@@ -1,6 +1,7 @@
 import AppKit
 import PelikanDB
 import PelikanODPI
+import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
 
@@ -114,6 +115,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
         sheet = w
         window.beginSheet(w)
+    }
+
+    func askVariables(_ requests: [VariableRequest], document: PelikanWorkspace.Document) async -> [String: VariableValue]? {
+        guard let window = mainWindow?.window else { return nil }
+        let model = VariablesModel(requests: requests, workspace: workspace, document: document)
+        return await withCheckedContinuation { cont in
+            var sheet: NSWindow?
+            var finished = false
+            let view = VariablesView(model: model) { values in
+                guard !finished else { return }
+                finished = true
+                if let sheet { window.endSheet(sheet) }
+                cont.resume(returning: values)
+            }
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            sheet = w
+            window.beginSheet(w)
+        }
     }
 
     func ask(_ title: String, message: String, buttons: [String]) async -> Int? {

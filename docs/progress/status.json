@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T19:12:58+02:00",
+  "heartbeat": "2026-10-22T19:16:41+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1: połączenia (ConnectionStore, Pęk kluczy, TNS), okno logowania, Lista połączeń",
+  "task": "Etap 1: sprawdzić ręcznie SQL Window na bazie testowej, zrzuty, PR etap-1/edytor-sql-window",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
     "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
     "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
     "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy",
@@ -70,11 +71,11 @@
     "Skrypty: version.sh, set-version.sh, progress.py (ten raport), testdb.sh"
   ],
   "next": [
-    "etap-1/polaczenia: ConnectionStore, Pęk kluczy, tnsnames.ora, okno definicji połączeń, Lista połączeń, okno logowania, SessionManager",
-    "etap-1/edytor: edytor TextKit 2 z podświetlaniem przyrostowym",
-    "etap-1/sql-window: wykonanie, karty wyników, DBMS_OUTPUT, transakcje, zmienne",
-    "etap-1/siatka: NSTableView z dociąganiem, LOB, eksport, edycja z ROWID",
-    "etap-1/command-window, etap-1/klawiatura, etap-1/thin, szkic wydania"
+    "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
+    "Testy wydajności: siatka 1 mln wierszy, edytor 50 000 linii (Release)",
+    "PR etap-1/edytor-sql-window → scalenie",
+    "Command Window, profile klawiatury i preferencje, eksport wyników, Large Data Editor, edycja siatki z ROWID",
+    "Tunel SSH, sterownik thin (OracleNIO), szkic wydania (podpis, DMG/PKG, Sparkle)"
   ],
   "blockers": [],
   "questions": [],
