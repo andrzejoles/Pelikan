@@ -5,7 +5,7 @@ import PelikanWorkspace
 /// Siatka wyników (ADR 0004): NSTableView z wirtualizacją wierszy, kolumna numeru wiersza, NULL na kolorowym tle
 /// (UG 7.2), liczby do prawej, dociąganie porcjami przy zbliżeniu do końca, sortowanie klikiem nagłówka (Shift —
 /// klucz dodatkowy), przenoszenie kolumn, pasek siatki (strony, kopiowanie, eksport, widok pojedynczego rekordu).
-final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
+final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, NSTextFieldDelegate {
     private let tab: ResultTab
     private let grid: ResultGridModel
     private let workspace: Workspace
@@ -14,6 +14,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     private let record = SingleRecordView()
     private let bar = NSStackView()
     private let recordButton = NSButton()
+    private let editButton = NSButton()
+    private var editControls: [NSView] = []
+    private var lastEditing = false
+    private var lastFocus: Int?
     private let countLabel = NSTextField(labelWithString: "")
     private var tokens: [ObservationToken] = []
     private var lastRowCount = 0
@@ -97,10 +101,37 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         export.toolTip = L10n.tr("Eksportuj zaznaczenie albo cały pobrany wynik")
         countLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         countLabel.textColor = .secondaryLabelColor
+        // Edycja (UG 7.6): kłódka Edit data, Wstaw, Usuń, Zatwierdź zmiany (z menu: kopiuj SQL zmian, anuluj).
+        editButton.image = NSImage(systemSymbolName: "lock", accessibilityDescription: L10n.tr("Edytuj dane"))
+        editButton.bezelStyle = .accessoryBarAction
+        editButton.setButtonType(.pushOnPushOff)
+        editButton.isBordered = false
+        editButton.toolTip = L10n.tr("Edytuj dane (wymaga ROWID w zapytaniu)")
+        editButton.target = self
+        editButton.action = #selector(toggleEdit)
+        editButton.isEnabled = grid.rowidColumn != nil
+        let post = NSPopUpButton(frame: .zero, pullsDown: true)
+        post.isBordered = false
+        post.addItem(withTitle: "")
+        post.item(at: 0)?.image = NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: L10n.tr("Zatwierdź zmiany"))
+        for (title, id) in [(L10n.tr("Zatwierdź zmiany (Post)"), "grid.post"), (L10n.tr("Kopiuj SQL zmian"), "grid.copyChangesSQL"),
+                            (L10n.tr("Anuluj zmiany"), "grid.cancelChanges")] {
+            let item = post.menu!.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = id
+        }
+        post.toolTip = L10n.tr("Zatwierdź zmiany w bazie (bez COMMIT)")
+        editControls = [button("plus", L10n.tr("Wstaw rekord"), #selector(insertRecord)),
+                        button("minus", L10n.tr("Usuń rekord"), #selector(deleteRecord)), post]
+        editControls.forEach { $0.isHidden = true }
+        let separator = NSBox()
+        separator.boxType = .separator
+        separator.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([separator.widthAnchor.constraint(equalToConstant: 1), separator.heightAnchor.constraint(equalToConstant: 14)])
         for v in [button("chevron.down", L10n.tr("Następna strona"), #selector(nextPage)),
                   button("chevron.down.2", L10n.tr("Ostatnia strona (pobierz wszystkie)"), #selector(lastPage)),
                   recordButton, export, button("tablecells", L10n.tr("Kopiuj do Excela"), #selector(copyToExcel)),
-                  countLabel] as [NSView] {
+                  separator, editButton] + editControls + [countLabel] as [NSView] {
             bar.addArrangedSubview(v)
         }
         bar.spacing = 4
@@ -145,7 +176,25 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         let count = grid.rowCount
         let more = grid.hasMore
         let sort = grid.sortKeys
-        countLabel.stringValue = more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy")
+        let edit = grid.edit
+        let focus = tab.focusedColumn
+        countLabel.stringValue = (more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy"))
+            + (edit.hasChanges ? L10n.tr("  ·  zmiany do zatwierdzenia") : "")
+        if edit.isEditing != lastEditing {
+            lastEditing = edit.isEditing
+            editButton.state = edit.isEditing ? .on : .off
+            editButton.image = NSImage(systemSymbolName: edit.isEditing ? "lock.open" : "lock", accessibilityDescription: L10n.tr("Edytuj dane"))
+            editControls.forEach { $0.isHidden = !edit.isEditing }
+            table.reloadData()
+        } else if edit.isEditing {
+            // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.
+            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+                             columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
+        }
+        if focus != lastFocus {
+            lastFocus = focus
+            if let f = focus { focusCell(column: f) }
+        }
         if sort != lastSort {
             lastSort = sort
             updateSortIndicators()
@@ -204,14 +253,43 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         }
         guard let i = Int(id.dropFirst()) else { return nil }
         let v = grid.value(row: row, column: i)
-        cell.configure(text: grid.text(row: row, column: i), alignRight: grid.columns[i].type.isNumeric, isNull: v.isNull, secondary: false)
+        cell.configure(text: grid.text(row: row, column: i), alignRight: grid.columns[i].type.isNumeric, isNull: v.isNull, secondary: false,
+                       state: grid.edit.isEditing ? grid.cellState(row: row, column: i) : .normal,
+                       overflow: grid.edit.isEditing && grid.isOverflow(row: row, column: i),
+                       editable: grid.isEditable(column: i))
+        cell.textField?.delegate = self
         return cell
+    }
+
+    /// Koniec edycji komórki: wartość do modelu (konwersja typu), błąd — komunikat i przywrócenie.
+    func controlTextDidEndEditing(_ obj: Notification) {
+        guard let field = obj.object as? NSTextField else { return }
+        let row = table.row(for: field), col = table.column(for: field)
+        guard row >= 0, col >= 0, let i = Int(table.tableColumns[col].identifier.rawValue.dropFirst()) else { return }
+        let text = field.stringValue
+        if text == grid.text(row: row, column: i) { return }
+        do {
+            try grid.setText(text, row: row, column: i)
+        } catch {
+            workspace.ui?.showError(error.localizedDescription)
+            field.stringValue = grid.text(row: row, column: i)
+        }
     }
 
     /// Klik nagłówka: rosnąco → malejąco → bez sortowania; Shift — sortowanie wtórne (UG 7.2).
     func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
         guard tableColumn.identifier.rawValue != "#", let i = Int(tableColumn.identifier.rawValue.dropFirst()) else { return }
         grid.toggleSort(column: i, add: NSEvent.modifierFlags.contains(.shift))
+    }
+
+    /// Komórka z błędem po zatwierdzaniu zmian (NF12): zaznacz wiersz, przewiń do kolumny, rozpocznij edycję.
+    private func focusCell(column: Int) {
+        guard let row = tab.selectedRows?.first, row < grid.rowCount,
+              let colIndex = table.tableColumns.firstIndex(where: { $0.identifier.rawValue == "c\(column)" }) else { return }
+        table.selectRowIndexes([row], byExtendingSelection: false)
+        table.scrollRowToVisible(row)
+        table.scrollColumnToVisible(colIndex)
+        if grid.isEditable(column: column) { table.editColumn(colIndex, row: row, with: nil, select: true) }
     }
 
     func tableViewSelectionDidChange(_ notification: Notification) {
@@ -223,6 +301,20 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     // MARK: Pasek siatki
 
     @objc private func nextPage() { workspace.perform("grid.nextPage") }
+    @objc private func toggleEdit() { workspace.perform("grid.edit") }
+    @objc private func insertRecord() {
+        workspace.perform("grid.insertRecord")
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let row = self.tab.selectedRows?.first, row < self.grid.rowCount else { return }
+            self.table.selectRowIndexes([row], byExtendingSelection: false)
+            self.table.scrollRowToVisible(row)
+            if let first = self.grid.edit.target?.editableColumns.min(),
+               let c = self.table.tableColumns.firstIndex(where: { $0.identifier.rawValue == "c\(first)" }) {
+                self.table.editColumn(c, row: row, with: nil, select: true)
+            }
+        }
+    }
+    @objc private func deleteRecord() { workspace.perform("grid.deleteRecord") }
     @objc private func lastPage() { workspace.perform("grid.lastPage") }
     @objc private func copyToExcel() { workspace.perform("grid.copyToExcel") }
 
@@ -330,6 +422,7 @@ final class GridCell: NSTableCellView {
         label.cell?.truncatesLastVisibleLine = true
         label.autoresizingMask = [.width, .height]
         addSubview(label)
+        textField = label
         wantsLayer = true
     }
 
@@ -341,12 +434,25 @@ final class GridCell: NSTableCellView {
         label.frame = bounds.insetBy(dx: 2, dy: 1)
     }
 
-    func configure(text: String, alignRight: Bool, isNull: Bool, secondary: Bool) {
+    static let modifiedColor = NSColor.systemBlue
+    static let insertedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.28, blue: 0.16, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.97, blue: 0.88, alpha: 1) }
+
+    func configure(text: String, alignRight: Bool, isNull: Bool, secondary: Bool,
+                   state: CellEditState = .normal, overflow: Bool = false, editable: Bool = false) {
         // Wielowierszowy tekst w jednej linii komórki (pełna treść — widok rekordu, Large Data Editor).
-        label.stringValue = text.count > 500 ? String(text.prefix(500)) + "…" : text.replacingOccurrences(of: "\n", with: " ⏎ ")
+        let shown = editable ? text : (text.count > 500 ? String(text.prefix(500)) + "…" : text.replacingOccurrences(of: "\n", with: " ⏎ "))
+        label.isEditable = editable && state != .deleted
+        label.isSelectable = label.isEditable
         label.alignment = alignRight ? .right : .left
-        label.textColor = secondary ? .tertiaryLabelColor : .labelColor
-        layer?.backgroundColor = isNull ? ResultGridView.nullColor.cgColor : nil
+        let color: NSColor = overflow ? .systemRed : state == .modified ? Self.modifiedColor : secondary ? .tertiaryLabelColor : .labelColor
+        if state == .deleted {
+            label.attributedStringValue = NSAttributedString(string: shown, attributes: [
+                .strikethroughStyle: NSUnderlineStyle.single.rawValue, .foregroundColor: NSColor.systemRed, .font: label.font!])
+        } else {
+            label.stringValue = shown
+            label.textColor = color
+        }
+        layer?.backgroundColor = state == .inserted ? Self.insertedBackground.cgColor : isNull ? ResultGridView.nullColor.cgColor : nil
     }
 }
 

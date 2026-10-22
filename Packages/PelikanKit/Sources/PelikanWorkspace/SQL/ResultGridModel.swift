@@ -8,20 +8,25 @@ import PelikanDB
 @Observable
 public final class ResultGridModel {
     public let columns: [ColumnInfo]
-    public private(set) var rows: [[OracleValue]] = []
+    public internal(set) var rows: [[OracleValue]] = []
     public private(set) var hasMore: Bool
     public private(set) var isFetching = false
     public private(set) var lastError: String?
     /// Polecenie, z którego pochodzi wynik (odświeżanie, eksport SQL).
     public let sql: String
     @ObservationIgnored private let resultSet: ResultSetID
-    @ObservationIgnored private var sessionRef: (any DatabaseSession)?
+    @ObservationIgnored var sessionRef: (any DatabaseSession)?
+    /// Sesja okna (także po wyczerpaniu kursora) — edycja i zatwierdzanie zmian siatki.
+    @ObservationIgnored let session: any DatabaseSession
+    /// Edycja danych (UG 7.6) — stan w GridEditing.swift.
+    public internal(set) var edit = GridEditState()
     @ObservationIgnored public var format: ValueFormat
 
     public init(columns: [ColumnInfo], resultSet: ResultSetID, session: any DatabaseSession, sql: String, format: ValueFormat) {
         self.columns = columns
         self.resultSet = resultSet
         sessionRef = session
+        self.session = session
         self.sql = sql
         self.format = format
         hasMore = true
@@ -33,7 +38,7 @@ public final class ResultGridModel {
     public private(set) var sortKeys: [SortKey] = []
     @ObservationIgnored public var sortCaseSensitive = false
     /// Permutacja: wiersz widoku → wiersz danych (nil bez sortowania).
-    @ObservationIgnored private var order: [Int]?
+    @ObservationIgnored var order: [Int]?
 
     public struct SortKey: Sendable, Hashable {
         public var column: Int
@@ -66,7 +71,7 @@ public final class ResultGridModel {
         applySort()
     }
 
-    private func applySort() {
+    func applySort() {
         guard !sortKeys.isEmpty else { order = nil; return }
         let keys = sortKeys
         let cols = columns
@@ -183,6 +188,8 @@ public final class ResultTab: Identifiable {
     /// Zaznaczenie w siatce (wiersze widoku; nil — brak) i kolejność kolumn po przeciąganiu — ustawia interfejs.
     public var selectedRows: [Int]?
     public var columnOrder: [Int]?
+    /// Kolumna do pokazania (np. z błędem po zatwierdzaniu zmian — NF12).
+    public var focusedColumn: Int?
 
     public init(title: String, statementRange: Range<Int>, grid: ResultGridModel? = nil, message: String? = nil) {
         self.title = title

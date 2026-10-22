@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T23:15:59+02:00",
+  "heartbeat": "2026-10-22T23:22:16+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
     "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
     "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
     "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
@@ -92,18 +93,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 87,
-      "passed": 87,
+      "total": 90,
+      "passed": 90,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T23:15:57+02:00"
+      "at": "2026-10-22T23:22:14+02:00"
     },
     "integration": {
-      "total": 28,
-      "passed": 27,
+      "total": 33,
+      "passed": 32,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-22T23:15:59+02:00"
+      "at": "2026-10-22T23:22:16+02:00"
     },
     "perf": {
       "total": 8,

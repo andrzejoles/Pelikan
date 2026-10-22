@@ -182,3 +182,104 @@ struct SQLWindowBreakTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Edycja siatki na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct GridEditingIntegrationTests {
+    func open(_ sql: String) async throws -> (Workspace, Document, ResultGridModel) {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql)
+        doc.text = sql
+        try await ws.invoke("sql.execute")
+        return (ws, doc, try #require(doc.results.first?.grid))
+    }
+
+    @Test("UPDATE po ROWID: kolumny edytowalne, wartość z wyzwalacza po zapisie, transakcja otwarta, anulowanie")
+    func update() async throws {
+        let (ws, doc, g) = try await open("select e.*, e.rowid from emp e order by empno")
+        try await ws.invoke("grid.edit")
+        let t = try #require(g.edit.target)
+        #expect(t.table == "EMP")
+        #expect(!t.editableColumns.contains(g.rowidColumn!))
+        let comm = g.columns.firstIndex { $0.name == "COMM" }!
+        let sal = g.columns.firstIndex { $0.name == "SAL" }!
+        #expect(t.editableColumns.isSuperset(of: [comm, sal]))
+        try g.setText("123,5", row: 0, column: comm)
+        #expect(g.cellState(row: 0, column: comm) == .modified)
+        #expect(g.changesSQL().hasPrefix("UPDATE PELIKAN_TEST.EMP SET COMM = 123.5 WHERE ROWID = '"))
+        try await ws.invoke("grid.post")
+        #expect(!g.edit.hasChanges)
+        #expect(doc.transactionOpen)
+        #expect(g.text(row: 0, column: comm) == "123.5")
+        // Druga zmiana i anulowanie przywraca wartość.
+        try g.setText("9999", row: 1, column: sal)
+        g.cancelChanges()
+        #expect(g.text(row: 1, column: sal) == "1600")
+        try await ws.invoke("session.rollback")
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("INSERT z RETURNING ROWID i DELETE; wstawiony i usunięty przed zapisem znika bez SQL")
+    func insertDelete() async throws {
+        let (ws, doc, g) = try await open("select d.rowid, d.* from dept d order by deptno")
+        try await ws.invoke("grid.edit")
+        let before = g.rowCount
+        let row = try g.insertRecord()
+        try g.setText("99", row: row, column: 1)
+        try g.setText("TESTY", row: row, column: 2)
+        try g.setText("Kraków", row: row, column: 3)
+        #expect(g.cellState(row: row, column: 1) == .inserted)
+        try await ws.invoke("grid.post")
+        #expect(g.rowCount == before + 1)
+        #expect(!g.value(row: row, column: 0).isNull)          // ROWID z RETURNING
+        try g.deleteRecords([row])
+        #expect(g.cellState(row: row, column: 1) == .deleted)
+        #expect(g.changesSQL().hasPrefix("DELETE FROM PELIKAN_TEST.DEPT WHERE ROWID = '"))
+        try await ws.invoke("grid.post")
+        #expect(g.rowCount == before)
+        let tmp = try g.insertRecord()
+        try g.deleteRecords([tmp])
+        #expect(g.rowCount == before && !g.edit.hasChanges)
+        #expect(doc.transactionOpen)
+        try await ws.invoke("session.rollback")
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Złączenie: edytowalne tylko kolumny tabeli z ROWID; kolumna z aliasem tylko do odczytu")
+    func joinAndAlias() async throws {
+        let (ws, _, g) = try await open("select e.ename, d.dname, e.sal pensja, e.rowid from emp e join dept d on d.deptno = e.deptno")
+        try await ws.invoke("grid.edit")
+        #expect(g.edit.target?.editableColumns == [0])
+        #expect(throws: GridEditError.self) { try g.setText("X", row: 0, column: 1) }
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Bez ROWID: edycja niedostępna z wyjaśnieniem")
+    func noRowid() async throws {
+        let (ws, _, g) = try await open("select * from emp")
+        #expect(!ws.isEnabled("grid.edit"))
+        await #expect(throws: GridEditError.self) { try await g.beginEditing() }
+        #expect(g.edit.notEditableReason?.contains("ROWID") == true)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Za długa wartość: czerwony znacznik, błąd ORA-12899 wskazuje wiersz i kolumnę")
+    func overflowError() async throws {
+        let (ws, _, g) = try await open("select ename, rowid from emp order by empno")
+        try await ws.invoke("grid.edit")
+        try g.setText(String(repeating: "x", count: 60), row: 2, column: 0)
+        #expect(g.isOverflow(row: 2, column: 0))
+        await #expect(throws: CommandError.self) { try await ws.invoke("grid.post") }
+        let tab = ws.activeDocument!.results.first!
+        #expect(tab.selectedRows == [2])
+        #expect(tab.focusedColumn == 0)
+        try? await ws.invoke("session.rollback")
+        await ws.sessions.disconnectAll()
+    }
+}

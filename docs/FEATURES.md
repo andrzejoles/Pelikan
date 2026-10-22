@@ -116,11 +116,11 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-014 | Excel (xlsx; „Copy all” — arkusz na wynik; z SQL na osobnym arkuszu, formatowanie, kolory) | UG 7.2, UG 23.30 | Siatka > Copy to Excel | 1 | P2 | Brak | ✅ test |
 | PD-GRID-015 | Copy, Copy with Header, Copy Header, Copy as Expression List; kopiowanie także jako HTML | UG 7.2, NF12, NF17 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-016 | Column to files (kolumna → plik na wiersz, katalog i nazwa z wyrażeń) | UG 7.2, NF15 | Siatka > Export Results | 6 | P3 | Brak | do zrobienia |
-| PD-GRID-017 | Edycja wyniku z ROWID lub FOR UPDATE: Edit data, Insert record, Delete record, Post changes | UG 7.6 | Siatka | 1 | P1 | Za zgodą | do zrobienia |
-| PD-GRID-018 | Tabela edytowana ustalana z ROWID (złączenia), kolumny z aliasem tylko do odczytu, kolumny niewidoczne edytowalne | UG 7.6, NF17, NF13 | Siatka | 1 | P1 | — | do zrobienia |
-| PD-GRID-019 | Czerwony tekst przy przekroczeniu rozmiaru/precyzji; przeliczanie kolumn wirtualnych; wartości z wyzwalaczy po Post | UG 7.6, NF9 | Siatka | 1 | P2 | — | do zrobienia |
-| PD-GRID-020 | Podgląd SQL zmian siatki (SQL Window / Command Window / schowek) przed Post | UG 7.6, NF15 | Siatka > Post changes ▾ | 1 | P1 | — | do zrobienia |
-| PD-GRID-021 | Przejście do komórki z błędem po INSERT/UPDATE | NF12 | Siatka | 1 | P2 | — | do zrobienia |
+| PD-GRID-017 | Edycja wyniku z ROWID lub FOR UPDATE: Edit data, Insert record, Delete record, Post changes | UG 7.6 | Siatka | 1 | P1 | Za zgodą | ✅ test |
+| PD-GRID-018 | Tabela edytowana ustalana z ROWID (złączenia), kolumny z aliasem tylko do odczytu, kolumny niewidoczne edytowalne | UG 7.6, NF17, NF13 | Siatka | 1 | P1 | — | ✅ test |
+| PD-GRID-019 | Czerwony tekst przy przekroczeniu rozmiaru/precyzji; przeliczanie kolumn wirtualnych; wartości z wyzwalaczy po Post | UG 7.6, NF9 | Siatka | 1 | P2 | — | w toku |
+| PD-GRID-020 | Podgląd SQL zmian siatki (SQL Window / Command Window / schowek) przed Post | UG 7.6, NF15 | Siatka > Post changes ▾ | 1 | P1 | — | ✅ test |
+| PD-GRID-021 | Przejście do komórki z błędem po INSERT/UPDATE | NF12 | Siatka | 1 | P2 | — | ✅ test |
 | PD-GRID-022 | Informacje słownika w siatce: typ, NOT NULL, komentarz na pasku; listy wartości z CHECK IN i FK do małych tabel | UG 23.20 | Siatka | 1 | P2 | — | do zrobienia |
 | PD-GRID-023 | LOB pobierane na żądanie (preferencja) | UG 23.20, NF14 | Preferences | 1 | P2 | — | do zrobienia |
 | PD-GRID-024 | Sumy kolumn (Sum/Count/Avg/Min/Max), trwałe po ponownym wykonaniu | UG 7.12, NF11 | Siatka | 1 | P2 | — | do zrobienia |

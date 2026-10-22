@@ -124,6 +124,69 @@ public enum GridCommands {
                 _ = await ctx.workspace.ui?.saveFile(suggestedName: doc.title, fileExtension: "xlsx", data: data)
                 return .ok
             },
+            // Edycja danych (UG 7.6).
+            Command(CommandDescriptor(id: "grid.edit", title: L10n.tr("Edytuj dane"), category: .session, submenu: L10n.tr("Wynik"),
+                                      mac: ["cmd+alt+e"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Włącza albo wyłącza edycję wyniku (wymaga ROWID w zapytaniu)."), feature: "PD-GRID-017"),
+                    validate: { ws in activeGrid(ws).map { $0.1.rowidColumn != nil } ?? false }) { ctx in
+                guard let (_, grid) = activeGrid(ctx.workspace) else { return .ok }
+                if grid.edit.isEditing {
+                    grid.endEditing()
+                } else {
+                    try await grid.beginEditing()
+                }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "grid.insertRecord", title: L10n.tr("Wstaw rekord"), category: .session, submenu: L10n.tr("Wynik"),
+                                      mac: ["cmd+alt+i"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Dodaje pusty wiersz do edytowanego wyniku."), feature: "PD-GRID-017"),
+                    validate: { ws in activeGrid(ws)?.1.edit.isEditing ?? false }) { ctx in
+                guard let (tab, grid) = activeGrid(ctx.workspace) else { return .ok }
+                let row = try grid.insertRecord()
+                tab.selectedRows = [row]
+                return .ok
+            },
+            Command(CommandDescriptor(id: "grid.deleteRecord", title: L10n.tr("Usuń rekord"), category: .session, submenu: L10n.tr("Wynik"),
+                                      mac: ["cmd+shift+backspace"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Oznacza zaznaczone wiersze do usunięcia (usunięcie przy zatwierdzaniu zmian)."), feature: "PD-GRID-017"),
+                    validate: { ws in activeGrid(ws).map { $0.1.edit.isEditing && !($0.0.selectedRows ?? []).isEmpty } ?? false }) { ctx in
+                guard let (tab, grid) = activeGrid(ctx.workspace) else { return .ok }
+                try grid.deleteRecords(tab.selectedRows ?? [])
+                return .ok
+            },
+            Command(CommandDescriptor(id: "grid.post", title: L10n.tr("Zatwierdź zmiany (Post)"), category: .session, submenu: L10n.tr("Wynik"),
+                                      mac: ["cmd+alt+s"], agent: .approval, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Zapisuje zmiany siatki w bazie (UPDATE/INSERT/DELETE po ROWID) — bez COMMIT."), feature: "PD-GRID-017"),
+                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
+                guard let (_, grid) = activeGrid(ctx.workspace), let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
+                do {
+                    let n = try await grid.postChanges()
+                    doc.transactionOpen = true
+                    return CommandResult(message: L10n.tr("Zapisano zmian: \(n) — transakcja otwarta"))
+                } catch let e as GridEditError {
+                    doc.transactionOpen = (try? await SessionUtilities.transactionOpen(grid.session)) ?? true
+                    if case .postFailed(let row, let column, _) = e, let tab = activeTab(ctx.workspace) {
+                        tab.selectedRows = [row]
+                        tab.focusedColumn = column
+                    }
+                    throw CommandError.notAvailable(e.localizedDescription)
+                }
+            },
+            Command(CommandDescriptor(id: "grid.cancelChanges", title: L10n.tr("Anuluj zmiany"), category: .session, submenu: L10n.tr("Wynik"),
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Przywraca wartości sprzed edycji."), feature: "PD-GRID-017"),
+                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
+                activeGrid(ctx.workspace)?.1.cancelChanges()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "grid.copyChangesSQL", title: L10n.tr("Kopiuj SQL zmian"), category: .session, submenu: L10n.tr("Wynik"),
+                                      agent: .read, effect: .none,
+                                      summary: L10n.tr("Kopiuje polecenia, które wykona Zatwierdź zmiany (podgląd przed zapisem)."), feature: "PD-GRID-020"),
+                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
+                guard let (_, grid) = activeGrid(ctx.workspace) else { return .ok }
+                let sql = grid.changesSQL()
+                ctx.workspace.ui?.copyToClipboard(sql, html: nil)
+                return CommandResult(message: sql)
+            },
         ]
     }
 }
