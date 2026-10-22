@@ -48,6 +48,9 @@ public final class SessionManager {
     @ObservationIgnored private var drivers: [DriverKind: any DatabaseDriver]
     @ObservationIgnored public weak var prompter: (any ConnectionPrompter)?
     @ObservationIgnored public var settings: () -> Settings
+    /// Hasła podane w tym uruchomieniu (tylko w pamięci): kolejne sesje tego połączenia (okna w trybie Multi, sesja
+    /// kompilacji) nie pytają ponownie. Zapominane przy rozłączeniu połączenia i po ORA-01017.
+    @ObservationIgnored private var sessionPasswords: [UUID: String] = [:]
 
     public init(store: ConnectionStore, drivers: [DriverKind: any DatabaseDriver], settings: @escaping () -> Settings) {
         self.store = store
@@ -105,7 +108,7 @@ public final class SessionManager {
             throw DatabaseError.driverUnavailable(L10n.tr("Sterownik \(def.driver.rawValue) jest niedostępny"))
         }
         if case .failure(let e) = driver.availability() { throw e }
-        var password = store.password(for: def.id)
+        var password = store.password(for: def.id) ?? sessionPasswords[def.id]
         // Hasło zapisujemy dopiero po udanym połączeniu i tylko gdy użytkownik zaznaczył „Zapamiętaj”.
         var rememberOnSuccess = false
         if password == nil, !def.target.externalAuth {
@@ -124,6 +127,7 @@ public final class SessionManager {
                 } else if rememberOnSuccess, let p = password {
                     try? store.rememberPassword(p, for: def.id)
                 }
+                if let p = credentials.newPassword ?? password { sessionPasswords[def.id] = p }
                 try await initialize(s, def)
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
@@ -131,6 +135,7 @@ public final class SessionManager {
                 credentials = Credentials(password: password, newPassword: np)
             } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.externalAuth {
                 // ORA-01017: błędne hasło — pytamy ponownie (zapisane hasło jest nieaktualne).
+                sessionPasswords[def.id] = nil
                 guard let answer = await prompter?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
                 password = answer.password
                 rememberOnSuccess = answer.remember
@@ -171,17 +176,19 @@ public final class SessionManager {
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
+        sessionPasswords[connectionID] = nil
     }
 
     public func disconnectAll() async {
         for key in Array(sessions.keys) { await close(key) }
+        sessionPasswords.removeAll()
     }
 
     /// Stan połączenia na liście.
     public func status(of connectionID: UUID) -> ConnectionStatus {
         let n = sessions.keys.filter { $0.connectionID == connectionID }.count
         if n > 0 { return .connected(sessions: n) }
-        return store.password(for: connectionID) != nil || store.connection(connectionID)?.target.externalAuth == true
+        return store.password(for: connectionID) != nil || sessionPasswords[connectionID] != nil || store.connection(connectionID)?.target.externalAuth == true
             ? .passwordKnown : .passwordUnknown
     }
 

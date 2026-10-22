@@ -111,6 +111,26 @@ struct SessionManagerTests {
         #expect(try secrets.password(for: def.id.uuidString) == nil)   // „good” bez „Zapamiętaj”
     }
 
+    @Test("Hasło podane raz wystarcza dla kolejnych sesji połączenia (tylko w pamięci); po rozłączeniu — pytanie ponownie")
+    func passwordReusedInRun() async throws {
+        let secrets = MemorySecretStore()
+        let (ws, _) = make(secrets)
+        let def = ConnectionDefinition(target: ConnectionTarget(user: "u", connectString: "db"), savePassword: false)
+        try ws.connections.upsert(def)
+        let prompter = FakePrompter(answers: [("good", false), ("good", false)])
+        ws.sessions.prompter = prompter
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .document(DocumentID())))
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .compile))
+        #expect(prompter.asked == 1)
+        #expect(ws.sessions.status(of: def.id) == .connected(sessions: 3))
+        #expect(try secrets.password(for: def.id.uuidString) == nil)
+        await ws.sessions.disconnect(def.id)
+        #expect(ws.sessions.status(of: def.id) == .passwordUnknown)
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(prompter.asked == 2)
+    }
+
     @Test("Anulowanie pytania o hasło przerywa łączenie")
     func cancel() async throws {
         let (ws, _) = make()

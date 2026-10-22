@@ -109,6 +109,45 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
         return workspace.isEnabled(CommandID(rawValue: raw))
     }
 
+    /// Skróty spoza menu (menu pokazuje tylko pierwszy skrót komendy, np. Ctrl+F8; drugi — ⇧⌘↩ — obsługujemy tu).
+    /// Zwraca true, gdy zdarzenie wywołało komendę. Tylko w oknie głównym bez arkusza (logowanie, zmienne).
+    func handleKeyDown(_ event: NSEvent) -> Bool {
+        guard let window = event.window, window.attachedSheet == nil, !window.isSheet, window.isMainWindow,
+              let chord = Self.chord(for: event), let id = workspace.keymap.command(for: chord) else { return false }
+        // Pierwszy skrót obsługuje menu (podświetlenie tytułu menu) — tu tylko pozostałe.
+        if workspace.keymap.chords(for: id).first(where: { Self.keyEquivalent(for: $0) != nil }) == chord { return false }
+        guard workspace.isEnabled(id) else { return false }
+        workspace.perform(id)
+        return true
+    }
+
+    /// NSEvent → KeyChord (nazwy klawiszy jak w opisach komend).
+    static func chord(for event: NSEvent) -> KeyChord? {
+        var mods: KeyModifiers = []
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags.contains(.command) { mods.insert(.command) }
+        if flags.contains(.control) { mods.insert(.control) }
+        if flags.contains(.option) { mods.insert(.option) }
+        if flags.contains(.shift) { mods.insert(.shift) }
+        guard let chars = event.charactersIgnoringModifiers, let scalar = chars.unicodeScalars.first else { return nil }
+        let key: String
+        switch Int(scalar.value) {
+        case NSF1FunctionKey...NSF20FunctionKey: key = "f\(Int(scalar.value) - NSF1FunctionKey + 1)"
+        case 0x0D, 0x03: key = "enter"
+        case 0x1B: key = "escape"
+        case 0x09, 0x19: key = "tab"
+        case 0x7F, 0x08: key = "backspace"
+        case NSDeleteFunctionKey: key = "delete"
+        case NSUpArrowFunctionKey: key = "up"
+        case NSDownArrowFunctionKey: key = "down"
+        case NSLeftArrowFunctionKey: key = "left"
+        case NSRightArrowFunctionKey: key = "right"
+        case 0x20: key = "space"
+        default: key = chars.lowercased()
+        }
+        return KeyChord(key: key, modifiers: mods)
+    }
+
     /// KeyChord → keyEquivalent NSMenuItem (F-klawisze przez NSF1FunctionKey…).
     static func keyEquivalent(for chord: KeyChord) -> (String, NSEvent.ModifierFlags)? {
         var mask: NSEvent.ModifierFlags = []

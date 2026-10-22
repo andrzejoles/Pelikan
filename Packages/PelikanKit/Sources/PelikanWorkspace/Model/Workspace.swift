@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PelikanDB
+import PelikanSQL
 
 /// Usługi interfejsu, których potrzebują komendy (implementuje aplikacja; w testach — atrapy).
 @MainActor
@@ -13,6 +14,8 @@ public protocol UIServices: AnyObject {
     func showConnectionEditor(connectionID: UUID?)
     /// Okno logowania (wybór połączenia).
     func showLogon()
+    /// Okno „Zmienne” (UG 7.5, 12.3): wartości dla zmiennych &, : i parametrów Jaspera; nil = anulowano.
+    func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).
@@ -62,6 +65,8 @@ public final class Workspace {
         didSet { rebuildKeymap() }
     }
     public var statusMessage: String?
+    /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
+    public private(set) var history: [HistoryEntry] = []
     public var settings: Settings {
         didSet {
             if settings.shortcutProfile != oldValue.shortcutProfile { shortcutProfile = settings.shortcutProfile }
@@ -103,6 +108,25 @@ public final class Workspace {
         sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
         box.value = loaded
         settingsBox = box
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")),
+           let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
+            history = h
+        }
+    }
+
+    /// Dopisuje polecenie do historii (bez poleceń z hasłami, bez duplikatu ostatniego), limit 200 (UG 23.26).
+    public func recordHistory(_ sql: String, limit: Int = 200) {
+        let text = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, !SQLExecutor.containsPassword(text) else { return }
+        if history.first?.text == text { history.removeFirst() }
+        let user = sessions.mainConnectionID.flatMap { connections.connection($0)?.target.driverUserName } ?? ""
+        history.insert(HistoryEntry(date: Date(), user: user, text: text), at: 0)
+        if history.count > limit { history.removeLast(history.count - limit) }
+        guard let dir = dataDirectory else { return }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        if let data = try? JSONEncoder.pelikan.encode(history) {
+            try? data.write(to: dir.appendingPathComponent("history.json"), options: [.atomic])
+        }
     }
 
     @ObservationIgnored private var settingsBox: SettingsBox
@@ -179,6 +203,10 @@ public final class Workspace {
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
+        // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się.
+        if !command.isPlanned, let validate = command.validate, !validate(self) {
+            throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
+        }
         let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
         let started = Date()
         do {
@@ -245,4 +273,11 @@ extension Workspace {
             d.transactionOpen = false
         }
     }
+}
+
+/// Wpis historii poleceń.
+public struct HistoryEntry: Sendable, Codable, Hashable {
+    public var date: Date
+    public var user: String
+    public var text: String
 }

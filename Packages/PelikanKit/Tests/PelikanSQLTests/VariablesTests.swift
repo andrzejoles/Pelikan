@@ -82,3 +82,54 @@ struct VariablesTests {
         #expect(p.sql == "where a = :p_Data_od")
     }
 }
+
+@Suite("Zmienne: opcje &<…> i &\"Nazwa\" (UG 12.3)")
+struct VariableOptionsTests {
+    @Test("&\"Nazwa ze spacjami\" i &<name=…> rozpoznawane jako jedna zmienna")
+    func syntax() {
+        let occ = Variables.find(in: """
+            select * from emp where deptno = &"Numer działu" and ename like &<name="Pracownik" type="string" ifempty="%"> and x = &<name="A b" list="1, 2">
+            """)
+        #expect(occ.map(\.name) == ["Numer działu", "Pracownik", "A b"])
+        #expect(occ[1].options?.type == .string)
+        #expect(occ[1].options?.ifEmpty == "%")
+        #expect(occ[2].options?.listItems.map(\.value) == ["1", "2"])
+    }
+
+    @Test("Typ string dodaje cudzysłowy (z podwojeniem apostrofu), uppercase, ifempty")
+    func stringType() {
+        let sql = "where ename = &<name=\"E\" type=\"string\" uppercase=\"yes\"> and job like &<name=\"J\" type=\"string\" ifempty=\"%\">"
+        let p = Variables.prepare(sql, values: ["E": .text("o'brien"), "J": .text("")])
+        #expect(p.sql == "where ename = 'O''BRIEN' and job like '%'")
+    }
+
+    @Test("Prefix/suffix znikają przy pustej wartości; checkbox; multiselect")
+    func prefixCheckboxMulti() {
+        let sql = "select * from emp &<name=\"Sort\" prefix=\"order by \" suffix=\" desc\"> &<name=\"D\" checkbox=\"desc,asc\"> where deptno in (&<name=\"Dz\" multiselect=\"yes\">)"
+        let empty = Variables.prepare(sql, values: ["Sort": .text(""), "D": .text("1"), "Dz": .list(["10", "20"])])
+        #expect(empty.sql == "select * from emp  desc where deptno in (10, 20)")
+        let filled = Variables.prepare(sql, values: ["Sort": .text("empno"), "D": .text("0"), "Dz": .list(["10"])])
+        #expect(filled.sql == "select * from emp order by empno desc asc where deptno in (10)")
+    }
+
+    @Test("Lista z opisami i z zapytaniem; nazwa zmiennej wiązanej dla list zależnych")
+    func lists() {
+        let o = VariableOptions.parse("&<name=\"Dział\" list=\"10, KSIĘGOWOŚĆ, 20, BADANIA\" description=\"yes\" restricted=\"yes\">")
+        #expect(o.listItems.map(\.label) == ["KSIĘGOWOŚĆ", "BADANIA"])
+        #expect(o.restricted)
+        let q = VariableOptions.parse("&<name=\"Owner of the table\" list=\"select username from all_users\">")
+        #expect(q.listIsQuery)
+        #expect(q.bindName == "owner_of_the_table")
+    }
+
+    @Test("W SQL Window && to dosłowne & (także w literale); w SQL*Plus — zmienna zapamiętywana")
+    func doubleAmpersand() {
+        let sql = "select * from dept where dname = 'R&&D' and x = &&y"
+        let w = Variables.prepare(sql, values: [:])
+        #expect(w.sql == "select * from dept where dname = 'R&D' and x = &y")
+        #expect(Variables.distinct(Variables.find(in: sql)).isEmpty)
+        let plus = Variables.find(in: sql, syntax: .sqlplus)
+        #expect(plus.map(\.name) == ["D", "y"])
+        #expect(plus.allSatisfy { $0.persistent })
+    }
+}

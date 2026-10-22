@@ -1,0 +1,233 @@
+import AppKit
+import PelikanWorkspace
+
+/// SQL Window (UG 7): edytor u góry, wyniki na dole (karty wyników + Output), pasek okna (pozycja kursora,
+/// przycisk `&`, stan). Polecenia wykonuje `SQLExecutor` przez komendy rejestru (F8, Ctrl+F8…).
+final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
+    private let document: Document
+    private let workspace: Workspace
+    private let split = NSSplitView()
+    private var editor: CodeEditorView!
+    private let resultsArea = NSView()
+    private let tabBar = NSStackView()
+    private let resultContainer = NSView()
+    private let caretLabel = NSTextField(labelWithString: "1:1")
+    private let substitutionButton = NSButton(title: "&", target: nil, action: nil)
+    private let executingIndicator = NSProgressIndicator()
+    private var tokens: [ObservationToken] = []
+    private var gridViews: [UUID: NSView] = [:]
+    private var showingOutput = false
+    private var resultsCollapsed = true
+
+    var preferredFirstResponder: NSView { editor.textView }
+
+    init(document: Document, workspace: Workspace) {
+        self.document = document
+        self.workspace = workspace
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func loadView() {
+        editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
+        editor.onCaretChange = { [weak self] s in self?.caretLabel.stringValue = s }
+
+        // Pasek okna (dół edytora): pozycja, &, wykonywanie.
+        caretLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        caretLabel.textColor = .secondaryLabelColor
+        substitutionButton.bezelStyle = .accessoryBarAction
+        substitutionButton.font = .boldSystemFont(ofSize: 12)
+        substitutionButton.target = self
+        substitutionButton.action = #selector(toggleSubstitution)
+        substitutionButton.toolTip = L10n.tr("Podstawianie zmiennych & i : (kliknij, aby wyłączyć)")
+        executingIndicator.style = .spinning
+        executingIndicator.controlSize = .small
+        executingIndicator.isDisplayedWhenStopped = false
+        let windowBar = NSStackView(views: [substitutionButton, caretLabel, NSView(), executingIndicator])
+        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 6, bottom: 2, right: 8)
+
+        let editorPane = NSView()
+        for v in [editor!, windowBar] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            editorPane.addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            editor.topAnchor.constraint(equalTo: editorPane.topAnchor),
+            editor.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
+            editor.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
+            windowBar.topAnchor.constraint(equalTo: editor.bottomAnchor),
+            windowBar.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
+            windowBar.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
+            windowBar.bottomAnchor.constraint(equalTo: editorPane.bottomAnchor),
+            { let c = windowBar.heightAnchor.constraint(equalToConstant: 22); c.priority = .defaultHigh; return c }(),
+        ])
+
+        // Obszar wyników: karty + zawartość.
+        tabBar.orientation = .horizontal
+        tabBar.spacing = 2
+        tabBar.edgeInsets = NSEdgeInsets(top: 3, left: 6, bottom: 3, right: 6)
+        let tabScroll = NSScrollView()
+        tabScroll.documentView = tabBar
+        tabScroll.drawsBackground = false
+        tabBar.translatesAutoresizingMaskIntoConstraints = false
+        for v in [tabScroll, resultContainer] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            resultsArea.addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            tabScroll.topAnchor.constraint(equalTo: resultsArea.topAnchor),
+            tabScroll.leadingAnchor.constraint(equalTo: resultsArea.leadingAnchor),
+            tabScroll.trailingAnchor.constraint(equalTo: resultsArea.trailingAnchor),
+            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 28); c.priority = .defaultHigh; return c }(),
+            tabBar.topAnchor.constraint(equalTo: tabScroll.contentView.topAnchor),
+            tabBar.leadingAnchor.constraint(equalTo: tabScroll.contentView.leadingAnchor),
+            tabBar.heightAnchor.constraint(equalTo: tabScroll.contentView.heightAnchor),
+            resultContainer.topAnchor.constraint(equalTo: tabScroll.bottomAnchor),
+            resultContainer.leadingAnchor.constraint(equalTo: resultsArea.leadingAnchor),
+            resultContainer.trailingAnchor.constraint(equalTo: resultsArea.trailingAnchor),
+            resultContainer.bottomAnchor.constraint(equalTo: resultsArea.bottomAnchor),
+        ])
+
+        split.isVertical = false
+        split.dividerStyle = .thin
+        split.delegate = self
+        split.addArrangedSubview(editorPane)
+        split.addArrangedSubview(resultsArea)
+        // Wyniki ukryte do pierwszego wykonania (ukryty widok NSSplitView = zwinięty, bez przesuwania dzielnika w layout).
+        resultsArea.isHidden = true
+        view = split
+        tokens.append(trackChanges { [weak self] in self?.refreshResults() })
+        tokens.append(trackChanges { [weak self] in self?.refreshState() })
+    }
+
+    private func refreshState() {
+        let executing = document.isExecuting
+        if executing { executingIndicator.startAnimation(nil) } else { executingIndicator.stopAnimation(nil) }
+        substitutionButton.contentTintColor = document.substitutionEnabled ? nil : .systemRed
+        substitutionButton.attributedTitle = NSAttributedString(string: "&", attributes: [
+            .foregroundColor: document.substitutionEnabled ? NSColor.labelColor : NSColor.systemRed,
+            .font: NSFont.boldSystemFont(ofSize: 12),
+        ])
+    }
+
+    private func refreshResults() {
+        let results = document.results
+        let active = document.activeResultID
+        let output = document.output
+        _ = results.map { ($0.title, $0.message, $0.pinned) }
+        // Pokaż obszar wyników po pierwszym wyniku albo wyjściu.
+        if resultsCollapsed, !results.isEmpty || !output.isEmpty {
+            resultsCollapsed = false
+            resultsArea.isHidden = false
+            split.adjustSubviews()
+            let h = split.bounds.height
+            DispatchQueue.main.async { [weak self] in self?.split.setPosition(max(120, h * 0.5), ofDividerAt: 0) }
+        }
+        tabBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for r in results {
+            tabBar.addArrangedSubview(tabButton(title: (r.pinned ? "📌 " : "") + r.title,
+                                                selected: !showingOutput && r.id == active, isError: r.grid == nil && r.message?.hasPrefix("ORA-") == true) { [weak self] in
+                self?.showingOutput = false
+                self?.document.activeResultID = r.id
+                self?.select(r)
+            })
+        }
+        tabBar.addArrangedSubview(tabButton(title: output.isEmpty ? L10n.tr("Output") : L10n.tr("Output (\(output.count))"),
+                                            selected: showingOutput || results.isEmpty, isError: false) { [weak self] in
+            self?.showingOutput = true
+            self?.refreshResults()
+        })
+        resultContainer.subviews.forEach { $0.removeFromSuperview() }
+        let alive = Set(results.map(\.id))
+        gridViews = gridViews.filter { alive.contains($0.key) }
+        if showingOutput || results.isEmpty {
+            install(outputView(output))
+        } else if let r = results.first(where: { $0.id == active }) ?? results.first {
+            install(view(for: r))
+        }
+    }
+
+    private func select(_ r: ResultTab) {
+        // Wybór karty podświetla polecenie w edytorze (UG 7.1).
+        let len = (editor.textView.string as NSString).length
+        let range = NSRange(location: min(r.statementRange.lowerBound, len), length: max(0, min(r.statementRange.count, len - min(r.statementRange.lowerBound, len))))
+        editor.textView.setSelectedRange(range)
+        editor.textView.scrollRangeToVisible(range)
+        refreshResults()
+    }
+
+    private func install(_ v: NSView) {
+        v.translatesAutoresizingMaskIntoConstraints = false
+        resultContainer.addSubview(v)
+        NSLayoutConstraint.activate([
+            v.topAnchor.constraint(equalTo: resultContainer.topAnchor),
+            v.leadingAnchor.constraint(equalTo: resultContainer.leadingAnchor),
+            v.trailingAnchor.constraint(equalTo: resultContainer.trailingAnchor),
+            v.bottomAnchor.constraint(equalTo: resultContainer.bottomAnchor),
+        ])
+    }
+
+    private func view(for r: ResultTab) -> NSView {
+        if let v = gridViews[r.id] { return v }
+        let v: NSView
+        if let grid = r.grid {
+            v = ResultGridView(grid: grid)
+        } else {
+            v = textView(r.message ?? "", isError: r.message?.hasPrefix("ORA-") == true)
+        }
+        gridViews[r.id] = v
+        return v
+    }
+
+    private func outputView(_ lines: [String]) -> NSView {
+        textView(lines.isEmpty ? L10n.tr("Brak wyjścia DBMS_OUTPUT") : lines.joined(separator: "\n"), isError: false, placeholder: lines.isEmpty)
+    }
+
+    private func textView(_ text: String, isError: Bool, placeholder: Bool = false) -> NSView {
+        let scroll = NSTextView.scrollableTextView()
+        let tv = scroll.documentView as! NSTextView
+        tv.isEditable = false
+        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.textColor = isError ? .systemRed : (placeholder ? .secondaryLabelColor : .labelColor)
+        tv.string = text
+        tv.textContainerInset = NSSize(width: 6, height: 6)
+        return scroll
+    }
+
+    private func tabButton(title: String, selected: Bool, isError: Bool, action: @escaping () -> Void) -> NSView {
+        let b = ClosureButton(title: title, action: action)
+        b.bezelStyle = .accessoryBarAction
+        b.setButtonType(.pushOnPushOff)
+        b.state = selected ? .on : .off
+        b.font = .systemFont(ofSize: 11, weight: selected ? .semibold : .regular)
+        if isError {
+            // Karta z błędem: czerwony tytuł z ikoną (UG 7.1 — wynik z błędem wyróżniony).
+            b.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: L10n.tr("Błąd"))
+            b.imagePosition = .imageLeading
+            b.contentTintColor = .systemRed
+            if !selected { b.attributedTitle = NSAttributedString(string: title, attributes: [.foregroundColor: NSColor.systemRed, .font: b.font!]) }
+        }
+        return b
+    }
+
+    @objc private func toggleSubstitution() { workspace.perform("sql.toggleSubstitution") }
+
+    func splitView(_ splitView: NSSplitView, constrainMinCoordinate proposedMinimumPosition: CGFloat, ofSubviewAt dividerIndex: Int) -> CGFloat { 60 }
+}
+
+/// Przycisk z akcją w domknięciu.
+final class ClosureButton: NSButton {
+    private var handler: (() -> Void)?
+
+    convenience init(title: String, action: @escaping () -> Void) {
+        self.init(frame: .zero)
+        self.title = title
+        handler = action
+        target = self
+        self.action = #selector(fire)
+    }
+
+    @objc private func fire() { handler?() }
+}

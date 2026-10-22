@@ -1,0 +1,265 @@
+import AppKit
+import PelikanWorkspace
+
+/// Edytor kodu SQL/PL/SQL (ADR 0003): NSTextView na TextKit 2, podświetlanie przyrostowe, numery linii,
+/// pasek pozycji `linia:kolumna [długość]` (NF15), wiązanie z `Document` (tekst, zaznaczenie, błąd).
+final class CodeEditorView: NSView, NSTextViewDelegate {
+    let textView: CodeTextView
+    let scrollView = NSScrollView()
+    private let ruler: LineNumberRulerView
+    private let highlighter = SyntaxHighlighter()
+    private let document: Document
+    private var font: NSFont
+    private var updatingFromModel = false
+    private var tokens: [ObservationToken] = []
+    var onCaretChange: ((String) -> Void)?
+
+    init(document: Document, fontSize: CGFloat = 13) {
+        self.document = document
+        font = NSFont(name: "SF Mono", size: fontSize) ?? .monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        textView = CodeTextView(usingTextLayoutManager: true)
+        ruler = LineNumberRulerView(textView: textView, highlighter: highlighter)
+        super.init(frame: .zero)
+        configure()
+        load(document.text)
+        tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func configure() {
+        textView.isRichText = false
+        textView.importsGraphics = false
+        textView.allowsUndo = true
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.isAutomaticTextReplacementEnabled = false
+        textView.isAutomaticSpellingCorrectionEnabled = false
+        textView.isContinuousSpellCheckingEnabled = false
+        textView.isGrammarCheckingEnabled = false
+        textView.smartInsertDeleteEnabled = false
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
+        textView.font = font
+        textView.textContainerInset = NSSize(width: 4, height: 4)
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = true
+        textView.autoresizingMask = [.width]
+        textView.textContainer?.widthTracksTextView = false
+        // Bez zawijania wierszy; TextKit 2 nie rysuje tekstu przy nieskończonej szerokości kontenera — duża, skończona.
+        textView.textContainer?.size = NSSize(width: 1_000_000, height: CGFloat.greatestFiniteMagnitude)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.typingAttributes = [.font: font, .foregroundColor: SyntaxTheme.plain]
+        textView.delegate = self
+        // Delegatem NSTextStorage w TextKit 2 jest NSTextContentStorage — nie podmieniamy go, tylko słuchamy powiadomień.
+        NotificationCenter.default.addObserver(self, selector: #selector(storageDidProcessEditing(_:)),
+                                               name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
+        textView.setAccessibilityLabel(document.fullTitle)
+
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+        scrollView.autohidesScrollers = true
+        // Margines numerów linii jako osobny widok obok (NSRulerView w TextKit 2 zasłaniał tekst).
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        ruler.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(ruler)
+        addSubview(scrollView)
+        NSLayoutConstraint.activate([
+            ruler.topAnchor.constraint(equalTo: topAnchor),
+            ruler.leadingAnchor.constraint(equalTo: leadingAnchor),
+            ruler.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ruler.widthAnchor.constraint(equalToConstant: 44),
+            scrollView.topAnchor.constraint(equalTo: topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: ruler.trailingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+        scrollView.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.ruler.needsDisplay = true }
+        }
+    }
+
+    override func layout() {
+        super.layout()
+        // Widok tekstu co najmniej tak duży jak obszar przewijania (inaczej zerowa szerokość = niewidoczny tekst).
+        let size = scrollView.contentSize
+        textView.minSize = NSSize(width: size.width, height: size.height)
+        if textView.frame.width < size.width || textView.frame.height < size.height {
+            textView.setFrameSize(NSSize(width: max(textView.frame.width, size.width), height: max(textView.frame.height, size.height)))
+        }
+    }
+
+    private func load(_ text: String) {
+        updatingFromModel = true
+        textView.string = text
+        if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
+        updatingFromModel = false
+        ruler.needsDisplay = true
+    }
+
+    /// Zmiany modelu z zewnątrz (historia okna, agent `replace_range`, błąd do zaznaczenia).
+    private func syncFromModel() {
+        let text = document.text
+        let error = document.errorRange
+        if text != textView.string {
+            load(text)
+            textView.setSelectedRange(NSRange(location: min(document.selectedRange.lowerBound, (text as NSString).length), length: 0))
+        }
+        if let error {
+            let len = (textView.string as NSString).length
+            let r = NSRange(location: min(error.lowerBound, len), length: 0)
+            textView.setSelectedRange(r)
+            textView.scrollRangeToVisible(r)
+            // Zaznacz słowo z błędem (NF15: podkreślenie całego słowa).
+            let word = textView.selectionRange(forProposedRange: r, granularity: .selectByWord)
+            if word.length > 0 { textView.showFindIndicator(for: word) }
+        }
+    }
+
+    // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
+
+    @objc private func storageDidProcessEditing(_ note: Notification) {
+        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters), !updatingFromModel else { return }
+        let editedRange = storage.editedRange
+        let delta = storage.changeInLength
+        // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let storage = self.textView.textStorage else { return }
+            let len = storage.length
+            let r = NSRange(location: min(editedRange.location, len), length: min(editedRange.length, max(0, len - min(editedRange.location, len))))
+            self.highlighter.highlight(storage, editedRange: r, delta: delta, font: self.font)
+            self.ruler.needsDisplay = true
+        }
+    }
+
+    // MARK: NSTextViewDelegate
+
+    func textDidChange(_ notification: Notification) {
+        guard !updatingFromModel else { return }
+        updatingFromModel = true
+        document.text = textView.string
+        document.errorRange = nil
+        updatingFromModel = false
+    }
+
+    func textViewDidChangeSelection(_ notification: Notification) {
+        let r = textView.selectedRange()
+        document.selectedRange = r.location..<(r.location + r.length)
+        // Po edycji początki linii przelicza podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let r = self.textView.selectedRange()
+            let line = self.highlighter.line(containing: r.location)
+            let col = r.location - (line < self.highlighter.lineStarts.count ? self.highlighter.lineStarts[line] : 0)
+            self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
+            self.ruler.needsDisplay = true
+        }
+    }
+
+    func setFontSize(_ size: CGFloat) {
+        font = NSFont(name: font.fontName, size: size) ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+        textView.font = font
+        if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
+    }
+}
+
+/// NSTextView z dodatkami edytora kodu: wcięcie zaznaczenia Tab/Shift+Tab (UG 25.1), auto-wcięcie po Enter.
+final class CodeTextView: NSTextView {
+    var indentUnit = "  "
+
+    override func insertNewline(_ sender: Any?) {
+        // Automatyczne wcięcie jak poprzednia linia (UG 23.12 „Automatic”).
+        let ns = string as NSString
+        let lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
+        let line = ns.substring(with: lineRange)
+        let indent = String(line.prefix { $0 == " " || $0 == "\t" })
+        super.insertNewline(sender)
+        if !indent.isEmpty { insertText(indent, replacementRange: selectedRange()) }
+    }
+
+    override func insertTab(_ sender: Any?) {
+        if selectedRange().length > 0 { shiftSelection(by: 1) } else { insertText(indentUnit, replacementRange: selectedRange()) }
+    }
+
+    override func insertBacktab(_ sender: Any?) { shiftSelection(by: -1) }
+
+    private func shiftSelection(by direction: Int) {
+        let ns = string as NSString
+        let lines = ns.lineRange(for: selectedRange())
+        var text = ns.substring(with: lines)
+        let parts = text.components(separatedBy: "\n")
+        let changed = parts.enumerated().map { i, l -> String in
+            if i == parts.count - 1 && l.isEmpty { return l }
+            if direction > 0 { return indentUnit + l }
+            if l.hasPrefix(indentUnit) { return String(l.dropFirst(indentUnit.count)) }
+            if l.hasPrefix("\t") { return String(l.dropFirst()) }
+            return String(l.drop { $0 == " " })
+        }
+        text = changed.joined(separator: "\n")
+        if shouldChangeText(in: lines, replacementString: text) {
+            replaceCharacters(in: lines, with: text)
+            didChangeText()
+            setSelectedRange(NSRange(location: lines.location, length: (text as NSString).length))
+        }
+    }
+}
+
+/// Margines z numerami linii (UG 23.12 „Display line numbers”); bieżąca linia wyróżniona. Rysuje tylko linie
+/// widoczne w obszarze przewijania (fragmenty układu TextKit 2 z zakresu viewportu).
+final class LineNumberRulerView: NSView {
+    private weak var textView: NSTextView?
+    private let highlighter: SyntaxHighlighter
+
+    init(textView: NSTextView, highlighter: SyntaxHighlighter) {
+        self.textView = textView
+        self.highlighter = highlighter
+        super.init(frame: .zero)
+        setAccessibilityElement(false)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override var isFlipped: Bool { true }
+
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.textBackgroundColor.setFill()
+        dirtyRect.fill()
+        NSColor.separatorColor.setFill()
+        NSRect(x: bounds.width - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
+        guard let tv = textView, let tlm = tv.textLayoutManager, let content = tlm.textContentManager else { return }
+        let font = NSFont.monospacedDigitSystemFont(ofSize: max(9, (tv.font?.pointSize ?? 13) - 2), weight: .regular)
+        let caretLine = highlighter.line(containing: tv.selectedRange().location)
+        let visible = tv.visibleRect
+        let inset = tv.textContainerInset.height
+        let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
+        func label(_ line: Int, y: CGFloat, height: CGFloat) {
+            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
+            let size = s.size()
+            s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
+        }
+        if content.documentRange.isEmpty {
+            label(0, y: inset - visible.minY, height: lineHeight)
+            return
+        }
+        let start = tlm.textViewportLayoutController.viewportRange?.location ?? tlm.documentRange.location
+        var lastFrame = NSRect.zero
+        tlm.enumerateTextLayoutFragments(from: start, options: []) { fragment in
+            let frame = fragment.layoutFragmentFrame
+            if frame.maxY < visible.minY - 50 { return true }
+            if frame.minY > visible.maxY + 50 { return false }
+            let offset = content.offset(from: content.documentRange.location, to: fragment.rangeInElement.location)
+            label(self.highlighter.line(containing: offset), y: frame.minY + inset - visible.minY, height: frame.height)
+            lastFrame = frame
+            return true
+        }
+        // Pusta ostatnia linia po końcowym znaku nowej linii nie ma własnego fragmentu.
+        if tv.string.hasSuffix("\n"), lastFrame.maxY < visible.maxY {
+            label(highlighter.lineStarts.count - 1, y: lastFrame.maxY + inset - visible.minY, height: lineHeight)
+        }
+    }
+}

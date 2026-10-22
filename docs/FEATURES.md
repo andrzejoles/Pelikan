@@ -70,20 +70,20 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | PD-SQLW-001 | Dzielenie skryptu na polecenia (`;`, `/`, bloki PL/SQL, CREATE z ciałem) jak SQL*Plus | UG 7.1, PROMPT §5 | SQL Window | 1 | P1 | — | ✅ test |
-| PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | do zrobienia |
-| PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | w toku |
-| PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | do zrobienia |
-| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | do zrobienia |
+| PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | ✅ test |
+| PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
+| PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | w toku |
+| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | w toku |
 | PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | do zrobienia |
-| PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | do zrobienia |
+| PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-008 | Karta Statistics (statystyki wykonania) | UG 6.2 | SQL Window > Statistics | 3 | P2 | Odczyt | do zrobienia |
-| PD-SQLW-009 | Karta Output z DBMS_OUTPUT (bufor, limit, włącz/wyłącz, czyszczenie, wskaźnik nowego wyjścia) | UG 5.8, UG 23.5 | SQL Window > Output | 1 | P1 | Odczyt | do zrobienia |
-| PD-SQLW-010 | Tytuł karty z komentarza `-- tab=…` i `&Count` | UG 7.1, NF17 | SQL Window | 1 | P2 | — | do zrobienia |
-| PD-SQLW-011 | Dyrektywy komentarzy: Excel=, CSV=, Records=, Totals=, AltRowColor= | UG 7.12 | SQL Window | 1 | P3 | — | do zrobienia |
+| PD-SQLW-009 | Karta Output z DBMS_OUTPUT (bufor, limit, włącz/wyłącz, czyszczenie, wskaźnik nowego wyjścia) | UG 5.8, UG 23.5 | SQL Window > Output | 1 | P1 | Odczyt | ✅ test |
+| PD-SQLW-010 | Tytuł karty z komentarza `-- tab=…` i `&Count` | UG 7.1, NF17 | SQL Window | 1 | P2 | — | ✅ test |
+| PD-SQLW-011 | Dyrektywy komentarzy: Excel=, CSV=, Records=, Totals=, AltRowColor= | UG 7.12 | SQL Window | 1 | P3 | — | w toku |
 | PD-SQLW-012 | Zapis .sql (bieżące polecenie / z historią), Load do istniejącego okna | UG 7.13 | File > Save | 1 | P1 | Pełny | do zrobienia |
 | PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | do zrobienia |
-| PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | do zrobienia |
-| PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | do zrobienia |
+| PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | ✅ test |
+| PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | w toku |
 | PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | do zrobienia |
 | PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | do zrobienia |
 | PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | do zrobienia |
@@ -91,7 +91,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-020 | Compare records (identyczne/różne, kolumna/rekord, wielkość liter) | UG 7.8, NF11 | Siatka | 6 | P3 | — | do zrobienia |
 | PD-SQLW-021 | Compare result sets (dwie karty naraz, podświetlenie różnic, układ pionowy/poziomy) | UG 7.9, NF14 | Karty wyników | 6 | P3 | — | do zrobienia |
 | PD-SQLW-022 | Query By Example (wiersz kryteriów, wyrażenia, preferencje QBE) | UG 7.3, UG 23.20 | Siatka > QBE | 1 | P2 | — | do zrobienia |
-| PD-SQLW-023 | Wyróżnienie całego słowa przy błędzie, przejście do pozycji błędu ORA | NF15 | SQL Window | 1 | P1 | — | do zrobienia |
+| PD-SQLW-023 | Wyróżnienie całego słowa przy błędzie, przejście do pozycji błędu ORA | NF15 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-024 | Pytanie o zapis nowego okna przy zamykaniu; ostrzeżenie o niezatwierdzonej transakcji przy zamykaniu okna i aplikacji | UG 23.20, PROMPT §3.1 | SQL Window | 1 | P1 | — | do zrobienia |
 | PD-SQLW-025 | Wklejenie tekstu na pusty obszar tworzy SQL Window | NF8 | — | 1 | P3 | — | do zrobienia |
 | PD-SQLW-026 | Maksymalny rozmiar wyniku (MB) z pytaniem przed dalszym pobieraniem | UG 23.20 | Preferences | 1 | P2 | — | do zrobienia |
@@ -100,8 +100,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | do zrobienia |
-| PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | do zrobienia |
+| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | ✅ test |
+| PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | 👁 ręcznie |
 | PD-GRID-003 | `<CLOB>`, `<BLOB>`, `<Long>`… z przyciskiem komórki → Large Data Editor; przycisk dla tekstu > 20 znaków | UG 7.2 | Siatka | 1 | P1 | — | do zrobienia |
 | PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | w toku |
@@ -132,13 +132,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-VAR-001 | Zmienne podstawiania `&nazwa`, `&&nazwa`, wiele wystąpień, okno pytania o wartości | UG 7.5 | SQL Window | 1 | P1 | — | w toku |
-| PD-VAR-002 | Zmienne wiązane `:nazwa` w SQL Window (typ domyślnie tekst), pomijanie `:new`/`:old` w wyzwalaczach | UG 7.5, NF16 | SQL Window | 1 | P1 | — | w toku |
-| PD-VAR-003 | Składnia opcji `&"Nazwa"` i `&<name= hint= type= required= default= ifempty= uppercase= lowercase= readonly= hidden= list= description= restricted= multiselect= checkbox= prefix= suffix= lines= editor=>` | UG 12.3, NF11 | SQL / Report Window, szablony | 1 | P1 | — | do zrobienia |
+| PD-VAR-001 | Zmienne podstawiania `&nazwa`, `&&nazwa`, wiele wystąpień, okno pytania o wartości | UG 7.5 | SQL Window | 1 | P1 | — | ✅ test |
+| PD-VAR-002 | Zmienne wiązane `:nazwa` w SQL Window (typ domyślnie tekst), pomijanie `:new`/`:old` w wyzwalaczach | UG 7.5, NF16 | SQL Window | 1 | P1 | — | ✅ test |
+| PD-VAR-003 | Składnia opcji `&"Nazwa"` i `&<name= hint= type= required= default= ifempty= uppercase= lowercase= readonly= hidden= list= description= restricted= multiselect= checkbox= prefix= suffix= lines= editor=>` | UG 12.3, NF11 | SQL / Report Window, szablony | 1 | P1 | — | ✅ test |
 | PD-VAR-004 | Listy zależne (`:inna_zmienna` w zapytaniu listy, `&zmienna` w listach) | UG 12.3, NF14 | Okno zmiennych | 1 | P2 | — | do zrobienia |
-| PD-VAR-005 | Przycisk `&` na pasku stanu wyłącza podstawianie (także zmiennych wiązanych) | UG 7.5, NF17 | Pasek stanu | 1 | P2 | — | do zrobienia |
-| PD-VAR-006 | `&&` jako literał `&` w tekście (np. 'R&&D') | UG 12.3 | SQL Window | 1 | P2 | — | do zrobienia |
-| PD-VAR-007 | Parametry JasperReports `$P{}`, `$P!{}`, `$X{IN/NOTIN/EQUAL/NOTEQUAL/LESS/GREATER/BETWEEN…}` jako zmienne (decyzja właściciela D6) | D6 | SQL Window | 1 | P1 | — | w toku |
+| PD-VAR-005 | Przycisk `&` na pasku stanu wyłącza podstawianie (także zmiennych wiązanych) | UG 7.5, NF17 | Pasek stanu | 1 | P2 | — | 👁 ręcznie |
+| PD-VAR-006 | `&&` jako literał `&` w tekście (np. 'R&&D') | UG 12.3 | SQL Window | 1 | P2 | — | ✅ test |
+| PD-VAR-007 | Parametry JasperReports `$P{}`, `$P!{}`, `$X{IN/NOTIN/EQUAL/NOTEQUAL/LESS/GREATER/BETWEEN…}` jako zmienne (decyzja właściciela D6) | D6 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-VAR-008 | Zapamiętywanie wartości zmiennych w oknie (.pfi) i przy Auto Refresh | UG 23.18, NF8 | SQL Window | 1 | P2 | — | do zrobienia |
 
 ## PL/SQL Developer — Command Window
@@ -188,13 +188,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 |---|---|---|---|---|---|---|---|
 | PD-EDIT-001 | Podświetlanie składni SQL, PL/SQL, SQL*Plus (kolory, styl, wielkość liter słów kluczowych przy pisaniu) | UG 23.12 | Edytor | 1 | P1 | — | w toku |
 | PD-EDIT-002 | Lekser przyrostowy (stan na końcu linii), tolerancyjny | PROMPT §4.1 | Edytor | 1 | P1 | — | ✅ test |
-| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
+| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | w toku |
 | PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
 | PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | do zrobienia |
 | PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | do zrobienia |
 | PD-EDIT-007 | Zaznaczenie kolumnowe (Alt+przeciąganie) z pisaniem w wielu liniach | UG 25.2, NF13 | Edytor | 1 | P2 | — | do zrobienia |
 | PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | do zrobienia |
-| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | do zrobienia |
+| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | w toku |
 | PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | do zrobienia |
 | PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | do zrobienia |
 | PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |

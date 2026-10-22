@@ -3,38 +3,45 @@
 Plik generowany z rejestru komend (`PELIKAN_WRITE_DOCS=1 swift test --filter shortcutsDoc`) — nie edytuj ręcznie.
 Skróty profilu PL/SQL Developer oznaczone † są do weryfikacji ze wzorcem (docs/research/keys.md).
 Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 = komenda zapowiedziana (wyszarzona).
+Skróty z ⌘ w profilu PL/SQL Developer to odpowiedniki macOS dodane przez Pelikana. Działają wszystkie skróty
+komendy, nie tylko ten pokazany w menu (D17).
+
+Kolizje z macOS: ⌃F8 (fokus do menu statusu), ⌃F2/⌃F3 i inne skróty z Ustawienia systemowe › Klawiatura ›
+Skróty klawiszowe › Klawiatura przechwytuje system — użyj odpowiednika z ⌘ albo wyłącz skrót systemowy.
+Klawisze F1–F12 działają jako klawisze funkcyjne po włączeniu „Używaj klawiszy F1, F2 itd. jako standardowych
+klawiszy funkcyjnych” albo z klawiszem fn.
 
 ## Plik
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Nowy › Okno SQL | `file.new.sql` | ⌘N † | ⌘N | Pełny | 0 | PD-SQLW-002 |
-| Nowy › Okno programu | `file.new.program` | ⇧⌘N † | ⇧⌘N | Pełny | 0 | PD-PROG-001 |
+| Nowy › Okno SQL | `file.new.sql` | ⌘N | ⌘N | Pełny | 0 | PD-SQLW-002 |
+| Nowy › Okno programu | `file.new.program` | ⇧⌘N | ⇧⌘N | Pełny | 0 | PD-PROG-001 |
 | Nowy › Okno testu | `file.new.test` |  |  | Pełny | 0 | PD-TEST-001 |
 | Nowy › Okno poleceń | `file.new.command` |  |  | Pełny | 0 | PD-CMDW-001 |
 | Nowy › Okno planu (Explain Plan) | `file.new.explainPlan` |  |  | Pełny | 0 | PD-OPT-001 |
 | Nowy › Okno raportu | `file.new.report` |  |  | Pełny | 0 | PD-REP-002 |
 | Nowy › Okno diagramu | `file.new.diagram` |  |  | Pełny | 0 | PD-DIAG-001 |
 | Nowy › Notatnik SQL | `file.new.notebook` |  |  | Pełny | 0 | SD-NB-001 |
-| Otwórz… | `file.open` | ⌘O † | ⌘O | Brak | 1 | PD-SQLW-012 |
-| Zapisz | `file.save` | ⌘S † | ⌘S | Pełny | 1 | PD-SQLW-012 |
-| Zapisz jako… | `file.saveAs` | ⇧⌘S † | ⇧⌘S | Brak | 1 | PD-SQLW-012 |
-| Zamknij okno | `file.close` | ⌘W † | ⌘W | Pełny | 0 | PD-UI-004 |
-| Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W † | ⌥⌘W | Brak | 0 | PD-UI-004 |
-| Drukuj… | `file.print` | ⌘P † | ⌘P | Brak | 8 | PD-SQLW-016 |
+| Otwórz… | `file.open` | ⌘O | ⌘O | Brak | 1 | PD-SQLW-012 |
+| Zapisz | `file.save` | ⌘S | ⌘S | Pełny | 1 | PD-SQLW-012 |
+| Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | 1 | PD-SQLW-012 |
+| Zamknij okno | `file.close` | ⌘W | ⌘W | Pełny | 0 | PD-UI-004 |
+| Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
+| Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 
 ## Edycja
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Znajdź i zamień… | `edit.find` | ⌃F, ⌘F † | ⌘F | Pełny | 1 | PD-EDIT-008 |
-| Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L † | ⌘L | Pełny | 1 | PD-EDIT-010 |
-| Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H † | ⇧⌘H | Odczyt | 1 | PD-EDIT-009 |
-| Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ † | ⌘/ | Pełny | 1 | PD-EDIT-006 |
-| Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D † | ⇧⌘D | Pełny | 1 | PD-EDIT-020 |
+| Znajdź i zamień… | `edit.find` | ⌃F, ⌘F | ⌘F | Pełny | 1 | PD-EDIT-008 |
+| Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Pełny | 1 | PD-EDIT-010 |
+| Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Odczyt | 1 | PD-EDIT-009 |
+| Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 1 | PD-EDIT-006 |
+| Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Pełny | 1 | PD-EDIT-020 |
 | Zaznaczenie › Wielkie litery | `edit.uppercase` |  |  | Pełny | 1 | PD-EDIT-005 |
 | Zaznaczenie › Małe litery | `edit.lowercase` |  |  | Pełny | 1 | PD-EDIT-005 |
-| Formatuj kod (PL/SQL Beautifier) | `edit.beautify` | ⇧⌘F † | ⇧⌘F | Pełny | 2 | PD-BEAU-002 |
+| Formatuj kod (PL/SQL Beautifier) | `edit.beautify` | ⇧⌘F | ⇧⌘F | Pełny | 2 | PD-BEAU-002 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 6 | PD-EDIT-015 |
 | Makra › Odtwórz makro | `edit.macroPlay` | F12 | F12 | Brak | 6 | PD-EDIT-015 |
 
@@ -42,15 +49,18 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Wykonaj | `sql.execute` | F8, ⌘↩ † | ⌘↩, F8 | Brak | 1 | PD-SQLW-002 |
-| Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ † | ⇧⌘↩, ⌃F8 | Brak | 1 | PD-SQLW-003 |
-| Przerwij | `sql.break` | ⇧⎋ †, ⌘. † | ⌘. | Brak | 1 | PD-SQLW-005 |
-| Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ † | ⌥⌘↩, F10 | Za zgodą | 1 | PD-SQLW-014 |
-| Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ † | ⌥⌘⌫, ⇧F10 | Za zgodą | 1 | PD-SQLW-014 |
 | Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 1 | PD-CONN-027 |
 | Zmień hasło… | `session.setPassword` |  |  | Brak | 1 | PD-CONN-017 |
 | SQL Trace | `session.sqlTrace` |  |  | Brak | 3 | PD-OPT-008 |
-| Zaloguj… | `session.logon` | ⇧⌘L † | ⇧⌘L | Brak | 0 | PD-CONN-002 |
+| Wykonaj | `sql.execute` | F8, ⌘↩ | ⌘↩, F8 | Brak | 0 | PD-SQLW-002 |
+| Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ | ⇧⌘↩, ⌃F8 | Brak | 0 | PD-SQLW-003 |
+| Przerwij | `sql.break` | ⇧⎋ †, ⌘. | ⌘. | Brak | 0 | PD-SQLW-005 |
+| Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ | ⌥⌘↩, F10 | Za zgodą | 0 | PD-SQLW-014 |
+| Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ | ⌥⌘⌫, ⇧F10 | Za zgodą | 0 | PD-SQLW-014 |
+| Historia okna › Poprzednie polecenie okna | `sql.historyBack` | ⌥⌘↑ | ⌥⌘↑ | Pełny | 0 | PD-SQLW-007 |
+| Historia okna › Następne polecenie okna | `sql.historyForward` | ⌥⌘↓ | ⌥⌘↓ | Pełny | 0 | PD-SQLW-007 |
+| Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | 0 | PD-VAR-005 |
+| Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
 | Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | 0 | PD-CONN-004 |
@@ -109,15 +119,15 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Paleta komend… | `view.commandPalette` | ⇧⌘P † | ⇧⌘P | Brak | 0 | PD-UI-007 |
+| Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |
 
 ## Okno
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Następne okno | `window.next` | ⌃⇥, ⇧⌘] † | ⇧⌘], ⌃⇥ | Pełny | 0 | PD-UI-004 |
-| Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ † | ⇧⌘[, ⌃⇧⇥ | Pełny | 0 | PD-UI-004 |
+| Następne okno | `window.next` | ⌃⇥, ⇧⌘] | ⇧⌘], ⌃⇥ | Pełny | 0 | PD-UI-004 |
+| Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ | ⇧⌘[, ⌃⇧⇥ | Pełny | 0 | PD-UI-004 |
 
 ## Pomoc
 

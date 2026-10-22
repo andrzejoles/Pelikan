@@ -50,14 +50,14 @@ final class ConnectionPrompts: ConnectionPrompter {
     }
 
     private func run(_ alert: NSAlert) async -> NSApplication.ModalResponse {
-        // Arkusz na najgłębszym otwartym arkuszu (np. nad oknem logowania) — inaczej czekałby w kolejce za nim.
-        var target = window
-        while let sheet = target?.attachedSheet { target = sheet }
-        if let window = target {
+        // Gdy na oknie wisi już arkusz (np. okno logowania), arkusz nad arkuszem bywa niewidoczny — wtedy okno
+        // modalne dla aplikacji; w przeciwnym razie arkusz na oknie głównym.
+        if let window, window.attachedSheet == nil {
             return await withCheckedContinuation { cont in
                 alert.beginSheetModal(for: window) { cont.resume(returning: $0) }
             }
         }
+        NSApp.activate()
         return alert.runModal()
     }
 }

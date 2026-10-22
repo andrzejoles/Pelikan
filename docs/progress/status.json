@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T19:04:48+02:00",
+  "heartbeat": "2026-10-22T22:15:38+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1: połączenia (ConnectionStore, Pęk kluczy, TNS), okno logowania, Lista połączeń",
+  "task": "Etap 1: sprawdzić ręcznie SQL Window na bazie testowej, zrzuty, PR etap-1/edytor-sql-window",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,11 @@
     }
   ],
   "done": [
+    "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
+    "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
+    "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
+    "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
+    "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
     "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
     "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy",
     "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",
@@ -69,36 +74,99 @@
     "Skrypty: version.sh, set-version.sh, progress.py (ten raport), testdb.sh"
   ],
   "next": [
-    "etap-1/polaczenia: ConnectionStore, Pęk kluczy, tnsnames.ora, okno definicji połączeń, Lista połączeń, okno logowania, SessionManager",
-    "etap-1/edytor: edytor TextKit 2 z podświetlaniem przyrostowym",
-    "etap-1/sql-window: wykonanie, karty wyników, DBMS_OUTPUT, transakcje, zmienne",
-    "etap-1/siatka: NSTableView z dociąganiem, LOB, eksport, edycja z ROWID",
-    "etap-1/command-window, etap-1/klawiatura, etap-1/thin, szkic wydania"
+    "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
+    "Testy wydajności: siatka 1 mln wierszy, edytor 50 000 linii (Release)",
+    "PR etap-1/edytor-sql-window → scalenie",
+    "Command Window, profile klawiatury i preferencje, eksport wyników, Large Data Editor, edycja siatki z ROWID",
+    "Tunel SSH, sterownik thin (OracleNIO), szkic wydania (podpis, DMG/PKG, Sparkle)"
   ],
   "blockers": [],
   "questions": [],
   "limitations": [
     "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków",
-    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia"
+    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia",
+    "Ctrl+F8 przechwytuje macOS (fokus do menu statusu) — działa odpowiednik ⇧⌘↩; skrót systemowy można wyłączyć w Ustawieniach (D17)",
+    "Instant Client w Pobranych: przy pierwszym połączeniu macOS pyta o dostęp do folderu Pobrane — zgoda należy do użytkownika; można wskazać inny katalog w ustawieniach (D18)"
   ],
   "tests": {
     "unit": {
-      "total": 41,
-      "passed": 41,
+      "total": 74,
+      "passed": 74,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:52:52+02:00"
+      "at": "2026-10-22T22:11:47+02:00"
     },
     "integration": {
-      "total": 13,
-      "passed": 13,
+      "total": 27,
+      "passed": 26,
+      "failed": 0,
+      "skipped": 1,
+      "at": "2026-10-22T22:15:36+02:00"
+    },
+    "perf": {
+      "total": 8,
+      "passed": 8,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:52:50+02:00"
+      "at": "2026-10-22T22:11:52+02:00"
     }
   },
-  "performance": [],
+  "performance": [
+    {
+      "name": "Podświetlenie całego pakietu 50 000 linii",
+      "value": "18 ms",
+      "target": "< 250 ms",
+      "ok": true
+    },
+    {
+      "name": "Klawisz w pakiecie 50 000 linii (podświetlanie przyrostowe)",
+      "value": "0,19 ms",
+      "target": "< 8 ms",
+      "ok": true
+    },
+    {
+      "name": "Dzielenie skryptu 50 000 linii na polecenia",
+      "value": "24 ms",
+      "target": "< 400 ms",
+      "ok": true
+    },
+    {
+      "name": "Siatka: pierwsza strona (100 wierszy)",
+      "value": "3 ms",
+      "target": "< 500 ms",
+      "ok": true
+    },
+    {
+      "name": "Siatka: porcja 1000 wierszy przy przewijaniu",
+      "value": "1,4 ms",
+      "target": "< 50 ms",
+      "ok": true
+    },
+    {
+      "name": "Siatka: pobranie 1 mln wierszy × 4 kolumny",
+      "value": "1,2 s",
+      "target": "< 15 s",
+      "ok": true
+    },
+    {
+      "name": "Siatka: tekst komórek jednego ekranu (200)",
+      "value": "1,5 ms",
+      "target": "< 4 ms",
+      "ok": true
+    },
+    {
+      "name": "Siatka: pamięć na 1 mln wierszy × 4 kolumny",
+      "value": "326 MB",
+      "target": "< 800 MB",
+      "ok": true
+    }
+  ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap1-sql-window.png",
+      "title": "SQL Window: skrypt z trzema poleceniami, zmienna :min_sal, karta błędu, otwarta transakcja",
+      "reference": "PD-SQLW-002"
+    },
     {
       "file": "img/etap1-lista-polaczen.png",
       "title": "Etap 1: Lista połączeń po zalogowaniu",

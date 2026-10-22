@@ -33,7 +33,7 @@ let package = Package(
         .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL"], swiftSettings: strict),
 
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
-        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI"], swiftSettings: strict),
+        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace"], swiftSettings: strict),
     ],
     swiftLanguageModes: [.v6]

@@ -5,7 +5,7 @@ import Foundation
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -101,23 +101,6 @@ public enum BuiltinCommands {
 
     @MainActor static var session: [Command] {
         [
-            .planned(CommandDescriptor(id: "sql.execute", title: L10n.tr("Wykonaj"), category: .session, pd: ["f8"], mac: ["cmd+enter"],
-                                       agent: .none, effect: .modifiesDatabase,
-                                       summary: L10n.tr("Wykonuje zaznaczenie albo polecenie pod kursorem (AutoSelect) lub wszystkie polecenia okna."),
-                                       stage: 1, feature: "PD-SQLW-002")),
-            .planned(CommandDescriptor(id: "sql.executeAlternate", title: L10n.tr("Wykonaj (odwrotnie do AutoSelect)"), category: .session,
-                                       pd: ["ctrl+f8"], mac: ["cmd+shift+enter"], agent: .none, effect: .modifiesDatabase,
-                                       summary: L10n.tr("Wykonuje wszystkie polecenia albo polecenie pod kursorem — odwrotnie niż Wykonaj."),
-                                       stage: 1, feature: "PD-SQLW-003")),
-            .planned(CommandDescriptor(id: "sql.break", title: L10n.tr("Przerwij"), category: .session, pd: ["shift+escape"], mac: ["cmd+."],
-                                       agent: .none, effect: .none, summary: L10n.tr("Przerywa bieżące wykonanie (OCIBreak)."),
-                                       stage: 1, feature: "PD-SQLW-005")),
-            .planned(CommandDescriptor(id: "session.commit", title: L10n.tr("Zatwierdź (COMMIT)"), category: .session, pd: ["f10"],
-                                       mac: ["cmd+alt+enter"], agent: .approval, effect: .transaction,
-                                       summary: L10n.tr("Zatwierdza transakcję sesji okna."), stage: 1, feature: "PD-SQLW-014")),
-            .planned(CommandDescriptor(id: "session.rollback", title: L10n.tr("Wycofaj (ROLLBACK)"), category: .session, pd: ["shift+f10"],
-                                       mac: ["cmd+alt+backspace"], agent: .approval, effect: .transaction,
-                                       summary: L10n.tr("Wycofuje transakcję sesji okna."), stage: 1, feature: "PD-SQLW-014")),
             .planned(CommandDescriptor(id: "session.kill", title: L10n.tr("Zakończ sesję okna (Kill)"), category: .session,
                                        agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kończy sesję bazy okna, gdy Przerwij nie działa."),
                                        stage: 1, feature: "PD-CONN-027")),

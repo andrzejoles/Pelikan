@@ -254,6 +254,8 @@ public struct Command: Sendable {
     let preview: PreviewHandler?
     /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze, gdy etap gotowy.
     let validate: ValidationHandler?
+    /// Komenda zapowiedziana na późniejszy etap.
+    public internal(set) var isPlanned = false
 
     public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, preview: PreviewHandler? = nil,
                 run: @escaping CommandHandler) {
@@ -265,9 +267,11 @@ public struct Command: Sendable {
 
     /// Komenda zapowiedziana (w menu wyszarzona do etapu `descriptor.stage`).
     public static func planned(_ descriptor: CommandDescriptor) -> Command {
-        Command(descriptor, validate: { _ in false }) { _ in
+        var c = Command(descriptor, validate: { _ in false }) { _ in
             throw CommandError.notAvailable(L10n.tr("Funkcja w przygotowaniu (Etap \(descriptor.stage))"))
         }
+        c.isPlanned = true
+        return c
     }
 
     public var id: CommandID { descriptor.id }
