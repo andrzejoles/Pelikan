@@ -403,3 +403,126 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | do zrobienia |
 | PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | do zrobienia |
 | PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | do zrobienia |
+
+## utPLSQL
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| UT-RUN-001 | Uruchom wszystkie testy bieżącego użytkownika | docs/research/utplsql.md (wtyczka PL/SQL Developer) | Tools > utPLSQL | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-002 | Uruchom testy ze ścieżki (`schemat.pakiet.procedura`, `schemat:ścieżka.suity`) | wtyczka PL/SQL Developer | Tools > utPLSQL > Run path | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-003 | Menu Object Browsera: testy lub pokrycie dla pakietu, ciała, procedury, użytkownika | wtyczka PL/SQL Developer | Object Browser | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-004 | Uruchomienie z edytora: test/suita pod kursorem, cały pakiet | wtyczka SQL Developer | Program Window | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-005 | Wyniki na żywo przez ut_realtime_reporter (dwie sesje: produkująca i konsumująca; postęp, licznik, bieżący test) | utPLSQL-dotnet-api RealTimeTestRunner | Okno wyników testów | 4 | P1 | Odczyt | do zrobienia |
+| UT-RUN-006 | Ponowne uruchomienie nieudanych; uruchomienie pojedynczego testu z wyników; przerwanie | wtyczka PL/SQL Developer, PROMPT §6.2 | Okno wyników | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-007 | Uruchomienie testu z debugerem (blok wygenerowany, wydłużony limit reportera) | wtyczka SQL Developer | Okno wyników | 4 | P2 | Brak | do zrobienia |
+| UT-RES-001 | Okno wyników: drzewo suit/kontekstów/testów, czasy, statusy, filtr statusu, sortowanie | wtyczka PL/SQL Developer 1.1.0 | Okno wyników | 4 | P1 | Odczyt | do zrobienia |
+| UT-RES-002 | Szczegóły: oczekiwane vs otrzymane (porównanie), DBMS_OUTPUT testu, stos błędu z przejściem do linii | PROMPT §6.2 | Okno wyników | 4 | P1 | Odczyt | do zrobienia |
+| UT-RES-003 | Historia uruchomień i porównanie dwóch uruchomień | PROMPT §6.2 | Okno wyników | 4 | P2 | Odczyt | do zrobienia |
+| UT-EXP-001 | Eksplorator testów (ut_runner.get_suites_info), odświeżany po kompilacji, z ostatnim wynikiem | PROMPT §6.2 | View > Test Explorer | 4 | P1 | Odczyt | do zrobienia |
+| UT-COV-001 | Pokrycie kodu: okno opcji (schematy, include/exclude), raport HTML (ut_coverage_html_reporter) | wtyczka PL/SQL Developer | Tools > utPLSQL > Coverage | 4 | P1 | Za zgodą | do zrobienia |
+| UT-COV-002 | Pokrycie na marginesie edytora (linie pokryte/niepokryte/częściowo), procent obiektu i schematu | PROMPT §6.2 | Program Window | 4 | P1 | Odczyt | do zrobienia |
+| UT-COV-003 | Eksport pokrycia Cobertura i Sonar; ostrzeżenie o uprawnieniach i danych profilera | PROMPT §6.2 | Coverage | 4 | P2 | Brak | do zrobienia |
+| UT-GEN-001 | Generowanie szkieletu pakietu testowego ze specyfikacji (test na procedurę/funkcję, adnotacje) — kompiluje się | wtyczka SQL Developer, PROMPT §6.2 | Object Browser > Generate test | 4 | P1 | Za zgodą | do zrobienia |
+| UT-GEN-002 | Szablony i fragmenty adnotacji `--%…` oraz oczekiwań | wtyczka SQL Developer | Templates | 4 | P2 | — | do zrobienia |
+| UT-CA-001 | Code Assistant dla adnotacji `--%` i matcherów `ut.expect(...).to_…` | PROMPT §6.2 | Edytor | 4 | P1 | — | do zrobienia |
+| UT-CA-002 | Walidacja adnotacji przy kompilacji (nieznana adnotacja, brak `--%suite`, zła lista procedur) | PROMPT §6.2 | Program Window | 4 | P2 | Odczyt | do zrobienia |
+| UT-NAV-001 | Przejście między pakietem a jego pakietem testowym | PROMPT §6.2 | Program Window | 4 | P2 | Pełny | do zrobienia |
+| UT-INS-001 | Wykrycie utPLSQL i wersji (ut_runner.version) na połączeniu | PROMPT §6.2 | Status | 4 | P1 | Odczyt | do zrobienia |
+| UT-INS-002 | Instalacja/aktualizacja z oficjalnego wydania tylko dla połączeń dev/test, po potwierdzeniu | PROMPT §6.2 | Tools > utPLSQL > Install | 4 | P2 | Za zgodą | do zrobienia |
+| UT-CI-001 | Eksport wyników JUnit, Sonar, TeamCity; skrypt uruchamiania tych samych testów z wiersza poleceń | PROMPT §6.2 | Okno wyników | 4 | P2 | Brak | do zrobienia |
+
+## Agenci AI (jak w Bifoldzie)
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| AI-PANEL-001 | Panel agenta: terminal SwiftTerm z CLI (claude, codex, grok, agy; lista konfigurowalna) | PROMPT §7.1 | View > Agent | 5 | P1 | — | do zrobienia |
+| AI-PANEL-002 | Panel aktywności (wywołania narzędzi: parametry, wynik, czas, decyzja) i oczekujące prośby o zgodę | PROMPT §7.1 | Panel agenta | 5 | P1 | — | do zrobienia |
+| AI-PANEL-003 | Konfiguracja MCP tylko dla sesji (claude --mcp-config --strict-mcp-config, codex -c, GROK_CONFIG, agy za zgodą) i tryb ścisły | PROMPT §7.1–7.2, Bifold D21 | Panel agenta | 5 | P1 | — | do zrobienia |
+| AI-SEC-001 | Most pelikan-mcp stdio ↔ gniazdo Unix 0600 w katalogu 0700, bez portów TCP | PROMPT §7.2 | — | 5 | P1 | — | do zrobienia |
+| AI-SEC-002 | Token sesji 256 bit w środowisku CLI, porównanie stałoczasowe, UID (getpeereid), drzewo procesów (LOCAL_PEERPID), unieważnienie, limit wywołań | PROMPT §7.2 | — | 5 | P1 | — | do zrobienia |
+| AI-SEC-003 | Agent widzi połączenia tylko pod aliasem i środowiskiem (bez hasła, hosta, portu, usługi, użytkownika OS) | PROMPT §7.3 p.1 | — | 5 | P1 | Odczyt | do zrobienia |
+| AI-SEC-004 | Własna sesja bazy agenta (MODULE/ACTION), nigdy transakcja użytkownika; opcjonalny osobny użytkownik bazy dla agenta | PROMPT §7.3 p.2, p.4 | — | 5 | P1 | — | do zrobienia |
+| AI-SEC-005 | Klasyfikacja poleceń parserem przed wykonaniem; nierozpoznane = najwyższe ryzyko | PROMPT §7.3 p.3 | — | 5 | P1 | — | ✅ test |
+| AI-SEC-006 | Odczyt = SELECT/WITH w transakcji READ ONLY z limitem wierszy, czasu i rozmiaru | PROMPT §7.3 p.4 | — | 5 | P1 | Odczyt | do zrobienia |
+| AI-SEC-007 | Zmiany za zgodą z podglądem: tekst, obiekty (ALL_DEPENDENCIES), plan, szacunek wierszy; DML niezatwierdzone do osobnej zgody na COMMIT; ROLLBACK przy zamknięciu | PROMPT §7.3 p.5 | Okno zgody | 5 | P1 | Za zgodą | do zrobienia |
+| AI-SEC-008 | Historia DDL obiektów przed zmianą kodu; „Cofnij sesję agenta” z wykrywaniem konfliktów | PROMPT §7.3 p.6, §7.6 | Panel agenta | 5 | P1 | — | do zrobienia |
+| AI-SEC-009 | Dane z bazy oznaczone `untrusted_content` | PROMPT §7.3 p.7 | — | 5 | P1 | — | do zrobienia |
+| AI-SEC-010 | Prod: domyślnie tylko metadane i odczyt; maskowanie wskazanych kolumn | PROMPT §7.3 p.8 | Configure > Connections | 5 | P1 | — | do zrobienia |
+| AI-SEC-011 | Brak dostępu agenta do terminala, Command Window, HOST, AWR/ASH/Tuning Pack, haseł i połączeń | PROMPT §7.3 p.9, §7.5 | — | 5 | P1 | Brak | do zrobienia |
+| AI-PERM-001 | Poziomy Brak/Odczyt/Za zgodą/Pełny, efektywny = min(komenda, sesja, połączenie); macierz sesji przy starcie | PROMPT §7.4 | Panel agenta | 5 | P1 | — | do zrobienia |
+| AI-PERM-002 | Okno zatwierdzania bez przycisku domyślnego, „Zatwierdź” po 0,8 s, Esc odrzuca | PROMPT §7.4, Bifold D23 | Okno zgody | 5 | P1 | — | do zrobienia |
+| AI-TOOL-001 | Narzędzia odczytu: list_connections, get_state, get_editor, search_objects, describe_object, get_source, get_ddl, get_dependencies, find_usages, run_query, explain_plan, get_compile_errors, get_dbms_output, list_tests, get_test_results, get_coverage, session_list | PROMPT §7.5 | MCP | 5 | P1 | Odczyt | do zrobienia |
+| AI-TOOL-002 | Narzędzia pełne (cofalne, tylko w aplikacji): open_object, open_editor, insert_text, replace_range, format_code, navigate_to | PROMPT §7.5 | MCP | 5 | P1 | Pełny | do zrobienia |
+| AI-TOOL-003 | Narzędzia za zgodą: compile, execute_statement, execute_script, commit, rollback, create_test_package, run_tests, generate_test_skeleton, install_utplsql, run_command (≤ Za zgodą) | PROMPT §7.5, Bifold D20 | MCP | 5 | P1 | Za zgodą | do zrobienia |
+| AI-LOG-001 | Dziennik JSONL każdego wywołania (bez danych wrażliwych) i przeglądarka dziennika | PROMPT §7.6 | Panel agenta | 5 | P1 | — | do zrobienia |
+| AI-E2E-001 | Testy E2E z prawdziwymi CLI (lokalnie, opcjonalnie) | PROMPT §9 | — | 5 | P2 | — | do zrobienia |
+
+## Dodatki z SQL Developer / SQL Developer for VS Code / SQLcl
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| SD-NB-001 | SQL Notebook: komórki SQL/PL/SQL i Markdown, Run All, wyniki zapisywane w pliku | SD VS Code 25.2, gap-analysis §1 | File > New > SQL Notebook | 7 | P2 | Pełny | do zrobienia |
+| SD-NB-002 | Wykresy z wyników komórek notatnika | SD VS Code 25.3 | SQL Notebook | 7 | P2 | — | do zrobienia |
+| SD-PLAN-001 | Plan wykonania jako diagram (kardynalność, koszty, kolejność) i flame graph; widok zaawansowany | SD VS Code 24.1, gap-analysis §1 | Explain Plan Window | 7 | P2 | Odczyt | do zrobienia |
+| SD-PLAN-002 | Autotrace (plan rzeczywisty i statystyki z V$SQL_PLAN_STATISTICS_ALL) | SQL Developer UG | SQL Window > Autotrace | 7 | P2 | Odczyt | do zrobienia |
+| SD-PLAN-003 | Porównanie dwóch planów | SQL Developer UG | Explain Plan Window | 7 | P3 | Odczyt | do zrobienia |
+| SD-MON-001 | Real-Time SQL Monitoring (Tuning Pack: ostrzeżenie licencyjne, zgoda zapamiętana na połączeniu) | SD VS Code 24.4, PROMPT §3.3 | Tools > SQL Monitor | 7 | P2 | Brak | do zrobienia |
+| SD-MON-002 | Task Monitor (zadania w tle: status, czasy, anulowanie) | SD VS Code 24.3 | View > Task Monitor | 7 | P2 | — | do zrobienia |
+| SD-DBA-001 | Panel DBA: przestrzenie tabel, pliki danych, parametry, użytkownicy, role, sesje, blokady | SQL Developer UG, SD VS Code 26.2 | View > DBA | 7 | P2 | Odczyt | do zrobienia |
+| SD-DBA-002 | Raporty AWR, ASH, ADDM (Diagnostics Pack — ostrzeżenie licencyjne) | SQL Developer UG, SD VS Code 26.2, PROMPT §3.3 | DBA > Performance | 7 | P2 | Brak | do zrobienia |
+| SD-DBA-003 | SQL Tuning Advisor (Tuning Pack) | SQL Developer UG | SQL Window > Tuning Advisor | 7 | P3 | Brak | do zrobienia |
+| SD-DBA-004 | Instance Viewer (pulpit instancji) | SQL Developer UG | DBA > Instance Viewer | 7 | P3 | Odczyt | do zrobienia |
+| SD-LIC-001 | Licencje Diagnostics/Tuning Pack na połączeniu (CONTROL_MANAGEMENT_PACK_ACCESS), pytanie przy pierwszym użyciu | SD VS Code 26.2, PROMPT §3.3 | Configure > Connections | 7 | P1 | Brak | do zrobienia |
+| SD-REP-001 | Raporty predefiniowane w kategoriach (Grid/Chart/DBMS_OUTPUT, zmienne, szczegóły, Open in Worksheet, eksport) | SD VS Code 24.4 | Reports | 7 | P2 | Odczyt | do zrobienia |
+| SD-DIFF-001 | Database Diff i Cart (pakiet zmian do wdrożenia jako skrypt) | SQL Developer UG | Tools > Database Diff / Cart | 7 | P2 | Odczyt | do zrobienia |
+| SD-COPY-001 | Kreator kopiowania bazy/schematu (Database Copy) | SQL Developer UG | Tools > Database Copy | 7 | P3 | Brak | do zrobienia |
+| SD-DOC-001 | Generowanie dokumentacji schematu (HTML) | SQL Developer UG | Tools > Generate DB Doc | 7 | P3 | Odczyt | do zrobienia |
+| SD-IMP-001 | Kreator importu danych (CSV, rozdzielany, tekst, XLS/XLSX; podgląd, kodowanie, mapowanie, nowa/istniejąca tabela, zapis stanu) | SD VS Code 25.4, 26.1 | Object Browser > Import | 7 | P2 | Brak | do zrobienia |
+| SD-GEN-001 | Generowanie kodu przez przeciąganie obiektu/połączenia (SQL, Java JDBC: SELECT/INSERT/UPDATE/DELETE/JOIN, łańcuch połączenia) | SD VS Code 25.3, 25.4 | Object Browser > przeciągnij | 7 | P3 | — | do zrobienia |
+| SD-AUTH-001 | Uwierzytelnianie Entra ID (Oracle na Azure) | SD VS Code 25.4 | Configure > Connections | 7 | P3 | Brak | do zrobienia |
+| SD-DV-001 | Widoki dualności JSON-relacyjnej (tworzenie, edycja, rekordy, diagram JSON Data Guide) | SD VS Code 24.2 | Object Browser | 7 | P3 | Za zgodą | do zrobienia |
+| SD-MLE-001 | Środowiska MLE (tworzenie, import modułów, kompilacja) i debugowanie modułów JavaScript po wykonaniu | SD VS Code 26.1–26.3 | Object Browser | 7 | P3 | Za zgodą | do zrobienia |
+| SD-DATA-001 | Podgląd danych przestrzennych (SDO_GEOMETRY jako WKT, prosty podgląd) | SQL Developer UG | Large Data Editor | 7 | P3 | — | do zrobienia |
+| SD-ORDS-001 | ORDS: włączenie REST dla schematu i obiektów, lista modułów | SQL Developer UG | Object Browser > REST | 7 | P3 | Za zgodą | do zrobienia |
+| SD-APEX-001 | APEXlang (eksport/import/porównanie aplikacji APEX) | SD VS Code 26.1–26.2 | — | 7 | P3 | — | pominięte (wymaga APEX; poza codzienną pracą z PL/SQL — D11) |
+| SC-CMD-001 | Command Window: INFO / INFO+, DDL, LOAD (CSV do tabeli), FORMAT (formatowanie skryptu), HISTORY z czasami, ALIAS, REPEAT, CTAS | SQLcl UG | Command Window | 7 | P2 | Brak | do zrobienia |
+| SC-CMD-002 | SET SQLFORMAT (csv, json, xml, html, insert, loader, fixed, delimited, ansiconsole) | SQLcl UG | Command Window | 7 | P2 | Brak | do zrobienia |
+| SC-LB-001 | Liquibase (`lb`) | SQLcl UG | Command Window | 7 | P3 | — | pominięte w pierwszej wersji (wymaga Javy i biblioteki Liquibase — D11) |
+| SC-SNIP-001 | Snippets (biblioteka fragmentów kodu do przeciągania) | SD VS Code, SQL Developer | View > Snippets | 7 | P3 | — | do zrobienia |
+
+## Dodatki z DBeaver
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | do zrobienia |
+| DB-DIAG-001 | Diagramy ER z bazy (automatyczny układ, relacje FK, eksport obrazu) | gap-analysis §3 | Object Browser > ER Diagram | 7 | P2 | Odczyt | do zrobienia |
+| DB-PANEL-001 | Panel wartości obok siatki (tekst, JSON, XML, HTML, obraz z BLOB, hex) | gap-analysis §3 | Siatka > Value panel | 7 | P2 | — | do zrobienia |
+| DB-GRID-001 | Filtr wyników w siatce (po wartości komórki, wyrażenie) i grupowanie z licznikami | gap-analysis §3 | Siatka | 7 | P2 | — | do zrobienia |
+| DB-GRID-002 | Generowanie SQL z zaznaczonych wierszy (INSERT/UPDATE/DELETE/MERGE) | gap-analysis §3 | Siatka > Generate SQL | 7 | P3 | — | do zrobienia |
+| DB-XFER-001 | Przenoszenie danych między tabelami/schematami/połączeniami z mapowaniem | gap-analysis §3 | Tools > Data Transfer | 7 | P2 | Brak | do zrobienia |
+| DB-TASK-001 | Zaplanowane zadania lokalne (eksport, skrypt cyklicznie) bez haseł w plikach | gap-analysis §3 | Tools > Tasks | 7 | P3 | Brak | do zrobienia |
+
+## Dodatki z DataGrip
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| DG-RES-001 | Rozwiązywanie nazw w czasie pisania (podkreślanie nieznanych tabel, kolumn, aliasów) | gap-analysis §4 | Edytor | 7 | P2 | — | do zrobienia |
+| DG-INSP-001 | Inspekcje kodu: nieużywane zmienne, nieosiągalny kod, niejawne konwersje, UPDATE/DELETE bez WHERE | gap-analysis §4 | Edytor | 7 | P2 | Odczyt | do zrobienia |
+| DG-USE-001 | Find Usages obiektu/kolumny (zależności, PL/Scope, pliki) | gap-analysis §4 | Edytor > Find Usages | 7 | P1 | Odczyt | do zrobienia |
+| DG-REF-001 | Refaktoryzacja z podglądem zmian (diff) przed zastosowaniem | gap-analysis §4 | Edytor > Refactoring | 7 | P2 | Za zgodą | do zrobienia |
+| DG-HIST-001 | Lokalna historia plików i obiektów (wersje, porównanie, przywracanie) | gap-analysis §4 | File > Local History | 7 | P1 | Odczyt | do zrobienia |
+| DG-CONS-001 | Konsole zapytań per połączenie (zachowywane automatycznie) | gap-analysis §4 | Session > Console | 7 | P2 | — | do zrobienia |
+| DG-GRID-001 | Wyróżnienie zmian oczekujących w siatce (wstawione/zmienione/usunięte) przed zapisem | gap-analysis §4 | Siatka | 7 | P2 | — | do zrobienia |
+
+## Integracja z macOS
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | do zrobienia |
+| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | do zrobienia |
+| MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | do zrobienia |
+| MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
+| MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
+| MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | do zrobienia |
+| MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
+| MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | do zrobienia |
