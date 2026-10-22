@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T18:12:25+02:00",
+  "heartbeat": "2026-10-22T18:28:53+02:00",
   "stage": {
     "id": 0,
     "name": "Analiza i fundament"
   },
-  "task": "Szkielet aplikacji (Xcode/XcodeGen, AppKit, rejestr komend), Makefile, CLAUDE.md, CI",
+  "task": "Etap 0: analiza utPLSQL (wtyczki PL/SQL Developer i SQL Developer), SQL Developer for VS Code, SQLcl, DBeaver, DataGrip → gap-analysis.md",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
+    "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",
     "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone",
     "Sterownik Instant Client (ODPI-C 26.0 + Instant Client 23.26.2): łączenie, zapytania z typami (NUMBER bez utraty precyzji, daty, LOB, JSON, ROWID, interwały), dociąganie porcjami, transakcje, zmienne wiązane IN/OUT, REF CURSOR, niejawne wyniki, błędy ORA z pozycją, ostrzeżenia kompilacji, przerwanie (Break), MODULE/ACTION — 12 testów integracyjnych zielonych",
     "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)",
@@ -70,7 +72,8 @@
   "blockers": [],
   "questions": [],
   "limitations": [
-    "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków"
+    "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków",
+    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia"
   ],
   "tests": {
     "unit": {
