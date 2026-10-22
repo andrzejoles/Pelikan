@@ -1,0 +1,66 @@
+# CI Pelikana: macOS (budowanie, testy jednostkowe, aplikacja) i Linux z bazą Oracle Free (testy warstwy bazy i utPLSQL).
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS — budowanie i testy jednostkowe
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # wersja liczona z historii scalonych PR (scripts/version.sh)
+      - name: Środowisko
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+          ls /Applications | grep -i xcode || true
+          scripts/version.sh
+      - name: Testy jednostkowe (bez bazy)
+        working-directory: Packages/PelikanKit
+        run: swift test --parallel 2>&1 | tee /tmp/swift-test.log
+      - name: Aplikacja
+        if: hashFiles('project.yml') != ''
+        run: |
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          make generate build
+
+  linux-db:
+    name: Linux — warstwa bazy na Oracle Free 26ai + utPLSQL
+    runs-on: ubuntu-24.04
+    env:
+      PELIKAN_OCI_LIB_DIR: /opt/oracle/instantclient
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.2"
+      - name: Oracle Instant Client (Linux x64, Basic Light)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libaio1t64 unzip >/dev/null
+          sudo ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
+          curl -fsSL -o /tmp/ic.zip https://download.oracle.com/otn_software/linux/instantclient/2326400/instantclient-basiclite-linux.x64-23.26.4.0.0.zip
+          sudo mkdir -p /opt/oracle && sudo unzip -q /tmp/ic.zip -d /opt/oracle
+          sudo ln -sfn "$(ls -d /opt/oracle/instantclient_* | head -1)" /opt/oracle/instantclient
+          ls /opt/oracle/instantclient | head
+      - name: Baza testowa (kontener) i utPLSQL
+        run: |
+          scripts/testdb.sh up
+          scripts/testdb.sh seed
+      - name: Testy warstwy SQL i bazy
+        working-directory: Packages/PelikanKit
+        run: |
+          export LD_LIBRARY_PATH=/opt/oracle/instantclient
+          swift test --filter 'PelikanSQLTests|PelikanDBTests'

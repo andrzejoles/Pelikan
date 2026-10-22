@@ -1,0 +1,107 @@
+{
+  "heartbeat": "2026-10-22T18:52:58+02:00",
+  "stage": {
+    "id": 1,
+    "name": "Połączenia, SQL Window, Command Window"
+  },
+  "task": "Etap 1: połączenia (ConnectionStore, Pęk kluczy, TNS), okno logowania, Lista połączeń",
+  "stages": [
+    {
+      "id": 0,
+      "name": "Analiza i fundament: źródła, macierz funkcji, ADR, CI, baza testowa, szkielet aplikacji, raport",
+      "state": "zakończony"
+    },
+    {
+      "id": 1,
+      "name": "Połączenia, SQL Window, Command Window (sterownik Instant Client, potem thin)",
+      "state": "w toku"
+    },
+    {
+      "id": 2,
+      "name": "Object Browser i Program Window",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 3,
+      "name": "Test Window, debuger, profiler",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 4,
+      "name": "utPLSQL",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 5,
+      "name": "Agenci AI (MCP jak w Bifoldzie)",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 6,
+      "name": "Narzędzia",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 7,
+      "name": "Dodatki z SQL Developer, DBeaver, DataGrip",
+      "state": "do zrobienia"
+    },
+    {
+      "id": 8,
+      "name": "Dopracowanie i wydanie",
+      "state": "do zrobienia"
+    }
+  ],
+  "done": [
+    "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",
+    "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15",
+    "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
+    "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
+    "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",
+    "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone",
+    "Sterownik Instant Client (ODPI-C 26.0 + Instant Client 23.26.2): łączenie, zapytania z typami (NUMBER bez utraty precyzji, daty, LOB, JSON, ROWID, interwały), dociąganie porcjami, transakcje, zmienne wiązane IN/OUT, REF CURSOR, niejawne wyniki, błędy ORA z pozycją, ostrzeżenia kompilacji, przerwanie (Break), MODULE/ACTION — 12 testów integracyjnych zielonych",
+    "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)",
+    "Repozytorium github.com/andrzejoles/Pelikan (publiczne, MIT), pierwszy commit na main",
+    "Przeczytany prompt i repozytorium Bifolda (rejestr komend, most MCP, skrypty wersji/wydań/podpisu)",
+    "Środowisko kontenerów: Colima + Docker CLI (Homebrew), obraz gvenzl/oracle-free (26ai, arm64)",
+    "Skrypty: version.sh, set-version.sh, progress.py (ten raport), testdb.sh"
+  ],
+  "next": [
+    "etap-1/polaczenia: ConnectionStore, Pęk kluczy, tnsnames.ora, okno definicji połączeń, Lista połączeń, okno logowania, SessionManager",
+    "etap-1/edytor: edytor TextKit 2 z podświetlaniem przyrostowym",
+    "etap-1/sql-window: wykonanie, karty wyników, DBMS_OUTPUT, transakcje, zmienne",
+    "etap-1/siatka: NSTableView z dociąganiem, LOB, eksport, edycja z ROWID",
+    "etap-1/command-window, etap-1/klawiatura, etap-1/thin, szkic wydania"
+  ],
+  "blockers": [],
+  "questions": [],
+  "limitations": [
+    "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków",
+    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia"
+  ],
+  "tests": {
+    "unit": {
+      "total": 41,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0,
+      "at": "2026-10-22T18:52:52+02:00"
+    },
+    "integration": {
+      "total": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "at": "2026-10-22T18:52:50+02:00"
+    }
+  },
+  "performance": [],
+  "screenshots": [
+    {
+      "file": "img/etap0-okno-glowne.png",
+      "title": "Etap 0: okno główne",
+      "reference": "Układ wzorca: lewa kolumna (Połączenia / Obiekty / Okna), karty dokumentów z kolorowym znacznikiem typu, pasek stanu z połączeniem; menu z rejestru komend"
+    }
+  ],
+  "ci": {}
+}

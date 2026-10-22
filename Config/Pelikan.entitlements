@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Bez sandboxa: Instant Client ładowany z katalogu użytkownika (dlopen), TNS_ADMIN i wallety w dowolnych
+	     katalogach, ssh dla tuneli, CLI agentów w terminalu (jak Bifold). -->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>
