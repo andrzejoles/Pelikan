@@ -170,6 +170,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 final class CodeTextView: NSTextView {
     var indentUnit = "  "
 
+    /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            NSApp.delegate.flatMap { $0 as? AppDelegate }?.application(NSApp, open: urls)
+            return true
+        }
+        return super.performDragOperation(sender)
+    }
+
     override func insertNewline(_ sender: Any?) {
         // Automatyczne wcięcie jak poprzednia linia (UG 23.12 „Automatic”).
         let ns = string as NSString

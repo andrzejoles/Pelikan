@@ -3,7 +3,7 @@ import PelikanWorkspace
 
 /// Buduje menu główne z rejestru komend (PROMPT §4.2 p.1). Skróty pochodzą z aktywnego profilu (`Workspace.keymap`);
 /// dostępność pozycji — z `Workspace.isEnabled`.
-final class MenuBuilder: NSObject, NSMenuItemValidation {
+final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
     private let workspace: Workspace
 
     init(workspace: Workspace) {
@@ -37,8 +37,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
         let menu = NSMenu(title: name)
         menu.addItem(withTitle: L10n.tr("O programie \(name)"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         menu.addItem(.separator())
-        let settings = menu.addItem(withTitle: L10n.tr("Ustawienia…"), action: nil, keyEquivalent: ",")
-        settings.isEnabled = false   // Etap 1 (PD-PREF-001)
+        menu.addItem(withTitle: L10n.tr("Ustawienia…"), action: #selector(AppDelegate.showPreferences(_:)), keyEquivalent: ",")
         menu.addItem(.separator())
         let services = NSMenuItem(title: L10n.tr("Usługi"), action: nil, keyEquivalent: "")
         let servicesMenu = NSMenu()
@@ -86,6 +85,13 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
                 item.keyEquivalent = key
                 item.keyEquivalentModifierMask = mask
             }
+            if d.id == "file.open" {
+                menu.addItem(item)
+                let recent = NSMenu(title: L10n.tr("Otwórz ponownie"))
+                recent.delegate = self
+                menu.addItem(submenuItem(recent))
+                continue
+            }
             if let sub = d.submenu {
                 if submenus[sub] == nil {
                     let m = NSMenu(title: sub)
@@ -99,13 +105,46 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
         }
     }
 
+    /// „Otwórz ponownie”: lista ostatnich plików budowana przy otwarciu menu.
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        guard menu.title == L10n.tr("Otwórz ponownie") else { return }
+        menu.removeAllItems()
+        for path in workspace.settings.recentFiles {
+            let item = NSMenuItem(title: (path as NSString).lastPathComponent, action: #selector(reopen(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = path
+            item.toolTip = (path as NSString).abbreviatingWithTildeInPath
+            menu.addItem(item)
+        }
+        if menu.items.isEmpty {
+            menu.addItem(withTitle: L10n.tr("Brak ostatnich plików"), action: nil, keyEquivalent: "").isEnabled = false
+        } else {
+            menu.addItem(.separator())
+            let clear = menu.addItem(withTitle: L10n.tr("Wyczyść listę"), action: #selector(clearRecent), keyEquivalent: "")
+            clear.target = self
+        }
+    }
+
+    @objc private func reopen(_ sender: NSMenuItem) {
+        guard let path = sender.representedObject as? String else { return }
+        workspace.perform("file.reopen", CommandArguments(["path": .string(path)]))
+    }
+
+    @objc private func clearRecent() { workspace.settings.recentFiles = [] }
+
     @objc func performCommand(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String else { return }
+        // ⌘W w oknie pomocniczym (Preferencje, Large Data Editor) zamyka to okno, nie dokument okna głównego.
+        if raw == "file.close", let key = NSApp.keyWindow, key.identifier != MainWindowController.windowID {
+            key.performClose(nil)
+            return
+        }
         workspace.perform(CommandID(rawValue: raw))
     }
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let raw = menuItem.representedObject as? String else { return true }
+        if raw == "file.close", let key = NSApp.keyWindow, key.identifier != MainWindowController.windowID { return true }
         return workspace.isEnabled(CommandID(rawValue: raw))
     }
 

@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T23:54:13+02:00",
+  "heartbeat": "2026-10-23T00:05:36+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1 / Command Window: silnik SQL*Plus (SET, DEFINE, VARIABLE, PROMPT, @, SPOOL, DESCRIBE, SHOW ERRORS…), wyniki tekstowe, karty Dialog i Editor",
+  "task": "Etap 1 / preferencje i klawiatura: okno Preferencji (sesje, siatka, edytor, NLS), wybór profilu skrótów i własne skróty, otwieranie plików z Findera, zapis/otwarcie plików .sql",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Pliki i preferencje: Otwórz / Zapisz / Zapisz jako / Otwórz ponownie (lista ostatnich), kodowanie UTF-8/UTF-16/Windows-1250 i CRLF zachowane przy zapisie, typ okna z rozszerzenia, otwieranie z Findera i przeciąganie plików, pytania przy zamykaniu (niezapisane zmiany, otwarta transakcja, sesja okna zamykana) i przy wyjściu; okno Preferencji (Ogólne, Okno SQL, Edytor, Klawiatura z nagrywaniem skrótów i konfliktami, Oracle — katalog Instant Client), wygląd jasny/ciemny/systemowy, ⌘W w oknach pomocniczych — 7 testów",
+    "PR #5 scalony (Command Window), wersja 1.5.0",
     "Command Window — interfejs: karta Dialog (konsola z kolorami, linia poleceń z historią strzałkami, wielowierszowe SQL do „;” i PL/SQL do „/”, kolejka poleceń wpisanych w trakcie wykonania), karta Edytor (F8 wykonuje i przełącza na Dialog), pasek SET (Echo, Feedback, Verify, Heading, Timing, Output, Termout); SET z wieloma opcjami w linii — sprawdzone ręcznie",
     "Command Window — silnik SQL*Plus: SET (ECHO, FEEDBACK, HEADING, PAGESIZE, COLSEP, SERVEROUTPUT, TIMING, VERIFY, DEFINE, ESCAPE, CONCAT…), DEFINE/UNDEFINE/ACCEPT, &/&&/&1, VARIABLE/EXEC/PRINT/AUTOPRINT, COLUMN FORMAT/HEADING/NEW_VALUE, PROMPT, PAUSE, @/@@/START z parametrami, SPOOL, CD, DESCRIBE (tabele, pakiety, synonimy), SHOW ERRORS/USER/RELEASE/ALL, WHENEVER SQLERROR, CONNECT (zapisane i tymczasowe), EXIT, wyniki tekstowe — 9 testów (5 na bazie)",
     "PR #4 scalony (siatka: strony, sortowanie, eksport, edycja, Large Data Editor), wersja 1.4.0",
@@ -97,11 +99,11 @@
   ],
   "tests": {
     "unit": {
-      "total": 99,
-      "passed": 99,
+      "total": 105,
+      "passed": 105,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T23:54:11+02:00"
+      "at": "2026-10-23T00:05:36+02:00"
     },
     "integration": {
       "total": 39,
@@ -169,6 +171,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap1-preferencje-klawiatura.png",
+      "title": "Preferencje: karta Klawiatura (profil skrótów, własne skróty)",
+      "reference": "PD-PREF-007"
+    },
     {
       "file": "docs/progress/img/etap1-command-window.png",
       "title": "Command Window: skrypt z COLUMN FORMAT/HEADING, TIMING i SHOW USER",

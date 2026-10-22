@@ -3,6 +3,7 @@ import PelikanWorkspace
 
 /// Okno główne w układzie PL/SQL Developer (ADR 0005): lewa kolumna narzędzi, obszar dokumentów z kartami, pasek stanu.
 final class MainWindowController: NSWindowController, NSWindowDelegate {
+    static let windowID = NSUserInterfaceItemIdentifier("PelikanMainWindow")
     private(set) lazy var documentArea = DocumentAreaViewController(workspace: workspace)
     private let workspace: Workspace
     private let split = NSSplitViewController()
@@ -17,6 +18,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.titlebarSeparatorStyle = .line
         window.toolbarStyle = .unified
         window.tabbingMode = .disallowed
+        window.identifier = Self.windowID
         super.init(window: window)
         window.delegate = self
 
@@ -137,6 +139,32 @@ final class PlaceholderPaneController: NSViewController {
 // MARK: - Obszar dokumentów
 
 /// Pasek kart dokumentów (SDI wzorca) + widok aktywnego dokumentu + pasek stanu.
+/// Widok obszaru dokumentów przyjmujący upuszczone pliki (MAC-FILE-001).
+final class FileDropView: NSView {
+    var onDrop: (([URL]) -> Void)?
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        registerForDraggedTypes([.fileURL])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func urls(_ info: NSDraggingInfo) -> [URL] {
+        (info.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { urls(sender).isEmpty ? [] : .copy }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let u = urls(sender)
+        guard !u.isEmpty else { return false }
+        onDrop?(u)
+        return true
+    }
+}
+
 final class DocumentAreaViewController: NSViewController {
     private let workspace: Workspace
     private let tabBar = NSStackView()
@@ -162,7 +190,13 @@ final class DocumentAreaViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        let root = NSView()
+        let root = FileDropView()
+        root.onDrop = { [weak self] urls in
+            guard let self else { return }
+            for u in urls {
+                do { try self.workspace.openFile(u) } catch { self.workspace.ui?.showError(error.localizedDescription) }
+            }
+        }
         tabBar.orientation = .horizontal
         tabBar.spacing = 2
         tabBar.alignment = .centerY

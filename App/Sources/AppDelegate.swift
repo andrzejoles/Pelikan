@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
     private var keyMonitor: Any?
+    private var menuToken: ObservationToken?
+    private var appearanceToken: ObservationToken?
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -32,6 +34,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let builder = MenuBuilder(workspace: workspace)
         NSApp.mainMenu = builder.build()
         menuBuilder = builder
+        // Wygląd z Preferencji (jak system / jasny / ciemny).
+        appearanceToken = trackChanges { [weak self] in
+            guard let self else { return }
+            switch self.workspace.settings.appearance {
+            case .system: NSApp.appearance = nil
+            case .light: NSApp.appearance = NSAppearance(named: .aqua)
+            case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+            }
+        }
+        // Zmiana profilu albo własnych skrótów (Preferencje › Klawiatura) — menu z nowymi skrótami.
+        menuToken = trackChanges { [weak self] in
+            guard let self else { return }
+            _ = self.workspace.keymap.bindings.count
+            NSApp.mainMenu = self.menuBuilder?.build()
+        }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak builder] event in
             nonisolated(unsafe) let e = event   // monitor lokalny działa na wątku głównym
             let handled = MainActor.assumeIsolated { builder?.handleKeyDown(e) == true }
@@ -56,8 +73,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    @objc func showPreferences(_ sender: Any?) {
+        PreferencesWindowController.show(workspace: workspace)
+    }
+
+    /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist).
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            do { try workspace.openFile(url) } catch { showError(error.localizedDescription) }
+        }
+    }
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let open = workspace.documents.filter(\.transactionOpen)
+        let modified = workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+        if !modified.isEmpty {
+            // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
+            Task { @MainActor in
+                do {
+                    for d in modified {
+                        workspace.activate(d.id)
+                        try await workspace.invoke("file.close")
+                    }
+                    NSApp.reply(toApplicationShouldTerminate: true)
+                } catch {
+                    NSApp.reply(toApplicationShouldTerminate: false)
+                }
+            }
+            return .terminateLater
+        }
         guard !open.isEmpty else { return .terminateNow }
         Task { @MainActor in
             let answer = await ask(L10n.tr("Niezatwierdzone zmiany"),
@@ -168,6 +212,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             showError(error.localizedDescription)
             return false
         }
+    }
+
+    func chooseFilesToOpen() async -> [URL] {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = ["sql", "pck", "pks", "pkb", "spc", "bdy", "fnc", "prc", "trg", "typ", "tps", "tpb", "tst", "txt"]
+            .compactMap { UTType(filenameExtension: $0) }
+        panel.allowsOtherFileTypes = true
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.urls : [] }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.urls : []
+    }
+
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
+        panel.canCreateDirectories = true
+        panel.isExtensionHidden = false
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
     }
 
     func showLargeDataEditor(_ model: LargeDataModel) {

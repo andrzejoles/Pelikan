@@ -21,6 +21,54 @@ public enum BuiltinCommands {
 
     // MARK: Plik
 
+    /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
+    @MainActor
+    static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
+        var url = doc.fileURL
+        if askForName || url == nil {
+            let base = doc.fileURL?.deletingPathExtension().lastPathComponent ?? (doc.customTitle ?? doc.kind.shortName)
+            guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: doc.fileURL?.pathExtension ?? doc.kind.defaultExtension) else { return false }
+            url = chosen
+        }
+        try ws.save(doc, to: url!)
+        return true
+    }
+
+    /// Zamknięcie okna (UG 23.20, PD-SQLW-024): pytanie o zapis zmian i o otwartą transakcję, zamknięcie sesji okna.
+    /// false — użytkownik anulował.
+    @MainActor
+    static func closeDocument(_ doc: Document, in ws: Workspace) async throws -> Bool {
+        let needsSave = doc.isModified && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+        if needsSave {
+            let choice = await ws.ui?.ask(L10n.tr("Zapisać zmiany w „\(doc.title)”?"), message: L10n.tr("Niezapisane zmiany zostaną utracone."),
+                                          buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 1
+            switch choice {
+            case 0: guard try await saveDocument(doc, in: ws, askForName: doc.fileURL == nil) else { return false }
+            case 1: break
+            default: return false
+            }
+        }
+        if doc.transactionOpen {
+            var commit: Bool
+            switch ws.settings.logoffWithOpenTransaction {
+            case .commit: commit = true
+            case .rollback: commit = false
+            case .ask:
+                let choice = await ws.ui?.ask(L10n.tr("Transakcja okna „\(doc.title)” jest otwarta"), message: L10n.tr("Zatwierdzić czy wycofać zmiany przed zamknięciem okna?"),
+                                              buttons: [L10n.tr("Zatwierdź"), L10n.tr("Wycofaj"), L10n.tr("Anuluj")])
+                guard let choice, choice < 2 else { return false }
+                commit = choice == 0
+            }
+            try await ws.endTransactions(of: [doc], commit: commit)
+        }
+        // Sesja okna (tryb Multi) kończy się razem z oknem.
+        if let c = ws.effectiveConnection(of: doc), ws.settings.sessionMode == .multi {
+            await ws.sessions.close(ws.sessions.key(forDocument: doc.id, connection: c))
+        }
+        ws.close(doc.id)
+        return true
+    }
+
     @MainActor static var file: [Command] {
         [
             newDocument(.sql, id: "file.new.sql", title: L10n.tr("Okno SQL"), mac: ["cmd+n"], feature: "PD-SQLW-002"),
@@ -31,27 +79,54 @@ public enum BuiltinCommands {
             newDocument(.report, id: "file.new.report", title: L10n.tr("Okno raportu"), feature: "PD-REP-002"),
             newDocument(.diagram, id: "file.new.diagram", title: L10n.tr("Okno diagramu"), feature: "PD-DIAG-001"),
             newDocument(.notebook, id: "file.new.notebook", title: L10n.tr("Notatnik SQL"), feature: "SD-NB-001"),
-            .planned(CommandDescriptor(id: "file.open", title: L10n.tr("Otwórz…"), category: .file, mac: ["cmd+o"],
-                                       agent: .none, effect: .external, summary: L10n.tr("Otwiera plik w odpowiednim oknie."),
-                                       stage: 1, feature: "PD-SQLW-012")),
-            .planned(CommandDescriptor(id: "file.save", title: L10n.tr("Zapisz"), category: .file, mac: ["cmd+s"],
-                                       agent: .full, effect: .external, summary: L10n.tr("Zapisuje okno do pliku."),
-                                       stage: 1, feature: "PD-SQLW-012")),
-            .planned(CommandDescriptor(id: "file.saveAs", title: L10n.tr("Zapisz jako…"), category: .file, mac: ["cmd+shift+s"],
-                                       agent: .none, effect: .external, summary: L10n.tr("Zapisuje okno pod nową nazwą."),
-                                       stage: 1, feature: "PD-SQLW-012")),
+            Command(CommandDescriptor(id: "file.open", title: L10n.tr("Otwórz…"), category: .file, mac: ["cmd+o"],
+                                      agent: .none, effect: .external, summary: L10n.tr("Otwiera plik w odpowiednim oknie."),
+                                      feature: "PD-SQLW-012")) { ctx in
+                let urls = await ctx.workspace.ui?.chooseFilesToOpen() ?? []
+                for url in urls { try ctx.workspace.openFile(url) }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "file.reopen", title: L10n.tr("Otwórz ponownie"), category: .file,
+                                      parameters: [CommandParameter("path", .string, required: true, L10n.tr("Ścieżka pliku z listy ostatnich"))],
+                                      agent: .none, effect: .external, summary: L10n.tr("Otwiera plik z listy ostatnio używanych."),
+                                      inMenu: false, feature: "PD-SQLW-012")) { ctx in
+                guard let path = ctx.arguments.string("path"), ctx.workspace.settings.recentFiles.contains(path) else {
+                    throw CommandError.invalidArgument("path", L10n.tr("plik spoza listy ostatnich"))
+                }
+                try ctx.workspace.openFile(URL(fileURLWithPath: path))
+                return .ok
+            },
+            Command(CommandDescriptor(id: "file.save", title: L10n.tr("Zapisz"), category: .file, mac: ["cmd+s"],
+                                      agent: .approval, effect: .external, summary: L10n.tr("Zapisuje okno do pliku."),
+                                      feature: "PD-SQLW-012"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument else { return .ok }
+                let ok = try await saveDocument(doc, in: ctx.workspace, askForName: doc.fileURL == nil)
+                return CommandResult(message: ok ? L10n.tr("Zapisano \(doc.title)") : nil)
+            },
+            Command(CommandDescriptor(id: "file.saveAs", title: L10n.tr("Zapisz jako…"), category: .file, mac: ["cmd+shift+s"],
+                                      agent: .none, effect: .external, summary: L10n.tr("Zapisuje okno pod nową nazwą."),
+                                      feature: "PD-SQLW-012"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument else { return .ok }
+                _ = try await saveDocument(doc, in: ctx.workspace, askForName: true)
+                return .ok
+            },
             Command(CommandDescriptor(id: "file.close", title: L10n.tr("Zamknij okno"), category: .file, mac: ["cmd+w"],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Zamyka bieżące okno."), feature: "PD-UI-004"),
                     validate: { $0.activeDocument != nil }) { ctx in
                 guard let doc = ctx.workspace.activeDocument else { return .ok }
-                ctx.workspace.close(doc.id)
+                guard try await closeDocument(doc, in: ctx.workspace) else { throw CommandError.cancelledByUser }
                 return .ok
             },
             Command(CommandDescriptor(id: "file.closeAll", title: L10n.tr("Zamknij wszystkie okna"), category: .file,
                                       mac: ["cmd+alt+w"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Zamyka wszystkie okna."), feature: "PD-UI-004"),
                     validate: { !$0.documents.isEmpty }) { ctx in
-                for d in ctx.workspace.documents { ctx.workspace.close(d.id) }
+                for d in ctx.workspace.documents {
+                    ctx.workspace.activate(d.id)
+                    guard try await closeDocument(d, in: ctx.workspace) else { throw CommandError.cancelledByUser }
+                }
                 return .ok
             },
             .planned(CommandDescriptor(id: "file.print", title: L10n.tr("Drukuj…"), category: .file, mac: ["cmd+p"],

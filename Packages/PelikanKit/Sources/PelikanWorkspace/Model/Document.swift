@@ -63,6 +63,8 @@ public final class Document: Identifiable {
     public let ordinal: Int
     public var customTitle: String?
     public var fileURL: URL?
+    /// Kodowanie i zakończenia linii pliku (zapis w tym samym formacie, w jakim plik otwarto).
+    public var fileFormat = TextFileFormat()
     public var text: String {
         didSet { if text != oldValue { isModified = true } }
     }
