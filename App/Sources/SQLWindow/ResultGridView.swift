@@ -50,6 +50,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         table.dataSource = self
         table.delegate = self
         table.copyHandler = { [weak self] withHeader in self?.copy(withHeader: withHeader) }
+        table.target = self
+        table.action = #selector(cellClicked)
+        table.doubleAction = #selector(cellDoubleClicked)
         let rowNo = NSTableColumn(identifier: .init("#"))
         rowNo.title = ""
         rowNo.width = 50
@@ -236,6 +239,24 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     @objc private func columnsMoved() { tab.columnOrder = visibleColumns() }
 
+    private func dataColumn(atTableColumn c: Int) -> Int? {
+        guard c >= 0, c < table.tableColumns.count, table.tableColumns[c].identifier.rawValue != "#" else { return nil }
+        return Int(table.tableColumns[c].identifier.rawValue.dropFirst())
+    }
+
+    @objc private func cellClicked() {
+        if let c = dataColumn(atTableColumn: table.clickedColumn) { tab.currentColumn = c }
+    }
+
+    /// Podwójne kliknięcie: komórka LOB/LONG/RAW albo długi tekst → Large Data Editor (UG 7.2: przycisk komórki).
+    @objc private func cellDoubleClicked() {
+        guard table.clickedRow >= 0, let c = dataColumn(atTableColumn: table.clickedColumn) else { return }
+        tab.currentColumn = c
+        let type = grid.columns[c].type
+        let large = type.isLOB || [.long, .longRaw, .raw, .json, .xmltype].contains(type) || grid.text(row: table.clickedRow, column: c).count > 20
+        if large, !grid.isEditable(column: c) || type.isLOB { workspace.perform("grid.largeData") }
+    }
+
     private func visibleColumns() -> [Int] {
         table.tableColumns.compactMap { c in c.identifier.rawValue == "#" ? nil : Int(c.identifier.rawValue.dropFirst()) }
     }
@@ -376,7 +397,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         let copyAsItem = menu.addItem(withTitle: L10n.tr("Kopiuj jako"), action: nil, keyEquivalent: "")
         copyAsItem.submenu = copyAs
         menu.addItem(.separator())
-        for (title, id) in [(L10n.tr("Eksportuj wynik…"), "grid.export"), (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel")] {
+        for (title, id) in [(L10n.tr("Large Data Editor…"), "grid.largeData"), (L10n.tr("Eksportuj wynik…"), "grid.export"),
+                            (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel")] {
             let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = id

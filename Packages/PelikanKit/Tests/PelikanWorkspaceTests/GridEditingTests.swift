@@ -16,6 +16,9 @@ struct GridEditingUnitTests {
         #expect(items[5] == .init())
         #expect(items[6] == .init(column: "Mała"))
         #expect(SelectListParser.items("select distinct (select 1 from dual) x, rowid from t").map(\.alias) == ["X", nil])
+        // Słowa kluczowe niezastrzeżone jako nazwy kolumn i aliasy.
+        #expect(SelectListParser.items("select d.body, data, type, sal body from docs d").map(\.column) == ["BODY", "DATA", "TYPE", "SAL"])
+        #expect(SelectListParser.items("select sal body from emp")[0].alias == "BODY")
     }
 
     @Test("Daty z tekstu wg maski Oracle (z czasem, bez czasu, AM/PM, ułamki)")
@@ -49,5 +52,27 @@ struct GridEditingUnitTests {
         let cols = [ColumnInfo(name: "EMPNO", type: .number, typeName: "NUMBER"), ColumnInfo(name: "ENAME", type: .varchar2, typeName: "VARCHAR2")]
         #expect(ResultGridModel.columnFromError("ORA-12899: value too large for column \"PELIKAN_TEST\".\"EMP\".\"ENAME\" (actual: 60, maximum: 40)", columns: cols) == 1)
         #expect(ResultGridModel.columnFromError("ORA-01400: cannot insert NULL into (\"PELIKAN_TEST\".\"EMP\".\"EMPNO\")", columns: cols) == 0)
+    }
+}
+
+@Suite("Large Data Editor — bez bazy")
+struct LargeDataUnitTests {
+    @Test("Rozpoznanie formatu po sygnaturze i początku tekstu")
+    func detect() {
+        #expect(LargeDataFormat.detect(text: "  <?xml version=\"1.0\"?><a/>", bytes: nil) == .xml)
+        #expect(LargeDataFormat.detect(text: "<!DOCTYPE html><html>", bytes: nil) == .html)
+        #expect(LargeDataFormat.detect(text: "{\"a\":1}", bytes: nil) == .json)
+        #expect(LargeDataFormat.detect(text: "zwykły tekst", bytes: nil) == .text)
+        #expect(LargeDataFormat.detect(text: nil, bytes: Data([0xFF, 0xD8, 0xFF, 0xE0])) == .jpeg)
+        #expect(LargeDataFormat.detect(text: nil, bytes: Data("%PDF-1.7".utf8)) == .pdf)
+        #expect(LargeDataFormat.detect(text: nil, bytes: Data([0, 1, 2, 3])) == .binary)
+        #expect(LargeDataFormat.detect(text: nil, bytes: Data("<a>tekst w BLOB</a>".utf8)) == .xml)
+    }
+
+    @Test("Podgląd hex: offset, bajty, ASCII, ograniczenie długości")
+    func hex() {
+        let d = Data("Pelikan".utf8) + Data([0, 255])
+        #expect(LargeDataModel.hexDump(d) == "00000000  50 65 6C 69 6B 61 6E 00 FF" + String(repeating: "   ", count: 7) + "  Pelikan..\n")
+        #expect(LargeDataModel.hexDump(Data(count: 100), limit: 32).hasSuffix("(pokazano 32 z 100 bajtów)\n"))
     }
 }

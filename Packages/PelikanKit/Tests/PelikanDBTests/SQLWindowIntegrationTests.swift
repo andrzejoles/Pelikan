@@ -22,6 +22,8 @@ final class TestUI: UIServices {
     var clipboard: String?
     var savedFile: (name: String, ext: String, data: Data)?
     func copyToClipboard(_ text: String, html: String?) { clipboard = text }
+    var largeData: LargeDataModel?
+    func showLargeDataEditor(_ model: LargeDataModel) { largeData = model }
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
         savedFile = (suggestedName, fileExtension, data)
         return true
@@ -280,6 +282,72 @@ struct GridEditingIntegrationTests {
         #expect(tab.selectedRows == [2])
         #expect(tab.focusedColumn == 0)
         try? await ws.invoke("session.rollback")
+        await ws.sessions.disconnectAll()
+    }
+}
+
+@MainActor
+@Suite("Large Data Editor na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct LargeDataIntegrationTests {
+    @Test("CLOB, BLOB i JSON: format, podgląd hex; CLOB obcięty w siatce pobierany w całości; zmiana CLOB i BLOB zatwierdzana przez Post")
+    func lobs() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql)
+        // CLOB 2,2 mln znaków — więcej niż limit pobierania w siatce (1 MB).
+        doc.text = """
+        declare c clob; begin dbms_lob.createtemporary(c, true);
+          for i in 1 .. 70 loop dbms_lob.writeappend(c, 32000, rpad('x', 32000, 'x')); end loop;
+          update docs set body = c where id = 1; end;
+        /
+        """
+        try await ws.invoke("sql.execute")
+        doc.text = "select d.rowid, d.id, d.body, d.data, d.meta from docs d where id = 1"
+        try await ws.invoke("sql.execute")
+        let tab = try #require(doc.results.first)
+        let grid = try #require(tab.grid)
+        #expect(grid.text(row: 0, column: 2) == "<CLOB>")
+        tab.selectedRows = [0]
+        tab.currentColumn = 2
+        try await ws.invoke("grid.largeData")
+        let clob = try #require(ui.largeData)
+        #expect(clob.text?.count == 2_240_000)
+        #expect(!clob.truncated)
+        #expect(clob.format == .text)
+
+        tab.currentColumn = 3
+        try await ws.invoke("grid.largeData")
+        let blob = try #require(ui.largeData)
+        #expect(blob.bytes == Data([0xDE, 0xAD, 0xBE, 0xEF]))
+        #expect(LargeDataModel.hexDump(blob.bytes!).hasPrefix("00000000  DE AD BE EF"))
+
+        let json = LargeDataModel(grid: grid, row: 0, column: 4)
+        #expect(json.format == .json)
+        #expect(LargeDataModel.prettyJSON(json.text ?? "")?.contains("\n") == true)
+
+        // Edycja: CLOB i BLOB z Large Data Editor, zapis przez Post.
+        try await ws.invoke("grid.edit")
+        let e1 = LargeDataModel(grid: grid, row: 0, column: 2)
+        #expect(e1.isEditable)
+        e1.setText("Nowa treść ✓")
+        try e1.apply()
+        let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) + Data(repeating: 7, count: 100_000)
+        let e2 = LargeDataModel(grid: grid, row: 0, column: 3)
+        e2.setBytes(png)
+        #expect(e2.format == .png)
+        try e2.apply()
+        try await ws.invoke("grid.post")
+        let s = try await ws.session(for: doc)
+        let (_, r) = try await s.queryAll("select dbms_lob.getlength(body), dbms_lob.getlength(data), dbms_lob.substr(body, 20, 1) from docs where id = 1")
+        #expect(r.first?[0].displayText == "12")
+        #expect(r.first?[1].displayText == "100008")
+        #expect(r.first?[2].displayText == "Nowa treść ✓")
+        try await ws.invoke("session.rollback")
         await ws.sessions.disconnectAll()
     }
 }

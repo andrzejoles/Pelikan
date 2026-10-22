@@ -190,6 +190,8 @@ public final class ResultTab: Identifiable {
     public var columnOrder: [Int]?
     /// Kolumna do pokazania (np. z błędem po zatwierdzaniu zmian — NF12).
     public var focusedColumn: Int?
+    /// Bieżąca komórka (ostatnio kliknięta kolumna) — Large Data Editor, widok rekordu.
+    public var currentColumn: Int?
 
     public init(title: String, statementRange: Range<Int>, grid: ResultGridModel? = nil, message: String? = nil) {
         self.title = title

@@ -124,6 +124,17 @@ public enum GridCommands {
                 _ = await ctx.workspace.ui?.saveFile(suggestedName: doc.title, fileExtension: "xlsx", data: data)
                 return .ok
             },
+            Command(CommandDescriptor(id: "grid.largeData", title: L10n.tr("Large Data Editor…"), category: .edit, submenu: L10n.tr("Wynik"),
+                                      mac: ["cmd+alt+l"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera bieżącą komórkę (LOB, LONG, RAW, długi tekst) w edytorze dużych danych."),
+                                      feature: "PD-GRID-003"),
+                    validate: { ws in activeGrid(ws).map { $0.0.selectedRows?.first != nil && $0.0.currentColumn != nil } ?? false }) { ctx in
+                guard let (tab, grid) = activeGrid(ctx.workspace), let row = tab.selectedRows?.first, let col = tab.currentColumn else { return .ok }
+                let model = LargeDataModel(grid: grid, row: row, column: col)
+                ctx.workspace.ui?.showLargeDataEditor(model)
+                try await model.loadFull()
+                return .ok
+            },
             // Edycja danych (UG 7.6).
             Command(CommandDescriptor(id: "grid.edit", title: L10n.tr("Edytuj dane"), category: .session, submenu: L10n.tr("Wynik"),
                                       mac: ["cmd+alt+e"], agent: .none, effect: .uiState,

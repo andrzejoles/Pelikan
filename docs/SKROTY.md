@@ -51,6 +51,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj jako listę wyrażeń | `grid.copyExpressionList` |  |  | Brak | 0 | PD-GRID-015 |
 | Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | 0 | PD-GRID-013 |
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
+| Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 
 ## Sesja
 

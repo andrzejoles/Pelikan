@@ -26,6 +26,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private struct OpenResultSet {
         let stmt: OpaquePointer
         let columns: [ColumnInfo]
+        let lobLimit: Int
     }
 
     /// Możliwości sterownika Instant Client (pełne OCI).
@@ -240,17 +241,17 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         var result = ExecutionResult(kind: kind, warning: warning)
         if stmtInfo.isQuery != 0 {
             let columns = try describeColumns(stmt, count: numCols)
-            result.resultSet = register(stmt: stmt, columns: columns)
+            result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
             keepStmt = true
         } else {
             var count: UInt64 = 0
             if dpiStmt_getRowCount(stmt, &count) == DPI_SUCCESS, stmtInfo.isDML != 0 { result.rowsAffected = count }
         }
         for v in vars where v.bind.direction != .input {
-            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: v.data, typeName: v.bind.type.rawValue)
+            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: v.data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         if stmtInfo.isPLSQL != 0 {
-            result.implicitResults = try implicitResults(stmt)
+            result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         result.elapsed = ContinuousClock.now - start
         return result
@@ -268,14 +269,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
-    private func register(stmt: OpaquePointer, columns: [ColumnInfo]) -> ResultSetDescriptor {
+    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int) -> ResultSetDescriptor {
         let id = nextResultSetID
         nextResultSetID += 1
-        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns)
+        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit)
         return ResultSetDescriptor(id: ResultSetID(id), columns: columns)
     }
 
-    private func implicitResults(_ stmt: OpaquePointer) throws -> [ResultSetDescriptor] {
+    private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int) throws -> [ResultSetDescriptor] {
         var out: [ResultSetDescriptor] = []
         while true {
             var child: OpaquePointer?
@@ -284,7 +285,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, options.fetchArraySize))
-            out.append(register(stmt: child, columns: try describeColumns(child, count: n)))
+            out.append(register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit))
         }
         return out
     }
@@ -388,7 +389,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                 var native: dpiNativeTypeNum = 0
                 var data: UnsafeMutablePointer<dpiData>?
                 try check(dpiStmt_getQueryValue(rs.stmt, UInt32(pos + 1), &native, &data))
-                row.append(try value(native: native, oracle: rs.columns[pos].type, data: data, typeName: rs.columns[pos].typeName))
+                row.append(try value(native: native, oracle: rs.columns[pos].type, data: data, typeName: rs.columns[pos].typeName, lobLimit: rs.lobLimit))
             }
             rows.append(row)
         }
@@ -404,7 +405,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     // MARK: - Wartości
 
-    private func value(native: dpiNativeTypeNum, oracle: OracleType, data: UnsafeMutablePointer<dpiData>?, typeName: String) throws -> OracleValue {
+    private func value(native: dpiNativeTypeNum, oracle: OracleType, data: UnsafeMutablePointer<dpiData>?, typeName: String, lobLimit: Int) throws -> OracleValue {
         guard let data, data.pointee.isNull == 0 else { return .null }
         let v = data.pointee.value
         switch Int32(native) {
@@ -439,7 +440,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             try check(dpiRowid_getStringValue(v.asRowid, &p, &len))
             return .rowid(String(decoding: UnsafeRawBufferPointer(start: p, count: Int(len)), as: UTF8.self))
         case DPI_NATIVE_TYPE_LOB:
-            return .lob(try readLOB(v.asLOB, type: oracle))
+            return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit))
         case DPI_NATIVE_TYPE_JSON:
             var node: UnsafeMutablePointer<dpiJsonNode>?
             try check(dpiJson_getValue(v.asJson, UInt32(DPI_JSON_OPT_NUMBER_AS_STRING), &node))
@@ -455,7 +456,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, options.fetchArraySize))
-            let rs = register(stmt: child, columns: try describeColumns(child, count: n))
+            let rs = register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit)
             return .cursor(rs.id)
         case DPI_NATIVE_TYPE_OBJECT:
             return .object(typeName: typeName, description: "")
@@ -471,7 +472,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         return s
     }
 
-    private func readLOB(_ lob: OpaquePointer?, type: OracleType) throws -> LOBValue {
+    private func readLOB(_ lob: OpaquePointer?, type: OracleType, limit lobLimit: Int) throws -> LOBValue {
         guard let lob else { return LOBValue(kind: .clob, length: 0, truncated: false) }
         let kind: LOBValue.Kind = switch type {
         case .nclob: .nclob
@@ -481,7 +482,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
         var size: UInt64 = 0
         try check(dpiLob_getSize(lob, &size))
-        let limit = UInt64(options.lobPrefetchLimit)
+        let limit = UInt64(lobLimit)
         let amount = min(size, limit)
         if amount == 0 { return LOBValue(kind: kind, text: kind == .clob || kind == .nclob ? "" : nil, bytes: kind == .blob || kind == .bfile ? Data() : nil, length: size, truncated: false) }
         var bufSize: UInt64 = 0

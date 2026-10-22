@@ -11,6 +11,8 @@ public struct EditTarget: Sendable, Hashable {
     public var editableColumns: Set<Int>
     /// Nazwa kolumny tabeli dla kolumny wyniku.
     public var tableColumn: [Int: String]
+    /// Kolumny LOB/RAW tabeli — zmieniane w Large Data Editor (nie w komórce).
+    public var largeDataColumns: Set<Int> = []
 
     public var qualifiedName: String {
         [owner, table].compactMap { $0 }.map(ResultExporter.identifier).joined(separator: ".")
@@ -140,9 +142,11 @@ extension ResultGridModel {
                 }
             }
         }
-        // Typy nieedytowalne w siatce (LOB — Large Data Editor, obiekty, kursory).
+        // Typy nieedytowalne w komórce: BLOB/LONG RAW — Large Data Editor; obiekty, kursory, wektory, BFILE — wcale.
+        let large = editable.filter { [.blob, .clob, .nclob, .longRaw, .raw, .long].contains(columns[$0].type) }
         editable = editable.filter { ![.blob, .bfile, .object, .refCursor, .longRaw, .vector].contains(columns[$0].type) }
-        return EditTarget(owner: owner, table: tableName, rowidColumn: rid, editableColumns: editable, tableColumn: mapping)
+        return EditTarget(owner: owner, table: tableName, rowidColumn: rid, editableColumns: editable, tableColumn: mapping,
+                          largeDataColumns: large)
     }
 
     // MARK: Zmiany w siatce
@@ -176,6 +180,17 @@ extension ResultGridModel {
         rows[r][column] = value
         let ref = CellRef(row: r, column: column)
         if Self.exceedsColumn(value, columns[column]) { edit.overflow.insert(ref) } else { edit.overflow.remove(ref) }
+    }
+
+    /// Wartość z Large Data Editor (CLOB/BLOB/RAW/LONG — także kolumny niedostępne do edycji w komórce).
+    public func setValue(_ value: OracleValue, row: Int, column: Int) throws {
+        guard let target = edit.target, edit.isEditing else { throw GridEditError.notEditable(L10n.tr("Edycja wyłączona")) }
+        guard target.editableColumns.contains(column) || target.largeDataColumns.contains(column) else {
+            throw GridEditError.readOnlyColumn(columns[column].name)
+        }
+        let r = dataRow(row)
+        if edit.changed[r]?[column] == nil { edit.changed[r, default: [:]][column] = edit.inserted.contains(r) ? .null : rows[r][column] }
+        rows[r][column] = value
     }
 
     /// Nowy wiersz (Insert record) — na końcu pobranych wierszy; zwraca wiersz widoku.
@@ -248,7 +263,10 @@ extension ResultGridModel {
         let table = t.qualifiedName
         var out: [PlannedStatement] = []
         func bind(_ name: String, _ c: Int, _ v: OracleValue) -> BindVariable {
-            BindVariable(name: name, type: Self.bindType(columns[c].type), value: v, maxSize: max(4000, columns[c].size * 4))
+            // Duże wartości tekstowe i binarne wiązane jako LOB (literał/VARCHAR2 ma limit 32 767 bajtów).
+            var type = Self.bindType(columns[c].type)
+            if case .lob(let l) = v { type = l.kind == .blob ? .blob : (l.kind == .nclob ? .nclob : .clob) }
+            return BindVariable(name: name, type: type, value: v, maxSize: max(4000, columns[c].size * 4))
         }
         for r in edit.deleted.sorted() {
             let rid = rows[r][t.rowidColumn]
@@ -268,7 +286,7 @@ extension ResultGridModel {
                                         preview: "UPDATE \(table) SET \(setPreview) WHERE ROWID = \(ResultExporter.literal(.text(rid)));", kind: .update))
         }
         for r in edit.inserted.sorted() {
-            let cols = t.editableColumns.sorted().filter { !rows[r][$0].isNull && t.tableColumn[$0] != nil }
+            let cols = t.editableColumns.union(t.largeDataColumns).sorted().filter { !rows[r][$0].isNull && t.tableColumn[$0] != nil }
             let names = cols.map { ResultExporter.identifier(t.tableColumn[$0]!) }.joined(separator: ", ")
             var binds = cols.enumerated().map { bind("v\($0)", $1, rows[r][$1]) }
             binds.append(BindVariable(name: "rid", type: .varchar2, direction: .output, maxSize: 4000))
@@ -448,7 +466,8 @@ enum SelectListParser {
             var item = Item()
             var g = g
             // Alias: „… AS x” albo „… x” (identyfikator po wyrażeniu).
-            if g.count >= 2, let last = g.last, last.kind == .identifier || last.kind == .quotedIdentifier {
+            if g.count >= 2, let last = g.last,
+               last.kind == .identifier || last.kind == .quotedIdentifier || (last.kind == .keyword && !Keywords.reserved.contains(text(last).uppercased())) {
                 let prev = g[g.count - 2]
                 if text(prev).uppercased() == "AS" {
                     item.alias = name(last)
@@ -458,7 +477,11 @@ enum SelectListParser {
                     g.removeLast()
                 }
             }
-            let isIdent: (Token) -> Bool = { $0.kind == .identifier || $0.kind == .quotedIdentifier || ($0.kind == .keyword && text($0).uppercased() == "ROWID") }
+            // Nazwą kolumny może być słowo kluczowe niezastrzeżone (BODY, DATA, TYPE…) i ROWID.
+            let isIdent: (Token) -> Bool = {
+                $0.kind == .identifier || $0.kind == .quotedIdentifier
+                    || ($0.kind == .keyword && (!Keywords.reserved.contains(text($0).uppercased()) || text($0).uppercased() == "ROWID"))
+            }
             if g.count == 1, text(g[0]) == "*" {
                 item.isStar = true
             } else if g.count == 3, isIdent(g[0]), g[1].kind == .dot, text(g[2]) == "*" {

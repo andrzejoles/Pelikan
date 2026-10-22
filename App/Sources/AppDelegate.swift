@@ -170,6 +170,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showLargeDataEditor(_ model: LargeDataModel) {
+        LargeDataEditorController.show(model, workspace: workspace, relativeTo: mainWindow?.window)
+    }
+
     func ask(_ title: String, message: String, buttons: [String]) async -> Int? {
         let alert = NSAlert()
         alert.messageText = title

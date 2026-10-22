@@ -20,6 +20,8 @@ public protocol UIServices: AnyObject {
     func copyToClipboard(_ text: String, html: String?)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
+    /// Large Data Editor (UG 27) dla komórki siatki.
+    func showLargeDataEditor(_ model: LargeDataModel)
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).

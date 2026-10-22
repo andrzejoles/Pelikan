@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T23:22:16+02:00",
+  "heartbeat": "2026-10-22T23:40:09+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Large Data Editor: CLOB/BLOB/RAW/LONG/JSON z komórki (podwójne kliknięcie, menu, ⌘⌥L), pełna treść ponownie pobierana po ROWID gdy obcięta w siatce, rozpoznanie formatu (tekst, XML, JSON, HTML, PNG/JPEG/GIF, PDF), Tekst/Hex/Obraz/PDF, Formatuj JSON i XML, wczytanie/zapis pliku, zmiana CLOB i BLOB zatwierdzana przez Post — 3 testy (1 na bazie, CLOB 2,24 mln znaków)",
     "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
     "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
     "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
@@ -93,18 +94,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 90,
-      "passed": 90,
+      "total": 92,
+      "passed": 92,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T23:22:14+02:00"
+      "at": "2026-10-22T23:40:07+02:00"
     },
     "integration": {
-      "total": 33,
-      "passed": 32,
+      "total": 34,
+      "passed": 33,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-22T23:22:16+02:00"
+      "at": "2026-10-22T23:40:09+02:00"
     },
     "perf": {
       "total": 8,
@@ -165,6 +166,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap1-large-data-editor.png",
+      "title": "Large Data Editor: kolumna JSON po sformatowaniu",
+      "reference": "PD-GRID-003"
+    },
     {
       "file": "docs/progress/img/etap1-sql-window.png",
       "title": "SQL Window: skrypt z trzema poleceniami, zmienna :min_sal, karta błędu, otwarta transakcja",
