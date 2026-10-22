@@ -32,99 +32,47 @@ extension NSAppearance {
     var isDark: Bool { bestMatch(from: [.darkAqua, .aqua]) == .darkAqua }
 }
 
-/// Podświetlanie przyrostowe (ADR 0002/0003): stan leksera na początku każdej linii w pamięci podręcznej; po zmianie
-/// przeleksowujemy od zmienionej linii do miejsca, w którym stan na początku linii jest taki sam jak poprzednio.
+/// Podświetlanie przyrostowe (ADR 0002/0003): logika w `IncrementalLexer` (PelikanSQL, testy wydajności), tu tylko
+/// nakładanie kolorów na NSTextStorage.
 final class SyntaxHighlighter {
-    private(set) var lineStarts: [Int] = [0]
-    private var startStates: [LexState] = [.normal]
+    private let lexer = IncrementalLexer()
+    var lineStarts: [Int] { lexer.lineStarts }
 
     /// Pełne przeliczenie (otwarcie pliku, zmiana całego tekstu).
     func highlightAll(_ storage: NSTextStorage, font: NSFont) {
-        let text = Array(storage.string.utf16)
-        lineStarts = Self.computeLineStarts(text)
-        startStates = Array(repeating: .normal, count: lineStarts.count)
-        let lexer = Lexer(utf16: text)
+        let text = Self.utf16(of: storage)
         storage.beginEditing()
         storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
-        var state = LexState.normal
-        for i in 0..<lineStarts.count {
-            startStates[i] = state
-            let range = lineStarts[i]..<(i + 1 < lineStarts.count ? lineStarts[i + 1] : text.count)
-            state = apply(lexer, range: range, state: state, storage: storage)
-        }
+        lexer.lexAll(text, onLine: { _ in }, onToken: { Self.color($0, in: storage) })
         storage.endEditing()
     }
 
     /// Po edycji: `editedRange` (w nowym tekście) i `delta` (zmiana długości).
     func highlight(_ storage: NSTextStorage, editedRange: NSRange, delta: Int, font: NSFont) {
-        let text = Array(storage.string.utf16)
-        let oldStates = startStates
-        let oldStarts = lineStarts
-        lineStarts = Self.computeLineStarts(text)
-        // Pierwsza dotknięta linia.
-        let firstLine = max(0, line(containing: editedRange.location) )
-        // Stany linii przed edycją zostają; od firstLine liczymy na nowo.
-        var states = Array(oldStates.prefix(firstLine))
-        if states.isEmpty { states = [.normal] }
-        var state = firstLine < oldStates.count ? oldStates[firstLine] : .normal
-        if firstLine == 0 { state = .normal }
-        let lexer = Lexer(utf16: text)
-        let editEnd = editedRange.location + editedRange.length
+        let text = Self.utf16(of: storage)
         storage.beginEditing()
-        var i = firstLine
-        while i < lineStarts.count {
-            if i >= states.count { states.append(state) } else { states[i] = state }
-            let lineStart = lineStarts[i]
-            let range = lineStart..<(i + 1 < lineStarts.count ? lineStarts[i + 1] : text.count)
-            storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: range.lowerBound, length: range.count))
-            state = apply(lexer, range: range, state: state, storage: storage)
-            // Za edycją: jeśli stan na początku następnej linii zgadza się ze starym — reszta bez zmian.
-            if lineStart >= editEnd, i + 1 < lineStarts.count {
-                let oldIndex = Self.index(of: lineStarts[i + 1] - delta, in: oldStarts)
-                if let oi = oldIndex, oi < oldStates.count, oldStates[oi] == state {
-                    states.append(contentsOf: oldStates[oi...].prefix(lineStarts.count - (i + 1)))
-                    break
-                }
-            }
-            i += 1
-        }
+        lexer.relex(text, editedRange: editedRange.location..<(editedRange.location + editedRange.length), delta: delta,
+                    onLine: { storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: $0.lowerBound, length: $0.count)) },
+                    onToken: { Self.color($0, in: storage) })
         storage.endEditing()
-        startStates = Array(states.prefix(lineStarts.count))
-        while startStates.count < lineStarts.count { startStates.append(.normal) }
     }
 
-    private func apply(_ lexer: Lexer, range: Range<Int>, state: LexState, storage: NSTextStorage) -> LexState {
-        lexer.scan(range: range, state: state) { token in
-            if let color = SyntaxTheme.color(for: token.kind), color != SyntaxTheme.plain {
-                storage.addAttribute(.foregroundColor, value: color, range: NSRange(location: token.start, length: token.length))
-            }
+    private static func color(_ token: Token, in storage: NSTextStorage) {
+        if let color = SyntaxTheme.color(for: token.kind), color != SyntaxTheme.plain {
+            storage.addAttribute(.foregroundColor, value: color, range: NSRange(location: token.start, length: token.length))
+        }
+    }
+
+    /// Bufor UTF-16 tekstu (getCharacters = kopia pamięci, bez iterowania po znakach mostkowanego NSString).
+    static func utf16(of storage: NSTextStorage) -> [UInt16] {
+        let ns = storage.string as NSString
+        let n = ns.length
+        return [UInt16](unsafeUninitializedCapacity: n) { buf, count in
+            if let base = buf.baseAddress { ns.getCharacters(base, range: NSRange(location: 0, length: n)) }
+            count = n
         }
     }
 
     /// Numer linii (od 0) dla przesunięcia UTF-16.
-    func line(containing offset: Int) -> Int {
-        var lo = 0, hi = lineStarts.count - 1
-        while lo < hi {
-            let mid = (lo + hi + 1) / 2
-            if lineStarts[mid] <= offset { lo = mid } else { hi = mid - 1 }
-        }
-        return lo
-    }
-
-    static func index(of start: Int, in starts: [Int]) -> Int? {
-        var lo = 0, hi = starts.count - 1
-        while lo <= hi {
-            let mid = (lo + hi) / 2
-            if starts[mid] == start { return mid }
-            if starts[mid] < start { lo = mid + 1 } else { hi = mid - 1 }
-        }
-        return nil
-    }
-
-    static func computeLineStarts(_ text: [UInt16]) -> [Int] {
-        var starts = [0]
-        starts.reserveCapacity(text.count / 30)
-        for (i, c) in text.enumerated() where c == 0x0A { starts.append(i + 1) }
-        return starts
-    }
+    func line(containing offset: Int) -> Int { lexer.line(containing: offset) }
 }
