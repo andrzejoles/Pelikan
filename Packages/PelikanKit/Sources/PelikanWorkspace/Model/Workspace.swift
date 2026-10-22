@@ -9,6 +9,10 @@ public protocol UIServices: AnyObject {
     func showCommandPalette()
     /// Pytanie z wyborem (np. zapis zmian przy zamykaniu). Zwraca indeks wybranego przycisku albo nil (anuluj).
     func ask(_ title: String, message: String, buttons: [String]) async -> Int?
+    /// Okno definicji połączenia (nil = nowe).
+    func showConnectionEditor(connectionID: UUID?)
+    /// Okno logowania (wybór połączenia).
+    func showLogon()
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).
@@ -216,4 +220,29 @@ public final class Workspace {
 @MainActor
 final class SettingsBox {
     var value = Settings()
+}
+
+// MARK: - Połączenia okien
+
+extension Workspace {
+    /// Połączenie okna: przypięte albo główne (UG 20.2).
+    public func effectiveConnection(of doc: Document) -> UUID? {
+        doc.connectionID ?? sessions.mainConnectionID
+    }
+
+    /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).
+    public func session(for doc: Document) async throws -> any DatabaseSession {
+        guard let c = effectiveConnection(of: doc) else { throw CommandError.notConnected }
+        return try await sessions.session(sessions.key(forDocument: doc.id, connection: c))
+    }
+
+    /// Kończy transakcje okien (COMMIT/ROLLBACK) przed rozłączeniem lub zamknięciem.
+    public func endTransactions(of docs: [Document], commit: Bool) async throws {
+        for d in docs {
+            guard let c = effectiveConnection(of: d),
+                  let s = sessions.existingSession(sessions.key(forDocument: d.id, connection: c)) else { continue }
+            if commit { try await s.commit() } else { try await s.rollback() }
+            d.transactionOpen = false
+        }
+    }
 }

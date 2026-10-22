@@ -49,7 +49,7 @@ struct ConnectionStoreTests {
         for d in [a, b, c] { try store.upsert(d) }
         #expect(Set(store.connections(in: sys.id).map(\.name)) == ["a", "c"])
         #expect(store.connections(in: prod.id).map(\.name) == ["b"])
-        #expect(Set(store.connections(in: nil).map(\.name)) == ["a", "b"])
+        #expect(store.connections(in: nil).isEmpty)   // a i b są w folderach z regułą
     }
 
     @Test("Wzorce * ? i user@database")

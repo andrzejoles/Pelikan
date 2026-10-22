@@ -112,7 +112,9 @@ public final class ConnectionStore {
     /// Połączenia widoczne w folderze: jawnie przypisane + pasujące do reguły (UG 19.2).
     public func connections(in folderID: UUID?) -> [ConnectionDefinition] {
         let explicit = connections.filter { $0.folderID == folderID }
-        guard let folderID, let folder = folders.first(where: { $0.id == folderID }), folder.hasRule else { return explicit }
+        // W korzeniu bez połączeń pokazanych już w folderze z regułą (inaczej byłyby dwa razy).
+        guard let folderID else { return explicit.filter { c in !folders.contains { $0.matches(c) } } }
+        guard let folder = folders.first(where: { $0.id == folderID }), folder.hasRule else { return explicit }
         let matched = connections.filter { $0.folderID != folderID && folder.matches($0) }
         return explicit + matched
     }

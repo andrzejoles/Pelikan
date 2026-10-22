@@ -35,28 +35,28 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | PD-CONN-001 | Sterownik Instant Client (ODPI-C): łączenie, zapytania, typy, przerwanie | PROMPT §4.1, UG 3 | Session > Log on | 1 | P1 | — | ✅ test |
-| PD-CONN-002 | Okno logowania (użytkownik, hasło, baza, Connect as) z historią i anulowaniem (praca bez połączenia) | UG 3, UG 23.8 | Session > Log on | 1 | P1 | Brak | do zrobienia |
-| PD-CONN-003 | Connection List: foldery, podfoldery, połączenia jawne i dopasowane regułami (wzorce * ?), folder Recent | UG 19.1–19.2 | View > Connection List | 1 | P1 | Odczyt | w toku |
-| PD-CONN-004 | Definicja połączenia: nazwa, obraz, użytkownik, baza, hasło (Pęk kluczy, puste = pytaj), Connect as, Identified externally | UG 19.2 | Configure > Connections | 1 | P1 | Brak | w toku |
-| PD-CONN-005 | Kolor połączenia i wskaźnik (pasek, okno, Window List, tło); reguły Connection Indicators user@db | UG 19.2, UG 23.16 | Configure > Preferences | 1 | P1 | — | do zrobienia |
-| PD-CONN-006 | Środowisko połączenia dev/test/prod z ostrzeżeniami przy zmianach na prod | PROMPT §4.2 p.6 | Configure > Connections | 1 | P1 | Odczyt | do zrobienia |
+| PD-CONN-002 | Okno logowania (użytkownik, hasło, baza, Connect as) z historią i anulowaniem (praca bez połączenia) | UG 3, UG 23.8 | Session > Log on | 1 | P1 | Brak | 👁 sprawdzone ręcznie |
+| PD-CONN-003 | Connection List: foldery, podfoldery, połączenia jawne i dopasowane regułami (wzorce * ?), folder Recent | UG 19.1–19.2 | View > Connection List | 1 | P1 | Odczyt | 👁 sprawdzone ręcznie |
+| PD-CONN-004 | Definicja połączenia: nazwa, obraz, użytkownik, baza, hasło (Pęk kluczy, puste = pytaj), Connect as, Identified externally | UG 19.2 | Configure > Connections | 1 | P1 | Brak | 👁 sprawdzone ręcznie |
+| PD-CONN-005 | Kolor połączenia i wskaźnik (pasek, okno, Window List, tło); reguły Connection Indicators user@db | UG 19.2, UG 23.16 | Configure > Preferences | 1 | P1 | — | w toku |
+| PD-CONN-006 | Środowisko połączenia dev/test/prod z ostrzeżeniami przy zmianach na prod | PROMPT §4.2 p.6 | Configure > Connections | 1 | P1 | Odczyt | w toku |
 | PD-CONN-007 | Połączenie tylko do odczytu (blokada zmian obiektów i danych) | UG 19.2, NF15 | Configure > Connections | 1 | P1 | Odczyt | do zrobienia |
-| PD-CONN-008 | Skrypt inicjalizacji sesji i komunikat przy logowaniu; Test połączenia | UG 19.2, NF11 | Configure > Connections | 1 | P2 | Brak | w toku |
+| PD-CONN-008 | Skrypt inicjalizacji sesji i komunikat przy logowaniu; Test połączenia | UG 19.2, NF11 | Configure > Connections | 1 | P2 | Brak | ✅ test |
 | PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | do zrobienia |
-| PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | w toku |
+| PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | w toku |
+| PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | ✅ test |
 | PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | do zrobienia |
 | PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | do zrobienia |
-| PD-CONN-016 | Proxy user (pośrednik[schemat]) | NF12 | Log on | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-017 | Zmiana wygasłego hasła (ORA-28001) i Set Password (w bazie i w definicji) | PROMPT §3.1, NF10 | Session > Set Password | 1 | P2 | Brak | w toku |
-| PD-CONN-018 | Wiele połączeń naraz; połączenie główne (pogrubione, dwuklik, Set Main Connection [to current]) | UG 20.1 | Session | 1 | P1 | Odczyt | w toku |
+| PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | w toku |
+| PD-CONN-016 | Proxy user (pośrednik[schemat]) | NF12 | Log on | 1 | P2 | Brak | w toku |
+| PD-CONN-017 | Zmiana wygasłego hasła (ORA-28001) i Set Password (w bazie i w definicji) | PROMPT §3.1, NF10 | Session > Set Password | 1 | P2 | Brak | ✅ test |
+| PD-CONN-018 | Wiele połączeń naraz; połączenie główne (pogrubione, dwuklik, Set Main Connection [to current]) | UG 20.1 | Session | 1 | P1 | Odczyt | ✅ test |
 | PD-CONN-019 | Połączenie okna na pasku stanu, zmiana połączenia okna, przypięte / nieprzypięte (preferencja domyślna) | UG 20.2, NF10 | Pasek stanu okna | 1 | P1 | — | do zrobienia |
-| PD-CONN-020 | Tryb sesji Multi / Dual / Single; osobna sesja kompilacji | UG 20.3 | Preferences > Oracle > Connection | 1 | P1 | — | w toku |
+| PD-CONN-020 | Tryb sesji Multi / Dual / Single; osobna sesja kompilacji | UG 20.3 | Preferences > Oracle > Connection | 1 | P1 | — | ✅ test |
 | PD-CONN-021 | Wykonywanie okien równolegle (wątki), kursor „wykonywanie”, blokada edycji okna w trakcie | UG 20.4 | — | 1 | P1 | — | do zrobienia |
-| PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | do zrobienia |
+| PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | w toku |
+| PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | w toku |
 | PD-CONN-024 | Wylogowanie z otwartą transakcją: COMMIT / ROLLBACK / pytaj (w Pelikanie domyślnie pytaj) | UG 23.1 | Preferences | 1 | P1 | — | do zrobienia |
 | PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | do zrobienia |
 | PD-CONN-026 | Automatyczne zamykanie nieużywanych połączeń; pamiętanie Recent | UG 23.1 | Preferences | 1 | P3 | — | do zrobienia |

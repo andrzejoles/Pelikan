@@ -5,7 +5,7 @@ import Foundation
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + debug + tools + reports + view + window + help
+        file + edit + session + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -101,12 +101,6 @@ public enum BuiltinCommands {
 
     @MainActor static var session: [Command] {
         [
-            .planned(CommandDescriptor(id: "session.logon", title: L10n.tr("Zaloguj…"), category: .session,
-                                       agent: .none, effect: .settings, summary: L10n.tr("Łączy się z bazą."),
-                                       stage: 1, feature: "PD-CONN-002")),
-            .planned(CommandDescriptor(id: "session.logoff", title: L10n.tr("Wyloguj"), category: .session,
-                                       agent: .none, effect: .settings, summary: L10n.tr("Rozłącza połączenie główne."),
-                                       stage: 1, feature: "PD-CONN-018")),
             .planned(CommandDescriptor(id: "sql.execute", title: L10n.tr("Wykonaj"), category: .session, pd: ["f8"], mac: ["cmd+enter"],
                                        agent: .none, effect: .modifiesDatabase,
                                        summary: L10n.tr("Wykonuje zaznaczenie albo polecenie pod kursorem (AutoSelect) lub wszystkie polecenia okna."),
@@ -209,9 +203,6 @@ public enum BuiltinCommands {
             .planned(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
                                        agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje lub ukrywa Przeglądarkę obiektów."),
                                        stage: 2, feature: "PD-OB-001")),
-            .planned(CommandDescriptor(id: "view.connectionList", title: L10n.tr("Lista połączeń"), category: .view,
-                                       agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje lub ukrywa Listę połączeń."),
-                                       stage: 1, feature: "PD-CONN-003")),
         ]
     }
 
