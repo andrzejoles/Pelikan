@@ -488,3 +488,59 @@ struct CommandWindowIntegrationTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Tunel SSH do bazy testowej", .serialized,
+       .enabled(if: TestDatabase.isAvailable && TestDatabase.config?.sshPort != nil
+                && FileManager.default.fileExists(atPath: (TestDatabase.config?.sshDirectory ?? "") + "/id_ed25519")))
+struct SSHTunnelIntegrationTests {
+    func workspace(identity: String) throws -> (Workspace, ConnectionDefinition) {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let dir = c.sshDirectory!
+        ws.sessions.tunnels.extraOptions = ["-o", "UserKnownHostsFile=\(dir)/known_hosts", "-o", "StrictHostKeyChecking=yes", "-F", "/dev/null"]
+        // Baza widziana z bastionu (sieć Docker), nie z Maca.
+        var def = ConnectionDefinition(name: "przez-ssh", target: ConnectionTarget(user: c.user, connectString: "\(c.sshDBHost ?? "pelikan-testdb"):1521/FREEPDB1"))
+        def.sshTunnel = SSHTunnel(host: "127.0.0.1", port: c.sshPort!, user: "tunnel", identityFile: identity)
+        try ws.connections.upsert(def, password: c.password)
+        return (ws, def)
+    }
+
+    @Test("Połączenie przez tunel: zapytanie działa, tunel współdzielony przez sesje, zamykany z ostatnią sesją")
+    func tunnel() async throws {
+        let c = TestDatabase.config!
+        let (ws, def) = try workspace(identity: c.sshDirectory! + "/id_ed25519")
+        let s1 = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        let s2 = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .compile))
+        #expect(ws.sessions.tunnels.isOpen(def.id))
+        let (_, rows) = try await s1.queryAll("select count(*) from emp")
+        #expect(rows.first?.first?.displayText == "8")
+        #expect(s2.info.sessionUser == c.user.uppercased())
+        await ws.sessions.close(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(ws.sessions.tunnels.isOpen(def.id))
+        await ws.sessions.close(SessionKey(connectionID: def.id, purpose: .compile))
+        #expect(!ws.sessions.tunnels.isOpen(def.id))
+    }
+
+    @Test("Zły klucz: czytelny błąd ssh, bez wiszącego procesu")
+    func wrongKey() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-ssh-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let key = dir.appendingPathComponent("zly").path
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
+        p.arguments = ["-q", "-t", "ed25519", "-N", "", "-f", key]
+        try p.run()
+        p.waitUntilExit()
+        let (ws, def) = try workspace(identity: key)
+        do {
+            _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+            Issue.record("połączenie nie powinno się udać")
+        } catch {
+            #expect(error.localizedDescription.contains("Tunel SSH nie powstał"))
+            #expect(error.localizedDescription.contains("Permission denied"))
+        }
+        #expect(!ws.sessions.tunnels.isOpen(def.id))
+    }
+}

@@ -112,7 +112,7 @@ public enum TNSNames {
     }
 
     /// Wartość parametru `(NAZWA=wartość)` z deskryptora (pierwsze wystąpienie, bez rozróżniania wielkości liter).
-    static func value(_ key: String, in descriptor: String) -> String? {
+    public static func value(_ key: String, in descriptor: String) -> String? {
         guard let r = descriptor.range(of: "(\(key)=", options: .caseInsensitive) else { return nil }
         let rest = descriptor[r.upperBound...]
         guard let end = rest.firstIndex(of: ")") else { return nil }

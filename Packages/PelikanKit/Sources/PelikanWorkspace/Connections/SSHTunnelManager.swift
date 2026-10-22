@@ -1,0 +1,190 @@
+import Foundation
+import PelikanDB
+#if canImport(Darwin)
+import Darwin
+private let sockStream = SOCK_STREAM
+#else
+import Glibc
+private let sockStream = Int32(SOCK_STREAM.rawValue)
+#endif
+
+/// Adres bazy w connect stringu i jego wersja przez tunel (127.0.0.1:port lokalny).
+public enum ConnectStringRewriter {
+    public struct Endpoint: Sendable, Hashable {
+        public var host: String
+        public var port: Int
+    }
+
+    /// Host i port bazy z EZConnect (`host[:port]/usługa`, `//host…`, `tcps://…`, `[IPv6]`) albo deskryptora.
+    public static func endpoint(of connect: String) -> Endpoint? {
+        let s = connect.trimmingCharacters(in: .whitespaces)
+        if s.hasPrefix("(") {
+            guard let h = TNSNames.value("HOST", in: s) else { return nil }
+            return Endpoint(host: h, port: TNSNames.value("PORT", in: s).flatMap(Int.init) ?? 1521)
+        }
+        var rest = s
+        if let r = rest.range(of: "://") { rest = String(rest[r.upperBound...]) }
+        if rest.hasPrefix("//") { rest.removeFirst(2) }
+        let hostPort = rest.split(separator: "/", maxSplits: 1).first.map(String.init) ?? rest
+        if hostPort.hasPrefix("["), let close = hostPort.firstIndex(of: "]") {
+            let host = String(hostPort[hostPort.index(after: hostPort.startIndex)..<close])
+            let after = hostPort[hostPort.index(after: close)...]
+            return Endpoint(host: host, port: after.hasPrefix(":") ? Int(after.dropFirst()) ?? 1521 : 1521)
+        }
+        let parts = hostPort.split(separator: ":", maxSplits: 1)
+        guard let host = parts.first, !host.isEmpty, s.contains("/") || s.contains(":") else { return nil }
+        return Endpoint(host: String(host), port: parts.count > 1 ? Int(parts[1]) ?? 1521 : 1521)
+    }
+
+    /// Connect string z adresem zastąpionym przez `127.0.0.1:localPort` (alias TNS — rozwinięty do deskryptora).
+    public static func rewrite(_ connect: String, localPort: Int, tns: [TNSEntry] = []) -> String? {
+        var s = connect.trimmingCharacters(in: .whitespaces)
+        if !s.hasPrefix("("), !s.contains("/"), !s.contains(":"),
+           let entry = tns.first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(s) == .orderedSame } }) {
+            s = entry.descriptor
+        }
+        if s.hasPrefix("(") {
+            var out = s.replacingOccurrences(of: #"\(\s*HOST\s*=\s*[^)]+\)"#, with: "(HOST=127.0.0.1)", options: [.regularExpression, .caseInsensitive])
+            out = out.replacingOccurrences(of: #"\(\s*PORT\s*=\s*[^)]+\)"#, with: "(PORT=\(localPort))", options: [.regularExpression, .caseInsensitive])
+            return out.contains("(HOST=127.0.0.1)") ? out : nil
+        }
+        guard let ep = endpoint(of: s) else { return nil }
+        var prefix = ""
+        var rest = s
+        if let r = rest.range(of: "://") { prefix = String(rest[..<r.upperBound]); rest = String(rest[r.upperBound...]) }
+        if rest.hasPrefix("//") { prefix += "//"; rest.removeFirst(2) }
+        let hostPortEnd = rest.firstIndex(of: "/") ?? rest.endIndex
+        let tail = rest[hostPortEnd...]
+        _ = ep
+        return prefix + "127.0.0.1:\(localPort)" + tail
+    }
+}
+
+/// Tunele SSH dla połączeń (UG nie ma tej funkcji — jak SQL Developer/DBeaver): systemowy `ssh -N -L`, więc działają
+/// `~/.ssh/config`, agent SSH (klucze w Pęku kluczy przez `ssh-add --apple-use-keychain`), ProxyJump i known_hosts.
+/// Hasła SSH nigdy nie trafiają do argumentów ani środowiska — w Etapie 1 tylko klucze i agent (D19).
+@MainActor
+public final class SSHTunnelManager {
+    public struct Tunnel: Sendable {
+        public let localPort: Int
+        public let remote: ConnectStringRewriter.Endpoint
+    }
+
+    private final class Running {
+        let process: Process
+        let tunnel: Tunnel
+        var users = 1
+        init(process: Process, tunnel: Tunnel) { self.process = process; self.tunnel = tunnel }
+    }
+
+    private var running: [UUID: Running] = [:]
+    /// Dodatkowe opcje ssh (testy: własny plik known_hosts).
+    public var extraOptions: [String] = []
+    public var sshPath = "/usr/bin/ssh"
+
+    public init() {}
+
+    /// Wolny port lokalny (bind na 0 i odczyt przydzielonego).
+    nonisolated static func freePort() -> Int? {
+        let fd = socket(AF_INET, sockStream, 0)
+        guard fd >= 0 else { return nil }
+        defer { close(fd) }
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = 0
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+        var len = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let ok = withUnsafeMutablePointer(to: &addr) { p in
+            p.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(fd, $0, len) == 0 && getsockname(fd, $0, &len) == 0 }
+        }
+        return ok ? Int(UInt16(bigEndian: addr.sin_port)) : nil
+    }
+
+    nonisolated static func canConnect(port: Int) -> Bool {
+        let fd = socket(AF_INET, sockStream, 0)
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = in_port_t(UInt16(port).bigEndian)
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+        return withUnsafePointer(to: &addr) { p in
+            p.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) == 0 }
+        }
+    }
+
+    /// Argumenty ssh dla tunelu (bez haseł).
+    nonisolated static func arguments(_ t: SSHTunnel, localPort: Int, remote: ConnectStringRewriter.Endpoint, extra: [String]) -> [String] {
+        var a = ["-N", "-T", "-o", "ExitOnForwardFailure=yes", "-o", "BatchMode=yes", "-o", "ServerAliveInterval=30",
+                 "-o", "ConnectTimeout=15", "-L", "127.0.0.1:\(localPort):\(remote.host):\(remote.port)", "-p", String(t.port)]
+        if let id = t.identityFile, !id.isEmpty { a += ["-i", (id as NSString).expandingTildeInPath, "-o", "IdentitiesOnly=yes"] }
+        if let j = t.jumpHost, !j.isEmpty { a += ["-J", j] }
+        a += extra
+        a.append(t.user.isEmpty ? t.host : "\(t.user)@\(t.host)")
+        return a
+    }
+
+    /// Otwiera (albo współdzieli) tunel połączenia; zwraca lokalny port.
+    public func open(for def: ConnectionDefinition, tns: [TNSEntry] = []) async throws -> Tunnel {
+        if let r = running[def.id], r.process.isRunning {
+            r.users += 1
+            return r.tunnel
+        }
+        guard let t = def.sshTunnel else { throw DatabaseError.driverUnavailable(L10n.tr("Połączenie nie ma tunelu SSH")) }
+        if t.usesPassword {
+            throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH z hasłem nie jest jeszcze obsługiwany — użyj klucza albo agenta SSH (ssh-add)."))
+        }
+        var connect = def.target.connectString
+        if !connect.hasPrefix("("), !connect.contains("/"), !connect.contains(":"),
+           let e = tns.first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(connect) == .orderedSame } }) {
+            connect = e.descriptor
+        }
+        guard let remote = ConnectStringRewriter.endpoint(of: connect) else {
+            throw DatabaseError.driverUnavailable(L10n.tr("Nie można ustalić hosta bazy z „\(def.target.connectString)” dla tunelu SSH"))
+        }
+        guard let port = Self.freePort() else { throw DatabaseError.driverUnavailable(L10n.tr("Brak wolnego portu lokalnego dla tunelu")) }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: sshPath)
+        p.arguments = Self.arguments(t, localPort: port, remote: remote, extra: extraOptions)
+        let err = Pipe()
+        p.standardError = err
+        p.standardOutput = FileHandle.nullDevice
+        p.standardInput = FileHandle.nullDevice
+        try p.run()
+        // Czekamy, aż port przyjmuje połączenia albo ssh się zakończy (błąd uwierzytelnienia, host key, sieć).
+        let deadline = ContinuousClock.now + .seconds(20)
+        while ContinuousClock.now < deadline {
+            if !p.isRunning {
+                let msg = String(decoding: err.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH nie powstał: \(msg.isEmpty ? "ssh zakończył się kodem \(p.terminationStatus)" : msg)"))
+            }
+            if Self.canConnect(port: port) { break }
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        guard p.isRunning, Self.canConnect(port: port) else {
+            p.terminate()
+            throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH: przekroczony czas oczekiwania"))
+        }
+        let tunnel = Tunnel(localPort: port, remote: remote)
+        running[def.id] = Running(process: p, tunnel: tunnel)
+        return tunnel
+    }
+
+    /// Zwalnia tunel (zamyka, gdy nikt go nie używa).
+    public func release(_ id: UUID) {
+        guard let r = running[id] else { return }
+        r.users -= 1
+        if r.users <= 0 {
+            r.process.terminate()
+            running[id] = nil
+        }
+    }
+
+    public func closeAll() {
+        for r in running.values { r.process.terminate() }
+        running.removeAll()
+    }
+
+    public func isOpen(_ id: UUID) -> Bool { running[id]?.process.isRunning ?? false }
+}

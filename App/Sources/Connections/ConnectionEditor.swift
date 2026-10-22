@@ -33,6 +33,12 @@ final class ConnectionDraft {
     var agentAllowChanges: Bool
     var agentUser: String
     var maskedColumns: String
+    var sshEnabled: Bool
+    var sshHost: String
+    var sshPort: Int
+    var sshUser: String
+    var sshIdentity: String
+    var sshJump: String
     var isNew: Bool
     var testResult: String?
     var testing = false
@@ -49,6 +55,12 @@ final class ConnectionDraft {
         readOnly = d.readOnly; connectOnStartup = d.connectOnStartup; initScript = d.initScript; logonMessage = d.logonMessage
         agentVisible = d.agent.visibleToAgent; agentAllowChanges = d.agent.allowChanges; agentUser = d.agent.agentUser ?? ""
         maskedColumns = d.agent.maskedColumns.joined(separator: ", ")
+        sshEnabled = d.sshTunnel != nil
+        sshHost = d.sshTunnel?.host ?? ""
+        sshPort = d.sshTunnel?.port ?? 22
+        sshUser = d.sshTunnel?.user ?? NSUserName()
+        sshIdentity = d.sshTunnel?.identityFile ?? ""
+        sshJump = d.sshTunnel?.jumpHost ?? ""
         self.isNew = isNew
     }
 
@@ -58,7 +70,7 @@ final class ConnectionDraft {
         if useCustomColor, let c = NSColor(color).usingColorSpace(.sRGB) {
             rgb = PelikanWorkspace.RGBColor(red: Double(c.redComponent), green: Double(c.greenComponent), blue: Double(c.blueComponent))
         }
-        return ConnectionDefinition(
+        var def = ConnectionDefinition(
             id: id, name: name.trimmingCharacters(in: .whitespaces), folderID: folderID,
             target: ConnectionTarget(user: user.trimmingCharacters(in: .whitespaces), connectString: connectString.trimmingCharacters(in: .whitespaces),
                                      role: role, proxyClient: opt(proxyClient), externalAuth: externalAuth,
@@ -69,6 +81,11 @@ final class ConnectionDraft {
             agent: AgentConnectionPolicy(visibleToAgent: agentVisible, allowChanges: agentAllowChanges, agentUser: opt(agentUser),
                                          maskedColumns: maskedColumns.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }),
             currentSchema: opt(currentSchema))
+        if sshEnabled, let host = opt(sshHost) {
+            def.sshTunnel = SSHTunnel(host: host, port: sshPort, user: sshUser.trimmingCharacters(in: .whitespaces),
+                                      identityFile: opt(sshIdentity), jumpHost: opt(sshJump))
+        }
+        return def
     }
 
     var isValid: Bool {
@@ -153,6 +170,33 @@ struct ConnectionEditorView: View {
 
                 Form {
                     Section {
+                        Toggle(L10n.tr("Łącz przez tunel SSH"), isOn: $draft.sshEnabled)
+                        TextField(L10n.tr("Serwer SSH (bastion)"), text: $draft.sshHost, prompt: Text("bastion.example.com"))
+                            .disabled(!draft.sshEnabled)
+                        TextField(L10n.tr("Port"), value: $draft.sshPort, format: .number.grouping(.never)).disabled(!draft.sshEnabled)
+                        TextField(L10n.tr("Użytkownik SSH"), text: $draft.sshUser).disabled(!draft.sshEnabled)
+                        HStack {
+                            TextField(L10n.tr("Plik klucza prywatnego"), text: $draft.sshIdentity, prompt: Text(L10n.tr("puste — agent SSH i ~/.ssh/config")))
+                            Button(L10n.tr("Wybierz…")) {
+                                let panel = NSOpenPanel()
+                                panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent(".ssh")
+                                panel.showsHiddenFiles = true
+                                if panel.runModal() == .OK, let u = panel.url { draft.sshIdentity = u.path }
+                            }
+                        }
+                        .disabled(!draft.sshEnabled)
+                        TextField(L10n.tr("Host pośredni (ProxyJump)"), text: $draft.sshJump, prompt: Text(L10n.tr("opcjonalnie")))
+                            .disabled(!draft.sshEnabled)
+                    } footer: {
+                        Text(L10n.tr("Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH nie jest obsługiwane — użyj klucza."))
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
+                .formStyle(.grouped)
+                .tabItem { Text(L10n.tr("Tunel SSH")) }
+
+                Form {
+                    Section {
                         Toggle(L10n.tr("Agent widzi to połączenie (tylko alias i środowisko)"), isOn: $draft.agentVisible)
                         Toggle(L10n.tr("Agent może zmieniać dane i obiekty (za zgodą)"), isOn: $draft.agentAllowChanges)
                             .disabled(!draft.agentVisible)
@@ -233,8 +277,17 @@ enum ConnectionEditorPresenter {
                 draft.testResult = Self.message(e)
                 return
             }
+            var target = def.target
+            var tunnelOpened = false
+            defer { if tunnelOpened { workspace.sessions.tunnels.release(def.id) } }
             do {
-                let s = try await driver.connect(target: def.target, credentials: Credentials(password: password),
+                if def.sshTunnel != nil {
+                    let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
+                    let tunnel = try await workspace.sessions.tunnels.open(for: def, tns: tns)
+                    tunnelOpened = true
+                    target.connectString = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) ?? target.connectString
+                }
+                let s = try await driver.connect(target: target, credentials: Credentials(password: password),
                                                  options: ConnectOptions(tags: SessionTags(module: "Pelikan", action: "test połączenia")))
                 let banner = s.info.server.banner.split(separator: "\n").first.map(String.init) ?? s.info.server.description
                 draft.testResult = "✓ " + banner + " · " + s.info.sessionUser

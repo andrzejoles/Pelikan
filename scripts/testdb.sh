@@ -7,6 +7,8 @@
 #         scripts/testdb.sh down     zatrzymuje kontener (dane zostają)
 #         scripts/testdb.sh env      wypisuje zmienne PELIKAN_TESTDB_* (do `eval`)
 #         scripts/testdb.sh sql [U]  sqlplus w kontenerze jako U (domyślnie SYSTEM), skrypt ze stdin
+#         scripts/testdb.sh ssh-up   serwer SSH w kontenerze (testy tunelu): klucz w .testdb/ssh, port 127.0.0.1:2222
+#         scripts/testdb.sh ssh-down usuwa kontener SSH
 #
 # Hasła: losowe przy pierwszym `up`, w .testdb/env (poza repozytorium, 0600). Port tylko na 127.0.0.1.
 # Testy łączą się WYŁĄCZNIE z tą bazą (PELIKAN_TESTDB_*); żadnych innych baz (docs/PROMPT.md §9, §13).
@@ -189,7 +191,44 @@ SQL
     echo "Seed zakończony." >&2
 }
 
+SSH_NAME="${PELIKAN_TESTDB_SSH_CONTAINER:-pelikan-testdb-ssh}"
+SSH_PORT="${PELIKAN_TESTDB_SSH_PORT:-2222}"
+NET="${PELIKAN_TESTDB_NETWORK:-pelikan-testnet}"
+
+# Serwer SSH (bastion) w tej samej sieci Docker co baza: tunel ssh -L … pelikan-testdb:1521.
+ssh_up() {
+    load_env
+    mkdir -p "$STATE/ssh"
+    chmod 700 "$STATE/ssh"
+    [ -f "$STATE/ssh/id_ed25519" ] || ssh-keygen -q -t ed25519 -N "" -C "pelikan-test" -f "$STATE/ssh/id_ed25519"
+    docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
+    docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
+    docker image inspect pelikan-test-sshd >/dev/null 2>&1 || docker build -q -t pelikan-test-sshd "$ROOT/scripts/testdb/ssh" >/dev/null
+    if ! docker container inspect "$SSH_NAME" >/dev/null 2>&1; then
+        docker run -d --name "$SSH_NAME" --network "$NET" -p "127.0.0.1:${SSH_PORT}:22" pelikan-test-sshd >/dev/null
+    else
+        docker start "$SSH_NAME" >/dev/null
+    fi
+    docker cp "$STATE/ssh/id_ed25519.pub" "$SSH_NAME:/home/tunnel/.ssh/authorized_keys"
+    docker exec "$SSH_NAME" sh -c 'chown tunnel:tunnel /home/tunnel/.ssh/authorized_keys && chmod 600 /home/tunnel/.ssh/authorized_keys'
+    # known_hosts testu: klucz hosta kontenera (tunel weryfikuje host jak zwykły ssh).
+    for _ in $(seq 1 20); do
+        if ssh-keyscan -p "$SSH_PORT" -t ed25519 127.0.0.1 2>/dev/null | sed "s/^127.0.0.1/[127.0.0.1]:${SSH_PORT}/" > "$STATE/ssh/known_hosts.tmp" && [ -s "$STATE/ssh/known_hosts.tmp" ]; then
+            mv "$STATE/ssh/known_hosts.tmp" "$STATE/ssh/known_hosts"
+            break
+        fi
+        sleep 0.5
+    done
+    grep -q '^PELIKAN_TESTDB_SSH_PORT=' "$ENVFILE" || {
+        echo "PELIKAN_TESTDB_SSH_PORT=$SSH_PORT" >> "$ENVFILE"
+        echo "PELIKAN_TESTDB_SSH_DBHOST=$NAME" >> "$ENVFILE"
+    }
+    echo "SSH gotowy: tunnel@127.0.0.1:${SSH_PORT} → ${NAME}:1521" >&2
+}
+
 case "${1:-}" in
+    ssh-up) ssh_up ;;
+    ssh-down) docker rm -f "$SSH_NAME" >/dev/null 2>&1; echo "Usunięto ${SSH_NAME}" ;;
     up) up ;;
     seed) seed ;;
     down) docker stop "$NAME" >/dev/null && echo "Zatrzymano ${NAME}" ;;

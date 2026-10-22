@@ -117,6 +117,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
+    /// Procesy ssh tuneli kończą się razem z aplikacją.
+    func applicationWillTerminate(_ notification: Notification) {
+        workspace.sessions.tunnels.closeAll()
+    }
+
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
     // MARK: UIServices
