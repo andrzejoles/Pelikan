@@ -99,6 +99,9 @@ public final class Document: Identifiable {
     public var substitutionEnabled = true
     /// Historia poleceń okna (przyciski wstecz/dalej — UG 7.1).
     public var statementHistory: [String] = []
+    /// Command Window: wyjście karty Dialog i historia linii poleceń (strzałki w górę/dół).
+    public var console: [ConsoleLine] = []
+    public var commandLineHistory: [String] = []
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {

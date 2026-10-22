@@ -26,6 +26,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */ = {isa = PBXBuildFile; productRef = 9D16B7D56F23E44BF345738A /* PelikanODPI */; };
+		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
@@ -36,6 +37,7 @@
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
 		26AA9CEDE79921F45A0500AB /* Observe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observe.swift; sourceTree = "<group>"; };
 		29353BC88EDA99528B1F86C8 /* Brand.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Brand.xcconfig; sourceTree = "<group>"; };
+		2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandWindowViewController.swift; sourceTree = "<group>"; };
 		2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowListViewController.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 		6D8CA0BC5B0BF89A556D1929 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				CA48D35749C698677F8C081C /* CommandWindow */,
 				42B5903D5D9EF245A7512677 /* Connections */,
 				ECB3825E12C3C711DC48304D /* Editor */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
@@ -134,6 +137,14 @@
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		CA48D35749C698677F8C081C /* CommandWindow */ = {
+			isa = PBXGroup;
+			children = (
+				2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */,
+			);
+			path = CommandWindow;
 			sourceTree = "<group>";
 		};
 		D5ECCC1B2D0E12AC15DE73EF /* Packages */ = {
@@ -251,6 +262,7 @@
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
+				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,

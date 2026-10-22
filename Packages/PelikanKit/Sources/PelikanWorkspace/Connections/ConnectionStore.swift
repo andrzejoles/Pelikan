@@ -11,6 +11,8 @@ public final class ConnectionStore {
     public private(set) var connections: [ConnectionDefinition] = []
     /// Hasła podane w tej sesji aplikacji dla połączeń bez zapisu hasła (tylko pamięć).
     @ObservationIgnored private var sessionPasswords: [UUID: String] = [:]
+    /// Połączenia tymczasowe (CONNECT w Command Window z hasłem w poleceniu) — nie trafiają do listy ani do pliku.
+    @ObservationIgnored private var temporary: [UUID: ConnectionDefinition] = [:]
     @ObservationIgnored private let secrets: any SecretStore
     @ObservationIgnored private let fileURL: URL?
 
@@ -40,7 +42,20 @@ public final class ConnectionStore {
 
     // MARK: Definicje
 
-    public func connection(_ id: UUID) -> ConnectionDefinition? { connections.first { $0.id == id } }
+    public func connection(_ id: UUID) -> ConnectionDefinition? { connections.first { $0.id == id } ?? temporary[id] }
+
+    /// Rejestruje połączenie tymczasowe (tylko pamięć, hasło nie trafia do Pęku kluczy ani do pliku).
+    public func registerTemporary(_ def: ConnectionDefinition, password: String?) {
+        var d = def
+        d.savePassword = false
+        temporary[d.id] = d
+        if let password { sessionPasswords[d.id] = password }
+    }
+
+    public func removeTemporary(_ id: UUID) {
+        temporary[id] = nil
+        sessionPasswords[id] = nil
+    }
 
     /// Dodaje lub aktualizuje definicję; hasło (opcjonalne) trafia do Pęku kluczy albo do pamięci sesji.
     public func upsert(_ def: ConnectionDefinition, password: String? = nil) throws {
@@ -83,7 +98,7 @@ public final class ConnectionStore {
     }
 
     public func markUsed(_ id: UUID, at date: Date = Date()) {
-        guard let i = connections.firstIndex(where: { $0.id == id }) else { return }
+        guard temporary[id] == nil, let i = connections.firstIndex(where: { $0.id == id }) else { return }
         connections[i].lastUsed = date
         try? save()
     }

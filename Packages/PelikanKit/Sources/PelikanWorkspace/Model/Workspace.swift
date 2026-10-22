@@ -88,6 +88,16 @@ public final class Workspace {
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
+    /// Silniki SQL*Plus okien Command Window (stan SET/DEFINE/VARIABLE trwa przez życie okna).
+    @ObservationIgnored private var sqlplusEngines: [DocumentID: SQLPlusEngine] = [:]
+
+    public func sqlplusEngine(for doc: Document) -> SQLPlusEngine {
+        if let e = sqlplusEngines[doc.id] { return e }
+        let e = SQLPlusEngine(workspace: self, document: doc)
+        sqlplusEngines[doc.id] = e
+        return e
+    }
+
 
     /// - Parameters:
     ///   - dataDirectory: katalog danych (`~/Library/Application Support/Pelikan`); nil = nic nie jest zapisywane.
@@ -171,6 +181,7 @@ public final class Workspace {
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
         documents.remove(at: i)
+        sqlplusEngines[id] = nil
         if activeDocumentID == id {
             activeDocumentID = documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id
         }

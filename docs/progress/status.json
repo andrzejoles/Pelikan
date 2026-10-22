@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T23:40:09+02:00",
+  "heartbeat": "2026-10-22T23:54:13+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1 / siatka: przyciski Next/Last Page, eksport (CSV, TSV, HTML, XML, SQL, XLSX, schowek), widok pojedynczego rekordu, sortowanie, edycja z ROWID i Post, Large Data Editor",
+  "task": "Etap 1 / Command Window: silnik SQL*Plus (SET, DEFINE, VARIABLE, PROMPT, @, SPOOL, DESCRIBE, SHOW ERRORS…), wyniki tekstowe, karty Dialog i Editor",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,9 @@
     }
   ],
   "done": [
+    "Command Window — interfejs: karta Dialog (konsola z kolorami, linia poleceń z historią strzałkami, wielowierszowe SQL do „;” i PL/SQL do „/”, kolejka poleceń wpisanych w trakcie wykonania), karta Edytor (F8 wykonuje i przełącza na Dialog), pasek SET (Echo, Feedback, Verify, Heading, Timing, Output, Termout); SET z wieloma opcjami w linii — sprawdzone ręcznie",
+    "Command Window — silnik SQL*Plus: SET (ECHO, FEEDBACK, HEADING, PAGESIZE, COLSEP, SERVEROUTPUT, TIMING, VERIFY, DEFINE, ESCAPE, CONCAT…), DEFINE/UNDEFINE/ACCEPT, &/&&/&1, VARIABLE/EXEC/PRINT/AUTOPRINT, COLUMN FORMAT/HEADING/NEW_VALUE, PROMPT, PAUSE, @/@@/START z parametrami, SPOOL, CD, DESCRIBE (tabele, pakiety, synonimy), SHOW ERRORS/USER/RELEASE/ALL, WHENEVER SQLERROR, CONNECT (zapisane i tymczasowe), EXIT, wyniki tekstowe — 9 testów (5 na bazie)",
+    "PR #4 scalony (siatka: strony, sortowanie, eksport, edycja, Large Data Editor), wersja 1.4.0",
     "Large Data Editor: CLOB/BLOB/RAW/LONG/JSON z komórki (podwójne kliknięcie, menu, ⌘⌥L), pełna treść ponownie pobierana po ROWID gdy obcięta w siatce, rozpoznanie formatu (tekst, XML, JSON, HTML, PNG/JPEG/GIF, PDF), Tekst/Hex/Obraz/PDF, Formatuj JSON i XML, wczytanie/zapis pliku, zmiana CLOB i BLOB zatwierdzana przez Post — 3 testy (1 na bazie, CLOB 2,24 mln znaków)",
     "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
     "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
@@ -94,18 +97,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 92,
-      "passed": 92,
+      "total": 99,
+      "passed": 99,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T23:40:07+02:00"
+      "at": "2026-10-22T23:54:11+02:00"
     },
     "integration": {
-      "total": 34,
-      "passed": 33,
+      "total": 39,
+      "passed": 38,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-22T23:40:09+02:00"
+      "at": "2026-10-22T23:54:13+02:00"
     },
     "perf": {
       "total": 8,
@@ -166,6 +169,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap1-command-window.png",
+      "title": "Command Window: skrypt z COLUMN FORMAT/HEADING, TIMING i SHOW USER",
+      "reference": "PD-CMDW-001"
+    },
     {
       "file": "docs/progress/img/etap1-large-data-editor.png",
       "title": "Large Data Editor: kolumna JSON po sformatowaniu",

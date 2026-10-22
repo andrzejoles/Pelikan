@@ -145,19 +145,19 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | do zrobienia |
-| PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | do zrobienia |
+| PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | ✅ test |
+| PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | 👁 ręcznie |
 | PD-CMDW-003 | Krokowanie skryptu: Pause Execution, Execute Next Command, SET EXECPAUSE | UG 8.2 | Command Window | 1 | P3 | Brak | do zrobienia |
-| PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | do zrobienia |
-| PD-CMDW-005 | SET: AUTOPRINT, COLSEP, CONCAT, DEFINE, ECHO, ESCAPE, FEEDBACK (ONLY, SQL_ID), HEADING, LONG, NUMWIDTH, PAGESIZE, PROMPT, SCAN, SERVEROUTPUT (SIZE UNLIMITED), SPOOLDIRECTORY, TERMOUT, TIMING, VERIFY | UG 8.3, NF17 | Command Window | 1 | P1 | Brak | do zrobienia |
-| PD-CMDW-006 | SHOW ERRORS / RELEASE / SQLCODE / USER / CONNECTION / ENVVAR | UG 8.3 | Command Window | 1 | P2 | Brak | do zrobienia |
-| PD-CMDW-007 | SPOOL (APPEND, OFF, OUT, .zip) | UG 8.3 | Command Window | 1 | P2 | Brak | do zrobienia |
+| PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | w toku |
+| PD-CMDW-005 | SET: AUTOPRINT, COLSEP, CONCAT, DEFINE, ECHO, ESCAPE, FEEDBACK (ONLY, SQL_ID), HEADING, LONG, NUMWIDTH, PAGESIZE, PROMPT, SCAN, SERVEROUTPUT (SIZE UNLIMITED), SPOOLDIRECTORY, TERMOUT, TIMING, VERIFY | UG 8.3, NF17 | Command Window | 1 | P1 | Brak | ✅ test |
+| PD-CMDW-006 | SHOW ERRORS / RELEASE / SQLCODE / USER / CONNECTION / ENVVAR | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
+| PD-CMDW-007 | SPOOL (APPEND, OFF, OUT, .zip) | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
 | PD-CMDW-008 | HOST (polecenie systemu — tylko użytkownik; agent nigdy) | UG 8.3, PROMPT §7.3 p.9 | Command Window | 1 | P3 | Brak | do zrobienia |
 | PD-CMDW-009 | Polecenia własne: BEAUTIFY, BROWSE, CD, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH, SET ENVVAR | UG 8.3 | Command Window | 6 | P3 | Brak | do zrobienia |
 | PD-CMDW-010 | EXPORT TABLES / EXPORT OBJECTS (składnia jak narzędzia eksportu), RUNTESTSET | UG 8.4–8.5 | Command Window | 6 | P3 | Brak | do zrobienia |
-| PD-CMDW-011 | Nieobsługiwane SET w skrypcie wsadowym bez błędu | NF17 | Command Window | 1 | P3 | Brak | do zrobienia |
+| PD-CMDW-011 | Nieobsługiwane SET w skrypcie wsadowym bez błędu | NF17 | Command Window | 1 | P3 | Brak | ✅ test |
 | PD-CMDW-012 | Code Assistant po `@` — listing katalogu; CONNECT z listą baz po `@` | UG 25.4, NF13, NF14 | Command Window | 2 | P3 | Brak | do zrobienia |
-| PD-CMDW-013 | Wyniki zapytań w formacie tekstowym SQL*Plus (kolumny, nagłówki, PAGESIZE, COLSEP) | UG 8.3 | Command Window | 1 | P1 | Brak | do zrobienia |
+| PD-CMDW-013 | Wyniki zapytań w formacie tekstowym SQL*Plus (kolumny, nagłówki, PAGESIZE, COLSEP) | UG 8.3 | Command Window | 1 | P1 | Brak | ✅ test |
 
 ## PL/SQL Developer — Program Window i kompilacja
 

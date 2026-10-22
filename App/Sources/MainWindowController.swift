@@ -148,7 +148,8 @@ final class DocumentAreaViewController: NSViewController {
     /// Fokus do edytora aktywnego okna (np. po zamknięciu arkusza logowania albo zmiennych).
     func focusActiveDocument() {
         guard let id = installedID, let vc = controllers[id] else { return }
-        let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? DocumentViewController)?.preferredFirstResponder
+        let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? CommandWindowViewController)?.preferredFirstResponder
+            ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
     }
 
@@ -237,9 +238,11 @@ final class DocumentAreaViewController: NSViewController {
         if workspace.activeDocument?.id != installedID { container.subviews.forEach { $0.removeFromSuperview() } }
         if let doc = workspace.activeDocument {
             let vc = controllers[doc.id] ?? {
-                let c: NSViewController = doc.kind == .sql
-                    ? SQLWindowViewController(document: doc, workspace: workspace)
-                    : DocumentViewController(document: doc, workspace: workspace)
+                let c: NSViewController = switch doc.kind {
+                case .sql: SQLWindowViewController(document: doc, workspace: workspace)
+                case .command: CommandWindowViewController(document: doc, workspace: workspace)
+                default: DocumentViewController(document: doc, workspace: workspace)
+                }
                 addChild(c)
                 controllers[doc.id] = c
                 return c
