@@ -2,6 +2,7 @@ import CODPI
 import Dispatch
 import Foundation
 import PelikanDB
+import Synchronization
 
 /// Sesja Oracle przez ODPI-C + Instant Client.
 ///
@@ -17,7 +18,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private let options: ConnectOptions
     private var resultSets: [UInt64: OpenResultSet] = [:]
     private var nextResultSetID: UInt64 = 1
-    private var closed = false
+    /// Zamknięte (true) — chronione blokadą, bo `breakExecution` działa poza kolejką i nie może trafić w zwolniony
+    /// uchwyt połączenia w trakcie `close()`.
+    private let closedState = Mutex<Bool>(false)
+    private var closed: Bool { closedState.withLock { $0 } }
 
     private struct OpenResultSet {
         let stmt: OpaquePointer
@@ -160,8 +164,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     public func breakExecution() {
-        // Celowo poza kolejką: kolejka jest zajęta przez przerywane wywołanie.
-        dpiConn_breakExecution(conn)
+        // Celowo poza kolejką: kolejka jest zajęta przez przerywane wywołanie. Blokada wyklucza wyścig z close().
+        closedState.withLock { isClosed in
+            if !isClosed { dpiConn_breakExecution(conn) }
+        }
     }
 
     public func ping() async throws {
@@ -175,15 +181,16 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     public func close() async {
         await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
             queue.async { [self] in
-                if !closed {
+                closedState.withLock { isClosed in
+                    guard !isClosed else { return }
                     for (_, rs) in resultSets { dpiStmt_release(rs.stmt) }
                     resultSets.removeAll()
-                    // Zamknięcie bez COMMIT: Oracle wycofuje niezatwierdzoną transakcję przy jawnym zamknięciu
-                    // przez OCI tylko przy OCI_TRANS_ROLLBACK; robimy ROLLBACK jawnie (jak PL/SQL Developer po pytaniu).
+                    // Sterownik nigdy nie zatwierdza po cichu: decyzję COMMIT/ROLLBACK podejmuje wcześniej interfejs
+                    // (D10); tu zostaje bezpieczne ROLLBACK przed zamknięciem.
                     dpiConn_rollback(conn)
                     dpiConn_close(conn, dpiConnCloseMode(DPI_MODE_CONN_CLOSE_DEFAULT), nil, 0)
                     dpiConn_release(conn)
-                    closed = true
+                    isClosed = true
                 }
                 cont.resume()
             }

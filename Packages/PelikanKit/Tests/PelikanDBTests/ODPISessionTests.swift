@@ -166,6 +166,14 @@ struct ODPISessionTests {
         #expect(try await s.scalar("SELECT 1 FROM dual") == "1")
     }
 
+    @Test("Przerwanie po zamknięciu sesji nic nie robi; operacje po zamknięciu zwracają błąd")
+    func breakAfterClose() async throws {
+        let s = try await TestDatabase.connect()
+        await s.close()
+        s.breakExecution()
+        await #expect(throws: DatabaseError.closed) { _ = try await s.execute("SELECT 1 FROM dual") }
+    }
+
     @Test("MODULE i ACTION widoczne w V$SESSION")
     func sessionTags() async throws {
         let s = try await TestDatabase.connect(tags: SessionTags(module: "Pelikan test", action: "tagi"))

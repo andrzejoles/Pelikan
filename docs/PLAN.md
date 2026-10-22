@@ -3,7 +3,7 @@
 Etapy wg PROMPT §8. Każdy etap kończy się: aplikacją używalną na co dzień, testami, zrzutami ekranu, scalonymi PR,
 aktualnym raportem i szkicem wydania (od Etapu 1 — D13). Postęp funkcji: `docs/FEATURES.md` (kolumna Etap).
 
-## Etap 0 — Analiza i fundament (w toku)
+## Etap 0 — Analiza i fundament (zakończony 2026-10-22)
 
 | Zadanie | Stan |
 |---|---|
@@ -17,8 +17,8 @@ aktualnym raportem i szkicem wydania (od Etapu 1 — D13). Postęp funkcji: `doc
 | Macierz funkcji `docs/FEATURES.md` (412 wierszy) | ✅ |
 | ADR 0001–0005 (sterowniki, parser, edytor, siatka, okna), `ARCHITECTURE.md`, `SECURITY.md` | ✅ |
 | `CLAUDE.md`, `THIRD_PARTY.md`, `GLOSSARY.md` | ✅ |
-| Szkielet aplikacji: XcodeGen, okno główne (układ wzorca), rejestr komend, menu z rejestru, paleta | w toku |
-| `docs/SKROTY.md` generowany z rejestru | w toku |
+| Szkielet aplikacji: XcodeGen, okno główne (układ wzorca), rejestr komend, menu z rejestru, paleta | ✅ |
+| `docs/SKROTY.md` generowany z rejestru | ✅ |
 
 **Kryteria odbioru:** raport HTML pokazuje macierz ✅; CI zielone ✅; `make test` łączy się z bazą testową ✅;
 aplikacja się buduje i otwiera okno główne z menu z rejestru (zrzut ekranu).

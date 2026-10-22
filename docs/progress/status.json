@@ -1,20 +1,20 @@
 {
-  "heartbeat": "2026-10-22T18:48:27+02:00",
+  "heartbeat": "2026-10-22T18:52:58+02:00",
   "stage": {
-    "id": 0,
-    "name": "Analiza i fundament"
+    "id": 1,
+    "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 0: szkielet aplikacji (XcodeGen, okno główne, rejestr komend, menu, paleta)",
+  "task": "Etap 1: połączenia (ConnectionStore, Pęk kluczy, TNS), okno logowania, Lista połączeń",
   "stages": [
     {
       "id": 0,
       "name": "Analiza i fundament: źródła, macierz funkcji, ADR, CI, baza testowa, szkielet aplikacji, raport",
-      "state": "w toku"
+      "state": "zakończony"
     },
     {
       "id": 1,
       "name": "Połączenia, SQL Window, Command Window (sterownik Instant Client, potem thin)",
-      "state": "do zrobienia"
+      "state": "w toku"
     },
     {
       "id": 2,
@@ -67,10 +67,11 @@
     "Skrypty: version.sh, set-version.sh, progress.py (ten raport), testdb.sh"
   ],
   "next": [
-    "Szkielet projektu: PelikanKit (warstwa SQL/bazy bez AppKit), aplikacja AppKit, rejestr komend, menu",
-    "CI na GitHub Actions: macOS (budowanie + testy) i Linux z Oracle Free jako usługą",
-    "Analiza źródeł (sekcja 2) → docs/research/, docs/FEATURES.md (macierz funkcji), gap-analysis.md, behaviour.md",
-    "ADR: sterowniki (ODPI-C + Instant Client / OracleNIO), parser, edytor, siatka; ARCHITECTURE.md, SECURITY.md, plan Etapu 1"
+    "etap-1/polaczenia: ConnectionStore, Pęk kluczy, tnsnames.ora, okno definicji połączeń, Lista połączeń, okno logowania, SessionManager",
+    "etap-1/edytor: edytor TextKit 2 z podświetlaniem przyrostowym",
+    "etap-1/sql-window: wykonanie, karty wyników, DBMS_OUTPUT, transakcje, zmienne",
+    "etap-1/siatka: NSTableView z dociąganiem, LOB, eksport, edycja z ROWID",
+    "etap-1/command-window, etap-1/klawiatura, etap-1/thin, szkic wydania"
   ],
   "blockers": [],
   "questions": [],
@@ -80,18 +81,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 42,
-      "passed": 42,
+      "total": 41,
+      "passed": 41,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:48:25+02:00"
+      "at": "2026-10-22T18:52:52+02:00"
     },
     "integration": {
-      "total": 12,
-      "passed": 12,
+      "total": 13,
+      "passed": 13,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:12:23+02:00"
+      "at": "2026-10-22T18:52:50+02:00"
     }
   },
   "performance": [],
