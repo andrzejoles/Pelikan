@@ -29,6 +29,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Pełny | 0 | PD-UI-004 |
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
+| Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 
 ## Edycja
 
@@ -44,6 +45,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Formatuj kod (PL/SQL Beautifier) | `edit.beautify` | ⇧⌘F | ⇧⌘F | Pełny | 2 | PD-BEAU-002 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 6 | PD-EDIT-015 |
 | Makra › Odtwórz makro | `edit.macroPlay` | F12 | F12 | Brak | 6 | PD-EDIT-015 |
+| Wynik › Kopiuj | `grid.copy` |  |  | Brak | 0 | PD-GRID-015 |
+| Wynik › Kopiuj z nagłówkiem | `grid.copyWithHeader` | ⌃⇧C †, ⇧⌘C | ⇧⌘C | Brak | 0 | PD-GRID-015 |
+| Wynik › Kopiuj nagłówek | `grid.copyHeader` |  |  | Brak | 0 | PD-GRID-015 |
+| Wynik › Kopiuj jako listę wyrażeń | `grid.copyExpressionList` |  |  | Brak | 0 | PD-GRID-015 |
+| Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | 0 | PD-GRID-013 |
+| Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 
 ## Sesja
 
@@ -60,6 +67,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Historia okna › Poprzednie polecenie okna | `sql.historyBack` | ⌥⌘↑ | ⌥⌘↑ | Pełny | 0 | PD-SQLW-007 |
 | Historia okna › Następne polecenie okna | `sql.historyForward` | ⌥⌘↓ | ⌥⌘↓ | Pełny | 0 | PD-SQLW-007 |
 | Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | 0 | PD-VAR-005 |
+| Wynik › Następna strona | `grid.nextPage` | ⌘⇟ | ⌘⇟ | Brak | 0 | PD-SQLW-004 |
+| Wynik › Ostatnia strona (pobierz wszystkie) | `grid.lastPage` | ⇧⌘⇟ | ⇧⌘⇟ | Brak | 0 | PD-SQLW-004 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |

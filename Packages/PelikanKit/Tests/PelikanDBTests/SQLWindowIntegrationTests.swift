@@ -19,6 +19,13 @@ final class TestUI: UIServices {
         askedVariables = requests
         return variables
     }
+    var clipboard: String?
+    var savedFile: (name: String, ext: String, data: Data)?
+    func copyToClipboard(_ text: String, html: String?) { clipboard = text }
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
+        savedFile = (suggestedName, fileExtension, data)
+        return true
+    }
 }
 
 @MainActor
@@ -101,6 +108,38 @@ struct SQLWindowIntegrationTests {
         #expect(ui.askedVariables.map(\.name) == ["Kolumna", "id"])
         #expect(doc.results.first?.grid?.text(row: 0, column: 0) == "KOWALSKI")
         #expect(doc.variableValues["id"] == .text("7839"))
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Komendy siatki: następna i ostatnia strona, sortowanie, kopiowanie zaznaczenia, eksport INSERT i xlsx")
+    func gridCommands() async throws {
+        let (ws, doc, ui) = try makeWorkspace()
+        doc.text = "select empno, ename, sal from emp order by empno"
+        try await ws.invoke("sql.execute")
+        #expect(!ws.isEnabled("grid.nextPage"))          // 8 wierszy — wszystko pobrane
+        let tab = try #require(doc.results.first)
+        tab.grid!.toggleSort(column: 2)
+        tab.grid!.toggleSort(column: 2)                   // malejąco po SAL
+        tab.selectedRows = [0, 1]
+        try await ws.invoke("grid.copyWithHeader")
+        #expect(ui.clipboard == "EMPNO\tENAME\tSAL\n7839\tKOWALSKI\t5000\n7788\tKAMIŃSKI\t3000")
+        try await ws.invoke("grid.copyExpressionList")
+        #expect(ui.clipboard?.hasPrefix("(EMPNO, ENAME, SAL) IN ((7839, 'KOWALSKI', 5000)") == true)
+        tab.selectedRows = nil
+        try await ws.invoke("grid.export", CommandArguments(["format": .string("sql")]))
+        let sql = String(decoding: ui.savedFile!.data, as: UTF8.self)
+        #expect(sql.components(separatedBy: "INSERT INTO EMP (EMPNO, ENAME, SAL) VALUES").count == 9)
+        try await ws.invoke("grid.copyToExcel")
+        #expect(ui.savedFile?.ext == "xlsx")
+
+        doc.text = "select * from big_rows"
+        try await ws.invoke("sql.execute")
+        #expect(ws.isEnabled("grid.nextPage"))
+        try await ws.invoke("grid.nextPage")
+        #expect(doc.results.first?.grid?.rowCount == 200)
+        try await ws.invoke("grid.lastPage")
+        #expect(doc.results.first?.grid?.rowCount == 200_000)
+        #expect(!ws.isEnabled("grid.lastPage"))
         await ws.sessions.disconnectAll()
     }
 

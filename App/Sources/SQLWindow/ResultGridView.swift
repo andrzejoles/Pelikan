@@ -3,21 +3,31 @@ import PelikanDB
 import PelikanWorkspace
 
 /// Siatka wyników (ADR 0004): NSTableView z wirtualizacją wierszy, kolumna numeru wiersza, NULL na kolorowym tle
-/// (UG 7.2), liczby do prawej, dociąganie porcjami przy zbliżeniu do końca, kopiowanie (Cmd+C — z nagłówkiem: Cmd+Shift+C).
+/// (UG 7.2), liczby do prawej, dociąganie porcjami przy zbliżeniu do końca, sortowanie klikiem nagłówka (Shift —
+/// klucz dodatkowy), przenoszenie kolumn, pasek siatki (strony, kopiowanie, eksport, widok pojedynczego rekordu).
 final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
+    private let tab: ResultTab
     private let grid: ResultGridModel
+    private let workspace: Workspace
     private let table = GridTableView()
     private let scroll = NSScrollView()
-    private var token: ObservationToken?
+    private let record = SingleRecordView()
+    private let bar = NSStackView()
+    private let recordButton = NSButton()
+    private let countLabel = NSTextField(labelWithString: "")
+    private var tokens: [ObservationToken] = []
     private var lastRowCount = 0
+    private var lastSort: [ResultGridModel.SortKey] = []
     static let nullColor = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.30, green: 0.28, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.98, blue: 0.80, alpha: 1) }
     private let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
-    init(grid: ResultGridModel) {
+    init(tab: ResultTab, grid: ResultGridModel, workspace: Workspace) {
+        self.tab = tab
         self.grid = grid
+        self.workspace = workspace
         super.init(frame: .zero)
         configure()
-        token = trackChanges { [weak self] in self?.modelChanged() }
+        tokens.append(trackChanges { [weak self] in self?.modelChanged() })
     }
 
     @available(*, unavailable)
@@ -35,7 +45,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         table.style = .plain
         table.dataSource = self
         table.delegate = self
-        table.copyHandler = { [weak self] withHeader in self?.copySelection(withHeader: withHeader) }
+        table.copyHandler = { [weak self] withHeader in self?.copy(withHeader: withHeader) }
         let rowNo = NSTableColumn(identifier: .init("#"))
         rowNo.title = ""
         rowNo.width = 50
@@ -51,20 +61,70 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
             table.addTableColumn(col)
         }
         table.setAccessibilityLabel(L10n.tr("Siatka wyników"))
+        table.menu = contextMenu()
         scroll.documentView = table
         scroll.hasVerticalScroller = true
         scroll.hasHorizontalScroller = true
-        scroll.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(scroll)
-        NSLayoutConstraint.activate([
-            scroll.topAnchor.constraint(equalTo: topAnchor),
-            scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
-            scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
-        ])
         NotificationCenter.default.addObserver(self, selector: #selector(scrolled), name: NSView.boundsDidChangeNotification,
                                                object: scroll.contentView)
         scroll.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(self, selector: #selector(columnsMoved), name: NSTableView.columnDidMoveNotification, object: table)
+
+        // Pasek siatki (UG 7.1: Next Page, Last Page; UG 7.2: Single Record View, Export, Copy to Excel).
+        func button(_ symbol: String, _ tip: String, _ action: Selector) -> NSButton {
+            let b = NSButton(image: NSImage(systemSymbolName: symbol, accessibilityDescription: tip)!, target: self, action: action)
+            b.bezelStyle = .accessoryBarAction
+            b.isBordered = false
+            b.toolTip = tip
+            return b
+        }
+        recordButton.image = NSImage(systemSymbolName: "rectangle.split.1x2", accessibilityDescription: L10n.tr("Widok pojedynczego rekordu"))
+        recordButton.bezelStyle = .accessoryBarAction
+        recordButton.setButtonType(.pushOnPushOff)
+        recordButton.isBordered = false
+        recordButton.toolTip = L10n.tr("Widok pojedynczego rekordu")
+        recordButton.target = self
+        recordButton.action = #selector(toggleRecord)
+        let export = NSPopUpButton(frame: .zero, pullsDown: true)
+        export.isBordered = false
+        export.addItem(withTitle: "")
+        export.item(at: 0)?.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: L10n.tr("Eksport"))
+        for f in ExportFormat.allCases where f != .expressionList {
+            let item = export.menu!.addItem(withTitle: L10n.tr("Eksportuj jako \(f.displayName)…"), action: #selector(exportAs(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = f.rawValue
+        }
+        export.toolTip = L10n.tr("Eksportuj zaznaczenie albo cały pobrany wynik")
+        countLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        countLabel.textColor = .secondaryLabelColor
+        for v in [button("chevron.down", L10n.tr("Następna strona"), #selector(nextPage)),
+                  button("chevron.down.2", L10n.tr("Ostatnia strona (pobierz wszystkie)"), #selector(lastPage)),
+                  recordButton, export, button("tablecells", L10n.tr("Kopiuj do Excela"), #selector(copyToExcel)),
+                  countLabel] as [NSView] {
+            bar.addArrangedSubview(v)
+        }
+        bar.spacing = 4
+        bar.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 6)
+        record.isHidden = true
+        record.onMove = { [weak self] delta in self?.moveRecord(delta) }
+        for v in [bar, scroll, record] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: topAnchor),
+            bar.leadingAnchor.constraint(equalTo: leadingAnchor),
+            bar.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor),
+            { let c = bar.heightAnchor.constraint(equalToConstant: 24); c.priority = .defaultHigh; return c }(),
+            scroll.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
+            record.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            record.leadingAnchor.constraint(equalTo: leadingAnchor),
+            record.trailingAnchor.constraint(equalTo: trailingAnchor),
+            record.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
     }
 
     static func initialWidth(_ c: ColumnInfo) -> CGFloat {
@@ -83,15 +143,38 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
 
     private func modelChanged() {
         let count = grid.rowCount
-        _ = grid.hasMore
-        guard count != lastRowCount else { return }
-        if count > lastRowCount, lastRowCount > 0 {
-            table.insertRows(at: IndexSet(integersIn: lastRowCount..<count), withAnimation: [])
-        } else {
+        let more = grid.hasMore
+        let sort = grid.sortKeys
+        countLabel.stringValue = more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy")
+        if sort != lastSort {
+            lastSort = sort
+            updateSortIndicators()
             table.reloadData()
+            lastRowCount = count
+        } else if count != lastRowCount {
+            if count > lastRowCount, lastRowCount > 0, sort.isEmpty {
+                table.insertRows(at: IndexSet(integersIn: lastRowCount..<count), withAnimation: [])
+            } else {
+                table.reloadData()
+            }
+            lastRowCount = count
         }
-        lastRowCount = count
         if let rowNo = table.tableColumns.first { rowNo.width = max(36, CGFloat(String(count).count) * 8 + 14) }
+        if !record.isHidden { showRecord() }
+    }
+
+    private func updateSortIndicators() {
+        for col in table.tableColumns {
+            guard col.identifier.rawValue != "#", let i = Int(col.identifier.rawValue.dropFirst()) else { continue }
+            if let k = grid.sortKeys.firstIndex(where: { $0.column == i }) {
+                let key = grid.sortKeys[k]
+                table.setIndicatorImage(NSImage(named: key.ascending ? "NSAscendingSortIndicator" : "NSDescendingSortIndicator"), in: col)
+                col.title = grid.sortKeys.count > 1 ? "\(grid.columns[i].name) \(k + 1)" : grid.columns[i].name
+            } else {
+                table.setIndicatorImage(nil, in: col)
+                col.title = grid.columns[i].name
+            }
+        }
     }
 
     /// Dociąganie przy zbliżeniu do końca (płynne przewijanie milionów wierszy — PD-GRID-001).
@@ -100,6 +183,12 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         if grid.hasMore, !grid.isFetching, visible.location + visible.length > grid.rowCount - 200 {
             Task { await grid.fetchMore(1000) }
         }
+    }
+
+    @objc private func columnsMoved() { tab.columnOrder = visibleColumns() }
+
+    private func visibleColumns() -> [Int] {
+        table.tableColumns.compactMap { c in c.identifier.rawValue == "#" ? nil : Int(c.identifier.rawValue.dropFirst()) }
     }
 
     // MARK: Źródło danych
@@ -119,16 +208,98 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
         return cell
     }
 
-    // MARK: Kopiowanie (UG 7.2: Copy, Copy with Header)
+    /// Klik nagłówka: rosnąco → malejąco → bez sortowania; Shift — sortowanie wtórne (UG 7.2).
+    func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
+        guard tableColumn.identifier.rawValue != "#", let i = Int(tableColumn.identifier.rawValue.dropFirst()) else { return }
+        grid.toggleSort(column: i, add: NSEvent.modifierFlags.contains(.shift))
+    }
 
-    private func copySelection(withHeader: Bool) {
-        let rows = table.selectedRowIndexes.isEmpty ? IndexSet(integersIn: 0..<grid.rowCount) : table.selectedRowIndexes
-        let cols = table.tableColumns.compactMap { c -> Int? in c.identifier.rawValue == "#" ? nil : Int(c.identifier.rawValue.dropFirst()) }
-        var lines: [String] = []
-        if withHeader { lines.append(cols.map { grid.columns[$0].name }.joined(separator: "\t")) }
-        for r in rows { lines.append(cols.map { grid.text(row: r, column: $0) }.joined(separator: "\t")) }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+    func tableViewSelectionDidChange(_ notification: Notification) {
+        let rows = Array(table.selectedRowIndexes)
+        tab.selectedRows = rows.isEmpty ? nil : rows
+        if !record.isHidden { showRecord() }
+    }
+
+    // MARK: Pasek siatki
+
+    @objc private func nextPage() { workspace.perform("grid.nextPage") }
+    @objc private func lastPage() { workspace.perform("grid.lastPage") }
+    @objc private func copyToExcel() { workspace.perform("grid.copyToExcel") }
+
+    @objc private func exportAs(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String else { return }
+        workspace.perform("grid.export", CommandArguments(["format": .string(raw)]))
+    }
+
+    @objc private func toggleRecord() {
+        record.isHidden = recordButton.state == .off
+        scroll.isHidden = !record.isHidden
+        if !record.isHidden {
+            if table.selectedRow < 0, grid.rowCount > 0 { table.selectRowIndexes([0], byExtendingSelection: false) }
+            showRecord()
+        }
+    }
+
+    private func moveRecord(_ delta: Int) {
+        let r = max(0, min(grid.rowCount - 1, max(0, table.selectedRow) + delta))
+        table.selectRowIndexes([r], byExtendingSelection: false)
+        table.scrollRowToVisible(r)
+        if delta > 0, r >= grid.rowCount - 2, grid.hasMore { Task { await grid.fetchMore(100) } }
+    }
+
+    private func showRecord() {
+        let row = max(0, table.selectedRow)
+        guard row < grid.rowCount else { record.show(row: 0, of: 0, fields: []); return }
+        let fields = visibleColumns().map { i in
+            SingleRecordView.Field(name: grid.columns[i].name, value: grid.text(row: row, column: i),
+                                   type: grid.columns[i].typeName, isNull: grid.value(row: row, column: i).isNull)
+        }
+        record.show(row: row, of: grid.rowCount, fields: fields)
+    }
+
+    // MARK: Kopiowanie (UG 7.2: Copy, Copy with Header, Copy Header, Copy as Expression List)
+
+    private func copy(withHeader: Bool) {
+        if withHeader {
+            workspace.perform("grid.copyWithHeader")
+        } else {
+            workspace.perform("grid.copy")
+        }
+    }
+
+    private func contextMenu() -> NSMenu {
+        let menu = NSMenu()
+        for (title, id) in [(L10n.tr("Kopiuj"), "grid.copy"), (L10n.tr("Kopiuj z nagłówkiem"), "grid.copyWithHeader"),
+                            (L10n.tr("Kopiuj nagłówek"), "grid.copyHeader"), (L10n.tr("Kopiuj jako listę wyrażeń"), "grid.copyExpressionList")] {
+            let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = id
+        }
+        let copyAs = NSMenu()
+        for f in [ExportFormat.csv, .html, .xml, .sql] {
+            let item = copyAs.addItem(withTitle: f.displayName, action: #selector(copyAsFormat(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = f.rawValue
+        }
+        let copyAsItem = menu.addItem(withTitle: L10n.tr("Kopiuj jako"), action: nil, keyEquivalent: "")
+        copyAsItem.submenu = copyAs
+        menu.addItem(.separator())
+        for (title, id) in [(L10n.tr("Eksportuj wynik…"), "grid.export"), (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel")] {
+            let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = id
+        }
+        return menu
+    }
+
+    @objc private func contextCommand(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        workspace.perform(CommandID(rawValue: id))
+    }
+
+    @objc private func copyAsFormat(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String else { return }
+        workspace.perform("grid.copyAs", CommandArguments(["format": .string(raw)]))
     }
 }
 
@@ -171,9 +342,97 @@ final class GridCell: NSTableCellView {
     }
 
     func configure(text: String, alignRight: Bool, isNull: Bool, secondary: Bool) {
-        label.stringValue = text
+        // Wielowierszowy tekst w jednej linii komórki (pełna treść — widok rekordu, Large Data Editor).
+        label.stringValue = text.count > 500 ? String(text.prefix(500)) + "…" : text.replacingOccurrences(of: "\n", with: " ⏎ ")
         label.alignment = alignRight ? .right : .left
         label.textColor = secondary ? .tertiaryLabelColor : .labelColor
         layer?.backgroundColor = isNull ? ResultGridView.nullColor.cgColor : nil
+    }
+}
+
+/// Widok pojedynczego rekordu (UG 7.2 Single Record View): kolumna, wartość, typ; poprzedni / następny rekord.
+final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate {
+    struct Field {
+        let name: String
+        let value: String
+        let type: String
+        let isNull: Bool
+    }
+
+    private var fields: [Field] = []
+    private let table = NSTableView()
+    private let label = NSTextField(labelWithString: "")
+    var onMove: ((Int) -> Void)?
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        for (id, title, width) in [("name", L10n.tr("Kolumna"), 180.0), ("value", L10n.tr("Wartość"), 420.0), ("type", L10n.tr("Typ"), 160.0)] {
+            let c = NSTableColumn(identifier: .init(id))
+            c.title = title
+            c.width = width
+            table.addTableColumn(c)
+        }
+        table.usesAlternatingRowBackgroundColors = true
+        table.style = .plain
+        table.dataSource = self
+        table.delegate = self
+        table.usesAutomaticRowHeights = true
+        let scroll = NSScrollView()
+        scroll.documentView = table
+        scroll.hasVerticalScroller = true
+        let prev = ClosureButton(title: "◀︎", action: { [weak self] in self?.onMove?(-1) })
+        let next = ClosureButton(title: "▶︎", action: { [weak self] in self?.onMove?(1) })
+        prev.toolTip = L10n.tr("Poprzedni rekord")
+        next.toolTip = L10n.tr("Następny rekord")
+        for b in [prev, next] { b.bezelStyle = .accessoryBarAction }
+        label.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        label.textColor = .secondaryLabelColor
+        let nav = NSStackView(views: [prev, next, label])
+        nav.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 4)
+        for v in [nav, scroll] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            nav.topAnchor.constraint(equalTo: topAnchor),
+            nav.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scroll.topAnchor.constraint(equalTo: nav.bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    func show(row: Int, of count: Int, fields: [Field]) {
+        self.fields = fields
+        label.stringValue = count == 0 ? "" : L10n.tr("Rekord \(row + 1) z \(count)")
+        table.reloadData()
+    }
+
+    func numberOfRows(in tableView: NSTableView) -> Int { fields.count }
+
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        let f = fields[row]
+        let tf = NSTextField(wrappingLabelWithString: "")
+        tf.isSelectable = true
+        switch tableColumn?.identifier.rawValue {
+        case "name":
+            tf.stringValue = f.name
+            tf.font = .boldSystemFont(ofSize: 12)
+        case "value":
+            tf.stringValue = f.value
+            tf.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+            if f.isNull {
+                tf.drawsBackground = true
+                tf.backgroundColor = ResultGridView.nullColor
+            }
+        default:
+            tf.stringValue = f.type
+            tf.textColor = .secondaryLabelColor
+        }
+        return tf
     }
 }

@@ -96,7 +96,7 @@ public extension OracleTimestamp {
     }
 }
 
-extension Data {
+public extension Data {
     var hexUpper: String {
         let digits = Array("0123456789ABCDEF".utf8)
         var out = [UInt8]()

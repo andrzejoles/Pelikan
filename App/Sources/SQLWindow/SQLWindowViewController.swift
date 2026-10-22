@@ -173,7 +173,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         if let v = gridViews[r.id] { return v }
         let v: NSView
         if let grid = r.grid {
-            v = ResultGridView(grid: grid)
+            v = ResultGridView(tab: r, grid: grid, workspace: workspace)
         } else {
             v = textView(r.message ?? "", isError: r.message?.hasPrefix("ORA-") == true)
         }

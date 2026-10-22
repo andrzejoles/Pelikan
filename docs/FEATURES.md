@@ -72,7 +72,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-001 | Dzielenie skryptu na polecenia (`;`, `/`, bloki PL/SQL, CREATE z ciałem) jak SQL*Plus | UG 7.1, PROMPT §5 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | ✅ test |
 | PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
-| PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | w toku |
+| PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | ✅ test |
 | PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | w toku |
 | PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | do zrobienia |
 | PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | ✅ test |
@@ -106,15 +106,15 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-006 | Kursor zagnieżdżony `<Cursor>` → nowe okno z wynikiem | UG 7.2 | Siatka | 1 | P3 | — | do zrobienia |
-| PD-GRID-007 | Zaznaczanie wierszy, kolumn i bloków komórek; Select All; przenoszenie kolumn | UG 7.2 | Siatka | 1 | P1 | — | do zrobienia |
+| PD-GRID-007 | Zaznaczanie wierszy, kolumn i bloków komórek; Select All; przenoszenie kolumn | UG 7.2 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-008 | Blokada przewijania kolumn i wierszy (Scroll lock) | UG 7.2, NF9 | Siatka > Scroll lock | 1 | P2 | — | do zrobienia |
-| PD-GRID-009 | Sortowanie lokalne klikiem nagłówka (rosnąco/malejąco/brak, wtórne, wielkość liter) | UG 7.2 | Siatka | 1 | P1 | — | do zrobienia |
-| PD-GRID-010 | Single Record View (kolumna, wartość, typ, komentarz; poprzedni/następny rekord) | UG 7.2, NF11 | Siatka | 1 | P1 | — | do zrobienia |
+| PD-GRID-009 | Sortowanie lokalne klikiem nagłówka (rosnąco/malejąco/brak, wtórne, wielkość liter) | UG 7.2 | Siatka | 1 | P1 | — | ✅ test |
+| PD-GRID-010 | Single Record View (kolumna, wartość, typ, komentarz; poprzedni/następny rekord) | UG 7.2, NF11 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-011 | Filtr kolumn (nazwy, typy, obowiązkowe, PK/UK/FK, historia, wklejanie wielu linii) | UG 7.2, NF13, NF17 | Siatka > Filter columns | 1 | P2 | — | do zrobienia |
 | PD-GRID-012 | Align (szerokość wg nagłówka/treści, wysokość, szablony wyrównania z kolejnością, auto-align), Hide Editor, Adjust Window width | UG 7.2, NF11 | Siatka > Align | 1 | P2 | — | do zrobienia |
-| PD-GRID-013 | Eksport zaznaczenia: CSV, TSV, HTML, XML, SQL (INSERT), do pliku i do schowka | UG 7.2 | Siatka > Export Results | 1 | P1 | Brak | do zrobienia |
-| PD-GRID-014 | Excel (xlsx; „Copy all” — arkusz na wynik; z SQL na osobnym arkuszu, formatowanie, kolory) | UG 7.2, UG 23.30 | Siatka > Copy to Excel | 1 | P2 | Brak | do zrobienia |
-| PD-GRID-015 | Copy, Copy with Header, Copy Header, Copy as Expression List; kopiowanie także jako HTML | UG 7.2, NF12, NF17 | Siatka | 1 | P1 | — | do zrobienia |
+| PD-GRID-013 | Eksport zaznaczenia: CSV, TSV, HTML, XML, SQL (INSERT), do pliku i do schowka | UG 7.2 | Siatka > Export Results | 1 | P1 | Brak | ✅ test |
+| PD-GRID-014 | Excel (xlsx; „Copy all” — arkusz na wynik; z SQL na osobnym arkuszu, formatowanie, kolory) | UG 7.2, UG 23.30 | Siatka > Copy to Excel | 1 | P2 | Brak | ✅ test |
+| PD-GRID-015 | Copy, Copy with Header, Copy Header, Copy as Expression List; kopiowanie także jako HTML | UG 7.2, NF12, NF17 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-016 | Column to files (kolumna → plik na wiersz, katalog i nazwa z wyrażeń) | UG 7.2, NF15 | Siatka > Export Results | 6 | P3 | Brak | do zrobienia |
 | PD-GRID-017 | Edycja wyniku z ROWID lub FOR UPDATE: Edit data, Insert record, Delete record, Post changes | UG 7.6 | Siatka | 1 | P1 | Za zgodą | do zrobienia |
 | PD-GRID-018 | Tabela edytowana ustalana z ROWID (złączenia), kolumny z aliasem tylko do odczytu, kolumny niewidoczne edytowalne | UG 7.6, NF17, NF13 | Siatka | 1 | P1 | — | do zrobienia |

@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T22:15:38+02:00",
+  "heartbeat": "2026-10-22T23:15:59+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1: sprawdzić ręcznie SQL Window na bazie testowej, zrzuty, PR etap-1/edytor-sql-window",
+  "task": "Etap 1 / siatka: przyciski Next/Last Page, eksport (CSV, TSV, HTML, XML, SQL, XLSX, schowek), widok pojedynczego rekordu, sortowanie, edycja z ROWID i Post, Large Data Editor",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
+    "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
     "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
     "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
     "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
@@ -90,18 +92,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 74,
-      "passed": 74,
+      "total": 87,
+      "passed": 87,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T22:11:47+02:00"
+      "at": "2026-10-22T23:15:57+02:00"
     },
     "integration": {
-      "total": 27,
-      "passed": 26,
+      "total": 28,
+      "passed": 27,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-22T22:15:36+02:00"
+      "at": "2026-10-22T23:15:59+02:00"
     },
     "perf": {
       "total": 8,

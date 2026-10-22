@@ -16,6 +16,10 @@ public protocol UIServices: AnyObject {
     func showLogon()
     /// Okno „Zmienne” (UG 7.5, 12.3): wartości dla zmiennych &, : i parametrów Jaspera; nil = anulowano.
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
+    /// Schowek: tekst i opcjonalnie HTML (wklejanie do Excela/Numbers z formatowaniem).
+    func copyToClipboard(_ text: String, html: String?)
+    /// Okno zapisu pliku; zwraca false przy anulowaniu.
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).
