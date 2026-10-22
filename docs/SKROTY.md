@@ -23,9 +23,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Okno raportu | `file.new.report` |  |  | Pełny | 0 | PD-REP-002 |
 | Nowy › Okno diagramu | `file.new.diagram` |  |  | Pełny | 0 | PD-DIAG-001 |
 | Nowy › Notatnik SQL | `file.new.notebook` |  |  | Pełny | 0 | SD-NB-001 |
-| Otwórz… | `file.open` | ⌘O | ⌘O | Brak | 1 | PD-SQLW-012 |
-| Zapisz | `file.save` | ⌘S | ⌘S | Pełny | 1 | PD-SQLW-012 |
-| Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | 1 | PD-SQLW-012 |
+| Otwórz… | `file.open` | ⌘O | ⌘O | Brak | 0 | PD-SQLW-012 |
+| Otwórz ponownie | `file.reopen` |  |  | Brak | 0 | PD-SQLW-012 |
+| Zapisz | `file.save` | ⌘S | ⌘S | Za zgodą | 0 | PD-SQLW-012 |
+| Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | 0 | PD-SQLW-012 |
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Pełny | 0 | PD-UI-004 |
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |

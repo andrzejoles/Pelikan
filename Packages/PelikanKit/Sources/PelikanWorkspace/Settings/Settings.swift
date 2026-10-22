@@ -31,6 +31,9 @@ public enum RecordsPerPage: Sendable, Codable, Hashable {
     case all
 }
 
+/// Wygląd aplikacji: jak system, jasny albo ciemny.
+public enum AppearanceMode: String, Sendable, Codable, Hashable, CaseIterable { case system, light, dark }
+
 /// Preferencje aplikacji (odpowiedniki Preferences wzorca; zestawy preferencji — Etap 8).
 public struct Settings: Sendable, Codable, Hashable {
     // Oracle — Connection
@@ -66,6 +69,12 @@ public struct Settings: Sendable, Codable, Hashable {
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
+    // UI — Appearance (UG 23.16)
+    public var appearance: AppearanceMode = .system
+    // Pliki
+    public var recentFiles: [String] = []
+    /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
+    public var confirmSaveNewWindows = true
 
     public init() {}
 
@@ -79,6 +88,9 @@ public struct Settings: Sendable, Codable, Hashable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         func v<T: Decodable>(_ k: CodingKeys, _ cur: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? cur }
         sessionMode = v(.sessionMode, sessionMode)
+        recentFiles = v(.recentFiles, recentFiles)
+        appearance = v(.appearance, appearance)
+        confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)
         checkConnectionIntervalSeconds = v(.checkConnectionIntervalSeconds, checkConnectionIntervalSeconds)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)

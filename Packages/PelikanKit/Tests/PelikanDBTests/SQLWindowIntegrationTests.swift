@@ -12,7 +12,9 @@ final class TestUI: UIServices {
     var askedVariables: [VariableRequest] = []
     func showError(_ message: String) {}
     func showCommandPalette() {}
-    func ask(_ title: String, message: String, buttons: [String]) async -> Int? { 0 }
+    var askAnswer: Int? = 0
+    var asked: [String] = []
+    func ask(_ title: String, message: String, buttons: [String]) async -> Int? { asked.append(title); return askAnswer }
     func showConnectionEditor(connectionID: UUID?) {}
     func showLogon() {}
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
@@ -23,6 +25,10 @@ final class TestUI: UIServices {
     var savedFile: (name: String, ext: String, data: Data)?
     func copyToClipboard(_ text: String, html: String?) { clipboard = text }
     var largeData: LargeDataModel?
+    var openURLs: [URL] = []
+    var saveURL: URL?
+    func chooseFilesToOpen() async -> [URL] { openURLs }
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
     func showLargeDataEditor(_ model: LargeDataModel) { largeData = model }
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
         savedFile = (suggestedName, fileExtension, data)
@@ -439,7 +445,8 @@ struct CommandWindowIntegrationTests {
 
     @Test("@plik z parametrami, @@ względem skryptu, SPOOL do pliku, WHENEVER SQLERROR EXIT ROLLBACK")
     func filesAndWhenever() async throws {
-        let (ws, doc, _) = try make()
+        let (ws, doc, ui) = try make()
+        ui.askAnswer = 1        // EXIT zamyka okno: „Nie zapisuj” skryptu z karty Edytor
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-cw-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: dir.appendingPathComponent("sub"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }

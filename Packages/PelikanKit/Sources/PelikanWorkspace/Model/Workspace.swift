@@ -22,6 +22,10 @@ public protocol UIServices: AnyObject {
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
     /// Large Data Editor (UG 27) dla komórki siatki.
     func showLargeDataEditor(_ model: LargeDataModel)
+    /// Okno wyboru plików do otwarcia.
+    func chooseFilesToOpen() async -> [URL]
+    /// Okno wyboru nazwy pliku do zapisu; nil — anulowano.
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL?
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).

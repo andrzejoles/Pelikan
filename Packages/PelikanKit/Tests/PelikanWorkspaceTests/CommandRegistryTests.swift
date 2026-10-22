@@ -100,3 +100,35 @@ struct CommandRegistryTests {
         #expect(current == generated, "Uruchom: PELIKAN_WRITE_DOCS=1 swift test --filter shortcutsDoc")
     }
 }
+
+@MainActor
+@Suite("Własne skróty klawiszowe")
+struct KeyboardCustomizationTests {
+    @Test("Przypisanie skrótu przejmuje go od innej komendy; usunięcie domyślnego; przywrócenie domyślnych")
+    func customize() {
+        let ws = Workspace(profile: .plsqlDeveloper)
+        let f9 = KeyChord(string: "f9")!
+        let f8 = KeyChord(string: "f8")!
+        #expect(ws.keymap.command(for: f8) == "sql.execute")
+        ws.assignShortcut(f9, to: "sql.execute")
+        #expect(ws.keymap.command(for: f9) == "sql.execute")
+        #expect(ws.keymap.chords(for: "sql.execute").contains(f8))     // domyślny zostaje, dopóki go nie usunąć
+        ws.removeShortcut(f8)
+        #expect(ws.keymap.command(for: f8) == nil)
+        #expect(ws.conflictingCommand(for: KeyChord(string: "f10")!, assigning: "sql.execute") == "session.commit")
+        ws.resetShortcuts(for: "sql.execute")
+        #expect(ws.keymap.command(for: f8) == "sql.execute")
+        #expect(ws.keymap.command(for: f9) == ws.defaultCommand(for: f9))    // F9 wraca do domyślnej komendy profilu
+        ws.assignShortcut(f9, to: "session.commit")
+        ws.resetShortcuts()
+        #expect(ws.settings.keyOverrides.isEmpty)
+    }
+
+    @Test("Zmiana profilu skrótów przebudowuje mapę klawiszy")
+    func profile() {
+        let ws = Workspace(profile: .plsqlDeveloper)
+        #expect(ws.keymap.command(for: KeyChord(string: "ctrl+f8")!) == "sql.executeAlternate")
+        ws.settings.shortcutProfile = .macOS
+        #expect(ws.keymap.command(for: KeyChord(string: "cmd+shift+enter")!) == "sql.executeAlternate")
+    }
+}
