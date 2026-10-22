@@ -70,7 +70,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate {
     static func initialWidth(_ c: ColumnInfo) -> CGFloat {
         let chars: Int
         switch c.type {
-        case .number, .binaryDouble, .binaryFloat, .binaryInteger: chars = min(max(Int(c.precision) + 2, c.name.count), 18)
+        case .number, .binaryDouble, .binaryFloat, .binaryInteger:
+            // NUMBER bez precyzji (wyrażenia, level) — szerokość jak dla 10 cyfr.
+            chars = min(max(c.precision > 0 ? Int(c.precision) + 2 : 10, c.name.count), 18)
         case .date: chars = 19
         case .timestamp, .timestampTZ, .timestampLTZ: chars = 26
         case .varchar2, .nvarchar2, .char, .nchar: chars = min(max(Int(c.size), c.name.count), 40)

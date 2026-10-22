@@ -251,7 +251,7 @@ final class DocumentAreaViewController: NSViewController {
                 installedID = doc.id
                 focusActiveDocument()
             }
-            statusLabel.stringValue = [connectionDescription(for: doc), doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil,
+            statusLabel.stringValue = [connectionDescription(for: doc), doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
         } else {
             installedID = nil

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T22:11:54+02:00",
+  "heartbeat": "2026-10-22T22:15:38+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
     "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
     "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
     "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
@@ -96,11 +97,11 @@
       "at": "2026-10-22T22:11:47+02:00"
     },
     "integration": {
-      "total": 26,
-      "passed": 25,
+      "total": 27,
+      "passed": 26,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-22T22:11:49+02:00"
+      "at": "2026-10-22T22:15:36+02:00"
     },
     "perf": {
       "total": 8,

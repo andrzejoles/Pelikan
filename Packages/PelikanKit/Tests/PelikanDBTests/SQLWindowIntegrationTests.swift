@@ -48,7 +48,7 @@ struct SQLWindowIntegrationTests {
         await grid.fetchMore(500)
         #expect(grid.rowCount == 600)
         #expect(doc.results.first?.title == "Select big_rows")
-        #expect(doc.statusText?.contains("więcej") == true)
+        #expect(doc.resultSummary == "600 wierszy (więcej…)")
         await ws.sessions.disconnectAll()
     }
 
@@ -112,6 +112,34 @@ struct SQLWindowIntegrationTests {
         #expect(doc.results.first?.grid?.rowCount == 7)
         #expect(ws.history.first?.text.hasSuffix("select * from big_rows") == true)
         #expect(doc.statementHistory.count == 1)
+        await ws.sessions.disconnectAll()
+    }
+}
+
+@MainActor
+@Suite("SQL Window — przerwanie", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct SQLWindowBreakTests {
+    @Test("Przerwij (sql.break) kończy długie zapytanie ORA-01013 bez przesuwania kursora; interfejs dostępny w trakcie")
+    func breakExecution() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql)
+        doc.text = "select count(*) from big_rows a, big_rows b"
+        doc.selectedRange = 5..<5
+        let run = Task { try await ws.invoke("sql.execute") }
+        while !doc.isExecuting { await Task.yield() }
+        try await Task.sleep(for: .milliseconds(700))
+        #expect(ws.isEnabled("sql.break"))
+        try await ws.invoke("sql.break")
+        _ = try? await run.value
+        #expect(!doc.isExecuting)
+        #expect(doc.results.first?.message?.contains("ORA-01013") == true)
+        #expect(doc.errorRange == nil)
         await ws.sessions.disconnectAll()
     }
 }

@@ -196,9 +196,12 @@ public enum SQLExecutor {
                     newTabs.append(tab)
                 }
             } catch let e as OracleError {
-                let local = SessionUtilities.utf16Offset(ofUTF8Offset: Int(e.offset), in: prepared.sql)
-                let pos = min(s.start + min(local, s.end - s.start), s.end)
-                doc.errorRange = pos..<pos
+                // Pozycja błędu tylko dla błędów w tekście polecenia (nie przy przerwaniu ani utracie połączenia).
+                if !e.isCancelled, !e.isConnectionLost {
+                    let local = SessionUtilities.utf16Offset(ofUTF8Offset: Int(e.offset), in: prepared.sql)
+                    let pos = min(s.start + min(local, s.end - s.start), s.end)
+                    doc.errorRange = pos..<pos
+                }
                 newTabs.append(ResultTab(title: tabTitle(for: s), statementRange: s.start..<s.end, message: e.message))
                 doc.statusText = e.message
                 ok = false
@@ -216,8 +219,8 @@ public enum SQLExecutor {
         }
         if ok {
             let elapsed = ContinuousClock.now - start
-            let rows = newTabs.first?.grid.map { g in g.hasMore ? L10n.tr("\(g.rowCount) wierszy (więcej…)") : L10n.tr("\(g.rowCount) wierszy") }
-            doc.statusText = [rows, newTabs.first?.message, L10n.tr("Czas: \(format(elapsed))")].compactMap { $0 }.joined(separator: "   ·   ")
+            // Liczbę wierszy aktywnej siatki pokazuje `Document.resultSummary` (zmienia się przy dociąganiu).
+            doc.statusText = [newTabs.first?.message, L10n.tr("Czas: \(format(elapsed))")].compactMap { $0 }.joined(separator: "   ·   ")
         }
         return ok
     }

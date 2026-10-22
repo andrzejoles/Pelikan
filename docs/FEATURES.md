@@ -73,7 +73,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | ✅ test |
 | PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | w toku |
-| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | do zrobienia |
+| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | w toku |
 | PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | do zrobienia |
 | PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-008 | Karta Statistics (statystyki wykonania) | UG 6.2 | SQL Window > Statistics | 3 | P2 | Odczyt | do zrobienia |
@@ -100,7 +100,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | w toku |
+| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | 👁 ręcznie |
 | PD-GRID-003 | `<CLOB>`, `<BLOB>`, `<Long>`… z przyciskiem komórki → Large Data Editor; przycisk dla tekstu > 20 znaków | UG 7.2 | Siatka | 1 | P1 | — | do zrobienia |
 | PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | w toku |

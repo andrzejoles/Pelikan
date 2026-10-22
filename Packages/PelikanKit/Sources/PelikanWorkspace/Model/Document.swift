@@ -80,6 +80,12 @@ public final class Document: Identifiable {
     /// Karty wyników (przypięte zostają przy kolejnym wykonaniu — UG 7.10).
     public var results: [ResultTab] = []
     public var activeResultID: UUID?
+
+    /// Liczba wierszy aktywnej siatki na pasek stanu („600 wierszy (więcej…)”) — aktualna przy dociąganiu.
+    public var resultSummary: String? {
+        guard let tab = results.first(where: { $0.id == activeResultID }) ?? results.first, let g = tab.grid else { return nil }
+        return g.hasMore ? L10n.tr("\(g.rowCount) wierszy (więcej…)") : L10n.tr("\(g.rowCount) wierszy")
+    }
     /// Wyjście DBMS_OUTPUT (karta Output).
     public var output: [String] = []
     public var outputEnabled = true
