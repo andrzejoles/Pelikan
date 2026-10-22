@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T17:56:42+02:00",
+  "heartbeat": "2026-10-22T18:12:25+02:00",
   "stage": {
     "id": 0,
     "name": "Analiza i fundament"
   },
-  "task": "Szkielet projektu Xcode/SPM i CI",
+  "task": "Szkielet aplikacji (Xcode/XcodeGen, AppKit, rejestr komend), Makefile, CLAUDE.md, CI",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone",
+    "Sterownik Instant Client (ODPI-C 26.0 + Instant Client 23.26.2): łączenie, zapytania z typami (NUMBER bez utraty precyzji, daty, LOB, JSON, ROWID, interwały), dociąganie porcjami, transakcje, zmienne wiązane IN/OUT, REF CURSOR, niejawne wyniki, błędy ORA z pozycją, ostrzeżenia kompilacji, przerwanie (Break), MODULE/ACTION — 12 testów integracyjnych zielonych",
     "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)",
     "Repozytorium github.com/andrzejoles/Pelikan (publiczne, MIT), pierwszy commit na main",
     "Przeczytany prompt i repozytorium Bifolda (rejestr komend, most MCP, skrypty wersji/wydań/podpisu)",
@@ -70,7 +72,22 @@
   "limitations": [
     "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków"
   ],
-  "tests": {},
+  "tests": {
+    "unit": {
+      "total": 33,
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "at": "2026-10-22T18:12:21+02:00"
+    },
+    "integration": {
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "at": "2026-10-22T18:12:23+02:00"
+    }
+  },
   "performance": [],
   "screenshots": [],
   "ci": {}
