@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T18:52:58+02:00",
+  "heartbeat": "2026-10-22T19:04:48+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
+    "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy",
     "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",
     "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15",
     "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
@@ -97,6 +99,16 @@
   },
   "performance": [],
   "screenshots": [
+    {
+      "file": "img/etap1-lista-polaczen.png",
+      "title": "Etap 1: Lista połączeń po zalogowaniu",
+      "reference": "UG 19.1: foldery (także z regułą), Ostatnie, klucz: nieznane/znane/połączone, połączenie główne pogrubione, kolor środowiska, połączenie okna na pasku stanu"
+    },
+    {
+      "file": "img/etap1-definicja-polaczenia.png",
+      "title": "Etap 1: definicja połączenia",
+      "reference": "UG 19.2: nazwa, folder, środowisko, kolor, logowanie (hasło w Pęku kluczy), baza z aliasami TNS, rola, uwierzytelnianie zewnętrzne, sterownik; karty Zaawansowane i Agent AI"
+    },
     {
       "file": "img/etap0-okno-glowne.png",
       "title": "Etap 0: okno główne",

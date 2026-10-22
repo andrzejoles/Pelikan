@@ -42,8 +42,6 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Zaloguj… | `session.logon` |  |  | Brak | 1 | PD-CONN-002 |
-| Wyloguj | `session.logoff` |  |  | Brak | 1 | PD-CONN-018 |
 | Wykonaj | `sql.execute` | F8, ⌘↩ † | ⌘↩, F8 | Brak | 1 | PD-SQLW-002 |
 | Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ † | ⇧⌘↩, ⌃F8 | Brak | 1 | PD-SQLW-003 |
 | Przerwij | `sql.break` | ⇧⎋ †, ⌘. † | ⌘. | Brak | 1 | PD-SQLW-005 |
@@ -52,6 +50,15 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 | Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 1 | PD-CONN-027 |
 | Zmień hasło… | `session.setPassword` |  |  | Brak | 1 | PD-CONN-017 |
 | SQL Trace | `session.sqlTrace` |  |  | Brak | 3 | PD-OPT-008 |
+| Zaloguj… | `session.logon` | ⇧⌘L † | ⇧⌘L | Brak | 0 | PD-CONN-002 |
+| Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
+| Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
+| Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | 0 | PD-CONN-004 |
+| Połączenia › Usuń połączenie | `connection.delete` |  |  | Brak | 0 | PD-CONN-004 |
+| Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | 0 | PD-CONN-018 |
+| Połączenia › Połącz | `connection.connect` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | 0 | PD-CONN-003 |
 
 ## Debugowanie
 
@@ -104,7 +111,6 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 |---|---|---|---|---|---|---|
 | Paleta komend… | `view.commandPalette` | ⇧⌘P † | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |
-| Lista połączeń | `view.connectionList` |  |  | Brak | 1 | PD-CONN-003 |
 
 ## Okno
 

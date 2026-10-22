@@ -60,7 +60,7 @@ final class SidebarViewController: NSViewController {
                                               trackingMode: .selectOne, target: nil, action: nil)
     private let container = NSView()
     private lazy var panes: [NSViewController] = [
-        PlaceholderPaneController(text: L10n.tr("Lista połączeń — Etap 1")),
+        ConnectionListViewController(workspace: workspace),
         PlaceholderPaneController(text: L10n.tr("Przeglądarka obiektów — Etap 2")),
         WindowListViewController(workspace: workspace),
     ]
@@ -77,7 +77,7 @@ final class SidebarViewController: NSViewController {
         let root = NSView()
         selector.target = self
         selector.action = #selector(selectPane(_:))
-        selector.selectedSegment = 2
+        selector.selectedSegment = 0
         selector.segmentDistribution = .fillEqually
         selector.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
@@ -93,7 +93,7 @@ final class SidebarViewController: NSViewController {
             container.bottomAnchor.constraint(equalTo: root.bottomAnchor),
         ])
         view = root
-        show(pane: 2)
+        show(pane: 0)
     }
 
     @objc private func selectPane(_ sender: NSSegmentedControl) { show(pane: sender.selectedSegment) }
@@ -237,10 +237,24 @@ final class DocumentAreaViewController: NSViewController {
             vc.view.autoresizingMask = [.width, .height]
             container.addSubview(vc.view)
             view.window?.makeFirstResponder(vc.preferredFirstResponder)
-            statusLabel.stringValue = L10n.tr("Brak połączenia") + "   ·   " + doc.fullTitle
+            statusLabel.stringValue = connectionDescription(for: doc) + "   ·   " + doc.fullTitle
         } else {
             statusLabel.stringValue = L10n.tr("Brak otwartych okien — Plik › Nowy")
         }
+    }
+}
+
+extension DocumentAreaViewController {
+    /// Połączenie okna na pasku stanu (UG 20.2): opis, środowisko, przypięcie.
+    func connectionDescription(for doc: Document) -> String {
+        guard let id = workspace.effectiveConnection(of: doc), let c = workspace.connections.connection(id) else {
+            return L10n.tr("Brak połączenia")
+        }
+        var s = c.displayName
+        if c.environment != .other { s += " (\(c.environment.shortName))" }
+        if doc.connectionPinned { s = "📌 " + s }
+        if c.readOnly { s += " · " + L10n.tr("tylko odczyt") }
+        return s
     }
 }
 

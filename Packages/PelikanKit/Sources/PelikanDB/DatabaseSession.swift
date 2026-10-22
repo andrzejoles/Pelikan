@@ -302,3 +302,13 @@ public enum DatabaseError: Error, Sendable, Equatable {
     case unsupported(String)
     case closed
 }
+
+/// Fabryka sesji danego sterownika (aplikacja wstrzykuje implementacje do modelu — Workspace nie zna sterowników).
+public protocol DatabaseDriver: Sendable {
+    var kind: DriverKind { get }
+    /// Możliwości sterownika (bez łączenia) — do wyszarzania funkcji w interfejsie.
+    var capabilities: DriverCapabilities { get }
+    /// Czy sterownik jest gotowy (np. znaleziono Instant Client); komunikat z instrukcją, gdy nie.
+    func availability() -> Result<Void, DatabaseError>
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession
+}
