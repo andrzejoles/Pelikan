@@ -183,7 +183,7 @@ struct VariablesView: View {
                     .frame(height: CGFloat(o.lines) * 18)
             } else {
                 TextField(label, text: f.text).disabled(o.readOnly)
-                    .onSubmit { model.valueChanged(o.name) }
+                    .onSubmit { if model.canSubmit { onDone(model.values) } }   // Enter wykonuje (jak w PL/SQL Developer)
             }
             if let hint = o.hint { Text(hint).font(.caption).foregroundStyle(.secondary) }
             if let e = f.wrappedValue.error { Text(e).font(.caption).foregroundStyle(.red) }

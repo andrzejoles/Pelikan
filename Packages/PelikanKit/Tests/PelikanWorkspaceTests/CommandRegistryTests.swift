@@ -63,8 +63,16 @@ struct CommandRegistryTests {
     @Test("Komenda zapowiedziana jest wyłączona i zwraca czytelny błąd")
     func plannedCommand() async {
         let ws = Workspace()
+        #expect(!ws.isEnabled("tools.scheduler"))
+        await #expect(throws: CommandError.self) { try await ws.invoke("tools.scheduler") }
+    }
+
+    @Test("Komenda wyłączona w bieżącym stanie (COMMIT bez transakcji) nie wykonuje się — także dla agenta")
+    func disabledCommand() async {
+        let ws = Workspace()
+        _ = ws.newDocument(.sql)
         #expect(!ws.isEnabled("session.commit"))
-        await #expect(throws: CommandError.self) { try await ws.invoke("session.commit") }
+        await #expect(throws: CommandError.self) { try await ws.invoke("session.commit", invoker: .agent(sessionID: "t", agentName: "test")) }
     }
 
     @Test("Każda komenda wskazuje istniejący wiersz macierzy funkcji")

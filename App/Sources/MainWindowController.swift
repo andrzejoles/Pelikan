@@ -3,6 +3,7 @@ import PelikanWorkspace
 
 /// Okno główne w układzie PL/SQL Developer (ADR 0005): lewa kolumna narzędzi, obszar dokumentów z kartami, pasek stanu.
 final class MainWindowController: NSWindowController, NSWindowDelegate {
+    private(set) lazy var documentArea = DocumentAreaViewController(workspace: workspace)
     private let workspace: Workspace
     private let split = NSSplitViewController()
 
@@ -23,7 +24,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sidebar.minimumThickness = 220
         sidebar.maximumThickness = 420
         sidebar.canCollapse = true
-        let content = NSSplitViewItem(viewController: DocumentAreaViewController(workspace: workspace))
+        let content = NSSplitViewItem(viewController: documentArea)
         content.minimumThickness = 480
         split.addSplitViewItem(sidebar)
         split.addSplitViewItem(content)
@@ -142,6 +143,14 @@ final class DocumentAreaViewController: NSViewController {
     private let container = NSView()
     private let statusLabel = NSTextField(labelWithString: "")
     private var controllers: [DocumentID: NSViewController] = [:]
+    private var installedID: DocumentID?
+
+    /// Fokus do edytora aktywnego okna (np. po zamknięciu arkusza logowania albo zmiennych).
+    func focusActiveDocument() {
+        guard let id = installedID, let vc = controllers[id] else { return }
+        let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? DocumentViewController)?.preferredFirstResponder
+        view.window?.makeFirstResponder(responder)
+    }
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -179,7 +188,7 @@ final class DocumentAreaViewController: NSViewController {
             tabScroll.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor),
             tabScroll.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             tabScroll.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            tabScroll.heightAnchor.constraint(equalToConstant: 32),
+            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 32); c.priority = .defaultHigh; return c }(),
             tabBar.topAnchor.constraint(equalTo: tabScroll.contentView.topAnchor),
             tabBar.leadingAnchor.constraint(equalTo: tabScroll.contentView.leadingAnchor),
             tabBar.heightAnchor.constraint(equalTo: tabScroll.contentView.heightAnchor),
@@ -225,7 +234,7 @@ final class DocumentAreaViewController: NSViewController {
             vc.removeFromParent()
             controllers[id] = nil
         }
-        container.subviews.forEach { $0.removeFromSuperview() }
+        if workspace.activeDocument?.id != installedID { container.subviews.forEach { $0.removeFromSuperview() } }
         if let doc = workspace.activeDocument {
             let vc = controllers[doc.id] ?? {
                 let c: NSViewController = doc.kind == .sql
@@ -235,14 +244,17 @@ final class DocumentAreaViewController: NSViewController {
                 controllers[doc.id] = c
                 return c
             }()
-            vc.view.frame = container.bounds
-            vc.view.autoresizingMask = [.width, .height]
-            container.addSubview(vc.view)
-            let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? DocumentViewController)?.preferredFirstResponder
-            view.window?.makeFirstResponder(responder)
+            if installedID != doc.id {
+                vc.view.frame = container.bounds
+                vc.view.autoresizingMask = [.width, .height]
+                container.addSubview(vc.view)
+                installedID = doc.id
+                focusActiveDocument()
+            }
             statusLabel.stringValue = [connectionDescription(for: doc), doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil,
-                                       doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText].compactMap { $0 }.joined(separator: "   ·   ")
+                                       doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
         } else {
+            installedID = nil
             statusLabel.stringValue = L10n.tr("Brak otwartych okien — Plik › Nowy")
         }
     }

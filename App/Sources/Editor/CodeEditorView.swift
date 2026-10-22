@@ -3,7 +3,7 @@ import PelikanWorkspace
 
 /// Edytor kodu SQL/PL/SQL (ADR 0003): NSTextView na TextKit 2, podświetlanie przyrostowe, numery linii,
 /// pasek pozycji `linia:kolumna [długość]` (NF15), wiązanie z `Document` (tekst, zaznaczenie, błąd).
-final class CodeEditorView: NSView, NSTextViewDelegate, NSTextStorageDelegate {
+final class CodeEditorView: NSView, NSTextViewDelegate {
     let textView: CodeTextView
     let scrollView = NSScrollView()
     private let ruler: LineNumberRulerView
@@ -47,28 +47,49 @@ final class CodeEditorView: NSView, NSTextViewDelegate, NSTextStorageDelegate {
         textView.isHorizontallyResizable = true
         textView.autoresizingMask = [.width]
         textView.textContainer?.widthTracksTextView = false
-        textView.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        // Bez zawijania wierszy; TextKit 2 nie rysuje tekstu przy nieskończonej szerokości kontenera — duża, skończona.
+        textView.textContainer?.size = NSSize(width: 1_000_000, height: CGFloat.greatestFiniteMagnitude)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.typingAttributes = [.font: font, .foregroundColor: SyntaxTheme.plain]
         textView.delegate = self
-        textView.textStorage?.delegate = self
+        // Delegatem NSTextStorage w TextKit 2 jest NSTextContentStorage — nie podmieniamy go, tylko słuchamy powiadomień.
+        NotificationCenter.default.addObserver(self, selector: #selector(storageDidProcessEditing(_:)),
+                                               name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
         textView.setAccessibilityLabel(document.fullTitle)
 
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
-        scrollView.verticalRulerView = ruler
-        scrollView.hasVerticalRuler = true
-        scrollView.rulersVisible = true
+        // Margines numerów linii jako osobny widok obok (NSRulerView w TextKit 2 zasłaniał tekst).
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        ruler.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(ruler)
         addSubview(scrollView)
         NSLayoutConstraint.activate([
+            ruler.topAnchor.constraint(equalTo: topAnchor),
+            ruler.leadingAnchor.constraint(equalTo: leadingAnchor),
+            ruler.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ruler.widthAnchor.constraint(equalToConstant: 44),
             scrollView.topAnchor.constraint(equalTo: topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: ruler.trailingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
+        scrollView.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.ruler.needsDisplay = true }
+        }
+    }
+
+    override func layout() {
+        super.layout()
+        // Widok tekstu co najmniej tak duży jak obszar przewijania (inaczej zerowa szerokość = niewidoczny tekst).
+        let size = scrollView.contentSize
+        textView.minSize = NSSize(width: size.width, height: size.height)
+        if textView.frame.width < size.width || textView.frame.height < size.height {
+            textView.setFrameSize(NSSize(width: max(textView.frame.width, size.width), height: max(textView.frame.height, size.height)))
+        }
     }
 
     private func load(_ text: String) {
@@ -98,11 +119,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate, NSTextStorageDelegate {
         }
     }
 
-    // MARK: NSTextStorageDelegate — podświetlanie przyrostowe
+    // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
 
-    func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange, changeInLength delta: Int) {
-        guard editedMask.contains(.editedCharacters), !updatingFromModel else { return }
-        // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie wewnątrz delegata).
+    @objc private func storageDidProcessEditing(_ note: Notification) {
+        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters), !updatingFromModel else { return }
+        let editedRange = storage.editedRange
+        let delta = storage.changeInLength
+        // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).
         DispatchQueue.main.async { [weak self] in
             guard let self, let storage = self.textView.textStorage else { return }
             let len = storage.length
@@ -125,10 +148,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate, NSTextStorageDelegate {
     func textViewDidChangeSelection(_ notification: Notification) {
         let r = textView.selectedRange()
         document.selectedRange = r.location..<(r.location + r.length)
-        let line = highlighter.line(containing: r.location)
-        let col = r.location - (line < highlighter.lineStarts.count ? highlighter.lineStarts[line] : 0)
-        onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
-        ruler.needsDisplay = true
+        // Po edycji początki linii przelicza podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            let r = self.textView.selectedRange()
+            let line = self.highlighter.line(containing: r.location)
+            let col = r.location - (line < self.highlighter.lineStarts.count ? self.highlighter.lineStarts[line] : 0)
+            self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
+            self.ruler.needsDisplay = true
+        }
     }
 
     func setFontSize(_ size: CGFloat) {
@@ -179,51 +207,59 @@ final class CodeTextView: NSTextView {
     }
 }
 
-/// Margines z numerami linii (UG 23.12 „Display line numbers”); bieżąca linia wyróżniona.
-final class LineNumberRulerView: NSRulerView {
+/// Margines z numerami linii (UG 23.12 „Display line numbers”); bieżąca linia wyróżniona. Rysuje tylko linie
+/// widoczne w obszarze przewijania (fragmenty układu TextKit 2 z zakresu viewportu).
+final class LineNumberRulerView: NSView {
     private weak var textView: NSTextView?
     private let highlighter: SyntaxHighlighter
 
     init(textView: NSTextView, highlighter: SyntaxHighlighter) {
         self.textView = textView
         self.highlighter = highlighter
-        super.init(scrollView: nil, orientation: .verticalRuler)
-        ruleThickness = 44
-        clientView = textView
+        super.init(frame: .zero)
+        setAccessibilityElement(false)
     }
 
     @available(*, unavailable)
-    required init(coder: NSCoder) { fatalError() }
+    required init?(coder: NSCoder) { fatalError() }
 
     override var isFlipped: Bool { true }
 
-    override func drawHashMarksAndLabels(in rect: NSRect) {
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.textBackgroundColor.setFill()
+        dirtyRect.fill()
+        NSColor.separatorColor.setFill()
+        NSRect(x: bounds.width - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
         guard let tv = textView, let tlm = tv.textLayoutManager, let content = tlm.textContentManager else { return }
-        NSColor.windowBackgroundColor.setFill()
-        rect.fill()
         let font = NSFont.monospacedDigitSystemFont(ofSize: max(9, (tv.font?.pointSize ?? 13) - 2), weight: .regular)
         let caretLine = highlighter.line(containing: tv.selectedRange().location)
         let visible = tv.visibleRect
-        let origin = convert(NSPoint.zero, from: tv)
         let inset = tv.textContainerInset.height
-        // Od początku widocznego zakresu (viewport), bez wymuszania układu całego dokumentu — O(widoczne linie).
+        let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
+        func label(_ line: Int, y: CGFloat, height: CGFloat) {
+            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
+            let size = s.size()
+            s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
+        }
+        if content.documentRange.isEmpty {
+            label(0, y: inset - visible.minY, height: lineHeight)
+            return
+        }
         let start = tlm.textViewportLayoutController.viewportRange?.location ?? tlm.documentRange.location
+        var lastFrame = NSRect.zero
         tlm.enumerateTextLayoutFragments(from: start, options: []) { fragment in
             let frame = fragment.layoutFragmentFrame
             if frame.maxY < visible.minY - 50 { return true }
             if frame.minY > visible.maxY + 50 { return false }
             let offset = content.offset(from: content.documentRange.location, to: fragment.rangeInElement.location)
-            let line = self.highlighter.line(containing: offset)
-            let isCaret = line == caretLine
-            let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: isCaret ? NSColor.labelColor : NSColor.tertiaryLabelColor]
-            let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
-            let size = s.size()
-            let y = frame.minY + inset + origin.y + (frame.height > 0 ? min(frame.height, (tv.font?.boundingRectForFont.height ?? size.height)) - size.height : 0) / 2
-            s.draw(at: NSPoint(x: self.ruleThickness - size.width - 6, y: y))
+            label(self.highlighter.line(containing: offset), y: frame.minY + inset - visible.minY, height: frame.height)
+            lastFrame = frame
             return true
         }
-        let border = NSRect(x: ruleThickness - 1, y: rect.minY, width: 1, height: rect.height)
-        NSColor.separatorColor.setFill()
-        border.fill()
+        // Pusta ostatnia linia po końcowym znaku nowej linii nie ma własnego fragmentu.
+        if tv.string.hasSuffix("\n"), lastFrame.maxY < visible.maxY {
+            label(highlighter.lineStarts.count - 1, y: lastFrame.maxY + inset - visible.minY, height: lineHeight)
+        }
     }
 }

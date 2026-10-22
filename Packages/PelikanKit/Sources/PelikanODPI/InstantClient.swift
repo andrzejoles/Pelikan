@@ -16,9 +16,12 @@ public enum InstantClientLocator {
     /// Oracle dla macOS), /opt/oracle/instantclient*, Homebrew, /usr/local/lib, katalogi Linuksa.
     public static func candidates(configured: String? = nil, environment: [String: String] = ProcessInfo.processInfo.environment,
                                   home: String = NSHomeDirectory()) -> [String] {
-        var dirs: [String] = []
-        if let c = configured, !c.isEmpty { dirs.append((c as NSString).expandingTildeInPath) }
-        if let e = environment["PELIKAN_OCI_LIB_DIR"], !e.isEmpty { dirs.append(e) }
+        stages(configured: configured, environment: environment, home: home).flatMap { $0() }
+    }
+
+    /// Etapy wyszukiwania liczone leniwie: odczyt ~/Downloads wywołuje pytanie systemu o dostęp (TCC), więc nie
+    /// sięgamy tam, gdy biblioteka jest już w katalogu z ustawień albo ze zmiennej środowiskowej.
+    static func stages(configured: String?, environment: [String: String], home: String) -> [() -> [String]] {
         let fm = FileManager.default
         func glob(_ parent: String, prefix: String) -> [String] {
             ((try? fm.contentsOfDirectory(atPath: parent)) ?? [])
@@ -26,20 +29,26 @@ public enum InstantClientLocator {
                 .sorted { $0.compare($1, options: .numeric) == .orderedDescending }   // najnowsza wersja pierwsza
                 .map { parent + "/" + $0 }
         }
-        dirs += glob(home + "/Downloads", prefix: "instantclient_")
-        dirs += glob(home + "/Applications", prefix: "instantclient_")
-        dirs += glob("/opt/oracle", prefix: "instantclient")
-        dirs += ["/opt/homebrew/lib", "/usr/local/lib", "/usr/local/oracle/instantclient"]
+        var stages: [() -> [String]] = [
+            { configured.map { $0.isEmpty ? [] : [($0 as NSString).expandingTildeInPath] } ?? [] },
+            { environment["PELIKAN_OCI_LIB_DIR"].map { $0.isEmpty ? [] : [$0] } ?? [] },
+            { ["/opt/homebrew/lib", "/usr/local/lib", "/usr/local/oracle/instantclient"] + glob("/opt/oracle", prefix: "instantclient") },
+            { glob(home + "/Downloads", prefix: "instantclient_") + glob(home + "/Applications", prefix: "instantclient_") },
+        ]
 #if os(Linux)
-        dirs += glob("/usr/lib/oracle", prefix: "").map { $0 + "/client64/lib" }
+        stages.append { glob("/usr/lib/oracle", prefix: "").map { $0 + "/client64/lib" } }
 #endif
-        if let ld = environment["LD_LIBRARY_PATH"] { dirs += ld.split(separator: ":").map(String.init) }
-        return dirs
+        stages.append { environment["LD_LIBRARY_PATH"].map { $0.split(separator: ":").map(String.init) } ?? [] }
+        return stages
     }
 
     /// Pierwszy katalog zawierający bibliotekę klienta.
-    public static func locate(configured: String? = nil) -> String? {
-        candidates(configured: configured).first { FileManager.default.fileExists(atPath: $0 + "/" + libraryName) }
+    public static func locate(configured: String? = nil, environment: [String: String] = ProcessInfo.processInfo.environment,
+                              home: String = NSHomeDirectory()) -> String? {
+        for stage in stages(configured: configured, environment: environment, home: home) {
+            if let dir = stage().first(where: { FileManager.default.fileExists(atPath: $0 + "/" + libraryName) }) { return dir }
+        }
+        return nil
     }
 }
 

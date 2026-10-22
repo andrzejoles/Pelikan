@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var palette: CommandPalette?
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
+    private var keyMonitor: Any?
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -30,6 +31,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let builder = MenuBuilder(workspace: workspace)
         NSApp.mainMenu = builder.build()
         menuBuilder = builder
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak builder] event in
+            nonisolated(unsafe) let e = event   // monitor lokalny działa na wątku głównym
+            let handled = MainActor.assumeIsolated { builder?.handleKeyDown(e) == true }
+            return handled ? nil : event
+        }
         let window = MainWindowController(workspace: workspace)
         window.showWindow(nil)
         mainWindow = window
@@ -111,7 +117,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func showLogon() {
         guard let window = mainWindow?.window else { return }
         var sheet: NSWindow?
-        let view = LogonView(workspace: workspace) { if let sheet { window.endSheet(sheet) } }
+        let view = LogonView(workspace: workspace) { [weak self] in
+            if let sheet { window.endSheet(sheet) }
+            self?.mainWindow?.documentArea.focusActiveDocument()
+        }
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
         sheet = w
         window.beginSheet(w)
@@ -127,6 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 guard !finished else { return }
                 finished = true
                 if let sheet { window.endSheet(sheet) }
+                self.mainWindow?.documentArea.focusActiveDocument()
                 cont.resume(returning: values)
             }
             let w = NSWindow(contentViewController: NSHostingController(rootView: view))

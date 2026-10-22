@@ -70,7 +70,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | PD-SQLW-001 | Dzielenie skryptu na polecenia (`;`, `/`, bloki PL/SQL, CREATE z ciałem) jak SQL*Plus | UG 7.1, PROMPT §5 | SQL Window | 1 | P1 | — | ✅ test |
-| PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | w toku |
+| PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | ✅ test |
 | PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | w toku |
 | PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | do zrobienia |
@@ -100,8 +100,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | do zrobienia |
-| PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | do zrobienia |
+| PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | w toku |
+| PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | 👁 ręcznie |
 | PD-GRID-003 | `<CLOB>`, `<BLOB>`, `<Long>`… z przyciskiem komórki → Large Data Editor; przycisk dla tekstu > 20 znaków | UG 7.2 | Siatka | 1 | P1 | — | do zrobienia |
 | PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | w toku |
 | PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | w toku |
@@ -136,7 +136,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-VAR-002 | Zmienne wiązane `:nazwa` w SQL Window (typ domyślnie tekst), pomijanie `:new`/`:old` w wyzwalaczach | UG 7.5, NF16 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-VAR-003 | Składnia opcji `&"Nazwa"` i `&<name= hint= type= required= default= ifempty= uppercase= lowercase= readonly= hidden= list= description= restricted= multiselect= checkbox= prefix= suffix= lines= editor=>` | UG 12.3, NF11 | SQL / Report Window, szablony | 1 | P1 | — | ✅ test |
 | PD-VAR-004 | Listy zależne (`:inna_zmienna` w zapytaniu listy, `&zmienna` w listach) | UG 12.3, NF14 | Okno zmiennych | 1 | P2 | — | do zrobienia |
-| PD-VAR-005 | Przycisk `&` na pasku stanu wyłącza podstawianie (także zmiennych wiązanych) | UG 7.5, NF17 | Pasek stanu | 1 | P2 | — | do zrobienia |
+| PD-VAR-005 | Przycisk `&` na pasku stanu wyłącza podstawianie (także zmiennych wiązanych) | UG 7.5, NF17 | Pasek stanu | 1 | P2 | — | 👁 ręcznie |
 | PD-VAR-006 | `&&` jako literał `&` w tekście (np. 'R&&D') | UG 12.3 | SQL Window | 1 | P2 | — | ✅ test |
 | PD-VAR-007 | Parametry JasperReports `$P{}`, `$P!{}`, `$X{IN/NOTIN/EQUAL/NOTEQUAL/LESS/GREATER/BETWEEN…}` jako zmienne (decyzja właściciela D6) | D6 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-VAR-008 | Zapamiętywanie wartości zmiennych w oknie (.pfi) i przy Auto Refresh | UG 23.18, NF8 | SQL Window | 1 | P2 | — | do zrobienia |
@@ -188,7 +188,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 |---|---|---|---|---|---|---|---|
 | PD-EDIT-001 | Podświetlanie składni SQL, PL/SQL, SQL*Plus (kolory, styl, wielkość liter słów kluczowych przy pisaniu) | UG 23.12 | Edytor | 1 | P1 | — | w toku |
 | PD-EDIT-002 | Lekser przyrostowy (stan na końcu linii), tolerancyjny | PROMPT §4.1 | Edytor | 1 | P1 | — | ✅ test |
-| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
+| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | w toku |
 | PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
 | PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | do zrobienia |
 | PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | do zrobienia |

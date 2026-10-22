@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T19:16:41+02:00",
+  "heartbeat": "2026-10-22T22:07:40+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
     "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
     "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
     "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
@@ -81,15 +82,17 @@
   "questions": [],
   "limitations": [
     "Oracle 19c i starsze nie mają obrazów arm64 — testy automatyczne tylko na 26ai; zgodność ze starszymi przez zapytania słownika odporne na brak kolumn i widoków",
-    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia"
+    "Runner GitHub macos-latest to macOS 26.6 / Swift 6.3 — budowanie aplikacji z celem macOS 27 w CI do sprawdzenia",
+    "Ctrl+F8 przechwytuje macOS (fokus do menu statusu) — działa odpowiednik ⇧⌘↩; skrót systemowy można wyłączyć w Ustawieniach (D17)",
+    "Instant Client w Pobranych: przy pierwszym połączeniu macOS pyta o dostęp do folderu Pobrane — zgoda należy do użytkownika; można wskazać inny katalog w ustawieniach (D18)"
   ],
   "tests": {
     "unit": {
-      "total": 41,
-      "passed": 41,
+      "total": 94,
+      "passed": 94,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:52:52+02:00"
+      "at": "2026-10-22T22:07:40+02:00"
     },
     "integration": {
       "total": 13,
@@ -101,6 +104,11 @@
   },
   "performance": [],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap1-sql-window.png",
+      "title": "SQL Window: skrypt z trzema poleceniami, zmienna :min_sal, karta błędu, otwarta transakcja",
+      "reference": "PD-SQLW-002"
+    },
     {
       "file": "img/etap1-lista-polaczen.png",
       "title": "Etap 1: Lista połączeń po zalogowaniu",

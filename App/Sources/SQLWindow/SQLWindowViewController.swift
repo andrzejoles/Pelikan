@@ -61,7 +61,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
             windowBar.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
             windowBar.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
             windowBar.bottomAnchor.constraint(equalTo: editorPane.bottomAnchor),
-            windowBar.heightAnchor.constraint(equalToConstant: 22),
+            { let c = windowBar.heightAnchor.constraint(equalToConstant: 22); c.priority = .defaultHigh; return c }(),
         ])
 
         // Obszar wyników: karty + zawartość.
@@ -80,7 +80,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
             tabScroll.topAnchor.constraint(equalTo: resultsArea.topAnchor),
             tabScroll.leadingAnchor.constraint(equalTo: resultsArea.leadingAnchor),
             tabScroll.trailingAnchor.constraint(equalTo: resultsArea.trailingAnchor),
-            tabScroll.heightAnchor.constraint(equalToConstant: 28),
+            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 28); c.priority = .defaultHigh; return c }(),
             tabBar.topAnchor.constraint(equalTo: tabScroll.contentView.topAnchor),
             tabBar.leadingAnchor.constraint(equalTo: tabScroll.contentView.leadingAnchor),
             tabBar.heightAnchor.constraint(equalTo: tabScroll.contentView.heightAnchor),
@@ -95,15 +95,11 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         split.delegate = self
         split.addArrangedSubview(editorPane)
         split.addArrangedSubview(resultsArea)
-        split.autosaveName = "PelikanSQLWindowSplit"
+        // Wyniki ukryte do pierwszego wykonania (ukryty widok NSSplitView = zwinięty, bez przesuwania dzielnika w layout).
+        resultsArea.isHidden = true
         view = split
         tokens.append(trackChanges { [weak self] in self?.refreshResults() })
         tokens.append(trackChanges { [weak self] in self?.refreshState() })
-    }
-
-    override func viewDidLayout() {
-        super.viewDidLayout()
-        if resultsCollapsed { split.setPosition(split.bounds.height, ofDividerAt: 0) }
     }
 
     private func refreshState() {
@@ -124,8 +120,10 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         // Pokaż obszar wyników po pierwszym wyniku albo wyjściu.
         if resultsCollapsed, !results.isEmpty || !output.isEmpty {
             resultsCollapsed = false
+            resultsArea.isHidden = false
+            split.adjustSubviews()
             let h = split.bounds.height
-            split.setPosition(max(120, h * 0.45), ofDividerAt: 0)
+            DispatchQueue.main.async { [weak self] in self?.split.setPosition(max(120, h * 0.5), ofDividerAt: 0) }
         }
         tabBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for r in results {
@@ -203,8 +201,14 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         b.bezelStyle = .accessoryBarAction
         b.setButtonType(.pushOnPushOff)
         b.state = selected ? .on : .off
-        b.contentTintColor = isError ? .systemRed : nil
         b.font = .systemFont(ofSize: 11, weight: selected ? .semibold : .regular)
+        if isError {
+            // Karta z błędem: czerwony tytuł z ikoną (UG 7.1 — wynik z błędem wyróżniony).
+            b.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: L10n.tr("Błąd"))
+            b.imagePosition = .imageLeading
+            b.contentTintColor = .systemRed
+            if !selected { b.attributedTitle = NSAttributedString(string: title, attributes: [.foregroundColor: NSColor.systemRed, .font: b.font!]) }
+        }
         return b
     }
 

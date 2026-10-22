@@ -203,6 +203,10 @@ public final class Workspace {
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
+        // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się.
+        if !command.isPlanned, let validate = command.validate, !validate(self) {
+            throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
+        }
         let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
         let started = Date()
         do {
