@@ -1,0 +1,34 @@
+# Budowanie
+build/
+dist/
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+Packages/*/Package.resolved.orig
+
+# Lokalne dane i sekrety — nigdy w repozytorium
+*.p12
+*.pem
+*.key
+*.keychain-db
+wallet/
+Wallet_*/
+.env
+.env.*
+tnsnames.ora
+sqlnet.ora
+cwallet.sso
+ewallet.p12
+
+# Pobrane zależności (Instant Client, utPLSQL) — skrypty pobierają je do katalogów poza repo
+ThirdParty/downloads/
+.testdb/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
