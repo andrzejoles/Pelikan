@@ -214,9 +214,12 @@ public struct ExecuteOptions: Sendable {
     public var autoCommit: Bool
     /// Limit czasu wywołania (ms), 0 = bez limitu (przerwanie ręczne przez `breakExecution`).
     public var callTimeoutMs: UInt32
+    /// Limit pobierania treści LOB (bajty) dla wyników tego polecenia; nil — z opcji połączenia (Large Data Editor
+    /// pobiera całość).
+    public var lobLimit: Int?
 
-    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0) {
-        self.describeOnly = describeOnly; self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs
+    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil) {
+        self.describeOnly = describeOnly; self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs; self.lobLimit = lobLimit
     }
 }
 

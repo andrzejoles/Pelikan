@@ -96,7 +96,7 @@ public extension OracleTimestamp {
     }
 }
 
-extension Data {
+public extension Data {
     var hexUpper: String {
         let digits = Array("0123456789ABCDEF".utf8)
         var out = [UInt8]()
@@ -106,5 +106,65 @@ extension Data {
             out.append(digits[Int(b & 0xF)])
         }
         return String(decoding: out, as: UTF8.self)
+    }
+}
+
+public extension OracleTimestamp {
+    /// Odczyt tekstu wg podzbioru masek Oracle (jak `formatted`): YYYY, YY, MM, MON, DD, HH24, HH/HH12, MI, SS, FF[1-9], AM/PM.
+    /// Separatory w masce dopasowują dowolny pojedynczy znak niebędący cyfrą; brakujący koniec tekstu (np. sama data
+    /// przy masce z czasem) daje zera.
+    static func parse(_ text: String, mask: String) -> OracleTimestamp? {
+        let s = Array(text.trimmingCharacters(in: .whitespaces))
+        let m = Array(mask.uppercased())
+        var si = 0, mi = 0
+        var y = 0, mo = 1, d = 1, h = 0, mi2 = 0, sec = 0, ns = 0, pm: Bool?
+        let months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+        func number(maxDigits: Int) -> Int? {
+            var v = 0, n = 0
+            while si < s.count, n < maxDigits, let dgt = s[si].wholeNumberValue { v = v * 10 + dgt; si += 1; n += 1 }
+            return n == 0 ? nil : v
+        }
+        func take(_ token: String) -> Bool {
+            let t = Array(token)
+            guard mi + t.count <= m.count, Array(m[mi..<(mi + t.count)]) == t else { return false }
+            mi += t.count
+            return true
+        }
+        while mi < m.count {
+            if si >= s.count { break }    // reszta maski bez tekstu — wartości domyślne
+            if take("YYYY") { guard let v = number(maxDigits: 4) else { return nil }; y = v }
+            else if take("YY") { guard let v = number(maxDigits: 2) else { return nil }; y = 2000 + v }
+            else if take("MON") {
+                guard si + 3 <= s.count, let i = months.firstIndex(of: String(s[si..<(si + 3)]).uppercased()) else { return nil }
+                mo = i + 1; si += 3
+            }
+            else if take("MM") { guard let v = number(maxDigits: 2) else { return nil }; mo = v }
+            else if take("DD") { guard let v = number(maxDigits: 2) else { return nil }; d = v }
+            else if take("HH24") { guard let v = number(maxDigits: 2) else { return nil }; h = v }
+            else if take("HH12") || take("HH") { guard let v = number(maxDigits: 2) else { return nil }; h = v % 12 }
+            else if take("MI") { guard let v = number(maxDigits: 2) else { return nil }; mi2 = v }
+            else if take("SS") { guard let v = number(maxDigits: 2) else { return nil }; sec = v }
+            else if take("FF") {
+                var digits = 9
+                if mi < m.count, let dgt = m[mi].wholeNumberValue { digits = dgt; mi += 1 }
+                let start = si
+                guard let v = number(maxDigits: max(1, digits)) else { return nil }
+                ns = v * Int(pow(10.0, Double(9 - (si - start))))
+            }
+            else if take("AM") || take("PM") {
+                guard si + 2 <= s.count else { return nil }
+                pm = String(s[si..<(si + 2)]).uppercased() == "PM"; si += 2
+            }
+            else if take("TZH") || take("TZM") { _ = number(maxDigits: 2) }
+            else {
+                // Separator maski: w tekście dowolny znak niebędący cyfrą (albo ten sam znak).
+                if s[si].isNumber && s[si] != m[mi] { return nil }
+                si += 1; mi += 1
+            }
+        }
+        if si < s.count { return nil }
+        if pm == true { h += 12 }
+        guard (1...12).contains(mo), (1...31).contains(d), h < 24, mi2 < 60, sec < 60, y > 0 else { return nil }
+        return OracleTimestamp(year: Int16(y), month: UInt8(mo), day: UInt8(d), hour: UInt8(h), minute: UInt8(mi2), second: UInt8(sec), fsecond: UInt32(ns))
     }
 }

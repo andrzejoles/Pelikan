@@ -4,6 +4,7 @@ import PelikanODPI
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
+import UniformTypeIdentifiers
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     let workspace: Workspace
@@ -143,6 +144,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             sheet = w
             window.beginSheet(w)
         }
+    }
+
+    func copyToClipboard(_ text: String, html: String?) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(text, forType: .string)
+        if let html { pb.setString(html, forType: .html) }
+    }
+
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
+        guard let window = mainWindow?.window else { return false }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
+        panel.allowedContentTypes = [UTType(filenameExtension: fileExtension) ?? .data]
+        panel.canCreateDirectories = true
+        let response = await panel.beginSheetModal(for: window)
+        guard response == .OK, let url = panel.url else { return false }
+        do {
+            try data.write(to: url, options: .atomic)
+            return true
+        } catch {
+            showError(error.localizedDescription)
+            return false
+        }
+    }
+
+    func showLargeDataEditor(_ model: LargeDataModel) {
+        LargeDataEditorController.show(model, workspace: workspace, relativeTo: mainWindow?.window)
     }
 
     func ask(_ title: String, message: String, buttons: [String]) async -> Int? {

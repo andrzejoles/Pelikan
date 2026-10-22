@@ -5,7 +5,7 @@ import Foundation
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,

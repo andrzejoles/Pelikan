@@ -143,6 +143,11 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
         case NSLeftArrowFunctionKey: key = "left"
         case NSRightArrowFunctionKey: key = "right"
         case 0x20: key = "space"
+        case NSHomeFunctionKey: key = "home"
+        case NSEndFunctionKey: key = "end"
+        case NSPageUpFunctionKey: key = "pageup"
+        case NSPageDownFunctionKey: key = "pagedown"
+        case NSInsertFunctionKey, NSHelpFunctionKey: key = "insert"
         default: key = chars.lowercased()
         }
         return KeyChord(key: key, modifiers: mods)
@@ -171,6 +176,11 @@ final class MenuBuilder: NSObject, NSMenuItemValidation {
         case "left": key = String(Character(UnicodeScalar(NSLeftArrowFunctionKey)!))
         case "right": key = String(Character(UnicodeScalar(NSRightArrowFunctionKey)!))
         case "space": key = " "
+        case "home": key = String(Character(UnicodeScalar(NSHomeFunctionKey)!))
+        case "end": key = String(Character(UnicodeScalar(NSEndFunctionKey)!))
+        case "pageup": key = String(Character(UnicodeScalar(NSPageUpFunctionKey)!))
+        case "pagedown": key = String(Character(UnicodeScalar(NSPageDownFunctionKey)!))
+        case "insert": key = String(Character(UnicodeScalar(NSInsertFunctionKey)!))
         default:
             guard chord.key.count == 1 else { return nil }
             key = chord.key
