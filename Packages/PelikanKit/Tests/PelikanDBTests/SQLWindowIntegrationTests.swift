@@ -351,3 +351,133 @@ struct LargeDataIntegrationTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Command Window na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct CommandWindowIntegrationTests {
+    func make() throws -> (Workspace, Document, TestUI) {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        return (ws, ws.newDocument(.command), ui)
+    }
+
+    func output(_ doc: Document) -> String { doc.console.map(\.text).joined(separator: "\n") }
+
+    @Test("Skrypt: SET, DEFINE, VARIABLE/EXEC/PRINT, SELECT jako tekst, SERVEROUTPUT, PROMPT, TIMING, FEEDBACK")
+    func script() async throws {
+        let (ws, doc, _) = try make()
+        doc.text = """
+        set feedback on
+        set serveroutput on
+        define dept = 10
+        prompt Pracownicy działu &dept
+        variable cnt number
+        exec select count(*) into :cnt from emp where deptno = &dept
+        print cnt
+        column ename heading 'Nazwisko' format a12
+        select empno, ename from emp where deptno = &dept order by empno;
+        begin dbms_output.put_line('Zażółć'); end;
+        /
+        set timing on
+        select 1 x from dual;
+        """
+        try await ws.invoke("sql.execute")
+        let out = output(doc)
+        #expect(out.contains("Pracownicy działu 10"))
+        #expect(out.contains("Procedura PL/SQL została zakończona pomyślnie."))
+        #expect(out.contains("       CNT\n----------\n         2"))
+        #expect(out.contains("     EMPNO Nazwisko\n---------- ------------\n      7782 WÓJCIK\n      7839 KOWALSKI"))
+        #expect(out.contains("Wybrano wierszy: 2"))
+        #expect(out.contains("Zażółć"))
+        #expect(out.contains("Czas: 00:00:"))
+        #expect(out.contains("stara: ") && out.contains("nowa: "))       // VERIFY ON
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Niezdefiniowana zmienna — pytanie w oknie Zmienne; && zapamiętuje; ACCEPT z DEFAULT")
+    func substitutionPrompt() async throws {
+        let (ws, doc, ui) = try make()
+        ui.variables = ["NR": .text("7839"), "A": .text("x")]
+        doc.text = "set verify off\nselect ename from emp where empno = &&nr;\nselect ename from emp where empno = &nr;\naccept a prompt 'Podaj A' default q\nprompt A=&a"
+        try await ws.invoke("sql.execute")
+        #expect(ui.askedVariables.map(\.name) == ["A"])          // ostatnie pytanie: ACCEPT; NR zapamiętane po pierwszym
+        #expect(output(doc).components(separatedBy: "KOWALSKI").count == 3)
+        #expect(output(doc).contains("A=x"))
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Kompilacja z błędami, SHOW ERRORS, DESCRIBE tabeli i pakietu, błąd ORA bez przerywania skryptu")
+    func compileAndDescribe() async throws {
+        let (ws, doc, _) = try make()
+        doc.text = """
+        create or replace procedure pelikan_cw_bad as begin brak_procedury; end;
+        /
+        show errors
+        desc emp
+        describe emp_api
+        select * from tabela_ktorej_nie_ma;
+        prompt dalej
+        drop procedure pelikan_cw_bad;
+        """
+        try await ws.invoke("sql.execute")
+        let out = output(doc)
+        #expect(out.contains("Ostrzeżenie: utworzono z błędami kompilacji."))
+        #expect(out.contains("PLS-00201"))
+        #expect(out.contains("LINE/COL ERROR"))
+        #expect(out.contains(" EMPNO") && out.contains("NOT NULL") && out.contains("NUMBER(6)"))
+        #expect(out.contains("PROCEDURE RAISE_SALARY"))
+        #expect(out.contains("ORA-00942"))
+        #expect(out.contains("dalej"))
+        #expect(out.contains("Usunięto: PROCEDURE."))
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("@plik z parametrami, @@ względem skryptu, SPOOL do pliku, WHENEVER SQLERROR EXIT ROLLBACK")
+    func filesAndWhenever() async throws {
+        let (ws, doc, _) = try make()
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-cw-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent("sub"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try "prompt main &1 &2\n@@inner".write(to: dir.appendingPathComponent("sub/main.sql"), atomically: true, encoding: .utf8)
+        try "prompt inner".write(to: dir.appendingPathComponent("sub/inner.sql"), atomically: true, encoding: .utf8)
+        let spool = dir.appendingPathComponent("wynik.lst")
+        doc.text = """
+        cd \(dir.path)
+        spool wynik
+        @sub/main a b
+        spool off
+        whenever sqlerror exit rollback
+        update emp set comm = 1 where empno = 7369;
+        select * from brak_tabeli;
+        prompt tego nie będzie
+        """
+        try await ws.invoke("sql.execute")
+        let out = output(doc)
+        #expect(out.contains("main a b"))
+        #expect(out.contains("inner"))
+        #expect(!out.contains("tego nie będzie"))
+        let spooled = try String(contentsOf: spool, encoding: .utf8)
+        #expect(spooled.contains("main a b") && spooled.contains("inner"))
+        #expect(ws.documents.isEmpty)        // EXIT zamknął okno; ROLLBACK wycofał UPDATE
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("CONNECT do zapisanego połączenia, SHOW USER, linia z karty Dialog i historia linii")
+    func connectAndDialog() async throws {
+        let (ws, doc, _) = try make()
+        let c = TestDatabase.config!
+        let agent = ConnectionDefinition(name: "agent-test", target: ConnectionTarget(user: c.agentUser, connectString: c.connectString))
+        try ws.connections.upsert(agent, password: c.agentPassword)
+        try await ws.invoke("cmd.executeLine", CommandArguments(["line": .string("connect agent-test")]))
+        try await ws.invoke("cmd.executeLine", CommandArguments(["line": .string("show user")]))
+        #expect(output(doc).contains("USER to „\(c.agentUser.uppercased())”"))
+        #expect(doc.commandLineHistory == ["connect agent-test", "show user"])
+        #expect(doc.console.contains { $0.kind == .prompt && $0.text == "SQL> show user" })
+        await ws.sessions.disconnectAll()
+    }
+}

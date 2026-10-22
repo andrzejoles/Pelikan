@@ -13,8 +13,27 @@ public enum SQLCommands {
     static func execute(_ ctx: CommandContext, _ scope: ExecuteScope) async throws -> CommandResult {
         guard let doc = sqlDocument(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak okna SQL")) }
         if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
+        if doc.kind == .command {
+            // Command Window: F8 wykonuje zaznaczenie albo cały skrypt karty Editor (UG 8.2).
+            let ns = doc.text as NSString
+            let sel = doc.selectedRange
+            let script = sel.isEmpty || sel.upperBound > ns.length ? doc.text : ns.substring(with: NSRange(location: sel.lowerBound, length: sel.count))
+            return try await runCommandWindow(ctx, doc, script)
+        }
         try await SQLExecutor.execute(doc, scope: scope, in: ctx.workspace)
         return CommandResult(message: doc.statusText)
+    }
+
+    @MainActor
+    static func runCommandWindow(_ ctx: CommandContext, _ doc: Document, _ script: String) async throws -> CommandResult {
+        let engine = ctx.workspace.sqlplusEngine(for: doc)
+        let outcome = await engine.run(script)
+        if outcome == .exit {
+            // EXIT/QUIT: zamknięcie okna (z pytaniem o otwartą transakcję jak przy zamykaniu).
+            ctx.workspace.activate(doc.id)
+            try await ctx.workspace.invoke("file.close")
+        }
+        return .ok
     }
 
     @MainActor
@@ -44,8 +63,20 @@ public enum SQLCommands {
                                       agent: .none, effect: .none, summary: L10n.tr("Przerywa bieżące wykonanie (OCIBreak)."),
                                       feature: "PD-SQLW-005"),
                     validate: { $0.activeDocument?.isExecuting ?? false }) { ctx in
+                if let doc = ctx.workspace.activeDocument, doc.kind == .command { ctx.workspace.sqlplusEngine(for: doc).cancel() }
                 currentSession(ctx.workspace)?.breakExecution()
                 return .ok
+            },
+            Command(CommandDescriptor(id: "cmd.executeLine", title: L10n.tr("Wykonaj linię poleceń"), category: .session,
+                                      parameters: [CommandParameter("line", .string, required: true, L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL"))],
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Wykonuje linię z karty Dialog okna Command Window."), inMenu: false, feature: "PD-CMDW-001"),
+                    validate: { ws in ws.activeDocument.map { $0.kind == .command && !$0.isExecuting } ?? false }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
+                guard let line = ctx.arguments.string("line") else { throw CommandError.missingArgument("line") }
+                if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line { doc.commandLineHistory.append(line) }
+                doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + line, .prompt))
+                return try await runCommandWindow(ctx, doc, line)
             },
             Command(CommandDescriptor(id: "session.commit", title: L10n.tr("Zatwierdź (COMMIT)"), category: .session, pd: ["f10"],
                                       mac: ["cmd+alt+enter"], agent: .approval, effect: .transaction,
