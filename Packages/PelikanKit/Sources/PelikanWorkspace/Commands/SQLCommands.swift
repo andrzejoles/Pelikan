@@ -75,7 +75,10 @@ public enum SQLCommands {
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
                 guard let line = ctx.arguments.string("line") else { throw CommandError.missingArgument("line") }
                 if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line { doc.commandLineHistory.append(line) }
-                doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + line, .prompt))
+                // Interfejs, który sam pokazał wpisane linie (wielowierszowe polecenie), przekazuje echo=false.
+                if ctx.arguments.values["echo"]?.boolValue != false {
+                    doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + line, .prompt))
+                }
                 return try await runCommandWindow(ctx, doc, line)
             },
             Command(CommandDescriptor(id: "session.commit", title: L10n.tr("Zatwierdź (COMMIT)"), category: .session, pd: ["f10"],

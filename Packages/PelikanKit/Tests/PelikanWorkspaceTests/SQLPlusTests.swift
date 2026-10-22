@@ -43,6 +43,28 @@ struct SQLPlusUnitTests {
         #expect(TextResultFormatter.number(123456, format: "999") == "###")
     }
 
+    @Test("Linia poleceń: kiedy polecenie jest kompletne (SQL*Plus od razu, SQL po ;, PL/SQL po /)")
+    func complete() {
+        #expect(SQLPlusEngine.isComplete("desc emp"))
+        #expect(SQLPlusEngine.isComplete("set echo on"))
+        #expect(!SQLPlusEngine.isComplete("select * from emp"))
+        #expect(SQLPlusEngine.isComplete("select * from emp\n where 1=1;"))
+        #expect(!SQLPlusEngine.isComplete("begin\n null;\nend;"))
+        #expect(SQLPlusEngine.isComplete("begin\n null;\nend;\n/"))
+        #expect(!SQLPlusEngine.isComplete("create or replace procedure p as begin null; end;"))
+        #expect(SQLPlusEngine.isComplete("/"))
+    }
+
+    @Test("SET z kilkoma opcjami i SERVEROUTPUT z SIZE/FORMAT")
+    @MainActor
+    func setMany() async {
+        let ws = Workspace()
+        let e = ws.sqlplusEngine(for: ws.newDocument(.command))
+        await e.run("set feedback off timing on heading off\nset serveroutput on size unlimited format wrapped pagesize 0")
+        #expect(e.state.feedback == 0 && e.state.timing && !e.state.heading)
+        #expect(e.state.serverOutput && e.state.pageSize == 0)
+    }
+
     @Test("Komunikaty DDL")
     func ddl() {
         #expect(SQLPlusEngine.ddlMessage("create or replace package body p as") == "Utworzono: PACKAGE BODY.")

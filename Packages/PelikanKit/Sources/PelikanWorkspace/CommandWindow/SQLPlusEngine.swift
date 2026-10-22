@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import PelikanDB
 import PelikanSQL
 
@@ -63,12 +64,13 @@ public enum SQLPlusSubstitution {
 /// Silnik Command Window (UG 8): wykonuje skrypt polecenie po poleceniu, polecenia SQL*Plus obsługuje lokalnie,
 /// SQL i PL/SQL wysyła do sesji okna; wyjście trafia do `Document.console` (i do pliku SPOOL).
 @MainActor
+@Observable
 public final class SQLPlusEngine {
-    public let workspace: Workspace
-    public let document: Document
+    @ObservationIgnored public let workspace: Workspace
+    @ObservationIgnored public let document: Document
     public var state = SQLPlusState()
-    var depth = 0
-    var cancelled = false
+    @ObservationIgnored var depth = 0
+    @ObservationIgnored var cancelled = false
 
     public enum Outcome: Sendable, Equatable { case finished, stopped, exit }
 
@@ -100,6 +102,19 @@ public final class SQLPlusEngine {
     }
 
     public func cancel() { cancelled = true }
+
+    /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
+    /// PL/SQL — po linii „/” (albo „.” kończącej bez wykonania), jak w SQL*Plus.
+    nonisolated public static func isComplete(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty { return true }
+        let lastLine = trimmed.components(separatedBy: "\n").last?.trimmingCharacters(in: .whitespaces) ?? ""
+        if lastLine == "/" || lastLine == "." { return true }
+        guard let s = ScriptSplitter.split(trimmed, mode: .commandWindow).first else { return true }
+        if s.sqlplusCommand != nil { return true }
+        if s.isPLSQL { return false }
+        return trimmed.hasSuffix(";")
+    }
 
     // MARK: Wykonanie skryptu
 

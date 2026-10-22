@@ -48,7 +48,16 @@ extension SQLPlusEngine {
         case "PROMPT":
             emit(Self.rest(line), .output)
         case "SET":
-            try set(upper, args)
+            // Kilka opcji w jednej linii: SET FEEDBACK ON TIMING ON; SERVEROUTPUT ON SIZE UNLIMITED FORMAT WRAPPED.
+            var i = 0
+            while i < upper.count {
+                var n = min(2, upper.count - i)
+                if upper[i].hasPrefix("SERVEROUT") {
+                    while i + n + 1 < upper.count, ["SIZE", "SIZ", "FORMAT", "FOR", "FORM"].contains(upper[i + n]) { n += 2 }
+                }
+                try set(Array(upper[i..<(i + n)]), Array(args[i..<(i + n)]))
+                i += n
+            }
         case "SHOW":
             try await show(upper, args)
         case "DEFINE":

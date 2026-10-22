@@ -145,8 +145,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | do zrobienia |
-| PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | do zrobienia |
+| PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | ✅ test |
+| PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | 👁 ręcznie |
 | PD-CMDW-003 | Krokowanie skryptu: Pause Execution, Execute Next Command, SET EXECPAUSE | UG 8.2 | Command Window | 1 | P3 | Brak | do zrobienia |
 | PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | w toku |
 | PD-CMDW-005 | SET: AUTOPRINT, COLSEP, CONCAT, DEFINE, ECHO, ESCAPE, FEEDBACK (ONLY, SQL_ID), HEADING, LONG, NUMWIDTH, PAGESIZE, PROMPT, SCAN, SERVEROUTPUT (SIZE UNLIMITED), SPOOLDIRECTORY, TERMOUT, TIMING, VERIFY | UG 8.3, NF17 | Command Window | 1 | P1 | Brak | ✅ test |
