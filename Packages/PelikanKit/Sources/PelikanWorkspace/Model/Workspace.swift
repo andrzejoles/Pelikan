@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PelikanDB
 
 /// Usługi interfejsu, których potrzebują komendy (implementuje aplikacja; w testach — atrapy).
 @MainActor
@@ -57,16 +58,58 @@ public final class Workspace {
         didSet { rebuildKeymap() }
     }
     public var statusMessage: String?
+    public var settings: Settings {
+        didSet {
+            if settings.shortcutProfile != oldValue.shortcutProfile { shortcutProfile = settings.shortcutProfile }
+            if settings.keyOverrides != oldValue.keyOverrides { keyOverrides = settings.keyOverrides }
+            saveSettings()
+        }
+    }
+    public let connections: ConnectionStore
+    public let sessions: SessionManager
+    /// Katalog danych aplikacji (nil = bez zapisu: testy, `persists: false`).
+    public let dataDirectory: URL?
 
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
 
-    public init(profile: ShortcutProfile = .plsqlDeveloper, commands: [Command]? = nil) {
-        shortcutProfile = profile
+    /// - Parameters:
+    ///   - dataDirectory: katalog danych (`~/Library/Application Support/Pelikan`); nil = nic nie jest zapisywane.
+    ///   - secrets: przechowywanie haseł (aplikacja: Pęk kluczy; testy: pamięć).
+    ///   - drivers: sterowniki bazy wstrzykiwane przez aplikację.
+    public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
+                secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
+        self.dataDirectory = dataDirectory
+        var loaded = Settings()
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")),
+           let s = try? JSONDecoder.pelikan.decode(Settings.self, from: data) {
+            loaded = s
+        }
+        if let profile { loaded.shortcutProfile = profile }
+        settings = loaded
+        shortcutProfile = loaded.shortcutProfile
+        keyOverrides = loaded.keyOverrides
         let all = commands ?? BuiltinCommands.all
         registry = CommandRegistry(all)
-        keymap = Keymap(commands: all.map(\.descriptor), profile: profile)
+        keymap = Keymap(commands: all.map(\.descriptor), profile: loaded.shortcutProfile, overrides: loaded.keyOverrides)
+        let store = ConnectionStore(fileURL: dataDirectory?.appendingPathComponent("connections.json"), secrets: secrets)
+        connections = store
+        let box = SettingsBox()
+        sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
+        box.value = loaded
+        settingsBox = box
+    }
+
+    @ObservationIgnored private var settingsBox: SettingsBox
+
+    private func saveSettings() {
+        settingsBox.value = settings
+        guard let dir = dataDirectory else { return }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        if let data = try? JSONEncoder.pelikan.encode(settings) {
+            try? data.write(to: dir.appendingPathComponent("settings.json"), options: [.atomic])
+        }
     }
 
     // MARK: Dokumenty
@@ -167,4 +210,10 @@ public final class Workspace {
     private func notify(_ record: CommandInvocationRecord) {
         for o in invocationObservers { o(record) }
     }
+}
+
+/// Bieżące ustawienia dla menedżera sesji (unika cyklu referencji do Workspace).
+@MainActor
+final class SettingsBox {
+    var value = Settings()
 }
