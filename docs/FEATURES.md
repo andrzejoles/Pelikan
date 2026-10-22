@@ -23,8 +23,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PL-INFRA-002 | CI GitHub Actions: macOS (testy jednostkowe) i Linux z Oracle Free + utPLSQL | PROMPT §10 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-003 | Baza testowa w kontenerze (Oracle Free 26ai), schematy, obiekty testowe, utPLSQL (scripts/testdb.sh) | PROMPT §9 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-004 | Wersja z historii scalonych PR (scripts/version.sh) | PROMPT §10 | — | 0 | P1 | — | ✅ test |
-| PL-INFRA-005 | Szkielet aplikacji AppKit (XcodeGen), okno główne, menu z rejestru komend | PROMPT §4.2 | — | 0 | P1 | — | do zrobienia |
-| PL-INFRA-006 | Rejestr komend z poziomem dostępu agenta i opisem skutków; docs/SKROTY.md generowany | PROMPT §4.2 p.1 | — | 0 | P1 | — | do zrobienia |
+| PL-INFRA-005 | Szkielet aplikacji AppKit (XcodeGen), okno główne, menu z rejestru komend | PROMPT §4.2 | — | 0 | P1 | — | 👁 sprawdzone ręcznie |
+| PL-INFRA-006 | Rejestr komend z poziomem dostępu agenta i opisem skutków; docs/SKROTY.md generowany | PROMPT §4.2 p.1 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-007 | Podpis stały, instalatory DMG i PKG, Sparkle, szkic wydania (scripts/release.sh) | PROMPT §10 | — | 8 | P2 | — | do zrobienia |
 | PL-INFRA-008 | Tłumaczenia pl (źródłowy), en, de, es, uk w String Catalog + test kompletności | PROMPT §1 | — | 8 | P2 | — | do zrobienia |
 | PL-INFRA-009 | Warstwa bazy za protokołem DatabaseSession, bez AppKit, testowana na Linuksie | PROMPT §4.2 p.2 | — | 0 | P1 | — | ✅ test |
@@ -381,13 +381,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-UI-001 | Okno główne: Object Browser po lewej, obszar dokumentów, paski narzędzi, pasek stanu | UG 33–35 | — | 0 | P1 | — | do zrobienia |
-| PD-UI-002 | Window List (status niezapisany/nieskompilowany/transakcja, wskaźnik połączenia, przypięcie, auto-refresh; menu: Execute, Reconnect, Rename, Short Text, New, Sort; środkowy klik zamyka) | UG 32, NF11, NF13, NF15 | View > Window List | 1 | P1 | Odczyt | do zrobienia |
+| PD-UI-001 | Okno główne: Object Browser po lewej, obszar dokumentów, paski narzędzi, pasek stanu | UG 33–35 | — | 0 | P1 | — | w toku |
+| PD-UI-002 | Window List (status niezapisany/nieskompilowany/transakcja, wskaźnik połączenia, przypięcie, auto-refresh; menu: Execute, Reconnect, Rename, Short Text, New, Sort; środkowy klik zamyka) | UG 32, NF11, NF13, NF15 | View > Window List | 1 | P1 | Odczyt | w toku |
 | PD-UI-003 | Narzędzia dokowane/pływające (Object Browser, File Browser, Connection List, Window List, Templates, Bookmarks, Search, To-Do, Project, Clipboard), autoukrywanie | UG 33, NF8 | View | 1 | P2 | — | do zrobienia |
-| PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | do zrobienia |
-| PD-UI-005 | Menu wg Apple HIG odpowiadające wstążkom wzorca (File, Project, Edit, Session, Debug, Tools, Reports, Configure, View, Help) + paski narzędzi | UG 34, PROMPT §3.4 | — | 0 | P1 | — | do zrobienia |
+| PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | w toku |
+| PD-UI-005 | Menu wg Apple HIG odpowiadające wstążkom wzorca (File, Project, Edit, Session, Debug, Tools, Reports, Configure, View, Help) + paski narzędzi | UG 34, PROMPT §3.4 | — | 0 | P1 | — | w toku |
 | PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | do zrobienia |
-| PD-UI-007 | Wyszukiwarka komend (paleta) | PROMPT §3.1 | Help / Cmd+Shift+P | 1 | P1 | — | do zrobienia |
+| PD-UI-007 | Wyszukiwarka komend (paleta) | PROMPT §3.1 | Help / Cmd+Shift+P | 1 | P1 | — | 👁 sprawdzone ręcznie |
 | PD-UI-008 | Tryb jasny/ciemny/auto (systemowy) | UG 23.16, NF15 | Preferences > Appearance | 1 | P1 | — | do zrobienia |
 | PD-UI-009 | Tytuł aplikacji z połączeniem / oknem / worksetem; nazwa bazy w tytułach okien | UG 23.16, NF17 | Preferences > Appearance | 1 | P2 | — | do zrobienia |
 | PD-UI-010 | Kolor ikony per typ okna; status transakcji na pasku stanu okna | NF12 | — | 1 | P2 | — | do zrobienia |

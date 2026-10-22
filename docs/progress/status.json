@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T18:38:47+02:00",
+  "heartbeat": "2026-10-22T18:48:27+02:00",
   "stage": {
     "id": 0,
     "name": "Analiza i fundament"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",
     "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15",
     "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
     "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
@@ -79,11 +80,11 @@
   ],
   "tests": {
     "unit": {
-      "total": 33,
-      "passed": 33,
+      "total": 42,
+      "passed": 42,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-22T18:12:21+02:00"
+      "at": "2026-10-22T18:48:25+02:00"
     },
     "integration": {
       "total": 12,
@@ -94,6 +95,12 @@
     }
   },
   "performance": [],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "file": "img/etap0-okno-glowne.png",
+      "title": "Etap 0: okno główne",
+      "reference": "Układ wzorca: lewa kolumna (Połączenia / Obiekty / Okna), karty dokumentów z kolorowym znacznikiem typu, pasek stanu z połączeniem; menu z rejestru komend"
+    }
+  ],
   "ci": {}
 }
