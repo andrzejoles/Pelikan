@@ -13,7 +13,11 @@ public enum VariableKind: String, Sendable, Hashable, Codable {
     case jasperValue         // $P{nazwa}
     case jasperText          // $P!{nazwa}
     case jasperClause        // parametr użyty w $X{…}
+    case literalAmpersand    // `&&` w SQL Window = dosłowny znak & (UG 12.3); w SQL*Plus to zmienna zapamiętywana
 }
+
+/// Składnia zmiennych: SQL Window i raporty (`&&` = dosłowne `&`) albo SQL*Plus (`&&x` = zmienna zapamiętywana).
+public enum VariableSyntax: Sendable, Hashable { case sqlWindow, sqlplus }
 
 public struct VariableOccurrence: Sendable, Hashable {
     public var name: String
@@ -25,6 +29,13 @@ public struct VariableOccurrence: Sendable, Hashable {
     public var persistent: Bool
     /// Dla `$X{…}`: funkcja i kolumna.
     public var clause: JasperClause?
+    /// Opcje zmiennej `&<…>` (UG 12.3); dla prostych `&x` — sama nazwa.
+    public var options: VariableOptions?
+
+    public init(name: String, kind: VariableKind, start: Int, length: Int, persistent: Bool, clause: JasperClause? = nil) {
+        self.name = name; self.kind = kind; self.start = start; self.length = length
+        self.persistent = persistent; self.clause = clause
+    }
 }
 
 public struct JasperClause: Sendable, Hashable {
@@ -49,7 +60,7 @@ public enum Variables {
     /// Wszystkie wystąpienia zmiennych w poleceniu. Zmienne wiązane w CREATE TRIGGER (`:new`, `:old`) pomijane,
     /// podobnie jak `:=` i nazwy w literałach i komentarzach. Zmienne podstawiania wykrywane także w literałach
     /// (jak w SQL*Plus), ale nie w komentarzach.
-    public static func find(in sql: String, scanSubstitutionInStrings: Bool = true) -> [VariableOccurrence] {
+    public static func find(in sql: String, syntax: VariableSyntax = .sqlWindow, scanSubstitutionInStrings: Bool = true) -> [VariableOccurrence] {
         let lexer = Lexer(sql)
         let tokens = lexer.tokenize()
         let isTrigger = Self.isCreateTrigger(lexer, tokens)
@@ -58,12 +69,17 @@ public enum Variables {
             switch t.kind {
             case .substitution:
                 let raw = lexer.string(t)
-                let persistent = raw.hasPrefix("&&")
-                var name = String(raw.drop(while: { $0 == "&" }))
-                if name.hasSuffix(".") { name.removeLast() }
-                out.append(VariableOccurrence(name: name, kind: .substitution, start: t.start, length: t.length, persistent: persistent))
+                if syntax == .sqlWindow, raw.hasPrefix("&&") {
+                    out.append(VariableOccurrence(name: "&", kind: .literalAmpersand, start: t.start, length: 2, persistent: false))
+                    continue
+                }
+                let options = VariableOptions.parse(raw)
+                var occ = VariableOccurrence(name: options.name, kind: .substitution, start: t.start, length: t.length,
+                                             persistent: raw.hasPrefix("&&"))
+                occ.options = options
+                out.append(occ)
             case .string where scanSubstitutionInStrings:
-                out += substitutionsInLiteral(lexer, t)
+                out += substitutionsInLiteral(lexer, t, syntax: syntax)
             case .bindVariable where !isTrigger:
                 var name = String(lexer.string(t).dropFirst())
                 if name.hasPrefix("\"") { name = String(name.dropFirst().dropLast()) }
@@ -81,7 +97,7 @@ public enum Variables {
     public static func distinct(_ occ: [VariableOccurrence]) -> [(name: String, kind: VariableKind)] {
         var seen = Set<String>()
         var out: [(String, VariableKind)] = []
-        for o in occ {
+        for o in occ where o.kind != .literalAmpersand {
             let key = (o.kind == .bind || o.kind == .jasperValue || o.kind == .jasperClause ? "v:" : "s:") + o.name.uppercased()
             if seen.insert(key).inserted { out.append((o.name, o.kind)) }
         }
@@ -95,13 +111,18 @@ public enum Variables {
     }
 
     /// `&x` wewnątrz literału '…' (SQL*Plus podstawia także tam).
-    static func substitutionsInLiteral(_ lexer: Lexer, _ t: Token) -> [VariableOccurrence] {
+    static func substitutionsInLiteral(_ lexer: Lexer, _ t: Token, syntax: VariableSyntax) -> [VariableOccurrence] {
         var out: [VariableOccurrence] = []
         var i = t.start
         let end = t.end
         let text = lexer.text
         while i < end {
             if text[i] == 0x26 {
+                if syntax == .sqlWindow, i + 1 < end, text[i + 1] == 0x26 {
+                    out.append(VariableOccurrence(name: "&", kind: .literalAmpersand, start: i, length: 2, persistent: false))
+                    i += 2
+                    continue
+                }
                 var j = i + 1
                 if j < end, text[j] == 0x26 { j += 1 }
                 let nameStart = j
@@ -144,6 +165,11 @@ public enum Variables {
         public var sql: String
         public var binds: [(name: String, value: VariableValue)]
 
+        public init(sql: String, binds: [(name: String, value: VariableValue)]) {
+            self.sql = sql
+            self.binds = binds
+        }
+
         public static func == (a: Prepared, b: Prepared) -> Bool {
             a.sql == b.sql && a.binds.map(\.name) == b.binds.map(\.name) && a.binds.map(\.value) == b.binds.map(\.value)
         }
@@ -152,8 +178,8 @@ public enum Variables {
 
     /// Podstawia wartości: `&` i `$P!{}` jako tekst, `$P{}` i `:x` jako zmienne wiązane, `$X{}` rozwija do warunku
     /// ze zmiennymi wiązanymi (`:jx1`, `:jx2`, …). Zmienne bez wartości zostają bez zmian (`:x` → wartość NULL).
-    public static func prepare(_ sql: String, values: [String: VariableValue]) -> Prepared {
-        let occ = find(in: sql)
+    public static func prepare(_ sql: String, values: [String: VariableValue], syntax: VariableSyntax = .sqlWindow) -> Prepared {
+        let occ = find(in: sql, syntax: syntax)
         let utf16 = Array(sql.utf16)
         var out = ""
         var cursor = 0
@@ -183,7 +209,15 @@ public enum Variables {
             out += String(decoding: utf16[cursor..<o.start], as: UTF16.self)
             cursor = o.start + o.length
             switch o.kind {
-            case .substitution, .jasperText:
+            case .substitution:
+                if let v = value(o.name) {
+                    out += (o.options ?? VariableOptions(name: o.name)).substitution(for: v)
+                } else {
+                    out += String(decoding: utf16[o.start..<cursor], as: UTF16.self)
+                }
+            case .literalAmpersand:
+                out += "&"
+            case .jasperText:
                 if case .text(let t)? = value(o.name) { out += t }
                 else if case .list(let l)? = value(o.name) { out += l.joined(separator: ", ") }
                 else { out += String(decoding: utf16[o.start..<cursor], as: UTF16.self) }

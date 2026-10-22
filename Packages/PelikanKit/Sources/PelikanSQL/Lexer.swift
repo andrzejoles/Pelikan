@@ -152,7 +152,13 @@ public struct Lexer: Sendable {
             case 0x26:  // &
                 var j = i + 1
                 if peek(j, end) == 0x26 { j += 1 }
-                if isIdentStart(peek(j, end)) || isDigit(peek(j, end)) {
+                if peek(j, end) == 0x3C, let close = optionsEnd(from: j, end: end) {   // &<name="…" …>
+                    i = close
+                    emit(Token(kind: .substitution, start: s, length: i - s))
+                } else if peek(j, end) == 0x22, let close = findChar(0x22, from: j + 1, end: end) {   // &"Nazwa ze spacjami"
+                    i = close + 1
+                    emit(Token(kind: .substitution, start: s, length: i - s))
+                } else if isIdentStart(peek(j, end)) || isDigit(peek(j, end)) {
                     while j < end, isIdentPart(text[j]) { j += 1 }
                     if j < end, text[j] == 0x2E { j += 1 }   // &nazwa. — kropka kończy nazwę i jest pochłaniana
                     i = j
@@ -221,6 +227,26 @@ public struct Lexer: Sendable {
         if c == 0x6E || c == 0x4E { j += 1 }
         guard j + 1 < end else { return false }
         return (text[j] == 0x71 || text[j] == 0x51) && text[j + 1] == 0x27   // q' Q'
+    }
+
+    /// Koniec opcji zmiennej `&<…>` (pozycja za `>`), z pominięciem `>` w wartościach w cudzysłowach (UG 12.3).
+    func optionsEnd(from lt: Int, end: Int) -> Int? {
+        var i = lt + 1
+        var quote: UInt16? = nil
+        while i < end {
+            let c = text[i]
+            if let q = quote {
+                if c == q { quote = nil }
+            } else if c == 0x22 || c == 0x201D || c == 0x201C {
+                quote = c == 0x22 ? 0x22 : 0x201D
+            } else if c == 0x3E {
+                return i + 1
+            } else if c == 0x3B && i == lt + 1 {
+                return nil
+            }
+            i += 1
+        }
+        return nil
     }
 
     /// Parametr JasperReports zaczynający się na `i` (`$P{`, `$P!{`, `$X{`) — pozycja za `}` albo nil.

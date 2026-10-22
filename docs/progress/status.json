@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-22T19:04:48+02:00",
+  "heartbeat": "2026-10-22T19:12:58+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
     "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
     "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy",
     "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",

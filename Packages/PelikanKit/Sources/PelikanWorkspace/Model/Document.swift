@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PelikanSQL
 
 /// Rodzaj okna dokumentu (odpowiedniki okien PL/SQL Developer).
 public enum DocumentKind: String, Sendable, Codable, CaseIterable {
@@ -74,6 +75,25 @@ public final class Document: Identifiable {
     /// Połączenie okna (nil = połączenie główne) i przypięcie (UG 20.2).
     public var connectionID: UUID?
     public var connectionPinned = false
+
+    // MARK: SQL Window (UG 7)
+    /// Karty wyników (przypięte zostają przy kolejnym wykonaniu — UG 7.10).
+    public var results: [ResultTab] = []
+    public var activeResultID: UUID?
+    /// Wyjście DBMS_OUTPUT (karta Output).
+    public var output: [String] = []
+    public var outputEnabled = true
+    /// Komunikat na pasku stanu okna (czas wykonania, liczba wierszy, błąd).
+    public var statusText: String?
+    /// Zakres błędu w tekście (UTF-16) do zaznaczenia w edytorze.
+    public var errorRange: Range<Int>?
+    /// Wartości zmiennych (&, :, Jasper) — zapamiętywane w oknie (UG 23.18).
+    public var variableValues: [String: VariableValue] = [:]
+    /// Podstawianie zmiennych włączone (przycisk `&` na pasku stanu — UG 7.5, NF17).
+    public var substitutionEnabled = true
+    /// Historia poleceń okna (przyciski wstecz/dalej — UG 7.1).
+    public var statementHistory: [String] = []
+    public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {
         id = DocumentID()

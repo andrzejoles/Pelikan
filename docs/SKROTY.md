@@ -42,14 +42,17 @@ Poziom agenta: Brak / Odczyt / Za zgodą / Pełny (docs/SECURITY.md). Etap > 0 =
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Wykonaj | `sql.execute` | F8, ⌘↩ † | ⌘↩, F8 | Brak | 1 | PD-SQLW-002 |
-| Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ † | ⇧⌘↩, ⌃F8 | Brak | 1 | PD-SQLW-003 |
-| Przerwij | `sql.break` | ⇧⎋ †, ⌘. † | ⌘. | Brak | 1 | PD-SQLW-005 |
-| Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ † | ⌥⌘↩, F10 | Za zgodą | 1 | PD-SQLW-014 |
-| Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ † | ⌥⌘⌫, ⇧F10 | Za zgodą | 1 | PD-SQLW-014 |
 | Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 1 | PD-CONN-027 |
 | Zmień hasło… | `session.setPassword` |  |  | Brak | 1 | PD-CONN-017 |
 | SQL Trace | `session.sqlTrace` |  |  | Brak | 3 | PD-OPT-008 |
+| Wykonaj | `sql.execute` | F8, ⌘↩ † | ⌘↩, F8 | Brak | 0 | PD-SQLW-002 |
+| Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ † | ⇧⌘↩, ⌃F8 | Brak | 0 | PD-SQLW-003 |
+| Przerwij | `sql.break` | ⇧⎋ †, ⌘. † | ⌘. | Brak | 0 | PD-SQLW-005 |
+| Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ † | ⌥⌘↩, F10 | Za zgodą | 0 | PD-SQLW-014 |
+| Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ † | ⌥⌘⌫, ⇧F10 | Za zgodą | 0 | PD-SQLW-014 |
+| Historia okna › Poprzednie polecenie okna | `sql.historyBack` | ⌥⌘↑ † | ⌥⌘↑ | Pełny | 0 | PD-SQLW-007 |
+| Historia okna › Następne polecenie okna | `sql.historyForward` | ⌥⌘↓ † | ⌥⌘↓ | Pełny | 0 | PD-SQLW-007 |
+| Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | 0 | PD-VAR-005 |
 | Zaloguj… | `session.logon` | ⇧⌘L † | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
