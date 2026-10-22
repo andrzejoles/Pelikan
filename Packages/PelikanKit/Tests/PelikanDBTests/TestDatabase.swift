@@ -13,6 +13,11 @@ enum TestDatabase {
         var agentUser: String
         var agentPassword: String
         var systemPassword: String
+        /// Serwer SSH testów tunelu (scripts/testdb.sh ssh-up): port lokalny, nazwa kontenera bazy w sieci Docker,
+        /// katalog z kluczem i known_hosts.
+        var sshPort: Int?
+        var sshDBHost: String?
+        var sshDirectory: String?
     }
 
     static let config: Config? = {
@@ -34,7 +39,9 @@ enum TestDatabase {
         return Config(connectString: "\(host):\(port)/\(service)", user: user, password: password,
                       agentUser: env["PELIKAN_TESTDB_AGENT_USER"] ?? "PELIKAN_AGENT",
                       agentPassword: env["PELIKAN_TESTDB_AGENT_PASSWORD"] ?? "",
-                      systemPassword: env["PELIKAN_TESTDB_SYSTEM_PASSWORD"] ?? "")
+                      systemPassword: env["PELIKAN_TESTDB_SYSTEM_PASSWORD"] ?? "",
+                      sshPort: env["PELIKAN_TESTDB_SSH_PORT"].flatMap(Int.init), sshDBHost: env["PELIKAN_TESTDB_SSH_DBHOST"],
+                      sshDirectory: envFile().map { ($0 as NSString).deletingLastPathComponent + "/ssh" })
     }()
 
     /// .testdb/env w katalogu głównym repozytorium (szukany w górę od tego pliku).

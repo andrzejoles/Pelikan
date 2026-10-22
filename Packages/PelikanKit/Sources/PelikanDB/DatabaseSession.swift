@@ -298,12 +298,20 @@ public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible {
     public var isPasswordExpired: Bool { code == 28001 }
 }
 
-public enum DatabaseError: Error, Sendable, Equatable {
+public enum DatabaseError: Error, LocalizedError, Sendable, Equatable {
     /// Sterownik niedostępny (np. brak Instant Client) — komunikat z instrukcją.
     case driverUnavailable(String)
     case unknownResultSet
     case unsupported(String)
     case closed
+
+    public var errorDescription: String? {
+        switch self {
+        case .driverUnavailable(let m), .unsupported(let m): m
+        case .unknownResultSet: "Wynik zapytania jest już zamknięty"
+        case .closed: "Sesja jest zamknięta"
+        }
+    }
 }
 
 /// Fabryka sesji danego sterownika (aplikacja wstrzykuje implementacje do modelu — Workspace nie zna sterowników).

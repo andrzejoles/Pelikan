@@ -51,6 +51,8 @@ public final class SessionManager {
     /// Hasła podane w tym uruchomieniu (tylko w pamięci): kolejne sesje tego połączenia (okna w trybie Multi, sesja
     /// kompilacji) nie pytają ponownie. Zapominane przy rozłączeniu połączenia i po ORA-01017.
     @ObservationIgnored private var sessionPasswords: [UUID: String] = [:]
+    /// Tunele SSH połączeń (współdzielone przez sesje połączenia).
+    @ObservationIgnored public let tunnels = SSHTunnelManager()
 
     public init(store: ConnectionStore, drivers: [DriverKind: any DatabaseDriver], settings: @escaping () -> Settings) {
         self.store = store
@@ -118,9 +120,25 @@ public final class SessionManager {
         }
         let tags = SessionTags(module: key.moduleName, action: key.actionName)
         var credentials = Credentials(password: password)
+        // Tunel SSH: łączymy się przez 127.0.0.1:port lokalny (alias TNS rozwijany do deskryptora).
+        var target = def.target
+        var tunnelOpened = false
+        if def.sshTunnel != nil {
+            let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
+            let tunnel = try await tunnels.open(for: def, tns: tns)
+            tunnelOpened = true
+            guard let rewritten = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) else {
+                tunnels.release(def.id)
+                throw DatabaseError.driverUnavailable(L10n.tr("Nie można przepisać connect stringu dla tunelu SSH"))
+            }
+            target.connectString = rewritten
+        }
+        var connected = false
+        defer { if tunnelOpened, !connected { tunnels.release(def.id) } }
         for attempt in 0..<3 {
             do {
-                let s = try await driver.connect(target: def.target, credentials: credentials, options: ConnectOptions(tags: tags))
+                let s = try await driver.connect(target: target, credentials: credentials, options: ConnectOptions(tags: tags))
+                connected = true
                 if let np = credentials.newPassword {
                     // Wygasłe hasło zmienione — nowe zastępuje stare, jeśli stare było zapisane albo użytkownik chciał.
                     if def.savePassword || rememberOnSuccess { try? store.rememberPassword(np, for: def.id) }
@@ -169,6 +187,7 @@ public final class SessionManager {
     public func close(_ key: SessionKey) async {
         guard let s = sessions.removeValue(forKey: key) else { return }
         await s.close()
+        if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
     }
 
     /// Rozłącza wszystkie sesje połączenia (UG 19.1 Disconnect).
@@ -197,7 +216,9 @@ public final class SessionManager {
     /// Usuwa sesje z utraconym połączeniem (zwraca klucze, żeby interfejs mógł poinformować o utraconej transakcji).
     @discardableResult
     public func dropLost(_ key: SessionKey) -> Bool {
-        sessions.removeValue(forKey: key) != nil
+        guard sessions.removeValue(forKey: key) != nil else { return false }
+        if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
+        return true
     }
 
     /// Sprawdzenie połączeń (UG 23.1 Check connection): ping sesji głównych; utracone usuwane.
@@ -208,7 +229,7 @@ public final class SessionManager {
                 lost.append(key)
             } catch {}
         }
-        for k in lost { sessions[k] = nil }
+        for k in lost { _ = dropLost(k) }
         return lost
     }
 }

@@ -63,7 +63,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-027 | Kill sesji okna (Session > Kill) gdy Break nie działa | UG 20.4 | Session > Kill | 1 | P2 | Brak | do zrobienia |
 | PD-CONN-028 | Sterownik thin (OracleNIO) wybierany w połączeniu; funkcje niedostępne wyszarzone z podpowiedzią | PROMPT §4.1 | Configure > Connections | 1 | P2 | — | do zrobienia |
 | PD-CONN-029 | Wykrywanie Instant Client, ścieżka w ustawieniach, ekran pomocy przy braku | PROMPT §4.1 | Preferences > Oracle | 1 | P1 | — | w toku |
-| PD-CONN-030 | Tunel SSH do bazy (z DBeaver; ważne na Macu) | PROMPT §3.3 | Configure > Connections | 1 | P1 | Brak | do zrobienia |
+| PD-CONN-030 | Tunel SSH do bazy (z DBeaver; ważne na Macu) | PROMPT §3.3 | Configure > Connections | 1 | P1 | Brak | ✅ test |
 
 ## PL/SQL Developer — SQL Window
 
@@ -494,7 +494,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | do zrobienia |
+| DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | ⚠️ częściowo (bez hasła SSH — D19) |
 | DB-DIAG-001 | Diagramy ER z bazy (automatyczny układ, relacje FK, eksport obrazu) | gap-analysis §3 | Object Browser > ER Diagram | 7 | P2 | Odczyt | do zrobienia |
 | DB-PANEL-001 | Panel wartości obok siatki (tekst, JSON, XML, HTML, obraz z BLOB, hex) | gap-analysis §3 | Siatka > Value panel | 7 | P2 | — | do zrobienia |
 | DB-GRID-001 | Filtr wyników w siatce (po wartości komórki, wyrażenie) i grupowanie z licznikami | gap-analysis §3 | Siatka | 7 | P2 | — | do zrobienia |
