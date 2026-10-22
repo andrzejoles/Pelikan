@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-22T18:34:54+02:00",
+  "heartbeat": "2026-10-22T18:38:47+02:00",
   "stage": {
     "id": 0,
     "name": "Analiza i fundament"
   },
-  "task": "Etap 0: analiza utPLSQL (wtyczki PL/SQL Developer i SQL Developer), SQL Developer for VS Code, SQLcl, DBeaver, DataGrip → gap-analysis.md",
+  "task": "Etap 0: szkielet aplikacji (XcodeGen, okno główne, rejestr komend, menu, paleta)",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15",
     "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
     "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
     "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",

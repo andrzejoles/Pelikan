@@ -83,3 +83,15 @@ Każdy pominięty wiersz macierzy ma stan „pominięte (powód)” i nie liczy 
 Domyślna wartość preferencji wzorca nie jest opisana w podręczniku (do weryfikacji). Pelikan domyślnie wykonuje
 polecenie pod kursorem (bez zaznaczenia), żeby przypadkiem nie uruchomić całego skryptu; F8 z zaznaczeniem wykonuje
 zaznaczenie, a osobna komenda „Wykonaj wszystko” — wszystkie polecenia okna.
+
+### D13 · 2026-10-22 — Szkice wydań od Etapu 1
+PROMPT §8 przewiduje szkic wydania na koniec każdego etapu. Etap 0 to fundament bez używalnej aplikacji (szkielet okna),
+więc pierwszy szkic wydania (z podpisem, DMG/PKG, Sparkle — przeniesione z Etapu 8) powstaje na koniec Etapu 1.
+
+### D14 · 2026-10-22 — Edytor bez STTextView
+STTextView ma licencję GPLv3 lub komercyjną — niezgodną z dystrybucją Pelikana na MIT bez zakupu (PROMPT §13). Edytor
+własny na TextKit 2 (ADR 0003).
+
+### D15 · 2026-10-22 — Jedno okno główne z kartami zamiast natywnych kart macOS
+Natywne karty macOS to osobne okna — wspólne panele (Object Browser, Window List) musiałyby być w każdym oknie. Jedno
+okno główne z własnym paskiem kart (SDI wzorca), odłączanie dokumentu do osobnego okna (ADR 0005).

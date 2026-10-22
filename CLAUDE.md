@@ -1,0 +1,42 @@
+# Pelikan — wskazówki dla sesji Claude Code
+
+Natywne IDE dla Oracle PL/SQL na macOS (Swift 6, AppKit), odpowiednik PL/SQL Developer 17 z utPLSQL i API dla agentów AI.
+Wymagania: `docs/PROMPT.md`, plan: `docs/PLAN.md`, macierz funkcji: `docs/FEATURES.md`, architektura:
+`docs/ARCHITECTURE.md`, bezpieczeństwo: `docs/SECURITY.md`, decyzje: `docs/DECISIONS.md`, ADR: `docs/adr/`,
+zachowania wzorca: `docs/research/behaviour.md`. **Na początku każdej sesji przeczytaj PLAN, status.json i ostatnie
+decyzje, zanim cokolwiek zmienisz.**
+
+## Zasady (decyzje właściciela)
+- Praca autonomiczna (D1): pytania zastępuje wpis w DECISIONS; zatrzymanie tylko w sytuacjach z PROMPT §13
+  (blokada w raporcie: `scripts/status.py block "…" "…"`).
+- **Raport postępów** po każdym zadaniu, commicie, blokadzie i co ≤ 30 min: `scripts/status.py done|task|next|tests…`
+  (generuje `docs/progress/index.html` i `~/Pelikan-raport/index.html`). Właściciel patrzy na raport — aktualizuj go.
+- Wersja z historii gita (`scripts/version.sh`); zmiany na `main` tylko przez PR scalane „Merge pull request”
+  (`gh pr merge --merge --delete-branch`), nigdy squash/rebase, nigdy push na `main`. CI czerwone — naprawiać.
+- Commity: konwencjonalne prefiksy po angielsku + identyfikator z macierzy, np. `feat(sqlwin): … (PD-SQLW-004)`;
+  stopka `Co-Authored-By` z promptu systemowego. Tożsamość gita lokalnie: adres noreply (D3).
+- Autor wszędzie: „Andrzej Oleś w kooperacji z Claude AI”. Nazwa i bundle id tylko w `Config/Brand.xcconfig`.
+- Każda czynność jest komendą w rejestrze (menu, skróty, paleta, agent), z poziomem dostępu agenta i opisem skutków.
+- Hasła tylko w Pęku kluczy — nigdy w plikach, logach, argumentach procesów, zmiennych środowiskowych, raporcie.
+  Repozytorium publiczne: przed commitem nic z `~/Library`, kluczy, haseł, adresów baz, ścieżek domowych.
+- Testy łączą się tylko z lokalną bazą testową (`scripts/testdb.sh`, `.testdb/env`); nigdy z bazami właściciela.
+- Teksty interfejsu po polsku (klucz = polskie zdanie) przez `L10n.tr`, tłumaczenia en/de/es/uk w String Catalog.
+- Funkcja zrobiona = test (✅) lub zrzut ekranu (👁) i aktualizacja stanu wiersza w `docs/FEATURES.md`.
+
+## Polecenia
+```sh
+make testdb                 # baza testowa (Colima musi działać: colima start)
+make test                   # wszystkie testy pakietu (integracyjne wymagają bazy)
+make test-unit              # bez bazy
+make generate build run     # aplikacja (XcodeGen + xcodebuild)
+scripts/status.py done "…"  # wpis do raportu + regeneracja
+scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
+```
+
+## Pułapki
+- `scripts/testdb.sh`: `set -o pipefail` + `tr </dev/urandom | head` zabija skrypt po cichu (SIGPIPE) — losowanie przez
+  `openssl rand`. `docker cp` tworzy pliki jako root — `chown` przed użyciem przez oracle.
+- `DBMS_SESSION.SLEEP` nie reaguje na Break do końca uśpienia (tak samo w SQL*Plus) — testy przerwania na długim zapytaniu.
+- Komunikaty SourceKit „No such module”/„Cannot find type” w edytorze to nieaktualny indeks — liczy się `swift build`.
+- Runner CI macOS to macOS 26.6 / Swift 6.3 (stan 2026-10-22) — pakiet ma cel macOS 27, testy SPM przechodzą.
+- Instant Client lokalnie: `~/Downloads/instantclient_23_26` (wykrywany automatycznie); w CI Linux: `/opt/oracle/instantclient`.
