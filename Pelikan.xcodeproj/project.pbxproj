@@ -11,6 +11,7 @@
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
 		177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */; };
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
+		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
 		1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
@@ -68,6 +69,7 @@
 				371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */,
 				AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */,
 				DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */,
+				1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,6 +214,7 @@
 				7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */,
 				68DCC77A1DA6108E25EBC9B9 /* PelikanDB */,
 				9D16B7D56F23E44BF345738A /* PelikanODPI */,
+				20A0AADF6109FF559605C47E /* PelikanThin */,
 			);
 			productName = Pelikan;
 			productReference = 683515088F140833D5EF9EE2 /* Pelikan.app */;
@@ -496,6 +499,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		20A0AADF6109FF559605C47E /* PelikanThin */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PelikanThin;
+		};
 		68DCC77A1DA6108E25EBC9B9 /* PelikanDB */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanDB;

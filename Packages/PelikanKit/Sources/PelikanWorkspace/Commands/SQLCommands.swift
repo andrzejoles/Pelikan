@@ -62,7 +62,11 @@ public enum SQLCommands {
             Command(CommandDescriptor(id: "sql.break", title: L10n.tr("Przerwij"), category: .session, pd: ["shift+escape"], mac: ["cmd+."],
                                       agent: .none, effect: .none, summary: L10n.tr("Przerywa bieżące wykonanie (OCIBreak)."),
                                       feature: "PD-SQLW-005"),
-                    validate: { $0.activeDocument?.isExecuting ?? false }) { ctx in
+                    validate: { ws in
+                        // Sterownik bez przerwania wywołania (thin) — Przerwij wyszarzone (ADR 0001).
+                        guard ws.activeDocument?.isExecuting == true else { return false }
+                        return currentSession(ws)?.info.capabilities.contains(.breakExecution) ?? true
+                    }) { ctx in
                 if let doc = ctx.workspace.activeDocument, doc.kind == .command { ctx.workspace.sqlplusEngine(for: doc).cancel() }
                 currentSession(ctx.workspace)?.breakExecution()
                 return .ok

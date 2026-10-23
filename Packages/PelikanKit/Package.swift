@@ -14,6 +14,11 @@ let package = Package(
         .library(name: "PelikanDB", targets: ["PelikanDB"]),
         .library(name: "PelikanODPI", targets: ["PelikanODPI"]),
         .library(name: "PelikanWorkspace", targets: ["PelikanWorkspace"]),
+        .library(name: "PelikanThin", targets: ["PelikanThin"]),
+    ],
+    dependencies: [
+        // Sterownik „thin” w czystym Swifcie (Apache 2.0) — commit z main po 1.0.0-rc.4 (poprawka dla Swift 6.4, D20).
+        .package(url: "https://github.com/lovetodream/oracle-nio.git", revision: "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"),
     ],
     targets: [
         // Lekser, dzielenie skryptów, klasyfikacja poleceń, zmienne podstawiania — czysty Swift (także Linux).
@@ -29,11 +34,13 @@ let package = Package(
                              .linkedLibrary("pthread", .when(platforms: [.linux]))]),
         // Sterownik „thick”: ODPI-C + Oracle Instant Client.
         .target(name: "PelikanODPI", dependencies: ["PelikanDB", "CODPI"], swiftSettings: strict),
+        // Sterownik „thin”: OracleNIO (bez Instant Client).
+        .target(name: "PelikanThin", dependencies: ["PelikanDB", .product(name: "OracleNIO", package: "oracle-nio")], swiftSettings: strict),
         // Model stanu aplikacji i rejestr komend — bez AppKit.
         .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL"], swiftSettings: strict),
 
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
-        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
+        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace"], swiftSettings: strict),
     ],
     swiftLanguageModes: [.v6]

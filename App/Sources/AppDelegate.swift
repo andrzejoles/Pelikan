@@ -1,6 +1,7 @@
 import AppKit
 import PelikanDB
 import PelikanODPI
+import PelikanThin
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
@@ -26,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore())
         super.init()
         workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory))
+        workspace.sessions.setDriver(ThinDriver())
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

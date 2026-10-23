@@ -3,6 +3,7 @@ import Darwin
 import Foundation
 import PelikanDB
 import PelikanODPI
+import PelikanThin
 @testable import PelikanWorkspace
 import Testing
 
@@ -75,6 +76,22 @@ struct GridPerformanceTests {
         let mem = Self.residentMB() - memBefore
         Self.report("Siatka: pamięć na 1 mln wierszy × 4 kolumny", String(format: "%.0f MB", mem), "< 800 MB", mem < 800)
         #expect(mem < 800)
+        await session.close()
+    }
+
+    @Test("Sterownik thin: pobranie 1 mln wierszy (porównanie z Instant Client — ADR 0001)")
+    func millionRowsThin() async throws {
+        let c = TestDatabase.config!
+        let session = try await ThinDriver().connect(target: ConnectionTarget(user: c.user, connectString: c.connectString),
+                                                     credentials: Credentials(password: c.password), options: ConnectOptions())
+        let sql = "select level as id, 'Wiersz numer ' || level as txt, date '2026-01-01' + level / 86400 as d, mod(level, 97) * 1.5 as n from dual connect by level <= 1000000"
+        let clock = ContinuousClock()
+        let r = try await session.execute(sql)
+        let grid = ResultGridModel(columns: r.resultSet!.columns, resultSet: r.resultSet!.id, session: session, sql: sql, format: ValueFormat())
+        let all = await clock.measure { await grid.fetchAll() }
+        Self.report("Siatka (thin): pobranie 1 mln wierszy (4 kolumny)", String(format: "%.1f s", Self.ms(all) / 1000), "< 30 s", all < .seconds(30))
+        #expect(grid.rowCount == 1_000_000)
+        #expect(all < .seconds(30))
         await session.close()
     }
 }

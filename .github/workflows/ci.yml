@@ -46,7 +46,7 @@ jobs:
       - name: Swift
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.2"
+          swift-version: "6.3"
       - name: Oracle Instant Client (Linux x64, Basic Light)
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq libaio1t64 unzip >/dev/null
