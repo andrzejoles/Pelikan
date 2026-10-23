@@ -17,6 +17,7 @@
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
 		0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */; };
 		1184C786CD59098DDC76580C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
+		16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */; };
 		177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */; };
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
@@ -51,6 +52,7 @@
 		972EF459C57D996C11CF97EC /* EditorToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */; };
 		997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FB679B3AA90E719B503472 /* TemplatePane.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
+		A071C58E27776BA0D1AB0A32 /* MainToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */; };
 		A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 570D3064D5201AF56E748711 /* PlanVisualViews.swift */; };
 		A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335AC06B5D604A8B96621019 /* DiffViewer.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
@@ -68,6 +70,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		CE85A176807A4599C1FD3C9B /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565A13529D730F54DE0A35B8 /* NotebookViewController.swift */; };
+		D0E4E53E61B71D09B1D4C583 /* ServicesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
@@ -120,10 +123,12 @@
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
 		10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportWindowViewController.swift; sourceTree = "<group>"; };
+		16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainToolbar.swift; sourceTree = "<group>"; };
 		229E7A0294B2BA8203F506AF /* BeautifierPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeautifierPane.swift; sourceTree = "<group>"; };
 		2456C231334B998B64CE9501 /* AgentSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSheets.swift; sourceTree = "<group>"; };
 		26AA9CEDE79921F45A0500AB /* Observe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observe.swift; sourceTree = "<group>"; };
 		2849E776640F52BC43AB5C6F /* pelikan-mcp */ = {isa = PBXFileReference; includeInIndex = 0; path = "pelikan-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
+		285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesProvider.swift; sourceTree = "<group>"; };
 		29353BC88EDA99528B1F86C8 /* Brand.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Brand.xcconfig; sourceTree = "<group>"; };
 		2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandWindowViewController.swift; sourceTree = "<group>"; };
 		2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowListViewController.swift; sourceTree = "<group>"; };
@@ -155,6 +160,7 @@
 		7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGripViews.swift; sourceTree = "<group>"; };
 		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
+		81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceSetsPane.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
@@ -231,6 +237,7 @@
 			children = (
 				C866A6E13301104082FC8632 /* AgentsPane.swift */,
 				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
+				81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
 			);
 			path = Preferences;
@@ -376,9 +383,11 @@
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				763E3F551A3684075944A130 /* main.swift */,
+				16B2BB118EADAF6ADD890DD1 /* MainToolbar.swift */,
 				0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */,
 				9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */,
 				26AA9CEDE79921F45A0500AB /* Observe.swift */,
+				285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */,
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
 			path = Sources;
@@ -681,6 +690,7 @@
 				3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
+				A071C58E27776BA0D1AB0A32 /* MainToolbar.swift in Sources */,
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
 				1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */,
 				53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */,
@@ -691,6 +701,7 @@
 				40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */,
 				B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */,
 				A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */,
+				16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				022DEED31A8996A834AEAFA9 /* ProCDeployViews.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
@@ -702,6 +713,7 @@
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
+				D0E4E53E61B71D09B1D4C583 /* ServicesProvider.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
 				B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */,

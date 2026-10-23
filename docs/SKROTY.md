@@ -37,6 +37,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |
 | Notatnik › Eksportuj notatnik jako Markdown… | `notebook.exportMarkdown` |  |  | Brak | 0 | SD-NB-001 |
 | Historia lokalna › Historia lokalna | `file.localHistory` |  |  | Brak | 0 | DG-HIST-001 |
 | Historia lokalna › Wersje w historii lokalnej | `file.localHistoryList` |  |  | Odczyt | 0 | DG-HIST-001 |
@@ -236,6 +237,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Preferencje › Eksportuj preferencje… | `prefs.export` |  |  | Brak | 0 | PD-PREF-003 |
+| Preferencje › Importuj preferencje… | `prefs.import` |  |  | Brak | 0 | PD-PREF-003 |
+| Preferencje › Zestawy preferencji… | `prefs.sets` |  |  | Brak | 0 | PD-PREF-002 |
 | Zdalny build Pro*C › Cele SSH… | `ssh.manager` |  |  | Brak | 0 | PC-CONN-002 |
 | Zdalny build Pro*C › Testuj cel SSH | `ssh.test` |  |  | Brak | 0 | PC-CONN-003 |
 | Zdalny build Pro*C › Eksportuj cele SSH… | `ssh.export` |  |  | Brak | 0 | PC-CONN-001 |
@@ -367,6 +371,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Dostosuj pasek narzędzi… | `view.customizeToolbar` |  |  | Brak | 0 | PD-UI-006 |
+| Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
+| Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
 | Podgląd przestrzenny | `grid.spatialPreview` |  |  | Brak | 0 | SD-DATA-001 |
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |

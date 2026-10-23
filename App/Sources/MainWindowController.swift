@@ -8,6 +8,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private let workspace: Workspace
     private let split = NSSplitViewController()
     private(set) lazy var sidebarController = SidebarViewController(workspace: workspace)
+    private(set) var toolbarController: MainToolbarController?
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -43,6 +44,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
         let toolbar = NSToolbar(identifier: "PelikanMainToolbar")
         toolbar.displayMode = .iconOnly
+        toolbarController = MainToolbarController(workspace: workspace, toolbar: toolbar)
         window.toolbar = toolbar
         trackChanges { [weak self] in
             guard let self else { return }

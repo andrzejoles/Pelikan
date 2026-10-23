@@ -26,6 +26,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     #else
     let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     #endif
+    /// Usługi macOS (MAC-SVC-001).
+    private var services: ServicesProvider?
     /// Agenci AI: panel, okno zgody, serwer gniazda (PROMPT §7).
     private var agentUI: AgentUIController?
     private var menuToken: ObservationToken?
@@ -108,8 +110,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             window.installAgentPane(agents.pane)
             agentUI = agents
         }
+        let provider = ServicesProvider(workspace: workspace)
+        NSApp.servicesProvider = provider
+        services = provider
+        NSUpdateDynamicServices()
+        // Parametry startowe (PD-CLI-001), np. `open -a Pelikan --args connection=Dev editobject=APP.PKG`.
+        let startup = StartupOptions.parse(Array(ProcessInfo.processInfo.arguments.dropFirst()))
         // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10).
-        if workspace.settings.worksetAutosave, workspace.documents.isEmpty,
+        if workspace.settings.worksetAutosave, !startup.noLoadDesktop, startup.workset == nil, workspace.documents.isEmpty,
            let saved = try? workspace.worksets.load(workspace.worksets.current), !saved.documents.isEmpty {
             workspace.applyWorkset(saved)
         }
@@ -120,6 +128,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
         NSApp.activate()
         startConnectionCheck()
+        if !startup.isEmpty || !startup.warnings.isEmpty {
+            runStartup(startup)
+            if startup.connection != nil { return }
+        }
         // Jak we wzorcu: okno logowania przy starcie (można anulować), chyba że są połączenia „Połącz przy starcie”.
         let auto = workspace.connections.connections.filter(\.connectOnStartup)
         if let first = auto.first {
@@ -137,10 +149,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         PreferencesWindowController.show(workspace: workspace)
     }
 
-    /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist).
+    func customizeToolbar() {
+        mainWindow?.toolbarController?.customize()
+    }
+
+    func showPreferenceSets() {
+        PreferencesWindowController.show(workspace: workspace)
+    }
+
+    /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
     func application(_ application: NSApplication, open urls: [URL]) {
+        let scheme = Bundle.main.object(forInfoDictionaryKey: "PelikanURLScheme") as? String ?? ""
         for url in urls {
+            if !url.isFileURL, !scheme.isEmpty, url.scheme?.lowercased() == scheme.lowercased() {
+                runStartup(StartupOptions.parse(url: url, scheme: scheme))
+                continue
+            }
             do { try workspace.openFile(url) } catch { showError(error.localizedDescription) }
+        }
+    }
+
+    private func runStartup(_ options: StartupOptions) {
+        Task { @MainActor in
+            let messages = await workspace.applyStartup(options)
+            if !messages.isEmpty { showError(messages.joined(separator: "\n")) }
         }
     }
 

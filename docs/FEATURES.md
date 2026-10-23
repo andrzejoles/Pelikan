@@ -386,15 +386,15 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-UI-003 | Narzędzia dokowane/pływające (Object Browser, File Browser, Connection List, Window List, Templates, Bookmarks, Search, To-Do, Project, Clipboard), autoukrywanie | UG 33, NF8 | View | 1 | P2 | — | do zrobienia |
 | PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | ✅ test |
 | PD-UI-005 | Menu wg Apple HIG odpowiadające wstążkom wzorca (File, Project, Edit, Session, Debug, Tools, Reports, Configure, View, Help) + paski narzędzi | UG 34, PROMPT §3.4 | — | 0 | P1 | — | w toku |
-| PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | do zrobienia |
+| PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | ✅ test (pasek okna głównego z komend rejestru, dostosowanie standardowe macOS z zapamiętaniem, grupa „Szybki dostęp” z listą komend w Preferencjach › Zestawy; bez zrzutu — D30, D-S8P-3) |
 | PD-UI-007 | Wyszukiwarka komend (paleta) | PROMPT §3.1 | Help / Cmd+Shift+P | 1 | P1 | — | 👁 sprawdzone ręcznie |
 | PD-UI-008 | Tryb jasny/ciemny/auto (systemowy) | UG 23.16, NF15 | Preferences > Appearance | 1 | P1 | — | 👁 ręcznie |
 | PD-UI-009 | Tytuł aplikacji z połączeniem / oknem / worksetem; nazwa bazy w tytułach okien | UG 23.16, NF17 | Preferences > Appearance | 1 | P2 | — | do zrobienia |
 | PD-UI-010 | Kolor ikony per typ okna; status transakcji na pasku stanu okna | NF12 | — | 1 | P2 | — | do zrobienia |
 | PD-UI-011 | Pełny ekran z dostępem do narzędzi | NF11, PROMPT §3.4 | View | 1 | P3 | — | do zrobienia |
 | PD-PREF-001 | Okno preferencji: kategorie Oracle / UI / Window Types / Tools / Files / Other, wyszukiwarka, Apply | UG 23 | Configure > Preferences | 1 | P1 | — | ⚠️ częściowo (karty bez wyszukiwarki i pełnych kategorii) |
-| PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | do zrobienia |
-| PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | do zrobienia |
+| PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | ✅ test (zestawy: domyślny globalny, domyślny połączenia, osobisty, osobisty połączenia — wzorce `użytkownik@baza`/nazwa z `*` `%`; pierwszeństwo jak we wzorcu, przeliczenie przy zmianie połączenia głównego, źródło wartości i „Dziedzicz” w karcie Zestawy, wybór zestawu edytowanego; okno bez zrzutu — D30, D-S8P-1) |
+| PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | ✅ test (eksport obowiązujących preferencji wybranych sekcji do JSON, import do zestawu edytowanego; bez haseł i historii plików, obcy plik odrzucony — D-S8P-1) |
 | PD-PREF-004 | NLS Options aplikacji (data, czas, liczby: własne / systemowe / Oracle) | UG 23.17 | Preferences > NLS | 1 | P2 | — | w toku |
 | PD-PREF-005 | Czcionki edytora, siatek, przeglądarki (z kolorem i tłem) | UG 23.13 | Preferences > Fonts | 1 | P2 | — | w toku |
 | PD-PREF-006 | Katalogi startowe (programy, testy, skrypty, raporty, makra, szablony, projekty, worksety…) i rozszerzenia plików | UG 23.28–23.29 | Preferences > Files | 1 | P2 | — | do zrobienia |
@@ -402,7 +402,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | do zrobienia |
 | PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | do zrobienia |
 | PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | do zrobienia |
-| PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | do zrobienia |
+| PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | ✅ test (`klucz=wartość` jak we wzorcu i `--klucz[=wartość]`: connection/userid, viewobject, editobject, commandfile, project, workset, readonly, noloaddesktop, pliki; URL `pelikan://open?…`; hasło odrzucane z ostrzeżeniem, łączenie przez Pęk kluczy albo pytanie — D-S8P-2) |
 
 ## utPLSQL
 
@@ -522,7 +522,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ✅ test (Pęk kluczy logowania, usługa z bundle id, bez iCloud; przełącznik „Wymagaj Touch ID albo hasła Maca” — potwierdzenie przed użyciem zapisanego hasła raz na połączenie; dialog systemowy bez zrzutu — D30) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
 | MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
-| MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
+| MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | ✅ test (usługi „Formatuj SQL” — zamiana zaznaczenia formaterem z Preferencji, „Otwórz w SQL Window”, „Otwórz plik”; NSServices w Info.plist; menu Usługi bez zrzutu — D30, D-S8P-3) |
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
 | MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |

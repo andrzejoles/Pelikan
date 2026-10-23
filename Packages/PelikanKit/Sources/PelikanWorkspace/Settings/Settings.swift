@@ -104,6 +104,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var appearance: AppearanceMode = .system
     /// Język interfejsu (pl, en, de, es, uk); nil — jak system. Działa od następnego uruchomienia (AppleLanguages).
     public var language: String?
+    /// Quick Access Toolbar: komendy w grupie szybkiego dostępu paska okna głównego (PD-UI-006).
+    public var quickAccessCommands: [String] = []
     // Pliki
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
@@ -161,6 +163,7 @@ public struct Settings: Sendable, Codable, Hashable {
         walletDirectory = v(.walletDirectory, walletDirectory)
         requireOwnerForSavedPasswords = v(.requireOwnerForSavedPasswords, requireOwnerForSavedPasswords)
         language = v(.language, language)
+        quickAccessCommands = v(.quickAccessCommands, quickAccessCommands)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)
