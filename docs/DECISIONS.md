@@ -624,7 +624,7 @@ się sprawdzić logowania, więc wiersz ⚠️ do potwierdzenia przez właścici
 **ORDS:** baza testowa (gvenzl/oracle-free) nie ma ORDS; Pelikan wykrywa jego brak, pokazuje moduły i obiekty AutoREST
 z widoków USER_ORDS_*, a włączenie REST generuje jako skrypt do okna SQL (jak DDL — bez samodzielnego wykonania).
 
-### D-PC3-1 · 2026-10-23 — Skrypt wdrożenia jako jeden plik ksh88 z kodami wyjścia
+### D83 · 2026-10-23 — Skrypt wdrożenia jako jeden plik ksh88 z kodami wyjścia
 Pipeline wysyła jeden skrypt (`run-<id>.ksh`, `scp -O` do `<backupy>/.pelikan`) zamiast serii poleceń: blokada,
 kontrola working copy, `git pull --ff-only`, backup, `make`, instalacja i wpis historii działają w obrębie jednej
 blokady, a Stop zabija jedną grupę procesów. Każdy krok wypisuje `@@STEP nazwa` / `@@END nazwa kod`; dodatkowe
@@ -636,7 +636,7 @@ w Pelikanie (bez arytmetyki w skrypcie). W sesji z pty (`ssh -tt`) git uruchomi�
 składnię sprawdza `ksh -n` i przebiegi na lokalnym sshd — to ksh93 z macOS, więc akceptacja na AIX 6.1 należy do
 właściciela (D54).
 
-### D-PC3-2 · 2026-10-23 — Blokada i jej zdejmowanie; binarki z katalogu `make`
+### D84 · 2026-10-23 — Blokada i jej zdejmowanie; binarki z katalogu `make`
 Blokada to katalog `.lock` z plikiem `info` (`id`, właściciel, czas, PID powłoki skryptu na serwerze). Istniejąca
 blokada z żywym procesem → „zablokowane” (kod 10), z martwym albo bez PID → „przeterminowana” (11); żadna nie jest
 zdejmowana automatycznie — ręczne zdjęcie po potwierdzeniu (PROD: nazwa celu). Skrypt zdejmuje własną blokadę pułapką

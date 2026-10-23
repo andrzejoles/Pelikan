@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T21:03:41+02:00",
+  "heartbeat": "2026-10-23T22:04:31+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Scalony PR #50 (Etap 7: pakiety Oracle, 23ai z debugowaniem MLE, DataGrip, narzędzia SQL Developer, Entra ID, ORDS; Etap P warstwa SSH i cele) — naprawione zawieszanie testów SSH w CI",
     "Scalone: narzędzia Etapu 7 (subagent C: notatnik, raporty predefiniowane, Diff/Cart, kopia schematu, import, SQLcl, ER, przenoszenie danych, zadania lokalne) i Etap P (menedżer celów SSH, parsery proc/xlc) w jeden PR",
     "Etap 7 / DataGrip (subagent D): analiza nazw w czasie pisania, inspekcje, Find Usages, zmiana nazwy z podglądem, historia lokalna, konsole połączeń, zmiany oczekujące w siatce — scalone, testy na bazie OK (D65–D70)",
     "Etap 7 / Oracle 23ai: widoki dualności JSON (lista, generator DDL, dokumenty, Data Guide), moduły i środowiska MLE, podgląd SDO_GEOMETRY — testy na bazie (D64)",
@@ -91,8 +92,7 @@
     "PR #21–#23 scalone (edytor tabeli, edytory obiektów, pary nawiasów i bloków)",
     "PR #20 scalony (wydajność, nawigacja, menu obiektu w edytorze)",
     "PR #19 scalony (przeglądarka różnic i porównania)",
-    "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy",
-    "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie"
+    "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy"
   ],
   "next": [
     "Wstrzymane na prośbę właściciela (wyłączenie komputera). Do wznowienia: pełne testy bazy po scaleniu Etapu 7 i Etapu P, SD-NB/REP/… zrobione; pozostały SD-AUTH-001, SD-ORDS-001, debugowanie MLE, zamknięcie Etapów 6–7, Etap P faza 2 (pipeline, konsola)"
