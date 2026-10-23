@@ -1,5 +1,5 @@
 {
-  "originHash" : "230b14b47866384f6cec7107aad881ca8e60850c463a6511ee9c31ccb4986727",
+  "originHash" : "cc7359f60ffaaa14309ee9ea41b121f73e35a47d7e303840639cc277a6263a1f",
   "pins" : [
     {
       "identity" : "oracle-nio",
@@ -7,6 +7,15 @@
       "location" : "https://github.com/lovetodream/oracle-nio.git",
       "state" : {
         "revision" : "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"
+      }
+    },
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle",
+      "state" : {
+        "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
+        "version" : "2.10.0"
       }
     },
     {

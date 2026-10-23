@@ -2,6 +2,7 @@ import AppKit
 import PelikanDB
 import PelikanODPI
 import PelikanThin
+import Sparkle
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
@@ -15,6 +16,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
     private var keyMonitor: Any?
+    /// Aktualizacje Sparkle (kanał releases/latest/download/appcast.xml, podpis EdDSA). W kompilacji Debug wyłączone.
+    #if DEBUG
+    let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+    #else
+    let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    #endif
     private var menuToken: ObservationToken?
     private var appearanceToken: ObservationToken?
 
@@ -73,6 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         } else {
             showLogon()
         }
+    }
+
+    @objc func checkForUpdates(_ sender: Any?) {
+        updater.checkForUpdates(sender)
     }
 
     @objc func showPreferences(_ sender: Any?) {

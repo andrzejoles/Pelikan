@@ -36,6 +36,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
         let name = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
         let menu = NSMenu(title: name)
         menu.addItem(withTitle: L10n.tr("O programie \(name)"), action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        menu.addItem(withTitle: L10n.tr("Sprawdź uaktualnienia…"), action: #selector(AppDelegate.checkForUpdates(_:)), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: L10n.tr("Ustawienia…"), action: #selector(AppDelegate.showPreferences(_:)), keyEquivalent: ",")
         menu.addItem(.separator())
