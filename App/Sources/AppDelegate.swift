@@ -314,6 +314,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showGraph(document: PelikanWorkspace.Document, tab: ResultTab) {
+        // Każdy wykres w osobnym oknie (kilka wykresów z różnych wyników naraz).
+        ToolWindowController.show(key: "graph-\(tab.id.uuidString)", title: L10n.tr("Wykres – \(tab.title)"), size: NSSize(width: 980, height: 600)) {
+            GraphView(workspace: workspace, document: document, tab: tab)
+        }
+    }
+
+    func showToolOutput(title: String, text: String, status: Int32) {
+        ToolWindowController.close(key: "toolOutput")
+        ToolWindowController.show(key: "toolOutput", title: title, size: NSSize(width: 640, height: 400)) {
+            ToolOutputView(text: text, status: status)
+        }
+    }
+
+    func showUserToolsSettings() {
+        ToolWindowController.show(key: "userTools", title: L10n.tr("Narzędzia użytkownika"), size: NSSize(width: 760, height: 480)) {
+            UserToolsView(workspace: workspace)
+        }
+    }
+
     func showSessionBrowser() {
         ToolWindowController.show(key: "sessions", title: L10n.tr("Sesje"), size: NSSize(width: 1000, height: 640)) {
             SessionBrowserView(workspace: workspace)

@@ -37,6 +37,7 @@
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
+		85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDD00050FBA5650E960C7ED /* GraphView.swift */; };
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		923CEBCD965BF601901F2C11 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = D507270E4637937E6D6C6235 /* PelikanBridgeKit */; };
 		92F74B6D7C2D435DBF289BEA /* AgentSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456C231334B998B64CE9501 /* AgentSheets.swift */; };
@@ -129,6 +130,7 @@
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
