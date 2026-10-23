@@ -139,6 +139,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     // MARK: UIServices
 
+    func showCompletion(_ result: CompletionResult, for document: PelikanWorkspace.Document) {
+        NotificationCenter.default.post(name: CodeEditorView.showCompletionNotification, object: document, userInfo: ["result": result])
+    }
+
     func showError(_ message: String) {
         let alert = NSAlert()
         alert.alertStyle = .warning

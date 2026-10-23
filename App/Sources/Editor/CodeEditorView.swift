@@ -16,6 +16,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private let folding = FoldingContentDelegate()
     private var regions: [FoldRegion] = []
     private var regionsWork: DispatchWorkItem?
+    private lazy var completion = CompletionPopup(textView: textView)
+    private var assistWork: DispatchWorkItem?
     var onCaretChange: ((String) -> Void)?
 
     init(document: Document, fontSize: CGFloat = 13) {
@@ -76,6 +78,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                                                name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
         textView.setAccessibilityLabel(document.fullTitle)
         textView.textContentStorage?.delegate = folding
+        configureCompletion()
         ruler.foldState = { [weak self] line in
             guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return nil }
             return self.document.foldedStarts.contains(r.start)
@@ -134,6 +137,40 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         updatingFromModel = false
         ruler.needsDisplay = true
         scheduleRegions(delay: 0)
+    }
+
+    // MARK: Code Assistant (UG 25.4)
+
+    static let showCompletionNotification = Notification.Name("PelikanShowCompletion")
+
+    private func configureCompletion() {
+        completion.requery = { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return nil }
+            let m = ws.metadata(for: ws.effectiveConnection(of: self.document))
+            return await CodeAssistant.complete(text: self.textView.string, offset: self.textView.selectedRange().location, metadata: m)
+        }
+        textView.keyInterceptor = { [weak self] event in self?.completion.handle(event) ?? false }
+        textView.onMouseDown = { [weak self] in self?.completion.close() }
+        NotificationCenter.default.addObserver(self, selector: #selector(showCompletion(_:)), name: Self.showCompletionNotification, object: document)
+    }
+
+    @objc private func showCompletion(_ note: Notification) {
+        guard let r = note.userInfo?["result"] as? CompletionResult, window?.isKeyWindow == true, window?.firstResponder === textView else { return }
+        completion.show(r)
+    }
+
+    /// Po wpisaniu kropki — automatyczna aktywacja z opóźnieniem (UG 23.14), gdy kursor nie zmienił się w międzyczasie.
+    private func scheduleAutomaticAssist() {
+        assistWork?.cancel()
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace, ws.settings.codeAssistantAutomatic else { return }
+        let caret = textView.selectedRange().location
+        guard caret > 0, (textView.string as NSString).character(at: caret - 1) == 0x2E else { return }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.textView.selectedRange().location == caret, !self.completion.isVisible else { return }
+            ws.perform("edit.codeAssistant")
+        }
+        assistWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(max(0, ws.settings.codeAssistantDelay)), execute: work)
     }
 
     // MARK: Zwijanie kodu (UG 25.17)
@@ -254,6 +291,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         document.text = textView.string
         document.errorRange = nil
         updatingFromModel = false
+        if completion.isVisible { completion.textChanged() } else { scheduleAutomaticAssist() }
     }
 
     func textViewDidChangeSelection(_ notification: Notification) {
@@ -356,8 +394,18 @@ final class CodeTextView: NSTextView {
         }
     }
 
+    /// Klawisze przechwytywane przez listę podpowiedzi (↑↓, Enter, Tab, Esc), zanim trafią do edytora.
+    var keyInterceptor: ((NSEvent) -> Bool)?
+    var onMouseDown: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        if keyInterceptor?(event) == true { return }
+        super.keyDown(with: event)
+    }
+
     /// Cmd+klik na identyfikatorze — przejście do deklaracji (UG 25.19 nawigacja hiperłączami).
     override func mouseDown(with event: NSEvent) {
+        onMouseDown?()
         guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return super.mouseDown(with: event) }
         let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))

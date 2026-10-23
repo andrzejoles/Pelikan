@@ -44,6 +44,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Znajdź następne | `edit.findNext` | F3 †, ⌘G | ⌘G, F3 | Pełny | 0 | PD-EDIT-008 |
 | Znajdź poprzednie | `edit.findPrevious` | ⇧F3 †, ⇧⌘G | ⇧⌘G, ⇧F3 | Pełny | 0 | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Pełny | 0 | PD-EDIT-010 |
+| Podpowiedź kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Odczyt | 0 | PD-CA-001 |
+| Odśwież podpowiedzi kodu | `edit.refreshCodeAssistant` |  |  | Pełny | 0 | PD-CA-009 |
 | Zwiń blok | `edit.fold` | ⌥⌘← | ⌥⌘← | Brak | 0 | PD-EDIT-013 |
 | Rozwiń blok | `edit.unfold` | ⌥⌘→ | ⌥⌘→ | Brak | 0 | PD-EDIT-013 |
 | Zwiń wszystko | `edit.foldAll` | ⌥⇧⌘← | ⌥⇧⌘← | Brak | 0 | PD-EDIT-013 |

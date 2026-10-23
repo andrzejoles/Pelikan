@@ -32,6 +32,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */ = {isa = PBXBuildFile; productRef = 9D16B7D56F23E44BF345738A /* PelikanODPI */; };
+		E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7048E3E041B381E86A22B88 /* CompletionPopup.swift */; };
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
@@ -62,6 +63,7 @@
 		967E1B4C45088DBF2A3C240B /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
 		9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
+		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
 		CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
@@ -220,6 +222,7 @@
 			children = (
 				8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */,
 				71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */,
+				A7048E3E041B381E86A22B88 /* CompletionPopup.swift */,
 				30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */,
 				DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */,
 			);
@@ -314,6 +317,7 @@
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
 				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,
+				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
