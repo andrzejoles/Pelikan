@@ -33,6 +33,7 @@
 		DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */ = {isa = PBXBuildFile; productRef = 9D16B7D56F23E44BF345738A /* PelikanODPI */; };
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
+		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
@@ -61,6 +62,7 @@
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
+		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -97,6 +99,14 @@
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
 			);
 			path = Preferences;
+			sourceTree = "<group>";
+		};
+		08A837C768E73A2A195BEB42 /* ProgramWindow */ = {
+			isa = PBXGroup;
+			children = (
+				E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */,
+			);
+			path = ProgramWindow;
 			sourceTree = "<group>";
 		};
 		11ADE4571DCB8BBCEF9CA7BD = {
@@ -155,6 +165,7 @@
 				ECB3825E12C3C711DC48304D /* Editor */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
+				08A837C768E73A2A195BEB42 /* ProgramWindow */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
@@ -305,6 +316,7 @@
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
+				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,

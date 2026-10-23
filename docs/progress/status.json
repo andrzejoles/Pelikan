@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T04:11:13+02:00",
+  "heartbeat": "2026-10-23T04:27:48+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1: CI dla PR #8 (sterownik thin), potem szkic wydania 2.0 (podpis, DMG/PKG, Sparkle)",
+  "task": "Etap 2 / Program Window: kompilacja jednostek, lista błędów i ostrzeżeń, wskaźniki, karty jednostek",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / Program Window: karty jednostek (specyfikacja, ciało…) z przejściem, F8 kompiluje jednostki po kolei w sesji kompilacji z PLSQL_WARNINGS, zatrzymanie przy błędzie i kursor w linii błędu, lista błędów i ostrzeżeń z przejściem, wskaźniki zmieniony (niebieski) / nieskompilowany (żółty); poprawka: margines numerów linii nie zamalowuje widoków nad edytorem — 2 testy (1 na bazie)",
+    "PR #11 scalony (Object Browser), wersja 2.1.0",
     "Etap 2 / Object Browser: MetadataProvider (sesja główna, cache, widoki DBA/ALL, foldery wg wersji — MLE i domeny na 23ai+), drzewo typów z leniwym ładowaniem, wybór użytkownika, filtr (nazwa%, status=, source=), elementy obiektu (kolumny, indeksy, więzy, wyzwalacze, podprogramy, zależności), niepoprawne na czerwono, Ostatnie, menu: Pokaż/Edytuj dane, Edytuj (okno programu), DDL, Opis, Właściwości, Rekompiluj, Usuń, Kopiuj nazwę, Odśwież — 5 testów na bazie",
     "Etap 1 zakończony: PR #10 scalony, wersja 2.0.0, szkic wydania v2.0.0 na GitHubie (do publikacji przez właściciela)",
     "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe",
@@ -90,9 +92,7 @@
     "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",
     "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone",
     "Sterownik Instant Client (ODPI-C 26.0 + Instant Client 23.26.2): łączenie, zapytania z typami (NUMBER bez utraty precyzji, daty, LOB, JSON, ROWID, interwały), dociąganie porcjami, transakcje, zmienne wiązane IN/OUT, REF CURSOR, niejawne wyniki, błędy ORA z pozycją, ostrzeżenia kompilacji, przerwanie (Break), MODULE/ACTION — 12 testów integracyjnych zielonych",
-    "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)",
-    "Repozytorium github.com/andrzejoles/Pelikan (publiczne, MIT), pierwszy commit na main",
-    "Przeczytany prompt i repozytorium Bifolda (rejestr komend, most MCP, skrypty wersji/wydań/podpisu)"
+    "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -113,18 +113,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 124,
-      "passed": 124,
+      "total": 125,
+      "passed": 125,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T03:53:20+02:00"
+      "at": "2026-10-23T04:27:46+02:00"
     },
     "integration": {
-      "total": 59,
-      "passed": 58,
+      "total": 61,
+      "passed": 60,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-23T04:11:13+02:00"
+      "at": "2026-10-23T04:27:48+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-program-window.png",
+      "title": "Program Window: kompilacja niepoprawnego pakietu, lista błędów",
+      "reference": "PD-PROG-004"
+    },
     {
       "file": "docs/progress/img/etap2-object-browser.png",
       "title": "Object Browser: foldery, niepoprawny pakiet, elementy tabeli EMP",

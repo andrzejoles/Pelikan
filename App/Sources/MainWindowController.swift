@@ -179,6 +179,7 @@ final class DocumentAreaViewController: NSViewController {
     func focusActiveDocument() {
         guard let id = installedID, let vc = controllers[id] else { return }
         let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? CommandWindowViewController)?.preferredFirstResponder
+            ?? (vc as? ProgramWindowViewController)?.preferredFirstResponder
             ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
     }
@@ -292,6 +293,7 @@ final class DocumentAreaViewController: NSViewController {
                 let c: NSViewController = switch doc.kind {
                 case .sql: SQLWindowViewController(document: doc, workspace: workspace)
                 case .command: CommandWindowViewController(document: doc, workspace: workspace)
+                case .program: ProgramWindowViewController(document: doc, workspace: workspace)
                 default: DocumentViewController(document: doc, workspace: workspace)
                 }
                 addChild(c)

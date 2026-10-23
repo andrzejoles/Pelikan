@@ -66,7 +66,12 @@ public final class Document: Identifiable {
     /// Kodowanie i zakończenia linii pliku (zapis w tym samym formacie, w jakim plik otwarto).
     public var fileFormat = TextFileFormat()
     public var text: String {
-        didSet { if text != oldValue { isModified = true } }
+        didSet {
+            if text != oldValue {
+                isModified = true
+                if kind == .program { isCompileStale = true }
+            }
+        }
     }
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false
@@ -104,6 +109,8 @@ public final class Document: Identifiable {
     /// Command Window: wyjście karty Dialog i historia linii poleceń (strzałki w górę/dół).
     public var console: [ConsoleLine] = []
     public var commandLineHistory: [String] = []
+    /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
+    public var compileMessages: [CompileMessage] = []
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {

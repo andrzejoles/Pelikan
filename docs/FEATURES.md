@@ -163,19 +163,19 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-PROG-001 | Program Window: wiele jednostek w pliku jako karty (specyfikacja/ciało), dodaj/usuń jednostkę | UG 4.1 | Program Window | 2 | P1 | Pełny | do zrobienia |
+| PD-PROG-001 | Program Window: wiele jednostek w pliku jako karty (specyfikacja/ciało), dodaj/usuń jednostkę | UG 4.1 | Program Window | 2 | P1 | Pełny | ⚠️ częściowo (karty jednostek jako nawigacja; bez dodaj/usuń jednostkę) |
 | PD-PROG-002 | Nowy program z szablonu (funkcja, procedura, pakiet, typ, wyzwalacz, Java, MLE) z formularzem zmiennych | UG 4.1, NF17 | File > New > Program Window | 2 | P1 | Pełny | do zrobienia |
-| PD-PROG-003 | Kompilacja wszystkich jednostek po kolei, stop przy błędzie, kursor w linii błędu | UG 4.4 | Execute (F8) | 2 | P1 | Za zgodą | do zrobienia |
-| PD-PROG-004 | Lista błędów i ostrzeżeń PLSQL_WARNINGS pod edytorem (klik = przejście, dwuklik = pomoc Oracle) | UG 4.4, NF16 | Program Window | 2 | P1 | Odczyt | do zrobienia |
+| PD-PROG-003 | Kompilacja wszystkich jednostek po kolei, stop przy błędzie, kursor w linii błędu | UG 4.4 | Execute (F8) | 2 | P1 | Za zgodą | ✅ test |
+| PD-PROG-004 | Lista błędów i ostrzeżeń PLSQL_WARNINGS pod edytorem (klik = przejście, dwuklik = pomoc Oracle) | UG 4.4, NF16 | Program Window | 2 | P1 | Odczyt | ✅ test |
 | PD-PROG-005 | Podpowiedzi kompilatora (hints) i konwencje nazw; `-- Ignore` | UG 4.4, UG 23.9 | Tools > Show Compiler Hints | 2 | P2 | Odczyt | do zrobienia |
-| PD-PROG-006 | Wskaźniki: zmieniony niezapisany (niebieski), niezskompilowany (żółty) | UG 4.3 | Pasek stanu okna | 2 | P1 | — | do zrobienia |
+| PD-PROG-006 | Wskaźniki: zmieniony niezapisany (niebieski), niezskompilowany (żółty) | UG 4.3 | Pasek stanu okna | 2 | P1 | — | ✅ test |
 | PD-PROG-007 | Zapis do pliku zgodnego z SQL*Plus, rozszerzenia per typ, nazwa z jednostki (opcjonalnie z właścicielem), końcowy `/` | UG 4.2, UG 23.19, UG 23.29 | File > Save | 2 | P1 | Pełny | do zrobienia |
 | PD-PROG-008 | Porównanie: z plikiem, ze źródłem w bazie, z innym plikiem, z obiektem w innej bazie | UG 4.5, NF10 | Compare to | 2 | P2 | Odczyt | do zrobienia |
-| PD-PROG-009 | Edycja źródła prosto z bazy (Edit), pytanie o zapis do pliku, Revert | UG 23.2, UG 15.1 | Object Browser > Edit | 2 | P1 | Pełny | do zrobienia |
+| PD-PROG-009 | Edycja źródła prosto z bazy (Edit), pytanie o zapis do pliku, Revert | UG 23.2, UG 15.1 | Object Browser > Edit | 2 | P1 | Pełny | ⚠️ częściowo (edycja z bazy; bez Revert) |
 | PD-PROG-010 | Safe compilation (próbna kompilacja obiektu tymczasowego) | UG 23.19 | Preferences | 2 | P3 | — | do zrobienia |
 | PD-PROG-011 | Wykrywanie zmian obiektu w bazie przez innych (co n s), różnice i przeładowanie | UG 23.19, NF10 | Program Window | 2 | P2 | — | do zrobienia |
-| PD-PROG-012 | Kompilacja w tle w osobnej sesji; blokada kompilacji w trakcie wykonywania | UG 23.19 | Preferences | 2 | P2 | — | do zrobienia |
-| PD-PROG-013 | Preferencje kompilatora: PLSQL_OPTIMIZE_LEVEL, CODE_TYPE, PL/Scope, flagi kompilacji warunkowej, PLSQL_WARNINGS, wartości `&` | UG 23.3 | Preferences > Oracle > Compiler | 2 | P2 | — | do zrobienia |
+| PD-PROG-012 | Kompilacja w tle w osobnej sesji; blokada kompilacji w trakcie wykonywania | UG 23.19 | Preferences | 2 | P2 | — | ✅ test |
+| PD-PROG-013 | Preferencje kompilatora: PLSQL_OPTIMIZE_LEVEL, CODE_TYPE, PL/Scope, flagi kompilacji warunkowej, PLSQL_WARNINGS, wartości `&` | UG 23.3 | Preferences > Oracle > Compiler | 2 | P2 | — | ⚠️ częściowo (PLSQL_WARNINGS; bez pozostałych parametrów) |
 | PD-PROG-014 | Moduły MLE (JavaScript) w Program Window: edycja, podświetlanie, kompilacja | NF17 | Program Window | 2 | P2 | Za zgodą | do zrobienia |
 | PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | do zrobienia |
 | PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | do zrobienia |
