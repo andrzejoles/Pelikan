@@ -229,9 +229,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CA-007 | Preferencje: auto/klawisz, opóźnienie, Contains/Starts with, styl wielkości liter, oryginalna wielkość liter, min. liczba znaków, funkcje standardowe | UG 23.14 | Preferences | 2 | P2 | — | do zrobienia |
 | PD-CA-008 | Deklaracja zmiennej/typu w dymku po najechaniu | UG 23.14, NF8 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-CA-009 | Refresh Code Assistant (cache metadanych odświeżany w tle) | NF14, PROMPT §4.2 p.5 | Edytor | 2 | P1 | — | do zrobienia |
-| PD-CA-010 | Code Contents: drzewo struktury, śledzenie kursora, hot track, sortowanie, menu (zaznacz, wytnij, test…) | UG 25.15 | Program Window | 2 | P1 | Odczyt | do zrobienia |
-| PD-CA-011 | Code Hierarchy nad edytorem (ścieżka od kursora, zaznaczanie, menu) | UG 25.16 | Program Window | 2 | P2 | — | do zrobienia |
-| PD-CA-012 | Hyperlink navigation (Cmd/Ctrl+klik) do deklaracji: w źródle, w oknach, w nowym oknie; tabela → definicja / zapytanie | UG 25.19, NF17 | Edytor | 2 | P1 | Pełny | do zrobienia |
+| PD-CA-010 | Code Contents: drzewo struktury, śledzenie kursora, hot track, sortowanie, menu (zaznacz, wytnij, test…) | UG 25.15 | Program Window | 2 | P1 | Odczyt | ⚠️ częściowo (drzewo, śledzenie kursora, przejście; bez sortowania i menu) ✅ test 👁 |
+| PD-CA-011 | Code Hierarchy nad edytorem (ścieżka od kursora, zaznaczanie, menu) | UG 25.16 | Program Window | 2 | P2 | — | ⚠️ częściowo (ścieżka pod edytorem; bez menu zaznaczania) ✅ test 👁 |
+| PD-CA-012 | Hyperlink navigation (Cmd/Ctrl+klik) do deklaracji: w źródle, w oknach, w nowym oknie; tabela → definicja / zapytanie | UG 25.19, NF17 | Edytor | 2 | P1 | Pełny | ⚠️ częściowo (deklaracje lokalne i obiekty bazy w nowym oknie, Cmd+klik; bez wariantów „w oknach”) ✅ test |
 | PD-CA-013 | Navigate back / forward (historia skoków) | UG 25.20 | Edit > Navigation | 2 | P1 | Pełny | do zrobienia |
 | PD-CA-014 | Refaktoryzacja: Rename item, Extract procedure, Extract local/global constant, Replace assignment with initialization | UG 25.21, NF13 | Edytor > Refactoring | 2 | P2 | Pełny | do zrobienia |
 | PD-CA-015 | Search Bar: wszystkie edytory / bieżący / pliki w katalogach, lista wyników | UG 25.22, NF11 | View > Search Bar | 2 | P2 | Odczyt | do zrobienia |

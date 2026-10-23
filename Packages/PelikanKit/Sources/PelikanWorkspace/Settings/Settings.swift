@@ -76,6 +76,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var keywordCase: KeywordCase = .unchanged
     public var highlightCurrentLine = true
     public var useTabCharacter = false
+    /// Panel Code Contents obok edytora Program Window (UG 25.15).
+    public var showCodeContents = true
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
@@ -101,6 +103,7 @@ public struct Settings: Sendable, Codable, Hashable {
         recentFiles = v(.recentFiles, recentFiles)
         keywordCase = v(.keywordCase, keywordCase)
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
+        showCodeContents = v(.showCodeContents, showCodeContents)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)

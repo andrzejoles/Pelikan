@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 
 /// Komendy wbudowane. Skróty profilu PL/SQL Developer: potwierdzone w UG 17 / na forum producenta albo oznaczone
 /// „do weryfikacji” w docs/research/keys.md. Komendy zapowiedziane (`.planned`) są w menu wyszarzone do swojego etapu.
@@ -196,6 +197,23 @@ public enum BuiltinCommands {
         }
     }
 
+    /// Identyfikator (z kropkami: schemat.pakiet.element) obejmujący pozycję.
+    static func identifier(at offset: Int, in text: String) -> (String, Range<Int>)? {
+        let ns = text as NSString
+        func isIdent(_ c: unichar) -> Bool {
+            guard let s = Unicode.Scalar(c) else { return false }
+            return CharacterSet.alphanumerics.contains(s) || c == 0x5F || c == 0x24 || c == 0x23 || c == 0x2E || c == 0x22
+        }
+        var a = min(offset, ns.length)
+        var b = a
+        while a > 0, isIdent(ns.character(at: a - 1)) { a -= 1 }
+        while b < ns.length, isIdent(ns.character(at: b)) { b += 1 }
+        guard b > a else { return nil }
+        var w = ns.substring(with: NSRange(location: a, length: b - a))
+        w = w.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+        return w.isEmpty ? nil : (w.replacingOccurrences(of: "\"", with: ""), a..<b)
+    }
+
     @MainActor
     static func findNext(_ ctx: CommandContext, backwards: Bool) throws -> CommandResult {
         guard let doc = editable(ctx.workspace), let search = ctx.workspace.lastSearch else { return .ok }
@@ -245,6 +263,33 @@ public enum BuiltinCommands {
                 let o = TextEditing.offset(ofLine: l, in: doc.text)
                 doc.selectedRange = o..<o
                 return .ok
+            },
+            Command(CommandDescriptor(id: "edit.gotoDeclaration", title: L10n.tr("Przejdź do deklaracji"), category: .edit,
+                                      pd: ["ctrl+alt+d"], mac: ["ctrl+cmd+j"], agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Deklaracja identyfikatora pod kursorem: lokalna (zmienna, parametr, podprogram) albo obiekt bazy."),
+                                      feature: "PD-CA-012"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                guard let (word, _) = identifier(at: doc.selectedRange.lowerBound, in: doc.text) else {
+                    throw CommandError.notAvailable(L10n.tr("Brak identyfikatora pod kursorem"))
+                }
+                let parts = word.split(separator: ".").map(String.init)
+                // Lokalnie: zmienna, parametr, kursor, typ, podprogram w zarysie kodu.
+                if parts.count == 1, let d = PLSQLOutline.declaration(of: word, at: doc.selectedRange.lowerBound, in: PLSQLOutline.parse(doc.text)) {
+                    doc.selectedRange = d.nameOffset..<(d.nameOffset + (d.name as NSString).length)
+                    return CommandResult(message: "\(d.kind.rawValue) \(d.name)")
+                }
+                // Obiekt bazy (pakiet, tabela…) — źródło albo DDL w nowym oknie.
+                guard let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc)) else {
+                    throw CommandError.notAvailable(L10n.tr("Nie znaleziono deklaracji „\(word)”"))
+                }
+                var found = try await m.find(parts.count >= 2 ? parts.prefix(2).joined(separator: ".") : word)
+                if found == nil, parts.count >= 2 { found = try await m.find(parts[0]) }
+                guard let o = found else {
+                    throw CommandError.notAvailable(L10n.tr("Nie znaleziono deklaracji „\(word)”"))
+                }
+                return try await ctx.workspace.invoke("ob.edit", CommandArguments(["object": .string("\(o.owner).\(o.name)"), "type": .string(o.type.rawValue)]),
+                                                      invoker: ctx.invoker)
             },
             Command(CommandDescriptor(id: "edit.recallStatement", title: L10n.tr("Historia poleceń…"), category: .edit, pd: ["ctrl+e"],
                                       mac: ["cmd+shift+h"], agent: .none, effect: .uiState,
@@ -377,6 +422,13 @@ public enum BuiltinCommands {
                                       pd: ["cmd+shift+p"], mac: ["cmd+shift+p"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Wyszukuje i wykonuje komendę po nazwie."), feature: "PD-UI-007")) { ctx in
                 ctx.ui?.showCommandPalette()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "view.codeContents", title: L10n.tr("Zawartość kodu"), category: .view,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje lub ukrywa panel Zawartość kodu (struktura jednostek) obok edytora okna programu."),
+                                      feature: "PD-CA-010")) { ctx in
+                ctx.workspace.settings.showCodeContents.toggle()
                 return .ok
             },
             .planned(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,

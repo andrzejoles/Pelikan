@@ -272,6 +272,15 @@ final class CodeTextView: NSTextView {
         }
     }
 
+    /// Cmd+klik na identyfikatorze — przejście do deklaracji (UG 25.19 nawigacja hiperłączami).
+    override func mouseDown(with event: NSEvent) {
+        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+              let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return super.mouseDown(with: event) }
+        let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
+        setSelectedRange(NSRange(location: i, length: 0))
+        ws.perform("edit.gotoDeclaration")
+    }
+
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         if let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {

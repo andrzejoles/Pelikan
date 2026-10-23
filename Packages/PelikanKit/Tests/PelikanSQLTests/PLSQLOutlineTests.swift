@@ -1,0 +1,112 @@
+import Foundation
+import PelikanSQL
+import Testing
+
+@Suite("Parser strukturalny PL/SQL")
+struct PLSQLOutlineTests {
+    let body = """
+    create or replace package body emp_api as
+      g_calls pls_integer := 0;
+      c_max constant number := 10;
+      cursor c_emp(p_dept number) is select * from emp where deptno = p_dept;
+      type t_tab is table of emp%rowtype;
+      e_brak exception;
+
+      function get_salary(p_empno in emp.empno%type, p_def number default 0) return emp.sal%type is
+        l_sal emp.sal%type;
+      begin
+        if l_sal is null then
+          return p_def;
+        end if;
+        for r in c_emp(10) loop
+          null;
+        end loop;
+        return case when l_sal > 0 then l_sal else 0 end;
+      end get_salary;
+
+      procedure raise_salary(p_empno number) is
+        procedure local_log(p_msg varchar2) is begin null; end;
+      begin
+        declare
+          v_tmp number;
+        begin
+          v_tmp := 1;
+        end;
+        local_log('x');
+      end;
+    begin
+      g_calls := 0;
+    end emp_api;
+    /
+    """
+
+    @Test("Jednostka, zmienne globalne, stała, kursor, typ, wyjątek, podprogramy z parametrami i typem zwracanym")
+    func outline() throws {
+        let nodes = PLSQLOutline.parse(body)
+        let pkg = try #require(nodes.first)
+        #expect(pkg.kind == .packageBody && pkg.name == "emp_api")
+        let kinds = pkg.children.map { "\($0.kind.rawValue):\($0.name)" }
+        #expect(kinds.prefix(7) == ["variable:g_calls", "constant:c_max", "cursor:c_emp", "typeDeclaration:t_tab", "exception:e_brak",
+                                    "function:get_salary", "procedure:raise_salary"])
+        let f = pkg.children[5]
+        #expect(f.detail == "emp.sal%type")
+        #expect(f.children.filter { $0.kind == .parameter }.map(\.name) == ["p_empno", "p_def"])
+        #expect(f.children.first { $0.name == "p_empno" }?.detail == "in emp.empno%type")
+        #expect(f.children.contains { $0.kind == .variable && $0.name == "l_sal" })
+        // Koniec funkcji na „end get_salary;” mimo END IF / END LOOP / CASE … END w środku.
+        let fText = (body as NSString).substring(with: NSRange(location: f.range.lowerBound, length: f.range.count))
+        #expect(fText.hasSuffix("end get_salary;"))
+        let p = pkg.children[6]
+        #expect(p.children.contains { $0.kind == .procedure && $0.name == "local_log" })
+        #expect(p.children.contains { $0.kind == .block && $0.children.contains { $0.name == "v_tmp" } })
+        #expect((body as NSString).substring(with: NSRange(location: pkg.range.lowerBound, length: pkg.range.count)).hasSuffix("end emp_api;"))
+    }
+
+    @Test("Ścieżka przy kursorze (Code Hierarchy) i deklaracja identyfikatora z zakresu")
+    func pathAndDeclaration() {
+        let nodes = PLSQLOutline.parse(body)
+        let pos = (body as NSString).range(of: "v_tmp := 1").location
+        #expect(PLSQLOutline.path(at: pos, in: nodes).map(\.name) == ["emp_api", "raise_salary", "BEGIN"])
+        let use = (body as NSString).range(of: "return p_def").location + 7
+        #expect(PLSQLOutline.declaration(of: "P_DEF", at: use, in: nodes)?.kind == .parameter)
+        let g = PLSQLOutline.declaration(of: "g_calls", at: pos, in: nodes)
+        #expect(g?.kind == .variable && g?.nameOffset == (body as NSString).range(of: "g_calls").location)
+    }
+
+    @Test("Specyfikacja pakietu, typ obiektowy, wyzwalacz, blok anonimowy, kod niekompletny bez awarii")
+    func misc() {
+        let spec = PLSQLOutline.parse("create package p as procedure a(x number); function b return number; end p;\n/")
+        #expect(spec.first?.children.map(\.name) == ["a", "b"])
+        let typ = PLSQLOutline.parse("create or replace type addr_t as object (street varchar2(40), city varchar2(30));\n/")
+        #expect(typ.first?.children.map(\.name) == ["street", "city"])
+        let trg = PLSQLOutline.parse("create or replace trigger t before insert on emp for each row declare v number; begin v := 1; end;\n/")
+        #expect(trg.first?.kind == .trigger && trg.first?.children.first?.name == "v")
+        let anon = PLSQLOutline.parse("declare x number; begin null; end;")
+        #expect(anon.first?.kind == .block && anon.first?.children.first?.name == "x")
+        let broken = PLSQLOutline.parse("create or replace package body q as procedure a is begin if x then")
+        #expect(broken.first?.name == "q")
+    }
+
+    @Test("Zakresy zwijania: blok podprogramu, IF, LOOP, CASE")
+    func folding() {
+        let ranges = PLSQLOutline.foldingRanges(body)
+        let texts = ranges.map { (body as NSString).substring(with: NSRange(location: $0.lowerBound, length: $0.count)) }
+        #expect(texts.contains { $0.hasPrefix("if l_sal is null") && $0.hasSuffix("end if") })
+        #expect(texts.contains { $0.hasPrefix("loop") && $0.hasSuffix("end loop") })
+        #expect(texts.contains { $0.hasPrefix("begin") && $0.hasSuffix("end get_salary") })
+    }
+
+    @Test("Wydajność: zarys pakietu 50 000 linii")
+    func performance() {
+        var s = "create or replace package body big as\n"
+        for i in 1...5000 {
+            s += "  procedure p\(i)(a number) is\n    v number;\n  begin\n    if a > 0 then\n      v := a;\n    end if;\n    for r in 1..2 loop null; end loop;\n  end p\(i);\n\n"
+        }
+        s += "end big;\n/\n"
+        let clock = ContinuousClock()
+        var count = 0
+        let t = clock.measure { count = PLSQLOutline.parse(s).first?.children.count ?? 0 }
+        #expect(count == 5000)
+        #expect(t < (ProcessInfo.processInfo.environment["PELIKAN_PERF_STRICT"] == "1" ? .milliseconds(300) : .seconds(5)), "\(t)")
+    }
+}

@@ -120,3 +120,38 @@ struct EditCommandTests {
         #expect(doc.selectedRange == first)
     }
 }
+
+@MainActor
+@Suite("Przejdź do deklaracji")
+struct GotoDeclarationTests {
+    @Test("Zmienna lokalna, parametr i podprogram z zarysu kodu; identyfikator z kropkami")
+    func local() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: """
+            create or replace package body p as
+              g number;
+              procedure helper(p_x number) is begin null; end;
+              procedure main(p_a number) is
+                v number;
+              begin
+                v := p_a + g;
+                helper(v);
+              end;
+            end;
+            /
+            """)
+        let ns = doc.text as NSString
+        doc.selectedRange = (ns.range(of: "p_a + g").location + 1)..<(ns.range(of: "p_a + g").location + 1)
+        try await ws.invoke("edit.gotoDeclaration")
+        #expect(doc.selectedRange.lowerBound == ns.range(of: "p_a number").location)
+        let gUse = ns.range(of: "+ g;").location + 2
+        doc.selectedRange = gUse..<gUse
+        try await ws.invoke("edit.gotoDeclaration")
+        #expect(doc.selectedRange.lowerBound == ns.range(of: "g number").location)
+        let call = ns.range(of: "helper(v)").location + 2
+        doc.selectedRange = call..<call
+        try await ws.invoke("edit.gotoDeclaration")
+        #expect(doc.selectedRange.lowerBound == ns.range(of: "helper(p_x").location)
+        #expect(BuiltinCommands.identifier(at: 6, in: "x := scott.emp_api.f(1)")?.0 == "scott.emp_api.f")
+    }
+}
