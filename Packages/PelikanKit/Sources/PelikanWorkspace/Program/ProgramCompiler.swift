@@ -152,6 +152,14 @@ public enum ProgramCompiler {
                 break
             }
         }
+        // Podpowiedzi Pelikana dla skompilowanych bez błędów jednostek (PD-PROG-005): inspekcje i konwencje nazw.
+        if ws.settings.compilerHints {
+            for u in units.prefix(result.compiled) {
+                for h in CompilerHints.hints(for: u.text, conventions: ws.settings.namingConventions) {
+                    result.messages.append(CompileMessage(severity: .hint, unit: u.tabTitle, line: u.line + h.line, column: h.column, text: h.text))
+                }
+            }
+        }
         // Adnotacje utPLSQL w specyfikacjach z --%suite: nieznane nazwy jako ostrzeżenia (UT-CA-002).
         for u in units where u.type == .package && u.text.lowercased().contains("--%suite") {
             for a in UtplsqlExplorer.unknownAnnotations(in: u.text) {

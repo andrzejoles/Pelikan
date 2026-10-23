@@ -533,6 +533,34 @@
         }
       }
     },
+    "%@ „%@” nie zaczyna się od „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ “%2$@” does not start with “%3$@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ „%2$@“ beginnt nicht mit „%3$@“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ «%2$@» no empieza por «%3$@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ «%2$@» не починається з «%3$@»"
+          }
+        }
+      }
+    },
     "%@: %@" : {
       "localizations" : {
         "en" : {
@@ -16773,6 +16801,34 @@
         }
       }
     },
+    "Globalne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Globals"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Globale"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Globales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глобальні"
+          }
+        }
+      }
+    },
     "Globalne prywatne" : {
       "localizations" : {
         "en" : {
@@ -22737,6 +22793,34 @@
         }
       }
     },
+    "Kompilacja tylko do odczytu plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compile read-only files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schreibgeschützte Dateien kompilieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilar archivos de solo lectura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компілювати файли лише для читання"
+          }
+        }
+      }
+    },
     "Kompiluj (agent)" : {
       "localizations" : {
         "en" : {
@@ -25145,6 +25229,34 @@
         }
       }
     },
+    "Kursor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсор"
+          }
+        }
+      }
+    },
     "Kursor nie jest w jednostce programu" : {
       "localizations" : {
         "en" : {
@@ -25253,6 +25365,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cursor steht nicht auf einem Bezeichner"
+          }
+        }
+      }
+    },
+    "Kursory" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсори"
           }
         }
       }
@@ -26765,6 +26905,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung /@datenbank mit Zugangsdaten aus dem in Einstellungen › Oracle angegebenen Wallet (Oracle Wallet). Das Feld „Datenbank“ muss genau einem im Wallet gespeicherten Alias oder Connect-String entsprechen; der Alias muss in der Oracle-Net-Konfiguration aus den Einstellungen stehen."
+          }
+        }
+      }
+    },
+    "Lokalne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locals"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Locales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальні"
           }
         }
       }
@@ -42561,6 +42729,34 @@
         }
       }
     },
+    "Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiler hints (code inspections after compilation; “-- Ignore” silences a line)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiler-Hinweise (Codeprüfungen nach dem Kompilieren; „-- Ignore“ unterdrückt eine Zeile)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerencias del compilador (inspecciones de código tras compilar; «-- Ignore» silencia una línea)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підказки компілятора (перевірки коду після компіляції; «-- Ignore» вимикає рядок)"
+          }
+        }
+      }
+    },
     "Podpowiedź" : {
       "localizations" : {
         "en" : {
@@ -55833,6 +56029,34 @@
         }
       }
     },
+    "Sprawdzaj konwencje nazw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check naming conventions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namenskonventionen prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar convenciones de nombres"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевіряти правила іменування"
+          }
+        }
+      }
+    },
     "Sprawdzanie połączenia co %@ s (0 — wyłączone)" : {
       "localizations" : {
         "en" : {
@@ -56305,6 +56529,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Feste Breite"
+          }
+        }
+      }
+    },
+    "Stałe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constants"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konstanten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constantes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Константи"
           }
         }
       }
@@ -82289,6 +82541,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Змінна %@ не оголошена в цій одиниці"
+          }
+        }
+      }
+    },
+    "Zmienna globalna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Global variable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Globale Variable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variable global"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глобальна змінна"
+          }
+        }
+      }
+    },
+    "Zmienna lokalna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local variable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lokale Variable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variable local"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Локальна змінна"
           }
         }
       }

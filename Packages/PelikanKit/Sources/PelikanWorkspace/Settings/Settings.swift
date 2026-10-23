@@ -58,6 +58,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var browserRecentLimit = 20
     public var browserDoubleClick: [String: String] = [:]
     public var confirmRecompile = false
+    /// Podpowiedzi kompilatora i konwencje nazw (PD-PROG-005).
+    public var compilerHints = true
+    public var namingConventions = NamingConventions()
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
@@ -219,6 +222,8 @@ public struct Settings: Sendable, Codable, Hashable {
         browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
         browserDoubleClick = v(.browserDoubleClick, browserDoubleClick)
         confirmRecompile = v(.confirmRecompile, confirmRecompile)
+        compilerHints = v(.compilerHints, compilerHints)
+        namingConventions = v(.namingConventions, namingConventions)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)

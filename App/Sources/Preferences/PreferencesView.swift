@@ -266,6 +266,21 @@ struct OraclePane: View {
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+                Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
+                Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
+                Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
+                if workspace.settings.namingConventions.enabled {
+                    HStack {
+                        TextField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter))
+                        TextField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local))
+                        TextField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global))
+                    }
+                    HStack {
+                        TextField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant))
+                        TextField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor))
+                        TextField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type))
+                    }
+                }
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
                 Toggle(L10n.tr("Pomijaj obiekty SYS przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipSys))
             }
