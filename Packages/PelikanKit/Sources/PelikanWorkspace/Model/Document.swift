@@ -112,6 +112,10 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
+    public var plan: ExplainPlanResult?
+    public var planGoal: OptimizerGoal = .session
+    public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
     public var errorStack: [ErrorStackFrame] = []

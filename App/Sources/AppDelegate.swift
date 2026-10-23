@@ -259,6 +259,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func clipboardText() -> String? { NSPasteboard.general.string(forType: .string) }
 
+    func showExportObjects() {
+        ToolWindowController.show(key: "exportObjects", title: L10n.tr("Eksport obiektów użytkownika"), size: NSSize(width: 680, height: 620)) {
+            ExportObjectsView(workspace: workspace)
+        }
+    }
+
+    func showCompareObjects() {
+        ToolWindowController.show(key: "compareObjects", title: L10n.tr("Porównanie obiektów użytkowników"), size: NSSize(width: 980, height: 620)) {
+            CompareObjectsView(workspace: workspace)
+        }
+    }
+
+    func showSessionBrowser() {
+        ToolWindowController.show(key: "sessions", title: L10n.tr("Sesje"), size: NSSize(width: 1000, height: 640)) {
+            SessionBrowserView(workspace: workspace)
+        }
+    }
+
     func showTestExplorer() {
         ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
             TestExplorerView(workspace: workspace)
