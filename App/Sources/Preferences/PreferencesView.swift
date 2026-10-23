@@ -57,6 +57,21 @@ struct GeneralPane: View {
                 }
                 .pickerStyle(.segmented)
             }
+            Section(L10n.tr("Język interfejsu")) {
+                Picker(L10n.tr("Język"), selection: Binding(get: { workspace.settings.language ?? "" }, set: { v in
+                    workspace.settings.language = v.isEmpty ? nil : v
+                    // Standardowe nadpisanie języka aplikacji w macOS (jak Ustawienia systemowe › Język › Aplikacje).
+                    if v.isEmpty { UserDefaults.standard.removeObject(forKey: "AppleLanguages") } else { UserDefaults.standard.set([v], forKey: "AppleLanguages") }
+                })) {
+                    Text(L10n.tr("Jak system")).tag("")
+                    Text("Polski").tag("pl")
+                    Text("English").tag("en")
+                    Text("Deutsch").tag("de")
+                    Text("Español").tag("es")
+                    Text("Українська").tag("uk")
+                }
+                Text(L10n.tr("Zmiana działa po ponownym uruchomieniu Pelikana.")).font(.caption).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
             }

@@ -20,7 +20,8 @@ decyzje, zanim cokolwiek zmienisz.**
 - Hasła tylko w Pęku kluczy — nigdy w plikach, logach, argumentach procesów, zmiennych środowiskowych, raporcie.
   Repozytorium publiczne: przed commitem nic z `~/Library`, kluczy, haseł, adresów baz, ścieżek domowych.
 - Testy łączą się tylko z lokalną bazą testową (`scripts/testdb.sh`, `.testdb/env`); nigdy z bazami właściciela.
-- Teksty interfejsu po polsku (klucz = polskie zdanie) przez `L10n.tr`, tłumaczenia en/de/es/uk w String Catalog.
+- Teksty interfejsu po polsku (klucz = polskie zdanie) przez `L10n.tr("…")` (literał; `\(…)` → `%@`), tłumaczenia en/de/es/uk
+  w String Catalog. Po dodaniu tekstów: `scripts/l10n.py extract` (CI: `scripts/l10n.py check`); tłumaczenia — `export`/`import`.
 - Funkcja zrobiona = test (✅) lub zrzut ekranu (👁) i aktualizacja stanu wiersza w `docs/FEATURES.md`.
 
 ## Polecenia
