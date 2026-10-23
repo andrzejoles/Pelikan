@@ -135,6 +135,10 @@ public enum ObjectCommands {
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
                     doc.selectedRange = 0..<0
+                } else if o.type == .table, ctx.invoker == .user, ctx.ui != nil {
+                    // Tabela: edytor definicji (UG 9.1) zamiast DDL.
+                    let d = try await TableDDL.load(owner: o.owner, name: o.name, metadata: m)
+                    ctx.ui?.showTableEditor(d, original: d, connectionID: m.connectionID)
                 } else {
                     let ddl = try await m.ddl(of: o)
                     _ = try await sqlWindow(ctx.workspace, title: "\(o.name).sql", text: ddl, execute: false)

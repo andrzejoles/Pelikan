@@ -38,6 +38,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Pełny | 0 | PD-PROG-002 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
+| Nowy › Tabela… | `file.newTable` |  |  | Brak | 0 | PD-OED-001 |
 
 ## Edycja
 
@@ -146,6 +147,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Porównaj z aktywnym oknem | `ob.compare` |  |  | Odczyt | 0 | PD-OB-022 |
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
+| Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |

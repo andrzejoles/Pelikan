@@ -35,6 +35,7 @@
 		B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
+		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
 		DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */ = {isa = PBXBuildFile; productRef = 9D16B7D56F23E44BF345738A /* PelikanODPI */; };
 		E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7048E3E041B381E86A22B88 /* CompletionPopup.swift */; };
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
@@ -66,6 +67,7 @@
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
+		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
 		967E1B4C45088DBF2A3C240B /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
 		9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
@@ -188,6 +190,7 @@
 				42B5903D5D9EF245A7512677 /* Connections */,
 				94B8513C5D09CD2AC6BAC631 /* Diff */,
 				ECB3825E12C3C711DC48304D /* Editor */,
+				D9C9B335E92845276A865184 /* Editors */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
@@ -243,6 +246,14 @@
 				29353BC88EDA99528B1F86C8 /* Brand.xcconfig */,
 			);
 			path = Config;
+			sourceTree = "<group>";
+		};
+		D9C9B335E92845276A865184 /* Editors */ = {
+			isa = PBXGroup;
+			children = (
+				8E6E52538571C1727BD5E642 /* TableEditorView.swift */,
+			);
+			path = Editors;
 			sourceTree = "<group>";
 		};
 		E26C4A5524EC80F8E8BE39B3 /* Resources */ = {
@@ -371,6 +382,7 @@
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
+				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */,
