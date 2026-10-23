@@ -22,7 +22,7 @@ struct AgentsPane: View {
                             workspace.settings.agent.profiles.removeAll { $0.id == p.id }
                         } label: { Image(systemName: "minus.circle") }
                             .buttonStyle(.borderless)
-                            .help(L10n.tr("Usuń z listy"))
+                            .iconLabel(L10n.tr("Usuń z listy"))
                     }
                 }
                 HStack {

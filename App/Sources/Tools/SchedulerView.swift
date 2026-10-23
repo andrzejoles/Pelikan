@@ -70,7 +70,7 @@ struct SchedulerView: View {
                 }.disabled(selected?.kind != .jobs)
                 Button(L10n.tr("Usuń")) { drop() }.disabled(selected == nil)
                 Spacer()
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             VSplitView {
                 Table(objects, selection: $selection) {
@@ -96,7 +96,7 @@ struct SchedulerView: View {
             HStack {
                 Picker(L10n.tr("Raport"), selection: $reportName) { ForEach(reports) { Text($0.name).tag($0.name) } }.frame(maxWidth: 280)
                 Spacer()
-                Button { Task { await reloadTab() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await reloadTab() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             grid(runs, colors: reports.first { $0.name == reportName }?.colors ?? [], selection: .constant(nil))
         }
@@ -108,7 +108,7 @@ struct SchedulerView: View {
                 Button(L10n.tr("Zatrzymaj")) { stop(force: false) }.disabled(runningSelection == nil)
                 Button(L10n.tr("Zatrzymaj (Force)")) { stop(force: true) }.disabled(runningSelection == nil)
                 Spacer()
-                Button { Task { await reloadTab() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await reloadTab() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             grid(running, colors: [], selection: $runningSelection)
         }

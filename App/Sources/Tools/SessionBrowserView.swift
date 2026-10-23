@@ -27,7 +27,7 @@ struct SessionBrowserView: View {
                     ForEach(queries.filters) { Text($0.name).tag($0.sql) }
                 }
                 .frame(maxWidth: 260)
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.help(L10n.tr("Odśwież"))
+                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Toggle(L10n.tr("Odświeżaj co"), isOn: $autoRefresh).toggleStyle(.checkbox)
                 Stepper("\(Int(interval)) s", value: $interval, in: 2...300, step: 1).fixedSize()
                 Spacer()

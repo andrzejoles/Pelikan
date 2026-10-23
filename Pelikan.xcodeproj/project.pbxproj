@@ -35,11 +35,13 @@
 		40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */; };
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
+		4B2E4E88BF993838C0CB2BB9 /* PelikanQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
 		53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
+		5ECD40E66F671B53CBD29985 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB3554C8E9BEC253635C7FDF /* Accessibility.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
 		76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */; };
 		7F6A0C97D9493300A27BB5FF /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
@@ -63,6 +65,7 @@
 		B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */; };
 		B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8470950500EBAD985D34E42 /* PackViews.swift */; };
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
+		B6BD34E33D6E1D4419DB45F2 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */; };
 		C252BEC5D799ACD07E9F8B83 /* PelikanProC in Frameworks */ = {isa = PBXBuildFile; productRef = FFC7B50AD82ABD4A43577E27 /* PelikanProC */; };
 		C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
@@ -86,6 +89,7 @@
 		F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
 		F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */; };
+		FAAF90E324ECC7C31475E5D7 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 5142E8A5C924AE927969AC4F /* PelikanSQL */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
 
@@ -97,9 +101,27 @@
 			remoteGlobalIDString = DB868026819E5E362EB80CCD;
 			remoteInfo = "pelikan-mcp";
 		};
+		FCE08C0C0569097C633F0922 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 63E8F48BF43E9163CE2789F1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 63EDB3716CA567DAA355561D;
+			remoteInfo = PelikanQuickLook;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		83C31F064D65AA9943417F69 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				4B2E4E88BF993838C0CB2BB9 /* PelikanQuickLook.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E2045759C8D11B6D2375F7A7 /* Embed Dependencies */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -157,6 +179,7 @@
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
+		85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewProvider.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
 		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
 		90A244677BB2A02F711F72B0 /* DiagramViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagramViewController.swift; sourceTree = "<group>"; };
@@ -167,6 +190,7 @@
 		A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectToolsViews.swift; sourceTree = "<group>"; };
 		A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Oracle23Views.swift; sourceTree = "<group>"; };
 		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
+		AB3554C8E9BEC253635C7FDF /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
 		AFB74D2818143B7B6569D353 /* ProCDeployViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProCDeployViews.swift; sourceTree = "<group>"; };
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B3FB679B3AA90E719B503472 /* TemplatePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePane.swift; sourceTree = "<group>"; };
@@ -184,10 +208,19 @@
 		E41B68045DB74053B692C853 /* ProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectView.swift; sourceTree = "<group>"; };
 		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
+		F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PelikanQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		118AE8E98C5A26840221C07C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FAAF90E324ECC7C31475E5D7 /* PelikanSQL in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		1DAF9FC709C8BC247966D477 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -220,6 +253,7 @@
 		02D34D1B96B8C2DBB05EE4DF /* App */ = {
 			isa = PBXGroup;
 			children = (
+				E7A5F011D74A07FE0C4B8DC9 /* QuickLook */,
 				E26C4A5524EC80F8E8BE39B3 /* Resources */,
 				6D8CA0BC5B0BF89A556D1929 /* Sources */,
 			);
@@ -260,6 +294,7 @@
 			children = (
 				2849E776640F52BC43AB5C6F /* pelikan-mcp */,
 				683515088F140833D5EF9EE2 /* Pelikan.app */,
+				F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -373,6 +408,7 @@
 				62AF99604A2C3C6CA9A3A1D6 /* TestWindow */,
 				98C2053BF992EBE778C7C8F4 /* Tools */,
 				5C5E85F85E1129E104F58BD8 /* UtPLSQL */,
+				AB3554C8E9BEC253635C7FDF /* Accessibility.swift */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				763E3F551A3684075944A130 /* main.swift */,
@@ -505,6 +541,14 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		E7A5F011D74A07FE0C4B8DC9 /* QuickLook */ = {
+			isa = PBXGroup;
+			children = (
+				85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */,
+			);
+			path = QuickLook;
+			sourceTree = "<group>";
+		};
 		ECB3825E12C3C711DC48304D /* Editor */ = {
 			isa = PBXGroup;
 			children = (
@@ -537,6 +581,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		63EDB3716CA567DAA355561D /* PelikanQuickLook */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C01E98D09FC2F111C9B49FD /* Build configuration list for PBXNativeTarget "PelikanQuickLook" */;
+			buildPhases = (
+				BE3514AAE6FE41EEBA817A02 /* Sources */,
+				118AE8E98C5A26840221C07C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PelikanQuickLook;
+			packageProductDependencies = (
+				5142E8A5C924AE927969AC4F /* PelikanSQL */,
+			);
+			productName = PelikanQuickLook;
+			productReference = F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		73764014EA2F909CD0BF86B7 /* Pelikan */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2F025E798DE4DCD1C37230DF /* Build configuration list for PBXNativeTarget "Pelikan" */;
@@ -544,12 +607,14 @@
 				7EE6A9464B535A0FDFE6B8D0 /* Sources */,
 				343217DCE7A550DBBC6B57E3 /* Resources */,
 				1DAF9FC709C8BC247966D477 /* Frameworks */,
+				83C31F064D65AA9943417F69 /* Embed Foundation Extensions */,
 				E2045759C8D11B6D2375F7A7 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				06C598DA1AE9E6019E8C748C /* PBXTargetDependency */,
+				378C47368890FCA8D671F72D /* PBXTargetDependency */,
 			);
 			name = Pelikan;
 			packageProductDependencies = (
@@ -597,6 +662,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
+					63EDB3716CA567DAA355561D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
 					73764014EA2F909CD0BF86B7 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Manual;
@@ -631,6 +700,7 @@
 			projectRoot = "";
 			targets = (
 				73764014EA2F909CD0BF86B7 /* Pelikan */,
+				63EDB3716CA567DAA355561D /* PelikanQuickLook */,
 				DB868026819E5E362EB80CCD /* pelikan-mcp */,
 			);
 		};
@@ -652,6 +722,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5ECD40E66F671B53CBD29985 /* Accessibility.swift in Sources */,
 				069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */,
 				92F74B6D7C2D435DBF289BEA /* AgentSheets.swift in Sources */,
 				DD90C5023ABF02A6EAE06E42 /* AgentUIController.swift in Sources */,
@@ -728,6 +799,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BE3514AAE6FE41EEBA817A02 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6BD34E33D6E1D4419DB45F2 /* PreviewProvider.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -735,6 +814,11 @@
 			isa = PBXTargetDependency;
 			target = DB868026819E5E362EB80CCD /* pelikan-mcp */;
 			targetProxy = 1D1BA79360630807EDA1DE2D /* PBXContainerItemProxy */;
+		};
+		378C47368890FCA8D671F72D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 63EDB3716CA567DAA355561D /* PelikanQuickLook */;
+			targetProxy = FCE08C0C0569097C633F0922 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -834,6 +918,21 @@
 			};
 			name = Release;
 		};
+		7222C80911964CF678ADC857 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = App/QuickLook/QuickLook.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/QuickLook/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PELIKAN_BUNDLE_ID).quicklook";
+				PRODUCT_NAME = "$(PELIKAN_APP_NAME)QuickLook";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		9AF4D36359DFAA1A713A0D84 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 29353BC88EDA99528B1F86C8 /* Brand.xcconfig */;
@@ -907,6 +1006,21 @@
 			};
 			name = Debug;
 		};
+		B795D73100414996F05CCD68 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = App/QuickLook/QuickLook.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/QuickLook/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PELIKAN_BUNDLE_ID).quicklook";
+				PRODUCT_NAME = "$(PELIKAN_APP_NAME)QuickLook";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
 		C33F88B57D64C8189773FDC9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -958,6 +1072,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		9C01E98D09FC2F111C9B49FD /* Build configuration list for PBXNativeTarget "PelikanQuickLook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B795D73100414996F05CCD68 /* Debug */,
+				7222C80911964CF678ADC857 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		FE4B76BAE3489BA638A90B6A /* Build configuration list for PBXNativeTarget "pelikan-mcp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1004,6 +1127,10 @@
 		20A0AADF6109FF559605C47E /* PelikanThin */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanThin;
+		};
+		5142E8A5C924AE927969AC4F /* PelikanSQL */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PelikanSQL;
 		};
 		68DCC77A1DA6108E25EBC9B9 /* PelikanDB */ = {
 			isa = XCSwiftPackageProductDependency;

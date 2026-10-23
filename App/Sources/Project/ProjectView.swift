@@ -31,7 +31,7 @@ struct ProjectView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button { refreshGit() } label: { Image(systemName: "arrow.clockwise") }.help(L10n.tr("Odśwież stan Git"))
+                    Button { refreshGit() } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież stan Git"))
                 }
                 HStack {
                     Button(L10n.tr("Dodaj pliki…")) { addFiles() }
@@ -52,6 +52,7 @@ struct ProjectView: View {
                         }
                     }
                 }
+                .accessibilityLabel(L10n.tr("Elementy projektu"))
                 .contextMenu(forSelectionType: ProjectItem.ID.self) { _ in } primaryAction: { ids in if let id = ids.first { open(id) } }
                 optionsView(p)
                 HStack {

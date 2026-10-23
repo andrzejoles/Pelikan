@@ -215,11 +215,11 @@ struct SSHTargetManagerView: View {
                 .onChange(of: model.selection) { model.selectionChanged() }
                 Divider()
                 HStack(spacing: 4) {
-                    Button { model.addTarget() } label: { Image(systemName: "plus") }.help(L10n.tr("Dodaj cel"))
-                    Button { model.addFolder() } label: { Image(systemName: "folder.badge.plus") }.help(L10n.tr("Dodaj folder"))
-                    Button { model.duplicate() } label: { Image(systemName: "plus.square.on.square") }.help(L10n.tr("Duplikuj"))
+                    Button { model.addTarget() } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj cel"))
+                    Button { model.addFolder() } label: { Image(systemName: "folder.badge.plus") }.iconLabel(L10n.tr("Dodaj folder"))
+                    Button { model.duplicate() } label: { Image(systemName: "plus.square.on.square") }.iconLabel(L10n.tr("Duplikuj"))
                         .disabled(model.selectedTargetID == nil)
-                    Button { model.delete() } label: { Image(systemName: "minus") }.help(L10n.tr("Usuń"))
+                    Button { model.delete() } label: { Image(systemName: "minus") }.iconLabel(L10n.tr("Usuń"))
                         .disabled(model.selection == nil)
                     Spacer()
                 }

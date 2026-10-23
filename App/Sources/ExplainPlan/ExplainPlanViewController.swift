@@ -63,10 +63,10 @@ struct PlanPanel: View {
                 }
                 .frame(maxWidth: 260)
                 Divider().frame(height: 18)
-                Button { move(to: ordered.first) } label: { Image(systemName: "backward.end") }.help(L10n.tr("Pierwszy krok wykonania"))
-                Button { step(-1) } label: { Image(systemName: "backward") }.help(L10n.tr("Poprzedni krok wykonania"))
-                Button { step(1) } label: { Image(systemName: "forward") }.help(L10n.tr("Następny krok wykonania"))
-                Button { move(to: ordered.last) } label: { Image(systemName: "forward.end") }.help(L10n.tr("Ostatni krok wykonania"))
+                Button { move(to: ordered.first) } label: { Image(systemName: "backward.end") }.iconLabel(L10n.tr("Pierwszy krok wykonania"))
+                Button { step(-1) } label: { Image(systemName: "backward") }.iconLabel(L10n.tr("Poprzedni krok wykonania"))
+                Button { step(1) } label: { Image(systemName: "forward") }.iconLabel(L10n.tr("Następny krok wykonania"))
+                Button { move(to: ordered.last) } label: { Image(systemName: "forward.end") }.iconLabel(L10n.tr("Ostatni krok wykonania"))
                 Spacer()
                 Picker("", selection: $mode) {
                     Text(L10n.tr("Drzewo")).tag(0)

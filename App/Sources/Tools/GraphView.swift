@@ -275,8 +275,8 @@ struct UserToolsView: View {
             VStack(alignment: .leading) {
                 List(tools, selection: $selection) { Text($0.name).tag($0.id) }
                 HStack {
-                    Button { tools.append(UserTool(name: L10n.tr("Nowe narzędzie"))); selection = tools.last?.id } label: { Image(systemName: "plus") }
-                    Button { tools.removeAll { $0.id == selection } } label: { Image(systemName: "minus") }.disabled(selection == nil)
+                    Button { tools.append(UserTool(name: L10n.tr("Nowe narzędzie"))); selection = tools.last?.id } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj"))
+                    Button { tools.removeAll { $0.id == selection } } label: { Image(systemName: "minus") }.iconLabel(L10n.tr("Usuń")).disabled(selection == nil)
                 }
             }
             .frame(minWidth: 180, idealWidth: 200)

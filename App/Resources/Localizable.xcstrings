@@ -1961,6 +1961,34 @@
         }
       }
     },
+    "Aktywność agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent activity"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent-Aktivität"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actividad del agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активність агента"
+          }
+        }
+      }
+    },
     "Aktywuj" : {
       "localizations" : {
         "en" : {
@@ -11395,6 +11423,35 @@
             "value" : "Druckt das aktuelle Fenster."
           }
         }
+      },
+      "extractionState" : "stale"
+    },
+    "Drukuje bieżące okno: kod z kolorami składni, a w oknie SQL także siatkę wyniku (zaznaczone wiersze albo wszystkie pobrane)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prints the current window: code with syntax colors and, in a SQL Window, also the result grid (selected rows or all fetched rows)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druckt das aktuelle Fenster: Code mit Syntaxfarben und im SQL Window auch das Ergebnisraster (ausgewählte oder alle abgerufenen Zeilen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprime la ventana actual: el código con colores de sintaxis y, en una SQL Window, también la cuadrícula de resultados (filas seleccionadas o todas las obtenidas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друкує поточне вікно: код із кольорами синтаксису, а в SQL Window також сітку результатів (виділені рядки або всі отримані)."
+          }
+        }
       }
     },
     "Drukuje diagram." : {
@@ -12933,6 +12990,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FORMAT FILE eingabe [ausgabe]"
+          }
+        }
+      }
+    },
+    "File Browser" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Browser"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Browser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Browser"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File Browser"
           }
         }
       }
@@ -15789,6 +15874,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf des gesamten Repositorys statt der Datei"
+          }
+        }
+      }
+    },
+    "Historia filtra" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter history"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filterverlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de filtros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія фільтра"
           }
         }
       }
@@ -20073,6 +20186,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Build-Befehl ist leer"
+          }
+        }
+      }
+    },
+    "Komendy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commands"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Befehle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comandos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команди"
           }
         }
       }
@@ -36429,6 +36570,34 @@
         }
       }
     },
+    "Pliki dziennika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolldateien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos de registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файли журналу"
+          }
+        }
+      }
+    },
     "Po" : {
       "localizations" : {
         "en" : {
@@ -43373,6 +43542,62 @@
         }
       }
     },
+    "Przesuń w dół" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move down"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach unten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bajar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити вниз"
+          }
+        }
+      }
+    },
+    "Przesuń w górę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move up"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach oben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити вгору"
+          }
+        }
+      }
+    },
     "Przeterminowana blokada (proces już nie działa)" : {
       "localizations" : {
         "en" : {
@@ -45245,6 +45470,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datensatz %@ von %@"
+          }
+        }
+      }
+    },
+    "Rekord w pionie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single record view"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einzeldatensatz-Ansicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista de registro único"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перегляд одного запису"
           }
         }
       }
@@ -59025,6 +59278,34 @@
         }
       }
     },
+    "Więcej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Більше"
+          }
+        }
+      }
+    },
     "Więzy" : {
       "localizations" : {
         "en" : {
@@ -59469,6 +59750,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Workspace (DBMS_WM)"
+          }
+        }
+      }
+    },
+    "Wpisy dziennika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log entries"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokolleinträge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entradas del registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записи журналу"
           }
         }
       }
@@ -70697,6 +71006,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgewählte Zeilen oder alle abgerufenen; LOBs in abgerufener Länge."
+          }
+        }
+      }
+    },
+    "Zaznaczone wiersze: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected rows: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausgewählte Zeilen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filas seleccionadas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділені рядки: %@"
           }
         }
       }

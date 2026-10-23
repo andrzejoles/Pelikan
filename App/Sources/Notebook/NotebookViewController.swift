@@ -108,15 +108,15 @@ struct NotebookCellView: View {
                 Text(cell.wrappedValue.kind == .sql ? "SQL" : "Markdown").font(.caption.bold()).foregroundStyle(.secondary)
                 Spacer()
                 if cell.wrappedValue.kind == .sql {
-                    Button { run() } label: { Image(systemName: "play.fill") }.help(L10n.tr("Wykonaj komórkę")).disabled(running)
-                    Button { toggleChart() } label: { Image(systemName: "chart.bar") }.help(L10n.tr("Wykres z wyniku"))
+                    Button { run() } label: { Image(systemName: "play.fill") }.iconLabel(L10n.tr("Wykonaj komórkę")).disabled(running)
+                    Button { toggleChart() } label: { Image(systemName: "chart.bar") }.iconLabel(L10n.tr("Wykres z wyniku"))
                         .disabled(cell.wrappedValue.result?.columns.isEmpty ?? true)
                 } else {
                     Button(editing ? L10n.tr("Gotowe") : L10n.tr("Edytuj")) { editing.toggle() }
                 }
-                Button { move(-1) } label: { Image(systemName: "arrow.up") }
-                Button { move(1) } label: { Image(systemName: "arrow.down") }
-                Button { remove() } label: { Image(systemName: "trash") }
+                Button { move(-1) } label: { Image(systemName: "arrow.up") }.iconLabel(L10n.tr("Przesuń w górę"))
+                Button { move(1) } label: { Image(systemName: "arrow.down") }.iconLabel(L10n.tr("Przesuń w dół"))
+                Button { remove() } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń"))
             }
             .buttonStyle(.borderless)
             if cell.wrappedValue.kind == .markdown && !editing && !cell.wrappedValue.text.isEmpty {

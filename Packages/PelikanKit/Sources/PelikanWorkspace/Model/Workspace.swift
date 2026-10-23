@@ -57,6 +57,8 @@ public protocol UIServices: AnyObject {
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
+    /// Okno druku dla dokumentu HTML (PD-SQLW-016).
+    func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
     func showDualityViews()
     func showMLEModules()
@@ -156,6 +158,7 @@ extension UIServices {
     public func showTestManager() {}
     public func showHTMLReport(title: String, html: String) {}
     public func showSQLMonitor() {}
+    public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
     public func showMLEModules() {}
     public func showSpatialPreview(title: String, wkt: [String]) {}

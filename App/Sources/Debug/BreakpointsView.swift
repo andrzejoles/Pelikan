@@ -18,7 +18,7 @@ struct BreakpointsView: View {
                     TextField("", value: $b.passCount, format: .number).frame(width: 60)
                 }.width(100)
                 TableColumn("") { $b in
-                    Button { workspace.breakpoints.removeAll { $0.id == b.id } } label: { Image(systemName: "trash") }.buttonStyle(.borderless)
+                    Button { workspace.breakpoints.removeAll { $0.id == b.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
                 }.width(30)
             }
             HStack {

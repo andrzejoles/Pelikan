@@ -104,10 +104,19 @@ public enum ResultExporter {
         return out
     }
 
+    /// Styl tabeli wyniku (eksport HTML, druk).
+    static let tableCSS = "table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:2px 6px}"
+        + "th{background:#eee;text-align:left}td.n{text-align:right}td.null{background:#fffbd0}thead{display:table-header-group}"
+
     static func html(_ data: ExportData, options: ExportOptions) -> String {
         var s = "<!DOCTYPE html>\n<html lang=\"pl\"><head><meta charset=\"utf-8\"><title>\(escapeHTML(data.title))</title>\n"
-        s += "<style>body{font:13px -apple-system,system-ui,sans-serif}table{border-collapse:collapse}th,td{border:1px solid #bbb;padding:2px 6px}"
-        s += "th{background:#eee;text-align:left}td.n{text-align:right}td.null{background:#fffbd0}</style></head><body>\n<table>\n"
+        s += "<style>body{font:13px -apple-system,system-ui,sans-serif}\(tableCSS)</style></head><body>\n"
+        return s + htmlTable(data, options: options) + "</body></html>\n"
+    }
+
+    /// Sama tabela wyniku (`<table>…</table>`).
+    static func htmlTable(_ data: ExportData, options: ExportOptions) -> String {
+        var s = "<table>\n"
         if options.includeHeader {
             s += "<thead><tr>" + data.columns.map { "<th>\(escapeHTML($0.name))</th>" }.joined() + "</tr></thead>\n"
         }
@@ -120,7 +129,7 @@ public enum ResultExporter {
             }
             s += "</tr>\n"
         }
-        return s + "</tbody>\n</table>\n</body></html>\n"
+        return s + "</tbody>\n</table>\n"
     }
 
     /// Nazwa elementu XML z nazwy kolumny (znaki spoza nazw XML jako `_xHHHH_`, jak w kanonicznym XML Oracle).

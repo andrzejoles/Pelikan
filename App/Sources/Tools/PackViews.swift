@@ -37,7 +37,7 @@ struct SQLMonitorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Raport")) { open(selection) }.disabled(selection == nil)
                 Spacer()
                 Text(message).font(.caption).foregroundStyle(.secondary)
