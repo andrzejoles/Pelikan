@@ -215,5 +215,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Połączenia (agent) | `agent.connections` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Stan okien (agent) | `agent.state` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Treść edytora (agent) | `agent.editor` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Nowe okno z tekstem (agent) | `agent.openEditor` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Wstaw tekst (agent) | `agent.insertText` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Zamień zakres linii (agent) | `agent.replaceRange` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Przejdź do linii (agent) | `agent.navigate` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Formatuj kod (agent) | `agent.format` |  |  | Pełny | 0 | AI-TOOL-002 |
 | Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | 2 | PD-EDIT-026 |
 
