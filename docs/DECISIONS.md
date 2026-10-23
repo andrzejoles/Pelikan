@@ -398,14 +398,14 @@ Blokada ukrywa zapytanie i układ oraz uniemożliwia ich zmianę w oknie; odblok
 — hasło lub jego skrót w pliku `.rep` byłoby sekretem w pliku, a plik JSON i tak da się otworzyć w edytorze tekstu.
 Blokada chroni przed przypadkową zmianą, nie przed świadomym odczytem definicji.
 
-### D-S7A-1 · 2026-10-23 — Filtr siatki lokalny, w modelu siatki
+### D57 · 2026-10-23 — Filtr siatki lokalny, w modelu siatki
 Filtr wyników (DB-GRID-001) działa na pobranych wierszach jako część permutacji widoku (`order`) modelu siatki,
 razem z sortowaniem: `rowCount` to liczba wierszy widoku, a `fetchedRowCount` — pobranych. Dociągnięte wiersze
 przechodzą przez filtr. Wyrażenie ma składnię podobną do SQL (porównania, LIKE, IS NULL, AND/OR), ale nie jest
 wysyłane do bazy — nie da się przez nie wykonać kodu. NULL nie spełnia porównań (jak w SQL). Grupowanie liczy
 wartości w wierszach widoku.
 
-### D-S7A-2 · 2026-10-23 — Generowanie SQL i kodu bez danych logowania; podgląd HTML bez skryptów
+### D58 · 2026-10-23 — Generowanie SQL i kodu bez danych logowania; podgląd HTML bez skryptów
 SQL z wierszy (DB-GRID-002) używa klucza głównego tabeli, a gdy nie ma go w wyniku — ROWID (MERGE wymaga klucza
 głównego). Kod generowany z obiektu (SD-GEN-001) ma zmienne wiązane zamiast wartości, a połączenie w Java/Python
 wskazuje alias — bez hasła, hosta i użytkownika. Przeciągnięcie obiektu z Option wstawia SELECT albo wywołanie
