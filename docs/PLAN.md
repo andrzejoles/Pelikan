@@ -96,6 +96,21 @@ z eksploratora i edytora, pokrycie widać na marginesie.
 PROMPT §7 (docs/SECURITY.md). Kryteria: każdy z czterech agentów czyta stan i obiekty; operacje „Za zgodą” czekają na
 decyzję; testy bezpieczeństwa z SECURITY §5.
 
+Podzadania (model kanału przeniesiony z Bifolda, D33):
+1. **etap-5/kanal** — most `pelikan-mcp` (stdio ↔ gniazdo Unix 0600 w katalogu 0700), serwer gniazda z weryfikacją UID,
+   drzewa procesów i tokenu 256 bit (porównanie stałoczasowe), sesje i unieważnianie, katalog narzędzi MCP z rejestru,
+   polityka najmniejszego poziomu, limit wywołań, dziennik JSONL; testy bezpieczeństwa kanału.
+2. **etap-5/baza** — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, opcjonalny użytkownik proxy), narzędzia
+   odczytu (połączenia pod aliasem, stan, edytor, wyszukiwanie, opis, źródło, DDL, zależności, użycia, `run_query`
+   w transakcji READ ONLY z limitami, plan, błędy kompilacji, DBMS_OUTPUT, testy, pokrycie, sesje), maskowanie kolumn,
+   `untrusted_content`, polityka środowisk (prod: odczyt i metadane).
+3. **etap-5/zmiany** — `execute_statement`, `execute_script`, `compile`, `commit`, `rollback` z podglądem (tekst, obiekty
+   z ALL_DEPENDENCIES, plan, szacunek wierszy), DML niezatwierdzone do zgody na COMMIT, ROLLBACK przy zamknięciu, historia
+   DDL obiektów przed zmianą i „Cofnij sesję agenta” z wykrywaniem konfliktów; narzędzia edytora (Pełny, cofalne).
+4. **etap-5/panel** — uruchamianie CLI (Claude Code, Codex, Grok, Antigravity; lista konfigurowalna) w terminalu
+   SwiftTerm z serwerem MCP tylko dla sesji, tryb ścisły, panel aktywności, okno zgody (bez przycisku domyślnego,
+   „Zatwierdź” po 0,8 s, Esc odrzuca), macierz uprawnień przy starcie, przeglądarka dziennika, ustawienia agentów.
+
 ## Etap 6 — Narzędzia
 Explain Plan, Session Browser, porównania obiektów i danych, eksport/import (SQL, format własny, Data Pump), Text/Excel
 Importer, Data Generator, Event Monitor, DBMS Scheduler, raporty, Query Builder, diagramy, projekty, worksets, układy,

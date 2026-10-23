@@ -120,6 +120,8 @@ struct ObjectCommandTests {
         try await ws.invoke("ob.drop", CommandArguments(["object": .string("pelikan_tmp_v")]))
         #expect(try await ws.metadata()!.find("pelikan_tmp_v") == nil)
         let before = ws.documents.count
+        let gate = AllowingGate()
+        ws.agentGate = gate
         _ = try await ws.invoke("ob.ddl", CommandArguments(["object": .string("dept")]), invoker: .agent(sessionID: "t", agentName: "test"))
         #expect(ws.documents.count == before)
         await ws.sessions.disconnectAll()
@@ -167,4 +169,10 @@ struct ProgramCompileTests {
         _ = try await s.execute("drop package pelikan_prog_t")
         await ws.sessions.disconnectAll()
     }
+}
+
+/// Bramka agenta przepuszczająca wszystko (testy zachowania komend wywołanych przez agenta, bez PelikanAgent).
+@MainActor
+final class AllowingGate: AgentInvocationGate {
+    func authorize(_ command: Command, context: CommandContext) async throws {}
 }

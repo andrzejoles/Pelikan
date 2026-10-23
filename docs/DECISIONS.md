@@ -240,3 +240,14 @@ okna programu (linie pokryte i niepokryte z reportera Sonar). Wszystkie wiersze 
 adnotacji przy kompilacji jest częściowa (nieznane nazwy, bez sprawdzania procedur wskazanych w `--%beforetest` itd.).
 Zrzuty okien eksploratora i wyników czekają na zgodę właściciela na sterowanie interfejsem (D30). Szkic wydania
 tworzony z `main` po scaleniu zamknięcia; publikuje właściciel.
+
+### D33 · 2026-10-23 — Kanał agentów przeniesiony z Bifolda; agent tylko przez własne narzędzia bazy
+Most, protokół gniazda, serwer z weryfikacją UID/drzewa procesów/tokenu, rejestr sesji, transport MCP i uruchamianie
+CLI pochodzą z Bifolda (ten sam autor, licencja MIT), z nazwami Pelikana (`pelikan-mcp`, `PELIKAN_AGENT_TOKEN`).
+Biblioteka MCP: oficjalne `modelcontextprotocol/swift-sdk` 0.12.1 (jak w Bifoldzie), tylko na macOS — moduły agenta
+nie budują się na Linuksie (CI bazy), a logika bazy agenta leży w PelikanWorkspace, więc jej testy działają na obu
+systemach. Agent dotyka bazy wyłącznie przez narzędzia `agent.*`, które używają jego własnej sesji; zwykłe komendy
+aplikacji są dla agenta dostępne przez `run_command` tylko z jawnej listy (`AgentPolicy.appCommands`: nowe okna SQL,
+programu i testu, nawigacja, formatowanie i operacje na tekście edytora). Heurystyka „skutki tylko w interfejsie” nie
+wystarcza: część takich komend czyta bazę sesjami użytkownika (np. otwarcie okna testu z argumentami procedury), co
+ominęłoby osobnego użytkownika bazy agenta i maskowanie, a skrypt CLI utPLSQL zawiera łańcuch połączenia.

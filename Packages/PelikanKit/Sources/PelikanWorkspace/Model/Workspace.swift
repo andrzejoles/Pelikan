@@ -160,6 +160,10 @@ public final class Workspace {
         }
     }
     public private(set) var utplsqlHistory: [UtplsqlRun] = []
+    /// Bramka uprawnień agentów (PelikanAgent); nil — wywołania agentów są odrzucane.
+    @ObservationIgnored public weak var agentGate: (any AgentInvocationGate)?
+    /// Zmiany edytorów wykonane przez agentów (cofanie sesji agenta).
+    public internal(set) var agentEdits: [AgentEdit] = []
     /// Ostrzeżenie o pokryciu kodu pokazane w tej sesji aplikacji.
     public var coverageWarningShown = false
     /// Zmienia się po kompilacji jednostek (eksplorator testów przeładowuje drzewo).
@@ -314,6 +318,11 @@ public final class Workspace {
         let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
         let started = Date()
         do {
+            if invoker.isAgent {
+                // Agent bez bramki uprawnień (serwer agentów nie działa) nie wykonuje niczego.
+                guard let gate = agentGate else { throw AgentDenial.sessionClosed }
+                try await gate.authorize(command, context: context)
+            }
             let result = try await command.run(context)
             notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))
             return result

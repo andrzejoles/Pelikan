@@ -98,6 +98,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
     public var confirmSaveNewWindows = true
+    // Agenci AI (PROMPT §7)
+    public var agent = AgentSettings()
 
     public init() {}
 
@@ -149,5 +151,6 @@ public struct Settings: Sendable, Codable, Hashable {
         useTabCharacter = v(.useTabCharacter, useTabCharacter)
         shortcutProfile = v(.shortcutProfile, shortcutProfile)
         keyOverrides = v(.keyOverrides, keyOverrides)
+        agent = v(.agent, agent)
     }
 }
