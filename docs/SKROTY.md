@@ -216,6 +216,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Widoki dualności JSON | `tools.dualityViews` |  |  | Brak | 0 | SD-DV-001 |
+| Nowy widok dualności… | `tools.dualityViewDDL` |  |  | Brak | 0 | SD-DV-001 |
+| Moduły i środowiska MLE | `tools.mleModules` |  |  | Brak | 0 | SD-MLE-001 |
+| Importuj moduł JavaScript… | `tools.importMLEModule` |  |  | Brak | 0 | SD-MLE-001 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |
@@ -314,6 +318,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Podgląd przestrzenny | `grid.spatialPreview` |  |  | Brak | 0 | SD-DATA-001 |
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |
 | Zadania To-Do | `view.todoItems` |  |  | Odczyt | 0 | PD-TODO-001 |

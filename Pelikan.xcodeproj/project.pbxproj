@@ -30,6 +30,7 @@
 		346CAA7136A40A29BF782E66 /* pelikan-mcp in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 2849E776640F52BC43AB5C6F /* pelikan-mcp */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */; };
 		3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA27E74D0C918323B465606B /* ToolWindows.swift */; };
+		40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */; };
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
@@ -153,6 +154,7 @@
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
 		9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
 		A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectToolsViews.swift; sourceTree = "<group>"; };
+		A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Oracle23Views.swift; sourceTree = "<group>"; };
 		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B3FB679B3AA90E719B503472 /* TemplatePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePane.swift; sourceTree = "<group>"; };
@@ -373,6 +375,7 @@
 				7BDD00050FBA5650E960C7ED /* GraphView.swift */,
 				0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */,
 				A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */,
+				A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */,
 				C8470950500EBAD985D34E42 /* PackViews.swift */,
 				83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */,
 				0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */,
@@ -650,6 +653,7 @@
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
+				40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */,
 				B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */,
 				A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,

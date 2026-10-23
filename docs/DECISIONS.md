@@ -475,3 +475,10 @@ bazy CONTROL_MANAGEMENT_PACK_ACCESS na nie pozwala i użytkownik zadeklarował l
 użyciu Pelikan pyta, a odpowiedź zapamiętuje w definicji połączenia (zmiana w edytorze połączenia). Agent nie ma do nich
 dostępu (PROMPT §7.3). W PDB migawki AWR mają DBID kontenera (`CON_DBID`), więc raporty używają go zamiast DBID z
 V$DATABASE. Oracle Free ma pakiety w licencji — testy działają na bazie testowej.
+
+### D64 · 2026-10-23 — Widoki dualności, MLE i dane przestrzenne: zakres
+Generator widoku dualności tworzy DDL z tabeli głównej (klucz główny → `_id`) i tabel podrzędnych połączonych kluczem
+obcym (tablice obiektów, insert/update/delete na każdym poziomie) i otwiera go w oknie SQL — Pelikan nie wykonuje DDL
+sam. Słownik 23ai: `ALL_MLE_MODULES.MODULE_OWNER`, `ALL_MLE_ENVS.ENV_OWNER`, flagi widoków dualności jako TRUE/FALSE.
+Debugowanie modułów JavaScript po wykonaniu (DBMS_MLE post-execution debugging) odłożone — wymaga osobnego widoku
+śladu; reszta SD-MLE-001 działa. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).

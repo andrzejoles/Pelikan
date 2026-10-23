@@ -57,6 +57,10 @@ public protocol UIServices: AnyObject {
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
+    /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
+    func showDualityViews()
+    func showMLEModules()
+    func showSpatialPreview(title: String, wkt: [String])
     /// Etap 7: Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu.
     func showAutotrace(_ result: AutotraceResult, sql: String)
     func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String)
@@ -134,6 +138,9 @@ extension UIServices {
     public func showTestManager() {}
     public func showHTMLReport(title: String, html: String) {}
     public func showSQLMonitor() {}
+    public func showDualityViews() {}
+    public func showMLEModules() {}
+    public func showSpatialPreview(title: String, wkt: [String]) {}
     public func showAutotrace(_ result: AutotraceResult, sql: String) {}
     public func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {}
     public func showDBAPanel() {}

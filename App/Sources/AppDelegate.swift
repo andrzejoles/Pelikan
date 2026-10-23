@@ -443,6 +443,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: key, title: title, size: NSSize(width: 960, height: 680)) { HTMLReportView(title: title, html: html) }
     }
 
+    func showDualityViews() {
+        ToolWindowController.show(key: "dualityViews", title: L10n.tr("Widoki dualności JSON"), size: NSSize(width: 860, height: 520)) { DualityViewsView(workspace: workspace) }
+    }
+
+    func showMLEModules() {
+        ToolWindowController.show(key: "mleModules", title: L10n.tr("Moduły i środowiska MLE"), size: NSSize(width: 680, height: 420)) { MLEModulesView(workspace: workspace) }
+    }
+
+    func showSpatialPreview(title: String, wkt: [String]) {
+        ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }
