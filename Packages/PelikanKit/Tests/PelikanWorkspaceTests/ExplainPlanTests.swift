@@ -50,3 +50,14 @@ struct GridToolsOfflineTests {
         #expect(GridTools.fileName("[X]", values: ["X": ".hidden"], index: 1) == "_hidden")
     }
 }
+
+@Suite("Test Manager bez bazy")
+struct TestManagerOfflineTests {
+    @Test("Oczekiwania i zmienne globalne")
+    func expectations() {
+        #expect(TestExpectation(.like, "ab%").matches("abc") && !TestExpectation(.like, "ab_").matches("abcd"))
+        #expect(TestExpectation(.inList, "1, 2,3").matches("2") && !TestExpectation(.inList, "1,2").matches("3"))
+        #expect(TestExpectation(.isNull).matches(nil) && TestExpectation(.isNotNull).matches("x"))
+        #expect(TestManager.resolve("&A-&AB", globals: ["A": "1", "AB": "2"]) == "1-2")
+    }
+}

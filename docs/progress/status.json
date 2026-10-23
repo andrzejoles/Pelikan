@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T13:54:39+02:00",
+  "heartbeat": "2026-10-23T14:02:31+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 6 / Test Manager — zestawy testów z oczekiwaniami, zmienne globalne, DBMS_OUTPUT, limit czasu, RUNTESTSET; polecenia własne okna poleceń i EXPORT; subagent zakończył wykresy i narzędzia użytkownika",
     "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie",
     "Etap 6 — gałąź integracyjna: narzędzia edytora, pliki i Git, scheduler, diagramy, dane; testy: 120+70+16 bez bazy, 103 na bazie (D46)",
     "Etap 6 / prace subagentów zintegrowane: makra, Special Copy, historia schowka, To-Do, przeglądarka plików, Git, worksety i układy okna (D37–D40)",
@@ -91,8 +92,7 @@
     "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy",
     "PR #16 scalony (formater PL/SQL)",
     "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
-    "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone",
-    "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii"
+    "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

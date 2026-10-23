@@ -69,6 +69,7 @@
 		F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */; };
 		F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
+		F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
 
@@ -142,6 +143,7 @@
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B3FB679B3AA90E719B503472 /* TemplatePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePane.swift; sourceTree = "<group>"; };
 		C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserPane.swift; sourceTree = "<group>"; };
+		C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagerView.swift; sourceTree = "<group>"; };
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
 		C866A6E13301104082FC8632 /* AgentsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentsPane.swift; sourceTree = "<group>"; };
 		CA27E74D0C918323B465606B /* ToolWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolWindows.swift; sourceTree = "<group>"; };
@@ -297,6 +299,7 @@
 		62AF99604A2C3C6CA9A3A1D6 /* TestWindow */ = {
 			isa = PBXGroup;
 			children = (
+				C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */,
 				00A838393A0802C7E216722E /* TestWindowViewController.swift */,
 			);
 			path = TestWindow;
@@ -617,6 +620,7 @@
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
 				A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */,
+				F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */,
 				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,

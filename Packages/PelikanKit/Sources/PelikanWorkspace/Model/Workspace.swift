@@ -50,6 +50,8 @@ public protocol UIServices: AnyObject {
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
     /// Eksplorator testów utPLSQL (UT-EXP-001).
     func showTestExplorer()
+    /// Test Manager (PD-TOOL-018).
+    func showTestManager()
     /// Okna narzędzi siatki (zapytania powiązane, porównania, kolumna do plików).
     func showGridTool(_ request: GridToolRequest)
     /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
@@ -105,6 +107,7 @@ extension UIServices {
     public func showBreakpoints() {}
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
+    public func showTestManager() {}
     public func showGridTool(_ request: GridToolRequest) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}

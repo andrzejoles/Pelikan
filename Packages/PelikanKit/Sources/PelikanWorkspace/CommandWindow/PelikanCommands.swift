@@ -73,6 +73,16 @@ extension SQLPlusEngine {
             emit(L10n.tr("Utworzono: \(args[0])"))
         case "EXPORT":
             try await export(args)
+        case "RUNTESTSET":
+            // RUNTESTSET plik.pts — wynik każdego testu i podsumowanie (UG 8.5).
+            guard let file = args.first, let conn = workspace.effectiveConnection(of: document) else { throw SQLPlusError(L10n.tr("RUNTESTSET plik")) }
+            let set = try TestSet.decode(Data(contentsOf: resolve(file, baseDirectory: nil)))
+            let results = await TestManager.run(set, connectionID: conn, in: workspace)
+            for r in results {
+                emit("\(r.passed ? "OK  " : "BŁĄD") \(r.name) (\(String(format: "%.2f", r.seconds)) s)", r.passed ? .output : .error)
+                for f in r.failures { emit("     " + f, .error) }
+            }
+            emit(L10n.tr("Testy: \(results.count), udane: \(results.filter(\.passed).count), nieudane: \(results.filter { !$0.passed }.count)"))
         default:
             break
         }

@@ -139,7 +139,7 @@ extension SQLPlusEngine {
             state.timing.toggle()
         case "HELP":
             emit(L10n.tr("Polecenia: @ @@ / ACCEPT CLEAR COLUMN CONNECT DEFINE DESCRIBE DISCONNECT EXECUTE EXIT LIST PAUSE PRINT PROMPT REM RUN SET SHOW SPOOL START UNDEFINE VARIABLE WHENEVER CD; Pelikan: BEAUTIFY BROWSE DIR EDIT EDITDATA EXPORT INFO PROPERTIES QUERYDATA RECOMPILE TEST VIEW ZIP"))
-        case "BEAUTIFY", "BROWSE", "DIR", "EDIT", "EDITDATA", "INFO", "PROPERTIES", "QUERYDATA", "RECOMPILE", "TEST", "VIEW", "ZIP", "EXPORT":
+        case "BEAUTIFY", "BROWSE", "DIR", "EDIT", "EDITDATA", "INFO", "PROPERTIES", "QUERYDATA", "RECOMPILE", "TEST", "VIEW", "ZIP", "EXPORT", "RUNTESTSET":
             try await pelikanCommand(cmd, args, line: line)
         default:
             // Polecenia SQL*Plus/SQLcl jeszcze nieobsługiwane — informacja zamiast błędu (skrypty wsadowe — NF17).
