@@ -64,6 +64,16 @@ public protocol UIServices: AnyObject {
     func showTodoItems()
     /// Tekst w schowku systemowym (Paste from host language).
     func clipboardText() -> String?
+    /// Pokazuje File Browser w lewej kolumnie (UG 22).
+    func showFileBrowser()
+    /// Wybór katalogu (lokalizacja File Browsera); nil — anulowano.
+    func chooseDirectory() async -> URL?
+    /// Bieżący układ okna głównego (nil — brak okna).
+    func currentLayout() -> WindowLayout?
+    /// Przywraca układ okna głównego.
+    func applyLayout(_ layout: WindowLayout)
+    /// Historia Git (lista zatwierdzeń) w oknie informacji.
+    func showGitLog(_ commits: [GitCommit], title: String)
 
 }
 
@@ -82,6 +92,14 @@ extension UIServices {
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
+    public func showFileBrowser() {}
+    public func chooseDirectory() async -> URL? { nil }
+    public func currentLayout() -> WindowLayout? { nil }
+    public func applyLayout(_ layout: WindowLayout) {}
+    public func showGitLog(_ commits: [GitCommit], title: String) {
+        showObjectInfo(title: title, columns: [L10n.tr("Zatwierdzenie"), L10n.tr("Autor"), L10n.tr("Data"), L10n.tr("Opis")],
+                       rows: commits.map { [String($0.hash.prefix(10)), $0.author, $0.date.map { ISO8601DateFormatter().string(from: $0) } ?? "", $0.subject] })
+    }
     public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
         await askVariables(requests, document: document)
     }
@@ -159,6 +177,11 @@ public final class Workspace {
     public let dataDirectory: URL?
     /// Szablony kodu (UG 31): wbudowane i użytkownika z katalogu danych.
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
+    /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
+    @ObservationIgnored public private(set) lazy var fileBrowser = FileBrowser(fileURL: dataDirectory?.appendingPathComponent("file-browser.json"))
+    /// Worksety (UG 15) i zapisany układ okna (UG 23.10).
+    @ObservationIgnored public private(set) lazy var worksets = WorksetStore(directory: dataDirectory?.appendingPathComponent("Worksets", isDirectory: true),
+                                                                             layoutURL: dataDirectory?.appendingPathComponent("layout.json"))
     /// Zmienia się po zapisie lub usunięciu szablonu (Template Window przeładowuje listę).
     public var templatesGeneration = 0
     /// Punkty przerwania (UG 5.10) i debugery okien testu.
