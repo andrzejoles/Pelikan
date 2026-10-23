@@ -38,6 +38,7 @@
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
 		DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */ = {isa = PBXBuildFile; productRef = 9D16B7D56F23E44BF345738A /* PelikanODPI */; };
 		E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7048E3E041B381E86A22B88 /* CompletionPopup.swift */; };
+		E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */; };
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
@@ -58,6 +59,7 @@
 		31283604CBB6B024351A4FFF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		335AC06B5D604A8B96621019 /* DiffViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffViewer.swift; sourceTree = "<group>"; };
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
+		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -251,6 +253,7 @@
 		D9C9B335E92845276A865184 /* Editors */ = {
 			isa = PBXGroup;
 			children = (
+				51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */,
 				8E6E52538571C1727BD5E642 /* TableEditorView.swift */,
 			);
 			path = Editors;
@@ -381,6 +384,7 @@
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
+				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,

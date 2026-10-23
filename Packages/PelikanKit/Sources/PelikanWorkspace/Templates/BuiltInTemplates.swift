@@ -2,6 +2,7 @@ import Foundation
 
 extension TemplateLibrary {
     static var programFolder: String { L10n.tr("Jednostki programów") }
+    static var objectsFolder: String { L10n.tr("Obiekty") }
 
     /// Szablony dostarczane z Pelikanem (własne teksty; użytkownik może je zastąpić własnymi o tej samej ścieżce).
     static var builtIn: [CodeTemplate] {
@@ -68,6 +69,12 @@ extension TemplateLibrary {
                   [#]null;
                 end [Nazwa];
                 /
+                """, isBuiltIn: true),
+            CodeTemplate(folder: objectsFolder, name: L10n.tr("Widok"), text: """
+                create or replace view [Nazwa=nowy_widok] as
+                select [#]*
+                from   [Tabela] t
+                where  1 = 1;
                 """, isBuiltIn: true),
             CodeTemplate(folder: dml, name: "select", text: """
                 select [#]*

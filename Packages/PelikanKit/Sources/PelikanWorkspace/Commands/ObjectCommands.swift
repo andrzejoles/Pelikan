@@ -135,6 +135,10 @@ public enum ObjectCommands {
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
                     doc.selectedRange = 0..<0
+                } else if let kind = Self.simpleEditorKind(o.type), ctx.invoker == .user, ctx.ui != nil {
+                    // Sekwencja, synonim, indeks, użytkownik, rola: prosty edytor (UG 9.2–9.11).
+                    let e = try await SimpleObjectEditor.load(kind, owner: o.owner, name: o.name, metadata: m)
+                    ctx.ui?.showObjectEditor(e, connectionID: m.connectionID)
                 } else if o.type == .table, ctx.invoker == .user, ctx.ui != nil {
                     // Tabela: edytor definicji (UG 9.1) zamiast DDL.
                     let d = try await TableDDL.load(owner: o.owner, name: o.name, metadata: m)
@@ -195,6 +199,17 @@ public enum ObjectCommands {
                 return .ok
             },
         ]
+    }
+
+    static func simpleEditorKind(_ t: DBObjectType) -> SimpleObjectEditor.Kind? {
+        switch t {
+        case .sequence: .sequence
+        case .synonym: .synonym
+        case .index: .index
+        case .user: .user
+        case .role: .role
+        default: nil
+        }
     }
 
     static func fileExtension(_ t: DBObjectType) -> String {

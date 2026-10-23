@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:47:52+02:00",
+  "heartbeat": "2026-10-23T08:54:43+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie",
+    "PR #18 scalony (szablony kodu)",
     "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie",
     "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
     "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
@@ -90,9 +92,7 @@
     "PR #4 scalony (siatka: strony, sortowanie, eksport, edycja, Large Data Editor), wersja 1.4.0",
     "Large Data Editor: CLOB/BLOB/RAW/LONG/JSON z komórki (podwójne kliknięcie, menu, ⌘⌥L), pełna treść ponownie pobierana po ROWID gdy obcięta w siatce, rozpoznanie formatu (tekst, XML, JSON, HTML, PNG/JPEG/GIF, PDF), Tekst/Hex/Obraz/PDF, Formatuj JSON i XML, wczytanie/zapis pliku, zmiana CLOB i BLOB zatwierdzana przez Post — 3 testy (1 na bazie, CLOB 2,24 mln znaków)",
     "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
-    "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
-    "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
-    "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji"
+    "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 68,
-      "passed": 68,
+      "total": 70,
+      "passed": 70,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:47:52+02:00"
+      "at": "2026-10-23T08:54:43+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-edytor-sekwencji.png",
+      "title": "Edytor nowej sekwencji z podglądem DDL",
+      "reference": "PD-OED-008"
+    },
     {
       "file": "docs/progress/img/etap2-edytor-tabeli.png",
       "title": "Edytor definicji tabeli",

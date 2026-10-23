@@ -46,6 +46,8 @@ public protocol UIServices: AnyObject {
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String)
     /// Edytor definicji tabeli (UG 9.1): `original` nil — nowa tabela.
     func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
+    /// Prosty edytor obiektu (sekwencja, synonim, indeks, użytkownik, rola — UG 9.2–9.11).
+    func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 
@@ -55,6 +57,7 @@ extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
+    public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
     public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
