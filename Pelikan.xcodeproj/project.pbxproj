@@ -32,6 +32,7 @@
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
+		53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
@@ -99,6 +100,7 @@
 
 /* Begin PBXFileReference section */
 		00A838393A0802C7E216722E /* TestWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWindowViewController.swift; sourceTree = "<group>"; };
+		0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorViews.swift; sourceTree = "<group>"; };
 		0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBrowserView.swift; sourceTree = "<group>"; };
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
@@ -349,6 +351,7 @@
 			isa = PBXGroup;
 			children = (
 				7C9355F810C37B2D27045A31 /* DataTransferViews.swift */,
+				0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */,
 				A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */,
 				83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */,
 				0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */,
@@ -604,6 +607,7 @@
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
 				1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */,
+				53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */,
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,

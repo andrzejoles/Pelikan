@@ -52,6 +52,9 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Monitor zdarzeń i test obciążenia (PD-TOOL-014, PD-TOOL-019).
+    func showEventMonitor()
+    func showLoadTester()
     /// Okna narzędzi siatki (zapytania powiązane, porównania, kolumna do plików).
     func showGridTool(_ request: GridToolRequest)
     /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
@@ -108,6 +111,8 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showEventMonitor() {}
+    public func showLoadTester() {}
     public func showGridTool(_ request: GridToolRequest) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}

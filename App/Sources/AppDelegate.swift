@@ -345,6 +345,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showEventMonitor() {
+        ToolWindowController.show(key: "eventMonitor", title: L10n.tr("Monitor zdarzeń"), size: NSSize(width: 680, height: 420)) {
+            EventMonitorView(workspace: workspace)
+        }
+    }
+
+    func showLoadTester() {
+        ToolWindowController.show(key: "loadTester", title: L10n.tr("Test obciążenia"), size: NSSize(width: 980, height: 620)) {
+            LoadTesterView(workspace: workspace)
+        }
+    }
+
     func showTestManager() {
         ToolWindowController.show(key: "testManager", title: L10n.tr("Test Manager"), size: NSSize(width: 900, height: 600)) {
             TestManagerView(workspace: workspace)

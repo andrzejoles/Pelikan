@@ -181,6 +181,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Zapytanie standardowe | `ob.standardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
+| Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |
+| Test obciążenia… | `tools.loadTester` |  |  | Brak | 0 | PD-TOOL-019 |
 | Obiekt › Pokaż dane | `ob.queryData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › Edytuj dane | `ob.editData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › DDL | `ob.ddl` |  |  | Odczyt | 0 | PD-OB-015 |
@@ -246,8 +248,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Import z Excela… | `tools.excelImporter` |  |  | Brak | 0 | PD-TOOL-009 |
 | Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
-| Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 6 | PD-TOOL-014 |
-| Test obciążenia… | `tools.loadTester` |  |  | Brak | 6 | PD-TOOL-019 |
 
 ## Raporty
 

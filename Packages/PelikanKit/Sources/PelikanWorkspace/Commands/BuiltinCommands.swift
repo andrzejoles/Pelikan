@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + TestManagerCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + TestManagerCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -459,8 +459,6 @@ public enum BuiltinCommands {
 
     @MainActor static var tools: [Command] {
         let t: [(String, String, [String], Int, String, AgentAccess)] = [
-            ("tools.eventMonitor", L10n.tr("Monitor zdarzeń…"), [], 6, "PD-TOOL-014", .none),
-            ("tools.loadTester", L10n.tr("Test obciążenia…"), [], 6, "PD-TOOL-019", .none),
         ]
         return t.map { id, title, pd, stage, feature, agent in
             .planned(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .tools, pd: pd, mac: pd.isEmpty ? [] : nil,
