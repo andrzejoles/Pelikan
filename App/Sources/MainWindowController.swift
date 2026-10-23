@@ -243,6 +243,7 @@ final class DocumentAreaViewController: NSViewController {
             ?? (vc as? ProgramWindowViewController)?.preferredFirstResponder ?? (vc as? TestWindowViewController)?.preferredFirstResponder
             ?? (vc as? DiagramViewController)?.preferredFirstResponder
             ?? (vc as? ExplainPlanViewController)?.preferredFirstResponder
+            ?? (vc as? ReportWindowViewController)?.preferredFirstResponder
             ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
     }
@@ -368,6 +369,7 @@ final class DocumentAreaViewController: NSViewController {
                 case .test: TestWindowViewController(document: doc, workspace: workspace)
                 case .diagram: DiagramViewController(document: doc, workspace: workspace)
                 case .explainPlan: ExplainPlanViewController(document: doc, workspace: workspace)
+                case .report: ReportWindowViewController(document: doc, workspace: workspace)
                 default: DocumentViewController(document: doc, workspace: workspace)
                 }
                 addChild(c)

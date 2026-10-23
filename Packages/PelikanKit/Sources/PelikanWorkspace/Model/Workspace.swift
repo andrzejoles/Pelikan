@@ -18,6 +18,8 @@ public protocol UIServices: AnyObject {
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
     /// Schowek: tekst i opcjonalnie HTML (wklejanie do Excela/Numbers z formatowaniem).
     func copyToClipboard(_ text: String, html: String?)
+    /// Druk dokumentu HTML (raport, PD-REP-001).
+    func printHTML(_ html: String, title: String)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
     /// Large Data Editor (UG 27) dla komórki siatki.
@@ -119,6 +121,7 @@ extension UIServices {
     public func showEventMonitor() {}
     public func showLoadTester() {}
     public func showGridTool(_ request: GridToolRequest) {}
+    public func printHTML(_ html: String, title: String) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}
     public func printDiagram(_ doc: Document) {}
@@ -317,6 +320,7 @@ public final class Workspace {
             registerMacroCommands()
             registerCopyFormatCommands()
             registerUserToolCommands()
+            registerUserReports()
         }
     }
 

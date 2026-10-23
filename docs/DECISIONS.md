@@ -373,3 +373,15 @@ Zmienne dają plik, zaznaczenie, tekst, obiekt z Przeglądarki obiektów, alias 
 port, usługę ani nazwę użytkownika połączenia; środowisko programu nie zawiera zmiennych `PELIKAN_*` (np. tokenu
 agenta). Narzędzie sesji nie wykonuje SQL samo: otwiera okno SQL z blokiem (opcjonalnie wykonuje je komendą okna),
 żeby obowiązywały te same zasady co przy ręcznym wykonaniu. Poziom agenta „Brak”.
+### D51 · 2026-10-23 — Raporty: renderer HTML w Swift, plik .rep w JSON, druk przez WebKit
+Raport to definicja (`ReportDefinition`: zapytanie, styl, formaty kolumn, układ, opcje) zapisywana jako JSON `.rep`,
+a wynik — HTML generowany w czystym Swifcie (testowalny bez bazy) i pokazywany w `WKWebView`; druk i PDF idą przez
+okno druku WebKit. Zmienne raportu korzystają z mechanizmu okna SQL (`&<…>`, `:bind`, parametry Jaspera, okno
+„Zmienne”), a wykonanie — z sesji narzędzi `tool("report")`, więc raport nie dotyka transakcji okien. Formaty liczb to
+wzorce `NumberFormatter` (np. `#,##0.00`), dat — wzorce Unicode (np. `yyyy-MM-dd`), w lokalizacji systemu. Grupowanie
+(Break) zakłada, że zapytanie sortuje po kolumnach grup (ORDER BY), jak we wzorcu.
+
+### D52 · 2026-10-23 — Blokada definicji raportu bez hasła
+Blokada ukrywa zapytanie i układ oraz uniemożliwia ich zmianę w oknie; odblokowanie wymaga potwierdzenia, ale nie hasła
+— hasło lub jego skrót w pliku `.rep` byłoby sekretem w pliku, a plik JSON i tak da się otworzyć w edytorze tekstu.
+Blokada chroni przed przypadkową zmianą, nie przed świadomym odczytem definicji.
