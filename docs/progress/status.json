@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:56:44+02:00",
+  "heartbeat": "2026-10-23T09:47:40+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,10 @@
     }
   ],
   "done": [
+    "Etap 3 / okno testu: blok ze zmiennymi (automatyczne skanowanie, typy, IN OUT, kursory jako tabela, BOOLEAN, LOB), zmienione na żółto, DBMS_OUTPUT, stos błędu z przejściem do linii, Test z Object Browsera (notacja nazwana, wynik funkcji), pliki .tst i skrypt SQL*Plus — 3 testy (1 na bazie)",
+    "PR #21–#23 scalone (edytor tabeli, edytory obiektów, pary nawiasów i bloków)",
+    "PR #20 scalony (wydajność, nawigacja, menu obiektu w edytorze)",
+    "PR #19 scalony (przeglądarka różnic i porównania)",
     "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy",
     "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie",
     "PR #18 scalony (szablony kodu)",
@@ -88,11 +92,7 @@
     "PR #6 scalony (pliki, preferencje, klawiatura), wersja 1.6.0",
     "Pliki i preferencje: Otwórz / Zapisz / Zapisz jako / Otwórz ponownie (lista ostatnich), kodowanie UTF-8/UTF-16/Windows-1250 i CRLF zachowane przy zapisie, typ okna z rozszerzenia, otwieranie z Findera i przeciąganie plików, pytania przy zamykaniu (niezapisane zmiany, otwarta transakcja, sesja okna zamykana) i przy wyjściu; okno Preferencji (Ogólne, Okno SQL, Edytor, Klawiatura z nagrywaniem skrótów i konfliktami, Oracle — katalog Instant Client), wygląd jasny/ciemny/systemowy, ⌘W w oknach pomocniczych — 7 testów",
     "PR #5 scalony (Command Window), wersja 1.5.0",
-    "Command Window — interfejs: karta Dialog (konsola z kolorami, linia poleceń z historią strzałkami, wielowierszowe SQL do „;” i PL/SQL do „/”, kolejka poleceń wpisanych w trakcie wykonania), karta Edytor (F8 wykonuje i przełącza na Dialog), pasek SET (Echo, Feedback, Verify, Heading, Timing, Output, Termout); SET z wieloma opcjami w linii — sprawdzone ręcznie",
-    "Command Window — silnik SQL*Plus: SET (ECHO, FEEDBACK, HEADING, PAGESIZE, COLSEP, SERVEROUTPUT, TIMING, VERIFY, DEFINE, ESCAPE, CONCAT…), DEFINE/UNDEFINE/ACCEPT, &/&&/&1, VARIABLE/EXEC/PRINT/AUTOPRINT, COLUMN FORMAT/HEADING/NEW_VALUE, PROMPT, PAUSE, @/@@/START z parametrami, SPOOL, CD, DESCRIBE (tabele, pakiety, synonimy), SHOW ERRORS/USER/RELEASE/ALL, WHENEVER SQLERROR, CONNECT (zapisane i tymczasowe), EXIT, wyniki tekstowe — 9 testów (5 na bazie)",
-    "PR #4 scalony (siatka: strony, sortowanie, eksport, edycja, Large Data Editor), wersja 1.4.0",
-    "Large Data Editor: CLOB/BLOB/RAW/LONG/JSON z komórki (podwójne kliknięcie, menu, ⌘⌥L), pełna treść ponownie pobierana po ROWID gdy obcięta w siatce, rozpoznanie formatu (tekst, XML, JSON, HTML, PNG/JPEG/GIF, PDF), Tekst/Hex/Obraz/PDF, Formatuj JSON i XML, wczytanie/zapis pliku, zmiana CLOB i BLOB zatwierdzana przez Post — 3 testy (1 na bazie, CLOB 2,24 mln znaków)",
-    "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie"
+    "Command Window — interfejs: karta Dialog (konsola z kolorami, linia poleceń z historią strzałkami, wielowierszowe SQL do „;” i PL/SQL do „/”, kolejka poleceń wpisanych w trakcie wykonania), karta Edytor (F8 wykonuje i przełącza na Dialog), pasek SET (Echo, Feedback, Verify, Heading, Timing, Output, Termout); SET z wieloma opcjami w linii — sprawdzone ręcznie"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap3-okno-testu.png",
+      "title": "Okno testu ze zmiennymi wykrytymi w bloku",
+      "reference": "PD-TEST-001"
+    },
     {
       "file": "docs/progress/img/etap2-edytor-sekwencji.png",
       "title": "Edytor nowej sekwencji z podglądem DDL",

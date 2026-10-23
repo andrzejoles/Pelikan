@@ -100,7 +100,17 @@ extension Workspace {
         if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == (kind ?? DocumentKind.forFile(std)) {
             close(active.id)
         }
-        let doc = newDocument(kind ?? DocumentKind.forFile(std), text: text, fileURL: std)
+        let docKind = kind ?? DocumentKind.forFile(std)
+        let doc: Document
+        if docKind == .test {
+            // .tst Pelikana: blok i zmienne (UG 5.4).
+            let f = TestScriptFile.decode(text)
+            doc = newDocument(.test, text: f.block, fileURL: std)
+            doc.testVariables = f.variables
+            TestRunner.synchronize(doc)
+        } else {
+            doc = newDocument(docKind, text: text, fileURL: std)
+        }
         doc.fileFormat = format
         doc.isModified = false
         rememberRecentFile(std)
@@ -116,6 +126,13 @@ extension Workspace {
             doc.text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines) + "\n/\n"
         }
         var format = doc.fileFormat
+        if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
+            try TestScriptFile(block: doc.text, variables: doc.testVariables).encoded().write(to: url, options: .atomic)
+            doc.fileURL = url.standardizedFileURL
+            doc.isModified = false
+            rememberRecentFile(url)
+            return
+        }
         var data = TextFileCodec.encode(doc.text, format: format)
         if data == nil {
             format.encoding = .utf8

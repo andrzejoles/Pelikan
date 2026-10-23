@@ -112,6 +112,9 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
+    public var testVariables: [TestVariable] = []
+    public var errorStack: [ErrorStackFrame] = []
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
     public var foldedStarts: Set<Int> = []
     public var historyPosition: Int?

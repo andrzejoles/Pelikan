@@ -29,6 +29,13 @@ public enum SQLCommands {
                 : L10n.tr("Błędy kompilacji: \(errors) (\(r.stoppedAt?.tabTitle ?? ""))")
             return CommandResult(message: doc.statusText)
         }
+        if doc.kind == .test {
+            // Test Window: F8 wykonuje blok ze zmiennymi (UG 5.2); agent dostaje wartości zmiennych po wykonaniu.
+            try await TestRunner.execute(doc, in: ctx.workspace)
+            return CommandResult(message: doc.statusText, value: .object(Dictionary(uniqueKeysWithValues: doc.testVariables.map {
+                ($0.name, $0.isNull ? JSONValue.null : .string($0.value))
+            })))
+        }
         try await SQLExecutor.execute(doc, scope: scope, in: ctx.workspace)
         return CommandResult(message: doc.statusText)
     }
