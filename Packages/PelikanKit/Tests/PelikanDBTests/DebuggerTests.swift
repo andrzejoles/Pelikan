@@ -79,9 +79,10 @@ struct DebuggerTriggerTests {
               :new.opis := upper(:new.opis);
             end;
             """)
-        _ = try await s.execute("create or replace package pelikan_dbg_k as procedure dodaj(p_id number); end;")
+        _ = try await s.execute("create or replace package pelikan_dbg_k as g_publiczna number := 7; procedure dodaj(p_id number); end;")
         _ = try await s.execute("""
             create or replace package body pelikan_dbg_k as
+              g_prywatna varchar2(10) := 'abc';
               procedure dodaj(p_id number) is
               begin
                 insert into pelikan_dbg_t values (p_id, 'abc');
@@ -99,8 +100,12 @@ struct DebuggerTriggerTests {
         let d = ws.debugger(for: doc)
         try await d.start()
         #expect(d.location?.line == 2)
-        try await d.step(.into)
+        // Najpierw inicjalizacja pakietu (specyfikacja i ciało z wartościami początkowymi), potem procedura.
+        for _ in 0..<6 where !(d.location?.objectType == .packageBody && d.location?.line ?? 0 >= 4) { try await d.step(.into) }
         #expect(d.location?.name == "PELIKAN_DBG_K" && d.location?.objectType == .packageBody)
+        let globals = d.variables.filter { $0.path.hasPrefix("#") }.flatMap { $0.children ?? [] }
+        #expect(globals.first { $0.name == "g_prywatna" }?.value == "abc")
+        #expect(globals.first { $0.name == "g_publiczna" }?.value == "7")
         // BEGIN i INSERT, potem wyzwalacz.
         for _ in 0..<3 where d.location?.name != "PELIKAN_DBG_TRG" { try await d.step(.into) }
         print("DBG trg", d.location as Any, d.stack.map { "\($0.name)/\($0.unitType):\($0.line)" }, d.variables.map { "\($0.name)=\($0.value)" })

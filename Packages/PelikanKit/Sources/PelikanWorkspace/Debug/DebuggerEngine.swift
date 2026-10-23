@@ -252,8 +252,10 @@ public final class DebuggerEngine {
 
     func continueExecution(breakflags: String) async throws {
         state = .running
+        var flags = breakflags
         while true {
-            let info = try await runtimeCall("dbms_debug.continue(ri, \(breakflags), dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            let info = try await runtimeCall("dbms_debug.continue(ri, \(flags), dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            flags = breakflags
             lastReason = info.reason
             Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner).\(info.name)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
             // reason_exit (15) / reason_knl_exit (25) / zakończony program.
@@ -266,6 +268,10 @@ public final class DebuggerEngine {
             }
             // Wejście do jednostki (reason_enter) i jednostki bez informacji debugowania (linia 0) — dalej do pierwszej linii.
             if info.line == 0 || info.reason == 6 { continue }
+            // Pomijanie kodu SYS (wyjście z jednostki) i inicjalizacji specyfikacji pakietu (preferencje debugera).
+            let isBreakpoint = info.breakpoint > 0 || info.reason == 11 || info.reason == 26
+            if !isBreakpoint, workspace.settings.debuggerSkipSys, info.owner == "SYS" { flags = "dbms_debug.break_any_return"; continue }
+
             location = DebugLocation(owner: info.owner, name: info.name, unitType: info.unitType, line: info.line)
             selectedFrame = 0
             state = .paused
@@ -273,6 +279,11 @@ public final class DebuggerEngine {
             // Typ jednostki z RUNTIME_INFO bywa 0 — poprawny jest w ramce stosu (PRINT_BACKTRACE).
             if location?.unitType == 0, let top = stack.first, top.name == location?.name, top.unitType != 0 {
                 location?.unitType = top.unitType
+            }
+            // Inicjalizacja specyfikacji pakietu (typ 9) — dalej, chyba że to punkt przerwania (preferencja debugera).
+            if !isBreakpoint, workspace.settings.debuggerSkipPackageInit, location?.unitType == 9 {
+                state = .running
+                continue
             }
             await loadVariables()
             await loadWatches()
@@ -455,6 +466,10 @@ public final class DebuggerEngine {
             if d.kind == .cursor { continue }
             out.append(await variable(d.name, path: d.name, type: d.detail, frame: frameNo, context: ctx))
         }
+        // Zmienne globalne pakietu: prywatne (ciało) i publiczne (specyfikacja) — GET_VALUE z uchwytem pakietu (UG 5.10).
+        if [9, 11].contains(frame.unitType) {
+            out += await packageGlobals(owner: frame.owner, name: frame.name, context: ctx)
+        }
         // Zmienne pętli FOR (rekordy, liczniki) obejmujących linię.
         for (name, _) in ctx.loopRecords.sorted(by: { $0.key < $1.key }) {
             out.append(await variable(name.lowercased(), path: name.lowercased(), type: "record", frame: frameNo, context: ctx))
@@ -494,6 +509,52 @@ public final class DebuggerEngine {
             }
         }
         return v
+    }
+
+    /// Zmienne z poziomu pakietu (bez podprogramów): grupy „Globalne prywatne” i „Globalne publiczne”.
+    func packageGlobals(owner: String, name: String, context ctx: CompletionContext) async -> [DebugVariable] {
+        guard let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) else { return [] }
+        var groups: [DebugVariable] = []
+        for (type, ns, title) in [(DBObjectType.packageBody, 2, L10n.tr("Globalne prywatne")), (DBObjectType.package, 1, L10n.tr("Globalne publiczne"))] {
+            let key = "\(owner).\(name).\(type.rawValue)"
+            let src: String
+            if let c = sourceCache[key] { src = c } else {
+                src = (try? await m.source(of: DBObject(owner: owner, name: name, type: type))) ?? ""
+                sourceCache[key] = src
+            }
+            guard let unit = PLSQLOutline.parse(src).first else { continue }
+            var children: [DebugVariable] = []
+            for d in unit.children where [.variable, .constant].contains(d.kind) {
+                var (st, v) = await getValue(d.name, package: (owner, name, ns))
+                // Prywatne zmienne ciała są widoczne w zasięgu ramki podprogramu ciała — odczyt przez ramkę.
+                if st == 3 { (st, v) = await getValue(d.name, frame: selectedFrame) }
+                children.append(DebugVariable(name: d.name, path: "\(name).\(d.name)", value: st == 0 ? (v ?? "NULL") : st == 32 ? "NULL" : L10n.tr("(niedostępna)"),
+                                              type: d.detail))
+            }
+            if !children.isEmpty {
+                groups.append(DebugVariable(name: title, path: "#\(type.rawValue)", value: "", type: "", children: children))
+            }
+        }
+        return groups
+    }
+
+    /// GET_VALUE dla zmiennej pakietu (uchwyt program_info zamiast numeru ramki).
+    func getValue(_ variable: String, package p: (owner: String, name: String, namespace: Int)) async -> (Int, String?) {
+        guard let debug else { return (-1, nil) }
+        let r = try? await debug.execute("""
+            declare
+              h dbms_debug.program_info;
+            begin
+              h.namespace := :ns; h.owner := :o; h.name := :n; h.dblink := null;
+              :st := dbms_debug.get_value(:v, h, :val, null);
+            end;
+            """, binds: [BindVariable(name: "ns", type: .number, value: .number(String(p.namespace))), BindVariable(name: "o", value: .text(p.owner)),
+                         BindVariable(name: "n", value: .text(p.name)), BindVariable(name: "v", value: .text(variable.uppercased())),
+                         BindVariable(name: "st", type: .number, direction: .output), BindVariable(name: "val", direction: .output, maxSize: 4000)])
+        let st = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
+        let v = r?.outBinds["val"] ?? r?.outBinds["VAL"]
+        Self.trace("get_value pkg \(p.name).\(variable) ns=\(p.namespace) status=\(st)")
+        return (st, v.flatMap { $0.isNull ? nil : $0.displayText })
     }
 
     func getValue(_ path: String, frame: Int) async -> (Int, String?) {

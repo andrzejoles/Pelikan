@@ -156,6 +156,8 @@ struct OraclePane: View {
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+                Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
+                Toggle(L10n.tr("Pomijaj obiekty SYS przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipSys))
             }
             Section(L10n.tr("Słownik danych")) {
                 Toggle(L10n.tr("Używaj widoków DBA_, jeśli dostępne"), isOn: setting(workspace, \.useDBAViews))

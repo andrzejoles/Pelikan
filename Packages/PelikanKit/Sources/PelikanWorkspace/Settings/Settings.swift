@@ -86,6 +86,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var beautifier = BeautifierOptions()
     /// Kompilacja okna programu z informacją debugowania (UG 23.4 „Add debug information when compiling”).
     public var debugInfoOnCompile = false
+    /// Debuger: pomijanie inicjalizacji specyfikacji pakietów i obiektów SYS przy krokowaniu (UG 23.4).
+    public var debuggerSkipPackageInit = true
+    public var debuggerSkipSys = true
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
@@ -116,6 +119,8 @@ public struct Settings: Sendable, Codable, Hashable {
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
         beautifier = v(.beautifier, beautifier)
         debugInfoOnCompile = v(.debugInfoOnCompile, debugInfoOnCompile)
+        debuggerSkipPackageInit = v(.debuggerSkipPackageInit, debuggerSkipPackageInit)
+        debuggerSkipSys = v(.debuggerSkipSys, debuggerSkipSys)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)
