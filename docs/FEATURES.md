@@ -177,7 +177,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PROG-012 | Kompilacja w tle w osobnej sesji; blokada kompilacji w trakcie wykonywania | UG 23.19 | Preferences | 2 | P2 | — | ✅ test |
 | PD-PROG-013 | Preferencje kompilatora: PLSQL_OPTIMIZE_LEVEL, CODE_TYPE, PL/Scope, flagi kompilacji warunkowej, PLSQL_WARNINGS, wartości `&` | UG 23.3 | Preferences > Oracle > Compiler | 2 | P2 | — | ⚠️ częściowo (PLSQL_WARNINGS; bez pozostałych parametrów) |
 | PD-PROG-014 | Moduły MLE (JavaScript) w Program Window: edycja, podświetlanie, kompilacja | NF17 | Program Window | 2 | P2 | Za zgodą | do zrobienia |
-| PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | do zrobienia |
+| PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | ⚠️ częściowo (pary if/loop/case/blok; bez wyróżniania COMMIT/ROLLBACK/SAVEPOINT) ✅ test |
 | PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | do zrobienia |
 | PD-PROG-017 | Kompilacja tylko do odczytu plików wyłączona (preferencja) | UG 23.2 | Preferences | 2 | P3 | — | do zrobienia |
 | PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | ✅ test (Release, 50 403 linie: pisanie bez przestojów > 100 ms — PELIKAN_STALL_LOG; analizy w tle; jednorazowo ~1,5 s przy otwarciu) |
@@ -203,7 +203,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-015 | Makra: nagrywanie F11, odtwarzanie F12, Repeat Play, biblioteka makr z klawiszami | UG 25.11, NF15 | Edit > Macro | 6 | P2 | Brak | do zrobienia |
 | PD-EDIT-016 | Special Copy (formaty .copy dla języków) i Paste from host language | UG 25.6–25.7, NF10 | Edit | 6 | P3 | Pełny | do zrobienia |
 | PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | do zrobienia |
-| PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | do zrobienia |
+| PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | ⚠️ częściowo (pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze; bez zmiennych, pasujących słów, INSERT ↔ VALUES) ✅ test |
 | PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | ⚠️ częściowo (Duplicate line; bez Delete next word) |
 | PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | do zrobienia |

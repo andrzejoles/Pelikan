@@ -18,6 +18,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var regionsWork: DispatchWorkItem?
     private lazy var completion = CompletionPopup(textView: textView)
     private var assistWork: DispatchWorkItem?
+    private var pairGeneration = 0
+    private var pairRanges: [NSTextRange] = []
     var onCaretChange: ((String) -> Void)?
 
     init(document: Document, fontSize: CGFloat = 13) {
@@ -179,6 +181,36 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(max(0, ws.settings.codeAssistantDelay)), execute: work)
     }
 
+    // MARK: Pary nawiasów i bloków (UG 23.12)
+
+    /// Podświetlenie pary przy kursorze (nawiasy, BEGIN/IF/LOOP/CASE ↔ END) — liczone w tle, bez zmiany tekstu.
+    private func updatePairs() {
+        pairGeneration += 1
+        let generation = pairGeneration
+        let sel = textView.selectedRange()
+        guard sel.length == 0 else { return showPairs([]) }
+        let text = textView.string
+        Task.detached(priority: .utility) {
+            let pairs = PairMatcher.pairs(text, offset: sel.location)
+            await MainActor.run { [weak self] in
+                guard let self, self.pairGeneration == generation, self.textView.string == text else { return }
+                self.showPairs(pairs)
+            }
+        }
+    }
+
+    private func showPairs(_ ranges: [Range<Int>]) {
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
+        for r in pairRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
+        pairRanges = ranges.compactMap { r in
+            guard let a = content.location(content.documentRange.location, offsetBy: r.lowerBound),
+                  let b = content.location(a, offsetBy: r.count) else { return nil }
+            return NSTextRange(location: a, end: b)
+        }
+        let color = NSColor.findHighlightColor.withAlphaComponent(0.35)
+        for r in pairRanges { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
+    }
+
     // MARK: Zwijanie kodu (UG 25.17)
 
     /// Obszary zwijania przeliczane z opóźnieniem po zmianie tekstu (znaczniki ± w marginesie).
@@ -320,6 +352,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let col = r.location - (line < self.highlighter.lineStarts.count ? self.highlighter.lineStarts[line] : 0)
             self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
             self.ruler.needsDisplay = true
+            self.updatePairs()
         }
     }
 

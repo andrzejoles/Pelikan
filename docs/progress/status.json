@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:54:43+02:00",
+  "heartbeat": "2026-10-23T08:56:44+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy",
     "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie",
     "PR #18 scalony (szablony kodu)",
     "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie",
@@ -91,8 +92,7 @@
     "Command Window — silnik SQL*Plus: SET (ECHO, FEEDBACK, HEADING, PAGESIZE, COLSEP, SERVEROUTPUT, TIMING, VERIFY, DEFINE, ESCAPE, CONCAT…), DEFINE/UNDEFINE/ACCEPT, &/&&/&1, VARIABLE/EXEC/PRINT/AUTOPRINT, COLUMN FORMAT/HEADING/NEW_VALUE, PROMPT, PAUSE, @/@@/START z parametrami, SPOOL, CD, DESCRIBE (tabele, pakiety, synonimy), SHOW ERRORS/USER/RELEASE/ALL, WHENEVER SQLERROR, CONNECT (zapisane i tymczasowe), EXIT, wyniki tekstowe — 9 testów (5 na bazie)",
     "PR #4 scalony (siatka: strony, sortowanie, eksport, edycja, Large Data Editor), wersja 1.4.0",
     "Large Data Editor: CLOB/BLOB/RAW/LONG/JSON z komórki (podwójne kliknięcie, menu, ⌘⌥L), pełna treść ponownie pobierana po ROWID gdy obcięta w siatce, rozpoznanie formatu (tekst, XML, JSON, HTML, PNG/JPEG/GIF, PDF), Tekst/Hex/Obraz/PDF, Formatuj JSON i XML, wczytanie/zapis pliku, zmiana CLOB i BLOB zatwierdzana przez Post — 3 testy (1 na bazie, CLOB 2,24 mln znaków)",
-    "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
-    "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów"
+    "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
