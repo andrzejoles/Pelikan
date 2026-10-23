@@ -410,3 +410,16 @@ rozwijania (poświadczenie jest szukane po dokładnym tekście). Portfel TLS (mT
 ustawieniem połączenia (import ZIP rozpakowuje portfel obok archiwum). Hasła z portfela nigdy nie trafiają do Pelikana;
 w plikach generowanych są tylko ścieżki. Test na bazie testowej używa portfela z `scripts/testdb.sh wallet`; właściciel
 potwierdził działanie na własnym aliasie (jednorazowa próba `select 'OK' from dual`, bez zapisu danych).
+
+### D54 · 2026-10-23 — Pro*C przez SSH: założenia do pytań otwartych
+Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 — bez pytań w trakcie pracy):
+1. Wersja gita na AIX nieznana — skrypty używają `cd` zamiast `git -C` i tylko opcji z gita 1.7; „Testuj” pokazuje
+   `git --version`, a skrypty sprawdzają wersję przed użyciem nowszych opcji.
+2. Korzeń repo: osobne pole „katalog working copy” (domyślnie `<baza>/src`); kontrola czystości dotyczy tylko jego,
+   `bin` poza nim.
+3. Binarki: lista nazw w konfiguracji celu (domyślnie jedna, nazwa projektu); instalacja kopiuje każdą.
+4. Kodowanie repo: ustawienie projektu, wykrywane z istniejących plików (bajty spoza UTF-8, poprawne w ISO-8859-2 →
+   ISO-8859-2); domyślnie UTF-8.
+5. Build próbny: po pierwszej wersji pipeline'u.
+Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
+z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.

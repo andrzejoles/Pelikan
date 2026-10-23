@@ -116,6 +116,17 @@ Explain Plan, Session Browser, porównania obiektów i danych, eksport/import (S
 Importer, Data Generator, Event Monitor, DBMS Scheduler, raporty, Query Builder, diagramy, projekty, worksets, układy,
 makra, Test Manager, Load Tester. Kryterium: każde narzędzie z macierzy ma test lub zrzut ekranu.
 
+## Etap P — Pro*C: zdalny build przez SSH (zadanie właściciela `zadanie-pelikan-proc-ssh.md`, D54)
+1. **etap-p/ssh** — kopia warstwy SSH z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`)
+   z testami na lokalnym `sshd`; rozbudowa: strumieniowanie, stdin, pty i Stop (`@@PID`), timeouty, prolog środowiska.
+2. **etap-p/kodowanie** — pliki `.pc`/`.h`/makefile w kodowaniu projektu (ISO-8859-2), blokada zapisu niekodowalnych
+   znaków z linią i kolumną.
+3. **etap-p/polaczenia** — menedżer połączeń SSH (`PelikanSSHTarget`, Keychain, UAT/PROD, Testuj).
+4. **etap-p/wdrozenie** — pipeline (blokada, kontrola working copy, `git pull --ff-only`, backup, `make`, instalacja,
+   historia, rollback), skrypty ksh88 ze znacznikami `@@STEP`, konsola z sekcjami i Stop, integracja z lokalnym gitem.
+5. **etap-p/parsery** — błędy `PCC-*` i IBM XL C/C++ (`1506-NNN`, także `-qsrcmsg`) klikalne do linii `.pc`.
+Akceptacja na prawdziwym AIX 6.1 — przez właściciela (dostęp do serwera ma tylko on; próbki wyjścia jako fixture'y).
+
 ## Etap 7 — Dodatki z SQL Developer, DBeaver, DataGrip
 Wg `docs/research/gap-analysis.md` (wiersze SD-, SC-, DB-, DG-).
 
