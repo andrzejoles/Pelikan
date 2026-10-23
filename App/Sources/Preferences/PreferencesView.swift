@@ -16,6 +16,7 @@ struct PreferencesView: View {
             BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
             KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
             OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
+            ToolsPane(workspace: workspace).tabItem { Label(L10n.tr("Narzędzia"), systemImage: "wrench.and.screwdriver") }
             AgentsPane(workspace: workspace).tabItem { Label(L10n.tr("Agenci"), systemImage: "cpu") }
         }
         .frame(width: 860, height: 560)

@@ -248,6 +248,7 @@ extension Workspace {
             throw TextFileError.unencodable(line: bad?.line ?? 0, column: bad?.column ?? 0, character: bad.map { String($0.character) } ?? "?",
                                             encoding: format.displayName.components(separatedBy: " ").first ?? "")
         }
+        backupBeforeSave(url)
         try data.write(to: url, options: .atomic)
         localHistory.record(key: LocalHistory.key(file: url), title: url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))
         doc.fileURL = url.standardizedFileURL

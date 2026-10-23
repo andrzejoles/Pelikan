@@ -677,3 +677,24 @@ co pozwala utrzymywać `Localizable.xcstrings` skryptem i sprawdzać go w CI. Ar
 `String(format:)`, żeby błędny specyfikator w tłumaczeniu nie wywrócił aplikacji. Okna i narzędzia wzorca zostają w
 tłumaczeniach pod angielskimi nazwami (SQL Window, Object Browser…). Wybór języka w Preferencjach zapisuje standardowe
 `AppleLanguages` w domenie aplikacji (jak Ustawienia systemowe › Język › Aplikacje) — działa po ponownym uruchomieniu.
+
+### D-S8E-1 · 2026-10-23 — Programy zewnętrzne edytora: tylko http(s) dla adresów, bez powłoki dla programów
+Wyszukiwania w sieci i dokumenty użytkownika otwierają wyłącznie adresy http(s) albo istniejące pliki — adres z
+Preferencji nie uruchomi programu przez inny schemat URL. Zewnętrzna przeglądarka różnic jest uruchamiana jak
+narzędzia użytkownika (D49): program wskazany ścieżką albo z katalogów systemowych, argumenty jako tablica po
+podstawieniu dyrektyw `%1`/`%2` (pliki) i `%3`/`%4` (tytuły), bez powłoki i bez zmiennych środowiska Pelikana
+(`Process` z pakietu Foundation, jak w narzędziach użytkownika — ten sam poziom ochrony co `posix_spawn`: brak
+interpretacji przez powłokę). Pliki porównań i edycji zewnętrznej w katalogu danych (`Diff/`, `External/`), 0600.
+
+### D-S8E-2 · 2026-10-23 — „Nie pytaj więcej” pamięta odpowiedź, a nie samo ukrycie
+Pytanie z zaznaczonym „Nie pytaj więcej” zapamiętuje wybrany przycisk (anulowanie nigdy) i do czasu przywrócenia w
+Preferencjach › Narzędzia odpowiada nim bez pytania. Wyłączyć można tylko pytania o czynności odwracalne albo
+potwierdzające wybór użytkownika (zatwierdzenie/wycofanie przy włączonej opcji potwierdzania, Kosz, przywrócenie
+workseta, odzyskiwanie okien) — nie potwierdzenia zmian na produkcji ani zgody agentów.
+
+### D-S8E-3 · 2026-10-23 — Odzyskiwanie po awarii: znacznik sesji i migawka co interwał
+Przy starcie powstaje znacznik `Recovery/running`; czyste zamknięcie go usuwa. Znacznik zastany przy starcie oznacza
+nieczyste zamknięcie — wtedy migawka niezapisanych okien (`Recovery/windows.json`, 0600, zapisywana co interwał z
+Preferencji) jest proponowana do odzyskania (pytanie albo Plik › Odzyskaj okna…). Migawka nie powstaje przy każdym
+wykonaniu polecenia (wzorzec ma taką opcję) — interwał wystarcza, a zapis przy wykonaniu spowalniałby pracę na dużych
+skryptach. Połączenie okna odtwarzane jest tak jak w worksetach — dla okien z przypiętym połączeniem.

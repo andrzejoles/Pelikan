@@ -60,6 +60,7 @@
 		AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */ = {isa = PBXBuildFile; productRef = 68DCC77A1DA6108E25EBC9B9 /* PelikanDB */; };
 		AF619AD9C795CDE3A74335EE /* PelikanWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = 7D051D9F72BF390F621C6946 /* PelikanWorkspace */; };
 		B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */; };
+		B11F760E47FF7DC651E5607E /* ToolsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2418148C5988E2B9B4DC3781 /* ToolsPane.swift */; };
 		B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */; };
 		B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8470950500EBAD985D34E42 /* PackViews.swift */; };
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
@@ -121,6 +122,7 @@
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
 		10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportWindowViewController.swift; sourceTree = "<group>"; };
 		229E7A0294B2BA8203F506AF /* BeautifierPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeautifierPane.swift; sourceTree = "<group>"; };
+		2418148C5988E2B9B4DC3781 /* ToolsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsPane.swift; sourceTree = "<group>"; };
 		2456C231334B998B64CE9501 /* AgentSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSheets.swift; sourceTree = "<group>"; };
 		26AA9CEDE79921F45A0500AB /* Observe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observe.swift; sourceTree = "<group>"; };
 		2849E776640F52BC43AB5C6F /* pelikan-mcp */ = {isa = PBXFileReference; includeInIndex = 0; path = "pelikan-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -232,6 +234,7 @@
 				C866A6E13301104082FC8632 /* AgentsPane.swift */,
 				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
+				2418148C5988E2B9B4DC3781 /* ToolsPane.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -713,6 +716,7 @@
 				F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */,
 				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
+				B11F760E47FF7DC651E5607E /* ToolsPane.swift in Sources */,
 				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,
 				177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */,
 				B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */,

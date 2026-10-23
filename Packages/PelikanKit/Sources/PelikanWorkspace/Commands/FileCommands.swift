@@ -125,8 +125,9 @@ enum FileCommands {
                     effect: .external, summary: L10n.tr("Przenosi plik albo katalog do Kosza (po potwierdzeniu); otwarte okno pliku zostaje jako okno bez pliku."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
                 guard let u = url(ctx) else { throw CommandError.missingArgument("path") }
-                if let ui = ctx.ui {
-                    guard await ui.ask(L10n.tr("Przenieść do Kosza?"), message: u.lastPathComponent, buttons: [L10n.tr("Przenieś do Kosza"), L10n.tr("Anuluj")]) == 0 else {
+                if ctx.ui != nil {
+                    guard await ctx.workspace.askSuppressible(.moveToTrash, title: L10n.tr("Przenieść do Kosza?"), message: u.lastPathComponent,
+                                                              buttons: [L10n.tr("Przenieś do Kosza")]) == 0 else {
                         throw CommandError.cancelledByUser
                     }
                 }
@@ -264,9 +265,10 @@ enum FileCommands {
                     summary: L10n.tr("Odrzuca zmiany okien od ostatniego zapisu workseta i przywraca zapisany stan (po potwierdzeniu)."), feature: "PD-WSET-001") { ctx in
                 let ws = ctx.workspace
                 guard let saved = try ws.worksets.load(ws.worksets.current) else { throw CommandError.notAvailable(L10n.tr("Workset nie był jeszcze zapisany")) }
-                if let ui = ctx.ui {
-                    guard await ui.ask(L10n.tr("Przywrócić workset „\(saved.name)”?"), message: L10n.tr("Zmiany okien od ostatniego zapisu workseta zostaną utracone."),
-                                       buttons: [L10n.tr("Przywróć"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                if ctx.ui != nil {
+                    guard await ws.askSuppressible(.revertWorkset, title: L10n.tr("Przywrócić workset „\(saved.name)”?"),
+                                                   message: L10n.tr("Zmiany okien od ostatniego zapisu workseta zostaną utracone."),
+                                                   buttons: [L10n.tr("Przywróć")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 return CommandResult(message: missingMessage(ws.applyWorkset(saved)) ?? saved.name)
             },
