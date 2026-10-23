@@ -88,7 +88,7 @@ obiektów, `:old`/`:new`, stos, watches) i DBMS_DEBUG_JDWP (Pelikan jako serwer 
 (DBMS_PROFILER, DBMS_HPROF), trace. Kryterium: krokowanie przez pakiet z wyzwalaczem, podgląd rekordu i kolekcji, test
 integracyjny debugera na bazie testowej.
 
-## Etap 4 — utPLSQL
+## Etap 4 — utPLSQL ✅ (zakończony 2026-10-23, PR #32–#35, szkic wydania — D32)
 PROMPT §6 w całości (docs/research/utplsql.md). Kryterium: wygenerowany szkielet kompiluje się, testy uruchamiają się
 z eksploratora i edytora, pokrycie widać na marginesie.
 
