@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "PelikanWorkspace", targets: ["PelikanWorkspace"]),
         .library(name: "PelikanThin", targets: ["PelikanThin"]),
         .library(name: "PelikanAgent", targets: ["PelikanAgent"]),
+        .library(name: "PelikanBridgeKit", targets: ["PelikanBridgeKit"]),
         .executable(name: "pelikan-mcp", targets: ["pelikan-mcp"]),
     ],
     dependencies: [

@@ -22,6 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     #else
     let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     #endif
+    /// Agenci AI: panel, okno zgody, serwer gniazda (PROMPT §7).
+    private var agentUI: AgentUIController?
     private var menuToken: ObservationToken?
     private var appearanceToken: ObservationToken?
 
@@ -86,6 +88,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         window.showWindow(nil)
         mainWindow = window
         prompts.window = window.window
+        if let agents = AgentUIController(workspace: workspace) {
+            agents.mainWindow = window
+            window.installAgentPane(agents.pane)
+            agentUI = agents
+        }
         // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
@@ -151,6 +158,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Procesy ssh tuneli kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
+        agentUI?.stop()
         workspace.sessions.tunnels.closeAll()
     }
 

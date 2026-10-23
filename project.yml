@@ -27,6 +27,10 @@ settings:
 packages:
   PelikanKit:
     path: Packages/PelikanKit
+  # Terminal panelu agenta (MIT; jak w Bifoldzie).
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    exactVersion: 1.99.0
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     exactVersion: 2.10.0
@@ -56,7 +60,30 @@ targets:
         product: PelikanODPI
       - package: PelikanKit
         product: PelikanThin
+      - package: PelikanKit
+        product: PelikanAgent
+      - package: PelikanKit
+        product: PelikanBridgeKit
+      - target: pelikan-mcp
+        embed: true
+        copy:
+          destination: executables
+      - package: SwiftTerm
+        product: SwiftTerm
       - package: Sparkle
+  # Most MCP agentów (stdio ↔ gniazdo Unix aplikacji) — w pakiecie aplikacji obok pliku wykonywalnego.
+  pelikan-mcp:
+    type: tool
+    platform: macOS
+    sources:
+      - path: Packages/PelikanKit/Sources/pelikan-mcp
+    settings:
+      base:
+        PRODUCT_NAME: pelikan-mcp
+        SWIFT_STRICT_CONCURRENCY: complete
+    dependencies:
+      - package: PelikanKit
+        product: PelikanBridgeKit
 schemes:
   Pelikan:
     build:

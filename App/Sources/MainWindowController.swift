@@ -52,6 +52,30 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: Prawa kolumna — panel agenta (ADR 0005)
+
+    private var agentItem: NSSplitViewItem?
+
+    /// Dodaje panel agenta jako prawą, zwijaną kolumnę (domyślnie zwiniętą).
+    func installAgentPane(_ view: NSView) {
+        guard agentItem == nil else { return }
+        let vc = NSViewController()
+        vc.view = view
+        let item = NSSplitViewItem(viewController: vc)
+        item.minimumThickness = 380
+        item.canCollapse = true
+        item.isCollapsed = true
+        item.holdingPriority = .defaultLow + 10
+        split.addSplitViewItem(item)
+        agentItem = item
+    }
+
+    var isAgentPaneVisible: Bool { agentItem.map { !$0.isCollapsed } ?? false }
+
+    func setAgentPane(visible: Bool) {
+        agentItem?.animator().isCollapsed = !visible
+    }
 }
 
 // MARK: - Lewa kolumna

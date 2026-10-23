@@ -205,10 +205,10 @@ struct ConnectionEditorView: View {
                         Toggle(L10n.tr("Agent może zmieniać dane i obiekty (za zgodą)"), isOn: $draft.agentAllowChanges)
                             .disabled(!draft.agentVisible)
                         TextField(L10n.tr("Osobny użytkownik bazy dla agenta"), text: $draft.agentUser,
-                                  prompt: Text(L10n.tr("zalecane dla produkcji (np. proxy tylko z SELECT)")))
+                                  prompt: Text(L10n.tr("proxy, zalecane dla produkcji (tylko z SELECT)")))
                         TextField(L10n.tr("Kolumny maskowane dla agenta"), text: $draft.maskedColumns, prompt: Text("PESEL, EMAIL"))
                     } footer: {
-                        Text(L10n.tr("Na połączeniach produkcyjnych agent domyślnie tylko czyta. Funkcje wywoływane w zapytaniach mogą mieć skutki uboczne — twardą granicą są uprawnienia użytkownika bazy."))
+                        Text(L10n.tr("Na połączeniach produkcyjnych agent domyślnie tylko czyta. Użytkownik agenta łączy się przez proxy (główny[agent]) — wymaga ALTER USER agent GRANT CONNECT THROUGH główny; bez drugiego hasła. Kolumny maskowane: nazwy kolumn albo SCHEMAT.TABELA.KOLUMNA, rozdzielone przecinkami. Funkcje wywoływane w zapytaniach mogą mieć skutki uboczne — twardą granicą są uprawnienia użytkownika bazy."))
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
