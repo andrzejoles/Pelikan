@@ -317,6 +317,102 @@ public final class DebuggerEngine {
         if !lines.isEmpty { document.output.append(contentsOf: lines) }
     }
 
+    /// Wykonanie SQL albo PL/SQL w sesji debugowanej podczas zatrzymania (DBMS_DEBUG.EXECUTE, UG 5.10). Zapytanie —
+    /// pierwsze 100 wierszy jako tekst (kolumny rozdzielone tabulatorem).
+    public func executeInTarget(_ sql: String) async throws -> [String] {
+        guard state == .paused, let debug else { throw CommandError.notAvailable(L10n.tr("Debuger nie jest zatrzymany")) }
+        var trimmed = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isQuery = trimmed.lowercased().hasPrefix("select") || trimmed.lowercased().hasPrefix("with")
+        // Średnik końcowy tylko z zapytania (blok PL/SQL musi go zachować).
+        if isQuery { trimmed = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "; \n")) }
+        // Zapytanie: wiersze jako JSON (DBMS_SQL jest zablokowany w DBMS_DEBUG.EXECUTE — ORA-29471), w kawałkach po 4000 znaków.
+        let what = isQuery ? """
+            declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); j clob;
+            begin select json_arrayagg(json_object(*) returning clob) into j from (\(trimmed) fetch first 100 rows only);
+              if j is not null then
+                for i in 0 .. ceil(dbms_lob.getlength(j) / 4000) - 1 loop pp.extend; pp(pp.count) := dbms_lob.substr(j, 4000, i * 4000 + 1); end loop;
+              end if;
+              :1 := pp; end;
+            """ : trimmed
+        let r = try await debug.execute("""
+            declare
+              coll sys.dbms_debug_vc2coll;
+              errm varchar2(4000);
+              s varchar2(32767);
+            begin
+              dbms_debug.execute(:w, -1, :b, coll, errm);
+              if coll is not null and coll.count > 0 then
+                for i in coll.first .. coll.last loop
+                  if length(s) < 30000 or s is null then s := s || coll(i) || chr(10); end if;
+                end loop;
+              end if;
+              :s := s;
+              :e := errm;
+            end;
+            """, binds: [BindVariable(name: "w", value: .text(what)), BindVariable(name: "b", type: .number, value: .number(isQuery ? "1" : "0")),
+                         BindVariable(name: "s", direction: .output, maxSize: 32767), BindVariable(name: "e", direction: .output, maxSize: 4000)])
+        if let e = (r.outBinds["e"] ?? r.outBinds["E"])?.displayText, !e.isEmpty { throw CommandError.notAvailable(e) }
+        let text = r.outBinds["s"]?.displayText ?? r.outBinds["S"]?.displayText ?? ""
+        if isQuery {
+            // Kawałki JSON (separator chr(10) dodany przez blok — w JSON nowe linie są zawsze w postaci \n).
+            return Self.jsonRows(text.replacingOccurrences(of: "\n", with: ""))
+        }
+        return text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).dropLast().map { $0 }
+    }
+
+    /// Wiersze z `[{"A":1,"B":"x"},…]` z zachowaniem kolejności kolumn; wartości rozdzielone tabulatorem.
+    nonisolated static func jsonRows(_ json: String) -> [String] {
+        var rows: [String] = []
+        var values: [String] = []
+        var i = json.startIndex
+        var depth = 0
+        var expectValue = false
+        func readString() -> String {
+            var s = ""
+            i = json.index(after: i)
+            while i < json.endIndex, json[i] != "\"" {
+                if json[i] == "\\" {
+                    i = json.index(after: i)
+                    guard i < json.endIndex else { break }
+                    switch json[i] {
+                    case "n": s.append("\n")
+                    case "t": s.append("\t")
+                    case "u":
+                        let hex = json[json.index(after: i)...].prefix(4)
+                        if let v = UInt32(hex, radix: 16), let u = Unicode.Scalar(v) { s.unicodeScalars.append(u) }
+                        i = json.index(i, offsetBy: 4, limitedBy: json.endIndex) ?? json.endIndex
+                    default: s.append(json[i])
+                    }
+                } else {
+                    s.append(json[i])
+                }
+                i = json.index(after: i)
+            }
+            return s
+        }
+        while i < json.endIndex {
+            let c = json[i]
+            switch c {
+            case "{": depth += 1; if depth == 1 { values = [] }
+            case "}": depth -= 1; if depth == 0 { rows.append(values.joined(separator: "\t")) }
+            case ":" where depth == 1: expectValue = true
+            case "\"":
+                let s = readString()
+                if expectValue, depth == 1 { values.append(s); expectValue = false }
+            default:
+                if expectValue, depth == 1, !c.isWhitespace, c != "," {
+                    var raw = ""
+                    while i < json.endIndex, json[i] != ",", json[i] != "}" { raw.append(json[i]); i = json.index(after: i) }
+                    values.append(raw == "null" ? "" : raw.trimmingCharacters(in: .whitespaces))
+                    expectValue = false
+                    continue
+                }
+            }
+            i = json.index(after: i)
+        }
+        return rows
+    }
+
     /// Wartości obserwowanych wyrażeń w bieżącej ramce.
     func loadWatches() async {
         guard !watches.isEmpty, stack.indices.contains(selectedFrame) else { watchValues = []; return }

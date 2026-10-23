@@ -92,6 +92,13 @@ public struct TestVariable: Sendable, Hashable, Identifiable, Codable {
     }
 }
 
+/// Wynik zapytania pokazany w oknie testu (niejawne wyniki 12c, UG 5.7): kolumny i pierwsze wiersze.
+public struct TestResultSet: Sendable, Hashable, Identifiable {
+    public var id = UUID()
+    public var columns: [String]
+    public var rows: [[String]]
+}
+
 /// Ramka stosu błędu wykonania (UG 5.5): jednostka i linia.
 public struct ErrorStackFrame: Sendable, Hashable {
     public var owner: String
@@ -225,6 +232,14 @@ public enum TestRunner {
                 n.changed = n.value != v.value || n.isNull != v.isNull
                 doc.testVariables[i] = n
             }
+            // Niejawne wyniki (DBMS_SQL.RETURN_RESULT) — karta Wyniki.
+            var results: [TestResultSet] = []
+            for rs in r.implicitResults {
+                let batch = try await session.fetch(rs.id, maxRows: 500)
+                results.append(TestResultSet(columns: rs.columns.map(\.name), rows: batch.rows.map { $0.map { $0.format(ws.settings.valueFormat) } }))
+                if batch.hasMore { await session.closeResultSet(rs.id) }
+            }
+            doc.testResults = results
             if doc.outputEnabled && ws.settings.dbmsOutputEnabled, let lines = try? await SessionUtilities.readOutput(session) {
                 doc.output.append(contentsOf: lines)
             }
