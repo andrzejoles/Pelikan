@@ -470,6 +470,30 @@ final class CodeTextView: NSTextView {
             applyKeywordCase()
         }
         super.insertText(string, replacementRange: replacementRange)
+        (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
+    }
+
+    /// Backspace w nagrywanym makrze (PD-EDIT-015).
+    override func deleteBackward(_ sender: Any?) {
+        super.deleteBackward(sender)
+        (NSApp.delegate as? AppDelegate)?.workspace.recordDeleteBackward()
+    }
+
+    /// Kopiowanie i wycinanie trafia do historii schowka (PD-EDIT-024).
+    override func copy(_ sender: Any?) {
+        recordSelectionInClipboardHistory()
+        super.copy(sender)
+    }
+
+    override func cut(_ sender: Any?) {
+        recordSelectionInClipboardHistory()
+        super.cut(sender)
+    }
+
+    private func recordSelectionInClipboardHistory() {
+        let r = selectedRange()
+        guard r.length > 0 else { return }
+        (NSApp.delegate as? AppDelegate)?.workspace.recordClipboard((string as NSString).substring(with: r))
     }
 
     private func applyKeywordCase() {

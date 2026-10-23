@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + ConnectionCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -432,12 +432,6 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
                 TextEditing.removeTrailingSpaces($0, selection: $1)
             },
-            .planned(CommandDescriptor(id: "edit.macroRecord", title: L10n.tr("Nagrywaj makro"), category: .edit, submenu: L10n.tr("Makra"),
-                                       pd: ["f11"], agent: .none, effect: .uiState,
-                                       summary: L10n.tr("Rozpoczyna lub kończy nagrywanie makra."), stage: 6, feature: "PD-EDIT-015")),
-            .planned(CommandDescriptor(id: "edit.macroPlay", title: L10n.tr("Odtwórz makro"), category: .edit, submenu: L10n.tr("Makra"),
-                                       pd: ["f12"], agent: .none, effect: .modifiesEditor,
-                                       summary: L10n.tr("Odtwarza nagrane makro."), stage: 6, feature: "PD-EDIT-015")),
         ]
     }
 

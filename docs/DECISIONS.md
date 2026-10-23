@@ -271,3 +271,22 @@ usuwa) sesją kompilacji użytkownika; obiekt, którego kod różni się od zapi
 wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/events`), a instalacja utPLSQL — w oknie
 poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
 zablokuje; okno zgody pokazuje pełny tekst.
+
+### D-EDYTOR-1 · 2026-10-23 — Makra nagrywają tekst i komendy edytora
+Makro (PD-EDIT-015) zapisuje wpisywany tekst, Backspace (łączone w kroki, poprawki literówek skracają ostatni tekst)
+oraz komendy rejestru wywołane przez użytkownika ze skutkiem „interfejs” albo „edytor”. Komendy wykonujące polecenia
+w bazie, zmieniające ustawienia lub pliki nie są nagrywane — odtworzenie makra nie może niespodziewanie wykonać SQL.
+Biblioteka makr leży w `macros.json` katalogu danych; makro ze skrótem jest komendą `edit.macro.<id>` (menu Edycja ›
+Makra, paleta), a skrót zajęty przez inną komendę jest pomijany. Makra są niedostępne dla agenta (poziom Brak).
+
+### D-EDYTOR-2 · 2026-10-23 — Składnia zadań To-Do
+Zadanie to komentarz zaczynający się od `TODO` (zamknięte: `DONE`) z opcjonalnymi atrybutami:
+`-- TODO(właściciel) !priorytet #kategoria: tekst`, także w kolejnych liniach komentarza blokowego. Słowo musi
+otwierać treść komentarza (nie środek zdania), literały są pomijane (lekser). Zamknięcie zamienia TODO na DONE w kodzie,
+więc stan zadania podróżuje z plikiem i repozytorium.
+
+### D-EDYTOR-3 · 2026-10-23 — Historia schowka tylko w pamięci; formaty Special Copy w JSON
+Historia schowka (PD-EDIT-024) zbiera teksty kopiowane w Pelikanie (edytor, siatka, Special Copy) i nie jest zapisywana
+na dysk — skopiowane wyniki mogą zawierać dane z bazy. Formaty Special Copy (PD-EDIT-016) to prefiks/sufiks linii,
+cudzysłów, escapy i znak nowej linii; własne formaty to pliki `CopyFormats/*.json` w katalogu danych (ten sam
+identyfikator zastępuje wbudowany). Wklejanie z języka bez formatu wykrywa cudzysłów i styl escapów z tekstu.

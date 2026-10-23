@@ -213,6 +213,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showMacroLibrary() {
+        ToolWindowController.show(key: "macroLibrary", title: L10n.tr("Biblioteka makr"), size: NSSize(width: 480, height: 420)) {
+            MacroLibraryView(workspace: workspace)
+        }
+    }
+
+    func showClipboardHistory() {
+        ToolWindowController.show(key: "clipboardHistory", title: L10n.tr("Historia schowka"), size: NSSize(width: 520, height: 520)) {
+            ClipboardHistoryView(workspace: workspace)
+        }
+    }
+
+    func showTodoItems() {
+        ToolWindowController.show(key: "todoItems", title: L10n.tr("Zadania To-Do"), size: NSSize(width: 640, height: 420)) {
+            TodoItemsView(workspace: workspace)
+        }
+    }
+
+    func clipboardText() -> String? { NSPasteboard.general.string(forType: .string) }
+
     func showTestExplorer() {
         ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
             TestExplorerView(workspace: workspace)
@@ -316,6 +336,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         pb.clearContents()
         pb.setString(text, forType: .string)
         if let html { pb.setString(html, forType: .html) }
+        workspace.recordClipboard(text)
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {

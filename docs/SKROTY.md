@@ -71,8 +71,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zaznaczenie › Zwiększ wcięcie | `edit.indent` | ⌘] | ⌘] | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Zmniejsz wcięcie | `edit.outdent` | ⌘[ | ⌘[ | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Usuń końcowe spacje | `edit.removeTrailingSpaces` |  |  | Pełny | 0 | PD-EDIT-005 |
-| Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 6 | PD-EDIT-015 |
-| Makra › Odtwórz makro | `edit.macroPlay` | F12 | F12 | Brak | 6 | PD-EDIT-015 |
 | Wynik › Kopiuj | `grid.copy` |  |  | Brak | 0 | PD-GRID-015 |
 | Wynik › Kopiuj z nagłówkiem | `grid.copyWithHeader` | ⌃⇧C †, ⇧⌘C | ⇧⌘C | Brak | 0 | PD-GRID-015 |
 | Wynik › Kopiuj nagłówek | `grid.copyHeader` |  |  | Brak | 0 | PD-GRID-015 |
@@ -83,6 +81,24 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Pełny | 0 | PD-TPL-002 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
+| Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 0 | PD-EDIT-015 |
+| Makra › Odtwórz makro | `edit.macroPlay` | F12 | F12 | Brak | 0 | PD-EDIT-015 |
+| Makra › Odtwórz makro wielokrotnie… | `edit.macroRepeat` | ⇧F12 † | ⇧F12 | Brak | 0 | PD-EDIT-015 |
+| Makra › Zapisz makro w bibliotece… | `edit.macroSave` |  |  | Brak | 0 | PD-EDIT-015 |
+| Makra › Biblioteka makr… | `edit.macroLibrary` |  |  | Brak | 0 | PD-EDIT-015 |
+| Kopiuj jako literał › Swift | `edit.specialCopy.swift` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › Java | `edit.specialCopy.java` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › C# | `edit.specialCopy.csharp` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › JavaScript | `edit.specialCopy.javascript` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › Python | `edit.specialCopy.python` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › C/C++ | `edit.specialCopy.c` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › PHP | `edit.specialCopy.php` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › Delphi | `edit.specialCopy.delphi` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › Visual Basic | `edit.specialCopy.vb` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Kopiuj jako literał › Wklej z języka programowania | `edit.pasteHostLanguage` |  |  | Pełny | 0 | PD-EDIT-016 |
+| Wklej z historii schowka | `edit.pasteFromHistory` |  |  | Brak | 0 | PD-EDIT-024 |
+| Wstaw zadanie To-Do | `edit.todoInsert` |  |  | Pełny | 0 | PD-TODO-001 |
+| Zamknij lub otwórz zadanie To-Do | `edit.todoToggle` |  |  | Pełny | 0 | PD-TODO-001 |
 
 ## Sesja
 
@@ -200,6 +216,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
+| Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |
+| Zadania To-Do | `view.todoItems` |  |  | Odczyt | 0 | PD-TODO-001 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | 0 | PD-CA-010 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |
