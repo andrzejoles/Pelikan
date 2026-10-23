@@ -272,6 +272,14 @@ wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/
 poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
 zablokuje; okno zgody pokazuje pełny tekst.
 
+### D36 · 2026-10-23 — Zamknięcie Etapu 5 (agenci AI); praca równoległa
+Kryteria spełnione testami: każde CLI z listy dostaje serwer MCP tylko dla sesji (specyfikacje uruchomienia, token poza
+argumentami), agent czyta stan, edytory i obiekty bazy przez własną sesję, operacje „Za zgodą” czekają na decyzję
+(atrapa okna zgody), testy bezpieczeństwa z SECURITY §5 przechodzą (kanał: 16, baza: 8). Testy E2E z prawdziwymi CLI
+(AI-E2E-001, opcjonalne) nie są uruchamiane automatycznie — używałyby kont dostawców właściciela; zostają do ręcznego
+uruchomienia. Od tego etapu część zadań bez bazy (interfejs panelu, funkcje edytora, przeglądarka plików) budują
+równolegle subagenty w osobnych worktree, a zadania z testami na wspólnej bazie testowej — sesja główna, szeregowo.
+
 ### D37 · 2026-10-23 — Makra nagrywają tekst i komendy edytora
 Makro (PD-EDIT-015) zapisuje wpisywany tekst, Backspace (łączone w kroki, poprawki literówek skracają ostatni tekst)
 oraz komendy rejestru wywołane przez użytkownika ze skutkiem „interfejs” albo „edytor”. Komendy wykonujące polecenia
@@ -300,6 +308,7 @@ domowy, a agent pracuje na bazie i edytorach. Usuwanie zawsze do Kosza, nigdy tr
 tekst okien w katalogu danych (`Worksets/*.json`, pliki 0600) — przy autozapisie zamknięcie aplikacji nie pyta o zapis
 okien, bo ich stan wraca przy starcie. Okna planu, raportu, diagramu i notatnika nie trafiają do workseta (własne
 formaty — Etapy 6–7). Układ okna: ramka, szerokość i karta lewej kolumny, panel agenta (`layout.json`).
+
 ### D41 · 2026-10-23 — Diagram jako model w dokumencie, plik JSON .pdd
 Okno diagramu trzyma model `Diagram` w dokumencie (nie w tekście okna); Zapisz/Otwórz zapisują go jako JSON z
 rozszerzeniem `.pdd` (format własny, czytelny i wersjonowany polem `version`). Współrzędne są w jednostkach przy zoomie
@@ -313,6 +322,7 @@ strony, pola, sortowanie, grupowanie, WHERE/HAVING/INTO, DISTINCT) i generuje SE
 słów kluczowych, kolumna w linii, złączenia ANSI albo w WHERE, schemat przed tabelą). Odczyt istniejącego zapytania
 obejmuje tylko proste SELECT: tabele rozdzielone przecinkami albo `[LEFT|RIGHT|FULL] JOIN … ON a.x = b.y`, bez
 podzapytań w FROM, WITH i operacji zbiorowych — inne zapytania otwierają pusty Query Builder z komunikatem.
+
 ### D43 · 2026-10-23 — Narzędzia danych w sesji narzędzi; format własny
 Eksport, importy, generator i porównanie danych działają w osobnej sesji narzędzi połączenia (`SessionPurpose.tool`),
 nie w sesjach okien — importy zatwierdzają własne transakcje (COMMIT co n wierszy) i nie mogą zatwierdzić pracy
@@ -358,6 +368,7 @@ monitor obsługuje DBMS_ALERT i DBMS_PIPE (wiadomość: elementy tekstowe, liczb
 programów pokazują okna, które je wykonują. Test obciążenia uruchamia każdy wątek w osobnej sesji narzędzi,
 wiąże `:thread` i `:iteration`, po iteracji domyślnie wycofuje zmiany, a przed startem przechodzi przez strażnika
 zmian (prod potwierdza, tylko do odczytu blokuje); wyniki zapisuje jako CSV (Excel).
+
 ### D49 · 2026-10-23 — Wykresy: Swift Charts, definicja po nazwach kolumn, odświeżanie przez okno SQL
 Okno wykresu bierze migawkę karty wyników (kolumny i pobrane wiersze) i rysuje ją w Swift Charts (słupkowy, liniowy,
 warstwowy, punktowy, kołowy — kołowy z pierwszej serii). Definicja wykresu odwołuje się do kolumn po nazwie, więc
@@ -373,6 +384,7 @@ Zmienne dają plik, zaznaczenie, tekst, obiekt z Przeglądarki obiektów, alias 
 port, usługę ani nazwę użytkownika połączenia; środowisko programu nie zawiera zmiennych `PELIKAN_*` (np. tokenu
 agenta). Narzędzie sesji nie wykonuje SQL samo: otwiera okno SQL z blokiem (opcjonalnie wykonuje je komendą okna),
 żeby obowiązywały te same zasady co przy ręcznym wykonaniu. Poziom agenta „Brak”.
+
 ### D51 · 2026-10-23 — Raporty: renderer HTML w Swift, plik .rep w JSON, druk przez WebKit
 Raport to definicja (`ReportDefinition`: zapytanie, styl, formaty kolumn, układ, opcje) zapisywana jako JSON `.rep`,
 a wynik — HTML generowany w czystym Swifcie (testowalny bez bazy) i pokazywany w `WKWebView`; druk i PDF idą przez
