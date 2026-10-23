@@ -157,6 +157,7 @@ struct PortedServerTests {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
         p.arguments = ["-q", "-t", "rsa", "-b", "2048", "-N", "", "-f", other.path + "/k"]
+        p.detachStandardIO()
         try p.run()
         p.waitUntilExit()
         let fake = try String(contentsOfFile: other.path + "/k.pub", encoding: .utf8).split(separator: " ").prefix(2).joined(separator: " ")

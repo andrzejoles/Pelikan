@@ -131,6 +131,80 @@ public enum MLE {
     }
 }
 
+/// Debugowanie modułów MLE po wykonaniu (DBMS_MLE.ENABLE_DEBUGGING, SD-MLE-001): punkty na liniach modułu z migawką
+/// zmiennych lokalnych albo obserwacją wskazanych; kod wywołujący wykonywany w jednym bloku z gwarantowanym wyłączeniem.
+public enum MLEDebugger {
+    public struct Point: Sendable, Hashable {
+        public var line: Int
+        /// Puste — migawka wszystkich zmiennych lokalnych (snapshot); inaczej obserwacja tych nazw (watch).
+        public var watch: [String]
+        public init(line: Int, watch: [String] = []) { self.line = line; self.watch = watch }
+    }
+
+    public struct Hit: Sendable, Hashable {
+        public var frame: String
+        public var line: Int
+        public var values: [String: String]
+    }
+
+    /// Specyfikacja debugowania (JSON) dla modułu `owner.module`.
+    public static func spec(owner: String, module: String, points: [Point]) -> String {
+        func q(_ s: String) -> String {
+            s.unicodeScalars.map { c -> String in
+                switch c { case "\"": "\\\""; case "\\": "\\\\"; default: c.value < 0x20 ? String(format: "\\u%04x", c.value) : String(c) }
+            }.joined()
+        }
+        let name = q("\(owner.uppercased()).\(module.uppercased())")
+        let dps = points.map { p -> String in
+            let actions = p.watch.isEmpty ? #"{"type":"snapshot"}"# : p.watch.map { #"{"type":"watch","id":""# + q($0) + #""}"# }.joined(separator: ",")
+            return #"{"at":{"name":""# + name + #"","line":"# + String(p.line) + #"},"actions":["# + actions + "]}"
+        }
+        return #"{"version":"1.0","debugpoints":["# + dps.joined(separator: ",") + "]}"
+    }
+
+    /// Wynik PARSE_DEBUG_OUTPUT: tablica (po wywołaniach) tablic trafień.
+    public static func parse(_ json: String) -> [Hit] {
+        guard let data = json.data(using: .utf8), let top = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return [] }
+        let flat = top.flatMap { ($0 as? [Any]) ?? [$0] }
+        return flat.compactMap { item in
+            guard let o = item as? [String: Any], let at = o["at"] as? [String: Any] else { return nil }
+            var values: [String: String] = [:]
+            for (k, v) in (o["values"] as? [String: Any]) ?? [:] {
+                if let d = try? JSONSerialization.data(withJSONObject: v, options: [.fragmentsAllowed, .sortedKeys]) { values[k] = String(decoding: d, as: UTF8.self) }
+            }
+            return Hit(frame: at["frameName"] as? String ?? "", line: (at["line"] as? Int) ?? 0, values: values)
+        }
+    }
+
+    /// Wykonuje `call` (instrukcje PL/SQL) z włączonym debugowaniem i zwraca trafienia punktów.
+    public static func run(owner: String, module: String, points: [Point], call: String, in s: any DatabaseSession) async throws -> [Hit] {
+        var body = call.trimmingCharacters(in: .whitespacesAndNewlines)
+        while body.hasSuffix("/") { body.removeLast(); body = body.trimmingCharacters(in: .whitespacesAndNewlines) }
+        if !body.hasSuffix(";") { body += ";" }
+        let block = """
+            declare
+              sink blob;
+            begin
+              dbms_lob.createtemporary(sink, true);
+              dbms_mle.enable_debugging(json(:spec), sink);
+              begin
+                \(body)
+              exception when others then
+                dbms_mle.disable_debugging;
+                raise;
+              end;
+              dbms_mle.disable_debugging;
+              :out := json_serialize(dbms_mle.parse_debug_output(sink) returning clob);
+            end;
+            """
+        let r = try await s.execute(block, binds: [BindVariable(name: "spec", type: .clob, value: .text(spec(owner: owner, module: module, points: points))),
+                                                   BindVariable(name: "out", type: .clob, direction: .output)],
+                                    options: ExecuteOptions(lobLimit: 50_000_000))
+        guard case .lob(let l)? = r.outBinds["out"] else { return [] }
+        return parse(l.text ?? "")
+    }
+}
+
 /// Dane przestrzenne (SD-DATA-001): SDO_GEOMETRY jako WKT i prosty podgląd.
 public enum Spatial {
     /// Kształt z WKT: listy pierścieni/linii (współrzędne x, y) i punkty.
@@ -248,6 +322,29 @@ public enum Oracle23Commands {
                                               source: source, version: ctx.arguments.string("version"))
                 ctx.workspace.newDocument(.program, text: ddl + (ddl.hasSuffix("\n") ? "" : "\n") + "/\n")
                 return CommandResult(value: .string(ddl))
+            },
+            Command(CommandDescriptor(id: "tools.debugMLE", title: L10n.tr("Debuguj moduł MLE po wykonaniu…"), category: .tools,
+                                      parameters: [CommandParameter("module", .string, required: true, L10n.tr("Moduł")),
+                                                   CommandParameter("lines", .string, required: true, L10n.tr("Linie punktów (po przecinku)")),
+                                                   CommandParameter("watch", .string, L10n.tr("Obserwowane zmienne (po przecinku; puste — wszystkie lokalne)")),
+                                                   CommandParameter("call", .sql, required: true, L10n.tr("Instrukcje PL/SQL wywołujące kod modułu"))],
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Wykonuje podane instrukcje z punktami debugowania DBMS_MLE i pokazuje wartości zmiennych w punktach."),
+                                      feature: "SD-MLE-001"), validate: connected) { ctx in
+                let (s, owner) = try await session(ctx.workspace)
+                func list(_ k: String) -> [String] {
+                    (ctx.arguments.string(k) ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                }
+                let watch = list("watch")
+                let points = list("lines").compactMap(Int.init).map { MLEDebugger.Point(line: $0, watch: watch) }
+                guard !points.isEmpty else { throw CommandError.invalidArgument("lines", ctx.arguments.string("lines") ?? "") }
+                let hits = try await MLEDebugger.run(owner: owner, module: ctx.arguments.string("module") ?? "", points: points,
+                                                     call: ctx.arguments.string("call") ?? "", in: s)
+                let text = hits.isEmpty ? L10n.tr("Żaden punkt nie został osiągnięty.")
+                    : hits.enumerated().map { i, h in "#\(i + 1)  \(h.frame)  " + L10n.tr("linia \(h.line)") + "\n" + h.values.keys.sorted().map { "    \($0) = \(h.values[$0] ?? "")" }.joined(separator: "\n") }.joined(separator: "\n\n")
+                ctx.ui?.showHTMLReport(title: L10n.tr("Debugowanie MLE"), html: PackCommands.html("MLE", text))
+                return CommandResult(value: .array(hits.map { h in .object(["frame": .string(h.frame), "line": .int(Int64(h.line)),
+                                                                            "values": .object(h.values.mapValues { .string($0) })]) }))
             },
             Command(CommandDescriptor(id: "grid.spatialPreview", title: L10n.tr("Podgląd przestrzenny"), category: .view,
                                       parameters: [CommandParameter("column", .string, L10n.tr("Kolumna SDO_GEOMETRY (domyślnie bieżąca)"))],

@@ -497,8 +497,9 @@ V$DATABASE. Oracle Free ma pakiety w licencji — testy działają na bazie test
 Generator widoku dualności tworzy DDL z tabeli głównej (klucz główny → `_id`) i tabel podrzędnych połączonych kluczem
 obcym (tablice obiektów, insert/update/delete na każdym poziomie) i otwiera go w oknie SQL — Pelikan nie wykonuje DDL
 sam. Słownik 23ai: `ALL_MLE_MODULES.MODULE_OWNER`, `ALL_MLE_ENVS.ENV_OWNER`, flagi widoków dualności jako TRUE/FALSE.
-Debugowanie modułów JavaScript po wykonaniu (DBMS_MLE post-execution debugging) odłożone — wymaga osobnego widoku
-śladu; reszta SD-MLE-001 działa. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).
+Debugowanie po wykonaniu: DBMS_MLE.ENABLE_DEBUGGING ze specyfikacją JSON (nazwa modułu kwalifikowana schematem,
+migawka albo obserwacja), kod wywołujący w jednym bloku z wyłączeniem debugowania także przy wyjątku, wynik z
+PARSE_DEBUG_OUTPUT jako lista trafień. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).
 ### D65 · 2026-10-23 — Analiza kodu w czasie pisania bez łączenia z bazą; agent tylko inspekcje
 Rozwiązywanie nazw (DG-RES-001) i inspekcje (DG-INSP-001) liczy `Workspace.analyzeCode` z opóźnieniem po zmianie
 tekstu. Inspekcje są lokalne (lekser, zarys PL/SQL). Nazwy sprawdza się w słowniku tylko wtedy, gdy połączenie okna
