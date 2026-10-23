@@ -20,6 +20,15 @@ public enum SQLCommands {
             let script = sel.isEmpty || sel.upperBound > ns.length ? doc.text : ns.substring(with: NSRange(location: sel.lowerBound, length: sel.count))
             return try await runCommandWindow(ctx, doc, script)
         }
+        if doc.kind == .program {
+            // Program Window: F8 kompiluje wszystkie jednostki (UG 4.4).
+            let r = try await ProgramCompiler.compile(doc, in: ctx.workspace)
+            let errors = r.messages.filter { $0.severity == .error }.count
+            let warnings = r.messages.filter { $0.severity == .warning }.count
+            doc.statusText = r.ok ? L10n.tr("Skompilowano jednostek: \(r.compiled)") + (warnings > 0 ? L10n.tr(" · ostrzeżeń: \(warnings)") : "")
+                : L10n.tr("Błędy kompilacji: \(errors) (\(r.stoppedAt?.tabTitle ?? ""))")
+            return CommandResult(message: doc.statusText)
+        }
         try await SQLExecutor.execute(doc, scope: scope, in: ctx.workspace)
         return CommandResult(message: doc.statusText)
     }

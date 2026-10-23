@@ -329,6 +329,7 @@ final class LineNumberRulerView: NSView {
         self.highlighter = highlighter
         super.init(frame: .zero)
         setAccessibilityElement(false)
+        clipsToBounds = true      // tło marginesu nie może zamalować widoków nad edytorem
     }
 
     @available(*, unavailable)
@@ -337,10 +338,11 @@ final class LineNumberRulerView: NSView {
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
+        let area = dirtyRect.intersection(bounds)
         NSColor.textBackgroundColor.setFill()
-        dirtyRect.fill()
+        area.fill()
         NSColor.separatorColor.setFill()
-        NSRect(x: bounds.width - 1, y: dirtyRect.minY, width: 1, height: dirtyRect.height).fill()
+        NSRect(x: bounds.width - 1, y: area.minY, width: 1, height: area.height).fill()
         guard let tv = textView, let tlm = tv.textLayoutManager, let content = tlm.textContentManager else { return }
         let font = NSFont.monospacedDigitSystemFont(ofSize: max(9, (tv.font?.pointSize ?? 13) - 2), weight: .regular)
         let caretLine = highlighter.line(containing: tv.selectedRange().location)

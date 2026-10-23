@@ -125,3 +125,46 @@ struct ObjectCommandTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Kompilacja w oknie programu na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct ProgramCompileTests {
+    @Test("Błąd w ciele: zatrzymanie, linia dokumentu, ostrzeżenie PLW; poprawka — kompilacja bez błędów; Edytuj z bazy nie jest nieskompilowany")
+    func compile() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.program, text: """
+            create or replace package pelikan_prog_t as
+              function f(p number) return number;
+            end;
+            /
+            create or replace package body pelikan_prog_t as
+              function f(p number) return number is
+                v number;
+              begin
+                return p + brak_zmiennej;
+              end;
+            end;
+            /
+            """)
+        try await ws.invoke("sql.execute")
+        let errors = doc.compileMessages.filter { $0.severity == .error }
+        #expect(errors.contains { $0.line == 9 && $0.text.contains("PLS-00201") })
+        #expect(doc.compileMessages.contains { $0.severity == .warning })       // nieużywana zmienna v (PLW-06009 / PLW-07206)
+        #expect(doc.isCompileStale)
+        #expect(doc.errorRange != nil)
+        doc.text = doc.text.replacingOccurrences(of: "brak_zmiennej", with: "1")
+        try await ws.invoke("sql.execute")
+        #expect(!doc.compileMessages.contains { $0.severity == .error })
+        #expect(!doc.isCompileStale)
+        #expect(doc.statusText?.hasPrefix("Skompilowano jednostek: 2") == true)
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("pelikan_prog_t"), "type": .string("PACKAGE")]))
+        #expect(ws.activeDocument?.isCompileStale == false)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try await s.execute("drop package pelikan_prog_t")
+        await ws.sessions.disconnectAll()
+    }
+}

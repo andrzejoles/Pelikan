@@ -50,6 +50,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var confirmCommitRollback = false
     /// Potwierdzanie poleceń zmieniających na połączeniach produkcyjnych (PD-CONN-006).
     public var confirmProductionChanges = true
+    /// PLSQL_WARNINGS dla kompilacji (UG 23.3); puste — ustawienie serwera.
+    public var plsqlWarnings = "ENABLE:ALL"
     public var useDBAViews = true
     // Oracle — Output
     public var dbmsOutputEnabled = true
@@ -100,6 +102,7 @@ public struct Settings: Sendable, Codable, Hashable {
         keywordCase = v(.keywordCase, keywordCase)
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
+        plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)
         confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)
