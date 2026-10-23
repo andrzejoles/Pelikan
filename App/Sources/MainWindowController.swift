@@ -370,6 +370,7 @@ final class DocumentAreaViewController: NSViewController {
                 case .diagram: DiagramViewController(document: doc, workspace: workspace)
                 case .explainPlan: ExplainPlanViewController(document: doc, workspace: workspace)
                 case .report: ReportWindowViewController(document: doc, workspace: workspace)
+                case .notebook: NotebookViewController(document: doc, workspace: workspace)
                 default: DocumentViewController(document: doc, workspace: workspace)
                 }
                 addChild(c)

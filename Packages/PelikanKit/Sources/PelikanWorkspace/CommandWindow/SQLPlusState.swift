@@ -36,6 +36,9 @@ public struct SQLPlusState: Sendable {
     public var execPause = false
     /// SET SQLFORMAT (SC-CMD-002); nil — format SQL*Plus.
     public var sqlFormat: SQLFormat?
+    /// Historia poleceń SQL okna z czasami (HISTORY, SQLcl) i aliasy (ALIAS nazwa=polecenie).
+    public var history: [(sql: String, milliseconds: Int)] = []
+    public var aliases: [String: String] = [:]
 
     /// Zmienne podstawiania (DEFINE, &&, ACCEPT, COLUMN NEW_VALUE, parametry &1…).
     public var defines: [String: String] = [:]

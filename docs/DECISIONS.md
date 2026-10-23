@@ -424,3 +424,56 @@ Sekcje panelu DBA i części Instance Viewera czytają słownik DBA_/V$ i przy O
 uprawnień zamiast błędu (użytkownik bez SELECT_CATALOG_ROLE widzi to, do czego ma dostęp). Zmiany (ALTER SYSTEM SET,
 blokada konta) to komendy z potwierdzeniem i strażnikiem zmian. Task Monitor to wspólna lista `WorkspaceTaskCenter`
 w Workspace (nazwa bez kolizji z `BackgroundTask` SwiftUI); długie operacje uruchamia się przez `ws.tasks.run`.
+
+### D-S7C-1 · 2026-10-23 — Notatnik SQL jako plik JSON z wynikami
+Notatnik (`.sqlnb`) to JSON z komórkami SQL/PL/SQL i Markdown; wynik komórki (kolumny, typy, do 200 wierszy jako
+tekst, komunikaty, DBMS_OUTPUT, błąd, czas) i opcjonalny wykres zapisują się w pliku, więc notatnik otwiera się z
+wynikami bez bazy. Komórka wykonuje się w sesji okna przez strażnika zmian; polecenia SQL*Plus w komórce są
+pomijane. Run All zatrzymuje się na pierwszym błędzie. Eksport do Markdown (tabele wyników). Komendy notatnika mają
+poziom agenta Brak — agent pracuje przez własne narzędzia zapytań.
+
+### D-S7C-2 · 2026-10-23 — Raporty predefiniowane na słowniku ALL_/USER_
+Katalog raportów predefiniowanych (SD-REP-001) jest wbudowany w kod i używa tylko widoków ALL_/USER_ (bez uprawnień
+DBA), z zmienną `:owner` domyślnie równą bieżącemu schematowi. Styl: siatka, wykres (definicja wykresu w raporcie)
+albo DBMS_OUTPUT. Raport szczegółów dostaje wartości wiersza jako `:parent_<kolumna>`. Raporty standardowe okna
+raportu (PD-REP-001, HTML) zostają osobno — to inny mechanizm wzorca.
+
+### D-S7C-3 · 2026-10-23 — Database Diff wyrównuje kolumny tabel; koszyk w katalogu danych
+Diff korzysta z porównania obiektów (PD-TOOL-012); dla różnych tabel generuje ALTER TABLE ADD/MODIFY (typ, DEFAULT,
+NULL/NOT NULL), a kolumny tylko w celu — DROP COLUMN jako komentarz, chyba że użytkownik zaznaczy usuwanie.
+Różnice więzów i indeksów pozostają do ręcznego przejrzenia. Koszyk (`cart.json` w katalogu danych, eksport `.cart`)
+przechowuje obiekty po nazwie; skrypt wdrożenia ma DDL w kolejności typów i dane INSERT (tabele nadrzędne pierwsze).
+
+### D-S7C-4 · 2026-10-23 — Kolejność kopiowania schematu
+Kopiowanie: sekwencje i typy, tabele bez więzów FK (`REF_CONSTRAINTS=false`), dane (format własny tabel),
+pozostałe obiekty, klucze obce, na końcu wyzwalacze — żeby wyzwalacze nie odpalały się na kopiowanych danych.
+DDL bez nazwy schematu, wykonywane z `CURRENT_SCHEMA` celu (przywracanym po zakończeniu). Istniejące obiekty są
+pomijane (raport), chyba że wybrano zastępowanie (DROP tabel, sekwencji, indeksów, typów; kod przez CREATE OR REPLACE).
+
+### D-S7C-5 · 2026-10-23 — Kreator importu obok importerów tekstu i Excela
+Importery PD-TOOL-008/009 zostają; kreator SD-IMP-001 łączy je i dodaje pliki o stałej szerokości (wykrywanie kolumn
+po wspólnych spacjach), jawny wybór kodowania (UTF-8, UTF-16, ISO-8859-2, Windows-1250/1252), podgląd i profile
+(`ImportProfiles/*.json` w katalogu danych, bez danych połączenia).
+
+### D-S7C-6 · 2026-10-23 — Polecenia SQLcl w oknie poleceń
+INFO+ (statystyki kolumn z ALL_TAB_COL_STATISTICS), DDL [plik] (DBMS_METADATA), LOAD tabela plik [NEW] (wykrycie
+separatora, NEW tworzy tabelę z typów danych), FORMAT BUFFER/FILE (formater Pelikana), HISTORY [TIME|n|CLEAR]
+(historia okna z czasami — w pamięci okna), ALIAS nazwa=polecenie / LIST / DROP (aliasy okna), REPEAT n [s]
+(bufor), CTAS tabela nowa (polecenie do bufora). Linia aliasu bez średnika łączy się przy podziale skryptu z
+następnym poleceniem — po aliasie wykonuje się reszta.
+
+### D-S7C-7 · 2026-10-23 — Układ diagramu ER warstwami kluczy obcych
+Diagram ER z bazy umieszcza tabele w kolumnach według poziomu w grafie FK (rodzice po lewej; cykle przerywane),
+w kolumnie alfabetycznie; wysokie kolumny dzielone dla proporcji obrazu. Powyżej 60 tabel bez listy kolumn.
+Eksport obrazu — istniejący eksport diagramu (PD-DIAG-003).
+
+### D-S7C-8 · 2026-10-23 — Przenoszenie danych literałami, definicje bez haseł
+Przenoszenie (DB-XFER-001) czyta źródło partiami i wstawia wiersze do celu jako INSERT z literałami (jak porównanie
+danych) — działa między dowolnymi połączeniami i typami kosztem szybkości. Definicje (`Transfers/*.json`) wskazują
+połączenia nazwą; zmiana celu przechodzi przez strażnika zmian.
+
+### D-S7C-9 · 2026-10-23 — Zadania lokalne tylko w działającej aplikacji
+Zadania lokalne (DB-TASK-001) uruchamia planista w aplikacji (co 30 s sprawdza terminy) — bez agenta launchd, bo to
+trwała zmiana konfiguracji systemu (PROMPT §13). Definicje (`Tasks/tasks.json`) zawierają nazwę połączenia, nigdy
+hasła; hasło pochodzi z Pęku kluczy w chwili uruchomienia. Stan i dzienniki osobno (`Tasks/state.json`,
+`Tasks/logs/`). Skrypt bez zaznaczonego COMMIT jest wycofywany; z COMMIT — przez strażnika zmian.

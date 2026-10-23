@@ -64,6 +64,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Workset › Zamknij workset | `workset.close` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Usuń workset… | `workset.delete` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Autozapis workseta | `workset.toggleAutosave` |  |  | Brak | 0 | PD-WSET-001 |
+| Notatnik › Eksportuj notatnik jako Markdown… | `notebook.exportMarkdown` |  |  | Brak | 0 | SD-NB-001 |
 
 ## Projekt
 
@@ -179,6 +180,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | 0 | PD-CONN-022 |
 | Połączenie okna… | `session.windowConnection` |  |  | Brak | 0 | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | 0 | PD-CONN-003 |
+| Notatnik › Wykonaj wszystkie komórki | `notebook.runAll` |  |  | Brak | 0 | SD-NB-001 |
+| Notatnik › Wykonaj komórkę | `notebook.runCell` |  |  | Brak | 0 | SD-NB-001 |
 
 ## Debugowanie
 
@@ -279,6 +282,17 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
 | Narzędzia użytkownika… | `tools.configureTools` |  |  | Brak | 0 | PD-TOOL-017 |
+| Database Diff… | `tools.databaseDiff` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk wdrożenia… | `tools.cart` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk › Dodaj obiekt do koszyka | `cart.add` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk › Skrypt wdrożenia koszyka | `cart.script` |  |  | Brak | 0 | SD-DIFF-001 |
+| Kopiowanie schematu… | `tools.schemaCopy` |  |  | Brak | 0 | SD-COPY-001 |
+| Kreator importu danych… | `tools.importWizard` |  |  | Brak | 0 | SD-IMP-001 |
+| Diagram › Diagram ER ze schematu… | `diagram.fromSchema` |  |  | Brak | 0 | DB-DIAG-001 |
+| Przenoszenie danych… | `tools.dataTransfer` |  |  | Brak | 0 | DB-XFER-001 |
+| Wykonaj zapisane przeniesienie danych | `transfer.run` |  |  | Brak | 0 | DB-XFER-001 |
+| Zadania lokalne… | `tools.localTasks` |  |  | Brak | 0 | DB-TASK-001 |
+| Uruchom zadanie lokalne | `localTasks.runNow` |  |  | Brak | 0 | DB-TASK-001 |
 
 ## Raporty
 
@@ -298,6 +312,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Raport › Zablokuj definicję raportu | `report.lock` |  |  | Brak | 0 | PD-REP-004 |
 | Raport › Odblokuj definicję raportu | `report.unlock` |  |  | Brak | 0 | PD-REP-004 |
 | Raport › Dodaj raport do menu Raporty | `report.addToMenu` |  |  | Brak | 0 | PD-REP-004 |
+| Raporty predefiniowane… | `reports.predefined` |  |  | Brak | 0 | SD-REP-001 |
+| Wykonaj raport predefiniowany | `reports.predefined.run` |  |  | Brak | 0 | SD-REP-001 |
+| Otwórz raport w oknie SQL | `reports.predefined.worksheet` |  |  | Brak | 0 | SD-REP-001 |
 
 ## Widok
 

@@ -114,6 +114,8 @@ public final class Document: Identifiable {
     public var compileMessages: [CompileMessage] = []
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
+    /// Notatnik SQL: komórki z wynikami (SD-NB-001).
+    public var notebook = Notebook()
     /// Okno raportu: definicja (zapytanie w `text`), wynik HTML i dane, błąd (PD-REP-002).
     public var report = ReportDefinition(title: "", sql: "")
     public var reportHTML: String?

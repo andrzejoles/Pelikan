@@ -113,10 +113,14 @@ public protocol UIServices: AnyObject {
     func applyLayout(_ layout: WindowLayout)
     /// Historia Git (lista zatwierdzeń) w oknie informacji.
     func showGitLog(_ commits: [GitCommit], title: String)
+    /// Okna narzędzi etapu 7: raporty predefiniowane, Database Diff, koszyk, kopiowanie schematu, kreator importu,
+    /// przenoszenie danych z mapowaniem, zadania lokalne.
+    func showStage7Tool(_ tool: Stage7Tool)
 
 }
 
 extension UIServices {
+    public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showMacroLibrary() {}
     public func showClipboardHistory() {}
@@ -277,6 +281,8 @@ public final class Workspace {
     public var projectBuildResults: [ProjectBuildResult] = []
     /// Zadania w tle (Task Monitor, SD-MON-002).
     public let tasks = WorkspaceTaskCenter()
+    /// Zadania lokalne według harmonogramu (DB-TASK-001); definicje w katalogu danych `Tasks/`.
+    @ObservationIgnored public private(set) lazy var localTasks = LocalTaskScheduler(directory: dataDirectory?.appendingPathComponent("Tasks", isDirectory: true))
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
