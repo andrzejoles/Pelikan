@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T11:04:33+02:00",
+  "heartbeat": "2026-10-23T11:14:28+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 4 / utPLSQL — eksplorator testów (get_suites_info, ostatni wynik, odświeżanie po kompilacji), generator szkieletu pakietu testowego (kompiluje się i uruchamia), podpowiedzi adnotacji --% i matcherów ut.expect, ostrzeżenia o nieznanych adnotacjach, przejście pakiet ↔ test — 2 testy (1 na bazie); weryfikacja bez sterowania interfejsem (D30)",
+    "PR #30 scalony (niejawne wyniki, SQL w sesji debugowanej)",
     "Etap 4 / utPLSQL — uruchamianie: wszystkie testy, ścieżka, z edytora (test pod kursorem), z Object Browsera, ponownie nieudane, przerwanie; wyniki na żywo (ut_realtime_reporter w dwóch sesjach), okno wyników z drzewem, czasami, filtrem i szczegółami; pokrycie (Sonar → margines edytora, raport HTML); wersja utPLSQL — 3 testy na bazie",
     "Etap 3 zamknięty (D29): krokowanie przez pakiet z wyzwalaczem, rekord i kolekcja w testach na bazie; JDWP i pozostałe P2/P3 przeniesione",
     "PR #28 i #29 scalone (profilery, zmienne globalne pakietu w debugerze)",
@@ -90,9 +92,7 @@
     "PR #11 scalony (Object Browser), wersja 2.1.0",
     "Etap 2 / Object Browser: MetadataProvider (sesja główna, cache, widoki DBA/ALL, foldery wg wersji — MLE i domeny na 23ai+), drzewo typów z leniwym ładowaniem, wybór użytkownika, filtr (nazwa%, status=, source=), elementy obiektu (kolumny, indeksy, więzy, wyzwalacze, podprogramy, zależności), niepoprawne na czerwono, Ostatnie, menu: Pokaż/Edytuj dane, Edytuj (okno programu), DDL, Opis, Właściwości, Rekompiluj, Usuń, Kopiuj nazwę, Odśwież — 5 testów na bazie",
     "Etap 1 zakończony: PR #10 scalony, wersja 2.0.0, szkic wydania v2.0.0 na GitHubie (do publikacji przez właściciela)",
-    "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe",
-    "Karty dokumentów: menu Zamknij / pozostałe / z lewej / z prawej, zamykanie krzyżykiem i środkowym przyciskiem przez komendę (pytania o zapis i transakcję); edytor: wielkość liter słów kluczowych przy pisaniu (preferencja), podświetlenie bieżącej linii, wcięcie z preferencji — 1 test, sprawdzone ręcznie",
-    "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy"
+    "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 80,
-      "passed": 80,
+      "total": 81,
+      "passed": 81,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T11:04:33+02:00"
+      "at": "2026-10-23T11:14:28+02:00"
     },
     "perf": {
       "total": 9,

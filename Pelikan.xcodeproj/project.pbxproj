@@ -31,6 +31,7 @@
 		A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335AC06B5D604A8B96621019 /* DiffViewer.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
+		A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */; };
 		AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */; };
 		AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */ = {isa = PBXBuildFile; productRef = 68DCC77A1DA6108E25EBC9B9 /* PelikanDB */; };
 		AF619AD9C795CDE3A74335EE /* PelikanWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = 7D051D9F72BF390F621C6946 /* PelikanWorkspace */; };
@@ -86,6 +87,7 @@
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
 		CA27E74D0C918323B465606B /* ToolWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolWindows.swift; sourceTree = "<group>"; };
 		CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestExplorerView.swift; sourceTree = "<group>"; };
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
@@ -185,6 +187,7 @@
 		5C5E85F85E1129E104F58BD8 /* UtPLSQL */ = {
 			isa = PBXGroup;
 			children = (
+				D823868EFA8AB35B9B9E1B7C /* TestExplorerView.swift */,
 				987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */,
 			);
 			path = UtPLSQL;
@@ -426,6 +429,7 @@
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
+				A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */,
 				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,

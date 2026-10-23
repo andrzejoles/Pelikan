@@ -48,6 +48,8 @@ public protocol UIServices: AnyObject {
     func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
     /// Prosty edytor obiektu (sekwencja, synonim, indeks, użytkownik, rola — UG 9.2–9.11).
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
+    /// Eksplorator testów utPLSQL (UT-EXP-001).
+    func showTestExplorer()
     /// Okno wyników utPLSQL dla przebiegu (PROMPT §6).
     func showUtplsqlResults(_ run: UtplsqlRun)
     /// Okno punktów przerwania (UG 5.10).
@@ -66,6 +68,7 @@ extension UIServices {
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
     public func showBreakpoints() {}
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
+    public func showTestExplorer() {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
@@ -148,6 +151,8 @@ public final class Workspace {
     public var errorBreakpoints: [Int] = []
     /// Ostatni przebieg testów utPLSQL (okno wyników, pokrycie na marginesie).
     public var lastUtplsqlRun: UtplsqlRun?
+    /// Zmienia się po kompilacji jednostek (eksplorator testów przeładowuje drzewo).
+    public var compileGeneration = 0
     @ObservationIgnored var debuggers: [DocumentID: DebuggerEngine] = [:]
     /// Historia skoków (UG 25.20) — Wstecz / Naprzód.
     public internal(set) var navigationBack: [NavigationPoint] = []

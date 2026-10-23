@@ -215,3 +215,9 @@ P1 Etapu 3 zrobione. Przechodzą dalej (najpóźniej audyt Etapu 8): DBMS_DEBUG_
 `:new`/`:old`, których DBMS_DEBUG nie udostępnia), karta statystyk okna SQL (PD-SQLW-008), DBMS_TRACE i SQL Trace
 (PD-OPT-007/008), ostrzeżenia ORA-04068 (PD-TEST-007), testy standardowe (PD-TEST-009), nadawanie uprawnień DEBUG
 (PD-DBG-013), warunki i logpointy punktów przerwania.
+
+### D30 · 2026-10-23 — Weryfikacja bez sterowania interfejsem w czasie pracy właściciela
+Właściciel używa komputera w trakcie pracy agenta, więc syntetyczne klawisze i kliknięcia (AppleScript, CGEvent) oraz
+aktywowanie okien Pelikana są wyłączone: mogą trafić do aktywnego okna właściciela. Funkcje są weryfikowane testami
+(jednostkowymi i integracyjnymi na bazie testowej) oraz zrzutami okien wykonywanymi w tle; wiersze macierzy bez zrzutu
+mają tylko ✅ test, a 👁 dochodzi, gdy zrzut da się zrobić bez interakcji albo właściciel na to pozwoli.

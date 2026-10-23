@@ -166,6 +166,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: uruchom ponownie nieudane | `utplsql.rerunFailed` |  |  | Za zgodą | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: przerwij | `utplsql.cancel` |  |  | Pełny | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: wersja w bazie | `utplsql.version` |  |  | Odczyt | 0 | UT-INS-001 |
+| utPLSQL › utPLSQL: generuj pakiet testowy | `utplsql.generateTest` |  |  | Pełny | 0 | UT-GEN-001 |
+| utPLSQL › utPLSQL: przejdź do testu / testowanego pakietu | `utplsql.toggleTest` | ⌃⇧T †, ⌃⌘T | ⌃⌘T | Pełny | 0 | UT-NAV-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
@@ -193,6 +195,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | 0 | PD-CA-010 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |

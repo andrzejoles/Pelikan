@@ -205,6 +205,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showTestExplorer() {
+        ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
+            TestExplorerView(workspace: workspace)
+        }
+    }
+
     func showUtplsqlResults(_ run: UtplsqlRun) {
         // Jedno okno wyników — nowy przebieg zastępuje zawartość.
         ToolWindowController.close(key: "utplsql")
