@@ -147,6 +147,10 @@ public final class Document: Identifiable {
     /// Profiler przy wykonaniu okna testu (nil — wyłączony) i raport ostatniego przebiegu (UG 6.3).
     public var profiler: ProfilerKind?
     public var profilerReport: ProfilerReport?
+    /// Ślad DBMS_TRACE okna testu (PD-OPT-007): poziom (nil — wyłączony), numer i zdarzenia ostatniego przebiegu.
+    public var traceLevel: PLSQLTrace.Level?
+    public var traceRun: Int?
+    public var traceEvents: [PLSQLTrace.Event] = []
     /// Statystyki sesji ostatniego wykonania (różnica V$MYSTAT, UG 6.2) — nazwa i wartość.
     public var statistics: [SessionStatistic] = []
     /// Linia (od 1), w której zatrzymał się debuger — wyróżniona w edytorze (UG 5.10).

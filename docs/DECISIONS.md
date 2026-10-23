@@ -810,3 +810,11 @@ w katalogu ustawionym przez CD, ze środowiskiem bez zmiennych `PELIKAN_*` i bez
 120 s i wyjściem w oknie. Każde wywołanie — także ze skryptu `@plik` — wymaga potwierdzenia z pełną treścią polecenia,
 żeby cudzy skrypt nie uruchomił niczego po cichu. Agent nie ma dostępu do Command Window (AI-SEC-011, test), więc nie
 dociera do HOST. Wyjątek instalatora utPLSQL (D31: `! rm plik` bez powłoki i bez pytania) zostaje bez zmian.
+
+### D106 · 2026-10-24 — Debuger JDWP pominięty, DBMS_TRACE z tabelami tracetab
+Debugowanie przez DBMS_DEBUG_JDWP wymagałoby, żeby Pelikan był serwerem protokołu Java Debug Wire Protocol (baza łączy
+się do IDE przez TCP) — to osobny, duży komponent sieciowy, a debuger na DBMS_DEBUG (ADR 0006) działa na wszystkich
+obsługiwanych wersjach, także 26ai. Wiersz PD-DBG-002 pominięty do czasu, gdy Oracle usunie DBMS_DEBUG. DBMS_TRACE używa
+tabel SYS.PLSQL_TRACE_RUNS/EVENTS z `tracetab.sql`; bez nich Pelikan podaje, co zainstalować (instaluje administrator),
+a baza testowa dostaje je w `scripts/testdb.sh seed`. Uprawnienia debugera Pelikan tylko przygotowuje jako skrypt
+w oknie SQL — nadaje je administrator, nie aplikacja.

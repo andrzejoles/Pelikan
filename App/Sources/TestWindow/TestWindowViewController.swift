@@ -72,6 +72,7 @@ struct TestPanel: View {
                 Text(L10n.tr("Profiler")).tag(3)
                 Text(L10n.tr("Statystyki")).tag(4)
                 Text(L10n.tr("Wyniki") + (document.testResults.isEmpty ? "" : " (\(document.testResults.count))")).tag(5)
+                Text(L10n.tr("Ślad") + (document.traceEvents.isEmpty ? "" : " (\(document.traceEvents.count))")).tag(6)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -82,6 +83,7 @@ struct TestPanel: View {
             case 2: errorStack
             case 3: profiler
             case 4: statistics
+            case 6: trace
             default: results
             }
         }
@@ -205,6 +207,30 @@ struct TestPanel: View {
             .padding(8)
         }
         .onChange(of: document.testResults) { if !document.testResults.isEmpty { tab = 5 } }
+    }
+
+    /// Ślad DBMS_TRACE (PD-OPT-007): zdarzenia przebiegu; poziom włączany komendą Debugowanie › Ślad DBMS_TRACE.
+    private var trace: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(document.traceLevel == nil ? L10n.tr("Ślad wyłączony") : L10n.tr("Poziom śladu: \(document.traceLevel!.rawValue)"))
+                    .font(.caption).foregroundStyle(.secondary)
+                if let run = document.traceRun { Text(L10n.tr("Przebieg \(run)")).font(.caption).foregroundStyle(.secondary) }
+                Spacer()
+                Button(document.traceLevel == nil ? L10n.tr("Włącz ślad") : L10n.tr("Wyłącz ślad")) {
+                    workspace.perform("test.trace", CommandArguments(document.traceLevel == nil ? [:] : ["levels": "off"]))
+                }
+                Button(L10n.tr("Historia…")) { workspace.perform("test.traceRuns") }
+            }
+            Table(document.traceEvents) {
+                TableColumn("#") { (e: PLSQLTrace.Event) in Text("\(e.seq)").monospacedDigit() }.width(50)
+                TableColumn(L10n.tr("Zdarzenie")) { (e: PLSQLTrace.Event) in Text(e.kind) }.width(min: 60, ideal: 80)
+                TableColumn(L10n.tr("Jednostka")) { (e: PLSQLTrace.Event) in Text(e.unit) }.width(min: 120, ideal: 180)
+                TableColumn(L10n.tr("Linia")) { (e: PLSQLTrace.Event) in Text(e.line > 0 ? "\(e.line)" : "") }.width(50)
+                TableColumn(L10n.tr("Opis")) { (e: PLSQLTrace.Event) in Text(e.comment) }
+            }
+        }
+        .padding(6)
     }
 
     private var statistics: some View {

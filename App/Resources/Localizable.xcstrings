@@ -5629,6 +5629,34 @@
         }
       }
     },
+    "Brak przebiegów." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No runs."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Läufe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ejecuciones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає запусків."
+          }
+        }
+      }
+    },
     "Brak różnic" : {
       "localizations" : {
         "en" : {
@@ -5737,6 +5765,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Paketspezifikation"
+          }
+        }
+      }
+    },
+    "Brak tabel DBMS_TRACE — administrator instaluje je skryptem ?/rdbms/admin/tracetab.sql" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No DBMS_TRACE tables — the administrator installs them with ?/rdbms/admin/tracetab.sql"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine DBMS_TRACE-Tabellen – der Administrator installiert sie mit ?/rdbms/admin/tracetab.sql"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay tablas de DBMS_TRACE: el administrador las instala con ?/rdbms/admin/tracetab.sql"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає таблиць DBMS_TRACE — адміністратор встановлює їх скриптом ?/rdbms/admin/tracetab.sql"
           }
         }
       }
@@ -18005,6 +18061,34 @@
         }
       }
     },
+    "Historia przebiegów DBMS_TRACE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE Run History"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE-Laufhistorie"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de ejecuciones de DBMS_TRACE"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія запусків DBMS_TRACE"
+          }
+        }
+      }
+    },
     "Historia schowka" : {
       "localizations" : {
         "en" : {
@@ -18169,6 +18253,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf vom Server"
+          }
+        }
+      }
+    },
+    "Historia…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historie …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія…"
           }
         }
       }
@@ -26489,6 +26601,34 @@
         }
       }
     },
+    "Lista przebiegów DBMS_TRACE; z numerem — wczytuje zdarzenia przebiegu do karty Ślad okna testu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists DBMS_TRACE runs; with a number, loads the run's events into the Test Window Trace tab."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listet DBMS_TRACE-Läufe auf; mit Nummer werden die Ereignisse des Laufs in die Registerkarte Trace des Test Window geladen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista las ejecuciones de DBMS_TRACE; con un número, carga los eventos de la ejecución en la pestaña Traza de la Test Window."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перелік запусків DBMS_TRACE; з номером — завантажує події запуску на вкладку Трасування Test Window."
+          }
+        }
+      }
+    },
     "Lista punktów przerwania (włączanie, licznik przejść, usuwanie) i zatrzymanie na kodach błędów." : {
       "localizations" : {
         "en" : {
@@ -33825,6 +33965,34 @@
         }
       }
     },
+    "Numer przebiegu do wczytania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run number to load"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu ladende Laufnummer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de ejecución que cargar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер запуску для завантаження"
+          }
+        }
+      }
+    },
     "Numer przeciążenia" : {
       "localizations" : {
         "en" : {
@@ -38669,6 +38837,34 @@
         }
       }
     },
+    "Otwiera okno SQL z poleceniami GRANT DEBUG CONNECT SESSION i DEBUG ANY PROCEDURE dla użytkownika (do wykonania przez administratora)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a SQL Window with GRANT DEBUG CONNECT SESSION and DEBUG ANY PROCEDURE for the user (to be run by an administrator)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein SQL Window mit GRANT DEBUG CONNECT SESSION und DEBUG ANY PROCEDURE für den Benutzer (vom Administrator auszuführen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una SQL Window con GRANT DEBUG CONNECT SESSION y DEBUG ANY PROCEDURE para el usuario (lo ejecuta un administrador)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває SQL Window з GRANT DEBUG CONNECT SESSION і DEBUG ANY PROCEDURE для користувача (виконує адміністратор)."
+          }
+        }
+      }
+    },
     "Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje." : {
       "localizations" : {
         "en" : {
@@ -42025,6 +42221,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Після повернення до Pelikan зміни файлу завантажуються у вікно. Вікно без файлу записується в тимчасовий файл у теці даних."
+          }
+        }
+      }
+    },
+    "Po przecinku: calls, exceptions, sql, lines (wszystkie) albo enabled-calls…; off — wyłączony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comma-separated: calls, exceptions, sql, lines (all) or enabled-calls…; off — disabled"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durch Kommas getrennt: calls, exceptions, sql, lines (alle) oder enabled-calls…; off – deaktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separados por comas: calls, exceptions, sql, lines (todas) o enabled-calls…; off: desactivado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Через кому: calls, exceptions, sql, lines (усі) або enabled-calls…; off — вимкнено"
           }
         }
       }
@@ -46677,6 +46901,34 @@
         }
       }
     },
+    "Poziom śladu: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace level: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace-Ebene: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel de traza: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рівень трасування: %@"
+          }
+        }
+      }
+    },
     "Pozycja w historii (0 — najnowszy)" : {
       "localizations" : {
         "en" : {
@@ -48213,6 +48465,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Proxy: Zielschema"
+          }
+        }
+      }
+    },
+    "Przebieg %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lauf %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecución %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запуск %@"
           }
         }
       }
@@ -62217,6 +62497,34 @@
         }
       }
     },
+    "Uprawnienia debugera…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger Privileges…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger-Privilegien …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privilegios del depurador…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілеї налагоджувача…"
+          }
+        }
+      }
+    },
     "Uprawnienia sesji: %@" : {
       "localizations" : {
         "en" : {
@@ -65377,6 +65685,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzer"
+          }
+        }
+      }
+    },
+    "Użytkownik (domyślnie bieżący)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User (default: current)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer (Standard: aktueller)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario (por defecto, el actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач (типово — поточний)"
           }
         }
       }
@@ -73417,6 +73753,34 @@
         }
       }
     },
+    "Wyłącz ślad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable trace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace deaktivieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar traza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкнути трасування"
+          }
+        }
+      }
+    },
     "Wyłącza wyzwalacz albo więz lub wszystkie wyzwalacze tabeli." : {
       "localizations" : {
         "en" : {
@@ -74113,6 +74477,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle aktivieren"
+          }
+        }
+      }
+    },
+    "Włącz ślad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable trace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace aktivieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar traza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увімкнути трасування"
           }
         }
       }
@@ -81509,6 +81901,34 @@
         }
       }
     },
+    "Zbiera ślad DBMS_TRACE (wywołania, wyjątki, SQL, linie) przy kolejnych wykonaniach okna testu — karta Ślad." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collects a DBMS_TRACE trace (calls, exceptions, SQL, lines) for subsequent Test Window executions — Trace tab."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sammelt einen DBMS_TRACE-Trace (Aufrufe, Ausnahmen, SQL, Zeilen) für die folgenden Ausführungen des Test Window – Registerkarte Trace."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recoge una traza de DBMS_TRACE (llamadas, excepciones, SQL, líneas) en las siguientes ejecuciones de la Test Window: pestaña Traza."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирає трасування DBMS_TRACE (виклики, винятки, SQL, рядки) під час наступних виконань Test Window — вкладка Трасування."
+          }
+        }
+      }
+    },
     "Zbieraj pokrycie kodu" : {
       "localizations" : {
         "en" : {
@@ -88621,6 +89041,34 @@
         }
       }
     },
+    "uprawnienia debugera" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "debugger privileges"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger-Privilegien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "privilegios del depurador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "привілеї налагоджувача"
+          }
+        }
+      }
+    },
     "ustawienie serwera" : {
       "localizations" : {
         "en" : {
@@ -90801,6 +91249,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durch Kommas getrennte Pfade (schema, schema.paket[.prozedur], schema:suitepath); standardmäßig aktuelles Schema"
+          }
+        }
+      }
+    },
+    "Ślad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Трасування"
+          }
+        }
+      }
+    },
+    "Ślad DBMS_TRACE przy wykonaniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE on Execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE bei Ausführung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE al ejecutar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE під час виконання"
+          }
+        }
+      }
+    },
+    "Ślad wyłączony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace disabled"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace deaktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traza desactivada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Трасування вимкнено"
+          }
+        }
+      }
+    },
+    "Ślad włączony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace enabled"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace aktiviert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traza activada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Трасування увімкнено"
           }
         }
       }

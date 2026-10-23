@@ -84,4 +84,35 @@ struct Stage8AuditDBTests {
         #expect(closed.value == .int(2) && ws.documents.allSatisfy { ws.effectiveConnection(of: $0) != def.id || !$0.connectionPinned })
         await ws.sessions.disconnectAll()
     }
+
+    @Test("DBMS_TRACE w oknie testu: wywołania i wyjątki, historia przebiegów; uprawnienia debugera w oknie SQL")
+    func trace() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let other = try await TestDatabase.connect()
+        _ = try await other.execute("create or replace procedure pelikan_trc_p is begin null; end;")
+        let doc = ws.newDocument(.test, text: "begin\n  pelikan_trc_p;\n  begin raise no_data_found; exception when others then null; end;\nend;")
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        ws.activate(doc.id)
+        _ = try await ws.invoke("test.trace", CommandArguments(["levels": "calls,exceptions"]))
+        #expect(doc.traceLevel == [.allCalls, .allExceptions])
+        _ = try await TestRunner.execute(doc, in: ws)
+        #expect(doc.traceRun != nil && doc.traceEvents.contains { $0.unit.contains("PELIKAN_TRC_P") })
+        #expect(doc.traceEvents.contains { $0.kind == "52" || $0.comment.lowercased().contains("exception") })
+        let runs = try await ws.invoke("test.traceRuns")
+        guard case .array(let list)? = runs.value else { Issue.record("brak historii"); return }
+        #expect(!list.isEmpty)
+        _ = try await ws.invoke("test.trace", CommandArguments(["levels": "off"]))
+        #expect(doc.traceLevel == nil)
+        let g = try await ws.invoke("debug.grantPrivileges")
+        #expect(g.value.map { "\($0)".contains("debug connect session to \(c.user.uppercased())") } == true)
+        _ = try await other.execute("drop procedure pelikan_trc_p")
+        await other.close()
+        await ws.sessions.disconnectAll()
+    }
 }

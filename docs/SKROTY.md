@@ -242,6 +242,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | 0 | PD-TEST-009 |
+| Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | 0 | PD-OPT-007 |
+| Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | 0 | PD-OPT-007 |
+| Uprawnienia debugera… | `debug.grantPrivileges` |  |  | Brak | 0 | PD-DBG-013 |
 | Profiler przy wykonaniu | `test.profiler` |  |  | Pełny | 0 | PD-OPT-005 |
 | utPLSQL: debuguj test pod kursorem | `utplsql.debugTest` |  |  | Brak | 0 | UT-RUN-007 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |

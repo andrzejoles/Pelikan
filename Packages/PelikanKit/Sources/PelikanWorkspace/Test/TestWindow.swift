@@ -193,7 +193,12 @@ public enum TestRunner {
             }
             profileID = try await Profiler.start(kind, session: session, comment: profileComment)
         }
+        if let level = doc.traceLevel { try await PLSQLTrace.start(level, in: session) }
         func finishMeasurements() async {
+            if doc.traceLevel != nil, let r = try? await PLSQLTrace.stop(in: session) {
+                doc.traceRun = r.run
+                doc.traceEvents = r.events
+            }
             if let kind = doc.profiler, let id = profileID {
                 doc.profilerReport = try? await Profiler.stop(kind, id: id, comment: profileComment, session: session)
                 // Tekst linii bloku testu (blok anonimowy nie ma źródła w ALL_SOURCE).
