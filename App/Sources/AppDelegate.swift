@@ -156,6 +156,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {
+        let title = original == nil ? L10n.tr("Nowa tabela") : L10n.tr("Tabela \(definition.owner).\(definition.name)")
+        ToolWindowController.show(key: "table-\(definition.owner).\(original?.name ?? UUID().uuidString)", title: title,
+                                  size: NSSize(width: 980, height: 560)) {
+            TableEditorView(workspace: workspace, connectionID: connectionID, definition: definition, original: original)
+        }
+    }
+
     func showCompileInvalid() {
         ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)

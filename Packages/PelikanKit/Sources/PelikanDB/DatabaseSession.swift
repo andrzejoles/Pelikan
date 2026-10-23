@@ -268,7 +268,7 @@ public extension DatabaseSession {
 }
 
 /// Błąd Oracle albo sterownika.
-public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible {
+public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible, LocalizedError {
     /// Kod ORA- (np. 942); 0 — błąd sterownika bez kodu ORA (wtedy `driverCode`, np. DPI-1047).
     public var code: Int32
     public var message: String
@@ -286,6 +286,8 @@ public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible {
     }
 
     public var description: String { message }
+    /// Treść komunikatu Oracle także w `localizedDescription` (okna błędów, wyniki komend).
+    public var errorDescription: String? { message }
 
     /// Utrata połączenia (ORA-03113, 03114, 03135, 12537, 28 itd.) — przyczynek do ponownego łączenia.
     public var isConnectionLost: Bool {

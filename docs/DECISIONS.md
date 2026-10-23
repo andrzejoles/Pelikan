@@ -166,3 +166,12 @@ Formater przebudowuje wyłącznie odstępy, podział linii i wielkość liter s�
 ze źródłem token po tokenie (literały, identyfikatory w cudzysłowie i komentarze bez zmian) i przy jakiejkolwiek
 różnicy formatowanie jest przerywane z komunikatem, a tekst zostaje bez zmian. Regiony `-- NoFormat Start/End`
 są kopiowane bez zmian. Skrót ⇧⌘F (zapowiedziany w Etapie 0) zostaje.
+
+### D25 · 2026-10-23 — Edytor tabeli: zmiany jako ALTER, zatrzymanie przy pierwszym błędzie
+Edytor definicji tabeli (UG 9.1) generuje dla istniejącej tabeli różnicę jako polecenia ALTER (zmiana nazwy tabeli,
+DROP / RENAME / MODIFY / ADD kolumn, komentarze, więzy: zmiana definicji = DROP + ADD, sama nazwa = RENAME, stan =
+ENABLE / DISABLE; indeksy analogicznie), a nie „Recreate table” — przebudowa z kopiowaniem danych zostaje opcją
+na później. Polecenia wykonuje sesja kompilacji po strażniku tylko do odczytu / produkcji; przy pierwszym błędzie
+wykonanie się zatrzymuje (DDL w Oracle zatwierdza się samo — wykonane polecenia zostają), edytor pokazuje kartę SQL
+z komunikatem i wczytuje stan z bazy. „Edytuj” na tabeli w Object Browserze otwiera edytor; agent dostaje definicję
+jako DDL (bez wykonania). Komunikaty `OracleError` mają od teraz pełną treść także w `localizedDescription`.

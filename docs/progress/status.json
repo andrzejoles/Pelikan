@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:40:45+02:00",
+  "heartbeat": "2026-10-23T08:47:52+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie",
     "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
     "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
     "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)",
@@ -91,8 +92,7 @@
     "Siatka — edycja danych (UG 7.6): tabela ustalana z ROWID (także przy złączeniach), kolumny z aliasem i wyrażenia tylko do odczytu, zmiana komórek z konwersją typów, Wstaw/Usuń rekord, Zatwierdź zmiany (UPDATE/INSERT RETURNING ROWID/DELETE) z odświeżeniem wartości z wyzwalaczy, podgląd SQL zmian, anulowanie, czerwony tekst przy przekroczeniu rozmiaru, przejście do komórki z błędem — 9 testów (5 na bazie), sprawdzone ręcznie",
     "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
     "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
-    "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
-    "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)"
+    "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 66,
-      "passed": 66,
+      "total": 68,
+      "passed": 68,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:32:45+02:00"
+      "at": "2026-10-23T08:47:52+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-edytor-tabeli.png",
+      "title": "Edytor definicji tabeli",
+      "reference": "PD-OED-002"
+    },
     {
       "file": "docs/progress/img/etap2-roznice.png",
       "title": "Przeglądarka różnic: okno programu ↔ baza",

@@ -44,6 +44,8 @@ public protocol UIServices: AnyObject {
     func showCompileInvalid()
     /// Przeglądarka różnic (UG 26): lewy i prawy tekst z tytułami.
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String)
+    /// Edytor definicji tabeli (UG 9.1): `original` nil — nowa tabela.
+    func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 
@@ -53,6 +55,7 @@ extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
+    public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
     public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
         await askVariables(requests, document: document)
