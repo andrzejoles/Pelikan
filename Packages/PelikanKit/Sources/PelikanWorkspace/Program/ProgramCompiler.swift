@@ -119,6 +119,10 @@ public enum ProgramCompiler {
                 break
             }
             result.compiled += 1
+            if ws.settings.debugInfoOnCompile,
+               let dbg = ObjectCommands.debugCompileStatement(DBObject(owner: u.owner ?? schema, name: u.name, type: u.type)) {
+                _ = try? await s.execute(dbg)
+            }
             let (_, rows) = try await s.queryAll("""
                 select line, position, text, attribute, message_number from all_errors
                 where owner = :o and name = :n and type = :t order by sequence

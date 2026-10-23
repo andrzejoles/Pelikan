@@ -110,10 +110,62 @@ struct DebuggerTriggerTests {
         #expect(d.location?.isTestBlock == true && d.location?.line == 3)
         try await d.step(.runToException)
         print("DBG exc", d.location as Any, d.lastReason)
-        #expect(d.location?.name == "PELIKAN_DBG_K" && d.lastReason == 11)
+        #expect(d.location?.name == "PELIKAN_DBG_K" && d.stoppedOnException)
         await d.stop()
         #expect(d.state == .finished)
         for o in ["table pelikan_dbg_t purge", "package pelikan_dbg_k"] { _ = try? await s.execute("drop \(o)") }
+        await ws.sessions.disconnectAll()
+    }
+}
+
+@MainActor
+@Suite("Debuger: wyjście, obserwowane, zmiana wartości, błędy", .enabled(if: TestDatabase.isAvailable), .serialized, .timeLimit(.minutes(1)))
+struct DebuggerExtrasTests {
+    @Test("DBMS_OUTPUT w trakcie, obserwowana zmienna, SET_VALUE zmienia przebieg, punkt przerwania na ORA-20002, Dodaj informację debugowania")
+    func extras() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try await s.execute("""
+            create or replace procedure pelikan_dbg_q(n number) is
+              v number := n;
+            begin
+              dbms_output.put_line('przed');
+              v := v * 10;
+              dbms_output.put_line('v=' || v);
+              if v > 25 then
+                raise_application_error(-20002, 'duże');
+              end if;
+            end;
+            """)
+        try await ws.invoke("ob.addDebugInfo", CommandArguments(["object": .string("pelikan_dbg_q")]))
+        let dbg = try await s.scalar("select plsql_debug from user_plsql_object_settings where name = 'PELIKAN_DBG_Q'")
+        #expect(dbg == "TRUE")
+
+        let doc = ws.newDocument(.test, text: "begin\n  pelikan_dbg_q(3);\nend;")
+        let d = ws.debugger(for: doc)
+        try await d.start()
+        try await d.step(.into)
+        await d.addWatch("v")
+        while d.state == .paused, d.location?.line != 5 { try await d.step(.over) }
+        #expect(doc.output.contains("przed"))
+        #expect(d.watchValues.first?.value == "3")
+        try await d.setValue("v", to: "1")
+        #expect(d.variables.first { $0.name == "v" }?.value == "1")
+        try await d.step(.run)
+        #expect(d.state == .finished && doc.errorStack.isEmpty)
+        #expect(doc.output.contains("v=10"))
+
+        ws.errorBreakpoints = [20002]
+        doc.output = []
+        try await d.start()
+        try await d.step(.run)
+        #expect(d.stoppedOnException && d.location?.line == 8)
+        await d.stop()
+        _ = try? await s.execute("drop procedure pelikan_dbg_q")
         await ws.sessions.disconnectAll()
     }
 }

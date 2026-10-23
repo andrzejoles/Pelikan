@@ -84,6 +84,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var codeAssistantDelay = 400
     /// Reguły formatera PL/SQL (UG 29).
     public var beautifier = BeautifierOptions()
+    /// Kompilacja okna programu z informacją debugowania (UG 23.4 „Add debug information when compiling”).
+    public var debugInfoOnCompile = false
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
@@ -113,6 +115,7 @@ public struct Settings: Sendable, Codable, Hashable {
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
         beautifier = v(.beautifier, beautifier)
+        debugInfoOnCompile = v(.debugInfoOnCompile, debugInfoOnCompile)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)

@@ -154,6 +154,9 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Debuger (UG 23.4)")) {
+                Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+            }
             Section(L10n.tr("Słownik danych")) {
                 Toggle(L10n.tr("Używaj widoków DBA_, jeśli dostępne"), isOn: setting(workspace, \.useDBAViews))
             }

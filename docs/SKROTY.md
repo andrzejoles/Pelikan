@@ -131,6 +131,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wykonaj do wyjątku | `debug.runToException` |  |  | Brak | 0 | PD-DBG-001 |
 | Wykonaj do kursora | `debug.runToCursor` |  |  | Brak | 0 | PD-DBG-001 |
 | Zatrzymaj debugowanie | `debug.stop` | ⇧F9 † | ⇧F9 | Brak | 0 | PD-DBG-001 |
+| Punkty przerwania… | `debug.breakpoints` |  |  | Brak | 0 | PD-DBG-008 |
 | Punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | 0 | PD-DBG-007 |
 
 ## Narzędzia
@@ -144,6 +145,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Właściwości | `ob.properties` |  |  | Odczyt | 0 | PD-OB-012 |
 | Obiekt › Edytuj | `ob.edit` |  |  | Brak | 0 | PD-OB-014 |
 | Obiekt › Rekompiluj | `ob.recompile` |  |  | Za zgodą | 0 | PD-OB-009 |
+| Obiekt › Dodaj informację debugowania | `ob.addDebugInfo` |  |  | Za zgodą | 0 | PD-DBG-011 |
 | Obiekt › Usuń obiekt… | `ob.drop` |  |  | Za zgodą | 0 | PD-OB-016 |
 | Obiekt › Kopiuj nazwę | `ob.copyName` |  |  | Brak | 0 | PD-OB-011 |
 | Obiekt › Odśwież Object Browser | `ob.refresh` |  |  | Pełny | 0 | PD-OB-004 |

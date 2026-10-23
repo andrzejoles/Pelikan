@@ -8,6 +8,7 @@ struct DebuggerPanel: View {
     let workspace: Workspace
     @Bindable var debugger: DebuggerEngine
     let document: PelikanWorkspace.Document
+    @State private var newWatch = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -31,13 +32,18 @@ struct DebuggerPanel: View {
                 .frame(minWidth: 200)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.tr("Zmienne")).font(.caption.bold())
-                    List(debugger.variables, children: \.children) { v in
-                        HStack {
-                            Text(v.name).font(.system(.body, design: .monospaced))
-                            Spacer()
-                            Text(v.value).font(.system(.body, design: .monospaced)).foregroundStyle(v.children == nil ? .primary : .secondary)
-                                .textSelection(.enabled)
+                    List(debugger.variables, children: \.children) { v in variableRow(v) }
+                    Text(L10n.tr("Obserwowane")).font(.caption.bold())
+                    List(debugger.watchValues, children: \.children) { v in
+                        variableRow(v).contextMenu {
+                            Button(L10n.tr("Usuń z obserwowanych")) { debugger.removeWatch(v.path) }
                         }
+                    }
+                    .frame(minHeight: 70)
+                    HStack {
+                        TextField(L10n.tr("Wyrażenie do obserwowania (np. v, r.pole, t(3))"), text: $newWatch)
+                            .onSubmit { addWatch() }
+                        Button { addWatch() } label: { Image(systemName: "plus") }.disabled(newWatch.isEmpty)
                     }
                 }
                 .frame(minWidth: 260)
@@ -45,6 +51,35 @@ struct DebuggerPanel: View {
         }
         .padding(10)
         .frame(minWidth: 560, minHeight: 320)
+    }
+
+    private func addWatch() {
+        let w = newWatch
+        newWatch = ""
+        Task { await debugger.addWatch(w) }
+    }
+
+    /// Wiersz zmiennej z menu: Ustaw wartość (SET_VALUE, tylko skalary), Kopiuj, Obserwuj (UG 5.10).
+    private func variableRow(_ v: DebugVariable) -> some View {
+        HStack {
+            Text(v.name).font(.system(.body, design: .monospaced))
+            Spacer()
+            Text(v.value).font(.system(.body, design: .monospaced)).foregroundStyle(v.children == nil ? .primary : .secondary)
+                .textSelection(.enabled)
+        }
+        .contextMenu {
+            if v.children == nil {
+                Button(L10n.tr("Ustaw wartość…")) {
+                    Task {
+                        guard let value = await workspace.ui?.askText(L10n.tr("Nowa wartość \(v.name)"), message: L10n.tr("Literał PL/SQL albo tekst; NULL — wartość pusta."),
+                                                                   defaultValue: v.value) else { return }
+                        do { try await debugger.setValue(v.path, to: value) } catch { workspace.ui?.showError(error.localizedDescription) }
+                    }
+                }.disabled(debugger.state != .paused)
+            }
+            Button(L10n.tr("Kopiuj wartość")) { workspace.ui?.copyToClipboard(v.value, html: nil) }
+            Button(L10n.tr("Obserwuj")) { Task { await debugger.addWatch(v.path) } }
+        }
     }
 
     private var status: String {

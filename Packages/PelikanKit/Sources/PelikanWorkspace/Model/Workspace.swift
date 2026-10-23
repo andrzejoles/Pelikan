@@ -48,6 +48,8 @@ public protocol UIServices: AnyObject {
     func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
     /// Prosty edytor obiektu (sekwencja, synonim, indeks, użytkownik, rola — UG 9.2–9.11).
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
+    /// Okno punktów przerwania (UG 5.10).
+    func showBreakpoints()
     /// Okno debugera (stos, zmienne, przyciski kroków) dla okna testu.
     func showDebugger(_ debugger: DebuggerEngine, document: Document)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
@@ -60,6 +62,7 @@ extension UIServices {
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
+    public func showBreakpoints() {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
@@ -138,6 +141,8 @@ public final class Workspace {
     public var templatesGeneration = 0
     /// Punkty przerwania (UG 5.10) i debugery okien testu.
     public var breakpoints: [Breakpoint] = []
+    /// Punkty przerwania na kodach błędów Oracle (bez „ORA-”, np. 1403).
+    public var errorBreakpoints: [Int] = []
     @ObservationIgnored var debuggers: [DocumentID: DebuggerEngine] = [:]
     /// Historia skoków (UG 25.20) — Wstecz / Naprzód.
     public internal(set) var navigationBack: [NavigationPoint] = []

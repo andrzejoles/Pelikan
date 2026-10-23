@@ -35,6 +35,7 @@
 		AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */ = {isa = PBXBuildFile; productRef = 68DCC77A1DA6108E25EBC9B9 /* PelikanDB */; };
 		AF619AD9C795CDE3A74335EE /* PelikanWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = 7D051D9F72BF390F621C6946 /* PelikanWorkspace */; };
 		B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */; };
+		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
@@ -83,6 +84,7 @@
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
 		CA27E74D0C918323B465606B /* ToolWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolWindows.swift; sourceTree = "<group>"; };
 		CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 		DE8A198D51A8A988E6CC6BD6 /* Debug */ = {
 			isa = PBXGroup;
 			children = (
+				DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */,
 				62611D2986EABAD106F9D86C /* DebuggerPanel.swift */,
 			);
 			path = Debug;
@@ -385,6 +388,7 @@
 			files = (
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
 				8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */,
+				B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */,
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,

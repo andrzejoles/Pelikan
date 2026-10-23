@@ -63,6 +63,13 @@ enum DebugCommands {
                 ctx.workspace.showDebugLocation(d, testDocument: doc)
                 return .ok
             },
+            Command(CommandDescriptor(id: "debug.breakpoints", title: L10n.tr("Punkty przerwania…"), category: .debug,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Lista punktów przerwania (włączanie, licznik przejść, usuwanie) i zatrzymanie na kodach błędów."),
+                                      feature: "PD-DBG-008")) { ctx in
+                ctx.ui?.showBreakpoints()
+                return .ok
+            },
             Command(CommandDescriptor(id: "debug.toggleBreakpoint", title: L10n.tr("Punkt przerwania"), category: .debug, pd: ["ctrl+b"],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Ustawia lub usuwa punkt przerwania w linii kursora (okno testu albo jednostka w oknie programu)."),
