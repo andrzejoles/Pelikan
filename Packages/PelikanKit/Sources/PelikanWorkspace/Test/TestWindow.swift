@@ -175,8 +175,37 @@ public enum TestRunner {
             if ws.settings.dbmsOutputClearBeforeExecute { doc.output = [] }
             try? await SessionUtilities.enableOutput(session, bufferSize: ws.settings.dbmsOutputBufferSize)
         }
+        // Statystyki sesji i profiler wokół wykonania (UG 6.2, 6.3).
+        let statsBefore = await Profiler.statistics(session)
+        var profileID: Int?
+        let profileComment = "Pelikan \(doc.title) \(UUID().uuidString.prefix(8))"
+        if let kind = doc.profiler {
+            if await Profiler.needsTables(kind, session: session) {
+                try await ws.guardModification([kind == .lines ? "CREATE TABLE plsql_profiler_runs" : "BEGIN dbms_hprof.create_tables; END;"],
+                                               connectionID: ws.effectiveConnection(of: doc))
+            }
+            profileID = try await Profiler.start(kind, session: session, comment: profileComment)
+        }
+        func finishMeasurements() async {
+            if let kind = doc.profiler, let id = profileID {
+                doc.profilerReport = try? await Profiler.stop(kind, id: id, comment: profileComment, session: session)
+                // Tekst linii bloku testu (blok anonimowy nie ma źródła w ALL_SOURCE).
+                if var r = doc.profilerReport, r.kind == .lines {
+                    let docLines = doc.text.components(separatedBy: "\n")
+                    for i in r.lines.indices where r.lines[i].isAnonymous && r.lines[i].text.isEmpty && r.lines[i].line <= docLines.count {
+                        r.lines[i].text = docLines[r.lines[i].line - 1].trimmingCharacters(in: .whitespaces)
+                        r.lines[i].unitName = L10n.tr("blok testu")
+                    }
+                    doc.profilerReport = r
+                }
+            }
+            if let before = statsBefore, let after = await Profiler.statistics(session) {
+                doc.statistics = Profiler.difference(before, after)
+            }
+        }
         do {
             let r = try await session.execute(sql, binds: binds)
+            await finishMeasurements()
             for i in doc.testVariables.indices {
                 let v = doc.testVariables[i]
                 let out = r.outBinds[v.name] ?? r.outBinds[v.name.uppercased()] ?? .null
@@ -202,6 +231,7 @@ public enum TestRunner {
             doc.statusText = L10n.tr("Wykonano w \(String(format: "%.3f", Double(r.elapsed.components.seconds) + Double(r.elapsed.components.attoseconds) / 1e18)) s")
             return r.elapsed
         } catch let e as OracleError {
+            await finishMeasurements()
             doc.errorStack = errorStack(e.message)
             // Linia bloku z błędem (ORA-06512 „at line n” bez jednostki) → kursor.
             if let local = doc.errorStack.first(where: { $0.unit.isEmpty }) {

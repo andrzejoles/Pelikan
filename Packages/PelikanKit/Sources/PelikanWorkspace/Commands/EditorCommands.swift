@@ -64,6 +64,23 @@ enum EditorCommands {
                 doc.customTitle = L10n.tr("Test \(member ?? o.name)").lowercased()
                 return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
             },
+            Command(CommandDescriptor(id: "test.profiler", title: L10n.tr("Profiler przy wykonaniu"), category: .debug,
+                                      parameters: [CommandParameter("kind", .string, L10n.tr("lines (DBMS_PROFILER), hierarchical (DBMS_HPROF) albo off"),
+                                                                    allowed: ["lines", "hierarchical", "off"])],
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Włącza profiler liniowy albo hierarchiczny dla kolejnych wykonań okna testu (raport w karcie Profiler)."),
+                                      feature: "PD-OPT-005"),
+                    validate: { $0.activeDocument?.kind == .test }) { ctx in
+                guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }
+                switch ctx.arguments.string("kind") {
+                case "lines": d.profiler = .lines
+                case "hierarchical": d.profiler = .hierarchical
+                case "off": d.profiler = nil
+                default: d.profiler = d.profiler == nil ? .lines : nil
+                }
+                return CommandResult(message: d.profiler.map { $0 == .lines ? L10n.tr("Profiler liniowy włączony") : L10n.tr("Profiler hierarchiczny włączony") }
+                                     ?? L10n.tr("Profiler wyłączony"))
+            },
             Command(CommandDescriptor(id: "test.saveAsSQLPlus", title: L10n.tr("Zapisz test jako skrypt SQL*Plus"), category: .file,
                                       agent: .full, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno poleceń ze skryptem SQL*Plus odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)."),

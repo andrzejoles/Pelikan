@@ -195,3 +195,12 @@ wiele kursorów, foldery i filtry Object Browsera, kosz, CCFlags, edytory Librar
 partycje, Safe compilation, MLE w Program Window) są realizowane przy etapach, które dotykają tych okien, najpóźniej
 w audycie Etapu 8. Debuger nie odczytuje `:new`/`:old` przez DBMS_DEBUG (GET_VALUE dla pseudorekordów wyzwalacza) —
 do rozwiązania w Etapie 3 (alternatywa: JDWP, ADR 0006).
+
+### D28 · 2026-10-23 — Profiler: tabele w schemacie użytkownika, dane w transakcji okna
+Profiler liniowy (DBMS_PROFILER) i hierarchiczny (DBMS_HPROF) działają w sesji okna testu. Brakujące tabele są
+tworzone w schemacie użytkownika (`DBMS_PROFILER.CREATE_TABLES` w 23ai+, wcześniej DDL jak w PROFTAB.SQL;
+`DBMS_HPROF.CREATE_TABLES`) — wyłącznie po przejściu strażnika modyfikacji (połączenie tylko do odczytu: blokada,
+produkcja: potwierdzenie). DBMS_PROFILER zapisuje dane przebiegu w transakcji sesji okna (bez COMMIT) — raport czyta
+je w tej samej sesji; zatwierdzenie albo wycofanie transakcji okna decyduje o ich zachowaniu, jak w SQL*Plus.
+Wariant `START_PROFILER` z numerem przebiegu (OUT) zwraca w 26ai `error_io`, więc numer przebiegu jest odczytywany po
+zatrzymaniu z unikalnego komentarza. Bloki pomocnicze Pelikana (start/stop) są pomijane w raporcie.
