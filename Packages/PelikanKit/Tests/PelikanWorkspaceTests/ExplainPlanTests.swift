@@ -61,3 +61,12 @@ struct TestManagerOfflineTests {
         #expect(TestManager.resolve("&A-&AB", globals: ["A": "1", "AB": "2"]) == "1-2")
     }
 }
+
+@Suite("Maska plików okna poleceń")
+struct FileMaskTests {
+    @Test("* i ? bez wielkości liter")
+    @MainActor func mask() {
+        #expect(SQLPlusEngine.matches("*.SQL", "a.sql") && SQLPlusEngine.matches("a?c.txt", "abc.txt") && !SQLPlusEngine.matches("*.pck", "a.sql"))
+        #expect(!SQLPlusEngine.matches("a.b", "aXb"))
+    }
+}
