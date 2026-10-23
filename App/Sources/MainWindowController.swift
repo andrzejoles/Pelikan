@@ -170,6 +170,8 @@ final class DocumentAreaViewController: NSViewController {
     private let tabBar = NSStackView()
     private let container = NSView()
     private let statusLabel = NSTextField(labelWithString: "")
+    /// Połączenie okna na pasku stanu — kliknięcie: wybór połączenia okna (UG 20.2, PD-CONN-019).
+    private let connectionButton = NSButton(title: "", target: nil, action: nil)
     private var controllers: [DocumentID: NSViewController] = [:]
     private var installedID: DocumentID?
 
@@ -212,6 +214,17 @@ final class DocumentAreaViewController: NSViewController {
         statusLabel.lineBreakMode = .byTruncatingTail
         let status = NSView()
         status.addSubview(statusLabel)
+        connectionButton.isBordered = false
+        connectionButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
+        connectionButton.contentTintColor = .labelColor
+        connectionButton.target = self
+        connectionButton.action = #selector(chooseConnection(_:))
+        connectionButton.toolTip = L10n.tr("Połączenie okna — kliknij, aby zmienić")
+        connectionButton.translatesAutoresizingMaskIntoConstraints = false
+        connectionButton.setContentHuggingPriority(.required, for: .horizontal)
+        connectionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        statusLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        status.addSubview(connectionButton)
         let separator = NSBox()
         separator.boxType = .separator
         let topSeparator = NSBox()
@@ -241,7 +254,9 @@ final class DocumentAreaViewController: NSViewController {
             status.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             status.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             status.heightAnchor.constraint(equalToConstant: 24),
-            statusLabel.leadingAnchor.constraint(equalTo: status.leadingAnchor, constant: 10),
+            connectionButton.leadingAnchor.constraint(equalTo: status.leadingAnchor, constant: 8),
+            connectionButton.centerYAnchor.constraint(equalTo: status.centerYAnchor),
+            statusLabel.leadingAnchor.constraint(equalTo: connectionButton.trailingAnchor, constant: 6),
             statusLabel.trailingAnchor.constraint(equalTo: status.trailingAnchor, constant: -10),
             statusLabel.centerYAnchor.constraint(equalTo: status.centerYAnchor),
         ])
@@ -288,16 +303,51 @@ final class DocumentAreaViewController: NSViewController {
                 installedID = doc.id
                 focusActiveDocument()
             }
-            statusLabel.stringValue = [connectionDescription(for: doc), doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
+            connectionButton.title = connectionDescription(for: doc) + " ▾"
+            connectionButton.isHidden = false
+            statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
         } else {
             installedID = nil
+            connectionButton.isHidden = true
             statusLabel.stringValue = L10n.tr("Brak otwartych okien — Plik › Nowy")
         }
     }
 }
 
 extension DocumentAreaViewController {
+    @objc func chooseConnection(_ sender: NSButton) {
+        guard let doc = workspace.activeDocument else { return }
+        let menu = NSMenu()
+        let mainName = workspace.sessions.mainConnectionID.flatMap { workspace.connections.connection($0)?.displayName } ?? L10n.tr("brak")
+        let main = menu.addItem(withTitle: L10n.tr("Połączenie główne (\(mainName))"), action: #selector(selectConnection(_:)), keyEquivalent: "")
+        main.representedObject = ""
+        main.target = self
+        main.state = doc.connectionID == nil ? .on : .off
+        menu.addItem(.separator())
+        for c in workspace.connections.connections.sorted(by: { $0.displayName.localizedCompare($1.displayName) == .orderedAscending }) {
+            let item = menu.addItem(withTitle: c.displayName + " (\(c.environment.shortName))", action: #selector(selectConnection(_:)), keyEquivalent: "")
+            item.representedObject = c.id.uuidString
+            item.target = self
+            item.state = doc.connectionID == c.id ? .on : .off
+        }
+        menu.addItem(.separator())
+        let pin = menu.addItem(withTitle: L10n.tr("Przypnij połączenie okna"), action: #selector(togglePin), keyEquivalent: "")
+        pin.target = self
+        pin.state = doc.connectionPinned ? .on : .off
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
+    }
+
+    @objc func selectConnection(_ sender: NSMenuItem) {
+        workspace.perform("session.windowConnection", CommandArguments(["connection": .string(sender.representedObject as? String ?? "")]))
+    }
+
+    @objc func togglePin() {
+        guard let doc = workspace.activeDocument else { return }
+        doc.connectionPinned.toggle()
+        if doc.connectionPinned, doc.connectionID == nil { doc.connectionID = workspace.sessions.mainConnectionID }
+    }
+
     /// Połączenie okna na pasku stanu (UG 20.2): opis, środowisko, przypięcie.
     func connectionDescription(for doc: Document) -> String {
         guard let id = workspace.effectiveConnection(of: doc), let c = workspace.connections.connection(id) else {

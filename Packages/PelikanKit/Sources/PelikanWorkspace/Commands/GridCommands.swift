@@ -170,6 +170,7 @@ public enum GridCommands {
                                       summary: L10n.tr("Zapisuje zmiany siatki w bazie (UPDATE/INSERT/DELETE po ROWID) — bez COMMIT."), feature: "PD-GRID-017"),
                     validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
                 guard let (_, grid) = activeGrid(ctx.workspace), let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
+                try await ctx.workspace.guardModification(["update t set x = 1"], connectionID: ctx.workspace.effectiveConnection(of: doc))
                 do {
                     let n = try await grid.postChanges()
                     doc.transactionOpen = true

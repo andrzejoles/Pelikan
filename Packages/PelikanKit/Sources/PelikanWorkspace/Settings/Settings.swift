@@ -45,6 +45,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var instantClientDirectory: String?
     // Oracle — Options
     public var confirmCommitRollback = false
+    /// Potwierdzanie poleceń zmieniających na połączeniach produkcyjnych (PD-CONN-006).
+    public var confirmProductionChanges = true
     public var useDBAViews = true
     // Oracle — Output
     public var dbmsOutputEnabled = true
@@ -89,6 +91,7 @@ public struct Settings: Sendable, Codable, Hashable {
         func v<T: Decodable>(_ k: CodingKeys, _ cur: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? cur }
         sessionMode = v(.sessionMode, sessionMode)
         recentFiles = v(.recentFiles, recentFiles)
+        confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         appearance = v(.appearance, appearance)
         confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)

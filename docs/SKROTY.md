@@ -91,6 +91,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Połącz | `connection.connect` |  |  | Brak | 0 | PD-CONN-022 |
 | Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenie okna… | `session.windowConnection` |  |  | Brak | 0 | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | 0 | PD-CONN-003 |
 
 ## Debugowanie

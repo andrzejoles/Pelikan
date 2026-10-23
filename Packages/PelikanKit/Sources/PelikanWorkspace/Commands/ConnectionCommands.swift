@@ -84,6 +84,38 @@ public enum ConnectionCommands {
                 try await disconnect(ctx, try connectionID(ctx))
                 return .ok
             },
+            Command(CommandDescriptor(id: "session.windowConnection", title: L10n.tr("Połączenie okna…"), category: .session,
+                                      parameters: [CommandParameter("connection", .string, required: true,
+                                                                    L10n.tr("Nazwa połączenia albo pusty tekst — połączenie główne"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zmienia połączenie bieżącego okna (UG 20.2); otwarta transakcja — pytanie o COMMIT/ROLLBACK."),
+                                      inMenu: false, feature: "PD-CONN-019"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument else { return .ok }
+                let spec = ctx.arguments.string("connection") ?? ""
+                var target: UUID?
+                if !spec.isEmpty {
+                    guard let def = ctx.workspace.connections.connections.first(where: {
+                        $0.id.uuidString == spec || $0.name.caseInsensitiveCompare(spec) == .orderedSame
+                            || $0.displayName.caseInsensitiveCompare(spec) == .orderedSame
+                    }) else { throw CommandError.invalidArgument("connection", spec) }
+                    target = def.id
+                }
+                guard target != doc.connectionID else { return .ok }
+                if doc.transactionOpen {
+                    let a = await ctx.ui?.ask(L10n.tr("Transakcja okna „\(doc.title)” jest otwarta"),
+                                              message: L10n.tr("Zatwierdzić czy wycofać zmiany przed zmianą połączenia okna?"),
+                                              buttons: [L10n.tr("Zatwierdź"), L10n.tr("Wycofaj"), L10n.tr("Anuluj")])
+                    guard let a, a < 2 else { throw CommandError.cancelledByUser }
+                    try await ctx.workspace.endTransactions(of: [doc], commit: a == 0)
+                }
+                if let old = ctx.workspace.effectiveConnection(of: doc), ctx.workspace.settings.sessionMode == .multi {
+                    await ctx.workspace.sessions.close(ctx.workspace.sessions.key(forDocument: doc.id, connection: old))
+                }
+                doc.connectionID = target
+                doc.results.removeAll()
+                return CommandResult(message: target.flatMap { ctx.workspace.connections.connection($0)?.displayName } ?? L10n.tr("Połączenie główne"))
+            },
             Command(CommandDescriptor(id: "connection.newFolder", title: L10n.tr("Nowy folder…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [CommandParameter("name", .string, required: true, "Nazwa folderu"),
                                                    CommandParameter("parent", .string, "Folder nadrzędny")],

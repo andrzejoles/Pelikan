@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T03:42:47+02:00",
+  "heartbeat": "2026-10-23T03:45:59+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Połączenia: tylko do odczytu (blokada DML/DDL/PL/SQL/FOR UPDATE w SQL Window, Command Window i siatce), potwierdzanie zmian na produkcji (preferencja), połączenie okna na pasku stanu z menu wyboru i przypięciem — 4 testy",
     "Edytor: komentarz linii, wcięcia, wielkie/małe litery bez literałów, usuwanie końcowych spacji, powielenie linii, Przejdź do linii, Znajdź i zamień (regex z $1/\\t, całe słowa, wielkość liter, zachowanie wielkości, zaznaczenie, kod/komentarze/literały), Znajdź następne/poprzednie (F3), Historia poleceń (Ctrl+E) z filtrem i wstawianiem wielu; zmiany z komend cofalne (⌘Z) — 8 testów",
     "PR #9 scalony; szkic wydania v1.9.0 na GitHubie (DMG, PKG, zip, appcast.xml) — do publikacji przez właściciela",
     "Wydania jak w Bifoldzie: stały podpis „Pelikan Self-Signed” (osobny pęk kluczy), make installer (DMG i PKG z licencjami zewnętrznymi i kontrolą danych w pakiecie), Sparkle 2.10.0 z kluczem EdDSA w Pęku kluczy i menu „Sprawdź uaktualnienia…”, make draft-release (zip, appcast.xml, tag, szkic wydania), docs/WYDANIA.md; instalatory 1.8.0 zbudowane i sprawdzone lokalnie",
@@ -109,11 +110,11 @@
   ],
   "tests": {
     "unit": {
-      "total": 116,
-      "passed": 116,
+      "total": 120,
+      "passed": 120,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T03:42:47+02:00"
+      "at": "2026-10-23T03:45:59+02:00"
     },
     "integration": {
       "total": 50,
