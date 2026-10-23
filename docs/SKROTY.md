@@ -46,6 +46,23 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
 | Zapisz test jako skrypt SQL*Plus | `test.saveAsSQLPlus` |  |  | Pełny | 0 | PD-TEST-005 |
+| Przeglądarka plików › Dodaj lokalizację… | `fb.addLocation` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Usuń lokalizację | `fb.removeLocation` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Otwórz jako… | `fb.open` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Zmień nazwę… | `fb.rename` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Nowy katalog… | `fb.newFolder` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Nowy plik… | `fb.newFile` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Przenieś do Kosza | `fb.trash` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Pokaż w Finderze | `fb.showInFinder` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Pokaż ukryte pliki | `fb.toggleHidden` |  |  | Brak | 0 | PD-FB-001 |
+| Przeglądarka plików › Wyczyść historię filtra | `fb.clearFilterHistory` |  |  | Brak | 0 | PD-FB-002 |
+| Workset › Nowy workset… | `workset.new` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Otwórz workset… | `workset.open` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Zapisz workset | `workset.save` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Przywróć workset | `workset.revert` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Zamknij workset | `workset.close` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Usuń workset… | `workset.delete` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Autozapis workseta | `workset.toggleAutosave` |  |  | Brak | 0 | PD-WSET-001 |
 
 ## Edycja
 
@@ -173,6 +190,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |
 | utPLSQL › utPLSQL: skrypt dla wiersza poleceń | `utplsql.cliScript` |  |  | Pełny | 0 | UT-CI-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
+| Git › Stan Git pliku | `vcs.status` |  |  | Brak | 0 | PD-VCS-001 |
+| Git › Porównaj z HEAD | `vcs.diff` |  |  | Brak | 0 | PD-VCS-001 |
+| Git › Dodaj do zatwierdzenia (git add) | `vcs.add` |  |  | Brak | 0 | PD-VCS-001 |
+| Git › Zatwierdź (git commit)… | `vcs.commit` |  |  | Brak | 0 | PD-VCS-001 |
+| Git › Historia Git pliku | `vcs.log` |  |  | Brak | 0 | PD-VCS-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
@@ -200,6 +222,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
+| Przeglądarka plików | `view.fileBrowser` |  |  | Brak | 0 | PD-FB-001 |
+| Zapisz układ okna | `view.saveLayout` |  |  | Brak | 0 | PD-WSET-002 |
+| Przywróć układ okna | `view.restoreLayout` |  |  | Brak | 0 | PD-WSET-002 |
+| Autozapis układu okna | `view.autosaveLayout` |  |  | Brak | 0 | PD-WSET-002 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | 0 | PD-CA-010 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |

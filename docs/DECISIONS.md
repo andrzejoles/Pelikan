@@ -271,3 +271,13 @@ usuwa) sesją kompilacji użytkownika; obiekt, którego kod różni się od zapi
 wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/events`), a instalacja utPLSQL — w oknie
 poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
 zablokuje; okno zgody pokazuje pełny tekst.
+
+### D-PLIKI-1 · 2026-10-23 — Przeglądarka plików, Git, worksety
+Git obsługuje `/usr/bin/git` (status `--porcelain=v2 -z`, `show HEAD:`, `add`, `commit -F -` z komunikatem przez stdin,
+`log`) z `GIT_TERMINAL_PROMPT=0` — bez operacji sieciowych i bez danych logowania w argumentach. SVN pominięty (na
+macOS praktycznie nieużywany przy Oracle; wzorzec traktuje go równolegle do Gita), podobnie stan VCS w projektach (Etap
+6, projekty). Operacje na plikach i Git są tylko dla użytkownika (agent — Brak), bo ścieżki lokalne ujawniają katalog
+domowy, a agent pracuje na bazie i edytorach. Usuwanie zawsze do Kosza, nigdy trwale. Worksety zapisują niezapisany
+tekst okien w katalogu danych (`Worksets/*.json`, pliki 0600) — przy autozapisie zamknięcie aplikacji nie pyta o zapis
+okien, bo ich stan wraca przy starcie. Okna planu, raportu, diagramu i notatnika nie trafiają do workseta (własne
+formaty — Etapy 6–7). Układ okna: ramka, szerokość i karta lewej kolumny, panel agenta (`layout.json`).

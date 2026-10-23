@@ -93,6 +93,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             window.installAgentPane(agents.pane)
             agentUI = agents
         }
+        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10).
+        if workspace.settings.worksetAutosave, workspace.documents.isEmpty,
+           let saved = try? workspace.worksets.load(workspace.worksets.current), !saved.documents.isEmpty {
+            workspace.applyWorkset(saved)
+        }
+        if workspace.settings.autosaveLayout, let layout = workspace.worksets.loadLayout() { window.apply(layout) }
         // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
@@ -125,7 +131,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let open = workspace.documents.filter(\.transactionOpen)
-        let modified = workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+        if workspace.settings.autosaveLayout, let l = mainWindow?.layout { workspace.worksets.saveLayout(l) }
+        // Autozapis workseta: niezapisane okna przetrwają w worksecie — bez pytania o zapis (UG 15).
+        let worksetSaved = workspace.settings.worksetAutosave && (try? workspace.saveCurrentWorkset()) != nil
+        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
         if !modified.isEmpty {
             // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
             Task { @MainActor in
@@ -175,6 +184,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             FindObjectsView(workspace: workspace, criteria: criteria)
         }
     }
+
+    func showFileBrowser() {
+        mainWindow?.sidebarController.select(pane: SidebarViewController.fileBrowserPane)
+    }
+
+    func chooseDirectory() async -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
+    }
+
+    func currentLayout() -> WindowLayout? { mainWindow?.layout }
+
+    func applyLayout(_ layout: WindowLayout) { mainWindow?.apply(layout) }
 
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
