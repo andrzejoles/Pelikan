@@ -199,6 +199,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         mainWindow?.window?.makeKeyAndOrderFront(nil)
     }
 
+    func showBreakpoints() {
+        ToolWindowController.show(key: "breakpoints", title: L10n.tr("Punkty przerwania"), size: NSSize(width: 640, height: 360)) {
+            BreakpointsView(workspace: workspace)
+        }
+    }
+
     func showCompileInvalid() {
         ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T10:27:23+02:00",
+  "heartbeat": "2026-10-23T10:27:28+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,9 @@
     }
   ],
   "done": [
+    "Etap 3 / debuger — rozszerzenia: DBMS_OUTPUT w trakcie debugowania, obserwowane wyrażenia, Ustaw wartość (SET_VALUE), punkty przerwania na kodach błędów, okno punktów przerwania, Dodaj informację debugowania (obiekt i preferencja kompilacji) — 1 test na bazie",
+    "PR #24 scalony — Etap 2 zamknięty (D27); szkic wydania v3.4.0 (DMG, PKG, appcast) — publikuje właściciel",
+    "Kontynuacja Etapu 3: debuger — rozszerzenia",
     "Etap 3 / debuger (DBMS_DEBUG, ADR 0006): Start, Kontynuuj, Wejdź (także do wyzwalacza), Przejdź, Wyjdź, do kursora, do wyjątku, Zatrzymaj; stos z typami jednostek; zmienne lokalne, rekordy i kolekcje jako drzewo; punkty przerwania w marginesie okna testu i programu; bieżąca linia w edytorze; okno debugera — 2 testy na bazie (pakiet z wyzwalaczem)",
     "Etap 3 / okno testu: blok ze zmiennymi (automatyczne skanowanie, typy, IN OUT, kursory jako tabela, BOOLEAN, LOB), zmienione na żółto, DBMS_OUTPUT, stos błędu z przejściem do linii, Test z Object Browsera (notacja nazwana, wynik funkcji), pliki .tst i skrypt SQL*Plus — 3 testy (1 na bazie)",
     "PR #21–#23 scalone (edytor tabeli, edytory obiektów, pary nawiasów i bloków)",
@@ -125,7 +128,7 @@
       "passed": 76,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T10:27:23+02:00"
+      "at": "2026-10-23T10:27:28+02:00"
     },
     "perf": {
       "total": 9,

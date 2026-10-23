@@ -80,7 +80,12 @@ public final class DebuggerEngine {
     /// Ramka wybrana na stosie (0 — bieżąca).
     public private(set) var selectedFrame = 0
     public private(set) var lastReason = 0
+    /// Zatrzymanie na wyjątku (reason_exception = 11) albo na punkcie przerwania kodu błędu (26).
+    public var stoppedOnException: Bool { state == .paused && (lastReason == 11 || lastReason == 26) }
     public private(set) var message: String?
+    /// Obserwowane wyrażenia (nazwy zmiennych, pola `r.pole`, elementy `t(3)`) i ich wartości po zatrzymaniu (UG 5.10).
+    public var watches: [String] = []
+    public private(set) var watchValues: [DebugVariable] = []
 
     @ObservationIgnored let workspace: Workspace
     @ObservationIgnored let document: Document
@@ -154,6 +159,12 @@ public final class DebuggerEngine {
         let info = try await runtimeCall("dbms_debug.synchronize(ri, dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
         if info.terminated { return try await finish() }
         try await applyBreakpoints(block: false)
+        // Punkty przerwania na kodach błędów (ORA-n, PD-DBG-008).
+        for code in workspace.errorBreakpoints {
+            _ = try? await debug.execute("begin :st := dbms_debug.set_oer_breakpoint(:c); end;",
+                                         binds: [BindVariable(name: "st", type: .number, direction: .output),
+                                                 BindVariable(name: "c", type: .number, value: .number(String(code)))])
+        }
         try await continueExecution(breakflags: "dbms_debug.break_any_call")
     }
 
@@ -169,7 +180,7 @@ public final class DebuggerEngine {
                 let inBlock = location?.isTestBlock == true
                 try await continueExecution(breakflags: (inBlock ? "dbms_debug.break_next_line" : "dbms_debug.break_any_return") + exc)
                 guard state == .paused, let l = location else { return }
-                if lastReason == 3 || lastReason == 11 { return }                  // punkt przerwania jednostki / wyjątek
+                if lastReason == 3 || lastReason == 11 || lastReason == 26 { return }                  // punkt przerwania jednostki / wyjątek
                 if l.isTestBlock, blockLines.contains(l.line) { return }
             }
             return
@@ -264,8 +275,81 @@ public final class DebuggerEngine {
                 location?.unitType = top.unitType
             }
             await loadVariables()
+            await loadWatches()
+            await readOutputWhilePaused()
             return
         }
+    }
+
+    /// DBMS_OUTPUT zebrany do chwili zatrzymania — odczyt w sesji docelowej przez DBMS_DEBUG.EXECUTE (PD-DBG-010).
+    func readOutputWhilePaused() async {
+        guard document.outputEnabled, workspace.settings.dbmsOutputEnabled, let debug else { return }
+        let block = "declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); l varchar2(32767); st integer; " +
+            "begin loop dbms_output.get_line(l, st); exit when st <> 0; pp.extend; pp(pp.count) := l; end loop; :1 := pp; end;"
+        let r = try? await debug.execute("""
+            declare
+              coll sys.dbms_debug_vc2coll;
+              errm varchar2(4000);
+              s varchar2(32767);
+            begin
+              dbms_debug.execute(:b, -1, 1, coll, errm);
+              if coll is not null and coll.count > 0 then
+                for i in coll.first .. coll.last loop
+                  if length(s) < 30000 or s is null then s := s || coll(i) || chr(10); end if;
+                end loop;
+              end if;
+              :s := s;
+            end;
+            """, binds: [BindVariable(name: "b", value: .text(block)), BindVariable(name: "s", direction: .output, maxSize: 32767)])
+        let text = r?.outBinds["s"]?.displayText ?? r?.outBinds["S"]?.displayText ?? ""
+        let lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).dropLast()
+        if !lines.isEmpty { document.output.append(contentsOf: lines) }
+    }
+
+    /// Wartości obserwowanych wyrażeń w bieżącej ramce.
+    func loadWatches() async {
+        guard !watches.isEmpty, stack.indices.contains(selectedFrame) else { watchValues = []; return }
+        let frame = stack[selectedFrame]
+        let text = await source(of: frame)
+        let ctx = CompletionContext.analyze(text, offset: ProgramCompiler.offset(line: frame.line, column: 1, in: text))
+        var out: [DebugVariable] = []
+        for w in watches {
+            let decl = ctx.declarations.first { $0.name.uppercased() == w.uppercased() }
+            out.append(await variable(w, path: w, type: decl?.detail ?? "", frame: selectedFrame, context: ctx))
+        }
+        watchValues = out
+    }
+
+    public func addWatch(_ expression: String) async {
+        let e = expression.trimmingCharacters(in: .whitespaces)
+        guard !e.isEmpty, !watches.contains(e) else { return }
+        watches.append(e)
+        if state == .paused { await loadWatches() }
+    }
+
+    public func removeWatch(_ expression: String) {
+        watches.removeAll { $0 == expression }
+        watchValues.removeAll { $0.path == expression }
+    }
+
+    /// Zmiana wartości zmiennej skalarnej w bieżącej ramce (SET_VALUE, „Set Variable”, UG 5.10).
+    public func setValue(_ path: String, to value: String) async throws {
+        guard state == .paused, let debug else { return }
+        let literal: String
+        if value.uppercased() == "NULL" || Double(value.replacingOccurrences(of: ",", with: ".")) != nil || ["TRUE", "FALSE"].contains(value.uppercased()) {
+            literal = value.replacingOccurrences(of: ",", with: ".")
+        } else {
+            literal = "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
+        }
+        let r = try await debug.execute("begin :st := dbms_debug.set_value(:f, :a); end;", binds: [
+            BindVariable(name: "st", type: .number, direction: .output),
+            BindVariable(name: "f", type: .number, value: .number(String(selectedFrame))),
+            BindVariable(name: "a", value: .text("\(path) := \(literal);")),
+        ])
+        let st = Int(r.outBinds["st"]?.displayText ?? r.outBinds["ST"]?.displayText ?? "") ?? -1
+        guard st == 0 else { throw CommandError.notAvailable(L10n.tr("Nie można ustawić wartości (status DBMS_DEBUG \(st))")) }
+        await loadVariables()
+        await loadWatches()
     }
 
     /// Koniec programu: wynik wykonania (zmienne OUT jak w Test Window) albo błąd ze stosem.

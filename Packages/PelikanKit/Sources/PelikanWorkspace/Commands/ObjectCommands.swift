@@ -58,6 +58,14 @@ public enum ObjectCommands {
         }
     }
 
+    /// Kompilacja z informacją debugowania (PD-DBG-011): ALTER … COMPILE DEBUG [BODY] dla jednostek PL/SQL.
+    static func debugCompileStatement(_ o: DBObject) -> String? {
+        guard [.package, .packageBody, .type, .typeBody, .function, .procedure, .trigger].contains(o.type),
+              let s = compileStatement(o) else { return nil }
+        if s.hasSuffix(" COMPILE BODY") { return String(s.dropLast(" COMPILE BODY".count)) + " COMPILE DEBUG BODY" }
+        return s + " DEBUG"
+    }
+
     @MainActor
     public static var all: [Command] {
         [
@@ -164,6 +172,23 @@ public enum ObjectCommands {
                                                         BindVariable(name: "t", value: .text(o.type.rawValue))])
                 return CommandResult(message: status == "VALID" ? L10n.tr("Skompilowano: \(o.qualifiedName)") : L10n.tr("\(o.qualifiedName) ma błędy kompilacji"),
                                      value: .string(status ?? ""))
+            },
+            Command(CommandDescriptor(id: "ob.addDebugInfo", title: L10n.tr("Dodaj informację debugowania"), category: .tools, submenu: L10n.tr("Obiekt"),
+                                      parameters: objectParams, agent: .approval, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Kompiluje jednostkę PL/SQL z informacją debugowania (ALTER … COMPILE DEBUG), także ciało pakietu/typu."),
+                                      feature: "PD-DBG-011"),
+                    validate: { ws in ws.selectedObject.flatMap { debugCompileStatement($0) } != nil }) { ctx in
+                let (o, m) = try await target(ctx)
+                var objs = [o]
+                if o.type == .package { objs.append(DBObject(owner: o.owner, name: o.name, type: .packageBody)) }
+                if o.type == .type { objs.append(DBObject(owner: o.owner, name: o.name, type: .typeBody)) }
+                let sql = objs.compactMap(debugCompileStatement)
+                guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Ten obiekt nie jest jednostką PL/SQL")) }
+                try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
+                let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
+                for q in sql { _ = try? await s.execute(q) }
+                m.refresh(o)
+                return CommandResult(message: L10n.tr("Dodano informację debugowania: \(o.qualifiedName)"))
             },
             Command(CommandDescriptor(id: "ob.drop", title: L10n.tr("Usuń obiekt…"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: objectParams, agent: .approval, effect: .modifiesDatabase,
