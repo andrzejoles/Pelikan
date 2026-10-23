@@ -104,8 +104,11 @@ public struct DBObjectChild: Sendable, Hashable, Identifiable {
 /// Filtr Object Browsera (UG 21.1): nazwy z `%`, wiele po przecinku; Status=, Source= (tekst w źródle PL/SQL).
 public struct ObjectFilter: Sendable, Hashable {
     public var text = ""
+    /// Filtr nazwany (PD-OB-007): warunek WHERE i ORDER BY na widoku obiektów (alias `o`), `:browser_user` — bieżący
+    /// użytkownik przeglądarki, `&browser_filter` — tekst z pola filtra.
+    public var named: BrowserFilter?
 
-    public init(_ text: String = "") { self.text = text }
+    public init(_ text: String = "", named: BrowserFilter? = nil) { self.text = text; self.named = named }
 
     struct Parsed {
         var names: [String] = []
@@ -226,7 +229,7 @@ public final class MetadataProvider {
 
     /// Obiekty typu dla właściciela (nil — wszyscy użytkownicy) z filtrem.
     public func objects(_ type: DBObjectType, owner: String?, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
-        let key = "\(owner ?? "*")|\(type.rawValue)|\(filter.text)"
+        let key = "\(owner ?? "*")|\(type.rawValue)|\(filter.text)|\(filter.named?.id.uuidString ?? "")|\(filter.named?.whereClause ?? "")"
         if let c = cache[key] { return c }
         let s = try await session()
         let px = try await dictionaryPrefix()
@@ -256,9 +259,18 @@ public final class MetadataProvider {
                 binds.append(BindVariable(name: "own", value: .text(owner)))
                 sql += " and o.owner = :own"
             }
-            let w = filter.whereClause(binds: &binds)
+            // Filtr nazwany: z polem filtra jako &browser_filter tekst pola nie filtruje już nazw (wzorzec).
+            let usesFilterText = filter.named?.whereClause.contains("&browser_filter") == true
+            let w = usesFilterText ? "" : filter.whereClause(binds: &binds)
             if !w.isEmpty { sql += " and " + w }
-            sql += " order by o.object_name, o.owner"
+            if let named = filter.named, !named.whereClause.trimmingCharacters(in: .whitespaces).isEmpty {
+                sql += " and (" + named.expandedWhere(filterText: filter.text) + ")"
+                if named.whereClause.contains(":browser_user") {
+                    binds.append(BindVariable(name: "browser_user", value: .text(try await currentSchema())))
+                }
+            }
+            let order = filter.named?.orderBy.trimmingCharacters(in: .whitespaces) ?? ""
+            sql += order.isEmpty ? " order by o.object_name, o.owner" : " order by " + order
         }
         let (_, rows) = try await s.queryAll(sql, binds: binds, limit: 1_000_000)
         let list = rows.map { r -> DBObject in
@@ -436,7 +448,8 @@ public final class MetadataProvider {
     public func touch(_ o: DBObject) {
         recent.removeAll { $0.id == o.id }
         recent.insert(o, at: 0)
-        if recent.count > 20 { recent.removeLast() }
+        let limit = max(1, workspace.settings.browserRecentLimit)
+        if recent.count > limit { recent.removeLast(recent.count - limit) }
     }
 
     /// Znalezienie obiektu po nazwie (`OWNER.NAME` albo `NAME`, synonimy publiczne pomijane).

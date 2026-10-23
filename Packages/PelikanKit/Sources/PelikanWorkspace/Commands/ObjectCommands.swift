@@ -168,6 +168,12 @@ public enum ObjectCommands {
                     validate: { ws in ws.selectedObject.flatMap { compileStatement($0) } != nil }) { ctx in
                 let (o, m) = try await target(ctx)
                 guard let sql = compileStatement(o) else { throw CommandError.notAvailable(L10n.tr("Tego obiektu nie da się kompilować")) }
+                // Potwierdzanie rekompilacji (Preferencje › Object Browser, PD-OB-025).
+                if ctx.workspace.settings.confirmRecompile, ctx.invoker == .user, let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Rekompilować \(o.name)?"), message: sql, buttons: [L10n.tr("Rekompiluj"), L10n.tr("Anuluj")]) == 0 else {
+                        throw CommandError.cancelledByUser
+                    }
+                }
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
                 _ = try? await s.execute(sql)

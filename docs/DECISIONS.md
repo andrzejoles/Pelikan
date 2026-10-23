@@ -786,3 +786,12 @@ przeszukiwanie plików użytkownika jest poza jego zakresem. Limity: 5000 plikó
 w stanie okna pliku. Narzędzia agenta zmieniające tekst okna (PelikanWorkspace/Agent) nie sprawdzają jeszcze trybu —
 poza zakresem tego zadania, wiersz PD-FILE-003 ⚠️. Ctrl+K n / Ctrl+Q n (zakładki) przechwytuje edytor tylko w profilu
 skrótów PL/SQL Developer — w profilu macOS Ctrl+K usuwa do końca linii (skrót systemowy NSTextView).
+
+### D103 · 2026-10-24 — Filtry i foldery Object Browsera w katalogu danych
+Filtry nazwane i foldery użytkownika są zapisywane w `browser.json` w katalogu danych (bez danych logowania). Warunek
+filtra jest fragmentem SQL użytkownika wklejanym do zapytania o obiekty w jego własnej sesji — tak jak we wzorcu;
+agent nie korzysta z filtrów. `:browser_user` to zmienna wiązana (bieżący schemat), `&browser_filter` — tekst pola
+filtra z podwojonymi apostrofami; gdy filtr go używa, pole nie filtruje już nazw osobno. Folder może łączyć listę
+obiektów i zapytanie zwracające OWNER, OBJECT_NAME, OBJECT_TYPE; widoczność według wzorca połączenia jak w zestawach
+preferencji. Ukrywanie właściciela w nazwach folderu jest w modelu, a widok pokazuje nazwy jak w drzewie bieżącego
+użytkownika.

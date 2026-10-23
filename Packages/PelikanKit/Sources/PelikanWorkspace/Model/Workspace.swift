@@ -280,6 +280,16 @@ public final class Workspace {
     public var statusMessage: String?
     /// Obiekt zaznaczony w Object Browserze (cel komend `ob.*`).
     public var selectedObject: DBObject?
+    /// Filtry nazwane i foldery użytkownika Object Browsera (`browser.json`, PD-OB-007/008) i filtr bieżący.
+    public private(set) var browserCustomization = BrowserCustomization()
+    public var browserFilter: BrowserFilter?
+
+    public func saveBrowserCustomization(_ c: BrowserCustomization) throws {
+        try c.save(to: dataDirectory)
+        browserCustomization = c
+        if let f = browserFilter, !c.filters.contains(where: { $0.id == f.id }) { browserFilter = nil }
+        metadata()?.refresh()
+    }
     /// Ostatnie wyszukiwanie (Znajdź następne — F3).
     public var lastSearch: TextSearch?
     /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
@@ -437,6 +447,7 @@ public final class Workspace {
         keymap = Keymap(commands: all.map(\.descriptor), profile: loaded.shortcutProfile, overrides: loaded.keyOverrides)
         let store = ConnectionStore(fileURL: dataDirectory?.appendingPathComponent("connections.json"), secrets: secrets)
         connections = store
+        browserCustomization = BrowserCustomization.load(from: dataDirectory)
         let box = SettingsBox()
         sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
         box.value = loaded

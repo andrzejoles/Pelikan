@@ -271,6 +271,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Object Browser › Filtr nazwany… | `ob.applyFilter` |  |  | Brak | 0 | PD-OB-007 |
+| Obiekt › Dodaj do folderu… | `ob.addToFolder` |  |  | Brak | 0 | PD-OB-008 |
 | Obiekt › Włącz | `ob.enable` |  |  | Brak | 0 | PD-OB-019 |
 | Obiekt › Wyłącz | `ob.disable` |  |  | Brak | 0 | PD-OB-019 |
 | Obiekt › Odśwież widok zmaterializowany | `ob.refreshMV` |  |  | Brak | 0 | PD-OB-019 |

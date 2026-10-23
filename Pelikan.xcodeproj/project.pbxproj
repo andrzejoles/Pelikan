@@ -24,6 +24,7 @@
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
 		1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */; };
 		26F8AB58DC1192AD7A7DCE23 /* PelikanAgent in Frameworks */ = {isa = PBXBuildFile; productRef = C91D66ECD039E3A75B4C6536 /* PelikanAgent */; };
+		2890D4FE8CB05429BCB0AA9C /* BrowserPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1892296F597E772265A2D4D /* BrowserPane.swift */; };
 		28954A51FF6185B872436C72 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */; };
 		2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9355F810C37B2D27045A31 /* DataTransferViews.swift */; };
 		2C9A6FBF8290C58405B2A4DA /* PelikanRemote in Frameworks */ = {isa = PBXBuildFile; productRef = 714D64EEF48603CCF934C810 /* PelikanRemote */; };
@@ -223,6 +224,7 @@
 		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PelikanQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1892296F597E772265A2D4D /* BrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPane.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -279,6 +281,7 @@
 			children = (
 				C866A6E13301104082FC8632 /* AgentsPane.swift */,
 				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
+				F1892296F597E772265A2D4D /* BrowserPane.swift */,
 				81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
 				2418148C5988E2B9B4DC3781 /* ToolsPane.swift */,
@@ -768,6 +771,7 @@
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
 				8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */,
 				B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */,
+				2890D4FE8CB05429BCB0AA9C /* BrowserPane.swift in Sources */,
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,

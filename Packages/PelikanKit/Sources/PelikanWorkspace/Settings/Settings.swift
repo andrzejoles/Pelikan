@@ -52,6 +52,12 @@ public struct Settings: Sendable, Codable, Hashable {
     public var sqlWindowStatistics = false
     /// Kompilacja okna programu z pliku tylko do odczytu (domyślnie zablokowana, PD-PROG-017).
     public var compileReadOnlyFiles = false
+    /// Object Browser (PD-OB-025): widoczne foldery typów w kolejności (puste — wszystkie, kolejność domyślna), limit
+    /// ostatnio używanych, akcja dwukliku według typu (edit, queryData, describe, ddl), potwierdzanie rekompilacji.
+    public var browserFolders: [String] = []
+    public var browserRecentLimit = 20
+    public var browserDoubleClick: [String: String] = [:]
+    public var confirmRecompile = false
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
@@ -209,6 +215,10 @@ public struct Settings: Sendable, Codable, Hashable {
         closeIdleSessionsMinutes = v(.closeIdleSessionsMinutes, closeIdleSessionsMinutes)
         sqlWindowStatistics = v(.sqlWindowStatistics, sqlWindowStatistics)
         compileReadOnlyFiles = v(.compileReadOnlyFiles, compileReadOnlyFiles)
+        browserFolders = v(.browserFolders, browserFolders)
+        browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
+        browserDoubleClick = v(.browserDoubleClick, browserDoubleClick)
+        confirmRecompile = v(.confirmRecompile, confirmRecompile)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)
