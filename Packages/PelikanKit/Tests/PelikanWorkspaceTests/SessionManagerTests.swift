@@ -275,3 +275,45 @@ struct ClientMissingTests {
         #expect(ui.clientHelp == "Brak Instant Client")
     }
 }
+
+
+/// Sesja, której ping zgłasza utratę połączenia.
+final class LostSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult { ExecutionResult(kind: .other) }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws { throw OracleError(code: 3113, message: "ORA-03113: end-of-file on communication channel") }
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+final class LostDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { LostSession() }
+}
+
+@MainActor
+@Suite("Sprawdzanie połączeń")
+struct ConnectionCheckTests {
+    @Test("Utracona sesja główna wykrywana i usuwana; kolejne użycie łączy ponownie")
+    func lost() async throws {
+        let ws = Workspace(drivers: [.instantClient: LostDriver()])
+        let def = ConnectionDefinition(name: "x", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "p")
+        let key = SessionKey(connectionID: def.id, purpose: .main)
+        _ = try await ws.sessions.session(key)
+        #expect(ws.sessions.openSessionCount == 1)
+        let lost = await ws.sessions.checkConnections()
+        #expect(lost == [key])
+        #expect(ws.sessions.openSessionCount == 0)
+        _ = try await ws.sessions.session(key)
+        #expect(ws.sessions.openSessionCount == 1)
+    }
+}

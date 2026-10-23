@@ -59,3 +59,23 @@ struct TNSNamesTests {
         #expect(d == ["/conf", "/tns", "/oh/network/admin", "/ic/network/admin"])
     }
 }
+
+@Suite("Katalog konfiguracji połączenia")
+struct ConnectionConfigDirectoryTests {
+    @Test("Alias z katalogu połączenia → deskryptor; TCPS dostaje MY_WALLET_DIRECTORY; bez katalogu — bez zmian")
+    func resolve() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tns-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try """
+        ADB_HIGH = (DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=adb.example)(PORT=1522))(CONNECT_DATA=(SERVICE_NAME=x_high)))
+        LOCAL = (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREEPDB1)))
+        """.write(to: dir.appendingPathComponent("tnsnames.ora"), atomically: true, encoding: .utf8)
+        let adb = TNSNames.resolveForConnection("adb_high", configDirectory: dir.path)
+        #expect(adb.contains("(HOST=adb.example)") && adb.contains("(SECURITY=(MY_WALLET_DIRECTORY=\(dir.path)))"))
+        let local = TNSNames.resolveForConnection("LOCAL", configDirectory: dir.path)
+        #expect(local.contains("(HOST=localhost)") && !local.contains("SECURITY"))
+        #expect(TNSNames.resolveForConnection("LOCAL", configDirectory: nil) == "LOCAL")
+        #expect(TNSNames.resolveForConnection("host:1521/svc", configDirectory: dir.path) == "host:1521/svc")
+    }
+}

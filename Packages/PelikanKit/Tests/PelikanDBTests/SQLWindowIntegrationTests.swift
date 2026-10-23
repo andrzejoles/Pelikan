@@ -614,3 +614,22 @@ struct WindowSessionsIntegrationTests {
         await s.close()
     }
 }
+
+@Suite("Alias TNS z katalogu połączenia (Instant Client)", .enabled(if: TestDatabase.isAvailable))
+struct ConfigDirectoryIntegrationTests {
+    @Test("Połączenie po aliasie z tnsnames.ora w katalogu konfiguracji połączenia")
+    func alias() async throws {
+        let c = TestDatabase.config!
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tnsdir-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let parts = c.connectString.split(separator: "/")
+        let hp = parts[0].split(separator: ":")
+        try "PELIKAN_TEST_ALIAS = (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=\(hp[0]))(PORT=\(hp[1])))(CONNECT_DATA=(SERVICE_NAME=\(parts[1]))))"
+            .write(to: dir.appendingPathComponent("tnsnames.ora"), atomically: true, encoding: .utf8)
+        let s = try await ODPIDriver().connect(target: ConnectionTarget(user: c.user, connectString: "pelikan_test_alias", configDirectory: dir.path),
+                                               credentials: Credentials(password: c.password), options: ConnectOptions())
+        #expect(try await s.scalar("select 1 from dual") == "1")
+        await s.close()
+    }
+}

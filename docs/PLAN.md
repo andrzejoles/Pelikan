@@ -23,7 +23,7 @@ aktualnym raportem i szkicem wydania (od Etapu 1 — D13). Postęp funkcji: `doc
 **Kryteria odbioru:** raport HTML pokazuje macierz ✅; CI zielone ✅; `make test` łączy się z bazą testową ✅;
 aplikacja się buduje i otwiera okno główne z menu z rejestru (zrzut ekranu).
 
-## Etap 1 — Połączenia, SQL Window, Command Window
+## Etap 1 — Połączenia, SQL Window, Command Window ✅ (zakończony 2026-10-23, PR #2–#10, szkic wydania — D21)
 
 Kolejność podzadań (każde = gałąź `etap-1/<nazwa>` i PR):
 1. **etap-1/polaczenia** — `ConnectionStore` (foldery, kolory, środowisko, sterownik, opcje), hasła w Pęku kluczy

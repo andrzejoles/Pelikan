@@ -1,7 +1,7 @@
 {
-  "heartbeat": "2026-10-23T03:51:13+02:00",
+  "heartbeat": "2026-10-23T03:53:23+02:00",
   "stage": {
-    "id": 1,
+    "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
   "task": "Etap 1: CI dla PR #8 (sterownik thin), potem szkic wydania 2.0 (podpis, DMG/PKG, Sparkle)",
@@ -14,12 +14,12 @@
     {
       "id": 1,
       "name": "Połączenia, SQL Window, Command Window (sterownik Instant Client, potem thin)",
-      "state": "w toku"
+      "state": "zakończony"
     },
     {
       "id": 2,
       "name": "Object Browser i Program Window",
-      "state": "do zrobienia"
+      "state": "w toku"
     },
     {
       "id": 3,
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe",
     "Karty dokumentów: menu Zamknij / pozostałe / z lewej / z prawej, zamykanie krzyżykiem i środkowym przyciskiem przez komendę (pytania o zapis i transakcję); edytor: wielkość liter słów kluczowych przy pisaniu (preferencja), podświetlenie bieżącej linii, wcięcie z preferencji — 1 test, sprawdzone ręcznie",
     "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy",
     "Połączenia: tylko do odczytu (blokada DML/DDL/PL/SQL/FOR UPDATE w SQL Window, Command Window i siatce), potwierdzanie zmian na produkcji (preferencja), połączenie okna na pasku stanu z menu wyboru i przypięciem — 4 testy",
@@ -112,18 +113,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 122,
-      "passed": 122,
+      "total": 124,
+      "passed": 124,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T03:51:13+02:00"
+      "at": "2026-10-23T03:53:20+02:00"
     },
     "integration": {
-      "total": 53,
-      "passed": 52,
+      "total": 54,
+      "passed": 53,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-23T03:48:34+02:00"
+      "at": "2026-10-23T03:53:23+02:00"
     },
     "perf": {
       "total": 9,
