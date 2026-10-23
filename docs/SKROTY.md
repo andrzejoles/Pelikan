@@ -217,13 +217,27 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | 0 | PD-TOOL-007 |
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | 0 | PD-TOOL-012 |
 | Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | 0 | PD-TOOL-015 |
-| Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
-| Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |
-| Import tabel… | `tools.importTables` |  |  | Brak | 6 | PD-TOOL-006 |
-| Porównaj dane tabel… | `tools.compareTableData` |  |  | Odczyt | 6 | PD-TOOL-013 |
-| Import tekstu… | `tools.textImporter` |  |  | Brak | 6 | PD-TOOL-008 |
-| Import z Excela… | `tools.excelImporter` |  |  | Brak | 6 | PD-TOOL-009 |
-| Generator danych… | `tools.dataGenerator` |  |  | Brak | 6 | PD-TOOL-011 |
+| DBMS Scheduler | `tools.scheduler` |  |  | Brak | 0 | PD-SCHED-001 |
+| Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj powiązane tabele | `diagram.addRelated` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj zależności | `diagram.addReferences` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Pokaż lub ukryj kolumny | `diagram.showColumns` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj notatkę | `diagram.addNote` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Grupuj zaznaczone | `diagram.addGroup` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Usuń z diagramu | `diagram.delete` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Powiększenie diagramu | `diagram.zoom` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Siatka diagramu | `diagram.toggleGrid` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Aktualizuj z bazy | `diagram.updateFromDB` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Eksportuj diagram jako obraz… | `diagram.export` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Kopiuj diagram jako obraz | `diagram.copyImage` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | 0 | PD-DIAG-003 |
+| Query Builder… | `tools.queryBuilder` |  |  | Brak | 0 | PD-QB-001 |
+| Eksport tabel… | `tools.exportTables` |  |  | Brak | 0 | PD-TOOL-003 |
+| Import tabel… | `tools.importTables` |  |  | Brak | 0 | PD-TOOL-006 |
+| Import tekstu… | `tools.textImporter` |  |  | Brak | 0 | PD-TOOL-008 |
+| Import z Excela… | `tools.excelImporter` |  |  | Brak | 0 | PD-TOOL-009 |
+| Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
+| Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 6 | PD-TOOL-014 |
 | Menedżer testów… | `tools.testManager` |  |  | Brak | 6 | PD-TOOL-018 |
 | Test obciążenia… | `tools.loadTester` |  |  | Brak | 6 | PD-TOOL-019 |

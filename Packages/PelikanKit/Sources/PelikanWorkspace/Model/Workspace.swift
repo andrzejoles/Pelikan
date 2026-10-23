@@ -55,6 +55,8 @@ public protocol UIServices: AnyObject {
     func copyDiagramImage(_ doc: Document)
     func printDiagram(_ doc: Document)
     func showQueryBuilder(sql: String?, connectionID: UUID?)
+    /// Okna eksportu/importu tabel, importu tekstu i Excela, generatora danych, porównania danych (PD-TOOL-003…013).
+    func showDataTransfer(_ tool: DataTransferTool)
     /// Przeglądarka sesji (PD-TOOL-015).
     func showSessionBrowser()
     /// Eksport i porównanie obiektów użytkownika (PD-TOOL-007, PD-TOOL-012).
@@ -105,6 +107,7 @@ extension UIServices {
     public func copyDiagramImage(_ doc: Document) {}
     public func printDiagram(_ doc: Document) {}
     public func showQueryBuilder(sql: String?, connectionID: UUID?) {}
+    public func showDataTransfer(_ tool: DataTransferTool) {}
     public func showSessionBrowser() {}
     public func showExportObjects() {}
     public func showCompareObjects() {}

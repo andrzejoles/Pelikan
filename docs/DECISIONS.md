@@ -313,3 +313,34 @@ strony, pola, sortowanie, grupowanie, WHERE/HAVING/INTO, DISTINCT) i generuje SE
 słów kluczowych, kolumna w linii, złączenia ANSI albo w WHERE, schemat przed tabelą). Odczyt istniejącego zapytania
 obejmuje tylko proste SELECT: tabele rozdzielone przecinkami albo `[LEFT|RIGHT|FULL] JOIN … ON a.x = b.y`, bez
 podzapytań w FROM, WITH i operacji zbiorowych — inne zapytania otwierają pusty Query Builder z komunikatem.
+### D43 · 2026-10-23 — Narzędzia danych w sesji narzędzi; format własny
+Eksport, importy, generator i porównanie danych działają w osobnej sesji narzędzi połączenia (`SessionPurpose.tool`),
+nie w sesjach okien — importy zatwierdzają własne transakcje (COMMIT co n wierszy) i nie mogą zatwierdzić pracy
+użytkownika. Zmiany danych przechodzą przez `guardModification` (produkcja pyta, połączenie tylko do odczytu odmawia).
+Format własny eksportu tabel to JSON (DDL, kolumny z typami, wartości tekstowe: liczby z kropką, daty
+`YYYY-MM-DD HH24:MI:SS.FF9`, RAW/BLOB w base64) skompresowany LZFSE z nagłówkiem `PLKT1Z` (bez kompresji — `PLKT1J`,
+odczyt na każdym systemie); LOB-y przy imporcie wiązane jako tekst do 32 KiB. Exp/imp zastępuje Data Pump przez
+DBMS_DATAPUMP (synchronicznie, dziennik z katalogu bazy przez UTL_FILE); pliki zrzutu zostają na serwerze bazy.
+
+### D44 · 2026-10-23 — Text/Excel Importer: filtr i duplikaty w jednym bloku PL/SQL
+Każdy wiersz importu to blok `INSERT … SELECT … FROM dual WHERE filtr` ze zmiennymi wiązanymi nazwanymi jak pola
+(`:KWOTA`), więc filtr SQL działa w bazie bez przepisywania; duplikaty klucza głównego są pomijane albo nadpisywane
+(UPDATE po kluczu) w obsłudze `DUP_VAL_ON_INDEX`. Liczby są wiązane jako NUMBER z kropką dziesiętną (przecinek
+z pliku zamieniany), daty przez `TO_DATE` z formatem pola, a liczby Excela w polu daty zamieniane na datę (dni od
+1899-12-30). Plik xlsx czyta własny czytnik ZIP (wpisy stored i deflate przez framework Compression) i XML
+(sharedStrings, arkusze) — bez bibliotek zewnętrznych; czytnik deflate działa tylko na macOS.
+
+### D45 · 2026-10-23 — Składnia generatora danych
+Generator przyjmuje własną składnię opisaną w `DataGenerator` (wzorce w nawiasach kwadratowych ze zbiorami `a A @ #
+* 0 1 9`, powtórzenia `(n)`/`(min..max)`, funkcje Random/Sequence/List/SQL/Text/Uppercase/Lowercase/InitCaps/Parent/
+Field i zbiory Firstname…Email z własnymi, krótkimi listami). Podgląd używa stałego ziarna (powtarzalny), zapis do
+bazy — losowego. `List(select …)` wykonuje zapytanie raz, `SQL(…)` — dla każdego rekordu (wolne, ale z dostępem do
+`:pól` rekordu). Zbiory użytkownika z plików CSV i funkcja File — na później.
+
+### D46 · 2026-10-23 — Druga baza testowa dla subagentów; gałąź integracyjna
+Subagent, który potrzebuje bazy, dostaje własny kontener (`PELIKAN_TESTDB_CONTAINER=pelikan-testdb-2`, port 1532)
+i własny `.testdb/` w swoim worktree — testy na wspólnej bazie muszą iść szeregowo, a dwie bazy mieszczą się w VM Colimy
+(8 GiB, ok. 2,3 GiB na bazę). Kontener zostaje zatrzymany do ponownego użycia. Gałęzie budowane równolegle i nawzajem
+konfliktujące (lista komend, UIServices, AppDelegate, dokumenty) są łączone lokalnie w jedną gałąź integracyjną,
+sprawdzaną pełnym zestawem testów i budowaniem aplikacji, a potem scalaną jednym PR; pojedyncze PR-y są zamykane
+z odnośnikiem — ich commity i scalenia są w historii PR integracyjnego.
