@@ -179,12 +179,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Import z Excela… | `tools.excelImporter` |  |  | Brak | 0 | PD-TOOL-009 |
 | Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
-| Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
+| Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | 0 | PD-OPT-002 |
+| Plan › Zapisz plan jako… | `plan.export` |  |  | Brak | 0 | PD-OPT-003 |
+| Sesje | `tools.sessions` |  |  | Brak | 0 | PD-TOOL-015 |
+| Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | 0 | PD-TOOL-007 |
+| Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | 0 | PD-TOOL-012 |
+| Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | 0 | PD-TOOL-015 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
-| Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
-| Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | 6 | PD-TOOL-007 |
-| Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Odczyt | 6 | PD-TOOL-012 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 6 | PD-TOOL-014 |
 | Menedżer testów… | `tools.testManager` |  |  | Brak | 6 | PD-TOOL-018 |
 | Test obciążenia… | `tools.loadTester` |  |  | Brak | 6 | PD-TOOL-019 |
