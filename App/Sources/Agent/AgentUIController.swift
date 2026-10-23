@@ -257,6 +257,8 @@ final class AgentUIController: ApprovalPresenter {
 
     func undoSession(_ id: String) {
         let edits = workspace.agentEdits.filter { $0.session == id }
+        let code = workspace.agentCodeChanges.filter { $0.session == id }
+        let objects = Set(code.map { "\($0.object.type.rawValue) \($0.object.qualifiedName)" }).sorted()
         let conflicts = edits.compactMap { e -> String? in
             guard let d = workspace.documents.first(where: { $0.id == e.document }), d.text != e.after else { return nil }
             return d.fullTitle
@@ -265,22 +267,30 @@ final class AgentUIController: ApprovalPresenter {
             let alert = NSAlert()
             alert.messageText = L10n.tr("Cofnąć sesję agenta \(id)?")
             var info = L10n.tr("Zmiany okien: \(edits.count). Okna otwarte przez agenta zostaną zamknięte.")
+            if !objects.isEmpty {
+                info += "\n" + L10n.tr("Kod obiektów do przywrócenia (obiekty utworzone przez agenta zostaną usunięte): \(objects.joined(separator: ", "))")
+            }
+            info += "\n" + L10n.tr("Niezatwierdzone zmiany danych agenta zostaną wycofane (ROLLBACK). Zmian po COMMIT i DDL na tabelach nie da się cofnąć.")
             if !conflicts.isEmpty {
                 info += "\n" + L10n.tr("Konflikty (okno zmienione później): \(Set(conflicts).sorted().joined(separator: ", "))")
             }
             alert.informativeText = info
             alert.addButton(withTitle: L10n.tr("Cofnij"))
-            if !conflicts.isEmpty { alert.addButton(withTitle: L10n.tr("Cofnij z wymuszeniem")) }
+            alert.addButton(withTitle: L10n.tr("Cofnij z wymuszeniem"))
             alert.addButton(withTitle: L10n.tr("Anuluj"))
             let response = await present(alert)
             let force: Bool
             switch response {
             case .alertFirstButtonReturn: force = false
-            case .alertSecondButtonReturn where !conflicts.isEmpty: force = true
+            case .alertSecondButtonReturn: force = true
             default: return
             }
-            let r = workspace.undoAgentEdits(session: id, force: force)
-            var messages = [L10n.tr("Cofnięto zmian okien: \(r.undone), pominięto (konflikty): \(r.conflicts.count)")]
+            // Konflikty kodu obiektów (zmienionych później przez kogoś innego) wychodzą dopiero przy porównaniu z bazą.
+            let r = await workspace.undoAgentSession(id, force: force)
+            var messages = [L10n.tr("Cofnięto zmian okien: \(r.editsUndone), przywrócono obiektów: \(r.objectsRestored)")]
+            if r.rolledBack { messages.append(L10n.tr("Wycofano niezatwierdzone zmiany danych agenta.")) }
+            if !r.conflicts.isEmpty { messages.append(L10n.tr("Pominięto (konflikty): \(r.conflicts.joined(separator: ", "))")) }
+            messages += r.errors
             for step in undoSteps { if let m = await step(id) { messages.append(m) } }
             let done = NSAlert()
             done.alertStyle = .informational

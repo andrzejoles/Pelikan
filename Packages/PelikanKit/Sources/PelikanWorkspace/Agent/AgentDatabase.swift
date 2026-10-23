@@ -18,7 +18,7 @@ extension Workspace {
 
     /// Koniec sesji agenta: ROLLBACK niezatwierdzonych zmian i zamknięcie jego sesji bazy na wszystkich połączeniach.
     public func closeAgentDatabase(session id: String) async {
-        for key in sessions.keys(purpose: .agent(id)) {
+        for key in [id, "\(id)/run", "\(id)/events"].flatMap({ sessions.keys(purpose: .agent($0)) }) {
             if let s = sessions.existingSession(key) { try? await s.rollback() }
             await sessions.close(key)
         }

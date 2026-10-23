@@ -108,6 +108,10 @@ Specyfika bazy: agent ma własną sesję bazy (`AgentSessionManager`, MODULE `Pe
 odczyt w `SET TRANSACTION READ ONLY` z limitami, klasyfikacja poleceń (`StatementClassifier`) przed wykonaniem, DML
 niezatwierdzone do osobnej zgody, historia DDL obiektów przed zmianą (cofanie), dane z bazy jako `untrusted_content`.
 
+Stan po Etapie 5 (D33–D35): logika bazy agenta leży w `PelikanWorkspace/Agent` (testy także na Linuksie), kanał
+i serwer MCP w `PelikanAgent` + `PelikanBridgeKit` + wykonywalny `pelikan-mcp` (tylko macOS, `swift-sdk` 0.12.1).
+Narzędzia MCP to komendy `agent.*` z rejestru; `run_command` widzi tylko komendy z `AgentPolicy.appCommands`.
+
 ## 6. Interfejs (Pelikan.app)
 
 ADR 0005: jedno okno główne z lewą kolumną narzędzi (Object Browser, Connection List, Window List, Templates, File
