@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T09:56:13+02:00",
+  "heartbeat": "2026-10-23T10:27:23+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -92,7 +92,8 @@
     "Tunel SSH: systemowy ssh -L (klucz, agent SSH, ~/.ssh/config, ProxyJump, known_hosts), losowy port lokalny, przepisywanie connect stringu (EZConnect, tcps, deskryptor, alias TNS), tunel współdzielony przez sesje i zamykany z ostatnią, karta „Tunel SSH” w definicji połączenia i test połączenia przez tunel; serwer SSH testów w kontenerze (testdb.sh ssh-up); DatabaseError z czytelnym komunikatem — 5 testów (2 przez prawdziwy tunel)",
     "PR #6 scalony (pliki, preferencje, klawiatura), wersja 1.6.0",
     "Pliki i preferencje: Otwórz / Zapisz / Zapisz jako / Otwórz ponownie (lista ostatnich), kodowanie UTF-8/UTF-16/Windows-1250 i CRLF zachowane przy zapisie, typ okna z rozszerzenia, otwieranie z Findera i przeciąganie plików, pytania przy zamykaniu (niezapisane zmiany, otwarta transakcja, sesja okna zamykana) i przy wyjściu; okno Preferencji (Ogólne, Okno SQL, Edytor, Klawiatura z nagrywaniem skrótów i konfliktami, Oracle — katalog Instant Client), wygląd jasny/ciemny/systemowy, ⌘W w oknach pomocniczych — 7 testów",
-    "PR #5 scalony (Command Window), wersja 1.5.0"
+    "PR #5 scalony (Command Window), wersja 1.5.0",
+    "Scalenie main (zamknięcie Etapu 2) z gałęzią okna testu"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +121,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 75,
-      "passed": 75,
+      "total": 76,
+      "passed": 76,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T09:56:13+02:00"
+      "at": "2026-10-23T10:27:23+02:00"
     },
     "perf": {
       "total": 9,
