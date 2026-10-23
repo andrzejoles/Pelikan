@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -380,6 +380,7 @@ public enum BuiltinCommands {
                 let parts = word.split(separator: ".").map(String.init)
                 // Lokalnie: zmienna, parametr, kursor, typ, podprogram w zarysie kodu.
                 if parts.count == 1, let d = PLSQLOutline.declaration(of: word, at: doc.selectedRange.lowerBound, in: PLSQLOutline.parse(doc.text)) {
+                    ctx.workspace.recordJump()
                     doc.selectedRange = d.nameOffset..<(d.nameOffset + (d.name as NSString).length)
                     return CommandResult(message: "\(d.kind.rawValue) \(d.name)")
                 }
@@ -392,6 +393,7 @@ public enum BuiltinCommands {
                 guard let o = found else {
                     throw CommandError.notAvailable(L10n.tr("Nie znaleziono deklaracji „\(word)”"))
                 }
+                ctx.workspace.recordJump()
                 return try await ctx.workspace.invoke("ob.edit", CommandArguments(["object": .string("\(o.owner).\(o.name)"), "type": .string(o.type.rawValue)]),
                                                       invoker: ctx.invoker)
             },

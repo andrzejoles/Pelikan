@@ -110,6 +110,11 @@ public enum TextEditing {
         return TextEdit(text: newText, selection: (selection.lowerBound + shift)..<(selection.upperBound + shift))
     }
 
+    /// Identyfikator z kropkami (schemat.pakiet.element) obejmujący pozycję, bez cudzysłowów.
+    public static func identifier(at offset: Int, in text: String) -> String? {
+        BuiltinCommands.identifier(at: offset, in: text)?.0
+    }
+
     /// Numer linii (od 0) zawierającej pozycję.
     public static func line(containing offset: Int, in text: String) -> Int {
         let ns = text as NSString

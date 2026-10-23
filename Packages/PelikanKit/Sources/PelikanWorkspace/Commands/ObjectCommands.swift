@@ -16,7 +16,12 @@ public enum ObjectCommands {
         guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
         if let spec = ctx.arguments.string("object") {
             let type = ctx.arguments.string("type").flatMap { DBObjectType(rawValue: $0.uppercased()) }
-            guard let o = try await m.find(spec, type: type) else {
+            // `pakiet.element` z edytora — gdy nie ma obiektu o tej nazwie, obiektem jest pakiet (pierwszy człon).
+            var found = try await m.find(spec, type: type)
+            if found == nil, type == nil, let first = spec.split(separator: ".").first, spec.contains(".") {
+                found = try await m.find(String(first))
+            }
+            guard let o = found else {
                 throw CommandError.invalidArgument("object", L10n.tr("nie znaleziono \(spec)"))
             }
             return (o, m)

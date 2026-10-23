@@ -73,6 +73,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Pełny | 0 | PD-TPL-002 |
+| Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
+| Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
 
 ## Sesja
 

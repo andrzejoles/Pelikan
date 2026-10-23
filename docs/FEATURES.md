@@ -180,7 +180,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | do zrobienia |
 | PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | do zrobienia |
 | PD-PROG-017 | Kompilacja tylko do odczytu plików wyłączona (preferencja) | UG 23.2 | Preferences | 2 | P3 | — | do zrobienia |
-| PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | do zrobienia |
+| PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | ⚠️ częściowo (analizy w tle, zarys/zwijanie/kontekst < 50 ms w Release dla 50 000 linii — testy wydajności; bez pomiaru opóźnienia klawisza w UI) |
 
 ## PL/SQL Developer — edytor
 
@@ -210,7 +210,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | 👁 ręcznie |
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | do zrobienia |
-| PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | do zrobienia |
+| PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
 | PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | do zrobienia |
 | PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | do zrobienia |
@@ -232,7 +232,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CA-010 | Code Contents: drzewo struktury, śledzenie kursora, hot track, sortowanie, menu (zaznacz, wytnij, test…) | UG 25.15 | Program Window | 2 | P1 | Odczyt | ⚠️ częściowo (drzewo, śledzenie kursora, przejście; bez sortowania i menu) ✅ test 👁 |
 | PD-CA-011 | Code Hierarchy nad edytorem (ścieżka od kursora, zaznaczanie, menu) | UG 25.16 | Program Window | 2 | P2 | — | ⚠️ częściowo (ścieżka pod edytorem; bez menu zaznaczania) ✅ test 👁 |
 | PD-CA-012 | Hyperlink navigation (Cmd/Ctrl+klik) do deklaracji: w źródle, w oknach, w nowym oknie; tabela → definicja / zapytanie | UG 25.19, NF17 | Edytor | 2 | P1 | Pełny | ⚠️ częściowo (deklaracje lokalne i obiekty bazy w nowym oknie, Cmd+klik; bez wariantów „w oknach”) ✅ test |
-| PD-CA-013 | Navigate back / forward (historia skoków) | UG 25.20 | Edit > Navigation | 2 | P1 | Pełny | do zrobienia |
+| PD-CA-013 | Navigate back / forward (historia skoków) | UG 25.20 | Edit > Navigation | 2 | P1 | Pełny | ✅ test (deklaracja, obiekt, błąd kompilacji, Zawartość kodu; ⌃⌘← / ⌃⌘→) |
 | PD-CA-014 | Refaktoryzacja: Rename item, Extract procedure, Extract local/global constant, Replace assignment with initialization | UG 25.21, NF13 | Edytor > Refactoring | 2 | P2 | Pełny | do zrobienia |
 | PD-CA-015 | Search Bar: wszystkie edytory / bieżący / pliki w katalogach, lista wyników | UG 25.22, NF11 | View > Search Bar | 2 | P2 | Odczyt | do zrobienia |
 
@@ -298,7 +298,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OB-021 | Kosz: Purge / Restore (pod starą lub nową nazwą) | UG 21.1 | Object Browser > Recycle bin | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OB-022 | Compare obiektu (z bazą/schematem, plikiem, bieżącym oknem) | UG 21.1, NF12 | Object Browser > Compare | 2 | P2 | Odczyt | ⚠️ częściowo (obiekt z aktywnym oknem; ze schematem innej bazy — Etap 6) ✅ test |
 | PD-OB-023 | Add source to editor (Program/Test Window) | UG 21.1 | Object Browser | 2 | P3 | — | do zrobienia |
-| PD-OB-024 | Object Browser ze 100 000 obiektów bez blokady interfejsu | PROMPT §9 | Object Browser | 2 | P1 | — | do zrobienia |
+| PD-OB-024 | Object Browser ze 100 000 obiektów bez blokady interfejsu | PROMPT §9 | Object Browser | 2 | P1 | — | ✅ test (100 000 synonimów: 0,3 s, przerwa głównego wątku < 10 ms; test na żądanie PELIKAN_PERF_OBJECTS=1) |
 | PD-OB-025 | Preferencje: widoczne foldery i kolejność, limit Recent, akcja dwukliku/przeciągania per typ, typy danych, Confirm Recompile, publiczne linki | UG 23.11 | Preferences | 2 | P2 | — | do zrobienia |
 | PD-OB-026 | Zapytania słownika odporne na wersję (19c, 21c, 23ai/26ai; starsze — brak kolumn/widoków), DBA views gdy dostępne | PROMPT §9, UG 23.2 | — | 2 | P1 | — | ⚠️ częściowo (DBA/ALL, foldery wg wersji; testowane na 26ai) |
 | PD-OED-001 | Table Definition Editor: General (właściciel, przestrzeń, storage, klaster, temporary, organizacja heap/IOT/external, komentarz, Recreate table) | UG 9.1 | File > New > Table | 2 | P1 | Za zgodą | do zrobienia |
