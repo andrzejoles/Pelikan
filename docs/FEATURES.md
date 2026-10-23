@@ -526,3 +526,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
 | MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |
+
+## Pro*C — zdalny build przez SSH (zadanie właściciela, Etap P)
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| PC-ENC-001 | Kodowanie plików projektu (UTF-8 / ISO-8859-2 / Windows-1250), wykrywanie z istniejących plików, blokada zapisu niekodowalnych znaków z linią i kolumną, jawna zmiana kodowania | zadanie-pelikan-proc-ssh.md (Rozbudowa p. 6) | File > Kodowanie pliku | P | P1 | Brak | ✅ test |

@@ -423,3 +423,10 @@ Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 �
 5. Build próbny: po pierwszej wersji pipeline'u.
 Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
 z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
+
+### D55 · 2026-10-23 — Plik nie zmienia kodowania po cichu
+Zapis znaku spoza kodowania pliku (np. „ ” w ISO-8859-2) jest blokowany z linią, kolumną i znakiem — wcześniej plik
+przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmiana kodowania tylko jawnie (Plik › Kodowanie
+pliku). Pliki jednobajtowe bez BOM: 0x80–0x9F → Windows-1250, polskie litery na pozycjach ISO-8859-2 → ISO-8859-2;
+projekt może narzucić kodowanie swoich plików (`ProjectOptions.encoding`), a `TextFileCodec.detectEncoding` ustala je
+z istniejących plików.
