@@ -571,6 +571,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         NSWorkspace.shared.open(url)
     }
 
+    func showUserManual() {
+        ToolWindowController.show(key: "userManual", title: L10n.tr("Instrukcja Pelikana"), size: NSSize(width: 900, height: 640)) { UserManualView(workspace: workspace) }
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }

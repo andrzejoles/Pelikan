@@ -59,6 +59,8 @@ public protocol UIServices: AnyObject {
     func showSQLMonitor()
     /// Otwiera adres w przeglądarce (dokumentacja Oracle, pomoc).
     func openURL(_ url: URL)
+    /// Instrukcja użytkownika (PL-INFRA-010).
+    func showUserManual()
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
     func showDualityViews()
     func showMLEModules()
@@ -159,6 +161,7 @@ extension UIServices {
     public func showHTMLReport(title: String, html: String) {}
     public func showSQLMonitor() {}
     public func openURL(_ url: URL) {}
+    public func showUserManual() {}
     public func showDualityViews() {}
     public func showMLEModules() {}
     public func showSpatialPreview(title: String, wkt: [String]) {}

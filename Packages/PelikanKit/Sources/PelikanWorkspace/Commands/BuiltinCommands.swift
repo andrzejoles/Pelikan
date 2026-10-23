@@ -554,6 +554,12 @@ public enum BuiltinCommands {
                 ctx.ui?.openURL(url)
                 return CommandResult(value: .string(url.absoluteString))
             },
+            Command(CommandDescriptor(id: "help.manual", title: L10n.tr("Instrukcja Pelikana"), category: .help,
+                                      mac: ["cmd+shift+/"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera instrukcję użytkownika z rozdziałami i listą skrótów klawiszowych."), feature: "PL-INFRA-010")) { ctx in
+                ctx.ui?.showUserManual()
+                return .ok
+            },
             Command(CommandDescriptor(id: "help.oracleManuals", title: L10n.tr("Dokumentacja Oracle…"), category: .help,
                                       parameters: [CommandParameter("query", .string, L10n.tr("Szukane słowa"))],
                                       agent: .none, effect: .external,

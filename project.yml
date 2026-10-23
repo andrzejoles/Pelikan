@@ -41,6 +41,11 @@ targets:
     sources:
       - path: App/Sources
       - path: App/Resources
+      # Instrukcja użytkownika (PL-INFRA-010): katalog z rozdziałami Markdown w językach, w zasobach jako „Manual”.
+      - path: docs/manual
+        name: Manual
+        type: folder
+        buildPhase: resources
     settings:
       base:
         INFOPLIST_FILE: App/Info.plist

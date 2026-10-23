@@ -17697,6 +17697,34 @@
         }
       }
     },
+    "Instrukcja Pelikana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan Help"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan-Hilfe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayuda de Pelikan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довідка Pelikan"
+          }
+        }
+      }
+    },
     "Instrukcje PL/SQL wywołujące kod modułu" : {
       "localizations" : {
         "en" : {
@@ -33965,6 +33993,34 @@
         }
       }
     },
+    "Otwiera instrukcję użytkownika z rozdziałami i listą skrótów klawiszowych." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the user guide with chapters and a list of keyboard shortcuts."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet das Benutzerhandbuch mit Kapiteln und einer Liste der Tastaturkurzbefehle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el manual de usuario con capítulos y una lista de atajos de teclado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває посібник користувача з розділами та списком клавіатурних скорочень."
+          }
+        }
+      }
+    },
     "Otwiera nowe okno SQL, programu albo testu z tekstem (bez wykonania); cofnięcie sesji agenta je zamyka." : {
       "localizations" : {
         "en" : {
@@ -49057,6 +49113,34 @@
         }
       }
     },
+    "Skróty klawiszowe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard shortcuts"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastaturkurzbefehle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atajos de teclado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клавіатурні скорочення"
+          }
+        }
+      }
+    },
     "Składnia: -- TODO(właściciel) !priorytet #kategoria: tekst" : {
       "localizations" : {
         "en" : {
@@ -60813,6 +60897,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bericht aus der Liste auswählen"
+          }
+        }
+      }
+    },
+    "Wybierz rozdział" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a chapter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona un capítulo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть розділ"
           }
         }
       }
