@@ -12069,6 +12069,62 @@
         }
       }
     },
+    "Dodatkowe rozszerzenia programów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Additional program extensions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusätzliche Programmendungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensiones adicionales de programas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додаткові розширення програм"
+          }
+        }
+      }
+    },
+    "Dodatkowe rozszerzenia testów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Additional test extensions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zusätzliche Testendungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extensiones adicionales de pruebas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додаткові розширення тестів"
+          }
+        }
+      }
+    },
     "Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)" : {
       "localizations" : {
         "en" : {
@@ -13045,34 +13101,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bericht drucken …"
-          }
-        }
-      }
-    },
-    "Drukuje bieżące okno." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prints the current window."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Druckt das aktuelle Fenster."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imprime la ventana actual."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друкує поточне вікно."
           }
         }
       }
@@ -17585,34 +17613,6 @@
         }
       }
     },
-    "HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST is not available in the Pelikan Command Window (run system commands in Terminal)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST ist im Command Window von Pelikan nicht verfügbar (Systembefehle im Terminal ausführen)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST no está disponible en la Command Window de Pelikan (ejecute los comandos del sistema en Terminal)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST недоступна в Command Window Pelikan (системні команди запускайте в Терміналі)."
-          }
-        }
-      }
-    },
     "HTML" : {
       "localizations" : {
         "en" : {
@@ -21585,6 +21585,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Каталоги, розділені ; (порожньо — розташування File Browser)"
+          }
+        }
+      }
+    },
+    "Katalogi startowe i rozszerzenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start folders and extensions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startordner und Dateiendungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpetas iniciales y extensiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Початкові теки й розширення"
           }
         }
       }
@@ -35641,6 +35669,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Object Browser"
+          }
+        }
+      }
+    },
+    "Object Browser: %@ pt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: %@ pt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: %@ pt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: %@ pt"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: %@ пт"
+          }
+        }
+      }
+    },
+    "Object Browser: systemowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: system"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: System"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: del sistema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object Browser: системний"
           }
         }
       }
@@ -56841,6 +56925,34 @@
         }
       }
     },
+    "Siatka wyników: %@ pt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result grid: %@ pt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisraster: %@ pt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuadrícula de resultados: %@ pt"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сітка результатів: %@ пт"
+          }
+        }
+      }
+    },
     "Single — jedna sesja" : {
       "localizations" : {
         "en" : {
@@ -57369,6 +57481,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skript aus dem Test Window von Pelikan"
+          }
+        }
+      }
+    },
+    "Skrypty SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL scripts"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Skripte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scripts SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрипти SQL"
           }
         }
       }
@@ -59021,34 +59161,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabulatorbreite: %@"
-          }
-        }
-      }
-    },
-    "Szuka słowa pod kursorem w dokumentacji Oracle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looks up the word under the cursor in the Oracle documentation."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sucht das Wort unter dem Cursor in der Oracle-Dokumentation."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busca la palabra bajo el cursor en la documentación de Oracle."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шукає слово під курсором у документації Oracle."
           }
         }
       }
@@ -88421,6 +88533,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dateiverzeichnis"
+          }
+        }
+      }
+    },
+    "katalog projektu albo ostatni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "project folder or last used"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projektordner oder zuletzt verwendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "carpeta del proyecto o la última"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "тека проєкту або остання"
           }
         }
       }

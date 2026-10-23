@@ -925,6 +925,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         window.beginSheet(w)
     }
 
+    /// Klucz katalogu startowego dla rodzaju okna (PD-PREF-006).
+    static func startDirectoryKey(_ kind: DocumentKind?) -> String {
+        switch kind {
+        case .program: "program"
+        case .test: "test"
+        case .report: "report"
+        default: "sql"
+        }
+    }
+
     func chooseFilesToOpen() async -> [URL] {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
@@ -932,6 +942,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.allowedContentTypes = ["sql", "pck", "pks", "pkb", "spc", "bdy", "fnc", "prc", "trg", "typ", "tps", "tpb", "tst", "txt"]
             .compactMap { UTType(filenameExtension: $0) }
         panel.allowsOtherFileTypes = true
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.urls : [] }
         return await panel.beginSheetModal(for: window) == .OK ? panel.urls : []
     }
@@ -941,6 +952,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
         return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
     }

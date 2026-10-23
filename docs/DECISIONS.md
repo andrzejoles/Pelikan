@@ -841,3 +841,9 @@ podgląd i znacznik obcięcia.
 Wzorzec trzyma wartości zmiennych w pliku `.pfi` obok skryptu. Pelikan zapisuje je w stanie okna w worksecie (także dla
 okien bez pliku); odświeżenie karty i automatyczne odświeżanie używają zapamiętanych wartości bez pytania (NF8).
 
+
+### D112 · 2026-10-24 — Narzędzia w kartach i kolory z motywu systemu
+Wzorzec pozwala dokować i odrywać każde narzędzie oraz ustawiać kolor i tło czcionek. Pelikan trzyma narzędzia w kartach
+lewej kolumny (zwijanej) i w osobnych oknach narzędzi — to układ zgodny z HIG i z trybem jasnym/ciemnym; dowolne
+dokowanie paneli wymagałoby własnego menedżera układu na AppKit. Kolory tekstu i tła biorą się z motywu systemu
+(czytelność w obu trybach, VoiceOver); w Preferencjach są czcionka i rozmiary. Oba wiersze ⚠️.

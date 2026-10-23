@@ -48,8 +48,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.toolbar = toolbar
         trackChanges { [weak self] in
             guard let self else { return }
-            let doc = workspace.activeDocument
-            self.window?.subtitle = doc?.fullTitle ?? ""
+            // Tytuł z połączeniem i worksetem, podtytuł z oknem i jego połączeniem (PD-UI-009).
+            let appName = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
+            self.window?.title = workspace.windowTitle(appName: appName)
+            self.window?.subtitle = workspace.windowSubtitle()
         }
     }
 

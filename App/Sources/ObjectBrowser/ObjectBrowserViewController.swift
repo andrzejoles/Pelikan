@@ -297,7 +297,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         }
         cell.textField?.stringValue = title
         cell.textField?.textColor = textColor
-        cell.textField?.font = .systemFont(ofSize: NSFont.smallSystemFontSize + 1)
+        let size = workspace.settings.browserFontSize
+        cell.textField?.font = .systemFont(ofSize: size > 0 ? size : NSFont.smallSystemFontSize + 1)
         cell.imageView?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         cell.imageView?.contentTintColor = color
         return cell

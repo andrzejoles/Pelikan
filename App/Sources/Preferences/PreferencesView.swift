@@ -75,6 +75,17 @@ struct GeneralPane: View {
                 }
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu Pelikana.")).font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Katalogi startowe i rozszerzenia")) {
+                ForEach([("sql", L10n.tr("Skrypty SQL")), ("program", L10n.tr("Programy")), ("test", L10n.tr("Testy")), ("report", L10n.tr("Raporty"))], id: \.0) { key, label in
+                    TextField(label, text: Binding(get: { workspace.settings.startDirectories[key] ?? "" },
+                                                   set: { workspace.settings.startDirectories[key] = $0.isEmpty ? nil : $0 }),
+                              prompt: Text(L10n.tr("katalog projektu albo ostatni")))
+                }
+                TextField(L10n.tr("Dodatkowe rozszerzenia programów"), text: Binding(get: { workspace.settings.programExtensions.joined(separator: ", ") },
+                    set: { workspace.settings.programExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
+                TextField(L10n.tr("Dodatkowe rozszerzenia testów"), text: Binding(get: { workspace.settings.testExtensions.joined(separator: ", ") },
+                    set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
+            }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
             }
@@ -140,6 +151,13 @@ struct EditorPane: View {
                 }
                 Stepper(value: setting(workspace, \.editorFontSize), in: 8...40, step: 1) {
                     Text(L10n.tr("Rozmiar: \(Int(workspace.settings.editorFontSize)) pt"))
+                }
+                Stepper(value: setting(workspace, \.gridFontSize), in: 8...24, step: 1) {
+                    Text(L10n.tr("Siatka wyników: \(Int(workspace.settings.gridFontSize)) pt"))
+                }
+                Stepper(value: setting(workspace, \.browserFontSize), in: 0...24, step: 1) {
+                    Text(workspace.settings.browserFontSize == 0 ? L10n.tr("Object Browser: systemowa")
+                         : L10n.tr("Object Browser: \(Int(workspace.settings.browserFontSize)) pt"))
                 }
                 Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
             }
