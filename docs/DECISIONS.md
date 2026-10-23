@@ -175,3 +175,10 @@ na później. Polecenia wykonuje sesja kompilacji po strażniku tylko do odczytu
 wykonanie się zatrzymuje (DDL w Oracle zatwierdza się samo — wykonane polecenia zostają), edytor pokazuje kartę SQL
 z komunikatem i wczytuje stan z bazy. „Edytuj” na tabeli w Object Browserze otwiera edytor; agent dostaje definicję
 jako DDL (bez wykonania). Komunikaty `OracleError` mają od teraz pełną treść także w `localizedDescription`.
+
+### D26 · 2026-10-23 — Hasła w edytorach użytkowników: tylko w pamięci okna, maskowane wszędzie
+Edytor użytkownika przyjmuje hasło w polu bezpiecznym; wartość istnieje wyłącznie w pamięci otwartego okna edytora
+i w poleceniu wysyłanym do bazy. Podgląd SQL, strażnik produkcji, lista wykonanych poleceń i komunikaty błędów
+dostają wersję z `IDENTIFIED BY ********`; hasło nie trafia do historii, dziennika komend, pliku ani Pęku kluczy
+(to hasło innego konta, nie dane logowania Pelikana). Edytor łącza bazy danych (też z hasłem) i profilu — później
+z tą samą zasadą.

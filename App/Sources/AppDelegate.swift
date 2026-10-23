@@ -37,7 +37,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         workspace.sessions.setDriver(ThinDriver())
     }
 
+    /// Diagnostyka (PELIKAN_STALL_LOG=1): przerwy głównego wątku > 100 ms w dzienniku (PD-PROG-018 — pisanie bez opóźnień).
+    private var stallTimer: Timer?
+    private var lastTick = Date()
+
+    private func startStallLog() {
+        guard ProcessInfo.processInfo.environment["PELIKAN_STALL_LOG"] == "1" else { return }
+        lastTick = Date()
+        stallTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let gap = Date().timeIntervalSince(self.lastTick)
+                if gap > 0.1 { NSLog("PELIKAN_STALL %.0f ms", gap * 1000) }
+                self.lastTick = Date()
+            }
+        }
+        RunLoop.main.add(stallTimer!, forMode: .common)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        startStallLog()
         workspace.ui = self
         workspace.sessions.prompter = prompts
         let builder = MenuBuilder(workspace: workspace)
@@ -161,6 +180,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "table-\(definition.owner).\(original?.name ?? UUID().uuidString)", title: title,
                                   size: NSSize(width: 980, height: 560)) {
             TableEditorView(workspace: workspace, connectionID: connectionID, definition: definition, original: original)
+        }
+    }
+
+    func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {
+        let name = editor.original?["name"]
+        let title = name.map { "\(editor.title) \($0)" } ?? L10n.tr("Nowy obiekt: \(editor.title.lowercased())")
+        ToolWindowController.show(key: "table-\(editor.kind.rawValue)-\(name ?? UUID().uuidString)", title: title, size: NSSize(width: 780, height: 460)) {
+            SimpleObjectEditorView(workspace: workspace, connectionID: connectionID, editor: editor)
         }
     }
 

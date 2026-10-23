@@ -180,7 +180,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | do zrobienia |
 | PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | do zrobienia |
 | PD-PROG-017 | Kompilacja tylko do odczytu plików wyłączona (preferencja) | UG 23.2 | Preferences | 2 | P3 | — | do zrobienia |
-| PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | ⚠️ częściowo (analizy w tle, zarys/zwijanie/kontekst < 50 ms w Release dla 50 000 linii — testy wydajności; bez pomiaru opóźnienia klawisza w UI) |
+| PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | ✅ test (Release, 50 403 linie: pisanie bez przestojów > 100 ms — PELIKAN_STALL_LOG; analizy w tle; jednorazowo ~1,5 s przy otwarciu) |
 
 ## PL/SQL Developer — edytor
 
@@ -308,9 +308,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OED-005 | Tabela — Privileges (Select/Insert/Update/Delete/References/Alter/Index/Read: brak/Yes/Grantable) | UG 9.1, NF12 | Table Editor | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OED-006 | Tabela — Partitions (Range/Hash/List, subpartycje), Triggers (nowy, usuń, Enabled, edycja), External | UG 9.1, NF10 | Table Editor | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OED-007 | Tabela — View SQL (DDL zmian, edycja SQL i zastosowanie, zapis/schowek/Command Window), Apply, Refresh, Query | UG 9.1 | Table Editor | 2 | P1 | Za zgodą | ✅ test 👁 (DDL zmian, kopiowanie, otwarcie w oknie SQL, Zastosuj z zatrzymaniem przy błędzie, Odśwież) |
-| PD-OED-008 | Edytory: Sequence, Synonym, Library, Directory, Job (DBMS_JOB), Queue, Queue Table | UG 9.2–9.8 | File > New | 2 | P2 | Za zgodą | do zrobienia |
-| PD-OED-009 | Edytory: User (uprawnienia obiektowe, role, systemowe, quoty), Role, Profile, Database link | UG 9.9–9.12 | File > New | 2 | P2 | Za zgodą | do zrobienia |
-| PD-OED-010 | Edytor widoku w SQL Window z szablonu; edytory widoku i indeksu (z SQL Developer for VS Code) | UG 21.1 | File > New > View | 2 | P2 | Za zgodą | do zrobienia |
+| PD-OED-008 | Edytory: Sequence, Synonym, Library, Directory, Job (DBMS_JOB), Queue, Queue Table | UG 9.2–9.8 | File > New | 2 | P2 | Za zgodą | ⚠️ częściowo (sekwencja, synonim; bez Library, Directory, Job, Queue) ✅ test 👁 |
+| PD-OED-009 | Edytory: User (uprawnienia obiektowe, role, systemowe, quoty), Role, Profile, Database link | UG 9.9–9.12 | File > New | 2 | P2 | Za zgodą | ⚠️ częściowo (użytkownik: hasło maskowane, przestrzenie, profil, blokada, role, uprawnienia systemowe, limity; rola; bez uprawnień obiektowych, Profile, Database link) ✅ test |
+| PD-OED-010 | Edytor widoku w SQL Window z szablonu; edytory widoku i indeksu (z SQL Developer for VS Code) | UG 21.1 | File > New > View | 2 | P2 | Za zgodą | ⚠️ częściowo (widok z szablonu w oknie SQL, edytor indeksu; bez edytora widoku z SQL Developera) ✅ test |
 | PD-OED-011 | Domena (File > New > Domain z szablonem; View/Edit/Drop/Properties) i Assertion (26ai) | NF17 | File > New | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OED-012 | Row Archival w edytorze tabeli | NF14 | Table Editor | 2 | P3 | Za zgodą | do zrobienia |
 

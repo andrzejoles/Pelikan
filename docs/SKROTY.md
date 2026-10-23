@@ -39,6 +39,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
 | Nowy › Tabela… | `file.newTable` |  |  | Brak | 0 | PD-OED-001 |
+| Nowy › Sekwencja… | `file.newSequence` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Synonim… | `file.newSynonym` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Indeks… | `file.newIndex` |  |  | Brak | 0 | PD-OED-010 |
+| Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
 
 ## Edycja
 
