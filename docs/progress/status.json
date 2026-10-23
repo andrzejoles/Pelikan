@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T03:03:32+02:00",
+  "heartbeat": "2026-10-23T03:03:54+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 1 / sterownik thin: OracleNIO za protokołem DatabaseSession, wybór sterownika w połączeniu, wyszarzanie funkcji niedostępnych",
+  "task": "Etap 1: CI dla PR #8 (sterownik thin), potem szkic wydania 2.0 (podpis, DMG/PKG, Sparkle)",
   "stages": [
     {
       "id": 0,
