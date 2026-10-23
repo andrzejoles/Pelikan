@@ -180,3 +180,29 @@ struct FoldCommandTests {
         #expect(doc.foldedStarts.isEmpty)
     }
 }
+
+@MainActor
+@Suite("Code Assistant bez bazy")
+struct CodeAssistantOfflineTests {
+    @Test("Deklaracje lokalne, pola rekordu, aliasy podzapytań, słowa kluczowe, brak w literale")
+    func offline() async {
+        let text = """
+            declare
+              type t_rec is record (id number, nazwa varchar2(10));
+              v_rec t_rec;
+              v_licznik number;
+            begin
+              v_
+            """
+        let r = await CodeAssistant.complete(text: text, offset: (text as NSString).length, metadata: nil)
+        #expect(r?.items.map(\.label) == ["v_rec", "v_licznik"])     // kolejność deklaracji
+        let f = await CodeAssistant.complete(text: text + "rec.", offset: (text as NSString).length + 4, metadata: nil)
+        #expect(f?.items.map(\.label) == ["id", "nazwa"])
+        let sub = "select s.| from (select 1 as jeden, x.dwa from t x) s"
+        let si = await CodeAssistant.complete(text: sub.replacingOccurrences(of: "|", with: ""), offset: 9, metadata: nil)
+        #expect(si?.items.map(\.insertText) == ["jeden", "dwa"])
+        let kw = await CodeAssistant.complete(text: "sel", offset: 3, metadata: nil)
+        #expect(kw?.items.first?.insertText == "select")
+        #expect(await CodeAssistant.complete(text: "select 'v_", offset: 10, metadata: nil) == nil)
+    }
+}

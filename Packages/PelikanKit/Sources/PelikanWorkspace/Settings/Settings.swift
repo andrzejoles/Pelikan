@@ -78,6 +78,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var useTabCharacter = false
     /// Panel Code Contents obok edytora Program Window (UG 25.15).
     public var showCodeContents = true
+    /// Code Assistant (UG 23.14): automatyczna aktywacja po kropce i jej opóźnienie w milisekundach.
+    public var codeAssistantAutomatic = true
+    public var codeAssistantDelay = 400
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
@@ -104,6 +107,8 @@ public struct Settings: Sendable, Codable, Hashable {
         keywordCase = v(.keywordCase, keywordCase)
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
         showCodeContents = v(.showCodeContents, showCodeContents)
+        codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
+        codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)

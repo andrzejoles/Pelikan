@@ -220,15 +220,15 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-CA-001 | Code Assistant po `obiekt.`: elementy pakietu, parametry (notacja nazwana), kolumny, NEXTVAL/CURRVAL, obiekty użytkownika | UG 25.4 | Edytor | 2 | P1 | — | do zrobienia |
-| PD-CA-002 | Code Assistant dla zmiennych: kursor, rekord, %ROWTYPE (bez niewidocznych), obiekt, kolekcja, `:new`/`:old`, Self | UG 25.4, NF17 | Edytor | 2 | P1 | — | do zrobienia |
-| PD-CA-003 | Kontekst: obiekty dostępne, kolumny tabel DML (bez aliasu), słowa kluczowe, identyfikatory jednostki i specyfikacji | UG 25.4, NF12, NF17 | Edytor | 2 | P1 | — | do zrobienia |
-| PD-CA-004 | Aliasy tabel w zapytaniu (`e.` → kolumny EMP) | PROMPT §3.1 | Edytor | 2 | P1 | — | do zrobienia |
-| PD-CA-005 | `@` — linki bazy | UG 25.4, NF9 | Edytor | 2 | P3 | — | do zrobienia |
+| PD-CA-001 | Code Assistant po `obiekt.`: elementy pakietu, parametry (notacja nazwana), kolumny, NEXTVAL/CURRVAL, obiekty użytkownika | UG 25.4 | Edytor | 2 | P1 | — | ⚠️ częściowo (elementy pakietu, kolumny, NEXTVAL/CURRVAL, obiekty schematu; bez parametrów w notacji nazwanej) ✅ test 👁 |
+| PD-CA-002 | Code Assistant dla zmiennych: kursor, rekord, %ROWTYPE (bez niewidocznych), obiekt, kolekcja, `:new`/`:old`, Self | UG 25.4, NF17 | Edytor | 2 | P1 | — | ⚠️ częściowo (kursor, rekord, %ROWTYPE, rekord pętli FOR, typ obiektowy, :new/:old; bez kolekcji i Self) ✅ test |
+| PD-CA-003 | Kontekst: obiekty dostępne, kolumny tabel DML (bez aliasu), słowa kluczowe, identyfikatory jednostki i specyfikacji | UG 25.4, NF12, NF17 | Edytor | 2 | P1 | — | ⚠️ częściowo (obiekty schematu, kolumny tabel instrukcji, słowa kluczowe, deklaracje w zasięgu i specyfikacji) ✅ test |
+| PD-CA-004 | Aliasy tabel w zapytaniu (`e.` → kolumny EMP) | PROMPT §3.1 | Edytor | 2 | P1 | — | ✅ test 👁 |
+| PD-CA-005 | `@` — linki bazy | UG 25.4, NF9 | Edytor | 2 | P3 | — | ⚠️ częściowo (lista z ALL_DB_LINKS; kontekst `@` ✅ test, bez testu listy — baza testowa nie ma linków) |
 | PD-CA-006 | Wybór wielu elementów i „(all)” (kolumny, parametry, konstruktory, pola widoku inline), układ w liniach, wyrównanie `=>`, przecinek przed | UG 25.4, UG 23.14 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-CA-007 | Preferencje: auto/klawisz, opóźnienie, Contains/Starts with, styl wielkości liter, oryginalna wielkość liter, min. liczba znaków, funkcje standardowe | UG 23.14 | Preferences | 2 | P2 | — | do zrobienia |
 | PD-CA-008 | Deklaracja zmiennej/typu w dymku po najechaniu | UG 23.14, NF8 | Edytor | 2 | P2 | — | do zrobienia |
-| PD-CA-009 | Refresh Code Assistant (cache metadanych odświeżany w tle) | NF14, PROMPT §4.2 p.5 | Edytor | 2 | P1 | — | do zrobienia |
+| PD-CA-009 | Refresh Code Assistant (cache metadanych odświeżany w tle) | NF14, PROMPT §4.2 p.5 | Edytor | 2 | P1 | — | ✅ test (pamięć podręczna słownika, komenda Odśwież podpowiedzi kodu) |
 | PD-CA-010 | Code Contents: drzewo struktury, śledzenie kursora, hot track, sortowanie, menu (zaznacz, wytnij, test…) | UG 25.15 | Program Window | 2 | P1 | Odczyt | ⚠️ częściowo (drzewo, śledzenie kursora, przejście; bez sortowania i menu) ✅ test 👁 |
 | PD-CA-011 | Code Hierarchy nad edytorem (ścieżka od kursora, zaznaczanie, menu) | UG 25.16 | Program Window | 2 | P2 | — | ⚠️ częściowo (ścieżka pod edytorem; bez menu zaznaczania) ✅ test 👁 |
 | PD-CA-012 | Hyperlink navigation (Cmd/Ctrl+klik) do deklaracji: w źródle, w oknach, w nowym oknie; tabela → definicja / zapytanie | UG 25.19, NF17 | Edytor | 2 | P1 | Pełny | ⚠️ częściowo (deklaracje lokalne i obiekty bazy w nowym oknie, Cmd+klik; bez wariantów „w oknach”) ✅ test |

@@ -36,6 +36,13 @@ public protocol UIServices: AnyObject {
     func chooseFilesToOpen() async -> [URL]
     /// Okno wyboru nazwy pliku do zapisu; nil — anulowano.
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL?
+    /// Lista podpowiedzi Code Assistant w edytorze dokumentu (UG 25.4).
+    func showCompletion(_ result: CompletionResult, for document: Document)
+
+}
+
+extension UIServices {
+    public func showCompletion(_ result: CompletionResult, for document: Document) {}
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).

@@ -162,6 +162,10 @@ public final class MetadataProvider {
     @ObservationIgnored private var cache: [String: [DBObject]] = [:]
     @ObservationIgnored private var childCache: [String: [DBObjectChild]] = [:]
     @ObservationIgnored private var dbaViews: Bool?
+    /// Pamięć podręczna Code Assistant: nazwy obiektów schematu, rozwiązane nazwy (synonimy), linki.
+    @ObservationIgnored var nameCache: [String: [(name: String, type: String)]] = [:]
+    @ObservationIgnored var resolveCache: [String: DBObject?] = [:]
+    @ObservationIgnored var linkCache: [String]?
     public private(set) var recent: [DBObject] = []
     /// Zmienia się po odświeżeniu (widoki przeładowują drzewo).
     public private(set) var generation = 0
@@ -178,6 +182,9 @@ public final class MetadataProvider {
     public func refresh() {
         cache.removeAll()
         childCache.removeAll()
+        nameCache.removeAll()
+        resolveCache.removeAll()
+        linkCache = nil
         generation += 1
     }
 

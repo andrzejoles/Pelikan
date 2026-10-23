@@ -264,6 +264,29 @@ public enum BuiltinCommands {
                 doc.selectedRange = o..<o
                 return .ok
             },
+            Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
+                                      pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .read, effect: .none,
+                                      summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),
+                                      feature: "PD-CA-001"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc))
+                guard let r = await CodeAssistant.complete(text: doc.text, offset: doc.selectedRange.lowerBound, metadata: m) else {
+                    return CommandResult(message: L10n.tr("Brak podpowiedzi"))
+                }
+                ctx.ui?.showCompletion(r, for: doc)
+                // Agent dostaje listę (bez zmiany tekstu).
+                return CommandResult(message: r.items.prefix(200).map(\.label).joined(separator: ", "))
+            },
+            Command(CommandDescriptor(id: "edit.refreshCodeAssistant", title: L10n.tr("Odśwież podpowiedzi kodu"), category: .edit,
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Czyści pamięć podręczną słownika używaną przez podpowiedzi (np. po zmianie tabel w innej sesji)."),
+                                      feature: "PD-CA-009"),
+                    validate: { ws in editable(ws).flatMap { ws.metadata(for: ws.effectiveConnection(of: $0)) } != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc))?.refresh()
+                return .ok
+            },
             Command(CommandDescriptor(id: "edit.fold", title: L10n.tr("Zwiń blok"), category: .edit,
                                       pd: ["cmd+alt+left"], mac: ["cmd+alt+left"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Zwija blok, IF, LOOP albo CASE zaczynający się w linii kursora lub najbliższy obejmujący kursor."),

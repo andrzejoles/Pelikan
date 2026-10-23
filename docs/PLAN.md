@@ -75,7 +75,8 @@ Kolejność podzadań (każde = gałąź `etap-2/<nazwa>` i PR):
    Code Hierarchy, zwijanie, Go to declaration, hiperłącza do obiektów.
 3a. **etap-2/zwijanie** — zwijanie kodu w edytorze (znaczniki ±, Fold All/Unfold All, podgląd zwiniętego) na
    zakresach z parsera (PD-EDIT-013, D22).
-4. **etap-2/code-assistant** — podpowiedzi (kolumny, aliasy, elementy pakietów, parametry, słowa kluczowe), szablony.
+4. **etap-2/code-assistant** — podpowiedzi (kolumny, aliasy, elementy pakietów, parametry, słowa kluczowe); szablony
+   (Template Window, PD-TPL-001…003) w osobnym podzadaniu **etap-2/szablony**.
 5. **etap-2/beautifier** — PL/SQL Beautifier z regułami i podglądem.
 6. **etap-2/narzedzia** — Find Database Objects, Compile Invalid Objects, Difference Viewer, edytory obiektów
    (tabela, sekwencja, synonim, widok, indeks, użytkownik, rola), test wydajności (pakiet 50 000 linii, 100 000 obiektów).
