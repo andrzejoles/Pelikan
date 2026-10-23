@@ -42,6 +42,8 @@ public protocol UIServices: AnyObject {
     func showFindObjects(_ criteria: DatabaseSearchCriteria)
     /// Okno Compile Invalid Objects (UG 24.3).
     func showCompileInvalid()
+    /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
+    func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 
 }
 
@@ -49,6 +51,9 @@ extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
+    public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
+        await askVariables(requests, document: document)
+    }
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).
@@ -115,6 +120,10 @@ public final class Workspace {
     public let sessions: SessionManager
     /// Katalog danych aplikacji (nil = bez zapisu: testy, `persists: false`).
     public let dataDirectory: URL?
+    /// Szablony kodu (UG 31): wbudowane i użytkownika z katalogu danych.
+    @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
+    /// Zmienia się po zapisie lub usunięciu szablonu (Template Window przeładowuje listę).
+    public var templatesGeneration = 0
 
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []

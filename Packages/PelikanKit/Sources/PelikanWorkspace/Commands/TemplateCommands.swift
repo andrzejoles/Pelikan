@@ -1,0 +1,119 @@
+import Foundation
+import PelikanSQL
+
+/// Szablony kodu (UG 31, PD-TPL-001…003) i nowy program z szablonu (PD-PROG-002).
+enum TemplateCommands {
+    static let insertParams = [
+        CommandParameter("template", .string, required: true, L10n.tr("Szablon: folder/nazwa albo nazwa")),
+        CommandParameter("values", .object, L10n.tr("Wartości zmiennych szablonu (nazwa → tekst); brakujące — domyślne")),
+    ]
+
+    @MainActor static var all: [Command] {
+        [
+            Command(CommandDescriptor(id: "edit.insertTemplate", title: L10n.tr("Wstaw szablon…"), category: .edit,
+                                      parameters: insertParams, agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Wstawia szablon w miejscu kursora (zmienne z formularza albo z argumentów); bez okna edytora — w nowym oknie."),
+                                      inMenu: false, feature: "PD-TPL-002")) { ctx in
+                try await insert(ctx, newWindow: false)
+            },
+            Command(CommandDescriptor(id: "file.newFromTemplate", title: L10n.tr("Nowy program z szablonu…"), category: .file, submenu: L10n.tr("Nowy"),
+                                      parameters: insertParams, agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Otwiera nowe okno programu (albo SQL dla szablonów spoza jednostek programów) z tekstem szablonu."),
+                                      inMenu: false, feature: "PD-PROG-002")) { ctx in
+                try await insert(ctx, newWindow: true)
+            },
+            Command(CommandDescriptor(id: "templates.save", title: L10n.tr("Zapisz zaznaczenie jako szablon…"), category: .tools, submenu: L10n.tr("Szablony"),
+                                      parameters: [
+                                          CommandParameter("folder", .string, required: true, L10n.tr("Folder szablonu")),
+                                          CommandParameter("name", .string, required: true, L10n.tr("Nazwa szablonu")),
+                                          CommandParameter("text", .string, L10n.tr("Tekst (domyślnie zaznaczenie albo cały tekst okna)")),
+                                      ],
+                                      agent: .full, effect: .settings,
+                                      summary: L10n.tr("Zapisuje szablon użytkownika (folder/nazwa) w katalogu danych."), feature: "PD-TPL-003")) { ctx in
+                var folder = ctx.arguments.string("folder") ?? ""
+                var name = ctx.arguments.string("name") ?? ""
+                if folder.isEmpty || name.isEmpty {
+                    guard let f = await ctx.ui?.askText(L10n.tr("Folder szablonu"), message: "", defaultValue: L10n.tr("Moje")), !f.isEmpty,
+                          let n = await ctx.ui?.askText(L10n.tr("Nazwa szablonu"), message: "", defaultValue: ""), !n.isEmpty else {
+                        throw CommandError.cancelledByUser
+                    }
+                    folder = f
+                    name = n
+                }
+                var text = ctx.arguments.string("text")
+                if text == nil, let doc = ctx.workspace.activeDocument {
+                    let ns = doc.text as NSString
+                    let r = doc.selectedRange.clamped(to: 0..<ns.length)
+                    text = r.isEmpty ? doc.text : ns.substring(with: NSRange(location: r.lowerBound, length: r.count))
+                }
+                guard let text, !text.isEmpty else { throw CommandError.missingArgument("text") }
+                try ctx.workspace.templates.save(CodeTemplate(folder: folder, name: name, text: text))
+                ctx.workspace.templatesGeneration += 1
+                return CommandResult(message: L10n.tr("Zapisano szablon \(folder)/\(name)"))
+            },
+            Command(CommandDescriptor(id: "templates.delete", title: L10n.tr("Usuń szablon"), category: .tools, submenu: L10n.tr("Szablony"),
+                                      parameters: [CommandParameter("template", .string, required: true, L10n.tr("Szablon użytkownika: folder/nazwa"))],
+                                      agent: .approval, effect: .settings,
+                                      summary: L10n.tr("Usuwa szablon użytkownika (szablony wbudowane zostają)."), inMenu: false, feature: "PD-TPL-003")) { ctx in
+                guard let id = ctx.arguments.string("template"), let t = ctx.workspace.templates.template(id), !t.isBuiltIn else {
+                    throw CommandError.invalidArgument("template", L10n.tr("brak szablonu użytkownika"))
+                }
+                try ctx.workspace.templates.delete(t)
+                ctx.workspace.templatesGeneration += 1
+                return CommandResult(message: L10n.tr("Usunięto szablon \(t.id)"))
+            },
+        ]
+    }
+
+    @MainActor
+    static func insert(_ ctx: CommandContext, newWindow: Bool) async throws -> CommandResult {
+        let ws = ctx.workspace
+        guard let id = ctx.arguments.string("template"), let t = ws.templates.template(id) else {
+            throw CommandError.invalidArgument("template", L10n.tr("nie znaleziono szablonu"))
+        }
+        var values: [String: String] = [:]
+        if case .object(let o)? = ctx.arguments.values["values"] {
+            for (k, v) in o { values[k] = v.stringValue ?? "" }
+        }
+        let vars = TemplateEngine.variables(t.text).filter { values[$0.name] == nil }
+        // Formularz zmiennych (okno „Zmienne”) — tylko dla użytkownika; agent dostaje wartości domyślne.
+        if !vars.isEmpty, ctx.invoker == .user, let ui = ctx.ui {
+            let requests = vars.map { v -> VariableRequest in
+                var o = VariableOptions(name: v.name)
+                o.defaultValue = v.defaultValue
+                if !v.choices.isEmpty { o.list = v.choices.joined(separator: ","); o.restricted = false }
+                return VariableRequest(name: v.name, kind: .substitution, options: o, value: nil)
+            }
+            guard let host = ws.activeDocument ?? ws.documents.last else {
+                // Bez okien formularz nie ma okna nadrzędnego — wartości domyślne.
+                return try await finish(ws, t, values: values, newWindow: newWindow)
+            }
+            guard let answers = await ui.askTemplateValues(requests, document: host) else { throw CommandError.cancelledByUser }
+            for (k, v) in answers {
+                if case .text(let s) = v { values[k] = s } else if case .list(let l) = v { values[k] = l.joined(separator: ", ") }
+            }
+        }
+        return try await finish(ws, t, values: values, newWindow: newWindow)
+    }
+
+    @MainActor
+    static func finish(_ ws: Workspace, _ t: CodeTemplate, values: [String: String], newWindow: Bool) async throws -> CommandResult {
+        let user = (ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID).flatMap { ws.connections.connection($0)?.target.user }
+        let (text, cursor) = TemplateEngine.apply(t.text, values: values, builtins: TemplateEngine.builtins(databaseUser: user))
+        let target: Document
+        let base: Int
+        if !newWindow, let doc = BuiltinCommands.editable(ws) {
+            let ns = doc.text as NSString
+            let r = doc.selectedRange.clamped(to: 0..<ns.length)
+            doc.text = ns.replacingCharacters(in: NSRange(location: r.lowerBound, length: r.count), with: text)
+            target = doc
+            base = r.lowerBound
+        } else {
+            target = ws.newDocument(t.folder == TemplateLibrary.programFolder ? .program : .sql, text: text)
+            base = 0
+        }
+        let c = base + (cursor ?? (text as NSString).length)
+        target.selectedRange = c..<c
+        return CommandResult(message: L10n.tr("Wstawiono szablon \(t.name)"))
+    }
+}

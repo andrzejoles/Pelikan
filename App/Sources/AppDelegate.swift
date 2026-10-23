@@ -206,12 +206,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func askVariables(_ requests: [VariableRequest], document: PelikanWorkspace.Document) async -> [String: VariableValue]? {
+        await presentVariables(requests, document: document, title: L10n.tr("Zmienne"), submit: L10n.tr("Wykonaj"), legend: true)
+    }
+
+    func askTemplateValues(_ requests: [VariableRequest], document: PelikanWorkspace.Document) async -> [String: VariableValue]? {
+        await presentVariables(requests, document: document, title: L10n.tr("Zmienne szablonu"), submit: L10n.tr("Wstaw"), legend: false)
+    }
+
+    private func presentVariables(_ requests: [VariableRequest], document: PelikanWorkspace.Document, title: String, submit: String,
+                                  legend: Bool) async -> [String: VariableValue]? {
         guard let window = mainWindow?.window else { return nil }
         let model = VariablesModel(requests: requests, workspace: workspace, document: document)
         return await withCheckedContinuation { cont in
             var sheet: NSWindow?
             var finished = false
-            let view = VariablesView(model: model) { values in
+            let view = VariablesView(model: model, title: title, submitTitle: submit, showLegend: legend) { values in
                 guard !finished else { return }
                 finished = true
                 if let sheet { window.endSheet(sheet) }

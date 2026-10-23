@@ -120,11 +120,14 @@ final class VariablesModel {
 
 struct VariablesView: View {
     @Bindable var model: VariablesModel
+    var title = L10n.tr("Zmienne")
+    var submitTitle = L10n.tr("Wykonaj")
+    var showLegend = true
     let onDone: ([String: VariableValue]?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(L10n.tr("Zmienne")).font(.title3.bold())
+            Text(title).font(.title3.bold())
             Form {
                 ForEach($model.fields) { $f in
                     if !f.request.options.hidden { row($f) }
@@ -132,10 +135,12 @@ struct VariablesView: View {
             }
             .formStyle(.grouped)
             HStack {
-                Text(L10n.tr("& tekst w SQL · : zmienna wiązana · $P{} / $X{} JasperReports")).font(.caption).foregroundStyle(.secondary)
+                if showLegend {
+                    Text(L10n.tr("& tekst w SQL · : zmienna wiązana · $P{} / $X{} JasperReports")).font(.caption).foregroundStyle(.secondary)
+                }
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { onDone(nil) }.keyboardShortcut(.cancelAction)
-                Button(L10n.tr("Wykonaj")) { onDone(model.values) }.keyboardShortcut(.defaultAction).disabled(!model.canSubmit)
+                Button(submitTitle) { onDone(model.values) }.keyboardShortcut(.defaultAction).disabled(!model.canSubmit)
             }
         }
         .padding(18)

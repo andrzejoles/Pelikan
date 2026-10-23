@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:20:43+02:00",
+  "heartbeat": "2026-10-23T08:27:56+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy",
+    "PR #16 scalony (formater PL/SQL)",
     "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
     "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone",
     "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii",
@@ -90,9 +92,7 @@
     "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
     "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
     "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
-    "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
-    "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
-    "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy"
+    "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-szablony.png",
+      "title": "Panel Szablony w pasku bocznym",
+      "reference": "PD-TPL-001"
+    },
     {
       "file": "docs/progress/img/etap2-kompiluj-niepoprawne.png",
       "title": "Kompiluj niepoprawne obiekty — wyniki z błędami",
