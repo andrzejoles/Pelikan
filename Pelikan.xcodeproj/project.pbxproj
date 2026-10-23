@@ -46,6 +46,7 @@
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
 		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
+		F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
@@ -76,6 +77,7 @@
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
 		967E1B4C45088DBF2A3C240B /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
+		987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtplsqlResultsView.swift; sourceTree = "<group>"; };
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
 		9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBuilder.swift; sourceTree = "<group>"; };
 		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
@@ -180,6 +182,14 @@
 			path = Templates;
 			sourceTree = "<group>";
 		};
+		5C5E85F85E1129E104F58BD8 /* UtPLSQL */ = {
+			isa = PBXGroup;
+			children = (
+				987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */,
+			);
+			path = UtPLSQL;
+			sourceTree = "<group>";
+		};
 		6047C9C37C3A0D921D8B27F2 /* SQLWindow */ = {
 			isa = PBXGroup;
 			children = (
@@ -215,6 +225,7 @@
 				4C59A6A5B15CB75AB066AE33 /* Templates */,
 				62AF99604A2C3C6CA9A3A1D6 /* TestWindow */,
 				98C2053BF992EBE778C7C8F4 /* Tools */,
+				5C5E85F85E1129E104F58BD8 /* UtPLSQL */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				763E3F551A3684075944A130 /* main.swift */,
@@ -417,6 +428,7 @@
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
 				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
+				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,
 				177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */,
 				B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */,
 				9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */,

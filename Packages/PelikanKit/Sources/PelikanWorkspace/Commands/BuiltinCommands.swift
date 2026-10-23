@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -480,9 +480,6 @@ public enum BuiltinCommands {
             ("tools.eventMonitor", L10n.tr("Monitor zdarzeń…"), [], 6, "PD-TOOL-014", .none),
             ("tools.testManager", L10n.tr("Menedżer testów…"), [], 6, "PD-TOOL-018", .none),
             ("tools.loadTester", L10n.tr("Test obciążenia…"), [], 6, "PD-TOOL-019", .none),
-            ("utplsql.runAll", L10n.tr("utPLSQL: uruchom wszystkie testy"), [], 4, "UT-RUN-001", .approval),
-            ("utplsql.runPath", L10n.tr("utPLSQL: uruchom testy ze ścieżki…"), [], 4, "UT-RUN-002", .approval),
-            ("utplsql.coverage", L10n.tr("utPLSQL: pokrycie kodu…"), [], 4, "UT-COV-001", .approval),
         ]
         return t.map { id, title, pd, stage, feature, agent in
             .planned(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .tools, pd: pd, mac: pd.isEmpty ? [] : nil,

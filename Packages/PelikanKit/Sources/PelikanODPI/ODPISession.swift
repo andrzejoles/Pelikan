@@ -17,6 +17,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     private let queue: DispatchQueue
     private let options: ConnectOptions
     private var resultSets: [UInt64: OpenResultSet] = [:]
+    /// Rozmiar pobierania bieżącego polecenia (ExecuteOptions albo opcje połączenia) — także dla kursorów potomnych.
+    private var currentFetchArraySize: UInt32 = 500
     private var nextResultSetID: UInt64 = 1
     /// Zamknięte (true) — chronione blokadą, bo `breakExecution` działa poza kolejką i nie może trafić w zwolniony
     /// uchwyt połączenia w trakcie `close()`.
@@ -234,7 +236,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let vars = try bindVariables(binds, to: stmt)
         defer { for v in vars { dpiVar_release(v.handle) } }
 
-        if stmtInfo.isQuery != 0 { try check(dpiStmt_setFetchArraySize(stmt, self.options.fetchArraySize)) }
+        currentFetchArraySize = options.fetchArraySize ?? self.options.fetchArraySize
+        if stmtInfo.isQuery != 0 { try check(dpiStmt_setFetchArraySize(stmt, currentFetchArraySize)) }
         var mode = dpiExecMode(DPI_MODE_EXEC_DEFAULT)
         if options.describeOnly { mode |= dpiExecMode(DPI_MODE_EXEC_DESCRIBE_ONLY) }
         if options.autoCommit { mode |= dpiExecMode(DPI_MODE_EXEC_COMMIT_ON_SUCCESS) }
@@ -291,7 +294,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             dpiStmt_addRef(child)
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
-            try check(dpiStmt_setFetchArraySize(child, options.fetchArraySize))
+            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
             out.append(register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit))
         }
         return out
@@ -462,7 +465,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             dpiStmt_addRef(child)
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
-            try check(dpiStmt_setFetchArraySize(child, options.fetchArraySize))
+            try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
             let rs = register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit)
             return .cursor(rs.id)
         case DPI_NATIVE_TYPE_OBJECT:
