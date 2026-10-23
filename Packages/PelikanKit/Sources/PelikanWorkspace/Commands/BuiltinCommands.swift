@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -469,8 +469,6 @@ public enum BuiltinCommands {
         let t: [(String, String, [String], Int, String, AgentAccess)] = [
             ("tools.explainPlan", L10n.tr("Explain Plan"), ["f5"], 6, "PD-OPT-002", .read),
             ("tools.queryBuilder", L10n.tr("Query Builder…"), [], 6, "PD-QB-001", .none),
-            ("tools.findObjects", L10n.tr("Znajdź obiekty bazy…"), [], 2, "PD-TOOL-001", .read),
-            ("tools.compileInvalid", L10n.tr("Kompiluj niepoprawne obiekty…"), [], 2, "PD-TOOL-002", .approval),
             ("tools.sessions", L10n.tr("Sesje"), [], 6, "PD-TOOL-015", .read),
             ("tools.scheduler", L10n.tr("DBMS Scheduler"), [], 6, "PD-SCHED-001", .read),
             ("tools.exportTables", L10n.tr("Eksport tabel…"), [], 6, "PD-TOOL-003", .none),

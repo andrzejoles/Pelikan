@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:10:53+02:00",
+  "heartbeat": "2026-10-23T08:20:43+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
+    "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone",
     "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii",
     "Etap 2 / Code Assistant: kolumny po aliasie i nazwie tabeli (FROM, JOIN, podzapytania, UPDATE/INSERT/DELETE/MERGE), elementy pakietu, NEXTVAL/CURRVAL, %ROWTYPE, kursory, rekordy pętli FOR, typy rekordowe, :new/:old w wyzwalaczu, deklaracje w zasięgu, obiekty schematu, słowa kluczowe, linki po @; automatycznie po kropce (400 ms) i ⌥⎋/⌃Space; lista z zawężaniem, ↑↓ Enter Tab Esc — 6 testów (1 na bazie)",
     "PR #13 scalony (parser strukturalny, Zawartość kodu, nawigacja)",
@@ -90,9 +92,7 @@
     "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
     "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)",
     "Etap 1 / połączenia (interfejs): Lista połączeń (foldery, reguły, Ostatnie, stan klucza, połączenie główne, menu), okno definicji połączenia z testem, okno logowania, pytanie o hasło i nowe hasło (ORA-28001), pytanie o transakcje przy wylogowaniu i zamknięciu aplikacji (D10), sprawdzanie połączeń co 60 s — sprawdzone na bazie testowej",
-    "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy",
-    "Szkielet aplikacji: XcodeGen, okno główne w układzie PL/SQL Developer, rejestr komend (dwa profile skrótów, komendy zapowiedziane wyszarzone do etapu), menu z rejestru, paleta komend (⇧⌘P), Lista okien, docs/SKROTY.md generowany z rejestru",
-    "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15"
+    "Etap 1 / połączenia (model): parser tnsnames.ora (IFILE, rozwinięcie do EZConnect dla thin), ConnectionStore (foldery z regułami * ?, środowisko dev/test/prod, kolory, eksport/import bez haseł), hasła w Pęku kluczy (Touch ID opcjonalnie), SessionManager (multi/dual/single, sesja kompilacji, pytanie o hasło, ORA-01017, ORA-28001, skrypt inicjalizacji), ustawienia — 33 nowe testy"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T08:10:53+02:00"
     },
     "integration": {
-      "total": 62,
-      "passed": 62,
+      "total": 65,
+      "passed": 65,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:00:30+02:00"
+      "at": "2026-10-23T08:20:43+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,16 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-kompiluj-niepoprawne.png",
+      "title": "Kompiluj niepoprawne obiekty — wyniki z błędami",
+      "reference": "PD-TOOL-002"
+    },
+    {
+      "file": "docs/progress/img/etap2-znajdz-obiekty.png",
+      "title": "Znajdź obiekty bazy",
+      "reference": "PD-TOOL-001"
+    },
     {
       "file": "docs/progress/img/etap2-formater.png",
       "title": "Formater PL/SQL: reguły i podgląd w Preferencjach",

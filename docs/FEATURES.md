@@ -318,8 +318,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-TOOL-001 | Find Database Objects: pełnotekstowo w źródłach/DDL (regex, całe słowa), kryteria, typy (MLE), w tle, Locate text, eksport, zapis kryteriów | UG 24.2, NF17 | Tools > Find Database Objects | 2 | P1 | Odczyt | do zrobienia |
-| PD-TOOL-002 | Compile Invalid Objects (kolejność zależności, błędy, użytkownik, MLE) | UG 24.3, NF12 | Tools > Compile Invalid Objects | 2 | P1 | Za zgodą | do zrobienia |
+| PD-TOOL-001 | Find Database Objects: pełnotekstowo w źródłach/DDL (regex, całe słowa), kryteria, typy (MLE), w tle, Locate text, eksport, zapis kryteriów | UG 24.2, NF17 | Tools > Find Database Objects | 2 | P1 | Odczyt | ⚠️ częściowo (źródła, zapytania widoków, nazwy; regex, całe słowa, wielkość liter; w tle z przerwaniem; przejście do linii; kopiowanie wyników; bez DDL tabel i zapisu kryteriów) ✅ test 👁 |
+| PD-TOOL-002 | Compile Invalid Objects (kolejność zależności, błędy, użytkownik, MLE) | UG 24.3, NF12 | Tools > Compile Invalid Objects | 2 | P1 | Za zgodą | ✅ test 👁 (kolejność typów i przebiegi do ustania postępu, błędy, właściciel; MLE — przy Etapie 7) |
 | PD-TOOL-003 | Export Tables — SQL Inserts (Drop/Create/Truncate/Delete, wyzwalacze, FK, storage, uprawnienia, Commit every, Batch, WHERE, Zip) | UG 24.4, NF16 | Tools > Export Tables | 6 | P2 | Brak | do zrobienia |
 | PD-TOOL-004 | Export Tables — format własny (skompresowany) i Import Tables tego formatu z wyborem tabel | UG 24.4–24.5 | Tools > Export/Import Tables | 6 | P3 | Brak | do zrobienia |
 | PD-TOOL-005 | Export/Import przez Data Pump (DBMS_DATAPUMP) zamiast exp/imp | PROMPT §3.1, UG 24.4 | Tools > Export/Import Tables | 6 | P2 | Brak | do zrobienia |
