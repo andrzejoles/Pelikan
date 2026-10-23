@@ -30,11 +30,10 @@ jobs:
       - name: Testy jednostkowe (bez bazy)
         working-directory: Packages/PelikanKit
         run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
-      # Testy SSH na lokalnym sshd osobno i szeregowo: wynik każdego testu od razu w logu, krótki limit czasu.
+      # Testy SSH na lokalnym sshd: każdy zestaw osobno, z limitem i diagnostyką przy zawieszeniu.
       - name: Testy SSH na lokalnym sshd
-        working-directory: Packages/PelikanKit
-        timeout-minutes: 10
-        run: swift test --skip-build --filter 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test-ssh.log
+        timeout-minutes: 25
+        run: scripts/ci-ssh-tests.sh
       - name: Aplikacja
         if: hashFiles('project.yml') != ''
         run: |

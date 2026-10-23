@@ -44,6 +44,7 @@ final class TestSSHD: @unchecked Sendable {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
             p.arguments = ["-q"] + args
+            p.detachStandardIO()
             try p.run()
             p.waitUntilExit()
         }
@@ -77,6 +78,9 @@ final class TestSSHD: @unchecked Sendable {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/sbin/sshd")
             p.arguments = ["-D", "-f", d + "/sshd_config", "-E", d + "/sshd.log"]
+            // Bez dziedziczenia stdout/stderr testów: procesy potomne sshd (sesje trzymane przez ControlPersist) żyją
+            // po teście i trzymałyby otwarty potok wyjścia — `swift test | tee` czekałby w nieskończoność (CI).
+            p.detachStandardIO()
             try p.run()
             for _ in 0..<50 where p.isRunning {
                 if (try? String(contentsOfFile: d + "/sshd.log", encoding: .utf8))?.contains("Server listening") == true {
@@ -105,6 +109,15 @@ final class TestSSHD: @unchecked Sendable {
     deinit {
         process.terminate()
         process.waitUntilExit()
+    }
+}
+
+extension Process {
+    /// stdin, stdout i stderr procesu na /dev/null.
+    func detachStandardIO() {
+        standardInput = FileHandle.nullDevice
+        standardOutput = FileHandle.nullDevice
+        standardError = FileHandle.nullDevice
     }
 }
 
