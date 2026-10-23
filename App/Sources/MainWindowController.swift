@@ -59,13 +59,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 /// Lewa kolumna narzędzi: Lista połączeń (Etap 1), Przeglądarka obiektów (Etap 2), Lista okien.
 final class SidebarViewController: NSViewController {
     private let workspace: Workspace
-    private let selector = NSSegmentedControl(labels: [L10n.tr("Połączenia"), L10n.tr("Obiekty"), L10n.tr("Okna")],
+    private let selector = NSSegmentedControl(labels: [L10n.tr("Połączenia"), L10n.tr("Obiekty"), L10n.tr("Okna"), L10n.tr("Szablony")],
                                               trackingMode: .selectOne, target: nil, action: nil)
     private let container = NSView()
     private lazy var panes: [NSViewController] = [
         ConnectionListViewController(workspace: workspace),
         ObjectBrowserViewController(workspace: workspace),
         WindowListViewController(workspace: workspace),
+        TemplatePaneController(workspace: workspace),
     ]
 
     init(workspace: Workspace) {
@@ -82,6 +83,8 @@ final class SidebarViewController: NSViewController {
         selector.action = #selector(selectPane(_:))
         selector.selectedSegment = 0
         selector.segmentDistribution = .fillEqually
+        selector.controlSize = .small
+        selector.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         selector.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(selector)

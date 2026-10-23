@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ConnectionCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -49,12 +49,24 @@ public enum BuiltinCommands {
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
         var url = doc.fileURL
         if askForName || url == nil {
-            let base = doc.fileURL?.deletingPathExtension().lastPathComponent ?? (doc.customTitle ?? doc.kind.shortName)
-            guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: doc.fileURL?.pathExtension ?? doc.kind.defaultExtension) else { return false }
+            let (base, ext) = suggestedFileName(doc)
+            guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext) else { return false }
             url = chosen
         }
         try ws.save(doc, to: url!)
         return true
+    }
+
+    /// Proponowana nazwa pliku: z pliku, z jednostki programu (nazwa + rozszerzenie typu, UG 23.29) albo z tytułu.
+    @MainActor
+    static func suggestedFileName(_ doc: Document) -> (String, String) {
+        if let url = doc.fileURL { return (url.deletingPathExtension().lastPathComponent, url.pathExtension) }
+        if doc.kind == .program, let u = ProgramCompiler.units(in: doc.text).first {
+            return (u.name.lowercased(), ObjectCommands.fileExtension(u.type))
+        }
+        let title = doc.customTitle ?? doc.kind.shortName
+        let ext = (title as NSString).pathExtension
+        return ext.isEmpty ? (title, doc.kind.defaultExtension) : ((title as NSString).deletingPathExtension, ext)
     }
 
     /// Zamknięcie okna (UG 23.20, PD-SQLW-024): pytanie o zapis zmian i o otwartą transakcję, zamknięcie sesji okna.
