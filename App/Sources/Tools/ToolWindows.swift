@@ -23,7 +23,7 @@ final class ToolWindowController: NSWindowController, NSWindowDelegate {
         w.title = title
         w.contentView = NSHostingView(rootView: view)
         w.center()
-        w.setFrameAutosaveName("Pelikan.\(key)")
+        if !key.hasPrefix("diff-") { w.setFrameAutosaveName("Pelikan.\(key)") }
         super.init(window: w)
         w.delegate = self
     }

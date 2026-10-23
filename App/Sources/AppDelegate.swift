@@ -149,6 +149,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {
+        ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
+                                  size: NSSize(width: 1100, height: 680)) {
+            DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
     func showCompileInvalid() {
         ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)
