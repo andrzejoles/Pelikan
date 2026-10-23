@@ -469,8 +469,6 @@ public enum BuiltinCommands {
             ("tools.scheduler", L10n.tr("DBMS Scheduler"), [], 6, "PD-SCHED-001", .read),
             ("tools.exportTables", L10n.tr("Eksport tabel…"), [], 6, "PD-TOOL-003", .none),
             ("tools.importTables", L10n.tr("Import tabel…"), [], 6, "PD-TOOL-006", .none),
-            ("tools.exportUserObjects", L10n.tr("Eksport obiektów użytkownika…"), [], 6, "PD-TOOL-007", .none),
-            ("tools.compareUserObjects", L10n.tr("Porównaj obiekty użytkowników…"), [], 6, "PD-TOOL-012", .read),
             ("tools.compareTableData", L10n.tr("Porównaj dane tabel…"), [], 6, "PD-TOOL-013", .read),
             ("tools.textImporter", L10n.tr("Import tekstu…"), [], 6, "PD-TOOL-008", .none),
             ("tools.excelImporter", L10n.tr("Import z Excela…"), [], 6, "PD-TOOL-009", .none),

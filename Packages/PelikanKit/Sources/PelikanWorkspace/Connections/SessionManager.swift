@@ -24,6 +24,11 @@ public enum SessionPurpose: Hashable, Sendable {
 public struct SessionKey: Hashable, Sendable {
     public var connectionID: UUID
     public var purpose: SessionPurpose
+
+    public init(connectionID: UUID, purpose: SessionPurpose) {
+        self.connectionID = connectionID
+        self.purpose = purpose
+    }
 }
 
 /// Stan połączenia na liście (ikona klucza wzorca, UG 19.1).

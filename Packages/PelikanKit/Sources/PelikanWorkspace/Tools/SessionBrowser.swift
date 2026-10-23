@@ -135,6 +135,22 @@ public enum SessionCommands {
                 ctx.ui?.showSessionBrowser()
                 return .ok
             },
+            Command(CommandDescriptor(id: "tools.exportUserObjects", title: L10n.tr("Eksport obiektów użytkownika…"), category: .tools,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("DDL wybranych obiektów schematu do jednego pliku albo pliku na obiekt (sekwencje pierwsze, uprawnienia, składowanie, schemat)."),
+                                      feature: "PD-TOOL-007"),
+                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                ctx.ui?.showExportObjects()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "tools.compareUserObjects", title: L10n.tr("Porównaj obiekty użytkowników…"), category: .tools,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Porównuje DDL obiektów schematu ze schematem docelowym (także na innym połączeniu); lista różnic, podgląd i SQL wyrównujący."),
+                                      feature: "PD-TOOL-012"),
+                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                ctx.ui?.showCompareObjects()
+                return .ok
+            },
             Command(CommandDescriptor(id: "sessions.kill", title: L10n.tr("Zabij sesję"), category: .tools, submenu: L10n.tr("Sesje"),
                                       parameters: sessionParams + [CommandParameter("immediate", .boolean, L10n.tr("Natychmiast (IMMEDIATE)"))],
                                       agent: .none, effect: .modifiesDatabase,
