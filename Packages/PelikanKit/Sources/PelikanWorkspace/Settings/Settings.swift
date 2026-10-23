@@ -100,6 +100,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var confirmSaveNewWindows = true
     // Agenci AI (PROMPT §7)
     public var agent = AgentSettings()
+    /// Zapytania przeglądarki sesji (Define Session Queries).
+    public var sessionQueries = SessionQueries.standard
 
     public init() {}
 
@@ -152,5 +154,6 @@ public struct Settings: Sendable, Codable, Hashable {
         shortcutProfile = v(.shortcutProfile, shortcutProfile)
         keyOverrides = v(.keyOverrides, keyOverrides)
         agent = v(.agent, agent)
+        sessionQueries = v(.sessionQueries, sessionQueries)
     }
 }
