@@ -164,6 +164,10 @@ public final class Workspace {
     @ObservationIgnored public weak var agentGate: (any AgentInvocationGate)?
     /// Zmiany edytorów wykonane przez agentów (cofanie sesji agenta).
     public internal(set) var agentEdits: [AgentEdit] = []
+    /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
+    public internal(set) var agentCodeChanges: [AgentCodeChange] = []
+    /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
+    public internal(set) var agentPendingRows: [String: UInt64] = [:]
     /// Ostrzeżenie o pokryciu kodu pokazane w tej sesji aplikacji.
     public var coverageWarningShown = false
     /// Zmienia się po kompilacji jednostek (eksplorator testów przeładowuje drzewo).

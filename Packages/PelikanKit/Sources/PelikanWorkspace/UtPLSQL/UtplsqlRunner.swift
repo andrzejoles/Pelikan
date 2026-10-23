@@ -34,10 +34,12 @@ public enum UtplsqlRunner {
 
     /// Uruchamia testy ze ścieżek (`schemat`, `schemat.pakiet[.procedura]`, `schemat:suitepath`); `coverage` — schematy,
     /// dla których zbierane jest pokrycie (puste — bez pokrycia). Zwraca przebieg aktualizowany na żywo.
-    public static func start(paths: [String], coverageSchemes: [String] = [], in ws: Workspace, connectionID: UUID) async throws -> UtplsqlRun {
+    /// `purposes` — sesje produkująca i konsumująca (agent uruchamia testy w swoich sesjach).
+    public static func start(paths: [String], coverageSchemes: [String] = [], in ws: Workspace, connectionID: UUID,
+                             purposes: (SessionPurpose, SessionPurpose) = (.utplsql("run"), .utplsql("events"))) async throws -> UtplsqlRun {
         let run = UtplsqlRun(paths: paths)
-        let producer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: .utplsql("run")))
-        let consumer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: .utplsql("events")))
+        let producer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: purposes.0))
+        let consumer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: purposes.1))
         guard await version(producer) != nil else {
             throw CommandError.notAvailable(L10n.tr("utPLSQL nie jest zainstalowany albo niedostępny dla tego użytkownika (ut_runner)"))
         }

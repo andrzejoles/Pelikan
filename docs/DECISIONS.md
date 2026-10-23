@@ -261,3 +261,13 @@ zdefiniowanych w klauzuli WITH, wykonuje je w transakcji `READ ONLY` (gdy agent 
 transakcji, żeby jej nie wycofać) z limitem wierszy, czasu wywołania i rozmiaru wyniku. Maskowanie działa po nazwie
 kolumny (ostatni człon wpisu), niezależnie od tabeli, a zapytanie odwołujące się do kolumny maskowanej jest odrzucane
 — granicą pozostają uprawnienia użytkownika bazy (SECURITY §3).
+
+### D35 · 2026-10-23 — Zmiany agenta: transakcja, DDL i cofanie kodu
+DDL w Oracle zatwierdza niejawnie bieżącą transakcję, więc DDL agenta jest odrzucane, gdy agent ma niezatwierdzone DML
+(najpierw `commit` albo `rollback` — każde za zgodą); bez tego zgoda na DDL oznaczałaby ukryty COMMIT. Przed DDL kodu
+(pakiet, ciało, procedura, funkcja, wyzwalacz, typ, widok; także DROP) zapisywany jest kod sprzed zmiany, a po
+wykonaniu — kod po zmianie. „Cofnij sesję agenta” przywraca pierwszą wersję sprzed sesji (obiekt utworzony przez agenta
+usuwa) sesją kompilacji użytkownika; obiekt, którego kod różni się od zapisanego „po zmianie”, to konflikt pomijany bez
+wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/events`), a instalacja utPLSQL — w oknie
+poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
+zablokuje; okno zgody pokazuje pełny tekst.

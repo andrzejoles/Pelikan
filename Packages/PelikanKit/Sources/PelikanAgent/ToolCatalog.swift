@@ -42,6 +42,15 @@ public enum ToolCatalog {
         Entry("get_test_results", "agent.testResults"),
         Entry("get_coverage", "agent.coverage"),
         Entry("session_list", "agent.sessions"),
+        Entry("execute_statement", "agent.execute"),
+        Entry("execute_script", "agent.executeScript"),
+        Entry("compile", "agent.compile"),
+        Entry("commit", "agent.commit"),
+        Entry("rollback", "agent.rollback"),
+        Entry("create_test_package", "agent.createTestPackage"),
+        Entry("generate_test_skeleton", "agent.generateTest"),
+        Entry("run_tests", "agent.runTests"),
+        Entry("install_utplsql", "agent.installUtplsql"),
     ]
 
     public static func entry(named name: String) -> Entry? { entries.first { $0.tool == name } }

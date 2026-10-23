@@ -75,7 +75,8 @@ struct AgentSecurityTests {
         try await client.initialize()
         let tools = try await client.tools()
         let names = tools.compactMap { $0["name"] as? String }
-        for t in ["list_connections", "get_state", "get_editor", "open_editor", "insert_text", "replace_range", "navigate_to", "format_code", "run_command"] {
+        for t in ["list_connections", "get_state", "get_editor", "open_editor", "insert_text", "replace_range", "navigate_to", "format_code", "run_command",
+                  "run_query", "get_source", "execute_statement", "commit", "rollback", "compile", "run_tests", "session_list"] {
             #expect(names.contains(t), "\(t)")
         }
         let runCommand = tools.first { $0["name"] as? String == "run_command" }?["description"] as? String ?? ""
@@ -150,6 +151,27 @@ struct AgentSecurityTests {
         doc.selectedRange = 0..<(doc.text as NSString).length
         let (_, okError) = try await client.call("run_command", ["command": "edit.lowercase"])
         #expect(!okError && doc.text == "select 1 from dual")
+    }
+
+    @Test("Połączenie produkcyjne: zmiany odrzucone przed dotknięciem bazy, odczyt widoczny; Brak dla niewidocznego")
+    func productionIsReadOnly() async throws {
+        let env = try AgentEnv()
+        defer { env.shutdown() }
+        let prod = ConnectionDefinition(name: "Produkcja", target: ConnectionTarget(user: "U", connectString: "127.0.0.1:9/X"), environment: .production)
+        try env.workspace.connections.upsert(prod, password: UUID().uuidString)
+        let (_, token) = env.session()
+        let client = try BridgeClient(socket: env.socket, token: token)
+        defer { client.terminate() }
+        try await client.initialize()
+        for (tool, args) in [("execute_statement", ["sql": "delete from emp"]), ("commit", [:]), ("compile", ["object": "p"]), ("install_utplsql", [:])] as [(String, [String: Any])] {
+            var a = args
+            a["connection"] = "Produkcja"
+            let (text, isError) = try await client.call(tool, a)
+            #expect(isError && text.contains("permission_denied") && text.contains("production"), "\(tool): \(text)")
+        }
+        #expect(env.approver.requests.isEmpty)
+        let (unknown, unknownError) = try await client.call("run_query", ["connection": "Nieznane", "sql": "select 1 from dual"])
+        #expect(unknownError && unknown.contains("Nieznane"))
     }
 
     @Test("Limit wywołań na minutę")

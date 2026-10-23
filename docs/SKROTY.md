@@ -238,5 +238,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Pokrycie kodu (agent) | `agent.coverage` |  |  | Odczyt | 0 | AI-TOOL-001 |
 | Sesje bazy (agent) | `agent.sessions` |  |  | Odczyt | 0 | AI-TOOL-001 |
 | Otwórz obiekt (agent) | `agent.openObject` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Wykonaj polecenie (agent) | `agent.execute` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Wykonaj skrypt (agent) | `agent.executeScript` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Utwórz pakiet testowy (agent) | `agent.createTestPackage` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Kompiluj (agent) | `agent.compile` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| COMMIT zmian agenta | `agent.commit` |  |  | Za zgodą | 0 | AI-SEC-007 |
+| ROLLBACK zmian agenta | `agent.rollback` |  |  | Za zgodą | 0 | AI-SEC-007 |
+| Uruchom testy utPLSQL (agent) | `agent.runTests` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Generuj i kompiluj szkielet testu (agent) | `agent.generateTest` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Instaluj utPLSQL (agent) | `agent.installUtplsql` |  |  | Za zgodą | 0 | AI-TOOL-003 |
 | Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | 2 | PD-EDIT-026 |
 
