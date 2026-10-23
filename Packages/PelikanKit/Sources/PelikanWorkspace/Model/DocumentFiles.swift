@@ -138,6 +138,7 @@ extension DocumentKind {
         case "tst": .test
         case "pdd": .diagram
         case "rep": .report
+        case "sqlnb": .notebook
         default: .sql
         }
     }
@@ -175,6 +176,10 @@ extension Workspace {
             // Diagram Pelikana: JSON (PD-DIAG-003).
             doc = newDocument(.diagram, fileURL: std)
             doc.diagram = try Diagram.decode(data)
+        } else if docKind == .notebook {
+            // Notatnik SQL Pelikana: JSON z komórkami i wynikami (SD-NB-001).
+            doc = newDocument(.notebook, fileURL: std)
+            doc.notebook = try Notebook.decode(data)
         } else if docKind == .test {
             // .tst Pelikana: blok i zmienne (UG 5.4).
             let f = TestScriptFile.decode(text)
@@ -217,6 +222,13 @@ extension Workspace {
         }
         if doc.kind == .diagram {
             try doc.diagram.encoded().write(to: url, options: .atomic)
+            doc.fileURL = url.standardizedFileURL
+            doc.isModified = false
+            rememberRecentFile(url)
+            return
+        }
+        if doc.kind == .notebook {
+            try doc.notebook.encoded().write(to: url, options: .atomic)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)

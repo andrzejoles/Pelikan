@@ -72,6 +72,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             Task { @MainActor in self?.workspace.persistConsoles() }
         }
         workspace.sessions.prompter = prompts
+        // Zadania lokalne według harmonogramu (DB-TASK-001) — tylko gdy są zdefiniowane.
+        if !workspace.localTasks.definitions.isEmpty { workspace.localTasks.start(workspace) }
         let builder = MenuBuilder(workspace: workspace)
         NSApp.mainMenu = builder.build()
         menuBuilder = builder
@@ -328,6 +330,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             QueryBuilderView(workspace: workspace, connectionID: connectionID, targetDocument: target, initialSQL: sql)
         }
     }
+
+    func showStage7Tool(_ tool: Stage7Tool) { Stage7ToolWindows.show(tool, workspace: workspace) }
 
     func showDataTransfer(_ tool: DataTransferTool) {
         switch tool {

@@ -37,6 +37,9 @@ extension SQLPlusEngine {
             emit(r.message ?? r.value?.description ?? L10n.tr("Skompilowano"))
         case "TEST": try await invoke("ob.test")
         case "VIEW": try await invoke("ob.ddl")
+        case "INFO" where line.uppercased().hasPrefix("INFO+"):
+            guard let name = args.first else { throw SQLPlusError(L10n.tr("INFO+ obiekt")) }
+            try await infoPlus(name)
         case "INFO":
             if let name = args.first {
                 try await describe(name)

@@ -118,7 +118,7 @@ public enum SQLPlus {
             ("LB", 2), ("SODA", 4), ("APEX", 4), ("CD", 2), ("REPEAT", 6), ("SSHTUNNEL", 9), ("TNSPING", 7), ("OERR", 4),
             // Pelikan / PL/SQL Developer (UG 8.3–8.5)
             ("BEAUTIFY", 8), ("BROWSE", 6), ("DIR", 3), ("EDITDATA", 8), ("PROPERTIES", 10), ("QUERYDATA", 9), ("RECOMPILE", 9),
-            ("TEST", 4), ("VIEW", 4), ("ZIP", 3), ("EXPORT", 6), ("RUNTESTSET", 10),
+            ("TEST", 4), ("VIEW", 4), ("ZIP", 3), ("EXPORT", 6), ("RUNTESTSET", 10), ("CTAS", 4),
         ]
         for (name, min) in list {
             for len in min...name.count { m[String(name.prefix(len))] = name }

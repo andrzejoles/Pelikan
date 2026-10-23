@@ -37,6 +37,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Notatnik › Eksportuj notatnik jako Markdown… | `notebook.exportMarkdown` |  |  | Brak | 0 | SD-NB-001 |
 | Historia lokalna › Historia lokalna | `file.localHistory` |  |  | Brak | 0 | DG-HIST-001 |
 | Historia lokalna › Wersje w historii lokalnej | `file.localHistoryList` |  |  | Odczyt | 0 | DG-HIST-001 |
 | Historia lokalna › Zapisz wersję w historii | `file.localHistoryCheckpoint` |  |  | Brak | 0 | DG-HIST-001 |
@@ -182,6 +183,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Notatnik › Wykonaj wszystkie komórki | `notebook.runAll` |  |  | Brak | 0 | SD-NB-001 |
+| Notatnik › Wykonaj komórkę | `notebook.runCell` |  |  | Brak | 0 | SD-NB-001 |
 | Konsola połączenia | `session.console` |  |  | Brak | 0 | DG-CONS-001 |
 | Wynik › Następna zmiana oczekująca | `grid.nextPendingChange` |  |  | Brak | 0 | DG-GRID-001 |
 | Wynik › Poprzednia zmiana oczekująca | `grid.previousPendingChange` |  |  | Brak | 0 | DG-GRID-001 |
@@ -232,6 +235,17 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Database Diff… | `tools.databaseDiff` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk wdrożenia… | `tools.cart` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk › Dodaj obiekt do koszyka | `cart.add` |  |  | Brak | 0 | SD-DIFF-001 |
+| Koszyk › Skrypt wdrożenia koszyka | `cart.script` |  |  | Brak | 0 | SD-DIFF-001 |
+| Kopiowanie schematu… | `tools.schemaCopy` |  |  | Brak | 0 | SD-COPY-001 |
+| Kreator importu danych… | `tools.importWizard` |  |  | Brak | 0 | SD-IMP-001 |
+| Diagram › Diagram ER ze schematu… | `diagram.fromSchema` |  |  | Brak | 0 | DB-DIAG-001 |
+| Przenoszenie danych… | `tools.dataTransfer` |  |  | Brak | 0 | DB-XFER-001 |
+| Wykonaj zapisane przeniesienie danych | `transfer.run` |  |  | Brak | 0 | DB-XFER-001 |
+| Zadania lokalne… | `tools.localTasks` |  |  | Brak | 0 | DB-TASK-001 |
+| Uruchom zadanie lokalne | `localTasks.runNow` |  |  | Brak | 0 | DB-TASK-001 |
 | Widoki dualności JSON | `tools.dualityViews` |  |  | Brak | 0 | SD-DV-001 |
 | Nowy widok dualności… | `tools.dualityViewDDL` |  |  | Brak | 0 | SD-DV-001 |
 | Moduły i środowiska MLE | `tools.mleModules` |  |  | Brak | 0 | SD-MLE-001 |
@@ -311,6 +325,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Raporty predefiniowane… | `reports.predefined` |  |  | Brak | 0 | SD-REP-001 |
+| Wykonaj raport predefiniowany | `reports.predefined.run` |  |  | Brak | 0 | SD-REP-001 |
+| Otwórz raport w oknie SQL | `reports.predefined.worksheet` |  |  | Brak | 0 | SD-REP-001 |
 | Błędy kompilacji | `reports.compilationErrors` |  |  | Brak | 0 | PD-REP-001 |
 | Niepoprawne obiekty | `reports.invalidObjects` |  |  | Brak | 0 | PD-REP-001 |
 | Ostatnio zmienione obiekty | `reports.recentChanges` |  |  | Brak | 0 | PD-REP-001 |

@@ -153,6 +153,19 @@ public final class SQLPlusEngine {
             guard let b = state.buffer else { emit(L10n.tr("SP2-0103: Bufor SQL jest pusty."), .error); return .finished }
             return await executeSQL(b, original: b, isPLSQL: ScriptSplitter.split(b).first?.isPLSQL ?? false)
         }
+        // Alias SQLcl (ALIAS nazwa=polecenie): pierwsze słowo linii jest nazwą aliasu — wykonanie jego treści. Linia
+        // aliasu bez średnika łączy się w podziale skryptu z kolejnym poleceniem — resztę wykonujemy osobno.
+        let lines = raw.components(separatedBy: "\n")
+        if let first = lines[0].split(whereSeparator: { $0.isWhitespace || $0 == ";" }).first.map({ String($0).uppercased() }),
+           let alias = state.aliases[first] {
+            let args = lines[0].trimmingCharacters(in: .whitespaces).dropFirst(first.count).trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ";")))
+            depth += 1
+            defer { depth -= 1 }
+            let o = await run(alias, arguments: args.isEmpty ? [] : args.split(separator: " ").map(String.init), baseDirectory: baseDirectory)
+            let remainder = lines.dropFirst().joined(separator: "\n")
+            guard o == .finished, !remainder.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return o }
+            return await run(remainder, baseDirectory: baseDirectory)
+        }
         if state.echo { emit(state.sqlPrompt + raw, .echo) }
         guard let text = await substitute(s.text) else { return .stopped }
         state.buffer = text
@@ -250,6 +263,9 @@ public final class SQLPlusEngine {
             if state.autoPrint, !names.isEmpty { printBinds(names.map { $0.uppercased() }) }
             if state.timing { emit(L10n.tr("Czas: ") + Self.elapsed(ContinuousClock.now - start), .info) }
             workspace.recordHistory(original)
+            let d = ContinuousClock.now - start
+            state.history.append((original.trimmingCharacters(in: .whitespacesAndNewlines), Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)))
+            if state.history.count > 500 { state.history.removeFirst(state.history.count - 500) }
             return .finished
         } catch let e as OracleError {
             emit(e.message, .error)

@@ -57,11 +57,13 @@
 		AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */ = {isa = PBXBuildFile; productRef = 68DCC77A1DA6108E25EBC9B9 /* PelikanDB */; };
 		AF619AD9C795CDE3A74335EE /* PelikanWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = 7D051D9F72BF390F621C6946 /* PelikanWorkspace */; };
 		B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */; };
+		B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */; };
 		B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8470950500EBAD985D34E42 /* PackViews.swift */; };
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
 		C252BEC5D799ACD07E9F8B83 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
+		CE85A176807A4599C1FD3C9B /* NotebookViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565A13529D730F54DE0A35B8 /* NotebookViewController.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
@@ -133,6 +135,7 @@
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7Views.swift; sourceTree = "<group>"; };
+		565A13529D730F54DE0A35B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
 		570D3064D5201AF56E748711 /* PlanVisualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanVisualViews.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
@@ -140,6 +143,7 @@
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
+		7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7ToolViews.swift; sourceTree = "<group>"; };
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
@@ -260,6 +264,14 @@
 			path = ObjectBrowser;
 			sourceTree = "<group>";
 		};
+		3C380357B07D0CE9BD6F01DC /* Notebook */ = {
+			isa = PBXGroup;
+			children = (
+				565A13529D730F54DE0A35B8 /* NotebookViewController.swift */,
+			);
+			path = Notebook;
+			sourceTree = "<group>";
+		};
 		42B5903D5D9EF245A7512677 /* Connections */ = {
 			isa = PBXGroup;
 			children = (
@@ -340,6 +352,7 @@
 				D9C9B335E92845276A865184 /* Editors */,
 				4DEF7E9E98D7A7BE391B9DA6 /* ExplainPlan */,
 				E133522553357E2FCFED1E91 /* Files */,
+				3C380357B07D0CE9BD6F01DC /* Notebook */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
@@ -382,6 +395,7 @@
 				C8470950500EBAD985D34E42 /* PackViews.swift */,
 				83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */,
 				0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */,
+				7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */,
 				CA27E74D0C918323B465606B /* ToolWindows.swift */,
 			);
 			path = Tools;
@@ -654,6 +668,7 @@
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
 				1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */,
 				53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */,
+				CE85A176807A4599C1FD3C9B /* NotebookViewController.swift in Sources */,
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
@@ -671,6 +686,7 @@
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
+				B1EE1F26840F3000682D5D93 /* Stage7ToolViews.swift in Sources */,
 				D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
