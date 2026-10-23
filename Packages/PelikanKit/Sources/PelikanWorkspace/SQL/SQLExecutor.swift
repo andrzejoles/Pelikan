@@ -149,6 +149,8 @@ public enum SQLExecutor {
             try? await SessionUtilities.enableOutput(session, bufferSize: ws.settings.dbmsOutputBufferSize)
         }
         let start = ContinuousClock.now
+        // Karta Statystyki (PD-SQLW-008): różnica V$MYSTAT przed i po wykonaniu (bez uprawnień — karta pusta).
+        let statsBefore = ws.settings.sqlWindowStatistics ? await Profiler.statistics(session) : nil
         var ok = true
         var changedData = false
         var newTabs: [ResultTab] = []
@@ -204,7 +206,7 @@ public enum SQLExecutor {
                     doc.errorRange = pos..<pos
                 }
                 newTabs.append(ResultTab(title: tabTitle(for: s), statementRange: s.start..<s.end, message: e.message))
-                doc.statusText = e.message
+                doc.statusText = SQLExecutor.statusMessage(for: e)
                 ok = false
                 if e.isConnectionLost { ws.sessions.dropLost(ws.sessions.key(forDocument: doc.id, connection: ws.effectiveConnection(of: doc)!)) }
                 break
@@ -218,12 +220,22 @@ public enum SQLExecutor {
         if changedData || !ok {
             doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
         }
+        if let before = statsBefore, let after = await Profiler.statistics(session) {
+            doc.statistics = Profiler.difference(before, after)
+        }
         if ok {
             let elapsed = ContinuousClock.now - start
             // Liczbę wierszy aktywnej siatki pokazuje `Document.resultSummary` (zmienia się przy dociąganiu).
             doc.statusText = [newTabs.first?.message, L10n.tr("Czas: \(format(elapsed))")].compactMap { $0 }.joined(separator: "   ·   ")
         }
         return ok
+    }
+
+    /// Tekst paska stanu dla błędu: pierwsza linia komunikatu; przy wyczyszczonym stanie pakietów — wyjaśnienie.
+    public static func statusMessage(for e: OracleError) -> String {
+        let first = e.message.components(separatedBy: "\n").first ?? e.message
+        guard e.isDiscardedPackageState else { return first }
+        return L10n.tr("⚠️ Stan pakietów sesji został wyczyszczony (pakiet zrekompilowano) — wykonaj ponownie. \(first)")
     }
 
     /// Liczba wierszy pobieranych na start (UG 23.20 Records per page; dyrektywa `-- Records=` — UG 7.12).

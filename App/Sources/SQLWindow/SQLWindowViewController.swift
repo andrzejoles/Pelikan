@@ -17,6 +17,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
     private var tokens: [ObservationToken] = []
     private var gridViews: [UUID: NSView] = [:]
     private var showingOutput = false
+    private var showingStatistics = false
     private var resultsCollapsed = true
 
     var preferredFirstResponder: NSView { editor.textView }
@@ -129,20 +130,31 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         for r in results {
             tabBar.addArrangedSubview(tabButton(title: (r.pinned ? "📌 " : "") + r.title,
                                                 selected: !showingOutput && r.id == active, isError: r.grid == nil && r.message?.hasPrefix("ORA-") == true) { [weak self] in
-                self?.showingOutput = false
+                self?.showingOutput = false; self?.showingStatistics = false
                 self?.document.activeResultID = r.id
                 self?.select(r)
             })
         }
         tabBar.addArrangedSubview(tabButton(title: output.isEmpty ? L10n.tr("Output") : L10n.tr("Output (\(output.count))"),
-                                            selected: showingOutput || results.isEmpty, isError: false) { [weak self] in
+                                            selected: (showingOutput || results.isEmpty) && !showingStatistics, isError: false) { [weak self] in
             self?.showingOutput = true
+            self?.showingStatistics = false
             self?.refreshResults()
         })
+        let stats = document.statistics
+        if !stats.isEmpty {
+            tabBar.addArrangedSubview(tabButton(title: L10n.tr("Statystyki"), selected: showingStatistics, isError: false) { [weak self] in
+                self?.showingStatistics = true
+                self?.refreshResults()
+            })
+        }
         resultContainer.subviews.forEach { $0.removeFromSuperview() }
         let alive = Set(results.map(\.id))
         gridViews = gridViews.filter { alive.contains($0.key) }
-        if showingOutput || results.isEmpty {
+        if showingStatistics, !stats.isEmpty {
+            let width = stats.map(\.name.count).max() ?? 0
+            install(textView(stats.map { $0.name.padding(toLength: width, withPad: " ", startingAt: 0) + "  " + String(format: "%.0f", $0.value) }.joined(separator: "\n"), isError: false))
+        } else if showingOutput || results.isEmpty {
             install(outputView(output))
         } else if let r = results.first(where: { $0.id == active }) ?? results.first {
             install(view(for: r))

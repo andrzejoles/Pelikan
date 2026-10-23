@@ -105,6 +105,9 @@ struct SQLWindowPane: View {
                     Text(L10n.tr("Maksymalny rozmiar wyniku: \(workspace.settings.maximumResultSetMegabytes) MB"))
                 }
             }
+            Section(L10n.tr("Statystyki")) {
+                Toggle(L10n.tr("Karta Statystyki: statystyki sesji z każdego wykonania (wymaga dostępu do V$MYSTAT)"), isOn: setting(workspace, \.sqlWindowStatistics))
+            }
             Section(L10n.tr("DBMS_OUTPUT (UG 23.5)")) {
                 Toggle(L10n.tr("Włączone"), isOn: setting(workspace, \.dbmsOutputEnabled))
                 Toggle(L10n.tr("Czyść przed wykonaniem"), isOn: setting(workspace, \.dbmsOutputClearBeforeExecute))

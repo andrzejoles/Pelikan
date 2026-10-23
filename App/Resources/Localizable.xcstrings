@@ -5433,6 +5433,34 @@
         }
       }
     },
+    "Brak testów standardowych — zapisz okno testu jako test standardowy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No standard tests — save a Test Window as a standard test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Standardtests – Test Window als Standardtest speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay pruebas estándar: guarda una Test Window como prueba estándar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає стандартних тестів — збережіть Test Window як стандартний тест"
+          }
+        }
+      }
+    },
     "Brak uprawnień do widoków słownika tej sekcji (potrzebne np. SELECT_CATALOG_ROLE)." : {
       "localizations" : {
         "en" : {
@@ -19181,6 +19209,34 @@
         }
       }
     },
+    "Karta Statystyki: statystyki sesji z każdego wykonania (wymaga dostępu do V$MYSTAT)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics tab: session statistics of every execution (requires access to V$MYSTAT)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registerkarte Statistiken: Sitzungsstatistiken jeder Ausführung (erfordert Zugriff auf V$MYSTAT)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestaña Estadísticas: estadísticas de sesión de cada ejecución (requiere acceso a V$MYSTAT)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладка Статистика: статистика сеансу кожного виконання (потрібен доступ до V$MYSTAT)"
+          }
+        }
+      }
+    },
     "Katalog" : {
       "localizations" : {
         "en" : {
@@ -27861,6 +27917,34 @@
         }
       }
     },
+    "Nazwa testu standardowego" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard test name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name des Standardtests"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la prueba estándar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва стандартного тесту"
+          }
+        }
+      }
+    },
     "Nazwa widoku" : {
       "localizations" : {
         "en" : {
@@ -35837,6 +35921,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet ein Program Window mit dem Gerüst eines Testpakets (Suite, ein Test pro Prozedur und Funktion) für das Paket."
+          }
+        }
+      }
+    },
+    "Otwiera okno testu z testu standardowego (szablon z %%CALL%%) dla procedury lub funkcji." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a Test Window from a standard test (template with %%CALL%%) for a procedure or function."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein Test Window aus einem Standardtest (Vorlage mit %%CALL%%) für eine Prozedur oder Funktion."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una Test Window a partir de una prueba estándar (plantilla con %%CALL%%) para un procedimiento o función."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває Test Window зі стандартного тесту (шаблон із %%CALL%%) для процедури або функції."
           }
         }
       }
@@ -55077,6 +55189,62 @@
         }
       }
     },
+    "Test standardowy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardtest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba estándar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандартний тест"
+          }
+        }
+      }
+    },
+    "Test standardowy…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard Test…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardtest …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba estándar…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стандартний тест…"
+          }
+        }
+      }
+    },
     "Testowany pakiet (SCHEMAT.NAZWA albo NAZWA)" : {
       "localizations" : {
         "en" : {
@@ -64093,6 +64261,34 @@
         }
       }
     },
+    "Wybierz test standardowy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a standard test."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardtest auswählen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona una prueba estándar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть стандартний тест."
+          }
+        }
+      }
+    },
     "Wybierz test, żeby zobaczyć szczegóły." : {
       "localizations" : {
         "en" : {
@@ -71821,6 +72017,34 @@
         }
       }
     },
+    "Zapisuje okno testu jako szablon testu standardowego; %%CALL%% w bloku oznacza miejsce wywołania programu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves the Test Window as a standard test template; %%CALL%% in the block marks where the program call goes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert das Test Window als Standardtest-Vorlage; %%CALL%% im Block markiert die Stelle des Programmaufrufs."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda la Test Window como plantilla de prueba estándar; %%CALL%% en el bloque marca dónde va la llamada al programa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає Test Window як шаблон стандартного тесту; %%CALL%% у блоці позначає місце виклику програми."
+          }
+        }
+      }
+    },
     "Zapisuje ostatnio nagrane makro w bibliotece pod nazwą, opcjonalnie ze skrótem klawiszowym." : {
       "localizations" : {
         "en" : {
@@ -72237,6 +72461,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In Datei speichern …"
+          }
+        }
+      }
+    },
+    "Zapisz jako test standardowy…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as Standard Test…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Standardtest speichern …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como prueba estándar…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як стандартний тест…"
           }
         }
       }
@@ -83857,6 +84109,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "● Transaktion offen"
+          }
+        }
+      }
+    },
+    "⚠️ Stan pakietów sesji został wyczyszczony (pakiet zrekompilowano) — wykonaj ponownie. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Session package state was discarded (package recompiled) — execute again. %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Package-Zustand der Sitzung wurde verworfen (Package neu kompiliert) – erneut ausführen. %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Se descartó el estado de los paquetes de la sesión (paquete recompilado): vuelve a ejecutar. %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Стан пакетів сеансу скинуто (пакет перекомпільовано) — виконайте ще раз. %@"
           }
         }
       }

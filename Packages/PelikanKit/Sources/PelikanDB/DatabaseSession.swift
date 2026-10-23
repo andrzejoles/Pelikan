@@ -317,6 +317,13 @@ public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible, L
     public var isPasswordExpired: Bool { code == 28001 }
 }
 
+
+extension OracleError {
+    /// Stan pakietów sesji wyczyszczony po rekompilacji (ORA-04068/04061/04065) albo klasa Java zmieniona (ORA-29549) —
+    /// ponowne wykonanie zwykle się udaje (PD-TEST-007).
+    public var isDiscardedPackageState: Bool { [4068, 4061, 4065, 29549].contains(code) || message.contains("ORA-04068") || message.contains("ORA-29549") }
+}
+
 public enum DatabaseError: Error, LocalizedError, Sendable, Equatable {
     /// Sterownik niedostępny (np. brak Instant Client) — komunikat z instrukcją.
     case driverUnavailable(String)

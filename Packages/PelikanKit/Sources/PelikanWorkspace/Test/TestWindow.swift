@@ -253,7 +253,7 @@ public enum TestRunner {
                 let o = ProgramCompiler.offset(line: local.line, column: 1, in: doc.text)
                 doc.errorRange = o..<o
             }
-            doc.statusText = e.message.components(separatedBy: "\n").first
+            doc.statusText = SQLExecutor.statusMessage(for: e)
             throw e
         }
     }

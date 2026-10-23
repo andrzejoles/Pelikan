@@ -48,6 +48,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var sessionNLS: [String: String] = [:]
     /// Zamykanie sesji bezczynnych dłużej niż N minut, bez otwartej transakcji (0 — nigdy; PD-CONN-026).
     public var closeIdleSessionsMinutes = 0
+    /// Karta Statystyki w SQL Window — statystyki sesji z wykonania (PD-SQLW-008).
+    public var sqlWindowStatistics = false
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
@@ -178,6 +180,7 @@ public struct Settings: Sendable, Codable, Hashable {
         checkConnectionIntervalSeconds = v(.checkConnectionIntervalSeconds, checkConnectionIntervalSeconds)
         sessionNLS = v(.sessionNLS, sessionNLS)
         closeIdleSessionsMinutes = v(.closeIdleSessionsMinutes, closeIdleSessionsMinutes)
+        sqlWindowStatistics = v(.sqlWindowStatistics, sqlWindowStatistics)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)

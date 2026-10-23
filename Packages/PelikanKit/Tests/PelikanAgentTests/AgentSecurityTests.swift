@@ -232,6 +232,31 @@ struct AgentUnitTests {
         #expect(r.authenticate(token: t1) != nil && r.authenticate(token: "x") == nil)
     }
 
+    @Test("AI-SEC-011: Command Window, HOST, debuger, AWR/ASH/ADDM, SQL Monitor, Tuning Advisor, Kill i SQL Trace — niedostępne dla agenta")
+    func forbiddenAreas() {
+        let ws = Workspace()
+        let r = SessionRegistry()
+        let (s, _) = r.create(profile: AgentProfile.builtIn[0], directory: "/")
+        // Nawet nadpisanie w ustawieniach nie podnosi poziomu powyżej Brak.
+        var settings = AgentSettings()
+        let forbidden = ws.registry.commands.map(\.descriptor).filter { d in
+            let id = d.id.rawValue
+            return id.hasPrefix("cmd.") || id.hasPrefix("debug.") || id.hasPrefix("sessions.") || id.hasPrefix("proc.") || id.hasPrefix("ssh.")
+                || ["tools.awrReport", "tools.ashReport", "tools.addmReport", "tools.sqlMonitor", "tools.sqlMonitorReport",
+                    "tools.sqlTuningAdvisor", "session.kill", "session.sqlTrace", "tools.userTools"].contains(id)
+        }
+        #expect(forbidden.count > 20)
+        for d in forbidden {
+            settings.accessOverrides[d.id.rawValue] = .full
+            #expect(AgentPolicy.effectiveAccess(command: d, session: s, settings: settings) == .none, "\(d.id.rawValue)")
+            #expect(AgentPolicy.effectiveAccess(command: d, session: s, settings: settings, viaRunCommand: true) == .none, "\(d.id.rawValue)")
+        }
+        // Narzędzia agenta nie dają powłoki, terminala ani poleceń systemu.
+        let agentTools = ws.registry.commands.map(\.descriptor.id.rawValue).filter { $0.hasPrefix("agent.") }
+        #expect(!agentTools.contains { $0.localizedCaseInsensitiveContains("host") || $0.localizedCaseInsensitiveContains("shell")
+                                       || $0.localizedCaseInsensitiveContains("terminal") || $0.localizedCaseInsensitiveContains("debug") })
+    }
+
     @Test("Najmniejszy poziom: komendy bazy spoza agent.* niedostępne, nadpisania tylko obniżają, prod = Odczyt")
     func leastPrivilege() {
         let ws = Workspace()

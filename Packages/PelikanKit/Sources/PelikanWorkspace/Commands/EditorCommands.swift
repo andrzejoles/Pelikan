@@ -64,6 +64,46 @@ enum EditorCommands {
                 doc.customTitle = L10n.tr("Test \(member ?? o.name)").lowercased()
                 return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
             },
+            Command(CommandDescriptor(id: "ob.standardTest", title: L10n.tr("Test standardowy…"), category: .tools, submenu: L10n.tr("Obiekt"),
+                                      parameters: ObjectCommands.objectParams + [
+                                          CommandParameter("name", .string, L10n.tr("Nazwa testu standardowego")),
+                                          CommandParameter("member", .string, L10n.tr("Podprogram pakietu")),
+                                      ],
+                                      agent: .read, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno testu z testu standardowego (szablon z %CALL%) dla procedury lub funkcji."),
+                                      feature: "PD-TEST-009"),
+                    validate: { ws in ws.selectedObject.map { [.procedure, .function, .package].contains($0.type) } ?? false }) { ctx in
+                let store = StandardTestStore(dataDirectory: ctx.workspace.dataDirectory)
+                let names = store.names
+                guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak testów standardowych — zapisz okno testu jako test standardowy")) }
+                var name = ctx.arguments.string("name")
+                if name == nil {
+                    if names.count == 1 { name = names[0] }
+                    else if let ui = ctx.ui, let i = await ui.ask(L10n.tr("Test standardowy"), message: L10n.tr("Wybierz test standardowy."), buttons: Array(names.prefix(8))) { name = names[i] }
+                }
+                guard let name else { throw CommandError.cancelledByUser }
+                let (o, m) = try await ObjectCommands.target(ctx)
+                let member = ctx.arguments.string("member")
+                let (call, vars) = try await TestRunner.script(for: o, member: member, metadata: m)
+                let (block, all) = StandardTestStore.apply(try store.load(name), call: call, variables: vars)
+                let doc = ctx.workspace.newDocument(.test, text: block)
+                doc.testVariables = all
+                doc.customTitle = name + " — " + (member ?? o.name).lowercased()
+                return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
+            },
+            Command(CommandDescriptor(id: "test.saveAsStandard", title: L10n.tr("Zapisz jako test standardowy…"), category: .debug,
+                                      parameters: [CommandParameter("name", .string, L10n.tr("Nazwa testu standardowego"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zapisuje okno testu jako szablon testu standardowego; %CALL% w bloku oznacza miejsce wywołania programu."),
+                                      feature: "PD-TEST-009"),
+                    validate: { $0.activeDocument?.kind == .test }) { ctx in
+                guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }
+                var name = ctx.arguments.string("name")
+                if name == nil { name = await ctx.ui?.askText(L10n.tr("Test standardowy"), message: L10n.tr("Nazwa testu standardowego"), defaultValue: "") }
+                guard let name, !name.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
+                try StandardTestStore(dataDirectory: ctx.workspace.dataDirectory).save(name, TestScriptFile(block: d.text, variables: d.testVariables))
+                return CommandResult(message: name)
+            },
             Command(CommandDescriptor(id: "test.profiler", title: L10n.tr("Profiler przy wykonaniu"), category: .debug,
                                       parameters: [CommandParameter("kind", .string, L10n.tr("lines (DBMS_PROFILER), hierarchical (DBMS_HPROF) albo off"),
                                                                     allowed: ["lines", "hierarchical", "off"])],

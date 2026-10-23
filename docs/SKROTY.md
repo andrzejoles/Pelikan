@@ -211,6 +211,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | 0 | PD-TEST-009 |
 | Profiler przy wykonaniu | `test.profiler` |  |  | Pełny | 0 | PD-OPT-005 |
 | utPLSQL: debuguj test pod kursorem | `utplsql.debugTest` |  |  | Brak | 0 | UT-RUN-007 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |
@@ -299,6 +300,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
 | Obiekt › Testuj | `ob.test` |  |  | Pełny | 0 | PD-TEST-004 |
+| Obiekt › Test standardowy… | `ob.standardTest` |  |  | Odczyt | 0 | PD-TEST-009 |
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | utPLSQL › utPLSQL: uruchom wszystkie testy | `utplsql.runAll` | ⌃⇧U †, ⇧⌘U | ⇧⌘U | Za zgodą | 0 | UT-RUN-001 |
 | utPLSQL › utPLSQL: uruchom testy ze ścieżki… | `utplsql.runPath` |  |  | Za zgodą | 0 | UT-RUN-002 |

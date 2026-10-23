@@ -53,4 +53,22 @@ struct ConnectionOptionsTests {
         #expect(await ws.sessions.closeIdleSessions(olderThan: 0, now: later) == 0)
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Karta Statystyki SQL Window: różnica V$MYSTAT z wykonania (preferencja)")
+    func statistics() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        let doc = ws.newDocument(.sql, text: "select count(*) from all_objects")
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        _ = try await SQLExecutor.execute(doc, scope: .standard, in: ws)
+        #expect(doc.statistics.isEmpty)
+        ws.settings.sqlWindowStatistics = true
+        _ = try await SQLExecutor.execute(doc, scope: .standard, in: ws)
+        #expect(doc.statistics.contains { $0.name == "session logical reads" && $0.value > 0 })
+        await ws.sessions.disconnectAll()
+    }
 }

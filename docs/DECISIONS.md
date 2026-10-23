@@ -753,3 +753,9 @@ kodowanie klienta to zawsze UTF-8 (ODPI-C), więc NLS_LANG jako zmienna środowi
 ustawiana. LDAP: `ldap.ora` dowiązany do katalogu Oracle Net Pelikana (klient czyta go tylko z TNS_ADMIN, bez IFILE).
 Kerberos i Workspace Manager działają tymi samymi ścieżkami co przetestowane uwierzytelnianie zewnętrzne i skrypt po
 połączeniu, ale bez KDC i bez DBMS_WM w bazie testowej — wiersze ⚠️ do potwierdzenia przez właściciela.
+
+### D98 · 2026-10-23 — Testy standardowe jako szablony z %CALL%
+Wzorzec pozwala zapisać skrypt testu jako „Standard Test” i wybrać go z menu procedury lub funkcji. Pelikan zapisuje
+szablon jako zwykły plik `.tst` w `StandardTests/` katalogu danych; znacznik `%CALL%` w bloku to miejsce, w które trafia
+wywołanie programu generowane jak w „Testuj” (notacja nazwana, zmienne parametrów i wyniku). Bez znacznika wywołanie
+jest dopisywane na końcu. Zmienne szablonu dochodzą do zmiennych wywołania (bez duplikatów nazw).
