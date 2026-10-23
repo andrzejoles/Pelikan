@@ -182,3 +182,16 @@ i w poleceniu wysyłanym do bazy. Podgląd SQL, strażnik produkcji, lista wykon
 dostają wersję z `IDENTIFIED BY ********`; hasło nie trafia do historii, dziennika komend, pliku ani Pęku kluczy
 (to hasło innego konta, nie dane logowania Pelikana). Edytor łącza bazy danych (też z hasłem) i profilu — później
 z tą samą zasadą.
+
+### D27 · 2026-10-23 — Etap 2 zamknięty; P2/P3 Etapu 2 przechodzą do kolejnych etapów
+Kryterium spełnione: edycja i kompilacja pakietu 50 403 linii bez przestojów przy pisaniu (Release, pomiar
+`PELIKAN_STALL_LOG`), a Object Browser wczytuje folder ze 100 000 obiektów w 0,3 s bez blokady. Zrobione: Object
+Browser, Program Window z kompilacją i listą błędów, parser strukturalny, Zawartość kodu i hierarchia, zwijanie,
+nawigacja (deklaracje, Wstecz/Naprzód, hiperłącza), Code Assistant, szablony, formater, Znajdź obiekty bazy, Kompiluj
+niepoprawne obiekty, przeglądarka różnic i porównania, edytory tabeli, sekwencji, synonimu, indeksu, użytkownika i
+roli, pary nawiasów i bloków. Wszystkie wiersze P1 Etapu 2 mają stan inny niż „do zrobienia” (części opisane jako
+„⚠️ częściowo”). Pozostałe 33 wiersze P2/P3 (m.in. refaktoryzacja, hints, zakładki, edycja podzielona, AutoReplace,
+wiele kursorów, foldery i filtry Object Browsera, kosz, CCFlags, edytory Library/Directory/Job/Queue/Profile/DB link,
+partycje, Safe compilation, MLE w Program Window) są realizowane przy etapach, które dotykają tych okien, najpóźniej
+w audycie Etapu 8. Debuger nie odczytuje `:new`/`:old` przez DBMS_DEBUG (GET_VALUE dla pseudorekordów wyzwalacza) —
+do rozwiązania w Etapie 3 (alternatywa: JDWP, ADR 0006).
