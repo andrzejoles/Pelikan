@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T13:05:24+02:00",
+  "heartbeat": "2026-10-23T13:06:09+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 6 równolegle: subagent 1 — makra, Special Copy, historia schowka, To-Do; subagent 2 — File Browser, Git, worksety i układy; główny — Explain Plan, Sessions i narzędzia bazodanowe (testy na wspólnej bazie szeregowo)",
+  "task": "Etap 4: utPLSQL",
   "stages": [
     {
       "id": 0,
@@ -53,9 +53,7 @@
     }
   ],
   "done": [
-    "Etap 6 / Eksport i porównanie obiektów użytkownika (DDL, kolejność wykonalna, pliki; różnice między schematami i połączeniami, SQL wyrównujący) — 2 testy na bazie; subagent 1 zakończył makra, Special Copy, historię schowka, To-Do",
-    "Etap 6 / Sesje — przeglądarka sesji (filtry, szczegóły z :sid i sklejaniem, Kill, SQL Trace, auto-odświeżanie, edycja zapytań); test na bazie; granty V$ w bazie testowej",
-    "Etap 6 / Explain Plan — okno planu (drzewo, koszt, wiersze, kolejność wykonania i nawigacja, cel optymalizatora, predykaty), F5 z zaznaczenia ze zmiennymi PL/SQL jako wiązanymi, formaty tekst/HTML/XML; sesja narzędzi; 3 testy",
+    "Etap 5 (agenci AI) zamknięty — D36; PR #38 scalony",
     "Etap 5 / panel (subagent, równolegle) — terminal SwiftTerm z CLI, okno zgody, macierz uprawnień przy starcie, aktywność, przeglądarka dziennika, Preferencje › Agenci; pełne cofanie sesji (edytory, kod obiektów, ROLLBACK) podpięte w panelu",
     "Etap 5 / zmiany — execute/script/compile/commit/rollback agenta z podglądem, DML niezatwierdzone, DDL odrzucone przy otwartej transakcji, historia kodu i cofanie sesji z konfliktami, testy i szkielet w sesjach agenta; 5 testów (D35). Równolegle subagent buduje panel agenta (5.4)",
     "Etap 5 / baza — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, użytkownik proxy), 15 narzędzi odczytu, run_query READ ONLY z limitami i maskowaniem, open_object; 4 testy na bazie (D34)",
@@ -92,7 +90,12 @@
     "PR #16 scalony (formater PL/SQL)",
     "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
     "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone",
-    "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii"
+    "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii",
+    "Etap 2 / Code Assistant: kolumny po aliasie i nazwie tabeli (FROM, JOIN, podzapytania, UPDATE/INSERT/DELETE/MERGE), elementy pakietu, NEXTVAL/CURRVAL, %ROWTYPE, kursory, rekordy pętli FOR, typy rekordowe, :new/:old w wyzwalaczu, deklaracje w zasięgu, obiekty schematu, słowa kluczowe, linki po @; automatycznie po kropce (400 ms) i ⌥⎋/⌃Space; lista z zawężaniem, ↑↓ Enter Tab Esc — 6 testów (1 na bazie)",
+    "PR #13 scalony (parser strukturalny, Zawartość kodu, nawigacja)",
+    "Etap 6 / Eksport i porównanie obiektów użytkownika (DDL, kolejność wykonalna, pliki; różnice między schematami i połączeniami, SQL wyrównujący) — 2 testy na bazie; subagent 1 zakończył makra, Special Copy, historię schowka, To-Do",
+    "Etap 6 / Sesje — przeglądarka sesji (filtry, szczegóły z :sid i sklejaniem, Kill, SQL Trace, auto-odświeżanie, edycja zapytań); test na bazie; granty V$ w bazie testowej",
+    "Etap 6 / Explain Plan — okno planu (drzewo, koszt, wiersze, kolejność wykonania i nawigacja, cel optymalizatora, predykaty), F5 z zaznaczenia ze zmiennymi PL/SQL jako wiązanymi, formaty tekst/HTML/XML; sesja narzędzi; 3 testy"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

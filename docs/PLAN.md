@@ -92,7 +92,7 @@ integracyjny debugera na bazie testowej.
 PROMPT §6 w całości (docs/research/utplsql.md). Kryterium: wygenerowany szkielet kompiluje się, testy uruchamiają się
 z eksploratora i edytora, pokrycie widać na marginesie.
 
-## Etap 5 — Agenci AI
+## Etap 5 — Agenci AI ✅ (zakończony 2026-10-23, PR #36–#38, szkic wydania — D36)
 PROMPT §7 (docs/SECURITY.md). Kryteria: każdy z czterech agentów czyta stan i obiekty; operacje „Za zgodą” czekają na
 decyzję; testy bezpieczeństwa z SECURITY §5.
 
