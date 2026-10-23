@@ -37,3 +37,16 @@ struct ExplainPlanOfflineTests {
         #expect(ExplainPlan.tree(lines).first?.children?.first?.children?.map(\.id) == [2, 3])
     }
 }
+
+@Suite("Narzędzia siatki bez bazy")
+struct GridToolsOfflineTests {
+    @Test("Zapytanie standardowe z SQL i dla obiektu; nazwy plików z szablonu bez znaków niedozwolonych")
+    func offline() {
+        let q = StandardQuery.from(sql: "select * from scott.emp where sal > 0", owner: "SCOTT", table: "EMP", name: "x")
+        #expect(q.sql == "select * from [owner].[table] where sal > 0")
+        #expect(StandardQuery(name: "a", sql: "select [columns] from [owner].[table] t").text(owner: "SCOTT", table: "EMP", columns: ["EMPNO", "Mixed"])
+            == "select t.EMPNO,\n       t.\"Mixed\" from SCOTT.EMP t")
+        #expect(GridTools.fileName("[NAME]/[#].txt", values: ["NAME": "a:b"], index: 3) == "a_b_3.txt")
+        #expect(GridTools.fileName("[X]", values: ["X": ".hidden"], index: 1) == "_hidden")
+    }
+}

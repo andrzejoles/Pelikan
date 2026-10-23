@@ -35,6 +35,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
+| Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Pełny | 0 | PD-PROG-002 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
@@ -141,6 +142,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Zatwierdź zmiany (Post) | `grid.post` | ⌥⌘S | ⌥⌘S | Za zgodą | 0 | PD-GRID-017 |
 | Wynik › Anuluj zmiany | `grid.cancelChanges` |  |  | Brak | 0 | PD-GRID-017 |
 | Wynik › Kopiuj SQL zmian | `grid.copyChangesSQL` |  |  | Odczyt | 0 | PD-GRID-020 |
+| Wynik › Zapisz jako zapytanie standardowe… | `grid.saveAsStandardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
+| Wynik › Zapytania powiązane… | `grid.linkedQueries` |  |  | Brak | 0 | PD-SQLW-019 |
+| Wynik › Porównaj rekordy | `grid.compareRecords` |  |  | Brak | 0 | PD-SQLW-020 |
+| Wynik › Porównaj wyniki | `grid.compareResults` |  |  | Brak | 0 | PD-SQLW-021 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
@@ -173,6 +178,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Obiekt › Zapytanie standardowe | `ob.standardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
 | Obiekt › Pokaż dane | `ob.queryData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › Edytuj dane | `ob.editData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › DDL | `ob.ddl` |  |  | Odczyt | 0 | PD-OB-015 |

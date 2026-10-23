@@ -8,6 +8,8 @@ import Testing
 /// Atrapa interfejsu: odpowiada na okno zmiennych podanymi wartościami.
 @MainActor
 final class TestUI: UIServices {
+    var gridRequests: [GridToolRequest] = []
+    func showGridTool(_ request: GridToolRequest) { gridRequests.append(request) }
     var variables: [String: VariableValue] = [:]
     var askedVariables: [VariableRequest] = []
     func showError(_ message: String) {}

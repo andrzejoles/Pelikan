@@ -320,6 +320,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showGridTool(_ request: GridToolRequest) {
+        switch request {
+        case let .linkedQueries(links, values, connection):
+            ToolWindowController.close(key: "linkedQueries")
+            ToolWindowController.show(key: "linkedQueries", title: L10n.tr("Zapytania powiązane"), size: NSSize(width: 520, height: 360)) {
+                LinkedQueriesView(workspace: workspace, links: links, values: values, connection: connection)
+            }
+        case let .compareRecords(comparison):
+            ToolWindowController.close(key: "compareRecords")
+            ToolWindowController.show(key: "compareRecords", title: L10n.tr("Porównanie rekordów"), size: NSSize(width: 700, height: 440)) {
+                CompareRecordsView(comparison: comparison)
+            }
+        case let .compareResults(left, right):
+            ToolWindowController.close(key: "compareResults")
+            ToolWindowController.show(key: "compareResults", title: L10n.tr("Porównanie wyników"), size: NSSize(width: 1000, height: 540)) {
+                CompareResultsView(left: left, right: right)
+            }
+        case let .columnToFiles(tab):
+            ToolWindowController.close(key: "columnToFiles")
+            ToolWindowController.show(key: "columnToFiles", title: L10n.tr("Kolumna do plików"), size: NSSize(width: 540, height: 200)) {
+                ColumnToFilesView(tab: tab)
+            }
+        }
+    }
+
     func showTestExplorer() {
         ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
             TestExplorerView(workspace: workspace)

@@ -81,15 +81,15 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-010 | Tytuł karty z komentarza `-- tab=…` i `&Count` | UG 7.1, NF17 | SQL Window | 1 | P2 | — | ✅ test |
 | PD-SQLW-011 | Dyrektywy komentarzy: Excel=, CSV=, Records=, Totals=, AltRowColor= | UG 7.12 | SQL Window | 1 | P3 | — | w toku |
 | PD-SQLW-012 | Zapis .sql (bieżące polecenie / z historią), Load do istniejącego okna | UG 7.13 | File > Save | 1 | P1 | Pełny | ✅ test |
-| PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | do zrobienia |
+| PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | ✅ test (zapytania standardowe [owner]/[table]/[columns] w menu obiektu, zapis z siatki; menu bez zrzutu — D30) |
 | PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | ✅ test |
 | PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | w toku |
 | PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | do zrobienia |
 | PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | do zrobienia |
 | PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | do zrobienia |
-| PD-SQLW-019 | Linked Queries: tabele nadrzędne/podrzędne z FK, master/detail ze zmiennymi `:m_…`, Custom | UG 7.4, NF10 | Siatka > Linked Query | 6 | P2 | — | do zrobienia |
-| PD-SQLW-020 | Compare records (identyczne/różne, kolumna/rekord, wielkość liter) | UG 7.8, NF11 | Siatka | 6 | P3 | — | do zrobienia |
-| PD-SQLW-021 | Compare result sets (dwie karty naraz, podświetlenie różnic, układ pionowy/poziomy) | UG 7.9, NF14 | Karty wyników | 6 | P3 | — | do zrobienia |
+| PD-SQLW-019 | Linked Queries: tabele nadrzędne/podrzędne z FK, master/detail ze zmiennymi `:m_…`, Custom | UG 7.4, NF10 | Siatka > Linked Query | 6 | P2 | — | ✅ test (tabele nadrzędne i podrzędne z FK dla bieżącego wiersza, nowe okno SQL z warunkiem na wartości wiersza) |
+| PD-SQLW-020 | Compare records (identyczne/różne, kolumna/rekord, wielkość liter) | UG 7.8, NF11 | Siatka | 6 | P3 | — | ✅ test (zaznaczone rekordy kolumna po kolumnie, identyczne/różne, bez wielkości liter, tylko różne) |
+| PD-SQLW-021 | Compare result sets (dwie karty naraz, podświetlenie różnic, układ pionowy/poziomy) | UG 7.9, NF14 | Karty wyników | 6 | P3 | — | ✅ test (dwie karty, kolumny po nazwie, różne komórki podświetlone, wiersze tylko po jednej stronie, układ pionowy/poziomy) |
 | PD-SQLW-022 | Query By Example (wiersz kryteriów, wyrażenia, preferencje QBE) | UG 7.3, UG 23.20 | Siatka > QBE | 1 | P2 | — | do zrobienia |
 | PD-SQLW-023 | Wyróżnienie całego słowa przy błędzie, przejście do pozycji błędu ORA | NF15 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-024 | Pytanie o zapis nowego okna przy zamykaniu; ostrzeżenie o niezatwierdzonej transakcji przy zamykaniu okna i aplikacji | UG 23.20, PROMPT §3.1 | SQL Window | 1 | P1 | — | ✅ test |
@@ -115,7 +115,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-013 | Eksport zaznaczenia: CSV, TSV, HTML, XML, SQL (INSERT), do pliku i do schowka | UG 7.2 | Siatka > Export Results | 1 | P1 | Brak | ✅ test |
 | PD-GRID-014 | Excel (xlsx; „Copy all” — arkusz na wynik; z SQL na osobnym arkuszu, formatowanie, kolory) | UG 7.2, UG 23.30 | Siatka > Copy to Excel | 1 | P2 | Brak | ✅ test |
 | PD-GRID-015 | Copy, Copy with Header, Copy Header, Copy as Expression List; kopiowanie także jako HTML | UG 7.2, NF12, NF17 | Siatka | 1 | P1 | — | ✅ test |
-| PD-GRID-016 | Column to files (kolumna → plik na wiersz, katalog i nazwa z wyrażeń) | UG 7.2, NF15 | Siatka > Export Results | 6 | P3 | Brak | do zrobienia |
+| PD-GRID-016 | Column to files (kolumna → plik na wiersz, katalog i nazwa z wyrażeń) | UG 7.2, NF15 | Siatka > Export Results | 6 | P3 | Brak | ✅ test (kolumna → plik na wiersz, szablon nazwy z kolumnami i [#], katalog) |
 | PD-GRID-017 | Edycja wyniku z ROWID lub FOR UPDATE: Edit data, Insert record, Delete record, Post changes | UG 7.6 | Siatka | 1 | P1 | Za zgodą | ✅ test |
 | PD-GRID-018 | Tabela edytowana ustalana z ROWID (złączenia), kolumny z aliasem tylko do odczytu, kolumny niewidoczne edytowalne | UG 7.6, NF17, NF13 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-019 | Czerwony tekst przy przekroczeniu rozmiaru/precyzji; przeliczanie kolumn wirtualnych; wartości z wyzwalaczy po Post | UG 7.6, NF9 | Siatka | 1 | P2 | — | w toku |

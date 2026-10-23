@@ -25,6 +25,7 @@
 		2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62611D2986EABAD106F9D86C /* DebuggerPanel.swift */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
+		3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */; };
 		346CAA7136A40A29BF782E66 /* pelikan-mcp in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 2849E776640F52BC43AB5C6F /* pelikan-mcp */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */; };
 		3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA27E74D0C918323B465606B /* ToolWindows.swift */; };
@@ -113,6 +114,7 @@
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		3429C3E6085A0A6E4E4B0843 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUIController.swift; sourceTree = "<group>"; };
+		3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridToolViews.swift; sourceTree = "<group>"; };
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 		6047C9C37C3A0D921D8B27F2 /* SQLWindow */ = {
 			isa = PBXGroup;
 			children = (
+				3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */,
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
@@ -593,6 +596,7 @@
 				0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */,
 				010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
+				3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
