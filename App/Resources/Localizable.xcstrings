@@ -42706,19 +42706,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Go"
+            "value" : "Step Over"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перейти"
+            "value" : "Крок з обходом"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ir"
+            "value" : "Pasar por encima"
           }
         },
         "de" : {
@@ -42734,19 +42734,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Go (⌃O)"
+            "value" : "Step Over (⌃O)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Перейти (⌃O)"
+            "value" : "Крок з обходом (⌃O)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ir (⌃O)"
+            "value" : "Pasar por encima (⌃O)"
           }
         },
         "de" : {
