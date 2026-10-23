@@ -211,7 +211,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | ✅ test (historia w pamięci: bez duplikatów, limit, filtr, wklejanie); okno bez zrzutu (D30) |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
-| PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | do zrobienia |
+| PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | ✅ test (F1: słowo pod kursorem → Oracle Error Help dla ORA-/PLS-/TNS-, PL/SQL Packages Reference, Reference dla widoków słownika, SQL/PL/SQL Language Reference dla poleceń i funkcji, inaczej wyszukiwanie; adresy sprawdzone na docs.oracle.com) |
 | PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | do zrobienia |
 | PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | do zrobienia |
 | PD-EDIT-029 | Zachowanie stanu okna (.pfi): pozycja, zakładki, znaczniki, zmienne | UG 23.18 | Preferences | 2 | P3 | — | do zrobienia |
@@ -400,7 +400,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PREF-006 | Katalogi startowe (programy, testy, skrypty, raporty, makra, szablony, projekty, worksety…) i rozszerzenia plików | UG 23.28–23.29 | Preferences > Files | 1 | P2 | — | do zrobienia |
 | PD-PREF-007 | Konfiguracja klawiszy (wszystkie funkcje, filtr, czyszczenie) | UG 23.15 | Preferences > Key Configuration | 1 | P1 | — | ✅ test |
 | PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | do zrobienia |
-| PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | do zrobienia |
+| PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | ✅ test (wyszukiwanie w dokumentacji Oracle wybranej wersji 19c/21c/23ai/26ai — Preferencje › Oracle; książka dobierana z rodzaju słowa; dokumentacja online — bez kopii lokalnej, D88) |
 | PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | do zrobienia |
 | PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | do zrobienia |
 

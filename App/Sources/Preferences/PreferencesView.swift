@@ -172,6 +172,11 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Dokumentacja Oracle (F1)")) {
+                Picker(L10n.tr("Wersja dokumentacji"), selection: setting(workspace, \.oracleDocsRelease)) {
+                    ForEach(OracleDocs.releases, id: \.self) { r in Text(r == "19" ? "19c" : r == "21" ? "21c" : r + "ai").tag(r) }
+                }
+            }
             Section(L10n.tr("Hasła połączeń")) {
                 Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))
                     .disabled(!Self.ownerAuthenticationAvailable && !workspace.settings.requireOwnerForSavedPasswords)

@@ -422,5 +422,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Uruchom testy utPLSQL (agent) | `agent.runTests` |  |  | Za zgodą | 0 | AI-TOOL-003 |
 | Generuj i kompiluj szkielet testu (agent) | `agent.generateTest` |  |  | Za zgodą | 0 | AI-TOOL-003 |
 | Instaluj utPLSQL (agent) | `agent.installUtplsql` |  |  | Za zgodą | 0 | AI-TOOL-003 |
-| Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | 2 | PD-EDIT-026 |
+| Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | 0 | PD-EDIT-026 |
+| Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | 0 | PD-DOC-001 |
 

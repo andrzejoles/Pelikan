@@ -537,9 +537,38 @@ public enum BuiltinCommands {
 
     @MainActor static var help: [Command] {
         [
-            .planned(CommandDescriptor(id: "help.context", title: L10n.tr("Pomoc kontekstowa (dokumentacja Oracle)"), category: .help,
-                                       pd: ["f1"], mac: ["f1"], agent: .none, effect: .external,
-                                       summary: L10n.tr("Szuka słowa pod kursorem w dokumentacji Oracle."), stage: 2, feature: "PD-EDIT-026")),
+            Command(CommandDescriptor(id: "help.context", title: L10n.tr("Pomoc kontekstowa (dokumentacja Oracle)"), category: .help,
+                                      pd: ["f1"], mac: ["f1"], parameters: [CommandParameter("word", .string, L10n.tr("Słowo (domyślnie pod kursorem)"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Otwiera dokumentację Oracle dla słowa pod kursorem: błąd ORA-/PLS-, pakiet, widok słownika, polecenie lub funkcję SQL i PL/SQL; inaczej wyszukiwanie."),
+                                      feature: "PD-EDIT-026")) { ctx in
+                let ws = ctx.workspace
+                var word = ctx.arguments.string("word")
+                var next: String?
+                if word == nil, let d = ws.activeDocument, let w = OracleDocs.word(at: d.selectedRange.lowerBound, in: d.text) {
+                    (word, next) = (w.word, w.next)
+                }
+                guard let word, let url = OracleDocs.url(for: word, next: next, release: ws.settings.oracleDocsRelease) else {
+                    throw CommandError.notAvailable(L10n.tr("Ustaw kursor na słowie"))
+                }
+                ctx.ui?.openURL(url)
+                return CommandResult(value: .string(url.absoluteString))
+            },
+            Command(CommandDescriptor(id: "help.oracleManuals", title: L10n.tr("Dokumentacja Oracle…"), category: .help,
+                                      parameters: [CommandParameter("query", .string, L10n.tr("Szukane słowa"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Preferencje › Oracle)."), feature: "PD-DOC-001")) { ctx in
+                let ws = ctx.workspace
+                var q = ctx.arguments.string("query")
+                if q == nil, let ui = ctx.ui { q = await ui.askText(L10n.tr("Dokumentacja Oracle"), message: L10n.tr("Szukane słowa"), defaultValue: "") }
+                guard let q, !q.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
+                var c = URLComponents(string: "https://docs.oracle.com/search/")!
+                c.queryItems = [URLQueryItem(name: "q", value: q), URLQueryItem(name: "category", value: "database"),
+                                URLQueryItem(name: "product", value: "en/database/oracle/oracle-database/" + ws.settings.oracleDocsRelease)]
+                guard let url = c.url else { throw CommandError.invalidArgument("query", q) }
+                ctx.ui?.openURL(url)
+                return CommandResult(value: .string(url.absoluteString))
+            },
         ]
     }
 }

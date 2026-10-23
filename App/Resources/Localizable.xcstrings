@@ -10865,6 +10865,90 @@
         }
       }
     },
+    "Dokumentacja Oracle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle Documentation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle"
+          }
+        }
+      }
+    },
+    "Dokumentacja Oracle (F1)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle Documentation (F1)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation (F1)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle (F1)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle (F1)"
+          }
+        }
+      }
+    },
+    "Dokumentacja Oracle…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle Documentation…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Dokumentation …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación de Oracle…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація Oracle…"
+          }
+        }
+      }
+    },
     "Dokumentacja schematu" : {
       "localizations" : {
         "en" : {
@@ -33769,6 +33853,34 @@
         }
       }
     },
+    "Otwiera dokumentację Oracle dla słowa pod kursorem: błąd ORA-/PLS-, pakiet, widok słownika, polecenie lub funkcję SQL i PL/SQL; inaczej wyszukiwanie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the Oracle documentation for the word at the cursor: an ORA-/PLS- error, package, data dictionary view, SQL or PL/SQL statement or function; otherwise a search."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Oracle-Dokumentation für das Wort an der Cursorposition: ORA-/PLS-Fehler, Package, Data-Dictionary-View, SQL- oder PL/SQL-Anweisung bzw. -Funktion; sonst eine Suche."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre la documentación de Oracle para la palabra bajo el cursor: error ORA-/PLS-, paquete, vista del diccionario, sentencia o función SQL y PL/SQL; si no, una búsqueda."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває документацію Oracle для слова під курсором: помилка ORA-/PLS-, пакет, подання словника, оператор чи функція SQL і PL/SQL; інакше — пошук."
+          }
+        }
+      }
+    },
     "Otwiera edytor definicji nowej tabeli w schemacie bieżącym." : {
       "localizations" : {
         "en" : {
@@ -50233,34 +50345,6 @@
         }
       }
     },
-    "Szuka słowa pod kursorem w dokumentacji Oracle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looks up the word under the cursor in the Oracle documentation."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шукає слово під курсором у документації Oracle."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busca la palabra bajo el cursor en la documentación de Oracle."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sucht das Wort unter dem Cursor in der Oracle-Dokumentation."
-          }
-        }
-      }
-    },
     "Szuka tekstu w plikach, źródłach obiektów i notatkach projektu." : {
       "localizations" : {
         "en" : {
@@ -50513,6 +50597,34 @@
         }
       }
     },
+    "Szukane słowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search terms"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suchbegriffe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Términos de búsqueda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошукові слова"
+          }
+        }
+      }
+    },
     "Szukany tekst" : {
       "localizations" : {
         "en" : {
@@ -50649,6 +50761,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Data Dictionary"
+          }
+        }
+      }
+    },
+    "Słowo (domyślnie pod kursorem)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Word (default: at the cursor)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wort (Standard: an der Cursorposition)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palabra (por defecto, bajo el cursor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слово (типово — під курсором)"
           }
         }
       }
@@ -55273,6 +55413,34 @@
         }
       }
     },
+    "Ustaw kursor na słowie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place the cursor on a word"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor auf ein Wort setzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitúa el cursor sobre una palabra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установіть курсор на слово"
+          }
+        }
+      }
+    },
     "Ustaw wartość…" : {
       "localizations" : {
         "en" : {
@@ -58293,6 +58461,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datenbankversion und Komponenten"
+          }
+        }
+      }
+    },
+    "Wersja dokumentacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation version"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentationsversion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión de la documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версія документації"
           }
         }
       }
@@ -63641,6 +63837,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sucht Text in PL/SQL-Quellen, View-Abfragen und Objektnamen; Ergebnis: Objekt, Zeile, Text."
+          }
+        }
+      }
+    },
+    "Wyszukuje w dokumentacji Oracle wybranej wersji (Preferencje › Oracle)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Searches the Oracle documentation for the selected version (Preferences › Oracle)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Durchsucht die Oracle-Dokumentation der gewählten Version (Einstellungen › Oracle)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Busca en la documentación de Oracle de la versión elegida (Preferencias › Oracle)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукає в документації Oracle вибраної версії (Параметри › Oracle)."
           }
         }
       }

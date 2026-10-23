@@ -677,3 +677,10 @@ co pozwala utrzymywać `Localizable.xcstrings` skryptem i sprawdzać go w CI. Ar
 `String(format:)`, żeby błędny specyfikator w tłumaczeniu nie wywrócił aplikacji. Okna i narzędzia wzorca zostają w
 tłumaczeniach pod angielskimi nazwami (SQL Window, Object Browser…). Wybór języka w Preferencjach zapisuje standardowe
 `AppleLanguages` w domenie aplikacji (jak Ustawienia systemowe › Język › Aplikacje) — działa po ponownym uruchomieniu.
+
+### D88 · 2026-10-23 — Pomoc F1 w dokumentacji Oracle online
+F1 otwiera stronę docs.oracle.com dobraną z rodzaju słowa pod kursorem (kody błędów → Oracle Error Help, DBMS_/UTL_ →
+PL/SQL Packages and Types Reference, V$/ALL_/DBA_/USER_ → Reference, polecenia i funkcje SQL → SQL Language Reference,
+polecenia PL/SQL → PL/SQL Language Reference), w pozostałych przypadkach wyszukiwanie ograniczone do wybranej wersji
+bazy. Wzorce adresów sprawdzone na docs.oracle.com (19, 21, 23, 26). Pelikan nie dołącza lokalnej kopii podręczników
+(licencja Oracle i rozmiar); aplikacja otwiera tylko adresy http(s), nigdy pliki ani inne schematy z tekstu edytora.

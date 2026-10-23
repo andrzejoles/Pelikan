@@ -565,6 +565,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
     }
 
+    func openURL(_ url: URL) {
+        // Tylko adresy WWW (dokumentacja) — bez otwierania plików i schematów aplikacji z tekstu edytora.
+        guard ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return }
+        NSWorkspace.shared.open(url)
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }
