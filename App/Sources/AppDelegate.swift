@@ -227,6 +227,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             ToolWindowController.show(key: "dataGenerator", title: L10n.tr("Generator danych"), size: NSSize(width: 900, height: 640)) { DataGeneratorView(workspace: workspace) }
         case .compareTableData:
             ToolWindowController.show(key: "compareTableData", title: L10n.tr("Porównanie danych tabel"), size: NSSize(width: 900, height: 580)) { CompareTableDataView(workspace: workspace) }
+        }
+    }
+
     func showExportObjects() {
         ToolWindowController.show(key: "exportObjects", title: L10n.tr("Eksport obiektów użytkownika"), size: NSSize(width: 680, height: 620)) {
             ExportObjectsView(workspace: workspace)
