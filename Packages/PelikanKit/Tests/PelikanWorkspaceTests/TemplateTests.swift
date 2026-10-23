@@ -107,3 +107,26 @@ struct TestScriptFileTests {
         #expect(s.contains("variable r NUMBER\nvariable a NUMBER\nexec :a := 21\nbegin") && s.hasSuffix("end;\n/\nprint r\nprint a\n"))
     }
 }
+
+@MainActor
+@Suite("utPLSQL bez bazy")
+struct UtplsqlOfflineTests {
+    @Test("Podpowiedzi adnotacji i matcherów, szkielet testu, nieznane adnotacje, drzewo ścieżek")
+    func offline() async {
+        let a = await CodeAssistant.complete(text: "  --%su", offset: 7, metadata: nil)
+        #expect(a?.items.map(\.label) == ["suite", "suitepath"])
+        let m = "begin ut.expect(l_x).to_eq"
+        #expect(await CodeAssistant.complete(text: m, offset: (m as NSString).length, metadata: nil)?.items.first?.insertText == "to_equal(")
+        let u = "begin ut.ex"
+        #expect(await CodeAssistant.complete(text: u, offset: (u as NSString).length, metadata: nil)?.items.first?.insertText == "expect(")
+        let sk = UtplsqlExplorer.skeleton(for: "EMP_API", owner: "SCOTT", specification: "create package emp_api as procedure a(x number); function b return number; procedure a(y date); end;")
+        #expect(sk.contains("--%suite(") && sk.contains("procedure a;") && sk.contains("procedure a_2;") && sk.contains("procedure b;"))
+        #expect(sk.contains("scott.emp_api.a") && sk.contains("ut.fail("))
+        #expect(UtplsqlExplorer.unknownAnnotations(in: "--%suite\n--%tset(x)\n--%test").map(\.name) == ["tset"])
+        let items = [UtSuiteItem(owner: "S", object: "P", name: "P", description: "", kind: .logicalSuite, line: 0, path: "a", disabled: false, disabledReason: "", tags: "", children: []),
+                     UtSuiteItem(owner: "S", object: "T", name: "T", description: "", kind: .suite, line: 2, path: "a.t", disabled: false, disabledReason: "", tags: "", children: []),
+                     UtSuiteItem(owner: "S", object: "T", name: "X", description: "", kind: .test, line: 5, path: "a.t.x", disabled: false, disabledReason: "", tags: "", children: nil)]
+        let tree = UtplsqlExplorer.tree(items)
+        #expect(tree.count == 1 && tree[0].children?.first?.children?.first?.path == "a.t.x")
+    }
+}

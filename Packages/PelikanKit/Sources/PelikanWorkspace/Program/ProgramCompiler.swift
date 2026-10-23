@@ -141,6 +141,14 @@ public enum ProgramCompiler {
                 break
             }
         }
+        // Adnotacje utPLSQL w specyfikacjach z --%suite: nieznane nazwy jako ostrzeżenia (UT-CA-002).
+        for u in units where u.type == .package && u.text.lowercased().contains("--%suite") {
+            for a in UtplsqlExplorer.unknownAnnotations(in: u.text) {
+                result.messages.append(CompileMessage(severity: .warning, unit: u.tabTitle, line: u.line + a.line, column: 1,
+                                                      text: L10n.tr("Nieznana adnotacja utPLSQL --%\(a.name)")))
+            }
+        }
+        ws.compileGeneration += 1
         doc.compileMessages = result.messages
         doc.isCompileStale = !result.ok
         if let first = result.messages.first(where: { $0.severity == .error }) {

@@ -35,6 +35,7 @@ public enum CodeAssistant {
     public static let minimumPrefix = 1
 
     public static func complete(text: String, offset: Int, metadata: MetadataProvider?) async -> CompletionResult? {
+        if let ut = utplsql(text: text, offset: offset) { return ut }
         let c = CompletionContext.analyze(text, offset: offset)
         guard !c.inLiteralOrComment else { return nil }
         var items: [CompletionItem] = []
@@ -48,6 +49,53 @@ public enum CodeAssistant {
         let filtered = filter(items, prefix: c.prefix)
         guard !filtered.isEmpty else { return nil }
         return CompletionResult(replaceRange: c.replaceRange, prefix: c.prefix, items: filtered.map { applyCase($0, prefix: c.prefix) })
+    }
+
+    static let utAnnotations: [(String, String)] = [
+        ("suite", "suite(opis)"), ("suitepath", "suitepath(a.b.c)"), ("displayname", "displayname(opis)"), ("test", "test(opis)"),
+        ("context", "context(opis)"), ("endcontext", "endcontext"), ("name", "name(nazwa)"), ("beforeall", "beforeall"), ("afterall", "afterall"),
+        ("beforeeach", "beforeeach"), ("aftereach", "aftereach"), ("beforetest", "beforetest(procedura)"), ("aftertest", "aftertest(procedura)"),
+        ("throws", "throws(wyjątek|-kod)"), ("disabled", "disabled(powód)"), ("rollback", "rollback(auto|manual)"), ("tags", "tags(t1,t2)"),
+    ]
+
+    static let utMatchers = [
+        "to_equal(", "not_to_equal(", "to_be_null", "to_be_not_null", "to_be_true", "to_be_false", "to_be_between(", "to_be_greater_than(",
+        "to_be_greater_or_equal(", "to_be_less_than(", "to_be_less_or_equal(", "to_be_like(", "to_match(", "to_be_empty", "not_to_be_empty",
+        "to_have_count(", "to_contain(", "to_be_within(", "to_be_within_pct(", "join_by(", "include(", "exclude(", "unordered", "unordered_columns",
+    ]
+
+    /// utPLSQL (UT-CA-001): adnotacje po `--%`, matchery po `ut.expect(…).`, `ut.` → expect / fail.
+    static func utplsql(text: String, offset: Int) -> CompletionResult? {
+        let ns = text as NSString
+        let o = min(offset, ns.length)
+        let lineStart = ns.lineRange(for: NSRange(location: o, length: 0)).location
+        let before = ns.substring(with: NSRange(location: lineStart, length: o - lineStart))
+        if let r = before.range(of: #"--%([A-Za-z_]*)$"#, options: .regularExpression) {
+            let prefix = String(before[r].dropFirst(3))
+            let start = o - (prefix as NSString).length
+            let items = utAnnotations.filter { $0.0.hasPrefix(prefix.lowercased()) }.map {
+                CompletionItem(label: $0.0, insertText: $0.1.contains("(") ? String($0.1.prefix { $0 != "(" }) + "(" : $0.1, kind: .keyword, detail: "--%" + $0.1)
+            }
+            return items.isEmpty ? nil : CompletionResult(replaceRange: start..<o, prefix: prefix, items: items)
+        }
+        let window = ns.substring(with: NSRange(location: max(0, o - 400), length: min(400, o)))
+        if let r = window.range(of: #"ut\.expect\s*\((?:[^;])*\)\s*\.\s*([A-Za-z_]*)$"#, options: [.regularExpression, .caseInsensitive]) {
+            let prefix = String(window[r].reversed().prefix { $0.isLetter || $0 == "_" }.reversed())
+            let start = o - (prefix as NSString).length
+            let items = utMatchers.filter { $0.hasPrefix(prefix.lowercased()) }.map {
+                CompletionItem(label: $0.trimmingCharacters(in: CharacterSet(charactersIn: "(")), insertText: $0, kind: .function, detail: "ut.expect")
+            }
+            return items.isEmpty ? nil : CompletionResult(replaceRange: start..<o, prefix: prefix, items: items)
+        }
+        if let r = window.range(of: #"\but\.([A-Za-z_]*)$"#, options: [.regularExpression, .caseInsensitive]) {
+            let prefix = String(window[r].dropFirst(3))
+            let start = o - (prefix as NSString).length
+            let items = [("expect(", "ut.expect(wartość)"), ("fail(", "ut.fail(komunikat)")].filter { $0.0.hasPrefix(prefix.lowercased()) }.map {
+                CompletionItem(label: String($0.0.dropLast()), insertText: $0.0, kind: .function, detail: $0.1)
+            }
+            return items.isEmpty ? nil : CompletionResult(replaceRange: start..<o, prefix: prefix, items: items)
+        }
+        return nil
     }
 
     /// Filtr „zaczyna się od” bez rozróżniania wielkości liter, bez duplikatów, kolejność źródeł zachowana.

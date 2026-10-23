@@ -80,4 +80,34 @@ struct UtplsqlTests {
         #expect(again.id != run.id && again.totalTests == 1)
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Eksplorator: drzewo suit i testów; generator: szkielet się kompiluje i uruchamia; przejście pakiet ↔ test")
+    func explorerGeneratorNavigation() async throws {
+        let (ws, id) = try workspace()
+        let m = try #require(ws.metadata())
+        let schema = try await m.currentSchema()
+        let tree = try await UtplsqlExplorer.load(owner: schema, metadata: m)
+        func flat(_ n: [UtSuiteItem]) -> [UtSuiteItem] { n.flatMap { [$0] + flat($0.children ?? []) } }
+        let tests = flat(tree).filter { $0.kind == .test }
+        #expect(tree.first?.path == "pelikan" && tests.count >= 5)
+        #expect(tests.allSatisfy { $0.object == "TEST_EMP_API" && $0.line > 0 })
+
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: id))
+        _ = try await s.execute("create or replace package pelikan_gen_p as procedure a(x number); function b return number; end;")
+        try await ws.invoke("utplsql.generateTest", CommandArguments(["object": .string("pelikan_gen_p"), "type": .string("PACKAGE")]))
+        let doc = try #require(ws.activeDocument)
+        #expect(doc.text.contains("create or replace package test_pelikan_gen_p"))
+        let r = try await ProgramCompiler.compile(doc, in: ws)
+        #expect(r.ok && r.compiled == 2, "\(r.messages.map(\.text))")
+        let run = try await UtplsqlRunner.start(paths: ["\(schema).test_pelikan_gen_p"], in: ws, connectionID: id)
+        await wait(run)
+        #expect(run.totalTests == 2 && run.counter.failure == 2)
+
+        let toTest = try await UtplsqlExplorer.counterpart(of: "EMP_API", owner: schema, metadata: m)
+        #expect(toTest?.name == "TEST_EMP_API")
+        let back = try await UtplsqlExplorer.counterpart(of: "TEST_EMP_API", owner: schema, metadata: m)
+        #expect(back?.name == "EMP_API")
+        for o in ["package test_pelikan_gen_p", "package pelikan_gen_p"] { _ = try? await s.execute("drop \(o)") }
+        await ws.sessions.disconnectAll()
+    }
 }

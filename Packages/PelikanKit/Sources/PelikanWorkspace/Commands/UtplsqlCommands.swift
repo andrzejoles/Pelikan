@@ -10,11 +10,16 @@ enum UtplsqlCommands {
         CommandParameter("coverage", .boolean, L10n.tr("Zbieraj pokrycie kodu bieżącego schematu")),
     ]
 
+    /// Połączenie dla utPLSQL: aktywnego okna albo główne.
+    @MainActor
+    static func connection(_ ws: Workspace) -> UUID? {
+        ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
+    }
+
     @MainActor
     static func run(_ ctx: CommandContext, paths: [String]?, coverage: Bool) async throws -> CommandResult {
         let ws = ctx.workspace
-        guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID,
-              let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
+        guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
         let schema = try await m.currentSchema()
         let p = paths ?? [schema]
         let run = try await UtplsqlRunner.start(paths: p, coverageSchemes: coverage ? [schema] : [], in: ws, connectionID: conn)
@@ -60,7 +65,7 @@ enum UtplsqlCommands {
                                       pd: ["ctrl+shift+u"], mac: ["cmd+shift+u"], agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia wszystkie testy utPLSQL bieżącego użytkownika; wyniki na żywo w oknie wyników."),
                                       feature: "UT-RUN-001"),
-                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                    validate: { connection($0) != nil }) { ctx in
                 try await run(ctx, paths: nil, coverage: false)
             },
             Command(CommandDescriptor(id: "utplsql.runPath", title: L10n.tr("utPLSQL: uruchom testy ze ścieżki…"), category: .tools, submenu: "utPLSQL",
@@ -109,11 +114,59 @@ enum UtplsqlCommands {
             Command(CommandDescriptor(id: "utplsql.version", title: L10n.tr("utPLSQL: wersja w bazie"), category: .tools, submenu: "utPLSQL",
                                       agent: .read, effect: .none, summary: L10n.tr("Wersja utPLSQL zainstalowanego w bazie połączenia (ut_runner.version)."),
                                       feature: "UT-INS-001"),
-                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
-                guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
+                    validate: { connection($0) != nil }) { ctx in
+                guard let conn = connection(ctx.workspace) else { throw CommandError.notConnected }
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: conn))
                 let v = await UtplsqlRunner.version(s)
                 return CommandResult(message: v.map { L10n.tr("utPLSQL \($0)") } ?? L10n.tr("utPLSQL nie jest zainstalowany w tej bazie"), value: v.map { .string($0) } ?? .null)
+            },
+            Command(CommandDescriptor(id: "utplsql.explorer", title: L10n.tr("Eksplorator testów utPLSQL"), category: .view,
+                                      agent: .read, effect: .none,
+                                      summary: L10n.tr("Drzewo suit, kontekstów i testów bieżącego użytkownika (ut_runner.get_suites_info) z ostatnim wynikiem."),
+                                      feature: "UT-EXP-001"),
+                    validate: { connection($0) != nil }) { ctx in
+                guard let m = ctx.workspace.metadata(for: connection(ctx.workspace)) else { throw CommandError.notConnected }
+                if ctx.invoker == .user { ctx.ui?.showTestExplorer(); return .ok }
+                let items = try await UtplsqlExplorer.load(owner: try await m.currentSchema(), metadata: m)
+                func flat(_ n: [UtSuiteItem]) -> [UtSuiteItem] { n.flatMap { [$0] + flat($0.children ?? []) } }
+                return CommandResult(value: .array(flat(items).filter { $0.kind == .test }.map { .string($0.runPath) }))
+            },
+            Command(CommandDescriptor(id: "utplsql.generateTest", title: L10n.tr("utPLSQL: generuj pakiet testowy"), category: .tools, submenu: "utPLSQL",
+                                      parameters: ObjectCommands.objectParams, agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno programu ze szkieletem pakietu testowego (suita, test na każdą procedurę i funkcję) dla pakietu."),
+                                      feature: "UT-GEN-001"),
+                    validate: { ws in ws.selectedObject?.type == .package || ws.activeDocument?.kind == .program }) { ctx in
+                let ws = ctx.workspace
+                var name: String?, owner: String?, spec: String?
+                if ctx.arguments.string("object") == nil, let doc = ws.activeDocument, doc.kind == .program,
+                   let u = ProgramCompiler.units(in: doc.text).first(where: { $0.type == .package }) {
+                    name = u.name; owner = u.owner; spec = u.text
+                } else {
+                    let (o, m) = try await ObjectCommands.target(ctx)
+                    guard o.type == .package || o.type == .packageBody else { throw CommandError.notAvailable(L10n.tr("Wybierz pakiet")) }
+                    name = o.name; owner = o.owner
+                    spec = try await m.source(of: DBObject(owner: o.owner, name: o.name, type: .package))
+                }
+                guard let name, let spec else { throw CommandError.notAvailable(L10n.tr("Brak specyfikacji pakietu")) }
+                let text = UtplsqlExplorer.skeleton(for: name, owner: owner, specification: spec)
+                let doc = ws.newDocument(.program, text: text)
+                return CommandResult(message: doc.fullTitle, value: .string(text))
+            },
+            Command(CommandDescriptor(id: "utplsql.toggleTest", title: L10n.tr("utPLSQL: przejdź do testu / testowanego pakietu"), category: .tools, submenu: "utPLSQL",
+                                      pd: ["ctrl+shift+t"], mac: ["cmd+ctrl+t"], agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Z pakietu otwiera jego pakiet testowy (test_nazwa albo zależność), z pakietu testowego — testowany pakiet."),
+                                      feature: "UT-NAV-001"),
+                    validate: { $0.activeDocument?.kind == .program }) { ctx in
+                let ws = ctx.workspace
+                guard let doc = ws.activeDocument, let u = ProgramCompiler.units(in: doc.text).first,
+                      let m = ws.metadata(for: ws.effectiveConnection(of: doc)) else { throw CommandError.notConnected }
+                var owner = u.owner ?? ""
+                if owner.isEmpty { owner = try await m.currentSchema() }
+                guard let o = try await UtplsqlExplorer.counterpart(of: u.name, owner: owner, metadata: m) else {
+                    throw CommandError.notAvailable(L10n.tr("Nie znaleziono pakietu testowego ani testowanego dla \(u.name)"))
+                }
+                try await ws.openObject(o)
+                return CommandResult(message: "\(o.owner).\(o.name)")
             },
             Command(CommandDescriptor(id: "ob.utplsqlRun", title: L10n.tr("Uruchom testy utPLSQL"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams + [CommandParameter("coverage", .boolean, L10n.tr("Z pokryciem kodu"))],
