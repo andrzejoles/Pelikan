@@ -2,7 +2,8 @@
 // Kod czyta nazwę z Info.plist (klucz PelikanAppName), katalog danych to ~/Library/Application Support/$(PELIKAN_APP_NAME).
 PELIKAN_APP_NAME = Pelikan
 PRODUCT_NAME = $(PELIKAN_APP_NAME)
-PRODUCT_BUNDLE_IDENTIFIER = local.aoles.pelikan
+PELIKAN_BUNDLE_ID = local.aoles.pelikan
+PRODUCT_BUNDLE_IDENTIFIER = $(PELIKAN_BUNDLE_ID)
 // Wersja i numer kompilacji z historii gita (scripts/set-version.sh → build/Version.xcconfig) — tu wartości zastępcze.
 MARKETING_VERSION = 0.0.0
 CURRENT_PROJECT_VERSION = 1

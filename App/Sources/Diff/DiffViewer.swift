@@ -44,8 +44,8 @@ struct DiffViewer: View {
 
     private var toolbar: some View {
         HStack(spacing: 12) {
-            Button { jump(-1) } label: { Image(systemName: "chevron.up") }.help(L10n.tr("Poprzednia różnica")).disabled(changes.isEmpty)
-            Button { jump(1) } label: { Image(systemName: "chevron.down") }.help(L10n.tr("Następna różnica")).disabled(changes.isEmpty)
+            Button { jump(-1) } label: { Image(systemName: "chevron.up") }.iconLabel(L10n.tr("Poprzednia różnica")).disabled(changes.isEmpty)
+            Button { jump(1) } label: { Image(systemName: "chevron.down") }.iconLabel(L10n.tr("Następna różnica")).disabled(changes.isEmpty)
             Text(changes.isEmpty ? L10n.tr("Brak różnic") : L10n.tr("Różnica \(max(current, 0) + 1) z \(changes.count)"))
                 .font(.callout).foregroundStyle(.secondary)
             Spacer()

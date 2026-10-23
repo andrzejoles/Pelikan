@@ -19,6 +19,7 @@ struct ToolsPane: View {
                         TextField(L10n.tr("Adres z %s"), text: Binding(get: { workspace.settings.webSearches[i].url },
                                                                       set: { workspace.settings.webSearches[i].url = $0 }))
                         Button { workspace.settings.webSearches.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                            .iconLabel(L10n.tr("Usuń wyszukiwanie"))
                     }
                 }
                 HStack {
@@ -57,6 +58,7 @@ struct ToolsPane: View {
                         TextField(L10n.tr("Plik albo adres http(s)"), text: Binding(get: { workspace.settings.userDocuments[i].location },
                                                                                   set: { workspace.settings.userDocuments[i].location = $0 }))
                         Button { workspace.settings.userDocuments.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                            .iconLabel(L10n.tr("Usuń dokument"))
                     }
                 }
                 HStack {

@@ -108,8 +108,8 @@ struct ReportToolbar: View {
                 .disabled(document.isExecuting)
             Spacer()
             if let e = document.reportError { Text(e).foregroundStyle(.red).font(.caption).lineLimit(1) }
-            Button { workspace.perform("report.print") } label: { Image(systemName: "printer") }.help(L10n.tr("Drukuj raport…")).disabled(document.reportHTML == nil)
-            Button { workspace.perform("report.saveHTML") } label: { Image(systemName: "square.and.arrow.down") }.help(L10n.tr("Zapisz raport jako HTML…")).disabled(document.reportHTML == nil)
+            Button { workspace.perform("report.print") } label: { Image(systemName: "printer") }.iconLabel(L10n.tr("Drukuj raport…")).disabled(document.reportHTML == nil)
+            Button { workspace.perform("report.saveHTML") } label: { Image(systemName: "square.and.arrow.down") }.iconLabel(L10n.tr("Zapisz raport jako HTML…")).disabled(document.reportHTML == nil)
             Menu(L10n.tr("Eksport")) {
                 ForEach(["csv", "tsv", "xml", "xlsx"], id: \.self) { f in
                     Button(f.uppercased()) { workspace.perform("report.export", CommandArguments(["format": .string(f)])) }

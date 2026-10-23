@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 
 /// Format pliku tekstowego: kodowanie, BOM, zakończenia linii.
 public struct TextFileFormat: Sendable, Hashable {
@@ -57,16 +58,9 @@ public enum TextFileCodec {
         return (text, f)
     }
 
-    /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8: bajty 0x80–0x9F to znaki Windows-1250 (w ISO-8859-2 są
-    /// tam znaki sterujące); polskie litery na pozycjach ISO-8859-2 (ą ś ź Ą Ś Ź = B1 B6 BC A1 A6 AC) bez 0x80–0x9F →
-    /// ISO-8859-2 (pliki z AIX/Unix); w innym razie Windows-1250 (pliki z PL/SQL Developer).
+    /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8 (reguła wspólna z podglądem Quick Look: `CodeHTML`).
     public static func guessSingleByte(_ data: Data) -> String.Encoding? {
-        var c1 = false, latin2 = false
-        for b in data {
-            if (0x80...0x9F).contains(b) { c1 = true; break }
-            if [0xB1, 0xB6, 0xBC, 0xA1, 0xA6, 0xAC].contains(b) { latin2 = true }
-        }
-        return c1 ? .windowsCP1250 : latin2 ? .isoLatin2 : .windowsCP1250
+        CodeHTML.singleByteGuess(data)
     }
 
     /// Kodowania wybieralne dla plików i projektów.

@@ -602,6 +602,7 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         }
         table.usesAlternatingRowBackgroundColors = true
         table.style = .plain
+        table.setAccessibilityLabel(L10n.tr("Rekord w pionie"))
         table.dataSource = self
         table.delegate = self
         table.usesAutomaticRowHeights = true

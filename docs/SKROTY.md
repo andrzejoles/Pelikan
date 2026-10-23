@@ -34,7 +34,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij okna z lewej | `file.closeLeft` |  |  | Brak | 0 | PD-UI-004 |
 | Zamknij okna z prawej | `file.closeRight` |  |  | Brak | 0 | PD-UI-004 |
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
-| Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
+| Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 0 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |

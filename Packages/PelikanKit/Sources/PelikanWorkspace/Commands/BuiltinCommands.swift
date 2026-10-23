@@ -194,9 +194,16 @@ public enum BuiltinCommands {
                 }
                 return .ok
             },
-            .planned(CommandDescriptor(id: "file.print", title: L10n.tr("Drukuj…"), category: .file, mac: ["cmd+p"],
-                                       agent: .none, effect: .external, summary: L10n.tr("Drukuje bieżące okno."),
-                                       stage: 8, feature: "PD-SQLW-016")),
+            Command(CommandDescriptor(id: "file.print", title: L10n.tr("Drukuj…"), category: .file, mac: ["cmd+p"],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Drukuje bieżące okno: kod z kolorami składni, a w oknie SQL także siatkę wyniku (zaznaczone wiersze albo wszystkie pobrane)."),
+                                      feature: "PD-SQLW-016"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument else { return .ok }
+                let html = PrintLayout.html(PrintLayout.content(of: doc, in: ctx.workspace))
+                ctx.ui?.printHTML(title: doc.fullTitle, html: html)
+                return CommandResult(value: .string(html))
+            },
         ]
     }
 

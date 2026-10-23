@@ -641,6 +641,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "userManual", title: L10n.tr("Instrukcja Pelikana"), size: NSSize(width: 900, height: 640)) { UserManualView(workspace: workspace) }
     }
 
+    /// Druk okna (PD-SQLW-016): HTML z `PrintLayout` jako tekst sformatowany, podział na strony przez NSTextView.
+    func printHTML(title: String, html: String) {
+        guard let text = NSAttributedString(html: Data(html.utf8), documentAttributes: nil) else { return }
+        let info = (NSPrintInfo.shared.copy() as? NSPrintInfo) ?? NSPrintInfo()
+        info.horizontalPagination = .fit
+        info.verticalPagination = .automatic
+        info.isVerticallyCentered = false
+        let width = info.paperSize.width - info.leftMargin - info.rightMargin
+        let view = NSTextView(frame: NSRect(x: 0, y: 0, width: width, height: 1))
+        view.textStorage?.setAttributedString(text)
+        view.isVerticallyResizable = true
+        view.sizeToFit()
+        let op = NSPrintOperation(view: view, printInfo: info)
+        op.jobTitle = title
+        if let window = mainWindow?.window {
+            op.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+        } else {
+            op.run()
+        }
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }

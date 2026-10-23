@@ -727,3 +727,19 @@ głównego dostaje elementy z rejestru komend z symbolami SF i standardowe dosto
 komendami, układ zapamiętywany przez system). Quick Access Toolbar to jedna grupa paska z dowolnymi komendami rejestru
 (do 20) wybieranymi w Preferencjach › Zestawy albo komendą `view.addToQuickAccess` — prostsze niż osobne paski
 użytkownika wzorca, a pokrywa ich zastosowanie.
+### D95 · 2026-10-23 — Quick Look jako podgląd oparty na danych, bez rejestracji w systemie
+Rozszerzenie `PelikanQuickLook` (com.apple.quicklook.preview, `QLIsDataBasedPreview`) zwraca HTML z `CodeHTML`
+(PelikanSQL — ten sam lekser co edytor), więc nie potrzebuje WebKitu ani PelikanWorkspace. Obsługuje typy UTI
+aplikacji (.sql, pakiety, programy, .tst), pierwsze 2 MB pliku. Rozszerzenia muszą działać w sandboxie; podpis jest ad
+hoc jak aplikacji — macOS może odmówić załadowania rozszerzenia bez podpisu dewelopera Apple (płatne konto — PROMPT
+§13), a rejestracja na próbę (`pluginkit -e use`, uruchomienie aplikacji) to trwała zmiana systemu w czasie pracy
+właściciela (D30). Działanie w Finderze sprawdzi właściciel; wiersz ⚠️. Identyfikator i typy UTI liczone z nowej
+zmiennej `PELIKAN_BUNDLE_ID` w `Config/Brand.xcconfig` (także w Info.plist aplikacji — wcześniej wpisane na sztywno).
+
+### D96 · 2026-10-23 — Dostępność pilnowana audytem źródeł
+VoiceOver potrzebuje etykiety dla elementów bez tekstu. Przyciski i menu SwiftUI z samą ikoną dostają `.iconLabel(_:)`
+(podpowiedź i etykieta z jednego przetłumaczonego tekstu), tabele i drzewa AppKit — `setAccessibilityLabel`,
+przyciski AppKit z obrazkiem — `accessibilityDescription`. `AccessibilityAuditTests` czyta App/Sources i odrzuca
+nowe elementy bez etykiety (testy pakietu nie uruchamiają interfejsu). Próba z VoiceOverem i Accessibility Inspector —
+w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
+

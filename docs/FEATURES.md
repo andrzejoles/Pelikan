@@ -84,7 +84,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | ✅ test (zapytania standardowe [owner]/[table]/[columns] w menu obiektu, zapis z siatki; menu bez zrzutu — D30) |
 | PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | ✅ test |
 | PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | w toku |
-| PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | do zrobienia |
+| PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | ✅ test (Plik › Drukuj… ⌘P: nagłówek z oknem, połączeniem i datą, kod z kolorami składni i numerami linii, w oknie SQL siatka — zaznaczone wiersze albo wszystkie pobrane; okno druku bez zrzutu — D30) |
 | PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | do zrobienia |
 | PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | do zrobienia |
 | PD-SQLW-019 | Linked Queries: tabele nadrzędne/podrzędne z FK, master/detail ze zmiennymi `:m_…`, Custom | UG 7.4, NF10 | Siatka > Linked Query | 6 | P2 | — | ✅ test (tabele nadrzędne i podrzędne z FK dla bieżącego wiersza, nowe okno SQL z warunkiem na wartości wiersza) |
@@ -521,10 +521,10 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | ✅ test |
 | MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ✅ test (Pęk kluczy logowania, usługa z bundle id, bez iCloud; przełącznik „Wymagaj Touch ID albo hasła Maca” — potwierdzenie przed użyciem zapisanego hasła raz na połączenie; dialog systemowy bez zrzutu — D30) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
-| MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
+| MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | ⚠️ test (rozszerzenie Quick Look w Contents/PlugIns: podgląd oparty na danych, HTML z kolorami składni z leksera — CodeHTML z testem, kodowania UTF-8/ISO-8859-2/Windows-1250, pliki .sql, pakiety, programy, .tst; działanie w Finderze niesprawdzone — podpis ad hoc, bez rejestracji w systemie, D95) |
 | MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | ✅ test (usługi „Formatuj SQL” — zamiana zaznaczenia formaterem z Preferencji, „Otwórz w SQL Window”, „Otwórz plik”; NSServices w Info.plist; menu Usługi bez zrzutu — D30, D94) |
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
-| MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
+| MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | ✅ test (etykiety VoiceOver: przyciski i menu z samą ikoną — .iconLabel (podpowiedź + etykieta), tabele i drzewa AppKit, listy File Browser i projektu; audyt źródeł w AccessibilityAuditTests; bez próby z VoiceOver — D30, D96) |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |
 
 ## Pro*C — zdalny build przez SSH (zadanie właściciela, Etap P)

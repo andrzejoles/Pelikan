@@ -32,6 +32,8 @@ final class FakeUI: UIServices {
     func showClientMissingHelp(_ message: String) { clientHelp = message }
     func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
+    var printed: [String] = []
+    func printHTML(title: String, html: String) { printed.append(title) }
 }
 
 @MainActor

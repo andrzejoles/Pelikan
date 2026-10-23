@@ -94,7 +94,7 @@ struct PreferenceSetsPane: View {
                         Text(workspace.registry.command(CommandID(rawValue: id))?.descriptor.title ?? id)
                         Spacer()
                         Button { workspace.settings.quickAccessCommands.removeAll { $0 == id } } label: { Image(systemName: "minus.circle") }
-                            .buttonStyle(.borderless)
+                            .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń z szybkiego dostępu"))
                     }
                 }
                 TextField(L10n.tr("Dodaj komendę — szukaj"), text: $commandFilter)

@@ -61,7 +61,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.sql</string>
+				<string>$(PELIKAN_BUNDLE_ID).sql</string>
 			</array>
 		</dict>
 		<dict>
@@ -73,7 +73,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.package</string>
+				<string>$(PELIKAN_BUNDLE_ID).package</string>
 			</array>
 		</dict>
 		<dict>
@@ -85,7 +85,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.program</string>
+				<string>$(PELIKAN_BUNDLE_ID).program</string>
 			</array>
 		</dict>
 		<dict>
@@ -97,7 +97,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.test</string>
+				<string>$(PELIKAN_BUNDLE_ID).test</string>
 			</array>
 		</dict>
 		<dict>
@@ -109,7 +109,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.notebook</string>
+				<string>$(PELIKAN_BUNDLE_ID).notebook</string>
 			</array>
 		</dict>
 	</array>
@@ -185,7 +185,7 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.sql</string>
+			<string>$(PELIKAN_BUNDLE_ID).sql</string>
 			<key>UTTypeDescription</key>
 			<string>SQL Script</string>
 			<key>UTTypeConformsTo</key>
@@ -202,7 +202,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.package</string>
+			<string>$(PELIKAN_BUNDLE_ID).package</string>
 			<key>UTTypeDescription</key>
 			<string>PL/SQL Package</string>
 			<key>UTTypeConformsTo</key>
@@ -223,7 +223,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.program</string>
+			<string>$(PELIKAN_BUNDLE_ID).program</string>
 			<key>UTTypeDescription</key>
 			<string>PL/SQL Program</string>
 			<key>UTTypeConformsTo</key>
@@ -245,7 +245,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.test</string>
+			<string>$(PELIKAN_BUNDLE_ID).test</string>
 			<key>UTTypeDescription</key>
 			<string>Pelikan Test Script</string>
 			<key>UTTypeConformsTo</key>
@@ -262,7 +262,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.notebook</string>
+			<string>$(PELIKAN_BUNDLE_ID).notebook</string>
 			<key>UTTypeDescription</key>
 			<string>SQL Notebook</string>
 			<key>UTTypeConformsTo</key>

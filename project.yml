@@ -80,6 +80,29 @@ targets:
       - package: SwiftTerm
         product: SwiftTerm
       - package: Sparkle
+      # Podgląd Quick Look plików SQL/PL/SQL (MAC-QL-001) — w Contents/PlugIns.
+      - target: PelikanQuickLook
+  # Rozszerzenie Quick Look (podgląd oparty na danych: HTML z kolorami składni z PelikanSQL).
+  PelikanQuickLook:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: App/QuickLook
+        excludes:
+          - Info.plist
+          - QuickLook.entitlements
+    settings:
+      base:
+        PRODUCT_NAME: $(PELIKAN_APP_NAME)QuickLook
+        PRODUCT_BUNDLE_IDENTIFIER: $(PELIKAN_BUNDLE_ID).quicklook
+        INFOPLIST_FILE: App/QuickLook/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: App/QuickLook/QuickLook.entitlements
+        SKIP_INSTALL: YES
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks @executable_path/../../../../Frameworks"
+    dependencies:
+      - package: PelikanKit
+        product: PelikanSQL
   # Most MCP agentów (stdio ↔ gniazdo Unix aplikacji) — w pakiecie aplikacji obok pliku wykonywalnego.
   pelikan-mcp:
     type: tool
