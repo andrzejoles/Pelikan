@@ -198,6 +198,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Zapytanie standardowe | `ob.standardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
+| Autotrace | `tools.autotrace` |  |  | Brak | 0 | SD-PLAN-002 |
+| Plan › Porównaj z poprzednim planem | `plan.compare` |  |  | Brak | 0 | SD-PLAN-003 |
+| DBA › Zmień parametr instancji | `dba.alterParameter` |  |  | Brak | 0 | SD-DBA-001 |
+| DBA › Zablokuj / odblokuj konto | `dba.lockUser` |  |  | Brak | 0 | SD-DBA-001 |
+| Instance Viewer | `tools.instanceViewer` |  |  | Brak | 0 | SD-DBA-004 |
+| Dokumentacja schematu… | `tools.schemaDoc` |  |  | Brak | 0 | SD-DOC-001 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |
 | Test obciążenia… | `tools.loadTester` |  |  | Brak | 0 | PD-TOOL-019 |
 | Obiekt › Pokaż dane | `ob.queryData` |  |  | Brak | 0 | PD-OB-017 |
@@ -290,6 +296,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
+| Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |
 | Zadania To-Do | `view.todoItems` |  |  | Odczyt | 0 | PD-TODO-001 |

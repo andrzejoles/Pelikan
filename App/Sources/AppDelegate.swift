@@ -383,6 +383,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showAutotrace(_ result: AutotraceResult, sql: String) {
+        ToolWindowController.close(key: "autotrace")
+        ToolWindowController.show(key: "autotrace", title: L10n.tr("Autotrace"), size: NSSize(width: 960, height: 560)) {
+            AutotraceView(result: result, sql: sql)
+        }
+    }
+
+    func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {
+        ToolWindowController.close(key: "planCompare")
+        ToolWindowController.show(key: "planCompare", title: L10n.tr("Porównanie planów"), size: NSSize(width: 1000, height: 520)) {
+            PlanComparisonView(comparison: comparison, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
+    func showDBAPanel() {
+        ToolWindowController.show(key: "dba", title: L10n.tr("Panel DBA"), size: NSSize(width: 1040, height: 640)) {
+            DBAPanelView(workspace: workspace)
+        }
+    }
+
+    func showInstanceViewer() {
+        ToolWindowController.show(key: "instanceViewer", title: L10n.tr("Instance Viewer"), size: NSSize(width: 960, height: 660)) {
+            InstanceViewerView(workspace: workspace)
+        }
+    }
+
+    func showTaskMonitor() {
+        ToolWindowController.show(key: "taskMonitor", title: L10n.tr("Zadania w tle"), size: NSSize(width: 760, height: 380)) {
+            TaskMonitorView(workspace: workspace)
+        }
+    }
+
+    func showSchemaDoc() {
+        ToolWindowController.show(key: "schemaDoc", title: L10n.tr("Dokumentacja schematu"), size: NSSize(width: 560, height: 220)) {
+            SchemaDocView(workspace: workspace)
+        }
+    }
+
     func showTestManager() {
         ToolWindowController.show(key: "testManager", title: L10n.tr("Test Manager"), size: NSSize(width: 900, height: 600)) {
             TestManagerView(workspace: workspace)

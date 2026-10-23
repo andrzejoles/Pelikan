@@ -54,6 +54,13 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Etap 7: Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu.
+    func showAutotrace(_ result: AutotraceResult, sql: String)
+    func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String)
+    func showDBAPanel()
+    func showInstanceViewer()
+    func showTaskMonitor()
+    func showSchemaDoc()
     /// Okno projektu (PD-PROJ-001).
     func showProject()
     /// Monitor zdarzeń i test obciążenia (PD-TOOL-014, PD-TOOL-019).
@@ -120,6 +127,12 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showAutotrace(_ result: AutotraceResult, sql: String) {}
+    public func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {}
+    public func showDBAPanel() {}
+    public func showInstanceViewer() {}
+    public func showTaskMonitor() {}
+    public func showSchemaDoc() {}
     public func showProject() {}
     public func showEventMonitor() {}
     public func showLoadTester() {}
@@ -255,6 +268,8 @@ public final class Workspace {
     public var project: Project?
     public var projectURL: URL?
     public var projectBuildResults: [ProjectBuildResult] = []
+    /// Zadania w tle (Task Monitor, SD-MON-002).
+    public let tasks = WorkspaceTaskCenter()
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
