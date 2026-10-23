@@ -64,6 +64,11 @@ public protocol UIServices: AnyObject {
     func showCompareObjects()
     /// DBMS Scheduler (PD-SCHED-001).
     func showScheduler()
+    /// Okno wykresu z karty wyników okna SQL (PD-GRAPH-001).
+    func showGraph(document: Document, tab: ResultTab)
+    /// Wyjście narzędzia użytkownika i edycja listy narzędzi (PD-TOOL-017).
+    func showToolOutput(title: String, text: String, status: Int32)
+    func showUserToolsSettings()
     /// Okno wyników utPLSQL dla przebiegu (PROMPT §6).
     func showUtplsqlResults(_ run: UtplsqlRun)
     /// Okno punktów przerwania (UG 5.10).
@@ -112,6 +117,9 @@ extension UIServices {
     public func showExportObjects() {}
     public func showCompareObjects() {}
     public func showScheduler() {}
+    public func showGraph(document: Document, tab: ResultTab) {}
+    public func showToolOutput(title: String, text: String, status: Int32) {}
+    public func showUserToolsSettings() {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
@@ -297,6 +305,7 @@ public final class Workspace {
         if commands == nil {
             registerMacroCommands()
             registerCopyFormatCommands()
+            registerUserToolCommands()
         }
     }
 

@@ -135,6 +135,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | 0 | PD-VAR-005 |
 | Wynik › Następna strona | `grid.nextPage` | ⌘⇟ | ⌘⇟ | Brak | 0 | PD-SQLW-004 |
 | Wynik › Ostatnia strona (pobierz wszystkie) | `grid.lastPage` | ⇧⌘⇟ | ⇧⌘⇟ | Brak | 0 | PD-SQLW-004 |
+| Wynik › Wykres… | `grid.graph` |  |  | Brak | 0 | PD-GRAPH-001 |
 | Wynik › Edytuj dane | `grid.edit` | ⌥⌘E | ⌥⌘E | Brak | 0 | PD-GRID-017 |
 | Wynik › Wstaw rekord | `grid.insertRecord` | ⌥⌘I | ⌥⌘I | Brak | 0 | PD-GRID-017 |
 | Wynik › Usuń rekord | `grid.deleteRecord` | ⇧⌘⌫ | ⇧⌘⌫ | Brak | 0 | PD-GRID-017 |
@@ -218,6 +219,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | 0 | PD-TOOL-012 |
 | Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | 0 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Brak | 0 | PD-SCHED-001 |
+| Narzędzia użytkownika… | `tools.configureTools` |  |  | Brak | 0 | PD-TOOL-017 |
 | Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | 0 | PD-DIAG-001 |
 | Diagram › Dodaj powiązane tabele | `diagram.addRelated` |  |  | Brak | 0 | PD-DIAG-001 |
 | Diagram › Dodaj zależności | `diagram.addReferences` |  |  | Brak | 0 | PD-DIAG-001 |

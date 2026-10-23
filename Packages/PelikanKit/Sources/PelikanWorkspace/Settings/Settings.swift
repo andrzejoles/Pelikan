@@ -108,6 +108,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var sessionQueries = SessionQueries.standard
     /// Raporty przebiegów zadań schedulera z regułami kolorów (UG 10.4).
     public var schedulerReports = Scheduler.RunReport.standard
+    /// Narzędzia użytkownika (UG 24.15, PD-TOOL-017).
+    public var userTools: [UserTool] = []
 
     public init() {}
 
@@ -164,5 +166,6 @@ public struct Settings: Sendable, Codable, Hashable {
         agent = v(.agent, agent)
         sessionQueries = v(.sessionQueries, sessionQueries)
         schedulerReports = v(.schedulerReports, schedulerReports)
+        userTools = v(.userTools, userTools)
     }
 }
