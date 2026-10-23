@@ -267,6 +267,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
 | Narzędzia użytkownika… | `tools.configureTools` |  |  | Brak | 0 | PD-TOOL-017 |
+| Zdalny build Pro*C › Cele SSH… | `ssh.manager` |  |  | Brak | 0 | PC-CONN-002 |
+| Zdalny build Pro*C › Testuj cel SSH | `ssh.test` |  |  | Brak | 0 | PC-CONN-003 |
+| Zdalny build Pro*C › Eksportuj cele SSH… | `ssh.export` |  |  | Brak | 0 | PC-CONN-001 |
+| Zdalny build Pro*C › Importuj cele SSH… | `ssh.import` |  |  | Brak | 0 | PC-CONN-001 |
 
 ## Raporty
 

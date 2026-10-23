@@ -104,6 +104,8 @@ public protocol UIServices: AnyObject {
     func applyLayout(_ layout: WindowLayout)
     /// Historia Git (lista zatwierdzeń) w oknie informacji.
     func showGitLog(_ commits: [GitCommit], title: String)
+    /// Cele SSH zdalnego builda Pro*C: menedżer, Testuj, eksport/import (Etap P).
+    func showSSHTargets(_ action: SSHTargetAction)
 
 }
 
@@ -144,6 +146,7 @@ extension UIServices {
     public func chooseDirectory() async -> URL? { nil }
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
+    public func showSSHTargets(_ action: SSHTargetAction) {}
     public func showGitLog(_ commits: [GitCommit], title: String) {
         showObjectInfo(title: title, columns: [L10n.tr("Zatwierdzenie"), L10n.tr("Autor"), L10n.tr("Data"), L10n.tr("Opis")],
                        rows: commits.map { [String($0.hash.prefix(10)), $0.author, $0.date.map { ISO8601DateFormatter().string(from: $0) } ?? "", $0.subject] })

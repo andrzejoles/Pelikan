@@ -15,6 +15,7 @@
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
 		0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */; };
+		1184C786CD59098DDC76580C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */; };
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
@@ -22,7 +23,7 @@
 		26F8AB58DC1192AD7A7DCE23 /* PelikanAgent in Frameworks */ = {isa = PBXBuildFile; productRef = C91D66ECD039E3A75B4C6536 /* PelikanAgent */; };
 		28954A51FF6185B872436C72 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */; };
 		2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9355F810C37B2D27045A31 /* DataTransferViews.swift */; };
-		2C9A6FBF8290C58405B2A4DA /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
+		2C9A6FBF8290C58405B2A4DA /* PelikanRemote in Frameworks */ = {isa = PBXBuildFile; productRef = 714D64EEF48603CCF934C810 /* PelikanRemote */; };
 		2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62611D2986EABAD106F9D86C /* DebuggerPanel.swift */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
@@ -39,6 +40,7 @@
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
 		76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */; };
+		7F6A0C97D9493300A27BB5FF /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
 		85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDD00050FBA5650E960C7ED /* GraphView.swift */; };
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		923CEBCD965BF601901F2C11 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = D507270E4637937E6D6C6235 /* PelikanBridgeKit */; };
@@ -55,7 +57,8 @@
 		AF619AD9C795CDE3A74335EE /* PelikanWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = 7D051D9F72BF390F621C6946 /* PelikanWorkspace */; };
 		B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */; };
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
-		C252BEC5D799ACD07E9F8B83 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
+		C252BEC5D799ACD07E9F8B83 /* PelikanProC in Frameworks */ = {isa = PBXBuildFile; productRef = FFC7B50AD82ABD4A43577E27 /* PelikanProC */; };
+		C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
@@ -134,6 +137,7 @@
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
+		7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHTargetManager.swift; sourceTree = "<group>"; };
 		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
@@ -177,8 +181,10 @@
 				1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */,
 				26F8AB58DC1192AD7A7DCE23 /* PelikanAgent in Frameworks */,
 				28954A51FF6185B872436C72 /* PelikanBridgeKit in Frameworks */,
-				C252BEC5D799ACD07E9F8B83 /* SwiftTerm in Frameworks */,
-				2C9A6FBF8290C58405B2A4DA /* Sparkle in Frameworks */,
+				C252BEC5D799ACD07E9F8B83 /* PelikanProC in Frameworks */,
+				2C9A6FBF8290C58405B2A4DA /* PelikanRemote in Frameworks */,
+				7F6A0C97D9493300A27BB5FF /* SwiftTerm in Frameworks */,
+				1184C786CD59098DDC76580C /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,6 +261,7 @@
 				7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */,
 				52082891AAB3D01CF123726D /* LogonView.swift */,
 				967E1B4C45088DBF2A3C240B /* Prompts.swift */,
+				7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */,
 			);
 			path = Connections;
 			sourceTree = "<group>";
@@ -518,6 +525,8 @@
 				20A0AADF6109FF559605C47E /* PelikanThin */,
 				C91D66ECD039E3A75B4C6536 /* PelikanAgent */,
 				C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */,
+				FFC7B50AD82ABD4A43577E27 /* PelikanProC */,
+				714D64EEF48603CCF934C810 /* PelikanRemote */,
 				910C5AB0C7B52DF921BC7E98 /* SwiftTerm */,
 				17B2E96D730996376F52B97F /* Sparkle */,
 			);
@@ -645,6 +654,7 @@
 				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
+				C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
@@ -951,6 +961,10 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanDB;
 		};
+		714D64EEF48603CCF934C810 /* PelikanRemote */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PelikanRemote;
+		};
 		7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanSQL;
@@ -979,6 +993,10 @@
 		D507270E4637937E6D6C6235 /* PelikanBridgeKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanBridgeKit;
+		};
+		FFC7B50AD82ABD4A43577E27 /* PelikanProC */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PelikanProC;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -1,6 +1,8 @@
 import AppKit
 import PelikanDB
 import PelikanODPI
+import PelikanProC
+import PelikanRemote
 import PelikanThin
 import Sparkle
 import PelikanSQL
@@ -202,6 +204,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.allowsMultipleSelection = false
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
         return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
+    }
+
+    /// Cele SSH zdalnego builda Pro*C: plik w katalogu danych bez sekretów, sekrety w Pęku kluczy (`<bundle id>.ssh`).
+    private lazy var sshTargets: SSHTargetManagerModel = {
+        let bundle = Bundle.main.bundleIdentifier ?? (Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan")
+        let dir = workspace.dataDirectory
+        let store = SSHTargetStore(fileURL: dir?.appendingPathComponent(SSHTargetStore.fileName),
+                                   secrets: KeychainSecretStore(service: SSHTargetStore.keychainService(bundleIdentifier: bundle)))
+        let preferred = (dir ?? FileManager.default.temporaryDirectory).appendingPathComponent("run", isDirectory: true)
+        let run = (try? SocketDirectory.make(preferred: preferred)) ?? FileManager.default.temporaryDirectory
+        return SSHTargetManagerModel(store: store, workspace: workspace, runDirectory: run)
+    }()
+
+    func showSSHTargets(_ action: SSHTargetAction) {
+        let model = sshTargets
+        switch action {
+        case .manage, .test:
+            ToolWindowController.show(key: "sshTargets", title: L10n.tr("Cele SSH"), size: NSSize(width: 900, height: 640)) {
+                SSHTargetManagerView(model: model)
+            }
+            if case .test(let name) = action {
+                if let name { model.select(name: name) }
+                Task { await model.test() }
+            }
+        case .export:
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.json]
+            panel.nameFieldStringValue = SSHTargetStore.fileName
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do { try model.store.exportData().write(to: url, options: .atomic) } catch { NSAlert(error: error).runModal() }
+        case .import:
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.json]
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do { try model.store.importData(Data(contentsOf: url)) } catch { NSAlert(error: error).runModal() }
+        }
     }
 
     func currentLayout() -> WindowLayout? { mainWindow?.layout }

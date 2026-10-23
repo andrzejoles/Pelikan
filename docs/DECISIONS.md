@@ -457,3 +457,27 @@ użyciem zapisanego hasła prosi o potwierdzenie przez LocalAuthentication (Touc
 w trakcie działania aplikacji — także dla sesji agenta. Stan „hasło zapisane” na liście połączeń sprawdzany bez odczytu
 sekretu. Ograniczenie: inna aplikacja, której użytkownik pozwoli czytać wpis Pelikana w Pęku kluczy, nie przejdzie
 przez to potwierdzenie (macOS i tak pyta wtedy o zgodę na dostęp do wpisu).
+
+### D-PC2-1 · 2026-10-23 — Cele SSH: osobny moduł, plik bez sekretów, osobna usługa Pęku kluczy
+Model `PelikanSSHTarget`, magazyn celów, „Testuj” i parsery błędów są w nowym module `PelikanProC` (zależy od
+`PelikanWorkspace` i `PelikanRemote`), żeby `PelikanWorkspace` nie zależał od warstwy SSH, która działa tylko na macOS;
+komendy (`ssh.manager`, `ssh.test`, `ssh.export`, `ssh.import`, agent — Brak) są w rejestrze i otwierają okno przez
+`UIServices.showSSHTargets`. Cele i foldery w `ssh-targets.json` w katalogu danych — bez haseł; hasło SSH albo hasło
+klucza w pęku logowania w usłudze `<bundle id>.ssh` (konto = id celu), osobnej od haseł baz (`.connection`), z tym samym
+potwierdzeniem właściciela co hasła baz, gdy włączone (D56) — raz na cel w trakcie działania aplikacji. Sekret podany
+bez „Zapamiętaj” zostaje tylko w pamięci. Eksport/import nie przenosi sekretów, a import nadaje nowe identyfikatory
+(dołącza, nie nadpisuje). Gałąź porównywana dokładnie (`MASTER` ≠ `master`). Katalog roboczy Pelikana
+`<backupy>/.pelikan` nie może leżeć w working copy (walidacja). Brak katalogu backupów przy „Testuj” — utworzenie po
+potwierdzeniu, dla PROD dodatkowo wpisaniem nazwy celu (`ProductionConfirmation`, gotowe dla pipeline'u wdrożenia).
+Wersja serwera SSH czytana z banera TCP (przed logowaniem, bez sekretów) — log negocjacji `ssh` jest kasowany przez
+`SSHSession` po połączeniu. `which make` zamiast `make -v`, bo `make` z AIX może nie mieć opcji wersji.
+
+### D-PC2-2 · 2026-10-23 — Parsery proc/xlc z formatu dokumentowanego
+Parsery rozpoznają: Pro*C `Error at line L, column C in file F` / `Semantic error at line L, column C, file F:` /
+`Syntax error …` z następującym kodem `PCC-x-NNNNN` (przy SQLCHECK=SEMANTICS także `PLS-x-NNNNN`; F = błąd krytyczny,
+także bez lokalizacji); XL C `"plik", line L.C: NNNN-NNN[N] (I|W|E|S|U) treść` (kolumna opcjonalna, numery komunikatów
+trzy- i czterocyfrowe) oraz układ `-qsrcmsg` (linia `  N | źródło`, znacznik `....a..`, komunikat `a - NNNN-NNN (S)`,
+plik z ostatniego polecenia kompilacji `xlc… -c plik.c` w wyjściu `make`). Ścieżka z komunikatu (względna wobec katalogu
+`make` albo bezwzględna) jest mapowana na ścieżkę względną working copy; pliki spoza repozytorium (nagłówki Oracle) nie
+dają skoku. Fixture'y odtwarzają format z dokumentacji — do zastąpienia prawdziwymi próbkami z AIX właściciela.
+Sukces builda wyznacza kod wyjścia `make`, nie parser.
