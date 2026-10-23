@@ -173,7 +173,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |
 | utPLSQL › utPLSQL: skrypt dla wiersza poleceń | `utplsql.cliScript` |  |  | Pełny | 0 | UT-CI-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
-| Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
+| Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | 0 | PD-OPT-002 |
+| Plan › Zapisz plan jako… | `plan.export` |  |  | Brak | 0 | PD-OPT-003 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |

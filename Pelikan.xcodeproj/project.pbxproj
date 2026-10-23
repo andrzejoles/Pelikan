@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */; };
 		069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */; };
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
@@ -131,6 +132,7 @@
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
+		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -237,6 +239,14 @@
 			path = Templates;
 			sourceTree = "<group>";
 		};
+		4DEF7E9E98D7A7BE391B9DA6 /* ExplainPlan */ = {
+			isa = PBXGroup;
+			children = (
+				E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */,
+			);
+			path = ExplainPlan;
+			sourceTree = "<group>";
+		};
 		5C5E85F85E1129E104F58BD8 /* UtPLSQL */ = {
 			isa = PBXGroup;
 			children = (
@@ -283,6 +293,7 @@
 				94B8513C5D09CD2AC6BAC631 /* Diff */,
 				ECB3825E12C3C711DC48304D /* Editor */,
 				D9C9B335E92845276A865184 /* Editors */,
+				4DEF7E9E98D7A7BE391B9DA6 /* ExplainPlan */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
@@ -536,6 +547,7 @@
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */,
+				0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
