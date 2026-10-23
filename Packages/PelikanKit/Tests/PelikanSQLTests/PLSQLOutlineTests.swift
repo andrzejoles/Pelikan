@@ -110,3 +110,33 @@ struct PLSQLOutlineTests {
         #expect(t < (ProcessInfo.processInfo.environment["PELIKAN_PERF_STRICT"] == "1" ? .milliseconds(300) : .seconds(5)), "\(t)")
     }
 }
+
+@Suite("Zwijanie kodu")
+struct CodeFoldingTests {
+    let text = """
+    begin
+      if a then
+        x := 1;
+      end if;
+      loop exit; end loop;
+    end;
+    """
+
+    @Test("Obszary wielolinijkowe, ukryte linie, zwinięcia zagnieżdżone pochłaniane")
+    func regions() {
+        let r = CodeFolding.regions(text)
+        #expect(r.map { "\($0.startLine)-\($0.endLine)" } == ["0-5", "1-3"])   // LOOP w jednej linii — bez obszaru
+        let ns = text as NSString
+        let inner = r[1]
+        #expect(ns.substring(with: NSRange(location: inner.hidden.lowerBound, length: inner.hidden.count)) == "    x := 1;\n  end if;\n")
+        #expect(CodeFolding.hiddenRanges(r, folded: [r[0].start, r[1].start]) == [r[0].hidden])
+    }
+
+    @Test("Przesunięcie zwinięć przy edycji przed, za i wewnątrz obszaru")
+    func shift() {
+        let start = (text as NSString).range(of: "if a").location
+        #expect(CodeFolding.shift([start], from: text, to: "-- k\n" + text) == [start + 5])
+        #expect(CodeFolding.shift([start], from: text, to: text + "\n/") == [start])
+        #expect(CodeFolding.shift([start], from: text, to: text.replacingOccurrences(of: "if a", with: "IF a")).isEmpty)
+    }
+}

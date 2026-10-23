@@ -264,6 +264,54 @@ public enum BuiltinCommands {
                 doc.selectedRange = o..<o
                 return .ok
             },
+            Command(CommandDescriptor(id: "edit.fold", title: L10n.tr("Zwiń blok"), category: .edit,
+                                      pd: ["cmd+alt+left"], mac: ["cmd+alt+left"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zwija blok, IF, LOOP albo CASE zaczynający się w linii kursora lub najbliższy obejmujący kursor."),
+                                      feature: "PD-EDIT-013"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                let caret = doc.selectedRange.lowerBound
+                let regions = CodeFolding.regions(doc.text)
+                let line = TextEditing.line(containing: caret, in: doc.text)
+                // Najpierw obszar zaczynający się w linii kursora, potem najmniejszy niezwinięty obejmujący kursor.
+                guard let r = regions.first(where: { $0.startLine == line && !doc.foldedStarts.contains($0.start) })
+                        ?? regions.filter({ $0.startLine <= line && $0.endLine >= line && !doc.foldedStarts.contains($0.start) })
+                                  .max(by: { $0.startLine < $1.startLine }) else {
+                    throw CommandError.notAvailable(L10n.tr("Brak bloku do zwinięcia"))
+                }
+                doc.foldedStarts.insert(r.start)
+                // Kursor nie zostaje w ukrytym tekście.
+                if r.hidden.contains(caret) { doc.selectedRange = r.start..<r.start }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.unfold", title: L10n.tr("Rozwiń blok"), category: .edit,
+                                      pd: ["cmd+alt+right"], mac: ["cmd+alt+right"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Rozwija zwinięty blok w linii kursora."), feature: "PD-EDIT-013"),
+                    validate: { editable($0).map { !$0.foldedStarts.isEmpty } ?? false }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                let line = TextEditing.line(containing: doc.selectedRange.lowerBound, in: doc.text)
+                let hit = CodeFolding.regions(doc.text).filter { doc.foldedStarts.contains($0.start) && $0.startLine <= line && $0.endLine >= line }
+                guard let r = hit.max(by: { $0.startLine < $1.startLine }) else { throw CommandError.notAvailable(L10n.tr("Brak zwiniętego bloku")) }
+                doc.foldedStarts.remove(r.start)
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.foldAll", title: L10n.tr("Zwiń wszystko"), category: .edit,
+                                      pd: ["cmd+alt+shift+left"], mac: ["cmd+alt+shift+left"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zwija wszystkie bloki podprogramów i struktur sterujących."), feature: "PD-EDIT-013"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                let regions = CodeFolding.regions(doc.text)
+                doc.foldedStarts = Set(regions.map(\.start))
+                if let r = regions.first(where: { $0.hidden.contains(doc.selectedRange.lowerBound) }) { doc.selectedRange = r.start..<r.start }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.unfoldAll", title: L10n.tr("Rozwiń wszystko"), category: .edit,
+                                      pd: ["cmd+alt+shift+right"], mac: ["cmd+alt+shift+right"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Rozwija wszystkie zwinięte bloki."), feature: "PD-EDIT-013"),
+                    validate: { editable($0).map { !$0.foldedStarts.isEmpty } ?? false }) { ctx in
+                editable(ctx.workspace)?.foldedStarts = []
+                return .ok
+            },
             Command(CommandDescriptor(id: "edit.gotoDeclaration", title: L10n.tr("Przejdź do deklaracji"), category: .edit,
                                       pd: ["ctrl+alt+d"], mac: ["ctrl+cmd+j"], agent: .full, effect: .uiState,
                                       summary: L10n.tr("Deklaracja identyfikatora pod kursorem: lokalna (zmienna, parametr, podprogram) albo obiekt bazy."),

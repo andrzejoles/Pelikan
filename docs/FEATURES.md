@@ -198,7 +198,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | ✅ test |
 | PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | do zrobienia |
 | PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |
-| PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | do zrobienia |
+| PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | ⚠️ częściowo (bloki, IF, LOOP, CASE; ▸/▾ w marginesie, ⌥⌘←/→, Zwiń/Rozwiń wszystko; bez podglądu zwiniętego) ✅ test 👁 |
 | PD-EDIT-014 | Split editing (dwa widoki tego samego źródła, zakładki zsynchronizowane) | UG 25.18, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-015 | Makra: nagrywanie F11, odtwarzanie F12, Repeat Play, biblioteka makr z klawiszami | UG 25.11, NF15 | Edit > Macro | 6 | P2 | Brak | do zrobienia |
 | PD-EDIT-016 | Special Copy (formaty .copy dla języków) i Paste from host language | UG 25.6–25.7, NF10 | Edit | 6 | P3 | Pełny | do zrobienia |

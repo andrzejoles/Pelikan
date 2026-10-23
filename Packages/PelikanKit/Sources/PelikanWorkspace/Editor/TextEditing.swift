@@ -110,6 +110,14 @@ public enum TextEditing {
         return TextEdit(text: newText, selection: (selection.lowerBound + shift)..<(selection.upperBound + shift))
     }
 
+    /// Numer linii (od 0) zawierającej pozycję.
+    public static func line(containing offset: Int, in text: String) -> Int {
+        let ns = text as NSString
+        var line = 0
+        for i in 0..<min(offset, ns.length) where ns.character(at: i) == 0x0A { line += 1 }
+        return line
+    }
+
     /// Początek linii `line` (od 1); poza zakresem — ostatnia linia.
     public static func offset(ofLine line: Int, in text: String) -> Int {
         let ns = text as NSString

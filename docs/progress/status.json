@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T04:48:55+02:00",
+  "heartbeat": "2026-10-23T04:53:24+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 2 / zwijanie kodu: bloki, IF, LOOP, CASE z parsera; ▸/▾ w marginesie (klik), ⌥⌘← / ⌥⌘→, Zwiń wszystko / Rozwiń wszystko, znacznik ⋯ przy zwiniętej linii, zwinięcia przesuwane przy edycji i rozwijane, gdy zaznaczenie trafia w ukryty tekst — 3 testy",
     "Etap 2 / parser strukturalny PL/SQL (ADR 0002): zarys jednostek, podprogramów z parametrami i typem zwracanym, deklaracji (zmienne, stałe, kursory, typy, wyjątki), bloków zagnieżdżonych; panel Zawartość kodu ze śledzeniem kursora, ścieżka Code Hierarchy, Przejdź do deklaracji (⌃⌥D / ⌃⌘J / Cmd+klik) — lokalnie i do obiektów bazy; zakresy zwijania; zarys pakietu 50 000 linii poniżej limitu — 7 testów",
     "PR #12 scalony (Program Window), wersja 2.2.0",
     "Etap 2 / Program Window: karty jednostek (specyfikacja, ciało…) z przejściem, F8 kompiluje jednostki po kolei w sesji kompilacji z PLSQL_WARNINGS, zatrzymanie przy błędzie i kursor w linii błędu, lista błędów i ostrzeżeń z przejściem, wskaźniki zmieniony (niebieski) / nieskompilowany (żółty); poprawka: margines numerów linii nie zamalowuje widoków nad edytorem — 2 testy (1 na bazie)",
@@ -91,8 +92,7 @@
     "ADR 0001–0005 (sterowniki z macierzą możliwości, parser, edytor TextKit 2, siatka NSTableView, okna z kartami), ARCHITECTURE.md, SECURITY.md (model zagrożeń), PLAN.md (plan Etapu 1), CLAUDE.md, THIRD_PARTY.md, GLOSSARY.md; decyzje D13–D15",
     "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
     "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
-    "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",
-    "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone"
+    "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-zwijanie.png",
+      "title": "Zwinięte bloki po Zwiń wszystko",
+      "reference": "PD-EDIT-013"
+    },
     {
       "file": "docs/progress/img/etap2-code-contents.png",
       "title": "Zawartość kodu i ścieżka Code Hierarchy w oknie programu",
