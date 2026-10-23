@@ -19,28 +19,28 @@ obiektowe, LOB, REF CURSOR, przerwanie wywołania, proxy user, zmianę hasła. S
 
 ## Macierz możliwości
 
-| Możliwość | Instant Client (ODPI-C) | Thin (OracleNIO 1.0.0-rc.4) | Uwagi / weryfikacja |
+| Możliwość | Instant Client (ODPI-C) | Thin (OracleNIO, commit 7cda9e0) | Uwagi / weryfikacja |
 |---|---|---|---|
 | Wersje baz | 11.2+ (klient 23.26 łączy się z 19c+ oficjalnie, starsze wg macierzy zgodności Oracle) | 12.1+ (12c z dodatkową konfiguracją), testowane 18–23 | ✅ 26ai na bazie testowej (IC) |
 | EZConnect | ✅ | ✅ host/port/usługa lub SID | |
-| tnsnames.ora / sqlnet.ora / TNS_ADMIN | ✅ | ❌ (brak parsera TNS) — Pelikan może rozwinąć alias z tnsnames.ora do host/port/usługa sam (proste wpisy) | do zrobienia w Etapie 1 |
+| tnsnames.ora / sqlnet.ora / TNS_ADMIN | ✅ | ✅ alias rozwijany przez Pelikana do deskryptora (TNSNames); sqlnet.ora ❌ | ✅ |
 | LDAP | ✅ | ❌ | |
-| Wallet / mTLS (ADB) | ✅ | ⚠️ TLS tak, wallet (cwallet.sso) — do weryfikacji | |
+| Wallet / mTLS (ADB) | ✅ | ❌ TCPS w Pelikanie wyłączony (komunikat „użyj Instant Client”) | test komunikatu |
 | Kerberos / uwierzytelnianie zewnętrzne | ✅ | ❌ | |
 | Tokeny OCI IAM / OAuth2 | ✅ (ODPI accessToken) | ⚠️ niesprawdzone przez autora | |
 | SYSDBA/SYSOPER… | ✅ | ⚠️ do weryfikacji | |
 | Proxy user | ✅ (`user[schema]`) | ⚠️ do weryfikacji | |
-| Zmiana wygasłego hasła | ✅ (newPassword) | ⚠️ do weryfikacji | |
+| Zmiana wygasłego hasła | ✅ (newPassword) | ❌ komunikat | |
 | DBMS_DEBUG | ✅ (wywołania PL/SQL w drugiej sesji) | ✅ w zasadzie (to tylko PL/SQL) — do weryfikacji | debuger Etap 3 |
 | DBMS_DEBUG_JDWP | ✅ (Pelikan jako serwer JDWP na porcie) | ✅ (niezależne od sterownika) | wymaga ACL po stronie bazy |
-| LOB (CLOB/BLOB/NCLOB/BFILE) | ✅ (test `lobJsonRowid`) | ✅ (do weryfikacji BFILE) | |
+| LOB (CLOB/BLOB/NCLOB/BFILE) | ✅ (test `lobJsonRowid`) | ✅ lokator, odczyt do limitu, CLOB w AL16UTF16 (test `types`) | ✅ |
 | Typy obiektowe i kolekcje | ✅ (dpiObject) | ⚠️ ograniczone — do weryfikacji | debuger/Test Window |
 | REF CURSOR, kursory zagnieżdżone | ✅ (test `refCursor`) | ✅ (do weryfikacji zagnieżdżonych) | |
 | Niejawne wyniki (DBMS_SQL.RETURN_RESULT) | ✅ (test `implicitResults`) | ⚠️ do weryfikacji | |
 | JSON, VECTOR, BOOLEAN (23ai) | ✅ | ✅ JSON/BOOLEAN, VECTOR — do weryfikacji | |
 | DBMS_OUTPUT | ✅ (PL/SQL) | ✅ (PL/SQL) | |
-| Przerwanie (break) | ✅ OCIBreak (test `breakExecution`) | ⚠️ (cancel w protokole TTC) — do weryfikacji | |
-| Pobieranie | tablicowe (fetch array 500), NUMBER jako tekst | strumieniowe z backpressure | test wydajności w Etapie 1 |
+| Przerwanie (break) | ✅ OCIBreak (test `breakExecution`) | ❌ brak w API OracleNIO — „Przerwij” wyszarzone (test) | ✅ |
+| Pobieranie | tablicowe, NUMBER jako tekst — 1 mln wierszy × 4 kol.: 1,2 s | strumieniowe; NUMBER/DATE dekodowane przez Pelikana z surowych bajtów (bez Double) — 1 mln: 4,3 s | ✅ Release |
 | Linux (CI) | ✅ Instant Client Linux | ✅ | ✅ CI |
 
 ## Konsekwencje

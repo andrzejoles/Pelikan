@@ -141,6 +141,10 @@ struct ConnectionEditorView: View {
                             Text(L10n.tr("Instant Client (zalecany)")).tag(DriverKind.instantClient)
                             Text(L10n.tr("Thin (bez Instant Client)")).tag(DriverKind.thin)
                         }
+                        if draft.driver == .thin {
+                            Text(L10n.tr("Thin nie obsługuje: TCPS/wallet, uwierzytelniania zewnętrznego, zmiany wygasłego hasła i przerwania wykonania (Przerwij). Do nich przełącz na Instant Client."))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 }
                 .formStyle(.grouped)

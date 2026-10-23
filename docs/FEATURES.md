@@ -61,7 +61,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | do zrobienia |
 | PD-CONN-026 | Automatyczne zamykanie nieużywanych połączeń; pamiętanie Recent | UG 23.1 | Preferences | 1 | P3 | — | do zrobienia |
 | PD-CONN-027 | Kill sesji okna (Session > Kill) gdy Break nie działa | UG 20.4 | Session > Kill | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-028 | Sterownik thin (OracleNIO) wybierany w połączeniu; funkcje niedostępne wyszarzone z podpowiedzią | PROMPT §4.1 | Configure > Connections | 1 | P2 | — | do zrobienia |
+| PD-CONN-028 | Sterownik thin (OracleNIO) wybierany w połączeniu; funkcje niedostępne wyszarzone z podpowiedzią | PROMPT §4.1 | Configure > Connections | 1 | P2 | — | ✅ test |
 | PD-CONN-029 | Wykrywanie Instant Client, ścieżka w ustawieniach, ekran pomocy przy braku | PROMPT §4.1 | Preferences > Oracle | 1 | P1 | — | w toku |
 | PD-CONN-030 | Tunel SSH do bazy (z DBeaver; ważne na Macu) | PROMPT §3.3 | Configure > Connections | 1 | P1 | Brak | ✅ test |
 
