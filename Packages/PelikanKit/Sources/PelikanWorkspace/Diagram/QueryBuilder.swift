@@ -134,7 +134,7 @@ public struct QueryModel: Sendable, Codable, Hashable {
     }
 
     func tableText(_ t: QBTable) -> String {
-        (format.qualifyWithOwner ? ident(t.owner) + "." : "") + ident(t.name) + " " + t.alias
+        (format.qualifyWithOwner && !t.owner.isEmpty ? ident(t.owner) + "." : "") + ident(t.name) + " " + t.alias
     }
 
     func condition(_ j: QBJoin) -> String {

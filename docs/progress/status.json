@@ -92,7 +92,9 @@
     "Etap 3 / okno testu: blok ze zmiennymi (automatyczne skanowanie, typy, IN OUT, kursory jako tabela, BOOLEAN, LOB), zmienione na żółto, DBMS_OUTPUT, stos błędu z przejściem do linii, Test z Object Browsera (notacja nazwana, wynik funkcji), pliki .tst i skrypt SQL*Plus — 3 testy (1 na bazie)",
     "PR #21–#23 scalone (edytor tabeli, edytory obiektów, pary nawiasów i bloków)",
     "PR #20 scalony (wydajność, nawigacja, menu obiektu w edytorze)",
-    "PR #19 scalony (przeglądarka różnic i porównania)"
+    "PR #19 scalony (przeglądarka różnic i porównania)",
+    "Zamknięcie Etapów 6, 7 i P po stronie Pelikana (D86); scalone PR #51 (pipeline Pro*C)",
+    "Etap 6 — domknięcie: porównanie worksetów, stan Git w projekcie, synonimy w Query Builderze (D85)"
   ],
   "next": [
     "Wstrzymane na prośbę właściciela (wyłączenie komputera). Do wznowienia: pełne testy bazy po scaleniu Etapu 7 i Etapu P, SD-NB/REP/… zrobione; pozostały SD-AUTH-001, SD-ORDS-001, debugowanie MLE, zamknięcie Etapów 6–7, Etap P faza 2 (pipeline, konsola)"

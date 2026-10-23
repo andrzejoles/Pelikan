@@ -424,23 +424,6 @@ Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 �
 Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
 z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
 
-### D61 · 2026-10-23 — Warstwa SSH jako moduł PelikanRemote (tylko macOS)
-Kod z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`) trafił do osobnego celu SPM
-`PelikanRemote` bez zależności od PelikanWorkspace — jak PelikanAgent, w `#if canImport(Darwin)`, więc Linux CI buduje
-pusty moduł. Zależności BifoldCore zastąpił `SSHError` z przypadkami strukturalnymi (negotiationFailed,
-permissionDenied, hostKeyChanged, timeout, cancelled, io, invalidName, unencodable) — teksty dla użytkownika powstaną
-w warstwie interfejsu przez `L10n.tr`. Sekrety SSH trafią do istniejącego `SecretStore` (Pęk kluczy) przy menedżerze
-połączeń; sesja dostaje sekret przez domknięcie, a do `ssh` idzie on przez kolejkę FIFO (w środowisku procesu tylko
-ścieżka kolejki, `PELIKAN_ASKPASS_FIFO`). Parser zwraca własny typ `RemoteFileEntry` zamiast `FileItem` z VFS Bifolda.
-
-### D62 · 2026-10-23 — Stop zdalnego builda i prolog środowiska
-Każde polecenie strumieniowe zaczyna się od `echo "@@PID $$"` — powłoka polecenia jest liderem sesji i grupy
-procesów na serwerze (sshd robi `setsid`). Stop kończy lokalne `ssh` (przy `-tt` zamknięcie pty wysyła SIGHUP do
-grupy), a zapasowo osobnym połączeniem wysyła `kill -TERM -<pid>`, sprawdza grupę `kill -0` i po 5 s `kill -KILL`;
-znacznik jest odcinany z wyjścia. Prolog środowiska ustawia zmienne w dwóch krokach (`NAZWA='wartość'; export NAZWA;`)
-z wartościami dosłownymi (bez rozwijania `$PATH`) — konfiguracja celu podaje pełne wartości; nazwy tylko
-`[A-Za-z_][A-Za-z0-9_]*`. Na AIX 6.1 (ksh88, stary OpenSSH) zachowanie Stop wymaga potwierdzenia przez właściciela.
-
 ### D55 · 2026-10-23 — Plik nie zmienia kodowania po cichu
 Zapis znaku spoza kodowania pliku (np. „ ” w ISO-8859-2) jest blokowany z linią, kolumną i znakiem — wcześniej plik
 przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmiana kodowania tylko jawnie (Plik › Kodowanie
@@ -486,6 +469,23 @@ uprawnień zamiast błędu (użytkownik bez SELECT_CATALOG_ROLE widzi to, do cze
 blokada konta) to komendy z potwierdzeniem i strażnikiem zmian. Task Monitor to wspólna lista `WorkspaceTaskCenter`
 w Workspace (nazwa bez kolizji z `BackgroundTask` SwiftUI); długie operacje uruchamia się przez `ws.tasks.run`.
 
+### D61 · 2026-10-23 — Warstwa SSH jako moduł PelikanRemote (tylko macOS)
+Kod z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`) trafił do osobnego celu SPM
+`PelikanRemote` bez zależności od PelikanWorkspace — jak PelikanAgent, w `#if canImport(Darwin)`, więc Linux CI buduje
+pusty moduł. Zależności BifoldCore zastąpił `SSHError` z przypadkami strukturalnymi (negotiationFailed,
+permissionDenied, hostKeyChanged, timeout, cancelled, io, invalidName, unencodable) — teksty dla użytkownika powstaną
+w warstwie interfejsu przez `L10n.tr`. Sekrety SSH trafią do istniejącego `SecretStore` (Pęk kluczy) przy menedżerze
+połączeń; sesja dostaje sekret przez domknięcie, a do `ssh` idzie on przez kolejkę FIFO (w środowisku procesu tylko
+ścieżka kolejki, `PELIKAN_ASKPASS_FIFO`). Parser zwraca własny typ `RemoteFileEntry` zamiast `FileItem` z VFS Bifolda.
+
+### D62 · 2026-10-23 — Stop zdalnego builda i prolog środowiska
+Każde polecenie strumieniowe zaczyna się od `echo "@@PID $$"` — powłoka polecenia jest liderem sesji i grupy
+procesów na serwerze (sshd robi `setsid`). Stop kończy lokalne `ssh` (przy `-tt` zamknięcie pty wysyła SIGHUP do
+grupy), a zapasowo osobnym połączeniem wysyła `kill -TERM -<pid>`, sprawdza grupę `kill -0` i po 5 s `kill -KILL`;
+znacznik jest odcinany z wyjścia. Prolog środowiska ustawia zmienne w dwóch krokach (`NAZWA='wartość'; export NAZWA;`)
+z wartościami dosłownymi (bez rozwijania `$PATH`) — konfiguracja celu podaje pełne wartości; nazwy tylko
+`[A-Za-z_][A-Za-z0-9_]*`. Na AIX 6.1 (ksh88, stary OpenSSH) zachowanie Stop wymaga potwierdzenia przez właściciela.
+
 ### D63 · 2026-10-23 — Funkcje Diagnostics/Tuning Pack za deklaracją licencji
 AWR, ASH, ADDM (Diagnostics Pack), SQL Monitor i SQL Tuning Advisor (Tuning Pack) działają tylko wtedy, gdy parametr
 bazy CONTROL_MANAGEMENT_PACK_ACCESS na nie pozwala i użytkownik zadeklarował licencję dla połączenia — przy pierwszym
@@ -500,6 +500,7 @@ sam. Słownik 23ai: `ALL_MLE_MODULES.MODULE_OWNER`, `ALL_MLE_ENVS.ENV_OWNER`, fl
 Debugowanie po wykonaniu: DBMS_MLE.ENABLE_DEBUGGING ze specyfikacją JSON (nazwa modułu kwalifikowana schematem,
 migawka albo obserwacja), kod wywołujący w jednym bloku z wyłączeniem debugowania także przy wyjątku, wynik z
 PARSE_DEBUG_OUTPUT jako lista trafień. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).
+
 ### D65 · 2026-10-23 — Analiza kodu w czasie pisania bez łączenia z bazą; agent tylko inspekcje
 Rozwiązywanie nazw (DG-RES-001) i inspekcje (DG-INSP-001) liczy `Workspace.analyzeCode` z opóźnieniem po zmianie
 tekstu. Inspekcje są lokalne (lekser, zarys PL/SQL). Nazwy sprawdza się w słowniku tylko wtedy, gdy połączenie okna
@@ -539,6 +540,7 @@ okno nie pyta o zapis. Wyniki zapytań nie są zachowywane.
 Wyróżnienie zmian w siatce (DG-GRID-001) korzysta z istniejącego stanu edycji (`changed`, `inserted`, `deleted`).
 Komórka zmieniona i przywrócona do wartości pierwotnej nie jest już zmianą (znacznik i licznik). Nagłówek wiersza
 pokazuje `+`, `~`, `−` z kolorem tła; nawigacja po zmianach i cofnięcie zmian wybranych wierszy to komendy rejestru.
+
 ### D71 · 2026-10-23 — Notatnik SQL jako plik JSON z wynikami
 Notatnik (`.sqlnb`) to JSON z komórkami SQL/PL/SQL i Markdown; wynik komórki (kolumny, typy, do 200 wierszy jako
 tekst, komunikaty, DBMS_OUTPUT, błąd, czas) i opcjonalny wykres zapisują się w pliku, więc notatnik otwiera się z
@@ -591,6 +593,7 @@ Zadania lokalne (DB-TASK-001) uruchamia planista w aplikacji (co 30 s sprawdza t
 trwała zmiana konfiguracji systemu (PROMPT §13). Definicje (`Tasks/tasks.json`) zawierają nazwę połączenia, nigdy
 hasła; hasło pochodzi z Pęku kluczy w chwili uruchomienia. Stan i dzienniki osobno (`Tasks/state.json`,
 `Tasks/logs/`). Skrypt bez zaznaczonego COMMIT jest wycofywany; z COMMIT — przez strażnika zmian.
+
 ### D80 · 2026-10-23 — Cele SSH: osobny moduł, plik bez sekretów, osobna usługa Pęku kluczy
 Model `PelikanSSHTarget`, magazyn celów, „Testuj” i parsery błędów są w nowym module `PelikanProC` (zależy od
 `PelikanWorkspace` i `PelikanRemote`), żeby `PelikanWorkspace` nie zależał od warstwy SSH, która działa tylko na macOS;
@@ -647,6 +650,23 @@ więc brak którejkolwiek nie zostawia `bin` w połowie. Wycofanie z kopii rozpa
 binarki (zachowanie praw bez `stat`). Lokalne repo projektu = katalog otwartego projektu Pelikana; remote i gałąź
 lokalnie mają te same nazwy co na serwerze. Przed PROD Pelikan sprawdza, czy commit był już z powodzeniem wdrożony na
 celu UAT z tego samego folderu drzewa celów. Build próbny (D54 p.5) — nadal poza zakresem.
+
+### D85 · 2026-10-23 — Synonimy w Query Builderze, porównanie worksetów, Git w projekcie
+Query Builder rozwija synonim (prywatny, PUBLIC, łańcuch do 8 poziomów) do tabeli lub widoku tylko po to, żeby pobrać
+kolumny — w SQL zostaje nazwa synonimu, a synonim PUBLIC jest bez schematu. Złączeń z kluczy obcych dla synonimów nie
+dodaje sam (klucze opisują tabelę, nie synonim) — złączenie ręczne. Porównanie worksetów zestawia tekst opisujący okna
+(typ, nazwa, stan, treść okna albo pliku) przeglądarką różnic. Stan Git projektu liczony poza wątkiem głównym przy
+otwarciu widoku i na żądanie (bez cyklicznego odpytywania).
+
+### D86 · 2026-10-23 — Zamknięcie Etapów 6, 7 i P (po stronie Pelikana)
+Wszystkie wiersze Etapów 6 i 7 mają test albo są pominięte decyzją. Częściowe zostają jawnie w macierzy:
+PD-DIAG-002 (punkty łamania linii zapisywane i rysowane, bez edycji myszą), PD-QB-001 (bez podzapytań), SD-AUTH-001
+(Entra ID bez próby na Azure — brak konta, PROMPT §13) i SD-ORDS-001 (baza testowa bez ORDS). Etap P: warstwa SSH,
+cele SSH, parsery, pipeline wdrożenia, konsola i lokalny git przetestowane na lokalnym `sshd` (ksh93 z macOS);
+akceptacja na AIX 6.1 / ksh88 i próbki komunikatów proc/xlc — właściciel (D54). Zawieszanie testów SSH w CI usunięte
+(sshd testowy bez dziedziczenia stdout/stderr, zestawy SSH w CI osobno z limitem i diagnostyką). Okna nowe w tych
+etapach nie mają zrzutów (D30) — do zrobienia w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
+Szkic wydania po scaleniu zamknięcia.
 
 ### D87 · 2026-10-23 — Klucze tłumaczeń odtwarzalne ze źródeł; język przez AppleLanguages
 `L10n.tr` przyjmuje własny typ `L10n.Key` (interpolacja) zamiast `String.LocalizationValue`: Xcode nie wyciągał tekstów

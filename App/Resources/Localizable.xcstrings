@@ -11285,6 +11285,34 @@
         }
       }
     },
+    "Drugi workset (domyślnie bieżące okna)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Second workset (default: current windows)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zweites Workset (Standard: aktuelle Fenster)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segundo workset (por defecto, las ventanas actuales)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другий workset (типово — поточні вікна)"
+          }
+        }
+      }
+    },
     "Drukuj diagram…" : {
       "localizations" : {
         "en" : {
@@ -31837,6 +31865,34 @@
         }
       }
     },
+    "Odśwież stan Git" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh Git status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git-Status aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar estado de Git"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити стан Git"
+          }
+        }
+      }
+    },
     "Odświeża kolumny i klucze obce obiektów diagramu ze słownika bazy; zgłasza obiekty, których już nie ma." : {
       "localizations" : {
         "en" : {
@@ -39397,6 +39453,34 @@
         }
       }
     },
+    "Porównaj worksety…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare Worksets…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Worksets vergleichen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar worksets…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти workset-и…"
+          }
+        }
+      }
+    },
     "Porównaj wyniki" : {
       "localizations" : {
         "en" : {
@@ -39617,6 +39701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Version vergleichen"
+          }
+        }
+      }
+    },
+    "Porównaj z worksetem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with workset"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Workset vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con workset"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з workset"
           }
         }
       }
@@ -40065,6 +40177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergleicht die Einheiten des Program Window mit der Quelle dieser Objekte in der Datenbank (ALL_SOURCE)."
+          }
+        }
+      }
+    },
+    "Porównuje okna i ich treść dwóch worksetów albo zapisanego workseta z bieżącymi oknami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the windows and their contents of two worksets, or of a saved workset with the current windows."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht die Fenster und deren Inhalt zweier Worksets oder eines gespeicherten Worksets mit den aktuellen Fenstern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara las ventanas y su contenido de dos worksets, o de un workset guardado con las ventanas actuales."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює вікна та їхній вміст двох workset-ів або збереженого workset із поточними вікнами."
           }
         }
       }
@@ -59193,6 +59333,34 @@
         }
       }
     },
+    "Workset do porównania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workset to compare"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu vergleichendes Workset"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workset que comparar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workset для порівняння"
+          }
+        }
+      }
+    },
     "Workset nie był jeszcze zapisany" : {
       "localizations" : {
         "en" : {
@@ -72745,6 +72913,34 @@
         }
       }
     },
+    "bez nazwy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "untitled"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ohne Namen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sin nombre"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "без назви"
+          }
+        }
+      }
+    },
     "bez oczekiwania" : {
       "localizations" : {
         "en" : {
@@ -72825,6 +73021,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "unverändert"
+          }
+        }
+      }
+    },
+    "bieżące okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "current windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aktuelle Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ventanas actuales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "поточні вікна"
           }
         }
       }

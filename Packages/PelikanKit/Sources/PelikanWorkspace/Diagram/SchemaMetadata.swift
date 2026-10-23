@@ -38,6 +38,26 @@ public protocol SchemaMetadataSource: Sendable {
     func foreignKeys(owner: String, table: String) async throws -> [ForeignKey]
     /// Obiekty, od których obiekt zależy (ALL_DEPENDENCIES), bez obiektów SYS.
     func references(owner: String, name: String) async throws -> [DBObject]
+    /// Obiekt wskazywany przez synonim (prywatny albo PUBLIC); nil — nie synonim albo cel niedostępny.
+    func synonymTarget(owner: String, name: String) async throws -> DBObject?
+}
+
+extension SchemaMetadataSource {
+    public func synonymTarget(owner: String, name: String) async throws -> DBObject? { nil }
+
+    /// Tabela dla Query Buildera (PD-QB-001): nazwa użyta w SQL (synonim zostaje synonimem; synonim PUBLIC — bez
+    /// schematu) i obiekt, z którego brane są kolumny (cel synonimu, także łańcuch synonimów).
+    public func queryTable(_ raw: String) async throws -> (owner: String, name: String, target: DBObject)? {
+        guard let o = try await resolve(raw) else { return nil }
+        guard o.type == .synonym else { return (o.owner, o.name, o) }
+        var target = o
+        for _ in 0..<8 {
+            guard target.type == .synonym, let next = try await synonymTarget(owner: target.owner, name: target.name) else { break }
+            target = next
+        }
+        guard target.type != .synonym else { return nil }
+        return (o.owner == "PUBLIC" ? "" : o.owner, o.name, target)
+    }
 }
 
 /// Metadane ze słownika bazy (ALL_TAB_COLUMNS, ALL_CONSTRAINTS, ALL_CONS_COLUMNS, ALL_DEPENDENCIES).
@@ -58,6 +78,23 @@ public struct SessionSchemaMetadata: SchemaMetadataSource {
                and object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW', 'PACKAGE', 'PROCEDURE', 'FUNCTION', 'TYPE', 'SEQUENCE', 'SYNONYM', 'TRIGGER')
              order by decode(object_type, 'TABLE', 1, 'VIEW', 2, 3)
             """, binds: [bind("n", name), bind("o", owner)], limit: 1)
+        if let r = rows.first, let o = r[0].displayText, let n = r[1].displayText, let t = r[2].displayText.flatMap(DBObjectType.init(rawValue:)) {
+            return DBObject(owner: o, name: n, type: t)
+        }
+        // Bez schematu: synonim PUBLIC (np. tabele słownika i aplikacji udostępnione publicznie).
+        guard owner == nil, try await session.scalar("select count(*) from all_synonyms where owner = 'PUBLIC' and synonym_name = :n",
+                                                     binds: [bind("n", name)]) != "0" else { return nil }
+        return DBObject(owner: "PUBLIC", name: name, type: .synonym)
+    }
+
+    public func synonymTarget(owner: String, name: String) async throws -> DBObject? {
+        let (_, rows) = try await session.queryAll("""
+            select o.owner, o.object_name, o.object_type from all_synonyms s
+              join all_objects o on o.owner = s.table_owner and o.object_name = s.table_name
+             where s.owner = :o and s.synonym_name = :n and s.db_link is null
+               and o.object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW', 'SYNONYM')
+             order by decode(o.object_type, 'TABLE', 1, 'VIEW', 2, 3)
+            """, binds: [bind("o", owner), bind("n", name)], limit: 1)
         guard let r = rows.first, let o = r[0].displayText, let n = r[1].displayText, let t = r[2].displayText.flatMap(DBObjectType.init(rawValue:)) else { return nil }
         return DBObject(owner: o, name: n, type: t)
     }

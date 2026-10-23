@@ -153,6 +153,31 @@ struct GitRepositoryTests {
         #expect(log.count == 1 && log[0].subject == "Pierwszy skrypt — zażółć" && log[0].author == "Test")
         #expect(throws: (any Error).self) { try repo.commit(message: "  ") }
     }
+
+    @Test("Stan Git plików projektu: gałąź, zmieniony, nieśledzony, bez zmian; projekt poza repozytorium — nil")
+    @MainActor func projectStatus() throws {
+        let t = try TempDirectory()
+        for args in [["init", "-q", "-b", "main"], ["config", "user.name", "Test"], ["config", "user.email", "test@example.invalid"],
+                     ["config", "commit.gpgsign", "false"]] {
+            try GitRepository.run(args, in: t.url)
+        }
+        let a = try t.file("src/a.sql", "select 1 from dual;\n")
+        let b = try t.file("src/b.sql", "select 2 from dual;\n")
+        let repo = try #require(GitRepository.discover(for: a))
+        try repo.add([a, b])
+        _ = try repo.commit(message: "start")
+        try Data("select 3 from dual;\n".utf8).write(to: b)
+        _ = try t.file("src/c.sql", "nowy")
+        var p = Project(name: "p")
+        p.items = [.file("src/a.sql"), .file("src/b.sql"), .file("src/c.sql"), .note("n")]
+        let projectURL = t.url.appendingPathComponent("p.pelikanproj")
+        let s = try #require(ProjectEngine.gitStatus(of: p, projectURL: projectURL))
+        #expect(s.branch == "main")
+        #expect(s.items[p.items[0].id] == .unmodified && s.items[p.items[1].id] == .modified && s.items[p.items[2].id] == .untracked)
+        #expect(s.items[p.items[3].id] == nil)
+        let outside = try TempDirectory()
+        #expect(ProjectEngine.gitStatus(of: p, projectURL: outside.url.appendingPathComponent("p.pelikanproj")) == nil)
+    }
 }
 
 @MainActor
@@ -187,6 +212,28 @@ struct WorksetTests {
         try await ws.invoke("workset.delete", CommandArguments(["name": "Raporty"]))
         #expect(!ws.worksets.names.contains("Raporty"))
         await #expect(throws: (any Error).self) { try await ws.invoke("workset.new", CommandArguments(["name": "../x"])) }
+    }
+
+    @Test("Porównanie worksetów: z bieżącymi oknami i dwóch zapisanych; treść pliku z dysku")
+    func compare() async throws {
+        let t = try TempDirectory()
+        let ws = Workspace(dataDirectory: t.url)
+        let f = try t.file("a.sql", "select 1 from dual;")
+        try ws.openFile(f)
+        _ = ws.newDocument(.sql, text: "select 'tylko w domyślnym' from dual")
+        try ws.saveCurrentWorkset()
+        try await ws.invoke("workset.new", CommandArguments(["name": "Drugi"]))
+        try ws.openFile(f)
+        _ = ws.newDocument(.sql, text: "select 'tylko w drugim' from dual")
+        let current = try await ws.invoke("workset.compare", CommandArguments(["name": .string(WorksetStore.defaultName)]))
+        guard case .string(let diff)? = current.value else { Issue.record("brak różnicy"); return }
+        #expect(diff.contains("-select 'tylko w drugim' from dual") && diff.contains("+select 'tylko w domyślnym' from dual"))
+        #expect(!diff.contains("-select 1 from dual;"))
+        try ws.saveCurrentWorkset()
+        let saved = try await ws.invoke("workset.compare", CommandArguments(["name": "Drugi", "with": "Drugi"]))
+        #expect(saved.message == "Brak różnic")
+        let d = try #require(try ws.worksets.load("Drugi"))
+        #expect(d.comparisonText().contains("=== [sql] a.sql\nselect 1 from dual;"))
     }
 
     @Test("Brakujący plik pomijany; pliki workseta z uprawnieniami 0600; układ okna zapisany i odczytany")
