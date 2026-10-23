@@ -60,6 +60,12 @@ final class FakePrompter: ConnectionPrompter {
         return (a.0, a.1)
     }
     func askNewPassword(for connection: ConnectionDefinition, message: String) async -> String? { newPassword }
+    var ownerAnswers: [Bool] = []
+    var ownerAsked = 0
+    func authenticateOwner(reason: String) async -> Bool {
+        ownerAsked += 1
+        return ownerAnswers.isEmpty ? false : ownerAnswers.removeFirst()
+    }
 }
 
 @MainActor
@@ -315,5 +321,28 @@ struct ConnectionCheckTests {
         #expect(ws.sessions.openSessionCount == 0)
         _ = try await ws.sessions.session(key)
         #expect(ws.sessions.openSessionCount == 1)
+    }
+
+    @Test("Ochrona zapisanych haseł: bez potwierdzenia właściciela hasło z Pęku kluczy nie jest użyte; po potwierdzeniu — raz na sesję aplikacji")
+    func ownerAuthentication() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"))
+        try ws.connections.upsert(def, password: "good")
+        let prompter = FakePrompter(answers: [])
+        ws.sessions.prompter = prompter
+        ws.settings.requireOwnerForSavedPasswords = true
+        #expect(ws.sessions.status(of: def.id) == .passwordKnown)
+        await #expect(throws: CommandError.cancelledByUser) { _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)) }
+        #expect(driver.attempts.withLock { $0.isEmpty } && prompter.ownerAsked == 1 && prompter.asked == 0)
+        prompter.ownerAnswers = [true]
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .compile))
+        #expect(prompter.ownerAsked == 2 && driver.attempts.withLock { $0.count } == 2)
+        ws.settings.requireOwnerForSavedPasswords = false
+        let other = ConnectionDefinition(name: "o", target: ConnectionTarget(user: "u", connectString: "h/s2"))
+        try ws.connections.upsert(other, password: "good")
+        _ = try await ws.sessions.session(SessionKey(connectionID: other.id, purpose: .main))
+        #expect(prompter.ownerAsked == 2)
     }
 }

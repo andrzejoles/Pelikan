@@ -40,8 +40,8 @@ public enum TextFileCodec {
             text = String(data: data.dropFirst(2), encoding: .utf16BigEndian) ?? ""
         } else if let s = String(data: data, encoding: .utf8) {
             text = s
-        } else if let s = String(data: data, encoding: .windowsCP1250) {
-            f.encoding = .windowsCP1250
+        } else if let enc = guessSingleByte(data), let s = String(data: data, encoding: enc) {
+            f.encoding = enc
             text = s
         } else {
             f.encoding = .isoLatin1
@@ -57,7 +57,51 @@ public enum TextFileCodec {
         return (text, f)
     }
 
-    /// Dane do zapisu; nil — tekst zawiera znaki spoza kodowania pliku (trzeba zapisać jako UTF-8).
+    /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8: bajty 0x80–0x9F to znaki Windows-1250 (w ISO-8859-2 są
+    /// tam znaki sterujące); polskie litery na pozycjach ISO-8859-2 (ą ś ź Ą Ś Ź = B1 B6 BC A1 A6 AC) bez 0x80–0x9F →
+    /// ISO-8859-2 (pliki z AIX/Unix); w innym razie Windows-1250 (pliki z PL/SQL Developer).
+    public static func guessSingleByte(_ data: Data) -> String.Encoding? {
+        var c1 = false, latin2 = false
+        for b in data {
+            if (0x80...0x9F).contains(b) { c1 = true; break }
+            if [0xB1, 0xB6, 0xBC, 0xA1, 0xA6, 0xAC].contains(b) { latin2 = true }
+        }
+        return c1 ? .windowsCP1250 : latin2 ? .isoLatin2 : .windowsCP1250
+    }
+
+    /// Kodowania wybieralne dla plików i projektów.
+    public static let encodingNames = ["UTF-8", "ISO-8859-2", "Windows-1250"]
+
+    public static func encoding(named name: String) -> String.Encoding? {
+        switch name.uppercased() {
+        case "UTF-8", "UTF8": .utf8
+        case "ISO-8859-2", "LATIN2", "ISO8859-2": .isoLatin2
+        case "WINDOWS-1250", "CP1250": .windowsCP1250
+        default: nil
+        }
+    }
+
+    /// Kodowanie istniejących plików: pierwszy plik spoza UTF-8 rozstrzyga (ISO-8859-2 albo Windows-1250), inaczej UTF-8.
+    public static func detectEncoding(of files: [URL]) -> String {
+        for f in files {
+            guard let d = try? Data(contentsOf: f), String(data: d, encoding: .utf8) == nil else { continue }
+            return guessSingleByte(d) == .isoLatin2 ? "ISO-8859-2" : "Windows-1250"
+        }
+        return "UTF-8"
+    }
+
+    /// Pierwszy znak, którego nie da się zapisać w kodowaniu: linia i kolumna (od 1) oraz znak.
+    public static func firstUnencodable(_ text: String, encoding: String.Encoding) -> (line: Int, column: Int, character: Character)? {
+        var line = 1, column = 1
+        for ch in text {
+            if ch == "\n" { line += 1; column = 1; continue }
+            if String(ch).data(using: encoding, allowLossyConversion: false) == nil { return (line, column, ch) }
+            column += 1
+        }
+        return nil
+    }
+
+    /// Dane do zapisu; nil — tekst zawiera znaki spoza kodowania pliku.
     public static func encode(_ text: String, format f: TextFileFormat) -> Data? {
         let t = f.lineEnding == .lf ? text : text.replacingOccurrences(of: "\n", with: f.lineEnding.rawValue)
         guard var data = t.data(using: f.encoding, allowLossyConversion: false) else { return nil }
@@ -70,6 +114,18 @@ public enum TextFileCodec {
             }
         }
         return data
+    }
+}
+
+/// Błąd zapisu pliku tekstowego.
+public enum TextFileError: Error, LocalizedError, Equatable {
+    case unencodable(line: Int, column: Int, character: String, encoding: String)
+
+    public var errorDescription: String? {
+        switch self {
+        case let .unencodable(line, column, character, encoding):
+            L10n.tr("Znak „\(character)” (linia \(line), kolumna \(column)) nie istnieje w kodowaniu \(encoding) — zapis zablokowany. Zmień znak albo jawnie zmień kodowanie pliku (Plik › Kodowanie pliku).")
+        }
     }
 }
 
@@ -97,7 +153,13 @@ extension Workspace {
             return open
         }
         let data = try Data(contentsOf: std)
-        let (text, format) = TextFileCodec.decode(data)
+        var (text, format) = TextFileCodec.decode(data)
+        // Plik projektu bez BOM: kodowanie ustawione w projekcie (np. ISO-8859-2 dla źródeł Pro*C z AIX), żeby nie
+        // przekodował się po cichu przy pierwszej edycji (D55).
+        if let enc = projectEncoding(for: std), !format.hasBOM, enc != format.encoding, let s = String(data: data, encoding: enc) {
+            format.encoding = enc
+            text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
+        }
         // Puste, niezmienione okno SQL zastępujemy otwieranym plikiem (jak przy starcie aplikacji).
         if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == (kind ?? DocumentKind.forFile(std)) {
             close(active.id)
@@ -128,6 +190,13 @@ extension Workspace {
         return doc
     }
 
+    /// Kodowanie z opcji otwartego projektu dla pliku w jego katalogu (albo nil).
+    func projectEncoding(for url: URL) -> String.Encoding? {
+        guard let p = project, let pu = projectURL, let name = p.options.encoding, let enc = TextFileCodec.encoding(named: name) else { return nil }
+        let base = pu.deletingLastPathComponent().standardizedFileURL.path + "/"
+        return url.standardizedFileURL.path.hasPrefix(base) ? enc : nil
+    }
+
     /// Zapis dokumentu do pliku (w formacie, w jakim go otwarto; znaki spoza kodowania — UTF-8).
     public func save(_ doc: Document, to url: URL) throws {
         if settings.beautifier.beforeSave { autoBeautify(doc) }
@@ -136,7 +205,7 @@ extension Workspace {
            doc.text.trimmingCharacters(in: .whitespacesAndNewlines).last != "/" {
             doc.text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines) + "\n/\n"
         }
-        var format = doc.fileFormat
+        let format = doc.fileFormat
         if doc.kind == .report {
             var def = doc.report
             def.sql = doc.text
@@ -160,13 +229,14 @@ extension Workspace {
             rememberRecentFile(url)
             return
         }
-        var data = TextFileCodec.encode(doc.text, format: format)
-        if data == nil {
-            format.encoding = .utf8
-            format.hasBOM = false
-            data = TextFileCodec.encode(doc.text, format: format)
+        // Plik nie zmienia po cichu kodowania (np. ISO-8859-2 → UTF-8): znak spoza kodowania blokuje zapis z dokładnym
+        // miejscem (Pro*C, D55); zmiana kodowania tylko jawnie (Plik › Kodowanie pliku).
+        guard let data = TextFileCodec.encode(doc.text, format: format) else {
+            let bad = TextFileCodec.firstUnencodable(doc.text, encoding: format.encoding)
+            throw TextFileError.unencodable(line: bad?.line ?? 0, column: bad?.column ?? 0, character: bad.map { String($0.character) } ?? "?",
+                                            encoding: format.displayName.components(separatedBy: " ").first ?? "")
         }
-        try data!.write(to: url, options: .atomic)
+        try data.write(to: url, options: .atomic)
         doc.fileURL = url.standardizedFileURL
         doc.fileFormat = format
         doc.isModified = false

@@ -1,4 +1,5 @@
 import AppKit
+import LocalAuthentication
 import PelikanDB
 import PelikanWorkspace
 import SwiftUI
@@ -156,6 +157,15 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Hasła połączeń")) {
+                Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))
+                    .disabled(!Self.ownerAuthenticationAvailable && !workspace.settings.requireOwnerForSavedPasswords)
+                Text(L10n.tr("Hasła są w Pęku kluczy (pęk logowania, bez synchronizacji z iCloud). Po włączeniu Pelikan pyta o potwierdzenie raz na połączenie w trakcie działania aplikacji — także gdy połączenia użyje agent. Hasła podane bez „Zapamiętaj” zostają tylko w pamięci."))
+                    .font(.caption).foregroundStyle(.secondary)
+                if !Self.ownerAuthenticationAvailable {
+                    Text(L10n.tr("Ten Mac nie ma skonfigurowanego Touch ID ani hasła logowania do potwierdzania.")).font(.caption).foregroundStyle(.orange)
+                }
+            }
             Section(L10n.tr("Oracle Net i Oracle Wallet")) {
                 directoryRow(L10n.tr("Konfiguracja Oracle Net (tnsnames.ora, sqlnet.ora)"), \.oracleNetDirectory,
                              placeholder: L10n.tr("TNS_ADMIN albo domyślne miejsca"))
@@ -180,6 +190,11 @@ struct OraclePane: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    static var ownerAuthenticationAvailable: Bool {
+        var error: NSError?
+        return LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
     }
 
     private func directoryRow(_ title: String, _ key: WritableKeyPath<PelikanWorkspace.Settings, String?>, placeholder: String) -> some View {

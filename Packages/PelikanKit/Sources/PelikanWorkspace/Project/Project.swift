@@ -39,6 +39,8 @@ public struct ProjectOptions: Sendable, Codable, Hashable {
     public var connection: String?
     public var haltOnFirstError = true
     public var beautifyOnBuild = false
+    /// Kodowanie plików projektu bez BOM (np. „ISO-8859-2” dla źródeł Pro*C); nil — wykrywanie przy otwarciu.
+    public var encoding: String?
     public init() {}
 }
 

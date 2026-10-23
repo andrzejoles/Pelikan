@@ -85,6 +85,16 @@ public final class ConnectionStore {
     }
 
     /// Hasło: z Pęku kluczy (savePassword) albo podane wcześniej w tej sesji. nil = trzeba zapytać.
+    /// Czy jest hasło do użycia (w pamięci sesji albo zapisane w Pęku kluczy) — bez odczytu zapisanego sekretu.
+    public func hasStoredPassword(for id: UUID) -> Bool {
+        if sessionPasswords[id] != nil { return true }
+        guard let def = connection(id), def.savePassword else { return false }
+        return (try? secrets.hasPassword(for: id.uuidString)) ?? false
+    }
+
+    /// Hasło tylko z pamięci sesji (bez Pęku kluczy).
+    public func sessionPassword(for id: UUID) -> String? { sessionPasswords[id] }
+
     public func password(for id: UUID) -> String? {
         if let p = sessionPasswords[id] { return p }
         guard let def = connection(id), def.savePassword else { return nil }

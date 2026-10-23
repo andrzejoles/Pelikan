@@ -519,7 +519,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | ✅ test |
-| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ⚠️ częściowo (Pęk kluczy; Touch ID w kodzie bez przełącznika w UI) |
+| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ✅ test (Pęk kluczy logowania, usługa z bundle id, bez iCloud; przełącznik „Wymagaj Touch ID albo hasła Maca” — potwierdzenie przed użyciem zapisanego hasła raz na połączenie; dialog systemowy bez zrzutu — D30) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
 | MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
 | MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
@@ -539,3 +539,4 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PC-SSH-006 | Stdin procesu: `/dev/null`, dane, plik (`cat > plik`, `sh -s`) | zadanie Pro*C | — | P | P1 | Brak | ✅ test |
 | PC-SSH-007 | Stop: `ssh -tt` (SIGHUP dla grupy procesów) + zapasowe `kill -TERM -<pid>` po znaczniku `@@PID`, po 5 s `-KILL` | zadanie Pro*C | — | P | P1 | Brak | ✅ test (lokalny sshd; na AIX 6.1 do potwierdzenia) |
 | PC-SSH-008 | Prolog środowiska zdalnego `NAZWA='wartość'; export NAZWA;` (ksh88) | zadanie Pro*C | — | P | P1 | Brak | ✅ test |
+| PC-ENC-001 | Kodowanie plików projektu (UTF-8 / ISO-8859-2 / Windows-1250), wykrywanie z istniejących plików, blokada zapisu niekodowalnych znaków z linią i kolumną, jawna zmiana kodowania | zadanie-pelikan-proc-ssh.md (Rozbudowa p. 6) | File > Kodowanie pliku | P | P1 | Brak | ✅ test |

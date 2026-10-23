@@ -1,4 +1,5 @@
 import AppKit
+import LocalAuthentication
 import PelikanWorkspace
 
 /// Pytania menedżera sesji: hasło (z „Zapamiętaj”) i nowe hasło po ORA-28001.
@@ -24,6 +25,14 @@ final class ConnectionPrompts: ConnectionPrompter {
         let response = await run(alert)
         guard response == .alertFirstButtonReturn else { return nil }
         return (field.stringValue, remember.state == .on)
+    }
+
+    /// Touch ID albo hasło Maca (LocalAuthentication) przed użyciem hasła z Pęku kluczy (D56).
+    func authenticateOwner(reason: String) async -> Bool {
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { return false }
+        return (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)) ?? false
     }
 
     func askNewPassword(for connection: ConnectionDefinition, message: String) async -> String? {
