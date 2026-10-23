@@ -156,10 +156,10 @@ extension Workspace {
             text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
         }
         // Puste, niezmienione okno SQL zastępujemy otwieranym plikiem (jak przy starcie aplikacji).
-        if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == (kind ?? DocumentKind.forFile(std)) {
+        if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == (kind ?? documentKind(for: std)) {
             close(active.id)
         }
-        let docKind = kind ?? DocumentKind.forFile(std)
+        let docKind = kind ?? documentKind(for: std)
         let doc: Document
         if docKind == .report {
             // Raport Pelikana: definicja JSON z zapytaniem (PD-REP-004).

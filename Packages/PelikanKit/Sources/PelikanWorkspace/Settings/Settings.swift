@@ -95,6 +95,13 @@ public struct Settings: Sendable, Codable, Hashable {
     // UI — Editor
     public var editorFontName = "SF Mono"
     public var editorFontSize: Double = 13
+    /// Czcionka Object Browsera (PD-PREF-005); 0 — systemowa. Czcionka siatki: `gridFontSize` (PD-GRID-025).
+    public var browserFontSize: Double = 0
+    /// Katalogi startowe okien wyboru pliku (PD-PREF-006): sql, program, test, report, macro, template, project, workset.
+    public var startDirectories: [String: String] = [:]
+    /// Dodatkowe rozszerzenia plików otwieranych jako okno programu albo testu (PD-PREF-006).
+    public var programExtensions: [String] = []
+    public var testExtensions: [String] = []
     public var tabSize = 2
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
@@ -256,6 +263,10 @@ public struct Settings: Sendable, Codable, Hashable {
         timestampFormat = v(.timestampFormat, timestampFormat)
         editorFontName = v(.editorFontName, editorFontName)
         editorFontSize = v(.editorFontSize, editorFontSize)
+        browserFontSize = v(.browserFontSize, browserFontSize)
+        startDirectories = v(.startDirectories, startDirectories)
+        programExtensions = v(.programExtensions, programExtensions)
+        testExtensions = v(.testExtensions, testExtensions)
         tabSize = v(.tabSize, tabSize)
         useTabCharacter = v(.useTabCharacter, useTabCharacter)
         shortcutProfile = v(.shortcutProfile, shortcutProfile)
