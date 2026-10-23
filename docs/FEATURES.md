@@ -200,8 +200,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |
 | PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | ⚠️ częściowo (bloki, IF, LOOP, CASE; ▸/▾ w marginesie, ⌥⌘←/→, Zwiń/Rozwiń wszystko; bez podglądu zwiniętego) ✅ test 👁 |
 | PD-EDIT-014 | Split editing (dwa widoki tego samego źródła, zakładki zsynchronizowane) | UG 25.18, NF16 | Edytor | 2 | P2 | — | do zrobienia |
-| PD-EDIT-015 | Makra: nagrywanie F11, odtwarzanie F12, Repeat Play, biblioteka makr z klawiszami | UG 25.11, NF15 | Edit > Macro | 6 | P2 | Brak | do zrobienia |
-| PD-EDIT-016 | Special Copy (formaty .copy dla języków) i Paste from host language | UG 25.6–25.7, NF10 | Edit | 6 | P3 | Pełny | do zrobienia |
+| PD-EDIT-015 | Makra: nagrywanie F11, odtwarzanie F12, Repeat Play, biblioteka makr z klawiszami | UG 25.11, NF15 | Edit > Macro | 6 | P2 | Brak | ✅ test (F11 nagrywanie tekstu, poprawek i komend edytora; F12 odtwarzanie, ⇧F12 wielokrotne; biblioteka JSON ze skrótami); okno biblioteki bez zrzutu (D30) |
+| PD-EDIT-016 | Special Copy (formaty .copy dla języków) i Paste from host language | UG 25.6–25.7, NF10 | Edit | 6 | P3 | Pełny | ✅ test (Swift, Java, C#, JavaScript, Python, C/C++, PHP, Delphi, VB + formaty JSON z katalogu danych; wklejanie z wykrywaniem stylu) |
 | PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | ⚠️ częściowo (pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze; bez zmiennych, pasujących słów, INSERT ↔ VALUES) ✅ test |
 | PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | do zrobienia |
@@ -209,7 +209,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | do zrobienia |
 | PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | 👁 ręcznie |
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
-| PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | do zrobienia |
+| PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | ✅ test (historia w pamięci: bez duplikatów, limit, filtr, wklejanie); okno bez zrzutu (D30) |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
 | PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | do zrobienia |
@@ -371,7 +371,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-FB-001 | File Browser: lokalizacje (filtry, kolor, hierarchia), drzewo, menu (Open as, Rename, Create, Delete, Sort, Save window in…), auto-odświeżanie | UG 22, NF8, NF14 | View > File Browser | 6 | P2 | Odczyt | do zrobienia |
 | PD-FB-002 | File Browser: filtr (Name, Status, VCS, rozmiar, data) z historią | UG 22.3, NF14 | File Browser | 6 | P3 | — | do zrobienia |
 | PD-VCS-001 | Git (i SVN): status pliku na pasku stanu, w File Browserze i projekcie, gałąź Git, operacje z menu | UG 17, NF14, NF17 | Pasek stanu okna | 6 | P2 | Odczyt | do zrobienia |
-| PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | do zrobienia |
+| PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | ✅ test (TODO/DONE w komentarzach z właścicielem, priorytetem, kategorią; wstawianie, zamykanie); lista bez zrzutu (D30) |
 | PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | do zrobienia |
 | PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |

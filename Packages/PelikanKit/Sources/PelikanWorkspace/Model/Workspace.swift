@@ -58,11 +58,21 @@ public protocol UIServices: AnyObject {
     func showDebugger(_ debugger: DebuggerEngine, document: Document)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
+    /// Biblioteka makr, historia schowka, lista zadań To-Do (PD-EDIT-015, PD-EDIT-024, PD-TODO-001).
+    func showMacroLibrary()
+    func showClipboardHistory()
+    func showTodoItems()
+    /// Tekst w schowku systemowym (Paste from host language).
+    func clipboardText() -> String?
 
 }
 
 extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
+    public func showMacroLibrary() {}
+    public func showClipboardHistory() {}
+    public func showTodoItems() {}
+    public func clipboardText() -> String? { nil }
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
@@ -96,6 +106,12 @@ public struct CommandRegistry: Sendable {
     }
 
     public func command(_ id: CommandID) -> Command? { index[id].map { commands[$0] } }
+
+    public mutating func remove(_ ids: [CommandID]) {
+        let drop = Set(ids)
+        commands.removeAll { drop.contains($0.id) }
+        index = Dictionary(uniqueKeysWithValues: commands.enumerated().map { ($0.element.id, $0.offset) })
+    }
     public var descriptors: [CommandDescriptor] { commands.map(\.descriptor) }
 }
 
@@ -179,6 +195,14 @@ public final class Workspace {
 
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []
+    /// Nagrywane makro (nil — nie trwa nagrywanie) i bieżące makro F12 (PD-EDIT-015).
+    public internal(set) var macroRecorder: MacroRecorder?
+    public internal(set) var currentMacro: Macro?
+    @ObservationIgnored var isPlayingMacro = false
+    /// Biblioteka makr z katalogu danych.
+    public internal(set) var macroLibrary = MacroLibrary()
+    /// Historia schowka (PD-EDIT-024).
+    public internal(set) var clipboardHistory = ClipboardHistory()
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
     /// Silniki SQL*Plus okien Command Window (stan SET/DEFINE/VARIABLE trwa przez życie okna).
     @ObservationIgnored private var sqlplusEngines: [DocumentID: SQLPlusEngine] = [:]
@@ -221,6 +245,12 @@ public final class Workspace {
         if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")),
            let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
             history = h
+        }
+        // Komendy z plików użytkownika: makra z biblioteki i własne formaty Special Copy.
+        macroLibrary = MacroLibrary.load(from: dataDirectory)
+        if commands == nil {
+            registerMacroCommands()
+            registerCopyFormatCommands()
         }
     }
 
@@ -300,6 +330,13 @@ public final class Workspace {
         rebuildKeymap()
     }
 
+    /// Usuwa komendy dodane w trakcie działania (np. usunięte makro).
+    public func unregister(_ ids: [CommandID]) {
+        guard !ids.isEmpty else { return }
+        registry.remove(ids)
+        rebuildKeymap()
+    }
+
     public func onInvocation(_ observer: @escaping @MainActor (CommandInvocationRecord) -> Void) {
         invocationObservers.append(observer)
     }
@@ -359,6 +396,7 @@ public final class Workspace {
     }
 
     private func notify(_ record: CommandInvocationRecord) {
+        recordMacroInvocation(record)
         for o in invocationObservers { o(record) }
     }
 }
