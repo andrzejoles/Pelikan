@@ -31,6 +31,8 @@ final class TestUI: UIServices {
     var textAnswer: String?
     func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
     func showFindReplace() {}
+    var objectInfo: (String, [[String]])?
+    func showObjectInfo(title: String, columns: [String], rows: [[String]]) { objectInfo = (title, rows) }
     var clientHelp: String?
     func showClientMissingHelp(_ message: String) { clientHelp = message }
     func showRecallStatement() {}

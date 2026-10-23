@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
+		0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */; };
 		177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */; };
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
@@ -45,6 +46,7 @@
 		2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowListViewController.swift; sourceTree = "<group>"; };
 		30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindReplacePanel.swift; sourceTree = "<group>"; };
 		31283604CBB6B024351A4FFF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +117,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		334095D94316C5129A5B1A6B /* ObjectBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */,
+			);
+			path = ObjectBrowser;
+			sourceTree = "<group>";
+		};
 		42B5903D5D9EF245A7512677 /* Connections */ = {
 			isa = PBXGroup;
 			children = (
@@ -143,6 +153,7 @@
 				CA48D35749C698677F8C081C /* CommandWindow */,
 				42B5903D5D9EF245A7512677 /* Connections */,
 				ECB3825E12C3C711DC48304D /* Editor */,
+				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
@@ -291,6 +302,7 @@
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
 				1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */,
+				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,

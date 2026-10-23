@@ -116,6 +116,16 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Obiekt › Pokaż dane | `ob.queryData` |  |  | Brak | 0 | PD-OB-017 |
+| Obiekt › Edytuj dane | `ob.editData` |  |  | Brak | 0 | PD-OB-017 |
+| Obiekt › DDL | `ob.ddl` |  |  | Odczyt | 0 | PD-OB-015 |
+| Obiekt › Opis | `ob.describe` |  |  | Odczyt | 0 | PD-OB-013 |
+| Obiekt › Właściwości | `ob.properties` |  |  | Odczyt | 0 | PD-OB-012 |
+| Obiekt › Edytuj | `ob.edit` |  |  | Brak | 0 | PD-OB-014 |
+| Obiekt › Rekompiluj | `ob.recompile` |  |  | Za zgodą | 0 | PD-OB-009 |
+| Obiekt › Usuń obiekt… | `ob.drop` |  |  | Za zgodą | 0 | PD-OB-016 |
+| Obiekt › Kopiuj nazwę | `ob.copyName` |  |  | Brak | 0 | PD-OB-011 |
+| Obiekt › Odśwież Object Browser | `ob.refresh` |  |  | Pełny | 0 | PD-OB-004 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Znajdź obiekty bazy… | `tools.findObjects` |  |  | Odczyt | 2 | PD-TOOL-001 |

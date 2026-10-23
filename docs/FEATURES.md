@@ -275,24 +275,24 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-OB-001 | Drzewo folderów wg typów obiektów (tabele, widoki, MV, sekwencje, synonimy, pakiety, funkcje, procedury, typy, wyzwalacze, Java, kolejki, linki, użytkownicy, role, profile, katalogi, biblioteki, joby, obiekty schedulera, kosz…) | UG 21.1, NF8 | View > Object Browser | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-002 | Foldery 23ai/26ai: MLE Modules, Domains, Annotations (+ użycie), Assertions | NF17 | Object Browser | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-003 | Podfoldery obiektu (kolumny z typami, klucze, indeksy, wyzwalacze, zależności, przeciążenia) | UG 21.1, UG 23.11, NF14 | Object Browser | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-004 | Recent objects; cache słownika w pamięci; Refresh obiektu / całości | UG 21.1 | Object Browser | 2 | P1 | — | do zrobienia |
-| PD-OB-005 | Wybór użytkownika (<CURRENT USER>, <ALL USERS>, konkretny, ostatni per połączenie) | UG 21.1, UG 23.11, NF10 | Object Browser | 2 | P1 | — | do zrobienia |
-| PD-OB-006 | Filtr ad hoc (nazwy z %, wiele po przecinku) i formularz: Name, Source, Status, Created/Modified After/Before | UG 21.1, NF11, NF14 | Object Browser | 2 | P1 | — | do zrobienia |
+| PD-OB-001 | Drzewo folderów wg typów obiektów (tabele, widoki, MV, sekwencje, synonimy, pakiety, funkcje, procedury, typy, wyzwalacze, Java, kolejki, linki, użytkownicy, role, profile, katalogi, biblioteki, joby, obiekty schedulera, kosz…) | UG 21.1, NF8 | View > Object Browser | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-002 | Foldery 23ai/26ai: MLE Modules, Domains, Annotations (+ użycie), Assertions | NF17 | Object Browser | 2 | P1 | Odczyt | ⚠️ częściowo (MLE, domeny; bez adnotacji i asercji) |
+| PD-OB-003 | Podfoldery obiektu (kolumny z typami, klucze, indeksy, wyzwalacze, zależności, przeciążenia) | UG 21.1, UG 23.11, NF14 | Object Browser | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-004 | Recent objects; cache słownika w pamięci; Refresh obiektu / całości | UG 21.1 | Object Browser | 2 | P1 | — | ✅ test |
+| PD-OB-005 | Wybór użytkownika (<CURRENT USER>, <ALL USERS>, konkretny, ostatni per połączenie) | UG 21.1, UG 23.11, NF10 | Object Browser | 2 | P1 | — | 👁 ręcznie |
+| PD-OB-006 | Filtr ad hoc (nazwy z %, wiele po przecinku) i formularz: Name, Source, Status, Created/Modified After/Before | UG 21.1, NF11, NF14 | Object Browser | 2 | P1 | — | ✅ test |
 | PD-OB-007 | Filtry nazwane (WHERE/ORDER BY na all_objects, :browser_user, &browser_filter, per użytkownik, domyślny) | UG 21.2 | Configure > Object Browser Filters | 2 | P2 | — | do zrobienia |
 | PD-OB-008 | Foldery użytkownika (zapytanie i/lub lista obiektów, kolor, hierarchia, widoczność per połączenie, Suppress owner); Add to folder | UG 21.3 | Configure > Object Browser Folders | 2 | P2 | — | do zrobienia |
-| PD-OB-009 | Obiekty niepoprawne z czerwonym znacznikiem; Recompile; Recompile referencing objects | UG 21.1 | Object Browser | 2 | P1 | Za zgodą | do zrobienia |
-| PD-OB-010 | Przeciąganie obiektu do edytora (menu: nazwa, właściwości, opis, SELECT/INSERT…) i na obszar roboczy (akcja z preferencji); folder → nazwy po przecinku | UG 21.1, UG 23.11 | Object Browser | 2 | P1 | — | do zrobienia |
-| PD-OB-011 | Wybór wielu obiektów (akcje wspólne), Copy comma separated, Cmd+C | UG 21.1, NF17 | Object Browser | 2 | P2 | — | do zrobienia |
-| PD-OB-012 | Properties (okno niemodalne, zwijane) | UG 21.1 | Object Browser > Properties | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-013 | Describe (kolumny / parametry / elementy pakietu / metody typu), kopiowanie, eksport, dwuklik wstawia do edytora | UG 21.1 | Object Browser > Describe | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-014 | View / Edit (Program Window, SQL Window dla widoków, edytory tabel/sekwencji/synonimów) | UG 21.1 | Object Browser | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-015 | DDL obiektu (DBMS_METADATA), prefiks właściciela, FORCE i lista aliasów dla widoków | UG 23.2, NF17 | Object Browser > DDL | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-016 | Rename (tabele, widoki, sekwencje, synonimy, kolumny, indeksy, więzy), Drop (z potwierdzeniem), Duplicate | UG 21.1, NF11 | Object Browser | 2 | P1 | Za zgodą | do zrobienia |
-| PD-OB-017 | Query data / Edit data (SQL Window z ROWID, AutoExecute), z synonimu | UG 21.1, NF13 | Object Browser | 2 | P1 | Odczyt | do zrobienia |
-| PD-OB-018 | Browse (obiekty powiązane), zależności (używa / używany przez) | UG 21.1 | Object Browser > Browse | 2 | P1 | Odczyt | do zrobienia |
+| PD-OB-009 | Obiekty niepoprawne z czerwonym znacznikiem; Recompile; Recompile referencing objects | UG 21.1 | Object Browser | 2 | P1 | Za zgodą | ✅ test |
+| PD-OB-010 | Przeciąganie obiektu do edytora (menu: nazwa, właściwości, opis, SELECT/INSERT…) i na obszar roboczy (akcja z preferencji); folder → nazwy po przecinku | UG 21.1, UG 23.11 | Object Browser | 2 | P1 | — | ⚠️ częściowo (przeciąganie nazwy; bez menu i akcji) |
+| PD-OB-011 | Wybór wielu obiektów (akcje wspólne), Copy comma separated, Cmd+C | UG 21.1, NF17 | Object Browser | 2 | P2 | — | ⚠️ częściowo (Kopiuj nazwę; bez wielu obiektów) |
+| PD-OB-012 | Properties (okno niemodalne, zwijane) | UG 21.1 | Object Browser > Properties | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-013 | Describe (kolumny / parametry / elementy pakietu / metody typu), kopiowanie, eksport, dwuklik wstawia do edytora | UG 21.1 | Object Browser > Describe | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-014 | View / Edit (Program Window, SQL Window dla widoków, edytory tabel/sekwencji/synonimów) | UG 21.1 | Object Browser | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-015 | DDL obiektu (DBMS_METADATA), prefiks właściciela, FORCE i lista aliasów dla widoków | UG 23.2, NF17 | Object Browser > DDL | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-016 | Rename (tabele, widoki, sekwencje, synonimy, kolumny, indeksy, więzy), Drop (z potwierdzeniem), Duplicate | UG 21.1, NF11 | Object Browser | 2 | P1 | Za zgodą | ⚠️ częściowo (Drop; bez Rename i Duplicate) |
+| PD-OB-017 | Query data / Edit data (SQL Window z ROWID, AutoExecute), z synonimu | UG 21.1, NF13 | Object Browser | 2 | P1 | Odczyt | ✅ test |
+| PD-OB-018 | Browse (obiekty powiązane), zależności (używa / używany przez) | UG 21.1 | Object Browser > Browse | 2 | P1 | Odczyt | ✅ test |
 | PD-OB-019 | Enable/Disable wyzwalaczy i więzów; Run job (DBMS_JOB); kolejki enqueue/dequeue; Refresh MV; Test linku | UG 21.1, NF13 | Object Browser | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OB-020 | PL/SQL CCFlags (podgląd i zmiana flag z rekompilacją) | UG 21.1 | Object Browser | 2 | P3 | Za zgodą | do zrobienia |
 | PD-OB-021 | Kosz: Purge / Restore (pod starą lub nową nazwą) | UG 21.1 | Object Browser > Recycle bin | 2 | P2 | Za zgodą | do zrobienia |
@@ -300,7 +300,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OB-023 | Add source to editor (Program/Test Window) | UG 21.1 | Object Browser | 2 | P3 | — | do zrobienia |
 | PD-OB-024 | Object Browser ze 100 000 obiektów bez blokady interfejsu | PROMPT §9 | Object Browser | 2 | P1 | — | do zrobienia |
 | PD-OB-025 | Preferencje: widoczne foldery i kolejność, limit Recent, akcja dwukliku/przeciągania per typ, typy danych, Confirm Recompile, publiczne linki | UG 23.11 | Preferences | 2 | P2 | — | do zrobienia |
-| PD-OB-026 | Zapytania słownika odporne na wersję (19c, 21c, 23ai/26ai; starsze — brak kolumn/widoków), DBA views gdy dostępne | PROMPT §9, UG 23.2 | — | 2 | P1 | — | do zrobienia |
+| PD-OB-026 | Zapytania słownika odporne na wersję (19c, 21c, 23ai/26ai; starsze — brak kolumn/widoków), DBA views gdy dostępne | PROMPT §9, UG 23.2 | — | 2 | P1 | — | ⚠️ częściowo (DBA/ALL, foldery wg wersji; testowane na 26ai) |
 | PD-OED-001 | Table Definition Editor: General (właściciel, przestrzeń, storage, klaster, temporary, organizacja heap/IOT/external, komentarz, Recreate table) | UG 9.1 | File > New > Table | 2 | P1 | Za zgodą | do zrobienia |
 | PD-OED-002 | Tabela — Columns (typ z podpowiedzią, domyślna, wirtualna, identity, DEFAULT ON NULL, niewidoczne, tabela obiektowa, Add foreign key columns) | UG 9.1, NF11, NF13 | Table Editor | 2 | P1 | Za zgodą | do zrobienia |
 | PD-OED-003 | Tabela — domeny i adnotacje (kolumny i tabela) 23ai | NF17 | Table Editor | 2 | P2 | Za zgodą | do zrobienia |

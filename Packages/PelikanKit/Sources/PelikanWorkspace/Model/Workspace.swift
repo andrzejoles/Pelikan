@@ -26,6 +26,8 @@ public protocol UIServices: AnyObject {
     func askText(_ title: String, message: String, defaultValue: String) async -> String?
     /// Okno Znajdź i zamień dla aktywnego edytora.
     func showFindReplace()
+    /// Okno informacji o obiekcie (Opis, Właściwości): tabela kolumn i wierszy tekstu.
+    func showObjectInfo(title: String, columns: [String], rows: [[String]])
     /// Ekran pomocy przy braku Oracle Instant Client (pobranie, wskazanie katalogu, sterownik thin).
     func showClientMissingHelp(_ message: String)
     /// Okno historii poleceń (Recall Statement, UG 25.5).
@@ -83,6 +85,8 @@ public final class Workspace {
         didSet { rebuildKeymap() }
     }
     public var statusMessage: String?
+    /// Obiekt zaznaczony w Object Browserze (cel komend `ob.*`).
+    public var selectedObject: DBObject?
     /// Ostatnie wyszukiwanie (Znajdź następne — F3).
     public var lastSearch: TextSearch?
     /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
@@ -104,6 +108,8 @@ public final class Workspace {
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
     /// Silniki SQL*Plus okien Command Window (stan SET/DEFINE/VARIABLE trwa przez życie okna).
     @ObservationIgnored private var sqlplusEngines: [DocumentID: SQLPlusEngine] = [:]
+    /// Metadane słownika per połączenie (Object Browser, Code Assistant).
+    @ObservationIgnored var metadataProviders: [UUID: MetadataProvider] = [:]
 
     public func sqlplusEngine(for doc: Document) -> SQLPlusEngine {
         if let e = sqlplusEngines[doc.id] { return e }
@@ -234,8 +240,9 @@ public final class Workspace {
     @discardableResult
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
-        // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się.
-        if !command.isPlanned, let validate = command.validate, !validate(self) {
+        // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
+        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel.
+        if !command.isPlanned, arguments.values.isEmpty, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
         let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
