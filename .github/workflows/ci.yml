@@ -14,6 +14,8 @@ jobs:
   macos:
     name: macOS — budowanie i testy jednostkowe
     runs-on: macos-latest
+    # Zawieszony test nie może blokować runnera godzinami.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,7 +29,12 @@ jobs:
           scripts/version.sh
       - name: Testy jednostkowe (bez bazy)
         working-directory: Packages/PelikanKit
-        run: swift test --parallel 2>&1 | tee /tmp/swift-test.log
+        run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
+      # Testy SSH na lokalnym sshd osobno i szeregowo: wynik każdego testu od razu w logu, krótki limit czasu.
+      - name: Testy SSH na lokalnym sshd
+        working-directory: Packages/PelikanKit
+        timeout-minutes: 10
+        run: swift test --skip-build --filter 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test-ssh.log
       - name: Aplikacja
         if: hashFiles('project.yml') != ''
         run: |
