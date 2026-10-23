@@ -231,3 +231,31 @@ struct BeautifyCommandTests {
         #expect(try String(contentsOf: url, encoding: .utf8) == "BEGIN\n  NULL;\nEND;")
     }
 }
+
+@MainActor
+@Suite("Nawigacja wstecz / naprzód")
+struct NavigationTests {
+    @Test("Skok do deklaracji, wstecz, naprzód, pominięcie zamkniętego okna")
+    func navigate() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: "declare\n  v number;\nbegin\n  v := 1;\nend;")
+        let use = (doc.text as NSString).range(of: "v := 1").location
+        doc.selectedRange = use..<use
+        try await ws.invoke("edit.gotoDeclaration")
+        let decl = (doc.text as NSString).range(of: "v number").location
+        #expect(doc.selectedRange.lowerBound == decl)
+        try await ws.invoke("edit.navigateBack")
+        #expect(doc.selectedRange.lowerBound == use)
+        try await ws.invoke("edit.navigateForward")
+        #expect(doc.selectedRange.lowerBound == decl)
+        let other = ws.newDocument(.sql, text: "select 1 from dual")
+        ws.recordJump()
+        ws.activate(doc.id)
+        ws.recordJump()
+        try await ws.invoke("file.close")      // zamyka doc (aktywny)
+        _ = other
+        #expect(ws.navigationBack.contains { $0.document == doc.id })
+        try await ws.invoke("edit.navigateBack")
+        #expect(ws.activeDocument?.id == other.id)
+    }
+}

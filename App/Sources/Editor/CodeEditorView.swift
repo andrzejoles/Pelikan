@@ -186,9 +186,17 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         regionsWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            self.regions = CodeFolding.regions(self.textView.string)
-            self.applyFolds()
-            self.ruler.needsDisplay = true
+            // Analiza w tle (pakiet 50 000 linii); wynik tylko dla niezmienionego tekstu.
+            let text = self.textView.string
+            Task.detached(priority: .userInitiated) {
+                let r = CodeFolding.regions(text)
+                await MainActor.run { [weak self] in
+                    guard let self, self.textView.string == text else { return }
+                    self.regions = r
+                    self.applyFolds()
+                    self.ruler.needsDisplay = true
+                }
+            }
         }
         regionsWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
@@ -418,6 +426,31 @@ final class CodeTextView: NSTextView {
         let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
         setSelectedRange(NSRange(location: i, length: 0))
         ws.perform("edit.gotoDeclaration")
+    }
+
+    /// Menu kontekstowe: na nazwie obiektu — działania jak w Object Browserze (UG 25.9), potem menu edycji.
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = super.menu(for: event) ?? NSMenu()
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return menu }
+        let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
+        guard let word = TextEditing.identifier(at: i, in: string), !Keywords.isKeyword(word) || word.contains(".") else { return menu }
+        if selectedRange().length == 0 { setSelectedRange(NSRange(location: i, length: 0)) }
+        var items: [NSMenuItem] = []
+        let header = NSMenuItem(title: L10n.tr("Obiekt „\(word)”"), action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        items.append(header)
+        let actions: [(String, String)] = [("ob.queryData", L10n.tr("Pokaż dane")), ("ob.editData", L10n.tr("Edytuj dane")),
+                                           ("ob.describe", L10n.tr("Opis")), ("ob.edit", L10n.tr("Edytuj")), ("ob.ddl", L10n.tr("DDL")),
+                                           ("ob.properties", L10n.tr("Właściwości")), ("ob.recompile", L10n.tr("Rekompiluj")),
+                                           ("ob.compare", L10n.tr("Porównaj z aktywnym oknem"))]
+        for (id, title) in actions {
+            let item = ClosureMenuItem(title: title) { ws.perform(CommandID(rawValue: id), CommandArguments(["object": .string(word)])) }
+            items.append(item)
+        }
+        items.append(ClosureMenuItem(title: L10n.tr("Przejdź do deklaracji")) { ws.perform("edit.gotoDeclaration") })
+        items.append(.separator())
+        for (k, item) in items.enumerated() { menu.insertItem(item, at: k) }
+        return menu
     }
 
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).

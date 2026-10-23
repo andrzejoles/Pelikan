@@ -231,3 +231,19 @@ final class ClosureButton: NSButton {
 
     @objc private func fire() { handler?() }
 }
+
+/// Pozycja menu z akcją w domknięciu (obiekt akcji trzymany w `representedObject`).
+final class MenuAction: NSObject {
+    private let handler: () -> Void
+    init(_ handler: @escaping () -> Void) { self.handler = handler }
+    @objc func fire() { handler() }
+}
+
+@MainActor
+func ClosureMenuItem(title: String, action: @escaping () -> Void) -> NSMenuItem {
+    let a = MenuAction(action)
+    let item = NSMenuItem(title: title, action: #selector(MenuAction.fire), keyEquivalent: "")
+    item.target = a
+    item.representedObject = a
+    return item
+}

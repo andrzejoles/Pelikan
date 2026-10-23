@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:32:45+02:00",
+  "heartbeat": "2026-10-23T08:40:45+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
+    "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
     "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)",
     "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy",
     "PR #16 scalony (formater PL/SQL)",
@@ -90,9 +92,7 @@
     "Siatka: Następna/Ostatnia strona, sortowanie klikiem nagłówka (Shift — wtórne), widok pojedynczego rekordu, kopiowanie (z nagłówkiem, nagłówek, lista IN, jako CSV/HTML/XML/SQL), eksport do pliku (CSV, TSV, HTML, XML, SQL, xlsx), Kopiuj do Excela (arkusz na wynik + SQL) — 13 testów",
     "PR #3 scalony (edytor i SQL Window), CI zielone na macOS i Linuksie",
     "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
-    "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
-    "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
-    "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie"
+    "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",

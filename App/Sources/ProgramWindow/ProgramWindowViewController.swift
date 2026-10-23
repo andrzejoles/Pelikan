@@ -46,6 +46,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         }
         contents.onSelect = { [weak self] n in
             guard let self else { return }
+            self.workspace.recordJump()
             self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
             self.view.window?.makeFirstResponder(self.editor.textView)
         }
@@ -161,10 +162,21 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     }
 
     private func recomputeUnits(_ text: String) {
-        outlineNodes = PLSQLOutline.parse(text)
+        // Zarys i jednostki liczone w tle (pakiet 50 000 linii bez przestojów przy pisaniu).
+        Task.detached(priority: .userInitiated) {
+            let outline = PLSQLOutline.parse(text)
+            let units = ProgramCompiler.units(in: text)
+            await MainActor.run { [weak self] in
+                guard let self, self.document.text == text else { return }
+                self.apply(outline: outline, units: units)
+            }
+        }
+    }
+
+    private func apply(outline: [OutlineNode], units u: [ProgramUnit]) {
+        outlineNodes = outline
         contents.update(outlineNodes)
         caretMoved()
-        let u = ProgramCompiler.units(in: text)
         let signature = u.map(\.id).map { $0.components(separatedBy: "@")[0] }.joined(separator: "|")
         units = u
         guard signature != lastUnitSignature else { return }
@@ -238,6 +250,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         guard row >= 0, row < shownMessages.count else { return }
         let m = shownMessages[row]
         let o = ProgramCompiler.offset(line: m.line, column: m.column, in: document.text)
+        workspace.recordJump()
         document.selectedRange = o..<o
         view.window?.makeFirstResponder(editor.textView)
     }

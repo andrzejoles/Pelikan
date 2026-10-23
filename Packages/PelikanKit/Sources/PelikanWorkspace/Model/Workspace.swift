@@ -127,6 +127,9 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
     /// Zmienia się po zapisie lub usunięciu szablonu (Template Window przeładowuje listę).
     public var templatesGeneration = 0
+    /// Historia skoków (UG 25.20) — Wstecz / Naprzód.
+    public internal(set) var navigationBack: [NavigationPoint] = []
+    public internal(set) var navigationForward: [NavigationPoint] = []
 
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []

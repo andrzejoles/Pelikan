@@ -72,6 +72,7 @@ enum ToolCommands {
 extension Workspace {
     /// Otwiera obiekt (źródło w oknie programu, pozostałe — DDL) i ustawia kursor w linii źródła danej jednostki.
     public func openObject(_ o: DBObject, line: Int = 0) async throws {
+        recordJump()
         try await invoke("ob.edit", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue)]))
         guard line > 0, let doc = activeDocument, doc.kind == .program else { return }
         let unit = ProgramCompiler.units(in: doc.text).first { $0.type == o.type } ?? ProgramCompiler.units(in: doc.text).first
