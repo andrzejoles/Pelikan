@@ -23,6 +23,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         configure()
         load(document.text)
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
+        // Okno w trakcie wykonania jest tylko do odczytu (jak we wzorcu); inne okna działają równolegle.
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            self.textView.isEditable = !self.document.isExecuting
+        })
     }
 
     @available(*, unavailable)

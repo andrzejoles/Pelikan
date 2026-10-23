@@ -26,6 +26,8 @@ final class FakeUI: UIServices {
     var textAnswer: String?
     func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
     func showFindReplace() {}
+    var clientHelp: String?
+    func showClientMissingHelp(_ message: String) { clientHelp = message }
     func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
 }

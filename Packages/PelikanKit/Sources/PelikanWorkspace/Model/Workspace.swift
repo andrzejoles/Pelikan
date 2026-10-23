@@ -26,6 +26,8 @@ public protocol UIServices: AnyObject {
     func askText(_ title: String, message: String, defaultValue: String) async -> String?
     /// Okno Znajdź i zamień dla aktywnego edytora.
     func showFindReplace()
+    /// Ekran pomocy przy braku Oracle Instant Client (pobranie, wskazanie katalogu, sterownik thin).
+    func showClientMissingHelp(_ message: String)
     /// Okno historii poleceń (Recall Statement, UG 25.5).
     func showRecallStatement()
     /// Okno wyboru plików do otwarcia.
@@ -262,6 +264,8 @@ public final class Workspace {
             do {
                 try await invoke(id, arguments)
             } catch CommandError.cancelledByUser {
+            } catch DatabaseError.clientMissing(let message) {
+                ui?.showClientMissingHelp(message)
             } catch {
                 ui?.showError(error.localizedDescription)
             }

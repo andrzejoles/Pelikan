@@ -262,6 +262,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         findPanel?.makeKeyAndOrderFront(nil)
     }
 
+    /// Ekran pomocy przy braku Instant Client (PD-CONN-029): pobranie od Oracle, wskazanie katalogu, sterownik thin.
+    func showClientMissingHelp(_ message: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = L10n.tr("Brak Oracle Instant Client")
+        alert.informativeText = message + "\n\n" + L10n.tr("Licencja Oracle nie pozwala dołączyć Instant Client do Pelikana. Bez niego możesz użyć sterownika „thin” (Definicja połączenia › Zaawansowane › Sterownik) — z ograniczeniami: bez TCPS/wallet, Kerberos i przerwania wykonania.")
+        alert.addButton(withTitle: L10n.tr("Wskaż katalog…"))
+        alert.addButton(withTitle: L10n.tr("Otwórz stronę Oracle"))
+        alert.addButton(withTitle: L10n.tr("Zamknij"))
+        let handle: (NSApplication.ModalResponse) -> Void = { [weak self] r in
+            guard let self else { return }
+            switch r {
+            case .alertFirstButtonReturn:
+                let panel = NSOpenPanel()
+                panel.canChooseDirectories = true
+                panel.canChooseFiles = false
+                panel.message = L10n.tr("Wybierz katalog z biblioteką libclntsh.dylib")
+                if panel.runModal() == .OK, let url = panel.url {
+                    self.workspace.settings.instantClientDirectory = url.path
+                    self.workspace.sessions.setDriver(ODPIDriver(libraryDirectory: url.path))
+                    if case .failure(let e) = ODPIDriver(libraryDirectory: url.path).availability() { self.showError(e.localizedDescription) }
+                }
+            case .alertSecondButtonReturn:
+                NSWorkspace.shared.open(URL(string: "https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html")!)
+            default: break
+            }
+        }
+        if let window = mainWindow?.window, window.attachedSheet == nil {
+            alert.beginSheetModal(for: window, completionHandler: handle)
+        } else {
+            handle(alert.runModal())
+        }
+    }
+
     func showRecallStatement() {
         guard let window = mainWindow?.window else { return }
         var sheet: NSWindow?

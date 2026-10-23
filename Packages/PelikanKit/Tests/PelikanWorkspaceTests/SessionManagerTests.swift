@@ -249,3 +249,29 @@ struct ModificationGuardTests {
         }
     }
 }
+
+/// Sterownik bez biblioteki klienta.
+final class MissingClientDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .failure(.clientMissing("Brak Instant Client")) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+        throw DatabaseError.clientMissing("Brak Instant Client")
+    }
+}
+
+@MainActor
+@Suite("Brak Instant Client")
+struct ClientMissingTests {
+    @Test("Połączenie bez biblioteki klienta otwiera ekran pomocy zamiast zwykłego błędu")
+    func help() async throws {
+        let ws = Workspace(drivers: [.instantClient: MissingClientDriver()])
+        let ui = FakeUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "x", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "p")
+        ws.perform("connection.connectAsMain", CommandArguments(["connection": .string(def.id.uuidString)]))
+        for _ in 0..<200 where ui.clientHelp == nil { await Task.yield() }
+        #expect(ui.clientHelp == "Brak Instant Client")
+    }
+}
