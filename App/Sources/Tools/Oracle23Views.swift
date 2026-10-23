@@ -91,6 +91,10 @@ struct MLEModulesView: View {
     @State private var environments: [String] = []
     @State private var selection: MLE.Module.ID?
     @State private var message = ""
+    @State private var debugging = false
+    @State private var debugLines = ""
+    @State private var debugWatch = ""
+    @State private var debugCall = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -104,6 +108,7 @@ struct MLEModulesView: View {
                     }
                 }
                 Button(L10n.tr("Źródło")) { Task { await openSource() } }.disabled(selection == nil)
+                Button(L10n.tr("Debuguj…")) { debugging = true }.disabled(selection == nil)
                 Button(L10n.tr("Nowe środowisko")) {
                     let imports = modules.map { "'\($0.name.lowercased())' module \($0.name)" }.joined(separator: ", ")
                     workspace.newDocument(.sql, text: "create or replace mle env NOWE_SRODOWISKO" + (imports.isEmpty ? "" : " imports (\(imports))") + ";\n")
@@ -122,6 +127,27 @@ struct MLEModulesView: View {
         .padding(10)
         .frame(minWidth: 620, minHeight: 380)
         .task { await reload() }
+        .sheet(isPresented: $debugging) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.tr("Debugowanie po wykonaniu: \(modules.first { $0.id == selection }?.name ?? "")")).font(.headline)
+                TextField(L10n.tr("Linie punktów (po przecinku)"), text: $debugLines)
+                TextField(L10n.tr("Obserwowane zmienne (puste — wszystkie lokalne)"), text: $debugWatch)
+                Text(L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")).font(.caption)
+                TextEditor(text: $debugCall).font(.system(size: 12, design: .monospaced)).frame(minHeight: 90)
+                HStack {
+                    Spacer()
+                    Button(L10n.tr("Anuluj"), role: .cancel) { debugging = false }.keyboardShortcut(.cancelAction)
+                    Button(L10n.tr("Wykonaj")) {
+                        debugging = false
+                        guard let m = modules.first(where: { $0.id == selection }) else { return }
+                        workspace.perform("tools.debugMLE", CommandArguments(["module": .string(m.name), "lines": .string(debugLines),
+                                                                              "watch": .string(debugWatch), "call": .string(debugCall)]))
+                    }.disabled(debugLines.isEmpty || debugCall.isEmpty)
+                }
+            }
+            .padding(14)
+            .frame(width: 520)
+        }
     }
 
     private func reload() async {

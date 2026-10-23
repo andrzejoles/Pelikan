@@ -16,6 +16,14 @@ struct Oracle23OfflineTests {
         #expect(Spatial.parse("bzdura").isEmpty)
     }
 
+    @Test("Specyfikacja debugowania MLE i parsowanie wyniku")
+    func mleDebugSpec() {
+        #expect(MLEDebugger.spec(owner: "hr", module: "m", points: [.init(line: 3), .init(line: 7, watch: ["a\"b"])])
+                == #"{"version":"1.0","debugpoints":[{"at":{"name":"HR.M","line":3},"actions":[{"type":"snapshot"}]},{"at":{"name":"HR.M","line":7},"actions":[{"type":"watch","id":"a\"b"}]}]}"#)
+        let hits = MLEDebugger.parse(#"[[{"at":{"frameName":"calc","name":"HR.M","line":4},"values":{"a":20,"s":"t","o":{"k":1}}}]]"#)
+        #expect(hits == [MLEDebugger.Hit(frame: "calc", line: 4, values: ["a": "20", "s": "\"t\"", "o": #"{"k":1}"#])])
+    }
+
     @Test("DDL modułu i środowiska MLE")
     func mleDDL() {
         #expect(MLE.createModuleDDL(name: "my-mod", source: "export function f(){}", version: "1.0")
@@ -58,6 +66,28 @@ struct Oracle23Tests {
         #expect(try await MLE.environments(owner: owner, in: s).contains("PELIKAN_ENV"))
         _ = try await s.execute("drop mle env pelikan_env")
         _ = try await s.execute("drop mle module pelikan_mod")
+    }
+
+    @Test("Debugowanie MLE po wykonaniu: migawka i obserwacja zmiennych w punkcie")
+    func mleDebug() async throws {
+        let s = try await TestDatabase.connect()
+        defer { Task { await s.close() } }
+        let owner = try #require(try await s.scalar("select user from dual"))
+        _ = try await s.execute(MLE.createModuleDDL(name: "pelikan_dbg", source: "export function calc(a) {\n  let x = a * 2;\n  let y = x + 1;\n  return y;\n}\n"))
+        _ = try await s.execute("create or replace function pelikan_dbg_calc(a number) return number as mle module pelikan_dbg signature 'calc(number)';")
+        let hits = try await MLEDebugger.run(owner: owner, module: "pelikan_dbg", points: [MLEDebugger.Point(line: 4)],
+                                             call: "if pelikan_dbg_calc(20) <> 41 then raise_application_error(-20001, 'zły wynik'); end if;", in: s)
+        #expect(hits.count == 1 && hits[0].frame == "calc" && hits[0].values["x"] == "40" && hits[0].values["a"] == "20")
+        let watched = try await MLEDebugger.run(owner: owner, module: "pelikan_dbg", points: [MLEDebugger.Point(line: 4, watch: ["y"])],
+                                                call: "dbms_output.put_line(pelikan_dbg_calc(1))", in: s)
+        #expect(watched.first?.values["y"] == "3")
+        // Błąd w kodzie wywołującym: debugowanie wyłączone, wyjątek przekazany.
+        await #expect(throws: (any Error).self) {
+            _ = try await MLEDebugger.run(owner: owner, module: "pelikan_dbg", points: [MLEDebugger.Point(line: 4)], call: "raise_application_error(-20002, 'test');", in: s)
+        }
+        #expect(try await s.scalar("select pelikan_dbg_calc(2) from dual") == "5")
+        _ = try await s.execute("drop function pelikan_dbg_calc")
+        _ = try await s.execute("drop mle module pelikan_dbg")
     }
 
     @Test("SDO_GEOMETRY jako WKT z zapytania")

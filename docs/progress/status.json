@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T15:52:52+02:00",
+  "heartbeat": "2026-10-23T21:03:41+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 4: utPLSQL",
+  "task": "Czekam na CI #50 (poprawka Observation dla Linuksa); lokalnie: Entra ID/OAuth2 i ORDS gotowe (do wypchnięcia po scaleniu), pełne testy bazy w toku; subagent — pipeline wdrożenia Pro*C i konsola",
   "stages": [
     {
       "id": 0,
