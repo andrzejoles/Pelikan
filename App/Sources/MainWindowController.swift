@@ -7,6 +7,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private(set) lazy var documentArea = DocumentAreaViewController(workspace: workspace)
     private let workspace: Workspace
     private let split = NSSplitViewController()
+    private(set) lazy var sidebarController = SidebarViewController(workspace: workspace)
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -22,7 +23,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: window)
         window.delegate = self
 
-        let sidebar = NSSplitViewItem(sidebarWithViewController: SidebarViewController(workspace: workspace))
+        let sidebar = NSSplitViewItem(sidebarWithViewController: sidebarController)
         sidebar.minimumThickness = 220
         sidebar.maximumThickness = 420
         sidebar.canCollapse = true
@@ -73,6 +74,24 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     var isAgentPaneVisible: Bool { agentItem.map { !$0.isCollapsed } ?? false }
 
+    // MARK: Układ okna (PD-WSET-002)
+
+    var layout: WindowLayout? {
+        guard let w = window else { return nil }
+        let sidebar = split.splitViewItems.first
+        return WindowLayout(frame: NSStringFromRect(w.frame), sidebarWidth: Double(sidebar?.viewController.view.frame.width ?? 260),
+                            sidebarPane: sidebarController.selectedPane, agentPaneVisible: isAgentPaneVisible)
+    }
+
+    func apply(_ l: WindowLayout) {
+        let f = NSRectFromString(l.frame)
+        if f.width >= 400, f.height >= 300, NSScreen.screens.contains(where: { $0.visibleFrame.intersects(f) }) { window?.setFrame(f, display: true) }
+        split.splitViewItems.first?.isCollapsed = false
+        split.splitView.setPosition(CGFloat(l.sidebarWidth), ofDividerAt: 0)
+        sidebarController.select(pane: l.sidebarPane)
+        if agentItem != nil { setAgentPane(visible: l.agentPaneVisible) }
+    }
+
     func setAgentPane(visible: Bool) {
         agentItem?.animator().isCollapsed = !visible
     }
@@ -83,7 +102,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 /// Lewa kolumna narzędzi: Lista połączeń (Etap 1), Przeglądarka obiektów (Etap 2), Lista okien.
 final class SidebarViewController: NSViewController {
     private let workspace: Workspace
-    private let selector = NSSegmentedControl(labels: [L10n.tr("Połączenia"), L10n.tr("Obiekty"), L10n.tr("Okna"), L10n.tr("Szablony")],
+    private let selector = NSSegmentedControl(labels: [L10n.tr("Połączenia"), L10n.tr("Obiekty"), L10n.tr("Okna"), L10n.tr("Szablony"), L10n.tr("Pliki")],
                                               trackingMode: .selectOne, target: nil, action: nil)
     private let container = NSView()
     private lazy var panes: [NSViewController] = [
@@ -91,7 +110,19 @@ final class SidebarViewController: NSViewController {
         ObjectBrowserViewController(workspace: workspace),
         WindowListViewController(workspace: workspace),
         TemplatePaneController(workspace: workspace),
+        FileBrowserPaneController(workspace: workspace),
     ]
+    static let fileBrowserPane = 4
+
+    /// Wybrana karta lewej kolumny (układ okna, PD-WSET-002).
+    var selectedPane: Int { selector.selectedSegment }
+
+    func select(pane index: Int) {
+        guard panes.indices.contains(index) else { return }
+        _ = view
+        selector.selectedSegment = index
+        show(pane: index)
+    }
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -199,6 +230,9 @@ final class DocumentAreaViewController: NSViewController {
     private let statusLabel = NSTextField(labelWithString: "")
     /// Połączenie okna na pasku stanu — kliknięcie: wybór połączenia okna (UG 20.2, PD-CONN-019).
     private let connectionButton = NSButton(title: "", target: nil, action: nil)
+    /// Gałąź i stan Git pliku aktywnego okna (PD-VCS-001).
+    private let gitLabel = NSTextField(labelWithString: "")
+    private var gitKey: String?
     private var controllers: [DocumentID: NSViewController] = [:]
     private var installedID: DocumentID?
 
@@ -207,6 +241,7 @@ final class DocumentAreaViewController: NSViewController {
         guard let id = installedID, let vc = controllers[id] else { return }
         let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? CommandWindowViewController)?.preferredFirstResponder
             ?? (vc as? ProgramWindowViewController)?.preferredFirstResponder ?? (vc as? TestWindowViewController)?.preferredFirstResponder
+            ?? (vc as? DiagramViewController)?.preferredFirstResponder
             ?? (vc as? ExplainPlanViewController)?.preferredFirstResponder
             ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
@@ -254,6 +289,12 @@ final class DocumentAreaViewController: NSViewController {
         connectionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
         statusLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         status.addSubview(connectionButton)
+        gitLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        gitLabel.textColor = .secondaryLabelColor
+        gitLabel.translatesAutoresizingMaskIntoConstraints = false
+        gitLabel.setContentHuggingPriority(.required, for: .horizontal)
+        gitLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        status.addSubview(gitLabel)
         let separator = NSBox()
         separator.boxType = .separator
         let topSeparator = NSBox()
@@ -286,7 +327,9 @@ final class DocumentAreaViewController: NSViewController {
             connectionButton.leadingAnchor.constraint(equalTo: status.leadingAnchor, constant: 8),
             connectionButton.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             statusLabel.leadingAnchor.constraint(equalTo: connectionButton.trailingAnchor, constant: 6),
-            statusLabel.trailingAnchor.constraint(equalTo: status.trailingAnchor, constant: -10),
+            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: gitLabel.leadingAnchor, constant: -10),
+            gitLabel.trailingAnchor.constraint(equalTo: status.trailingAnchor, constant: -10),
+            gitLabel.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             statusLabel.centerYAnchor.constraint(equalTo: status.centerYAnchor),
         ])
         view = root
@@ -323,6 +366,7 @@ final class DocumentAreaViewController: NSViewController {
                 case .command: CommandWindowViewController(document: doc, workspace: workspace)
                 case .program: ProgramWindowViewController(document: doc, workspace: workspace)
                 case .test: TestWindowViewController(document: doc, workspace: workspace)
+                case .diagram: DiagramViewController(document: doc, workspace: workspace)
                 case .explainPlan: ExplainPlanViewController(document: doc, workspace: workspace)
                 default: DocumentViewController(document: doc, workspace: workspace)
                 }
@@ -341,8 +385,10 @@ final class DocumentAreaViewController: NSViewController {
             connectionButton.isHidden = false
             statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
+            refreshGit(file: doc.fileURL, modified: doc.isModified)
         } else {
             installedID = nil
+            refreshGit(file: nil, modified: false)
             connectionButton.isHidden = true
             statusLabel.stringValue = L10n.tr("Brak otwartych okien — Plik › Nowy")
         }
@@ -350,6 +396,28 @@ final class DocumentAreaViewController: NSViewController {
 }
 
 extension DocumentAreaViewController {
+    /// Stan Git pliku aktywnego okna — liczony w tle przy zmianie pliku albo po zapisie (zmiana `isModified`).
+    func refreshGit(file: URL?, modified: Bool) {
+        let key = file.map { "\($0.path)|\(modified)" }
+        guard key != gitKey else { return }
+        gitKey = key
+        guard let file else { gitLabel.stringValue = ""; return }
+        Task { [weak self] in
+            let info = await Task.detached { () -> (String?, GitFileState?)? in
+                guard let repo = GitRepository.discover(for: file), let s = try? repo.status() else { return nil }
+                return (s.branch, s.state(of: file))
+            }.value
+            guard let self, self.gitKey == key else { return }
+            if let (branch, state) = info {
+                let mark = state.map { $0 == .unmodified ? "" : " · " + $0.displayName } ?? ""
+                self.gitLabel.stringValue = "⎇ " + (branch ?? L10n.tr("(odłączony HEAD)")) + mark
+                self.gitLabel.toolTip = L10n.tr("Git: gałąź i stan pliku")
+            } else {
+                self.gitLabel.stringValue = ""
+            }
+        }
+    }
+
     /// Menu karty (PD-UI-004): zamknij, zamknij pozostałe / z lewej / z prawej.
     func tabMenu(for doc: Document) -> NSMenu {
         let menu = NSMenu()

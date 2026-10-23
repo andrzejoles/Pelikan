@@ -93,6 +93,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             window.installAgentPane(agents.pane)
             agentUI = agents
         }
+        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10).
+        if workspace.settings.worksetAutosave, workspace.documents.isEmpty,
+           let saved = try? workspace.worksets.load(workspace.worksets.current), !saved.documents.isEmpty {
+            workspace.applyWorkset(saved)
+        }
+        if workspace.settings.autosaveLayout, let layout = workspace.worksets.loadLayout() { window.apply(layout) }
         // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
@@ -125,7 +131,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let open = workspace.documents.filter(\.transactionOpen)
-        let modified = workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+        if workspace.settings.autosaveLayout, let l = mainWindow?.layout { workspace.worksets.saveLayout(l) }
+        // Autozapis workseta: niezapisane okna przetrwają w worksecie — bez pytania o zapis (UG 15).
+        let worksetSaved = workspace.settings.worksetAutosave && (try? workspace.saveCurrentWorkset()) != nil
+        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
         if !modified.isEmpty {
             // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
             Task { @MainActor in
@@ -176,6 +185,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showFileBrowser() {
+        mainWindow?.sidebarController.select(pane: SidebarViewController.fileBrowserPane)
+    }
+
+    func chooseDirectory() async -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
+    }
+
+    func currentLayout() -> WindowLayout? { mainWindow?.layout }
+
+    func applyLayout(_ layout: WindowLayout) { mainWindow?.apply(layout) }
+
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
@@ -213,6 +239,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showMacroLibrary() {
+        ToolWindowController.show(key: "macroLibrary", title: L10n.tr("Biblioteka makr"), size: NSSize(width: 480, height: 420)) {
+            MacroLibraryView(workspace: workspace)
+        }
+    }
+
+    func showClipboardHistory() {
+        ToolWindowController.show(key: "clipboardHistory", title: L10n.tr("Historia schowka"), size: NSSize(width: 520, height: 520)) {
+            ClipboardHistoryView(workspace: workspace)
+        }
+    }
+
+    func showTodoItems() {
+        ToolWindowController.show(key: "todoItems", title: L10n.tr("Zadania To-Do"), size: NSSize(width: 640, height: 420)) {
+            TodoItemsView(workspace: workspace)
+        }
+    }
+
+    func clipboardText() -> String? { NSPasteboard.general.string(forType: .string) }
+
+    func exportDiagram(_ doc: PelikanWorkspace.Document, format: String) {
+        DiagramOutput.export(doc, format: format, workspace: workspace)
+    }
+
+    func copyDiagramImage(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.copy(doc)
+    }
+
+    func printDiagram(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.print(doc)
+    }
+
+    func showQueryBuilder(sql: String?, connectionID: UUID?) {
+        let target = workspace.activeDocument.flatMap { [.sql, .program, .test].contains($0.kind) ? $0.id : nil }
+        ToolWindowController.close(key: "queryBuilder")
+        ToolWindowController.show(key: "queryBuilder", title: L10n.tr("Query Builder"), size: NSSize(width: 1000, height: 720)) {
+            QueryBuilderView(workspace: workspace, connectionID: connectionID, targetDocument: target, initialSQL: sql)
+        }
+    }
+
+    func showDataTransfer(_ tool: DataTransferTool) {
+        switch tool {
+        case .exportTables:
+            ToolWindowController.show(key: "exportTables", title: L10n.tr("Eksport tabel"), size: NSSize(width: 760, height: 600)) { ExportTablesView(workspace: workspace) }
+        case .importTables:
+            ToolWindowController.show(key: "importTables", title: L10n.tr("Import tabel"), size: NSSize(width: 720, height: 560)) { ImportTablesView(workspace: workspace) }
+        case .textImporter:
+            ToolWindowController.show(key: "textImporter", title: L10n.tr("Import tekstu"), size: NSSize(width: 900, height: 680)) { ImporterView(workspace: workspace, excel: false) }
+        case .excelImporter:
+            ToolWindowController.show(key: "excelImporter", title: L10n.tr("Import z Excela"), size: NSSize(width: 900, height: 680)) { ImporterView(workspace: workspace, excel: true) }
+        case .dataGenerator:
+            ToolWindowController.show(key: "dataGenerator", title: L10n.tr("Generator danych"), size: NSSize(width: 900, height: 640)) { DataGeneratorView(workspace: workspace) }
+        case .compareTableData:
+            ToolWindowController.show(key: "compareTableData", title: L10n.tr("Porównanie danych tabel"), size: NSSize(width: 900, height: 580)) { CompareTableDataView(workspace: workspace) }
+        }
+    }
+
     func showExportObjects() {
         ToolWindowController.show(key: "exportObjects", title: L10n.tr("Eksport obiektów użytkownika"), size: NSSize(width: 680, height: 620)) {
             ExportObjectsView(workspace: workspace)
@@ -222,6 +305,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func showCompareObjects() {
         ToolWindowController.show(key: "compareObjects", title: L10n.tr("Porównanie obiektów użytkowników"), size: NSSize(width: 980, height: 620)) {
             CompareObjectsView(workspace: workspace)
+        }
+    }
+
+    func showScheduler() {
+        ToolWindowController.show(key: "scheduler", title: L10n.tr("DBMS Scheduler"), size: NSSize(width: 1000, height: 640)) {
+            SchedulerView(workspace: workspace)
         }
     }
 
@@ -334,6 +423,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         pb.clearContents()
         pb.setString(text, forType: .string)
         if let html { pb.setString(html, forType: .html) }
+        workspace.recordClipboard(text)
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {

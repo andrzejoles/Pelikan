@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + ConnectionCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -432,12 +432,6 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
                 TextEditing.removeTrailingSpaces($0, selection: $1)
             },
-            .planned(CommandDescriptor(id: "edit.macroRecord", title: L10n.tr("Nagrywaj makro"), category: .edit, submenu: L10n.tr("Makra"),
-                                       pd: ["f11"], agent: .none, effect: .uiState,
-                                       summary: L10n.tr("Rozpoczyna lub kończy nagrywanie makra."), stage: 6, feature: "PD-EDIT-015")),
-            .planned(CommandDescriptor(id: "edit.macroPlay", title: L10n.tr("Odtwórz makro"), category: .edit, submenu: L10n.tr("Makra"),
-                                       pd: ["f12"], agent: .none, effect: .modifiesEditor,
-                                       summary: L10n.tr("Odtwarza nagrane makro."), stage: 6, feature: "PD-EDIT-015")),
         ]
     }
 
@@ -465,14 +459,6 @@ public enum BuiltinCommands {
 
     @MainActor static var tools: [Command] {
         let t: [(String, String, [String], Int, String, AgentAccess)] = [
-            ("tools.queryBuilder", L10n.tr("Query Builder…"), [], 6, "PD-QB-001", .none),
-            ("tools.scheduler", L10n.tr("DBMS Scheduler"), [], 6, "PD-SCHED-001", .read),
-            ("tools.exportTables", L10n.tr("Eksport tabel…"), [], 6, "PD-TOOL-003", .none),
-            ("tools.importTables", L10n.tr("Import tabel…"), [], 6, "PD-TOOL-006", .none),
-            ("tools.compareTableData", L10n.tr("Porównaj dane tabel…"), [], 6, "PD-TOOL-013", .read),
-            ("tools.textImporter", L10n.tr("Import tekstu…"), [], 6, "PD-TOOL-008", .none),
-            ("tools.excelImporter", L10n.tr("Import z Excela…"), [], 6, "PD-TOOL-009", .none),
-            ("tools.dataGenerator", L10n.tr("Generator danych…"), [], 6, "PD-TOOL-011", .none),
             ("tools.eventMonitor", L10n.tr("Monitor zdarzeń…"), [], 6, "PD-TOOL-014", .none),
             ("tools.testManager", L10n.tr("Menedżer testów…"), [], 6, "PD-TOOL-018", .none),
             ("tools.loadTester", L10n.tr("Test obciążenia…"), [], 6, "PD-TOOL-019", .none),

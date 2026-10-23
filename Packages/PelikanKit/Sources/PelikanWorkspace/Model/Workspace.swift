@@ -50,11 +50,20 @@ public protocol UIServices: AnyObject {
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
     /// Eksplorator testów utPLSQL (UT-EXP-001).
     func showTestExplorer()
+    /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
+    func exportDiagram(_ doc: Document, format: String)
+    func copyDiagramImage(_ doc: Document)
+    func printDiagram(_ doc: Document)
+    func showQueryBuilder(sql: String?, connectionID: UUID?)
+    /// Okna eksportu/importu tabel, importu tekstu i Excela, generatora danych, porównania danych (PD-TOOL-003…013).
+    func showDataTransfer(_ tool: DataTransferTool)
     /// Przeglądarka sesji (PD-TOOL-015).
     func showSessionBrowser()
     /// Eksport i porównanie obiektów użytkownika (PD-TOOL-007, PD-TOOL-012).
     func showExportObjects()
     func showCompareObjects()
+    /// DBMS Scheduler (PD-SCHED-001).
+    func showScheduler()
     /// Okno wyników utPLSQL dla przebiegu (PROMPT §6).
     func showUtplsqlResults(_ run: UtplsqlRun)
     /// Okno punktów przerwania (UG 5.10).
@@ -63,23 +72,57 @@ public protocol UIServices: AnyObject {
     func showDebugger(_ debugger: DebuggerEngine, document: Document)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
+    /// Biblioteka makr, historia schowka, lista zadań To-Do (PD-EDIT-015, PD-EDIT-024, PD-TODO-001).
+    func showMacroLibrary()
+    func showClipboardHistory()
+    func showTodoItems()
+    /// Tekst w schowku systemowym (Paste from host language).
+    func clipboardText() -> String?
+    /// Pokazuje File Browser w lewej kolumnie (UG 22).
+    func showFileBrowser()
+    /// Wybór katalogu (lokalizacja File Browsera); nil — anulowano.
+    func chooseDirectory() async -> URL?
+    /// Bieżący układ okna głównego (nil — brak okna).
+    func currentLayout() -> WindowLayout?
+    /// Przywraca układ okna głównego.
+    func applyLayout(_ layout: WindowLayout)
+    /// Historia Git (lista zatwierdzeń) w oknie informacji.
+    func showGitLog(_ commits: [GitCommit], title: String)
 
 }
 
 extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
+    public func showMacroLibrary() {}
+    public func showClipboardHistory() {}
+    public func showTodoItems() {}
+    public func clipboardText() -> String? { nil }
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
     public func showBreakpoints() {}
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
+    public func exportDiagram(_ doc: Document, format: String) {}
+    public func copyDiagramImage(_ doc: Document) {}
+    public func printDiagram(_ doc: Document) {}
+    public func showQueryBuilder(sql: String?, connectionID: UUID?) {}
+    public func showDataTransfer(_ tool: DataTransferTool) {}
     public func showSessionBrowser() {}
     public func showExportObjects() {}
     public func showCompareObjects() {}
+    public func showScheduler() {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
+    public func showFileBrowser() {}
+    public func chooseDirectory() async -> URL? { nil }
+    public func currentLayout() -> WindowLayout? { nil }
+    public func applyLayout(_ layout: WindowLayout) {}
+    public func showGitLog(_ commits: [GitCommit], title: String) {
+        showObjectInfo(title: title, columns: [L10n.tr("Zatwierdzenie"), L10n.tr("Autor"), L10n.tr("Data"), L10n.tr("Opis")],
+                       rows: commits.map { [String($0.hash.prefix(10)), $0.author, $0.date.map { ISO8601DateFormatter().string(from: $0) } ?? "", $0.subject] })
+    }
     public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
         await askVariables(requests, document: document)
     }
@@ -104,6 +147,12 @@ public struct CommandRegistry: Sendable {
     }
 
     public func command(_ id: CommandID) -> Command? { index[id].map { commands[$0] } }
+
+    public mutating func remove(_ ids: [CommandID]) {
+        let drop = Set(ids)
+        commands.removeAll { drop.contains($0.id) }
+        index = Dictionary(uniqueKeysWithValues: commands.enumerated().map { ($0.element.id, $0.offset) })
+    }
     public var descriptors: [CommandDescriptor] { commands.map(\.descriptor) }
 }
 
@@ -151,6 +200,11 @@ public final class Workspace {
     public let dataDirectory: URL?
     /// Szablony kodu (UG 31): wbudowane i użytkownika z katalogu danych.
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
+    /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
+    @ObservationIgnored public private(set) lazy var fileBrowser = FileBrowser(fileURL: dataDirectory?.appendingPathComponent("file-browser.json"))
+    /// Worksety (UG 15) i zapisany układ okna (UG 23.10).
+    @ObservationIgnored public private(set) lazy var worksets = WorksetStore(directory: dataDirectory?.appendingPathComponent("Worksets", isDirectory: true),
+                                                                             layoutURL: dataDirectory?.appendingPathComponent("layout.json"))
     /// Zmienia się po zapisie lub usunięciu szablonu (Template Window przeładowuje listę).
     public var templatesGeneration = 0
     /// Punkty przerwania (UG 5.10) i debugery okien testu.
@@ -187,6 +241,14 @@ public final class Workspace {
 
     @ObservationIgnored public weak var ui: (any UIServices)?
     @ObservationIgnored private var invocationObservers: [@MainActor (CommandInvocationRecord) -> Void] = []
+    /// Nagrywane makro (nil — nie trwa nagrywanie) i bieżące makro F12 (PD-EDIT-015).
+    public internal(set) var macroRecorder: MacroRecorder?
+    public internal(set) var currentMacro: Macro?
+    @ObservationIgnored var isPlayingMacro = false
+    /// Biblioteka makr z katalogu danych.
+    public internal(set) var macroLibrary = MacroLibrary()
+    /// Historia schowka (PD-EDIT-024).
+    public internal(set) var clipboardHistory = ClipboardHistory()
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
     /// Silniki SQL*Plus okien Command Window (stan SET/DEFINE/VARIABLE trwa przez życie okna).
     @ObservationIgnored private var sqlplusEngines: [DocumentID: SQLPlusEngine] = [:]
@@ -229,6 +291,12 @@ public final class Workspace {
         if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")),
            let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
             history = h
+        }
+        // Komendy z plików użytkownika: makra z biblioteki i własne formaty Special Copy.
+        macroLibrary = MacroLibrary.load(from: dataDirectory)
+        if commands == nil {
+            registerMacroCommands()
+            registerCopyFormatCommands()
         }
     }
 
@@ -308,6 +376,13 @@ public final class Workspace {
         rebuildKeymap()
     }
 
+    /// Usuwa komendy dodane w trakcie działania (np. usunięte makro).
+    public func unregister(_ ids: [CommandID]) {
+        guard !ids.isEmpty else { return }
+        registry.remove(ids)
+        rebuildKeymap()
+    }
+
     public func onInvocation(_ observer: @escaping @MainActor (CommandInvocationRecord) -> Void) {
         invocationObservers.append(observer)
     }
@@ -367,6 +442,7 @@ public final class Workspace {
     }
 
     private func notify(_ record: CommandInvocationRecord) {
+        recordMacroInvocation(record)
         for o in invocationObservers { o(record) }
     }
 }

@@ -98,10 +98,16 @@ public struct Settings: Sendable, Codable, Hashable {
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
     public var confirmSaveNewWindows = true
+    /// Autozapis bieżącego workseta przy zamykaniu aplikacji i przywrócenie przy starcie (UG 15).
+    public var worksetAutosave = true
+    /// Autozapis układu okna głównego (UG 23.10 „Autosave desktop/layout”).
+    public var autosaveLayout = true
     // Agenci AI (PROMPT §7)
     public var agent = AgentSettings()
     /// Zapytania przeglądarki sesji (Define Session Queries).
     public var sessionQueries = SessionQueries.standard
+    /// Raporty przebiegów zadań schedulera z regułami kolorów (UG 10.4).
+    public var schedulerReports = Scheduler.RunReport.standard
 
     public init() {}
 
@@ -129,6 +135,8 @@ public struct Settings: Sendable, Codable, Hashable {
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)
         confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
+        worksetAutosave = v(.worksetAutosave, worksetAutosave)
+        autosaveLayout = v(.autosaveLayout, autosaveLayout)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)
         checkConnectionIntervalSeconds = v(.checkConnectionIntervalSeconds, checkConnectionIntervalSeconds)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
@@ -155,5 +163,6 @@ public struct Settings: Sendable, Codable, Hashable {
         keyOverrides = v(.keyOverrides, keyOverrides)
         agent = v(.agent, agent)
         sessionQueries = v(.sessionQueries, sessionQueries)
+        schedulerReports = v(.schedulerReports, schedulerReports)
     }
 }
