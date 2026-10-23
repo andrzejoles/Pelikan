@@ -715,6 +715,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         connectionCheck = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
+                // Bezczynne sesje okien bez transakcji (Preferencje › Oracle, PD-CONN-026).
+                await self.workspace.sessions.closeIdleSessions(olderThan: self.workspace.settings.closeIdleSessionsMinutes)
                 let lost = await self.workspace.sessions.checkConnections()
                 guard !lost.isEmpty else { return }
                 let names = Set(lost.compactMap { self.workspace.connections.connection($0.connectionID)?.displayName })

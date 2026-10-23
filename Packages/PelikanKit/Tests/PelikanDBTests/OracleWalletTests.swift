@@ -19,6 +19,11 @@ struct OracleNetTests {
         let sqlnet = try String(contentsOfFile: dir + "/sqlnet.ora", encoding: .utf8)
         #expect(sqlnet.contains("DIRECTORY=\"\(wallet.path)\"") && sqlnet.contains("SQLNET.WALLET_OVERRIDE=TRUE") && !sqlnet.contains("IFILE"))
         #expect(try String(contentsOfFile: dir + "/tnsnames.ora", encoding: .utf8).contains("IFILE=\"\(user.path)/tnsnames.ora\""))
+        #expect(!FileManager.default.fileExists(atPath: dir + "/ldap.ora"))
+        // ldap.ora użytkownika — dowiązanie w katalogu zarządzanym (LDAP, PD-CONN-013).
+        try "DEFAULT_ADMIN_CONTEXT = \"dc=example,dc=invalid\"".write(to: user.appendingPathComponent("ldap.ora"), atomically: true, encoding: .utf8)
+        _ = try OracleNet.prepareManagedDirectory(tmp.appendingPathComponent("net"), userDirectory: user.path, walletDirectory: wallet.path)
+        #expect(try FileManager.default.destinationOfSymbolicLink(atPath: dir + "/ldap.ora") == user.path + "/ldap.ora")
         #expect(OracleNet.walletStatus(wallet.path) == .missing)
         FileManager.default.createFile(atPath: wallet.appendingPathComponent("ewallet.p12").path, contents: Data())
         #expect(OracleNet.walletStatus(wallet.path) == .passwordOnly)

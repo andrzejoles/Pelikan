@@ -61,6 +61,48 @@ extension ConnectionPrompter {
 public final class SessionManager {
     public private(set) var mainConnectionID: UUID?
     private var sessions: [SessionKey: any DatabaseSession] = [:]
+    /// SID i numer instancji sesji (SYS_CONTEXT przy otwarciu) — do zakończenia sesji okna z innej sesji (PD-CONN-027).
+    public private(set) var serverSessionIDs: [SessionKey: (sid: String, instance: String)] = [:]
+    /// Sesje okien z włączonym SQL Trace (PD-OPT-008).
+    public var sqlTraceEnabled: Set<SessionKey> = []
+    /// Ostatnie użycie sesji (zamykanie bezczynnych, PD-CONN-026).
+    public private(set) var lastActivity: [SessionKey: Date] = [:]
+
+    /// Parametry NLS sesji, które Pelikan pozwala ustawić (wartość w cudzysłowie, bez apostrofów).
+    public static let nlsParameters = ["NLS_LANGUAGE", "NLS_TERRITORY", "NLS_DATE_FORMAT", "NLS_DATE_LANGUAGE", "NLS_TIMESTAMP_FORMAT",
+                                       "NLS_TIMESTAMP_TZ_FORMAT", "NLS_NUMERIC_CHARACTERS", "NLS_CURRENCY", "NLS_ISO_CURRENCY",
+                                       "NLS_SORT", "NLS_COMP", "NLS_LENGTH_SEMANTICS", "TIME_ZONE"]
+
+    /// Polecenie ALTER SESSION dla parametrów NLS z ustawień (nieznane nazwy i wartości z apostrofem — pomijane).
+    public static func nlsStatement(_ values: [String: String]) -> String? {
+        let parts = values.sorted { $0.key < $1.key }.compactMap { k, v -> String? in
+            // Wartość bez przycinania: spacja bywa znacząca (NLS_NUMERIC_CHARACTERS = ', ').
+            let name = k.uppercased(), value = v
+            guard nlsParameters.contains(name), !value.trimmingCharacters(in: .whitespaces).isEmpty, !value.contains("'") else { return nil }
+            return "\(name) = '\(value)'"
+        }
+        return parts.isEmpty ? nil : "ALTER SESSION SET " + parts.joined(separator: " ")
+    }
+
+    /// Notuje użycie sesji (wykonanie polecenia w oknie).
+    public func touch(_ key: SessionKey, at date: Date = Date()) { lastActivity[key] = date }
+
+    /// Zamyka sesje okien bezczynne dłużej niż `minutes` minut, bez otwartej transakcji; zwraca liczbę zamkniętych.
+    @discardableResult
+    public func closeIdleSessions(olderThan minutes: Int, now: Date = Date()) async -> Int {
+        guard minutes > 0 else { return 0 }
+        var closed = 0
+        for (key, s) in sessions {
+            guard case .document = key.purpose, now.timeIntervalSince(lastActivity[key] ?? .distantPast) > Double(minutes * 60) else { continue }
+            // Zamykamy tylko sesję, która odpowiada i nie ma otwartej transakcji (decyzję o transakcji podejmuje użytkownik).
+            let tx: String?? = try? await s.scalar("select dbms_transaction.local_transaction_id from dual")
+            if case .some(.none) = tx {
+                await close(key)
+                closed += 1
+            }
+        }
+        return closed
+    }
     @ObservationIgnored private var connecting: [SessionKey: Task<any DatabaseSession, any Error>] = [:]
     @ObservationIgnored private let store: ConnectionStore
     @ObservationIgnored private var drivers: [DriverKind: any DatabaseDriver]
@@ -137,7 +179,13 @@ public final class SessionManager {
         defer { connecting[key] = nil }
         let s = try await task.value
         sessions[key] = s
+        lastActivity[key] = Date()
         store.markUsed(key.connectionID)
+        // SID sesji okien i głównej (wykonują polecenia użytkownika) — do zakończenia sesji, gdy Przerwij nie działa.
+        switch key.purpose {
+        case .main, .document: await recordServerSessionID(s, key: key)
+        default: break
+        }
         return s
     }
 
@@ -215,11 +263,18 @@ public final class SessionManager {
         throw CommandError.notConnected
     }
 
+    /// Zapamiętuje SID i instancję sesji (bez uprawnień do V$SESSION).
+    func recordServerSessionID(_ s: any DatabaseSession, key: SessionKey) async {
+        let (_, rows) = (try? await s.queryAll("select sys_context('userenv', 'sid'), sys_context('userenv', 'instance') from dual", limit: 1)) ?? ([], [])
+        if let r = rows.first, let sid = r[0].displayText { serverSessionIDs[key] = (sid, r[1].displayText ?? "1") }
+    }
+
     /// Po połączeniu: Workspace Manager, bieżący schemat, skrypt inicjalizacji połączenia (UG 19.2).
     private func initialize(_ s: any DatabaseSession, _ def: ConnectionDefinition) async throws {
         if let ws = def.workspaceManager, !ws.isEmpty {
             _ = try await s.execute("BEGIN DBMS_WM.GotoWorkspace(:ws); END;", binds: [BindVariable(name: "ws", value: .text(ws))])
         }
+        if let nls = Self.nlsStatement(settings().sessionNLS) { _ = try await s.execute(nls) }
         if let schema = def.currentSchema, !schema.isEmpty, Self.isSafeIdentifier(schema) {
             _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
         }
@@ -237,6 +292,9 @@ public final class SessionManager {
 
     /// Zamyka sesję (bez pytania — decyzję o transakcji podejmuje wywołujący).
     public func close(_ key: SessionKey) async {
+        serverSessionIDs[key] = nil
+        sqlTraceEnabled.remove(key)
+        lastActivity[key] = nil
         guard let s = sessions.removeValue(forKey: key) else { return }
         await s.close()
         if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }

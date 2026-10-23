@@ -743,3 +743,13 @@ przyciski AppKit z obrazkiem — `accessibilityDescription`. `AccessibilityAudit
 nowe elementy bez etykiety (testy pakietu nie uruchamiają interfejsu). Próba z VoiceOverem i Accessibility Inspector —
 w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
 
+
+### D97 · 2026-10-23 — Domknięcie połączeń: Kill, NLS, LDAP, Kerberos, Workspace Manager
+Zakończenie sesji okna używa SID zapamiętanego przy otwarciu sesji (SYS_CONTEXT — bez uprawnień do V$SESSION) i numeru
+seryjnego z GV$SESSION w chwili zabicia, z osobnej sesji narzędziowej; ORA-00031 to sukces (ODPI-C zgłasza go jako
+zamknięcie połączenia, więc sesję narzędziową zamykamy). Wymaga uprawnienia ALTER SYSTEM — bez niego błąd bazy w oknie.
+Parametry NLS z Preferencji (biała lista nazw, wartości bez apostrofów i bez przycinania) — ALTER SESSION po połączeniu;
+kodowanie klienta to zawsze UTF-8 (ODPI-C), więc NLS_LANG jako zmienna środowiska nie jest potrzebna i nie jest
+ustawiana. LDAP: `ldap.ora` dowiązany do katalogu Oracle Net Pelikana (klient czyta go tylko z TNS_ADMIN, bez IFILE).
+Kerberos i Workspace Manager działają tymi samymi ścieżkami co przetestowane uwierzytelnianie zewnętrzne i skrypt po
+połączeniu, ale bez KDC i bez DBMS_WM w bazie testowej — wiersze ⚠️ do potwierdzenia przez właściciela.

@@ -35,6 +35,28 @@ public enum ConnectionCommands {
                 ctx.workspace.sessions.setMainConnection(nil)
                 return .ok
             },
+            Command(CommandDescriptor(id: "connection.export", title: L10n.tr("Eksportuj definicje połączeń…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje definicje połączeń i foldery do pliku JSON — bez haseł (zostają w Pęku kluczy)."),
+                                      feature: "PD-CONN-010")) { ctx in
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: "Pelikan-connections", fileExtension: "json") }
+                guard let url else { throw CommandError.cancelledByUser }
+                try ctx.workspace.connections.exportDefinitions().write(to: url, options: .atomic)
+                return CommandResult(message: L10n.tr("Zapisano \(ctx.workspace.connections.connections.count) połączeń"), value: .string(url.path))
+            },
+            Command(CommandDescriptor(id: "connection.import", title: L10n.tr("Importuj definicje połączeń…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Dopisuje definicje połączeń z pliku JSON (hasła trzeba podać przy pierwszym połączeniu)."),
+                                      feature: "PD-CONN-010")) { ctx in
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
+                guard let url else { throw CommandError.cancelledByUser }
+                let n = try ctx.workspace.connections.importDefinitions(try Data(contentsOf: url))
+                return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n)"), value: .int(Int64(n)))
+            },
             Command(CommandDescriptor(id: "connection.new", title: L10n.tr("Nowe połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       agent: .none, effect: .settings, summary: L10n.tr("Definiuje nowe połączenie."), feature: "PD-CONN-004")) { ctx in
                 ctx.ui?.showConnectionEditor(connectionID: nil)

@@ -42,14 +42,14 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-006 | Środowisko połączenia dev/test/prod z ostrzeżeniami przy zmianach na prod | PROMPT §4.2 p.6 | Configure > Connections | 1 | P1 | Odczyt | ✅ test |
 | PD-CONN-007 | Połączenie tylko do odczytu (blokada zmian obiektów i danych) | UG 19.2, NF15 | Configure > Connections | 1 | P1 | Odczyt | ✅ test |
 | PD-CONN-008 | Skrypt inicjalizacji sesji i komunikat przy logowaniu; Test połączenia | UG 19.2, NF11 | Configure > Connections | 1 | P2 | Brak | ✅ test |
-| PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | do zrobienia |
-| PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | w toku |
+| PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | ⚠️ test (Edition z definicji połączenia — test na bazie, CURRENT_EDITION_NAME; Workspace Manager przez DBMS_WM.GotoWorkspace po połączeniu — bez próby, baza testowa nie ma DBMS_WM, D97) |
+| PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | ✅ test (połączenie przy starcie z definicji; eksport i import definicji z folderami do JSON bez haseł — komendy, test na bazie) |
 | PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | ✅ test |
 | PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ✅ test (portfel magazynu haseł SEPS /@alias z Preferencji przez katalog Oracle Net Pelikana — test na bazie i ręczna próba właściciela; portfel TLS per połączenie: tcps:// wallet_location, MY_WALLET_DIRECTORY; import portfela ZIP; status cwallet.sso; TCPS bez testu na żywo — brak listenera TCPS w bazie testowej) |
-| PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | do zrobienia |
-| PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | do zrobienia |
+| PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | ⚠️ częściowo (ldap.ora użytkownika dowiązany do katalogu Oracle Net Pelikana, NAMES.DIRECTORY_PATH z jego sqlnet.ora; bez próby z serwerem LDAP, D97) |
+| PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | ⚠️ test (uwierzytelnianie zewnętrzne — test przez magazyn haseł Oracle Wallet; Kerberos tym samym trybem, bez KDC w testach, D97) |
 | PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | ✅ test |
-| PD-CONN-016 | Proxy user (pośrednik[schemat]) | NF12 | Log on | 1 | P2 | Brak | w toku |
+| PD-CONN-016 | Proxy user (pośrednik[schemat]) | NF12 | Log on | 1 | P2 | Brak | ✅ test (użytkownik proxy pośrednik[schemat] — sesja agenta przez PELIKAN_AGENT[PELIKAN_TEST] w testach na bazie) |
 | PD-CONN-017 | Zmiana wygasłego hasła (ORA-28001) i Set Password (w bazie i w definicji) | PROMPT §3.1, NF10 | Session > Set Password | 1 | P2 | Brak | ✅ test |
 | PD-CONN-018 | Wiele połączeń naraz; połączenie główne (pogrubione, dwuklik, Set Main Connection [to current]) | UG 20.1 | Session | 1 | P1 | Odczyt | ✅ test |
 | PD-CONN-019 | Połączenie okna na pasku stanu, zmiana połączenia okna, przypięte / nieprzypięte (preferencja domyślna) | UG 20.2, NF10 | Pasek stanu okna | 1 | P1 | — | ✅ test |
@@ -58,9 +58,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | w toku |
 | PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | ✅ test |
 | PD-CONN-024 | Wylogowanie z otwartą transakcją: COMMIT / ROLLBACK / pytaj (w Pelikanie domyślnie pytaj) | UG 23.1 | Preferences | 1 | P1 | — | ✅ test |
-| PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | do zrobienia |
-| PD-CONN-026 | Automatyczne zamykanie nieużywanych połączeń; pamiętanie Recent | UG 23.1 | Preferences | 1 | P3 | — | do zrobienia |
-| PD-CONN-027 | Kill sesji okna (Session > Kill) gdy Break nie działa | UG 20.4 | Session > Kill | 1 | P2 | Brak | do zrobienia |
+| PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | ✅ test (parametry NLS sesji z Preferencji przez ALTER SESSION w każdej nowej sesji, biała lista nazw; kodowanie klienta zawsze UTF-8 zamiast NLS_LANG, D97) |
+| PD-CONN-026 | Automatyczne zamykanie nieużywanych połączeń; pamiętanie Recent | UG 23.1 | Preferences | 1 | P3 | — | ✅ test (zamykanie sesji okien bezczynnych ponad N minut bez otwartej transakcji; ostatnio używane połączenia z lastUsed) |
+| PD-CONN-027 | Kill sesji okna (Session > Kill) gdy Break nie działa | UG 20.4 | Session > Kill | 1 | P2 | Brak | ✅ test (Zakończ sesję okna: SID zapamiętany przy połączeniu, ALTER SYSTEM KILL SESSION z sesji narzędziowej po potwierdzeniu, ORA-00031 jako sukces, okno łączy się ponownie) |
 | PD-CONN-028 | Sterownik thin (OracleNIO) wybierany w połączeniu; funkcje niedostępne wyszarzone z podpowiedzią | PROMPT §4.1 | Configure > Connections | 1 | P2 | — | ✅ test |
 | PD-CONN-029 | Wykrywanie Instant Client, ścieżka w ustawieniach, ekran pomocy przy braku | PROMPT §4.1 | Preferences > Oracle | 1 | P1 | — | ✅ test |
 | PD-CONN-030 | Tunel SSH do bazy (z DBeaver; ważne na Macu) | PROMPT §3.3 | Configure > Connections | 1 | P1 | Brak | ✅ test |
@@ -269,7 +269,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OPT-005 | Profiler PL/SQL (DBMS_PROFILER): raport na linię, przebiegi, jednostki, wykres, preferencje | UG 6.3, UG 23.7 | Test Window > Profiler | 3 | P2 | Brak | ⚠️ częściowo (raport na linię z czasem, liczbą wykonań, udziałem i tekstem; bez historii przebiegów, wykresu i preferencji) ✅ test 👁 |
 | PD-OPT-006 | Profiler hierarchiczny (DBMS_HPROF) | PROMPT §3.1 | Test Window | 3 | P2 | Brak | ⚠️ częściowo (funkcje z wywołaniami i czasami własnym/z wywołaniami; bez drzewa rodzic–dziecko w UI) ✅ test |
 | PD-OPT-007 | Trace (DBMS_TRACE): poziomy, raport, historia przebiegów, kolumny | UG 5.11, UG 23.6 | Test Window > Trace | 3 | P3 | Brak | do zrobienia |
-| PD-OPT-008 | SQL Trace sesji okna (przełącznik) | UG 6.4 | Session > SQL Trace | 3 | P3 | Brak | do zrobienia |
+| PD-OPT-008 | SQL Trace sesji okna (przełącznik) | UG 6.4 | Session > SQL Trace | 3 | P3 | Brak | ✅ test (SQL Trace sesji okna — DBMS_SESSION.SESSION_TRACE_ENABLE/DISABLE, plik śladu z V$DIAG_INFO) |
 
 ## PL/SQL Developer — Object Browser i edytory obiektów
 
@@ -395,7 +395,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PREF-001 | Okno preferencji: kategorie Oracle / UI / Window Types / Tools / Files / Other, wyszukiwarka, Apply | UG 23 | Configure > Preferences | 1 | P1 | — | ⚠️ częściowo (karty bez wyszukiwarki i pełnych kategorii) |
 | PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | ✅ test (zestawy: domyślny globalny, domyślny połączenia, osobisty, osobisty połączenia — wzorce `użytkownik@baza`/nazwa z `*` `%`; pierwszeństwo jak we wzorcu, przeliczenie przy zmianie połączenia głównego, źródło wartości i „Dziedzicz” w karcie Zestawy, wybór zestawu edytowanego; okno bez zrzutu — D30, D92) |
 | PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | ✅ test (eksport obowiązujących preferencji wybranych sekcji do JSON, import do zestawu edytowanego; bez haseł i historii plików, obcy plik odrzucony — D92) |
-| PD-PREF-004 | NLS Options aplikacji (data, czas, liczby: własne / systemowe / Oracle) | UG 23.17 | Preferences > NLS | 1 | P2 | — | w toku |
+| PD-PREF-004 | NLS Options aplikacji (data, czas, liczby: własne / systemowe / Oracle) | UG 23.17 | Preferences > NLS | 1 | P2 | — | ✅ test (NLS aplikacji: format daty i czasu, separatory liczb, język, terytorium, sortowanie — Preferencje › Oracle; formaty wyświetlania siatki osobno w SQL Window) |
 | PD-PREF-005 | Czcionki edytora, siatek, przeglądarki (z kolorem i tłem) | UG 23.13 | Preferences > Fonts | 1 | P2 | — | w toku |
 | PD-PREF-006 | Katalogi startowe (programy, testy, skrypty, raporty, makra, szablony, projekty, worksety…) i rozszerzenia plików | UG 23.28–23.29 | Preferences > Files | 1 | P2 | — | do zrobienia |
 | PD-PREF-007 | Konfiguracja klawiszy (wszystkie funkcje, filtr, czyszczenie) | UG 23.15 | Preferences > Key Configuration | 1 | P1 | — | ✅ test |

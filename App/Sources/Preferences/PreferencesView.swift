@@ -174,6 +174,18 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Ustawienia NLS sesji")) {
+                ForEach(["NLS_DATE_FORMAT", "NLS_TIMESTAMP_FORMAT", "NLS_NUMERIC_CHARACTERS", "NLS_LANGUAGE", "NLS_TERRITORY", "NLS_SORT", "NLS_COMP"], id: \.self) { name in
+                    TextField(name, text: Binding(get: { workspace.settings.sessionNLS[name] ?? "" },
+                                                  set: { v in workspace.settings.sessionNLS[name] = v.isEmpty ? nil : v }),
+                              prompt: Text(L10n.tr("ustawienie serwera")))
+                }
+                Text(L10n.tr("Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji.")).font(.caption).foregroundStyle(.secondary)
+                Stepper(value: setting(workspace, \.closeIdleSessionsMinutes), in: 0...1440, step: 15) {
+                    Text(workspace.settings.closeIdleSessionsMinutes == 0 ? L10n.tr("Nie zamykaj bezczynnych sesji okien")
+                         : L10n.tr("Zamykaj sesje okien bezczynne ponad \(workspace.settings.closeIdleSessionsMinutes) min (bez otwartej transakcji)"))
+                }
+            }
             Section(L10n.tr("Dokumentacja Oracle (F1)")) {
                 Picker(L10n.tr("Wersja dokumentacji"), selection: setting(workspace, \.oracleDocsRelease)) {
                     ForEach(OracleDocs.releases, id: \.self) { r in Text(r == "19" ? "19c" : r == "21" ? "21c" : r + "ai").tag(r) }

@@ -98,7 +98,7 @@ struct SessionManagerTests {
         ws.sessions.prompter = prompter
         let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)) as! FakeSession
         #expect(prompter.asked == 0)
-        #expect(s.executed.withLock { $0 } == ["ALTER SESSION SET CURRENT_SCHEMA = HR", "alter session set nls_language = 'POLISH'", "begin null; end;"])
+        #expect(s.executed.withLock { $0 }.filter { !$0.lowercased().hasPrefix("select") } == ["ALTER SESSION SET CURRENT_SCHEMA = HR", "alter session set nls_language = 'POLISH'", "begin null; end;"])
         #expect(driver.attempts.withLock { $0.count } == 1)
         #expect(ws.sessions.status(of: def.id) == .connected(sessions: 1))
     }

@@ -11761,6 +11761,34 @@
         }
       }
     },
+    "Dopisuje definicje połączeń z pliku JSON (hasła trzeba podać przy pierwszym połączeniu)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adds connection definitions from a JSON file (passwords must be entered on first connect)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt Verbindungsdefinitionen aus einer JSON-Datei hinzu (Kennwörter werden beim ersten Verbinden abgefragt)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade definiciones de conexión desde un archivo JSON (las contraseñas se piden al conectar por primera vez)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає визначення з'єднань із файлу JSON (паролі потрібно ввести під час першого з'єднання)."
+          }
+        }
+      }
+    },
     "Dostosuj pasek narzędzi…" : {
       "localizations" : {
         "en" : {
@@ -13297,6 +13325,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichtsdaten exportieren …"
+          }
+        }
+      }
+    },
+    "Eksportuj definicje połączeń…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Connection Definitions…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsdefinitionen exportieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar definiciones de conexión…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати визначення з'єднань…"
           }
         }
       }
@@ -17861,6 +17917,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SSH-Ziele importieren …"
+          }
+        }
+      }
+    },
+    "Importuj definicje połączeń…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Connection Definitions…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsdefinitionen importieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar definiciones de conexión…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортувати визначення з'єднань…"
           }
         }
       }
@@ -28645,6 +28729,34 @@
         }
       }
     },
+    "Nie zamykaj bezczynnych sesji okien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't close idle window sessions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaktive Fenstersitzungen nicht schließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cerrar las sesiones de ventana inactivas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не закривати неактивні сеанси вікон"
+          }
+        }
+      }
+    },
     "Nie zapisuj" : {
       "localizations" : {
         "en" : {
@@ -33741,6 +33853,34 @@
         }
       }
     },
+    "Okno nie ma sesji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has no session"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat keine Sitzung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana no tiene sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно не має сеансу"
+          }
+        }
+      }
+    },
     "Okno planu" : {
       "localizations" : {
         "en" : {
@@ -37853,6 +37993,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файл .json"
+          }
+        }
+      }
+    },
+    "Plik JSON" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON-Datei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo JSON"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл JSON"
           }
         }
       }
@@ -49477,6 +49645,62 @@
         }
       }
     },
+    "SQL Trace wyłączony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace off"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace desactivado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace вимкнено"
+          }
+        }
+      }
+    },
+    "SQL Trace włączony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace on"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace ein"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace activado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Trace увімкнено"
+          }
+        }
+      }
+    },
     "SQL Tuning Advisor" : {
       "localizations" : {
         "en" : {
@@ -50229,6 +50453,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sitzung"
+          }
+        }
+      }
+    },
+    "Sesja %@ już nie istnieje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session %@ no longer exists"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung %@ existiert nicht mehr"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión %@ ya no existe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеансу %@ уже не існує"
+          }
+        }
+      }
+    },
+    "Sesja %@ zakończona" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session %@ terminated"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung %@ beendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión %@ finalizada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеанс %@ завершено"
+          }
+        }
+      }
+    },
+    "Sesja %@ zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session %@ will be terminated in the database (ALTER SYSTEM KILL SESSION). Uncommitted changes of this session will be lost."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung %@ wird in der Datenbank beendet (ALTER SYSTEM KILL SESSION). Nicht festgeschriebene Änderungen dieser Sitzung gehen verloren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sesión %@ se finalizará en la base de datos (ALTER SYSTEM KILL SESSION). Se perderán los cambios no confirmados de esta sesión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеанс %@ буде завершено в базі даних (ALTER SYSTEM KILL SESSION). Незафіксовані зміни цього сеансу буде втрачено."
           }
         }
       }
@@ -57989,6 +58297,34 @@
         }
       }
     },
+    "Ustawienia NLS sesji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session NLS settings"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NLS-Einstellungen der Sitzung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes NLS de la sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри NLS сеансу"
+          }
+        }
+      }
+    },
     "Ustawienia…" : {
       "localizations" : {
         "en" : {
@@ -60281,6 +60617,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werte an Punkten"
+          }
+        }
+      }
+    },
+    "Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Values set with ALTER SESSION in every new session."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werte, die in jeder neuen Sitzung per ALTER SESSION gesetzt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valores establecidos con ALTER SESSION en cada sesión nueva."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Значення, що встановлюються командою ALTER SESSION у кожному новому сеансі."
           }
         }
       }
@@ -68993,6 +69357,34 @@
         }
       }
     },
+    "Zaimportowano połączeń: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connections imported: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importierte Verbindungen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexiones importadas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортовано з'єднань: %@"
+          }
+        }
+      }
+    },
     "Zainstalowano utPLSQL %@" : {
       "localizations" : {
         "en" : {
@@ -69133,6 +69525,34 @@
         }
       }
     },
+    "Zakończ sesję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminate session"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzung beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizar sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершити сеанс"
+          }
+        }
+      }
+    },
     "Zakończ sesję agenta" : {
       "localizations" : {
         "en" : {
@@ -69241,6 +69661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abgeschlossen"
+          }
+        }
+      }
+    },
+    "Zakończyć sesję okna?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminate the window session?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstersitzung beenden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Finalizar la sesión de la ventana?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершити сеанс вікна?"
           }
         }
       }
@@ -70421,6 +70869,34 @@
         }
       }
     },
+    "Zamykaj sesje okien bezczynne ponad %@ min (bez otwartej transakcji)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close window sessions idle for more than %@ min (without an open transaction)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstersitzungen schließen, die länger als %@ Min. inaktiv sind (ohne offene Transaktion)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar las sesiones de ventana inactivas más de %@ min (sin transacción abierta)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закривати сеанси вікон, неактивні понад %@ хв (без відкритої транзакції)"
+          }
+        }
+      }
+    },
     "Zapamiętaj hasło w Pęku kluczy" : {
       "localizations" : {
         "en" : {
@@ -70585,6 +71061,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ gespeichert"
+          }
+        }
+      }
+    },
+    "Zapisano %@ połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved %@ connections"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Verbindungen gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ conexiones guardadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережено з'єднань: %@"
           }
         }
       }
@@ -71061,6 +71565,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speichert die Daten des Berichtsergebnisses als CSV, TSV, XML oder Excel."
+          }
+        }
+      }
+    },
+    "Zapisuje definicje połączeń i foldery do pliku JSON — bez haseł (zostają w Pęku kluczy)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves connection definitions and folders to a JSON file — without passwords (they stay in the Keychain)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert Verbindungsdefinitionen und Ordner in einer JSON-Datei – ohne Kennwörter (sie bleiben im Schlüsselbund)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda las definiciones de conexión y las carpetas en un archivo JSON, sin contraseñas (quedan en el Llavero)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає визначення з'єднань і теки у файлі JSON — без паролів (вони залишаються у В'язці ключів)."
           }
         }
       }
@@ -80749,6 +81281,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekttyp"
+          }
+        }
+      }
+    },
+    "ustawienie serwera" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "server setting"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servereinstellung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ajuste del servidor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "параметр сервера"
           }
         }
       }

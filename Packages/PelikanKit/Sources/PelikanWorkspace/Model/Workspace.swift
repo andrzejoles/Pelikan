@@ -699,7 +699,9 @@ extension Workspace {
     /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).
     public func session(for doc: Document) async throws -> any DatabaseSession {
         guard let c = effectiveConnection(of: doc) else { throw CommandError.notConnected }
-        return try await sessions.session(sessions.key(forDocument: doc.id, connection: c))
+        let key = sessions.key(forDocument: doc.id, connection: c)
+        sessions.touch(key)
+        return try await sessions.session(key)
     }
 
     /// Kończy transakcje okien (COMMIT/ROLLBACK) przed rozłączeniem lub zamknięciem.

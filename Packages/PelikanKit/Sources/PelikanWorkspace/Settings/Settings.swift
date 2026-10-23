@@ -44,6 +44,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var sessionMode: SessionMode = .multi
     public var logoffWithOpenTransaction: OpenTransactionAction = .ask
     public var checkConnectionIntervalSeconds: Int = 60
+    /// Parametry NLS ustawiane w każdej sesji po połączeniu (PD-CONN-025, PD-PREF-004): nazwa → wartość; puste — serwer.
+    public var sessionNLS: [String: String] = [:]
+    /// Zamykanie sesji bezczynnych dłużej niż N minut, bez otwartej transakcji (0 — nigdy; PD-CONN-026).
+    public var closeIdleSessionsMinutes = 0
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
@@ -172,6 +176,8 @@ public struct Settings: Sendable, Codable, Hashable {
         autosaveLayout = v(.autosaveLayout, autosaveLayout)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)
         checkConnectionIntervalSeconds = v(.checkConnectionIntervalSeconds, checkConnectionIntervalSeconds)
+        sessionNLS = v(.sessionNLS, sessionNLS)
+        closeIdleSessionsMinutes = v(.closeIdleSessionsMinutes, closeIdleSessionsMinutes)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)
