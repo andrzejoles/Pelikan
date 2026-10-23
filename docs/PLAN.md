@@ -130,6 +130,6 @@ Akceptacja na prawdziwym AIX 6.1 — przez właściciela (dostęp do serwera ma 
 ## Etap 7 — Dodatki z SQL Developer, DBeaver, DataGrip ✅ (zakończony 2026-10-23, PR #48, #50; D86)
 Wg `docs/research/gap-analysis.md` (wiersze SD-, SC-, DB-, DG-).
 
-## Etap 8 — Dopracowanie i wydanie
+## Etap 8 — Dopracowanie i wydanie ✅ (zakończony 2026-10-24, PR #53–#56; D114, stan: docs/STATUS.md)
 Audyt zgodności z macierzą, wydajność, VoiceOver, tłumaczenia (en, de, es, uk), instrukcja w aplikacji, zestawy
 preferencji, druk, `docs/STATUS.md` z ograniczeniami.
