@@ -19,7 +19,7 @@ extension Workspace {
             }
         }
         guard !changing.isEmpty else { return .allowed }
-        if def.readOnly {
+        if def.readOnly || startupReadOnlyPatterns.contains(where: { p in PreferenceSets.candidates(for: def).contains { PreferenceSets.matches(p, $0) } }) {
             let first = changing[0].trimmingCharacters(in: .whitespacesAndNewlines).prefix(60)
             return .blocked(L10n.tr("Połączenie „\(def.displayName)” jest tylko do odczytu — polecenie zmieniające zablokowane: \(first)…"))
         }

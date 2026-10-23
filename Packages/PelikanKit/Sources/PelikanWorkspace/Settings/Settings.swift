@@ -120,6 +120,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var suppressedDialogs: [String: Int] = [:]
     /// Dokumenty użytkownika w menu Narzędzia › Dokumenty (PD-DOC-002).
     public var userDocuments: [UserDocument] = []
+    /// Quick Access Toolbar: komendy w grupie szybkiego dostępu paska okna głównego (PD-UI-006).
+    public var quickAccessCommands: [String] = []
     // Pliki
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
@@ -186,6 +188,7 @@ public struct Settings: Sendable, Codable, Hashable {
         recoveryIntervalSeconds = v(.recoveryIntervalSeconds, recoveryIntervalSeconds)
         suppressedDialogs = v(.suppressedDialogs, suppressedDialogs)
         userDocuments = v(.userDocuments, userDocuments)
+        quickAccessCommands = v(.quickAccessCommands, quickAccessCommands)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)

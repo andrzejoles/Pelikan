@@ -704,3 +704,26 @@ nieczyste zamknięcie — wtedy migawka niezapisanych okien (`Recovery/windows.j
 Preferencji) jest proponowana do odzyskania (pytanie albo Plik › Odzyskaj okna…). Migawka nie powstaje przy każdym
 wykonaniu polecenia (wzorzec ma taką opcję) — interwał wystarcza, a zapis przy wykonaniu spowalniałby pracę na dużych
 skryptach. Połączenie okna odtwarzane jest tak jak w worksetach — dla okien z przypiętym połączeniem.
+### D92 · 2026-10-23 — Zestawy preferencji jako warstwy częściowych wartości
+Zestaw to słownik `pole Settings → wartość JSON`; obowiązujące preferencje to wartości wbudowane z nałożonymi zestawami
+w kolejności wzorca (domyślny globalny < domyślny połączenia < osobisty < osobisty połączenia). Zestaw osobisty to
+`settings.json`, od teraz zapisywany częściowo (tylko pola zmienione przez użytkownika; stary pełny plik wczytuje się
+jako zestaw osobisty z wszystkimi polami). Pozostałe zestawy w `Preferences/sets.json` katalogu danych. Zmiana w
+Preferencjach trafia do zestawu wybranego w karcie Zestawy (domyślnie osobisty), a połączeniowe przeliczają się po
+zmianie połączenia głównego. Wzorzec porównywany z `użytkownik@baza` i nazwą połączenia. Eksport i import obejmują
+wybrane sekcje (jak karty Preferencji), nigdy historii plików; hasła nie są preferencjami (Pęk kluczy).
+
+### D93 · 2026-10-23 — Parametry startowe bez haseł; URL z marki
+Argumenty jak we wzorcu (`klucz=wartość`, bez rozróżniania wielkości liter) i w stylu `--klucz[=wartość]`; argumenty
+AppKit (`-Klucz wartość`, `-psn_…`) są pomijane. `userid=u/hasło@baza` daje połączenie `u@baza` i ostrzeżenie — hasło
+nie jest używane (widać je w `ps`), więc łączenie idzie przez Pęk kluczy albo pytanie. Połączenie z definicji po nazwie
+albo `użytkownik@baza`. `readonly=` blokuje polecenia zmieniające tylko w tym uruchomieniu (bez zapisu definicji).
+Schemat URL (`PELIKAN_URL_SCHEME`) jest w `Config/Brand.xcconfig`, kod czyta go z Info.plist.
+
+### D94 · 2026-10-23 — Usługi macOS i pasek narzędzi
+Usługi: „Formatuj SQL” (zwraca sformatowany tekst do aplikacji źródłowej), „Otwórz w SQL Window” i „Otwórz plik”;
+nazwy w menu Usługi z marki, po polsku (lokalizacja nazw usług — Etap 8, ServicesMenu.strings). Pasek narzędzi okna
+głównego dostaje elementy z rejestru komend z symbolami SF i standardowe dostosowanie macOS (paleta z ~30 najczęstszymi
+komendami, układ zapamiętywany przez system). Quick Access Toolbar to jedna grupa paska z dowolnymi komendami rejestru
+(do 20) wybieranymi w Preferencjach › Zestawy albo komendą `view.addToQuickAccess` — prostsze niż osobne paski
+użytkownika wzorca, a pokrywa ich zastosowanie.

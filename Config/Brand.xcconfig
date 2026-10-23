@@ -12,6 +12,8 @@ PELIKAN_REPOSITORY = andrzejoles/Pelikan
 PELIKAN_UPDATE_FEED_URL = https:/$()/github.com/$(PELIKAN_REPOSITORY)/releases/latest/download/appcast.xml
 // Klucz publiczny EdDSA aktualizacji (prywatny w Pęku kluczy, konto „pelikan” — scripts/sparkle-tools.sh, docs/WYDANIA.md).
 PELIKAN_SPARKLE_PUBLIC_KEY = GKJUVap7wIeFawGzLi2oBEOHK61r7t/Ix0JCpI3dTuI=
+// Schemat URL parametrów startowych (`<schemat>://open?connection=…`, PD-CLI-001).
+PELIKAN_URL_SCHEME = pelikan
 DEVELOPMENT_TEAM =
 
 // Wygenerowane przed budowaniem przez scripts/set-version.sh (poza repozytorium).
