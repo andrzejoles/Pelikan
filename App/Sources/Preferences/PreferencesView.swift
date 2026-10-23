@@ -11,10 +11,11 @@ struct PreferencesView: View {
             GeneralPane(workspace: workspace).tabItem { Label(L10n.tr("Ogólne"), systemImage: "gearshape") }
             SQLWindowPane(workspace: workspace).tabItem { Label(L10n.tr("Okno SQL"), systemImage: "tablecells") }
             EditorPane(workspace: workspace).tabItem { Label(L10n.tr("Edytor"), systemImage: "text.cursor") }
+            BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
             KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
             OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
         }
-        .frame(width: 720, height: 520)
+        .frame(width: 860, height: 560)
         .padding(.top, 8)
     }
 }

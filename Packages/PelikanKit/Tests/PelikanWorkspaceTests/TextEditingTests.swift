@@ -206,3 +206,28 @@ struct CodeAssistantOfflineTests {
         #expect(await CodeAssistant.complete(text: "select 'v_", offset: 10, metadata: nil) == nil)
     }
 }
+
+@MainActor
+@Suite("Komenda formatera")
+struct BeautifyCommandTests {
+    @Test("Całe źródło, zaznaczenie, formatowanie przed zapisem")
+    func beautify() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: "begin null; end;")
+        try await ws.invoke("edit.beautify")
+        #expect(doc.text == "BEGIN\n  NULL;\nEND;")
+        doc.text = "begin\n  select a,b from t;\nend;"
+        let s = (doc.text as NSString).range(of: "select").location
+        doc.selectedRange = s..<(s + 3)
+        try await ws.invoke("edit.beautify")
+        #expect(doc.text == "begin\n  SELECT a,\n         b\n  FROM   t;\nend;")
+        var settings = ws.settings
+        settings.beautifier.beforeSave = true
+        ws.settings = settings
+        doc.text = "begin null; end;"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-beautify-\(UUID().uuidString).pck")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try ws.save(doc, to: url)
+        #expect(try String(contentsOf: url, encoding: .utf8) == "BEGIN\n  NULL;\nEND;")
+    }
+}

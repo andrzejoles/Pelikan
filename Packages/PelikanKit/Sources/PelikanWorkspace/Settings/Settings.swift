@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 import PelikanDB
 
 /// Tryb sesji (UG 20.3).
@@ -81,6 +82,8 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Code Assistant (UG 23.14): automatyczna aktywacja po kropce i jej opóźnienie w milisekundach.
     public var codeAssistantAutomatic = true
     public var codeAssistantDelay = 400
+    /// Reguły formatera PL/SQL (UG 29).
+    public var beautifier = BeautifierOptions()
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
     public var keyOverrides: [String: String] = [:]
@@ -109,6 +112,7 @@ public struct Settings: Sendable, Codable, Hashable {
         showCodeContents = v(.showCodeContents, showCodeContents)
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
+        beautifier = v(.beautifier, beautifier)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
         appearance = v(.appearance, appearance)

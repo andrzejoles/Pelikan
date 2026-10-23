@@ -22,6 +22,7 @@
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
+		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
@@ -44,6 +45,7 @@
 /* Begin PBXFileReference section */
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
+		229E7A0294B2BA8203F506AF /* BeautifierPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeautifierPane.swift; sourceTree = "<group>"; };
 		26AA9CEDE79921F45A0500AB /* Observe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observe.swift; sourceTree = "<group>"; };
 		29353BC88EDA99528B1F86C8 /* Brand.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Brand.xcconfig; sourceTree = "<group>"; };
 		2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandWindowViewController.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 		04AA0F0ED1F31BC87839A227 /* Preferences */ = {
 			isa = PBXGroup;
 			children = (
+				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
 			);
 			path = Preferences;
@@ -312,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
+				8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */,
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
