@@ -15,6 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var palette: CommandPalette?
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
+    /// Okresowy zapis konsol połączeń (DG-CONS-001).
+    private var consoleSave: Timer?
     private var keyMonitor: Any?
     /// Aktualizacje Sparkle (kanał releases/latest/download/appcast.xml, podpis EdDSA). W kompilacji Debug wyłączone.
     #if DEBUG
@@ -60,6 +62,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func applicationDidFinishLaunching(_ notification: Notification) {
         startStallLog()
         workspace.ui = self
+        consoleSave = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.workspace.persistConsoles() }
+        }
         workspace.sessions.prompter = prompts
         let builder = MenuBuilder(workspace: workspace)
         NSApp.mainMenu = builder.build()
@@ -134,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.settings.autosaveLayout, let l = mainWindow?.layout { workspace.worksets.saveLayout(l) }
         // Autozapis workseta: niezapisane okna przetrwają w worksecie — bez pytania o zapis (UG 15).
         let worksetSaved = workspace.settings.worksetAutosave && (try? workspace.saveCurrentWorkset()) != nil
-        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && $0.consoleConnectionID == nil && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
         if !modified.isEmpty {
             // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
             Task { @MainActor in
@@ -167,6 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Procesy ssh tuneli kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
+        workspace.persistConsoles()
         agentUI?.stop()
         workspace.sessions.tunnels.closeAll()
     }
@@ -206,6 +212,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
             DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
+    func showUsages(title: String, hits: [UsageHit]) {
+        ToolWindowController.close(key: "usages")
+        ToolWindowController.show(key: "usages", title: L10n.tr("Użycia: \(title)"), size: NSSize(width: 820, height: 420)) {
+            UsagesView(workspace: workspace, title: title, hits: hits)
+        }
+    }
+
+    func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool {
+        guard let window = mainWindow?.window else { return false }
+        return await withCheckedContinuation { cont in
+            var sheet: NSWindow?
+            var finished = false
+            let view = RefactoringPreviewView(plan: plan) { apply in
+                guard !finished else { return }
+                finished = true
+                if let sheet { window.endSheet(sheet) }
+                cont.resume(returning: apply)
+            }
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            sheet = w
+            window.beginSheet(w)
+        }
+    }
+
+    func showLocalHistory(document: PelikanWorkspace.Document) {
+        ToolWindowController.close(key: "localHistory")
+        ToolWindowController.show(key: "localHistory", title: L10n.tr("Historia lokalna — \(document.title)"), size: NSSize(width: 820, height: 480)) {
+            LocalHistoryView(workspace: workspace, document: document)
+        }
+    }
+
+    func showProblems(document: PelikanWorkspace.Document) {
+        ToolWindowController.close(key: "problems")
+        ToolWindowController.show(key: "problems", title: L10n.tr("Problemy — \(document.title)"), size: NSSize(width: 640, height: 320)) {
+            ProblemsView(workspace: workspace, document: document)
         }
     }
 

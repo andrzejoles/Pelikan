@@ -206,6 +206,8 @@ public final class ResultTab: Identifiable {
     public var focusedColumn: Int?
     /// Bieżąca komórka (ostatnio kliknięta kolumna) — Large Data Editor, widok rekordu.
     public var currentColumn: Int?
+    /// Wiersz widoku do zaznaczenia i pokazania (np. następna zmiana oczekująca — DG-GRID-001); interfejs zeruje po użyciu.
+    public var revealRow: Int?
 
     public init(title: String, statementRange: Range<Int>, grid: ResultGridModel? = nil, message: String? = nil) {
         self.title = title

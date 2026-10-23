@@ -20,6 +20,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var assistWork: DispatchWorkItem?
     private var pairGeneration = 0
     private var pairRanges: [NSTextRange] = []
+    private var analysisWork: DispatchWorkItem?
+    private var analyzedText: String?
+    private var diagnostics: [EditorDiagnostic] = []
     var onCaretChange: ((String) -> Void)?
 
     init(document: Document, fontSize: CGFloat = 13) {
@@ -41,6 +44,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             _ = self.document.foldedStarts
             self.applyFolds()
         })
+        // Podkreślenia analizy kodu (DG-RES-001, DG-INSP-001) z modelu.
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            let list = ws.settings.liveCodeAnalysis ? ws.diagnostics[self.document.id] ?? [] : []
+            self.showDiagnostics(list)
+        })
+        scheduleAnalysis(delay: 0.5)
         // Okno w trakcie wykonania jest tylko do odczytu (jak we wzorcu); inne okna działają równolegle.
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -234,6 +244,46 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         for r in pairRanges { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
     }
 
+    // MARK: Analiza kodu w czasie pisania (DG-RES-001, DG-INSP-001)
+
+    /// Analiza z opóźnieniem po zmianie tekstu (inspekcje lokalnie, nazwy ze słownika otwartego połączenia).
+    private func scheduleAnalysis(delay: Double = 0.8) {
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace, ws.settings.liveCodeAnalysis,
+              [.sql, .program, .test].contains(document.kind), document.text != analyzedText else { return }
+        analysisWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.analyzedText = self.document.text
+            Task { @MainActor in await ws.analyzeCode(self.document) }
+        }
+        analysisWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    /// Podkreślenie falowane (kropkowane): błąd — czerwone, ostrzeżenie — pomarańczowe; atrybuty renderowania, bez zmiany tekstu.
+    private func showDiagnostics(_ list: [EditorDiagnostic]) {
+        diagnostics = list
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
+        tlm.removeRenderingAttribute(.underlineStyle, for: content.documentRange)
+        tlm.removeRenderingAttribute(.underlineColor, for: content.documentRange)
+        let len = (textView.string as NSString).length
+        for d in list where d.range.upperBound <= len && !d.range.isEmpty {
+            guard let a = content.location(content.documentRange.location, offsetBy: d.range.lowerBound),
+                  let b = content.location(a, offsetBy: d.range.count), let r = NSTextRange(location: a, end: b) else { continue }
+            tlm.addRenderingAttribute(.underlineStyle, value: NSUnderlineStyle.thick.rawValue | NSUnderlineStyle.patternDot.rawValue, for: r)
+            tlm.addRenderingAttribute(.underlineColor, value: d.severity == .error ? NSColor.systemRed : NSColor.systemOrange, for: r)
+        }
+        updateDiagnosticTip()
+    }
+
+    /// Komunikat problemu pod kursorem: podpowiedź edytora i pasek stanu okna.
+    private func updateDiagnosticTip() {
+        let caret = textView.selectedRange().location
+        let d = diagnostics.first { $0.range.lowerBound <= caret && caret <= $0.range.upperBound }
+        textView.toolTip = d?.message
+        if let d, document.statusText != d.message { document.statusText = d.message }
+    }
+
     // MARK: Zwijanie kodu (UG 25.17)
 
     /// Obszary zwijania przeliczane z opóźnieniem po zmianie tekstu (znaczniki ± w marginesie).
@@ -287,6 +337,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let error = document.errorRange
         if text != textView.string {
             applyExternal(text)
+            scheduleAnalysis()
         }
         let len = (textView.string as NSString).length
         let current = textView.selectedRange()
@@ -361,6 +412,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         document.errorRange = nil
         updatingFromModel = false
         if completion.isVisible { completion.textChanged() } else { scheduleAutomaticAssist() }
+        scheduleAnalysis()
     }
 
     func textViewDidChangeSelection(_ notification: Notification) {
@@ -376,6 +428,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
             self.ruler.needsDisplay = true
             self.updatePairs()
+            self.updateDiagnosticTip()
         }
     }
 

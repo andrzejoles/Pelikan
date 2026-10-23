@@ -119,6 +119,9 @@ public enum ProgramCompiler {
                 break
             }
             result.compiled += 1
+            // Historia lokalna obiektu (DG-HIST-001): wersja wysłana do bazy.
+            ws.localHistory.record(key: LocalHistory.key(object: u.owner ?? schema, type: u.type.rawValue, name: u.name, connection: conn),
+                                   title: "\(u.owner ?? schema).\(u.name) (\(u.type.rawValue))", text: u.text, label: L10n.tr("kompilacja"))
             if ws.settings.debugInfoOnCompile,
                let dbg = ObjectCommands.debugCompileStatement(DBObject(owner: u.owner ?? schema, name: u.name, type: u.type)) {
                 _ = try? await s.execute(dbg)

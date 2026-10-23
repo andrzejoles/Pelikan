@@ -83,6 +83,8 @@ public final class Document: Identifiable {
     /// Połączenie okna (nil = połączenie główne) i przypięcie (UG 20.2).
     public var connectionID: UUID?
     public var connectionPinned = false
+    /// Konsola zapytań połączenia (DG-CONS-001): tekst zachowywany automatycznie, bez pliku.
+    public var consoleConnectionID: UUID?
 
     // MARK: SQL Window (UG 7)
     /// Karty wyników (przypięte zostają przy kolejnym wykonaniu — UG 7.10).

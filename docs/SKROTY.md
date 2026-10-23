@@ -36,6 +36,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Historia lokalna › Historia lokalna | `file.localHistory` |  |  | Brak | 0 | DG-HIST-001 |
+| Historia lokalna › Wersje w historii lokalnej | `file.localHistoryList` |  |  | Odczyt | 0 | DG-HIST-001 |
+| Historia lokalna › Zapisz wersję w historii | `file.localHistoryCheckpoint` |  |  | Brak | 0 | DG-HIST-001 |
+| Historia lokalna › Porównaj z wersją | `file.localHistoryCompare` |  |  | Brak | 0 | DG-HIST-001 |
+| Historia lokalna › Przywróć wersję | `file.localHistoryRestore` |  |  | Brak | 0 | DG-HIST-001 |
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Pełny | 0 | PD-PROG-002 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
@@ -113,6 +118,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
+| Analiza kodu › Analizuj kod | `edit.analyzeCode` |  |  | Odczyt | 0 | DG-INSP-001 |
+| Analiza kodu › Analiza kodu w czasie pisania | `edit.toggleCodeAnalysis` |  |  | Brak | 0 | DG-RES-001 |
+| Analiza kodu › Następny problem | `edit.nextProblem` |  | F2 | Brak | 0 | DG-RES-001 |
+| Analiza kodu › Poprzedni problem | `edit.previousProblem` |  | ⇧F2 | Brak | 0 | DG-RES-001 |
+| Analiza kodu › Lista problemów | `edit.showProblems` |  |  | Brak | 0 | DG-INSP-001 |
+| Refaktoryzacja › Znajdź użycia | `edit.findUsages` |  | ⌥F7 | Brak | 0 | DG-USE-001 |
+| Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Za zgodą | 0 | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Pełny | 0 | PD-TPL-002 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
@@ -169,6 +181,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Konsola połączenia | `session.console` |  |  | Brak | 0 | DG-CONS-001 |
+| Wynik › Następna zmiana oczekująca | `grid.nextPendingChange` |  |  | Brak | 0 | DG-GRID-001 |
+| Wynik › Poprzednia zmiana oczekująca | `grid.previousPendingChange` |  |  | Brak | 0 | DG-GRID-001 |
+| Wynik › Cofnij zmiany wierszy | `grid.revertRowChanges` |  |  | Brak | 0 | DG-GRID-001 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |

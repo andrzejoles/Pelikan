@@ -76,6 +76,8 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
     public var highlightCurrentLine = true
+    /// Analiza kodu w czasie pisania: nieznane nazwy (ze słownika połączenia) i inspekcje (DG-RES-001, DG-INSP-001).
+    public var liveCodeAnalysis = true
     public var useTabCharacter = false
     /// Panel Code Contents obok edytora Program Window (UG 25.15).
     public var showCodeContents = true
@@ -128,6 +130,7 @@ public struct Settings: Sendable, Codable, Hashable {
         recentFiles = v(.recentFiles, recentFiles)
         keywordCase = v(.keywordCase, keywordCase)
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
+        liveCodeAnalysis = v(.liveCodeAnalysis, liveCodeAnalysis)
         showCodeContents = v(.showCodeContents, showCodeContents)
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)

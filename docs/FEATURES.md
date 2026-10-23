@@ -506,13 +506,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| DG-RES-001 | Rozwiązywanie nazw w czasie pisania (podkreślanie nieznanych tabel, kolumn, aliasów) | gap-analysis §4 | Edytor | 7 | P2 | — | do zrobienia |
-| DG-INSP-001 | Inspekcje kodu: nieużywane zmienne, nieosiągalny kod, niejawne konwersje, UPDATE/DELETE bez WHERE | gap-analysis §4 | Edytor | 7 | P2 | Odczyt | do zrobienia |
-| DG-USE-001 | Find Usages obiektu/kolumny (zależności, PL/Scope, pliki) | gap-analysis §4 | Edytor > Find Usages | 7 | P1 | Odczyt | do zrobienia |
-| DG-REF-001 | Refaktoryzacja z podglądem zmian (diff) przed zastosowaniem | gap-analysis §4 | Edytor > Refactoring | 7 | P2 | Za zgodą | do zrobienia |
-| DG-HIST-001 | Lokalna historia plików i obiektów (wersje, porównanie, przywracanie) | gap-analysis §4 | File > Local History | 7 | P1 | Odczyt | do zrobienia |
-| DG-CONS-001 | Konsole zapytań per połączenie (zachowywane automatycznie) | gap-analysis §4 | Session > Console | 7 | P2 | — | do zrobienia |
-| DG-GRID-001 | Wyróżnienie zmian oczekujących w siatce (wstawione/zmienione/usunięte) przed zapisem | gap-analysis §4 | Siatka | 7 | P2 | — | do zrobienia |
+| DG-RES-001 | Rozwiązywanie nazw w czasie pisania (podkreślanie nieznanych tabel, kolumn, aliasów) | gap-analysis §4 | Edytor | 7 | P2 | — | ✅ test (nieznane tabele/widoki, kolumny po aliasie, nieznane aliasy w poleceniach SQL i w SQL osadzonym w PL/SQL; CTE, pseudokolumny, pakiety i schematy bez fałszywych alarmów; słownik przez otwartą sesję główną z pamięcią podręczną, analiza nie łączy z bazą; podkreślenia w edytorze, F2/⇧F2, przełącznik — bez zrzutu, D30) |
+| DG-INSP-001 | Inspekcje kodu: nieużywane zmienne, nieosiągalny kod, niejawne konwersje, UPDATE/DELETE bez WHERE | gap-analysis §4 | Edytor | 7 | P2 | Odczyt | ✅ test (nieużywane zmienne, stałe i parametry, kod po RETURN/RAISE/GOTO/EXIT, UPDATE/DELETE bez WHERE, porównanie/przypisanie zmiennej liczbowej z tekstem i odwrotnie; lista problemów; agent: `edit.analyzeCode` — tylko inspekcje tekstu) |
+| DG-USE-001 | Find Usages obiektu/kolumny (zależności, PL/Scope, pliki) | gap-analysis §4 | Edytor > Find Usages | 7 | P1 | Odczyt | ✅ test (ALL_DEPENDENCIES, linie kodu obiektów zależnych, PL/Scope ALL_IDENTIFIERS, okna i pliki projektu — tylko identyfikatory; kolumna przez ALIAS.KOLUMNA w poleceniach tabeli; okno wyników z przejściem — bez zrzutu, D30; agent: istniejące `find_usages`) |
+| DG-REF-001 | Refaktoryzacja z podglądem zmian (diff) przed zastosowaniem | gap-analysis §4 | Edytor > Refactoring | 7 | P2 | Za zgodą | ✅ test (zmiana nazwy zmiennej/parametru w zakresie, obiektu i kolumny w oknach i plikach projektu; podgląd różnic przed zastosowaniem, DDL do nowego okna bez wykonania, wersje „przed” w historii lokalnej; agent za zgodą z podglądem zmienionych linii) |
+| DG-HIST-001 | Lokalna historia plików i obiektów (wersje, porównanie, przywracanie) | gap-analysis §4 | File > Local History | 7 | P1 | Odczyt | ✅ test (wersje przy zapisie pliku, kompilacji obiektu, refaktoryzacji, przywróceniu i ręcznie; limit 50 wersji/30 dni, JSON w katalogu danych; porównanie w oknie różnic, przywracanie z zachowaniem bieżącego tekstu; okno bez zrzutu — D30) |
+| DG-CONS-001 | Konsole zapytań per połączenie (zachowywane automatycznie) | gap-analysis §4 | Session > Console | 7 | P2 | — | ✅ test (okno SQL przypięte do połączenia, jedno na połączenie; tekst zapisywany przy zamknięciu, co 30 s i przy zakończeniu aplikacji, przywracany po ponownym otwarciu; bez pytania o zapis) |
+| DG-GRID-001 | Wyróżnienie zmian oczekujących w siatce (wstawione/zmienione/usunięte) przed zapisem | gap-analysis §4 | Siatka | 7 | P2 | — | ✅ test (znaczniki +/~/− i kolor w nagłówku wiersza, tło zmienionych i wstawionych komórek, przekreślenie usuniętych, zmiana cofnięta do oryginału nie jest zmianą; licznik oczekujących na pasku siatki, następna/poprzednia zmiana, cofnięcie zmian wierszy — bez zrzutu, D30) |
 
 ## Integracja z macOS
 

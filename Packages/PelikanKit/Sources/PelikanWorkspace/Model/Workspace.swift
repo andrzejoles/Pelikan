@@ -113,11 +113,21 @@ public protocol UIServices: AnyObject {
     func applyLayout(_ layout: WindowLayout)
     /// Historia Git (lista zatwierdzeń) w oknie informacji.
     func showGitLog(_ commits: [GitCommit], title: String)
+    /// Wyniki Find Usages (DG-USE-001), podgląd refaktoryzacji z różnicami — true: zastosuj (DG-REF-001),
+    /// historia lokalna okna (DG-HIST-001), lista problemów analizy kodu (DG-RES-001, DG-INSP-001).
+    func showUsages(title: String, hits: [UsageHit])
+    func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool
+    func showLocalHistory(document: Document)
+    func showProblems(document: Document)
 
 }
 
 extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
+    public func showUsages(title: String, hits: [UsageHit]) {}
+    public func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool { false }
+    public func showLocalHistory(document: Document) {}
+    public func showProblems(document: Document) {}
     public func showMacroLibrary() {}
     public func showClipboardHistory() {}
     public func showTodoItems() {}
@@ -243,6 +253,12 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
     /// Snippety (SC-SNIP-001): wbudowane i własne w `Snippets/snippets.json`.
     @ObservationIgnored public private(set) lazy var snippets = SnippetLibrary(directory: dataDirectory?.appendingPathComponent("Snippets", isDirectory: true))
+    /// Lokalna historia plików i obiektów (DG-HIST-001) i konsole zapytań połączeń (DG-CONS-001).
+    @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
+    @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
+    @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Problemy edytora z rozwiązywania nazw i inspekcji (DG-RES-001, DG-INSP-001) według okna.
+    public var diagnostics: [DocumentID: [EditorDiagnostic]] = [:]
     /// Panel wartości obok siatki wyników (DB-PANEL-001).
     public var valuePanelVisible = false
     /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
@@ -403,8 +419,10 @@ public final class Workspace {
 
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
+        consoles.persist(documents[i])
         documents.remove(at: i)
         sqlplusEngines[id] = nil
+        diagnostics[id] = nil
         if activeDocumentID == id {
             activeDocumentID = documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id
         }
