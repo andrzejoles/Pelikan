@@ -54,11 +54,14 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Otwarcie adresu (przeglądarka, dokumenty — PD-EDIT-027, PD-DOC-002) i pliku w aplikacji (nil — skojarzonej; PD-EDIT-028).
+    func openURL(_ url: URL)
+    func openInApplication(_ file: URL, application: String?)
+    /// Pytanie z polem „Nie pytaj więcej” (PD-PREF-008): odpowiedź (nil — anulowano) i stan pola.
+    func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool)
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
-    /// Otwiera adres w przeglądarce (dokumentacja Oracle, pomoc).
-    func openURL(_ url: URL)
     /// Instrukcja użytkownika (PL-INFRA-010).
     func showUserManual()
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
@@ -159,8 +162,12 @@ extension UIServices {
     public func showTestExplorer() {}
     public func showTestManager() {}
     public func showHTMLReport(title: String, html: String) {}
-    public func showSQLMonitor() {}
     public func openURL(_ url: URL) {}
+    public func openInApplication(_ file: URL, application: String?) {}
+    public func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool) {
+        (await ask(title, message: message, buttons: buttons), false)
+    }
+    public func showSQLMonitor() {}
     public func showUserManual() {}
     public func showDualityViews() {}
     public func showMLEModules() {}
@@ -285,6 +292,22 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
     @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
+    @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
+    @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))
+    /// Okna z poprzedniego, nieczysto zakończonego uruchomienia — do przywrócenia (Plik › Odzyskaj okna).
+    public var pendingRecovery: Workset?
+    /// Uruchomienie programu zewnętrznego bez powłoki (argumenty jako tablica); w testach podmieniane.
+    @ObservationIgnored public var launchProgram: @Sendable (URL, [String]) throws -> Void = { exe, args in
+        let p = Process()
+        p.executableURL = exe
+        p.arguments = args
+        p.environment = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("PELIKAN_") }
+        p.standardInput = FileHandle.nullDevice
+        p.standardOutput = FileHandle.nullDevice
+        p.standardError = FileHandle.nullDevice
+        try p.run()
+    }
     /// Problemy edytora z rozwiązywania nazw i inspekcji (DG-RES-001, DG-INSP-001) według okna.
     public var diagnostics: [DocumentID: [EditorDiagnostic]] = [:]
     /// Panel wartości obok siatki wyników (DB-PANEL-001).

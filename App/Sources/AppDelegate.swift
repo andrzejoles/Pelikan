@@ -17,8 +17,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var palette: CommandPalette?
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
-    /// Okresowy zapis konsol połączeń (DG-CONS-001).
+    /// Okresowy zapis konsol połączeń (DG-CONS-001) i migawki okien do odzyskiwania (PD-FILE-001).
     private var consoleSave: Timer?
+    private var recoverySave: Timer?
     private var keyMonitor: Any?
     /// Aktualizacje Sparkle (kanał releases/latest/download/appcast.xml, podpis EdDSA). W kompilacji Debug wyłączone.
     #if DEBUG
@@ -118,6 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
+        startRecovery()
         NSApp.activate()
         startConnectionCheck()
         // Jak we wzorcu: okno logowania przy starcie (można anulować), chyba że są połączenia „Połącz przy starcie”.
@@ -183,11 +185,49 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// Procesy ssh tuneli kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
         workspace.persistConsoles()
+        // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
+        workspace.recovery.end()
         agentUI?.stop()
         workspace.sessions.tunnels.closeAll()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
+
+    /// Powrót do Pelikana: okna edytowane programem zewnętrznym dostają nową treść (PD-EDIT-028).
+    func applicationDidBecomeActive(_ notification: Notification) {
+        workspace.checkExternalEdits()
+    }
+
+    /// Odzyskiwanie po awarii (PD-FILE-001): okna z poprzedniego, nieczysto zakończonego uruchomienia i okresowa migawka.
+    private func startRecovery() {
+        if let previous = workspace.recovery.begin() {
+            workspace.pendingRecovery = previous
+            Task { @MainActor in
+                let answer = await workspace.askSuppressible(.restoreRecovery, title: L10n.tr("Pelikan nie został poprawnie zamknięty"),
+                                                             message: L10n.tr("Odzyskać okna z niezapisanymi zmianami (\(previous.documents.count))?"),
+                                                             buttons: [L10n.tr("Odzyskaj"), L10n.tr("Odrzuć")])
+                if answer == 0 {
+                    workspace.perform("file.restoreRecovery")
+                } else if answer == 1 {
+                    workspace.pendingRecovery = nil
+                    workspace.recovery.discardPrevious()
+                }
+            }
+        }
+        scheduleRecoverySave()
+    }
+
+    private func scheduleRecoverySave() {
+        recoverySave?.invalidate()
+        let interval = TimeInterval(max(15, workspace.settings.recoveryIntervalSeconds))
+        recoverySave = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self else { return }
+                self.workspace.saveRecoverySnapshot()
+                if TimeInterval(max(15, self.workspace.settings.recoveryIntervalSeconds)) != interval { self.scheduleRecoverySave() }
+            }
+        }
+    }
 
     // MARK: UIServices
 
@@ -565,12 +605,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
     }
 
-    func openURL(_ url: URL) {
-        // Tylko adresy WWW (dokumentacja) — bez otwierania plików i schematów aplikacji z tekstu edytora.
-        guard ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return }
-        NSWorkspace.shared.open(url)
-    }
-
     func showUserManual() {
         ToolWindowController.show(key: "userManual", title: L10n.tr("Instrukcja Pelikana"), size: NSSize(width: 900, height: 640)) { UserManualView(workspace: workspace) }
     }
@@ -814,6 +848,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func showLargeDataEditor(_ model: LargeDataModel) {
         LargeDataEditorController.show(model, workspace: workspace, relativeTo: mainWindow?.window)
+    }
+
+    func openURL(_ url: URL) {
+        NSWorkspace.shared.open(url)
+    }
+
+    /// Plik w wskazanej aplikacji (nazwa, ścieżka `.app` albo identyfikator pakietu) albo w skojarzonej.
+    func openInApplication(_ file: URL, application: String?) {
+        guard let name = application, let app = Self.applicationURL(name) else {
+            if let application { showError(L10n.tr("Nie znaleziono aplikacji „\(application)” — plik otwarty programem skojarzonym")) }
+            NSWorkspace.shared.open(file)
+            return
+        }
+        NSWorkspace.shared.open([file], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
+    }
+
+    static func applicationURL(_ name: String) -> URL? {
+        let n = (name as NSString).expandingTildeInPath
+        if n.hasSuffix(".app"), FileManager.default.fileExists(atPath: n) { return URL(fileURLWithPath: n) }
+        if let u = NSWorkspace.shared.urlForApplication(withBundleIdentifier: n) { return u }
+        let file = n.hasSuffix(".app") ? (n as NSString).lastPathComponent : n + ".app"
+        for dir in ["/Applications", "/System/Applications", NSHomeDirectory() + "/Applications", "/Applications/Utilities"] {
+            let p = (dir as NSString).appendingPathComponent(file)
+            if FileManager.default.fileExists(atPath: p) { return URL(fileURLWithPath: p) }
+        }
+        return nil
+    }
+
+    func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        for b in buttons { alert.addButton(withTitle: b) }
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = L10n.tr("Nie pytaj więcej")
+        let response = alert.runModal()
+        let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+        return (index < buttons.count ? index : nil, alert.suppressionButton?.state == .on)
     }
 
     func ask(_ title: String, message: String, buttons: [String]) async -> Int? {

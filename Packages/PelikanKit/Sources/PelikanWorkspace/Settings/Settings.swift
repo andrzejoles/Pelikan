@@ -106,6 +106,20 @@ public struct Settings: Sendable, Codable, Hashable {
     public var language: String?
     /// Wersja dokumentacji Oracle dla pomocy F1 (19, 21, 23, 26).
     public var oracleDocsRelease = OracleDocs.defaultRelease
+    /// Wyszukiwania w sieci z `%s` (PD-EDIT-027).
+    public var webSearches: [WebSearch] = WebSearch.defaults
+    /// Edytor zewnętrzny: nazwa aplikacji albo ścieżka `.app` (nil — program skojarzony z plikiem; PD-EDIT-028).
+    public var externalEditor: String?
+    /// Zewnętrzna przeglądarka różnic (nil — wbudowana; PD-DIFF-002).
+    public var externalDiff: ExternalDiffTool?
+    /// Kopia `plik.~ext` przy zapisie i odzyskiwanie okien po awarii co interwał (PD-FILE-001).
+    public var backupOnSave = false
+    public var recoveryEnabled = true
+    public var recoveryIntervalSeconds = 60
+    /// Odpowiedzi zapamiętane w pytaniach „Nie pytaj więcej” (PD-PREF-008): identyfikator okna → numer przycisku.
+    public var suppressedDialogs: [String: Int] = [:]
+    /// Dokumenty użytkownika w menu Narzędzia › Dokumenty (PD-DOC-002).
+    public var userDocuments: [UserDocument] = []
     // Pliki
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
@@ -164,6 +178,14 @@ public struct Settings: Sendable, Codable, Hashable {
         requireOwnerForSavedPasswords = v(.requireOwnerForSavedPasswords, requireOwnerForSavedPasswords)
         language = v(.language, language)
         oracleDocsRelease = v(.oracleDocsRelease, oracleDocsRelease)
+        webSearches = v(.webSearches, webSearches)
+        externalEditor = v(.externalEditor, externalEditor)
+        externalDiff = v(.externalDiff, externalDiff)
+        backupOnSave = v(.backupOnSave, backupOnSave)
+        recoveryEnabled = v(.recoveryEnabled, recoveryEnabled)
+        recoveryIntervalSeconds = v(.recoveryIntervalSeconds, recoveryIntervalSeconds)
+        suppressedDialogs = v(.suppressedDialogs, suppressedDialogs)
+        userDocuments = v(.userDocuments, userDocuments)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)

@@ -212,8 +212,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | ✅ test (historia w pamięci: bez duplikatów, limit, filtr, wklejanie); okno bez zrzutu (D30) |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
 | PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | ✅ test (F1: słowo pod kursorem → Oracle Error Help dla ORA-/PLS-/TNS-, PL/SQL Packages Reference, Reference dla widoków słownika, SQL/PL/SQL Language Reference dla poleceń i funkcji, inaczej wyszukiwanie; adresy sprawdzone na docs.oracle.com) |
-| PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | do zrobienia |
-| PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | do zrobienia |
+| PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | ✅ test (wyszukiwania z %s w Preferencjach › Narzędzia, zaznaczenie albo słowo pod kursorem, kodowanie tekstu, tylko http(s), wybór wyszukiwania; okno bez zrzutu (D30)) |
+| PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | ✅ test (aplikacja z Preferencji albo skojarzona; plik zapisany przed przekazaniem, okno bez pliku — plik 0600 w katalogu danych; zmiany wczytywane po powrocie do Pelikana) |
 | PD-EDIT-029 | Zachowanie stanu okna (.pfi): pozycja, zakładki, znaczniki, zmienne | UG 23.18 | Preferences | 2 | P3 | — | do zrobienia |
 
 ## PL/SQL Developer — Code Assistant i nawigacja
@@ -357,7 +357,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-LDE-001 | Large Data Editor: Text, XML, JSON, HTML (podgląd), obraz, Hex; Parse/Format, Auto Format; Open/Save/Clear; Post, następny/poprzedni rekord | UG 27, NF15, NF17 | Siatka > przycisk komórki | 1 | P1 | — | ⚠️ częściowo (bez podglądu HTML i Auto Format) |
 | PD-LDE-002 | Large Data Editor: edytor zewnętrzny (plik tymczasowy, wykrywanie zapisu, skojarzenie z kolumną), RTF | UG 27.2, UG 27.8 | Large Data Editor | 6 | P3 | — | ✅ test (plik tymczasowy 0600 z rozszerzeniem wg formatu, w tym RTF, program skojarzony, wykrywanie zapisu, sprzątanie) |
 | PD-DIFF-001 | Wewnętrzna przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap, Reload) | UG 26, NF14, NF15 | — | 2 | P1 | Odczyt | ⚠️ częściowo (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap; bez Reload) ✅ test 👁 |
-| PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | do zrobienia |
+| PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | ✅ test (program i argumenty z dyrektywami %1/%2 — pliki, %3/%4 — tytuły; bez powłoki, pliki porównania 0600 w katalogu danych; brak programu — komunikat) |
 
 ## PL/SQL Developer — projekty, worksets, pliki, kontrola wersji
 
@@ -372,7 +372,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-FB-002 | File Browser: filtr (Name, Status, VCS, rozmiar, data) z historią | UG 22.3, NF14 | File Browser | 6 | P3 | — | ✅ test (nazwa/maski, stan otwarty/zmieniony, stan Git, rozmiar, data; historia masek) |
 | PD-VCS-001 | Git (i SVN): status pliku na pasku stanu, w File Browserze i projekcie, gałąź Git, operacje z menu | UG 17, NF14, NF17 | Pasek stanu okna | 6 | P2 | Odczyt | ✅ test (Git: gałąź i stan na pasku stanu, w Przeglądarce plików i w projekcie — gałąź z ahead/behind i znacznik pliku; porównanie z HEAD, add, commit, historia; SVN pominięty — D40) |
 | PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | ✅ test (TODO/DONE w komentarzach z właścicielem, priorytetem, kategorią; wstawianie, zamykanie); lista bez zrzutu (D30) |
-| PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | do zrobienia |
+| PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | ⚠️ częściowo (kopia plik.~ext przy zapisie — opcja; migawka niezapisanych okien co interwał, nieczyste zamknięcie → pytanie o odzyskanie i Plik › Odzyskaj okna ✅ test; połączenie odtwarzane tylko dla okien z przypiętym połączeniem; bez migawki przy każdym wykonaniu — D91) |
 | PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |
 | PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | do zrobienia |
@@ -399,9 +399,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PREF-005 | Czcionki edytora, siatek, przeglądarki (z kolorem i tłem) | UG 23.13 | Preferences > Fonts | 1 | P2 | — | w toku |
 | PD-PREF-006 | Katalogi startowe (programy, testy, skrypty, raporty, makra, szablony, projekty, worksety…) i rozszerzenia plików | UG 23.28–23.29 | Preferences > Files | 1 | P2 | — | do zrobienia |
 | PD-PREF-007 | Konfiguracja klawiszy (wszystkie funkcje, filtr, czyszczenie) | UG 23.15 | Preferences > Key Configuration | 1 | P1 | — | ✅ test |
-| PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | do zrobienia |
+| PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | ✅ test (pytania z „Nie pytaj więcej”: zatwierdzenie/wycofanie, Kosz, przywrócenie workseta, odzyskiwanie; lista i przywracanie w Preferencjach › Narzędzia; anulowanie nie jest zapamiętywane) |
 | PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | ✅ test (wyszukiwanie w dokumentacji Oracle wybranej wersji 19c/21c/23ai/26ai — Preferencje › Oracle; książka dobierana z rodzaju słowa; dokumentacja online — bez kopii lokalnej, D88) |
-| PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | do zrobienia |
+| PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | ✅ test (lista plików i adresów http(s) w Preferencjach › Narzędzia, Narzędzia › Dokumenty…; inne schematy odrzucane) |
 | PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | do zrobienia |
 
 ## utPLSQL

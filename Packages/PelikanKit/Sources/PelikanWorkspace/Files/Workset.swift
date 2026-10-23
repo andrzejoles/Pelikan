@@ -172,6 +172,12 @@ extension Workspace {
     @discardableResult
     public func applyWorkset(_ w: Workset) -> [String] {
         for d in documents { close(d.id) }
+        return appendWorksetDocuments(w)
+    }
+
+    /// Otwiera okna workseta obok bieżących (odzyskiwanie po awarii); zwraca pominięte ścieżki.
+    @discardableResult
+    public func appendWorksetDocuments(_ w: Workset) -> [String] {
         var missing: [String] = []
         var opened: [Document] = []
         for e in w.documents {
