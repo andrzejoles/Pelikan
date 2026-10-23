@@ -235,6 +235,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Zdalny build Pro*C › Cele SSH… | `ssh.manager` |  |  | Brak | 0 | PC-CONN-002 |
+| Zdalny build Pro*C › Testuj cel SSH | `ssh.test` |  |  | Brak | 0 | PC-CONN-003 |
+| Zdalny build Pro*C › Eksportuj cele SSH… | `ssh.export` |  |  | Brak | 0 | PC-CONN-001 |
+| Zdalny build Pro*C › Importuj cele SSH… | `ssh.import` |  |  | Brak | 0 | PC-CONN-001 |
 | Database Diff… | `tools.databaseDiff` |  |  | Brak | 0 | SD-DIFF-001 |
 | Koszyk wdrożenia… | `tools.cart` |  |  | Brak | 0 | SD-DIFF-001 |
 | Koszyk › Dodaj obiekt do koszyka | `cart.add` |  |  | Brak | 0 | SD-DIFF-001 |

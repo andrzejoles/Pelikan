@@ -424,6 +424,23 @@ Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 �
 Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
 z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
 
+### D61 · 2026-10-23 — Warstwa SSH jako moduł PelikanRemote (tylko macOS)
+Kod z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`) trafił do osobnego celu SPM
+`PelikanRemote` bez zależności od PelikanWorkspace — jak PelikanAgent, w `#if canImport(Darwin)`, więc Linux CI buduje
+pusty moduł. Zależności BifoldCore zastąpił `SSHError` z przypadkami strukturalnymi (negotiationFailed,
+permissionDenied, hostKeyChanged, timeout, cancelled, io, invalidName, unencodable) — teksty dla użytkownika powstaną
+w warstwie interfejsu przez `L10n.tr`. Sekrety SSH trafią do istniejącego `SecretStore` (Pęk kluczy) przy menedżerze
+połączeń; sesja dostaje sekret przez domknięcie, a do `ssh` idzie on przez kolejkę FIFO (w środowisku procesu tylko
+ścieżka kolejki, `PELIKAN_ASKPASS_FIFO`). Parser zwraca własny typ `RemoteFileEntry` zamiast `FileItem` z VFS Bifolda.
+
+### D62 · 2026-10-23 — Stop zdalnego builda i prolog środowiska
+Każde polecenie strumieniowe zaczyna się od `echo "@@PID $$"` — powłoka polecenia jest liderem sesji i grupy
+procesów na serwerze (sshd robi `setsid`). Stop kończy lokalne `ssh` (przy `-tt` zamknięcie pty wysyła SIGHUP do
+grupy), a zapasowo osobnym połączeniem wysyła `kill -TERM -<pid>`, sprawdza grupę `kill -0` i po 5 s `kill -KILL`;
+znacznik jest odcinany z wyjścia. Prolog środowiska ustawia zmienne w dwóch krokach (`NAZWA='wartość'; export NAZWA;`)
+z wartościami dosłownymi (bez rozwijania `$PATH`) — konfiguracja celu podaje pełne wartości; nazwy tylko
+`[A-Za-z_][A-Za-z0-9_]*`. Na AIX 6.1 (ksh88, stary OpenSSH) zachowanie Stop wymaga potwierdzenia przez właściciela.
+
 ### D55 · 2026-10-23 — Plik nie zmienia kodowania po cichu
 Zapis znaku spoza kodowania pliku (np. „ ” w ISO-8859-2) jest blokowany z linią, kolumną i znakiem — wcześniej plik
 przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmiana kodowania tylko jawnie (Plik › Kodowanie
@@ -573,3 +590,26 @@ Zadania lokalne (DB-TASK-001) uruchamia planista w aplikacji (co 30 s sprawdza t
 trwała zmiana konfiguracji systemu (PROMPT §13). Definicje (`Tasks/tasks.json`) zawierają nazwę połączenia, nigdy
 hasła; hasło pochodzi z Pęku kluczy w chwili uruchomienia. Stan i dzienniki osobno (`Tasks/state.json`,
 `Tasks/logs/`). Skrypt bez zaznaczonego COMMIT jest wycofywany; z COMMIT — przez strażnika zmian.
+### D80 · 2026-10-23 — Cele SSH: osobny moduł, plik bez sekretów, osobna usługa Pęku kluczy
+Model `PelikanSSHTarget`, magazyn celów, „Testuj” i parsery błędów są w nowym module `PelikanProC` (zależy od
+`PelikanWorkspace` i `PelikanRemote`), żeby `PelikanWorkspace` nie zależał od warstwy SSH, która działa tylko na macOS;
+komendy (`ssh.manager`, `ssh.test`, `ssh.export`, `ssh.import`, agent — Brak) są w rejestrze i otwierają okno przez
+`UIServices.showSSHTargets`. Cele i foldery w `ssh-targets.json` w katalogu danych — bez haseł; hasło SSH albo hasło
+klucza w pęku logowania w usłudze `<bundle id>.ssh` (konto = id celu), osobnej od haseł baz (`.connection`), z tym samym
+potwierdzeniem właściciela co hasła baz, gdy włączone (D56) — raz na cel w trakcie działania aplikacji. Sekret podany
+bez „Zapamiętaj” zostaje tylko w pamięci. Eksport/import nie przenosi sekretów, a import nadaje nowe identyfikatory
+(dołącza, nie nadpisuje). Gałąź porównywana dokładnie (`MASTER` ≠ `master`). Katalog roboczy Pelikana
+`<backupy>/.pelikan` nie może leżeć w working copy (walidacja). Brak katalogu backupów przy „Testuj” — utworzenie po
+potwierdzeniu, dla PROD dodatkowo wpisaniem nazwy celu (`ProductionConfirmation`, gotowe dla pipeline'u wdrożenia).
+Wersja serwera SSH czytana z banera TCP (przed logowaniem, bez sekretów) — log negocjacji `ssh` jest kasowany przez
+`SSHSession` po połączeniu. `which make` zamiast `make -v`, bo `make` z AIX może nie mieć opcji wersji.
+
+### D81 · 2026-10-23 — Parsery proc/xlc z formatu dokumentowanego
+Parsery rozpoznają: Pro*C `Error at line L, column C in file F` / `Semantic error at line L, column C, file F:` /
+`Syntax error …` z następującym kodem `PCC-x-NNNNN` (przy SQLCHECK=SEMANTICS także `PLS-x-NNNNN`; F = błąd krytyczny,
+także bez lokalizacji); XL C `"plik", line L.C: NNNN-NNN[N] (I|W|E|S|U) treść` (kolumna opcjonalna, numery komunikatów
+trzy- i czterocyfrowe) oraz układ `-qsrcmsg` (linia `  N | źródło`, znacznik `....a..`, komunikat `a - NNNN-NNN (S)`,
+plik z ostatniego polecenia kompilacji `xlc… -c plik.c` w wyjściu `make`). Ścieżka z komunikatu (względna wobec katalogu
+`make` albo bezwzględna) jest mapowana na ścieżkę względną working copy; pliki spoza repozytorium (nagłówki Oracle) nie
+dają skoku. Fixture'y odtwarzają format z dokumentacji — do zastąpienia prawdziwymi próbkami z AIX właściciela.
+Sukces builda wyznacza kod wyjścia `make`, nie parser.

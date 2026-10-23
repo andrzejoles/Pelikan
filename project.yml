@@ -64,6 +64,10 @@ targets:
         product: PelikanAgent
       - package: PelikanKit
         product: PelikanBridgeKit
+      - package: PelikanKit
+        product: PelikanProC
+      - package: PelikanKit
+        product: PelikanRemote
       - target: pelikan-mcp
         embed: true
         copy:
