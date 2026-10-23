@@ -124,6 +124,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Profiler przy wykonaniu | `test.profiler` |  |  | Pełny | 0 | PD-OPT-005 |
+| utPLSQL: debuguj test pod kursorem | `utplsql.debugTest` |  |  | Brak | 0 | UT-RUN-007 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |
 | Kontynuuj | `debug.run` | ⌃R † | ⌃R | Brak | 0 | PD-DBG-001 |
 | Wejdź | `debug.stepInto` | ⌃N † | ⌃N | Brak | 0 | PD-DBG-001 |
@@ -162,12 +163,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: uruchom wszystkie testy | `utplsql.runAll` | ⌃⇧U †, ⇧⌘U | ⇧⌘U | Za zgodą | 0 | UT-RUN-001 |
 | utPLSQL › utPLSQL: uruchom testy ze ścieżki… | `utplsql.runPath` |  |  | Za zgodą | 0 | UT-RUN-002 |
 | utPLSQL › utPLSQL: testy z pokryciem kodu | `utplsql.coverage` |  |  | Za zgodą | 0 | UT-COV-001 |
-| utPLSQL › utPLSQL: uruchom test pod kursorem | `utplsql.runEditor` | ⌃⌥U †, ⌥⌘U | ⌥⌘U | Za zgodą | 0 | UT-RUN-004 |
+| utPLSQL › utPLSQL: uruchom test pod kursorem | `utplsql.runEditor` | ⌃⌥U †, ⌃⌘U | ⌃⌘U | Za zgodą | 0 | UT-RUN-004 |
 | utPLSQL › utPLSQL: uruchom ponownie nieudane | `utplsql.rerunFailed` |  |  | Za zgodą | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: przerwij | `utplsql.cancel` |  |  | Pełny | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: wersja w bazie | `utplsql.version` |  |  | Odczyt | 0 | UT-INS-001 |
 | utPLSQL › utPLSQL: generuj pakiet testowy | `utplsql.generateTest` |  |  | Pełny | 0 | UT-GEN-001 |
 | utPLSQL › utPLSQL: przejdź do testu / testowanego pakietu | `utplsql.toggleTest` | ⌃⇧T †, ⌃⌘T | ⌃⌘T | Pełny | 0 | UT-NAV-001 |
+| utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |
+| utPLSQL › utPLSQL: skrypt dla wiersza poleceń | `utplsql.cliScript` |  |  | Pełny | 0 | UT-CI-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |

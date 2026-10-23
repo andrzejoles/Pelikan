@@ -16,9 +16,22 @@ enum UtplsqlCommands {
         ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
     }
 
+    /// Jednorazowe (na sesję aplikacji) ostrzeżenie przed pierwszym pokryciem (UT-COV-003): utPLSQL zbiera je przez
+    /// DBMS_PROFILER/DBMS_PLSQL_CODE_COVERAGE, co wymaga uprawnień i zapisuje dane profilera w bazie.
+    @MainActor
+    static func confirmCoverage(_ ctx: CommandContext) async throws {
+        guard ctx.invoker == .user, !ctx.workspace.coverageWarningShown, let ui = ctx.ui else { return }
+        let choice = await ui.ask(L10n.tr("Pokrycie kodu"),
+                                  message: L10n.tr("utPLSQL zbiera pokrycie przez profiler PL/SQL: wymaga uprawnień do DBMS_PROFILER i obiektów schematu UT3, zapisuje dane profilera w bazie i spowalnia testy. Kontynuować?"),
+                                  buttons: [L10n.tr("Kontynuuj"), L10n.tr("Anuluj")])
+        guard choice == 0 else { throw CommandError.cancelledByUser }
+        ctx.workspace.coverageWarningShown = true
+    }
+
     @MainActor
     static func run(_ ctx: CommandContext, paths: [String]?, coverage: Bool) async throws -> CommandResult {
         let ws = ctx.workspace
+        if coverage { try await confirmCoverage(ctx) }
         guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
         let schema = try await m.currentSchema()
         let p = paths ?? [schema]
@@ -89,7 +102,7 @@ enum UtplsqlCommands {
                 return try await run(ctx, paths: p, coverage: true)
             },
             Command(CommandDescriptor(id: "utplsql.runEditor", title: L10n.tr("utPLSQL: uruchom test pod kursorem"), category: .tools, submenu: "utPLSQL",
-                                      pd: ["ctrl+alt+u"], mac: ["cmd+alt+u"], agent: .approval, effect: .modifiesDatabase,
+                                      pd: ["ctrl+alt+u"], mac: ["cmd+ctrl+u"], agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia test (procedurę pod kursorem) albo cały pakiet testowy z okna programu."),
                                       feature: "UT-RUN-004"),
                     validate: { $0.activeDocument?.kind == .program }) { ctx in
@@ -167,6 +180,67 @@ enum UtplsqlCommands {
                 }
                 try await ws.openObject(o)
                 return CommandResult(message: "\(o.owner).\(o.name)")
+            },
+            Command(CommandDescriptor(id: "utplsql.export", title: L10n.tr("utPLSQL: eksport wyników…"), category: .tools, submenu: "utPLSQL",
+                                      parameters: runParams + [CommandParameter("format", .string, required: true, L10n.tr("Format wyniku albo pokrycia"),
+                                                                                 allowed: UtplsqlReportFormat.allCases.map(\.rawValue))],
+                                      agent: .approval, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Uruchamia testy z reporterem JUnit, Sonar, TeamCity, TAP albo pokryciem Cobertura/Sonar/HTML i zapisuje wynik do pliku (agent dostaje tekst)."),
+                                      feature: "UT-CI-001")) { ctx in
+                let ws = ctx.workspace
+                guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
+                guard let format = UtplsqlReportFormat(rawValue: ctx.arguments.string("format") ?? "") else {
+                    throw CommandError.invalidArgument("format", UtplsqlReportFormat.allCases.map(\.rawValue).joined(separator: ", "))
+                }
+                if format.isCoverage { try await confirmCoverage(ctx) }
+                let schema = try await m.currentSchema()
+                let paths = ctx.arguments.string("path").map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } } ?? [schema]
+                let text = try await UtplsqlRunner.report(paths: paths, format: format, coverageSchemes: [schema], in: ws, connectionID: conn)
+                if ctx.invoker == .user, let ui = ctx.ui {
+                    _ = await ui.saveFile(suggestedName: "utplsql-\(format.rawValue)", fileExtension: format.fileExtension, data: Data(text.utf8))
+                    return CommandResult(message: L10n.tr("Wyeksportowano: \(format.rawValue)"))
+                }
+                return CommandResult(value: .string(text))
+            },
+            Command(CommandDescriptor(id: "utplsql.cliScript", title: L10n.tr("utPLSQL: skrypt dla wiersza poleceń"), category: .tools, submenu: "utPLSQL",
+                                      parameters: [runParams[0]], agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Otwiera skrypt SQL*Plus/SQLcl uruchamiający te same testy z wynikiem JUnit oraz skrypt powłoki (bez hasła)."),
+                                      feature: "UT-CI-001")) { ctx in
+                let ws = ctx.workspace
+                guard let conn = connection(ws), let def = ws.connections.connection(conn), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
+                let schema = try await m.currentSchema()
+                let paths = ctx.arguments.string("path").map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } } ?? [schema]
+                // Łańcuch połączenia z definicji (alias albo EZConnect); hasła w skrypcie nie ma.
+                let (sql, shell) = UtplsqlRunner.cliScript(paths: paths, user: def.target.user, connectString: def.target.connectString)
+                let doc = ws.newDocument(.command, text: sql + "\n\n-- utplsql-run.sh:\n" + shell.split(separator: "\n", omittingEmptySubsequences: false).map { "-- " + $0 }.joined(separator: "\n"))
+                doc.customTitle = "utplsql-run.sql"
+                return CommandResult(message: doc.fullTitle, value: .object(["sql": .string(sql), "shell": .string(shell)]))
+            },
+            Command(CommandDescriptor(id: "utplsql.debugTest", title: L10n.tr("utPLSQL: debuguj test pod kursorem"), category: .debug,
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Okno testu z ut.run dla testu pod kursorem, punkt przerwania w procedurze testowej i start debugera."),
+                                      feature: "UT-RUN-007"),
+                    validate: { $0.activeDocument?.kind == .program }) { ctx in
+                let ws = ctx.workspace
+                guard let path = await editorPath(ws), let src = ws.activeDocument else {
+                    throw CommandError.notAvailable(L10n.tr("Kursor nie jest w pakiecie testowym"))
+                }
+                let parts = path.split(separator: ".").map(String.init)
+                // Punkt przerwania w pierwszej linii ciała procedury testowej (linia w źródle ciała pakietu).
+                if parts.count == 3, let body = ProgramCompiler.units(in: src.text).first(where: { $0.type == .packageBody }) {
+                    let lines = body.text.components(separatedBy: "\n")
+                    if let i = lines.firstIndex(where: { $0.lowercased().contains("procedure \(parts[2])") }) {
+                        let begin = lines[i...].firstIndex { $0.lowercased().trimmingCharacters(in: .whitespaces).hasPrefix("begin") } ?? i
+                        ws.breakpoints.append(Breakpoint(owner: parts[0].uppercased(), unit: parts[1].uppercased(), type: .packageBody, line: begin + 2))
+                    }
+                }
+                let doc = ws.newDocument(.test, text: "begin\n  ut.run('\(path)');\nend;")
+                let d = ws.debugger(for: doc)
+                ctx.ui?.showDebugger(d, document: doc)
+                try await d.start()
+                try await d.step(.run)
+                ws.showDebugLocation(d, testDocument: doc)
+                return .ok
             },
             Command(CommandDescriptor(id: "ob.utplsqlRun", title: L10n.tr("Uruchom testy utPLSQL"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams + [CommandParameter("coverage", .boolean, L10n.tr("Z pokryciem kodu"))],

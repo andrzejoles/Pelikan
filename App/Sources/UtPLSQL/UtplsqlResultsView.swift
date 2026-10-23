@@ -10,6 +10,7 @@ struct UtplsqlResultsView: View {
     @Bindable var run: UtplsqlRun
     @State private var selection: String?
     @State private var shown: Set<UtStatus> = Set(UtStatus.allCases)
+    @State private var showChanges = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -21,6 +22,33 @@ struct UtplsqlResultsView: View {
         }
         .padding(10)
         .frame(minWidth: 760, minHeight: 440)
+        .sheet(isPresented: $showChanges) { changes }
+    }
+
+    /// Poprzedni przebieg w historii (porównanie, UT-RES-003).
+    private var previous: UtplsqlRun? {
+        guard let i = workspace.utplsqlHistory.firstIndex(where: { $0.id == run.id }), i + 1 < workspace.utplsqlHistory.count else { return nil }
+        return workspace.utplsqlHistory[i + 1]
+    }
+
+    private var changes: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.tr("Zmiany względem poprzedniego przebiegu")).font(.headline)
+            let diff = previous.map { run.compare(with: $0) } ?? []
+            if diff.isEmpty { Text(L10n.tr("Bez zmian stanów testów.")).foregroundStyle(.secondary) }
+            List(diff, id: \.path) { d in
+                HStack {
+                    Text(d.path).font(.system(size: 11, design: .monospaced)).lineLimit(1).truncationMode(.head)
+                    Spacer()
+                    Text(d.before?.displayName ?? L10n.tr("nowy")).foregroundStyle(.secondary)
+                    Image(systemName: "arrow.right")
+                    Text(d.after.displayName).foregroundStyle(UtNodeRow.color(d.after))
+                }
+            }
+            HStack { Spacer(); Button(L10n.tr("Zamknij")) { showChanges = false }.keyboardShortcut(.defaultAction) }
+        }
+        .padding(14)
+        .frame(minWidth: 560, minHeight: 300)
     }
 
     private var header: some View {
@@ -34,6 +62,14 @@ struct UtplsqlResultsView: View {
                     Button(L10n.tr("Uruchom ponownie")) { workspace.perform("utplsql.runPath", CommandArguments(["path": .string(run.paths.joined(separator: ","))])) }
                     Button(L10n.tr("Ponownie nieudane")) { workspace.perform("utplsql.rerunFailed") }.disabled(run.failedPaths.isEmpty)
                     if run.coverageHTML != nil { Button(L10n.tr("Raport pokrycia")) { openCoverage() } }
+                    Menu(L10n.tr("Historia")) {
+                        ForEach(workspace.utplsqlHistory) { r in
+                            Button("\(r.started.formatted(date: .omitted, time: .standard)) — \(r.paths.joined(separator: ", ")) (\(r.counter.success)/\(r.counter.total))") {
+                                workspace.ui?.showUtplsqlResults(r)
+                            }
+                        }
+                    }
+                    Button(L10n.tr("Zmiany")) { showChanges = true }.disabled(previous == nil)
                 }
             }
             if let f = run.failure {

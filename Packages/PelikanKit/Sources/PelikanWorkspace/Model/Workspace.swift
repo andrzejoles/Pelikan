@@ -150,7 +150,18 @@ public final class Workspace {
     /// Punkty przerwania na kodach błędów Oracle (bez „ORA-”, np. 1403).
     public var errorBreakpoints: [Int] = []
     /// Ostatni przebieg testów utPLSQL (okno wyników, pokrycie na marginesie).
-    public var lastUtplsqlRun: UtplsqlRun?
+    public var lastUtplsqlRun: UtplsqlRun? {
+        didSet {
+            // Historia przebiegów (UT-RES-003), najnowszy pierwszy, do 20.
+            if let r = lastUtplsqlRun, utplsqlHistory.first?.id != r.id {
+                utplsqlHistory.insert(r, at: 0)
+                if utplsqlHistory.count > 20 { utplsqlHistory.removeLast() }
+            }
+        }
+    }
+    public private(set) var utplsqlHistory: [UtplsqlRun] = []
+    /// Ostrzeżenie o pokryciu kodu pokazane w tej sesji aplikacji.
+    public var coverageWarningShown = false
     /// Zmienia się po kompilacji jednostek (eksplorator testów przeładowuje drzewo).
     public var compileGeneration = 0
     @ObservationIgnored var debuggers: [DocumentID: DebuggerEngine] = [:]

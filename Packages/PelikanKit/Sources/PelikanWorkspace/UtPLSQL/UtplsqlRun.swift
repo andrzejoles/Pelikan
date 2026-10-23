@@ -99,6 +99,15 @@ public final class UtplsqlRun: Identifiable {
     /// Ścieżki testów zakończonych niepowodzeniem albo błędem (ponowne uruchomienie nieudanych).
     public var failedPaths: [String] { tests.filter { $0.status == .failure || $0.status == .error }.map(\.runPath) }
 
+    /// Zmiany względem wcześniejszego przebiegu (UT-RES-003): ścieżka testu, stan wcześniej (nil — nowy) i teraz.
+    public func compare(with earlier: UtplsqlRun) -> [(path: String, before: UtStatus?, after: UtStatus)] {
+        let old = Dictionary(earlier.tests.map { ($0.id, $0.status) }, uniquingKeysWith: { a, _ in a })
+        return tests.compactMap { t in
+            let b = old[t.id]
+            return b == t.status ? nil : (t.id, b, t.status)
+        }
+    }
+
     // MARK: Zdarzenia
 
     func apply(_ e: UtEvent) {

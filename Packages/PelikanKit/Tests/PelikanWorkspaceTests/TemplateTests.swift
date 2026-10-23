@@ -130,3 +130,15 @@ struct UtplsqlOfflineTests {
         #expect(tree.count == 1 && tree[0].children?.first?.children?.first?.path == "a.t.x")
     }
 }
+
+@MainActor
+@Suite("Szablony utPLSQL")
+struct UtplsqlTemplateTests {
+    @Test("Folder utPLSQL: pakiet testowy, test, wyjątek, kontekst, oczekiwanie, kursory")
+    func templates() {
+        let ut = TemplateLibrary.builtIn.filter { $0.folder == "utPLSQL" }
+        #expect(ut.count == 6)
+        #expect(ut.allSatisfy { TemplateEngine.parse($0.text).contains { $0.variable != nil } })
+        #expect(ut.first?.text.contains("--%suite(") == true)
+    }
+}
