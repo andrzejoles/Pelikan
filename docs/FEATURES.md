@@ -25,7 +25,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PL-INFRA-004 | Wersja z historii scalonych PR (scripts/version.sh) | PROMPT §10 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-005 | Szkielet aplikacji AppKit (XcodeGen), okno główne, menu z rejestru komend | PROMPT §4.2 | — | 0 | P1 | — | 👁 sprawdzone ręcznie |
 | PL-INFRA-006 | Rejestr komend z poziomem dostępu agenta i opisem skutków; docs/SKROTY.md generowany | PROMPT §4.2 p.1 | — | 0 | P1 | — | ✅ test |
-| PL-INFRA-007 | Podpis stały, instalatory DMG i PKG, Sparkle, szkic wydania (scripts/release.sh) | PROMPT §10 | — | 8 | P2 | — | do zrobienia |
+| PL-INFRA-007 | Podpis stały, instalatory DMG i PKG, Sparkle, szkic wydania (scripts/release.sh) | PROMPT §10 | — | 8 | P2 | — | ✅ sprawdzone (szkic v5.7.0: podpis „Pelikan Self-Signed” — wymaganie podpisu identyfikator + certyfikat, DMG, PKG, ZIP i appcast.xml z podpisem EdDSA; scripts/signing.sh, scripts/release.sh) |
 | PL-INFRA-008 | Tłumaczenia pl (źródłowy), en, de, es, uk w String Catalog + test kompletności | PROMPT §1 | — | 8 | P2 | — | ✅ test (2839 tekstów w en, de, es, uk; klucze odtwarzane ze źródeł przez scripts/l10n.py, CI: check --strict — komplet i zgodność placeholderów; L10nTests; wybór języka w Preferencjach — D87) |
 | PL-INFRA-009 | Warstwa bazy za protokołem DatabaseSession, bez AppKit, testowana na Linuksie | PROMPT §4.2 p.2 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-010 | Instrukcja użytkownika w aplikacji (pl + tłumaczenia) | PROMPT §12 | Help | 8 | P2 | — | ✅ test (instrukcja w 10 rozdziałach w docs/manual — pl i tłumaczenia, okno pomocy ⌘? z rozdziałem skrótów generowanym z rejestru w języku interfejsu; HTML bez skryptów; okno bez zrzutu — D30) |
