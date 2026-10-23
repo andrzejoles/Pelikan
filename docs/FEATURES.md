@@ -156,7 +156,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CMDW-009 | Polecenia własne: BEAUTIFY, BROWSE, CD, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH, SET ENVVAR | UG 8.3 | Command Window | 6 | P3 | Brak | ✅ test (BEAUTIFY, BROWSE, CD, DIR, EDIT, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH; SET ENVVAR pominięte — D47) |
 | PD-CMDW-010 | EXPORT TABLES / EXPORT OBJECTS (składnia jak narzędzia eksportu), RUNTESTSET | UG 8.4–8.5 | Command Window | 6 | P3 | Brak | ✅ test (EXPORT TABLES / EXPORT OBJECTS, RUNTESTSET) |
 | PD-CMDW-011 | Nieobsługiwane SET w skrypcie wsadowym bez błędu | NF17 | Command Window | 1 | P3 | Brak | ✅ test |
-| PD-CMDW-012 | Code Assistant po `@` — listing katalogu; CONNECT z listą baz po `@` | UG 25.4, NF13, NF14 | Command Window | 2 | P3 | Brak | do zrobienia |
+| PD-CMDW-012 | Code Assistant po `@` — listing katalogu; CONNECT z listą baz po `@` | UG 25.4, NF13, NF14 | Command Window | 2 | P3 | Brak | ✅ test (po `@`, `@@` i `START` — pliki skryptów i katalogi z katalogu bieżącego okna, także w podkatalogu; po `CONNECT użytkownik@` — aliasy z tnsnames.ora) |
 | PD-CMDW-013 | Wyniki zapytań w formacie tekstowym SQL*Plus (kolumny, nagłówki, PAGESIZE, COLSEP) | UG 8.3 | Command Window | 1 | P1 | Brak | ✅ test |
 
 ## PL/SQL Developer — Program Window i kompilacja
@@ -192,29 +192,29 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | ⚠️ częściowo (auto-wcięcie, Tab/Shift+Tab; bez trybu Smart i zawijania) |
 | PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | ✅ test |
 | PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | ✅ test |
-| PD-EDIT-007 | Zaznaczenie kolumnowe (Alt+przeciąganie) z pisaniem w wielu liniach | UG 25.2, NF13 | Edytor | 1 | P2 | — | do zrobienia |
+| PD-EDIT-007 | Zaznaczenie kolumnowe (Alt+przeciąganie) z pisaniem w wielu liniach | UG 25.2, NF13 | Edytor | 1 | P2 | — | ✅ test (Option+przeciąganie — zaznaczenie kolumnowe NSTextView; pisanie, Backspace i wklejanie tekstu we wszystkich liniach naraz, jedna operacja cofania; Esc — jeden kursor; bez zrzutu — D30) |
 | PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | ✅ test |
 | PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | ✅ test |
 | PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | ✅ test |
-| PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | do zrobienia |
-| PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |
+| PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | ✅ test (zakładki 0–9: Ctrl+K n / Ctrl+Q n w profilu PL/SQL Developer, przełącz/następna/poprzednia, nazwy, lista zakładek wszystkich okien z przejściem, numer na marginesie; przesuwane przy edycji) |
+| PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | ✅ test (tło zaznaczenia w 6 kolorach, usuwanie części i wszystkich znaczników; przesuwane przy edycji; zapamiętywane w stanie okna) |
 | PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | ⚠️ częściowo (bloki, IF, LOOP, CASE; ▸/▾ w marginesie, ⌥⌘←/→, Zwiń/Rozwiń wszystko; bez podglądu zwiniętego) ✅ test 👁 |
-| PD-EDIT-014 | Split editing (dwa widoki tego samego źródła, zakładki zsynchronizowane) | UG 25.18, NF16 | Edytor | 2 | P2 | — | do zrobienia |
+| PD-EDIT-014 | Split editing (dwa widoki tego samego źródła, zakładki zsynchronizowane) | UG 25.18, NF16 | Edytor | 2 | P2 | — | ✅ test (Widok › Podziel edytor — drugi widok tego samego tekstu w NSSplitView z dzielnikiem, zmiany i zaznaczenie przez wspólny model; widok bez zrzutu — D30) |
 | PD-EDIT-015 | Makra: nagrywanie F11, odtwarzanie F12, Repeat Play, biblioteka makr z klawiszami | UG 25.11, NF15 | Edit > Macro | 6 | P2 | Brak | ✅ test (F11 nagrywanie tekstu, poprawek i komend edytora; F12 odtwarzanie, ⇧F12 wielokrotne; biblioteka JSON ze skrótami); okno biblioteki bez zrzutu (D30) |
 | PD-EDIT-016 | Special Copy (formaty .copy dla języków) i Paste from host language | UG 25.6–25.7, NF10 | Edit | 6 | P3 | Pełny | ✅ test (Swift, Java, C#, JavaScript, Python, C/C++, PHP, Delphi, VB + formaty JSON z katalogu danych; wklejanie z wykrywaniem stylu) |
-| PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | do zrobienia |
+| PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | ✅ test (skróty → tekst z `|` jako pozycją kursora, także skróty z symboli po identyfikatorze; nie w literałach i komentarzach; lista w Preferencjach › Edytor) |
 | PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | ⚠️ częściowo (pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze; bez zmiennych, pasujących słów, INSERT ↔ VALUES) ✅ test |
-| PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | do zrobienia |
+| PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | ✅ test (inspekcja „long-identifier”: identyfikator dłuższy niż limit bajtów — domyślnie 30, 0 wyłącza; podkreślenie i lista problemów) |
 | PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | ⚠️ częściowo (Duplicate line; bez Delete next word) |
-| PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | do zrobienia |
+| PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | ✅ test (⌘= / ⌘− / ⌘0 i Ctrl+= / Ctrl+Shift+− / Ctrl+0 w profilu PL/SQL Developer — rozmiar czcionki edytorów na żywo; ligatury włączane w Preferencjach) |
 | PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | 👁 ręcznie |
-| PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
+| PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | ✅ test (Option+klik — dodatkowy kursor, Ctrl+Shift+↑/↓ — kursor powyżej/poniżej, pisanie i Backspace we wszystkich, Esc — jeden kursor; kursory rysowane w edytorze, bez zrzutu — D30) |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | ✅ test (historia w pamięci: bez duplikatów, limit, filtr, wklejanie); okno bez zrzutu (D30) |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
 | PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | ✅ test (F1: słowo pod kursorem → Oracle Error Help dla ORA-/PLS-/TNS-, PL/SQL Packages Reference, Reference dla widoków słownika, SQL/PL/SQL Language Reference dla poleceń i funkcji, inaczej wyszukiwanie; adresy sprawdzone na docs.oracle.com) |
 | PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | ✅ test (wyszukiwania z %s w Preferencjach › Narzędzia, zaznaczenie albo słowo pod kursorem, kodowanie tekstu, tylko http(s), wybór wyszukiwania; okno bez zrzutu (D30)) |
 | PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | ✅ test (aplikacja z Preferencji albo skojarzona; plik zapisany przed przekazaniem, okno bez pliku — plik 0600 w katalogu danych; zmiany wczytywane po powrocie do Pelikana) |
-| PD-EDIT-029 | Zachowanie stanu okna (.pfi): pozycja, zakładki, znaczniki, zmienne | UG 23.18 | Preferences | 2 | P3 | — | do zrobienia |
+| PD-EDIT-029 | Zachowanie stanu okna (.pfi): pozycja, zakładki, znaczniki, zmienne | UG 23.18 | Preferences | 2 | P3 | — | ✅ test (stan okna pliku w katalogu danych WindowState/, 0600, nazwa ze skrótu ścieżki: kursor, zakładki, znaczniki kolorów, zwinięcia, zmienne, tylko do odczytu; przy zmienionym pliku tylko kursor i zmienne; przełącznik w Preferencjach) |
 
 ## PL/SQL Developer — Code Assistant i nawigacja
 
@@ -225,16 +225,16 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CA-003 | Kontekst: obiekty dostępne, kolumny tabel DML (bez aliasu), słowa kluczowe, identyfikatory jednostki i specyfikacji | UG 25.4, NF12, NF17 | Edytor | 2 | P1 | — | ⚠️ częściowo (obiekty schematu, kolumny tabel instrukcji, słowa kluczowe, deklaracje w zasięgu i specyfikacji) ✅ test |
 | PD-CA-004 | Aliasy tabel w zapytaniu (`e.` → kolumny EMP) | PROMPT §3.1 | Edytor | 2 | P1 | — | ✅ test 👁 |
 | PD-CA-005 | `@` — linki bazy | UG 25.4, NF9 | Edytor | 2 | P3 | — | ⚠️ częściowo (lista z ALL_DB_LINKS; kontekst `@` ✅ test, bez testu listy — baza testowa nie ma linków) |
-| PD-CA-006 | Wybór wielu elementów i „(all)” (kolumny, parametry, konstruktory, pola widoku inline), układ w liniach, wyrównanie `=>`, przecinek przed | UG 25.4, UG 23.14 | Edytor | 2 | P2 | — | do zrobienia |
-| PD-CA-007 | Preferencje: auto/klawisz, opóźnienie, Contains/Starts with, styl wielkości liter, oryginalna wielkość liter, min. liczba znaków, funkcje standardowe | UG 23.14 | Preferences | 2 | P2 | — | do zrobienia |
-| PD-CA-008 | Deklaracja zmiennej/typu w dymku po najechaniu | UG 23.14, NF8 | Edytor | 2 | P2 | — | do zrobienia |
+| PD-CA-006 | Wybór wielu elementów i „(all)” (kolumny, parametry, konstruktory, pola widoku inline), układ w liniach, wyrównanie `=>`, przecinek przed | UG 25.4, UG 23.14 | Edytor | 2 | P2 | — | ⚠️ częściowo (pozycja „(all)” dla kolumn i pól po kwalifikatorze, także pól widoku inline, oraz parametrów podprogramów lokalnych i z bazy — ALL_ARGUMENTS; w jednej linii albo po jednym w linii, przecinek na początku, wyrównanie `=>` ✅ test; bez konstruktorów typów obiektowych — D100) |
+| PD-CA-007 | Preferencje: auto/klawisz, opóźnienie, Contains/Starts with, styl wielkości liter, oryginalna wielkość liter, min. liczba znaków, funkcje standardowe | UG 23.14 | Preferences | 2 | P2 | — | ✅ test (automatycznie po kropce i opóźnienie, dopasowanie „zaczyna się od”/„zawiera”, wielkość liter: jak wpisano/wielkie/małe/pierwsza wielka/oryginalna, minimum znaków, funkcje standardowe SQL; Preferencje › Edytor) |
+| PD-CA-008 | Deklaracja zmiennej/typu w dymku po najechaniu | UG 23.14, NF8 | Edytor | 2 | P2 | — | ✅ test (deklaracja zmiennej, stałej, parametru, kursora, typu, wyjątku i podprogramu w zasięgu — rodzaj, linia, tekst deklaracji; w podpowiedzi pod myszą, problem analizy ma pierwszeństwo; dymek bez zrzutu — D30) |
 | PD-CA-009 | Refresh Code Assistant (cache metadanych odświeżany w tle) | NF14, PROMPT §4.2 p.5 | Edytor | 2 | P1 | — | ✅ test (pamięć podręczna słownika, komenda Odśwież podpowiedzi kodu) |
 | PD-CA-010 | Code Contents: drzewo struktury, śledzenie kursora, hot track, sortowanie, menu (zaznacz, wytnij, test…) | UG 25.15 | Program Window | 2 | P1 | Odczyt | ⚠️ częściowo (drzewo, śledzenie kursora, przejście; bez sortowania i menu) ✅ test 👁 |
 | PD-CA-011 | Code Hierarchy nad edytorem (ścieżka od kursora, zaznaczanie, menu) | UG 25.16 | Program Window | 2 | P2 | — | ⚠️ częściowo (ścieżka pod edytorem; bez menu zaznaczania) ✅ test 👁 |
 | PD-CA-012 | Hyperlink navigation (Cmd/Ctrl+klik) do deklaracji: w źródle, w oknach, w nowym oknie; tabela → definicja / zapytanie | UG 25.19, NF17 | Edytor | 2 | P1 | Pełny | ⚠️ częściowo (deklaracje lokalne i obiekty bazy w nowym oknie, Cmd+klik; bez wariantów „w oknach”) ✅ test |
 | PD-CA-013 | Navigate back / forward (historia skoków) | UG 25.20 | Edit > Navigation | 2 | P1 | Pełny | ✅ test (deklaracja, obiekt, błąd kompilacji, Zawartość kodu; ⌃⌘← / ⌃⌘→) |
-| PD-CA-014 | Refaktoryzacja: Rename item, Extract procedure, Extract local/global constant, Replace assignment with initialization | UG 25.21, NF13 | Edytor > Refactoring | 2 | P2 | Pełny | do zrobienia |
-| PD-CA-015 | Search Bar: wszystkie edytory / bieżący / pliki w katalogach, lista wyników | UG 25.22, NF11 | View > Search Bar | 2 | P2 | Odczyt | do zrobienia |
+| PD-CA-014 | Refaktoryzacja: Rename item, Extract procedure, Extract local/global constant, Replace assignment with initialization | UG 25.21, NF13 | Edytor > Refactoring | 2 | P2 | Pełny | ✅ test (Wydziel stałą lokalną i globalną — typ z wyrażenia albo podany, Wydziel procedurę — parametry IN/IN OUT z użytych deklaracji, Zamień przypisanie na inicjalizację; Rename item — edit.refactorRename, DG-REF-001; cofanie przez edytor) |
+| PD-CA-015 | Search Bar: wszystkie edytory / bieżący / pliki w katalogach, lista wyników | UG 25.22, NF11 | View > Search Bar | 2 | P2 | Odczyt | ✅ test (bieżący edytor, wszystkie edytory, pliki skryptów w katalogach — domyślnie lokalizacje File Browsera; wielkość liter, całe słowa, regex; lista wyników z przejściem; okno Search Bar zamiast panelu dokowanego, bez zrzutu — D101, D30) |
 
 ## PL/SQL Developer — Test Window, debuger, optymalizacja
 
@@ -374,8 +374,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | ✅ test (TODO/DONE w komentarzach z właścicielem, priorytetem, kategorią; wstawianie, zamykanie); lista bez zrzutu (D30) |
 | PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | ⚠️ częściowo (kopia plik.~ext przy zapisie — opcja; migawka niezapisanych okien co interwał, nieczyste zamknięcie → pytanie o odzyskanie i Plik › Odzyskaj okna ✅ test; połączenie odtwarzane tylko dla okien z przypiętym połączeniem; bez migawki przy każdym wykonaniu — D91) |
 | PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
-| PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |
-| PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | do zrobienia |
+| PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | ⚠️ częściowo (Plik › Tylko do odczytu: edytor nieedytowalny, komendy zaznaczenia i refaktoryzacji odmawiają ✅ test; narzędzia agenta zmieniające tekst okna nie sprawdzają trybu — D102) |
+| PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | ✅ test (Plik › Otwórz z połączeniem… — połączenie przypięte do okien; katalog upuszczony albo otwarty — skrypty z katalogu w kolejności nazw) |
 
 ## PL/SQL Developer — interfejs, preferencje, dostosowanie
 

@@ -135,6 +135,8 @@ public protocol UIServices: AnyObject {
     /// Wyniki Find Usages (DG-USE-001), podgląd refaktoryzacji z różnicami — true: zastosuj (DG-REF-001),
     /// historia lokalna okna (DG-HIST-001), lista problemów analizy kodu (DG-RES-001, DG-INSP-001).
     func showUsages(title: String, hits: [UsageHit])
+    /// Search Bar — wyszukiwanie w edytorach i plikach (PD-CA-015).
+    func showSearchBar()
     func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool
     func showLocalHistory(document: Document)
     func showProblems(document: Document)
@@ -152,6 +154,7 @@ extension UIServices {
     public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showUsages(title: String, hits: [UsageHit]) {}
+    public func showSearchBar() {}
     public func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool { false }
     public func showLocalHistory(document: Document) {}
     public func showProblems(document: Document) {}
@@ -312,6 +315,8 @@ public final class Workspace {
     /// Lokalna historia plików i obiektów (DG-HIST-001) i konsole zapytań połączeń (DG-CONS-001).
     @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
     @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
+    /// Stany okien plików (PD-EDIT-029).
+    @ObservationIgnored public private(set) lazy var fileStates = FileStateStore(directory: dataDirectory?.appendingPathComponent("WindowState", isDirectory: true))
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
@@ -583,6 +588,7 @@ public final class Workspace {
 
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
+        saveWindowState(documents[i])
         consoles.persist(documents[i])
         documents.remove(at: i)
         sqlplusEngines[id] = nil

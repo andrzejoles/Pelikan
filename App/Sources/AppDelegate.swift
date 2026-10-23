@@ -162,11 +162,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
     func application(_ application: NSApplication, open urls: [URL]) {
         let scheme = Bundle.main.object(forInfoDictionaryKey: "PelikanURLScheme") as? String ?? ""
+        var files: [URL] = []
         for url in urls {
             if !url.isFileURL, !scheme.isEmpty, url.scheme?.lowercased() == scheme.lowercased() {
                 runStartup(StartupOptions.parse(url: url, scheme: scheme))
                 continue
             }
+            if url.isFileURL { files.append(url) }
+        }
+        // Katalog (upuszczony albo otwarty) — wszystkie skrypty w nim (PD-FILE-004).
+        for url in FileOpening.files(from: files) {
             do { try workspace.openFile(url) } catch { showError(error.localizedDescription) }
         }
     }
@@ -354,6 +359,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
             DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
+    func showSearchBar() {
+        ToolWindowController.show(key: "searchBar", title: L10n.tr("Szukaj w edytorach i plikach"), size: NSSize(width: 760, height: 480)) {
+            SearchBarView(workspace: workspace)
         }
     }
 

@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -224,6 +224,7 @@ public enum BuiltinCommands {
                                   agent: .full, effect: .modifiesEditor, summary: summary, feature: feature),
                 validate: { editable($0) != nil }) { ctx in
             guard let doc = editable(ctx.workspace) else { return .ok }
+            if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
@@ -327,8 +328,7 @@ public enum BuiltinCommands {
                                       feature: "PD-CA-001"),
                     validate: { editable($0) != nil }) { ctx in
                 guard let doc = editable(ctx.workspace) else { return .ok }
-                let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc))
-                guard let r = await CodeAssistant.complete(text: doc.text, offset: doc.selectedRange.lowerBound, metadata: m) else {
+                guard let r = await ctx.workspace.completion(for: doc, text: doc.text, offset: doc.selectedRange.lowerBound) else {
                     return CommandResult(message: L10n.tr("Brak podpowiedzi"))
                 }
                 ctx.ui?.showCompletion(r, for: doc)

@@ -88,6 +88,7 @@
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
+		ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
 		F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */; };
 		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
@@ -143,6 +144,7 @@
 
 /* Begin PBXFileReference section */
 		00A838393A0802C7E216722E /* TestWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWindowViewController.swift; sourceTree = "<group>"; };
+		0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorViews.swift; sourceTree = "<group>"; };
 		0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBrowserView.swift; sourceTree = "<group>"; };
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
@@ -591,6 +593,7 @@
 				A7048E3E041B381E86A22B88 /* CompletionPopup.swift */,
 				72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */,
 				30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */,
+				0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */,
 				DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */,
 			);
 			path = Editor;
@@ -810,6 +813,7 @@
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
+				ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */,
 				D0E4E53E61B71D09B1D4C583 /* ServicesProvider.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,

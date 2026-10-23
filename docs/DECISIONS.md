@@ -767,3 +767,22 @@ przy błędzie. Wyzwalacze są pomijane: tymczasowy wyzwalacz działałby na pra
 LAST_DDL_TIME z chwilą wczytania/kompilacji (cykl jak sprawdzanie połączeń) i tylko ostrzega — nie nadpisuje tekstu bez
 decyzji użytkownika. Kolejki AQ (enqueue/dequeue z menu obiektu) odłożone: wymagają edytora ładunku dla typów
 obiektowych; test łącza i DBMS_JOB.RUN zaimplementowane bez próby (baza testowa nie ma łączy ani zadań DBMS_JOB).
+### D100 · 2026-10-23 — „(all)” i parametry w Code Assistant
+Pozycja „(all)” pojawia się po kwalifikatorze, gdy lista ma co najmniej dwie kolumny albo pola (tabela, alias, widok
+inline, rekord, kursor): pierwszy element bez kwalifikatora (jest już wpisany), kolejne z nim. Po `nazwa(` Code
+Assistant podaje parametry podprogramu lokalnego (zarys kodu) albo z bazy (ALL_ARGUMENTS, poziom 0, pierwsza
+przeciążona wersja wygrywa przy powtórzeniach nazw) jako `parametr => `, a „(all)” — wszystkie w notacji nazwanej;
+w układzie „po jednym w linii” `=>` jest wyrównane. Konstruktory typów obiektowych — nie zrobione (wymagają atrybutów
+typu z ALL_TYPE_ATTRS i rozróżnienia wywołania funkcji od konstruktora).
+
+### D101 · 2026-10-23 — Search Bar jako okno narzędzia
+Pelikan nie ma dokowanych paneli narzędzi (D15, PD-UI-003), więc Search Bar to okno narzędzia z tekstem, zakresem
+(bieżący edytor, wszystkie edytory, pliki w katalogach — domyślnie lokalizacje File Browsera), opcjami i listą wyników
+jak w Find Usages. Komenda `edit.searchBar` z parametrami działa też dla agenta (poziom Odczyt), ale tylko w oknach —
+przeszukiwanie plików użytkownika jest poza jego zakresem. Limity: 5000 plików, 5000 trafień, pliki do 5 MB.
+
+### D102 · 2026-10-23 — Tryb tylko do odczytu okna
+„Tylko do odczytu” blokuje edycję w edytorze i komendy zmieniające zaznaczenie oraz refaktoryzacje; stan zapamiętywany
+w stanie okna pliku. Narzędzia agenta zmieniające tekst okna (PelikanWorkspace/Agent) nie sprawdzają jeszcze trybu —
+poza zakresem tego zadania, wiersz PD-FILE-003 ⚠️. Ctrl+K n / Ctrl+Q n (zakładki) przechwytuje edytor tylko w profilu
+skrótów PL/SQL Developer — w profilu macOS Ctrl+K usuwa do końca linii (skrót systemowy NSTextView).

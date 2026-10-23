@@ -19,6 +19,29 @@ public struct CompletionItem: Sendable, Hashable, Identifiable {
     }
 }
 
+/// Dopasowanie nazw do wpisanego tekstu (PD-CA-007).
+public enum CompletionMatch: String, Sendable, Codable, CaseIterable { case startsWith, contains }
+
+/// Wielkość liter wstawianych nazw (PD-CA-007): jak we wpisanym tekście (auto), wielkie, małe, pierwsza wielka, oryginalna.
+public enum CompletionCase: String, Sendable, Codable, CaseIterable { case auto, upper, lower, initCap, original }
+
+/// Preferencje Code Assistant (PD-CA-006, PD-CA-007).
+public struct CompletionOptions: Sendable, Hashable {
+    public var match: CompletionMatch = .startsWith
+    public var letterCase: CompletionCase = .auto
+    public var minimumCharacters = 1
+    public var standardFunctions = true
+    /// Pozycja „(all)”: każdy element w osobnej linii, przecinek na początku linii.
+    public var allPerLine = false
+    public var commaFirst = false
+    public init() {}
+
+    public init(_ s: Settings) {
+        match = s.codeAssistantMatch; letterCase = s.codeAssistantCase; minimumCharacters = max(0, s.codeAssistantMinChars)
+        standardFunctions = s.codeAssistantStandardFunctions; allPerLine = s.codeAssistantAllPerLine; commaFirst = s.codeAssistantCommaFirst
+    }
+}
+
 /// Wynik podpowiedzi: zakres tekstu do zastąpienia i elementy (już przefiltrowane prefiksem).
 public struct CompletionResult: Sendable, Hashable {
     public var replaceRange: Range<Int>
@@ -34,21 +57,87 @@ public enum CodeAssistant {
     /// Minimalna liczba znaków prefiksu dla obiektów schematu i słów kluczowych bez kwalifikatora.
     public static let minimumPrefix = 1
 
-    public static func complete(text: String, offset: Int, metadata: MetadataProvider?) async -> CompletionResult? {
+    public static func complete(text: String, offset: Int, metadata: MetadataProvider?, options: CompletionOptions = CompletionOptions()) async -> CompletionResult? {
         if let ut = utplsql(text: text, offset: offset) { return ut }
         let c = CompletionContext.analyze(text, offset: offset)
         guard !c.inLiteralOrComment else { return nil }
+        if let p = await parameters(text: text, offset: offset, metadata: metadata, options: options) { return p }
         var items: [CompletionItem] = []
         if c.afterAt {
             items = (try? await metadata?.databaseLinks())?.map { CompletionItem(label: $0, kind: .databaseLink) } ?? []
         } else if !c.qualifier.isEmpty {
             items = await members(of: c, metadata: metadata)
         } else {
-            items = await unqualified(c, metadata: metadata)
+            items = await unqualified(c, metadata: metadata, options: options)
         }
-        let filtered = filter(items, prefix: c.prefix)
+        var filtered = filter(items, prefix: c.prefix, match: options.match).map { applyCase($0, prefix: c.prefix, letterCase: options.letterCase) }
         guard !filtered.isEmpty else { return nil }
-        return CompletionResult(replaceRange: c.replaceRange, prefix: c.prefix, items: filtered.map { applyCase($0, prefix: c.prefix) })
+        // „(all)” — wszystkie kolumny/pola po kwalifikatorze (PD-CA-006).
+        let columns = filtered.filter { [.column, .field].contains($0.kind) }
+        if !c.qualifier.isEmpty, c.prefix.isEmpty, columns.count >= 2 {
+            let ns = text as NSString
+            let dot = c.replaceRange.lowerBound
+            var q = dot - 1
+            while q > 0, let s = UnicodeScalar(ns.character(at: q - 1)), CharacterSet.alphanumerics.contains(s) || "_$#.\"".unicodeScalars.contains(s) { q -= 1 }
+            let qualifierText = ns.substring(with: NSRange(location: q, length: dot - q))
+            let lineStart = ns.lineRange(for: NSRange(location: q, length: 0)).location
+            let indent = String(ns.substring(with: NSRange(location: lineStart, length: q - lineStart)).map { $0 == "\t" ? "\t" : " " })
+            filtered.insert(allItem(columns.map(\.insertText), qualifier: qualifierText, indent: indent, options: options), at: 0)
+        }
+        return CompletionResult(replaceRange: c.replaceRange, prefix: c.prefix, items: filtered)
+    }
+
+    /// Pozycja „(all)”: pierwszy element bez kwalifikatora (już wpisany), kolejne z nim; w jednej linii albo po
+    /// jednym w linii (z przecinkiem na końcu albo na początku linii).
+    static func allItem(_ names: [String], qualifier: String, indent: String, options: CompletionOptions) -> CompletionItem {
+        var text = names[0]
+        for n in names.dropFirst() {
+            if options.allPerLine {
+                text += options.commaFirst ? "\n" + String(indent.dropLast(min(2, indent.count))) + ", " + qualifier + n : ",\n" + indent + qualifier + n
+            } else {
+                text += ", " + qualifier + n
+            }
+        }
+        return CompletionItem(label: L10n.tr("(all)"), insertText: text, kind: .keyword, detail: L10n.tr("Elementów: \(names.count)"))
+    }
+
+    /// Parametry po `nazwa(` podprogramu (lokalnego z zarysu kodu albo z bazy): pozycje `parametr => ` i „(all)” z
+    /// wyrównaniem `=>` (PD-CA-006).
+    static func parameters(text: String, offset: Int, metadata m: MetadataProvider?, options: CompletionOptions) async -> CompletionResult? {
+        let ns = text as NSString
+        let o = min(offset, ns.length)
+        let before = ns.substring(with: NSRange(location: max(0, o - 300), length: min(300, o)))
+        guard let match = before.firstMatch(of: #/([A-Za-z_][A-Za-z0-9_$#]*(?:\.[A-Za-z_][A-Za-z0-9_$#]*)*)\s*\(\s*$/#) else { return nil }
+        let parts = String(match.1).uppercased().split(separator: ".").map(String.init)
+        guard let name = parts.last, !Keywords.isKeyword(name) || parts.count > 1 else { return nil }
+        var params: [(String, String)] = []
+        func collect(_ nodes: [OutlineNode]) {
+            for n in nodes {
+                if [.procedure, .function].contains(n.kind), n.name.uppercased() == name, params.isEmpty, parts.count == 1 {
+                    params = n.children.filter { $0.kind == .parameter }.map { ($0.name, $0.detail) }
+                }
+                collect(n.children)
+            }
+        }
+        collect(PLSQLOutline.parse(text))
+        if params.isEmpty, let m {
+            params = (try? await m.arguments(owner: parts.count == 3 ? parts[0] : nil, package: parts.count >= 2 ? parts[parts.count - 2] : nil, name: name)) ?? []
+        }
+        guard !params.isEmpty else { return nil }
+        let letterCase: CompletionCase = options.letterCase == .auto ? .lower : options.letterCase
+        let names = params.map { applyCase(CompletionItem(label: $0.0, kind: .column), prefix: "", letterCase: letterCase).insertText }
+        var items = zip(names, params).map { CompletionItem(label: $0.0, insertText: $0.0 + " => ", kind: .parameter, detail: $0.1.1) }
+        if params.count >= 2 {
+            let width = names.map(\.count).max() ?? 0
+            let lineStart = ns.lineRange(for: NSRange(location: o, length: 0)).location
+            let indent = String(repeating: " ", count: o - lineStart)
+            let aligned = names.map { $0.padding(toLength: width, withPad: " ", startingAt: 0) + " => " }
+            let text = options.allPerLine
+                ? aligned.enumerated().map { i, e in i == 0 ? e : (options.commaFirst ? "\n" + String(indent.dropLast(min(2, indent.count))) + ", " + e : ",\n" + indent + e) }.joined()
+                : names.map { $0 + " => " }.joined(separator: ", ")
+            items.insert(CompletionItem(label: L10n.tr("(all)"), insertText: text, kind: .keyword, detail: L10n.tr("Parametrów: \(params.count)")), at: 0)
+        }
+        return CompletionResult(replaceRange: o..<o, prefix: "", items: items)
     }
 
     static let utAnnotations: [(String, String)] = [
@@ -99,19 +188,38 @@ public enum CodeAssistant {
     }
 
     /// Filtr „zaczyna się od” bez rozróżniania wielkości liter, bez duplikatów, kolejność źródeł zachowana.
-    static func filter(_ items: [CompletionItem], prefix: String) -> [CompletionItem] {
+    static func filter(_ items: [CompletionItem], prefix: String, match: CompletionMatch = .startsWith) -> [CompletionItem] {
         let p = prefix.uppercased()
         var seen = Set<String>()
-        return items.filter { i in
-            guard p.isEmpty || i.label.uppercased().hasPrefix(p) else { return false }
-            return seen.insert(i.label.uppercased() + "|" + i.kind.rawValue).inserted
+        let kept = items.filter { i in
+            let l = i.label.uppercased()
+            guard p.isEmpty || (match == .startsWith ? l.hasPrefix(p) : l.contains(p)) else { return false }
+            return seen.insert(l + "|" + i.kind.rawValue).inserted
         }
+        // „Zawiera” (PD-CA-007): najpierw nazwy zaczynające się od wpisanego tekstu.
+        guard match == .contains, !p.isEmpty else { return kept }
+        return kept.filter { $0.label.uppercased().hasPrefix(p) } + kept.filter { !$0.label.uppercased().hasPrefix(p) }
     }
 
     /// Wielkość liter wstawianego tekstu jak we wpisanym prefiksie (małe → małe, wielkie → wielkie); bez prefiksu —
     /// nazwy słownikowe małymi, deklaracje lokalne w oryginalnej postaci (D23).
-    static func applyCase(_ item: CompletionItem, prefix: String) -> CompletionItem {
+    static func applyCase(_ item: CompletionItem, prefix: String, letterCase: CompletionCase = .auto) -> CompletionItem {
         var i = item
+        // Preferencja wielkości liter (PD-CA-007); nazwy w cudzysłowie (mieszana wielkość ze słownika) bez zmian.
+        let mixed = i.insertText != i.insertText.uppercased() && i.insertText != i.insertText.lowercased()
+            && ![.variable, .constant, .parameter, .cursor, .localType, .exception, .alias].contains(i.kind)
+        switch letterCase {
+        case .upper: if !mixed { i.insertText = i.insertText.uppercased() }; return i
+        case .lower: if !mixed { i.insertText = i.insertText.lowercased() }; return i
+        case .initCap:
+            if !mixed {
+                i.insertText = i.insertText.lowercased().split(separator: "_", omittingEmptySubsequences: false)
+                    .map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: "_")
+            }
+            return i
+        case .original: return i
+        case .auto: break
+        }
         let local: Set<CompletionItem.Kind> = [.variable, .constant, .parameter, .cursor, .localType, .exception, .alias]
         if local.contains(i.kind), prefix.isEmpty { return i }
         let hasLetters = prefix.contains { $0.isLetter }
@@ -257,7 +365,7 @@ public enum CodeAssistant {
 
     // MARK: Bez kwalifikatora
 
-    static func unqualified(_ c: CompletionContext, metadata m: MetadataProvider?) async -> [CompletionItem] {
+    static func unqualified(_ c: CompletionContext, metadata m: MetadataProvider?, options: CompletionOptions = CompletionOptions()) async -> [CompletionItem] {
         var out: [CompletionItem] = []
         for d in c.declarations {
             out.append(CompletionItem(label: d.name, kind: declarationKind(d.kind), detail: d.detail))
@@ -272,7 +380,7 @@ public enum CodeAssistant {
                 out += await columnItems(owner: t.owner, name: t.name, metadata: m)
             }
         }
-        guard c.prefix.count >= minimumPrefix else { return out }
+        guard c.prefix.count >= max(minimumPrefix, options.minimumCharacters) else { return out }
         if let m, let schema = try? await m.currentSchema(), let names = try? await m.objectNames(owner: schema) {
             let p = c.prefix.uppercased()
             out += names.lazy.filter { $0.name.hasPrefix(p) }.prefix(300).map {
@@ -281,6 +389,11 @@ public enum CodeAssistant {
         }
         let p = c.prefix.uppercased()
         out += Keywords.reserved.union(Keywords.plsql).union(Keywords.sql).filter { $0.hasPrefix(p) }.sorted().map { CompletionItem(label: $0, kind: .keyword) }
+        // Funkcje standardowe SQL (PD-CA-007).
+        if options.standardFunctions {
+            out += OracleDocs.sqlFunctions.filter { options.match == .contains ? $0.contains(p) : $0.hasPrefix(p) }.sorted()
+                .map { CompletionItem(label: $0, kind: .function, detail: L10n.tr("funkcja SQL")) }
+        }
         return out
     }
 

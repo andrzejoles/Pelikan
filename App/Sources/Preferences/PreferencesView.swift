@@ -137,9 +137,55 @@ struct EditorPane: View {
                 Picker(L10n.tr("Czcionka"), selection: setting(workspace, \.editorFontName)) {
                     ForEach(["SF Mono", "Menlo", "Monaco", "Courier New", "JetBrains Mono"].filter { NSFont(name: $0, size: 12) != nil }, id: \.self) { Text($0).tag($0) }
                 }
-                Stepper(value: setting(workspace, \.editorFontSize), in: 8...32, step: 1) {
+                Stepper(value: setting(workspace, \.editorFontSize), in: 8...40, step: 1) {
                     Text(L10n.tr("Rozmiar: \(Int(workspace.settings.editorFontSize)) pt"))
                 }
+                Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
+            }
+            Section(L10n.tr("Code Assistant")) {
+                Toggle(L10n.tr("Automatycznie po kropce"), isOn: setting(workspace, \.codeAssistantAutomatic))
+                Stepper(value: setting(workspace, \.codeAssistantDelay), in: 0...2000, step: 100) {
+                    Text(L10n.tr("Opóźnienie: \(workspace.settings.codeAssistantDelay) ms"))
+                }
+                Picker(L10n.tr("Dopasowanie"), selection: setting(workspace, \.codeAssistantMatch)) {
+                    Text(L10n.tr("Zaczyna się od")).tag(CompletionMatch.startsWith)
+                    Text(L10n.tr("Zawiera")).tag(CompletionMatch.contains)
+                }
+                Picker(L10n.tr("Wielkość liter"), selection: setting(workspace, \.codeAssistantCase)) {
+                    Text(L10n.tr("Jak we wpisanym tekście")).tag(CompletionCase.auto)
+                    Text(L10n.tr("WIELKIE")).tag(CompletionCase.upper)
+                    Text(L10n.tr("małe")).tag(CompletionCase.lower)
+                    Text(L10n.tr("Pierwsza wielka")).tag(CompletionCase.initCap)
+                    Text(L10n.tr("Oryginalna")).tag(CompletionCase.original)
+                }
+                Stepper(value: setting(workspace, \.codeAssistantMinChars), in: 0...5) {
+                    Text(L10n.tr("Minimum znaków dla obiektów i słów kluczowych: \(workspace.settings.codeAssistantMinChars)"))
+                }
+                Toggle(L10n.tr("Funkcje standardowe SQL"), isOn: setting(workspace, \.codeAssistantStandardFunctions))
+                Toggle(L10n.tr("„(all)”: każdy element w osobnej linii"), isOn: setting(workspace, \.codeAssistantAllPerLine))
+                Toggle(L10n.tr("„(all)”: przecinek na początku linii"), isOn: setting(workspace, \.codeAssistantCommaFirst))
+                    .disabled(!workspace.settings.codeAssistantAllPerLine)
+            }
+            Section(L10n.tr("AutoReplace")) {
+                ForEach(workspace.settings.autoReplace.indices, id: \.self) { i in
+                    HStack {
+                        TextField(L10n.tr("Skrót"), text: Binding(get: { workspace.settings.autoReplace[i].abbreviation },
+                                                                 set: { workspace.settings.autoReplace[i].abbreviation = $0 }))
+                            .frame(width: 90)
+                        TextField(L10n.tr("Zamiana (| — kursor)"), text: Binding(get: { workspace.settings.autoReplace[i].replacement },
+                                                                                set: { workspace.settings.autoReplace[i].replacement = $0 }))
+                        Button { workspace.settings.autoReplace.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                            .iconLabel(L10n.tr("Usuń skrót"))
+                    }
+                }
+                Button(L10n.tr("Dodaj skrót")) { workspace.settings.autoReplace.append(AutoReplaceRule(abbreviation: "", replacement: "")) }
+            }
+            Section(L10n.tr("Analiza i okna")) {
+                Stepper(value: setting(workspace, \.identifierLengthWarning), in: 0...128, step: 1) {
+                    Text(workspace.settings.identifierLengthWarning == 0 ? L10n.tr("Ostrzeżenie o długich identyfikatorach: wyłączone")
+                         : L10n.tr("Ostrzegaj o identyfikatorach dłuższych niż \(workspace.settings.identifierLengthWarning) bajtów"))
+                }
+                Toggle(L10n.tr("Zapamiętuj stan okien plików (kursor, zakładki, znaczniki, zmienne)"), isOn: setting(workspace, \.rememberWindowState))
             }
             Section(L10n.tr("Pisanie")) {
                 Picker(L10n.tr("Wielkość liter słów kluczowych"), selection: setting(workspace, \.keywordCase)) {

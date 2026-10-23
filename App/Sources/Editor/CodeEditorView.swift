@@ -25,11 +25,14 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var diagnostics: [EditorDiagnostic] = []
     var onCaretChange: ((String) -> Void)?
 
-    init(document: Document, fontSize: CGFloat = 13) {
+    init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
-        font = NSFont(name: "SF Mono", size: fontSize) ?? .monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        let ws0 = (NSApp.delegate as? AppDelegate)?.workspace
+        ligatures = ws0?.settings.editorLigatures ?? true
+        font = Self.makeFont(name: ws0?.settings.editorFontName ?? "SF Mono", size: fontSize, ligatures: ligatures)
         textView = CodeTextView(usingTextLayoutManager: true)
         ruler = LineNumberRulerView(textView: textView, highlighter: highlighter)
+        isSecondary = secondary
         super.init(frame: .zero)
         configure()
         if let ws = (NSApp.delegate as? AppDelegate)?.workspace {
@@ -54,8 +57,125 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Okno w trakcie wykonania jest tylko do odczytu (jak we wzorcu); inne okna działają równolegle.
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
-            self.textView.isEditable = !self.document.isExecuting
+            self.textView.isEditable = !self.document.isExecuting && !self.document.isReadOnly
         })
+        // Rozmiar czcionki i ligatury z Preferencji na żywo (PD-EDIT-021).
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            let size = CGFloat(ws.settings.editorFontSize), lig = ws.settings.editorLigatures
+            if size != self.font.pointSize || lig != self.ligatures { self.ligatures = lig; self.setFontSize(size) }
+        })
+        // Znaczniki kolorów (PD-EDIT-012) i zakładki na marginesie (PD-EDIT-011).
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            self.showColorMarks(self.document.colorMarks)
+            _ = self.document.bookmarks
+            self.ruler.needsDisplay = true
+        })
+        // Dodatkowe kursory z modelu (PD-EDIT-023).
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            let extra = self.document.additionalSelections
+            self.applyAdditionalSelections(extra)
+        })
+        // Drugi widok tego samego tekstu (PD-EDIT-014).
+        if !isSecondary {
+            tokens.append(trackChanges { [weak self] in
+                guard let self else { return }
+                self.setSplit(self.document.splitEditor)
+            })
+        }
+        textView.hoverText = { [weak self] offset in
+            guard let self else { return nil }
+            if let d = self.diagnostics.first(where: { $0.range.lowerBound <= offset && offset < max($0.range.upperBound, $0.range.lowerBound + 1) }) { return d.message }
+            return DeclarationHover.text(at: offset, in: self.textView.string)
+        }
+        ruler.bookmarkLines = { [weak self] in
+            guard let self else { return [:] }
+            var out: [Int: Int] = [:]
+            for b in self.document.bookmarks { out[self.highlighter.line(containing: b.offset)] = b.number }
+            return out
+        }
+    }
+
+    /// Drugi edytor tego samego dokumentu (podział, PD-EDIT-014) — bez własnego podziału.
+    private(set) var isSecondary = false
+    private var secondary: CodeEditorView?
+    private weak var peer: CodeEditorView?
+    private let pane = NSView()
+    private var splitView: NSSplitView?
+    private var ligatures = true
+    private var colorMarkRanges: [NSTextRange] = []
+
+    convenience init(secondaryOf primary: CodeEditorView, document: Document, fontSize: CGFloat) {
+        self.init(document: document, fontSize: fontSize, secondary: true)
+        peer = primary
+    }
+
+    private func setSplit(_ on: Bool) {
+        if on, secondary == nil {
+            let s = CodeEditorView(secondaryOf: self, document: document, fontSize: font.pointSize)
+            secondary = s
+            peer = s
+            let split = NSSplitView()
+            split.isVertical = false
+            split.dividerStyle = .thin
+            split.translatesAutoresizingMaskIntoConstraints = false
+            pane.removeFromSuperview()
+            pane.translatesAutoresizingMaskIntoConstraints = true
+            split.addArrangedSubview(pane)
+            split.addArrangedSubview(s)
+            addSubview(split)
+            NSLayoutConstraint.activate([split.topAnchor.constraint(equalTo: topAnchor), split.bottomAnchor.constraint(equalTo: bottomAnchor),
+                                         split.leadingAnchor.constraint(equalTo: leadingAnchor), split.trailingAnchor.constraint(equalTo: trailingAnchor)])
+            splitView = split
+            layoutSubtreeIfNeeded()
+            split.setPosition(split.bounds.height / 2, ofDividerAt: 0)
+        } else if !on, let split = splitView {
+            secondary?.removeFromSuperview()
+            secondary = nil
+            peer = nil
+            pane.removeFromSuperview()
+            split.removeFromSuperview()
+            splitView = nil
+            embedPane()
+        }
+    }
+
+    private func embedPane() {
+        pane.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(pane)
+        NSLayoutConstraint.activate([pane.topAnchor.constraint(equalTo: topAnchor), pane.bottomAnchor.constraint(equalTo: bottomAnchor),
+                                     pane.leadingAnchor.constraint(equalTo: leadingAnchor), pane.trailingAnchor.constraint(equalTo: trailingAnchor)])
+    }
+
+    static let colorMarkPalette: [NSColor] = [.systemYellow, .systemGreen, .systemBlue, .systemPink, .systemOrange, .systemPurple]
+
+    private func showColorMarks(_ marks: [ColorMark]) {
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
+        for r in colorMarkRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
+        let len = (textView.string as NSString).length
+        colorMarkRanges = []
+        for m in marks where m.range.upperBound <= len {
+            guard let a = content.location(content.documentRange.location, offsetBy: m.range.lowerBound),
+                  let b = content.location(a, offsetBy: m.range.count), let r = NSTextRange(location: a, end: b) else { continue }
+            let color = Self.colorMarkPalette[max(0, min(Self.colorMarkPalette.count - 1, m.color - 1))].withAlphaComponent(0.3)
+            tlm.addRenderingAttribute(.backgroundColor, value: color, for: r)
+            colorMarkRanges.append(r)
+        }
+    }
+
+    /// Zaznaczenia z modelu → zaznaczenia widoku (pierwsze — główne).
+    private func applyAdditionalSelections(_ extra: [Range<Int>]) {
+        let len = (textView.string as NSString).length
+        let main = document.selectedRange
+        let all = ([main] + extra).map { NSRange(location: min($0.lowerBound, len), length: max(0, min($0.upperBound, len) - min($0.lowerBound, len))) }
+        let current = textView.selectedRanges.map(\.rangeValue)
+        guard all != current, !updatingFromModel else { return }
+        updatingFromModel = true
+        textView.selectedRanges = all.map { NSValue(range: $0) }
+        updatingFromModel = false
+        textView.needsDisplay = true
     }
 
     @available(*, unavailable)
@@ -137,18 +257,20 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Margines numerów linii jako osobny widok obok (NSRulerView w TextKit 2 zasłaniał tekst).
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         ruler.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(ruler)
-        addSubview(scrollView)
+        // Margines i tekst w panelu — przy podziale (PD-EDIT-014) panel trafia do NSSplitView obok drugiego widoku.
+        pane.addSubview(ruler)
+        pane.addSubview(scrollView)
         NSLayoutConstraint.activate([
-            ruler.topAnchor.constraint(equalTo: topAnchor),
-            ruler.leadingAnchor.constraint(equalTo: leadingAnchor),
-            ruler.bottomAnchor.constraint(equalTo: bottomAnchor),
+            ruler.topAnchor.constraint(equalTo: pane.topAnchor),
+            ruler.leadingAnchor.constraint(equalTo: pane.leadingAnchor),
+            ruler.bottomAnchor.constraint(equalTo: pane.bottomAnchor),
             ruler.widthAnchor.constraint(equalToConstant: 44),
-            scrollView.topAnchor.constraint(equalTo: topAnchor),
+            scrollView.topAnchor.constraint(equalTo: pane.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: ruler.trailingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: pane.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: pane.bottomAnchor),
         ])
+        embedPane()
         scrollView.contentView.postsBoundsChangedNotifications = true
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.ruler.needsDisplay = true }
@@ -187,8 +309,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func configureCompletion() {
         completion.requery = { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return nil }
-            let m = ws.metadata(for: ws.effectiveConnection(of: self.document))
-            return await CodeAssistant.complete(text: self.textView.string, offset: self.textView.selectedRange().location, metadata: m)
+            return await ws.completion(for: self.document, text: self.textView.string, offset: self.textView.selectedRange().location)
         }
         textView.keyInterceptor = { [weak self] event in self?.completion.handle(event) ?? false }
         textView.onMouseDown = { [weak self] in self?.completion.close() }
@@ -280,7 +401,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func updateDiagnosticTip() {
         let caret = textView.selectedRange().location
         let d = diagnostics.first { $0.range.lowerBound <= caret && caret <= $0.range.upperBound }
-        textView.toolTip = d?.message
+        // Podpowiedź pod myszą (problem albo deklaracja) daje `hoverText`; tu — pasek stanu okna.
         if let d, document.statusText != d.message { document.statusText = d.message }
     }
 
@@ -342,7 +463,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let len = (textView.string as NSString).length
         let current = textView.selectedRange()
         let wanted = NSRange(location: min(selection.lowerBound, len), length: max(0, min(selection.upperBound, len) - min(selection.lowerBound, len)))
-        if !updatingFromModel, current != wanted {
+        // Przy podziale edytora zaznaczenie z modelu stosuje tylko widok, w którym nie pisze się właśnie w drugim.
+        let peerActive = peer.map { $0.window?.firstResponder === $0.textView } ?? false
+        if !updatingFromModel, current != wanted, !peerActive, document.additionalSelections.isEmpty {
             revealSelection(wanted.location)
             textView.setSelectedRange(wanted)
             textView.scrollRangeToVisible(wanted)
@@ -419,6 +542,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         guard !updatingFromModel else { return }
         let r = textView.selectedRange()
         document.selectedRange = r.location..<(r.location + r.length)
+        // Zaznaczenie kolumnowe (Option+przeciąganie) i dodatkowe kursory → model (PD-EDIT-007, PD-EDIT-023).
+        let extra = textView.selectedRanges.dropFirst().map { $0.rangeValue }.map { $0.location..<($0.location + $0.length) }
+        if document.additionalSelections != Array(extra) {
+            updatingFromModel = true
+            document.additionalSelections = Array(extra)
+            updatingFromModel = false
+        }
         // Po edycji początki linii przelicza podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -433,9 +563,23 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     func setFontSize(_ size: CGFloat) {
-        font = NSFont(name: font.fontName, size: size) ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+        let name = (NSApp.delegate as? AppDelegate)?.workspace.settings.editorFontName ?? font.familyName ?? "SF Mono"
+        font = Self.makeFont(name: name, size: size, ligatures: ligatures)
         textView.font = font
+        textView.typingAttributes[.font] = font
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
+        ruler.needsDisplay = true
+    }
+
+    /// Czcionka edytora; bez ligatur — wyłączone ligatury typowe i kontekstowe alternatywy (PD-EDIT-021).
+    static func makeFont(name: String, size: CGFloat, ligatures: Bool) -> NSFont {
+        let base = NSFont(name: name, size: size) ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+        guard !ligatures else { return base }
+        let off: [[NSFontDescriptor.FeatureKey: Int]] = [
+            [.typeIdentifier: kLigaturesType, .selectorIdentifier: kCommonLigaturesOffSelector],
+            [.typeIdentifier: kContextualAlternatesType, .selectorIdentifier: kContextualAlternatesOffSelector],
+        ]
+        return NSFont(descriptor: base.fontDescriptor.addingAttributes([.featureSettings: off]), size: size) ?? base
     }
 }
 
@@ -493,6 +637,7 @@ final class CodeTextView: NSTextView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+        drawExtraCarets()
         guard !foldedLines.isEmpty, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
         let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: max(9, (font?.pointSize ?? 13) - 2)),
                                                     .foregroundColor: NSColor.secondaryLabelColor]
@@ -519,17 +664,108 @@ final class CodeTextView: NSTextView {
     /// Wielkość liter słowa kluczowego po jego zakończeniu (spacja, nowa linia, znak przestankowy), poza literałami i komentarzami.
     override func insertText(_ string: Any, replacementRange: NSRange) {
         let text = (string as? String) ?? (string as? NSAttributedString)?.string ?? ""
+        // Pisanie w wielu miejscach naraz: zaznaczenie kolumnowe albo dodatkowe kursory (PD-EDIT-007, PD-EDIT-023).
+        if selectedRanges.count > 1, replacementRange.location == NSNotFound {
+            applyMulti { MultiCursor.insert(text, in: $0, ranges: $1) }
+            (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
+            return
+        }
         if keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
         super.insertText(string, replacementRange: replacementRange)
+        applyAutoReplace(after: text)
         (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
     }
 
-    /// Backspace w nagrywanym makrze (PD-EDIT-015).
+    /// Backspace w nagrywanym makrze (PD-EDIT-015); przy wielu kursorach — w każdym.
     override func deleteBackward(_ sender: Any?) {
-        super.deleteBackward(sender)
+        if selectedRanges.count > 1 {
+            applyMulti { MultiCursor.deleteBackward(in: $0, ranges: $1) }
+        } else {
+            super.deleteBackward(sender)
+        }
         (NSApp.delegate as? AppDelegate)?.workspace.recordDeleteBackward()
+    }
+
+    /// Zmiana tekstu we wszystkich zaznaczeniach jedną operacją cofania; zaznaczenia po zmianie z funkcji.
+    private func applyMulti(_ edit: (String, [Range<Int>]) -> (text: String, ranges: [Range<Int>])) {
+        let ranges = selectedRanges.map(\.rangeValue).map { $0.location..<($0.location + $0.length) }
+        let result = edit(string, ranges)
+        let change = EditorShift.Change(old: string, new: result.text)
+        let range = NSRange(location: change.prefix, length: change.oldEnd - change.prefix)
+        let replacement = (result.text as NSString).substring(with: NSRange(location: change.prefix, length: change.oldEnd - change.prefix + change.delta))
+        guard shouldChangeText(in: range, replacementString: replacement) else { return }
+        replaceCharacters(in: range, with: replacement)
+        didChangeText()
+        selectedRanges = result.ranges.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
+    }
+
+    /// AutoReplace (PD-EDIT-017): skrót przed wpisanym znakiem kończącym zastąpiony tekstem z Preferencji.
+    private func applyAutoReplace(after typed: String) {
+        guard typed.count == 1, selectedRange().length == 0, let ws = (NSApp.delegate as? AppDelegate)?.workspace,
+              let r = AutoReplace.apply(ws.settings.autoReplace, text: string, caret: selectedRange().location) else { return }
+        let range = NSRange(location: r.range.lowerBound, length: r.range.count)
+        guard shouldChangeText(in: range, replacementString: r.replacement) else { return }
+        replaceCharacters(in: range, with: r.replacement)
+        didChangeText()
+        setSelectedRange(NSRange(location: r.caret, length: 0))
+    }
+
+    // MARK: Podpowiedź pod myszą (PD-CA-008)
+
+    /// Tekst podpowiedzi dla pozycji w tekście: problem analizy albo deklaracja identyfikatora.
+    var hoverText: ((Int) -> String?)?
+    private var tooltipTag: NSView.ToolTipTag?
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if let tooltipTag { removeToolTip(tooltipTag) }
+        tooltipTag = addToolTip(bounds, owner: self, userData: nil)
+    }
+
+    @objc func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
+        let i = characterIndexForInsertion(at: point)
+        return hoverText?(i) ?? ""
+    }
+
+    // MARK: Zakładki Ctrl+K n / Ctrl+Q n (PD-EDIT-011, profil PL/SQL Developer)
+
+    private var bookmarkPrefix: Character?
+
+    private func handleBookmarkKeys(_ event: NSEvent) -> Bool {
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace, ws.settings.shortcutProfile == .plsqlDeveloper else { return false }
+        let mods = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        if let prefix = bookmarkPrefix {
+            bookmarkPrefix = nil
+            if let ch = event.charactersIgnoringModifiers?.first, let n = ch.wholeNumberValue {
+                ws.perform(prefix == "k" ? "edit.toggleBookmark" : "edit.gotoBookmark", CommandArguments(["number": .int(Int64(n))]))
+                return true
+            }
+            return false
+        }
+        if mods == .control, let ch = event.charactersIgnoringModifiers?.lowercased().first, ch == "k" || ch == "q" {
+            bookmarkPrefix = ch
+            return true
+        }
+        return false
+    }
+
+    /// Dodatkowe kursory (zaznaczenia zerowej długości poza pierwszym) — NSTextView rysuje tylko jeden.
+    private func drawExtraCarets() {
+        guard selectedRanges.count > 1, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
+        NSColor.textColor.setFill()
+        for r in selectedRanges.dropFirst().map(\.rangeValue) where r.length == 0 {
+            guard let loc = content.location(content.documentRange.location, offsetBy: r.location) else { continue }
+            var rect: CGRect?
+            tlm.enumerateTextSegments(in: NSTextRange(location: loc), type: .selection, options: []) { _, frame, _, _ in
+                rect = frame
+                return false
+            }
+            if let f = rect {
+                NSRect(x: f.minX + textContainerInset.width, y: f.minY + textContainerInset.height, width: 1.5, height: max(f.height, font?.pointSize ?? 13)).fill()
+            }
+        }
     }
 
     /// Kopiowanie i wycinanie trafia do historii schowka (PD-EDIT-024).
@@ -577,12 +813,30 @@ final class CodeTextView: NSTextView {
 
     override func keyDown(with event: NSEvent) {
         if keyInterceptor?(event) == true { return }
+        if handleBookmarkKeys(event) { return }
+        // Esc przy wielu kursorach — zostaje jeden (jak w edytorach z wieloma kursorami).
+        if event.keyCode == 53, selectedRanges.count > 1 {
+            setSelectedRange(selectedRanges[0].rangeValue)
+            return
+        }
         super.keyDown(with: event)
     }
 
-    /// Cmd+klik na identyfikatorze — przejście do deklaracji (UG 25.19 nawigacja hiperłączami).
+    /// Cmd+klik na identyfikatorze — przejście do deklaracji (UG 25.19 nawigacja hiperłączami); Option+klik —
+    /// dodatkowy kursor (PD-EDIT-023), Option+przeciąganie — zaznaczenie kolumnowe (NSTextView, PD-EDIT-007).
     override func mouseDown(with event: NSEvent) {
         onMouseDown?()
+        if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .option, event.clickCount == 1 {
+            let before = selectedRanges
+            super.mouseDown(with: event)
+            let after = selectedRanges
+            if after.count == 1, after[0].rangeValue.length == 0 {
+                let merged = MultiCursor.sorted(before.map(\.rangeValue).map { $0.location..<($0.location + $0.length) } + [after[0].rangeValue.location..<after[0].rangeValue.location])
+                selectedRanges = merged.map { NSValue(range: NSRange(location: $0.lowerBound, length: $0.count)) }
+                needsDisplay = true
+            }
+            return
+        }
         guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return super.mouseDown(with: event) }
         let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
@@ -692,6 +946,8 @@ final class LineNumberRulerView: NSView {
     /// Pokrycie utPLSQL: linie (od 0) pokryte i niepokryte (UT-COV-002).
     var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>))?
     var onBreakpointClick: ((Int) -> Void)?
+    /// Zakładki: linia (od 0) → numer 0–9 (PD-EDIT-011).
+    var bookmarkLines: (() -> [Int: Int])?
     /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
     private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
 
@@ -741,6 +997,15 @@ final class LineNumberRulerView: NSView {
                 NSColor.systemRed.withAlphaComponent(0.85).setFill()
                 NSBezierPath(ovalIn: NSRect(x: bounds.width - 8 - d - 10, y: y + 1, width: d, height: d)).fill()
             }
+            if let n = marks[line] {
+                // Zakładka: numer w zaokrąglonym znaczniku przy lewej krawędzi (obok znacznika zwijania).
+                let badge = NSAttributedString(string: "\(n)", attributes: [.font: NSFont.boldSystemFont(ofSize: max(8, font.pointSize - 2)), .foregroundColor: NSColor.white])
+                let h = min(height, lineHeight) - 2
+                let box = NSRect(x: 13, y: y + 1, width: max(10, badge.size().width + 4), height: h)
+                NSColor.systemBlue.setFill()
+                NSBezierPath(roundedRect: box, xRadius: 3, yRadius: 3).fill()
+                badge.draw(at: NSPoint(x: box.midX - badge.size().width / 2, y: box.midY - badge.size().height / 2))
+            }
             let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
             let size = s.size()
             s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
@@ -752,6 +1017,7 @@ final class LineNumberRulerView: NSView {
         }
         drawnLines.removeAll(keepingCapacity: true)
         let bps = breakpointLines?() ?? []
+        let marks = bookmarkLines?() ?? [:]
         let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>())
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)

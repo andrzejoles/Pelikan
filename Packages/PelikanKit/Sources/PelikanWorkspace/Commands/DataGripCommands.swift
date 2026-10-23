@@ -146,7 +146,7 @@ enum DataGripCommands {
                                       feature: "DG-INSP-001")) { ctx in
                 let ws = ctx.workspace
                 if let text = ctx.arguments.string("text") {
-                    let list = CodeInspections.inspect(text)
+                    let list = CodeInspections.inspect(text, identifierLimit: ws.settings.identifierLengthWarning)
                     return CommandResult(message: L10n.tr("Problemów: \(list.count)"), value: diagnosticsJSON(list, text: text))
                 }
                 guard let doc = editor(ws) else { throw CommandError.notAvailable(L10n.tr("Brak okna edytora")) }
