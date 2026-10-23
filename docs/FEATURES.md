@@ -526,3 +526,16 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
 | MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |
+
+## Pro*C — zdalny build przez SSH (zadanie właściciela, Etap P)
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| PC-SSH-001 | `Spawn` (posix_spawn, argumenty jako bajty, anulowanie, pauza, limit czasu `nil` = bez limitu) | zadanie Pro*C, Bifold | — | P | P1 | Brak | ✅ test (przeniesione z Bifolda) |
+| PC-SSH-002 | `SSHSession`: ControlMaster/ControlPersist, stare algorytmy przez `ssh -Q`, hasło przez FIFO + askpass, `accept-new` + known_hosts, błędy strukturalne (`SSHError`), `scp -O`, `shellQuote`, katalog gniazd (sun_path) | zadanie Pro*C, Bifold | — | P | P1 | Brak | ✅ test (lokalny sshd ze starymi algorytmami, bez SFTP) |
+| PC-SSH-003 | Kodowanie nazw i poleceń UTF-8 / ISO-8859-2 (`NameEncoding`), dekoder strumienia z buforem resztek i normalizacją `\r\n` | zadanie Pro*C | — | P | P1 | Brak | ✅ test |
+| PC-SSH-004 | Parser `ls -la` (AIX, Linux, BSD) z własnym typem wyniku | zadanie Pro*C, Bifold | — | P | P2 | Brak | ✅ test (próbki AIX z Bifolda — do potwierdzenia na serwerze właściciela) |
+| PC-SSH-005 | Strumieniowanie wyjścia (`Spawn.stream`, `SSHSession.stream`): porcje stdout/stderr, kod wyjścia, limit całkowity i limit ciszy | zadanie Pro*C | — | P | P1 | Brak | ✅ test |
+| PC-SSH-006 | Stdin procesu: `/dev/null`, dane, plik (`cat > plik`, `sh -s`) | zadanie Pro*C | — | P | P1 | Brak | ✅ test |
+| PC-SSH-007 | Stop: `ssh -tt` (SIGHUP dla grupy procesów) + zapasowe `kill -TERM -<pid>` po znaczniku `@@PID`, po 5 s `-KILL` | zadanie Pro*C | — | P | P1 | Brak | ✅ test (lokalny sshd; na AIX 6.1 do potwierdzenia) |
+| PC-SSH-008 | Prolog środowiska zdalnego `NAZWA='wartość'; export NAZWA;` (ksh88) | zadanie Pro*C | — | P | P1 | Brak | ✅ test |

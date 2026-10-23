@@ -423,3 +423,21 @@ Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 �
 5. Build próbny: po pierwszej wersji pipeline'u.
 Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
 z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
+
+### D-PC-1 · 2026-10-23 — Warstwa SSH jako moduł PelikanRemote (tylko macOS)
+Kod z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`) trafił do osobnego celu SPM
+`PelikanRemote` bez zależności od PelikanWorkspace — jak PelikanAgent, w `#if canImport(Darwin)`, więc Linux CI buduje
+pusty moduł. Zależności BifoldCore zastąpił `SSHError` z przypadkami strukturalnymi (negotiationFailed,
+permissionDenied, hostKeyChanged, timeout, cancelled, io, invalidName, unencodable) — teksty dla użytkownika powstaną
+w warstwie interfejsu przez `L10n.tr`. Sekrety SSH trafią do istniejącego `SecretStore` (Pęk kluczy) przy menedżerze
+połączeń; sesja dostaje sekret przez domknięcie, a do `ssh` idzie on przez kolejkę FIFO (w środowisku procesu tylko
+ścieżka kolejki, `PELIKAN_ASKPASS_FIFO`). Parser zwraca własny typ `RemoteFileEntry` zamiast `FileItem` z VFS Bifolda.
+
+### D-PC-2 · 2026-10-23 — Stop zdalnego builda i prolog środowiska
+Każde polecenie strumieniowe zaczyna się od `echo "@@PID $$"` — powłoka polecenia jest liderem sesji i grupy
+procesów na serwerze (sshd robi `setsid`). Stop kończy lokalne `ssh` (przy `-tt` zamknięcie pty wysyła SIGHUP do
+grupy), a zapasowo osobnym połączeniem wysyła `kill -TERM -<pid>`, sprawdza grupę `kill -0` i po 5 s `kill -KILL`;
+znacznik jest odcinany z wyjścia. Prolog środowiska ustawia zmienne w dwóch krokach (`NAZWA='wartość'; export NAZWA;`)
+z wartościami dosłownymi (bez rozwijania `$PATH`) — konfiguracja celu podaje pełne wartości; nazwy tylko
+`[A-Za-z_][A-Za-z0-9_]*`. Na AIX 6.1 (ksh88, stary OpenSSH) zachowanie Stop wymaga potwierdzenia przez właściciela.
+

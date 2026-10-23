@@ -16,6 +16,7 @@ let package = Package(
         .library(name: "PelikanWorkspace", targets: ["PelikanWorkspace"]),
         .library(name: "PelikanThin", targets: ["PelikanThin"]),
         .library(name: "PelikanAgent", targets: ["PelikanAgent"]),
+        .library(name: "PelikanRemote", targets: ["PelikanRemote"]),
         .library(name: "PelikanBridgeKit", targets: ["PelikanBridgeKit"]),
         .executable(name: "pelikan-mcp", targets: ["pelikan-mcp"]),
     ],
@@ -55,10 +56,14 @@ let package = Package(
                                                      .product(name: "MCP", package: "swift-sdk", condition: .when(platforms: [.macOS]))],
                 swiftSettings: strict),
 
+        // Zdalny build Pro*C (Etap P): ssh/scp przez posix_spawn, warstwa przejęta z Bifolda — tylko macOS.
+        .target(name: "PelikanRemote", swiftSettings: strict),
+
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace"], swiftSettings: strict),
         .testTarget(name: "PelikanAgentTests", dependencies: ["PelikanAgent", "pelikan-mcp"], swiftSettings: strict),
+        .testTarget(name: "PelikanRemoteTests", dependencies: ["PelikanRemote"], swiftSettings: strict),
     ],
     swiftLanguageModes: [.v6]
 )
