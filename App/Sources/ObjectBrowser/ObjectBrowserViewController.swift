@@ -332,8 +332,12 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             menu.addItem(withTitle: L10n.tr("Odśwież"), action: #selector(refreshAll), keyEquivalent: "").target = self
             return
         }
-        for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.recompile", "ob.drop",
+        // Pozycje niedostępne dla typu obiektu (np. Włącz/Wyłącz poza wyzwalaczami i tabelami) są pomijane, nie wyszarzane.
+        let optional: Set<String> = ["ob.enable", "ob.disable", "ob.ccflags", "ob.test", "ob.standardTest", "ob.addSourceToEditor"]
+        for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.test", "ob.standardTest",
+                   "ob.addSourceToEditor", "-", "ob.recompile", "ob.enable", "ob.disable", "ob.ccflags", "ob.drop",
                    "-", "ob.copyName", "ob.refresh"] {
+            if optional.contains(id), !workspace.isEnabled(CommandID(rawValue: id)) { continue }
             if id == "ob.copyName", let o = workspace.selectedObject, let gen = generateCodeMenu(o) { menu.addItem(gen) }
             if id == "-" { menu.addItem(.separator()); continue }
             guard let c = workspace.registry.command(CommandID(rawValue: id)) else { continue }

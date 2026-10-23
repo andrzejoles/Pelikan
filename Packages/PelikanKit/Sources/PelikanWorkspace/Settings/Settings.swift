@@ -50,6 +50,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var closeIdleSessionsMinutes = 0
     /// Karta Statystyki w SQL Window — statystyki sesji z wykonania (PD-SQLW-008).
     public var sqlWindowStatistics = false
+    /// Kompilacja okna programu z pliku tylko do odczytu (domyślnie zablokowana, PD-PROG-017).
+    public var compileReadOnlyFiles = false
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
@@ -181,6 +183,7 @@ public struct Settings: Sendable, Codable, Hashable {
         sessionNLS = v(.sessionNLS, sessionNLS)
         closeIdleSessionsMinutes = v(.closeIdleSessionsMinutes, closeIdleSessionsMinutes)
         sqlWindowStatistics = v(.sqlWindowStatistics, sqlWindowStatistics)
+        compileReadOnlyFiles = v(.compileReadOnlyFiles, compileReadOnlyFiles)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)

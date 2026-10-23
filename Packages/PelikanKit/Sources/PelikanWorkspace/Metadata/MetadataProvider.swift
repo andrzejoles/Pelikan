@@ -364,6 +364,12 @@ public final class MetadataProvider {
         guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak źródła \(o.type.rawValue) \(o.qualifiedName) (brak uprawnień albo obiekt zawinięty)")) }
         var text = rows.map { $0.first?.displayText ?? "" }.joined()
         if text.hasSuffix("\n") { text.removeLast() }
+        // Moduł MLE: ALL_SOURCE zawiera sam kod JavaScript — nagłówek CREATE MLE MODULE z wersją (PD-PROG-014).
+        if o.type == .mleModule {
+            let version = try? await s.scalar("select version from all_mle_modules where module_owner = :o and module_name = :n",
+                                               binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name))])
+            return MLE.createModuleDDL(name: o.name, source: text, version: version ?? nil)
+        }
         // Pierwsza linia z ALL_SOURCE zaczyna się od typu ("PACKAGE emp_api AS") — dodajemy CREATE OR REPLACE.
         return "CREATE OR REPLACE " + text
     }

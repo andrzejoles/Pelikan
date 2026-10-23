@@ -10865,6 +10865,34 @@
         }
       }
     },
+    "Dodaj źródło do edytora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add source to editor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelltext zum Editor hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir el código fuente al editor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати вихідний код до редактора"
+          }
+        }
+      }
+    },
     "Dodaje katalog do lokalizacji Przeglądarki plików (z filtrem plików i miejscem w hierarchii)." : {
       "localizations" : {
         "en" : {
@@ -14333,6 +14361,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Filter (WHERE-Bedingung)"
+          }
+        }
+      }
+    },
+    "Flagi kompilacji dotyczą jednostek PL/SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation flags apply to PL/SQL units"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompilierungs-Flags gelten für PL/SQL-Einheiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los indicadores de compilación se aplican a unidades PL/SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прапорці компіляції стосуються одиниць PL/SQL"
+          }
+        }
+      }
+    },
+    "Flagi kompilacji warunkowej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conditional compilation flags"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flags der bedingten Kompilierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicadores de compilación condicional"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прапорці умовної компіляції"
+          }
+        }
+      }
+    },
+    "Flagi kompilacji warunkowej…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conditional compilation flags…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flags der bedingten Kompilierung …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicadores de compilación condicional…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прапорці умовної компіляції…"
           }
         }
       }
@@ -21309,6 +21421,90 @@
         }
       }
     },
+    "Kompilacja próbna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trial compilation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probekompilierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilación de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробна компіляція"
+          }
+        }
+      }
+    },
+    "Kompilacja próbna bez błędów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trial compilation without errors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probekompilierung ohne Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilación de prueba sin errores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробна компіляція без помилок"
+          }
+        }
+      }
+    },
+    "Kompilacja próbna: błędów %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trial compilation: %@ errors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probekompilierung: %@ Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilación de prueba: %@ errores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробна компіляція: помилок — %@"
+          }
+        }
+      }
+    },
     "Kompiluj (agent)" : {
       "localizations" : {
         "en" : {
@@ -21445,6 +21641,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle kompilieren"
+          }
+        }
+      }
+    },
+    "Kompiluje jednostki okna pod tymczasową nazwą i pokazuje błędy bez zastępowania obiektów w bazie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiles the window's units under a temporary name and shows errors without replacing objects in the database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompiliert die Einheiten des Fensters unter einem temporären Namen und zeigt Fehler an, ohne Objekte in der Datenbank zu ersetzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compila las unidades de la ventana con un nombre temporal y muestra los errores sin reemplazar objetos en la base de datos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компілює одиниці вікна під тимчасовою назвою та показує помилки, не замінюючи об’єкти в базі даних."
           }
         }
       }
@@ -23045,6 +23269,34 @@
         }
       }
     },
+    "Kosz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recycle Bin"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papierkorb"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papelera de reciclaje"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кошик"
+          }
+        }
+      }
+    },
     "Kosz jest niedostępny w tym systemie" : {
       "localizations" : {
         "en" : {
@@ -23069,6 +23321,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Papierkorb ist auf diesem System nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Kosz jest pusty." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Recycle Bin is empty."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Papierkorb ist leer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La papelera de reciclaje está vacía."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кошик порожній."
           }
         }
       }
@@ -27805,6 +28085,34 @@
         }
       }
     },
+    "Nazwa pierwotna albo BIN$…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original name or BIN$…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ursprünglicher Name oder BIN$…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre original o BIN$…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Первинна назва або BIN$…"
+          }
+        }
+      }
+    },
     "Nazwa pliku (np. [ID]_[NAZWA].txt, [#] — numer wiersza)" : {
       "localizations" : {
         "en" : {
@@ -28305,6 +28613,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає з'єднання «%@»"
+          }
+        }
+      }
+    },
+    "Nie ma w koszu obiektu „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no object “%@” in the Recycle Bin"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Papierkorb gibt es kein Objekt „%@“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún objeto «%@» en la papelera de reciclaje"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У кошику немає об’єкта «%@»"
+          }
+        }
+      }
+    },
+    "Nie ma w koszu obiektu „%@” do przywrócenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no object “%@” in the Recycle Bin to restore"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Papierkorb gibt es kein Objekt „%@“ zum Wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún objeto «%@» en la papelera de reciclaje para restaurar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У кошику немає об’єкта «%@» для відновлення"
           }
         }
       }
@@ -29289,6 +29653,34 @@
         }
       }
     },
+    "Nie znaleziono źródła w bazie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source not found in the database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelltext in der Datenbank nicht gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró el código fuente en la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вихідний код у базі даних не знайдено"
+          }
+        }
+      }
+    },
     "Nie znaleziono „%@”" : {
       "localizations" : {
         "en" : {
@@ -29705,6 +30097,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unsichtbar"
+          }
+        }
+      }
+    },
+    "Niezapisane zmiany w oknie zostaną utracone." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsaved changes in the window will be lost."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht gespeicherte Änderungen im Fenster gehen verloren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los cambios no guardados de la ventana se perderán."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Незбережені зміни у вікні буде втрачено."
           }
         }
       }
@@ -30265,6 +30685,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Name"
+          }
+        }
+      }
+    },
+    "Nowa nazwa (puste — pierwotna)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New name (empty — original)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Name (leer — ursprünglicher)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo nombre (vacío — el original)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова назва (порожньо — первинна)"
           }
         }
       }
@@ -31865,6 +32313,34 @@
         }
       }
     },
+    "Obiekt (puste — cały kosz)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object (empty — entire Recycle Bin)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt (leer — gesamter Papierkorb)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objeto (vacío — toda la papelera de reciclaje)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкт (порожньо — весь кошик)"
+          }
+        }
+      }
+    },
     "Obiekt JSON z kolumn" : {
       "localizations" : {
         "en" : {
@@ -31973,6 +32449,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt „%@“"
+          }
+        }
+      }
+    },
+    "Obiekt „%@” zostanie usunięty z kosza bez możliwości przywrócenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Object “%@” will be removed from the Recycle Bin and cannot be restored."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Objekt „%@“ wird aus dem Papierkorb entfernt und kann nicht wiederhergestellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El objeto «%@» se eliminará de la papelera de reciclaje sin posibilidad de restaurarlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкт «%@» буде видалено з кошика без можливості відновлення."
           }
         }
       }
@@ -32169,6 +32673,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Typobjekte"
+          }
+        }
+      }
+    },
+    "Obiekty usunięte do kosza (USER_RECYCLEBIN): nazwa pierwotna, typ, czas usunięcia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects dropped to the Recycle Bin (USER_RECYCLEBIN): original name, type, drop time."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In den Papierkorb verschobene Objekte (USER_RECYCLEBIN): ursprünglicher Name, Typ, Zeitpunkt des Löschens."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos eliminados a la papelera de reciclaje (USER_RECYCLEBIN): nombre original, tipo, hora de eliminación."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкти, видалені до кошика (USER_RECYCLEBIN): первинна назва, тип, час видалення."
           }
         }
       }
@@ -33601,6 +34133,34 @@
         }
       }
     },
+    "Odśwież widok zmaterializowany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refresh materialized view"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Materialisierte Sicht aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualizar vista materializada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновити матеріалізоване подання"
+          }
+        }
+      }
+    },
     "Odświeża kolumny i klucze obce obiektów diagramu ze słownika bazy; zgłasza obiekty, których już nie ma." : {
       "localizations" : {
         "en" : {
@@ -33629,6 +34189,34 @@
         }
       }
     },
+    "Odświeża widok zmaterializowany (DBMS_MVIEW.REFRESH, metoda z definicji)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshes the materialized view (DBMS_MVIEW.REFRESH, method from its definition)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktualisiert die materialisierte Sicht (DBMS_MVIEW.REFRESH, Methode laut Definition)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualiza la vista materializada (DBMS_MVIEW.REFRESH, método de su definición)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлює матеріалізоване подання (DBMS_MVIEW.REFRESH, метод за визначенням)."
+          }
+        }
+      }
+    },
     "Odświeżaj co" : {
       "localizations" : {
         "en" : {
@@ -33653,6 +34241,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktualisieren alle"
+          }
+        }
+      }
+    },
+    "Odświeżono %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Refreshed %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ aktualisiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ actualizado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оновлено %@"
           }
         }
       }
@@ -34717,6 +35333,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Beschreibung: %@"
+          }
+        }
+      }
+    },
+    "Opróżnij kosz…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty Recycle Bin…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Papierkorb leeren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaciar la papelera de reciclaje…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очистити кошик…"
           }
         }
       }
@@ -36373,6 +37017,34 @@
         }
       }
     },
+    "Otwiera zaznaczony blok PL/SQL (albo całe okno) w oknie testu i wykonuje go z DBMS_OUTPUT." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the selected PL/SQL block (or the whole window) in a Test Window and runs it with DBMS_OUTPUT."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet den markierten PL/SQL-Block (oder das ganze Fenster) in einem Test Window und führt ihn mit DBMS_OUTPUT aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el bloque PL/SQL seleccionado (o toda la ventana) en un Test Window y lo ejecuta con DBMS_OUTPUT."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває виділений блок PL/SQL (або все вікно) у Test Window і виконує його з DBMS_OUTPUT."
+          }
+        }
+      }
+    },
     "Otwiera źródło programu (albo DDL innego obiektu) w nowym oknie, bez kompilacji; cofnięcie sesji agenta zamyka okno." : {
       "localizations" : {
         "en" : {
@@ -37209,6 +37881,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PL/SQL Developer (F-Tasten, Ctrl)"
+          }
+        }
+      }
+    },
+    "PLSQL_CCFLAGS, np. debug:TRUE, level:2 (bez argumentu — odczyt)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PLSQL_CCFLAGS, e.g. debug:TRUE, level:2 (no argument — read)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PLSQL_CCFLAGS, z. B. debug:TRUE, level:2 (ohne Argument — Lesen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PLSQL_CCFLAGS, p. ej. debug:TRUE, level:2 (sin argumento — lectura)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PLSQL_CCFLAGS, напр. debug:TRUE, level:2 (без аргументу — читання)"
           }
         }
       }
@@ -38697,6 +39397,34 @@
         }
       }
     },
+    "Plik „%@” jest tylko do odczytu — kompilacja wyłączona (Preferencje › Oracle)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File “%@” is read-only — compilation disabled (Preferences › Oracle)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ ist schreibgeschützt — Kompilierung deaktiviert (Einstellungen › Oracle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo «%@» es de solo lectura: compilación desactivada (Preferencias › Oracle)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» доступний лише для читання — компіляцію вимкнено (Параметри › Oracle)"
+          }
+        }
+      }
+    },
     "Pliki" : {
       "localizations" : {
         "en" : {
@@ -39953,6 +40681,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показувати знову"
+          }
+        }
+      }
+    },
+    "Pokazuje PLSQL_CCFLAGS jednostki albo ustawia nowe i rekompiluje ją (REUSE SETTINGS)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the unit's PLSQL_CCFLAGS or sets new ones and recompiles it (REUSE SETTINGS)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die PLSQL_CCFLAGS der Einheit an oder setzt neue und kompiliert sie neu (REUSE SETTINGS)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra los PLSQL_CCFLAGS de la unidad o establece otros nuevos y la recompila (REUSE SETTINGS)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує PLSQL_CCFLAGS одиниці або встановлює нові й перекомпілює її (REUSE SETTINGS)."
           }
         }
       }
@@ -42557,6 +43313,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergleicht den aktuellen Ergebnis-Tab mit einem zweiten Tab des Fensters (angeheftet oder benachbart), mit hervorgehobenen Unterschieden."
+          }
+        }
+      }
+    },
+    "Porównuje czas ostatniej zmiany obiektów okna programu w bazie z chwilą wczytania albo kompilacji." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the last-modified time of the Program Window's objects in the database with the time of loading or compilation."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht den Zeitpunkt der letzten Änderung der Objekte des Program Window in der Datenbank mit dem Zeitpunkt des Ladens oder Kompilierens."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara la hora de la última modificación de los objetos del Program Window en la base de datos con el momento de la carga o la compilación."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює час останньої зміни об’єктів Program Window у базі даних із моментом завантаження або компіляції."
           }
         }
       }
@@ -46257,6 +47041,34 @@
         }
       }
     },
+    "Przywraca tabelę z kosza (FLASHBACK TABLE … TO BEFORE DROP), opcjonalnie pod nową nazwą." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restores a table from the Recycle Bin (FLASHBACK TABLE … TO BEFORE DROP), optionally under a new name."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stellt eine Tabelle aus dem Papierkorb wieder her (FLASHBACK TABLE … TO BEFORE DROP), optional unter neuem Namen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaura una tabla de la papelera de reciclaje (FLASHBACK TABLE … TO BEFORE DROP), opcionalmente con un nuevo nombre."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлює таблицю з кошика (FLASHBACK TABLE … TO BEFORE DROP), за потреби під новою назвою."
+          }
+        }
+      }
+    },
     "Przywraca wartości pierwotne zaznaczonych wierszy, zdejmuje oznaczenie usunięcia, usuwa wiersze wstawione." : {
       "localizations" : {
         "en" : {
@@ -46589,6 +47401,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Standardwerte wiederherstellen"
+          }
+        }
+      }
+    },
+    "Przywróć z kosza…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore from Recycle Bin…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Papierkorb wiederherstellen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar de la papelera de reciclaje…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити з кошика…"
           }
         }
       }
@@ -52137,6 +52977,34 @@
         }
       }
     },
+    "Sprawdza łącze bazy danych zapytaniem do DUAL po drugiej stronie i podaje czas odpowiedzi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests the database link with a query to DUAL on the remote side and reports the response time."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prüft den Datenbank-Link mit einer Abfrage an DUAL auf der Gegenseite und gibt die Antwortzeit an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprueba el enlace de base de datos con una consulta a DUAL en el otro extremo e indica el tiempo de respuesta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевіряє зв’язок бази даних запитом до DUAL на віддаленому боці та показує час відповіді."
+          }
+        }
+      }
+    },
     "Sprawdzanie połączenia co %@ s (0 — wyłączone)" : {
       "localizations" : {
         "en" : {
@@ -52189,6 +53057,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach Updates suchen …"
+          }
+        }
+      }
+    },
+    "Sprawdź zmiany obiektów w bazie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check object changes in the database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objektänderungen in der Datenbank prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar cambios de objetos en la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити зміни об’єктів у базі даних"
           }
         }
       }
@@ -55609,6 +56505,34 @@
         }
       }
     },
+    "Testuj łącze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test database link"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenbank-Link testen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar enlace de base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити зв’язок бази даних"
+          }
+        }
+      }
+    },
     "Testy" : {
       "localizations" : {
         "en" : {
@@ -56141,6 +57065,34 @@
         }
       }
     },
+    "To nie jest zadanie DBMS_JOB (numer zadania)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is not a DBMS_JOB job (job number)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dies ist kein DBMS_JOB-Job (Jobnummer)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No es un trabajo de DBMS_JOB (número de trabajo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Це не завдання DBMS_JOB (номер завдання)"
+          }
+        }
+      }
+    },
     "Token OAuth2 z pliku" : {
       "localizations" : {
         "en" : {
@@ -56417,6 +57369,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aufzeichnung läuft (F11 beendet)"
+          }
+        }
+      }
+    },
+    "Trwale usuwa obiekt z kosza albo cały kosz użytkownika (PURGE) — po potwierdzeniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanently removes an object from the Recycle Bin or the user's entire Recycle Bin (PURGE) — after confirmation."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt ein Objekt aus dem Papierkorb oder den gesamten Papierkorb des Benutzers endgültig (PURGE) — nach Bestätigung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina de forma permanente un objeto de la papelera de reciclaje o toda la papelera del usuario (PURGE), tras confirmación."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Остаточно видаляє об’єкт із кошика або весь кошик користувача (PURGE) — після підтвердження."
           }
         }
       }
@@ -58241,6 +59221,34 @@
         }
       }
     },
+    "Uruchamia zadanie DBMS_JOB teraz (zadania Scheduler — w oknie DBMS Scheduler)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs a DBMS_JOB job now (Scheduler jobs — in the DBMS Scheduler window)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Führt einen DBMS_JOB-Job jetzt aus (Scheduler-Jobs — im Fenster DBMS Scheduler)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecuta ahora un trabajo de DBMS_JOB (los trabajos de Scheduler, en la ventana DBMS Scheduler)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускає завдання DBMS_JOB зараз (завдання Scheduler — у вікні DBMS Scheduler)."
+          }
+        }
+      }
+    },
     "Uruchamia zadanie lokalne od razu (poza harmonogramem)." : {
       "localizations" : {
         "en" : {
@@ -58349,6 +59357,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ starten"
+          }
+        }
+      }
+    },
+    "Uruchom blok w oknie testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run block in Test Window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block im Test Window ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar bloque en Test Window"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати блок у Test Window"
           }
         }
       }
@@ -58489,6 +59525,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Abdeckung ausführen"
+          }
+        }
+      }
+    },
+    "Uruchom zadanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run job"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar trabajo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити завдання"
           }
         }
       }
@@ -59021,6 +60085,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung „%@“ löschen?"
+          }
+        }
+      }
+    },
+    "Usunąć trwale?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete permanently?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endgültig löschen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar de forma permanente?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити остаточно?"
           }
         }
       }
@@ -61601,6 +62693,34 @@
         }
       }
     },
+    "Wczytaj ponownie z bazy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload from database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Datenbank neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar desde la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову з бази даних"
+          }
+        }
+      }
+    },
     "Wczytaj profil" : {
       "localizations" : {
         "en" : {
@@ -61653,6 +62773,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus Datei laden …"
+          }
+        }
+      }
+    },
+    "Wczytano ponownie z bazy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloaded from database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Datenbank neu geladen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recargado desde la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову завантажено з бази даних"
           }
         }
       }
@@ -61737,6 +62885,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus der Datenbank geladen"
+          }
+        }
+      }
+    },
+    "Wczytać ponownie z bazy?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload from database?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Datenbank neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Volver a cargar desde la base de datos?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову з бази даних?"
           }
         }
       }
@@ -62801,6 +63977,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Більше"
+          }
+        }
+      }
+    },
+    "Więz tabeli (puste — wszystkie wyzwalacze tabeli)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table constraint (empty — all triggers of the table)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constraint der Tabelle (leer — alle Trigger der Tabelle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restricción de la tabla (vacío — todos los disparadores de la tabla)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обмеження таблиці (порожньо — усі тригери таблиці)"
           }
         }
       }
@@ -63953,6 +65157,34 @@
         }
       }
     },
+    "Wstawia źródło zaznaczonego obiektu w miejscu kursora w aktywnym oknie programu albo testu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserts the source of the selected object at the cursor in the active Program Window or Test Window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt den Quelltext des markierten Objekts an der Cursorposition im aktiven Program Window oder Test Window ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inserta el código fuente del objeto seleccionado en la posición del cursor en el Program Window o Test Window activo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставляє вихідний код вибраного об’єкта в позицію курсора в активному Program Window або Test Window."
+          }
+        }
+      }
+    },
     "Wstawiaj znak tabulacji zamiast spacji" : {
       "localizations" : {
         "en" : {
@@ -64173,6 +65405,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Spalten aufgezählt"
+          }
+        }
+      }
+    },
+    "Wszystkie obiekty z kosza zostaną usunięte bez możliwości przywrócenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All objects in the Recycle Bin will be removed and cannot be restored."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Objekte im Papierkorb werden entfernt und können nicht wiederhergestellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los objetos de la papelera de reciclaje se eliminarán sin posibilidad de restaurarlos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі об’єкти в кошику буде видалено без можливості відновлення."
           }
         }
       }
@@ -67845,6 +69105,34 @@
         }
       }
     },
+    "Wyłącz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deaktivieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимкнути"
+          }
+        }
+      }
+    },
     "Wyłącz SQL Trace" : {
       "localizations" : {
         "en" : {
@@ -67953,6 +69241,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trigger deaktivieren"
+          }
+        }
+      }
+    },
+    "Wyłącza wyzwalacz albo więz lub wszystkie wyzwalacze tabeli." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disables a trigger or constraint, or all triggers of a table."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deaktiviert einen Trigger oder Constraint bzw. alle Trigger einer Tabelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactiva un disparador o una restricción, o todos los disparadores de una tabla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вимикає тригер чи обмеження або всі тригери таблиці."
           }
         }
       }
@@ -68461,6 +69777,34 @@
         }
       }
     },
+    "Włącz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Увімкнути"
+          }
+        }
+      }
+    },
     "Włącz REST dla obiektu…" : {
       "localizations" : {
         "en" : {
@@ -68793,6 +70137,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert den linearen oder hierarchischen Profiler für die nächsten Ausführungen des Test Window (Bericht im Tab „Profiler“)."
+          }
+        }
+      }
+    },
+    "Włącza wyzwalacz albo więz lub wszystkie wyzwalacze tabeli." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enables a trigger or constraint, or all triggers of a table."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert einen Trigger oder Constraint bzw. alle Trigger einer Tabelle."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa un disparador o una restricción, o todos los disparadores de una tabla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикає тригер чи обмеження або всі тригери таблиці."
+          }
+        }
+      }
+    },
+    "Włączanie i wyłączanie dotyczy wyzwalaczy i tabel (wyzwalacze, więzy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabling and disabling applies to triggers and tables (triggers, constraints)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivieren und Deaktivieren gilt für Trigger und Tabellen (Trigger, Constraints)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activar y desactivar se aplica a disparadores y tablas (disparadores, restricciones)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикання й вимикання стосується тригерів і таблиць (тригери, обмеження)"
           }
         }
       }
@@ -69801,6 +71201,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Job"
+          }
+        }
+      }
+    },
+    "Zadanie %@ wykonane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job %@ executed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Job %@ ausgeführt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trabajo %@ ejecutado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завдання %@ виконано"
           }
         }
       }
@@ -73949,6 +75377,34 @@
         }
       }
     },
+    "Zastępuje tekst okna programu źródłem obiektów z bazy (po potwierdzeniu, gdy są niezapisane zmiany)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replaces the Program Window text with the objects' source from the database (after confirmation if there are unsaved changes)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ersetzt den Text des Program Window durch den Quelltext der Objekte aus der Datenbank (nach Bestätigung, wenn nicht gespeicherte Änderungen vorliegen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reemplaza el texto del Program Window por el código fuente de los objetos de la base de datos (con confirmación si hay cambios sin guardar)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Замінює текст Program Window вихідним кодом об’єктів із бази даних (після підтвердження, якщо є незбережені зміни)."
+          }
+        }
+      }
+    },
     "Zatrzymaj" : {
       "localizations" : {
         "en" : {
@@ -74757,6 +76213,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Codeinhalt"
+          }
+        }
+      }
+    },
+    "Zaznacz blok anonimowy (DECLARE … BEGIN … END;)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an anonymous block (DECLARE … BEGIN … END;)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonymen Block markieren (DECLARE … BEGIN … END;)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona un bloque anónimo (DECLARE … BEGIN … END;)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділіть анонімний блок (DECLARE … BEGIN … END;)"
           }
         }
       }
@@ -83637,6 +85121,62 @@
         }
       }
     },
+    "Łącze %@ działa (%@ ms)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link %@ works (%@ ms)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link %@ funktioniert (%@ ms)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El enlace %@ funciona (%@ ms)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зв’язок %@ працює (%@ мс)"
+          }
+        }
+      }
+    },
+    "Łącze %@ nie odpowiada poprawnie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link %@ is not responding correctly"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link %@ antwortet nicht korrekt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El enlace %@ no responde correctamente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зв’язок %@ відповідає некоректно"
+          }
+        }
+      }
+    },
     "Łącze bazy danych" : {
       "localizations" : {
         "en" : {
@@ -84529,6 +86069,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "● Transaktion offen"
+          }
+        }
+      }
+    },
+    "⚠️ Obiekt zmieniony w bazie po wczytaniu: %@ — porównaj ze źródłem w bazie przed kompilacją" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Object changed in the database after loading: %@ — compare with the database source before compiling"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Objekt nach dem Laden in der Datenbank geändert: %@ — vor dem Kompilieren mit dem Quelltext in der Datenbank vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Objeto modificado en la base de datos tras la carga: %@ — compáralo con el código fuente de la base de datos antes de compilar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Об’єкт змінено в базі даних після завантаження: %@ — порівняйте з вихідним кодом у базі перед компіляцією"
           }
         }
       }

@@ -759,3 +759,11 @@ Wzorzec pozwala zapisać skrypt testu jako „Standard Test” i wybrać go z me
 szablon jako zwykły plik `.tst` w `StandardTests/` katalogu danych; znacznik `%CALL%` w bloku to miejsce, w które trafia
 wywołanie programu generowane jak w „Testuj” (notacja nazwana, zmienne parametrów i wyniku). Bez znacznika wywołanie
 jest dopisywane na końcu. Zmienne szablonu dochodzą do zmiennych wywołania (bez duplikatów nazw).
+
+### D99 · 2026-10-23 — Operacje na obiektach: kompilacja próbna, zmiany w bazie, kolejki
+Kompilacja próbna zmienia nazwę jednostki w poleceniu CREATE na tymczasową `PELIKAN$SAFE_…` (specyfikacja i ciało
+pakietu wspólnie), odczytuje błędy z USER_ERRORS z nazwą pierwotną w treści i od razu usuwa obiekty tymczasowe — także
+przy błędzie. Wyzwalacze są pomijane: tymczasowy wyzwalacz działałby na prawdziwej tabeli. Wykrywanie zmian porównuje
+LAST_DDL_TIME z chwilą wczytania/kompilacji (cykl jak sprawdzanie połączeń) i tylko ostrzega — nie nadpisuje tekstu bez
+decyzji użytkownika. Kolejki AQ (enqueue/dequeue z menu obiektu) odłożone: wymagają edytora ładunku dla typów
+obiektowych; test łącza i DBMS_JOB.RUN zaimplementowane bez próby (baza testowa nie ma łączy ani zadań DBMS_JOB).

@@ -114,6 +114,8 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// LAST_DDL_TIME obiektów okna programu przy wczytaniu albo kompilacji — wykrywanie zmian w bazie (PD-PROG-011).
+    public var objectTimestamps: [String: String] = [:]
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
     /// Notatnik SQL: komórki z wynikami (SD-NB-001).

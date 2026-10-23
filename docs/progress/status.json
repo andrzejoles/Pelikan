@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T23:26:14+02:00",
+  "heartbeat": "2026-10-23T23:46:00+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 8 / audyt obiektów i okna programu: włącz/wyłącz, kosz, CCFlags, odświeżenie MV, źródło do edytora, kompilacja próbna, zmiany w bazie, blok w oknie testu, pliki tylko do odczytu, MLE w oknie programu (D99)",
+    "Scalony PR #54 (Etap 8 część 1); audyt macierzy: połączenia, Kill, SQL Trace, NLS, statystyki, testy standardowe, ORA-04068, menu połączenia, zakazy agenta",
     "Etap 8 / audyt połączeń: Kill sesji okna, SQL Trace, Edition, eksport/import definicji, LDAP, NLS sesji, zamykanie bezczynnych sesji (D97)",
     "Etap 8: scalone gałęzie — F1 i instrukcja (5 języków), narzędzia zewnętrzne edytora, kopie i odzyskiwanie, zestawy i eksport preferencji, parametry startowe, usługi macOS, pasek narzędzi, Quick Look, VoiceOver, druk",
     "Szkic wydania v5.7.0 (Etapy 6, 7 i P) — do publikacji przez właściciela; PR #53 tłumaczenia w CI",
@@ -90,9 +92,7 @@
     "Etap 3 / profiler: liniowy DBMS_PROFILER (raport na linię z czasem, wykonaniami, udziałem, tekstem) i hierarchiczny DBMS_HPROF (funkcje, wywołania, czasy), statystyki sesji okna testu (różnica V$MYSTAT); tabele profilera tworzone za zgodą strażnika (D28) — 1 test na bazie",
     "Etap 3 / debuger — rozszerzenia: DBMS_OUTPUT w trakcie debugowania, obserwowane wyrażenia, Ustaw wartość (SET_VALUE), punkty przerwania na kodach błędów, okno punktów przerwania, Dodaj informację debugowania (obiekt i preferencja kompilacji) — 1 test na bazie",
     "PR #24 scalony — Etap 2 zamknięty (D27); szkic wydania v3.4.0 (DMG, PKG, appcast) — publikuje właściciel",
-    "Kontynuacja Etapu 3: debuger — rozszerzenia",
-    "Etap 3 / debuger (DBMS_DEBUG, ADR 0006): Start, Kontynuuj, Wejdź (także do wyzwalacza), Przejdź, Wyjdź, do kursora, do wyjątku, Zatrzymaj; stos z typami jednostek; zmienne lokalne, rekordy i kolekcje jako drzewo; punkty przerwania w marginesie okna testu i programu; bieżąca linia w edytorze; okno debugera — 2 testy na bazie (pakiet z wyzwalaczem)",
-    "Etap 3 / okno testu: blok ze zmiennymi (automatyczne skanowanie, typy, IN OUT, kursory jako tabela, BOOLEAN, LOB), zmienione na żółto, DBMS_OUTPUT, stos błędu z przejściem do linii, Test z Object Browsera (notacja nazwana, wynik funkcji), pliki .tst i skrypt SQL*Plus — 3 testy (1 na bazie)"
+    "Kontynuacja Etapu 3: debuger — rozszerzenia"
   ],
   "next": [
     "Wstrzymane na prośbę właściciela (wyłączenie komputera). Do wznowienia: pełne testy bazy po scaleniu Etapu 7 i Etapu P, SD-NB/REP/… zrobione; pozostały SD-AUTH-001, SD-ORDS-001, debugowanie MLE, zamknięcie Etapów 6–7, Etap P faza 2 (pipeline, konsola)"

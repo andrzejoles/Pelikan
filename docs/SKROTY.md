@@ -188,6 +188,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Wczytaj ponownie z bazy | `prog.reloadFromDatabase` |  |  | Brak | 0 | PD-PROG-011 |
+| Kompilacja próbna | `prog.safeCompile` |  |  | Brak | 0 | PD-PROG-010 |
+| Sprawdź zmiany obiektów w bazie | `prog.checkChanges` |  |  | Odczyt | 0 | PD-PROG-011 |
+| Uruchom blok w oknie testu | `prog.runBlock` |  |  | Brak | 0 | PD-PROG-016 |
 | Notatnik › Wykonaj wszystkie komórki | `notebook.runAll` |  |  | Brak | 0 | SD-NB-001 |
 | Notatnik › Wykonaj komórkę | `notebook.runCell` |  |  | Brak | 0 | SD-NB-001 |
 | Konsola połączenia | `session.console` |  |  | Brak | 0 | DG-CONS-001 |
@@ -248,6 +252,16 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Obiekt › Włącz | `ob.enable` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Wyłącz | `ob.disable` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Odśwież widok zmaterializowany | `ob.refreshMV` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Testuj łącze | `ob.testLink` |  |  | Odczyt | 0 | PD-OB-019 |
+| Obiekt › Uruchom zadanie | `ob.runJob` |  |  | Brak | 0 | PD-OB-019 |
+| Kosz | `ob.recycleBin` |  |  | Odczyt | 0 | PD-OB-021 |
+| Kosz › Przywróć z kosza… | `ob.restoreFromRecycleBin` |  |  | Brak | 0 | PD-OB-021 |
+| Kosz › Opróżnij kosz… | `ob.purgeRecycleBin` |  |  | Brak | 0 | PD-OB-021 |
+| Obiekt › Flagi kompilacji warunkowej… | `ob.ccflags` |  |  | Odczyt | 0 | PD-OB-020 |
+| Obiekt › Dodaj źródło do edytora | `ob.addSourceToEditor` |  |  | Brak | 0 | PD-OB-023 |
 | Preferencje › Eksportuj preferencje… | `prefs.export` |  |  | Brak | 0 | PD-PREF-003 |
 | Preferencje › Importuj preferencje… | `prefs.import` |  |  | Brak | 0 | PD-PREF-003 |
 | Preferencje › Zestawy preferencji… | `prefs.sets` |  |  | Brak | 0 | PD-PREF-002 |

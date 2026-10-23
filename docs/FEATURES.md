@@ -172,14 +172,14 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PROG-007 | Zapis do pliku zgodnego z SQL*Plus, rozszerzenia per typ, nazwa z jednostki (opcjonalnie z właścicielem), końcowy `/` | UG 4.2, UG 23.19, UG 23.29 | File > Save | 2 | P1 | Pełny | ✅ test (nazwa z jednostki, rozszerzenie typu, końcowy /; nazwa z właścicielem — w preferencjach plików Etapu 8) |
 | PD-PROG-008 | Porównanie: z plikiem, ze źródłem w bazie, z innym plikiem, z obiektem w innej bazie | UG 4.5, NF10 | Compare to | 2 | P2 | Odczyt | ⚠️ częściowo (z plikiem, ze źródłem w bazie; z obiektem w innej bazie — Etap 6) ✅ test 👁 |
 | PD-PROG-009 | Edycja źródła prosto z bazy (Edit), pytanie o zapis do pliku, Revert | UG 23.2, UG 15.1 | Object Browser > Edit | 2 | P1 | Pełny | ⚠️ częściowo (edycja z bazy; bez Revert) |
-| PD-PROG-010 | Safe compilation (próbna kompilacja obiektu tymczasowego) | UG 23.19 | Preferences | 2 | P3 | — | do zrobienia |
-| PD-PROG-011 | Wykrywanie zmian obiektu w bazie przez innych (co n s), różnice i przeładowanie | UG 23.19, NF10 | Program Window | 2 | P2 | — | do zrobienia |
+| PD-PROG-010 | Safe compilation (próbna kompilacja obiektu tymczasowego) | UG 23.19 | Preferences | 2 | P3 | — | ✅ test (kompilacja próbna pod nazwą tymczasową PELIKAN$SAFE_…, błędy z nazwą pierwotną, obiekty tymczasowe usuwane; wyzwalacze pomijane, D99) |
+| PD-PROG-011 | Wykrywanie zmian obiektu w bazie przez innych (co n s), różnice i przeładowanie | UG 23.19, NF10 | Program Window | 2 | P2 | — | ✅ test (LAST_DDL_TIME obiektów przy wczytaniu i kompilacji, sprawdzanie cykliczne i komendą — ostrzeżenie na pasku stanu, porównanie ze źródłem w bazie, wczytanie ponowne) |
 | PD-PROG-012 | Kompilacja w tle w osobnej sesji; blokada kompilacji w trakcie wykonywania | UG 23.19 | Preferences | 2 | P2 | — | ✅ test |
 | PD-PROG-013 | Preferencje kompilatora: PLSQL_OPTIMIZE_LEVEL, CODE_TYPE, PL/Scope, flagi kompilacji warunkowej, PLSQL_WARNINGS, wartości `&` | UG 23.3 | Preferences > Oracle > Compiler | 2 | P2 | — | ⚠️ częściowo (PLSQL_WARNINGS; bez pozostałych parametrów) |
-| PD-PROG-014 | Moduły MLE (JavaScript) w Program Window: edycja, podświetlanie, kompilacja | NF17 | Program Window | 2 | P2 | Za zgodą | do zrobienia |
+| PD-PROG-014 | Moduły MLE (JavaScript) w Program Window: edycja, podświetlanie, kompilacja | NF17 | Program Window | 2 | P2 | Za zgodą | ⚠️ test (moduł MLE w Program Window: źródło z nagłówkiem CREATE MLE MODULE i wersją, jednostka rozpoznawana, kompilacja i błędy JavaScript; podświetlanie składni JavaScript — nie, edytor używa leksera PL/SQL) |
 | PD-PROG-015 | Podświetlanie poleceń transakcyjnych (COMMIT/ROLLBACK/SAVEPOINT) i par if/loop/case/blok | NF14, UG 23.19 | Program Window | 2 | P2 | — | ⚠️ częściowo (pary if/loop/case/blok; bez wyróżniania COMMIT/ROLLBACK/SAVEPOINT) ✅ test |
-| PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | do zrobienia |
-| PD-PROG-017 | Kompilacja tylko do odczytu plików wyłączona (preferencja) | UG 23.2 | Preferences | 2 | P3 | — | do zrobienia |
+| PD-PROG-016 | Uruchomienie bloku PL/SQL z Program Window z DBMS_OUTPUT | NF13 | Program Window | 2 | P3 | Za zgodą | ✅ test (zaznaczony blok anonimowy z okna programu w nowym oknie testu, wykonany z DBMS_OUTPUT) |
+| PD-PROG-017 | Kompilacja tylko do odczytu plików wyłączona (preferencja) | UG 23.2 | Preferences | 2 | P3 | — | ✅ test (plik tylko do odczytu — kompilacja zablokowana, preferencja w Preferencje › Oracle pozwala ją włączyć) |
 | PD-PROG-018 | Edycja pakietu 50 000 linii bez opóźnień (podświetlanie, Code Assistant) | PROMPT §3.4, §8 | Program Window | 2 | P1 | — | ✅ test (Release, 50 403 linie: pisanie bez przestojów > 100 ms — PELIKAN_STALL_LOG; analizy w tle; jednorazowo ~1,5 s przy otwarciu) |
 
 ## PL/SQL Developer — edytor
@@ -293,11 +293,11 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OB-016 | Rename (tabele, widoki, sekwencje, synonimy, kolumny, indeksy, więzy), Drop (z potwierdzeniem), Duplicate | UG 21.1, NF11 | Object Browser | 2 | P1 | Za zgodą | ⚠️ częściowo (Drop; bez Rename i Duplicate) |
 | PD-OB-017 | Query data / Edit data (SQL Window z ROWID, AutoExecute), z synonimu | UG 21.1, NF13 | Object Browser | 2 | P1 | Odczyt | ✅ test |
 | PD-OB-018 | Browse (obiekty powiązane), zależności (używa / używany przez) | UG 21.1 | Object Browser > Browse | 2 | P1 | Odczyt | ✅ test |
-| PD-OB-019 | Enable/Disable wyzwalaczy i więzów; Run job (DBMS_JOB); kolejki enqueue/dequeue; Refresh MV; Test linku | UG 21.1, NF13 | Object Browser | 2 | P2 | Za zgodą | do zrobienia |
-| PD-OB-020 | PL/SQL CCFlags (podgląd i zmiana flag z rekompilacją) | UG 21.1 | Object Browser | 2 | P3 | Za zgodą | do zrobienia |
-| PD-OB-021 | Kosz: Purge / Restore (pod starą lub nową nazwą) | UG 21.1 | Object Browser > Recycle bin | 2 | P2 | Za zgodą | do zrobienia |
+| PD-OB-019 | Enable/Disable wyzwalaczy i więzów; Run job (DBMS_JOB); kolejki enqueue/dequeue; Refresh MV; Test linku | UG 21.1, NF13 | Object Browser | 2 | P2 | Za zgodą | ⚠️ test (włącz/wyłącz wyzwalacz, więz i wszystkie wyzwalacze tabeli, odświeżenie widoku zmaterializowanego — testy na bazie; test łącza i DBMS_JOB.RUN bez próby — baza testowa bez łączy i zadań DBMS_JOB; kolejki AQ — nie zrobione, D99) |
+| PD-OB-020 | PL/SQL CCFlags (podgląd i zmiana flag z rekompilacją) | UG 21.1 | Object Browser | 2 | P3 | Za zgodą | ✅ test (PLSQL_CCFLAGS z ALL_PLSQL_OBJECT_SETTINGS, zmiana przez ALTER … COMPILE PLSQL_CCFLAGS REUSE SETTINGS; agent tylko odczyt) |
+| PD-OB-021 | Kosz: Purge / Restore (pod starą lub nową nazwą) | UG 21.1 | Object Browser > Recycle bin | 2 | P2 | Za zgodą | ✅ test (kosz: lista USER_RECYCLEBIN, przywrócenie FLASHBACK TABLE … TO BEFORE DROP pod starą albo nową nazwą, PURGE obiektu albo całego kosza po potwierdzeniu) |
 | PD-OB-022 | Compare obiektu (z bazą/schematem, plikiem, bieżącym oknem) | UG 21.1, NF12 | Object Browser > Compare | 2 | P2 | Odczyt | ⚠️ częściowo (obiekt z aktywnym oknem; ze schematem innej bazy — Etap 6) ✅ test |
-| PD-OB-023 | Add source to editor (Program/Test Window) | UG 21.1 | Object Browser | 2 | P3 | — | do zrobienia |
+| PD-OB-023 | Add source to editor (Program/Test Window) | UG 21.1 | Object Browser | 2 | P3 | — | ✅ test (źródło albo DDL zaznaczonego obiektu w miejscu kursora w oknie programu, testu albo SQL) |
 | PD-OB-024 | Object Browser ze 100 000 obiektów bez blokady interfejsu | PROMPT §9 | Object Browser | 2 | P1 | — | ✅ test (100 000 synonimów: 0,3 s, przerwa głównego wątku < 10 ms; test na żądanie PELIKAN_PERF_OBJECTS=1) |
 | PD-OB-025 | Preferencje: widoczne foldery i kolejność, limit Recent, akcja dwukliku/przeciągania per typ, typy danych, Confirm Recompile, publiczne linki | UG 23.11 | Preferences | 2 | P2 | — | do zrobienia |
 | PD-OB-026 | Zapytania słownika odporne na wersję (19c, 21c, 23ai/26ai; starsze — brak kolumn/widoków), DBA views gdy dostępne | PROMPT §9, UG 23.2 | — | 2 | P1 | — | ⚠️ częściowo (DBA/ALL, foldery wg wersji; testowane na 26ai) |

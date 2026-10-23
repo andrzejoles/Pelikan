@@ -717,6 +717,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 guard let self else { return }
                 // Bezczynne sesje okien bez transakcji (Preferencje › Oracle, PD-CONN-026).
                 await self.workspace.sessions.closeIdleSessions(olderThan: self.workspace.settings.closeIdleSessionsMinutes)
+                // Okna programu: obiekty zmienione w bazie przez innych od wczytania (PD-PROG-011) — ostrzeżenie na pasku stanu.
+                await self.workspace.checkProgramWindowChanges()
                 let lost = await self.workspace.sessions.checkConnections()
                 guard !lost.isEmpty else { return }
                 let names = Set(lost.compactMap { self.workspace.connections.connection($0.connectionID)?.displayName })
