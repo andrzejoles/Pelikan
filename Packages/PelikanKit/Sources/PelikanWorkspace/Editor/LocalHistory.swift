@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 /// Wersja tekstu w historii lokalnej (DG-HIST-001).
 public struct LocalHistoryEntry: Codable, Sendable, Hashable, Identifiable {
