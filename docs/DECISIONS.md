@@ -622,3 +622,27 @@ i hasła; token nie przechodzi przez Pelikana i nie jest zapisywany. Bez konta A
 się sprawdzić logowania, więc wiersz ⚠️ do potwierdzenia przez właściciela.
 **ORDS:** baza testowa (gvenzl/oracle-free) nie ma ORDS; Pelikan wykrywa jego brak, pokazuje moduły i obiekty AutoREST
 z widoków USER_ORDS_*, a włączenie REST generuje jako skrypt do okna SQL (jak DDL — bez samodzielnego wykonania).
+
+### D-PC3-1 · 2026-10-23 — Skrypt wdrożenia jako jeden plik ksh88 z kodami wyjścia
+Pipeline wysyła jeden skrypt (`run-<id>.ksh`, `scp -O` do `<backupy>/.pelikan`) zamiast serii poleceń: blokada,
+kontrola working copy, `git pull --ff-only`, backup, `make`, instalacja i wpis historii działają w obrębie jednej
+blokady, a Stop zabija jedną grupę procesów. Każdy krok wypisuje `@@STEP nazwa` / `@@END nazwa kod`; dodatkowe
+znaczniki (`@@HEAD_BEFORE/AFTER`, `@@LOCKINFO`, `@@DIRTY_BEGIN/END`, `@@BACKUP`, `@@INSTALLED`, `@@MISSING`, `@@NO_FF`,
+`@@DONE`) czyta `DeployProgress`. Wynik wyznacza kod wyjścia skryptu (stałe `DeployScripts.Exit`), build — kod `make`.
+Znacznik czasu i właściciel (`użytkownik@host-Maca`) pochodzą z Maca (bez `date +%s`); numer linii retencji wyliczany
+w Pelikanie (bez arytmetyki w skrypcie). W sesji z pty (`ssh -tt`) git uruchomiłby pager i czekał — skrypt ustawia
+`GIT_PAGER=cat`, `PAGER=cat` i używa `git --no-pager`. Konstrukcje spoza ksh88 pilnuje test `forbiddenConstructs`;
+składnię sprawdza `ksh -n` i przebiegi na lokalnym sshd — to ksh93 z macOS, więc akceptacja na AIX 6.1 należy do
+właściciela (D54).
+
+### D-PC3-2 · 2026-10-23 — Blokada i jej zdejmowanie; binarki z katalogu `make`
+Blokada to katalog `.lock` z plikiem `info` (`id`, właściciel, czas, PID powłoki skryptu na serwerze). Istniejąca
+blokada z żywym procesem → „zablokowane” (kod 10), z martwym albo bez PID → „przeterminowana” (11); żadna nie jest
+zdejmowana automatycznie — ręczne zdjęcie po potwierdzeniu (PROD: nazwa celu). Skrypt zdejmuje własną blokadę pułapką
+(`trap … 0` i sygnały 1 2 15); po Stop albo zerwaniu połączenia Pelikan zdejmuje ją osobnym poleceniem, ale tylko gdy
+`info` zawiera identyfikator tego wdrożenia. Binarki do instalacji bierze z `<baza>/src` (katalog `make`; inny
+katalog — parametr planu), kopiuje wszystkie do `.new`, dopiero potem zamienia (`nazwa` → `.prev`, `.new` → `nazwa`),
+więc brak którejkolwiek nie zostawia `bin` w połowie. Wycofanie z kopii rozpakowuje do `.new` po skopiowaniu bieżącej
+binarki (zachowanie praw bez `stat`). Lokalne repo projektu = katalog otwartego projektu Pelikana; remote i gałąź
+lokalnie mają te same nazwy co na serwerze. Przed PROD Pelikan sprawdza, czy commit był już z powodzeniem wdrożony na
+celu UAT z tego samego folderu drzewa celów. Build próbny (D54 p.5) — nadal poza zakresem.

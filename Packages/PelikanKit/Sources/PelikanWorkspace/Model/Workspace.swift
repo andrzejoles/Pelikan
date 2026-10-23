@@ -131,6 +131,8 @@ public protocol UIServices: AnyObject {
     func showStage7Tool(_ tool: Stage7Tool)
     /// Cele SSH zdalnego builda Pro*C: menedżer, Testuj, eksport/import (Etap P).
     func showSSHTargets(_ action: SSHTargetAction)
+    /// Wdrożenie Pro*C: pipeline, konsola, historia, blokada, stan git (Etap P).
+    func showProCDeploy(_ action: ProCDeployAction)
 
 }
 
@@ -189,6 +191,7 @@ extension UIServices {
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
     public func showSSHTargets(_ action: SSHTargetAction) {}
+    public func showProCDeploy(_ action: ProCDeployAction) {}
     public func showGitLog(_ commits: [GitCommit], title: String) {
         showObjectInfo(title: title, columns: [L10n.tr("Zatwierdzenie"), L10n.tr("Autor"), L10n.tr("Data"), L10n.tr("Opis")],
                        rows: commits.map { [String($0.hash.prefix(10)), $0.author, $0.date.map { ISO8601DateFormatter().string(from: $0) } ?? "", $0.subject] })
