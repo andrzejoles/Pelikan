@@ -134,3 +134,24 @@ public enum TNSNames {
         return nil
     }
 }
+
+public extension TNSNames {
+    /// Connect string dla połączenia z własnym katalogiem konfiguracji (tnsnames.ora, wallet): alias z tego katalogu
+    /// rozwijany do deskryptora; przy TCPS bez wskazanego wallet dopisywany `MY_WALLET_DIRECTORY` = katalog połączenia.
+    /// Bez katalogu konfiguracji — bez zmian (klient czyta TNS_ADMIN / domyślne miejsca).
+    static func resolveForConnection(_ connect: String, configDirectory: String?) -> String {
+        guard let dir = configDirectory.map({ ($0 as NSString).expandingTildeInPath }), !dir.isEmpty else { return connect }
+        var s = connect.trimmingCharacters(in: .whitespaces)
+        if !s.hasPrefix("("), !s.contains("/"), !s.contains(":") {
+            guard let e = load(directories: [dir]).first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(s) == .orderedSame } }) else {
+                return connect
+            }
+            s = e.descriptor
+        }
+        if s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil,
+           let close = s.lastIndex(of: ")") {
+            s.insert(contentsOf: "(SECURITY=(MY_WALLET_DIRECTORY=\(dir)))", at: close)
+        }
+        return s
+    }
+}

@@ -28,6 +28,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zapisz | `file.save` | ⌘S | ⌘S | Za zgodą | 0 | PD-SQLW-012 |
 | Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | 0 | PD-SQLW-012 |
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Pełny | 0 | PD-UI-004 |
+| Zamknij wskazane okno | `file.closeWindow` |  |  | Pełny | 0 | PD-UI-004 |
+| Zamknij pozostałe okna | `file.closeOthers` |  |  | Brak | 0 | PD-UI-004 |
+| Zamknij okna z lewej | `file.closeLeft` |  |  | Brak | 0 | PD-UI-004 |
+| Zamknij okna z prawej | `file.closeRight` |  |  | Brak | 0 | PD-UI-004 |
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
@@ -36,13 +40,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Znajdź i zamień… | `edit.find` | ⌃F, ⌘F | ⌘F | Pełny | 1 | PD-EDIT-008 |
-| Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Pełny | 1 | PD-EDIT-010 |
-| Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Odczyt | 1 | PD-EDIT-009 |
-| Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 1 | PD-EDIT-006 |
-| Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Pełny | 1 | PD-EDIT-020 |
-| Zaznaczenie › Wielkie litery | `edit.uppercase` |  |  | Pełny | 1 | PD-EDIT-005 |
-| Zaznaczenie › Małe litery | `edit.lowercase` |  |  | Pełny | 1 | PD-EDIT-005 |
+| Znajdź i zamień… | `edit.find` | ⌃F, ⌘F | ⌘F | Brak | 0 | PD-EDIT-008 |
+| Znajdź następne | `edit.findNext` | F3 †, ⌘G | ⌘G, F3 | Pełny | 0 | PD-EDIT-008 |
+| Znajdź poprzednie | `edit.findPrevious` | ⇧F3 †, ⇧⌘G | ⇧⌘G, ⇧F3 | Pełny | 0 | PD-EDIT-008 |
+| Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Pełny | 0 | PD-EDIT-010 |
+| Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Brak | 0 | PD-EDIT-009 |
+| Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 0 | PD-EDIT-006 |
+| Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Pełny | 0 | PD-EDIT-020 |
+| Zaznaczenie › Wielkie litery | `edit.uppercase` | ⌥⌘U | ⌥⌘U | Pełny | 0 | PD-EDIT-005 |
+| Zaznaczenie › Małe litery | `edit.lowercase` | ⌥⇧⌘U | ⌥⇧⌘U | Pełny | 0 | PD-EDIT-005 |
+| Zaznaczenie › Zwiększ wcięcie | `edit.indent` | ⌘] | ⌘] | Pełny | 0 | PD-EDIT-005 |
+| Zaznaczenie › Zmniejsz wcięcie | `edit.outdent` | ⌘[ | ⌘[ | Pełny | 0 | PD-EDIT-005 |
+| Zaznaczenie › Usuń końcowe spacje | `edit.removeTrailingSpaces` |  |  | Pełny | 0 | PD-EDIT-005 |
 | Formatuj kod (PL/SQL Beautifier) | `edit.beautify` | ⇧⌘F | ⇧⌘F | Pełny | 2 | PD-BEAU-002 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 6 | PD-EDIT-015 |
 | Makra › Odtwórz makro | `edit.macroPlay` | F12 | F12 | Brak | 6 | PD-EDIT-015 |
@@ -86,6 +95,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Połącz | `connection.connect` |  |  | Brak | 0 | PD-CONN-022 |
 | Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenie okna… | `session.windowConnection` |  |  | Brak | 0 | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | 0 | PD-CONN-003 |
 
 ## Debugowanie

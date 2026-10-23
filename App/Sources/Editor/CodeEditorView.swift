@@ -1,4 +1,5 @@
 import AppKit
+import PelikanSQL
 import PelikanWorkspace
 
 /// Edytor kodu SQL/PL/SQL (ADR 0003): NSTextView na TextKit 2, podświetlanie przyrostowe, numery linii,
@@ -21,8 +22,18 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         ruler = LineNumberRulerView(textView: textView, highlighter: highlighter)
         super.init(frame: .zero)
         configure()
+        if let ws = (NSApp.delegate as? AppDelegate)?.workspace {
+            textView.keywordCase = ws.settings.keywordCase
+            textView.highlightCurrentLine = ws.settings.highlightCurrentLine
+            textView.indentUnit = ws.settings.useTabCharacter ? "\t" : String(repeating: " ", count: ws.settings.tabSize)
+        }
         load(document.text)
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
+        // Okno w trakcie wykonania jest tylko do odczytu (jak we wzorcu); inne okna działają równolegle.
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            self.textView.isEditable = !self.document.isExecuting
+        })
     }
 
     @available(*, unavailable)
@@ -100,16 +111,23 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         ruler.needsDisplay = true
     }
 
-    /// Zmiany modelu z zewnątrz (historia okna, agent `replace_range`, błąd do zaznaczenia).
+    /// Zmiany modelu z zewnątrz (komendy edycji, historia okna, agent `replace_range`, błąd do zaznaczenia).
+    /// Tekst nakładany jako minimalna zamiana przez NSTextView — z rejestracją cofania i podświetlaniem przyrostowym.
     private func syncFromModel() {
         let text = document.text
+        let selection = document.selectedRange
         let error = document.errorRange
         if text != textView.string {
-            load(text)
-            textView.setSelectedRange(NSRange(location: min(document.selectedRange.lowerBound, (text as NSString).length), length: 0))
+            applyExternal(text)
+        }
+        let len = (textView.string as NSString).length
+        let current = textView.selectedRange()
+        let wanted = NSRange(location: min(selection.lowerBound, len), length: max(0, min(selection.upperBound, len) - min(selection.lowerBound, len)))
+        if !updatingFromModel, current != wanted {
+            textView.setSelectedRange(wanted)
+            textView.scrollRangeToVisible(wanted)
         }
         if let error {
-            let len = (textView.string as NSString).length
             let r = NSRange(location: min(error.lowerBound, len), length: 0)
             textView.setSelectedRange(r)
             textView.scrollRangeToVisible(r)
@@ -117,6 +135,34 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let word = textView.selectionRange(forProposedRange: r, granularity: .selectByWord)
             if word.length > 0 { textView.showFindIndicator(for: word) }
         }
+    }
+
+    private func applyExternal(_ text: String) {
+        let old = textView.string as NSString
+        let new = text as NSString
+        // Wspólny początek i koniec — zamieniamy tylko środek.
+        var prefix = 0
+        let minLen = min(old.length, new.length)
+        while prefix < minLen, old.character(at: prefix) == new.character(at: prefix) { prefix += 1 }
+        var suffix = 0
+        while suffix < minLen - prefix, old.character(at: old.length - 1 - suffix) == new.character(at: new.length - 1 - suffix) { suffix += 1 }
+        let range = NSRange(location: prefix, length: old.length - prefix - suffix)
+        let replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        updatingFromModel = true
+        defer { updatingFromModel = false }
+        if old.length == 0 || range.length == old.length && old.length > 200_000 {
+            load(text)
+            return
+        }
+        if textView.shouldChangeText(in: range, replacementString: replacement) {
+            textView.textStorage?.replaceCharacters(in: range, with: replacement)
+            textView.didChangeText()
+        }
+        if let storage = textView.textStorage {
+            highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
+                                  delta: (replacement as NSString).length - range.length, font: font)
+        }
+        ruler.needsDisplay = true
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
@@ -169,6 +215,59 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 /// NSTextView z dodatkami edytora kodu: wcięcie zaznaczenia Tab/Shift+Tab (UG 25.1), auto-wcięcie po Enter.
 final class CodeTextView: NSTextView {
     var indentUnit = "  "
+    var keywordCase: KeywordCase = .unchanged
+    var highlightCurrentLine = true
+    static let currentLineColor = NSColor(name: nil) { $0.isDark ? NSColor(white: 1, alpha: 0.05) : NSColor(srgbRed: 0.95, green: 0.97, blue: 1, alpha: 1) }
+
+    /// Podświetlenie linii z kursorem (UG 23.12 „Highlight current line”).
+    override func drawBackground(in rect: NSRect) {
+        super.drawBackground(in: rect)
+        guard highlightCurrentLine, selectedRange().length == 0, let tlm = textLayoutManager, let content = tlm.textContentManager,
+              let loc = content.location(content.documentRange.location, offsetBy: selectedRange().location) else { return }
+        var frame = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame ?? .zero
+        if frame == .zero || selectedRange().location == (string as NSString).length && string.hasSuffix("\n") {
+            let h = (font?.ascender ?? 12) - (font?.descender ?? -3) + (font?.leading ?? 0)
+            frame = NSRect(x: 0, y: frame == .zero ? 0 : frame.maxY, width: bounds.width, height: h)
+        }
+        Self.currentLineColor.setFill()
+        NSRect(x: 0, y: frame.minY + textContainerInset.height, width: bounds.width, height: frame.height).fill()
+    }
+
+    override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool) {
+        super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
+        if highlightCurrentLine { needsDisplay = true }
+    }
+
+    /// Wielkość liter słowa kluczowego po jego zakończeniu (spacja, nowa linia, znak przestankowy), poza literałami i komentarzami.
+    override func insertText(_ string: Any, replacementRange: NSRange) {
+        let text = (string as? String) ?? (string as? NSAttributedString)?.string ?? ""
+        if keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
+            applyKeywordCase()
+        }
+        super.insertText(string, replacementRange: replacementRange)
+    }
+
+    private func applyKeywordCase() {
+        let ns = self.string as NSString
+        let caret = selectedRange().location
+        guard selectedRange().length == 0, caret > 0 else { return }
+        let lineStart = ns.lineRange(for: NSRange(location: caret, length: 0)).location
+        let line = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
+        guard let last = Lexer(line).tokenize().last, last.kind == .keyword, last.start + last.length == (line as NSString).length else { return }
+        let word = (line as NSString).substring(with: NSRange(location: last.start, length: last.length))
+        let cased: String = switch keywordCase {
+        case .upper: word.uppercased()
+        case .lower: word.lowercased()
+        case .initCap: word.prefix(1).uppercased() + word.dropFirst().lowercased()
+        case .unchanged: word
+        }
+        guard cased != word else { return }
+        let r = NSRange(location: lineStart + last.start, length: last.length)
+        if shouldChangeText(in: r, replacementString: cased) {
+            replaceCharacters(in: r, with: cased)
+            didChangeText()
+        }
+    }
 
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {

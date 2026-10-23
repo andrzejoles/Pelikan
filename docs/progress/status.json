@@ -1,7 +1,7 @@
 {
-  "heartbeat": "2026-10-23T03:26:09+02:00",
+  "heartbeat": "2026-10-23T03:53:23+02:00",
   "stage": {
-    "id": 1,
+    "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
   "task": "Etap 1: CI dla PR #8 (sterownik thin), potem szkic wydania 2.0 (podpis, DMG/PKG, Sparkle)",
@@ -14,12 +14,12 @@
     {
       "id": 1,
       "name": "Połączenia, SQL Window, Command Window (sterownik Instant Client, potem thin)",
-      "state": "w toku"
+      "state": "zakończony"
     },
     {
       "id": 2,
       "name": "Object Browser i Program Window",
-      "state": "do zrobienia"
+      "state": "w toku"
     },
     {
       "id": 3,
@@ -53,6 +53,12 @@
     }
   ],
   "done": [
+    "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe",
+    "Karty dokumentów: menu Zamknij / pozostałe / z lewej / z prawej, zamykanie krzyżykiem i środkowym przyciskiem przez komendę (pytania o zapis i transakcję); edytor: wielkość liter słów kluczowych przy pisaniu (preferencja), podświetlenie bieżącej linii, wcięcie z preferencji — 1 test, sprawdzone ręcznie",
+    "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy",
+    "Połączenia: tylko do odczytu (blokada DML/DDL/PL/SQL/FOR UPDATE w SQL Window, Command Window i siatce), potwierdzanie zmian na produkcji (preferencja), połączenie okna na pasku stanu z menu wyboru i przypięciem — 4 testy",
+    "Edytor: komentarz linii, wcięcia, wielkie/małe litery bez literałów, usuwanie końcowych spacji, powielenie linii, Przejdź do linii, Znajdź i zamień (regex z $1/\\t, całe słowa, wielkość liter, zachowanie wielkości, zaznaczenie, kod/komentarze/literały), Znajdź następne/poprzednie (F3), Historia poleceń (Ctrl+E) z filtrem i wstawianiem wielu; zmiany z komend cofalne (⌘Z) — 8 testów",
+    "PR #9 scalony; szkic wydania v1.9.0 na GitHubie (DMG, PKG, zip, appcast.xml) — do publikacji przez właściciela",
     "Wydania jak w Bifoldzie: stały podpis „Pelikan Self-Signed” (osobny pęk kluczy), make installer (DMG i PKG z licencjami zewnętrznymi i kontrolą danych w pakiecie), Sparkle 2.10.0 z kluczem EdDSA w Pęku kluczy i menu „Sprawdź uaktualnienia…”, make draft-release (zip, appcast.xml, tag, szkic wydania), docs/WYDANIA.md; instalatory 1.8.0 zbudowane i sprawdzone lokalnie",
     "PR #8 scalony (sterownik thin), wersja 1.8.0",
     "Sterownik thin (OracleNIO): EZConnect i alias TNS, SYSDBA, proxy, bindy IN/OUT, LOB jako lokator z limitem (CLOB w AL16UTF16), NUMBER/DATE/TIMESTAMP dekodowane z surowych bajtów bez utraty precyzji, metadane kolumn, błędy ORA, DBMS_OUTPUT, SQL Window na thin; Przerwij wyszarzone (brak w API); 1 mln wierszy w 4,3 s (Instant Client 1,2 s); OracleNIO przypięty do commitu z poprawką dla Swift 6.4 (D20) — 9 testów (6 na bazie)",
@@ -107,18 +113,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 108,
-      "passed": 108,
+      "total": 124,
+      "passed": 124,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T03:03:28+02:00"
+      "at": "2026-10-23T03:53:20+02:00"
     },
     "integration": {
-      "total": 50,
-      "passed": 49,
+      "total": 54,
+      "passed": 53,
       "failed": 0,
       "skipped": 1,
-      "at": "2026-10-23T03:03:30+02:00"
+      "at": "2026-10-23T03:53:23+02:00"
     },
     "perf": {
       "total": 9,

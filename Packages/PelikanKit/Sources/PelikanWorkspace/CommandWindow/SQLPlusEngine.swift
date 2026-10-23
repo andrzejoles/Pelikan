@@ -204,6 +204,7 @@ public final class SQLPlusEngine {
     func executeSQL(_ sql: String, original: String, isPLSQL: Bool) async -> Outcome {
         let start = ContinuousClock.now
         do {
+            try await workspace.guardModification([sql], connectionID: workspace.effectiveConnection(of: document))
             let session = try await workspace.session(for: document)
             if state.serverOutput { try await SessionUtilities.enableOutput(session, bufferSize: workspace.settings.dbmsOutputBufferSize) }
             let names = Variables.distinct(Variables.find(in: sql, syntax: .sqlplus)).filter { $0.kind == .bind }.map(\.name)

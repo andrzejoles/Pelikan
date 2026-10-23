@@ -31,6 +31,9 @@ public enum RecordsPerPage: Sendable, Codable, Hashable {
     case all
 }
 
+/// Wielkość liter słów kluczowych w edytorze.
+public enum KeywordCase: String, Sendable, Codable, Hashable, CaseIterable { case unchanged, upper, lower, initCap }
+
 /// Wygląd aplikacji: jak system, jasny albo ciemny.
 public enum AppearanceMode: String, Sendable, Codable, Hashable, CaseIterable { case system, light, dark }
 
@@ -45,6 +48,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var instantClientDirectory: String?
     // Oracle — Options
     public var confirmCommitRollback = false
+    /// Potwierdzanie poleceń zmieniających na połączeniach produkcyjnych (PD-CONN-006).
+    public var confirmProductionChanges = true
     public var useDBAViews = true
     // Oracle — Output
     public var dbmsOutputEnabled = true
@@ -65,6 +70,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var editorFontName = "SF Mono"
     public var editorFontSize: Double = 13
     public var tabSize = 2
+    /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
+    public var keywordCase: KeywordCase = .unchanged
+    public var highlightCurrentLine = true
     public var useTabCharacter = false
     // Klawiatura
     public var shortcutProfile: ShortcutProfile = .plsqlDeveloper
@@ -89,6 +97,9 @@ public struct Settings: Sendable, Codable, Hashable {
         func v<T: Decodable>(_ k: CodingKeys, _ cur: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? cur }
         sessionMode = v(.sessionMode, sessionMode)
         recentFiles = v(.recentFiles, recentFiles)
+        keywordCase = v(.keywordCase, keywordCase)
+        highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
+        confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         appearance = v(.appearance, appearance)
         confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
         logoffWithOpenTransaction = v(.logoffWithOpenTransaction, logoffWithOpenTransaction)

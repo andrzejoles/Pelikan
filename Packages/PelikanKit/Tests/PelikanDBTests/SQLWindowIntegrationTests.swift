@@ -28,6 +28,12 @@ final class TestUI: UIServices {
     var openURLs: [URL] = []
     var saveURL: URL?
     func chooseFilesToOpen() async -> [URL] { openURLs }
+    var textAnswer: String?
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
+    func showFindReplace() {}
+    var clientHelp: String?
+    func showClientMissingHelp(_ message: String) { clientHelp = message }
+    func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
     func showLargeDataEditor(_ model: LargeDataModel) { largeData = model }
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
@@ -542,5 +548,88 @@ struct SSHTunnelIntegrationTests {
             #expect(error.localizedDescription.contains("Permission denied"))
         }
         #expect(!ws.sessions.tunnels.isOpen(def.id))
+    }
+}
+
+@MainActor
+@Suite("Sesje okien na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct WindowSessionsIntegrationTests {
+    func make() throws -> (Workspace, ConnectionDefinition, TestUI) {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        return (ws, def, ui)
+    }
+
+    @Test("Dwa okna wykonują się równolegle w osobnych sesjach (tryb Multi)")
+    func parallel() async throws {
+        let (ws, _, _) = try make()
+        let a = ws.newDocument(.sql)
+        a.text = "select count(*) from big_rows x, (select level from dual connect by level <= 20)"
+        let b = ws.newDocument(.sql)
+        b.text = "select count(*) from big_rows x, (select level from dual connect by level <= 20)"
+        let clock = ContinuousClock()
+        let single = try await clock.measure { _ = try await SQLExecutor.execute(a, scope: .standard, in: ws) }
+        let both = try await clock.measure {
+            async let r1 = SQLExecutor.execute(a, scope: .standard, in: ws)
+            async let r2 = SQLExecutor.execute(b, scope: .standard, in: ws)
+            _ = try await (r1, r2)
+        }
+        #expect(a.results.first?.grid?.rowCount == 1 && b.results.first?.grid?.rowCount == 1)
+        #expect(ws.sessions.openSessionCount >= 2)
+        #expect(both < single * 1.8)       // nie sekwencyjnie
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Wylogowanie z otwartą transakcją pyta o COMMIT/ROLLBACK (domyślnie pytaj) i wycofuje po wyborze")
+    func logoffWithTransaction() async throws {
+        let (ws, _, ui) = try make()
+        let doc = ws.newDocument(.sql)
+        doc.text = "update emp set comm = 11 where empno = 7369"
+        try await ws.invoke("sql.execute")
+        #expect(doc.transactionOpen)
+        ui.askAnswer = 1            // Wycofaj (ROLLBACK)
+        try await ws.invoke("session.logoff")
+        #expect(ui.asked.contains("Niezatwierdzone zmiany"))
+        #expect(!doc.transactionOpen)
+        #expect(ws.sessions.openSessionCount == 0)
+        ws.sessions.setMainConnection(ws.connections.connections.first!.id)
+        doc.text = "select comm from emp where empno = 7369"
+        try await ws.invoke("sql.execute")
+        #expect(doc.results.first?.grid?.text(row: 0, column: 0) == "")
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Rola SYSDBA (konto SYS kontenera testowego)")
+    func sysdba() async throws {
+        let c = TestDatabase.config!
+        var target = ConnectionTarget(user: "SYS", connectString: c.connectString)
+        target.role = .sysdba
+        let s = try await ODPIDriver().connect(target: target, credentials: Credentials(password: c.systemPassword), options: ConnectOptions())
+        #expect(try await s.scalar("select sys_context('USERENV', 'ISDBA') from dual") == "TRUE")
+        await s.close()
+    }
+}
+
+@Suite("Alias TNS z katalogu połączenia (Instant Client)", .enabled(if: TestDatabase.isAvailable))
+struct ConfigDirectoryIntegrationTests {
+    @Test("Połączenie po aliasie z tnsnames.ora w katalogu konfiguracji połączenia")
+    func alias() async throws {
+        let c = TestDatabase.config!
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tnsdir-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let parts = c.connectString.split(separator: "/")
+        let hp = parts[0].split(separator: ":")
+        try "PELIKAN_TEST_ALIAS = (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=\(hp[0]))(PORT=\(hp[1])))(CONNECT_DATA=(SERVICE_NAME=\(parts[1]))))"
+            .write(to: dir.appendingPathComponent("tnsnames.ora"), atomically: true, encoding: .utf8)
+        let s = try await ODPIDriver().connect(target: ConnectionTarget(user: c.user, connectString: "pelikan_test_alias", configDirectory: dir.path),
+                                               credentials: Credentials(password: c.password), options: ConnectOptions())
+        #expect(try await s.scalar("select 1 from dual") == "1")
+        await s.close()
     }
 }

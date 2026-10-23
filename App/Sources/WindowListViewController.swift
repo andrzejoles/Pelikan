@@ -87,6 +87,8 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
     override func otherMouseUp(with event: NSEvent) {
         let point = table.convert(event.locationInWindow, from: nil)
         let row = table.row(at: point)
-        if event.buttonNumber == 2, row >= 0, row < documents.count { workspace.close(documents[row].id) }
+        if event.buttonNumber == 2, row >= 0, row < documents.count {
+            workspace.perform("file.closeWindow", CommandArguments(["document": .string(documents[row].id.description)]))
+        }
     }
 }

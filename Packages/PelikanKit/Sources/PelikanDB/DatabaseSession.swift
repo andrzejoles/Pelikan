@@ -301,13 +301,15 @@ public struct OracleError: Error, Sendable, Hashable, CustomStringConvertible {
 public enum DatabaseError: Error, LocalizedError, Sendable, Equatable {
     /// Sterownik niedostępny (np. brak Instant Client) — komunikat z instrukcją.
     case driverUnavailable(String)
+    /// Brak biblioteki klienta (Instant Client) — interfejs pokazuje ekran pomocy (PD-CONN-029).
+    case clientMissing(String)
     case unknownResultSet
     case unsupported(String)
     case closed
 
     public var errorDescription: String? {
         switch self {
-        case .driverUnavailable(let m), .unsupported(let m): m
+        case .driverUnavailable(let m), .unsupported(let m), .clientMissing(let m): m
         case .unknownResultSet: "Wynik zapytania jest już zamknięty"
         case .closed: "Sesja jest zamknięta"
         }

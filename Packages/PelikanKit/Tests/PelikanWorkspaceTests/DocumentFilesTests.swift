@@ -23,6 +23,12 @@ final class FakeUI: UIServices {
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool { true }
     func showLargeDataEditor(_ model: LargeDataModel) {}
     func chooseFilesToOpen() async -> [URL] { openURLs }
+    var textAnswer: String?
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
+    func showFindReplace() {}
+    var clientHelp: String?
+    func showClientMissingHelp(_ message: String) { clientHelp = message }
+    func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
 }
 
@@ -123,5 +129,29 @@ struct DocumentFilesTests {
     func reopen() async throws {
         let ws = Workspace()
         await #expect(throws: CommandError.self) { try await ws.invoke("file.reopen", CommandArguments(["path": .string("/etc/hosts")])) }
+    }
+}
+
+@MainActor
+@Suite("Zamykanie grup okien")
+struct CloseManyTests {
+    @Test("Zamknij pozostałe / z lewej / z prawej; zmienione okno pyta, Anuluj przerywa")
+    func closeMany() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let docs = (0..<5).map { _ in ws.newDocument(.sql) }
+        ws.activate(docs[2].id)
+        try await ws.invoke("file.closeLeft")
+        #expect(ws.documents.map(\.id) == [docs[2].id, docs[3].id, docs[4].id])
+        docs[4].text = "zmiana"
+        ui.answers = [2]                         // Anuluj przy zmienionym oknie
+        await #expect(throws: CommandError.cancelledByUser) { try await ws.invoke("file.closeRight") }
+        #expect(ws.documents.count == 2)          // docs[3] zamknięte, docs[4] zostało
+        ui.answers = [1]
+        try await ws.invoke("file.closeOthers")
+        #expect(ws.documents.map(\.id) == [docs[2].id] && ws.activeDocumentID == docs[2].id)
+        try await ws.invoke("file.closeWindow", CommandArguments(["document": .string(docs[2].id.description)]))
+        #expect(ws.documents.isEmpty)
     }
 }

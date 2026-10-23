@@ -125,6 +125,7 @@ public enum SQLExecutor {
             doc.statusText = L10n.tr("Brak polecenia do wykonania")
             return false
         }
+        try await ws.guardModification(stmts.map(\.text), connectionID: ws.effectiveConnection(of: doc))
         // Zmienne (& : Jasper) — jedno okno dla wszystkich poleceń.
         var values = doc.variableValues
         if doc.substitutionEnabled {

@@ -189,3 +189,131 @@ struct SessionManagerTests {
         #expect(again.shortcutProfile == .macOS)
     }
 }
+
+@MainActor
+@Suite("Strażnik zmian i połączenie okna")
+struct ModificationGuardTests {
+    func make() throws -> (Workspace, ConnectionDefinition, ConnectionDefinition, FakeUI) {
+        let ws = Workspace(drivers: [.instantClient: FakeDriver()])
+        let ui = FakeUI()
+        ws.ui = ui
+        let ro = ConnectionDefinition(name: "raport", target: ConnectionTarget(user: "u", connectString: "db"), readOnly: true)
+        let prod = ConnectionDefinition(name: "prod", target: ConnectionTarget(user: "u", connectString: "db"), environment: .production)
+        try ws.connections.upsert(ro, password: "good")
+        try ws.connections.upsert(prod, password: "good")
+        return (ws, ro, prod, ui)
+    }
+
+    @Test("Tylko do odczytu: zapytania tak; DML, DDL, PL/SQL i FOR UPDATE — zablokowane")
+    func readOnly() throws {
+        let (ws, ro, _, _) = try make()
+        #expect(ws.modificationCheck(["select * from emp", "alter session set nls_language = 'POLISH'"], connectionID: ro.id) == .allowed)
+        for s in ["update emp set sal = 1", "drop table t", "begin p; end;", "select * from emp for update"] {
+            if case .blocked = ws.modificationCheck([s], connectionID: ro.id) {} else { Issue.record("niezablokowane: \(s)") }
+        }
+    }
+
+    @Test("Produkcja: polecenia zmieniające wymagają potwierdzenia; anulowanie przerywa; preferencja wyłącza")
+    func production() async throws {
+        let (ws, _, prod, ui) = try make()
+        #expect(ws.modificationCheck(["select 1 from dual"], connectionID: prod.id) == .allowed)
+        #expect(ws.modificationCheck(["delete from emp"], connectionID: prod.id) == .needsConfirmation)
+        ui.answers = [1]
+        await #expect(throws: CommandError.cancelledByUser) { try await ws.guardModification(["delete from emp"], connectionID: prod.id) }
+        ui.answers = [0]
+        try await ws.guardModification(["delete from emp"], connectionID: prod.id)
+        ws.settings.confirmProductionChanges = false
+        #expect(ws.modificationCheck(["delete from emp"], connectionID: prod.id) == .allowed)
+    }
+
+    @Test("SQL Window na połączeniu tylko do odczytu odrzuca UPDATE przed wysłaniem do bazy")
+    func sqlWindowBlocked() async throws {
+        let (ws, ro, _, _) = try make()
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = ro.id
+        doc.text = "update emp set sal = 1"
+        await #expect(throws: CommandError.self) { try await ws.invoke("sql.execute") }
+    }
+
+    @Test("Zmiana połączenia okna po nazwie; puste — połączenie główne; nieznane — błąd")
+    func windowConnection() async throws {
+        let (ws, ro, prod, _) = try make()
+        ws.sessions.setMainConnection(prod.id)
+        let doc = ws.newDocument(.sql)
+        try await ws.invoke("session.windowConnection", CommandArguments(["connection": .string("raport")]))
+        #expect(doc.connectionID == ro.id && ws.effectiveConnection(of: doc) == ro.id)
+        try await ws.invoke("session.windowConnection", CommandArguments(["connection": .string("")]))
+        #expect(doc.connectionID == nil && ws.effectiveConnection(of: doc) == prod.id)
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("session.windowConnection", CommandArguments(["connection": .string("brak")]))
+        }
+    }
+}
+
+/// Sterownik bez biblioteki klienta.
+final class MissingClientDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .failure(.clientMissing("Brak Instant Client")) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
+        throw DatabaseError.clientMissing("Brak Instant Client")
+    }
+}
+
+@MainActor
+@Suite("Brak Instant Client")
+struct ClientMissingTests {
+    @Test("Połączenie bez biblioteki klienta otwiera ekran pomocy zamiast zwykłego błędu")
+    func help() async throws {
+        let ws = Workspace(drivers: [.instantClient: MissingClientDriver()])
+        let ui = FakeUI()
+        ws.ui = ui
+        let def = ConnectionDefinition(name: "x", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "p")
+        ws.perform("connection.connectAsMain", CommandArguments(["connection": .string(def.id.uuidString)]))
+        for _ in 0..<200 where ui.clientHelp == nil { await Task.yield() }
+        #expect(ui.clientHelp == "Brak Instant Client")
+    }
+}
+
+
+/// Sesja, której ping zgłasza utratę połączenia.
+final class LostSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult { ExecutionResult(kind: .other) }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws { throw OracleError(code: 3113, message: "ORA-03113: end-of-file on communication channel") }
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+final class LostDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { LostSession() }
+}
+
+@MainActor
+@Suite("Sprawdzanie połączeń")
+struct ConnectionCheckTests {
+    @Test("Utracona sesja główna wykrywana i usuwana; kolejne użycie łączy ponownie")
+    func lost() async throws {
+        let ws = Workspace(drivers: [.instantClient: LostDriver()])
+        let def = ConnectionDefinition(name: "x", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "p")
+        let key = SessionKey(connectionID: def.id, purpose: .main)
+        _ = try await ws.sessions.session(key)
+        #expect(ws.sessions.openSessionCount == 1)
+        let lost = await ws.sessions.checkConnections()
+        #expect(lost == [key])
+        #expect(ws.sessions.openSessionCount == 0)
+        _ = try await ws.sessions.session(key)
+        #expect(ws.sessions.openSessionCount == 1)
+    }
+}

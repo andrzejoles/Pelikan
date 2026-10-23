@@ -51,9 +51,12 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                                libraryDirectory: String? = nil) async throws -> ODPISession {
         let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory)
         let queue = DispatchQueue(label: "pelikan.odpi.session", qos: .userInitiated)
+        var resolved = target
+        resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory)
+        let finalTarget = resolved
         return try await withCheckedThrowingContinuation { cont in
             queue.async {
-                cont.resume(with: Result { try connectSync(env: env, queue: queue, target: target, credentials: credentials, options: options) })
+                cont.resume(with: Result { try connectSync(env: env, queue: queue, target: finalTarget, credentials: credentials, options: options) })
             }
         }
     }

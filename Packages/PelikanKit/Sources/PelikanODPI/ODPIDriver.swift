@@ -15,7 +15,7 @@ public struct ODPIDriver: DatabaseDriver {
 
     public func availability() -> Result<Void, DatabaseError> {
         if InstantClientLocator.locate(configured: libraryDirectory) != nil { return .success(()) }
-        return .failure(.driverUnavailable(
+        return .failure(.clientMissing(
             "Nie znaleziono Oracle Instant Client. Pobierz „Basic” dla macOS (ARM64) ze strony "
                 + "https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html, "
                 + "zainstaluj (domyślnie ~/Downloads/instantclient_23_26) albo wskaż katalog w Ustawieniach."))

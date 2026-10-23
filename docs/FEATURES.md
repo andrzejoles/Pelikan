@@ -38,31 +38,31 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-002 | Okno logowania (użytkownik, hasło, baza, Connect as) z historią i anulowaniem (praca bez połączenia) | UG 3, UG 23.8 | Session > Log on | 1 | P1 | Brak | 👁 sprawdzone ręcznie |
 | PD-CONN-003 | Connection List: foldery, podfoldery, połączenia jawne i dopasowane regułami (wzorce * ?), folder Recent | UG 19.1–19.2 | View > Connection List | 1 | P1 | Odczyt | 👁 sprawdzone ręcznie |
 | PD-CONN-004 | Definicja połączenia: nazwa, obraz, użytkownik, baza, hasło (Pęk kluczy, puste = pytaj), Connect as, Identified externally | UG 19.2 | Configure > Connections | 1 | P1 | Brak | 👁 sprawdzone ręcznie |
-| PD-CONN-005 | Kolor połączenia i wskaźnik (pasek, okno, Window List, tło); reguły Connection Indicators user@db | UG 19.2, UG 23.16 | Configure > Preferences | 1 | P1 | — | w toku |
-| PD-CONN-006 | Środowisko połączenia dev/test/prod z ostrzeżeniami przy zmianach na prod | PROMPT §4.2 p.6 | Configure > Connections | 1 | P1 | Odczyt | w toku |
-| PD-CONN-007 | Połączenie tylko do odczytu (blokada zmian obiektów i danych) | UG 19.2, NF15 | Configure > Connections | 1 | P1 | Odczyt | do zrobienia |
+| PD-CONN-005 | Kolor połączenia i wskaźnik (pasek, okno, Window List, tło); reguły Connection Indicators user@db | UG 19.2, UG 23.16 | Configure > Preferences | 1 | P1 | — | ⚠️ częściowo (kolor i środowisko na liście; bez tła okna i reguł) |
+| PD-CONN-006 | Środowisko połączenia dev/test/prod z ostrzeżeniami przy zmianach na prod | PROMPT §4.2 p.6 | Configure > Connections | 1 | P1 | Odczyt | ✅ test |
+| PD-CONN-007 | Połączenie tylko do odczytu (blokada zmian obiektów i danych) | UG 19.2, NF15 | Configure > Connections | 1 | P1 | Odczyt | ✅ test |
 | PD-CONN-008 | Skrypt inicjalizacji sesji i komunikat przy logowaniu; Test połączenia | UG 19.2, NF11 | Configure > Connections | 1 | P2 | Brak | ✅ test |
 | PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | w toku |
 | PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | ✅ test |
-| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | do zrobienia |
+| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ⚠️ częściowo (MY_WALLET_DIRECTORY z katalogu połączenia; bez testu TCPS) |
 | PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | do zrobienia |
-| PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | w toku |
+| PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | ✅ test |
 | PD-CONN-016 | Proxy user (pośrednik[schemat]) | NF12 | Log on | 1 | P2 | Brak | w toku |
 | PD-CONN-017 | Zmiana wygasłego hasła (ORA-28001) i Set Password (w bazie i w definicji) | PROMPT §3.1, NF10 | Session > Set Password | 1 | P2 | Brak | ✅ test |
 | PD-CONN-018 | Wiele połączeń naraz; połączenie główne (pogrubione, dwuklik, Set Main Connection [to current]) | UG 20.1 | Session | 1 | P1 | Odczyt | ✅ test |
-| PD-CONN-019 | Połączenie okna na pasku stanu, zmiana połączenia okna, przypięte / nieprzypięte (preferencja domyślna) | UG 20.2, NF10 | Pasek stanu okna | 1 | P1 | — | do zrobienia |
+| PD-CONN-019 | Połączenie okna na pasku stanu, zmiana połączenia okna, przypięte / nieprzypięte (preferencja domyślna) | UG 20.2, NF10 | Pasek stanu okna | 1 | P1 | — | ✅ test |
 | PD-CONN-020 | Tryb sesji Multi / Dual / Single; osobna sesja kompilacji | UG 20.3 | Preferences > Oracle > Connection | 1 | P1 | — | ✅ test |
-| PD-CONN-021 | Wykonywanie okien równolegle (wątki), kursor „wykonywanie”, blokada edycji okna w trakcie | UG 20.4 | — | 1 | P1 | — | do zrobienia |
+| PD-CONN-021 | Wykonywanie okien równolegle (wątki), kursor „wykonywanie”, blokada edycji okna w trakcie | UG 20.4 | — | 1 | P1 | — | ✅ test |
 | PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | w toku |
-| PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | w toku |
-| PD-CONN-024 | Wylogowanie z otwartą transakcją: COMMIT / ROLLBACK / pytaj (w Pelikanie domyślnie pytaj) | UG 23.1 | Preferences | 1 | P1 | — | do zrobienia |
+| PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | ✅ test |
+| PD-CONN-024 | Wylogowanie z otwartą transakcją: COMMIT / ROLLBACK / pytaj (w Pelikanie domyślnie pytaj) | UG 23.1 | Preferences | 1 | P1 | — | ✅ test |
 | PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | do zrobienia |
 | PD-CONN-026 | Automatyczne zamykanie nieużywanych połączeń; pamiętanie Recent | UG 23.1 | Preferences | 1 | P3 | — | do zrobienia |
 | PD-CONN-027 | Kill sesji okna (Session > Kill) gdy Break nie działa | UG 20.4 | Session > Kill | 1 | P2 | Brak | do zrobienia |
 | PD-CONN-028 | Sterownik thin (OracleNIO) wybierany w połączeniu; funkcje niedostępne wyszarzone z podpowiedzią | PROMPT §4.1 | Configure > Connections | 1 | P2 | — | ✅ test |
-| PD-CONN-029 | Wykrywanie Instant Client, ścieżka w ustawieniach, ekran pomocy przy braku | PROMPT §4.1 | Preferences > Oracle | 1 | P1 | — | w toku |
+| PD-CONN-029 | Wykrywanie Instant Client, ścieżka w ustawieniach, ekran pomocy przy braku | PROMPT §4.1 | Preferences > Oracle | 1 | P1 | — | ✅ test |
 | PD-CONN-030 | Tunel SSH do bazy (z DBeaver; ważne na Macu) | PROMPT §3.3 | Configure > Connections | 1 | P1 | Brak | ✅ test |
 
 ## PL/SQL Developer — SQL Window
@@ -73,7 +73,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-002 | Wykonanie: zaznaczenie → tylko zaznaczony tekst; wiele poleceń → wszystkie, wyniki w kartach | UG 7.1 | SQL Window > Execute (F8) | 1 | P1 | Za zgodą | ✅ test |
 | PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | ✅ test |
-| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | w toku |
+| PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | ✅ test |
 | PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | do zrobienia |
 | PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-008 | Karta Statistics (statystyki wykonania) | UG 6.2 | SQL Window > Statistics | 3 | P2 | Odczyt | do zrobienia |
@@ -103,13 +103,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-001 | Siatka płynna przy milionach wierszy (dociąganie stronami, bez zacięć) | PROMPT §3.4 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-002 | NULL na kolorowym tle (osobny kolor dla kolumn obowiązkowych), naprzemienne wiersze | UG 7.2, UG 23.20 | Siatka | 1 | P1 | — | 👁 ręcznie |
 | PD-GRID-003 | `<CLOB>`, `<BLOB>`, `<Long>`… z przyciskiem komórki → Large Data Editor; przycisk dla tekstu > 20 znaków | UG 7.2 | Siatka | 1 | P1 | — | ✅ test |
-| PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | w toku |
-| PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | w toku |
+| PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | ⚠️ częściowo (pełna precyzja; bez wyboru układu liczb) |
+| PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | ⚠️ częściowo (formaty z preferencji; bez kalendarza) |
 | PD-GRID-006 | Kursor zagnieżdżony `<Cursor>` → nowe okno z wynikiem | UG 7.2 | Siatka | 1 | P3 | — | do zrobienia |
-| PD-GRID-007 | Zaznaczanie wierszy, kolumn i bloków komórek; Select All; przenoszenie kolumn | UG 7.2 | Siatka | 1 | P1 | — | w toku |
+| PD-GRID-007 | Zaznaczanie wierszy, kolumn i bloków komórek; Select All; przenoszenie kolumn | UG 7.2 | Siatka | 1 | P1 | — | ⚠️ częściowo (wiersze, przenoszenie kolumn; bez bloków komórek) |
 | PD-GRID-008 | Blokada przewijania kolumn i wierszy (Scroll lock) | UG 7.2, NF9 | Siatka > Scroll lock | 1 | P2 | — | do zrobienia |
 | PD-GRID-009 | Sortowanie lokalne klikiem nagłówka (rosnąco/malejąco/brak, wtórne, wielkość liter) | UG 7.2 | Siatka | 1 | P1 | — | ✅ test |
-| PD-GRID-010 | Single Record View (kolumna, wartość, typ, komentarz; poprzedni/następny rekord) | UG 7.2, NF11 | Siatka | 1 | P1 | — | w toku |
+| PD-GRID-010 | Single Record View (kolumna, wartość, typ, komentarz; poprzedni/następny rekord) | UG 7.2, NF11 | Siatka | 1 | P1 | — | ⚠️ częściowo (bez komentarzy kolumn) |
 | PD-GRID-011 | Filtr kolumn (nazwy, typy, obowiązkowe, PK/UK/FK, historia, wklejanie wielu linii) | UG 7.2, NF13, NF17 | Siatka > Filter columns | 1 | P2 | — | do zrobienia |
 | PD-GRID-012 | Align (szerokość wg nagłówka/treści, wysokość, szablony wyrównania z kolejnością, auto-align), Hide Editor, Adjust Window width | UG 7.2, NF11 | Siatka > Align | 1 | P2 | — | do zrobienia |
 | PD-GRID-013 | Eksport zaznaczenia: CSV, TSV, HTML, XML, SQL (INSERT), do pliku i do schowka | UG 7.2 | Siatka > Export Results | 1 | P1 | Brak | ✅ test |
@@ -148,7 +148,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | ✅ test |
 | PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | 👁 ręcznie |
 | PD-CMDW-003 | Krokowanie skryptu: Pause Execution, Execute Next Command, SET EXECPAUSE | UG 8.2 | Command Window | 1 | P3 | Brak | do zrobienia |
-| PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | w toku |
+| PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | ⚠️ częściowo (bez GET/STORE/CHANGE/INPUT/COPY/BREAK/COMPUTE) |
 | PD-CMDW-005 | SET: AUTOPRINT, COLSEP, CONCAT, DEFINE, ECHO, ESCAPE, FEEDBACK (ONLY, SQL_ID), HEADING, LONG, NUMWIDTH, PAGESIZE, PROMPT, SCAN, SERVEROUTPUT (SIZE UNLIMITED), SPOOLDIRECTORY, TERMOUT, TIMING, VERIFY | UG 8.3, NF17 | Command Window | 1 | P1 | Brak | ✅ test |
 | PD-CMDW-006 | SHOW ERRORS / RELEASE / SQLCODE / USER / CONNECTION / ENVVAR | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
 | PD-CMDW-007 | SPOOL (APPEND, OFF, OUT, .zip) | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
@@ -186,16 +186,16 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-EDIT-001 | Podświetlanie składni SQL, PL/SQL, SQL*Plus (kolory, styl, wielkość liter słów kluczowych przy pisaniu) | UG 23.12 | Edytor | 1 | P1 | — | w toku |
+| PD-EDIT-001 | Podświetlanie składni SQL, PL/SQL, SQL*Plus (kolory, styl, wielkość liter słów kluczowych przy pisaniu) | UG 23.12 | Edytor | 1 | P1 | — | 👁 ręcznie |
 | PD-EDIT-002 | Lekser przyrostowy (stan na końcu linii), tolerancyjny | PROMPT §4.1 | Edytor | 1 | P1 | — | ✅ test |
-| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | w toku |
-| PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
-| PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | do zrobienia |
-| PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | do zrobienia |
+| PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | ⚠️ częściowo (numery i bieżąca linia; bez statusu zmienionych linii) |
+| PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | ⚠️ częściowo (auto-wcięcie, Tab/Shift+Tab; bez trybu Smart i zawijania) |
+| PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | ✅ test |
+| PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | ✅ test |
 | PD-EDIT-007 | Zaznaczenie kolumnowe (Alt+przeciąganie) z pisaniem w wielu liniach | UG 25.2, NF13 | Edytor | 1 | P2 | — | do zrobienia |
-| PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | do zrobienia |
-| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | w toku |
-| PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | do zrobienia |
+| PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | ✅ test |
+| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | ✅ test |
+| PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | ✅ test |
 | PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | do zrobienia |
 | PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |
 | PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | do zrobienia |
@@ -205,9 +205,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | do zrobienia |
-| PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | do zrobienia |
+| PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | ⚠️ częściowo (Duplicate line; bez Delete next word) |
 | PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | do zrobienia |
-| PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | do zrobienia |
+| PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | 👁 ręcznie |
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | do zrobienia |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | do zrobienia |
@@ -354,7 +354,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-TPL-001 | Template Window (dokowalny, foldery, filtr) z szablonami domyślnymi (DML, pętle, typy, funkcje SQL, jednostki programów…) | UG 31.1, NF16 | View > Templates | 2 | P1 | Odczyt | do zrobienia |
 | PD-TPL-002 | Użycie szablonu (dwuklik, przeciągnięcie, menu edytora), formularz zmiennych, `$OSUSER $DBUSER $DATE $TIME`, `[#]`, wiele jednostek z `/` | UG 31.2–31.3 | Template Window | 2 | P1 | Pełny | do zrobienia |
 | PD-TPL-003 | Tworzenie i edycja szablonów i folderów | UG 31.3 | Template Window | 2 | P2 | — | do zrobienia |
-| PD-LDE-001 | Large Data Editor: Text, XML, JSON, HTML (podgląd), obraz, Hex; Parse/Format, Auto Format; Open/Save/Clear; Post, następny/poprzedni rekord | UG 27, NF15, NF17 | Siatka > przycisk komórki | 1 | P1 | — | w toku |
+| PD-LDE-001 | Large Data Editor: Text, XML, JSON, HTML (podgląd), obraz, Hex; Parse/Format, Auto Format; Open/Save/Clear; Post, następny/poprzedni rekord | UG 27, NF15, NF17 | Siatka > przycisk komórki | 1 | P1 | — | ⚠️ częściowo (bez podglądu HTML i Auto Format) |
 | PD-LDE-002 | Large Data Editor: edytor zewnętrzny (plik tymczasowy, wykrywanie zapisu, skojarzenie z kolumną), RTF | UG 27.2, UG 27.8 | Large Data Editor | 6 | P3 | — | do zrobienia |
 | PD-DIFF-001 | Wewnętrzna przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap, Reload) | UG 26, NF14, NF15 | — | 2 | P1 | Odczyt | do zrobienia |
 | PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | do zrobienia |
@@ -373,7 +373,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-VCS-001 | Git (i SVN): status pliku na pasku stanu, w File Browserze i projekcie, gałąź Git, operacje z menu | UG 17, NF14, NF17 | Pasek stanu okna | 6 | P2 | Odczyt | do zrobienia |
 | PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | do zrobienia |
 | PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | do zrobienia |
-| PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | do zrobienia |
+| PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |
 | PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | do zrobienia |
 
@@ -382,9 +382,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | PD-UI-001 | Okno główne: Object Browser po lewej, obszar dokumentów, paski narzędzi, pasek stanu | UG 33–35 | — | 0 | P1 | — | w toku |
-| PD-UI-002 | Window List (status niezapisany/nieskompilowany/transakcja, wskaźnik połączenia, przypięcie, auto-refresh; menu: Execute, Reconnect, Rename, Short Text, New, Sort; środkowy klik zamyka) | UG 32, NF11, NF13, NF15 | View > Window List | 1 | P1 | Odczyt | w toku |
+| PD-UI-002 | Window List (status niezapisany/nieskompilowany/transakcja, wskaźnik połączenia, przypięcie, auto-refresh; menu: Execute, Reconnect, Rename, Short Text, New, Sort; środkowy klik zamyka) | UG 32, NF11, NF13, NF15 | View > Window List | 1 | P1 | Odczyt | ⚠️ częściowo (stan okna i transakcji; bez menu Execute/Reconnect/Rename) |
 | PD-UI-003 | Narzędzia dokowane/pływające (Object Browser, File Browser, Connection List, Window List, Templates, Bookmarks, Search, To-Do, Project, Clipboard), autoukrywanie | UG 33, NF8 | View | 1 | P2 | — | do zrobienia |
-| PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | w toku |
+| PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | ✅ test |
 | PD-UI-005 | Menu wg Apple HIG odpowiadające wstążkom wzorca (File, Project, Edit, Session, Debug, Tools, Reports, Configure, View, Help) + paski narzędzi | UG 34, PROMPT §3.4 | — | 0 | P1 | — | w toku |
 | PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | do zrobienia |
 | PD-UI-007 | Wyszukiwarka komend (paleta) | PROMPT §3.1 | Help / Cmd+Shift+P | 1 | P1 | — | 👁 sprawdzone ręcznie |
@@ -392,7 +392,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-UI-009 | Tytuł aplikacji z połączeniem / oknem / worksetem; nazwa bazy w tytułach okien | UG 23.16, NF17 | Preferences > Appearance | 1 | P2 | — | do zrobienia |
 | PD-UI-010 | Kolor ikony per typ okna; status transakcji na pasku stanu okna | NF12 | — | 1 | P2 | — | do zrobienia |
 | PD-UI-011 | Pełny ekran z dostępem do narzędzi | NF11, PROMPT §3.4 | View | 1 | P3 | — | do zrobienia |
-| PD-PREF-001 | Okno preferencji: kategorie Oracle / UI / Window Types / Tools / Files / Other, wyszukiwarka, Apply | UG 23 | Configure > Preferences | 1 | P1 | — | w toku |
+| PD-PREF-001 | Okno preferencji: kategorie Oracle / UI / Window Types / Tools / Files / Other, wyszukiwarka, Apply | UG 23 | Configure > Preferences | 1 | P1 | — | ⚠️ częściowo (karty bez wyszukiwarki i pełnych kategorii) |
 | PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | do zrobienia |
 | PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | do zrobienia |
 | PD-PREF-004 | NLS Options aplikacji (data, czas, liczby: własne / systemowe / Oracle) | UG 23.17 | Preferences > NLS | 1 | P2 | — | w toku |
@@ -519,10 +519,10 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | ✅ test |
-| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | w toku |
+| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ⚠️ częściowo (Pęk kluczy; Touch ID w kodzie bez przełącznika w UI) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
 | MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
 | MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
-| MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | do zrobienia |
+| MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
 | MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |

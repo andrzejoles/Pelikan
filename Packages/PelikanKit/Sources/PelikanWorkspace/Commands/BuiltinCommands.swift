@@ -21,6 +21,28 @@ public enum BuiltinCommands {
 
     // MARK: Plik
 
+    /// Zamknięcie grupy okien względem bieżącego (menu karty — PD-UI-004).
+    @MainActor
+    static func closeMany(_ id: String, _ title: String, _ summary: String, _ which: @escaping @Sendable (Int, Int) -> Bool) -> Command {
+        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .file, agent: .none, effect: .uiState,
+                                  summary: summary, feature: "PD-UI-004"),
+                validate: { ws in
+                    guard let a = ws.documents.firstIndex(where: { $0.id == ws.activeDocumentID }) else { return false }
+                    return ws.documents.indices.contains { which($0, a) }
+                }) { ctx in
+            let ws = ctx.workspace
+            guard let a = ws.documents.firstIndex(where: { $0.id == ws.activeDocumentID }) else { return .ok }
+            let keep = ws.documents[a].id
+            let targets = ws.documents.enumerated().filter { which($0.offset, a) }.map(\.element)
+            for d in targets {
+                ws.activate(d.id)
+                guard try await closeDocument(d, in: ws) else { ws.activate(keep); throw CommandError.cancelledByUser }
+            }
+            ws.activate(keep)
+            return .ok
+        }
+    }
+
     /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
     @MainActor
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
@@ -119,6 +141,19 @@ public enum BuiltinCommands {
                 guard try await closeDocument(doc, in: ctx.workspace) else { throw CommandError.cancelledByUser }
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.closeWindow", title: L10n.tr("Zamknij wskazane okno"), category: .file,
+                                      parameters: [CommandParameter("document", .string, required: true, L10n.tr("Identyfikator okna"))],
+                                      agent: .full, effect: .uiState, summary: L10n.tr("Zamyka okno o podanym identyfikatorze (z pytaniami o zapis i transakcję)."),
+                                      inMenu: false, feature: "PD-UI-004")) { ctx in
+                guard let s = ctx.arguments.string("document"), let d = ctx.workspace.documents.first(where: { $0.id.description == s }) else {
+                    throw CommandError.invalidArgument("document", L10n.tr("nieznane okno"))
+                }
+                guard try await closeDocument(d, in: ctx.workspace) else { throw CommandError.cancelledByUser }
+                return .ok
+            },
+            closeMany("file.closeOthers", L10n.tr("Zamknij pozostałe okna"), L10n.tr("Zamyka wszystkie okna oprócz bieżącego.")) { i, a in i != a },
+            closeMany("file.closeLeft", L10n.tr("Zamknij okna z lewej"), L10n.tr("Zamyka okna na lewo od bieżącego.")) { i, a in i < a },
+            closeMany("file.closeRight", L10n.tr("Zamknij okna z prawej"), L10n.tr("Zamyka okna na prawo od bieżącego.")) { i, a in i > a },
             Command(CommandDescriptor(id: "file.closeAll", title: L10n.tr("Zamknij wszystkie okna"), category: .file,
                                       mac: ["cmd+alt+w"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Zamyka wszystkie okna."), feature: "PD-UI-004"),
@@ -137,29 +172,115 @@ public enum BuiltinCommands {
 
     // MARK: Edycja
 
+    /// Okno z edytorem tekstu (SQL, Command, program, test).
+    @MainActor
+    static func editable(_ ws: Workspace) -> Document? {
+        guard let d = ws.activeDocument, [.sql, .command, .program, .test].contains(d.kind) else { return nil }
+        return d
+    }
+
+    /// Komenda zmieniająca tekst edytora czystą funkcją (cofalne w edytorze — zmiana trafia przez model).
+    @MainActor
+    static func editCommand(_ id: String, _ title: String, pd: [String] = [], mac: [String]? = nil, summary: String, feature: String,
+                            _ transform: @escaping @Sendable (String, Range<Int>) -> TextEdit) -> Command {
+        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: L10n.tr("Zaznaczenie"), pd: pd, mac: mac,
+                                  agent: .full, effect: .modifiesEditor, summary: summary, feature: feature),
+                validate: { editable($0) != nil }) { ctx in
+            guard let doc = editable(ctx.workspace) else { return .ok }
+            let len = (doc.text as NSString).length
+            let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
+            let e = transform(doc.text, sel)
+            doc.text = e.text
+            doc.selectedRange = e.selection
+            return .ok
+        }
+    }
+
+    @MainActor
+    static func findNext(_ ctx: CommandContext, backwards: Bool) throws -> CommandResult {
+        guard let doc = editable(ctx.workspace), let search = ctx.workspace.lastSearch else { return .ok }
+        let from = backwards ? doc.selectedRange.lowerBound : doc.selectedRange.upperBound
+        guard let r = try search.next(in: doc.text, from: from, backwards: backwards) else {
+            return CommandResult(message: L10n.tr("Nie znaleziono „\(search.pattern)”"))
+        }
+        doc.selectedRange = r
+        return .ok
+    }
+
     @MainActor static var edit: [Command] {
         [
-            .planned(CommandDescriptor(id: "edit.find", title: L10n.tr("Znajdź i zamień…"), category: .edit, pd: ["ctrl+f"], mac: ["cmd+f"],
-                                       agent: .full, effect: .uiState, summary: L10n.tr("Wyszukiwanie i zamiana w edytorze."),
-                                       stage: 1, feature: "PD-EDIT-008")),
-            .planned(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
-                                       agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."),
-                                       stage: 1, feature: "PD-EDIT-010")),
-            .planned(CommandDescriptor(id: "edit.recallStatement", title: L10n.tr("Historia poleceń…"), category: .edit, pd: ["ctrl+e"],
-                                       mac: ["cmd+shift+h"], agent: .read, effect: .uiState,
-                                       summary: L10n.tr("Wstawia wcześniej wykonane polecenie."), stage: 1, feature: "PD-EDIT-009")),
-            .planned(CommandDescriptor(id: "edit.commentLine", title: L10n.tr("Komentarz linii"), category: .edit, submenu: L10n.tr("Zaznaczenie"),
-                                       pd: ["ctrl+-"], mac: ["cmd+/"], agent: .full, effect: .modifiesEditor,
-                                       summary: L10n.tr("Dodaje lub usuwa -- na początku linii."), stage: 1, feature: "PD-EDIT-006")),
-            .planned(CommandDescriptor(id: "edit.duplicateLine", title: L10n.tr("Powiel linię"), category: .edit, submenu: L10n.tr("Zaznaczenie"),
-                                       mac: ["cmd+shift+d"], agent: .full, effect: .modifiesEditor,
-                                       summary: L10n.tr("Powiela bieżącą linię."), stage: 1, feature: "PD-EDIT-020")),
-            .planned(CommandDescriptor(id: "edit.uppercase", title: L10n.tr("Wielkie litery"), category: .edit, submenu: L10n.tr("Zaznaczenie"),
-                                       agent: .full, effect: .modifiesEditor,
-                                       summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), stage: 1, feature: "PD-EDIT-005")),
-            .planned(CommandDescriptor(id: "edit.lowercase", title: L10n.tr("Małe litery"), category: .edit, submenu: L10n.tr("Zaznaczenie"),
-                                       agent: .full, effect: .modifiesEditor,
-                                       summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), stage: 1, feature: "PD-EDIT-005")),
+            Command(CommandDescriptor(id: "edit.find", title: L10n.tr("Znajdź i zamień…"), category: .edit, pd: ["ctrl+f"], mac: ["cmd+f"],
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Wyszukiwanie i zamiana w edytorze (tekst albo wyrażenie regularne)."),
+                                      feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil }) { ctx in
+                ctx.workspace.ui?.showFindReplace()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.findNext", title: L10n.tr("Znajdź następne"), category: .edit, pd: ["f3"], mac: ["cmd+g"],
+                                      agent: .full, effect: .uiState, summary: L10n.tr("Zaznacza następne wystąpienie ostatnio szukanego tekstu."),
+                                      feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in try findNext(ctx, backwards: false) },
+            Command(CommandDescriptor(id: "edit.findPrevious", title: L10n.tr("Znajdź poprzednie"), category: .edit, pd: ["shift+f3"], mac: ["cmd+shift+g"],
+                                      agent: .full, effect: .uiState, summary: L10n.tr("Zaznacza poprzednie wystąpienie ostatnio szukanego tekstu."),
+                                      feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in try findNext(ctx, backwards: true) },
+            Command(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
+                                      parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1)"))],
+                                      agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."), feature: "PD-EDIT-010"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                var line = ctx.arguments.values["line"].flatMap { v -> Int? in
+                    if case .int(let i) = v { return Int(i) }
+                    return v.stringValue.flatMap(Int.init)
+                }
+                if line == nil {
+                    let current = (doc.text as NSString).substring(to: min(doc.selectedRange.lowerBound, (doc.text as NSString).length))
+                        .components(separatedBy: "\n").count
+                    guard let answer = await ctx.workspace.ui?.askText(L10n.tr("Przejdź do linii"), message: L10n.tr("Numer linii:"), defaultValue: String(current)) else {
+                        return .ok
+                    }
+                    line = Int(answer.trimmingCharacters(in: .whitespaces))
+                }
+                guard let l = line, l > 0 else { throw CommandError.invalidArgument("line", L10n.tr("liczba od 1")) }
+                let o = TextEditing.offset(ofLine: l, in: doc.text)
+                doc.selectedRange = o..<o
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.recallStatement", title: L10n.tr("Historia poleceń…"), category: .edit, pd: ["ctrl+e"],
+                                      mac: ["cmd+shift+h"], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Wstawia wcześniej wykonane polecenie (globalna historia, bez poleceń z hasłami)."), feature: "PD-EDIT-009"),
+                    validate: { editable($0) != nil }) { ctx in
+                ctx.workspace.ui?.showRecallStatement()
+                return .ok
+            },
+            editCommand("edit.commentLine", L10n.tr("Komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
+                        summary: L10n.tr("Dodaje lub usuwa -- na początku zaznaczonych linii."), feature: "PD-EDIT-006") {
+                TextEditing.toggleLineComment($0, selection: $1)
+            },
+            editCommand("edit.duplicateLine", L10n.tr("Powiel linię"), mac: ["cmd+shift+d"],
+                        summary: L10n.tr("Powiela bieżącą linię albo zaznaczone linie."), feature: "PD-EDIT-020") {
+                TextEditing.duplicateLines($0, selection: $1)
+            },
+            editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
+                        summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
+                TextEditing.changeCase($0, selection: $1, upper: true)
+            },
+            editCommand("edit.lowercase", L10n.tr("Małe litery"), mac: ["cmd+alt+shift+u"],
+                        summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), feature: "PD-EDIT-005") {
+                TextEditing.changeCase($0, selection: $1, upper: false)
+            },
+            editCommand("edit.indent", L10n.tr("Zwiększ wcięcie"), mac: ["cmd+]"],
+                        summary: L10n.tr("Wcina zaznaczone linie."), feature: "PD-EDIT-005") { t, s in
+                TextEditing.indent(t, selection: s)
+            },
+            editCommand("edit.outdent", L10n.tr("Zmniejsz wcięcie"), mac: ["cmd+["],
+                        summary: L10n.tr("Cofa wcięcie zaznaczonych linii."), feature: "PD-EDIT-005") { t, s in
+                TextEditing.indent(t, selection: s, outdent: true)
+            },
+            editCommand("edit.removeTrailingSpaces", L10n.tr("Usuń końcowe spacje"),
+                        summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
+                TextEditing.removeTrailingSpaces($0, selection: $1)
+            },
             .planned(CommandDescriptor(id: "edit.beautify", title: L10n.tr("Formatuj kod (PL/SQL Beautifier)"), category: .edit,
                                        mac: ["cmd+shift+f"], agent: .full, effect: .modifiesEditor,
                                        summary: L10n.tr("Formatuje kod według reguł."), stage: 2, feature: "PD-BEAU-002")),
