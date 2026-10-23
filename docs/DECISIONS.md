@@ -858,3 +858,10 @@ więc treść WKWebView zapisuje krok `debug.snapshotWebViews` (zrzut w procesie
 `.testdb/instantclient`, bo odczyt chronionego folderu Pobrane przez aplikację Debug wywołuje pytanie macOS o dostęp.
 Przebieg znalazł dwa błędy: karty edytora tabeli chowały się pod przepełnieniem (teraz przełącznik segmentowy) i
 instrukcja nie znajdowała rozdziałów (folder zasobów `manual` małą literą).
+
+### D114 · 2026-10-24 — Zamknięcie Etapu 8 i planu
+Wszystkie wiersze macierzy mają stan po audycie: ✅ z testem, 👁 zrzut, ⚠️ częściowo z opisem braków albo pominięte
+decyzją — żadnego „do zrobienia”. Interfejs jest w pięciu językach, z instrukcją w aplikacji i kompletem tłumaczeń
+sprawdzanym w CI. `docs/STATUS.md` (generowany z macierzy) zbiera ograniczenia i listę rzeczy do potwierdzenia przez
+właściciela (AIX, Entra ID, ORDS, Kerberos/LDAP/DBMS_WM, Quick Look, asercje 26ai). Dalsze prace to domykanie wierszy ⚠️
+według priorytetów właściciela; szkic wydania po scaleniu zamknięcia.
