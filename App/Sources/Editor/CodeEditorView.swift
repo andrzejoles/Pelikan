@@ -134,7 +134,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         updatingFromModel = true
         textView.string = text
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
+        // Zaznaczenie z modelu (np. otwarcie obiektu na linii), a nie koniec wczytanego tekstu.
+        let len = (text as NSString).length
+        let sel = document.selectedRange
+        let r = NSRange(location: min(sel.lowerBound, len), length: max(0, min(sel.upperBound, len) - min(sel.lowerBound, len)))
+        textView.setSelectedRange(r)
         updatingFromModel = false
+        DispatchQueue.main.async { [weak self] in self?.textView.scrollRangeToVisible(r) }
         ruler.needsDisplay = true
         scheduleRegions(delay: 0)
     }
@@ -295,6 +301,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     func textViewDidChangeSelection(_ notification: Notification) {
+        guard !updatingFromModel else { return }
         let r = textView.selectedRange()
         document.selectedRange = r.location..<(r.location + r.length)
         // Po edycji początki linii przelicza podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.

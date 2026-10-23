@@ -38,11 +38,17 @@ public protocol UIServices: AnyObject {
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL?
     /// Lista podpowiedzi Code Assistant w edytorze dokumentu (UG 25.4).
     func showCompletion(_ result: CompletionResult, for document: Document)
+    /// Okno Find Database Objects (UG 24.2) z kryteriami początkowymi.
+    func showFindObjects(_ criteria: DatabaseSearchCriteria)
+    /// Okno Compile Invalid Objects (UG 24.3).
+    func showCompileInvalid()
 
 }
 
 extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
+    public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
+    public func showCompileInvalid() {}
 }
 
 /// Rejestr wszystkich komend (kolejność = kolejność w menu i palecie).

@@ -26,7 +26,6 @@ struct CodeAssistantTests {
                     "create or replace package pelikan_ca_pkg as procedure dodaj(p_id number); function suma return number; end;"] {
             _ = try? await s.execute(sql)
         }
-        defer { Task { for o in ["table pelikan_ca_t", "sequence pelikan_ca_seq", "package pelikan_ca_pkg"] { _ = try? await s.execute("drop \(o)") } } }
 
         #expect(await labels(ws, "select t.| from pelikan_ca_t t") == ["ID", "NAZWA", "KWOTA"])
         #expect(await labels(ws, "select pelikan_ca_t.na| from pelikan_ca_t") == ["NAZWA"])
@@ -51,6 +50,7 @@ struct CodeAssistantTests {
         // Wielkość liter jak w prefiksie.
         let lower = await CodeAssistant.complete(text: "select t.na from pelikan_ca_t t", offset: 11, metadata: ws.metadata())
         #expect(lower?.items.first?.insertText == "nazwa")
+        for o in ["table pelikan_ca_t purge", "sequence pelikan_ca_seq", "package pelikan_ca_pkg"] { _ = try? await s.execute("drop \(o)") }
         await ws.sessions.disconnectAll()
     }
 }

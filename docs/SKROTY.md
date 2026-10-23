@@ -133,10 +133,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Usuń obiekt… | `ob.drop` |  |  | Za zgodą | 0 | PD-OB-016 |
 | Obiekt › Kopiuj nazwę | `ob.copyName` |  |  | Brak | 0 | PD-OB-011 |
 | Obiekt › Odśwież Object Browser | `ob.refresh` |  |  | Pełny | 0 | PD-OB-004 |
+| Znajdź obiekty bazy… | `tools.findObjects` | ⌃⇧O †, ⇧⌘O | ⇧⌘O | Odczyt | 0 | PD-TOOL-001 |
+| Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Za zgodą | 0 | PD-TOOL-002 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
-| Znajdź obiekty bazy… | `tools.findObjects` |  |  | Odczyt | 2 | PD-TOOL-001 |
-| Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Za zgodą | 2 | PD-TOOL-002 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |

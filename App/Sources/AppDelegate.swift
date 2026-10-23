@@ -143,6 +143,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         NotificationCenter.default.post(name: CodeEditorView.showCompletionNotification, object: document, userInfo: ["result": result])
     }
 
+    func showFindObjects(_ criteria: DatabaseSearchCriteria) {
+        ToolWindowController.show(key: "findObjects", title: L10n.tr("Znajdź obiekty bazy"), size: NSSize(width: 760, height: 520)) {
+            FindObjectsView(workspace: workspace, criteria: criteria)
+        }
+    }
+
+    func showCompileInvalid() {
+        ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
+            CompileInvalidView(workspace: workspace)
+        }
+    }
+
     func showError(_ message: String) {
         let alert = NSAlert()
         alert.alertStyle = .warning
