@@ -353,7 +353,11 @@ public final class MetadataProvider {
 
     /// Źródło PL/SQL (ALL_SOURCE) jako skrypt `CREATE OR REPLACE` (bez końcowego `/`).
     public func source(of o: DBObject) async throws -> String {
-        let s = try await session()
+        try await Self.source(of: o, in: session())
+    }
+
+    /// Źródło programu w podanej sesji (także sesji agenta).
+    public nonisolated static func source(of o: DBObject, in s: any DatabaseSession) async throws -> String {
         let (_, rows) = try await s.queryAll("select text from all_source where owner = :o and name = :n and type = :t order by line",
                                              binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name)),
                                                      BindVariable(name: "t", value: .text(o.type.rawValue))], limit: 2_000_000)
@@ -366,7 +370,11 @@ public final class MetadataProvider {
 
     /// DDL obiektu przez DBMS_METADATA (UG 23.2): zakończenie `;`/`/`, bez atrybutów składowania.
     public func ddl(of o: DBObject) async throws -> String {
-        let s = try await session()
+        try await Self.ddl(of: o, in: session())
+    }
+
+    /// DDL obiektu w podanej sesji (także sesji agenta).
+    public nonisolated static func ddl(of o: DBObject, in s: any DatabaseSession) async throws -> String {
         let metaType: String = switch o.type {
         case .packageBody: "PACKAGE_BODY"
         case .typeBody: "TYPE_BODY"

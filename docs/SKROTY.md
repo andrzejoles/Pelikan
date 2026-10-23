@@ -223,5 +223,29 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamień zakres linii (agent) | `agent.replaceRange` |  |  | Pełny | 0 | AI-TOOL-002 |
 | Przejdź do linii (agent) | `agent.navigate` |  |  | Pełny | 0 | AI-TOOL-002 |
 | Formatuj kod (agent) | `agent.format` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Szukaj obiektów (agent) | `agent.searchObjects` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Opis obiektu (agent) | `agent.describe` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Źródło programu (agent) | `agent.source` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| DDL obiektu (agent) | `agent.ddl` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Zależności obiektu (agent) | `agent.dependencies` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Użycia obiektu (agent) | `agent.findUsages` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Zapytanie (agent) | `agent.query` |  |  | Odczyt | 0 | AI-SEC-006 |
+| Plan wykonania (agent) | `agent.explain` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Błędy kompilacji (agent) | `agent.compileErrors` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| DBMS_OUTPUT sesji agenta | `agent.dbmsOutput` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Testy utPLSQL (agent) | `agent.listTests` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Wyniki testów (agent) | `agent.testResults` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Pokrycie kodu (agent) | `agent.coverage` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Sesje bazy (agent) | `agent.sessions` |  |  | Odczyt | 0 | AI-TOOL-001 |
+| Otwórz obiekt (agent) | `agent.openObject` |  |  | Pełny | 0 | AI-TOOL-002 |
+| Wykonaj polecenie (agent) | `agent.execute` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Wykonaj skrypt (agent) | `agent.executeScript` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Utwórz pakiet testowy (agent) | `agent.createTestPackage` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Kompiluj (agent) | `agent.compile` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| COMMIT zmian agenta | `agent.commit` |  |  | Za zgodą | 0 | AI-SEC-007 |
+| ROLLBACK zmian agenta | `agent.rollback` |  |  | Za zgodą | 0 | AI-SEC-007 |
+| Uruchom testy utPLSQL (agent) | `agent.runTests` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Generuj i kompiluj szkielet testu (agent) | `agent.generateTest` |  |  | Za zgodą | 0 | AI-TOOL-003 |
+| Instaluj utPLSQL (agent) | `agent.installUtplsql` |  |  | Za zgodą | 0 | AI-TOOL-003 |
 | Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | 2 | PD-EDIT-026 |
 

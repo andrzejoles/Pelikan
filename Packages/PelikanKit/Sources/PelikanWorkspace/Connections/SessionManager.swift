@@ -100,6 +100,9 @@ public final class SessionManager {
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
 
+    /// Klucze otwartych sesji o danym przeznaczeniu (np. wszystkie sesje jednej sesji agenta).
+    public func keys(purpose: SessionPurpose) -> [SessionKey] { sessions.keys.filter { $0.purpose == purpose } }
+
     /// Bieżący schemat dowolnej otwartej sesji połączenia (bez łączenia) — nil, gdy brak sesji.
     public func connectedSchema(_ connection: UUID?) -> String? {
         guard let connection else { return nil }
@@ -133,10 +136,16 @@ public final class SessionManager {
             password = answer.password
             rememberOnSuccess = answer.remember
         }
-        let tags = SessionTags(module: key.moduleName, action: key.actionName)
+        var tags = SessionTags(module: key.moduleName, action: key.actionName)
         var credentials = Credentials(password: password)
         // Tunel SSH: łączymy się przez 127.0.0.1:port lokalny (alias TNS rozwijany do deskryptora).
         var target = def.target
+        // Sesja agenta: CLIENT_INFO z identyfikatorem sesji agenta, a gdy wskazano użytkownika bazy agenta — połączenie
+        // proxy `główny[agent]` (agent działa z uprawnieniami tylko tego użytkownika, bez osobnego hasła; PROMPT §7.3 p.4).
+        if case .agent(let id) = key.purpose {
+            tags.clientInfo = "Pelikan agent \(id)"
+            if let u = def.agent.agentUser?.trimmingCharacters(in: .whitespaces), !u.isEmpty { target.proxyClient = u }
+        }
         var tunnelOpened = false
         if def.sshTunnel != nil {
             let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
