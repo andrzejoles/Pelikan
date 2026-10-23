@@ -62,6 +62,10 @@ struct TestWindowTests {
         #expect(err.errorStack.contains { $0.unit.isEmpty && $0.line == 3 })
         #expect(err.errorRange != nil)
 
+        let imp = ws.newDocument(.test, text: "declare c sys_refcursor; begin open c for select deptno, dname from dept order by deptno; dbms_sql.return_result(c); end;")
+        try await ws.invoke("sql.execute")
+        #expect(imp.testResults.first?.columns == ["DEPTNO", "DNAME"] && imp.testResults.first?.rows.first?.first == "10")
+
         for o in ["function pelikan_tw_f", "package pelikan_tw_p"] { _ = try? await s.execute("drop \(o)") }
         await ws.sessions.disconnectAll()
     }

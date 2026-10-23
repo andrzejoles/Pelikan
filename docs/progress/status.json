@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T10:38:03+02:00",
+  "heartbeat": "2026-10-23T10:52:23+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 3 / wyniki: niejawne wyniki (DBMS_SQL.RETURN_RESULT) w karcie Wyniki okna testu; wykonanie zapytania albo bloku w sesji debugowanej (DBMS_DEBUG.EXECUTE, wiersze przez JSON — DBMS_SQL zablokowany) — 2 testy",
+    "PR #26 i #27 scalone (debuger, rozszerzenia debugera)",
     "Etap 3 / debuger: zmienne globalne pakietu (prywatne i publiczne), pomijanie inicjalizacji pakietów i obiektów SYS przy krokowaniu (preferencje)",
     "PR #25 scalony (okno testu)",
     "Etap 3 / profiler: liniowy DBMS_PROFILER (raport na linię z czasem, wykonaniami, udziałem, tekstem) i hierarchiczny DBMS_HPROF (funkcje, wywołania, czasy), statystyki sesji okna testu (różnica V$MYSTAT); tabele profilera tworzone za zgodą strażnika (D28) — 1 test na bazie",
@@ -90,9 +92,7 @@
     "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy",
     "Połączenia: tylko do odczytu (blokada DML/DDL/PL/SQL/FOR UPDATE w SQL Window, Command Window i siatce), potwierdzanie zmian na produkcji (preferencja), połączenie okna na pasku stanu z menu wyboru i przypięciem — 4 testy",
     "Edytor: komentarz linii, wcięcia, wielkie/małe litery bez literałów, usuwanie końcowych spacji, powielenie linii, Przejdź do linii, Znajdź i zamień (regex z $1/\\t, całe słowa, wielkość liter, zachowanie wielkości, zaznaczenie, kod/komentarze/literały), Znajdź następne/poprzednie (F3), Historia poleceń (Ctrl+E) z filtrem i wstawianiem wielu; zmiany z komend cofalne (⌘Z) — 8 testów",
-    "PR #9 scalony; szkic wydania v1.9.0 na GitHubie (DMG, PKG, zip, appcast.xml) — do publikacji przez właściciela",
-    "Wydania jak w Bifoldzie: stały podpis „Pelikan Self-Signed” (osobny pęk kluczy), make installer (DMG i PKG z licencjami zewnętrznymi i kontrolą danych w pakiecie), Sparkle 2.10.0 z kluczem EdDSA w Pęku kluczy i menu „Sprawdź uaktualnienia…”, make draft-release (zip, appcast.xml, tag, szkic wydania), docs/WYDANIA.md; instalatory 1.8.0 zbudowane i sprawdzone lokalnie",
-    "PR #8 scalony (sterownik thin), wersja 1.8.0"
+    "PR #9 scalony; szkic wydania v1.9.0 na GitHubie (DMG, PKG, zip, appcast.xml) — do publikacji przez właściciela"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",

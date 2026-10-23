@@ -115,6 +115,8 @@ public final class Document: Identifiable {
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
     public var errorStack: [ErrorStackFrame] = []
+    /// Niejawne wyniki ostatniego wykonania okna testu (UG 5.7).
+    public var testResults: [TestResultSet] = []
     /// Profiler przy wykonaniu okna testu (nil — wyłączony) i raport ostatniego przebiegu (UG 6.3).
     public var profiler: ProfilerKind?
     public var profilerReport: ProfilerReport?

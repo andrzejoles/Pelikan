@@ -158,6 +158,8 @@ struct DebuggerExtrasTests {
         while d.state == .paused, d.location?.line != 5 { try await d.step(.over) }
         #expect(doc.output.contains("przed"))
         #expect(d.watchValues.first?.value == "3")
+        #expect(try await d.executeInTarget("select dname from dept where deptno = 10") == ["KSIĘGOWOŚĆ"])
+        _ = try await d.executeInTarget("begin dbms_output.put_line('z debugera'); end;")
         try await d.setValue("v", to: "1")
         #expect(d.variables.first { $0.name == "v" }?.value == "1")
         try await d.step(.run)

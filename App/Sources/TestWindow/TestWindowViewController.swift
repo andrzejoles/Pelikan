@@ -71,6 +71,7 @@ struct TestPanel: View {
                 Text(L10n.tr("Stos błędu") + (document.errorStack.isEmpty ? "" : " (\(document.errorStack.count))")).tag(2)
                 Text(L10n.tr("Profiler")).tag(3)
                 Text(L10n.tr("Statystyki")).tag(4)
+                Text(L10n.tr("Wyniki") + (document.testResults.isEmpty ? "" : " (\(document.testResults.count))")).tag(5)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -80,7 +81,8 @@ struct TestPanel: View {
             case 1: output
             case 2: errorStack
             case 3: profiler
-            default: statistics
+            case 4: statistics
+            default: results
             }
         }
         .onChange(of: document.errorStack) { if !document.errorStack.isEmpty { tab = 2 } }
@@ -180,6 +182,29 @@ struct TestPanel: View {
         }
         .frame(height: 10)
         .help(String(format: "%.1f%%", fraction * 100))
+    }
+
+    /// Niejawne wyniki (DBMS_SQL.RETURN_RESULT) — każdy jako tabela (UG 5.7).
+    private var results: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                if document.testResults.isEmpty {
+                    Text(L10n.tr("Brak wyników — blok może zwracać zapytania przez DBMS_SQL.RETURN_RESULT.")).foregroundStyle(.secondary)
+                }
+                ForEach(Array(document.testResults.enumerated()), id: \.offset) { i, r in
+                    Text(L10n.tr("Wynik \(i + 1)")).font(.caption.bold())
+                    Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 3) {
+                        GridRow { ForEach(r.columns, id: \.self) { Text($0).bold() } }
+                        ForEach(Array(r.rows.enumerated()), id: \.offset) { _, row in
+                            GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 11, design: .monospaced)) } }
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(8)
+        }
+        .onChange(of: document.testResults) { if !document.testResults.isEmpty { tab = 5 } }
     }
 
     private var statistics: some View {
