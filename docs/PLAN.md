@@ -57,7 +57,7 @@ Kolejność podzadań (każde = gałąź `etap-1/<nazwa>` i PR):
 Release); brak blokad interfejsu przy długim zapytaniu (Break działa); zrzuty ekranu SQL Window, Command Window,
 Connection List; testy integracyjne na obu sterownikach.
 
-## Etap 2 — Object Browser i Program Window
+## Etap 2 — Object Browser i Program Window ✅ (zakończony 2026-10-23, PR #11–#24, szkic wydania — D27)
 Parser strukturalny (ADR 0002), `MetadataProvider` z cache, Object Browser (wszystkie typy, MLE, domeny, adnotacje,
 asercje, filtry, foldery), Properties/Describe/DDL, edytory obiektów (tabela, sekwencja, synonim, widok, indeks, użytkownik,
 rola…), Program Window (karty jednostek, kompilacja w osobnej sesji, błędy i ostrzeżenia, hints), Code Assistant,
