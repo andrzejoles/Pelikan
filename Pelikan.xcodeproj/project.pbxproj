@@ -21,6 +21,7 @@
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
+		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
@@ -54,6 +55,7 @@
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */,
+				71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */,
 				30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */,
 				DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */,
 			);
@@ -308,6 +311,7 @@
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
+				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
 				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,

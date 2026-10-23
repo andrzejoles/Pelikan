@@ -44,6 +44,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Znajdź następne | `edit.findNext` | F3 †, ⌘G | ⌘G, F3 | Pełny | 0 | PD-EDIT-008 |
 | Znajdź poprzednie | `edit.findPrevious` | ⇧F3 †, ⇧⌘G | ⇧⌘G, ⇧F3 | Pełny | 0 | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Pełny | 0 | PD-EDIT-010 |
+| Zwiń blok | `edit.fold` | ⌥⌘← | ⌥⌘← | Brak | 0 | PD-EDIT-013 |
+| Rozwiń blok | `edit.unfold` | ⌥⌘→ | ⌥⌘→ | Brak | 0 | PD-EDIT-013 |
+| Zwiń wszystko | `edit.foldAll` | ⌥⇧⌘← | ⌥⇧⌘← | Brak | 0 | PD-EDIT-013 |
+| Rozwiń wszystko | `edit.unfoldAll` | ⌥⇧⌘→ | ⌥⇧⌘→ | Brak | 0 | PD-EDIT-013 |
 | Przejdź do deklaracji | `edit.gotoDeclaration` | ⌃⌥D †, ⌃⌘J | ⌃⌘J | Pełny | 0 | PD-CA-012 |
 | Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Brak | 0 | PD-EDIT-009 |
 | Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 0 | PD-EDIT-006 |

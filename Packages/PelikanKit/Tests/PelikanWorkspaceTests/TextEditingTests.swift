@@ -155,3 +155,28 @@ struct GotoDeclarationTests {
         #expect(BuiltinCommands.identifier(at: 6, in: "x := scott.emp_api.f(1)")?.0 == "scott.emp_api.f")
     }
 }
+
+@MainActor
+@Suite("Komendy zwijania")
+struct FoldCommandTests {
+    @Test("Zwiń w linii kursora, kursor poza ukrytym tekstem, rozwiń, zwiń i rozwiń wszystko, przesunięcie po edycji")
+    func commands() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: "begin\n  if a then\n    x := 1;\n  end if;\nend;\n")
+        let ns = doc.text as NSString
+        let x = ns.range(of: "x := 1").location
+        doc.selectedRange = x..<x
+        try await ws.invoke("edit.fold")
+        let ifStart = ns.range(of: "if a").location
+        #expect(doc.foldedStarts == [ifStart])
+        #expect(doc.selectedRange == ifStart..<ifStart)
+        try await ws.invoke("edit.unfold")
+        #expect(doc.foldedStarts.isEmpty)
+        try await ws.invoke("edit.foldAll")
+        #expect(doc.foldedStarts.count == 2)
+        doc.text = "-- c\n" + doc.text
+        #expect(doc.foldedStarts.contains(ifStart + 5))
+        try await ws.invoke("edit.unfoldAll")
+        #expect(doc.foldedStarts.isEmpty)
+    }
+}

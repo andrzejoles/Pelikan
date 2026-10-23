@@ -13,6 +13,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var font: NSFont
     private var updatingFromModel = false
     private var tokens: [ObservationToken] = []
+    private let folding = FoldingContentDelegate()
+    private var regions: [FoldRegion] = []
+    private var regionsWork: DispatchWorkItem?
     var onCaretChange: ((String) -> Void)?
 
     init(document: Document, fontSize: CGFloat = 13) {
@@ -29,6 +32,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         load(document.text)
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            _ = self.document.foldedStarts
+            self.applyFolds()
+        })
         // Okno w trakcie wykonania jest tylko do odczytu (jak we wzorcu); inne okna działają równolegle.
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -67,6 +75,19 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(storageDidProcessEditing(_:)),
                                                name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
         textView.setAccessibilityLabel(document.fullTitle)
+        textView.textContentStorage?.delegate = folding
+        ruler.foldState = { [weak self] line in
+            guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return nil }
+            return self.document.foldedStarts.contains(r.start)
+        }
+        ruler.onFoldClick = { [weak self] line in
+            guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return }
+            if self.document.foldedStarts.contains(r.start) { self.document.foldedStarts.remove(r.start) } else {
+                self.document.foldedStarts.insert(r.start)
+                let caret = self.document.selectedRange.lowerBound
+                if r.hidden.contains(caret) { self.document.selectedRange = r.start..<r.start }
+            }
+        }
 
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
@@ -112,6 +133,44 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
         updatingFromModel = false
         ruler.needsDisplay = true
+        scheduleRegions(delay: 0)
+    }
+
+    // MARK: Zwijanie kodu (UG 25.17)
+
+    /// Obszary zwijania przeliczane z opóźnieniem po zmianie tekstu (znaczniki ± w marginesie).
+    private func scheduleRegions(delay: Double = 0.3) {
+        regionsWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.regions = CodeFolding.regions(self.textView.string)
+            self.applyFolds()
+            self.ruler.needsDisplay = true
+        }
+        regionsWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func applyFolds() {
+        let folded = document.foldedStarts
+        let hidden = CodeFolding.hiddenRanges(regions, folded: folded)
+        guard hidden != folding.hidden else { return }
+        folding.hidden = hidden
+        // Znacznik „⋯” tylko przy zwinięciach widocznych (nie wewnątrz innego zwiniętego obszaru).
+        textView.foldedLines = regions.filter { r in folded.contains(r.start) && !hidden.contains { $0.contains(r.start) } }.map(\.start)
+        if let tlm = textView.textLayoutManager {
+            tlm.invalidateLayout(for: tlm.documentRange)
+            tlm.textViewportLayoutController.layoutViewport()
+        }
+        textView.needsDisplay = true
+        ruler.needsDisplay = true
+    }
+
+    /// Zaznaczenie w ukrytym tekście (przejście do deklaracji, wyszukiwanie, błąd) rozwija obejmujące zwinięcia.
+    private func revealSelection(_ offset: Int) {
+        guard folding.hidden.contains(where: { $0.contains(offset) }) else { return }
+        let containing = regions.filter { document.foldedStarts.contains($0.start) && $0.hidden.contains(offset) }.map(\.start)
+        DispatchQueue.main.async { [weak self] in self?.document.foldedStarts.subtract(containing) }
     }
 
     /// Zmiany modelu z zewnątrz (komendy edycji, historia okna, agent `replace_range`, błąd do zaznaczenia).
@@ -127,6 +186,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let current = textView.selectedRange()
         let wanted = NSRange(location: min(selection.lowerBound, len), length: max(0, min(selection.upperBound, len) - min(selection.lowerBound, len)))
         if !updatingFromModel, current != wanted {
+            revealSelection(wanted.location)
             textView.setSelectedRange(wanted)
             textView.scrollRangeToVisible(wanted)
         }
@@ -166,6 +226,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                                   delta: (replacement as NSString).length - range.length, font: font)
         }
         ruler.needsDisplay = true
+        scheduleRegions()
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
@@ -181,6 +242,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let r = NSRange(location: min(editedRange.location, len), length: min(editedRange.length, max(0, len - min(editedRange.location, len))))
             self.highlighter.highlight(storage, editedRange: r, delta: delta, font: self.font)
             self.ruler.needsDisplay = true
+            self.scheduleRegions()
         }
     }
 
@@ -220,6 +282,8 @@ final class CodeTextView: NSTextView {
     var indentUnit = "  "
     var keywordCase: KeywordCase = .unchanged
     var highlightCurrentLine = true
+    /// Początki zwiniętych struktur — za ich linią rysowany jest znacznik „⋯”.
+    var foldedLines: [Int] = [] { didSet { needsDisplay = true } }
     static let currentLineColor = NSColor(name: nil) { $0.isDark ? NSColor(white: 1, alpha: 0.05) : NSColor(srgbRed: 0.95, green: 0.97, blue: 1, alpha: 1) }
 
     /// Podświetlenie linii z kursorem (UG 23.12 „Highlight current line”).
@@ -234,6 +298,26 @@ final class CodeTextView: NSTextView {
         }
         Self.currentLineColor.setFill()
         NSRect(x: 0, y: frame.minY + textContainerInset.height, width: bounds.width, height: frame.height).fill()
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        guard !foldedLines.isEmpty, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
+        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: max(9, (font?.pointSize ?? 13) - 2)),
+                                                    .foregroundColor: NSColor.secondaryLabelColor]
+        let mark = NSAttributedString(string: "⋯", attributes: attrs)
+        for start in foldedLines {
+            guard let loc = content.location(content.documentRange.location, offsetBy: start),
+                  let fragment = tlm.textLayoutFragment(for: loc) else { continue }
+            let f = fragment.layoutFragmentFrame
+            let width = fragment.textLineFragments.first?.typographicBounds.width ?? 0
+            let box = NSRect(x: f.minX + width + textContainerInset.width + 6, y: f.minY + textContainerInset.height + 2,
+                             width: mark.size().width + 10, height: max(10, f.height - 4))
+            guard box.intersects(dirtyRect) else { continue }
+            NSColor.quaternaryLabelColor.setFill()
+            NSBezierPath(roundedRect: box, xRadius: 4, yRadius: 4).fill()
+            mark.draw(at: NSPoint(x: box.minX + 5, y: box.midY - mark.size().height / 2))
+        }
     }
 
     override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool) {
@@ -332,6 +416,11 @@ final class CodeTextView: NSTextView {
 final class LineNumberRulerView: NSView {
     private weak var textView: NSTextView?
     private let highlighter: SyntaxHighlighter
+    /// Stan znacznika zwijania linii: nil — brak obszaru, true — zwinięty, false — rozwinięty.
+    var foldState: ((Int) -> Bool?)?
+    var onFoldClick: ((Int) -> Void)?
+    /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
+    private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
 
     init(textView: NSTextView, highlighter: SyntaxHighlighter) {
         self.textView = textView
@@ -345,6 +434,14 @@ final class LineNumberRulerView: NSView {
     required init?(coder: NSCoder) { fatalError() }
 
     override var isFlipped: Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        let p = convert(event.locationInWindow, from: nil)
+        guard let hit = drawnLines.first(where: { p.y >= $0.minY && p.y < $0.maxY }), foldState?(hit.line) != nil else {
+            return super.mouseDown(with: event)
+        }
+        onFoldClick?(hit.line)
+    }
 
     override func draw(_ dirtyRect: NSRect) {
         let area = dirtyRect.intersection(bounds)
@@ -363,7 +460,13 @@ final class LineNumberRulerView: NSView {
             let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
             let size = s.size()
             s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
+            drawnLines.append((line, y, y + height))
+            if let folded = foldState?(line) {
+                let marker = NSAttributedString(string: folded ? "▸" : "▾", attributes: [.font: font, .foregroundColor: folded ? NSColor.controlAccentColor : NSColor.tertiaryLabelColor])
+                marker.draw(at: NSPoint(x: 3, y: y + (min(height, lineHeight) - marker.size().height) / 2))
+            }
         }
+        drawnLines.removeAll(keepingCapacity: true)
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)
             return

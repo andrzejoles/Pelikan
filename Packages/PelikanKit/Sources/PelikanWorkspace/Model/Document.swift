@@ -70,6 +70,7 @@ public final class Document: Identifiable {
             if text != oldValue {
                 isModified = true
                 if kind == .program { isCompileStale = true }
+                if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
             }
         }
     }
@@ -111,6 +112,8 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
+    public var foldedStarts: Set<Int> = []
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {
