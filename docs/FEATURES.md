@@ -153,8 +153,8 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CMDW-006 | SHOW ERRORS / RELEASE / SQLCODE / USER / CONNECTION / ENVVAR | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
 | PD-CMDW-007 | SPOOL (APPEND, OFF, OUT, .zip) | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
 | PD-CMDW-008 | HOST (polecenie systemu — tylko użytkownik; agent nigdy) | UG 8.3, PROMPT §7.3 p.9 | Command Window | 1 | P3 | Brak | do zrobienia |
-| PD-CMDW-009 | Polecenia własne: BEAUTIFY, BROWSE, CD, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH, SET ENVVAR | UG 8.3 | Command Window | 6 | P3 | Brak | do zrobienia |
-| PD-CMDW-010 | EXPORT TABLES / EXPORT OBJECTS (składnia jak narzędzia eksportu), RUNTESTSET | UG 8.4–8.5 | Command Window | 6 | P3 | Brak | do zrobienia |
+| PD-CMDW-009 | Polecenia własne: BEAUTIFY, BROWSE, CD, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH, SET ENVVAR | UG 8.3 | Command Window | 6 | P3 | Brak | ✅ test (BEAUTIFY, BROWSE, CD, DIR, EDIT, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH; SET ENVVAR pominięte — D47) |
+| PD-CMDW-010 | EXPORT TABLES / EXPORT OBJECTS (składnia jak narzędzia eksportu), RUNTESTSET | UG 8.4–8.5 | Command Window | 6 | P3 | Brak | ⚠️ częściowo (EXPORT TABLES / EXPORT OBJECTS ✅ test; RUNTESTSET — z Test Managerem) |
 | PD-CMDW-011 | Nieobsługiwane SET w skrypcie wsadowym bez błędu | NF17 | Command Window | 1 | P3 | Brak | ✅ test |
 | PD-CMDW-012 | Code Assistant po `@` — listing katalogu; CONNECT z listą baz po `@` | UG 25.4, NF13, NF14 | Command Window | 2 | P3 | Brak | do zrobienia |
 | PD-CMDW-013 | Wyniki zapytań w formacie tekstowym SQL*Plus (kolumny, nagłówki, PAGESIZE, COLSEP) | UG 8.3 | Command Window | 1 | P1 | Brak | ✅ test |

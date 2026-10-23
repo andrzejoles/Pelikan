@@ -116,6 +116,9 @@ public enum SQLPlus {
             // SQLcl
             ("INFO", 4), ("DDL", 3), ("LOAD", 4), ("FORMAT", 6), ("ALIAS", 5), ("SCRIPT", 6), ("LIQUIBASE", 2),
             ("LB", 2), ("SODA", 4), ("APEX", 4), ("CD", 2), ("REPEAT", 6), ("SSHTUNNEL", 9), ("TNSPING", 7), ("OERR", 4),
+            // Pelikan / PL/SQL Developer (UG 8.3–8.5)
+            ("BEAUTIFY", 8), ("BROWSE", 6), ("DIR", 3), ("EDITDATA", 8), ("PROPERTIES", 10), ("QUERYDATA", 9), ("RECOMPILE", 9),
+            ("TEST", 4), ("VIEW", 4), ("ZIP", 3), ("EXPORT", 6), ("RUNTESTSET", 10),
         ]
         for (name, min) in list {
             for len in min...name.count { m[String(name.prefix(len))] = name }
@@ -128,7 +131,7 @@ public enum SQLPlus {
 
     /// Polecenia, które dotykają systemu plików lub systemu operacyjnego.
     public static let osCommands: Set<String> = ["HOST", "!", "$", "SPOOL", "@", "@@", "START", "GET", "SAVE", "STORE",
-                                                 "EDIT", "CD", "LOAD", "SCRIPT", "COPY"]
+                                                 "EDIT", "CD", "LOAD", "SCRIPT", "COPY", "BEAUTIFY", "DIR", "ZIP", "EXPORT", "RUNTESTSET"]
 
     /// Nazwa polecenia SQL*Plus dla pierwszych słów polecenia albo nil (to SQL/PL/SQL).
     static func command(words: [String], firstTokenText: String) -> String? {
