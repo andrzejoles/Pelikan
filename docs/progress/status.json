@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T13:09:16+02:00",
+  "heartbeat": "2026-10-23T13:32:03+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -95,7 +95,8 @@
     "PR #13 scalony (parser strukturalny, Zawartość kodu, nawigacja)",
     "Etap 6 / Eksport i porównanie obiektów użytkownika (DDL, kolejność wykonalna, pliki; różnice między schematami i połączeniami, SQL wyrównujący) — 2 testy na bazie; subagent 1 zakończył makra, Special Copy, historię schowka, To-Do",
     "Etap 6 / Sesje — przeglądarka sesji (filtry, szczegóły z :sid i sklejaniem, Kill, SQL Trace, auto-odświeżanie, edycja zapytań); test na bazie; granty V$ w bazie testowej",
-    "Etap 6 / Explain Plan — okno planu (drzewo, koszt, wiersze, kolejność wykonania i nawigacja, cel optymalizatora, predykaty), F5 z zaznaczenia ze zmiennymi PL/SQL jako wiązanymi, formaty tekst/HTML/XML; sesja narzędzi; 3 testy"
+    "Etap 6 / Explain Plan — okno planu (drzewo, koszt, wiersze, kolejność wykonania i nawigacja, cel optymalizatora, predykaty), F5 z zaznaczenia ze zmiennymi PL/SQL jako wiązanymi, formaty tekst/HTML/XML; sesja narzędzi; 3 testy",
+    "Etap 6 / DBMS Scheduler — drzewo obiektów, View SQL, tworzenie/edycja/usuwanie zadań z powiadomieniami, przebiegi z kolorami, Stop/Force; test na bazie. Subagent zakończył diagramy i Query Builder"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

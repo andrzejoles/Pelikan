@@ -271,6 +271,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showScheduler() {
+        ToolWindowController.show(key: "scheduler", title: L10n.tr("DBMS Scheduler"), size: NSSize(width: 1000, height: 640)) {
+            SchedulerView(workspace: workspace)
+        }
+    }
+
     func showSessionBrowser() {
         ToolWindowController.show(key: "sessions", title: L10n.tr("Sesje"), size: NSSize(width: 1000, height: 640)) {
             SessionBrowserView(workspace: workspace)

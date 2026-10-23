@@ -218,7 +218,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | 0 | PD-TOOL-012 |
 | Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | 0 | PD-TOOL-015 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
-| DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |
 | Import tabel… | `tools.importTables` |  |  | Brak | 6 | PD-TOOL-006 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Odczyt | 6 | PD-TOOL-013 |
