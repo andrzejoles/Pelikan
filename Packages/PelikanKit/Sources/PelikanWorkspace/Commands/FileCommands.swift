@@ -276,6 +276,22 @@ enum FileCommands {
                 let missing = try ctx.workspace.switchWorkset(to: WorksetStore.defaultName)
                 return CommandResult(message: missingMessage(missing) ?? WorksetStore.defaultName)
             },
+            command("workset.compare", L10n.tr("Porównaj worksety…"), submenu: sub,
+                    params: [CommandParameter("name", .string, required: true, L10n.tr("Workset do porównania")),
+                             CommandParameter("with", .string, L10n.tr("Drugi workset (domyślnie bieżące okna)"))], effect: .uiState,
+                    summary: L10n.tr("Porównuje okna i ich treść dwóch worksetów albo zapisanego workseta z bieżącymi oknami."), feature: "PD-WSET-001") { ctx in
+                let ws = ctx.workspace
+                let name = try await worksetName(ctx, title: L10n.tr("Porównaj z worksetem"))
+                guard let other = try ws.worksets.load(name) else { throw CommandError.notAvailable(L10n.tr("Nie ma workseta „\(name)”")) }
+                let left: Workset
+                if let w = ctx.arguments.string("with"), !w.isEmpty {
+                    guard let l = try ws.worksets.load(w) else { throw CommandError.notAvailable(L10n.tr("Nie ma workseta „\(w)”")) }
+                    left = l
+                } else {
+                    left = ws.worksetSnapshot(name: L10n.tr("bieżące okna"))
+                }
+                return CompareCommands.show(ctx, left: left.comparisonText(), right: other.comparisonText(), leftTitle: left.name, rightTitle: other.name)
+            },
             command("workset.delete", L10n.tr("Usuń workset…"), submenu: sub, params: [nameParam], effect: .settings,
                     summary: L10n.tr("Usuwa zapisany workset (okna bieżącego workseta zostają otwarte)."), feature: "PD-WSET-001") { ctx in
                 let name = try await worksetName(ctx, title: L10n.tr("Usuń workset"))

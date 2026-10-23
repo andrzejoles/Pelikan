@@ -98,9 +98,27 @@ public struct ProjectMatch: Sendable, Hashable, Identifiable {
     public var text: String
 }
 
+/// Stan Git projektu (PD-VCS-001): gałąź, ahead/behind i stan każdego pliku projektu.
+public struct ProjectGitStatus: Sendable, Hashable {
+    public var branch: String?
+    public var ahead: Int
+    public var behind: Int
+    public var items: [UUID: GitFileState]
+}
+
 @MainActor
 public enum ProjectEngine {
-    public static func url(of item: ProjectItem, projectURL: URL) -> URL? {
+    /// Stan Git plików projektu (repozytorium wykrywane z katalogu projektu; poza repozytorium — nil).
+    public nonisolated static func gitStatus(of project: Project, projectURL: URL) -> ProjectGitStatus? {
+        guard let repo = GitRepository.discover(for: projectURL.deletingLastPathComponent()), let status = try? repo.status() else { return nil }
+        var items: [UUID: GitFileState] = [:]
+        for item in project.items where item.kind == .file {
+            if let url = url(of: item, projectURL: projectURL), let s = status.state(of: url) { items[item.id] = s }
+        }
+        return ProjectGitStatus(branch: status.branch, ahead: status.ahead, behind: status.behind, items: items)
+    }
+
+    public nonisolated static func url(of item: ProjectItem, projectURL: URL) -> URL? {
         guard let p = item.path else { return nil }
         return p.hasPrefix("/") ? URL(fileURLWithPath: p) : projectURL.deletingLastPathComponent().appendingPathComponent(p)
     }

@@ -9,6 +9,9 @@ struct FakeSchema: SchemaMetadataSource {
         switch n {
         case "EMP", "DEPT": return DBObject(owner: "SCOTT", name: n, type: .table)
         case "EMP_V": return DBObject(owner: "SCOTT", name: n, type: .view)
+        case "PRACOWNICY": return DBObject(owner: "SCOTT", name: n, type: .synonym)
+        case "PUB_DEPT": return DBObject(owner: "PUBLIC", name: n, type: .synonym)
+        case "PETLA": return DBObject(owner: "SCOTT", name: n, type: .synonym)
         default: return nil
         }
     }
@@ -31,6 +34,37 @@ struct FakeSchema: SchemaMetadataSource {
 
     func references(owner: String, name: String) async throws -> [DBObject] {
         name == "EMP_V" ? [DBObject(owner: "SCOTT", name: "EMP", type: .table)] : []
+    }
+
+    func synonymTarget(owner: String, name: String) async throws -> DBObject? {
+        switch name {
+        case "PRACOWNICY": DBObject(owner: "SCOTT", name: "EMP", type: .table)
+        case "PUB_DEPT": DBObject(owner: "SCOTT", name: "DEPT", type: .table)
+        case "PETLA": DBObject(owner: "SCOTT", name: "PETLA", type: .synonym)
+        default: nil
+        }
+    }
+}
+
+@Suite("Query Builder: synonimy")
+struct QueryBuilderSynonymTests {
+    @Test("Synonim prywatny i PUBLIC: nazwa w SQL zostaje, kolumny z celu; pętla synonimów — nil")
+    func synonyms() async throws {
+        let s = FakeSchema()
+        let p = try #require(try await s.queryTable("pracownicy"))
+        #expect(p.owner == "SCOTT" && p.name == "PRACOWNICY" && p.target.name == "EMP")
+        let pub = try #require(try await s.queryTable("pub_dept"))
+        #expect(pub.owner == "" && pub.name == "PUB_DEPT" && pub.target.name == "DEPT")
+        #expect(try await s.queryTable("petla") == nil)
+        let t = try #require(try await s.queryTable("emp"))
+        #expect(t.owner == "SCOTT" && t.name == "EMP" && t.target.type == .table)
+        var m = QueryModel()
+        m.addTable(owner: pub.owner, name: pub.name, columns: try await s.columns(owner: pub.target.owner, name: pub.target.name), foreignKeys: [])
+        var f = QBFormat()
+        f.qualifyWithOwner = true
+        m.format = f
+        let sql = m.sql().lowercased()
+        #expect(sql.contains("from pub_dept ") && !sql.contains("public") && !sql.contains(".pub_dept"))
     }
 }
 

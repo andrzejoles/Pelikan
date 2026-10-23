@@ -193,12 +193,12 @@ struct QueryBuilderView: View {
             let source = try await workspace.schemaSource(connection: connectionID)
             for i in parsed.tables.indices {
                 let t = parsed.tables[i]
-                guard let o = try await source.resolve(t.owner.isEmpty ? t.name : "\"\(t.owner)\".\"\(t.name)\"") else {
+                guard let q = try await source.queryTable(t.owner.isEmpty ? t.name : "\"\(t.owner)\".\"\(t.name)\"") else {
                     message = L10n.tr("Nie znaleziono \(t.name)")
                     continue
                 }
-                parsed.tables[i].owner = o.owner
-                parsed.tables[i].columns = try await source.columns(owner: o.owner, name: o.name)
+                parsed.tables[i].owner = q.owner
+                parsed.tables[i].columns = try await source.columns(owner: q.target.owner, name: q.target.name)
             }
             model = parsed
         } catch { message = error.localizedDescription }
@@ -210,10 +210,12 @@ struct QueryBuilderView: View {
         Task {
             do {
                 let source = try await workspace.schemaSource(connection: connectionID)
-                guard let o = try await source.resolve(raw) else { message = L10n.tr("Nie znaleziono \(raw)"); return }
-                let cols = try await source.columns(owner: o.owner, name: o.name)
-                let fks = o.type == .table ? try await source.foreignKeys(owner: o.owner, table: o.name) : []
-                model.addTable(owner: o.owner, name: o.name, columns: cols, foreignKeys: fks)
+                guard let q = try await source.queryTable(raw) else { message = L10n.tr("Nie znaleziono \(raw)"); return }
+                let cols = try await source.columns(owner: q.target.owner, name: q.target.name)
+                // Złączenia z kluczy obcych tylko dla tabel pod własną nazwą (synonim — złączenie ręczne).
+                let fks = q.target.type == .table && q.name == q.target.name && q.owner == q.target.owner
+                    ? try await source.foreignKeys(owner: q.owner, table: q.name) : []
+                model.addTable(owner: q.owner, name: q.name, columns: cols, foreignKeys: fks)
                 tableName = ""
                 message = L10n.tr("Tabele: \(model.tables.count), złączenia: \(model.joins.count)")
             } catch { message = error.localizedDescription }
