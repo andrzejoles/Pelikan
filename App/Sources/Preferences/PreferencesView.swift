@@ -1,4 +1,6 @@
 import AppKit
+import LocalAuthentication
+import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
@@ -155,6 +157,29 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Hasła połączeń")) {
+                Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))
+                    .disabled(!Self.ownerAuthenticationAvailable && !workspace.settings.requireOwnerForSavedPasswords)
+                Text(L10n.tr("Hasła są w Pęku kluczy (pęk logowania, bez synchronizacji z iCloud). Po włączeniu Pelikan pyta o potwierdzenie raz na połączenie w trakcie działania aplikacji — także gdy połączenia użyje agent. Hasła podane bez „Zapamiętaj” zostają tylko w pamięci."))
+                    .font(.caption).foregroundStyle(.secondary)
+                if !Self.ownerAuthenticationAvailable {
+                    Text(L10n.tr("Ten Mac nie ma skonfigurowanego Touch ID ani hasła logowania do potwierdzania.")).font(.caption).foregroundStyle(.orange)
+                }
+            }
+            Section(L10n.tr("Oracle Net i Oracle Wallet")) {
+                directoryRow(L10n.tr("Konfiguracja Oracle Net (tnsnames.ora, sqlnet.ora)"), \.oracleNetDirectory,
+                             placeholder: L10n.tr("TNS_ADMIN albo domyślne miejsca"))
+                directoryRow(L10n.tr("Oracle Wallet (magazyn haseł)"), \.walletDirectory, placeholder: L10n.tr("Brak — logowanie hasłem"))
+                if let w = workspace.settings.walletDirectory {
+                    switch OracleNet.walletStatus(w) {
+                    case .autoLogin: Label(L10n.tr("Portfel z automatycznym logowaniem (cwallet.sso)"), systemImage: "checkmark.seal").foregroundStyle(.green)
+                    case .passwordOnly: Label(L10n.tr("Tylko ewallet.p12 — klient wymaga portfela z automatycznym logowaniem (cwallet.sso); utwórz go narzędziem orapki/mkstore"), systemImage: "exclamationmark.triangle").foregroundStyle(.orange)
+                    case .missing: Label(L10n.tr("W katalogu nie ma portfela (cwallet.sso / ewallet.p12)"), systemImage: "xmark.octagon").foregroundStyle(.red)
+                    }
+                }
+                Text(L10n.tr("Połączenia w trybie „Oracle Wallet” logują się poświadczeniami z portfela (/@alias) — alias albo connect string połączenia musi odpowiadać wpisowi w portfelu. Hasła z portfela nie trafiają do Pelikana. Portfel TLS (mTLS, np. Autonomous Database) ustawia się w połączeniu. Zmiana działa po ponownym uruchomieniu aplikacji."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
@@ -165,6 +190,30 @@ struct OraclePane: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    static var ownerAuthenticationAvailable: Bool {
+        var error: NSError?
+        return LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
+    }
+
+    private func directoryRow(_ title: String, _ key: WritableKeyPath<PelikanWorkspace.Settings, String?>, placeholder: String) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(workspace.settings[keyPath: key] ?? placeholder).font(.caption)
+                    .foregroundStyle(workspace.settings[keyPath: key] == nil ? .secondary : .primary).lineLimit(1).truncationMode(.middle)
+            }
+            Spacer()
+            Button(L10n.tr("Wybierz…")) {
+                let panel = NSOpenPanel()
+                panel.canChooseDirectories = true
+                panel.canChooseFiles = false
+                panel.showsHiddenFiles = true
+                if panel.runModal() == .OK, let url = panel.url { workspace.settings[keyPath: key] = url.path }
+            }
+            if workspace.settings[keyPath: key] != nil { Button(L10n.tr("Wyczyść")) { workspace.settings[keyPath: key] = nil } }
+        }
     }
 
     func choose() {

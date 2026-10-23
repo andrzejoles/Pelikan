@@ -20,12 +20,19 @@ public struct ConnectionTarget: Sendable, Codable, Hashable {
     /// Katalog z `tnsnames.ora`, `sqlnet.ora` i wallet (jak TNS_ADMIN); nil = domyślny.
     public var configDirectory: String?
     public var edition: String?
+    /// Portfel TLS (mTLS, np. Autonomous Database) tego połączenia; nil — katalog konfiguracji.
+    public var walletDirectory: String?
+    /// Uwierzytelnianie portfelem z magazynem haseł (SEPS, `/@alias`) — dla sterownika to uwierzytelnianie zewnętrzne.
+    public var walletAuth: Bool?
 
     public init(user: String, connectString: String, role: ConnectRole = .normal, proxyClient: String? = nil,
                 externalAuth: Bool = false, configDirectory: String? = nil, edition: String? = nil) {
         self.user = user; self.connectString = connectString; self.role = role; self.proxyClient = proxyClient
         self.externalAuth = externalAuth; self.configDirectory = configDirectory; self.edition = edition
     }
+
+    /// Logowanie bez hasła Pelikana: uwierzytelnianie zewnętrzne albo portfel z magazynem haseł.
+    public var usesExternalCredentials: Bool { externalAuth || walletAuth == true }
 
     /// Nazwa użytkownika przekazywana do sterownika (z proxy: `pośrednik[schemat]`).
     public var driverUserName: String {

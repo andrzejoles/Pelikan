@@ -36,6 +36,17 @@ enum TestDatabase {
         guard isLocal || env["CI"] != nil else {
             fatalError("Testy łączą się tylko z lokalną bazą testową, nie z \(host)")
         }
+        // Portfel testowy (scripts/testdb.sh wallet): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN procesu testów —
+        // ustawiany przed pierwszym połączeniem (klient czyta konfigurację raz). Bez portfela — bez zmian.
+        if let file = envFile() {
+            let state = (file as NSString).deletingLastPathComponent
+            if FileManager.default.fileExists(atPath: state + "/wallet/cwallet.sso"),
+               let dir = try? OracleNet.prepareManagedDirectory(URL(fileURLWithPath: state + "/oracle-net"), userDirectory: state + "/oracle-net-user",
+                                                               walletDirectory: state + "/wallet") {
+                setenv("TNS_ADMIN", dir, 1)
+                walletReady = true
+            }
+        }
         return Config(connectString: "\(host):\(port)/\(service)", user: user, password: password,
                       agentUser: env["PELIKAN_TESTDB_AGENT_USER"] ?? "PELIKAN_AGENT",
                       agentPassword: env["PELIKAN_TESTDB_AGENT_PASSWORD"] ?? "",
@@ -56,6 +67,10 @@ enum TestDatabase {
     }
 
     static var isAvailable: Bool { config != nil && InstantClientLocator.locate() != nil }
+
+    /// Portfel SEPS bazy testowej przygotowany (scripts/testdb.sh wallet).
+    nonisolated(unsafe) static var walletReady = false
+    static var isWalletAvailable: Bool { isAvailable && walletReady }
 
     static func connect(agent: Bool = false, tags: SessionTags = SessionTags(module: "Pelikan tests")) async throws -> ODPISession {
         guard let c = config else { throw DatabaseError.driverUnavailable("Brak konfiguracji bazy testowej (scripts/testdb.sh up)") }
