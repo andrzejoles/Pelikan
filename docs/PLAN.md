@@ -73,6 +73,8 @@ Kolejność podzadań (każde = gałąź `etap-2/<nazwa>` i PR):
    kompilacji, lista błędów i ostrzeżeń (PLSQL_WARNINGS) z przejściem, wskaźniki zmieniony/nieskompilowany, Compare.
 3. **etap-2/parser** — parser strukturalny PL/SQL (ADR 0002): jednostki, podprogramy, deklaracje; Code Contents,
    Code Hierarchy, zwijanie, Go to declaration, hiperłącza do obiektów.
+3a. **etap-2/zwijanie** — zwijanie kodu w edytorze (znaczniki ±, Fold All/Unfold All, podgląd zwiniętego) na
+   zakresach z parsera (PD-EDIT-013, D22).
 4. **etap-2/code-assistant** — podpowiedzi (kolumny, aliasy, elementy pakietów, parametry, słowa kluczowe), szablony.
 5. **etap-2/beautifier** — PL/SQL Beautifier z regułami i podglądem.
 6. **etap-2/narzedzia** — Find Database Objects, Compile Invalid Objects, Difference Viewer, edytory obiektów

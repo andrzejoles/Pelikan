@@ -1,4 +1,5 @@
 import AppKit
+import PelikanSQL
 import PelikanWorkspace
 
 /// Program Window (UG 4): karty jednostek (specyfikacja, ciało…) nad edytorem — przejście do jednostki, edytor kodu,
@@ -13,6 +14,10 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private let messagesScroll = NSScrollView()
     private let split = NSSplitView()
     private let caretLabel = NSTextField(labelWithString: "1:1")
+    private let hierarchyLabel = NSTextField(labelWithString: "")
+    private let contents = CodeContentsView()
+    private let outerSplit = NSSplitView()
+    private var outlineNodes: [OutlineNode] = []
     private let modifiedDot = NSTextField(labelWithString: "●")
     private let staleDot = NSTextField(labelWithString: "●")
     private let executing = NSProgressIndicator()
@@ -35,7 +40,20 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
 
     override func loadView() {
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
-        editor.onCaretChange = { [weak self] s in self?.caretLabel.stringValue = s }
+        editor.onCaretChange = { [weak self] s in
+            self?.caretLabel.stringValue = s
+            self?.caretMoved()
+        }
+        contents.onSelect = { [weak self] n in
+            guard let self else { return }
+            self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
+            self.view.window?.makeFirstResponder(self.editor.textView)
+        }
+        hierarchyLabel.font = .systemFont(ofSize: 11)
+        hierarchyLabel.textColor = .secondaryLabelColor
+        hierarchyLabel.lineBreakMode = .byTruncatingHead
+        hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        hierarchyLabel.setAccessibilityLabel(L10n.tr("Hierarchia kodu"))
         unitBar.spacing = 2
         unitBar.edgeInsets = NSEdgeInsets(top: 3, left: 6, bottom: 3, right: 6)
 
@@ -64,7 +82,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         executing.style = .spinning
         executing.controlSize = .small
         executing.isDisplayedWhenStopped = false
-        let windowBar = NSStackView(views: [modifiedDot, staleDot, caretLabel, NSView(), executing])
+        let windowBar = NSStackView(views: [modifiedDot, staleDot, caretLabel, hierarchyLabel, NSView(), executing])
         windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 8, bottom: 2, right: 8)
 
         let editorPane = NSView()
@@ -96,10 +114,37 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         split.addArrangedSubview(editorPane)
         split.addArrangedSubview(messagesScroll)
         messagesScroll.isHidden = true
-        view = split
+        // Code Contents po lewej stronie edytora (UG 25.15).
+        outerSplit.isVertical = true
+        outerSplit.dividerStyle = .thin
+        outerSplit.addArrangedSubview(contents)
+        outerSplit.addArrangedSubview(split)
+        contents.widthAnchor.constraint(greaterThanOrEqualToConstant: 120).isActive = true
+        outerSplit.setHoldingPriority(NSLayoutConstraint.Priority(260), forSubviewAt: 0)
+        outerSplit.setHoldingPriority(NSLayoutConstraint.Priority(240), forSubviewAt: 1)
+        view = outerSplit
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            self.contents.isHidden = !self.workspace.settings.showCodeContents
+            self.outerSplit.adjustSubviews()
+        })
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
         tokens.append(trackChanges { [weak self] in self?.refreshMessages() })
         tokens.append(trackChanges { [weak self] in self?.refreshIndicators() })
+    }
+
+    private var didPositionContents = false
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        // Szerokość początkowa panelu Code Contents — po pierwszym układzie okna (wcześniej podział dzieli po połowie).
+        guard !didPositionContents else { return }
+        didPositionContents = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.outerSplit.layoutSubtreeIfNeeded()
+            self.outerSplit.setPosition(220, ofDividerAt: 0)
+        }
     }
 
     // MARK: Karty jednostek
@@ -116,6 +161,9 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     }
 
     private func recomputeUnits(_ text: String) {
+        outlineNodes = PLSQLOutline.parse(text)
+        contents.update(outlineNodes)
+        caretMoved()
         let u = ProgramCompiler.units(in: text)
         let signature = u.map(\.id).map { $0.components(separatedBy: "@")[0] }.joined(separator: "|")
         units = u
@@ -129,6 +177,13 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             b.toolTip = "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)"
             unitBar.addArrangedSubview(b)
         }
+    }
+
+    /// Code Hierarchy (UG 25.16): ścieżka od jednostki do podprogramu/bloku pod kursorem; Code Contents śledzi kursor.
+    private func caretMoved() {
+        let o = document.selectedRange.lowerBound
+        hierarchyLabel.stringValue = PLSQLOutline.path(at: o, in: outlineNodes).map(\.name).joined(separator: " › ")
+        if !contents.isHidden { contents.track(offset: o) }
     }
 
     private func select(_ id: String) {

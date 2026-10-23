@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T04:27:48+02:00",
+  "heartbeat": "2026-10-23T04:48:55+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 2 / Program Window: kompilacja jednostek, lista błędów i ostrzeżeń, wskaźniki, karty jednostek",
+  "task": "Etap 2 / parser strukturalny PL/SQL: Code Contents, Code Hierarchy, zwijanie, przejście do deklaracji, hiperłącza do obiektów",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Etap 2 / parser strukturalny PL/SQL (ADR 0002): zarys jednostek, podprogramów z parametrami i typem zwracanym, deklaracji (zmienne, stałe, kursory, typy, wyjątki), bloków zagnieżdżonych; panel Zawartość kodu ze śledzeniem kursora, ścieżka Code Hierarchy, Przejdź do deklaracji (⌃⌥D / ⌃⌘J / Cmd+klik) — lokalnie i do obiektów bazy; zakresy zwijania; zarys pakietu 50 000 linii poniżej limitu — 7 testów",
+    "PR #12 scalony (Program Window), wersja 2.2.0",
     "Etap 2 / Program Window: karty jednostek (specyfikacja, ciało…) z przejściem, F8 kompiluje jednostki po kolei w sesji kompilacji z PLSQL_WARNINGS, zatrzymanie przy błędzie i kursor w linii błędu, lista błędów i ostrzeżeń z przejściem, wskaźniki zmieniony (niebieski) / nieskompilowany (żółty); poprawka: margines numerów linii nie zamalowuje widoków nad edytorem — 2 testy (1 na bazie)",
     "PR #11 scalony (Object Browser), wersja 2.1.0",
     "Etap 2 / Object Browser: MetadataProvider (sesja główna, cache, widoki DBA/ALL, foldery wg wersji — MLE i domeny na 23ai+), drzewo typów z leniwym ładowaniem, wybór użytkownika, filtr (nazwa%, status=, source=), elementy obiektu (kolumny, indeksy, więzy, wyzwalacze, podprogramy, zależności), niepoprawne na czerwono, Ostatnie, menu: Pokaż/Edytuj dane, Edytuj (okno programu), DDL, Opis, Właściwości, Rekompiluj, Usuń, Kopiuj nazwę, Odśwież — 5 testów na bazie",
@@ -90,9 +92,7 @@
     "Analiza utPLSQL (API, mechanizm wtyczek), SQL Developer for VS Code 23.4–26.3, SQL Developer, SQLcl, DBeaver, DataGrip → docs/research/utplsql.md, gap-analysis.md, behaviour.md; macierz rozszerzona do 412 funkcji (UT, AI, SD, SC, DB, DG, MAC)",
     "Analiza PL/SQL Developer 17: podręcznik 17.0 (322 s.) i nowości 7.1–17.0 streszczone w docs/research/plsqldev-17.md; macierz funkcji docs/FEATURES.md — 319 wierszy (PD + infrastruktura)",
     "CI zielone (PR #1): Linux — Oracle Free 26ai w kontenerze + utPLSQL + 44 testy (w tym 12 integracyjnych sterownika); macOS — 45 testów jednostkowych",
-    "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone",
-    "Sterownik Instant Client (ODPI-C 26.0 + Instant Client 23.26.2): łączenie, zapytania z typami (NUMBER bez utraty precyzji, daty, LOB, JSON, ROWID, interwały), dociąganie porcjami, transakcje, zmienne wiązane IN/OUT, REF CURSOR, niejawne wyniki, błędy ORA z pozycją, ostrzeżenia kompilacji, przerwanie (Break), MODULE/ACTION — 12 testów integracyjnych zielonych",
-    "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)"
+    "PelikanSQL: lekser (przyrostowy, UTF-16), dzielenie skryptu (SQL/PL-SQL/SQL*Plus), klasyfikacja poleceń, zmienne & / :bind / JasperReports $P{} $P!{} $X{} — 32 testy jednostkowe zielone"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -113,11 +113,11 @@
   ],
   "tests": {
     "unit": {
-      "total": 125,
-      "passed": 125,
+      "total": 131,
+      "passed": 131,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T04:27:46+02:00"
+      "at": "2026-10-23T04:48:55+02:00"
     },
     "integration": {
       "total": 61,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-code-contents.png",
+      "title": "Zawartość kodu i ścieżka Code Hierarchy w oknie programu",
+      "reference": "PD-CA-010"
+    },
     {
       "file": "docs/progress/img/etap2-program-window.png",
       "title": "Program Window: kompilacja niepoprawnego pakietu, lista błędów",
