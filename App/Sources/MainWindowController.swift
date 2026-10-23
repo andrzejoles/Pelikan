@@ -273,8 +273,9 @@ final class DocumentAreaViewController: NSViewController {
             let tab = DocumentTabButton(document: doc, isActive: doc.id == active) { [weak self] in
                 self?.workspace.activate(doc.id)
             } onClose: { [weak self] in
-                self?.workspace.close(doc.id)
+                self?.workspace.perform("file.closeWindow", CommandArguments(["document": .string(doc.id.description)]))
             }
+            tab.menu = tabMenu(for: doc)
             tabBar.addArrangedSubview(tab)
         }
         // Widoki dokumentów (zachowywane dla otwartych okien).
@@ -316,6 +317,28 @@ final class DocumentAreaViewController: NSViewController {
 }
 
 extension DocumentAreaViewController {
+    /// Menu karty (PD-UI-004): zamknij, zamknij pozostałe / z lewej / z prawej.
+    func tabMenu(for doc: Document) -> NSMenu {
+        let menu = NSMenu()
+        for (title, id) in [(L10n.tr("Zamknij"), "file.closeWindow"), (L10n.tr("Zamknij pozostałe"), "file.closeOthers"),
+                            (L10n.tr("Zamknij z lewej"), "file.closeLeft"), (L10n.tr("Zamknij z prawej"), "file.closeRight")] {
+            let item = menu.addItem(withTitle: title, action: #selector(tabMenuAction(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = [id, doc.id.description]
+        }
+        return menu
+    }
+
+    @objc func tabMenuAction(_ sender: NSMenuItem) {
+        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
+        if pair[0] == "file.closeWindow" {
+            workspace.perform("file.closeWindow", CommandArguments(["document": .string(pair[1])]))
+        } else {
+            if let d = workspace.documents.first(where: { $0.id.description == pair[1] }) { workspace.activate(d.id) }
+            workspace.perform(CommandID(rawValue: pair[0]))
+        }
+    }
+
     @objc func chooseConnection(_ sender: NSButton) {
         guard let doc = workspace.activeDocument else { return }
         let menu = NSMenu()

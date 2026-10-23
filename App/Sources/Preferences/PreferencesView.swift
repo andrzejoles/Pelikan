@@ -117,6 +117,15 @@ struct EditorPane: View {
                     Text(L10n.tr("Rozmiar: \(Int(workspace.settings.editorFontSize)) pt"))
                 }
             }
+            Section(L10n.tr("Pisanie")) {
+                Picker(L10n.tr("Wielkość liter słów kluczowych"), selection: setting(workspace, \.keywordCase)) {
+                    Text(L10n.tr("Bez zmian")).tag(KeywordCase.unchanged)
+                    Text(L10n.tr("WIELKIE")).tag(KeywordCase.upper)
+                    Text(L10n.tr("małe")).tag(KeywordCase.lower)
+                    Text(L10n.tr("Pierwsza wielka")).tag(KeywordCase.initCap)
+                }
+                Toggle(L10n.tr("Podświetlaj bieżącą linię"), isOn: setting(workspace, \.highlightCurrentLine))
+            }
             Section(L10n.tr("Wcięcia")) {
                 Stepper(value: setting(workspace, \.tabSize), in: 1...8) { Text(L10n.tr("Szerokość tabulacji: \(workspace.settings.tabSize)")) }
                 Toggle(L10n.tr("Wstawiaj znak tabulacji zamiast spacji"), isOn: setting(workspace, \.useTabCharacter))

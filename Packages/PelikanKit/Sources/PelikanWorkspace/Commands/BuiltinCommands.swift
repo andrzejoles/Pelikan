@@ -21,6 +21,28 @@ public enum BuiltinCommands {
 
     // MARK: Plik
 
+    /// Zamknięcie grupy okien względem bieżącego (menu karty — PD-UI-004).
+    @MainActor
+    static func closeMany(_ id: String, _ title: String, _ summary: String, _ which: @escaping @Sendable (Int, Int) -> Bool) -> Command {
+        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .file, agent: .none, effect: .uiState,
+                                  summary: summary, feature: "PD-UI-004"),
+                validate: { ws in
+                    guard let a = ws.documents.firstIndex(where: { $0.id == ws.activeDocumentID }) else { return false }
+                    return ws.documents.indices.contains { which($0, a) }
+                }) { ctx in
+            let ws = ctx.workspace
+            guard let a = ws.documents.firstIndex(where: { $0.id == ws.activeDocumentID }) else { return .ok }
+            let keep = ws.documents[a].id
+            let targets = ws.documents.enumerated().filter { which($0.offset, a) }.map(\.element)
+            for d in targets {
+                ws.activate(d.id)
+                guard try await closeDocument(d, in: ws) else { ws.activate(keep); throw CommandError.cancelledByUser }
+            }
+            ws.activate(keep)
+            return .ok
+        }
+    }
+
     /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
     @MainActor
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
@@ -119,6 +141,19 @@ public enum BuiltinCommands {
                 guard try await closeDocument(doc, in: ctx.workspace) else { throw CommandError.cancelledByUser }
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.closeWindow", title: L10n.tr("Zamknij wskazane okno"), category: .file,
+                                      parameters: [CommandParameter("document", .string, required: true, L10n.tr("Identyfikator okna"))],
+                                      agent: .full, effect: .uiState, summary: L10n.tr("Zamyka okno o podanym identyfikatorze (z pytaniami o zapis i transakcję)."),
+                                      inMenu: false, feature: "PD-UI-004")) { ctx in
+                guard let s = ctx.arguments.string("document"), let d = ctx.workspace.documents.first(where: { $0.id.description == s }) else {
+                    throw CommandError.invalidArgument("document", L10n.tr("nieznane okno"))
+                }
+                guard try await closeDocument(d, in: ctx.workspace) else { throw CommandError.cancelledByUser }
+                return .ok
+            },
+            closeMany("file.closeOthers", L10n.tr("Zamknij pozostałe okna"), L10n.tr("Zamyka wszystkie okna oprócz bieżącego.")) { i, a in i != a },
+            closeMany("file.closeLeft", L10n.tr("Zamknij okna z lewej"), L10n.tr("Zamyka okna na lewo od bieżącego.")) { i, a in i < a },
+            closeMany("file.closeRight", L10n.tr("Zamknij okna z prawej"), L10n.tr("Zamyka okna na prawo od bieżącego.")) { i, a in i > a },
             Command(CommandDescriptor(id: "file.closeAll", title: L10n.tr("Zamknij wszystkie okna"), category: .file,
                                       mac: ["cmd+alt+w"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Zamyka wszystkie okna."), feature: "PD-UI-004"),

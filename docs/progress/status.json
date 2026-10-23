@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T03:48:34+02:00",
+  "heartbeat": "2026-10-23T03:51:13+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Karty dokumentów: menu Zamknij / pozostałe / z lewej / z prawej, zamykanie krzyżykiem i środkowym przyciskiem przez komendę (pytania o zapis i transakcję); edytor: wielkość liter słów kluczowych przy pisaniu (preferencja), podświetlenie bieżącej linii, wcięcie z preferencji — 1 test, sprawdzone ręcznie",
     "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy",
     "Połączenia: tylko do odczytu (blokada DML/DDL/PL/SQL/FOR UPDATE w SQL Window, Command Window i siatce), potwierdzanie zmian na produkcji (preferencja), połączenie okna na pasku stanu z menu wyboru i przypięciem — 4 testy",
     "Edytor: komentarz linii, wcięcia, wielkie/małe litery bez literałów, usuwanie końcowych spacji, powielenie linii, Przejdź do linii, Znajdź i zamień (regex z $1/\\t, całe słowa, wielkość liter, zachowanie wielkości, zaznaczenie, kod/komentarze/literały), Znajdź następne/poprzednie (F3), Historia poleceń (Ctrl+E) z filtrem i wstawianiem wielu; zmiany z komend cofalne (⌘Z) — 8 testów",
@@ -111,11 +112,11 @@
   ],
   "tests": {
     "unit": {
-      "total": 121,
-      "passed": 121,
+      "total": 122,
+      "passed": 122,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T03:48:32+02:00"
+      "at": "2026-10-23T03:51:13+02:00"
     },
     "integration": {
       "total": 53,
