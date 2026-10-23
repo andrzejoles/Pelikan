@@ -27,7 +27,7 @@ struct CodeAssistantTests {
             _ = try? await s.execute(sql)
         }
 
-        #expect(await labels(ws, "select t.| from pelikan_ca_t t") == ["ID", "NAZWA", "KWOTA"])
+        #expect(await labels(ws, "select t.| from pelikan_ca_t t") == ["(ALL)", "ID", "NAZWA", "KWOTA"])     // „(all)” — PD-CA-006
         #expect(await labels(ws, "select pelikan_ca_t.na| from pelikan_ca_t") == ["NAZWA"])
         #expect(await labels(ws, "select | from pelikan_ca_t").starts(with: ["ID", "NAZWA", "KWOTA"]))
         #expect(await labels(ws, "select pelikan_ca_seq.| from dual") == ["NEXTVAL", "CURRVAL"])
@@ -43,10 +43,14 @@ struct CodeAssistantTests {
                 for z in (select t.* from pelikan_ca_t t) loop
                   x := 
             """
-        #expect(await labels(ws, plsql + "r.|") == ["ID", "NAZWA", "KWOTA"])
-        #expect(await labels(ws, plsql + "q.|") == ["ID", "N"])
+        #expect(await labels(ws, plsql + "r.|") == ["(ALL)", "ID", "NAZWA", "KWOTA"])
+        #expect(await labels(ws, plsql + "q.|") == ["(ALL)", "ID", "N"])
         #expect(await labels(ws, plsql + "z.k|") == ["KWOTA"])
-        #expect(await labels(ws, "create or replace trigger trg before insert on pelikan_ca_t for each row begin :new.|") == ["ID", "NAZWA", "KWOTA"])
+        #expect(await labels(ws, "create or replace trigger trg before insert on pelikan_ca_t for each row begin :new.|") == ["(ALL)", "ID", "NAZWA", "KWOTA"])
+        // Parametry podprogramu z ALL_ARGUMENTS (PD-CA-006).
+        #expect(await labels(ws, "begin pelikan_ca_pkg.dodaj(|") == ["P_ID"])
+        let args = try await ws.metadata()!.arguments(owner: nil, package: "PELIKAN_CA_PKG", name: "DODAJ")
+        #expect(args.map(\.0) == ["P_ID"] && args.first?.1 == "IN NUMBER")
         // Wielkość liter jak w prefiksie.
         let lower = await CodeAssistant.complete(text: "select t.na from pelikan_ca_t t", offset: 11, metadata: ws.metadata())
         #expect(lower?.items.first?.insertText == "nazwa")

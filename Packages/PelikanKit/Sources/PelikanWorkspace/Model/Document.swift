@@ -71,6 +71,11 @@ public final class Document: Identifiable {
                 isModified = true
                 if kind == .program { isCompileStale = true }
                 if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
+                if !bookmarks.isEmpty || !colorMarks.isEmpty {
+                    let d = EditorShift.Change(old: oldValue, new: text)
+                    bookmarks = bookmarks.map { var b = $0; b.offset = d.shift(b.offset); return b }
+                    colorMarks = colorMarks.compactMap { m in d.shift(m.range).map { ColorMark(range: $0, color: m.color) } }
+                }
             }
         }
     }
@@ -146,6 +151,14 @@ public final class Document: Identifiable {
     public var executionLine: Int?
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
     public var foldedStarts: Set<Int> = []
+    /// Zakładki 0–9 (PD-EDIT-011) i znaczniki kolorów (PD-EDIT-012) — przesuwane przy zmianach tekstu.
+    public var bookmarks: [Bookmark] = []
+    public var colorMarks: [ColorMark] = []
+    /// Dodatkowe kursory i zaznaczenia poza `selectedRange` (PD-EDIT-007, PD-EDIT-023).
+    public var additionalSelections: [Range<Int>] = []
+    /// Okno tylko do odczytu (PD-FILE-003) i drugi widok tego samego tekstu (PD-EDIT-014).
+    public var isReadOnly = false
+    public var splitEditor = false
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {

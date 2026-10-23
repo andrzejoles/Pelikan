@@ -185,6 +185,7 @@ extension Workspace {
         }
         doc.fileFormat = format
         doc.isModified = false
+        restoreWindowState(doc)
         rememberRecentFile(std)
         return doc
     }

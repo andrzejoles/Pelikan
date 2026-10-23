@@ -308,11 +308,21 @@ public enum CodeInspections {
     static let charTypes = ["VARCHAR2", "VARCHAR", "CHAR", "NVARCHAR2", "NCHAR"]
 
     /// Wszystkie inspekcje tekstu (bez bazy).
-    public static func inspect(_ text: String) -> [EditorDiagnostic] {
+    public static func inspect(_ text: String, identifierLimit: Int = 30) -> [EditorDiagnostic] {
         let t = SQLToken.significant(text)
         let outline = PLSQLOutline.parse(text)
-        return (unusedDeclarations(text, t, outline) + unreachableCode(t, text) + missingWhere(t) + implicitConversions(t, outline))
+        return (unusedDeclarations(text, t, outline) + unreachableCode(t, text) + missingWhere(t) + implicitConversions(t, outline)
+                + longIdentifiers(t, limit: identifierLimit))
             .sorted { $0.range.lowerBound < $1.range.lowerBound }
+    }
+
+    /// Identyfikatory dłuższe niż limit (PD-EDIT-019; domyślnie 30 bajtów — limit Oracle przed 12.2, 0 — wyłączone).
+    static func longIdentifiers(_ t: [SQLToken], limit: Int) -> [EditorDiagnostic] {
+        guard limit > 0 else { return [] }
+        return t.filter { ($0.kind == .identifier || $0.kind == .quotedIdentifier) && $0.name.utf8.count > limit }.map {
+            EditorDiagnostic(range: $0.start..<$0.end, severity: .info, source: .inspection, code: "long-identifier",
+                             message: L10n.tr("Identyfikator dłuższy niż \(limit) bajtów — w bazach przed 12.2 (albo z COMPATIBLE < 12.2) niedozwolony"))
+        }
     }
 
     /// Zmienne, stałe i parametry bez użycia w swoim zakresie (podprogram albo blok).
@@ -468,7 +478,7 @@ extension Workspace {
     public func analyzeCode(_ doc: Document, names: Bool = true) async -> [EditorDiagnostic] {
         guard [.sql, .program, .test].contains(doc.kind) else { return [] }
         let text = doc.text
-        var found = CodeInspections.inspect(text)
+        var found = CodeInspections.inspect(text, identifierLimit: settings.identifierLengthWarning)
         if names, let c = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: c, purpose: .main)) {
             let source = nameSources[c] ?? CachedNameSource(MetadataNameSource(session: s))
             nameSources[c] = source

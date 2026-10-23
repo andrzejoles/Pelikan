@@ -37,6 +37,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 0 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Tylko do odczytu | `file.readOnly` |  |  | Brak | 0 | PD-FILE-003 |
+| Otwórz z połączeniem… | `file.openWithConnection` |  |  | Brak | 0 | PD-FILE-004 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |
 | Odzyskaj okna… | `file.restoreRecovery` |  |  | Brak | 0 | PD-FILE-001 |
 | Notatnik › Eksportuj notatnik jako Markdown… | `notebook.exportMarkdown` |  |  | Brak | 0 | SD-NB-001 |
@@ -123,6 +125,23 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
+| Zakładki › Przełącz zakładkę | `edit.toggleBookmark` | ⌘F3 | ⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Przejdź do zakładki | `edit.gotoBookmark` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Następna zakładka | `edit.nextBookmark` | ⌥⌘F3 | ⌥⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Poprzednia zakładka | `edit.previousBookmark` | ⌥⇧⌘F3 | ⌥⇧⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Nazwij zakładkę… | `edit.renameBookmark` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Lista zakładek | `edit.bookmarkList` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Usuń zakładki okna | `edit.clearBookmarks` |  |  | Brak | 0 | PD-EDIT-011 |
+| Znaczniki kolorów › Oznacz kolorem | `edit.colorMark` |  |  | Brak | 0 | PD-EDIT-012 |
+| Znaczniki kolorów › Usuń znaczniki kolorów | `edit.clearColorMarks` |  |  | Brak | 0 | PD-EDIT-012 |
+| Wiele kursorów › Dodaj kursor powyżej | `edit.addCursorAbove` | ⌃⇧↑ † | ⌃⇧↑ | Brak | 0 | PD-EDIT-023 |
+| Wiele kursorów › Dodaj kursor poniżej | `edit.addCursorBelow` | ⌃⇧↓ † | ⌃⇧↓ | Brak | 0 | PD-EDIT-023 |
+| Wiele kursorów › Jeden kursor | `edit.singleCursor` |  |  | Brak | 0 | PD-EDIT-023 |
+| Refaktoryzacja › Wydziel stałą lokalną… | `edit.extractLocalConstant` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Wydziel stałą globalną… | `edit.extractGlobalConstant` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Wydziel procedurę… | `edit.extractProcedure` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Zamień przypisanie na inicjalizację | `edit.replaceAssignmentWithInitialization` |  |  | Pełny | 0 | PD-CA-014 |
+| Szukaj w edytorach i plikach… | `edit.searchBar` | ⌥⇧⌘F | ⌥⇧⌘F | Odczyt | 0 | PD-CA-015 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | 0 | PD-EDIT-027 |
 | Otwórz w zewnętrznym edytorze | `edit.openInExternalEditor` |  |  | Brak | 0 | PD-EDIT-028 |
 | Analiza kodu › Analizuj kod | `edit.analyzeCode` |  |  | Odczyt | 0 | DG-INSP-001 |
@@ -375,6 +394,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Podziel edytor | `view.splitEditor` |  |  | Brak | 0 | PD-EDIT-014 |
+| Powiększ czcionkę edytora | `view.zoomIn` | ⌃= †, ⌘= | ⌘= | Brak | 0 | PD-EDIT-021 |
+| Pomniejsz czcionkę edytora | `view.zoomOut` | ⌃⇧- †, ⌘- | ⌘- | Brak | 0 | PD-EDIT-021 |
+| Domyślny rozmiar czcionki edytora | `view.zoomReset` | ⌃0 †, ⌘0 | ⌘0 | Brak | 0 | PD-EDIT-021 |
 | Dostosuj pasek narzędzi… | `view.customizeToolbar` |  |  | Brak | 0 | PD-UI-006 |
 | Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
 | Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | 0 | PD-UI-006 |

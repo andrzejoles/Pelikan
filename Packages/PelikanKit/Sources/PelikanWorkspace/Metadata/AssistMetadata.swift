@@ -53,4 +53,22 @@ extension MetadataProvider {
         linkCache = list
         return list
     }
+
+    /// Parametry podprogramu (ALL_ARGUMENTS, poziom 0, w kolejności): nazwa i typ z kierunkiem (PD-CA-006).
+    /// `package` — pakiet albo, przy wywołaniu `schemat.procedura`, schemat (sprawdzane oba warianty).
+    public func arguments(owner: String?, package: String?, name: String) async throws -> [(String, String)] {
+        let (_, rows) = try await session().queryAll("""
+            select argument_name, in_out || ' ' || data_type from all_arguments
+             where object_name = :n and argument_name is not null and data_level = 0
+               and ((package_name = :p and owner = nvl(:o, owner)) or (:p is not null and package_name is null and owner = :p)
+                    or (:p is null and package_name is null and owner = sys_context('userenv', 'current_schema')))
+             order by owner, package_name, overload, position
+            """, binds: [BindVariable(name: "n", value: .text(name)), BindVariable(name: "p", value: package.map { .text($0) } ?? .null),
+                         BindVariable(name: "o", value: owner.map { .text($0) } ?? .null)], limit: 200)
+        var seen = Set<String>()
+        return rows.compactMap { r in
+            guard let n = r[0].displayText, seen.insert(n).inserted else { return nil }
+            return (n, r[1].displayText ?? "")
+        }
+    }
 }

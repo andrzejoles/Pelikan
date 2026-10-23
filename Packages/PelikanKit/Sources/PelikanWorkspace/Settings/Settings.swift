@@ -90,6 +90,21 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Code Assistant (UG 23.14): automatyczna aktywacja po kropce i jej opóźnienie w milisekundach.
     public var codeAssistantAutomatic = true
     public var codeAssistantDelay = 400
+    /// Code Assistant (PD-CA-006, PD-CA-007): dopasowanie, wielkość liter, minimum znaków, funkcje standardowe,
+    /// układ pozycji „(all)”.
+    public var codeAssistantMatch: CompletionMatch = .startsWith
+    public var codeAssistantCase: CompletionCase = .auto
+    public var codeAssistantMinChars = 1
+    public var codeAssistantStandardFunctions = true
+    public var codeAssistantAllPerLine = false
+    public var codeAssistantCommaFirst = false
+    /// Skróty AutoReplace (PD-EDIT-017), ostrzeżenie o długich identyfikatorach (PD-EDIT-019; 0 — wyłączone),
+    /// ligatury czcionki edytora (PD-EDIT-021).
+    public var autoReplace: [AutoReplaceRule] = AutoReplaceRule.defaults
+    public var identifierLengthWarning = 30
+    public var editorLigatures = true
+    /// Zapamiętywanie stanu okien plików (PD-EDIT-029).
+    public var rememberWindowState = true
     /// Reguły formatera PL/SQL (UG 29).
     public var beautifier = BeautifierOptions()
     /// Kompilacja okna programu z informacją debugowania (UG 23.4 „Add debug information when compiling”).
@@ -160,6 +175,16 @@ public struct Settings: Sendable, Codable, Hashable {
         showCodeContents = v(.showCodeContents, showCodeContents)
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
+        codeAssistantMatch = v(.codeAssistantMatch, codeAssistantMatch)
+        codeAssistantCase = v(.codeAssistantCase, codeAssistantCase)
+        codeAssistantMinChars = v(.codeAssistantMinChars, codeAssistantMinChars)
+        codeAssistantStandardFunctions = v(.codeAssistantStandardFunctions, codeAssistantStandardFunctions)
+        codeAssistantAllPerLine = v(.codeAssistantAllPerLine, codeAssistantAllPerLine)
+        codeAssistantCommaFirst = v(.codeAssistantCommaFirst, codeAssistantCommaFirst)
+        autoReplace = v(.autoReplace, autoReplace)
+        identifierLengthWarning = v(.identifierLengthWarning, identifierLengthWarning)
+        editorLigatures = v(.editorLigatures, editorLigatures)
+        rememberWindowState = v(.rememberWindowState, rememberWindowState)
         beautifier = v(.beautifier, beautifier)
         debugInfoOnCompile = v(.debugInfoOnCompile, debugInfoOnCompile)
         debuggerSkipPackageInit = v(.debuggerSkipPackageInit, debuggerSkipPackageInit)
