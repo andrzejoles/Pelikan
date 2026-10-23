@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T10:27:28+02:00",
+  "heartbeat": "2026-10-23T10:35:15+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 3 / profiler: liniowy DBMS_PROFILER (raport na linię z czasem, wykonaniami, udziałem, tekstem) i hierarchiczny DBMS_HPROF (funkcje, wywołania, czasy), statystyki sesji okna testu (różnica V$MYSTAT); tabele profilera tworzone za zgodą strażnika (D28) — 1 test na bazie",
     "Etap 3 / debuger — rozszerzenia: DBMS_OUTPUT w trakcie debugowania, obserwowane wyrażenia, Ustaw wartość (SET_VALUE), punkty przerwania na kodach błędów, okno punktów przerwania, Dodaj informację debugowania (obiekt i preferencja kompilacji) — 1 test na bazie",
     "PR #24 scalony — Etap 2 zamknięty (D27); szkic wydania v3.4.0 (DMG, PKG, appcast) — publikuje właściciel",
     "Kontynuacja Etapu 3: debuger — rozszerzenia",
@@ -91,12 +92,7 @@
     "Wydania jak w Bifoldzie: stały podpis „Pelikan Self-Signed” (osobny pęk kluczy), make installer (DMG i PKG z licencjami zewnętrznymi i kontrolą danych w pakiecie), Sparkle 2.10.0 z kluczem EdDSA w Pęku kluczy i menu „Sprawdź uaktualnienia…”, make draft-release (zip, appcast.xml, tag, szkic wydania), docs/WYDANIA.md; instalatory 1.8.0 zbudowane i sprawdzone lokalnie",
     "PR #8 scalony (sterownik thin), wersja 1.8.0",
     "Sterownik thin (OracleNIO): EZConnect i alias TNS, SYSDBA, proxy, bindy IN/OUT, LOB jako lokator z limitem (CLOB w AL16UTF16), NUMBER/DATE/TIMESTAMP dekodowane z surowych bajtów bez utraty precyzji, metadane kolumn, błędy ORA, DBMS_OUTPUT, SQL Window na thin; Przerwij wyszarzone (brak w API); 1 mln wierszy w 4,3 s (Instant Client 1,2 s); OracleNIO przypięty do commitu z poprawką dla Swift 6.4 (D20) — 9 testów (6 na bazie)",
-    "PR #7 scalony (tunel SSH), wersja 1.7.0",
-    "Tunel SSH: systemowy ssh -L (klucz, agent SSH, ~/.ssh/config, ProxyJump, known_hosts), losowy port lokalny, przepisywanie connect stringu (EZConnect, tcps, deskryptor, alias TNS), tunel współdzielony przez sesje i zamykany z ostatnią, karta „Tunel SSH” w definicji połączenia i test połączenia przez tunel; serwer SSH testów w kontenerze (testdb.sh ssh-up); DatabaseError z czytelnym komunikatem — 5 testów (2 przez prawdziwy tunel)",
-    "PR #6 scalony (pliki, preferencje, klawiatura), wersja 1.6.0",
-    "Pliki i preferencje: Otwórz / Zapisz / Zapisz jako / Otwórz ponownie (lista ostatnich), kodowanie UTF-8/UTF-16/Windows-1250 i CRLF zachowane przy zapisie, typ okna z rozszerzenia, otwieranie z Findera i przeciąganie plików, pytania przy zamykaniu (niezapisane zmiany, otwarta transakcja, sesja okna zamykana) i przy wyjściu; okno Preferencji (Ogólne, Okno SQL, Edytor, Klawiatura z nagrywaniem skrótów i konfliktami, Oracle — katalog Instant Client), wygląd jasny/ciemny/systemowy, ⌘W w oknach pomocniczych — 7 testów",
-    "PR #5 scalony (Command Window), wersja 1.5.0",
-    "Scalenie main (zamknięcie Etapu 2) z gałęzią okna testu"
+    "PR #7 scalony (tunel SSH), wersja 1.7.0"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -124,11 +120,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 76,
-      "passed": 76,
+      "total": 77,
+      "passed": 77,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T10:27:28+02:00"
+      "at": "2026-10-23T10:35:15+02:00"
     },
     "perf": {
       "total": 9,
@@ -195,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap3-profiler.png",
+      "title": "Profiler liniowy w oknie testu",
+      "reference": "PD-OPT-005"
+    },
     {
       "file": "docs/progress/img/etap3-debuger.png",
       "title": "Okno debugera: zatrzymanie w bloku testu, zmienne",

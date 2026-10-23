@@ -115,6 +115,11 @@ public final class Document: Identifiable {
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
     public var errorStack: [ErrorStackFrame] = []
+    /// Profiler przy wykonaniu okna testu (nil — wyłączony) i raport ostatniego przebiegu (UG 6.3).
+    public var profiler: ProfilerKind?
+    public var profilerReport: ProfilerReport?
+    /// Statystyki sesji ostatniego wykonania (różnica V$MYSTAT, UG 6.2) — nazwa i wartość.
+    public var statistics: [SessionStatistic] = []
     /// Linia (od 1), w której zatrzymał się debuger — wyróżniona w edytorze (UG 5.10).
     public var executionLine: Int?
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.

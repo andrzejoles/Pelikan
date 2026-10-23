@@ -69,6 +69,8 @@ struct TestPanel: View {
                 Text(L10n.tr("Zmienne")).tag(0)
                 Text(L10n.tr("Wyjście")).tag(1)
                 Text(L10n.tr("Stos błędu") + (document.errorStack.isEmpty ? "" : " (\(document.errorStack.count))")).tag(2)
+                Text(L10n.tr("Profiler")).tag(3)
+                Text(L10n.tr("Statystyki")).tag(4)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -76,7 +78,9 @@ struct TestPanel: View {
             switch tab {
             case 0: variables
             case 1: output
-            default: errorStack
+            case 2: errorStack
+            case 3: profiler
+            default: statistics
             }
         }
         .onChange(of: document.errorStack) { if !document.errorStack.isEmpty { tab = 2 } }
@@ -128,6 +132,63 @@ struct TestPanel: View {
                 }
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    @State private var statFilter = ""
+
+    private var profiler: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(L10n.tr("Profiler przy wykonaniu"), selection: $document.profiler) {
+                Text(L10n.tr("Wyłączony")).tag(ProfilerKind?.none)
+                Text(L10n.tr("Liniowy (DBMS_PROFILER)")).tag(ProfilerKind?.some(.lines))
+                Text(L10n.tr("Hierarchiczny (DBMS_HPROF)")).tag(ProfilerKind?.some(.hierarchical))
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 6)
+            if let r = document.profilerReport {
+                if r.kind == .lines {
+                    let total = max(r.lines.reduce(0) { $0 + $1.totalTime }, 1)
+                    Table(r.lines) {
+                        TableColumn(L10n.tr("Jednostka")) { (l: ProfilerLine) in Text(l.unitName.isEmpty ? L10n.tr("blok") : l.unitName) }.width(min: 90, ideal: 140)
+                        TableColumn(L10n.tr("Linia")) { (l: ProfilerLine) in Text(String(l.line)) }.width(44)
+                        TableColumn(L10n.tr("Wykonań")) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
+                        TableColumn(L10n.tr("Czas [ms]")) { (l: ProfilerLine) in Text(String(format: "%.3f", l.totalTime / 1e6)) }.width(74)
+                        TableColumn("%") { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
+                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.system(size: 11, design: .monospaced)).lineLimit(1) }
+                    }
+                } else {
+                    let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
+                    Table(r.functions) {
+                        TableColumn(L10n.tr("Funkcja")) { (f: ProfilerFunction) in Text(f.displayName).font(.system(.body, design: .monospaced)) }.width(min: 160, ideal: 240)
+                        TableColumn(L10n.tr("Wywołań")) { (f: ProfilerFunction) in Text(String(f.calls)) }.width(64)
+                        TableColumn(L10n.tr("Własny [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.functionTime)) }.width(84)
+                        TableColumn(L10n.tr("Z wywołaniami [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.subtreeTime)) }.width(120)
+                        TableColumn("%") { (f: ProfilerFunction) in bar(f.subtreeTime / total) }.width(90)
+                    }
+                }
+            } else {
+                Text(L10n.tr("Włącz profiler i wykonaj blok (F8) — raport pojawi się tutaj.")).foregroundStyle(.secondary).padding(8)
+                Spacer()
+            }
+        }
+    }
+
+    private func bar(_ fraction: Double) -> some View {
+        GeometryReader { g in
+            Rectangle().fill(Color.orange.opacity(0.7)).frame(width: max(1, g.size.width * min(1, fraction)))
+        }
+        .frame(height: 10)
+        .help(String(format: "%.1f%%", fraction * 100))
+    }
+
+    private var statistics: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TextField(L10n.tr("Filtr statystyk"), text: $statFilter).textFieldStyle(.roundedBorder).padding(.horizontal, 6)
+            Table(document.statistics.filter { statFilter.isEmpty || $0.name.localizedCaseInsensitiveContains(statFilter) }) {
+                TableColumn(L10n.tr("Statystyka")) { (s: SessionStatistic) in Text(s.name) }
+                TableColumn(L10n.tr("Wartość")) { (s: SessionStatistic) in Text(String(format: s.value.rounded() == s.value ? "%.0f" : "%.2f", s.value)) }.width(120)
+            }
         }
     }
 

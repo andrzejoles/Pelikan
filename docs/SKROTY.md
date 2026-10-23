@@ -123,6 +123,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Profiler przy wykonaniu | `test.profiler` |  |  | Pełny | 0 | PD-OPT-005 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |
 | Kontynuuj | `debug.run` | ⌃R † | ⌃R | Brak | 0 | PD-DBG-001 |
 | Wejdź | `debug.stepInto` | ⌃N † | ⌃N | Brak | 0 | PD-DBG-001 |

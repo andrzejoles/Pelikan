@@ -265,9 +265,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OPT-001 | Explain Plan Window: plan w drzewie, Optimizer goal, nawigacja w kolejności wykonania, tworzenie PLAN_TABLE, kolumny | UG 6.1, UG 23.22 | File > New > Explain Plan Window | 6 | P1 | Odczyt | do zrobienia |
 | PD-OPT-002 | Explain Plan z zaznaczenia (F5) z zamianą zmiennych PL/SQL na wiązane | UG 6.1, UG 25.10 | Tools > Explain Plan (F5) | 6 | P1 | Odczyt | do zrobienia |
 | PD-OPT-003 | Plan w formacie HTML, Text, XML (DBMS_XPLAN) | UG 6.1, NF11 | Explain Plan Window | 6 | P2 | Odczyt | do zrobienia |
-| PD-OPT-004 | Statystyki automatyczne (V$SESSTAT): ostatnie i suma sesji, wybór statystyk, filtr, sortowanie, eksport | UG 6.2, UG 23.2, NF15 | Karta Statistics | 3 | P2 | Odczyt | do zrobienia |
-| PD-OPT-005 | Profiler PL/SQL (DBMS_PROFILER): raport na linię, przebiegi, jednostki, wykres, preferencje | UG 6.3, UG 23.7 | Test Window > Profiler | 3 | P2 | Brak | do zrobienia |
-| PD-OPT-006 | Profiler hierarchiczny (DBMS_HPROF) | PROMPT §3.1 | Test Window | 3 | P2 | Brak | do zrobienia |
+| PD-OPT-004 | Statystyki automatyczne (V$SESSTAT): ostatnie i suma sesji, wybór statystyk, filtr, sortowanie, eksport | UG 6.2, UG 23.2, NF15 | Karta Statistics | 3 | P2 | Odczyt | ⚠️ częściowo (statystyki wykonania okna testu — różnica V$MYSTAT, filtr; bez sumy sesji, wyboru statystyk i eksportu; okno SQL — PD-SQLW-008) ✅ test |
+| PD-OPT-005 | Profiler PL/SQL (DBMS_PROFILER): raport na linię, przebiegi, jednostki, wykres, preferencje | UG 6.3, UG 23.7 | Test Window > Profiler | 3 | P2 | Brak | ⚠️ częściowo (raport na linię z czasem, liczbą wykonań, udziałem i tekstem; bez historii przebiegów, wykresu i preferencji) ✅ test 👁 |
+| PD-OPT-006 | Profiler hierarchiczny (DBMS_HPROF) | PROMPT §3.1 | Test Window | 3 | P2 | Brak | ⚠️ częściowo (funkcje z wywołaniami i czasami własnym/z wywołaniami; bez drzewa rodzic–dziecko w UI) ✅ test |
 | PD-OPT-007 | Trace (DBMS_TRACE): poziomy, raport, historia przebiegów, kolumny | UG 5.11, UG 23.6 | Test Window > Trace | 3 | P3 | Brak | do zrobienia |
 | PD-OPT-008 | SQL Trace sesji okna (przełącznik) | UG 6.4 | Session > SQL Trace | 3 | P3 | Brak | do zrobienia |
 

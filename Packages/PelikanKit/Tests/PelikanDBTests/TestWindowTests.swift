@@ -66,3 +66,42 @@ struct TestWindowTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Profiler i statystyki okna testu", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct ProfilerTests {
+    @Test("DBMS_PROFILER: linie procedury z liczbą wykonań; DBMS_HPROF: funkcje z wywołaniami; statystyki sesji")
+    func profilers() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try await s.execute("""
+            create or replace procedure pelikan_prof_p(n number) is
+              v number := 0;
+            begin
+              for i in 1 .. n loop
+                v := v + sqrt(i);
+              end loop;
+            end;
+            """)
+        let doc = ws.newDocument(.test, text: "begin\n  pelikan_prof_p(100);\nend;")
+        try await ws.invoke("test.profiler", CommandArguments(["kind": .string("lines")]))
+        try await ws.invoke("sql.execute")
+        let lines = try #require(doc.profilerReport?.lines)
+        let loopLine = lines.first { $0.unitName == "PELIKAN_PROF_P" && $0.line == 5 }
+        #expect(loopLine?.occurrences == 100)
+        #expect(loopLine?.text.contains("sqrt") == true)
+        #expect(!doc.statistics.isEmpty)
+
+        try await ws.invoke("test.profiler", CommandArguments(["kind": .string("hierarchical")]))
+        try await ws.invoke("sql.execute")
+        let f = try #require(doc.profilerReport?.functions)
+        #expect(f.contains { $0.module == "PELIKAN_PROF_P" && $0.calls == 1 })
+        #expect(doc.profilerReport?.kind == .hierarchical)
+        _ = try? await s.execute("drop procedure pelikan_prof_p")
+        await ws.sessions.disconnectAll()
+    }
+}
