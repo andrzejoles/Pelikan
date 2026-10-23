@@ -27,6 +27,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Otwórz ponownie | `file.reopen` |  |  | Brak | 0 | PD-SQLW-012 |
 | Zapisz | `file.save` | ⌘S | ⌘S | Za zgodą | 0 | PD-SQLW-012 |
 | Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | 0 | PD-SQLW-012 |
+| Kodowanie pliku… | `file.encoding` |  |  | Brak | 0 | PC-ENC-001 |
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Pełny | 0 | PD-UI-004 |
 | Zamknij wskazane okno | `file.closeWindow` |  |  | Pełny | 0 | PD-UI-004 |
 | Zamknij pozostałe okna | `file.closeOthers` |  |  | Brak | 0 | PD-UI-004 |

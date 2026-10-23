@@ -9,6 +9,12 @@ public protocol SecretStore: Sendable {
     func password(for account: String) throws -> String?
     func setPassword(_ password: String, for account: String) throws
     func deletePassword(for account: String) throws
+    /// Czy hasło jest zapisane — bez odczytu jego treści (stan połączenia na liście).
+    func hasPassword(for account: String) throws -> Bool
+}
+
+extension SecretStore {
+    public func hasPassword(for account: String) throws -> Bool { try password(for: account) != nil }
 }
 
 public enum SecretStoreError: Error, Equatable, Sendable {
@@ -25,15 +31,26 @@ public final class MemorySecretStore: SecretStore {
 }
 
 #if canImport(Security)
-/// Pęk kluczy macOS: hasła jako kSecClassGenericPassword (usługa = `local.aoles.pelikan.connection`, konto = id).
-/// Opcjonalnie wymaga Touch ID / hasła użytkownika przy odczycie (`requireUserPresence`, MAC-KC-001).
+/// Pęk kluczy macOS (pęk logowania): hasła jako kSecClassGenericPassword (usługa = `<bundle id>.connection`, konto = id
+/// połączenia), dostępne, gdy Mac jest odblokowany, bez synchronizacji z iCloud. Potwierdzenie Touch ID / hasłem Maca
+/// przed użyciem zapisanego hasła robi menedżer sesji (D56) — atrybut kontroli dostępu wymagałby pęku chronionego
+/// danymi, dostępnego tylko dla aplikacji podpisanych certyfikatem dewelopera.
 public final class KeychainSecretStore: SecretStore {
     public let service: String
-    public let requireUserPresence: Bool
 
-    public init(service: String = "local.aoles.pelikan.connection", requireUserPresence: Bool = false) {
+    public init(service: String) {
         self.service = service
-        self.requireUserPresence = requireUserPresence
+    }
+
+    public func hasPassword(for account: String) throws -> Bool {
+        var q = baseQuery(account)
+        q[kSecReturnAttributes as String] = true
+        q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var out: CFTypeRef?
+        let status = SecItemCopyMatching(q as CFDictionary, &out)
+        if status == errSecItemNotFound { return false }
+        guard status == errSecSuccess else { throw SecretStoreError.keychain(status) }
+        return true
     }
 
     private func baseQuery(_ account: String) -> [String: Any] {
@@ -57,16 +74,8 @@ public final class KeychainSecretStore: SecretStore {
         try deletePassword(for: account)
         var q = baseQuery(account)
         q[kSecValueData as String] = Data(password.utf8)
-        q[kSecAttrLabel as String] = "Pelikan"
-        if requireUserPresence {
-            var error: Unmanaged<CFError>?
-            if let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenUnlockedThisDeviceOnly, .userPresence, &error) {
-                q[kSecAttrAccessControl as String] = access
-                q[kSecUseDataProtectionKeychain as String] = true
-            }
-        } else {
-            q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
-        }
+        q[kSecAttrLabel as String] = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? service
+        q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
         let status = SecItemAdd(q as CFDictionary, nil)
         guard status == errSecSuccess else { throw SecretStoreError.keychain(status) }
     }

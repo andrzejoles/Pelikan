@@ -45,7 +45,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | w toku |
 | PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | ✅ test |
-| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ⚠️ częściowo (MY_WALLET_DIRECTORY z katalogu połączenia; bez testu TCPS) |
+| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ✅ test (portfel magazynu haseł SEPS /@alias z Preferencji przez katalog Oracle Net Pelikana — test na bazie i ręczna próba właściciela; portfel TLS per połączenie: tcps:// wallet_location, MY_WALLET_DIRECTORY; import portfela ZIP; status cwallet.sso; TCPS bez testu na żywo — brak listenera TCPS w bazie testowej) |
 | PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | do zrobienia |
 | PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | ✅ test |
@@ -519,10 +519,16 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
 | MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | ✅ test |
-| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ⚠️ częściowo (Pęk kluczy; Touch ID w kodzie bez przełącznika w UI) |
+| MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ✅ test (Pęk kluczy logowania, usługa z bundle id, bez iCloud; przełącznik „Wymagaj Touch ID albo hasła Maca” — potwierdzenie przed użyciem zapisanego hasła raz na połączenie; dialog systemowy bez zrzutu — D30) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
 | MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
 | MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
 | MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |
+
+## Pro*C — zdalny build przez SSH (zadanie właściciela, Etap P)
+
+| ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
+|---|---|---|---|---|---|---|---|
+| PC-ENC-001 | Kodowanie plików projektu (UTF-8 / ISO-8859-2 / Windows-1250), wykrywanie z istniejących plików, blokada zapisu niekodowalnych znaków z linią i kolumną, jawna zmiana kodowania | zadanie-pelikan-proc-ssh.md (Rozbudowa p. 6) | File > Kodowanie pliku | P | P1 | Brak | ✅ test |

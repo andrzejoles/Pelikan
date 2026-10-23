@@ -50,11 +50,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     /// Łączy się z bazą. `libraryDirectory` — katalog Instant Client z ustawień (nil = wykrywanie).
     public static func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions = ConnectOptions(),
-                               libraryDirectory: String? = nil) async throws -> ODPISession {
-        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory)
+                               libraryDirectory: String? = nil, configDirectory: String? = nil) async throws -> ODPISession {
+        let env = try ODPIEnvironment.get(libraryDirectory: libraryDirectory, configDirectory: configDirectory)
         let queue = DispatchQueue(label: "pelikan.odpi.session", qos: .userInitiated)
         var resolved = target
-        resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory)
+        // Magazyn haseł (portfel z poświadczeniami) szuka wpisu po dokładnym tekście aliasu — bez rozwijania (D53).
+        if target.walletAuth == true { resolved.externalAuth = true }
+        resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory,
+                                                               walletDirectory: target.walletDirectory, keepAlias: resolved.externalAuth)
         let finalTarget = resolved
         return try await withCheckedThrowingContinuation { cont in
             queue.async {

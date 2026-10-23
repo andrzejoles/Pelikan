@@ -258,7 +258,31 @@ ssh_up() {
     echo "SSH gotowy: tunnel@127.0.0.1:${SSH_PORT} → ${NAME}:1521" >&2
 }
 
+# Portfel magazynu haseł (SEPS) dla testów Oracle Wallet (D53): .testdb/wallet z poświadczeniem aliasu PELIKAN_SEPS
+# oraz .testdb/oracle-net-user/tnsnames.ora. mkstore z bibliotek PKI Oracle (Maven Central) i lokalnej Javy; hasła
+# (portfela — losowe, nigdzie niezapisywane, i bazy testowej) przekazywane przez stdin, nie w argumentach.
+wallet() {
+    load_env
+    local java_home java pki="$STATE/pki" w="$STATE/wallet" net="$STATE/oracle-net-user" v=21.23.0.0
+    java_home="${JAVA_HOME:-$(/usr/libexec/java_home 2>/dev/null || true)}"
+    java="$java_home/bin/java"
+    [ -x "$java" ] || { echo "Brak Javy (JAVA_HOME) — portfel testowy pominięty" >&2; return 1; }
+    mkdir -p "$pki"
+    for a in oraclepki osdt_core osdt_cert; do
+        [ -f "$pki/$a.jar" ] || curl -fsSL -o "$pki/$a.jar" "https://repo1.maven.org/maven2/com/oracle/database/security/$a/$v/$a-$v.jar"
+    done
+    local cp="$pki/oraclepki.jar:$pki/osdt_core.jar:$pki/osdt_cert.jar" wp
+    wp="W$(openssl rand -hex 12)a1"
+    rm -rf "$w"; mkdir -p "$w" "$net"; chmod 700 "$w"
+    printf '%s\n%s\n' "$wp" "$wp" | "$java" -cp "$cp" oracle.security.pki.OracleSecretStoreTextUI -wrl "$w" -create >/dev/null
+    printf '%s\n%s\n%s\n' "$PELIKAN_TESTDB_PASSWORD" "$PELIKAN_TESTDB_PASSWORD" "$wp" \
+        | "$java" -cp "$cp" oracle.security.pki.OracleSecretStoreTextUI -wrl "$w" -createCredential pelikan_seps "$PELIKAN_TESTDB_USER" >/dev/null
+    echo "pelikan_seps=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${PELIKAN_TESTDB_HOST:-127.0.0.1})(PORT=${PELIKAN_TESTDB_PORT:-$PORT}))(CONNECT_DATA=(SERVICE_NAME=${PELIKAN_TESTDB_SERVICE:-FREEPDB1})))" > "$net/tnsnames.ora"
+    [ -f "$w/cwallet.sso" ] && echo "Portfel testowy: $w" >&2
+}
+
 case "${1:-}" in
+    wallet) wallet ;;
     ssh-up) ssh_up ;;
     ssh-down) docker rm -f "$SSH_NAME" >/dev/null 2>&1; echo "Usunięto ${SSH_NAME}" ;;
     up) up ;;
@@ -284,7 +308,7 @@ case "${1:-}" in
         esac
         ;;
     *)
-        echo "Użycie: $0 up | seed | reset | down | env | sql [SYSTEM|SYS|TEST|AGENT]" >&2
+        echo "Użycie: $0 up | seed | wallet | reset | down | env | sql [SYSTEM|SYS|TEST|AGENT]" >&2
         exit 2
         ;;
 esac

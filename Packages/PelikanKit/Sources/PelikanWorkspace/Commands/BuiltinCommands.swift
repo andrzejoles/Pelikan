@@ -147,6 +147,23 @@ public enum BuiltinCommands {
                 _ = try await saveDocument(doc, in: ctx.workspace, askForName: true)
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.encoding", title: L10n.tr("Kodowanie pliku…"), category: .file,
+                                      parameters: [CommandParameter("encoding", .string, required: true, L10n.tr("Kodowanie"), allowed: TextFileCodec.encodingNames)],
+                                      agent: .none, effect: .modifiesEditor,
+                                      summary: L10n.tr("Jawnie zmienia kodowanie, w którym okno zostanie zapisane (UTF-8, ISO-8859-2, Windows-1250); znaki spoza kodowania są wskazywane."),
+                                      feature: "PC-ENC-001"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, let name = ctx.arguments.string("encoding"), let enc = TextFileCodec.encoding(named: name) else {
+                    throw CommandError.invalidArgument("encoding", TextFileCodec.encodingNames.joined(separator: ", "))
+                }
+                doc.fileFormat.encoding = enc
+                doc.fileFormat.hasBOM = false
+                doc.isModified = true
+                if let bad = TextFileCodec.firstUnencodable(doc.text, encoding: enc) {
+                    return CommandResult(message: L10n.tr("Kodowanie \(name); znak „\(bad.character)” (linia \(bad.line), kolumna \(bad.column)) trzeba zmienić przed zapisem"))
+                }
+                return CommandResult(message: L10n.tr("Kodowanie \(name)"))
+            },
             Command(CommandDescriptor(id: "file.close", title: L10n.tr("Zamknij okno"), category: .file, mac: ["cmd+w"],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Zamyka bieżące okno."), feature: "PD-UI-004"),
                     validate: { $0.activeDocument != nil }) { ctx in

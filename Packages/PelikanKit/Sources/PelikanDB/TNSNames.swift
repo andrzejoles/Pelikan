@@ -139,18 +139,26 @@ public extension TNSNames {
     /// Connect string dla połączenia z własnym katalogiem konfiguracji (tnsnames.ora, wallet): alias z tego katalogu
     /// rozwijany do deskryptora; przy TCPS bez wskazanego wallet dopisywany `MY_WALLET_DIRECTORY` = katalog połączenia.
     /// Bez katalogu konfiguracji — bez zmian (klient czyta TNS_ADMIN / domyślne miejsca).
-    static func resolveForConnection(_ connect: String, configDirectory: String?) -> String {
-        guard let dir = configDirectory.map({ ($0 as NSString).expandingTildeInPath }), !dir.isEmpty else { return connect }
+    /// `walletDirectory` — portfel TLS połączenia (pierwszeństwo przed katalogiem konfiguracji); przy EZConnect
+    /// `tcps://…` dopisywany parametr `wallet_location` (Instant Client 21+). `keepAlias` — alias przekazywany bez
+    /// rozwinięcia (magazyn haseł szuka poświadczenia po dokładnym tekście aliasu, D53).
+    static func resolveForConnection(_ connect: String, configDirectory: String?, walletDirectory: String? = nil, keepAlias: Bool = false) -> String {
+        let walletDir = (walletDirectory ?? configDirectory).map { ($0 as NSString).expandingTildeInPath }.flatMap { $0.isEmpty ? nil : $0 }
         var s = connect.trimmingCharacters(in: .whitespaces)
-        if !s.hasPrefix("("), !s.contains("/"), !s.contains(":") {
+        if let w = walletDir, s.lowercased().hasPrefix("tcps://"), !s.lowercased().contains("wallet_location") {
+            return s + (s.contains("?") ? "&" : "?") + "wallet_location=\(w)"
+        }
+        let dir = configDirectory.map { ($0 as NSString).expandingTildeInPath } ?? ""
+        if dir.isEmpty && walletDir == nil { return connect }
+        if !keepAlias, !dir.isEmpty, !s.hasPrefix("("), !s.contains("/"), !s.contains(":") {
             guard let e = load(directories: [dir]).first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(s) == .orderedSame } }) else {
                 return connect
             }
             s = e.descriptor
         }
-        if s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil,
+        if let w = walletDir, s.hasPrefix("("), (value("PROTOCOL", in: s) ?? "").uppercased() == "TCPS", value("MY_WALLET_DIRECTORY", in: s) == nil,
            let close = s.lastIndex(of: ")") {
-            s.insert(contentsOf: "(SECURITY=(MY_WALLET_DIRECTORY=\(dir)))", at: close)
+            s.insert(contentsOf: "(SECURITY=(MY_WALLET_DIRECTORY=\(w)))", at: close)
         }
         return s
     }

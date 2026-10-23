@@ -65,7 +65,9 @@ final class ODPIEnvironment: @unchecked Sendable {
     }
 
     /// Kontekst dla podanego katalogu Instant Client (pierwsze wywołanie decyduje — kolejne go ignorują).
-    static func get(libraryDirectory configured: String?) throws -> ODPIEnvironment {
+    /// `configDirectory` — katalog Oracle Net (TNS_ADMIN) zarządzany przez Pelikana; obowiązuje od pierwszego połączenia
+    /// do końca procesu (klient czyta konfigurację raz przy inicjalizacji).
+    static func get(libraryDirectory configured: String?, configDirectory: String? = nil) throws -> ODPIEnvironment {
         try shared.withLock { env in
             if let env { return env }
             let dir = InstantClientLocator.locate(configured: configured)
@@ -75,11 +77,14 @@ final class ODPIEnvironment: @unchecked Sendable {
             let status: Int32 = "Pelikan".withCString { driverName in
                 "UTF-8".withCString { enc in
                     withOptionalCString(dir) { libDir in
-                        params.defaultDriverName = driverName
-                        params.defaultEncoding = enc
-                        params.oracleClientLibDir = libDir
-                        return dpiContext_createWithParams(UInt32(DPI_MAJOR_VERSION), UInt32(DPI_MINOR_VERSION),
-                                                           &params, &ctx, &errorInfo)
+                        withOptionalCString(configDirectory.flatMap { $0.isEmpty ? nil : $0 }) { cfgDir in
+                            params.defaultDriverName = driverName
+                            params.defaultEncoding = enc
+                            params.oracleClientLibDir = libDir
+                            params.oracleClientConfigDir = cfgDir
+                            return dpiContext_createWithParams(UInt32(DPI_MAJOR_VERSION), UInt32(DPI_MINOR_VERSION),
+                                                               &params, &ctx, &errorInfo)
+                        }
                     }
                 }
             }

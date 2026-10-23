@@ -398,6 +398,49 @@ Blokada ukrywa zapytanie i układ oraz uniemożliwia ich zmianę w oknie; odblok
 — hasło lub jego skrót w pliku `.rep` byłoby sekretem w pliku, a plik JSON i tak da się otworzyć w edytorze tekstu.
 Blokada chroni przed przypadkową zmianą, nie przed świadomym odczytem definicji.
 
+### D53 · 2026-10-23 — Oracle Wallet: magazyn haseł przez katalog Oracle Net Pelikana, TLS per połączenie
+Próby z Instant Client 23 pokazały, że portfel magazynu haseł (SEPS, logowanie `/@alias`) działa tylko przez
+`WALLET_LOCATION` w `sqlnet.ora` katalogu TNS_ADMIN klienta — portfel wskazany w deskryptorze (`MY_WALLET_DIRECTORY`,
+`WALLET_LOCATION`) albo w EZConnect (`wallet_location`) dotyczy wyłącznie TLS. Dlatego Preferencje › Oracle mają
+katalog konfiguracji Oracle Net użytkownika i katalog portfela; Pelikan generuje z nich własny katalog
+(`oracle-net/` w katalogu danych: `sqlnet.ora` z portfelem i `IFILE` do plików użytkownika, `tnsnames.ora` z `IFILE`)
+i przekazuje go klientowi przy inicjalizacji (`oracleClientConfigDir`) — zmiana działa po ponownym uruchomieniu.
+Połączenie w trybie „Oracle Wallet” to dla sterownika uwierzytelnianie zewnętrzne, a alias trafia do klienta bez
+rozwijania (poświadczenie jest szukane po dokładnym tekście). Portfel TLS (mTLS, np. Autonomous Database) jest
+ustawieniem połączenia (import ZIP rozpakowuje portfel obok archiwum). Hasła z portfela nigdy nie trafiają do Pelikana;
+w plikach generowanych są tylko ścieżki. Test na bazie testowej używa portfela z `scripts/testdb.sh wallet`; właściciel
+potwierdził działanie na własnym aliasie (jednorazowa próba `select 'OK' from dual`, bez zapisu danych).
+
+### D54 · 2026-10-23 — Pro*C przez SSH: założenia do pytań otwartych
+Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 — bez pytań w trakcie pracy):
+1. Wersja gita na AIX nieznana — skrypty używają `cd` zamiast `git -C` i tylko opcji z gita 1.7; „Testuj” pokazuje
+   `git --version`, a skrypty sprawdzają wersję przed użyciem nowszych opcji.
+2. Korzeń repo: osobne pole „katalog working copy” (domyślnie `<baza>/src`); kontrola czystości dotyczy tylko jego,
+   `bin` poza nim.
+3. Binarki: lista nazw w konfiguracji celu (domyślnie jedna, nazwa projektu); instalacja kopiuje każdą.
+4. Kodowanie repo: ustawienie projektu, wykrywane z istniejących plików (bajty spoza UTF-8, poprawne w ISO-8859-2 →
+   ISO-8859-2); domyślnie UTF-8.
+5. Build próbny: po pierwszej wersji pipeline'u.
+Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
+z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
+
+### D55 · 2026-10-23 — Plik nie zmienia kodowania po cichu
+Zapis znaku spoza kodowania pliku (np. „ ” w ISO-8859-2) jest blokowany z linią, kolumną i znakiem — wcześniej plik
+przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmiana kodowania tylko jawnie (Plik › Kodowanie
+pliku). Pliki jednobajtowe bez BOM: 0x80–0x9F → Windows-1250, polskie litery na pozycjach ISO-8859-2 → ISO-8859-2;
+projekt może narzucić kodowanie swoich plików (`ProjectOptions.encoding`), a `TextFileCodec.detectEncoding` ustala je
+z istniejących plików.
+
+### D56 · 2026-10-23 — Touch ID / hasło Maca przed użyciem zapisanego hasła
+Na prośbę właściciela przełącznik w Preferencjach › Oracle („Hasła połączeń”). Atrybut kontroli dostępu w Pęku kluczy
+(`.userPresence`) działa tylko w pęku chronionym danymi, a ten wymaga aplikacji podpisanej certyfikatem dewelopera
+Apple — Pelikan jest podpisywany ad hoc (płatne konto poza zakresem, PROMPT §13). Dlatego hasła zostają w pęku logowania
+(usługa `<bundle id>.connection`, konto = id połączenia, dostęp po odblokowaniu Maca, bez iCloud), a menedżer sesji przed
+użyciem zapisanego hasła prosi o potwierdzenie przez LocalAuthentication (Touch ID albo hasło Maca), raz na połączenie
+w trakcie działania aplikacji — także dla sesji agenta. Stan „hasło zapisane” na liście połączeń sprawdzany bez odczytu
+sekretu. Ograniczenie: inna aplikacja, której użytkownik pozwoli czytać wpis Pelikana w Pęku kluczy, nie przejdzie
+przez to potwierdzenie (macOS i tak pyta wtedy o zgodę na dostęp do wpisu).
+
 ### D57 · 2026-10-23 — Filtr siatki lokalny, w modelu siatki
 Filtr wyników (DB-GRID-001) działa na pobranych wierszach jako część permutacji widoku (`order`) modelu siatki,
 razem z sortowaniem: `rowCount` to liczba wierszy widoku, a `fetchedRowCount` — pobranych. Dociągnięte wiersze
@@ -412,6 +455,7 @@ wskazuje alias — bez hasła, hosta i użytkownika. Przeciągnięcie obiektu z 
 programu; zwykłe przeciągnięcie — nazwę. Panel wartości pokazuje HTML z bazy bez JavaScriptu i bez zasobów
 sieciowych (Content-Security-Policy), bo treść z bazy jest niezaufana. SET SQLFORMAT formatuje tylko wyniki zapytań
 okna poleceń; `ansiconsole` to wyrównane kolumny z nagłówkiem (bez kolorów ANSI w konsoli okna).
+
 ### D59 · 2026-10-23 — Autotrace bez Tuning Pack; kursor odnajdywany znacznikiem
 Autotrace wykonuje polecenie w sesji narzędzi ze wskazówką `GATHER_PLAN_STATISTICS` i unikalnym komentarzem, po którym
 odnajduje kursor w V$SQL (niezależnie od kolejności zapytań pomocniczych), a plan rzeczywisty czyta z
