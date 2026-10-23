@@ -430,3 +430,13 @@ przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmia
 pliku). Pliki jednobajtowe bez BOM: 0x80–0x9F → Windows-1250, polskie litery na pozycjach ISO-8859-2 → ISO-8859-2;
 projekt może narzucić kodowanie swoich plików (`ProjectOptions.encoding`), a `TextFileCodec.detectEncoding` ustala je
 z istniejących plików.
+
+### D56 · 2026-10-23 — Touch ID / hasło Maca przed użyciem zapisanego hasła
+Na prośbę właściciela przełącznik w Preferencjach › Oracle („Hasła połączeń”). Atrybut kontroli dostępu w Pęku kluczy
+(`.userPresence`) działa tylko w pęku chronionym danymi, a ten wymaga aplikacji podpisanej certyfikatem dewelopera
+Apple — Pelikan jest podpisywany ad hoc (płatne konto poza zakresem, PROMPT §13). Dlatego hasła zostają w pęku logowania
+(usługa `<bundle id>.connection`, konto = id połączenia, dostęp po odblokowaniu Maca, bez iCloud), a menedżer sesji przed
+użyciem zapisanego hasła prosi o potwierdzenie przez LocalAuthentication (Touch ID albo hasło Maca), raz na połączenie
+w trakcie działania aplikacji — także dla sesji agenta. Stan „hasło zapisane” na liście połączeń sprawdzany bez odczytu
+sekretu. Ograniczenie: inna aplikacja, której użytkownik pozwoli czytać wpis Pelikana w Pęku kluczy, nie przejdzie
+przez to potwierdzenie (macOS i tak pyta wtedy o zgodę na dostęp do wpisu).

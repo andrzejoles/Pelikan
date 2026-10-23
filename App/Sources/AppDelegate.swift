@@ -33,7 +33,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let name = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
         let dir = env["PELIKAN_DATA_DIR"].map { URL(fileURLWithPath: $0) }
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
-        workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore())
+        // Usługa w Pęku kluczy z bundle id (nazwa marki tylko w Config/Brand.xcconfig).
+        let keychainService = (Bundle.main.bundleIdentifier ?? name) + ".connection"
+        workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore(service: keychainService))
         super.init()
         // Katalog Oracle Net zarządzany przez Pelikana: portfel magazynu haseł i IFILE do konfiguracji użytkownika (D53).
         let oracleNet = try? OracleNet.prepareManagedDirectory(dir.appendingPathComponent("oracle-net", isDirectory: true),
