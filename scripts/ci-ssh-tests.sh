@@ -4,8 +4,10 @@ set -u
 cd "$(dirname "$0")/../Packages/PelikanKit" || exit 1
 limit=${PELIKAN_SSH_TEST_LIMIT:-180}
 status=0
-for suite in PortedParserTests SpawnStreamTests PortedServerTests RemoteStreamTests SSHTargetTests BuildMessageParserTests SSHTargetTesterTests DeployScriptTests DeployPipelineTests; do
-  grep -rqs "struct $suite\b" Tests/PelikanRemoteTests Tests/PelikanProCTests || continue
+# Wszystkie zestawy z celów testowych SSH (krok testów jednostkowych je pomija) — nowy zestaw nie wypadnie z CI.
+suites=$(grep -hoE '^(final class|struct) [A-Za-z0-9_]+Tests\b' Tests/PelikanRemoteTests/*.swift Tests/PelikanProCTests/*.swift | awk '{print $NF}' | sort -u)
+[ -n "$suites" ] || { echo "::error::brak zestawów testów SSH"; exit 1; }
+for suite in $suites; do
   log=$(mktemp)
   echo "::group::$suite"
   # Wyjście do pliku (nie potoku), żeby proces potomny trzymający deskryptor nie blokował końca.

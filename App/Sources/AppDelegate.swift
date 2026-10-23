@@ -225,6 +225,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return SSHTargetManagerModel(store: store, workspace: workspace, runDirectory: run)
     }()
 
+    /// Wdrożenia Pro*C (konsola, historia) na celach z menedżera celów SSH.
+    private lazy var procDeploy = ProCDeployModel(store: sshTargets.store, workspace: workspace, runDirectory: sshTargets.runDirectory)
+
+    func showProCDeploy(_ action: ProCDeployAction) {
+        let model = procDeploy
+        switch action {
+        case .deploy(let name): ProCDeployWindows.showStart(model, target: name)
+        case .rollback(let name): ProCDeployWindows.showRollback(model, target: name)
+        case .history: ProCDeployWindows.showHistory(model)
+        case .console: ProCDeployWindows.showConsole(model)
+        case .stop: model.center.selected?.stop()
+        case .gitStatus: ProCDeployWindows.showGitStatus(model)
+        case .releaseLock(let name):
+            guard let t = model.target(named: name) ?? model.center.selected?.target ?? model.store.targets.first else { return }
+            Task {
+                if let m = await model.releaseLock(t, info: model.center.selected?.target.id == t.id ? model.center.selected?.progress.lockInfo ?? [] : []) {
+                    let a = NSAlert()
+                    a.messageText = m
+                    a.runModal()
+                }
+            }
+        }
+    }
+
     func showSSHTargets(_ action: SSHTargetAction) {
         let model = sshTargets
         switch action {

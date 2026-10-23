@@ -11,6 +11,24 @@ public enum SSHTargetAction: Sendable, Equatable {
     case `import`
 }
 
+/// Czynność wdrożenia Pro*C (pipeline, konsola, historia, blokada, lokalny git).
+public enum ProCDeployAction: Sendable, Equatable {
+    /// Wdrożenie na cel (nil — wybór w oknie): podsumowanie, potwierdzenie PROD, konsola.
+    case deploy(String?)
+    /// Wycofanie binarki z `.prev` albo z kopii.
+    case rollback(String?)
+    /// Historia wdrożeń (lokalna i z serwera) z logami.
+    case history
+    /// Konsola bieżącego/ostatniego wdrożenia.
+    case console
+    /// Zatrzymanie bieżącego wdrożenia (Stop).
+    case stop
+    /// Ręczne zdjęcie blokady celu (po potwierdzeniu).
+    case releaseLock(String?)
+    /// Stan lokalnego repo i commity wdrożone na celach („gdzie co jest”).
+    case gitStatus
+}
+
 /// Cele SSH zdalnego builda Pro*C (zadanie Pro*C, „Menedżer połączeń SSH”). Tylko dla użytkownika (agent — Brak):
 /// cele zawierają hosty i ścieżki serwera, a operacje na serwerze należą do pipeline'u z potwierdzeniami.
 @MainActor
@@ -40,6 +58,51 @@ enum RemoteTargetCommands {
                     summary: L10n.tr("Zapisuje listę celów SSH i folderów do pliku JSON — bez haseł (sekrety zostają w Pęku kluczy)."),
                     feature: "PC-CONN-001") { ctx in
                 ctx.ui?.showSSHTargets(.export)
+                return .ok
+            },
+            command("proc.deploy", L10n.tr("Wdróż na cel…"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu (domyślnie wybór w oknie)"))],
+                    effect: .external,
+                    summary: L10n.tr("Wdrożenie Pro*C: podsumowanie zmian (commit na serwerze → remote), dla PROD potwierdzenie nazwą celu, potem na serwerze blokada, kontrola working copy, git pull --ff-only, backup binarek, make, instalacja do bin i historia — z konsolą na żywo."),
+                    feature: "PC-DEPLOY-001") { ctx in
+                ctx.ui?.showProCDeploy(.deploy(ctx.arguments.string("target")))
+                return .ok
+            },
+            command("proc.rollback", L10n.tr("Wycofaj binarkę…"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu"))],
+                    effect: .external,
+                    summary: L10n.tr("Przywraca binarkę na celu z wersji .prev albo z wybranej kopii w katalogu backupów (po potwierdzeniu; PROD — nazwą celu). Źródła wycofuje się przez revert w git."),
+                    feature: "PC-DEPLOY-003") { ctx in
+                ctx.ui?.showProCDeploy(.rollback(ctx.arguments.string("target")))
+                return .ok
+            },
+            command("proc.history", L10n.tr("Historia wdrożeń"), effect: .uiState,
+                    summary: L10n.tr("Historia wdrożeń i wycofań: lokalna (z pełnymi logami) i z serwera celu."),
+                    feature: "PC-DEPLOY-004") { ctx in
+                ctx.ui?.showProCDeploy(.history)
+                return .ok
+            },
+            command("proc.console", L10n.tr("Konsola wdrożenia"), effect: .uiState,
+                    summary: L10n.tr("Konsola wdrożenia: sekcje kroków ze statusem i czasem, filtr błędów, klikalne błędy proc/xlc, Stop, zapis logu."),
+                    feature: "PC-CONS-001") { ctx in
+                ctx.ui?.showProCDeploy(.console)
+                return .ok
+            },
+            command("proc.stop", L10n.tr("Zatrzymaj wdrożenie"), effect: .external,
+                    summary: L10n.tr("Stop: kończy ssh -tt (SIGHUP po stronie serwera) i zapasowo zabija grupę procesów skryptu; blokada zdejmowana."),
+                    feature: "PC-CONS-002") { ctx in
+                ctx.ui?.showProCDeploy(.stop)
+                return .ok
+            },
+            command("proc.releaseLock", L10n.tr("Zdejmij blokadę celu…"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu"))],
+                    effect: .external,
+                    summary: L10n.tr("Ręczne zdjęcie blokady wdrożenia na serwerze (np. po awarii) — pokazuje, kto ją trzyma, i wymaga potwierdzenia."),
+                    feature: "PC-DEPLOY-002") { ctx in
+                ctx.ui?.showProCDeploy(.releaseLock(ctx.arguments.string("target")))
+                return .ok
+            },
+            command("proc.gitStatus", L10n.tr("Stan git i wdrożeń"), effect: .uiState,
+                    summary: L10n.tr("Lokalne repo projektu: gałąź, niezatwierdzone zmiany, commity niewypchnięte; commit remote i commit wdrożony na każdym celu."),
+                    feature: "PC-GIT-001") { ctx in
+                ctx.ui?.showProCDeploy(.gitStatus)
                 return .ok
             },
             command("ssh.import", L10n.tr("Importuj cele SSH…"), effect: .settings,
