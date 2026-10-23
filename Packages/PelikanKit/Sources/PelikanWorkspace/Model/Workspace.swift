@@ -18,6 +18,8 @@ public protocol UIServices: AnyObject {
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
     /// Schowek: tekst i opcjonalnie HTML (wklejanie do Excela/Numbers z formatowaniem).
     func copyToClipboard(_ text: String, html: String?)
+    /// Druk dokumentu HTML (raport, PD-REP-001).
+    func printHTML(_ html: String, title: String)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
     /// Large Data Editor (UG 27) dla komórki siatki.
@@ -50,6 +52,15 @@ public protocol UIServices: AnyObject {
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
     /// Eksplorator testów utPLSQL (UT-EXP-001).
     func showTestExplorer()
+    /// Test Manager (PD-TOOL-018).
+    func showTestManager()
+    /// Okno projektu (PD-PROJ-001).
+    func showProject()
+    /// Monitor zdarzeń i test obciążenia (PD-TOOL-014, PD-TOOL-019).
+    func showEventMonitor()
+    func showLoadTester()
+    /// Okna narzędzi siatki (zapytania powiązane, porównania, kolumna do plików).
+    func showGridTool(_ request: GridToolRequest)
     /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
     func exportDiagram(_ doc: Document, format: String)
     func copyDiagramImage(_ doc: Document)
@@ -64,6 +75,11 @@ public protocol UIServices: AnyObject {
     func showCompareObjects()
     /// DBMS Scheduler (PD-SCHED-001).
     func showScheduler()
+    /// Okno wykresu z karty wyników okna SQL (PD-GRAPH-001).
+    func showGraph(document: Document, tab: ResultTab)
+    /// Wyjście narzędzia użytkownika i edycja listy narzędzi (PD-TOOL-017).
+    func showToolOutput(title: String, text: String, status: Int32)
+    func showUserToolsSettings()
     /// Okno wyników utPLSQL dla przebiegu (PROMPT §6).
     func showUtplsqlResults(_ run: UtplsqlRun)
     /// Okno punktów przerwania (UG 5.10).
@@ -103,6 +119,12 @@ extension UIServices {
     public func showBreakpoints() {}
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
+    public func showTestManager() {}
+    public func showProject() {}
+    public func showEventMonitor() {}
+    public func showLoadTester() {}
+    public func showGridTool(_ request: GridToolRequest) {}
+    public func printHTML(_ html: String, title: String) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}
     public func printDiagram(_ doc: Document) {}
@@ -112,6 +134,9 @@ extension UIServices {
     public func showExportObjects() {}
     public func showCompareObjects() {}
     public func showScheduler() {}
+    public func showGraph(document: Document, tab: ResultTab) {}
+    public func showToolOutput(title: String, text: String, status: Int32) {}
+    public func showUserToolsSettings() {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
@@ -226,6 +251,10 @@ public final class Workspace {
     @ObservationIgnored public weak var agentGate: (any AgentInvocationGate)?
     /// Zmiany edytorów wykonane przez agentów (cofanie sesji agenta).
     public internal(set) var agentEdits: [AgentEdit] = []
+    /// Otwarty projekt (UG 14), jego plik i wynik ostatniego budowania.
+    public var project: Project?
+    public var projectURL: URL?
+    public var projectBuildResults: [ProjectBuildResult] = []
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
@@ -297,6 +326,8 @@ public final class Workspace {
         if commands == nil {
             registerMacroCommands()
             registerCopyFormatCommands()
+            registerUserToolCommands()
+            registerUserReports()
         }
     }
 

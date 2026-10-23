@@ -93,6 +93,15 @@ public enum GridCommands {
                                       submenu: L10n.tr("Wynik"), agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczenie jako warunek „kolumna IN (…)”."), feature: "PD-GRID-015"),
                     validate: hasGrid) { ctx in try copy(ctx, .expressionList, header: false) },
+            Command(CommandDescriptor(id: "grid.graph", title: L10n.tr("Wykres…"), category: .session, submenu: L10n.tr("Wynik"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Okno wykresu z bieżącej karty wyników: kategoria, serie, typ, styl, szablony, auto-odświeżanie, eksport."),
+                                      feature: "PD-GRAPH-001"),
+                    validate: hasGrid) { ctx in
+                guard let doc = SQLCommands.sqlDocument(ctx.workspace), let (tab, _) = activeGrid(ctx.workspace) else { return .ok }
+                ctx.ui?.showGraph(document: doc, tab: tab)
+                return .ok
+            },
             Command(CommandDescriptor(id: "grid.copyAs", title: L10n.tr("Kopiuj jako…"), category: .edit, submenu: L10n.tr("Wynik"),
                                       parameters: [CommandParameter("format", .string, required: true, L10n.tr("Format"), allowed: ["csv", "tsv", "html", "xml", "sql", "expressionList"])],
                                       agent: .none, effect: .none,

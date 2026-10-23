@@ -272,6 +272,14 @@ wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/
 poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
 zablokuje; okno zgody pokazuje pełny tekst.
 
+### D36 · 2026-10-23 — Zamknięcie Etapu 5 (agenci AI); praca równoległa
+Kryteria spełnione testami: każde CLI z listy dostaje serwer MCP tylko dla sesji (specyfikacje uruchomienia, token poza
+argumentami), agent czyta stan, edytory i obiekty bazy przez własną sesję, operacje „Za zgodą” czekają na decyzję
+(atrapa okna zgody), testy bezpieczeństwa z SECURITY §5 przechodzą (kanał: 16, baza: 8). Testy E2E z prawdziwymi CLI
+(AI-E2E-001, opcjonalne) nie są uruchamiane automatycznie — używałyby kont dostawców właściciela; zostają do ręcznego
+uruchomienia. Od tego etapu część zadań bez bazy (interfejs panelu, funkcje edytora, przeglądarka plików) budują
+równolegle subagenty w osobnych worktree, a zadania z testami na wspólnej bazie testowej — sesja główna, szeregowo.
+
 ### D37 · 2026-10-23 — Makra nagrywają tekst i komendy edytora
 Makro (PD-EDIT-015) zapisuje wpisywany tekst, Backspace (łączone w kroki, poprawki literówek skracają ostatni tekst)
 oraz komendy rejestru wywołane przez użytkownika ze skutkiem „interfejs” albo „edytor”. Komendy wykonujące polecenia
@@ -300,6 +308,7 @@ domowy, a agent pracuje na bazie i edytorach. Usuwanie zawsze do Kosza, nigdy tr
 tekst okien w katalogu danych (`Worksets/*.json`, pliki 0600) — przy autozapisie zamknięcie aplikacji nie pyta o zapis
 okien, bo ich stan wraca przy starcie. Okna planu, raportu, diagramu i notatnika nie trafiają do workseta (własne
 formaty — Etapy 6–7). Układ okna: ramka, szerokość i karta lewej kolumny, panel agenta (`layout.json`).
+
 ### D41 · 2026-10-23 — Diagram jako model w dokumencie, plik JSON .pdd
 Okno diagramu trzyma model `Diagram` w dokumencie (nie w tekście okna); Zapisz/Otwórz zapisują go jako JSON z
 rozszerzeniem `.pdd` (format własny, czytelny i wersjonowany polem `version`). Współrzędne są w jednostkach przy zoomie
@@ -313,6 +322,7 @@ strony, pola, sortowanie, grupowanie, WHERE/HAVING/INTO, DISTINCT) i generuje SE
 słów kluczowych, kolumna w linii, złączenia ANSI albo w WHERE, schemat przed tabelą). Odczyt istniejącego zapytania
 obejmuje tylko proste SELECT: tabele rozdzielone przecinkami albo `[LEFT|RIGHT|FULL] JOIN … ON a.x = b.y`, bez
 podzapytań w FROM, WITH i operacji zbiorowych — inne zapytania otwierają pusty Query Builder z komunikatem.
+
 ### D43 · 2026-10-23 — Narzędzia danych w sesji narzędzi; format własny
 Eksport, importy, generator i porównanie danych działają w osobnej sesji narzędzi połączenia (`SessionPurpose.tool`),
 nie w sesjach okien — importy zatwierdzają własne transakcje (COMMIT co n wierszy) i nie mogą zatwierdzić pracy
@@ -344,10 +354,46 @@ i własny `.testdb/` w swoim worktree — testy na wspólnej bazie muszą iść 
 konfliktujące (lista komend, UIServices, AppDelegate, dokumenty) są łączone lokalnie w jedną gałąź integracyjną,
 sprawdzaną pełnym zestawem testów i budowaniem aplikacji, a potem scalaną jednym PR; pojedyncze PR-y są zamykane
 z odnośnikiem — ich commity i scalenia są w historii PR integracyjnego.
-### D36 · 2026-10-23 — Zamknięcie Etapu 5 (agenci AI); praca równoległa
-Kryteria spełnione testami: każde CLI z listy dostaje serwer MCP tylko dla sesji (specyfikacje uruchomienia, token poza
-argumentami), agent czyta stan, edytory i obiekty bazy przez własną sesję, operacje „Za zgodą” czekają na decyzję
-(atrapa okna zgody), testy bezpieczeństwa z SECURITY §5 przechodzą (kanał: 16, baza: 8). Testy E2E z prawdziwymi CLI
-(AI-E2E-001, opcjonalne) nie są uruchamiane automatycznie — używałyby kont dostawców właściciela; zostają do ręcznego
-uruchomienia. Od tego etapu część zadań bez bazy (interfejs panelu, funkcje edytora, przeglądarka plików) budują
-równolegle subagenty w osobnych worktree, a zadania z testami na wspólnej bazie testowej — sesja główna, szeregowo.
+
+### D47 · 2026-10-23 — Polecenia własne okna poleceń; bez SET ENVVAR
+BEAUTIFY, BROWSE, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP i EXPORT
+TABLES/OBJECTS działają przez te same komendy rejestru i modele co menu (Object Browser, eksport), pliki — w katalogu
+ustawionym przez CD. SET ENVVAR nie jest obsługiwane: zmienna środowiskowa procesu Pelikana trafiłaby do procesów
+potomnych, w tym CLI agentów, a hasła nie mogą być w zmiennych środowiskowych. ZIP używa `/usr/bin/zip` z argumentami
+w tablicy (bez powłoki).
+
+### D48 · 2026-10-23 — Monitor zdarzeń bez DBMS_OUTPUT innych sesji; test obciążenia
+DBMS_OUTPUT jest buforem prywatnym sesji — monitor w osobnej sesji nie może odczytać wyjścia innej sesji, więc
+monitor obsługuje DBMS_ALERT i DBMS_PIPE (wiadomość: elementy tekstowe, liczbowe i daty sklejone ` | `), a wyjście
+programów pokazują okna, które je wykonują. Test obciążenia uruchamia każdy wątek w osobnej sesji narzędzi,
+wiąże `:thread` i `:iteration`, po iteracji domyślnie wycofuje zmiany, a przed startem przechodzi przez strażnika
+zmian (prod potwierdza, tylko do odczytu blokuje); wyniki zapisuje jako CSV (Excel).
+
+### D49 · 2026-10-23 — Wykresy: Swift Charts, definicja po nazwach kolumn, odświeżanie przez okno SQL
+Okno wykresu bierze migawkę karty wyników (kolumny i pobrane wiersze) i rysuje ją w Swift Charts (słupkowy, liniowy,
+warstwowy, punktowy, kołowy — kołowy z pierwszej serii). Definicja wykresu odwołuje się do kolumn po nazwie, więc
+zapisana jako szablon (`ChartTemplates.json` w katalogu danych) pasuje do innych zapytań o tych samych kolumnach;
+brakujące kolumny są przy zastosowaniu pomijane. Auto-odświeżanie zaznacza polecenie karty w oknie SQL i wykonuje je
+tak jak F8 (ta sama sesja, strażnik zmian, historia), zamiast osobnej sesji — wykres pokazuje to, co zobaczyłby
+użytkownik w siatce. Wartości nieliczbowe w seriach są pomijane i zliczane w stopce okna.
+
+### D50 · 2026-10-23 — Narzędzia użytkownika bez powłoki i bez danych logowania
+Narzędzie zewnętrzne uruchamia się przez `Process` z programem (ścieżka albo nazwa szukana w katalogach systemowych)
+i argumentami jako tablicą — bez powłoki, więc `$(…)`, `;` i spacje w wartościach zmiennych nie są interpretowane.
+Zmienne dają plik, zaznaczenie, tekst, obiekt z Przeglądarki obiektów, alias połączenia i schemat — nigdy hasło, host,
+port, usługę ani nazwę użytkownika połączenia; środowisko programu nie zawiera zmiennych `PELIKAN_*` (np. tokenu
+agenta). Narzędzie sesji nie wykonuje SQL samo: otwiera okno SQL z blokiem (opcjonalnie wykonuje je komendą okna),
+żeby obowiązywały te same zasady co przy ręcznym wykonaniu. Poziom agenta „Brak”.
+
+### D51 · 2026-10-23 — Raporty: renderer HTML w Swift, plik .rep w JSON, druk przez WebKit
+Raport to definicja (`ReportDefinition`: zapytanie, styl, formaty kolumn, układ, opcje) zapisywana jako JSON `.rep`,
+a wynik — HTML generowany w czystym Swifcie (testowalny bez bazy) i pokazywany w `WKWebView`; druk i PDF idą przez
+okno druku WebKit. Zmienne raportu korzystają z mechanizmu okna SQL (`&<…>`, `:bind`, parametry Jaspera, okno
+„Zmienne”), a wykonanie — z sesji narzędzi `tool("report")`, więc raport nie dotyka transakcji okien. Formaty liczb to
+wzorce `NumberFormatter` (np. `#,##0.00`), dat — wzorce Unicode (np. `yyyy-MM-dd`), w lokalizacji systemu. Grupowanie
+(Break) zakłada, że zapytanie sortuje po kolumnach grup (ORDER BY), jak we wzorcu.
+
+### D52 · 2026-10-23 — Blokada definicji raportu bez hasła
+Blokada ukrywa zapytanie i układ oraz uniemożliwia ich zmianę w oknie; odblokowanie wymaga potwierdzenia, ale nie hasła
+— hasło lub jego skrót w pliku `.rep` byłoby sekretem w pliku, a plik JSON i tak da się otworzyć w edytorze tekstu.
+Blokada chroni przed przypadkową zmianą, nie przed świadomym odczytem definicji.

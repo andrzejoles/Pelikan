@@ -104,10 +104,14 @@ public struct Settings: Sendable, Codable, Hashable {
     public var autosaveLayout = true
     // Agenci AI (PROMPT §7)
     public var agent = AgentSettings()
+    /// Zapytania standardowe tabel i widoków (UG 7.14).
+    public var standardQueries = StandardQuery.standard
     /// Zapytania przeglądarki sesji (Define Session Queries).
     public var sessionQueries = SessionQueries.standard
     /// Raporty przebiegów zadań schedulera z regułami kolorów (UG 10.4).
     public var schedulerReports = Scheduler.RunReport.standard
+    /// Narzędzia użytkownika (UG 24.15, PD-TOOL-017).
+    public var userTools: [UserTool] = []
 
     public init() {}
 
@@ -162,7 +166,9 @@ public struct Settings: Sendable, Codable, Hashable {
         shortcutProfile = v(.shortcutProfile, shortcutProfile)
         keyOverrides = v(.keyOverrides, keyOverrides)
         agent = v(.agent, agent)
+        standardQueries = v(.standardQueries, standardQueries)
         sessionQueries = v(.sessionQueries, sessionQueries)
         schedulerReports = v(.schedulerReports, schedulerReports)
+        userTools = v(.userTools, userTools)
     }
 }

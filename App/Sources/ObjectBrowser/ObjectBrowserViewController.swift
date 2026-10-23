@@ -333,7 +333,22 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             item.target = self
             item.representedObject = id
             item.isEnabled = workspace.isEnabled(CommandID(rawValue: id))
+            // Zapytania standardowe tabel i widoków (UG 7.14) zaraz po „Pokaż dane”.
+            if id == "ob.queryData", let o = workspace.selectedObject, [.table, .view, .materializedView].contains(o.type) {
+                let sub = NSMenu()
+                for q in workspace.settings.standardQueries {
+                    let si = sub.addItem(withTitle: q.name, action: #selector(runStandardQuery(_:)), keyEquivalent: "")
+                    si.target = self
+                    si.representedObject = q.name
+                }
+                menu.addItem(withTitle: L10n.tr("Zapytania standardowe"), action: nil, keyEquivalent: "").submenu = sub
+            }
         }
+    }
+
+    @objc private func runStandardQuery(_ sender: NSMenuItem) {
+        guard let name = sender.representedObject as? String, let o = workspace.selectedObject else { return }
+        workspace.perform("ob.standardQuery", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue), "name": .string(name)]))
     }
 
     @objc private func runCommand(_ sender: NSMenuItem) {

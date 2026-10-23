@@ -314,9 +314,78 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showGraph(document: PelikanWorkspace.Document, tab: ResultTab) {
+        // Każdy wykres w osobnym oknie (kilka wykresów z różnych wyników naraz).
+        ToolWindowController.show(key: "graph-\(tab.id.uuidString)", title: L10n.tr("Wykres – \(tab.title)"), size: NSSize(width: 980, height: 600)) {
+            GraphView(workspace: workspace, document: document, tab: tab)
+        }
+    }
+
+    func showToolOutput(title: String, text: String, status: Int32) {
+        ToolWindowController.close(key: "toolOutput")
+        ToolWindowController.show(key: "toolOutput", title: title, size: NSSize(width: 640, height: 400)) {
+            ToolOutputView(text: text, status: status)
+        }
+    }
+
+    func showUserToolsSettings() {
+        ToolWindowController.show(key: "userTools", title: L10n.tr("Narzędzia użytkownika"), size: NSSize(width: 760, height: 480)) {
+            UserToolsView(workspace: workspace)
+        }
+    }
+
     func showSessionBrowser() {
         ToolWindowController.show(key: "sessions", title: L10n.tr("Sesje"), size: NSSize(width: 1000, height: 640)) {
             SessionBrowserView(workspace: workspace)
+        }
+    }
+
+    func showGridTool(_ request: GridToolRequest) {
+        switch request {
+        case let .linkedQueries(links, values, connection):
+            ToolWindowController.close(key: "linkedQueries")
+            ToolWindowController.show(key: "linkedQueries", title: L10n.tr("Zapytania powiązane"), size: NSSize(width: 520, height: 360)) {
+                LinkedQueriesView(workspace: workspace, links: links, values: values, connection: connection)
+            }
+        case let .compareRecords(comparison):
+            ToolWindowController.close(key: "compareRecords")
+            ToolWindowController.show(key: "compareRecords", title: L10n.tr("Porównanie rekordów"), size: NSSize(width: 700, height: 440)) {
+                CompareRecordsView(comparison: comparison)
+            }
+        case let .compareResults(left, right):
+            ToolWindowController.close(key: "compareResults")
+            ToolWindowController.show(key: "compareResults", title: L10n.tr("Porównanie wyników"), size: NSSize(width: 1000, height: 540)) {
+                CompareResultsView(left: left, right: right)
+            }
+        case let .columnToFiles(tab):
+            ToolWindowController.close(key: "columnToFiles")
+            ToolWindowController.show(key: "columnToFiles", title: L10n.tr("Kolumna do plików"), size: NSSize(width: 540, height: 200)) {
+                ColumnToFilesView(tab: tab)
+            }
+        }
+    }
+
+    func showEventMonitor() {
+        ToolWindowController.show(key: "eventMonitor", title: L10n.tr("Monitor zdarzeń"), size: NSSize(width: 680, height: 420)) {
+            EventMonitorView(workspace: workspace)
+        }
+    }
+
+    func showLoadTester() {
+        ToolWindowController.show(key: "loadTester", title: L10n.tr("Test obciążenia"), size: NSSize(width: 980, height: 620)) {
+            LoadTesterView(workspace: workspace)
+        }
+    }
+
+    func showProject() {
+        ToolWindowController.show(key: "project", title: L10n.tr("Projekt"), size: NSSize(width: 640, height: 640)) {
+            ProjectView(workspace: workspace)
+        }
+    }
+
+    func showTestManager() {
+        ToolWindowController.show(key: "testManager", title: L10n.tr("Test Manager"), size: NSSize(width: 900, height: 600)) {
+            TestManagerView(workspace: workspace)
         }
     }
 
@@ -416,6 +485,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             sheet = w
             window.beginSheet(w)
         }
+    }
+
+    func printHTML(_ html: String, title: String) {
+        _ = HTMLPrinter(html: html, title: title)
     }
 
     func copyToClipboard(_ text: String, html: String?) {

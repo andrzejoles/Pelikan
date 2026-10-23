@@ -65,8 +65,13 @@ public enum SQLCommands {
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Wykonuje zaznaczenie albo polecenie pod kursorem (AutoSelect) lub wszystkie polecenia okna."),
                                       feature: "PD-SQLW-002"),
-                    validate: { ws in sqlDocument(ws).map { !$0.isExecuting } ?? false }) { ctx in
-                try await execute(ctx, .standard)
+                    validate: { ws in (sqlDocument(ws) ?? ReportCommands.reportDocument(ws)).map { !$0.isExecuting } ?? false }) { ctx in
+                // Okno raportu: Wykonaj (F8) wykonuje raport (UG 12.2).
+                if let doc = ReportCommands.reportDocument(ctx.workspace) {
+                    try await ReportRunner.run(doc, in: ctx.workspace)
+                    return .ok
+                }
+                return try await execute(ctx, .standard)
             },
             Command(CommandDescriptor(id: "sql.executeAlternate", title: L10n.tr("Wykonaj (odwrotnie do AutoSelect)"), category: .session,
                                       pd: ["ctrl+f8"], mac: ["cmd+shift+enter"], agent: .none, effect: .modifiesDatabase,

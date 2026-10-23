@@ -398,7 +398,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         copyAsItem.submenu = copyAs
         menu.addItem(.separator())
         for (title, id) in [(L10n.tr("Large Data Editor…"), "grid.largeData"), (L10n.tr("Eksportuj wynik…"), "grid.export"),
-                            (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel")] {
+                            (L10n.tr("Kopiuj do Excela"), "grid.copyToExcel"), (L10n.tr("Kolumna do plików…"), "grid.columnToFiles"),
+                            (L10n.tr("Zapytania powiązane…"), "grid.linkedQueries"), (L10n.tr("Porównaj rekordy"), "grid.compareRecords"),
+                            (L10n.tr("Porównaj wyniki"), "grid.compareResults"), (L10n.tr("Zapisz jako zapytanie standardowe…"), "grid.saveAsStandardQuery")] {
             let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = id

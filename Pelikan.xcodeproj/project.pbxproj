@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */; };
+		01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41B68045DB74053B692C853 /* ProjectView.swift */; };
 		0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */; };
 		03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A244677BB2A02F711F72B0 /* DiagramViewController.swift */; };
 		069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */; };
@@ -25,16 +26,20 @@
 		2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62611D2986EABAD106F9D86C /* DebuggerPanel.swift */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
+		3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */; };
 		346CAA7136A40A29BF782E66 /* pelikan-mcp in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 2849E776640F52BC43AB5C6F /* pelikan-mcp */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */; };
 		3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA27E74D0C918323B465606B /* ToolWindows.swift */; };
 		41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */; };
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
+		53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
 		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
+		76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */; };
+		85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDD00050FBA5650E960C7ED /* GraphView.swift */; };
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		923CEBCD965BF601901F2C11 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = D507270E4637937E6D6C6235 /* PelikanBridgeKit */; };
 		92F74B6D7C2D435DBF289BEA /* AgentSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456C231334B998B64CE9501 /* AgentSheets.swift */; };
@@ -68,6 +73,7 @@
 		F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */; };
 		F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */; };
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
+		F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
 
@@ -97,9 +103,11 @@
 
 /* Begin PBXFileReference section */
 		00A838393A0802C7E216722E /* TestWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWindowViewController.swift; sourceTree = "<group>"; };
+		0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorViews.swift; sourceTree = "<group>"; };
 		0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBrowserView.swift; sourceTree = "<group>"; };
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
+		10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportWindowViewController.swift; sourceTree = "<group>"; };
 		229E7A0294B2BA8203F506AF /* BeautifierPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeautifierPane.swift; sourceTree = "<group>"; };
 		2456C231334B998B64CE9501 /* AgentSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSheets.swift; sourceTree = "<group>"; };
 		26AA9CEDE79921F45A0500AB /* Observe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Observe.swift; sourceTree = "<group>"; };
@@ -113,6 +121,7 @@
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		3429C3E6085A0A6E4E4B0843 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUIController.swift; sourceTree = "<group>"; };
+		3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridToolViews.swift; sourceTree = "<group>"; };
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
@@ -124,6 +133,7 @@
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
@@ -140,6 +150,7 @@
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B3FB679B3AA90E719B503472 /* TemplatePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePane.swift; sourceTree = "<group>"; };
 		C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserPane.swift; sourceTree = "<group>"; };
+		C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagerView.swift; sourceTree = "<group>"; };
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
 		C866A6E13301104082FC8632 /* AgentsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentsPane.swift; sourceTree = "<group>"; };
 		CA27E74D0C918323B465606B /* ToolWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolWindows.swift; sourceTree = "<group>"; };
@@ -148,6 +159,7 @@
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
+		E41B68045DB74053B692C853 /* ProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectView.swift; sourceTree = "<group>"; };
 		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
@@ -283,6 +295,7 @@
 		6047C9C37C3A0D921D8B27F2 /* SQLWindow */ = {
 			isa = PBXGroup;
 			children = (
+				3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */,
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
@@ -294,6 +307,7 @@
 		62AF99604A2C3C6CA9A3A1D6 /* TestWindow */ = {
 			isa = PBXGroup;
 			children = (
+				C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */,
 				00A838393A0802C7E216722E /* TestWindowViewController.swift */,
 			);
 			path = TestWindow;
@@ -315,6 +329,8 @@
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
+				C1F67E62A7276D0917058CE5 /* Project */,
+				F35B01C8CB3BFC56A6E4F216 /* Reports */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
 				4C59A6A5B15CB75AB066AE33 /* Templates */,
 				62AF99604A2C3C6CA9A3A1D6 /* TestWindow */,
@@ -343,6 +359,8 @@
 			isa = PBXGroup;
 			children = (
 				7C9355F810C37B2D27045A31 /* DataTransferViews.swift */,
+				7BDD00050FBA5650E960C7ED /* GraphView.swift */,
+				0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */,
 				A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */,
 				83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */,
 				0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */,
@@ -376,6 +394,14 @@
 				F9CC0D7BF4B9B154BFE1F32C /* Sources */,
 			);
 			path = PelikanKit;
+			sourceTree = "<group>";
+		};
+		C1F67E62A7276D0917058CE5 /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				E41B68045DB74053B692C853 /* ProjectView.swift */,
+			);
+			path = Project;
 			sourceTree = "<group>";
 		};
 		CA48D35749C698677F8C081C /* CommandWindow */ = {
@@ -448,6 +474,14 @@
 				DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */,
 			);
 			path = Editor;
+			sourceTree = "<group>";
+		};
+		F35B01C8CB3BFC56A6E4F216 /* Reports */ = {
+			isa = PBXGroup;
+			children = (
+				10B4748E08F3E0074F5CE892 /* ReportWindowViewController.swift */,
+			);
+			path = Reports;
 			sourceTree = "<group>";
 		};
 		F9CC0D7BF4B9B154BFE1F32C /* Sources */ = {
@@ -593,17 +627,22 @@
 				0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */,
 				010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
+				85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */,
+				3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
 				F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */,
 				1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */,
+				53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */,
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
+				01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
+				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
@@ -613,6 +652,7 @@
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
 				A642A0E43AB977C2957DE20E /* TestExplorerView.swift in Sources */,
+				F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */,
 				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,

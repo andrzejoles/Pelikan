@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T13:46:19+02:00",
+  "heartbeat": "2026-10-23T14:15:50+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,11 @@
     }
   ],
   "done": [
+    "Etap 6 / projekty (Build, Make, Find in Project, pulpit) i edytor zewnętrzny Large Data Editor (RTF) — wszystkie wiersze Etapu 6 zrobione",
+    "Etap 6 — wykresy, narzędzia użytkownika i raporty (subagenci) zintegrowane z narzędziami siatki, Test Managerem, monitorem i testem obciążenia; testy 132+70+16 bez bazy, 110 na bazie (D49–D52)",
+    "Etap 6 / Monitor zdarzeń (DBMS_ALERT, DBMS_PIPE) i test obciążenia (wątki, wyniki na żywo, CSV) — 2 testy na bazie (D48); subagent zakończył raporty",
+    "Etap 6 / Test Manager — zestawy testów z oczekiwaniami, zmienne globalne, DBMS_OUTPUT, limit czasu, RUNTESTSET; polecenia własne okna poleceń i EXPORT; subagent zakończył wykresy i narzędzia użytkownika",
+    "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie",
     "Etap 6 — gałąź integracyjna: narzędzia edytora, pliki i Git, scheduler, diagramy, dane; testy: 120+70+16 bez bazy, 103 na bazie (D46)",
     "Etap 6 / prace subagentów zintegrowane: makra, Special Copy, historia schowka, To-Do, przeglądarka plików, Git, worksety i układy okna (D37–D40)",
     "Etap 5 / panel (subagent, równolegle) — terminal SwiftTerm z CLI, okno zgody, macierz uprawnień przy starcie, aktywność, przeglądarka dziennika, Preferencje › Agenci; pełne cofanie sesji (edytory, kod obiektów, ROLLBACK) podpięte w panelu",
@@ -87,17 +92,7 @@
     "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
     "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
     "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)",
-    "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy",
-    "PR #16 scalony (formater PL/SQL)",
-    "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
-    "PR #14 (zwijanie kodu) i PR #15 (Code Assistant) scalone",
-    "Etap 2 / formater PL/SQL: bloki, IF/ELSIF/ELSE, pętle, CASE, wyjątki, deklaracje i nagłówki z zawijaniem parametrów, klauzule SQL z wyrównaniem, AND/OR, BETWEEN, JOIN … ON, podzapytania, WITH, MERGE; komentarze, puste linie, NoFormat; weryfikacja tokenów (kod nigdy nie zmieniony); zaznaczenie, automatycznie po wczytaniu / przed kompilacją / przed zapisem; preferencje z podglądem — 9 testów, pakiet 50 000 linii",
-    "Etap 2 / Code Assistant: kolumny po aliasie i nazwie tabeli (FROM, JOIN, podzapytania, UPDATE/INSERT/DELETE/MERGE), elementy pakietu, NEXTVAL/CURRVAL, %ROWTYPE, kursory, rekordy pętli FOR, typy rekordowe, :new/:old w wyzwalaczu, deklaracje w zasięgu, obiekty schematu, słowa kluczowe, linki po @; automatycznie po kropce (400 ms) i ⌥⎋/⌃Space; lista z zawężaniem, ↑↓ Enter Tab Esc — 6 testów (1 na bazie)",
-    "Etap 5 (agenci AI) zamknięty — D36; PR #38 scalony",
-    "PR #13 scalony (parser strukturalny, Zawartość kodu, nawigacja)",
-    "Etap 6 / Eksport i porównanie obiektów użytkownika (DDL, kolejność wykonalna, pliki; różnice między schematami i połączeniami, SQL wyrównujący) — 2 testy na bazie; subagent 1 zakończył makra, Special Copy, historię schowka, To-Do",
-    "Etap 6 / Sesje — przeglądarka sesji (filtry, szczegóły z :sid i sklejaniem, Kill, SQL Trace, auto-odświeżanie, edycja zapytań); test na bazie; granty V$ w bazie testowej",
-    "Etap 6 / Explain Plan — okno planu (drzewo, koszt, wiersze, kolejność wykonania i nawigacja, cel optymalizatora, predykaty), F5 z zaznaczenia ze zmiennymi PL/SQL jako wiązanymi, formaty tekst/HTML/XML; sesja narzędzi; 3 testy"
+    "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"
@@ -114,18 +109,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 206,
-      "passed": 206,
+      "total": 218,
+      "passed": 218,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T13:46:16+02:00"
+      "at": "2026-10-23T14:09:42+02:00"
     },
     "integration": {
-      "total": 103,
-      "passed": 103,
+      "total": 110,
+      "passed": 110,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T13:46:19+02:00"
+      "at": "2026-10-23T14:09:45+02:00"
     },
     "perf": {
       "total": 9,

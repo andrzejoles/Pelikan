@@ -18,6 +18,8 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     private var tokens: [ObservationToken] = []
     private var updating = false
     private static var open: [LargeDataEditorController] = []
+    private var externalEdit: ExternalLargeDataEdit?
+    private var externalTimer: Timer?
 
     static func show(_ model: LargeDataModel, workspace: Workspace, relativeTo parent: NSWindow?) {
         let c = LargeDataEditorController(model: model, workspace: workspace)
@@ -75,7 +77,9 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         let format = button(L10n.tr("Formatuj"), #selector(prettyPrint))
         format.toolTip = L10n.tr("Wcięcia dla JSON i XML")
         let top = NSStackView(views: [mode, format, NSView(), info])
-        let bottom = NSStackView(views: [button(L10n.tr("Wczytaj z pliku…"), #selector(load)), button(L10n.tr("Zapisz do pliku…"), #selector(save)),
+        let external = button(L10n.tr("Edytor zewnętrzny"), #selector(openExternal))
+        external.toolTip = L10n.tr("Otwiera treść w programie skojarzonym z formatem; zapis w tym programie wraca do edytora")
+        let bottom = NSStackView(views: [button(L10n.tr("Wczytaj z pliku…"), #selector(load)), button(L10n.tr("Zapisz do pliku…"), #selector(save)), external,
                                          NSView(), button(L10n.tr("Zamknij"), #selector(closeWindow)), applyButton])
         for v in [top, content, bottom] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false }
         info.textColor = .secondaryLabelColor
@@ -97,6 +101,25 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         window?.contentView = root
         mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : (model.isBinary && !model.format.isText ? 1 : 0)
         modeChanged()
+    }
+
+    /// Edytor zewnętrzny (UG 27.2): plik tymczasowy, program skojarzony z rozszerzeniem, wykrywanie zapisu co sekundę.
+    @objc private func openExternal() {
+        do {
+            let edit = externalEdit ?? ExternalLargeDataEdit(model: model)
+            let url = try edit.url ?? edit.start()
+            externalEdit = edit
+            NSWorkspace.shared.open(url)
+            externalTimer?.invalidate()
+            externalTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self, let e = self.externalEdit, self.model.isEditable else { return }
+                    if e.checkForChanges() { self.modeChanged() }
+                }
+            }
+        } catch {
+            workspace.ui?.showError(error.localizedDescription)
+        }
     }
 
     private func refresh() {
@@ -206,6 +229,9 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     @objc private func closeWindow() { close() }
 
     func windowWillClose(_ notification: Notification) {
+        externalTimer?.invalidate()
+        externalEdit?.checkForChanges()
+        externalEdit?.finish()
         Self.open.removeAll { $0 === self }
     }
 }

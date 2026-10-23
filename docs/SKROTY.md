@@ -35,6 +35,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 8 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
+| Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Pełny | 0 | PD-PROG-002 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
@@ -63,6 +64,22 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Workset › Zamknij workset | `workset.close` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Usuń workset… | `workset.delete` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Autozapis workseta | `workset.toggleAutosave` |  |  | Brak | 0 | PD-WSET-001 |
+
+## Projekt
+
+| Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
+|---|---|---|---|---|---|---|
+| Elementy projektu | `project.show` |  |  | Brak | 0 | PD-PROJ-001 |
+| Nowy projekt… | `project.new` |  |  | Brak | 0 | PD-PROJ-001 |
+| Otwórz projekt… | `project.open` |  |  | Brak | 0 | PD-PROJ-001 |
+| Zamknij projekt | `project.close` |  |  | Brak | 0 | PD-PROJ-001 |
+| Dodaj plik okna do projektu | `project.addActiveFile` |  |  | Brak | 0 | PD-PROJ-001 |
+| Dodaj obiekt do projektu | `project.addSelectedObject` |  |  | Brak | 0 | PD-PROJ-001 |
+| Buduj projekt | `project.build` |  |  | Brak | 0 | PD-PROJ-002 |
+| Make projektu | `project.make` |  |  | Brak | 0 | PD-PROJ-002 |
+| Zapisz pulpit projektu | `project.saveDesktop` |  |  | Brak | 0 | PD-PROJ-003 |
+| Otwórz pulpit projektu | `project.openDesktop` |  |  | Brak | 0 | PD-PROJ-003 |
+| Szukaj w projekcie… | `project.find` |  |  | Brak | 0 | PD-PROJ-003 |
 
 ## Edycja
 
@@ -135,12 +152,17 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | 0 | PD-VAR-005 |
 | Wynik › Następna strona | `grid.nextPage` | ⌘⇟ | ⌘⇟ | Brak | 0 | PD-SQLW-004 |
 | Wynik › Ostatnia strona (pobierz wszystkie) | `grid.lastPage` | ⇧⌘⇟ | ⇧⌘⇟ | Brak | 0 | PD-SQLW-004 |
+| Wynik › Wykres… | `grid.graph` |  |  | Brak | 0 | PD-GRAPH-001 |
 | Wynik › Edytuj dane | `grid.edit` | ⌥⌘E | ⌥⌘E | Brak | 0 | PD-GRID-017 |
 | Wynik › Wstaw rekord | `grid.insertRecord` | ⌥⌘I | ⌥⌘I | Brak | 0 | PD-GRID-017 |
 | Wynik › Usuń rekord | `grid.deleteRecord` | ⇧⌘⌫ | ⇧⌘⌫ | Brak | 0 | PD-GRID-017 |
 | Wynik › Zatwierdź zmiany (Post) | `grid.post` | ⌥⌘S | ⌥⌘S | Za zgodą | 0 | PD-GRID-017 |
 | Wynik › Anuluj zmiany | `grid.cancelChanges` |  |  | Brak | 0 | PD-GRID-017 |
 | Wynik › Kopiuj SQL zmian | `grid.copyChangesSQL` |  |  | Odczyt | 0 | PD-GRID-020 |
+| Wynik › Zapisz jako zapytanie standardowe… | `grid.saveAsStandardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
+| Wynik › Zapytania powiązane… | `grid.linkedQueries` |  |  | Brak | 0 | PD-SQLW-019 |
+| Wynik › Porównaj rekordy | `grid.compareRecords` |  |  | Brak | 0 | PD-SQLW-020 |
+| Wynik › Porównaj wyniki | `grid.compareResults` |  |  | Brak | 0 | PD-SQLW-021 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
@@ -173,6 +195,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Obiekt › Zapytanie standardowe | `ob.standardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
+| Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
+| Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
+| Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |
+| Test obciążenia… | `tools.loadTester` |  |  | Brak | 0 | PD-TOOL-019 |
 | Obiekt › Pokaż dane | `ob.queryData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › Edytuj dane | `ob.editData` |  |  | Brak | 0 | PD-OB-017 |
 | Obiekt › DDL | `ob.ddl` |  |  | Odczyt | 0 | PD-OB-015 |
@@ -238,15 +265,26 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Import z Excela… | `tools.excelImporter` |  |  | Brak | 0 | PD-TOOL-009 |
 | Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
 | Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
-| Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 6 | PD-TOOL-014 |
-| Menedżer testów… | `tools.testManager` |  |  | Brak | 6 | PD-TOOL-018 |
-| Test obciążenia… | `tools.loadTester` |  |  | Brak | 6 | PD-TOOL-019 |
+| Narzędzia użytkownika… | `tools.configureTools` |  |  | Brak | 0 | PD-TOOL-017 |
 
 ## Raporty
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Błędy kompilacji | `reports.compilationErrors` |  |  | Odczyt | 6 | PD-REP-001 |
+| Błędy kompilacji | `reports.compilationErrors` |  |  | Brak | 0 | PD-REP-001 |
+| Niepoprawne obiekty | `reports.invalidObjects` |  |  | Brak | 0 | PD-REP-001 |
+| Ostatnio zmienione obiekty | `reports.recentChanges` |  |  | Brak | 0 | PD-REP-001 |
+| Rozmiary tabel | `reports.tableSizes` |  |  | Brak | 0 | PD-REP-001 |
+| Kolumny tabel | `reports.tableColumns` |  |  | Brak | 0 | PD-REP-001 |
+| Uprawnienia użytkownika | `reports.privileges` |  |  | Brak | 0 | PD-REP-001 |
+| Sesje | `reports.sessions` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Wykonaj raport | `report.execute` |  |  | Brak | 0 | PD-REP-002 |
+| Raport › Zapisz raport jako HTML… | `report.saveHTML` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Eksportuj dane raportu… | `report.export` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Drukuj raport… | `report.print` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Zablokuj definicję raportu | `report.lock` |  |  | Brak | 0 | PD-REP-004 |
+| Raport › Odblokuj definicję raportu | `report.unlock` |  |  | Brak | 0 | PD-REP-004 |
+| Raport › Dodaj raport do menu Raporty | `report.addToMenu` |  |  | Brak | 0 | PD-REP-004 |
 
 ## Widok
 
