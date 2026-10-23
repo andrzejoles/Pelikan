@@ -54,6 +54,8 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Okno projektu (PD-PROJ-001).
+    func showProject()
     /// Monitor zdarzeń i test obciążenia (PD-TOOL-014, PD-TOOL-019).
     func showEventMonitor()
     func showLoadTester()
@@ -118,6 +120,7 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showProject() {}
     public func showEventMonitor() {}
     public func showLoadTester() {}
     public func showGridTool(_ request: GridToolRequest) {}
@@ -248,6 +251,10 @@ public final class Workspace {
     @ObservationIgnored public weak var agentGate: (any AgentInvocationGate)?
     /// Zmiany edytorów wykonane przez agentów (cofanie sesji agenta).
     public internal(set) var agentEdits: [AgentEdit] = []
+    /// Otwarty projekt (UG 14), jego plik i wynik ostatniego budowania.
+    public var project: Project?
+    public var projectURL: URL?
+    public var projectBuildResults: [ProjectBuildResult] = []
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.

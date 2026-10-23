@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */; };
+		01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E41B68045DB74053B692C853 /* ProjectView.swift */; };
 		0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */; };
 		03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A244677BB2A02F711F72B0 /* DiagramViewController.swift */; };
 		069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */; };
@@ -158,6 +159,7 @@
 		DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakpointsView.swift; sourceTree = "<group>"; };
 		DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyntaxHighlighter.swift; sourceTree = "<group>"; };
 		E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgramWindowViewController.swift; sourceTree = "<group>"; };
+		E41B68045DB74053B692C853 /* ProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectView.swift; sourceTree = "<group>"; };
 		E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExplainPlanViewController.swift; sourceTree = "<group>"; };
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
@@ -327,6 +329,7 @@
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
+				C1F67E62A7276D0917058CE5 /* Project */,
 				F35B01C8CB3BFC56A6E4F216 /* Reports */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
 				4C59A6A5B15CB75AB066AE33 /* Templates */,
@@ -391,6 +394,14 @@
 				F9CC0D7BF4B9B154BFE1F32C /* Sources */,
 			);
 			path = PelikanKit;
+			sourceTree = "<group>";
+		};
+		C1F67E62A7276D0917058CE5 /* Project */ = {
+			isa = PBXGroup;
+			children = (
+				E41B68045DB74053B692C853 /* ProjectView.swift */,
+			);
+			path = Project;
 			sourceTree = "<group>";
 		};
 		CA48D35749C698677F8C081C /* CommandWindow */ = {
@@ -628,6 +639,7 @@
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
+				01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
 				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,

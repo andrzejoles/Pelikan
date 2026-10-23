@@ -4,10 +4,10 @@ import PelikanDB
 
 /// Rozpoznany format treści (UG 27: Large Data Editor — tekst, RTF/XML/HTML, obraz, hex).
 public enum LargeDataFormat: String, Sendable {
-    case text, xml, json, html, png, jpeg, gif, pdf, binary
+    case text, xml, json, html, rtf, png, jpeg, gif, pdf, binary
 
     public var isImage: Bool { [.png, .jpeg, .gif].contains(self) }
-    public var isText: Bool { [.text, .xml, .json, .html].contains(self) }
+    public var isText: Bool { [.text, .xml, .json, .html, .rtf].contains(self) }
 
     public var fileExtension: String {
         switch self {
@@ -15,6 +15,7 @@ public enum LargeDataFormat: String, Sendable {
         case .xml: "xml"
         case .json: "json"
         case .html: "html"
+        case .rtf: "rtf"
         case .png: "png"
         case .jpeg: "jpg"
         case .gif: "gif"
@@ -34,6 +35,7 @@ public enum LargeDataFormat: String, Sendable {
             return .binary
         }
         let s = (text ?? "").drop { $0.isWhitespace }.prefix(200).lowercased()
+        if s.hasPrefix("{\\rtf") { return .rtf }
         if s.hasPrefix("<!doctype html") || s.hasPrefix("<html") { return .html }
         if s.hasPrefix("<?xml") || (s.hasPrefix("<") && s.contains(">")) { return .xml }
         if s.hasPrefix("{") || s.hasPrefix("[") { return .json }

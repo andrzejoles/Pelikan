@@ -61,4 +61,31 @@ struct GridToolsTests {
         #expect(ws.activeDocument?.text.contains("t.DNAME") == true && ws.activeDocument?.results.first?.grid != nil)
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Edytor zewnętrzny Large Data Editor: plik tymczasowy 0600 z rozszerzeniem RTF, wykrycie zapisu, sprzątanie")
+    func externalEditor() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql, text: "select to_clob('{\\rtf1 tekst}') tresc from dual")
+        doc.connectionID = def.id
+        _ = try await SQLExecutor.execute(doc, scope: .allStatements, in: ws)
+        let grid = try #require(doc.results.first?.grid)
+        let model = LargeDataModel(grid: grid, row: 0, column: 0)
+        #expect(model.format == .rtf)
+        let edit = ExternalLargeDataEdit(model: model)
+        let url = try edit.start()
+        #expect(url.pathExtension == "rtf")
+        let perms = try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions] as? Int
+        #expect(perms == 0o600)
+        #expect(!edit.checkForChanges())
+        try Data("{\\rtf1 zmienione}".utf8).write(to: url)
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(5)], ofItemAtPath: url.path)
+        #expect(edit.checkForChanges() && model.text == "{\\rtf1 zmienione}" && model.modified)
+        edit.finish()
+        #expect(!FileManager.default.fileExists(atPath: url.path))
+        await ws.sessions.disconnectAll()
+    }
 }

@@ -377,6 +377,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showProject() {
+        ToolWindowController.show(key: "project", title: L10n.tr("Projekt"), size: NSSize(width: 640, height: 640)) {
+            ProjectView(workspace: workspace)
+        }
+    }
+
     func showTestManager() {
         ToolWindowController.show(key: "testManager", title: L10n.tr("Test Manager"), size: NSSize(width: 900, height: 600)) {
             TestManagerView(workspace: workspace)

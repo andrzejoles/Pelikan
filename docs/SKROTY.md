@@ -65,6 +65,22 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Workset › Usuń workset… | `workset.delete` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Autozapis workseta | `workset.toggleAutosave` |  |  | Brak | 0 | PD-WSET-001 |
 
+## Projekt
+
+| Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
+|---|---|---|---|---|---|---|
+| Elementy projektu | `project.show` |  |  | Brak | 0 | PD-PROJ-001 |
+| Nowy projekt… | `project.new` |  |  | Brak | 0 | PD-PROJ-001 |
+| Otwórz projekt… | `project.open` |  |  | Brak | 0 | PD-PROJ-001 |
+| Zamknij projekt | `project.close` |  |  | Brak | 0 | PD-PROJ-001 |
+| Dodaj plik okna do projektu | `project.addActiveFile` |  |  | Brak | 0 | PD-PROJ-001 |
+| Dodaj obiekt do projektu | `project.addSelectedObject` |  |  | Brak | 0 | PD-PROJ-001 |
+| Buduj projekt | `project.build` |  |  | Brak | 0 | PD-PROJ-002 |
+| Make projektu | `project.make` |  |  | Brak | 0 | PD-PROJ-002 |
+| Zapisz pulpit projektu | `project.saveDesktop` |  |  | Brak | 0 | PD-PROJ-003 |
+| Otwórz pulpit projektu | `project.openDesktop` |  |  | Brak | 0 | PD-PROJ-003 |
+| Szukaj w projekcie… | `project.find` |  |  | Brak | 0 | PD-PROJ-003 |
+
 ## Edycja
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
