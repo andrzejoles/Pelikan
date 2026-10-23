@@ -17,11 +17,13 @@ public enum HostCommand {
         p.standardError = pipe
         p.standardInput = FileHandle.nullDevice
         try p.run()
-        var data = Data()
+        final class Buffer: @unchecked Sendable { var data = Data() }   // zapis w wątku czytającym, odczyt po semaforze
+        let buffer = Buffer()
         let reader = DispatchQueue(label: "pelikan.host.read")
         let done = DispatchSemaphore(value: 0)
+        let handle = pipe.fileHandleForReading
         reader.async {
-            data = pipe.fileHandleForReading.readDataToEndOfFile()
+            buffer.data = handle.readDataToEndOfFile()
             done.signal()
         }
         if done.wait(timeout: .now() + timeout) == .timedOut {
@@ -30,6 +32,6 @@ public enum HostCommand {
             throw SQLPlusError(L10n.tr("Polecenie systemu przekroczyło limit \(Int(timeout)) s i zostało przerwane"))
         }
         p.waitUntilExit()
-        return Result(status: p.terminationStatus, output: String(decoding: data, as: UTF8.self))
+        return Result(status: p.terminationStatus, output: String(decoding: buffer.data, as: UTF8.self))
     }
 }
