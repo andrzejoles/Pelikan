@@ -170,7 +170,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-PROG-005 | Podpowiedzi kompilatora (hints) i konwencje nazw; `-- Ignore` | UG 4.4, UG 23.9 | Tools > Show Compiler Hints | 2 | P2 | Odczyt | do zrobienia |
 | PD-PROG-006 | Wskaźniki: zmieniony niezapisany (niebieski), niezskompilowany (żółty) | UG 4.3 | Pasek stanu okna | 2 | P1 | — | ✅ test |
 | PD-PROG-007 | Zapis do pliku zgodnego z SQL*Plus, rozszerzenia per typ, nazwa z jednostki (opcjonalnie z właścicielem), końcowy `/` | UG 4.2, UG 23.19, UG 23.29 | File > Save | 2 | P1 | Pełny | ✅ test (nazwa z jednostki, rozszerzenie typu, końcowy /; nazwa z właścicielem — w preferencjach plików Etapu 8) |
-| PD-PROG-008 | Porównanie: z plikiem, ze źródłem w bazie, z innym plikiem, z obiektem w innej bazie | UG 4.5, NF10 | Compare to | 2 | P2 | Odczyt | do zrobienia |
+| PD-PROG-008 | Porównanie: z plikiem, ze źródłem w bazie, z innym plikiem, z obiektem w innej bazie | UG 4.5, NF10 | Compare to | 2 | P2 | Odczyt | ⚠️ częściowo (z plikiem, ze źródłem w bazie; z obiektem w innej bazie — Etap 6) ✅ test 👁 |
 | PD-PROG-009 | Edycja źródła prosto z bazy (Edit), pytanie o zapis do pliku, Revert | UG 23.2, UG 15.1 | Object Browser > Edit | 2 | P1 | Pełny | ⚠️ częściowo (edycja z bazy; bez Revert) |
 | PD-PROG-010 | Safe compilation (próbna kompilacja obiektu tymczasowego) | UG 23.19 | Preferences | 2 | P3 | — | do zrobienia |
 | PD-PROG-011 | Wykrywanie zmian obiektu w bazie przez innych (co n s), różnice i przeładowanie | UG 23.19, NF10 | Program Window | 2 | P2 | — | do zrobienia |
@@ -296,7 +296,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-OB-019 | Enable/Disable wyzwalaczy i więzów; Run job (DBMS_JOB); kolejki enqueue/dequeue; Refresh MV; Test linku | UG 21.1, NF13 | Object Browser | 2 | P2 | Za zgodą | do zrobienia |
 | PD-OB-020 | PL/SQL CCFlags (podgląd i zmiana flag z rekompilacją) | UG 21.1 | Object Browser | 2 | P3 | Za zgodą | do zrobienia |
 | PD-OB-021 | Kosz: Purge / Restore (pod starą lub nową nazwą) | UG 21.1 | Object Browser > Recycle bin | 2 | P2 | Za zgodą | do zrobienia |
-| PD-OB-022 | Compare obiektu (z bazą/schematem, plikiem, bieżącym oknem) | UG 21.1, NF12 | Object Browser > Compare | 2 | P2 | Odczyt | do zrobienia |
+| PD-OB-022 | Compare obiektu (z bazą/schematem, plikiem, bieżącym oknem) | UG 21.1, NF12 | Object Browser > Compare | 2 | P2 | Odczyt | ⚠️ częściowo (obiekt z aktywnym oknem; ze schematem innej bazy — Etap 6) ✅ test |
 | PD-OB-023 | Add source to editor (Program/Test Window) | UG 21.1 | Object Browser | 2 | P3 | — | do zrobienia |
 | PD-OB-024 | Object Browser ze 100 000 obiektów bez blokady interfejsu | PROMPT §9 | Object Browser | 2 | P1 | — | do zrobienia |
 | PD-OB-025 | Preferencje: widoczne foldery i kolejność, limit Recent, akcja dwukliku/przeciągania per typ, typy danych, Confirm Recompile, publiczne linki | UG 23.11 | Preferences | 2 | P2 | — | do zrobienia |
@@ -356,7 +356,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-TPL-003 | Tworzenie i edycja szablonów i folderów | UG 31.3 | Template Window | 2 | P2 | — | ⚠️ częściowo (zapis zaznaczenia jako szablon, usuwanie; edycja przez nadpisanie) ✅ test |
 | PD-LDE-001 | Large Data Editor: Text, XML, JSON, HTML (podgląd), obraz, Hex; Parse/Format, Auto Format; Open/Save/Clear; Post, następny/poprzedni rekord | UG 27, NF15, NF17 | Siatka > przycisk komórki | 1 | P1 | — | ⚠️ częściowo (bez podglądu HTML i Auto Format) |
 | PD-LDE-002 | Large Data Editor: edytor zewnętrzny (plik tymczasowy, wykrywanie zapisu, skojarzenie z kolumną), RTF | UG 27.2, UG 27.8 | Large Data Editor | 6 | P3 | — | do zrobienia |
-| PD-DIFF-001 | Wewnętrzna przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap, Reload) | UG 26, NF14, NF15 | — | 2 | P1 | Odczyt | do zrobienia |
+| PD-DIFF-001 | Wewnętrzna przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap, Reload) | UG 26, NF14, NF15 | — | 2 | P1 | Odczyt | ⚠️ częściowo (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap; bez Reload) ✅ test 👁 |
 | PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | do zrobienia |
 
 ## PL/SQL Developer — projekty, worksets, pliki, kontrola wersji

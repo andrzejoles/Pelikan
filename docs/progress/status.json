@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T08:27:56+02:00",
+  "heartbeat": "2026-10-23T08:32:45+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)",
     "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy",
     "PR #16 scalony (formater PL/SQL)",
     "Etap 2 / narzędzia: Znajdź obiekty bazy (źródła, widoki, nazwy; regex, całe słowa, wielkość liter; w tle; przejście do linii) i Kompiluj niepoprawne obiekty (kolejność zależności, przebiegi, błędy); otwieranie obiektu na linii; poprawka: edytor przyjmuje zaznaczenie z modelu przy otwarciu; testy na bazie sprzątają obiekty synchronicznie — 3 testy na bazie",
@@ -91,8 +92,7 @@
     "Przerwanie zapytania (⌘. / Shift+Esc) sprawdzone ręcznie i testem; licznik wierszy na pasku stanu aktualny przy dociąganiu; siatka 1 mln wierszy przewijana w aplikacji",
     "Testy wydajności (Release): podświetlanie pakietu 50 000 linii 18 ms, klawisz 0,19 ms, siatka 1 mln wierszy 1,2 s / 326 MB, porcja przy przewijaniu 1,4 ms — wszystkie cele spełnione; logika podświetlania przeniesiona do PelikanSQL (IncrementalLexer, 3 testy zgodności z pełnym leksowaniem)",
     "Etap 1 / SQL Window sprawdzone ręcznie na bazie testowej: F8 i ⇧⌘↩, okno zmiennych (Enter wykonuje), karty wyników z tytułem -- tab= i &Count, czerwona karta błędu z kursorem na pozycji ORA, Output z polskimi znakami, transakcja na pasku stanu, ROLLBACK ⌥⌘⌫. Poprawione: pętla układu przy starcie, edytor TextKit 2 (niewidoczny tekst), fokus po arkuszach, hasło pytane raz na uruchomienie, komendy wyłączone blokowane w invoke (także dla agenta)",
-    "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie",
-    "Etap 1 / SQL Window (silnik): wybór poleceń (zaznaczenie / AutoSelect / Ctrl+F8), okno zmiennych (&, &&, &\"Nazwa\", &<opcje>, :bind, Jasper), karty wyników z tytułem z -- tab= i &Count, dyrektywa Records=, dociąganie, DBMS_OUTPUT, transakcje (LOCAL_TRANSACTION_ID), COMMIT/ROLLBACK, pozycja błędu w tekście, historia okna i globalna bez haseł — 11 testów (6 na bazie)"
+    "Etap 1 / SQL Window (interfejs, w toku): edytor TextKit 2 z podświetlaniem przyrostowym i numerami linii, siatka wyników NSTableView z dociąganiem i kopiowaniem, karty wyników i Output, okno Zmienne (listy, zapytania, zależności, checkbox, multiselect) — buduje się, jeszcze niesprawdzone ręcznie"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -113,18 +113,18 @@
   ],
   "tests": {
     "unit": {
-      "total": 150,
-      "passed": 150,
+      "total": 160,
+      "passed": 160,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:10:53+02:00"
+      "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 65,
-      "passed": 65,
+      "total": 66,
+      "passed": 66,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:20:43+02:00"
+      "at": "2026-10-23T08:32:45+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap2-roznice.png",
+      "title": "Przeglądarka różnic: okno programu ↔ baza",
+      "reference": "PD-DIFF-001"
+    },
     {
       "file": "docs/progress/img/etap2-szablony.png",
       "title": "Panel Szablony w pasku bocznym",

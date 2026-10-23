@@ -100,3 +100,30 @@ struct OpenObjectLineTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Porównania na bazie", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct CompareTests {
+    @Test("Okno programu otwarte z bazy bez różnic; po zmianie — różnica w unified; porównanie tekstów")
+    func compare() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try? await s.execute("create or replace package pelikan_cmp_p as procedure a; end;")
+        _ = try? await s.execute("create or replace package body pelikan_cmp_p as\n  procedure a is\n  begin\n    null;\n  end;\nend;")
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("pelikan_cmp_p"), "type": .string("PACKAGE")]))
+        let same = try await ws.invoke("prog.compareWithDatabase")
+        #expect(same.value?.stringValue == "")
+        let doc = try #require(ws.activeDocument)
+        doc.text = doc.text.replacingOccurrences(of: "    null;", with: "    dbms_output.put_line('x');")
+        let diff = try await ws.invoke("prog.compareWithDatabase")
+        #expect(diff.value?.stringValue?.contains("-    null;\n+    dbms_output.put_line('x');") == true)
+        let t = try await ws.invoke("tools.compareTexts", CommandArguments(["left": .string("A\n"), "right": .string("a\n"), "ignoreCase": .bool(true)]))
+        #expect(t.value?.stringValue == "")
+        for o in ["package pelikan_cmp_p"] { _ = try? await s.execute("drop \(o)") }
+        await ws.sessions.disconnectAll()
+    }
+}

@@ -26,6 +26,7 @@
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FB679B3AA90E719B503472 /* TemplatePane.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
+		A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335AC06B5D604A8B96621019 /* DiffViewer.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
 		AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */; };
@@ -54,6 +55,7 @@
 		2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowListViewController.swift; sourceTree = "<group>"; };
 		30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindReplacePanel.swift; sourceTree = "<group>"; };
 		31283604CBB6B024351A4FFF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		335AC06B5D604A8B96621019 /* DiffViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffViewer.swift; sourceTree = "<group>"; };
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 			children = (
 				CA48D35749C698677F8C081C /* CommandWindow */,
 				42B5903D5D9EF245A7512677 /* Connections */,
+				94B8513C5D09CD2AC6BAC631 /* Diff */,
 				ECB3825E12C3C711DC48304D /* Editor */,
 				334095D94316C5129A5B1A6B /* ObjectBrowser */,
 				04AA0F0ED1F31BC87839A227 /* Preferences */,
@@ -200,6 +203,14 @@
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		94B8513C5D09CD2AC6BAC631 /* Diff */ = {
+			isa = PBXGroup;
+			children = (
+				335AC06B5D604A8B96621019 /* DiffViewer.swift */,
+			);
+			path = Diff;
 			sourceTree = "<group>";
 		};
 		98C2053BF992EBE778C7C8F4 /* Tools */ = {
@@ -346,6 +357,7 @@
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
+				A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,

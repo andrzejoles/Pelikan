@@ -42,6 +42,8 @@ public protocol UIServices: AnyObject {
     func showFindObjects(_ criteria: DatabaseSearchCriteria)
     /// Okno Compile Invalid Objects (UG 24.3).
     func showCompileInvalid()
+    /// Przeglądarka różnic (UG 26): lewy i prawy tekst z tytułami.
+    func showDiff(left: String, right: String, leftTitle: String, rightTitle: String)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 
@@ -51,6 +53,7 @@ extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
+    public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
     public func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? {
         await askVariables(requests, document: document)
     }
