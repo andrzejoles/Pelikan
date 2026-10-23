@@ -213,6 +213,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func exportDiagram(_ doc: PelikanWorkspace.Document, format: String) {
+        DiagramOutput.export(doc, format: format, workspace: workspace)
+    }
+
+    func copyDiagramImage(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.copy(doc)
+    }
+
+    func printDiagram(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.print(doc)
+    }
+
+    func showQueryBuilder(sql: String?, connectionID: UUID?) {
+        let target = workspace.activeDocument.flatMap { [.sql, .program, .test].contains($0.kind) ? $0.id : nil }
+        ToolWindowController.close(key: "queryBuilder")
+        ToolWindowController.show(key: "queryBuilder", title: L10n.tr("Query Builder"), size: NSSize(width: 1000, height: 720)) {
+            QueryBuilderView(workspace: workspace, connectionID: connectionID, targetDocument: target, initialSQL: sql)
+        }
+    }
+
     func showTestExplorer() {
         ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
             TestExplorerView(workspace: workspace)

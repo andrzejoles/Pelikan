@@ -80,6 +80,7 @@ extension DocumentKind {
         switch url.pathExtension.lowercased() {
         case "pck", "pks", "pkb", "spc", "bdy", "fnc", "prc", "trg", "typ", "tps", "tpb", "jav", "mle": .program
         case "tst": .test
+        case "pdd": .diagram
         default: .sql
         }
     }
@@ -102,7 +103,11 @@ extension Workspace {
         }
         let docKind = kind ?? DocumentKind.forFile(std)
         let doc: Document
-        if docKind == .test {
+        if docKind == .diagram {
+            // Diagram Pelikana: JSON (PD-DIAG-003).
+            doc = newDocument(.diagram, fileURL: std)
+            doc.diagram = try Diagram.decode(data)
+        } else if docKind == .test {
             // .tst Pelikana: blok i zmienne (UG 5.4).
             let f = TestScriptFile.decode(text)
             doc = newDocument(.test, text: f.block, fileURL: std)
@@ -126,6 +131,13 @@ extension Workspace {
             doc.text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines) + "\n/\n"
         }
         var format = doc.fileFormat
+        if doc.kind == .diagram {
+            try doc.diagram.encoded().write(to: url, options: .atomic)
+            doc.fileURL = url.standardizedFileURL
+            doc.isModified = false
+            rememberRecentFile(url)
+            return
+        }
         if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
             try TestScriptFile(block: doc.text, variables: doc.testVariables).encoded().write(to: url, options: .atomic)
             doc.fileURL = url.standardizedFileURL

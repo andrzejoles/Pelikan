@@ -271,3 +271,17 @@ usuwa) sesją kompilacji użytkownika; obiekt, którego kod różni się od zapi
 wymuszenia. Testy utPLSQL agenta działają w jego sesjach (`agent/run`, `agent/events`), a instalacja utPLSQL — w oknie
 poleceń widocznym dla użytkownika, tylko na dev/test. Bloki PL/SQL mogą zatwierdzać wewnątrz siebie — tego aplikacja nie
 zablokuje; okno zgody pokazuje pełny tekst.
+
+### D-DIAG-1 · 2026-10-23 — Diagram jako model w dokumencie, plik JSON .pdd
+Okno diagramu trzyma model `Diagram` w dokumencie (nie w tekście okna); Zapisz/Otwórz zapisują go jako JSON z
+rozszerzeniem `.pdd` (format własny, czytelny i wersjonowany polem `version`). Współrzędne są w jednostkach przy zoomie
+100 %, siatka ma 8 px, a przesuwanie dociąga do niej, gdy siatka jest włączona. Metadane (kolumny z PK, klucze obce,
+zależności) idą przez protokół `SchemaMetadataSource` — w aplikacji słownik bazy (`SessionSchemaMetadata` na sesji
+metadanych), w testach atrapa — więc model, układ i generator SQL są testowane bez bazy.
+
+### D-DIAG-2 · 2026-10-23 — Query Builder: generator i odczyt prostych SELECT
+Query Builder buduje `QueryModel` (tabele z aliasami z pierwszych liter członów nazwy, złączenia z kluczy obcych w obie
+strony, pola, sortowanie, grupowanie, WHERE/HAVING/INTO, DISTINCT) i generuje SELECT według preferencji (wielkość liter
+słów kluczowych, kolumna w linii, złączenia ANSI albo w WHERE, schemat przed tabelą). Odczyt istniejącego zapytania
+obejmuje tylko proste SELECT: tabele rozdzielone przecinkami albo `[LEFT|RIGHT|FULL] JOIN … ON a.x = b.y`, bez
+podzapytań w FROM, WITH i operacji zbiorowych — inne zapytania otwierają pusty Query Builder z komunikatem.

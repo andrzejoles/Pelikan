@@ -50,6 +50,11 @@ public protocol UIServices: AnyObject {
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
     /// Eksplorator testów utPLSQL (UT-EXP-001).
     func showTestExplorer()
+    /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
+    func exportDiagram(_ doc: Document, format: String)
+    func copyDiagramImage(_ doc: Document)
+    func printDiagram(_ doc: Document)
+    func showQueryBuilder(sql: String?, connectionID: UUID?)
     /// Okno wyników utPLSQL dla przebiegu (PROMPT §6).
     func showUtplsqlResults(_ run: UtplsqlRun)
     /// Okno punktów przerwania (UG 5.10).
@@ -69,6 +74,10 @@ extension UIServices {
     public func showBreakpoints() {}
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
+    public func exportDiagram(_ doc: Document, format: String) {}
+    public func copyDiagramImage(_ doc: Document) {}
+    public func printDiagram(_ doc: Document) {}
+    public func showQueryBuilder(sql: String?, connectionID: UUID?) {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}

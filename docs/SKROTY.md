@@ -173,8 +173,21 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |
 | utPLSQL › utPLSQL: skrypt dla wiersza poleceń | `utplsql.cliScript` |  |  | Pełny | 0 | UT-CI-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
+| Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj powiązane tabele | `diagram.addRelated` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj zależności | `diagram.addReferences` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Pokaż lub ukryj kolumny | `diagram.showColumns` |  |  | Brak | 0 | PD-DIAG-001 |
+| Diagram › Dodaj notatkę | `diagram.addNote` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Grupuj zaznaczone | `diagram.addGroup` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Usuń z diagramu | `diagram.delete` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Powiększenie diagramu | `diagram.zoom` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Siatka diagramu | `diagram.toggleGrid` |  |  | Brak | 0 | PD-DIAG-002 |
+| Diagram › Aktualizuj z bazy | `diagram.updateFromDB` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Eksportuj diagram jako obraz… | `diagram.export` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Kopiuj diagram jako obraz | `diagram.copyImage` |  |  | Brak | 0 | PD-DIAG-003 |
+| Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | 0 | PD-DIAG-003 |
+| Query Builder… | `tools.queryBuilder` |  |  | Brak | 0 | PD-QB-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
-| Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |
