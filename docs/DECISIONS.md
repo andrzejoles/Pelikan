@@ -482,3 +482,42 @@ obcym (tablice obiektów, insert/update/delete na każdym poziomie) i otwiera go
 sam. Słownik 23ai: `ALL_MLE_MODULES.MODULE_OWNER`, `ALL_MLE_ENVS.ENV_OWNER`, flagi widoków dualności jako TRUE/FALSE.
 Debugowanie modułów JavaScript po wykonaniu (DBMS_MLE post-execution debugging) odłożone — wymaga osobnego widoku
 śladu; reszta SD-MLE-001 działa. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).
+### D65 · 2026-10-23 — Analiza kodu w czasie pisania bez łączenia z bazą; agent tylko inspekcje
+Rozwiązywanie nazw (DG-RES-001) i inspekcje (DG-INSP-001) liczy `Workspace.analyzeCode` z opóźnieniem po zmianie
+tekstu. Inspekcje są lokalne (lekser, zarys PL/SQL). Nazwy sprawdza się w słowniku tylko wtedy, gdy połączenie okna
+ma już otwartą sesję główną — analiza nigdy nie łączy z bazą ani nie pyta o hasło; odpowiedzi słownika są w pamięci
+podręcznej na 5 minut. Źródło metadanych to protokół `NameResolutionSource` (atrapa w testach). Ostrzeżenia są
+zachowawcze: kwalifikator w SQL osadzonym w PL/SQL może być zmienną rekordową, więc nie jest zgłaszany, a funkcje
+tabelaryczne i linki baz są pomijane. Agent (`edit.analyzeCode`) dostaje tylko inspekcje tekstu — słownik czyta
+wyłącznie przez własną sesję i narzędzia `agent.*`.
+
+### D66 · 2026-10-23 — Find Usages dla użytkownika, agent przez istniejące find_usages
+`edit.findUsages` (DG-USE-001) łączy ALL_DEPENDENCIES, linie kodu obiektów zależnych (tylko wystąpienia
+identyfikatora, bez komentarzy i literałów), ALL_IDENTIFIERS z PL/Scope (gdy kod skompilowano z PLSCOPE_SETTINGS) oraz
+otwarte okna i pliki projektu. Komenda działa w sesji głównej użytkownika, więc nie jest narzędziem agenta (poziom
+`.none`); agent ma `agent.findUsages` z własną sesją i regułami dostępu.
+
+### D67 · 2026-10-23 — Refaktoryzacja zmienia teksty, DDL tylko do przejrzenia
+Zmiana nazwy (DG-REF-001) zmienia tokeny identyfikatorów w oknach i plikach projektu po podglądzie różnic. Zmiennej
+lub parametru — w zakresie deklaracji, bez pól po kropce i notacji nazwanej `=>`; obiektu — `NAZWA` i
+`WŁAŚCICIEL.NAZWA`, bez nazw kwalifikowanych innym schematem; kolumny — tylko w poleceniach z tą tabelą. Skrypt
+DDL (ALTER TABLE … RENAME, RENAME) trafia do nowego okna SQL bez wykonania: zmiana w bazie przechodzi zwykłą ścieżką
+ze strażnikiem zmian. Przed zmianą tekstu wersja trafia do historii lokalnej. Agent — za zgodą, z podglądem
+zmienionych linii.
+
+### D68 · 2026-10-23 — Historia lokalna w katalogu danych, bez bazy
+Historia lokalna (DG-HIST-001) to jeden plik JSON na plik albo obiekt w `LocalHistory/` katalogu danych aplikacji
+(nazwa: czytelny fragment klucza + skrót FNV-1a). Wersje powstają przy zapisie pliku, kompilacji jednostki (klucz:
+połączenie, właściciel, typ, nazwa), refaktoryzacji, przed przywróceniem i ręcznie; tekst identyczny z ostatnią
+wersją jest pomijany; najwyżej 50 wersji i 30 dni. Przywrócenie zapisuje najpierw bieżący tekst, więc da się je
+cofnąć. Historia może zawierać kod, ale nie hasła (te są tylko w Pęku kluczy).
+
+### D69 · 2026-10-23 — Konsola połączenia to okno SQL z tekstem w katalogu danych
+Konsola (DG-CONS-001) to zwykłe okno SQL przypięte do połączenia, jedno na połączenie, z tekstem w
+`Consoles/<id połączenia>.sql`. Tekst zapisuje się przy zamknięciu okna, co 30 s i przy zakończeniu aplikacji, więc
+okno nie pyta o zapis. Wyniki zapytań nie są zachowywane.
+
+### D70 · 2026-10-23 — Zmiany oczekujące liczone względem wartości pierwotnych
+Wyróżnienie zmian w siatce (DG-GRID-001) korzysta z istniejącego stanu edycji (`changed`, `inserted`, `deleted`).
+Komórka zmieniona i przywrócona do wartości pierwotnej nie jest już zmianą (znacznik i licznik). Nagłówek wiersza
+pokazuje `+`, `~`, `−` z kolorem tła; nawigacja po zmianach i cofnięcie zmian wybranych wierszy to komendy rejestru.

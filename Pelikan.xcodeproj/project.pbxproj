@@ -74,6 +74,7 @@
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
+		F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */; };
 		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
 		F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */; };
 		F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */; };
@@ -142,6 +143,7 @@
 		72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorToolViews.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7BDD00050FBA5650E960C7ED /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
+		7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGripViews.swift; sourceTree = "<group>"; };
 		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
@@ -370,6 +372,7 @@
 		98C2053BF992EBE778C7C8F4 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */,
 				7C9355F810C37B2D27045A31 /* DataTransferViews.swift */,
 				36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */,
 				7BDD00050FBA5650E960C7ED /* GraphView.swift */,
@@ -635,6 +638,7 @@
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				950E9DE97966450BC3AAF2A4 /* DBAViews.swift in Sources */,
+				F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */,
 				2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */,

@@ -237,6 +237,7 @@ extension Workspace {
                                             encoding: format.displayName.components(separatedBy: " ").first ?? "")
         }
         try data.write(to: url, options: .atomic)
+        localHistory.record(key: LocalHistory.key(file: url), title: url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))
         doc.fileURL = url.standardizedFileURL
         doc.fileFormat = format
         doc.isModified = false

@@ -33,8 +33,8 @@ struct Oracle23Tests {
         let owner = try #require(try await s.scalar("select user from dual"))
         let ddl = try await DualityViews.generateDDL(view: "dept_dv", owner: owner, rootTable: "DEPT", children: ["EMP"], in: s)
         #expect(ddl.contains("'_id' : r.DEPTNO") && ddl.contains("'emp' : [select json"))
+        _ = try? await s.execute("drop view dept_dv")
         _ = try await s.execute(ddl)
-        defer { Task { _ = try? await s.execute("drop view dept_dv") } }
         let views = try await DualityViews.list(owner: owner, in: s)
         let v = try #require(views.first { $0.name == "DEPT_DV" })
         #expect(v.rootTable == "DEPT" && v.allowInsert)
@@ -42,6 +42,7 @@ struct Oracle23Tests {
         #expect(!docs.isEmpty && docs[0].contains("\"_id\""))
         let guide = try await DualityViews.dataGuide(v, in: s)
         #expect(guide.contains { $0.path.contains("emp") })
+        _ = try await s.execute("drop view dept_dv")
     }
 
     @Test("Moduł MLE: utworzenie, lista, źródło, środowisko")
@@ -51,11 +52,12 @@ struct Oracle23Tests {
         let owner = try #require(try await s.scalar("select user from dual"))
         _ = try await s.execute(MLE.createModuleDDL(name: "pelikan_mod", source: "export function twice(a) { return a * 2; }\n", version: "1.0"))
         _ = try await s.execute(MLE.createEnvironmentDDL(name: "pelikan_env", imports: [("twice", "pelikan_mod")]))
-        defer { Task { _ = try? await s.execute("drop mle env pelikan_env"); _ = try? await s.execute("drop mle module pelikan_mod") } }
         let m = try #require(try await MLE.modules(owner: owner, in: s).first { $0.name == "PELIKAN_MOD" })
         #expect(m.language == "JAVASCRIPT" && m.version == "1.0")
         #expect(try await MLE.source(owner: owner, name: "PELIKAN_MOD", in: s).contains("twice"))
         #expect(try await MLE.environments(owner: owner, in: s).contains("PELIKAN_ENV"))
+        _ = try await s.execute("drop mle env pelikan_env")
+        _ = try await s.execute("drop mle module pelikan_mod")
     }
 
     @Test("SDO_GEOMETRY jako WKT z zapytania")

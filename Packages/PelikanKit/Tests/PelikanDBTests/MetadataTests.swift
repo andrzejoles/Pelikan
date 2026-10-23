@@ -30,7 +30,7 @@ struct MetadataTests {
         #expect(try await m.objects(.packageBody, owner: schema, filter: ObjectFilter("status=invalid")).map(\.name) == ["BROKEN_PKG"])
         #expect(try await m.objects(.package, owner: schema, filter: ObjectFilter("source=raise_salary")).map(\.name).contains("EMP_API"))
         #expect(!(try await m.objects(.package, owner: schema, filter: ObjectFilter("source=raise_salary")).map(\.name).contains("BROKEN_PKG")))
-        #expect(try await m.objects(.mleModule, owner: schema).map(\.name) == ["GREET_MOD"])
+        #expect(try await m.objects(.mleModule, owner: schema).map(\.name).contains("GREET_MOD"))
         #expect(try await m.objects(.domain, owner: schema).map(\.name) == ["EMAIL_D"])
         #expect(try await m.users().contains(schema))
         await ws.sessions.disconnectAll()

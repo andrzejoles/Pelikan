@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T15:29:01+02:00",
+  "heartbeat": "2026-10-23T15:34:24+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 7 / DataGrip (subagent D): analiza nazw w czasie pisania, inspekcje, Find Usages, zmiana nazwy z podglądem, historia lokalna, konsole połączeń, zmiany oczekujące w siatce — scalone, testy na bazie OK (D65–D70)",
     "Etap 7 / Oracle 23ai: widoki dualności JSON (lista, generator DDL, dokumenty, Data Guide), moduły i środowiska MLE, podgląd SDO_GEOMETRY — testy na bazie (D64)",
     "Etap 7 / licencje pakietów Oracle: deklaracja na połączeniu, AWR, ASH, ADDM, SQL Monitor, SQL Tuning Advisor — test na bazie (D63)",
     "Etap 7 / plany i DBA (subagent) zintegrowane: diagram i flame graph planu, Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu (D59–D60); poprawka wyścigu w teście kanału agenta",
@@ -91,8 +92,7 @@
     "PR #19 scalony (przeglądarka różnic i porównania)",
     "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy",
     "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie",
-    "PR #18 scalony (szablony kodu)",
-    "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie"
+    "PR #18 scalony (szablony kodu)"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

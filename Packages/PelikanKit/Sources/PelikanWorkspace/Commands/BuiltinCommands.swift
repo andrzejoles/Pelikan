@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + Oracle23Commands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + DataGripCommands.all + Oracle23Commands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -73,7 +73,7 @@ public enum BuiltinCommands {
     /// false — użytkownik anulował.
     @MainActor
     static func closeDocument(_ doc: Document, in ws: Workspace) async throws -> Bool {
-        let needsSave = doc.isModified && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+        let needsSave = doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
         if needsSave {
             let choice = await ws.ui?.ask(L10n.tr("Zapisać zmiany w „\(doc.title)”?"), message: L10n.tr("Niezapisane zmiany zostaną utracone."),
                                           buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 1

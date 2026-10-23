@@ -215,7 +215,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         let focus = tab.focusedColumn
         countLabel.stringValue = (more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy"))
             + (filterText.map { L10n.tr("  ·  filtr: \($0) (z \(grid.fetchedRowCount))") } ?? "")
-            + (edit.hasChanges ? L10n.tr("  ·  zmiany do zatwierdzenia") : "")
+            + (edit.hasChanges ? "  ·  " + (grid.pendingSummary.isEmpty ? L10n.tr("zmiany do zatwierdzenia") : grid.pendingSummary.text) : "")
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
             editButton.state = edit.isEditing ? .on : .off
@@ -226,6 +226,13 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.
             table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
                              columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
+        }
+        if let r = tab.revealRow {
+            tab.revealRow = nil
+            if r < table.numberOfRows {
+                table.selectRowIndexes([r], byExtendingSelection: false)
+                table.scrollRowToVisible(r)
+            }
         }
         if focus != lastFocus {
             lastFocus = focus
@@ -302,13 +309,16 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         guard let id = tableColumn?.identifier.rawValue else { return nil }
         let cell = tableView.makeView(withIdentifier: .init("cell"), owner: nil) as? GridCell ?? GridCell(font: font)
         if id == "#" {
-            cell.configure(text: String(row + 1), alignRight: true, isNull: false, secondary: true)
+            // Znacznik zmiany oczekującej w nagłówku wiersza (DG-GRID-001): + wstawiony, ~ zmieniony, − usunięty.
+            let state = grid.edit.isEditing ? grid.rowEditState(row: row) : .normal
+            let mark = switch state { case .inserted: "+ "; case .modified: "~ "; case .deleted: "− "; case .normal: "" }
+            cell.configure(text: mark + String(row + 1), alignRight: true, isNull: false, secondary: state == .normal, rowMarker: state)
             return cell
         }
         guard let i = Int(id.dropFirst()) else { return nil }
         let v = grid.value(row: row, column: i)
         cell.configure(text: grid.text(row: row, column: i), alignRight: grid.columns[i].type.isNumeric, isNull: v.isNull, secondary: false,
-                       state: grid.edit.isEditing ? grid.cellState(row: row, column: i) : .normal,
+                       state: grid.edit.isEditing ? grid.pendingCellState(row: row, column: i) : .normal,
                        overflow: grid.edit.isEditing && grid.isOverflow(row: row, column: i),
                        editable: grid.isEditable(column: i))
         cell.textField?.delegate = self
@@ -539,9 +549,11 @@ final class GridCell: NSTableCellView {
 
     static let modifiedColor = NSColor.systemBlue
     static let insertedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.28, blue: 0.16, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.97, blue: 0.88, alpha: 1) }
+    static let modifiedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.20, blue: 0.32, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.93, blue: 1.0, alpha: 1) }
+    static let deletedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.32, green: 0.12, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.90, blue: 0.90, alpha: 1) }
 
     func configure(text: String, alignRight: Bool, isNull: Bool, secondary: Bool,
-                   state: CellEditState = .normal, overflow: Bool = false, editable: Bool = false) {
+                   state: CellEditState = .normal, overflow: Bool = false, editable: Bool = false, rowMarker: CellEditState = .normal) {
         // Wielowierszowy tekst w jednej linii komórki (pełna treść — widok rekordu, Large Data Editor).
         let shown = editable ? text : (text.count > 500 ? String(text.prefix(500)) + "…" : text.replacingOccurrences(of: "\n", with: " ⏎ "))
         label.isEditable = editable && state != .deleted
@@ -555,7 +567,14 @@ final class GridCell: NSTableCellView {
             label.stringValue = shown
             label.textColor = color
         }
-        layer?.backgroundColor = state == .inserted ? Self.insertedBackground.cgColor : isNull ? ResultGridView.nullColor.cgColor : nil
+        let marker: NSColor? = switch rowMarker {
+        case .inserted: Self.insertedBackground
+        case .modified: Self.modifiedBackground
+        case .deleted: Self.deletedBackground
+        case .normal: nil
+        }
+        layer?.backgroundColor = marker?.cgColor ?? (state == .inserted ? Self.insertedBackground.cgColor : state == .modified ? Self.modifiedBackground.cgColor
+            : isNull ? ResultGridView.nullColor.cgColor : nil)
     }
 }
 
