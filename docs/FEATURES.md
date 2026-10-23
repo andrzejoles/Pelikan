@@ -55,7 +55,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-019 | Połączenie okna na pasku stanu, zmiana połączenia okna, przypięte / nieprzypięte (preferencja domyślna) | UG 20.2, NF10 | Pasek stanu okna | 1 | P1 | — | ✅ test |
 | PD-CONN-020 | Tryb sesji Multi / Dual / Single; osobna sesja kompilacji | UG 20.3 | Preferences > Oracle > Connection | 1 | P1 | — | ✅ test |
 | PD-CONN-021 | Wykonywanie okien równolegle (wątki), kursor „wykonywanie”, blokada edycji okna w trakcie | UG 20.4 | — | 1 | P1 | — | ✅ test |
-| PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | w toku |
+| PD-CONN-022 | Menu połączenia: otwórz okno typu, Show/Close/Reconnect All Windows, Connect, Disconnect, Set current schema | UG 19.1 | Connection List | 1 | P2 | Brak | ✅ test (menu połączenia: połącz jako główne, połącz, rozłącz, nowe okno typu na połączeniu, pokaż / zamknij / połącz ponownie okna połączenia, ustaw bieżący schemat — test na bazie) |
 | PD-CONN-023 | Sprawdzanie połączenia co 60 s (wszystkie sesje opcjonalnie), reakcja na utratę połączenia | UG 23.1, PROMPT §5 | Preferences | 1 | P1 | — | ✅ test |
 | PD-CONN-024 | Wylogowanie z otwartą transakcją: COMMIT / ROLLBACK / pytaj (w Pelikanie domyślnie pytaj) | UG 23.1 | Preferences | 1 | P1 | — | ✅ test |
 | PD-CONN-025 | Zmienne środowiska Oracle per aplikacja (NLS_LANG, NLS_DATE_FORMAT…), NLS sesji | UG 23.1, PROMPT §3.1 | Preferences | 1 | P2 | — | ✅ test (parametry NLS sesji z Preferencji przez ALTER SESSION w każdej nowej sesji, biała lista nazw; kodowanie klienta zawsze UTF-8 zamiast NLS_LANG, D97) |

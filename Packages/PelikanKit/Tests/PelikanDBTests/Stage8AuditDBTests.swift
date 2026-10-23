@@ -56,4 +56,32 @@ struct Stage8AuditDBTests {
         await other.close()
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Menu połączenia: okno na połączeniu, pokaż i zamknij okna, ponowne połączenie, bieżący schemat")
+    func connectionMenu() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        let args = CommandArguments(["connection": .string(def.id.uuidString), "kind": "sql"])
+        _ = try await ws.invoke("connection.openWindow", args)
+        _ = try await ws.invoke("connection.openWindow", args)
+        let docs = ws.documents.filter { ws.effectiveConnection(of: $0) == def.id }
+        #expect(docs.count == 2 && docs.allSatisfy(\.connectionPinned))
+        ws.activate(docs[0].id)
+        _ = try await ws.invoke("connection.showWindows", CommandArguments(["connection": .string(def.id.uuidString)]))
+        #expect(ws.activeDocumentID == docs[1].id)
+        _ = try await ws.session(for: docs[0])
+        let r = try await ws.invoke("connection.reconnectWindows", CommandArguments(["connection": .string(def.id.uuidString)]))
+        #expect(r.value == .int(1))
+        let schema = try await ws.invoke("connection.setCurrentSchema", CommandArguments(["connection": .string(def.id.uuidString), "schema": .string(c.user.uppercased())]))
+        #expect(schema.value == .string(c.user.uppercased()))
+        await #expect(throws: (any Error).self) {
+            try await ws.invoke("connection.setCurrentSchema", CommandArguments(["connection": .string(def.id.uuidString), "schema": "x; drop table emp"]))
+        }
+        let closed = try await ws.invoke("connection.closeWindows", CommandArguments(["connection": .string(def.id.uuidString)]))
+        #expect(closed.value == .int(2) && ws.documents.allSatisfy { ws.effectiveConnection(of: $0) != def.id || !$0.connectionPinned })
+        await ws.sessions.disconnectAll()
+    }
 }

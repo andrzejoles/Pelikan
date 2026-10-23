@@ -1373,6 +1373,34 @@
         }
       }
     },
+    "ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Object Browser i nazwy bez schematu)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA in the connection's main session (Object Browser and unqualified names)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA in der Hauptsitzung der Verbindung (Object Browser und Namen ohne Schema)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA en la sesión principal de la conexión (Object Browser y nombres sin esquema)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ALTER SESSION SET CURRENT_SCHEMA в основному сеансі з'єднання (Object Browser та імена без схеми)."
+          }
+        }
+      }
+    },
     "ALTER SYSTEM KILL SESSION dla zaznaczonej sesji (po potwierdzeniu)." : {
       "localizations" : {
         "en" : {
@@ -2125,6 +2153,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktivieren"
+          }
+        }
+      }
+    },
+    "Aktywuje kolejne okno używające połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activates the next window that uses the connection."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert das nächste Fenster, das die Verbindung verwendet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la siguiente ventana que usa la conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активує наступне вікно, що використовує з'єднання."
           }
         }
       }
@@ -4785,6 +4841,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Aufzeichnung"
+          }
+        }
+      }
+    },
+    "Brak okien na tym połączeniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No windows on this connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Fenster mit dieser Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ventanas en esta conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає вікон на цьому з'єднанні"
           }
         }
       }
@@ -30521,6 +30605,34 @@
         }
       }
     },
+    "Nowe okno na połączeniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Window on Connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Fenster mit Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva ventana en la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нове вікно на з'єднанні"
+          }
+        }
+      }
+    },
     "Nowe okno z szablonu" : {
       "localizations" : {
         "en" : {
@@ -33909,6 +34021,34 @@
         }
       }
     },
+    "Okno ma niezapisane zmiany albo otwartą transakcję." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has unsaved changes or an open transaction."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat ungesicherte Änderungen oder eine offene Transaktion."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene cambios sin guardar o una transacción abierta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має незбережені зміни або відкриту транзакцію."
+          }
+        }
+      }
+    },
     "Okno nie ma historii lokalnej (zapisz plik albo skompiluj obiekt)" : {
       "localizations" : {
         "en" : {
@@ -35977,6 +36117,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet ein Test Window mit dem Aufruf der Prozedur oder Funktion (benannte Notation) und Parametervariablen."
+          }
+        }
+      }
+    },
+    "Otwiera okno wskazanego typu przypięte do połączenia (bez zmiany połączenia głównego)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a window of the given type pinned to the connection (without changing the main connection)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein Fenster des angegebenen Typs, das an die Verbindung gebunden ist (ohne die Hauptverbindung zu ändern)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una ventana del tipo indicado vinculada a la conexión (sin cambiar la conexión principal)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває вікно вказаного типу, прив'язане до з'єднання (без зміни основного з'єднання)."
           }
         }
       }
@@ -40125,6 +40293,34 @@
         }
       }
     },
+    "Pokaż okna połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Connection Windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster der Verbindung zeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar ventanas de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати вікна з'єднання"
+          }
+        }
+      }
+    },
     "Pokaż różnice" : {
       "localizations" : {
         "en" : {
@@ -43089,6 +43285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Als Hauptverbindung verbinden"
+          }
+        }
+      }
+    },
+    "Połącz ponownie okna połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect Connection Windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster der Verbindung neu verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar ventanas de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перепідключити вікна з'єднання"
           }
         }
       }
@@ -50793,6 +51017,34 @@
         }
       }
     },
+    "Sesje do ponownego połączenia: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessions to reconnect: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu zu verbindende Sitzungen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones por reconectar: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеансів для перепідключення: %@"
+          }
+        }
+      }
+    },
     "Sesje użytkowników" : {
       "localizations" : {
         "en" : {
@@ -56981,6 +57233,34 @@
         }
       }
     },
+    "Typ okna: sql, program, test, command" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window type: sql, program, test, command"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstertyp: sql, program, test, command"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de ventana: sql, program, test, command"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип вікна: sql, program, test, command"
+          }
+        }
+      }
+    },
     "Typy" : {
       "localizations" : {
         "en" : {
@@ -58321,6 +58601,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgeführte Tests: %@"
+          }
+        }
+      }
+    },
+    "Ustaw bieżący schemat…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Current Schema…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelles Schema festlegen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer esquema actual…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установити поточну схему…"
           }
         }
       }
@@ -70589,6 +70897,34 @@
         }
       }
     },
+    "Zamknij okna połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Connection Windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster der Verbindung schließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar ventanas de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрити вікна з'єднання"
+          }
+        }
+      }
+    },
     "Zamknij okna z lewej" : {
       "localizations" : {
         "en" : {
@@ -70897,6 +71233,34 @@
         }
       }
     },
+    "Zamknąć okno „%@”?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close the window “%@”?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster „%@“ schließen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cerrar la ventana «%@»?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрити вікно «%@»?"
+          }
+        }
+      }
+    },
     "Zamyka bieżące okno." : {
       "localizations" : {
         "en" : {
@@ -70981,6 +71345,34 @@
         }
       }
     },
+    "Zamyka okna przypięte do połączenia (z pytaniem o niezapisane zmiany i otwarte transakcje)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the windows pinned to the connection (asking about unsaved changes and open transactions)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt die an die Verbindung gebundenen Fenster (mit Rückfrage bei ungesicherten Änderungen und offenen Transaktionen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra las ventanas vinculadas a la conexión (preguntando por cambios sin guardar y transacciones abiertas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закриває вікна, прив'язані до з'єднання (з питанням про незбережені зміни й відкриті транзакції)."
+          }
+        }
+      }
+    },
     "Zamyka okno o podanym identyfikatorze (z pytaniami o zapis i transakcję)." : {
       "localizations" : {
         "en" : {
@@ -71005,6 +71397,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schließt das Fenster mit der angegebenen ID (mit Abfragen zu Speichern und Transaktion)."
+          }
+        }
+      }
+    },
+    "Zamyka sesje okien bez otwartej transakcji; okna łączą się ponownie przy następnym wykonaniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes window sessions without an open transaction; the windows reconnect on the next execution."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt Fenstersitzungen ohne offene Transaktion; die Fenster verbinden sich bei der nächsten Ausführung neu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra las sesiones de ventana sin transacción abierta; las ventanas se reconectan en la siguiente ejecución."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закриває сеанси вікон без відкритої транзакції; вікна перепідключаться під час наступного виконання."
           }
         }
       }
