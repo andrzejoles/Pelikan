@@ -24,6 +24,8 @@ public struct ConnectionTarget: Sendable, Codable, Hashable {
     public var walletDirectory: String?
     /// Uwierzytelnianie portfelem z magazynem haseł (SEPS, `/@alias`) — dla sterownika to uwierzytelnianie zewnętrzne.
     public var walletAuth: Bool?
+    /// Uwierzytelnianie tokenem (Microsoft Entra ID, plik tokenu OAuth2) obsługiwane przez Instant Client 23 (SD-AUTH-001).
+    public var tokenAuth: TokenAuth?
 
     public init(user: String, connectString: String, role: ConnectRole = .normal, proxyClient: String? = nil,
                 externalAuth: Bool = false, configDirectory: String? = nil, edition: String? = nil) {
@@ -32,7 +34,7 @@ public struct ConnectionTarget: Sendable, Codable, Hashable {
     }
 
     /// Logowanie bez hasła Pelikana: uwierzytelnianie zewnętrzne albo portfel z magazynem haseł.
-    public var usesExternalCredentials: Bool { externalAuth || walletAuth == true }
+    public var usesExternalCredentials: Bool { externalAuth || walletAuth == true || tokenAuth != nil }
 
     /// Nazwa użytkownika przekazywana do sterownika (z proxy: `pośrednik[schemat]`).
     public var driverUserName: String {
@@ -341,4 +343,44 @@ public protocol DatabaseDriver: Sendable {
     /// Czy sterownik jest gotowy (np. znaleziono Instant Client); komunikat z instrukcją, gdy nie.
     func availability() -> Result<Void, DatabaseError>
     func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession
+}
+
+/// Token dostępu pobierany przez klienta Oracle (Instant Client 23+), bez hasła i bez sekretów w Pelikanie:
+/// Entra ID interaktywnie (przeglądarka) albo token OAuth2 z pliku (np. zapisany przez `az account get-access-token`).
+public struct TokenAuth: Sendable, Codable, Hashable {
+    public enum Flow: String, Sendable, Codable, CaseIterable { case azureInteractive, oauthFile }
+    public var flow: Flow
+    /// Entra ID: identyfikator dzierżawy, identyfikator aplikacji klienta i URI aplikacji bazy.
+    public var tenantID: String?
+    public var clientID: String?
+    public var appIDURI: String?
+    /// Plik albo katalog z tokenem (TOKEN_LOCATION) dla `oauthFile`.
+    public var tokenLocation: String?
+
+    public init(flow: Flow, tenantID: String? = nil, clientID: String? = nil, appIDURI: String? = nil, tokenLocation: String? = nil) {
+        self.flow = flow; self.tenantID = tenantID; self.clientID = clientID; self.appIDURI = appIDURI; self.tokenLocation = tokenLocation
+    }
+
+    /// Parametry sekcji SECURITY deskryptora / EZConnect Plus.
+    public var parameters: [(String, String)] {
+        func clean(_ s: String?) -> String? { s.map { $0.trimmingCharacters(in: .whitespaces) }.flatMap { $0.isEmpty ? nil : $0 } }
+        switch flow {
+        case .azureInteractive:
+            return [("TOKEN_AUTH", "AZURE_INTERACTIVE")] + [("TENANT_ID", clean(tenantID)), ("AZURE_CLIENT_ID", clean(clientID)), ("AZURE_DB_APP_ID_URI", clean(appIDURI))]
+                .compactMap { k, v in v.map { (k, $0) } }
+        case .oauthFile:
+            return [("TOKEN_AUTH", "OAUTH")] + (clean(tokenLocation).map { [("TOKEN_LOCATION", ($0 as NSString).expandingTildeInPath)] } ?? [])
+        }
+    }
+
+    /// Brakujące pola wymagane dla przepływu (puste — gotowe).
+    public var missingFields: [String] {
+        switch flow {
+        case .azureInteractive:
+            return [("TENANT_ID", tenantID), ("AZURE_CLIENT_ID", clientID), ("AZURE_DB_APP_ID_URI", appIDURI)]
+                .filter { ($0.1 ?? "").trimmingCharacters(in: .whitespaces).isEmpty }.map(\.0)
+        case .oauthFile:
+            return (tokenLocation ?? "").trimmingCharacters(in: .whitespaces).isEmpty ? ["TOKEN_LOCATION"] : []
+        }
+    }
 }

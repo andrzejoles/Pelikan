@@ -21,10 +21,14 @@ final class ConnectionDraft {
     var role: ConnectRole
     var proxyClient: String
     /// Logowanie: hasło, Oracle Wallet (magazyn haseł, `/@alias`) albo uwierzytelnianie zewnętrzne (Kerberos, system).
-    enum AuthMode: String, CaseIterable { case password, wallet, external }
+    enum AuthMode: String, CaseIterable { case password, wallet, external, entra, oauthFile }
     var authMode: AuthMode
     var configDirectory: String
     var walletDirectory: String
+    var tokenTenant: String
+    var tokenClient: String
+    var tokenAppURI: String
+    var tokenLocation: String
     var managementPacks: ManagementPackLicense?
     var edition: String
     var workspaceManager: String
@@ -54,7 +58,10 @@ final class ConnectionDraft {
         color = d.color.map { Color(red: $0.red, green: $0.green, blue: $0.blue) } ?? .accentColor
         driver = d.driver; user = d.target.user; savePassword = d.savePassword; connectString = d.target.connectString
         role = d.target.role; proxyClient = d.target.proxyClient ?? ""
-        authMode = d.target.walletAuth == true ? .wallet : d.target.externalAuth ? .external : .password
+        authMode = d.target.tokenAuth?.flow == .azureInteractive ? .entra : d.target.tokenAuth?.flow == .oauthFile ? .oauthFile
+            : d.target.walletAuth == true ? .wallet : d.target.externalAuth ? .external : .password
+        tokenTenant = d.target.tokenAuth?.tenantID ?? ""; tokenClient = d.target.tokenAuth?.clientID ?? ""
+        tokenAppURI = d.target.tokenAuth?.appIDURI ?? ""; tokenLocation = d.target.tokenAuth?.tokenLocation ?? ""
         walletDirectory = d.target.walletDirectory ?? ""
         managementPacks = d.managementPacks
         configDirectory = d.target.configDirectory ?? ""; edition = d.target.edition ?? ""
@@ -90,6 +97,11 @@ final class ConnectionDraft {
             currentSchema: opt(currentSchema))
         def.managementPacks = managementPacks
         def.target.walletAuth = authMode == .wallet ? true : nil
+        def.target.tokenAuth = switch authMode {
+        case .entra: TokenAuth(flow: .azureInteractive, tenantID: opt(tokenTenant), clientID: opt(tokenClient), appIDURI: opt(tokenAppURI))
+        case .oauthFile: TokenAuth(flow: .oauthFile, tokenLocation: opt(tokenLocation))
+        default: nil
+        }
         def.target.walletDirectory = opt(walletDirectory)
         if sshEnabled, let host = opt(sshHost) {
             def.sshTunnel = SSHTunnel(host: host, port: sshPort, user: sshUser.trimmingCharacters(in: .whitespaces),
@@ -178,6 +190,20 @@ struct ConnectionEditorView: View {
                             Text(L10n.tr("Hasło")).tag(ConnectionDraft.AuthMode.password)
                             Text(L10n.tr("Oracle Wallet (magazyn haseł)")).tag(ConnectionDraft.AuthMode.wallet)
                             Text(L10n.tr("Zewnętrzne (Kerberos, system)")).tag(ConnectionDraft.AuthMode.external)
+                            Text(L10n.tr("Microsoft Entra ID (przeglądarka)")).tag(ConnectionDraft.AuthMode.entra)
+                            Text(L10n.tr("Token OAuth2 z pliku")).tag(ConnectionDraft.AuthMode.oauthFile)
+                        }
+                        if draft.authMode == .entra {
+                            TextField(L10n.tr("Identyfikator dzierżawy (tenant)"), text: $draft.tokenTenant)
+                            TextField(L10n.tr("Identyfikator aplikacji klienta"), text: $draft.tokenClient)
+                            TextField(L10n.tr("URI aplikacji bazy"), text: $draft.tokenAppURI)
+                            Text(L10n.tr("Instant Client 23 otwiera przeglądarkę do logowania w Entra ID i sam przekazuje token bazie; Pelikan nie widzi ani nie zapisuje tokenu. Wymaga połączenia TCPS (portfel TLS w polu poniżej albo w konfiguracji)."))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        if draft.authMode == .oauthFile {
+                            TextField(L10n.tr("Plik albo katalog tokenu"), text: $draft.tokenLocation)
+                            Text(L10n.tr("Token zapisany wcześniej narzędziem zewnętrznym (np. Azure CLI) — klient Oracle czyta go przy łączeniu."))
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                         if draft.authMode == .wallet {
                             Text(L10n.tr("Logowanie /@baza poświadczeniem z portfela wskazanego w Preferencjach › Oracle (Oracle Wallet). Pole „Baza” musi być dokładnie aliasem albo connect stringiem zapisanym w portfelu; alias musi być w konfiguracji Oracle Net z Preferencji."))

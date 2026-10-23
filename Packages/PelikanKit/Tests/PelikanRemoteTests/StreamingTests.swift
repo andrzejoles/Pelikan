@@ -29,7 +29,7 @@ func collect(_ events: AsyncThrowingStream<RemoteEvent, any Error>) async throws
     return out
 }
 
-@Suite("Rozbudowa: strumień, stdin, limity, dekoder, prolog")
+@Suite("Rozbudowa: strumień, stdin, limity, dekoder, prolog", .timeLimit(.minutes(1)))
 struct SpawnStreamTests {
     @Test("Kolejność porcji stdout/stderr i kod wyjścia")
     func order() async throws {
@@ -128,7 +128,7 @@ struct SpawnStreamTests {
     }
 }
 
-@Suite("Rozbudowa na lokalnym sshd: strumień, stdin, Stop, ISO-8859-2", .serialized, .enabled(if: sshdAvailable))
+@Suite("Rozbudowa na lokalnym sshd: strumień, stdin, Stop, ISO-8859-2", .serialized, .enabled(if: sshdAvailable), .timeLimit(.minutes(2)))
 struct RemoteStreamTests {
     func connected(encoding: NameEncoding = .utf8) throws -> (TestSSHD, SSHSession, URL) {
         let sshd = try TestSSHD()

@@ -70,3 +70,22 @@ struct Oracle23Tests {
         #expect(Spatial.parse(text).first?.parts.first?.count == 4)
     }
 }
+
+@Suite("ORDS: skrypty i wykrycie")
+struct ORDSTests {
+    @Test("Skrypty ENABLE_SCHEMA / ENABLE_OBJECT z cytowaniem")
+    func scripts() {
+        let s = ORDSTools.enableSchemaScript(schema: "hr", urlAlias: "kadry")
+        #expect(s.contains("p_schema => 'HR'") && s.contains("p_url_mapping_pattern => 'kadry'") && s.contains("p_auto_rest_auth => true"))
+        let o = ORDSTools.enableObjectScript(schema: "hr", object: "o'k", type: "package body")
+        #expect(o.contains("p_object => 'O''K'") && o.contains("p_object_type => 'PACKAGE'") && o.contains("p_object_alias => 'o''k'"))
+        #expect(ORDSTools.disableObjectScript(schema: "hr", object: "emp").contains("p_enabled => false"))
+    }
+
+    @Test("Baza testowa bez ORDS: wykrycie braku", .enabled(if: TestDatabase.isAvailable))
+    func detect() async throws {
+        let s = try await TestDatabase.connect()
+        #expect(try await ORDSTools.isInstalled(s) == false)
+        await s.close()
+    }
+}

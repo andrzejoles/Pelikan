@@ -254,6 +254,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy widok dualności… | `tools.dualityViewDDL` |  |  | Brak | 0 | SD-DV-001 |
 | Moduły i środowiska MLE | `tools.mleModules` |  |  | Brak | 0 | SD-MLE-001 |
 | Importuj moduł JavaScript… | `tools.importMLEModule` |  |  | Brak | 0 | SD-MLE-001 |
+| REST (ORDS) › Moduły REST (ORDS) | `tools.ordsModules` |  |  | Brak | 0 | SD-ORDS-001 |
+| REST (ORDS) › Włącz REST dla schematu… | `tools.ordsEnableSchema` |  |  | Brak | 0 | SD-ORDS-001 |
+| REST (ORDS) › Włącz REST dla obiektu… | `tools.ordsEnableObject` |  |  | Brak | 0 | SD-ORDS-001 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |

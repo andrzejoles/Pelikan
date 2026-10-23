@@ -77,7 +77,7 @@ struct PortedParserTests {
     }
 }
 
-@Suite("Przeniesione z Bifolda: lokalny sshd", .serialized, .enabled(if: sshdAvailable))
+@Suite("Przeniesione z Bifolda: lokalny sshd", .serialized, .enabled(if: sshdAvailable), .timeLimit(.minutes(2)))
 struct PortedServerTests {
     /// Stary serwer tylko z SCP: hasło klucza przez askpass/FIFO, polecenia, scp w obie strony z polskimi
     /// i specjalnymi znakami, listing `ls -la`, bez śladów w katalogu run.

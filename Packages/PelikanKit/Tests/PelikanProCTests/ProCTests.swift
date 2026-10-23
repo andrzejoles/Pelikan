@@ -188,7 +188,7 @@ struct BuildMessageParserTests {
 }
 
 #if canImport(Darwin)
-@Suite("Testuj cel SSH na lokalnym sshd", .serialized, .enabled(if: sshdAvailable))
+@Suite("Testuj cel SSH na lokalnym sshd", .serialized, .enabled(if: sshdAvailable), .timeLimit(.minutes(2)))
 struct SSHTargetTesterTests {
     @Test("Testuj: logowanie, wersja serwera, git w working copy (gałąź, czystość), katalogi i utworzenie katalogu backupów")
     func testTarget() throws {

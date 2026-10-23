@@ -613,3 +613,12 @@ plik z ostatniego polecenia kompilacji `xlc… -c plik.c` w wyjściu `make`). Ś
 `make` albo bezwzględna) jest mapowana na ścieżkę względną working copy; pliki spoza repozytorium (nagłówki Oracle) nie
 dają skoku. Fixture'y odtwarzają format z dokumentacji — do zastąpienia prawdziwymi próbkami z AIX właściciela.
 Sukces builda wyznacza kod wyjścia `make`, nie parser.
+
+### D82 · 2026-10-23 — Entra ID i ORDS bez środowisk do prób
+**Entra ID:** Pelikan nie implementuje OAuth sam — używa obsługi tokenów w Instant Client 23 (`TOKEN_AUTH=AZURE_INTERACTIVE`
+z `TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_DB_APP_ID_URI`; albo `TOKEN_AUTH=OAUTH` z `TOKEN_LOCATION`). Parametry trafiają
+do sekcji SECURITY deskryptora albo do EZConnect; alias rozwijany z konfiguracji Oracle Net. Logowanie bez użytkownika
+i hasła; token nie przechodzi przez Pelikana i nie jest zapisywany. Bez konta Azure (płatne konto — PROMPT §13) nie da
+się sprawdzić logowania, więc wiersz ⚠️ do potwierdzenia przez właściciela.
+**ORDS:** baza testowa (gvenzl/oracle-free) nie ma ORDS; Pelikan wykrywa jego brak, pokazuje moduły i obiekty AutoREST
+z widoków USER_ORDS_*, a włączenie REST generuje jako skrypt do okna SQL (jak DDL — bez samodzielnego wykonania).
