@@ -18,10 +18,53 @@ public struct TableDefinition: Sendable, Hashable {
         public var virtualExpression = ""
         public var identity = false
         public var comment = ""
+        /// Domena SQL kolumny (23ai, `WŁAŚCICIEL.NAZWA`) i adnotacje (PD-OED-003).
+        public var domain = ""
+        public var annotations: [Annotation] = []
 
         public init(name: String, type: String, nullable: Bool = true) {
             self.name = name; self.type = type; self.nullable = nullable
         }
+    }
+
+    /// Adnotacja schematu (23ai): nazwa i opcjonalna wartość.
+    public struct Annotation: Sendable, Hashable, Identifiable {
+        public var name: String
+        public var value: String
+        public var id: String { name.uppercased() }
+        public init(name: String, value: String = "") { self.name = name; self.value = value }
+    }
+
+    /// Uprawnienie do tabeli (PD-OED-005).
+    public struct Grant: Sendable, Hashable, Identifiable {
+        public var grantee: String
+        public var privilege: String
+        public var grantable = false
+        public var id: String { grantee.uppercased() + ":" + privilege.uppercased() }
+        public init(grantee: String, privilege: String, grantable: Bool = false) { self.grantee = grantee; self.privilege = privilege; self.grantable = grantable }
+    }
+
+    /// Partycjonowanie nowej tabeli (PD-OED-006): metoda, kolumny i partycje (nazwa, wartości).
+    public struct Partitioning: Sendable, Hashable {
+        public enum Method: String, Sendable, Hashable, CaseIterable { case range = "RANGE", list = "LIST", hash = "HASH" }
+        public var method: Method
+        public var columns: [String]
+        public var partitions: [Partition] = []
+        /// Przedział dla partycjonowania automatycznego (INTERVAL) w RANGE, np. NUMTOYMINTERVAL(1,'MONTH').
+        public var interval = ""
+        public init(method: Method, columns: [String]) { self.method = method; self.columns = columns }
+    }
+
+    public struct Partition: Sendable, Hashable {
+        public var name: String
+        /// RANGE: wartości VALUES LESS THAN, LIST: VALUES, HASH: puste.
+        public var values: String
+        public init(name: String, values: String = "") { self.name = name; self.values = values }
+    }
+
+    public struct Trigger: Sendable, Hashable {
+        public var name: String
+        public var enabled: Bool
     }
 
     public struct Key: Sendable, Hashable, Identifiable {
@@ -80,6 +123,15 @@ public struct TableDefinition: Sendable, Hashable {
     public var keys: [Key] = []
     public var checks: [Check] = []
     public var indexes: [Index] = []
+    public var annotations: [Annotation] = []
+    public var grants: [Grant] = []
+    /// ROW ARCHIVAL (In-Database Archiving, PD-OED-012).
+    public var rowArchival = false
+    /// Partycjonowanie (tylko przy tworzeniu; istniejące — opis w `partitionInfo`).
+    public var partitioning: Partitioning?
+    public var partitionInfo = ""
+    /// Wyzwalacze tabeli (nazwa, stan) — karta Wyzwalacze, włączanie przez Object Browser.
+    public var triggers: [Trigger] = []
 
     public init(owner: String, name: String) { self.owner = owner; self.name = name }
 
@@ -201,6 +253,36 @@ public enum TableDDL {
             x.invisible = r[4].displayText == "INVISIBLE"
             d.indexes.append(x)
         }
+        // Uprawnienia (PD-OED-005), wyzwalacze (PD-OED-006), partycjonowanie (opis), ROW ARCHIVAL (PD-OED-012).
+        let (_, grants) = (try? await s.queryAll("""
+            select grantee, privilege, grantable from all_tab_privs where table_schema = :o and table_name = :n order by grantee, privilege
+            """, binds: b, limit: 10_000)) ?? ([], [])
+        d.grants = grants.map { TableDefinition.Grant(grantee: $0[0].displayText ?? "", privilege: $0[1].displayText ?? "", grantable: $0[2].displayText == "YES") }
+        let (_, trg) = (try? await s.queryAll("select trigger_name, status from all_triggers where table_owner = :o and table_name = :n order by 1",
+                                               binds: b, limit: 10_000)) ?? ([], [])
+        d.triggers = trg.map { TableDefinition.Trigger(name: $0[0].displayText ?? "", enabled: $0[1].displayText == "ENABLED") }
+        if let p = try? await s.scalar("""
+            select partitioning_type || nvl2(subpartitioning_type, ' / ' || subpartitioning_type, '') || ', ' || partition_count
+              from all_part_tables where owner = :o and table_name = :n
+            """, binds: b) { d.partitionInfo = p }
+        d.rowArchival = (try? await s.scalar("select count(*) from all_tab_cols where owner = :o and table_name = :n and column_name = 'ORA_ARCHIVE_STATE'",
+                                             binds: b)) == "1"
+        // Domeny i adnotacje (23ai, PD-OED-003) — na starszych bazach słownik ich nie ma (błąd pomijany).
+        if let (_, dom) = try? await s.queryAll("""
+            select column_name, domain_owner || '.' || domain_name from all_tab_cols where owner = :o and table_name = :n and domain_name is not null
+            """, binds: b, limit: 10_000) {
+            for r in dom { if let i = d.columns.firstIndex(where: { $0.name == r[0].displayText }) { d.columns[i].domain = r[1].displayText ?? "" } }
+        }
+        if let (_, ann) = try? await s.queryAll("""
+            select column_name, annotation_name, annotation_value from all_annotations_usage
+             where object_name = :n and object_type = 'TABLE' and domain_name is null order by annotation_name
+            """, binds: [BindVariable(name: "n", value: .text(name))], limit: 10_000) {
+            for r in ann {
+                let a = TableDefinition.Annotation(name: r[1].displayText ?? "", value: r[2].displayText ?? "")
+                if let col = r[0].displayText, let i = d.columns.firstIndex(where: { $0.name == col }) { d.columns[i].annotations.append(a) }
+                else if r[0].displayText == nil { d.annotations.append(a) }
+            }
+        }
         return d
     }
 
@@ -258,6 +340,24 @@ public enum TableDDL {
             for c in added where !c.comment.isEmpty { out.append("COMMENT ON COLUMN \(t).\(q(c.name)) IS \(literal(c.comment))") }
         }
         if old.comment != new.comment { out.append("COMMENT ON TABLE \(t) IS \(literal(new.comment))") }
+        // Domeny i adnotacje kolumn oraz tabeli (23ai).
+        for c in new.columns {
+            guard let orig = c.originalName, let before = old.columns.first(where: { $0.name == orig }) else { continue }
+            if before.domain != c.domain {
+                out.append(c.domain.isEmpty ? "ALTER TABLE \(t) MODIFY (\(q(c.name)) DROP DOMAIN)"
+                           : "ALTER TABLE \(t) MODIFY (\(q(c.name)) DOMAIN " + c.domain.split(separator: ".").map { q(String($0)) }.joined(separator: ".") + ")")
+            }
+            out += annotationChanges(before.annotations, c.annotations) { "ALTER TABLE \(t) MODIFY (\(q(c.name)) \($0))" }
+        }
+        out += annotationChanges(old.annotations, new.annotations) { "ALTER TABLE \(t) \($0)" }
+        if old.rowArchival != new.rowArchival { out.append("ALTER TABLE \(t) \(new.rowArchival ? "ROW ARCHIVAL" : "NO ROW ARCHIVAL")") }
+        // Uprawnienia: odebrane, nadane, zmiana opcji nadawania (REVOKE + GRANT).
+        let newGrants = Dictionary(new.grants.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let oldGrants = Dictionary(old.grants.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        for g in old.grants where newGrants[g.id] == nil || newGrants[g.id]?.grantable != g.grantable {
+            out.append("REVOKE \(g.privilege.uppercased()) ON \(t) FROM \(q(g.grantee))")
+        }
+        for g in new.grants where oldGrants[g.id] == nil || oldGrants[g.id]?.grantable != g.grantable { out.append(grantStatement(g, table: t)) }
         // Więzy i indeksy: zmienione definicje — usunięcie i utworzenie; tylko nazwa — RENAME; stan — ENABLE/DISABLE.
         func constraintsDiff<T>(_ o: [T], _ n: [T], name: (T) -> String, orig: (T) -> String?, same: (T, T) -> Bool, enabled: (T) -> Bool,
                                 add: (T) -> String) {
@@ -294,6 +394,18 @@ public enum TableDDL {
         return out
     }
 
+    /// Zmiany adnotacji: DROP usuniętych i zmienionych, ADD nowych i zmienionych.
+    static func annotationChanges(_ old: [TableDefinition.Annotation], _ new: [TableDefinition.Annotation], wrap: (String) -> String) -> [String] {
+        let o = Dictionary(old.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let n = Dictionary(new.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let drop = old.filter { n[$0.id] == nil || n[$0.id]?.value != $0.value }
+        let add = new.filter { o[$0.id] == nil || o[$0.id]?.value != $0.value }
+        var out: [String] = []
+        if !drop.isEmpty { out.append(wrap(annotationsClause(drop.map { .init(name: $0.name) }, operation: "DROP"))) }
+        if !add.isEmpty { out.append(wrap(annotationsClause(add, operation: "ADD"))) }
+        return out
+    }
+
     static func create(_ d: TableDefinition) -> [String] {
         let t = qualified(d)
         var body = d.columns.map(columnClause)
@@ -304,11 +416,41 @@ public enum TableDDL {
         if d.temporary { sql += "\nON COMMIT \(d.preserveRows ? "PRESERVE" : "DELETE") ROWS" }
         if d.indexOrganized, !d.temporary { sql += "\nORGANIZATION INDEX" }
         if !d.tablespace.isEmpty, !d.temporary { sql += "\nTABLESPACE \(q(d.tablespace))" }
+        if let p = d.partitioning, !d.temporary, !p.columns.isEmpty { sql += "\n" + partitionClause(p) }
+        if d.rowArchival { sql += "\nROW ARCHIVAL" }
+        if !d.annotations.isEmpty { sql += "\n" + annotationsClause(d.annotations) }
         var out = [sql]
         if !d.comment.isEmpty { out.append("COMMENT ON TABLE \(t) IS \(literal(d.comment))") }
         for c in d.columns where !c.comment.isEmpty { out.append("COMMENT ON COLUMN \(t).\(q(c.name)) IS \(literal(c.comment))") }
         out += d.indexes.map { createIndex($0, table: d) }
+        out += d.grants.map { grantStatement($0, table: t) }
         return out
+    }
+
+    static func annotationsClause(_ a: [TableDefinition.Annotation], operation: String = "") -> String {
+        "ANNOTATIONS (" + a.map { x in (operation.isEmpty ? "" : operation + " ") + q(x.name) + (x.value.isEmpty ? "" : " " + literal(x.value)) }
+            .joined(separator: ", ") + ")"
+    }
+
+    static func partitionClause(_ p: TableDefinition.Partitioning) -> String {
+        var s = "PARTITION BY \(p.method.rawValue) (" + p.columns.map(q).joined(separator: ", ") + ")"
+        if p.method == .range, !p.interval.isEmpty { s += " INTERVAL (\(p.interval))" }
+        if p.method == .hash, p.partitions.allSatisfy({ $0.values.isEmpty }), !p.partitions.isEmpty {
+            return s + " (" + p.partitions.map { "PARTITION \(q($0.name))" }.joined(separator: ", ") + ")"
+        }
+        guard !p.partitions.isEmpty else { return s }
+        let parts = p.partitions.map { x -> String in
+            switch p.method {
+            case .range: "PARTITION \(q(x.name)) VALUES LESS THAN (\(x.values))"
+            case .list: "PARTITION \(q(x.name)) VALUES (\(x.values))"
+            case .hash: "PARTITION \(q(x.name))"
+            }
+        }
+        return s + " (\n  " + parts.joined(separator: ",\n  ") + "\n)"
+    }
+
+    static func grantStatement(_ g: TableDefinition.Grant, table: String) -> String {
+        "GRANT \(g.privilege.uppercased()) ON \(table) TO \(q(g.grantee))" + (g.grantable ? " WITH GRANT OPTION" : "")
     }
 
     static func columnClause(_ c: TableDefinition.Column) -> String {
@@ -321,6 +463,8 @@ public enum TableDDL {
             s += " DEFAULT\(c.defaultOnNull ? " ON NULL" : "") \(c.defaultValue)"
         }
         if !c.nullable, !c.identity, !(c.defaultOnNull && !c.defaultValue.isEmpty) { s += " NOT NULL" }
+        if !c.domain.isEmpty { s += " DOMAIN " + c.domain.split(separator: ".").map { q(String($0)) }.joined(separator: ".") }
+        if !c.annotations.isEmpty { s += " " + annotationsClause(c.annotations) }
         return s
     }
 

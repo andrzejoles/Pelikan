@@ -226,6 +226,20 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             menu.addItem(item(L10n.tr("Połącz"), "connection.connect", arg))
             menu.addItem(item(L10n.tr("Rozłącz"), "connection.disconnect", arg))
             menu.addItem(.separator())
+            let open = NSMenuItem(title: L10n.tr("Nowe okno"), action: nil, keyEquivalent: "")
+            let sub = NSMenu()
+            for (title, kind) in [(L10n.tr("Okno SQL"), "sql"), (L10n.tr("Okno programu"), "program"), (L10n.tr("Okno testu"), "test"), (L10n.tr("Okno poleceń"), "command")] {
+                let i = item(title, "connection.openWindow", arg)
+                i.representedObject = ["connection.openWindow", arg, kind]
+                sub.addItem(i)
+            }
+            open.submenu = sub
+            menu.addItem(open)
+            menu.addItem(item(L10n.tr("Pokaż okna połączenia"), "connection.showWindows", arg))
+            menu.addItem(item(L10n.tr("Połącz ponownie okna połączenia"), "connection.reconnectWindows", arg))
+            menu.addItem(item(L10n.tr("Zamknij okna połączenia"), "connection.closeWindows", arg))
+            menu.addItem(item(L10n.tr("Ustaw bieżący schemat…"), "connection.setCurrentSchema", arg))
+            menu.addItem(.separator())
             menu.addItem(item(L10n.tr("Edytuj…"), "connection.edit", arg))
             menu.addItem(item(L10n.tr("Usuń…"), "connection.delete", arg))
         case .folder, .recent:
@@ -246,8 +260,10 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
     }
 
     @objc private func runCommand(_ sender: NSMenuItem) {
-        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
-        let args = pair[1].isEmpty ? CommandArguments.empty : CommandArguments(["connection": .string(pair[1])])
+        guard let pair = sender.representedObject as? [String], pair.count >= 2 else { return }
+        var values: [String: PelikanWorkspace.JSONValue] = pair[1].isEmpty ? [:] : ["connection": .string(pair[1])]
+        if pair.count > 2 { values["kind"] = .string(pair[2]) }
+        let args = CommandArguments(values)
         workspace.perform(CommandID(rawValue: pair[0]), args)
     }
 

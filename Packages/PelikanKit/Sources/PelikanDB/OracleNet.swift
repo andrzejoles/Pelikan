@@ -41,6 +41,13 @@ public enum OracleNet {
         var tns = "# Pelikan\n"
         if let u = user, FileManager.default.fileExists(atPath: u + "/tnsnames.ora") { tns += "IFILE=\(quoted(u + "/tnsnames.ora"))\n" }
         try tns.write(to: dir.appendingPathComponent("tnsnames.ora"), atomically: true, encoding: .utf8)
+        // Nazewnictwo katalogowe (LDAP, PD-CONN-013): klient czyta ldap.ora tylko z TNS_ADMIN i bez IFILE — dowiązanie
+        // do pliku użytkownika (NAMES.DIRECTORY_PATH przychodzi z jego sqlnet.ora przez IFILE).
+        let ldap = dir.appendingPathComponent("ldap.ora")
+        try? FileManager.default.removeItem(at: ldap)
+        if let u = user, FileManager.default.fileExists(atPath: u + "/ldap.ora") {
+            try FileManager.default.createSymbolicLink(atPath: ldap.path, withDestinationPath: u + "/ldap.ora")
+        }
         return dir.path
     }
 }

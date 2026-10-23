@@ -35,6 +35,28 @@ public enum ConnectionCommands {
                 ctx.workspace.sessions.setMainConnection(nil)
                 return .ok
             },
+            Command(CommandDescriptor(id: "connection.export", title: L10n.tr("Eksportuj definicje połączeń…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje definicje połączeń i foldery do pliku JSON — bez haseł (zostają w Pęku kluczy)."),
+                                      feature: "PD-CONN-010")) { ctx in
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: "Pelikan-connections", fileExtension: "json") }
+                guard let url else { throw CommandError.cancelledByUser }
+                try ctx.workspace.connections.exportDefinitions().write(to: url, options: .atomic)
+                return CommandResult(message: L10n.tr("Zapisano \(ctx.workspace.connections.connections.count) połączeń"), value: .string(url.path))
+            },
+            Command(CommandDescriptor(id: "connection.import", title: L10n.tr("Importuj definicje połączeń…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Dopisuje definicje połączeń z pliku JSON (hasła trzeba podać przy pierwszym połączeniu)."),
+                                      feature: "PD-CONN-010")) { ctx in
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
+                guard let url else { throw CommandError.cancelledByUser }
+                let n = try ctx.workspace.connections.importDefinitions(try Data(contentsOf: url))
+                return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n)"), value: .int(Int64(n)))
+            },
             Command(CommandDescriptor(id: "connection.new", title: L10n.tr("Nowe połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       agent: .none, effect: .settings, summary: L10n.tr("Definiuje nowe połączenie."), feature: "PD-CONN-004")) { ctx in
                 ctx.ui?.showConnectionEditor(connectionID: nil)
@@ -77,6 +99,76 @@ public enum ConnectionCommands {
                 let id = try connectionID(ctx)
                 _ = try await ctx.workspace.sessions.session(SessionKey(connectionID: id, purpose: .main))
                 return .ok
+            },
+            Command(CommandDescriptor(id: "connection.openWindow", title: L10n.tr("Nowe okno na połączeniu"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam, CommandParameter("kind", .string, L10n.tr("Typ okna: sql, program, test, command"),
+                                                                                      allowed: ["sql", "program", "test", "command"])],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno wskazanego typu przypięte do połączenia (bez zmiany połączenia głównego)."),
+                                      inMenu: false, feature: "PD-CONN-022")) { ctx in
+                let id = try connectionID(ctx)
+                let kind: DocumentKind = switch ctx.arguments.string("kind") { case "program": .program; case "test": .test; case "command": .command; default: .sql }
+                let doc = ctx.workspace.newDocument(kind)
+                doc.connectionID = id
+                doc.connectionPinned = true
+                return CommandResult(value: .string(doc.id.description))
+            },
+            Command(CommandDescriptor(id: "connection.showWindows", title: L10n.tr("Pokaż okna połączenia"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Aktywuje kolejne okno używające połączenia."), inMenu: false, feature: "PD-CONN-022")) { ctx in
+                let id = try connectionID(ctx)
+                let ws = ctx.workspace
+                let docs = ws.documents.filter { ws.effectiveConnection(of: $0) == id }
+                guard !docs.isEmpty else { return CommandResult(message: L10n.tr("Brak okien na tym połączeniu")) }
+                let next = docs.firstIndex { $0.id == ws.activeDocumentID }.map { docs[($0 + 1) % docs.count] } ?? docs[0]
+                ws.activate(next.id)
+                return CommandResult(value: .int(Int64(docs.count)))
+            },
+            Command(CommandDescriptor(id: "connection.closeWindows", title: L10n.tr("Zamknij okna połączenia"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zamyka okna przypięte do połączenia (z pytaniem o niezapisane zmiany i otwarte transakcje)."),
+                                      inMenu: false, feature: "PD-CONN-022")) { ctx in
+                let id = try connectionID(ctx)
+                let ws = ctx.workspace
+                var closed = 0
+                for d in ws.documents where ws.effectiveConnection(of: d) == id && d.connectionPinned {
+                    if d.isModified || d.transactionOpen, let ui = ctx.ui {
+                        guard await ui.ask(L10n.tr("Zamknąć okno „\(d.fullTitle)”?"), message: L10n.tr("Okno ma niezapisane zmiany albo otwartą transakcję."),
+                                           buttons: [L10n.tr("Zamknij"), L10n.tr("Pomiń")]) == 0 else { continue }
+                        if d.transactionOpen { try? await ws.endTransactions(of: [d], commit: false) }
+                    }
+                    ws.close(d.id)
+                    closed += 1
+                }
+                return CommandResult(value: .int(Int64(closed)))
+            },
+            Command(CommandDescriptor(id: "connection.reconnectWindows", title: L10n.tr("Połącz ponownie okna połączenia"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam], agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zamyka sesje okien bez otwartej transakcji; okna łączą się ponownie przy następnym wykonaniu."),
+                                      inMenu: false, feature: "PD-CONN-022")) { ctx in
+                let id = try connectionID(ctx)
+                let ws = ctx.workspace
+                var n = 0
+                for d in ws.documents where ws.effectiveConnection(of: d) == id && !d.transactionOpen && !d.isExecuting {
+                    let key = ws.sessions.key(forDocument: d.id, connection: id)
+                    guard case .document = key.purpose, ws.sessions.existingSession(key) != nil else { continue }
+                    await ws.sessions.close(key)
+                    n += 1
+                }
+                return CommandResult(message: L10n.tr("Sesje do ponownego połączenia: \(n)"), value: .int(Int64(n)))
+            },
+            Command(CommandDescriptor(id: "connection.setCurrentSchema", title: L10n.tr("Ustaw bieżący schemat…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam, CommandParameter("schema", .string, required: true, L10n.tr("Schemat"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Object Browser i nazwy bez schematu)."),
+                                      inMenu: false, feature: "PD-CONN-022")) { ctx in
+                let id = try connectionID(ctx)
+                var schema = ctx.arguments.string("schema")
+                if schema == nil { schema = await ctx.ui?.askText(L10n.tr("Bieżący schemat"), message: L10n.tr("Schemat"), defaultValue: "") }
+                guard let schema, SessionManager.isSafeIdentifier(schema) else { throw CommandError.invalidArgument("schema", schema ?? "") }
+                let s = try await ctx.workspace.sessions.session(SessionKey(connectionID: id, purpose: .main))
+                _ = try await s.execute("ALTER SESSION SET CURRENT_SCHEMA = \(schema)")
+                return CommandResult(value: .string(try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? schema))
             },
             Command(CommandDescriptor(id: "connection.disconnect", title: L10n.tr("Rozłącz"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam], agent: .none, effect: .settings,

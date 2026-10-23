@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -224,6 +224,7 @@ public enum BuiltinCommands {
                                   agent: .full, effect: .modifiesEditor, summary: summary, feature: feature),
                 validate: { editable($0) != nil }) { ctx in
             guard let doc = editable(ctx.workspace) else { return .ok }
+            if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
@@ -327,8 +328,7 @@ public enum BuiltinCommands {
                                       feature: "PD-CA-001"),
                     validate: { editable($0) != nil }) { ctx in
                 guard let doc = editable(ctx.workspace) else { return .ok }
-                let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc))
-                guard let r = await CodeAssistant.complete(text: doc.text, offset: doc.selectedRange.lowerBound, metadata: m) else {
+                guard let r = await ctx.workspace.completion(for: doc, text: doc.text, offset: doc.selectedRange.lowerBound) else {
                     return CommandResult(message: L10n.tr("Brak podpowiedzi"))
                 }
                 ctx.ui?.showCompletion(r, for: doc)
@@ -463,15 +463,47 @@ public enum BuiltinCommands {
 
     @MainActor static var session: [Command] {
         [
-            .planned(CommandDescriptor(id: "session.kill", title: L10n.tr("Zakończ sesję okna (Kill)"), category: .session,
-                                       agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kończy sesję bazy okna, gdy Przerwij nie działa."),
-                                       stage: 1, feature: "PD-CONN-027")),
+            Command(CommandDescriptor(id: "session.kill", title: L10n.tr("Zakończ sesję okna (Kill)"), category: .session,
+                                      agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kończy sesję bazy okna, gdy Przerwij nie działa."),
+                                      feature: "PD-CONN-027"),
+                    validate: { ws in
+                        guard let doc = ws.activeDocument, let c = ws.effectiveConnection(of: doc) else { return false }
+                        return ws.sessions.serverSessionIDs[ws.sessions.key(forDocument: doc.id, connection: c)] != nil
+                    }) { ctx in
+                let ws = ctx.workspace
+                guard let doc = ws.activeDocument, let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
+                let key = ws.sessions.key(forDocument: doc.id, connection: conn)
+                guard let id = ws.sessions.serverSessionIDs[key] else { throw CommandError.notAvailable(L10n.tr("Okno nie ma sesji")) }
+                if let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Zakończyć sesję okna?"),
+                                       message: L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną."),
+                                       buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                let toolKey = SessionKey(connectionID: conn, purpose: .tool("kill"))
+                let tool = try await ws.sessions.session(toolKey)
+                defer { Task { await ws.sessions.close(toolKey) } }
+                try await SessionKiller.kill(sid: id.sid, instance: id.instance, using: tool)
+                doc.isExecuting = false
+                await ws.sessions.close(key)
+                return CommandResult(message: L10n.tr("Sesja \(id.sid) zakończona"))
+            },
             .planned(CommandDescriptor(id: "session.setPassword", title: L10n.tr("Zmień hasło…"), category: .session,
                                        agent: .none, effect: .settings, summary: L10n.tr("Zmienia hasło w bazie i w definicji połączenia."),
                                        stage: 1, feature: "PD-CONN-017")),
-            .planned(CommandDescriptor(id: "session.sqlTrace", title: L10n.tr("SQL Trace"), category: .session,
-                                       agent: .none, effect: .settings, summary: L10n.tr("Włącza lub wyłącza SQL Trace sesji okna."),
-                                       stage: 3, feature: "PD-OPT-008")),
+            Command(CommandDescriptor(id: "session.sqlTrace", title: L10n.tr("SQL Trace"), category: .session,
+                                      agent: .none, effect: .settings, summary: L10n.tr("Włącza lub wyłącza SQL Trace sesji okna."),
+                                      feature: "PD-OPT-008"),
+                    validate: { ws in ws.activeDocument.flatMap { d in ws.effectiveConnection(of: d) } != nil && ws.activeDocument?.isExecuting != true }) { ctx in
+                let ws = ctx.workspace
+                guard let doc = ws.activeDocument, let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
+                let key = ws.sessions.key(forDocument: doc.id, connection: conn)
+                let s = try await ws.sessions.session(key)
+                let enable = !ws.sessions.sqlTraceEnabled.contains(key)
+                let file = try await SessionKiller.setSQLTrace(enable, in: s)
+                if enable { ws.sessions.sqlTraceEnabled.insert(key) } else { ws.sessions.sqlTraceEnabled.remove(key) }
+                let message = enable ? L10n.tr("SQL Trace włączony") + (file.map { " — " + $0 } ?? "") : L10n.tr("SQL Trace wyłączony")
+                return CommandResult(message: message, value: .bool(enable))
+            },
         ]
     }
 

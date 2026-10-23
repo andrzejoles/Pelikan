@@ -16,6 +16,7 @@ struct PreferencesView: View {
             BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
             KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
             OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
+            BrowserPane(workspace: workspace).tabItem { Label(L10n.tr("Object Browser"), systemImage: "list.bullet.indent") }
             ToolsPane(workspace: workspace).tabItem { Label(L10n.tr("Narzędzia"), systemImage: "wrench.and.screwdriver") }
             AgentsPane(workspace: workspace).tabItem { Label(L10n.tr("Agenci"), systemImage: "cpu") }
             PreferenceSetsPane(workspace: workspace).tabItem { Label(L10n.tr("Zestawy"), systemImage: "square.stack.3d.up") }
@@ -74,6 +75,17 @@ struct GeneralPane: View {
                 }
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu Pelikana.")).font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Katalogi startowe i rozszerzenia")) {
+                ForEach([("sql", L10n.tr("Skrypty SQL")), ("program", L10n.tr("Programy")), ("test", L10n.tr("Testy")), ("report", L10n.tr("Raporty"))], id: \.0) { key, label in
+                    TextField(label, text: Binding(get: { workspace.settings.startDirectories[key] ?? "" },
+                                                   set: { workspace.settings.startDirectories[key] = $0.isEmpty ? nil : $0 }),
+                              prompt: Text(L10n.tr("katalog projektu albo ostatni")))
+                }
+                TextField(L10n.tr("Dodatkowe rozszerzenia programów"), text: Binding(get: { workspace.settings.programExtensions.joined(separator: ", ") },
+                    set: { workspace.settings.programExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
+                TextField(L10n.tr("Dodatkowe rozszerzenia testów"), text: Binding(get: { workspace.settings.testExtensions.joined(separator: ", ") },
+                    set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
+            }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
             }
@@ -105,6 +117,9 @@ struct SQLWindowPane: View {
                     Text(L10n.tr("Maksymalny rozmiar wyniku: \(workspace.settings.maximumResultSetMegabytes) MB"))
                 }
             }
+            Section(L10n.tr("Statystyki")) {
+                Toggle(L10n.tr("Karta Statystyki: statystyki sesji z każdego wykonania (wymaga dostępu do V$MYSTAT)"), isOn: setting(workspace, \.sqlWindowStatistics))
+            }
             Section(L10n.tr("DBMS_OUTPUT (UG 23.5)")) {
                 Toggle(L10n.tr("Włączone"), isOn: setting(workspace, \.dbmsOutputEnabled))
                 Toggle(L10n.tr("Czyść przed wykonaniem"), isOn: setting(workspace, \.dbmsOutputClearBeforeExecute))
@@ -134,9 +149,62 @@ struct EditorPane: View {
                 Picker(L10n.tr("Czcionka"), selection: setting(workspace, \.editorFontName)) {
                     ForEach(["SF Mono", "Menlo", "Monaco", "Courier New", "JetBrains Mono"].filter { NSFont(name: $0, size: 12) != nil }, id: \.self) { Text($0).tag($0) }
                 }
-                Stepper(value: setting(workspace, \.editorFontSize), in: 8...32, step: 1) {
+                Stepper(value: setting(workspace, \.editorFontSize), in: 8...40, step: 1) {
                     Text(L10n.tr("Rozmiar: \(Int(workspace.settings.editorFontSize)) pt"))
                 }
+                Stepper(value: setting(workspace, \.gridFontSize), in: 8...24, step: 1) {
+                    Text(L10n.tr("Siatka wyników: \(Int(workspace.settings.gridFontSize)) pt"))
+                }
+                Stepper(value: setting(workspace, \.browserFontSize), in: 0...24, step: 1) {
+                    Text(workspace.settings.browserFontSize == 0 ? L10n.tr("Object Browser: systemowa")
+                         : L10n.tr("Object Browser: \(Int(workspace.settings.browserFontSize)) pt"))
+                }
+                Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
+            }
+            Section(L10n.tr("Code Assistant")) {
+                Toggle(L10n.tr("Automatycznie po kropce"), isOn: setting(workspace, \.codeAssistantAutomatic))
+                Stepper(value: setting(workspace, \.codeAssistantDelay), in: 0...2000, step: 100) {
+                    Text(L10n.tr("Opóźnienie: \(workspace.settings.codeAssistantDelay) ms"))
+                }
+                Picker(L10n.tr("Dopasowanie"), selection: setting(workspace, \.codeAssistantMatch)) {
+                    Text(L10n.tr("Zaczyna się od")).tag(CompletionMatch.startsWith)
+                    Text(L10n.tr("Zawiera")).tag(CompletionMatch.contains)
+                }
+                Picker(L10n.tr("Wielkość liter"), selection: setting(workspace, \.codeAssistantCase)) {
+                    Text(L10n.tr("Jak we wpisanym tekście")).tag(CompletionCase.auto)
+                    Text(L10n.tr("WIELKIE")).tag(CompletionCase.upper)
+                    Text(L10n.tr("małe")).tag(CompletionCase.lower)
+                    Text(L10n.tr("Pierwsza wielka")).tag(CompletionCase.initCap)
+                    Text(L10n.tr("Oryginalna")).tag(CompletionCase.original)
+                }
+                Stepper(value: setting(workspace, \.codeAssistantMinChars), in: 0...5) {
+                    Text(L10n.tr("Minimum znaków dla obiektów i słów kluczowych: \(workspace.settings.codeAssistantMinChars)"))
+                }
+                Toggle(L10n.tr("Funkcje standardowe SQL"), isOn: setting(workspace, \.codeAssistantStandardFunctions))
+                Toggle(L10n.tr("„(all)”: każdy element w osobnej linii"), isOn: setting(workspace, \.codeAssistantAllPerLine))
+                Toggle(L10n.tr("„(all)”: przecinek na początku linii"), isOn: setting(workspace, \.codeAssistantCommaFirst))
+                    .disabled(!workspace.settings.codeAssistantAllPerLine)
+            }
+            Section(L10n.tr("AutoReplace")) {
+                ForEach(workspace.settings.autoReplace.indices, id: \.self) { i in
+                    HStack {
+                        TextField(L10n.tr("Skrót"), text: Binding(get: { workspace.settings.autoReplace[i].abbreviation },
+                                                                 set: { workspace.settings.autoReplace[i].abbreviation = $0 }))
+                            .frame(width: 90)
+                        TextField(L10n.tr("Zamiana (| — kursor)"), text: Binding(get: { workspace.settings.autoReplace[i].replacement },
+                                                                                set: { workspace.settings.autoReplace[i].replacement = $0 }))
+                        Button { workspace.settings.autoReplace.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                            .iconLabel(L10n.tr("Usuń skrót"))
+                    }
+                }
+                Button(L10n.tr("Dodaj skrót")) { workspace.settings.autoReplace.append(AutoReplaceRule(abbreviation: "", replacement: "")) }
+            }
+            Section(L10n.tr("Analiza i okna")) {
+                Stepper(value: setting(workspace, \.identifierLengthWarning), in: 0...128, step: 1) {
+                    Text(workspace.settings.identifierLengthWarning == 0 ? L10n.tr("Ostrzeżenie o długich identyfikatorach: wyłączone")
+                         : L10n.tr("Ostrzegaj o identyfikatorach dłuższych niż \(workspace.settings.identifierLengthWarning) bajtów"))
+                }
+                Toggle(L10n.tr("Zapamiętuj stan okien plików (kursor, zakładki, znaczniki, zmienne)"), isOn: setting(workspace, \.rememberWindowState))
             }
             Section(L10n.tr("Pisanie")) {
                 Picker(L10n.tr("Wielkość liter słów kluczowych"), selection: setting(workspace, \.keywordCase)) {
@@ -174,6 +242,18 @@ struct OraclePane: View {
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Ustawienia NLS sesji")) {
+                ForEach(["NLS_DATE_FORMAT", "NLS_TIMESTAMP_FORMAT", "NLS_NUMERIC_CHARACTERS", "NLS_LANGUAGE", "NLS_TERRITORY", "NLS_SORT", "NLS_COMP"], id: \.self) { name in
+                    TextField(name, text: Binding(get: { workspace.settings.sessionNLS[name] ?? "" },
+                                                  set: { v in workspace.settings.sessionNLS[name] = v.isEmpty ? nil : v }),
+                              prompt: Text(L10n.tr("ustawienie serwera")))
+                }
+                Text(L10n.tr("Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji.")).font(.caption).foregroundStyle(.secondary)
+                Stepper(value: setting(workspace, \.closeIdleSessionsMinutes), in: 0...1440, step: 15) {
+                    Text(workspace.settings.closeIdleSessionsMinutes == 0 ? L10n.tr("Nie zamykaj bezczynnych sesji okien")
+                         : L10n.tr("Zamykaj sesje okien bezczynne ponad \(workspace.settings.closeIdleSessionsMinutes) min (bez otwartej transakcji)"))
+                }
+            }
             Section(L10n.tr("Dokumentacja Oracle (F1)")) {
                 Picker(L10n.tr("Wersja dokumentacji"), selection: setting(workspace, \.oracleDocsRelease)) {
                     ForEach(OracleDocs.releases, id: \.self) { r in Text(r == "19" ? "19c" : r == "21" ? "21c" : r + "ai").tag(r) }
@@ -204,6 +284,21 @@ struct OraclePane: View {
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+                Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
+                Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
+                Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
+                if workspace.settings.namingConventions.enabled {
+                    HStack {
+                        TextField(L10n.tr("Parametry"), text: setting(workspace, \.namingConventions.parameter))
+                        TextField(L10n.tr("Lokalne"), text: setting(workspace, \.namingConventions.local))
+                        TextField(L10n.tr("Globalne"), text: setting(workspace, \.namingConventions.global))
+                    }
+                    HStack {
+                        TextField(L10n.tr("Stałe"), text: setting(workspace, \.namingConventions.constant))
+                        TextField(L10n.tr("Kursory"), text: setting(workspace, \.namingConventions.cursor))
+                        TextField(L10n.tr("Typy"), text: setting(workspace, \.namingConventions.type))
+                    }
+                }
                 Toggle(L10n.tr("Pomijaj inicjalizację pakietów przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipPackageInit))
                 Toggle(L10n.tr("Pomijaj obiekty SYS przy krokowaniu"), isOn: setting(workspace, \.debuggerSkipSys))
             }

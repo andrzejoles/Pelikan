@@ -72,3 +72,45 @@ struct SQLPlusUnitTests {
         #expect(SQLPlusEngine.ddlMessage("create unique index i on t(x)") == "Utworzono: INDEX.")
     }
 }
+
+@MainActor
+@Suite("Command Window: HOST i krokowanie skryptu")
+struct SQLPlusHostStepTests {
+    @Test("HOST po potwierdzeniu: wyjście w oknie, katalog CD; anulowanie nic nie uruchamia")
+    func host() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("host-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        engine.state.directory = dir
+        ui.answers = [0]
+        _ = await engine.run("host echo witaj; pwd")
+        let out = doc.console.map(\.text).joined(separator: "\n")
+        #expect(out.contains("witaj") && out.contains(dir.lastPathComponent) && ui.asked.contains("Wykonać polecenie systemu?"))
+        ui.answers = [1]
+        _ = await engine.run("! touch \(dir.path)/nie")
+        #expect(!FileManager.default.fileExists(atPath: dir.appendingPathComponent("nie").path))
+    }
+
+    @Test("SET EXECPAUSE ON: pytanie przed poleceniem; Wykonaj resztę i Przerwij")
+    func stepping() async {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        engine.state.execPause = true
+        ui.answers = [0, 1]
+        _ = await engine.run("prompt jeden\nprompt dwa\nprompt trzy")
+        #expect(doc.console.map(\.text).filter { ["jeden", "dwa", "trzy"].contains($0) } == ["jeden", "dwa", "trzy"])
+        #expect(ui.asked.filter { $0 == "Następne polecenie" }.count == 2)
+        doc.console.removeAll()
+        ui.answers = [2]
+        let o = await engine.run("prompt cztery")
+        #expect(o == .stopped && !doc.console.map(\.text).contains("cztery"))
+    }
+}

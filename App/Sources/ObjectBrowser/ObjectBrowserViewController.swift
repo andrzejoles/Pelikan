@@ -22,6 +22,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         enum Kind {
             case folder(DBObjectType)
             case recent
+            case userFolder(BrowserFolder)
             case object(DBObject)
             case group(DBObjectChild.Kind, [DBObjectChild])
             case child(DBObjectChild)
@@ -144,7 +145,13 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             let types = try await m.availableTypes()
             if users { try await loadUsers(m) }
             if ownerMode == 0 { owner = try await m.currentSchema() }
-            roots = [Node(.recent)] + types.map { Node(.folder($0)) }
+            // Filtr domyślny dla użytkownika (PD-OB-007) — przy pierwszym wczytaniu połączenia.
+            if users, workspace.browserFilter == nil, let user = try? await m.currentSchema(),
+               let f = workspace.browserCustomization.defaultFilter(user: user) { workspace.browserFilter = f }
+            // Foldery użytkownika widoczne dla połączenia (PD-OB-008) i foldery typów wg preferencji (PD-OB-025).
+            let def = workspace.sessions.mainConnectionID.flatMap { workspace.connections.connection($0) }
+            let userFolders = workspace.browserCustomization.folders.filter { $0.parentID == nil && $0.visible(for: def) }
+            roots = [Node(.recent)] + userFolders.map { Node(.userFolder($0)) } + workspace.browserFolderTypes(available: types).map { Node(.folder($0)) }
             outline.reloadData()
             status.stringValue = ""
         } catch {
@@ -167,7 +174,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     private func load(_ node: Node) {
         guard node.children == nil, !node.loading, let m = workspace.metadata() else { return }
         node.loading = true
-        let filter = ObjectFilter(filterField.stringValue)
+        let filter = ObjectFilter(filterField.stringValue, named: workspace.browserFilter)
         let owner = self.owner
         Task {
             defer { node.loading = false }
@@ -179,6 +186,11 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                     status.stringValue = L10n.tr("\(t.folderName): \(objects.count)")
                 case .recent:
                     node.children = m.recent.map { Node(.object($0)) }
+                case .userFolder(let f):
+                    let subfolders = workspace.browserCustomization.folders.filter { $0.parentID == f.id }.map { Node(.userFolder($0)) }
+                    let objects = try await m.objects(in: f).map { Node(.object($0)) }
+                    node.children = subfolders + objects
+                    if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak)")))] }
                 case .object(let o):
                     let items = try await m.children(of: o)
                     let order: [DBObjectChild.Kind] = [.column, .attribute, .subprogram, .index, .constraint, .trigger, .dependency, .referencedBy]
@@ -227,7 +239,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         guard let n = item as? Node else { return false }
         switch n.kind {
-        case .folder, .recent, .group: return true
+        case .folder, .recent, .group, .userFolder: return true
         case .object(let o): return !o.type.isGlobal
         default: return false
         }
@@ -268,6 +280,10 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         switch n.kind {
         case .folder(let t): title = t.folderName
         case .recent: title = L10n.tr("Ostatnie"); symbol = "clock"
+        case .userFolder(let f):
+            title = f.name
+            symbol = "folder.fill"
+            color = f.color.flatMap(Self.namedColor) ?? .systemBlue
         case .object(let o):
             title = ownerMode == 0 || o.type.isGlobal ? o.name : "\(o.owner).\(o.name)"
             symbol = Self.symbol(o.type)
@@ -281,7 +297,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         }
         cell.textField?.stringValue = title
         cell.textField?.textColor = textColor
-        cell.textField?.font = .systemFont(ofSize: NSFont.smallSystemFontSize + 1)
+        let size = workspace.settings.browserFontSize
+        cell.textField?.font = .systemFont(ofSize: size > 0 ? size : NSFont.smallSystemFontSize + 1)
         cell.imageView?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         cell.imageView?.contentTintColor = color
         return cell
@@ -311,9 +328,10 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 
     @objc private func doubleClicked() {
         guard let n = outline.item(atRow: outline.clickedRow) as? Node else { return }
-        if let o = n.object, o.type.isProgram {
+        if let o = n.object, o.type.isProgram || workspace.settings.browserDoubleClick[o.type.rawValue] != nil {
+            // Akcja dwukliku według typu z Preferencji (PD-OB-025); domyślnie Edytuj dla programów.
             workspace.selectedObject = o
-            workspace.perform("ob.edit")
+            workspace.perform(workspace.browserDoubleClickCommand(for: o.type))
         } else if outline.isExpandable(n) {
             outline.isItemExpanded(n) ? outline.collapseItem(n) : outline.expandItem(n)
         }
@@ -332,8 +350,12 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             menu.addItem(withTitle: L10n.tr("Odśwież"), action: #selector(refreshAll), keyEquivalent: "").target = self
             return
         }
-        for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.recompile", "ob.drop",
+        // Pozycje niedostępne dla typu obiektu (np. Włącz/Wyłącz poza wyzwalaczami i tabelami) są pomijane, nie wyszarzane.
+        let optional: Set<String> = ["ob.enable", "ob.disable", "ob.ccflags", "ob.test", "ob.standardTest", "ob.addSourceToEditor"]
+        for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.test", "ob.standardTest",
+                   "ob.addSourceToEditor", "-", "ob.recompile", "ob.enable", "ob.disable", "ob.ccflags", "ob.drop",
                    "-", "ob.copyName", "ob.refresh"] {
+            if optional.contains(id), !workspace.isEnabled(CommandID(rawValue: id)) { continue }
             if id == "ob.copyName", let o = workspace.selectedObject, let gen = generateCodeMenu(o) { menu.addItem(gen) }
             if id == "-" { menu.addItem(.separator()); continue }
             guard let c = workspace.registry.command(CommandID(rawValue: id)) else { continue }
@@ -390,6 +412,11 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     }
 
     // MARK: Wygląd
+
+    static func namedColor(_ name: String) -> NSColor? {
+        ["red": .systemRed, "orange": .systemOrange, "yellow": .systemYellow, "green": .systemGreen, "blue": .systemBlue,
+         "purple": .systemPurple, "gray": .systemGray][name.lowercased()]
+    }
 
     static func symbol(_ t: DBObjectType) -> String {
         switch t {

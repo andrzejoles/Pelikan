@@ -13,6 +13,8 @@ public struct EditTarget: Sendable, Hashable {
     public var tableColumn: [Int: String]
     /// Kolumny LOB/RAW tabeli — zmieniane w Large Data Editor (nie w komórce).
     public var largeDataColumns: Set<Int> = []
+    /// Kolumny wirtualne tabeli w wyniku (tylko do odczytu) — przeliczane po zapisie (UG 7.6, PD-GRID-019).
+    public var virtualColumns: [Int: String] = [:]
 
     public var qualifiedName: String {
         [owner, table].compactMap { $0 }.map(ResultExporter.identifier).joined(separator: ".")
@@ -118,6 +120,9 @@ extension ResultGridModel {
         let targetQualifier = items.first { $0.isRowid }?.qualifier
         var editable = Set<Int>()
         var mapping: [Int: String] = [:]
+        var virtual: [Int: String] = [:]
+        // Kolumny wirtualne po nazwie kolumny wyniku — do odświeżenia po zapisie.
+        for (i, c) in columns.enumerated() where tableCols[c.name] == true { virtual[i] = c.name }
         let hasStar = items.contains { $0.isStar }
         if !hasStar, items.count == columns.count {
             // Pozycyjnie: kolumna wyniku ↔ element listy SELECT.
@@ -146,7 +151,7 @@ extension ResultGridModel {
         let large = editable.filter { [.blob, .clob, .nclob, .longRaw, .raw, .long].contains(columns[$0].type) }
         editable = editable.filter { ![.blob, .bfile, .object, .refCursor, .longRaw, .vector].contains(columns[$0].type) }
         return EditTarget(owner: owner, table: tableName, rowidColumn: rid, editableColumns: editable, tableColumn: mapping,
-                          largeDataColumns: large)
+                          largeDataColumns: large, virtualColumns: virtual)
     }
 
     // MARK: Zmiany w siatce
@@ -345,7 +350,7 @@ extension ResultGridModel {
 
     /// Wartości z bazy po zapisie (wyzwalacze, wartości domyślne, kolumny wirtualne — UG 7.6).
     func refresh(dataRow r: Int, target t: EditTarget) async throws {
-        let mapped = t.tableColumn.sorted { $0.key < $1.key }
+        let mapped = t.tableColumn.merging(t.virtualColumns) { a, _ in a }.sorted { $0.key < $1.key }
         guard !mapped.isEmpty else { return }
         let list = mapped.map { ResultExporter.identifier($0.value) }.joined(separator: ", ")
         let rid = rows[r][t.rowidColumn].format(.default)

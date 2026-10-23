@@ -1,0 +1,74 @@
+import Foundation
+import PelikanDB
+import PelikanODPI
+@testable import PelikanWorkspace
+import Testing
+
+@MainActor
+@Suite("Opcje połączenia na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
+struct ConnectionOptionsTests {
+    @Test("Edition (EBR) z definicji połączenia; eksport i import definicji przez komendy (bez haseł)")
+    func editionAndExport() async throws {
+        let c = TestDatabase.config!
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("conn-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace(dataDirectory: dir, drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        var target = ConnectionTarget(user: c.user, connectString: c.connectString)
+        target.edition = "ORA$BASE"
+        let def = ConnectionDefinition(name: "edycja", target: target)
+        try ws.connections.upsert(def, password: c.password)
+        let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(try await s.scalar("select sys_context('userenv', 'current_edition_name') from dual") == "ORA$BASE")
+        let file = dir.appendingPathComponent("conn.json")
+        _ = try await ws.invoke("connection.export", CommandArguments(["file": .string(file.path)]))
+        let text = try String(contentsOf: file, encoding: .utf8)
+        #expect(text.contains("edycja") && !text.contains(c.password))
+        let r = try await ws.invoke("connection.import", CommandArguments(["file": .string(file.path)]))
+        #expect(r.value == .int(1) && ws.connections.connections.filter { $0.name == "edycja" }.count == 2)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("NLS sesji z Preferencji; zamykanie bezczynnych sesji okien bez transakcji, z transakcją — zostaje")
+    func nlsAndIdle() async throws {
+        #expect(SessionManager.nlsStatement(["nls_date_format": "DD.MM.YYYY", "BAD": "x", "NLS_SORT": "it's"]) == "ALTER SESSION SET NLS_DATE_FORMAT = 'DD.MM.YYYY'")
+        #expect(SessionManager.nlsStatement([:]) == nil)
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        ws.settings.sessionNLS = ["NLS_DATE_FORMAT": "DD.MM.YYYY", "NLS_NUMERIC_CHARACTERS": ", "]
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        let a = ws.newDocument(.sql), b = ws.newDocument(.sql)
+        let ka = ws.sessions.key(forDocument: a.id, connection: def.id), kb = ws.sessions.key(forDocument: b.id, connection: def.id)
+        let sa = try await ws.sessions.session(ka), sb = try await ws.sessions.session(kb)
+        #expect(try await sa.scalar("select value from nls_session_parameters where parameter = 'NLS_DATE_FORMAT'") == "DD.MM.YYYY")
+        #expect(try await sa.scalar("select to_char(1.5) from dual") == "1,5")
+        _ = try await sb.execute("update dept set loc = loc where deptno = 10")
+        let later = Date().addingTimeInterval(3600)
+        #expect(await ws.sessions.closeIdleSessions(olderThan: 30, now: later) == 1)
+        #expect(ws.sessions.existingSession(ka) == nil && ws.sessions.existingSession(kb) != nil)
+        _ = try await sb.execute("rollback")
+        #expect(await ws.sessions.closeIdleSessions(olderThan: 0, now: later) == 0)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Karta Statystyki SQL Window: różnica V$MYSTAT z wykonania (preferencja)")
+    func statistics() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        let doc = ws.newDocument(.sql, text: "select count(*) from all_objects")
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        _ = try await SQLExecutor.execute(doc, scope: .standard, in: ws)
+        #expect(doc.statistics.isEmpty)
+        ws.settings.sqlWindowStatistics = true
+        _ = try await SQLExecutor.execute(doc, scope: .standard, in: ws)
+        #expect(doc.statistics.contains { $0.name == "session logical reads" && $0.value > 0 })
+        await ws.sessions.disconnectAll()
+    }
+}

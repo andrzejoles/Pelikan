@@ -743,3 +743,118 @@ przyciski AppKit z obrazkiem — `accessibilityDescription`. `AccessibilityAudit
 nowe elementy bez etykiety (testy pakietu nie uruchamiają interfejsu). Próba z VoiceOverem i Accessibility Inspector —
 w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
 
+
+### D97 · 2026-10-23 — Domknięcie połączeń: Kill, NLS, LDAP, Kerberos, Workspace Manager
+Zakończenie sesji okna używa SID zapamiętanego przy otwarciu sesji (SYS_CONTEXT — bez uprawnień do V$SESSION) i numeru
+seryjnego z GV$SESSION w chwili zabicia, z osobnej sesji narzędziowej; ORA-00031 to sukces (ODPI-C zgłasza go jako
+zamknięcie połączenia, więc sesję narzędziową zamykamy). Wymaga uprawnienia ALTER SYSTEM — bez niego błąd bazy w oknie.
+Parametry NLS z Preferencji (biała lista nazw, wartości bez apostrofów i bez przycinania) — ALTER SESSION po połączeniu;
+kodowanie klienta to zawsze UTF-8 (ODPI-C), więc NLS_LANG jako zmienna środowiska nie jest potrzebna i nie jest
+ustawiana. LDAP: `ldap.ora` dowiązany do katalogu Oracle Net Pelikana (klient czyta go tylko z TNS_ADMIN, bez IFILE).
+Kerberos i Workspace Manager działają tymi samymi ścieżkami co przetestowane uwierzytelnianie zewnętrzne i skrypt po
+połączeniu, ale bez KDC i bez DBMS_WM w bazie testowej — wiersze ⚠️ do potwierdzenia przez właściciela.
+
+### D98 · 2026-10-23 — Testy standardowe jako szablony z %CALL%
+Wzorzec pozwala zapisać skrypt testu jako „Standard Test” i wybrać go z menu procedury lub funkcji. Pelikan zapisuje
+szablon jako zwykły plik `.tst` w `StandardTests/` katalogu danych; znacznik `%CALL%` w bloku to miejsce, w które trafia
+wywołanie programu generowane jak w „Testuj” (notacja nazwana, zmienne parametrów i wyniku). Bez znacznika wywołanie
+jest dopisywane na końcu. Zmienne szablonu dochodzą do zmiennych wywołania (bez duplikatów nazw).
+
+### D99 · 2026-10-23 — Operacje na obiektach: kompilacja próbna, zmiany w bazie, kolejki
+Kompilacja próbna zmienia nazwę jednostki w poleceniu CREATE na tymczasową `PELIKAN$SAFE_…` (specyfikacja i ciało
+pakietu wspólnie), odczytuje błędy z USER_ERRORS z nazwą pierwotną w treści i od razu usuwa obiekty tymczasowe — także
+przy błędzie. Wyzwalacze są pomijane: tymczasowy wyzwalacz działałby na prawdziwej tabeli. Wykrywanie zmian porównuje
+LAST_DDL_TIME z chwilą wczytania/kompilacji (cykl jak sprawdzanie połączeń) i tylko ostrzega — nie nadpisuje tekstu bez
+decyzji użytkownika. Kolejki AQ (enqueue/dequeue z menu obiektu) odłożone: wymagają edytora ładunku dla typów
+obiektowych; test łącza i DBMS_JOB.RUN zaimplementowane bez próby (baza testowa nie ma łączy ani zadań DBMS_JOB).
+### D100 · 2026-10-23 — „(all)” i parametry w Code Assistant
+Pozycja „(all)” pojawia się po kwalifikatorze, gdy lista ma co najmniej dwie kolumny albo pola (tabela, alias, widok
+inline, rekord, kursor): pierwszy element bez kwalifikatora (jest już wpisany), kolejne z nim. Po `nazwa(` Code
+Assistant podaje parametry podprogramu lokalnego (zarys kodu) albo z bazy (ALL_ARGUMENTS, poziom 0, pierwsza
+przeciążona wersja wygrywa przy powtórzeniach nazw) jako `parametr => `, a „(all)” — wszystkie w notacji nazwanej;
+w układzie „po jednym w linii” `=>` jest wyrównane. Konstruktory typów obiektowych — nie zrobione (wymagają atrybutów
+typu z ALL_TYPE_ATTRS i rozróżnienia wywołania funkcji od konstruktora).
+
+### D101 · 2026-10-23 — Search Bar jako okno narzędzia
+Pelikan nie ma dokowanych paneli narzędzi (D15, PD-UI-003), więc Search Bar to okno narzędzia z tekstem, zakresem
+(bieżący edytor, wszystkie edytory, pliki w katalogach — domyślnie lokalizacje File Browsera), opcjami i listą wyników
+jak w Find Usages. Komenda `edit.searchBar` z parametrami działa też dla agenta (poziom Odczyt), ale tylko w oknach —
+przeszukiwanie plików użytkownika jest poza jego zakresem. Limity: 5000 plików, 5000 trafień, pliki do 5 MB.
+
+### D102 · 2026-10-23 — Tryb tylko do odczytu okna
+„Tylko do odczytu” blokuje edycję w edytorze i komendy zmieniające zaznaczenie oraz refaktoryzacje; stan zapamiętywany
+w stanie okna pliku. Narzędzia agenta zmieniające tekst okna (PelikanWorkspace/Agent) nie sprawdzają jeszcze trybu —
+poza zakresem tego zadania, wiersz PD-FILE-003 ⚠️. Ctrl+K n / Ctrl+Q n (zakładki) przechwytuje edytor tylko w profilu
+skrótów PL/SQL Developer — w profilu macOS Ctrl+K usuwa do końca linii (skrót systemowy NSTextView).
+
+### D103 · 2026-10-24 — Filtry i foldery Object Browsera w katalogu danych
+Filtry nazwane i foldery użytkownika są zapisywane w `browser.json` w katalogu danych (bez danych logowania). Warunek
+filtra jest fragmentem SQL użytkownika wklejanym do zapytania o obiekty w jego własnej sesji — tak jak we wzorcu;
+agent nie korzysta z filtrów. `:browser_user` to zmienna wiązana (bieżący schemat), `&browser_filter` — tekst pola
+filtra z podwojonymi apostrofami; gdy filtr go używa, pole nie filtruje już nazw osobno. Folder może łączyć listę
+obiektów i zapytanie zwracające OWNER, OBJECT_NAME, OBJECT_TYPE; widoczność według wzorca połączenia jak w zestawach
+preferencji. Ukrywanie właściciela w nazwach folderu jest w modelu, a widok pokazuje nazwy jak w drzewie bieżącego
+użytkownika.
+
+### D104 · 2026-10-24 — Edytor tabeli 23ai: zakres partycji i domen
+Partycjonowanie jest edytowane tylko przy tworzeniu tabeli (RANGE z opcjonalnym INTERVAL, LIST, HASH); dla istniejącej
+tabeli edytor pokazuje opis z ALL_PART_TABLES — zmiany partycji (ADD/SPLIT/MERGE) to osobne operacje administracyjne,
+których edytor nie generuje, a subpartycje i tabele zewnętrzne zostają poza zakresem. Adnotacje są przechowywane jako
+lista nazwa=wartość; zmiana wartości to DROP i ADD (Oracle nie ma zamiany w miejscu). Uprawnienia ze zmienioną opcją
+nadawania są odbierane i nadawane ponownie. Domena: szablon CREATE DOMAIN i DDL z DBMS_METADATA (typ SQL_DOMAIN);
+asercje (26ai) czekają na wersję bazy testowej, która je obsługuje.
+
+### D105 · 2026-10-24 — HOST w Command Window dla użytkownika, z potwierdzeniem (zmienia D31)
+Wiersz PD-CMDW-008 wymaga HOST dla użytkownika (agent nigdy). HOST, `!` i `$` uruchamiają polecenie przez `/bin/sh -c`
+w katalogu ustawionym przez CD, ze środowiskiem bez zmiennych `PELIKAN_*` i bez TNS_ADMIN katalogu zarządzanego, z limitem
+120 s i wyjściem w oknie. Każde wywołanie — także ze skryptu `@plik` — wymaga potwierdzenia z pełną treścią polecenia,
+żeby cudzy skrypt nie uruchomił niczego po cichu. Agent nie ma dostępu do Command Window (AI-SEC-011, test), więc nie
+dociera do HOST. Wyjątek instalatora utPLSQL (D31: `! rm plik` bez powłoki i bez pytania) zostaje bez zmian.
+
+### D106 · 2026-10-24 — Debuger JDWP pominięty, DBMS_TRACE z tabelami tracetab
+Debugowanie przez DBMS_DEBUG_JDWP wymagałoby, żeby Pelikan był serwerem protokołu Java Debug Wire Protocol (baza łączy
+się do IDE przez TCP) — to osobny, duży komponent sieciowy, a debuger na DBMS_DEBUG (ADR 0006) działa na wszystkich
+obsługiwanych wersjach, także 26ai. Wiersz PD-DBG-002 pominięty do czasu, gdy Oracle usunie DBMS_DEBUG. DBMS_TRACE używa
+tabel SYS.PLSQL_TRACE_RUNS/EVENTS z `tracetab.sql`; bez nich Pelikan podaje, co zainstalować (instaluje administrator),
+a baza testowa dostaje je w `scripts/testdb.sh seed`. Uprawnienia debugera Pelikan tylko przygotowuje jako skrypt
+w oknie SQL — nadaje je administrator, nie aplikacja.
+### D107 · 2026-10-24 — Kursor zagnieżdżony w nowej karcie wyniku
+Wzorzec otwiera wynik `<Cursor>` w nowym SQL Window. Pelikan dokłada kartę wyniku w tym samym oknie: kursor jest częścią
+sesji okna (zamknięcie okna zamyka kursor), a nowe okno nie miałoby polecenia do ponownego wykonania.
+
+### D108 · 2026-10-24 — Bez blokady przewijania kolumn i wierszy
+NSTableView nie ma zamrażania kolumn ani wierszy; dwie zsynchronizowane tabele komplikowałyby edycję, sortowanie i
+przenoszenie kolumn. Kolumna numerów wierszy i nagłówek zostają widoczne przy przewijaniu; filtr kolumn (PD-GRID-011)
+pozwala zawęzić siatkę do potrzebnych kolumn.
+
+### D109 · 2026-10-24 — Wyrównanie kolumn bez wysokości wierszy i zmiany okna
+„Align” ustawia szerokości (nagłówek, treść z pierwszych 500 wierszy, oba) i zapisuje szablon kolejności i szerokości
+dla zapytania (klucz: tekst zapytania ze zwiniętymi odstępami), stosowany automatycznie (preferencja). Wysokość
+wierszy, „Hide Editor” i „Adjust Window width” pominięte — siatka ma stałą wysokość wiersza zależną od czcionki.
+
+### D110 · 2026-10-24 — LOB na żądanie jako podgląd 4000 bajtów
+Sterownik zawsze zwraca lokator i rozmiar LOB; przy „LOB na żądanie” siatka pobiera tylko 4000 bajtów (zamiast 1 MB),
+oznaczonych jako obcięte, a Large Data Editor dociąga całość przez ROWID. Zero bajtów odebrałoby panelowi wartości
+podgląd i znacznik obcięcia.
+
+### D111 · 2026-10-24 — Wartości zmiennych okna w worksecie zamiast .pfi
+Wzorzec trzyma wartości zmiennych w pliku `.pfi` obok skryptu. Pelikan zapisuje je w stanie okna w worksecie (także dla
+okien bez pliku); odświeżenie karty i automatyczne odświeżanie używają zapamiętanych wartości bez pytania (NF8).
+
+
+### D112 · 2026-10-24 — Narzędzia w kartach i kolory z motywu systemu
+Wzorzec pozwala dokować i odrywać każde narzędzie oraz ustawiać kolor i tło czcionek. Pelikan trzyma narzędzia w kartach
+lewej kolumny (zwijanej) i w osobnych oknach narzędzi — to układ zgodny z HIG i z trybem jasnym/ciemnym; dowolne
+dokowanie paneli wymagałoby własnego menedżera układu na AppKit. Kolory tekstu i tła biorą się z motywu systemu
+(czytelność w obu trybach, VoiceOver); w Preferencjach są czcionka i rozmiary. Oba wiersze ⚠️.
+
+### D113 · 2026-10-24 — Przebieg zrzutów w tle
+`scripts/screenshots.sh` uruchamia aplikację Debug przez `open -g -n` (bez aktywacji) z osobnym katalogiem danych
+(`PELIKAN_DATA_DIR`) i skryptem komend (`PELIKAN_UI_SCRIPT`, hak tylko w kompilacji Debug): aplikacja nie aktywuje się,
+nie pyta o odzyskanie okien, łączy się z bazą testową przez portfel z magazynem haseł (bez hasła w plikach, środowisku
+i Pęku kluczy), wykonuje komendy i zapisuje znacznik końca. Zrzuty pojedynczych okien robi `screencapture -l` według listy
+okien procesu (CGWindowList) — nic nie steruje klawiaturą ani myszą (D30). WebKit nie rysuje okien w tle w takim zrzucie,
+więc treść WKWebView zapisuje krok `debug.snapshotWebViews` (zrzut w procesie). Instant Client jest kopiowany do
+`.testdb/instantclient`, bo odczyt chronionego folderu Pobrane przez aplikację Debug wywołuje pytanie macOS o dostęp.
+Przebieg znalazł dwa błędy: karty edytora tabeli chowały się pod przepełnieniem (teraz przełącznik segmentowy) i
+instrukcja nie znajdowała rozdziałów (folder zasobów `manual` małą literą).

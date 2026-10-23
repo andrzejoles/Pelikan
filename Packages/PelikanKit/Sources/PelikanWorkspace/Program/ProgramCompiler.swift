@@ -64,6 +64,9 @@ public enum ProgramCompiler {
         case "TRIGGER": type = .trigger
         case "LIBRARY": type = .library
         case "JAVA": type = .javaSource
+        case "MLE" where i + 1 < up.count && up[i + 1] == "MODULE":   // CREATE MLE MODULE nazwa … AS <JavaScript> (PD-PROG-014)
+            type = .mleModule
+            i += 1
         default: return nil
         }
         i += 1
@@ -96,6 +99,11 @@ public enum ProgramCompiler {
         let units = units(in: doc.text)
         guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
+        // Plik tylko do odczytu (np. z systemu kontroli wersji) — kompilacja wyłączona preferencją (PD-PROG-017).
+        if let url = doc.fileURL, !ws.settings.compileReadOnlyFiles, FileManager.default.fileExists(atPath: url.path),
+           !FileManager.default.isWritableFile(atPath: url.path) {
+            throw CommandError.notAvailable(L10n.tr("Plik „\(url.lastPathComponent)” jest tylko do odczytu — kompilacja wyłączona (Preferencje › Oracle)"))
+        }
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
         let warnings = ws.settings.plsqlWarnings.trimmingCharacters(in: .whitespaces)
@@ -144,6 +152,14 @@ public enum ProgramCompiler {
                 break
             }
         }
+        // Podpowiedzi Pelikana dla skompilowanych bez błędów jednostek (PD-PROG-005): inspekcje i konwencje nazw.
+        if ws.settings.compilerHints {
+            for u in units.prefix(result.compiled) {
+                for h in CompilerHints.hints(for: u.text, conventions: ws.settings.namingConventions) {
+                    result.messages.append(CompileMessage(severity: .hint, unit: u.tabTitle, line: u.line + h.line, column: h.column, text: h.text))
+                }
+            }
+        }
         // Adnotacje utPLSQL w specyfikacjach z --%suite: nieznane nazwy jako ostrzeżenia (UT-CA-002).
         for u in units where u.type == .package && u.text.lowercased().contains("--%suite") {
             for a in UtplsqlExplorer.unknownAnnotations(in: u.text) {
@@ -153,6 +169,9 @@ public enum ProgramCompiler {
         }
         ws.compileGeneration += 1
         doc.compileMessages = result.messages
+        // Znaczniki czasu skompilowanych obiektów — zmiana przez kogoś innego później będzie wykryta.
+        let compiled = units.prefix(result.compiled).map { DBObject(owner: $0.owner ?? schema, name: $0.name, type: $0.type) }
+        for (k, v) in (try? await ObjectAdmin.lastDDLTimes(compiled, in: s)) ?? [:] { doc.objectTimestamps[k] = v }
         doc.isCompileStale = !result.ok
         if let first = result.messages.first(where: { $0.severity == .error }) {
             let o = offset(line: first.line, column: first.column, in: doc.text)

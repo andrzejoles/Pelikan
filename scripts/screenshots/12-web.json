@@ -1,0 +1,1 @@
+[{"command": "help.manual", "delay": 3}, {"command": "ob.recycleBin", "delay": 3}, {"command": "debug.snapshotWebViews", "args": {"directory": "@OUT@"}, "delay": 1}]

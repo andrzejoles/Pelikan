@@ -99,6 +99,19 @@ sql_sys() {
     } | docker exec -i "$NAME" sqlplus -S -L /nolog
 }
 
+# Tabele DBMS_TRACE (PD-OPT-007): tracetab.sql z ORACLE_HOME tworzy SYS.PLSQL_TRACE_RUNS/EVENTS — raz, tylko baza testowa.
+install_tracetab() {
+    local n
+    n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_tables WHERE owner = 'SYS' AND table_name = 'PLSQL_TRACE_RUNS';\n" | sql_sys | tr -dc '0-9')
+    if [ "${n:-0}" = "0" ]; then
+        { printf 'WHENEVER SQLERROR CONTINUE\n@?/rdbms/admin/tracetab.sql\n'
+          printf 'CREATE OR REPLACE PUBLIC SYNONYM plsql_trace_runs FOR sys.plsql_trace_runs;\n'
+          printf 'CREATE OR REPLACE PUBLIC SYNONYM plsql_trace_events FOR sys.plsql_trace_events;\n'
+          printf 'GRANT SELECT ON sys.plsql_trace_runs TO PUBLIC;\nGRANT SELECT ON sys.plsql_trace_events TO PUBLIC;\n'
+        } | sql_sys >/dev/null
+    fi
+}
+
 install_utplsql() {
     local have
     have="$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_users WHERE username = 'UT3';\n" | sql_sys | tr -d '[:space:]')"
@@ -203,6 +216,9 @@ GRANT EXECUTE ON DBMS_SQLTUNE TO $PELIKAN_TESTDB_USER;
 -- Synonimy PUBLIC (Query Builder, PD-QB-001) — tylko baza testowa.
 GRANT CREATE PUBLIC SYNONYM TO $PELIKAN_TESTDB_USER;
 GRANT DROP PUBLIC SYNONYM TO $PELIKAN_TESTDB_USER;
+-- Zakończenie sesji okna i SQL Trace (PD-CONN-027, PD-OPT-008) — tylko baza testowa.
+GRANT ALTER SYSTEM TO $PELIKAN_TESTDB_USER;
+GRANT ALTER SESSION TO $PELIKAN_TESTDB_USER;
 -- MLE (SD-MLE-001).
 GRANT CREATE MLE TO $PELIKAN_TESTDB_USER;
 GRANT EXECUTE ON JAVASCRIPT TO $PELIKAN_TESTDB_USER;
@@ -211,6 +227,7 @@ GRANT CREATE SESSION TO $PELIKAN_TESTDB_AGENT_USER;
 ALTER USER $PELIKAN_TESTDB_AGENT_USER GRANT CONNECT THROUGH $PELIKAN_TESTDB_USER;
 SQL
     install_utplsql
+    install_tracetab
     for f in "$ROOT"/scripts/testdb/seed/*.sql; do
         [ -f "$f" ] || continue
         echo "Seed: $(basename "$f")" >&2

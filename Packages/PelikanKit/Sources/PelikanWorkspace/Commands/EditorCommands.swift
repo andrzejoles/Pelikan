@@ -41,6 +41,13 @@ enum EditorCommands {
             newSimple(.index, id: "file.newIndex", title: L10n.tr("Indeks…"), feature: "PD-OED-010"),
             newSimple(.user, id: "file.newUser", title: L10n.tr("Użytkownik…"), feature: "PD-OED-009"),
             newSimple(.role, id: "file.newRole", title: L10n.tr("Rola…"), feature: "PD-OED-009"),
+            Command(CommandDescriptor(id: "file.newDomain", title: L10n.tr("Domena…"), category: .file, submenu: L10n.tr("Nowy"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje."),
+                                      feature: "PD-OED-011")) { ctx in
+                try await ctx.workspace.invoke("file.newFromTemplate", CommandArguments(["template": .string(TemplateLibrary.objectsFolder + "/" + L10n.tr("Domena"))]),
+                                               invoker: ctx.invoker)
+            },
             Command(CommandDescriptor(id: "file.newView", title: L10n.tr("Widok…"), category: .file, submenu: L10n.tr("Nowy"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno SQL z szablonem CREATE OR REPLACE VIEW."), feature: "PD-OED-010")) { ctx in
@@ -63,6 +70,111 @@ enum EditorCommands {
                 doc.testVariables = vars
                 doc.customTitle = L10n.tr("Test \(member ?? o.name)").lowercased()
                 return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
+            },
+            Command(CommandDescriptor(id: "ob.standardTest", title: L10n.tr("Test standardowy…"), category: .tools, submenu: L10n.tr("Obiekt"),
+                                      parameters: ObjectCommands.objectParams + [
+                                          CommandParameter("name", .string, L10n.tr("Nazwa testu standardowego")),
+                                          CommandParameter("member", .string, L10n.tr("Podprogram pakietu")),
+                                      ],
+                                      agent: .read, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno testu z testu standardowego (szablon z %CALL%) dla procedury lub funkcji."),
+                                      feature: "PD-TEST-009"),
+                    validate: { ws in ws.selectedObject.map { [.procedure, .function, .package].contains($0.type) } ?? false }) { ctx in
+                let store = StandardTestStore(dataDirectory: ctx.workspace.dataDirectory)
+                let names = store.names
+                guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak testów standardowych — zapisz okno testu jako test standardowy")) }
+                var name = ctx.arguments.string("name")
+                if name == nil {
+                    if names.count == 1 { name = names[0] }
+                    else if let ui = ctx.ui, let i = await ui.ask(L10n.tr("Test standardowy"), message: L10n.tr("Wybierz test standardowy."), buttons: Array(names.prefix(8))) { name = names[i] }
+                }
+                guard let name else { throw CommandError.cancelledByUser }
+                let (o, m) = try await ObjectCommands.target(ctx)
+                let member = ctx.arguments.string("member")
+                let (call, vars) = try await TestRunner.script(for: o, member: member, metadata: m)
+                let (block, all) = StandardTestStore.apply(try store.load(name), call: call, variables: vars)
+                let doc = ctx.workspace.newDocument(.test, text: block)
+                doc.testVariables = all
+                doc.customTitle = name + " — " + (member ?? o.name).lowercased()
+                return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
+            },
+            Command(CommandDescriptor(id: "test.saveAsStandard", title: L10n.tr("Zapisz jako test standardowy…"), category: .debug,
+                                      parameters: [CommandParameter("name", .string, L10n.tr("Nazwa testu standardowego"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zapisuje okno testu jako szablon testu standardowego; %CALL% w bloku oznacza miejsce wywołania programu."),
+                                      feature: "PD-TEST-009"),
+                    validate: { $0.activeDocument?.kind == .test }) { ctx in
+                guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }
+                var name = ctx.arguments.string("name")
+                if name == nil { name = await ctx.ui?.askText(L10n.tr("Test standardowy"), message: L10n.tr("Nazwa testu standardowego"), defaultValue: "") }
+                guard let name, !name.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
+                try StandardTestStore(dataDirectory: ctx.workspace.dataDirectory).save(name, TestScriptFile(block: d.text, variables: d.testVariables))
+                return CommandResult(message: name)
+            },
+            Command(CommandDescriptor(id: "test.trace", title: L10n.tr("Ślad DBMS_TRACE przy wykonaniu"), category: .debug,
+                                      parameters: [CommandParameter("levels", .string, L10n.tr("Po przecinku: calls, exceptions, sql, lines (wszystkie) albo enabled-calls…; off — wyłączony"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zbiera ślad DBMS_TRACE (wywołania, wyjątki, SQL, linie) przy kolejnych wykonaniach okna testu — karta Ślad."),
+                                      feature: "PD-OPT-007"),
+                    validate: { $0.activeDocument?.kind == .test }) { ctx in
+                guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }
+                let raw = (ctx.arguments.string("levels") ?? (d.traceLevel == nil ? "calls,exceptions" : "off")).lowercased()
+                guard raw != "off" else { d.traceLevel = nil; return CommandResult(message: L10n.tr("Ślad wyłączony")) }
+                var level: PLSQLTrace.Level = []
+                for p in raw.split(separator: ",").map({ $0.trimmingCharacters(in: .whitespaces) }) {
+                    switch p {
+                    case "calls": level.insert(.allCalls)
+                    case "enabled-calls": level.insert(.enabledCalls)
+                    case "exceptions": level.insert(.allExceptions)
+                    case "enabled-exceptions": level.insert(.enabledExceptions)
+                    case "sql": level.insert(.allSQL)
+                    case "lines": level.insert(.allLines)
+                    case "enabled-lines": level.insert(.enabledLines)
+                    default: throw CommandError.invalidArgument("levels", p)
+                    }
+                }
+                d.traceLevel = level
+                return CommandResult(message: L10n.tr("Ślad włączony"), value: .int(Int64(level.rawValue)))
+            },
+            Command(CommandDescriptor(id: "test.traceRuns", title: L10n.tr("Historia przebiegów DBMS_TRACE"), category: .debug,
+                                      parameters: [CommandParameter("run", .integer, L10n.tr("Numer przebiegu do wczytania"))],
+                                      agent: .none, effect: .none,
+                                      summary: L10n.tr("Lista przebiegów DBMS_TRACE; z numerem — wczytuje zdarzenia przebiegu do karty Ślad okna testu."),
+                                      feature: "PD-OPT-007"),
+                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                let ws = ctx.workspace
+                guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID else { throw CommandError.notConnected }
+                let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("trace")))
+                if let run = ctx.arguments.int("run"), let d = ws.activeDocument, d.kind == .test {
+                    d.traceRun = Int(run)
+                    d.traceEvents = try await PLSQLTrace.events(run: Int(run), in: s)
+                    return CommandResult(value: .int(Int64(d.traceEvents.count)))
+                }
+                let runs = try await PLSQLTrace.runs(in: s)
+                if ctx.invoker == .user {
+                    let text = runs.isEmpty ? L10n.tr("Brak przebiegów.") : runs.map { "\($0.id)  \($0.date)  \($0.comment)" }.joined(separator: "\n")
+                    ctx.ui?.showHTMLReport(title: L10n.tr("Historia przebiegów DBMS_TRACE"), html: PackCommands.html("DBMS_TRACE", text))
+                }
+                return CommandResult(value: .array(runs.map { .object(["run": .int(Int64($0.id)), "date": .string($0.date)]) }))
+            },
+            Command(CommandDescriptor(id: "debug.grantPrivileges", title: L10n.tr("Uprawnienia debugera…"), category: .debug,
+                                      parameters: [CommandParameter("user", .string, L10n.tr("Użytkownik (domyślnie bieżący)"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno SQL z poleceniami GRANT DEBUG CONNECT SESSION i DEBUG ANY PROCEDURE dla użytkownika (do wykonania przez administratora)."),
+                                      feature: "PD-DBG-013")) { ctx in
+                let ws = ctx.workspace
+                var user = ctx.arguments.string("user")
+                if user == nil, let m = ws.metadata() { user = try? await m.currentSchema() }
+                guard let user, SessionManager.isSafeIdentifier(user) else { throw CommandError.invalidArgument("user", user ?? "") }
+                let script = """
+                    -- Uprawnienia debugera PL/SQL dla \(user.uppercased()) — wykonuje administrator (DBA).
+                    grant debug connect session to \(user.uppercased());
+                    grant debug any procedure to \(user.uppercased());
+                    -- Węższa alternatywa dla DEBUG ANY PROCEDURE: grant debug on <schemat>.<obiekt> to \(user.uppercased());
+                    """
+                let doc = ws.newDocument(.sql, text: script)
+                doc.customTitle = L10n.tr("uprawnienia debugera")
+                return CommandResult(value: .string(script))
             },
             Command(CommandDescriptor(id: "test.profiler", title: L10n.tr("Profiler przy wykonaniu"), category: .debug,
                                       parameters: [CommandParameter("kind", .string, L10n.tr("lines (DBMS_PROFILER), hierarchical (DBMS_HPROF) albo off"),

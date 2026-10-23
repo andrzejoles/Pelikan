@@ -65,6 +65,13 @@ public protocol UIServices: AnyObject {
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
+    /// Koniec długiego wykonania (dźwięk, uwaga aplikacji — PD-SQLW-015).
+    func notifyExecutionFinished(title: String, elapsed: String, success: Bool)
+    /// Okno Query By Example (PD-SQLW-022) i filtr kolumn (PD-GRID-011) dla karty wyniku.
+    func showQueryByExample(_ tab: ResultTab)
+    func showColumnFilter(_ tab: ResultTab)
+    /// Wybór wartości z listy (lista wartości kolumny ze słownika — PD-GRID-022); nil — anulowano.
+    func chooseValue(_ title: String, values: [String]) async -> String?
     /// Instrukcja użytkownika (PL-INFRA-010).
     func showUserManual()
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
@@ -135,6 +142,8 @@ public protocol UIServices: AnyObject {
     /// Wyniki Find Usages (DG-USE-001), podgląd refaktoryzacji z różnicami — true: zastosuj (DG-REF-001),
     /// historia lokalna okna (DG-HIST-001), lista problemów analizy kodu (DG-RES-001, DG-INSP-001).
     func showUsages(title: String, hits: [UsageHit])
+    /// Search Bar — wyszukiwanie w edytorach i plikach (PD-CA-015).
+    func showSearchBar()
     func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool
     func showLocalHistory(document: Document)
     func showProblems(document: Document)
@@ -152,6 +161,7 @@ extension UIServices {
     public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showUsages(title: String, hits: [UsageHit]) {}
+    public func showSearchBar() {}
     public func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool { false }
     public func showLocalHistory(document: Document) {}
     public func showProblems(document: Document) {}
@@ -175,6 +185,10 @@ extension UIServices {
         (await ask(title, message: message, buttons: buttons), false)
     }
     public func showSQLMonitor() {}
+    public func notifyExecutionFinished(title: String, elapsed: String, success: Bool) {}
+    public func showQueryByExample(_ tab: ResultTab) {}
+    public func showColumnFilter(_ tab: ResultTab) {}
+    public func chooseValue(_ title: String, values: [String]) async -> String? { nil }
     public func showUserManual() {}
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
@@ -277,6 +291,16 @@ public final class Workspace {
     public var statusMessage: String?
     /// Obiekt zaznaczony w Object Browserze (cel komend `ob.*`).
     public var selectedObject: DBObject?
+    /// Filtry nazwane i foldery użytkownika Object Browsera (`browser.json`, PD-OB-007/008) i filtr bieżący.
+    public private(set) var browserCustomization = BrowserCustomization()
+    public var browserFilter: BrowserFilter?
+
+    public func saveBrowserCustomization(_ c: BrowserCustomization) throws {
+        try c.save(to: dataDirectory)
+        browserCustomization = c
+        if let f = browserFilter, !c.filters.contains(where: { $0.id == f.id }) { browserFilter = nil }
+        metadata()?.refresh()
+    }
     /// Ostatnie wyszukiwanie (Znajdź następne — F3).
     public var lastSearch: TextSearch?
     /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
@@ -312,6 +336,8 @@ public final class Workspace {
     /// Lokalna historia plików i obiektów (DG-HIST-001) i konsole zapytań połączeń (DG-CONS-001).
     @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
     @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
+    /// Stany okien plików (PD-EDIT-029).
+    @ObservationIgnored public private(set) lazy var fileStates = FileStateStore(directory: dataDirectory?.appendingPathComponent("WindowState", isDirectory: true))
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
@@ -432,6 +458,7 @@ public final class Workspace {
         keymap = Keymap(commands: all.map(\.descriptor), profile: loaded.shortcutProfile, overrides: loaded.keyOverrides)
         let store = ConnectionStore(fileURL: dataDirectory?.appendingPathComponent("connections.json"), secrets: secrets)
         connections = store
+        browserCustomization = BrowserCustomization.load(from: dataDirectory)
         let box = SettingsBox()
         sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
         box.value = loaded
@@ -583,6 +610,7 @@ public final class Workspace {
 
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
+        saveWindowState(documents[i])
         consoles.persist(documents[i])
         documents.remove(at: i)
         sqlplusEngines[id] = nil
@@ -699,7 +727,9 @@ extension Workspace {
     /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).
     public func session(for doc: Document) async throws -> any DatabaseSession {
         guard let c = effectiveConnection(of: doc) else { throw CommandError.notConnected }
-        return try await sessions.session(sessions.key(forDocument: doc.id, connection: c))
+        let key = sessions.key(forDocument: doc.id, connection: c)
+        sessions.touch(key)
+        return try await sessions.session(key)
     }
 
     /// Kończy transakcje okien (COMMIT/ROLLBACK) przed rozłączeniem lub zamknięciem.

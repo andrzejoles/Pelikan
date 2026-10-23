@@ -8,6 +8,7 @@ import Sparkle
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
+import WebKit
 import UniformTypeIdentifiers
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
@@ -127,9 +128,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
-        startRecovery()
-        NSApp.activate()
+        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”.
+        if Self.uiScriptURL == nil { startRecovery() }
+        // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
+        if Self.uiScriptURL == nil { NSApp.activate() }
         startConnectionCheck()
+        if let script = Self.uiScriptURL {
+            runUIScript(script)
+            return
+        }
         if !startup.isEmpty || !startup.warnings.isEmpty {
             runStartup(startup)
             if startup.connection != nil { return }
@@ -162,11 +169,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
     func application(_ application: NSApplication, open urls: [URL]) {
         let scheme = Bundle.main.object(forInfoDictionaryKey: "PelikanURLScheme") as? String ?? ""
+        var files: [URL] = []
         for url in urls {
             if !url.isFileURL, !scheme.isEmpty, url.scheme?.lowercased() == scheme.lowercased() {
                 runStartup(StartupOptions.parse(url: url, scheme: scheme))
                 continue
             }
+            if url.isFileURL { files.append(url) }
+        }
+        // Katalog (upuszczony albo otwarty) — wszystkie skrypty w nim (PD-FILE-004).
+        for url in FileOpening.files(from: files) {
             do { try workspace.openFile(url) } catch { showError(error.localizedDescription) }
         }
     }
@@ -354,6 +366,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
             DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
+    func showSearchBar() {
+        ToolWindowController.show(key: "searchBar", title: L10n.tr("Szukaj w edytorach i plikach"), size: NSSize(width: 760, height: 480)) {
+            SearchBarView(workspace: workspace)
         }
     }
 
@@ -662,6 +680,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    /// Koniec długiego wykonania (PD-SQLW-015): dźwięk, a gdy Pelikan jest w tle — podskok ikony w Docku.
+    func notifyExecutionFinished(title: String, elapsed: String, success: Bool) {
+        NSSound(named: success ? "Glass" : "Basso")?.play()
+        if !NSApp.isActive { NSApp.requestUserAttention(.informationalRequest) }
+    }
+
+    func showQueryByExample(_ tab: ResultTab) {
+        ToolWindowController.show(key: "qbe", title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
+            QueryByExampleView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "qbe") }
+        }
+    }
+
+    func showColumnFilter(_ tab: ResultTab) {
+        ToolWindowController.show(key: "columnFilter", title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
+            ColumnFilterView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "columnFilter") }
+        }
+    }
+
+    /// Lista wartości kolumny (PD-GRID-022): wybór w okienku z listą rozwijaną.
+    func chooseValue(_ title: String, values: [String]) async -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = L10n.tr("Wybierz wartość")
+        let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 260, height: 26), pullsDown: false)
+        popup.addItems(withTitles: values)
+        alert.accessoryView = popup
+        alert.addButton(withTitle: L10n.tr("Wybierz"))
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        return alert.runModal() == .alertFirstButtonReturn ? popup.titleOfSelectedItem : nil
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }
@@ -715,6 +764,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         connectionCheck = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
+                // Bezczynne sesje okien bez transakcji (Preferencje › Oracle, PD-CONN-026).
+                await self.workspace.sessions.closeIdleSessions(olderThan: self.workspace.settings.closeIdleSessionsMinutes)
+                // Okna programu: obiekty zmienione w bazie przez innych od wczytania (PD-PROG-011) — ostrzeżenie na pasku stanu.
+                await self.workspace.checkProgramWindowChanges()
                 let lost = await self.workspace.sessions.checkConnections()
                 guard !lost.isEmpty else { return }
                 let names = Set(lost.compactMap { self.workspace.connections.connection($0.connectionID)?.displayName })
@@ -879,6 +932,70 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         window.beginSheet(w)
     }
 
+    /// Klucz katalogu startowego dla rodzaju okna (PD-PREF-006).
+    static func startDirectoryKey(_ kind: DocumentKind?) -> String {
+        switch kind {
+        case .program: "program"
+        case .test: "test"
+        case .report: "report"
+        default: "sql"
+        }
+    }
+
+    /// Skrypt przebiegu zrzutów (tylko kompilacja Debug): JSON [{"command": id, "args": {…}, "delay": s}], wykonywany
+    /// po starcie zamiast okna logowania; na końcu plik `PELIKAN_UI_SCRIPT.done`. Bez klawiszy, kliknięć i aktywacji.
+    static var uiScriptURL: URL? {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["PELIKAN_UI_SCRIPT"].map { URL(fileURLWithPath: $0) }
+        #else
+        nil
+        #endif
+    }
+
+    private func runUIScript(_ url: URL) {
+        struct Step: Decodable { var command: String; var args: [String: PelikanWorkspace.JSONValue]?; var delay: Double? }
+        let steps = (try? JSONDecoder().decode([Step].self, from: Data(contentsOf: url))) ?? []
+        let logURL = url.appendingPathExtension("log")
+        func log(_ s: String) {
+            let line = Data((ISO8601DateFormatter().string(from: Date()) + " " + s + "\n").utf8)
+            if let h = try? FileHandle(forWritingTo: logURL) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: logURL) }
+        }
+        log("start: kroki \(steps.count), okna \(workspace.documents.count)")
+        Task { @MainActor in
+            // Połączenie „przy starcie” (portfel bazy testowej) przed krokami skryptu.
+            if let first = workspace.connections.connections.first(where: \.connectOnStartup) {
+                log("łączenie \(first.displayName)")
+                do { _ = try await workspace.invoke("connection.connectAsMain", CommandArguments(["connection": .string(first.id.uuidString)])); log("połączono") }
+                catch { log("połączenie: \(error.localizedDescription)") }
+            }
+            for s in steps {
+                // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
+                if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
+                    await snapshotWebViews(into: URL(fileURLWithPath: dir))
+                    log("ok snapshotWebViews")
+                    continue
+                }
+                do { _ = try await workspace.invoke(CommandID(rawValue: s.command), CommandArguments(s.args ?? [:])); log("ok \(s.command)") }
+                catch { log("\(s.command): \(error.localizedDescription)") }
+                try? await Task.sleep(for: .seconds(s.delay ?? 1))
+            }
+            try? Data().write(to: url.appendingPathExtension("done"))
+        }
+    }
+
+    private func snapshotWebViews(into dir: URL) async {
+        func webViews(_ v: NSView) -> [WKWebView] { (v as? WKWebView).map { [$0] } ?? v.subviews.flatMap(webViews) }
+        var i = 0
+        for w in NSApp.windows where w.isVisible {
+            for wv in webViews(w.contentView ?? NSView()) {
+                guard let image = try? await wv.takeSnapshot(configuration: nil), let tiff = image.tiffRepresentation,
+                      let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { continue }
+                i += 1
+                try? png.write(to: dir.appendingPathComponent("web-\(w.title.replacingOccurrences(of: "/", with: "-"))-\(i).png"))
+            }
+        }
+    }
+
     func chooseFilesToOpen() async -> [URL] {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
@@ -886,6 +1003,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.allowedContentTypes = ["sql", "pck", "pks", "pkb", "spc", "bdy", "fnc", "prc", "trg", "typ", "tps", "tpb", "tst", "txt"]
             .compactMap { UTType(filenameExtension: $0) }
         panel.allowsOtherFileTypes = true
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.urls : [] }
         return await panel.beginSheetModal(for: window) == .OK ? panel.urls : []
     }
@@ -895,6 +1013,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
         panel.canCreateDirectories = true
         panel.isExtensionHidden = false
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
         return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
     }

@@ -45,3 +45,5 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
 - Debuger: po `DBMS_DEBUG.DEBUG_ON` każde wywołanie PL/SQL w sesji docelowej czeka na debuger — DBMS_OUTPUT włączać
   przed `DEBUG_ON`, a `DEBUG_OFF` obsłużyć z sesji nadzorującej (ADR 0006, `DebuggerEngine.cleanUp`).
 - Instant Client lokalnie: `~/Downloads/instantclient_23_26` (wykrywany automatycznie); w CI Linux: `/opt/oracle/instantclient`.
+- Zrzuty w tle: `scripts/screenshots.sh [scenariusz]` (scenariusze w `scripts/screenshots/*.json`, D113). Aplikacja Debug
+  nie może czytać `~/Downloads` (pytanie macOS o dostęp przerywa właścicielowi) — skrypt używa kopii w `.testdb/instantclient`.

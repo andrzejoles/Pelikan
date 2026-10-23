@@ -71,6 +71,11 @@ public final class Document: Identifiable {
                 isModified = true
                 if kind == .program { isCompileStale = true }
                 if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
+                if !bookmarks.isEmpty || !colorMarks.isEmpty {
+                    let d = EditorShift.Change(old: oldValue, new: text)
+                    bookmarks = bookmarks.map { var b = $0; b.offset = d.shift(b.offset); return b }
+                    colorMarks = colorMarks.compactMap { m in d.shift(m.range).map { ColorMark(range: $0, color: m.color) } }
+                }
             }
         }
     }
@@ -105,6 +110,11 @@ public final class Document: Identifiable {
     public var errorRange: Range<Int>?
     /// Wartości zmiennych (&, :, Jasper) — zapamiętywane w oknie (UG 23.18).
     public var variableValues: [String: VariableValue] = [:]
+    /// Sumy kolumn trwałe po ponownym wykonaniu (PD-GRID-024): nazwa kolumny (wielkie litery) → funkcje.
+    public var columnTotals: [String: [ColumnAggregate]] = [:]
+    /// Automatyczne odświeżanie wyników co n sekund (PD-SQLW-006); nil — wyłączone.
+    public var autoRefreshSeconds: Int?
+    @ObservationIgnored public var autoRefreshTask: Task<Void, Never>?
     /// Podstawianie zmiennych włączone (przycisk `&` na pasku stanu — UG 7.5, NF17).
     public var substitutionEnabled = true
     /// Historia poleceń okna (przyciski wstecz/dalej — UG 7.1).
@@ -114,6 +124,8 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// LAST_DDL_TIME obiektów okna programu przy wczytaniu albo kompilacji — wykrywanie zmian w bazie (PD-PROG-011).
+    public var objectTimestamps: [String: String] = [:]
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
     /// Notatnik SQL: komórki z wynikami (SD-NB-001).
@@ -140,12 +152,24 @@ public final class Document: Identifiable {
     /// Profiler przy wykonaniu okna testu (nil — wyłączony) i raport ostatniego przebiegu (UG 6.3).
     public var profiler: ProfilerKind?
     public var profilerReport: ProfilerReport?
+    /// Ślad DBMS_TRACE okna testu (PD-OPT-007): poziom (nil — wyłączony), numer i zdarzenia ostatniego przebiegu.
+    public var traceLevel: PLSQLTrace.Level?
+    public var traceRun: Int?
+    public var traceEvents: [PLSQLTrace.Event] = []
     /// Statystyki sesji ostatniego wykonania (różnica V$MYSTAT, UG 6.2) — nazwa i wartość.
     public var statistics: [SessionStatistic] = []
     /// Linia (od 1), w której zatrzymał się debuger — wyróżniona w edytorze (UG 5.10).
     public var executionLine: Int?
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
     public var foldedStarts: Set<Int> = []
+    /// Zakładki 0–9 (PD-EDIT-011) i znaczniki kolorów (PD-EDIT-012) — przesuwane przy zmianach tekstu.
+    public var bookmarks: [Bookmark] = []
+    public var colorMarks: [ColorMark] = []
+    /// Dodatkowe kursory i zaznaczenia poza `selectedRange` (PD-EDIT-007, PD-EDIT-023).
+    public var additionalSelections: [Range<Int>] = []
+    /// Okno tylko do odczytu (PD-FILE-003) i drugi widok tego samego tekstu (PD-EDIT-014).
+    public var isReadOnly = false
+    public var splitEditor = false
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {

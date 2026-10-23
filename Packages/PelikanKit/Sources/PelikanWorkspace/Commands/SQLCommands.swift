@@ -92,6 +92,15 @@ public enum SQLCommands {
                 currentSession(ctx.workspace)?.breakExecution()
                 return .ok
             },
+            Command(CommandDescriptor(id: "cmd.pause", title: L10n.tr("Wstrzymaj wykonanie"), category: .session,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Wstrzymuje skrypt Command Window przed następnym poleceniem; dalej krok po kroku albo resztę naraz."),
+                                      feature: "PD-CMDW-003"),
+                    validate: { ws in ws.activeDocument.map { $0.kind == .command && $0.isExecuting } ?? false }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
+                ctx.workspace.sqlplusEngine(for: doc).pauseRequested = true
+                return .ok
+            },
             Command(CommandDescriptor(id: "cmd.executeLine", title: L10n.tr("Wykonaj linię poleceń"), category: .session,
                                       parameters: [CommandParameter("line", .string, required: true, L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL"))],
                                       agent: .none, effect: .modifiesDatabase,

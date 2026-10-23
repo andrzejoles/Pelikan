@@ -143,6 +143,11 @@ public enum ObjectCommands {
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
                     doc.selectedRange = 0..<0
+                    // Znaczniki czasu (PD-PROG-011): późniejsza zmiana obiektu w bazie przez kogoś innego jest wykrywana.
+                    var objects = [o]
+                    if o.type == .package { objects.append(DBObject(owner: o.owner, name: o.name, type: .packageBody)) }
+                    if o.type == .type { objects.append(DBObject(owner: o.owner, name: o.name, type: .typeBody)) }
+                    if let s = try? await m.session() { doc.objectTimestamps = (try? await ObjectAdmin.lastDDLTimes(objects, in: s)) ?? [:] }
                 } else if let kind = Self.simpleEditorKind(o.type), ctx.invoker == .user, ctx.ui != nil {
                     // Sekwencja, synonim, indeks, użytkownik, rola: prosty edytor (UG 9.2–9.11).
                     let e = try await SimpleObjectEditor.load(kind, owner: o.owner, name: o.name, metadata: m)
@@ -163,6 +168,12 @@ public enum ObjectCommands {
                     validate: { ws in ws.selectedObject.flatMap { compileStatement($0) } != nil }) { ctx in
                 let (o, m) = try await target(ctx)
                 guard let sql = compileStatement(o) else { throw CommandError.notAvailable(L10n.tr("Tego obiektu nie da się kompilować")) }
+                // Potwierdzanie rekompilacji (Preferencje › Object Browser, PD-OB-025).
+                if ctx.workspace.settings.confirmRecompile, ctx.invoker == .user, let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Rekompilować \(o.name)?"), message: sql, buttons: [L10n.tr("Rekompiluj"), L10n.tr("Anuluj")]) == 0 else {
+                        throw CommandError.cancelledByUser
+                    }
+                }
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
                 _ = try? await s.execute(sql)

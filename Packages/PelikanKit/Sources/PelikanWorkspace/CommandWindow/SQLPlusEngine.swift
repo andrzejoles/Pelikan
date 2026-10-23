@@ -71,6 +71,8 @@ public final class SQLPlusEngine {
     public var state = SQLPlusState()
     @ObservationIgnored var depth = 0
     @ObservationIgnored var cancelled = false
+    /// Wstrzymanie przed następnym poleceniem (komenda Wstrzymaj wykonanie, PD-CMDW-003).
+    @ObservationIgnored public var pauseRequested = false
 
     public enum Outcome: Sendable, Equatable { case finished, stopped, exit }
 
@@ -126,8 +128,21 @@ public final class SQLPlusEngine {
         defer { if depth == 0 { document.isExecuting = false } }
         for (i, a) in arguments.enumerated() { state.defines[String(i + 1)] = a }
         let statements = ScriptSplitter.split(script, mode: .commandWindow)
+        var stepping = state.execPause
         for s in statements {
             if cancelled { emit(L10n.tr("Przerwano"), .info); return .stopped }
+            // Krokowanie (SET EXECPAUSE ON albo Wstrzymaj wykonanie, PD-CMDW-003): pytanie przed każdym poleceniem.
+            if stepping || pauseRequested, !s.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let ui = workspace.ui {
+                pauseRequested = false
+                stepping = true
+                let preview = s.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                switch await ui.ask(L10n.tr("Następne polecenie"), message: String(preview.prefix(400)),
+                                    buttons: [L10n.tr("Wykonaj"), L10n.tr("Wykonaj resztę"), L10n.tr("Przerwij")]) {
+                case 0: break
+                case 1: stepping = false
+                default: emit(L10n.tr("Przerwano"), .info); return .stopped
+                }
+            }
             let outcome = await execute(s, baseDirectory: baseDirectory)
             if outcome != .finished { return outcome }
         }

@@ -37,6 +37,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 0 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Wklej jako nowe SQL Window | `file.pasteAsSQLWindow` |  |  | Brak | 0 | PD-SQLW-025 |
+| Tylko do odczytu | `file.readOnly` |  |  | Brak | 0 | PD-FILE-003 |
+| Otwórz z połączeniem… | `file.openWithConnection` |  |  | Brak | 0 | PD-FILE-004 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |
 | Odzyskaj okna… | `file.restoreRecovery` |  |  | Brak | 0 | PD-FILE-001 |
 | Notatnik › Eksportuj notatnik jako Markdown… | `notebook.exportMarkdown` |  |  | Brak | 0 | SD-NB-001 |
@@ -54,6 +57,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Indeks… | `file.newIndex` |  |  | Brak | 0 | PD-OED-010 |
 | Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Domena… | `file.newDomain` |  |  | Brak | 0 | PD-OED-011 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
 | Zapisz test jako skrypt SQL*Plus | `test.saveAsSQLPlus` |  |  | Pełny | 0 | PD-TEST-005 |
 | Przeglądarka plików › Dodaj lokalizację… | `fb.addLocation` |  |  | Brak | 0 | PD-FB-001 |
@@ -123,6 +127,25 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
+| Wynik › Wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | 0 | PD-GRID-026 |
+| Wynik › Małe litery w komórkach | `grid.lowerCase` |  |  | Brak | 0 | PD-GRID-026 |
+| Zakładki › Przełącz zakładkę | `edit.toggleBookmark` | ⌘F3 | ⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Przejdź do zakładki | `edit.gotoBookmark` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Następna zakładka | `edit.nextBookmark` | ⌥⌘F3 | ⌥⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Poprzednia zakładka | `edit.previousBookmark` | ⌥⇧⌘F3 | ⌥⇧⌘F3 | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Nazwij zakładkę… | `edit.renameBookmark` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Lista zakładek | `edit.bookmarkList` |  |  | Brak | 0 | PD-EDIT-011 |
+| Zakładki › Usuń zakładki okna | `edit.clearBookmarks` |  |  | Brak | 0 | PD-EDIT-011 |
+| Znaczniki kolorów › Oznacz kolorem | `edit.colorMark` |  |  | Brak | 0 | PD-EDIT-012 |
+| Znaczniki kolorów › Usuń znaczniki kolorów | `edit.clearColorMarks` |  |  | Brak | 0 | PD-EDIT-012 |
+| Wiele kursorów › Dodaj kursor powyżej | `edit.addCursorAbove` | ⌃⇧↑ † | ⌃⇧↑ | Brak | 0 | PD-EDIT-023 |
+| Wiele kursorów › Dodaj kursor poniżej | `edit.addCursorBelow` | ⌃⇧↓ † | ⌃⇧↓ | Brak | 0 | PD-EDIT-023 |
+| Wiele kursorów › Jeden kursor | `edit.singleCursor` |  |  | Brak | 0 | PD-EDIT-023 |
+| Refaktoryzacja › Wydziel stałą lokalną… | `edit.extractLocalConstant` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Wydziel stałą globalną… | `edit.extractGlobalConstant` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Wydziel procedurę… | `edit.extractProcedure` |  |  | Pełny | 0 | PD-CA-014 |
+| Refaktoryzacja › Zamień przypisanie na inicjalizację | `edit.replaceAssignmentWithInitialization` |  |  | Pełny | 0 | PD-CA-014 |
+| Szukaj w edytorach i plikach… | `edit.searchBar` | ⌥⇧⌘F | ⌥⇧⌘F | Odczyt | 0 | PD-CA-015 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | 0 | PD-EDIT-027 |
 | Otwórz w zewnętrznym edytorze | `edit.openInExternalEditor` |  |  | Brak | 0 | PD-EDIT-028 |
 | Analiza kodu › Analizuj kod | `edit.analyzeCode` |  |  | Odczyt | 0 | DG-INSP-001 |
@@ -158,12 +181,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 1 | PD-CONN-027 |
+| Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 0 | PD-CONN-027 |
 | Zmień hasło… | `session.setPassword` |  |  | Brak | 1 | PD-CONN-017 |
-| SQL Trace | `session.sqlTrace` |  |  | Brak | 3 | PD-OPT-008 |
+| SQL Trace | `session.sqlTrace` |  |  | Brak | 0 | PD-OPT-008 |
 | Wykonaj | `sql.execute` | F8, ⌘↩ | ⌘↩, F8 | Brak | 0 | PD-SQLW-002 |
 | Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ | ⇧⌘↩, ⌃F8 | Brak | 0 | PD-SQLW-003 |
 | Przerwij | `sql.break` | ⇧⎋ †, ⌘. | ⌘. | Brak | 0 | PD-SQLW-005 |
+| Wstrzymaj wykonanie | `cmd.pause` |  |  | Brak | 0 | PD-CMDW-003 |
 | Wykonaj linię poleceń | `cmd.executeLine` |  |  | Brak | 0 | PD-CMDW-001 |
 | Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ | ⌥⌘↩, F10 | Za zgodą | 0 | PD-SQLW-014 |
 | Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ | ⌥⌘⌫, ⇧F10 | Za zgodą | 0 | PD-SQLW-014 |
@@ -188,6 +212,28 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | 0 | PD-GRID-006 |
+| Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Zapisz wyrównanie dla zapytania | `grid.saveAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Usuń wyrównanie zapytania | `grid.removeAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Informacje o kolumnie | `grid.columnInfo` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Lista wartości… | `grid.valueList` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Sumy kolumny… | `grid.totals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Wyłącz sumy | `grid.clearTotals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Odśwież wynik | `sql.refreshResult` | ⇧⌘R | ⇧⌘R | Brak | 0 | PD-SQLW-006 |
+| Wynik › Automatyczne odświeżanie… | `sql.autoRefresh` |  |  | Brak | 0 | PD-SQLW-006 |
+| Wynik › Przypnij wynik | `sql.pinResult` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Przypnij wszystkie wyniki | `sql.pinAllResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Wyczyść karty wyników | `sql.clearResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Eksportuj zapytanie do pliku… | `sql.exportQuery` |  |  | Brak | 0 | PD-SQLW-018 |
+| Wynik › Query By Example… | `grid.queryByExample` | ⇧⌘E | ⇧⌘E | Brak | 0 | PD-SQLW-022 |
+| Wynik › Wyczyść Query By Example | `grid.clearQueryByExample` |  |  | Brak | 0 | PD-SQLW-022 |
+| Wczytaj ponownie z bazy | `prog.reloadFromDatabase` |  |  | Brak | 0 | PD-PROG-011 |
+| Kompilacja próbna | `prog.safeCompile` |  |  | Brak | 0 | PD-PROG-010 |
+| Sprawdź zmiany obiektów w bazie | `prog.checkChanges` |  |  | Odczyt | 0 | PD-PROG-011 |
+| Uruchom blok w oknie testu | `prog.runBlock` |  |  | Brak | 0 | PD-PROG-016 |
 | Notatnik › Wykonaj wszystkie komórki | `notebook.runAll` |  |  | Brak | 0 | SD-NB-001 |
 | Notatnik › Wykonaj komórkę | `notebook.runCell` |  |  | Brak | 0 | SD-NB-001 |
 | Konsola połączenia | `session.console` |  |  | Brak | 0 | DG-CONS-001 |
@@ -196,11 +242,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Cofnij zmiany wierszy | `grid.revertRowChanges` |  |  | Brak | 0 | DG-GRID-001 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
+| Połączenia › Eksportuj definicje połączeń… | `connection.export` |  |  | Brak | 0 | PD-CONN-010 |
+| Połączenia › Importuj definicje połączeń… | `connection.import` |  |  | Brak | 0 | PD-CONN-010 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
 | Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | 0 | PD-CONN-004 |
 | Połączenia › Usuń połączenie | `connection.delete` |  |  | Brak | 0 | PD-CONN-004 |
 | Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Połącz | `connection.connect` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Nowe okno na połączeniu | `connection.openWindow` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Pokaż okna połączenia | `connection.showWindows` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Zamknij okna połączenia | `connection.closeWindows` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Połącz ponownie okna połączenia | `connection.reconnectWindows` |  |  | Brak | 0 | PD-CONN-022 |
+| Połączenia › Ustaw bieżący schemat… | `connection.setCurrentSchema` |  |  | Brak | 0 | PD-CONN-022 |
 | Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | 0 | PD-CONN-022 |
 | Połączenie okna… | `session.windowConnection` |  |  | Brak | 0 | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | 0 | PD-CONN-003 |
@@ -209,6 +262,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | 0 | PD-TEST-009 |
+| Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | 0 | PD-OPT-007 |
+| Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | 0 | PD-OPT-007 |
+| Uprawnienia debugera… | `debug.grantPrivileges` |  |  | Brak | 0 | PD-DBG-013 |
 | Profiler przy wykonaniu | `test.profiler` |  |  | Pełny | 0 | PD-OPT-005 |
 | utPLSQL: debuguj test pod kursorem | `utplsql.debugTest` |  |  | Brak | 0 | UT-RUN-007 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |
@@ -240,6 +297,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Object Browser › Filtr nazwany… | `ob.applyFilter` |  |  | Brak | 0 | PD-OB-007 |
+| Obiekt › Dodaj do folderu… | `ob.addToFolder` |  |  | Brak | 0 | PD-OB-008 |
+| Obiekt › Włącz | `ob.enable` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Wyłącz | `ob.disable` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Odśwież widok zmaterializowany | `ob.refreshMV` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Testuj łącze | `ob.testLink` |  |  | Odczyt | 0 | PD-OB-019 |
+| Obiekt › Uruchom zadanie | `ob.runJob` |  |  | Brak | 0 | PD-OB-019 |
+| Kosz | `ob.recycleBin` |  |  | Odczyt | 0 | PD-OB-021 |
+| Kosz › Przywróć z kosza… | `ob.restoreFromRecycleBin` |  |  | Brak | 0 | PD-OB-021 |
+| Kosz › Opróżnij kosz… | `ob.purgeRecycleBin` |  |  | Brak | 0 | PD-OB-021 |
+| Obiekt › Flagi kompilacji warunkowej… | `ob.ccflags` |  |  | Odczyt | 0 | PD-OB-020 |
+| Obiekt › Dodaj źródło do edytora | `ob.addSourceToEditor` |  |  | Brak | 0 | PD-OB-023 |
 | Preferencje › Eksportuj preferencje… | `prefs.export` |  |  | Brak | 0 | PD-PREF-003 |
 | Preferencje › Importuj preferencje… | `prefs.import` |  |  | Brak | 0 | PD-PREF-003 |
 | Preferencje › Zestawy preferencji… | `prefs.sets` |  |  | Brak | 0 | PD-PREF-002 |
@@ -297,6 +366,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
 | Obiekt › Testuj | `ob.test` |  |  | Pełny | 0 | PD-TEST-004 |
+| Obiekt › Test standardowy… | `ob.standardTest` |  |  | Odczyt | 0 | PD-TEST-009 |
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | utPLSQL › utPLSQL: uruchom wszystkie testy | `utplsql.runAll` | ⌃⇧U †, ⇧⌘U | ⇧⌘U | Za zgodą | 0 | UT-RUN-001 |
 | utPLSQL › utPLSQL: uruchom testy ze ścieżki… | `utplsql.runPath` |  |  | Za zgodą | 0 | UT-RUN-002 |
@@ -375,6 +445,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Siatka › Większa czcionka siatki | `grid.fontLarger` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Mniejsza czcionka siatki | `grid.fontSmaller` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Domyślna czcionka siatki | `grid.fontReset` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Numer wiersza w kopiowaniu i eksporcie | `grid.toggleRowNumbers` |  |  | Brak | 0 | PD-GRID-027 |
+| Podziel edytor | `view.splitEditor` |  |  | Brak | 0 | PD-EDIT-014 |
+| Powiększ czcionkę edytora | `view.zoomIn` | ⌃= †, ⌘= | ⌘= | Brak | 0 | PD-EDIT-021 |
+| Pomniejsz czcionkę edytora | `view.zoomOut` | ⌃⇧- †, ⌘- | ⌘- | Brak | 0 | PD-EDIT-021 |
+| Domyślny rozmiar czcionki edytora | `view.zoomReset` | ⌃0 †, ⌘0 | ⌘0 | Brak | 0 | PD-EDIT-021 |
 | Dostosuj pasek narzędzi… | `view.customizeToolbar` |  |  | Brak | 0 | PD-UI-006 |
 | Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
 | Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | 0 | PD-UI-006 |

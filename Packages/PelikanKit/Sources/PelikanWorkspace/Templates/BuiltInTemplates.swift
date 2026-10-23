@@ -122,6 +122,12 @@ extension TemplateLibrary {
                 from   [Tabela] t
                 where  1 = 1;
                 """, isBuiltIn: true),
+            CodeTemplate(folder: objectsFolder, name: L10n.tr("Domena"), text: """
+                create domain if not exists [Nazwa=nowa_domena] as [Typ=varchar2(100)]
+                  constraint [Nazwa]_chk check ([Warunek=value is not null])
+                  display [Wyświetlanie=value]
+                  annotations ([Adnotacja=opis] '[Opis]');[#]
+                """, isBuiltIn: true),
             CodeTemplate(folder: dml, name: "select", text: """
                 select [#]*
                 from   [Tabela] t

@@ -21,6 +21,14 @@ public final class ResultGridModel {
     /// Edycja danych (UG 7.6) — stan w GridEditing.swift.
     public internal(set) var edit = GridEditState()
     @ObservationIgnored public var format: ValueFormat
+    /// Limit rozmiaru wyniku w pamięci (PD-SQLW-026): po przekroczeniu dalsze pobieranie dopiero po potwierdzeniu.
+    @ObservationIgnored public var sizeLimitBytes = 0
+    @ObservationIgnored public var confirmSizeLimit: (@MainActor (Int) async -> Bool)?
+    @ObservationIgnored var sizeLimitAccepted = false
+    /// Szacowany rozmiar pobranych wierszy w bajtach.
+    public private(set) var approximateBytes = 0
+    /// Pobieranie wstrzymane na limicie rozmiaru (odmowa dalszego pobierania).
+    public private(set) var stoppedAtSizeLimit = false
 
     public init(columns: [ColumnInfo], resultSet: ResultSetID, session: any DatabaseSession, sql: String, format: ValueFormat) {
         self.columns = columns
@@ -153,8 +161,18 @@ public final class ResultGridModel {
         guard hasMore, !isFetching, let s = sessionRef else { return }
         isFetching = true
         defer { isFetching = false }
+        if sizeLimitBytes > 0, approximateBytes >= sizeLimitBytes, !sizeLimitAccepted {
+            if let confirm = confirmSizeLimit, await confirm(approximateBytes) {
+                sizeLimitAccepted = true
+                stoppedAtSizeLimit = false
+            } else {
+                stoppedAtSizeLimit = true
+                return
+            }
+        }
         do {
             let batch = try await s.fetch(resultSet, maxRows: count)
+            approximateBytes += batch.rows.reduce(0) { $0 + ResultSize.bytes($1) }
             rows.append(contentsOf: batch.rows)
             hasMore = batch.hasMore
             if resort, !sortKeys.isEmpty || filter != nil { applySort() }   // sortowane są pobrane wiersze — po dociągnięciu na nowo
@@ -170,7 +188,7 @@ public final class ResultGridModel {
 
     /// Pobiera wszystkie wiersze („Last Page”), z limitem bezpieczeństwa.
     public func fetchAll(limit: Int = 5_000_000) async {
-        while hasMore, rows.count < limit {
+        while hasMore, rows.count < limit, !stoppedAtSizeLimit {
             let before = rows.count
             await fetchMore(10_000, resort: false)
             if rows.count == before { break }
@@ -208,6 +226,22 @@ public final class ResultTab: Identifiable {
     public var currentColumn: Int?
     /// Wiersz widoku do zaznaczenia i pokazania (np. następna zmiana oczekująca — DG-GRID-001); interfejs zeruje po użyciu.
     public var revealRow: Int?
+    /// Kolumny ukryte filtrem kolumn (PD-GRID-011) i aktywny filtr.
+    public var hiddenColumns: Set<Int> = []
+    public var columnFilter: ColumnFilter?
+    /// Szerokości kolumn w znakach po „Align” (PD-GRID-012); nil — szerokości domyślne.
+    public var columnWidths: [Int: Int]?
+    /// Sumy kolumn (PD-GRID-024): kolumna → funkcje.
+    public var totals: [Int: [ColumnAggregate]] = [:]
+    /// Kolor naprzemiennych wierszy z dyrektywy `AltRowColor=` (PD-SQLW-011), np. `#F0F0FF` albo nazwa.
+    public var altRowColor: String?
+    /// Kryteria Query By Example (PD-SQLW-022): kolumna → wyrażenie; zapytanie bazowe przed QBE.
+    public var qbeCriteria: [Int: String] = [:]
+    public var baseSQL: String?
+    /// Tekst polecenia wyniku (przed podstawieniem zmiennych) — odświeżanie karty (PD-SQLW-006).
+    public var statementText: String?
+    /// Informacje słownika o kolumnach tabeli wyniku (PD-GRID-022), wczytywane przy pierwszym użyciu.
+    public var columnInfo: [Int: ColumnDictionaryInfo]?
 
     public init(title: String, statementRange: Range<Int>, grid: ResultGridModel? = nil, message: String? = nil) {
         self.title = title

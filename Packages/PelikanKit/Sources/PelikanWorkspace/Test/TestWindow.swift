@@ -193,7 +193,12 @@ public enum TestRunner {
             }
             profileID = try await Profiler.start(kind, session: session, comment: profileComment)
         }
+        if let level = doc.traceLevel { try await PLSQLTrace.start(level, in: session) }
         func finishMeasurements() async {
+            if doc.traceLevel != nil, let r = try? await PLSQLTrace.stop(in: session) {
+                doc.traceRun = r.run
+                doc.traceEvents = r.events
+            }
             if let kind = doc.profiler, let id = profileID {
                 doc.profilerReport = try? await Profiler.stop(kind, id: id, comment: profileComment, session: session)
                 // Tekst linii bloku testu (blok anonimowy nie ma źródła w ALL_SOURCE).
@@ -253,7 +258,7 @@ public enum TestRunner {
                 let o = ProgramCompiler.offset(line: local.line, column: 1, in: doc.text)
                 doc.errorRange = o..<o
             }
-            doc.statusText = e.message.components(separatedBy: "\n").first
+            doc.statusText = SQLExecutor.statusMessage(for: e)
             throw e
         }
     }

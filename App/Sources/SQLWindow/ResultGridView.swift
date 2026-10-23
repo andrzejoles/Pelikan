@@ -28,7 +28,13 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private var scrollTrailing: NSLayoutConstraint?
     private var panelWidth: NSLayoutConstraint?
     static let nullColor = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.30, green: 0.28, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.98, blue: 0.80, alpha: 1) }
-    private let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    private var font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+    private var lastFontSize: Double = 0
+    private var lastHidden: Set<Int> = []
+    private var lastWidths: [Int: Int]?
+    private var lastOrder: [Int]?
+    /// Model siatki widoku (kontroler okna sprawdza, czy karta nie dostała nowego wyniku).
+    var model: ResultGridModel { grid }
 
     init(tab: ResultTab, grid: ResultGridModel, workspace: Workspace) {
         self.tab = tab
@@ -58,20 +64,32 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         table.target = self
         table.action = #selector(cellClicked)
         table.doubleAction = #selector(cellDoubleClicked)
+        font = NSFont.monospacedSystemFont(ofSize: workspace.settings.gridFontSize, weight: .regular)
+        lastFontSize = workspace.settings.gridFontSize
+        table.rowHeight = CGFloat(lastFontSize) + 8
+        if tab.altRowColor != nil { table.usesAlternatingRowBackgroundColors = false }
         let rowNo = NSTableColumn(identifier: .init("#"))
         rowNo.title = ""
         rowNo.width = 50
         rowNo.minWidth = 30
         table.addTableColumn(rowNo)
-        for (i, c) in grid.columns.enumerated() {
+        // Kolejność kolumn z szablonu wyrównania (PD-GRID-012) albo z bazy.
+        let order = (tab.columnOrder.map { o in o + grid.columns.indices.filter { !o.contains($0) } } ?? Array(grid.columns.indices))
+        lastOrder = tab.columnOrder
+        for i in order {
+            let c = grid.columns[i]
             let col = NSTableColumn(identifier: .init("c\(i)"))
             col.title = c.name
             col.headerToolTip = "\(c.name) — \(c.typeName)\(c.nullable ? "" : " NOT NULL")"
             col.width = Self.initialWidth(c)
             col.minWidth = 24
             if c.type.isNumeric { col.headerCell.alignment = .right }
+            col.isHidden = tab.hiddenColumns.contains(i)
+            if let w = tab.columnWidths?[i] { col.width = charWidth * CGFloat(w) + 14 }
             table.addTableColumn(col)
         }
+        lastHidden = tab.hiddenColumns
+        lastWidths = tab.columnWidths
         table.setAccessibilityLabel(L10n.tr("Siatka wyników"))
         table.menu = contextMenu()
         scroll.documentView = table
@@ -195,7 +213,46 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         return CGFloat(chars) * 7.6 + 14
     }
 
+    private var charWidth: CGFloat { CGFloat(lastFontSize) * 0.62 }
+
+    /// Czcionka (PD-GRID-025), kolumny ukryte filtrem (PD-GRID-011), szerokości i kolejność z wyrównania (PD-GRID-012).
+    private func applyLayout() {
+        let size = workspace.settings.gridFontSize
+        if size != lastFontSize {
+            lastFontSize = size
+            font = NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+            table.rowHeight = CGFloat(size) + 8
+            table.reloadData()
+        }
+        let hidden = tab.hiddenColumns
+        if hidden != lastHidden {
+            lastHidden = hidden
+            for col in table.tableColumns { if let i = dataColumnIndex(col) { col.isHidden = hidden.contains(i) } }
+        }
+        let widths = tab.columnWidths
+        if widths != lastWidths {
+            lastWidths = widths
+            for col in table.tableColumns {
+                guard let i = dataColumnIndex(col) else { continue }
+                col.width = widths?[i].map { charWidth * CGFloat($0) + 14 } ?? Self.initialWidth(grid.columns[i])
+            }
+        }
+        let order = tab.columnOrder
+        if order != lastOrder, let order {
+            lastOrder = order
+            for (target, i) in order.enumerated() {
+                guard let from = table.tableColumns.firstIndex(where: { $0.identifier.rawValue == "c\(i)" }), from != target + 1 else { continue }
+                table.moveColumn(from, toColumn: target + 1)
+            }
+        }
+    }
+
+    private func dataColumnIndex(_ col: NSTableColumn) -> Int? {
+        col.identifier.rawValue == "#" ? nil : Int(col.identifier.rawValue.dropFirst())
+    }
+
     private func modelChanged() {
+        applyLayout()
         let showPanel = workspace.valuePanelVisible
         if valuePanel?.isHidden == showPanel {
             valuePanel?.isHidden = !showPanel
@@ -216,6 +273,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         countLabel.stringValue = (more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy"))
             + (filterText.map { L10n.tr("  ·  filtr: \($0) (z \(grid.fetchedRowCount))") } ?? "")
             + (edit.hasChanges ? "  ·  " + (grid.pendingSummary.isEmpty ? L10n.tr("zmiany do zatwierdzenia") : grid.pendingSummary.text) : "")
+            + (tab.totals.isEmpty ? "" : "   ·   " + ColumnTotals.summary(grid, totals: tab.totals))
+            + (grid.stoppedAtSizeLimit ? "   ·   " + L10n.tr("zatrzymano na limicie rozmiaru") : "")
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
             editButton.state = edit.isEditing ? .on : .off
@@ -277,7 +336,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         }
     }
 
-    @objc private func columnsMoved() { tab.columnOrder = visibleColumns() }
+    @objc private func columnsMoved() {
+        tab.columnOrder = visibleColumns()
+        lastOrder = tab.columnOrder
+    }
 
     private func dataColumn(atTableColumn c: Int) -> Int? {
         guard c >= 0, c < table.tableColumns.count, table.tableColumns[c].identifier.rawValue != "#" else { return nil }
@@ -285,7 +347,11 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     }
 
     @objc private func cellClicked() {
-        if let c = dataColumn(atTableColumn: table.clickedColumn) { tab.currentColumn = c }
+        if let c = dataColumn(atTableColumn: table.clickedColumn) {
+            tab.currentColumn = c
+            // Typ, NOT NULL i komentarz kolumny na pasku stanu (PD-GRID-022).
+            workspace.perform("grid.columnInfo")
+        }
     }
 
     /// Podwójne kliknięcie: komórka LOB/LONG/RAW albo długi tekst → Large Data Editor (UG 7.2: przycisk komórki).
@@ -308,6 +374,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let id = tableColumn?.identifier.rawValue else { return nil }
         let cell = tableView.makeView(withIdentifier: .init("cell"), owner: nil) as? GridCell ?? GridCell(font: font)
+        cell.textField?.font = font
         if id == "#" {
             // Znacznik zmiany oczekującej w nagłówku wiersza (DG-GRID-001): + wstawiony, ~ zmieniony, − usunięty.
             let state = grid.edit.isEditing ? grid.rowEditState(row: row) : .normal
@@ -354,6 +421,25 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         table.scrollRowToVisible(row)
         table.scrollColumnToVisible(colIndex)
         if grid.isEditable(column: column) { table.editColumn(colIndex, row: row, with: nil, select: true) }
+    }
+
+    /// Kolor naprzemiennych wierszy z dyrektywy `AltRowColor=` (PD-SQLW-011).
+    func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+        guard let raw = tab.altRowColor, let color = Self.color(raw) else { return nil }
+        let v = NSTableRowView()
+        if row % 2 == 1 { v.backgroundColor = color }
+        return v
+    }
+
+    static func color(_ raw: String) -> NSColor? {
+        let s = raw.trimmingCharacters(in: .whitespaces).lowercased()
+        if s.hasPrefix("#"), s.count == 7, let n = Int(s.dropFirst(), radix: 16) {
+            return NSColor(srgbRed: CGFloat((n >> 16) & 0xFF) / 255, green: CGFloat((n >> 8) & 0xFF) / 255, blue: CGFloat(n & 0xFF) / 255, alpha: 1)
+        }
+        let names: [String: NSColor] = ["yellow": .systemYellow.withAlphaComponent(0.15), "blue": .systemBlue.withAlphaComponent(0.1),
+                                        "green": .systemGreen.withAlphaComponent(0.1), "gray": .gridColor.withAlphaComponent(0.3),
+                                        "grey": .gridColor.withAlphaComponent(0.3), "red": .systemRed.withAlphaComponent(0.1)]
+        return names[s]
     }
 
     func tableViewSelectionDidChange(_ notification: Notification) {
@@ -457,7 +543,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             _ = id
         }
         for (title, id) in [(L10n.tr("Filtr wyrażeniem…"), "grid.filterExpression"), (L10n.tr("Wyczyść filtr"), "grid.clearFilter"),
-                            (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel")] {
+                            (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel"),
+                            (L10n.tr("Otwórz kursor zagnieżdżony"), "grid.openCursor"), (L10n.tr("Sumy kolumny…"), "grid.totals"),
+                            (L10n.tr("Lista wartości…"), "grid.valueList"), (L10n.tr("Wielkie litery w komórkach"), "grid.upperCase"),
+                            (L10n.tr("Małe litery w komórkach"), "grid.lowerCase")] {
             let item = menu.addItem(withTitle: title, action: #selector(cellCommand(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = id
@@ -469,6 +558,15 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = k.rawValue
         }
         menu.addItem(withTitle: L10n.tr("Generuj SQL z wierszy"), action: nil, keyEquivalent: "").submenu = gen
+        menu.addItem(.separator())
+        for (title, id) in [(L10n.tr("Filtr kolumn…"), "grid.columnFilter"), (L10n.tr("Pokaż wszystkie kolumny"), "grid.clearColumnFilter"),
+                            (L10n.tr("Wyrównaj kolumny"), "grid.align"), (L10n.tr("Zapisz wyrównanie dla zapytania"), "grid.saveAlignTemplate"),
+                            (L10n.tr("Query By Example…"), "grid.queryByExample"), (L10n.tr("Wyczyść Query By Example"), "grid.clearQueryByExample"),
+                            (L10n.tr("Odśwież wynik"), "sql.refreshResult"), (L10n.tr("Przypnij wynik"), "sql.pinResult")] {
+            let item = menu.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = id
+        }
         return menu
     }
 

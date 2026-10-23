@@ -147,3 +147,22 @@ public struct VariableOptions: Sendable, Hashable {
         return prefix + items.joined(separator: ", ") + suffix
     }
 }
+
+/// Listy zależne w oknie zmiennych (UG 12.3, PD-VAR-004): zapytanie listy widzi wartości innych zmiennych jako
+/// `:nazwa` (zmienna wiązana) albo `&nazwa` (podstawienie tekstu); nazwa = `VariableOptions.bindName`.
+public enum VariableLists {
+    /// Nazwy (małe litery) zmiennych, od których zależy zapytanie listy.
+    public static func dependencies(of query: String) -> Set<String> {
+        Set(Variables.find(in: query).filter { $0.kind == .bind || $0.kind == .substitution }.map { $0.name.lowercased() })
+    }
+
+    /// Zapytanie gotowe do wykonania; nil — któraś zmienna, od której lista zależy, jest pusta (lista pusta).
+    public static func prepare(_ query: String, values: [String: String]) -> Variables.Prepared? {
+        var map: [String: VariableValue] = [:]
+        for d in Variables.find(in: query) where d.kind == .bind || d.kind == .substitution {
+            guard let v = values.first(where: { $0.key.lowercased() == d.name.lowercased() })?.value, !v.isEmpty else { return nil }
+            map[d.name] = .text(v)
+        }
+        return Variables.prepare(query, values: map)
+    }
+}
