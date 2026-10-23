@@ -210,6 +210,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | DBA › Zablokuj / odblokuj konto | `dba.lockUser` |  |  | Brak | 0 | SD-DBA-001 |
 | Instance Viewer | `tools.instanceViewer` |  |  | Brak | 0 | SD-DBA-004 |
 | Dokumentacja schematu… | `tools.schemaDoc` |  |  | Brak | 0 | SD-DOC-001 |
+| Wydajność (pakiety Oracle) › Raport AWR | `tools.awrReport` |  |  | Brak | 0 | SD-DBA-002 |
+| Wydajność (pakiety Oracle) › Raport ASH | `tools.ashReport` |  |  | Brak | 0 | SD-DBA-002 |
+| Wydajność (pakiety Oracle) › Raport ADDM | `tools.addmReport` |  |  | Brak | 0 | SD-DBA-002 |
+| Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
+| Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
+| Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |

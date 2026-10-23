@@ -112,6 +112,8 @@ public struct ConnectionDefinition: Sendable, Codable, Hashable, Identifiable {
     public var workspaceManager: String?
     public var sshTunnel: SSHTunnel?
     public var agent: AgentConnectionPolicy
+    /// Zadeklarowana licencja Oracle Diagnostics/Tuning Pack dla bazy (nil — jeszcze nie pytano; SD-LIC-001).
+    public var managementPacks: ManagementPackLicense?
     /// Bieżący schemat ustawiany w każdej sesji (Set current schema, UG 19.1).
     public var currentSchema: String?
     public var lastUsed: Date?

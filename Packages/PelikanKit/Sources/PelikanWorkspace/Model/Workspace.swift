@@ -54,6 +54,9 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
+    func showHTMLReport(title: String, html: String)
+    func showSQLMonitor()
     /// Etap 7: Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu.
     func showAutotrace(_ result: AutotraceResult, sql: String)
     func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String)
@@ -129,6 +132,8 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showHTMLReport(title: String, html: String) {}
+    public func showSQLMonitor() {}
     public func showAutotrace(_ result: AutotraceResult, sql: String) {}
     public func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {}
     public func showDBAPanel() {}

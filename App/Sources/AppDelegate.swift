@@ -438,6 +438,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showHTMLReport(title: String, html: String) {
+        let key = "html-" + UUID().uuidString
+        ToolWindowController.show(key: key, title: title, size: NSSize(width: 960, height: 680)) { HTMLReportView(title: title, html: html) }
+    }
+
+    func showSQLMonitor() {
+        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
+    }
+
     func showTestManager() {
         ToolWindowController.show(key: "testManager", title: L10n.tr("Test Manager"), size: NSSize(width: 900, height: 600)) {
             TestManagerView(workspace: workspace)

@@ -25,6 +25,7 @@ final class ConnectionDraft {
     var authMode: AuthMode
     var configDirectory: String
     var walletDirectory: String
+    var managementPacks: ManagementPackLicense?
     var edition: String
     var workspaceManager: String
     var currentSchema: String
@@ -55,6 +56,7 @@ final class ConnectionDraft {
         role = d.target.role; proxyClient = d.target.proxyClient ?? ""
         authMode = d.target.walletAuth == true ? .wallet : d.target.externalAuth ? .external : .password
         walletDirectory = d.target.walletDirectory ?? ""
+        managementPacks = d.managementPacks
         configDirectory = d.target.configDirectory ?? ""; edition = d.target.edition ?? ""
         workspaceManager = d.workspaceManager ?? ""; currentSchema = d.currentSchema ?? ""
         readOnly = d.readOnly; connectOnStartup = d.connectOnStartup; initScript = d.initScript; logonMessage = d.logonMessage
@@ -86,6 +88,7 @@ final class ConnectionDraft {
             agent: AgentConnectionPolicy(visibleToAgent: agentVisible, allowChanges: agentAllowChanges, agentUser: opt(agentUser),
                                          maskedColumns: maskedColumns.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }),
             currentSchema: opt(currentSchema))
+        def.managementPacks = managementPacks
         def.target.walletAuth = authMode == .wallet ? true : nil
         def.target.walletDirectory = opt(walletDirectory)
         if sshEnabled, let host = opt(sshHost) {
@@ -210,6 +213,10 @@ struct ConnectionEditorView: View {
                             }
                         }
                         TextField(L10n.tr("Edition (EBR)"), text: $draft.edition)
+                        Picker(L10n.tr("Licencja Diagnostics/Tuning Pack"), selection: $draft.managementPacks) {
+                            Text(L10n.tr("Nie określono (pytanie przy pierwszym użyciu)")).tag(ManagementPackLicense?.none)
+                            ForEach(ManagementPackLicense.allCases, id: \.self) { Text($0.displayName).tag(ManagementPackLicense?.some($0)) }
+                        }
                         TextField(L10n.tr("Workspace (DBMS_WM)"), text: $draft.workspaceManager)
                         TextField(L10n.tr("Bieżący schemat"), text: $draft.currentSchema)
                     }

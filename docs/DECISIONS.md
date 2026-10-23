@@ -468,3 +468,10 @@ Sekcje panelu DBA i części Instance Viewera czytają słownik DBA_/V$ i przy O
 uprawnień zamiast błędu (użytkownik bez SELECT_CATALOG_ROLE widzi to, do czego ma dostęp). Zmiany (ALTER SYSTEM SET,
 blokada konta) to komendy z potwierdzeniem i strażnikiem zmian. Task Monitor to wspólna lista `WorkspaceTaskCenter`
 w Workspace (nazwa bez kolizji z `BackgroundTask` SwiftUI); długie operacje uruchamia się przez `ws.tasks.run`.
+
+### D63 · 2026-10-23 — Funkcje Diagnostics/Tuning Pack za deklaracją licencji
+AWR, ASH, ADDM (Diagnostics Pack), SQL Monitor i SQL Tuning Advisor (Tuning Pack) działają tylko wtedy, gdy parametr
+bazy CONTROL_MANAGEMENT_PACK_ACCESS na nie pozwala i użytkownik zadeklarował licencję dla połączenia — przy pierwszym
+użyciu Pelikan pyta, a odpowiedź zapamiętuje w definicji połączenia (zmiana w edytorze połączenia). Agent nie ma do nich
+dostępu (PROMPT §7.3). W PDB migawki AWR mają DBID kontenera (`CON_DBID`), więc raporty używają go zamiast DBID z
+V$DATABASE. Oracle Free ma pakiety w licencji — testy działają na bazie testowej.
