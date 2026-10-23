@@ -70,6 +70,52 @@ extension TemplateLibrary {
                 end [Nazwa];
                 /
                 """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Pakiet testowy"), text: """
+                create or replace package test_[Pakiet] as
+                  --%suite([Opis=Testy pakietu])
+
+                  --%beforeall
+                  procedure przygotuj;
+
+                  --%test([Opis testu])
+                  procedure [Nazwa testu=pierwszy_test];
+                end;
+                /
+                create or replace package body test_[Pakiet] as
+                  procedure przygotuj is
+                  begin
+                    null;
+                  end;
+
+                  procedure [Nazwa testu] is
+                  begin
+                    [#]ut.expect(1).to_equal(1);
+                  end;
+                end;
+                /
+                """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Test (specyfikacja)"), text: """
+                --%test([Opis])
+                procedure [Nazwa];[#]
+                """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Test oczekujący wyjątku"), text: """
+                --%test([Opis])
+                --%throws([Wyjątek=no_data_found])
+                procedure [Nazwa];[#]
+                """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Kontekst"), text: """
+                --%context([Opis])
+                [#]
+                --%endcontext
+                """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Oczekiwanie"), text: """
+                ut.expect([Wartość]).[Matcher=*to_equal,not_to_equal,to_be_null,to_be_not_null,to_be_true,to_be_false,to_be_greater_than,to_be_less_than,to_be_like,to_match,to_have_count]([Oczekiwana]);[#]
+                """, isBuiltIn: true),
+            CodeTemplate(folder: "utPLSQL", name: L10n.tr("Porównanie kursorów"), text: """
+                open l_expected for [Zapytanie oczekiwane=select 1 x from dual];
+                open l_actual for [Zapytanie badane=select 1 x from dual];
+                ut.expect(l_actual).to_equal(l_expected).join_by('[Klucz=X]');[#]
+                """, isBuiltIn: true),
             CodeTemplate(folder: objectsFolder, name: L10n.tr("Widok"), text: """
                 create or replace view [Nazwa=nowy_widok] as
                 select [#]*

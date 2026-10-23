@@ -19,6 +19,8 @@ let package = Package(
     dependencies: [
         // Sterownik „thin” w czystym Swifcie (Apache 2.0) — commit z main po 1.0.0-rc.4 (poprawka dla Swift 6.4, D20).
         .package(url: "https://github.com/lovetodream/oracle-nio.git", revision: "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"),
+        // SHA-256 pobranych wydań utPLSQL na Linuksie (na macOS CryptoKit); już w grafie zależności przez OracleNIO.
+        .package(url: "https://github.com/apple/swift-crypto.git", "3.0.0"..<"5.0.0"),
     ],
     targets: [
         // Lekser, dzielenie skryptów, klasyfikacja poleceń, zmienne podstawiania — czysty Swift (także Linux).
@@ -37,7 +39,9 @@ let package = Package(
         // Sterownik „thin”: OracleNIO (bez Instant Client).
         .target(name: "PelikanThin", dependencies: ["PelikanDB", .product(name: "OracleNIO", package: "oracle-nio")], swiftSettings: strict),
         // Model stanu aplikacji i rejestr komend — bez AppKit.
-        .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL"], swiftSettings: strict),
+        .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL",
+                                                         .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))],
+                swiftSettings: strict),
 
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),

@@ -15,6 +15,19 @@ public enum UtplsqlRunner {
 
     static func reporterID() -> String { UUID().uuidString.replacingOccurrences(of: "-", with: "").uppercased() }
 
+    /// Inicjuje bufory reporterów przed startem producenta i konsumenta: `output_buffer.init` robi MERGE do
+    /// `ut_output_buffer_info_tmp`, a równoczesne pierwsze wstawienie z obu sesji kończy się ORA-00001 (wtedy konsument
+    /// czeka do limitu czasu). Po tym wywołaniu kolejne `init` tylko aktualizują istniejący wiersz.
+    static func initBuffers(_ reporters: [(type: String, id: String)], session s: any DatabaseSession) async throws {
+        var block = "begin\n"
+        var binds: [BindVariable] = []
+        for (i, r) in reporters.enumerated() {
+            block += "  declare r \(r.type) := \(r.type)(); begin r.set_reporter_id(:id\(i)); r.output_buffer.init(); end;\n"
+            binds.append(BindVariable(name: "id\(i)", value: .text(r.id)))
+        }
+        _ = try await s.execute(block + "end;", binds: binds)
+    }
+
     static func literalList(_ items: [String]) -> String {
         "ut_varchar2_list(" + items.map { "'" + $0.replacingOccurrences(of: "'", with: "''") + "'" }.joined(separator: ", ") + ")"
     }
@@ -45,6 +58,8 @@ public enum UtplsqlRunner {
             """
         var binds = [BindVariable(name: "rid", value: .text(rid))]
         if coverage { binds += [BindVariable(name: "sid", value: .text(sonarID)), BindVariable(name: "hid", value: .text(htmlID))] }
+        try await initBuffers([("ut_realtime_reporter", rid)] + (coverage ? [("ut_coverage_sonar_reporter", sonarID), ("ut_coverage_html_reporter", htmlID)] : []),
+                              session: producer)
         let produce = Task.detached { try await producer.execute(block, binds: binds) }
         activeProducers[run.id] = producer
         Task {
@@ -126,5 +141,83 @@ public enum UtplsqlRunner {
     /// z typem: `PACKAGE BODY PELIKAN_TEST.EMP_API`).
     nonisolated static func objectKey(fromCoveragePath p: String) -> String {
         p.trimmingCharacters(in: .whitespaces).uppercased()
+    }
+}
+
+/// Formaty eksportu wyników i pokrycia (UT-CI-001, UT-COV-003).
+public enum UtplsqlReportFormat: String, Sendable, CaseIterable {
+    case junit, sonarTests, teamcity, tap, coberturaCoverage, sonarCoverage, htmlCoverage
+
+    var reporter: String {
+        switch self {
+        case .junit: "ut_junit_reporter"
+        case .sonarTests: "ut_sonar_test_reporter"
+        case .teamcity: "ut_teamcity_reporter"
+        case .tap: "ut_tap_reporter"
+        case .coberturaCoverage: "ut_coverage_cobertura_reporter"
+        case .sonarCoverage: "ut_coverage_sonar_reporter"
+        case .htmlCoverage: "ut_coverage_html_reporter"
+        }
+    }
+
+    public var isCoverage: Bool { [.coberturaCoverage, .sonarCoverage, .htmlCoverage].contains(self) }
+
+    public var fileExtension: String {
+        switch self {
+        case .teamcity, .tap: "txt"
+        case .htmlCoverage: "html"
+        default: "xml"
+        }
+    }
+}
+
+extension UtplsqlRunner {
+    /// Uruchamia testy z jednym reporterem formatu i zwraca jego wyjście (eksport JUnit/Sonar/TeamCity/TAP, pokrycie).
+    public static func report(paths: [String], format: UtplsqlReportFormat, coverageSchemes: [String], in ws: Workspace, connectionID: UUID) async throws -> String {
+        let producer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: .utplsql("run")))
+        let consumer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: .utplsql("events")))
+        guard await version(producer) != nil else { throw CommandError.notAvailable(L10n.tr("utPLSQL nie jest zainstalowany albo niedostępny")) }
+        try await ws.guardModification(["BEGIN ut_runner.run; END;"], connectionID: connectionID)
+        let id = reporterID()
+        let cov = format.isCoverage && !coverageSchemes.isEmpty ? ", a_coverage_schemes => " + literalList(coverageSchemes.map { $0.uppercased() }) : ""
+        let block = """
+            declare r \(format.reporter) := \(format.reporter)();
+            begin r.set_reporter_id(:id); r.output_buffer.init();
+              ut_runner.run(a_paths => \(literalList(paths)), a_reporters => ut_reporters(r)\(cov)); end;
+            """
+        try await initBuffers([(format.reporter, id)], session: producer)
+        let produce = Task.detached { try await producer.execute(block, binds: [BindVariable(name: "id", value: .text(id))]) }
+        var out = ""
+        do {
+            try await consume(reporter: format.reporter, id: id, session: consumer) { out += $0 + "\n" }
+        } catch {
+            // Błąd producenta jest przyczyną — zgłaszany zamiast limitu czasu konsumenta.
+            _ = try await produce.value
+            throw error
+        }
+        _ = try await produce.value
+        return out
+    }
+
+    /// Skrypt SQL*Plus / SQLcl uruchamiający te same testy z reporterem JUnit (CI) — bez hasła: łączenie z wiersza
+    /// poleceń (pytanie o hasło albo wallet).
+    public static func cliScript(paths: [String], user: String, connectString: String) -> (sql: String, shell: String) {
+        let sql = """
+            -- \(L10n.tr("Testy utPLSQL z wiersza poleceń (wygenerowane przez Pelikana)"))
+            set serveroutput on size unlimited format truncated
+            set feedback off heading off pagesize 0 linesize 32767 trimspool on verify off
+            spool utplsql-junit.xml
+            exec ut.run(\(literalList(paths)), ut_junit_reporter());
+            spool off
+            exit
+            """
+        let shell = """
+            #!/bin/sh
+            # \(L10n.tr("Uruchamia testy utPLSQL; wynik JUnit w utplsql-junit.xml. Hasło: pytanie SQLcl/SQL*Plus albo wallet — nigdy w skrypcie."))
+            set -e
+            CONNECT="${PELIKAN_UT_CONNECT:-\(user)@\(connectString)}"
+            if command -v sql >/dev/null 2>&1; then sql -S -L "$CONNECT" @utplsql-run.sql; else sqlplus -S -L "$CONNECT" @utplsql-run.sql; fi
+            """
+        return (sql, shell)
     }
 }

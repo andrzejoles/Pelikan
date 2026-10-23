@@ -110,4 +110,50 @@ struct UtplsqlTests {
         for o in ["package test_pelikan_gen_p", "package pelikan_gen_p"] { _ = try? await s.execute("drop \(o)") }
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Eksport JUnit i Cobertura, skrypt CLI bez hasła")
+    func exports() async throws {
+        let (ws, id) = try workspace()
+        let schema = try await ws.metadata()!.currentSchema()
+        let junit = try await UtplsqlRunner.report(paths: ["\(schema).test_emp_api"], format: .junit, coverageSchemes: [], in: ws, connectionID: id)
+        #expect(junit.contains("<testsuites") && junit.contains("failures=\"1\""))
+        let teamcity = try await UtplsqlRunner.report(paths: ["\(schema).test_emp_api"], format: .teamcity, coverageSchemes: [], in: ws, connectionID: id)
+        #expect(teamcity.contains("##teamcity[testStarted"))
+        let cobertura = try await UtplsqlRunner.report(paths: ["\(schema).test_emp_api"], format: .coberturaCoverage, coverageSchemes: [schema], in: ws, connectionID: id)
+        #expect(cobertura.contains("<coverage"))
+        let r = try await ws.invoke("utplsql.cliScript", CommandArguments(["path": .string("\(schema).test_emp_api")]))
+        let sql = r.value?.objectValue?["sql"]?.stringValue ?? ""
+        #expect(sql.contains("ut_junit_reporter()") && sql.contains("spool utplsql-junit.xml"))
+        let c = TestDatabase.config!
+        #expect(!sql.contains(c.password) && !(r.value?.objectValue?["shell"]?.stringValue ?? "").contains(c.password))
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Debugowanie testu pod kursorem: zatrzymanie w procedurze testowej; historia i porównanie przebiegów")
+    func debugAndHistory() async throws {
+        let (ws, id) = try workspace()
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: id))
+        _ = try? await s.execute("alter package test_emp_api compile debug body")
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("test_emp_api"), "type": .string("PACKAGE")]))
+        let doc = try #require(ws.activeDocument)
+        let ns = doc.text as NSString
+        let body = ns.range(of: "package body", options: .caseInsensitive).location
+        let at = ns.range(of: "procedure get_salary_existing", options: .caseInsensitive, range: NSRange(location: body, length: ns.length - body)).location + 12
+        doc.selectedRange = at..<at
+        try await ws.invoke("utplsql.debugTest")
+        let test = try #require(ws.documents.last { $0.kind == .test })
+        let d = ws.debugger(for: test)
+        #expect(d.state == .paused && d.location?.name == "TEST_EMP_API")
+        await d.stop()
+        ws.breakpoints = []
+
+        let schema = try await ws.metadata()!.currentSchema()
+        let a = try await UtplsqlRunner.start(paths: ["\(schema).test_emp_api"], in: ws, connectionID: id)
+        await wait(a)
+        let b = try await UtplsqlRunner.start(paths: ["\(schema).test_emp_api.nested_context_#2"], in: ws, connectionID: id)
+        await wait(b)
+        #expect(ws.utplsqlHistory.prefix(2).map(\.id) == [b.id, a.id])
+        #expect(b.compare(with: a).isEmpty)          // te same stany wspólnych testów
+        await ws.sessions.disconnectAll()
+    }
 }

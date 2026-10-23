@@ -328,10 +328,11 @@ public final class SQLPlusEngine {
         }
         if total >= limit { await session.closeResultSet(rs.id); emit(L10n.tr("Pokazano pierwszy milion wierszy."), .info) }
         // COLUMN … NEW_VALUE: wartość z ostatniego wiersza do zmiennej podstawiania.
-        if let row = lastRow {
-            for (i, c) in rs.columns.enumerated() {
-                if let nv = state.columns[c.name.uppercased()]?.newValue { state.defines[nv.uppercased()] = row[i].format(workspace.settings.valueFormat) }
-            }
+        // Bez wierszy zmienna zachowuje wartość, a niezdefiniowana jest definiowana jako pusta (jak w SQL*Plus —
+        // na tym opiera się np. `select null as "1" from dual where 1=0` dla opcjonalnych parametrów skryptu).
+        for (i, c) in rs.columns.enumerated() {
+            guard let nv = state.columns[c.name.uppercased()]?.newValue?.uppercased() else { continue }
+            if let row = lastRow { state.defines[nv] = row[i].format(workspace.settings.valueFormat) } else if state.defines[nv] == nil { state.defines[nv] = "" }
         }
         if total == 0 { emit(L10n.tr("Nie wybrano wierszy.")) } else { feedback(L10n.tr("Wybrano wierszy: \(total)"), count: total) }
     }

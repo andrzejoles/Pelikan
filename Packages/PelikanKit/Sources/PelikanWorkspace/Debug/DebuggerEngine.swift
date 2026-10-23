@@ -198,7 +198,13 @@ public final class DebuggerEngine {
     /// Przerywa program (abort) i kończy sesję debugowania.
     public func stop() async {
         guard state == .paused || state == .running else { return }
-        if state == .paused { _ = try? await runtimeCall("dbms_debug.continue(ri, dbms_debug.abort_execution, 0)") }
+        // Program może przechwycić przerwanie (np. ut.run uruchamia dalsze testy) — przerwanie aż do zakończenia.
+        if state == .paused {
+            for _ in 0..<200 {
+                guard let info = try? await runtimeCall("dbms_debug.continue(ri, dbms_debug.abort_execution, 0)") else { break }
+                if info.terminated || info.reason == 15 || info.reason == 25 { break }
+            }
+        }
         _ = try? await execution?.value
         await cleanUp()
         location = nil
