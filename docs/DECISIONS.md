@@ -623,3 +623,10 @@ i hasła; token nie przechodzi przez Pelikana i nie jest zapisywany. Bez konta A
 się sprawdzić logowania, więc wiersz ⚠️ do potwierdzenia przez właściciela.
 **ORDS:** baza testowa (gvenzl/oracle-free) nie ma ORDS; Pelikan wykrywa jego brak, pokazuje moduły i obiekty AutoREST
 z widoków USER_ORDS_*, a włączenie REST generuje jako skrypt do okna SQL (jak DDL — bez samodzielnego wykonania).
+
+### D85 · 2026-10-23 — Synonimy w Query Builderze, porównanie worksetów, Git w projekcie
+Query Builder rozwija synonim (prywatny, PUBLIC, łańcuch do 8 poziomów) do tabeli lub widoku tylko po to, żeby pobrać
+kolumny — w SQL zostaje nazwa synonimu, a synonim PUBLIC jest bez schematu. Złączeń z kluczy obcych dla synonimów nie
+dodaje sam (klucze opisują tabelę, nie synonim) — złączenie ręczne. Porównanie worksetów zestawia tekst opisujący okna
+(typ, nazwa, stan, treść okna albo pliku) przeglądarką różnic. Stan Git projektu liczony poza wątkiem głównym przy
+otwarciu widoku i na żądanie (bez cyklicznego odpytywania).

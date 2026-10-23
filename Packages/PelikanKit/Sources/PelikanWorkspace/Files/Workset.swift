@@ -27,6 +27,21 @@ public struct Workset: Sendable, Codable, Hashable {
     }
 }
 
+extension Workset {
+    /// Opis tekstowy do porównania worksetów (PD-WSET-001): każde okno z typem, tytułem albo plikiem, stanem i treścią
+    /// (tekst okna albo — dla okna bez zmian — treść pliku z dysku).
+    public func comparisonText() -> String {
+        documents.map { d in
+            let name = d.filePath.map { ($0 as NSString).lastPathComponent } ?? d.title ?? L10n.tr("bez nazwy")
+            var head = "=== [\(d.kind.rawValue)] \(name)" + (d.modified ? " *" : "")
+            if let c = d.connectionID { head += "  @\(c.uuidString.prefix(8))" }
+            let body = d.text ?? d.filePath.flatMap { try? Data(contentsOf: URL(fileURLWithPath: $0)) }.map { TextFileCodec.decode($0).text }
+                ?? L10n.tr("(brak pliku)")
+            return head + "\n" + body
+        }.joined(separator: "\n\n") + "\n"
+    }
+}
+
 /// Układ okna głównego (UG 23.10 „Autosave desktop/layout”, PD-WSET-002): ramka, szerokość lewej kolumny, karta
 /// lewej kolumny, panel agenta.
 public struct WindowLayout: Sendable, Codable, Hashable {

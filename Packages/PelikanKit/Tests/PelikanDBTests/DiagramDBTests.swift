@@ -6,6 +6,23 @@ import Testing
 
 @Suite("Diagram i Query Builder na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
 struct DiagramDBTests {
+    @Test("Query Builder: synonim prywatny i PUBLIC rozwijane do tabeli; nazwa w SQL zostaje")
+    func synonyms() async throws {
+        let s = try await TestDatabase.connect()
+        let meta = SessionSchemaMetadata(session: s)
+        let owner = try #require(try await s.scalar("select user from dual"))
+        _ = try await s.execute("create or replace synonym pelikan_qb_emp for emp")
+        _ = try await s.execute("create or replace public synonym pelikan_qb_pub for \(owner).dept")
+        let p = try #require(try await meta.queryTable("pelikan_qb_emp"))
+        #expect(p.owner == owner && p.name == "PELIKAN_QB_EMP" && p.target.name == "EMP" && p.target.type == .table)
+        let pub = try #require(try await meta.queryTable("pelikan_qb_pub"))
+        #expect(pub.owner == "" && pub.name == "PELIKAN_QB_PUB" && pub.target.name == "DEPT")
+        #expect(try await meta.columns(owner: pub.target.owner, name: pub.target.name).contains { $0.name == "DNAME" })
+        _ = try await s.execute("drop synonym pelikan_qb_emp")
+        _ = try await s.execute("drop public synonym pelikan_qb_pub")
+        await s.close()
+    }
+
     @Test("Słownik: kolumny z PK, klucz obcy EMP → DEPT, zależności; diagram z linią FK; Query Builder ze złączeniem")
     func metadata() async throws {
         let s = try await TestDatabase.connect()

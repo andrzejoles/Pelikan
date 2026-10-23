@@ -11,6 +11,7 @@ struct ProjectView: View {
     @State private var findText = ""
     @State private var matches: [ProjectMatch] = []
     @State private var message = ""
+    @State private var git: ProjectGitStatus?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -23,7 +24,15 @@ struct ProjectView: View {
                 Button(L10n.tr("Make")) { run("project.make") }.disabled(workspace.project == nil)
             }
             if let p = workspace.project {
-                Text(p.name).font(.headline)
+                HStack {
+                    Text(p.name).font(.headline)
+                    if let g = git, let branch = g.branch {
+                        Label(branch + (g.ahead > 0 ? " ↑\(g.ahead)" : "") + (g.behind > 0 ? " ↓\(g.behind)" : ""), systemImage: "arrow.triangle.branch")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button { refreshGit() } label: { Image(systemName: "arrow.clockwise") }.help(L10n.tr("Odśwież stan Git"))
+                }
                 HStack {
                     Button(L10n.tr("Dodaj pliki…")) { addFiles() }
                     Button(L10n.tr("Dodaj zaznaczony obiekt")) { workspace.perform("project.addSelectedObject") }.disabled(workspace.selectedObject == nil)
@@ -72,6 +81,23 @@ struct ProjectView: View {
         }
         .padding(10)
         .frame(minWidth: 560, minHeight: 520)
+        .onAppear { refreshGit() }
+        .onChange(of: workspace.projectURL) { refreshGit() }
+    }
+
+    private func refreshGit() {
+        guard let p = workspace.project, let url = workspace.projectURL else { git = nil; return }
+        Task { git = await Task.detached { ProjectEngine.gitStatus(of: p, projectURL: url) }.value }
+    }
+
+    private func gitColor(_ s: GitFileState) -> Color {
+        switch s {
+        case .modified, .renamed: .orange
+        case .added: .green
+        case .deleted, .conflicted: .red
+        case .untracked: .blue
+        default: .secondary
+        }
     }
 
     private func row(_ item: ProjectItem) -> some View {
@@ -81,6 +107,9 @@ struct ProjectView: View {
                 TextField("", text: Binding(get: { workspace.project?.items[i].note ?? "" }, set: { v in mutate { $0.items[i].note = v } }))
             } else {
                 Text(item.title)
+            }
+            if let s = git?.items[item.id], !s.badge.isEmpty {
+                Text(s.badge).font(.caption.monospaced().bold()).foregroundStyle(gitColor(s)).help(s.displayName)
             }
             Spacer()
             TextField(L10n.tr("grupa"), text: Binding(get: { item.group ?? "" }, set: { v in

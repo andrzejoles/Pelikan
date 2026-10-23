@@ -69,6 +69,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Workset › Zapisz workset | `workset.save` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Przywróć workset | `workset.revert` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Zamknij workset | `workset.close` |  |  | Brak | 0 | PD-WSET-001 |
+| Workset › Porównaj worksety… | `workset.compare` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Usuń workset… | `workset.delete` |  |  | Brak | 0 | PD-WSET-001 |
 | Workset › Autozapis workseta | `workset.toggleAutosave` |  |  | Brak | 0 | PD-WSET-001 |
 
