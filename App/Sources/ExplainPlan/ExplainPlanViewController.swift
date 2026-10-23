@@ -48,7 +48,8 @@ struct PlanPanel: View {
     @Bindable var document: PelikanWorkspace.Document
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
-    @State private var showText = false
+    /// Widok planu: drzewo, diagram, flame graph kosztu, tekst DBMS_XPLAN (SD-PLAN-001).
+    @State private var mode = 0
 
     private var ordered: [PlanLine] { document.plan?.executionOrder ?? [] }
 
@@ -67,7 +68,16 @@ struct PlanPanel: View {
                 Button { step(1) } label: { Image(systemName: "forward") }.help(L10n.tr("Następny krok wykonania"))
                 Button { move(to: ordered.last) } label: { Image(systemName: "forward.end") }.help(L10n.tr("Ostatni krok wykonania"))
                 Spacer()
-                Toggle(L10n.tr("Tekst DBMS_XPLAN"), isOn: $showText).toggleStyle(.checkbox)
+                Picker("", selection: $mode) {
+                    Text(L10n.tr("Drzewo")).tag(0)
+                    Text(L10n.tr("Diagram")).tag(1)
+                    Text(L10n.tr("Flame graph")).tag(2)
+                    Text(L10n.tr("Tekst")).tag(3)
+                }
+                .pickerStyle(.segmented).fixedSize()
+                Button(L10n.tr("Porównaj")) { workspace.perform("plan.compare") }.disabled(document.previousPlan == nil)
+                    .help(L10n.tr("Porównaj z poprzednim planem okna"))
+                Button(L10n.tr("Autotrace")) { workspace.perform("tools.autotrace") }.disabled(document.isExecuting)
                 Menu(L10n.tr("Zapisz")) {
                     ForEach(PlanFormat.allCases, id: \.self) { f in
                         Button(f.rawValue.uppercased()) { workspace.perform("plan.export", CommandArguments(["format": .string(f.rawValue)])) }
@@ -77,7 +87,11 @@ struct PlanPanel: View {
                 .disabled(document.plan == nil)
             }
             if let e = document.planError { Text(e).foregroundStyle(.red).font(.callout).textSelection(.enabled) }
-            if showText, let plan = document.plan {
+            if mode == 1, let plan = document.plan {
+                PlanDiagramView(roots: plan.roots, selection: $selection)
+            } else if mode == 2, let plan = document.plan {
+                FlameGraphView(roots: plan.roots, selection: $selection)
+            } else if mode == 3, let plan = document.plan {
                 ScrollView([.horizontal, .vertical]) {
                     Text(plan.text).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).padding(4)
                 }

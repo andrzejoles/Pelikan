@@ -29,7 +29,10 @@ struct AgentSecurityTests {
         let reply = await Task.detached { try? Wire.readFrame(from: fd) }.value
         let decoded = reply.flatMap { try? JSONDecoder().decode(Wire.Reply.self, from: $0) }
         #expect(decoded?.type == "error")
-        #expect(env.controller.connectionEvents.contains { if case .rejected("no_hello", _) = $0 { true } else { false } })
+        // Zdarzenie trafia do kontrolera asynchronicznie (zadanie na głównym aktorze) — krótkie oczekiwanie.
+        let rejected = { env.controller.connectionEvents.contains { if case .rejected("no_hello", _) = $0 { true } else { false } } }
+        for _ in 0..<40 where !rejected() { try? await Task.sleep(for: .milliseconds(50)) }
+        #expect(rejected())
     }
 
     @Test("Brak tokenu, zły token, token zamkniętej sesji — odrzucone")
