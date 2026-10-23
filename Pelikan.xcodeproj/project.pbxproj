@@ -59,6 +59,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
+		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
 		DD90C5023ABF02A6EAE06E42 /* AgentUIController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */; };
@@ -125,6 +126,7 @@
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
+		553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7Views.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -299,6 +301,7 @@
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
+				553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */,
 				9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */,
 			);
 			path = SQLWindow;
@@ -648,6 +651,7 @@
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
+				D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,

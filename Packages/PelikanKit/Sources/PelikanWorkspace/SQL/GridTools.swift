@@ -222,6 +222,8 @@ public enum GridToolRequest {
     case compareRecords([GridTools.ColumnComparison])
     case compareResults(left: ResultTab, right: ResultTab)
     case columnToFiles(ResultTab)
+    /// Grupowanie z licznikami (DB-GRID-001): karta, kolumna, wartości z liczbą wystąpień.
+    case groupCounts(ResultTab, column: Int, counts: [GroupCount])
 }
 
 /// Komendy narzędzi siatki (PD-SQLW-013, 019, 020, 021, PD-GRID-016).

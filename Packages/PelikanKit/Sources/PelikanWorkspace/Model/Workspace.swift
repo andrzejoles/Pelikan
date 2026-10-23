@@ -61,6 +61,8 @@ public protocol UIServices: AnyObject {
     func showLoadTester()
     /// Okna narzędzi siatki (zapytania powiązane, porównania, kolumna do plików).
     func showGridTool(_ request: GridToolRequest)
+    /// Biblioteka snippetów (SC-SNIP-001).
+    func showSnippets()
     /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
     func exportDiagram(_ doc: Document, format: String)
     func copyDiagramImage(_ doc: Document)
@@ -124,6 +126,7 @@ extension UIServices {
     public func showEventMonitor() {}
     public func showLoadTester() {}
     public func showGridTool(_ request: GridToolRequest) {}
+    public func showSnippets() {}
     public func printHTML(_ html: String, title: String) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}
@@ -225,6 +228,10 @@ public final class Workspace {
     public let dataDirectory: URL?
     /// Szablony kodu (UG 31): wbudowane i użytkownika z katalogu danych.
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
+    /// Snippety (SC-SNIP-001): wbudowane i własne w `Snippets/snippets.json`.
+    @ObservationIgnored public private(set) lazy var snippets = SnippetLibrary(directory: dataDirectory?.appendingPathComponent("Snippets", isDirectory: true))
+    /// Panel wartości obok siatki wyników (DB-PANEL-001).
+    public var valuePanelVisible = false
     /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
     @ObservationIgnored public private(set) lazy var fileBrowser = FileBrowser(fileURL: dataDirectory?.appendingPathComponent("file-browser.json"))
     /// Worksety (UG 15) i zapisany układ okna (UG 23.10).

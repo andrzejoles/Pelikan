@@ -34,6 +34,8 @@ public struct SQLPlusState: Sendable {
     public var escapeChar: Character?
     public var sqlPrompt = "SQL> "
     public var execPause = false
+    /// SET SQLFORMAT (SC-CMD-002); nil — format SQL*Plus.
+    public var sqlFormat: SQLFormat?
 
     /// Zmienne podstawiania (DEFINE, &&, ACCEPT, COLUMN NEW_VALUE, parametry &1…).
     public var defines: [String: String] = [:]

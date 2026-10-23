@@ -32,7 +32,18 @@ public final class ResultGridModel {
         hasMore = true
     }
 
-    public var rowCount: Int { rows.count }
+    /// Liczba wierszy widoku (z filtrem lokalnym — tylko pasujące; DB-GRID-001).
+    public var rowCount: Int { order?.count ?? rows.count }
+    /// Liczba pobranych wierszy (bez filtra).
+    public var fetchedRowCount: Int { rows.count }
+
+    /// Filtr lokalny na pobranych wierszach (DB-GRID-001); nil — wszystkie.
+    public private(set) var filter: GridFilter?
+
+    public func setFilter(_ f: GridFilter?) {
+        filter = f
+        applySort()
+    }
 
     /// Sortowanie lokalne (UG 7.2): klucze w kolejności ważności; pusta lista — kolejność z bazy.
     public private(set) var sortKeys: [SortKey] = []
@@ -72,13 +83,16 @@ public final class ResultGridModel {
     }
 
     func applySort() {
-        guard !sortKeys.isEmpty else { order = nil; return }
+        guard !sortKeys.isEmpty || filter != nil else { order = nil; return }
         let keys = sortKeys
         let cols = columns
         let cs = sortCaseSensitive
         let data = rows
+        let fmt = format
+        let visible = filter.map { f in data.indices.filter { f.matches(data[$0], columns: cols, format: fmt) } } ?? Array(data.indices)
+        guard !keys.isEmpty else { order = visible; return }
         // Sortowanie stabilne: przy równych kluczach kolejność z bazy.
-        order = Array(data.indices).sorted { a, b in
+        order = visible.sorted { a, b in
             for k in keys {
                 let c = Self.compare(data[a][k.column], data[b][k.column], type: cols[k.column].type, caseSensitive: cs)
                 if c != .orderedSame { return k.ascending ? c == .orderedAscending : c == .orderedDescending }
@@ -143,7 +157,7 @@ public final class ResultGridModel {
             let batch = try await s.fetch(resultSet, maxRows: count)
             rows.append(contentsOf: batch.rows)
             hasMore = batch.hasMore
-            if resort, !sortKeys.isEmpty { applySort() }   // sortowane są pobrane wiersze — po dociągnięciu na nowo
+            if resort, !sortKeys.isEmpty || filter != nil { applySort() }   // sortowane są pobrane wiersze — po dociągnięciu na nowo
             if !batch.hasMore { sessionRef = nil }
         } catch let e as OracleError {
             lastError = e.message
@@ -161,7 +175,7 @@ public final class ResultGridModel {
             await fetchMore(10_000, resort: false)
             if rows.count == before { break }
         }
-        if !sortKeys.isEmpty { applySort() }
+        if !sortKeys.isEmpty || filter != nil { applySort() }
     }
 
     /// Zamyka kursor (zamknięcie karty, ponowne wykonanie).

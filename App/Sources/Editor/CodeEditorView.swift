@@ -564,6 +564,24 @@ final class CodeTextView: NSTextView {
 
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        // Obiekt z Object Browsera upuszczony z klawiszem Option: wygenerowany kod zamiast nazwy (SD-GEN-001).
+        if NSEvent.modifierFlags.contains(.option),
+           let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
+           let ws = (NSApp.delegate as? AppDelegate)?.workspace {
+            let parts = raw.components(separatedBy: "\u{1}")
+            if parts.count == 3, let type = DBObjectType(rawValue: parts[2]) {
+                let kind: CodeGenerator.Kind? = [.table, .view, .materializedView, .synonym].contains(type) ? .select
+                    : [.procedure, .function].contains(type) ? .call : nil
+                if let kind {
+                    let i = characterIndexForInsertion(at: convert(sender.draggingLocation, from: nil))
+                    setSelectedRange(NSRange(location: i, length: 0))
+                    window?.makeFirstResponder(self)
+                    ws.perform("ob.generateCode", CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2]),
+                                                                    "kind": .string(kind.rawValue)]))
+                    return true
+                }
+            }
+        }
         if let urls = sender.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             NSApp.delegate.flatMap { $0 as? AppDelegate }?.application(NSApp, open: urls)
             return true

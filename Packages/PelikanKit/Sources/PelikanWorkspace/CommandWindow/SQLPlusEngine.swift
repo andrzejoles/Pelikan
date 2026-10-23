@@ -220,7 +220,7 @@ public final class SQLPlusEngine {
             for (name, v) in r.outBinds { state.binds[name.uppercased()]?.value = v }
             switch r.kind {
             case .query:
-                if let rs = r.resultSet { try await printQuery(rs, session: session) }
+                if let rs = r.resultSet { try await printQuery(rs, session: session, sql: sql) }
             case .dml:
                 feedback(L10n.tr("Wierszy: \(r.rowsAffected)"), count: Int(r.rowsAffected))
                 document.transactionOpen = true
@@ -309,8 +309,14 @@ public final class SQLPlusEngine {
         state.lastCompiled = (type, owner.map(clean), clean(name))
     }
 
-    func printQuery(_ rs: ResultSetDescriptor, session: any DatabaseSession) async throws {
+    func printQuery(_ rs: ResultSetDescriptor, session: any DatabaseSession, sql: String = "") async throws {
         var formatter = TextResultFormatter(columns: rs.columns, state: state, format: workspace.settings.valueFormat)
+        var custom = state.sqlFormat.map {
+            SQLFormatter(format: $0, columns: rs.columns, valueFormat: workspace.settings.valueFormat,
+                         table: ResultExporter.tableName(fromQuery: sql) ?? "TABELA")
+        }
+        if let c = custom { let h = c.header(); if !h.isEmpty { emit(h.joined(separator: "\n")) } }
+        defer { if let c = custom { let f = c.footer(); if !f.isEmpty { emit(f.joined(separator: "\n")) } } }
         var total = 0
         var first = true
         var lastRow: [OracleValue]?
@@ -319,7 +325,7 @@ public final class SQLPlusEngine {
             if cancelled { session.breakExecution(); await session.closeResultSet(rs.id); emit(L10n.tr("Przerwano"), .info); return }
             let batch = try await session.fetch(rs.id, maxRows: first ? 200 : 2000)
             if batch.rows.isEmpty, !first { break }
-            let lines = formatter.lines(batch.rows, first: first)
+            let lines = custom != nil ? custom!.lines(batch.rows) : formatter.lines(batch.rows, first: first)
             if !(first && batch.rows.isEmpty) { emit(lines.joined(separator: "\n")) }
             first = false
             total += batch.rows.count

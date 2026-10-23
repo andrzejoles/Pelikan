@@ -362,6 +362,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             ToolWindowController.show(key: "columnToFiles", title: L10n.tr("Kolumna do plików"), size: NSSize(width: 540, height: 200)) {
                 ColumnToFilesView(tab: tab)
             }
+        case let .groupCounts(tab, column, counts):
+            ToolWindowController.close(key: "groupCounts")
+            ToolWindowController.show(key: "groupCounts", title: L10n.tr("Grupowanie"), size: NSSize(width: 420, height: 420)) {
+                GroupCountsView(workspace: workspace, tab: tab, column: column, counts: counts)
+            }
+        }
+    }
+
+    func showSnippets() {
+        ToolWindowController.show(key: "snippets", title: L10n.tr("Snippety"), size: NSSize(width: 420, height: 520)) {
+            SnippetsView(workspace: workspace)
         }
     }
 

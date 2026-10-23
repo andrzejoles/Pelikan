@@ -47,6 +47,9 @@ extension SQLPlusEngine {
         switch cmd {
         case "PROMPT":
             emit(Self.rest(line), .output)
+        case "SET" where upper.first.map({ $0.count >= 5 && "SQLFORMAT".hasPrefix($0) }) == true:
+            // SET SQLFORMAT format [argumenty] — reszta linii należy do formatu (np. delimited | " ").
+            state.sqlFormat = try SQLFormat.parse(Array(args.dropFirst()))
         case "SET":
             // Kilka opcji w jednej linii: SET FEEDBACK ON TIMING ON; SERVEROUTPUT ON SIZE UNLIMITED FORMAT WRAPPED.
             var i = 0
@@ -229,6 +232,8 @@ extension SQLPlusEngine {
             try await showErrors(Array(args.dropFirst()))
         case "ALL":
             emit(state.summary.joined(separator: "\n"))
+        case "SQLFORMAT", "SQLFO", "SQLFOR", "SQLFORM", "SQLFORMA":
+            emit(L10n.tr("SQL Format: \(state.sqlFormat?.name ?? "default")"))
         case "SPOOL", "SPOO":
             emit(state.spoolURL.map { L10n.tr("spool ON: \($0.path)") } ?? L10n.tr("spool OFF"))
         case "SQLCODE", "SQLCO":
