@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T12:00:03+02:00",
+  "heartbeat": "2026-10-23T12:30:48+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 5 / baza — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, użytkownik proxy), 15 narzędzi odczytu, run_query READ ONLY z limitami i maskowaniem, open_object; 4 testy na bazie (D34)",
     "Etap 4 (utPLSQL) zamknięty — D32; PR #34 scalony",
     "Etap 4 / utPLSQL — instalacja i aktualizacja z oficjalnego wydania (suma kontrolna, okno poleceń, tylko dev/test, po potwierdzeniu; konto właściciela z losowym hasłem i zablokowane); COLUMN NEW_VALUE bez wierszy jak w SQL*Plus — test instalacji obok w osobnym schemacie",
     "Etap 4 / utPLSQL — eksport JUnit/Sonar/TeamCity/TAP i pokrycia Cobertura/Sonar/HTML, skrypt CLI bez hasła (sprawdzony w SQL*Plus), ostrzeżenie o pokryciu, szablony adnotacji, historia i porównanie przebiegów, debugowanie testu pod kursorem; naprawa wyścigu buforów reportera (ORA-00001) i konfliktu skrótu ⌥⌘U",
@@ -91,8 +92,7 @@
     "PR #13 scalony (parser strukturalny, Zawartość kodu, nawigacja)",
     "Etap 2 / zwijanie kodu: bloki, IF, LOOP, CASE z parsera; ▸/▾ w marginesie (klik), ⌥⌘← / ⌥⌘→, Zwiń wszystko / Rozwiń wszystko, znacznik ⋯ przy zwiniętej linii, zwinięcia przesuwane przy edycji i rozwijane, gdy zaznaczenie trafia w ukryty tekst — 3 testy",
     "Etap 2 / parser strukturalny PL/SQL (ADR 0002): zarys jednostek, podprogramów z parametrami i typem zwracanym, deklaracji (zmienne, stałe, kursory, typy, wyjątki), bloków zagnieżdżonych; panel Zawartość kodu ze śledzeniem kursora, ścieżka Code Hierarchy, Przejdź do deklaracji (⌃⌥D / ⌃⌘J / Cmd+klik) — lokalnie i do obiektów bazy; zakresy zwijania; zarys pakietu 50 000 linii poniżej limitu — 7 testów",
-    "PR #12 scalony (Program Window), wersja 2.2.0",
-    "Etap 2 / Program Window: karty jednostek (specyfikacja, ciało…) z przejściem, F8 kompiluje jednostki po kolei w sesji kompilacji z PLSQL_WARNINGS, zatrzymanie przy błędzie i kursor w linii błędu, lista błędów i ostrzeżeń z przejściem, wskaźniki zmieniony (niebieski) / nieskompilowany (żółty); poprawka: margines numerów linii nie zamalowuje widoków nad edytorem — 2 testy (1 na bazie)"
+    "PR #12 scalony (Program Window), wersja 2.2.0"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

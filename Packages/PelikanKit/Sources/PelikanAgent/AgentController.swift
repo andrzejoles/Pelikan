@@ -125,6 +125,9 @@ public final class AgentController: AgentInvocationGate {
         mcpServers[id] = nil
         sessions.removeAll { $0.id == id }
         pending.removeAll { $0.sessionID == id }
+        // ROLLBACK niezatwierdzonych zmian agenta i zamknięcie jego sesji bazy (PROMPT §7.3 p.5).
+        let ws = workspace
+        Task { await ws.closeAgentDatabase(session: id) }
         onSessionClosed?(id)
         log.write(session: session, ["event": "session_end"])
     }

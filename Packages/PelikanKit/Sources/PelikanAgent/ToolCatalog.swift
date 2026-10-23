@@ -27,6 +27,21 @@ public enum ToolCatalog {
         Entry("replace_range", "agent.replaceRange"),
         Entry("navigate_to", "agent.navigate"),
         Entry("format_code", "agent.format"),
+        Entry("open_object", "agent.openObject"),
+        Entry("search_objects", "agent.searchObjects"),
+        Entry("describe_object", "agent.describe"),
+        Entry("get_source", "agent.source"),
+        Entry("get_ddl", "agent.ddl"),
+        Entry("get_dependencies", "agent.dependencies"),
+        Entry("find_usages", "agent.findUsages"),
+        Entry("run_query", "agent.query"),
+        Entry("explain_plan", "agent.explain"),
+        Entry("get_compile_errors", "agent.compileErrors"),
+        Entry("get_dbms_output", "agent.dbmsOutput"),
+        Entry("list_tests", "agent.listTests"),
+        Entry("get_test_results", "agent.testResults"),
+        Entry("get_coverage", "agent.coverage"),
+        Entry("session_list", "agent.sessions"),
     ]
 
     public static func entry(named name: String) -> Entry? { entries.first { $0.tool == name } }

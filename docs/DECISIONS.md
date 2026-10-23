@@ -251,3 +251,13 @@ aplikacji są dla agenta dostępne przez `run_command` tylko z jawnej listy (`Ag
 programu i testu, nawigacja, formatowanie i operacje na tekście edytora). Heurystyka „skutki tylko w interfejsie” nie
 wystarcza: część takich komend czyta bazę sesjami użytkownika (np. otwarcie okna testu z argumentami procedury), co
 ominęłoby osobnego użytkownika bazy agenta i maskowanie, a skrypt CLI utPLSQL zawiera łańcuch połączenia.
+
+### D34 · 2026-10-23 — Sesja bazy agenta, odczyt i maskowanie
+Agent ma na każdym połączeniu własną sesję (`SessionPurpose.agent`), z `MODULE='Pelikan agent'`, `ACTION` = nazwa
+narzędzia i `CLIENT_INFO` z identyfikatorem sesji agenta. Osobny użytkownik bazy agenta jest realizowany połączeniem
+proxy `główny[agent]` (`ALTER USER agent GRANT CONNECT THROUGH główny`) — bez drugiego hasła w Pęku kluczy, a sesja ma
+wyłącznie uprawnienia użytkownika agenta. `run_query` przyjmuje jedno SELECT/WITH bez `FOR UPDATE` i bez funkcji
+zdefiniowanych w klauzuli WITH, wykonuje je w transakcji `READ ONLY` (gdy agent ma niezatwierdzone DML — w tej
+transakcji, żeby jej nie wycofać) z limitem wierszy, czasu wywołania i rozmiaru wyniku. Maskowanie działa po nazwie
+kolumny (ostatni człon wpisu), niezależnie od tabeli, a zapytanie odwołujące się do kolumny maskowanej jest odrzucane
+— granicą pozostają uprawnienia użytkownika bazy (SECURITY §3).
