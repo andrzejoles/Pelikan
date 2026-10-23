@@ -7,6 +7,29 @@ import Testing
 @MainActor
 @Suite("Polecenia własne okna poleceń na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)
 struct PelikanCommandsTests {
+    @Test("BREAK i COMPUTE na zapytaniu, GET i / z pliku (PD-CMDW-004)")
+    func breakCompute() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-bc-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try "select deptno, sal from emp\nwhere deptno in (10, 20)\norder by deptno, sal\n/\n".write(to: dir.appendingPathComponent("q.sql"), atomically: true, encoding: .utf8)
+        let doc = ws.newDocument(.command)
+        doc.connectionID = def.id
+        let e = ws.sqlplusEngine(for: doc)
+        let outcome = await e.run("cd \(dir.path)\nbreak on deptno skip 1 on report\ncompute sum of sal on deptno report\nget q nolist\n/")
+        let out = doc.console.map(\.text).joined(separator: "\n")
+        #expect(outcome == .finished && !doc.console.contains { $0.kind == .error }, "\(out)")
+        let sums = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)).queryAll("select sum(sal) from emp where deptno in (10, 20) group by rollup(deptno) order by deptno nulls last")
+        for row in sums.rows { #expect(out.contains(row[0].format(.default)), "\(out)") }
+        #expect(out.components(separatedBy: "\nsum ").count == 4, "\(out)")
+    }
+
     @Test("CD/DIR, EXPORT TABLES i OBJECTS, BEAUTIFY, ZIP, RECOMPILE, QUERYDATA, INFO, EDIT bez argumentu")
     func commands() async throws {
         let c = TestDatabase.config!

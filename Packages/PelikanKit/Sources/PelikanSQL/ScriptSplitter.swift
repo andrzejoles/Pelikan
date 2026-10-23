@@ -75,7 +75,15 @@ public enum ScriptSplitter {
             while ti < tokens.count, tokens[ti].kind == .whitespace || tokens[ti].kind == .newline { ti += 1 }
             guard ti < tokens.count else { break }
 
-            // Samotny `/` po poleceniu zakończonym `;` — tylko separator.
+            // Samotny `/` po poleceniu zakończonym `;` — tylko separator. W Command Window w innym miejscu (na początku,
+            // po poleceniu SQL*Plus, po bloku) wykonuje bufor SQL, jak w SQL*Plus (np. GET plik, potem `/`).
+            if isLoneSlash(ti), mode == .commandWindow, !lastWasSemicolonTerminated {
+                let t = tokens[ti]
+                out.append(ScriptStatement(text: "/", start: t.start, end: t.end, fullEnd: t.end, line: lineOf(t.start),
+                                           isPLSQL: false, terminator: .endOfLine, sqlplusCommand: nil, category: .sqlplus))
+                ti += 1
+                continue
+            }
             if isLoneSlash(ti) {
                 ti += 1
                 lastWasSemicolonTerminated = false

@@ -31865,6 +31865,62 @@
         }
       }
     },
+    "Nie zdefiniowano BREAK." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No BREAK defined."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein BREAK definiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay BREAK definido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BREAK не визначено."
+          }
+        }
+      }
+    },
+    "Nie zdefiniowano COMPUTE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No COMPUTE defined."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein COMPUTE definiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay COMPUTE definido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPUTE не визначено."
+          }
+        }
+      }
+    },
     "Nie znaleziono" : {
       "localizations" : {
         "en" : {
@@ -54965,6 +55021,90 @@
         }
       }
     },
+    "SP2-0023: Nie znaleziono ciągu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: String not found."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Zeichenfolge nicht gefunden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Cadena no encontrada."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Рядок не знайдено."
+          }
+        }
+      }
+    },
+    "SP2-0025: Nieprawidłowy format polecenia CHANGE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Invalid CHANGE command format."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Ungültiges Format des CHANGE-Befehls."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Formato del comando CHANGE no válido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Неправильний формат команди CHANGE."
+          }
+        }
+      }
+    },
+    "SP2-0042: INPUT wymaga tekstu nowej linii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT requires the text of the new line."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT erfordert den Text der neuen Zeile."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT requiere el texto de la nueva línea."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT потребує тексту нового рядка."
+          }
+        }
+      }
+    },
     "SP2-0042: brak polecenia systemu po HOST" : {
       "localizations" : {
         "en" : {
@@ -54989,6 +55129,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0042: немає системної команди після HOST"
+          }
+        }
+      }
+    },
+    "SP2-0082: COMPUTE wymaga funkcji, OF kolumna i ON kolumna albo REPORT." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE requires a function, OF column and ON column or REPORT."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE erfordert eine Funktion, OF Spalte und ON Spalte oder REPORT."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE requiere una función, OF columna y ON columna o REPORT."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE потребує функції, OF стовпець і ON стовпець або REPORT."
+          }
+        }
+      }
+    },
+    "SP2-0084: Brak nazwy kolumny po ON." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Missing column name after ON."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Spaltenname nach ON fehlt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Falta el nombre de columna después de ON."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Бракує назви стовпця після ON."
+          }
+        }
+      }
+    },
+    "SP2-0087: Nieznana funkcja COMPUTE: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Unknown COMPUTE function: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Unbekannte COMPUTE-Funktion: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Función COMPUTE desconocida: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Невідома функція COMPUTE: %@"
           }
         }
       }
@@ -55021,6 +55245,62 @@
         }
       }
     },
+    "SP2-0107: Nic do zapisania — bufor SQL jest pusty." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nothing to save — the SQL buffer is empty."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nichts zu speichern — der SQL-Puffer ist leer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nada que guardar: el búfer SQL está vacío."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Нічого зберігати — буфер SQL порожній."
+          }
+        }
+      }
+    },
+    "SP2-0110: Podaj nazwę pliku." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Specify a file name."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Geben Sie einen Dateinamen an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Indique un nombre de archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Вкажіть назву файлу."
+          }
+        }
+      }
+    },
     "SP2-0135: Symbol %@ nie jest zdefiniowany." : {
       "localizations" : {
         "en" : {
@@ -55045,6 +55325,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0135: Symbol %@ ist nicht definiert."
+          }
+        }
+      }
+    },
+    "SP2-0158: Nieznana opcja BREAK: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Unknown BREAK option: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Unbekannte BREAK-Option: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Opción BREAK desconocida: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Невідомий параметр BREAK: %@"
           }
         }
       }
@@ -55105,6 +55413,34 @@
         }
       }
     },
+    "SP2-0160: Nie można otworzyć pliku %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Unable to open file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Datei %@ kann nicht geöffnet werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: No se puede abrir el archivo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Не вдається відкрити файл %@"
+          }
+        }
+      }
+    },
     "SP2-0223: Bufor SQL jest pusty." : {
       "localizations" : {
         "en" : {
@@ -55129,6 +55465,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0223: SQL-Puffer ist leer."
+          }
+        }
+      }
+    },
+    "SP2-0226: Nieprawidłowy numer linii: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Invalid line number: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Ungültige Zeilennummer: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Número de línea no válido: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Неправильний номер рядка: %@"
           }
         }
       }
@@ -55185,6 +55549,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0268: Ungültiger numerischer Wert."
+          }
+        }
+      }
+    },
+    "SP2-0285: Składnia: STORE SET plik [CREATE|REPLACE|APPEND]" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Syntax: STORE SET file [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Syntax: STORE SET Datei [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Sintaxis: STORE SET archivo [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Синтаксис: STORE SET файл [CREATE|REPLACE|APPEND]"
           }
         }
       }
@@ -55325,6 +55717,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0310: Datei „%@“ kann nicht geöffnet werden."
+          }
+        }
+      }
+    },
+    "SP2-0540: Plik %@ już istnieje. Użyj opcji REPLACE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: File %@ already exists. Use the REPLACE option."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: Die Datei %@ existiert bereits. Verwenden Sie die Option REPLACE."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: El archivo %@ ya existe. Use la opción REPLACE."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: Файл %@ уже існує. Використайте параметр REPLACE."
           }
         }
       }
@@ -80553,6 +80973,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Makro „%@“ gespeichert"
+          }
+        }
+      }
+    },
+    "Zapisano plik %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei %@ gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo %@ guardado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@ збережено"
           }
         }
       }

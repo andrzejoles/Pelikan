@@ -9,11 +9,80 @@ public struct TextResultFormatter {
     public let format: ValueFormat
     private(set) var widths: [Int] = []
     private var linesOnPage = 0
+    // BREAK/COMPUTE (PD-CMDW-004): kolumny przerwań, ostatnie wartości i akumulatory grup (ostatni — REPORT).
+    private var breakColumns: [(index: Int, spec: SQLPlusBreak)] = []
+    private var lastKeys: [String]?
+    private var groups: [ComputeAccumulator] = []
+    private var report = ComputeAccumulator()
 
     public init(columns: [ColumnInfo], state: SQLPlusState, format: ValueFormat) {
         self.columns = columns
         self.state = state
         self.format = format
+        let names = columns.map { $0.name.uppercased() }
+        breakColumns = state.breaks.compactMap { b in names.firstIndex(of: b.column).map { ($0, b) } }
+        groups = Array(repeating: ComputeAccumulator(), count: breakColumns.count)
+    }
+
+    private var computeColumns: Set<Int> {
+        let names = columns.map { $0.name.uppercased() }
+        return Set(state.computes.flatMap(\.of).compactMap { names.firstIndex(of: $0) })
+    }
+
+    /// Linie podsumowania COMPUTE grupy (kolumna przerwania albo REPORT).
+    private func summary(on breakName: String, at breakIndex: Int?, _ acc: ComputeAccumulator) -> [String] {
+        let names = columns.map { $0.name.uppercased() }
+        var out: [String] = []
+        for c in state.computes where c.on.contains(breakName) {
+            let of = Set(c.of.compactMap { names.firstIndex(of: $0) })
+            guard !of.isEmpty else { continue }
+            let labelColumn = breakIndex ?? 0
+            let rule = columns.indices.map { i -> String in
+                if of.contains(i) { return String(repeating: "-", count: widths[i]) }
+                if i == breakIndex { return String(repeating: "*", count: widths[i]) }
+                return String(repeating: " ", count: widths[i])
+            }
+            out.append(rule.joined(separator: state.colSep).trimmingTrailingSpaces)
+            for f in c.functions {
+                let cells = columns.indices.map { i -> String in
+                    if of.contains(i) {
+                        let v = acc.value(f, column: i)
+                        let s = v.number.map { aggregate($0, column: i) } ?? v.text ?? ""
+                        let t = s.count > widths[i] ? String(repeating: "#", count: widths[i]) : s
+                        return String(repeating: " ", count: widths[i] - t.count) + t
+                    }
+                    if i == labelColumn {
+                        let l = c.label ?? f.rawValue
+                        let t = l.count > widths[i] ? String(l.prefix(widths[i])) : l
+                        return t + String(repeating: " ", count: widths[i] - t.count)
+                    }
+                    return String(repeating: " ", count: widths[i])
+                }
+                out.append(cells.joined(separator: state.colSep).trimmingTrailingSpaces)
+            }
+        }
+        return out
+    }
+
+    private func aggregate(_ d: Double, column i: Int) -> String {
+        if let fmt = state.columns[columns[i].name.uppercased()]?.format, !fmt.uppercased().hasPrefix("A") { return Self.number(d, format: fmt) }
+        if d == d.rounded(), abs(d) < 1e15 { return String(Int64(d)) }
+        var s = String(format: "%.6f", d)
+        while s.last == "0" { s.removeLast() }
+        if s.last == "." { s.removeLast() }
+        return s
+    }
+
+    /// Podsumowania otwartych grup i REPORT po ostatnim wierszu (wywołać raz, na końcu wyniku).
+    public mutating func finish() -> [String] {
+        guard lastKeys != nil else { return [] }
+        var out: [String] = []
+        for level in breakColumns.indices.reversed() {
+            out += summary(on: breakColumns[level].spec.column, at: breakColumns[level].index, groups[level])
+        }
+        out += summary(on: "REPORT", at: nil, report)
+        lastKeys = nil
+        return out
     }
 
     func heading(_ i: Int) -> String {
@@ -92,7 +161,27 @@ public struct TextResultFormatter {
                 out += headerLines()
                 linesOnPage = 0
             }
-            out.append(columns.indices.map { pad(cell(r[$0], column: $0), $0) }.joined(separator: state.colSep).trimmingTrailingSpaces)
+            var hidden = Set<Int>()
+            if !breakColumns.isEmpty || !state.computes.isEmpty {
+                let keys = breakColumns.map { cell(r[$0.index], column: $0.index) }
+                if let last = lastKeys {
+                    // Pierwszy poziom ze zmianą zamyka grupy od najgłębszej do niego (potem SKIP); kolumny przerwań
+                    // nad nim (bez zmiany) są ukrywane, chyba że DUPLICATES.
+                    let changed = keys.indices.first(where: { keys[$0] != last[$0] }) ?? breakColumns.count
+                    for level in (changed..<breakColumns.count).reversed() {
+                        out += summary(on: breakColumns[level].spec.column, at: breakColumns[level].index, groups[level])
+                        groups[level] = ComputeAccumulator()
+                    }
+                    out += Array(repeating: "", count: breakColumns[changed...].map(\.spec.skip).max() ?? 0)
+                    hidden = Set(breakColumns[..<changed].filter { !$0.spec.duplicates }.map(\.index))
+                }
+                lastKeys = keys
+                let of = computeColumns
+                for level in groups.indices { groups[level].add(r, columns: of) }
+                report.add(r, columns: of)
+            }
+            out.append(columns.indices.map { pad(hidden.contains($0) ? "" : cell(r[$0], column: $0), $0) }
+                .joined(separator: state.colSep).trimmingTrailingSpaces)
             linesOnPage += 1
         }
         return out

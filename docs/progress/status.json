@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T01:11:12+02:00",
+  "heartbeat": "2026-10-24T01:56:23+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,9 @@
     }
   ],
   "done": [
+    "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
+    "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela",
+    "Etap 8 zamknięty (D114): docs/STATUS.md z ograniczeniami i listą do potwierdzenia przez właściciela; PR #56 w CI, potem szkic wydania",
     "Etap 8: przebieg zrzutów w tle (scripts/screenshots.sh, D113) — 11 scenariuszy, znalezione i poprawione 2 błędy (karty edytora tabeli, rozdziały instrukcji)",
     "Etap 8 / audyt macierzy: scalone siatka i edytor (subagenty), Object Browser (filtry, foldery, preferencje), edytor tabeli 23ai, podpowiedzi kompilatora, HOST i krokowanie, DBMS_TRACE, tytuł okna, katalogi startowe; testy bazy 174/174",
     "Etap 8 / audyt obiektów i okna programu: włącz/wyłącz, kosz, CCFlags, odświeżenie MV, źródło do edytora, kompilacja próbna, zmiany w bazie, blok w oknie testu, pliki tylko do odczytu, MLE w oknie programu (D99)",
@@ -89,13 +92,10 @@
     "PR #28 i #29 scalone (profilery, zmienne globalne pakietu w debugerze)",
     "Etap 3 / wyniki: niejawne wyniki (DBMS_SQL.RETURN_RESULT) w karcie Wyniki okna testu; wykonanie zapytania albo bloku w sesji debugowanej (DBMS_DEBUG.EXECUTE, wiersze przez JSON — DBMS_SQL zablokowany) — 2 testy",
     "PR #26 i #27 scalone (debuger, rozszerzenia debugera)",
-    "Etap 3 / debuger: zmienne globalne pakietu (prywatne i publiczne), pomijanie inicjalizacji pakietów i obiektów SYS przy krokowaniu (preferencje)",
-    "PR #25 scalony (okno testu)",
-    "Etap 3 / profiler: liniowy DBMS_PROFILER (raport na linię z czasem, wykonaniami, udziałem, tekstem) i hierarchiczny DBMS_HPROF (funkcje, wywołania, czasy), statystyki sesji okna testu (różnica V$MYSTAT); tabele profilera tworzone za zgodą strażnika (D28) — 1 test na bazie",
-    "Etap 3 / debuger — rozszerzenia: DBMS_OUTPUT w trakcie debugowania, obserwowane wyrażenia, Ustaw wartość (SET_VALUE), punkty przerwania na kodach błędów, okno punktów przerwania, Dodaj informację debugowania (obiekt i preferencja kompilacji) — 1 test na bazie"
+    "Etap 3 / debuger: zmienne globalne pakietu (prywatne i publiczne), pomijanie inicjalizacji pakietów i obiektów SYS przy krokowaniu (preferencje)"
   ],
   "next": [
-    "Wstrzymane na prośbę właściciela (wyłączenie komputera). Do wznowienia: pełne testy bazy po scaleniu Etapu 7 i Etapu P, SD-NB/REP/… zrobione; pozostały SD-AUTH-001, SD-ORDS-001, debugowanie MLE, zamknięcie Etapów 6–7, Etap P faza 2 (pipeline, konsola)"
+    "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."
   ],
   "blockers": [],
   "questions": [],

@@ -88,6 +88,8 @@ extension SQLPlusEngine {
             case "SCR", "SCRE", "SCREE", "SCREEN": document.console.removeAll()
             case "COL", "COLU", "COLUM", "COLUMN", "COLUMNS": state.columns.removeAll()
             case "BUFF", "BUFFE", "BUFFER", "SQL": state.buffer = nil
+            case "BRE", "BREA", "BREAK", "BREAKS": state.breaks.removeAll()
+            case "COMP", "COMPU", "COMPUT", "COMPUTE", "COMPUTES": state.computes.removeAll()
             default: break
             }
         case "@", "@@", "START":
@@ -115,8 +117,8 @@ extension SQLPlusEngine {
             emit(L10n.tr("Rozłączono."))
         case "EXIT", "QUIT":
             return .exit
-        case "LIST":
-            emit(state.buffer ?? L10n.tr("SP2-0223: Bufor SQL jest pusty."), state.buffer == nil ? .error : .output)
+        case "LIST", "APPEND", "CHANGE", "DEL", "INPUT", "SAVE", "GET", "STORE", "BREAK", "COMPUTE":
+            try bufferCommand(cmd, args, line: line, baseDirectory: baseDirectory)
         case "RUN":
             guard let b = state.buffer else { throw SQLPlusError(L10n.tr("SP2-0103: Bufor SQL jest pusty.")) }
             emit(b, .echo)

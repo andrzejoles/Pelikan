@@ -865,3 +865,12 @@ decyzją — żadnego „do zrobienia”. Interfejs jest w pięciu językach, z 
 sprawdzanym w CI. `docs/STATUS.md` (generowany z macierzy) zbiera ograniczenia i listę rzeczy do potwierdzenia przez
 właściciela (AIX, Entra ID, ORDS, Kerberos/LDAP/DBMS_WM, Quick Look, asercje 26ai). Dalsze prace to domykanie wierszy ⚠️
 według priorytetów właściciela; szkic wydania po scaleniu zamknięcia.
+
+### D115 · 2026-10-24 — Command Window: bufor, BREAK/COMPUTE, bez COPY
+Bufor SQL ma linie i bieżącą linię (LIST, APPEND, CHANGE, DEL, INPUT jak w SQL*Plus; `APPEND ;;` dokleja średnik).
+GET/SAVE dopisują `.sql`, SAVE bez REPLACE nie nadpisuje pliku; STORE SET zapisuje polecenia SET do odtworzenia przez
+`@plik`. BREAK/COMPUTE działają w formatowaniu tekstowym wyniku (nie w SET SQLFORMAT): ukrywanie powtórzeń, SKIP, sumy
+grup od najgłębszej i REPORT na końcu. Samotny `/` w Command Window wykonuje bufor, chyba że kończy polecenie zakończone
+`;` (wtedy pozostaje separatorem) — wcześniej był pomijany zawsze. COPY pominięte: Oracle oznacza je jako przestarzałe,
+a składnia wymaga haseł w poleceniu (`user/hasło@baza`), co łamie zasadę haseł tylko w Pęku kluczy; kopiowanie danych
+między połączeniami robi Transfer danych (DB-XFER-001).
