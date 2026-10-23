@@ -62,3 +62,48 @@ struct ProgramSaveTests {
         #expect(BuiltinCommands.suggestedFileName(pkg) == ("p", "pck"))
     }
 }
+
+@MainActor
+@Suite("Okno testu bez bazy")
+struct TestWindowOfflineTests {
+    @Test("Skanowanie zmiennych, synchronizacja listy, stos błędu z komunikatu")
+    func offline() {
+        #expect(TestRunner.scan("begin :a := :B + :a; :new.x := 1; end;") == ["a", "B"])
+        let ws = Workspace()
+        let doc = ws.newDocument(.test, text: "begin :x := 1; end;")
+        TestRunner.synchronize(doc)
+        doc.testVariables[0].type = .integer
+        doc.text = "begin :x := :y; end;"
+        TestRunner.synchronize(doc)
+        #expect(doc.testVariables.map(\.name) == ["x", "y"] && doc.testVariables[0].type == .integer)
+        doc.text = "begin open :rc for select 1 from dual; end;"
+        TestRunner.synchronize(doc)
+        #expect(doc.testVariables.first?.type == .cursor)
+        let st = TestRunner.errorStack("ORA-20001: x\nORA-06512: at \"SCOTT.P\", line 4\nORA-06512: at line 3")
+        #expect(st == [ErrorStackFrame(owner: "SCOTT", unit: "P", line: 4), ErrorStackFrame(owner: "", unit: "", line: 3)])
+    }
+}
+
+@MainActor
+@Suite("Plik okna testu")
+struct TestScriptFileTests {
+    @Test("Zapis i wczytanie .tst, zwykły tekst bloku, skrypt SQL*Plus")
+    func roundTrip() throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.test, text: "begin\n  :r := :a * 2;\nend;")
+        TestRunner.synchronize(doc)
+        doc.testVariables[0].type = .integer
+        doc.testVariables[1].type = .integer
+        doc.testVariables[1].value = "21"; doc.testVariables[1].isNull = false
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-\(UUID().uuidString).tst")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try ws.save(doc, to: url)
+        ws.close(doc.id)
+        let back = try ws.openFile(url)
+        #expect(back.kind == .test && back.text == "begin\n  :r := :a * 2;\nend;")
+        #expect(back.testVariables.map(\.name) == ["r", "a"] && back.testVariables[1].value == "21" && back.testVariables[1].type == .integer)
+        #expect(TestScriptFile.decode("begin null; end;").block == "begin null; end;")
+        let s = TestScriptFile(block: back.text, variables: back.testVariables).sqlPlusScript()
+        #expect(s.contains("variable r NUMBER\nvariable a NUMBER\nexec :a := 21\nbegin") && s.hasSuffix("end;\n/\nprint r\nprint a\n"))
+    }
+}

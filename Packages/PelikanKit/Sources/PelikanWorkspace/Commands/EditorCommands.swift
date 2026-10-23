@@ -47,6 +47,34 @@ enum EditorCommands {
                 try await ctx.workspace.invoke("file.newFromTemplate", CommandArguments(["template": .string(TemplateLibrary.objectsFolder + "/" + L10n.tr("Widok"))]),
                                                invoker: ctx.invoker)
             },
+            Command(CommandDescriptor(id: "ob.test", title: L10n.tr("Testuj"), category: .tools, submenu: L10n.tr("Obiekt"),
+                                      parameters: ObjectCommands.objectParams + [
+                                          CommandParameter("member", .string, L10n.tr("Podprogram pakietu")),
+                                          CommandParameter("overload", .integer, L10n.tr("Numer przeciążenia")),
+                                      ],
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno testu z wywołaniem procedury lub funkcji (notacja nazwana) i zmiennymi parametrów."),
+                                      feature: "PD-TEST-004"),
+                    validate: { ws in ws.selectedObject.map { [.procedure, .function].contains($0.type) } ?? false }) { ctx in
+                let (o, m) = try await ObjectCommands.target(ctx)
+                let member = ctx.arguments.string("member")
+                let (text, vars) = try await TestRunner.script(for: o, member: member, overload: ctx.arguments.int("overload").map(Int.init), metadata: m)
+                let doc = ctx.workspace.newDocument(.test, text: text)
+                doc.testVariables = vars
+                doc.customTitle = L10n.tr("Test \(member ?? o.name)").lowercased()
+                return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
+            },
+            Command(CommandDescriptor(id: "test.saveAsSQLPlus", title: L10n.tr("Zapisz test jako skrypt SQL*Plus"), category: .file,
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno poleceń ze skryptem SQL*Plus odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)."),
+                                      feature: "PD-TEST-005"),
+                    validate: { $0.activeDocument?.kind == .test }) { ctx in
+                guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }
+                TestRunner.synchronize(d)
+                let script = TestScriptFile(block: d.text, variables: d.testVariables).sqlPlusScript()
+                let doc = ctx.workspace.newDocument(.command, text: script)
+                return CommandResult(message: doc.fullTitle, value: .string(script))
+            },
             Command(CommandDescriptor(id: "ob.editTable", title: L10n.tr("Edytuj definicję tabeli"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams, agent: .read, effect: .none,
                                       summary: L10n.tr("Otwiera edytor definicji tabeli (kolumny, klucze, warunki, indeksy); agent dostaje definicję jako DDL."),

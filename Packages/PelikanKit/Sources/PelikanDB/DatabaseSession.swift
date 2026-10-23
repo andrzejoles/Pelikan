@@ -231,6 +231,8 @@ public protocol DatabaseSession: AnyObject, Sendable {
     func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult
     func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch
     func closeResultSet(_ resultSet: ResultSetID) async
+    /// Opis kolumn otwartego kursora (np. REF CURSOR z OUT); pusta lista, gdy sterownik go nie zna.
+    func columns(of resultSet: ResultSetID) async -> [ColumnInfo]
 
     func commit() async throws
     func rollback() async throws
@@ -242,6 +244,8 @@ public protocol DatabaseSession: AnyObject, Sendable {
 }
 
 public extension DatabaseSession {
+    func columns(of resultSet: ResultSetID) async -> [ColumnInfo] { [] }
+
     func execute(_ sql: String, binds: [BindVariable] = []) async throws -> ExecutionResult {
         try await execute(sql, binds: binds, options: ExecuteOptions())
     }

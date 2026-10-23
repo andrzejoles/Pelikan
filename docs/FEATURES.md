@@ -240,12 +240,12 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| PD-TEST-001 | Test Window: blok PL/SQL + lista zmiennych (nazwa, typ, wartość), skanowanie zmiennych (auto) | UG 5.1, UG 23.21 | File > New > Test Window | 3 | P1 | Za zgodą | do zrobienia |
-| PD-TEST-002 | Typy zmiennych: Integer, Float, String, Date, Long, Long Raw, Cursor, CLOB/BLOB/BFile, PL/SQL String, Char, Substitution, Temporary CLOB/BLOB, Boolean | UG 5.3 | Test Window | 3 | P1 | — | do zrobienia |
-| PD-TEST-003 | Wykonanie: zmienione wartości na żółto, czas, Break, Commit/Rollback, AutoCommit after execute | UG 5.2, UG 23.21 | Test Window | 3 | P1 | Za zgodą | do zrobienia |
-| PD-TEST-004 | Test z Object Browsera (skrypt ze zmiennymi parametrów i wyniku, właściwe przeciążenie) | UG 5.1, NF14 | Object Browser > Test | 3 | P1 | Pełny | do zrobienia |
-| PD-TEST-005 | Zapis .tst (blok, zmienne, obserwowane), Load, zapis jako skrypt SQL*Plus | UG 5.4 | File > Save | 3 | P1 | Pełny | do zrobienia |
-| PD-TEST-006 | Stos błędu wykonania z kartami jednostek i liniami na czerwono | UG 5.5 | Test Window | 3 | P1 | Odczyt | do zrobienia |
+| PD-TEST-001 | Test Window: blok PL/SQL + lista zmiennych (nazwa, typ, wartość), skanowanie zmiennych (auto) | UG 5.1, UG 23.21 | File > New > Test Window | 3 | P1 | Za zgodą | ✅ test 👁 (blok, zmienne nazwa/typ/wartość, automatyczne skanowanie, Cursor po OPEN … FOR) |
+| PD-TEST-002 | Typy zmiennych: Integer, Float, String, Date, Long, Long Raw, Cursor, CLOB/BLOB/BFile, PL/SQL String, Char, Substitution, Temporary CLOB/BLOB, Boolean | UG 5.3 | Test Window | 3 | P1 | — | ⚠️ częściowo (Integer, Float, String, PL/SQL String, Char, Date, Timestamp, Long, Long Raw, Cursor, CLOB/BLOB, Boolean; bez BFile, Substitution jako podstawienia, tymczasowych LOB jako osobnych) ✅ test |
+| PD-TEST-003 | Wykonanie: zmienione wartości na żółto, czas, Break, Commit/Rollback, AutoCommit after execute | UG 5.2, UG 23.21 | Test Window | 3 | P1 | Za zgodą | ⚠️ częściowo (zmienione na żółto, czas, DBMS_OUTPUT; Break/Commit/Rollback z menu sesji; bez AutoCommit after execute) ✅ test |
+| PD-TEST-004 | Test z Object Browsera (skrypt ze zmiennymi parametrów i wyniku, właściwe przeciążenie) | UG 5.1, NF14 | Object Browser > Test | 3 | P1 | Pełny | ✅ test (notacja nazwana, wynik funkcji, typy z ALL_ARGUMENTS, podprogram pakietu i przeciążenie argumentem) |
+| PD-TEST-005 | Zapis .tst (blok, zmienne, obserwowane), Load, zapis jako skrypt SQL*Plus | UG 5.4 | File > Save | 3 | P1 | Pełny | ⚠️ częściowo (.tst w formacie Pelikana, wczytanie, skrypt SQL*Plus; bez zmiennych obserwowanych) ✅ test |
+| PD-TEST-006 | Stos błędu wykonania z kartami jednostek i liniami na czerwono | UG 5.5 | Test Window | 3 | P1 | Odczyt | ✅ test (stos z ORA-06512, linia bloku z błędem, klik otwiera jednostkę na linii) |
 | PD-TEST-007 | Ostrzeżenia ORA-04068 / ORA-29549 na pasku stanu | UG 5.6 | Test Window | 3 | P3 | — | do zrobienia |
 | PD-TEST-008 | Karty Results (SELECT), Output (DBMS_OUTPUT), HTP Output, niejawne wyniki 12c jako zmienne | UG 5.7–5.9, NF12 | Test Window | 3 | P2 | Odczyt | do zrobienia |
 | PD-TEST-009 | Standard Tests dla funkcji/procedur w menu kontekstowym | UG 5.13, NF12 | Test Window | 3 | P3 | Odczyt | do zrobienia |

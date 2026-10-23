@@ -23,6 +23,7 @@
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
+		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FB679B3AA90E719B503472 /* TemplatePane.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
@@ -48,6 +49,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00A838393A0802C7E216722E /* TestWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWindowViewController.swift; sourceTree = "<group>"; };
 		0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		100FC1DAA3B4236C5DCD0146 /* PelikanKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PelikanKit; path = Packages/PelikanKit; sourceTree = SOURCE_ROOT; };
 		229E7A0294B2BA8203F506AF /* BeautifierPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeautifierPane.swift; sourceTree = "<group>"; };
@@ -185,6 +187,14 @@
 			path = SQLWindow;
 			sourceTree = "<group>";
 		};
+		62AF99604A2C3C6CA9A3A1D6 /* TestWindow */ = {
+			isa = PBXGroup;
+			children = (
+				00A838393A0802C7E216722E /* TestWindowViewController.swift */,
+			);
+			path = TestWindow;
+			sourceTree = "<group>";
+		};
 		6D8CA0BC5B0BF89A556D1929 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
@@ -198,6 +208,7 @@
 				08A837C768E73A2A195BEB42 /* ProgramWindow */,
 				6047C9C37C3A0D921D8B27F2 /* SQLWindow */,
 				4C59A6A5B15CB75AB066AE33 /* Templates */,
+				62AF99604A2C3C6CA9A3A1D6 /* TestWindow */,
 				98C2053BF992EBE778C7C8F4 /* Tools */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
@@ -388,6 +399,7 @@
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,
+				69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */,
 				B06B954F55D4DE84C3468376 /* WindowListViewController.swift in Sources */,

@@ -155,6 +155,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         try await onQueue { [self] in try fetchSync(resultSet, maxRows: maxRows) }
     }
 
+    public func columns(of resultSet: ResultSetID) async -> [ColumnInfo] {
+        (try? await onQueue { [self] in resultSets[resultSet.raw]?.columns ?? [] }) ?? []
+    }
+
     public func closeResultSet(_ resultSet: ResultSetID) async {
         _ = try? await onQueue { [self] in closeSync(resultSet) }
     }

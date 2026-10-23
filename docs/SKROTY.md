@@ -45,6 +45,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
+| Zapisz test jako skrypt SQL*Plus | `test.saveAsSQLPlus` |  |  | Pełny | 0 | PD-TEST-005 |
 
 ## Edycja
 
@@ -153,6 +154,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Porównaj z aktywnym oknem | `ob.compare` |  |  | Odczyt | 0 | PD-OB-022 |
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
+| Obiekt › Testuj | `ob.test` |  |  | Pełny | 0 | PD-TEST-004 |
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
