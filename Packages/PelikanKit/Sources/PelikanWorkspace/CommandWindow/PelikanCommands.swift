@@ -54,7 +54,7 @@ extension SQLPlusEngine {
         case "DIR":
             let mask = args.first ?? "*"
             let files = (try? FileManager.default.contentsOfDirectory(atPath: currentDirectory.path)) ?? []
-            for f in files.sorted() where fnmatch(mask, f, FNM_CASEFOLD) == 0 { emit(f) }
+            for f in files.sorted() where Self.matches(mask, f) { emit(f) }
         case "BEAUTIFY":
             guard let file = args.first else { throw SQLPlusError(L10n.tr("Podaj plik")) }
             let url = resolve(file, baseDirectory: nil)
@@ -86,6 +86,12 @@ extension SQLPlusEngine {
         default:
             break
         }
+    }
+
+    /// Maska plików `*` i `?` bez wielkości liter (przenośnie — `fnmatch`/FNM_CASEFOLD nie ma w glibc).
+    nonisolated static func matches(_ mask: String, _ name: String) -> Bool {
+        let pattern = "^" + NSRegularExpression.escapedPattern(for: mask).replacingOccurrences(of: "\\*", with: ".*").replacingOccurrences(of: "\\?", with: ".") + "$"
+        return name.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 
     /// Parametry `klucz=wartość` (wartości z apostrofami albo cudzysłowami).
