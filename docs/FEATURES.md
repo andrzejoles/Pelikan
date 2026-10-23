@@ -428,7 +428,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | UT-CA-002 | Walidacja adnotacji przy kompilacji (nieznana adnotacja, brak `--%suite`, zła lista procedur) | PROMPT §6.2 | Program Window | 4 | P2 | Odczyt | ⚠️ częściowo (nieznane adnotacje jako ostrzeżenia kompilacji; bez sprawdzania list procedur) ✅ test |
 | UT-NAV-001 | Przejście między pakietem a jego pakietem testowym | PROMPT §6.2 | Program Window | 4 | P2 | Pełny | ✅ test (konwencja test_nazwa, a gdy brak — zależności pakietów z --%suite) |
 | UT-INS-001 | Wykrycie utPLSQL i wersji (ut_runner.version) na połączeniu | PROMPT §6.2 | Status | 4 | P1 | Odczyt | ✅ test (ut_runner.version; komunikat, gdy brak utPLSQL) |
-| UT-INS-002 | Instalacja/aktualizacja z oficjalnego wydania tylko dla połączeń dev/test, po potwierdzeniu | PROMPT §6.2 | Tools > utPLSQL > Install | 4 | P2 | Za zgodą | do zrobienia |
+| UT-INS-002 | Instalacja/aktualizacja z oficjalnego wydania tylko dla połączeń dev/test, po potwierdzeniu | PROMPT §6.2 | Tools > utPLSQL > Install | 4 | P2 | Za zgodą | ✅ test (oficjalne wydanie z sumą SHA-256/MD5, instalacja i aktualizacja silnikiem Command Window, odmowa dla produkcji) |
 | UT-CI-001 | Eksport wyników JUnit, Sonar, TeamCity; skrypt uruchamiania tych samych testów z wiersza poleceń | PROMPT §6.2 | Okno wyników | 4 | P2 | Brak | ✅ test (JUnit, Sonar, TeamCity, TAP do pliku; skrypt SQL*Plus/SQLcl + powłoki bez hasła, sprawdzony w SQL*Plus) |
 
 ## Agenci AI (jak w Bifoldzie)

@@ -127,6 +127,13 @@ extension SQLPlusEngine {
             }
             state.directory = url
         case "HOST", "!", "$":
+            // Instalator utPLSQL sprząta po sobie `! rm plik` / `$ del plik`: tylko w jego przebiegu i tylko pliki
+            // z katalogu instalatora, usuwane bez powłoki. Każde inne polecenie systemu pozostaje niedostępne.
+            if let dir = state.installerDirectory, upper.count == 2, ["RM", "DEL"].contains(upper[0]),
+               !args[1].contains("/"), !args[1].contains("\\"), !args[1].hasPrefix(".") {
+                try? FileManager.default.removeItem(at: dir.appendingPathComponent(args[1]))
+                return .finished
+            }
             throw SQLPlusError(L10n.tr("HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)."))
         case "TIMING":
             state.timing.toggle()

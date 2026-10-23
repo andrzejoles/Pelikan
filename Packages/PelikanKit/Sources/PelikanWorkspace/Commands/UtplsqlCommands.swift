@@ -133,6 +133,44 @@ enum UtplsqlCommands {
                 let v = await UtplsqlRunner.version(s)
                 return CommandResult(message: v.map { L10n.tr("utPLSQL \($0)") } ?? L10n.tr("utPLSQL nie jest zainstalowany w tej bazie"), value: v.map { .string($0) } ?? .null)
             },
+            Command(CommandDescriptor(id: "utplsql.install", title: L10n.tr("utPLSQL: instaluj lub aktualizuj…"), category: .tools, submenu: "utPLSQL",
+                                      parameters: [CommandParameter("version", .string, L10n.tr("Znacznik wydania (domyślnie najnowsze)")),
+                                                   CommandParameter("owner", .string, L10n.tr("Schemat utPLSQL przy nowej instalacji (domyślnie UT3)")),
+                                                   CommandParameter("tablespace", .string, L10n.tr("Przestrzeń tabel schematu (domyślnie USERS)"))],
+                                      agent: .approval, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w oknie poleceń — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu."),
+                                      feature: "UT-INS-002"),
+                    validate: { connection($0) != nil }) { ctx in
+                let ws = ctx.workspace
+                guard let conn = connection(ws), let def = ws.connections.connection(conn) else { throw CommandError.notConnected }
+                guard [.development, .test].contains(def.environment) else {
+                    throw CommandError.notAvailable(L10n.tr("Instalacja utPLSQL jest dostępna tylko dla połączeń deweloperskich i testowych"))
+                }
+                let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
+                let installed = await UtplsqlRunner.version(s)
+                let owner = await UtplsqlInstaller.installedOwner(s) ?? (ctx.arguments.string("owner") ?? "UT3").uppercased()
+                let release = try await UtplsqlInstaller.release(version: ctx.arguments.string("version"))
+                let message = installed.map {
+                    L10n.tr("Zaktualizować utPLSQL \($0) do \(release.version) w schemacie \(owner) (połączenie \(def.name))? Obiekty utPLSQL zostaną usunięte i zainstalowane ponownie; potrzebne są uprawnienia SYSDBA albo DBA.")
+                } ?? L10n.tr("Zainstalować utPLSQL \(release.version) w nowym schemacie \(owner) (połączenie \(def.name)) z publicznymi synonimami? Konto schematu dostanie losowe hasło i zostanie zablokowane; potrzebne są uprawnienia SYSDBA albo DBA.")
+                if let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Instalacja utPLSQL"), message: message, buttons: [L10n.tr("Instaluj"), L10n.tr("Anuluj")]) == 0 else {
+                        throw CommandError.cancelledByUser
+                    }
+                }
+                let cache = (ws.dataDirectory ?? FileManager.default.temporaryDirectory).appendingPathComponent("utPLSQL", isDirectory: true)
+                let source = try await UtplsqlInstaller.prepare(release, cache: cache)
+                let doc = ws.newDocument(.command, text: "")
+                doc.connectionID = conn
+                doc.customTitle = L10n.tr("Instalacja utPLSQL \(release.version)")
+                let steps = UtplsqlInstaller.script(owner: owner, upgrade: installed != nil,
+                                                    tablespace: ctx.arguments.string("tablespace") ?? "USERS")
+                guard await UtplsqlInstaller.run(steps, source: source, engine: ws.sqlplusEngine(for: doc)) else {
+                    throw CommandError.notAvailable(L10n.tr("Instalacja utPLSQL nie powiodła się — szczegóły w oknie poleceń"))
+                }
+                let now = await UtplsqlRunner.version(s)
+                return CommandResult(message: L10n.tr("Zainstalowano utPLSQL \(now ?? release.version)"), value: now.map { .string($0) } ?? .null)
+            },
             Command(CommandDescriptor(id: "utplsql.explorer", title: L10n.tr("Eksplorator testów utPLSQL"), category: .view,
                                       agent: .read, effect: .none,
                                       summary: L10n.tr("Drzewo suit, kontekstów i testów bieżącego użytkownika (ut_runner.get_suites_info) z ostatnim wynikiem."),

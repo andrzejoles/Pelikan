@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T11:38:44+02:00",
+  "heartbeat": "2026-10-23T11:48:51+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 4 / utPLSQL — instalacja i aktualizacja z oficjalnego wydania (suma kontrolna, okno poleceń, tylko dev/test, po potwierdzeniu; konto właściciela z losowym hasłem i zablokowane); COLUMN NEW_VALUE bez wierszy jak w SQL*Plus — test instalacji obok w osobnym schemacie",
     "Etap 4 / utPLSQL — eksport JUnit/Sonar/TeamCity/TAP i pokrycia Cobertura/Sonar/HTML, skrypt CLI bez hasła (sprawdzony w SQL*Plus), ostrzeżenie o pokryciu, szablony adnotacji, historia i porównanie przebiegów, debugowanie testu pod kursorem; naprawa wyścigu buforów reportera (ORA-00001) i konfliktu skrótu ⌥⌘U",
     "Szkic wydania v4.1.0 (Etap 3) — publikuje właściciel; PR #31 i #32 scalone (zamknięcie Etapu 3, utPLSQL)",
     "Etap 4 / utPLSQL — eksplorator testów (get_suites_info, ostatni wynik, odświeżanie po kompilacji), generator szkieletu pakietu testowego (kompiluje się i uruchamia), podpowiedzi adnotacji --% i matcherów ut.expect, ostrzeżenia o nieznanych adnotacjach, przejście pakiet ↔ test — 2 testy (1 na bazie); weryfikacja bez sterowania interfejsem (D30)",
@@ -91,8 +92,7 @@
     "Etap 2 / parser strukturalny PL/SQL (ADR 0002): zarys jednostek, podprogramów z parametrami i typem zwracanym, deklaracji (zmienne, stałe, kursory, typy, wyjątki), bloków zagnieżdżonych; panel Zawartość kodu ze śledzeniem kursora, ścieżka Code Hierarchy, Przejdź do deklaracji (⌃⌥D / ⌃⌘J / Cmd+klik) — lokalnie i do obiektów bazy; zakresy zwijania; zarys pakietu 50 000 linii poniżej limitu — 7 testów",
     "PR #12 scalony (Program Window), wersja 2.2.0",
     "Etap 2 / Program Window: karty jednostek (specyfikacja, ciało…) z przejściem, F8 kompiluje jednostki po kolei w sesji kompilacji z PLSQL_WARNINGS, zatrzymanie przy błędzie i kursor w linii błędu, lista błędów i ostrzeżeń z przejściem, wskaźniki zmieniony (niebieski) / nieskompilowany (żółty); poprawka: margines numerów linii nie zamalowuje widoków nad edytorem — 2 testy (1 na bazie)",
-    "PR #11 scalony (Object Browser), wersja 2.1.0",
-    "Etap 2 / Object Browser: MetadataProvider (sesja główna, cache, widoki DBA/ALL, foldery wg wersji — MLE i domeny na 23ai+), drzewo typów z leniwym ładowaniem, wybór użytkownika, filtr (nazwa%, status=, source=), elementy obiektu (kolumny, indeksy, więzy, wyzwalacze, podprogramy, zależności), niepoprawne na czerwono, Ostatnie, menu: Pokaż/Edytuj dane, Edytuj (okno programu), DDL, Opis, Właściwości, Rekompiluj, Usuń, Kopiuj nazwę, Odśwież — 5 testów na bazie"
+    "PR #11 scalony (Object Browser), wersja 2.1.0"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T11:38:44+02:00"
     },
     "integration": {
-      "total": 81,
-      "passed": 81,
+      "total": 83,
+      "passed": 83,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T11:38:42+02:00"
+      "at": "2026-10-23T11:48:51+02:00"
     },
     "perf": {
       "total": 9,

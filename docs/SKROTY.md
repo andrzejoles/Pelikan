@@ -167,6 +167,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: uruchom ponownie nieudane | `utplsql.rerunFailed` |  |  | Za zgodą | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: przerwij | `utplsql.cancel` |  |  | Pełny | 0 | UT-RUN-006 |
 | utPLSQL › utPLSQL: wersja w bazie | `utplsql.version` |  |  | Odczyt | 0 | UT-INS-001 |
+| utPLSQL › utPLSQL: instaluj lub aktualizuj… | `utplsql.install` |  |  | Za zgodą | 0 | UT-INS-002 |
 | utPLSQL › utPLSQL: generuj pakiet testowy | `utplsql.generateTest` |  |  | Pełny | 0 | UT-GEN-001 |
 | utPLSQL › utPLSQL: przejdź do testu / testowanego pakietu | `utplsql.toggleTest` | ⌃⇧T †, ⌃⌘T | ⌃⌘T | Pełny | 0 | UT-NAV-001 |
 | utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |

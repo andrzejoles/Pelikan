@@ -221,3 +221,14 @@ Właściciel używa komputera w trakcie pracy agenta, więc syntetyczne klawisze
 aktywowanie okien Pelikana są wyłączone: mogą trafić do aktywnego okna właściciela. Funkcje są weryfikowane testami
 (jednostkowymi i integracyjnymi na bazie testowej) oraz zrzutami okien wykonywanymi w tle; wiersze macierzy bez zrzutu
 mają tylko ✅ test, a 👁 dochodzi, gdy zrzut da się zrobić bez interakcji albo właściciel na to pozwoli.
+
+### D31 · 2026-10-23 — Instalacja utPLSQL z aplikacji
+Instalator pobiera archiwum `utPLSQL.tar.gz` z wydań projektu na GitHubie i odrzuca je bez zgodnej sumy kontrolnej
+(SHA-256, a dla starszych wydań, które mają tylko MD5 — MD5). Skrypty instalatora wykonuje silnik Command Window
+w osobnym oknie poleceń; każdy krok (`install_headless.sql`, `uninstall.sql`, `install.sql`) to osobne uruchomienie,
+bo skrypty kończą się `EXIT`. Nowa instalacja nadaje właścicielowi losowe hasło, którego nikt nie zna, i od razu
+blokuje konto (utPLSQL nie loguje się jako właściciel). Instalator sprząta pliki tymczasowe poleceniem `! rm plik`;
+tylko w jego przebiegu takie polecenie usuwa plik z katalogu instalatora bez powłoki, a poza tym HOST pozostaje
+niedostępny. Komenda działa tylko dla połączeń deweloperskich i testowych i zawsze pyta o potwierdzenie (agent —
+poziom „za zgodą”). Przy okazji: `COLUMN … NEW_VALUE` przy zapytaniu bez wierszy definiuje brakującą zmienną jako pustą,
+jak SQL*Plus (opcjonalne parametry skryptów).

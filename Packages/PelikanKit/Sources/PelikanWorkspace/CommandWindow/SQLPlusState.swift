@@ -49,6 +49,8 @@ public struct SQLPlusState: Sendable {
     public var spoolURL: URL?
     /// Katalog bieżący (CD, @plik, SPOOL).
     public var directory: URL?
+    /// Katalog skryptów instalatora utPLSQL w trakcie instalacji (sprzątanie plików tymczasowych, UT-INS-002).
+    var installerDirectory: URL?
 
     public enum Whenever: Sendable, Equatable {
         case `continue`
