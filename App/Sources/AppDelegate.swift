@@ -418,6 +418,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func printHTML(_ html: String, title: String) {
+        _ = HTMLPrinter(html: html, title: title)
+    }
+
     func copyToClipboard(_ text: String, html: String?) {
         let pb = NSPasteboard.general
         pb.clearContents()

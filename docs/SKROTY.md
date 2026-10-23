@@ -246,7 +246,20 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Błędy kompilacji | `reports.compilationErrors` |  |  | Odczyt | 6 | PD-REP-001 |
+| Błędy kompilacji | `reports.compilationErrors` |  |  | Brak | 0 | PD-REP-001 |
+| Niepoprawne obiekty | `reports.invalidObjects` |  |  | Brak | 0 | PD-REP-001 |
+| Ostatnio zmienione obiekty | `reports.recentChanges` |  |  | Brak | 0 | PD-REP-001 |
+| Rozmiary tabel | `reports.tableSizes` |  |  | Brak | 0 | PD-REP-001 |
+| Kolumny tabel | `reports.tableColumns` |  |  | Brak | 0 | PD-REP-001 |
+| Uprawnienia użytkownika | `reports.privileges` |  |  | Brak | 0 | PD-REP-001 |
+| Sesje | `reports.sessions` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Wykonaj raport | `report.execute` |  |  | Brak | 0 | PD-REP-002 |
+| Raport › Zapisz raport jako HTML… | `report.saveHTML` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Eksportuj dane raportu… | `report.export` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Drukuj raport… | `report.print` |  |  | Brak | 0 | PD-REP-001 |
+| Raport › Zablokuj definicję raportu | `report.lock` |  |  | Brak | 0 | PD-REP-004 |
+| Raport › Odblokuj definicję raportu | `report.unlock` |  |  | Brak | 0 | PD-REP-004 |
+| Raport › Dodaj raport do menu Raporty | `report.addToMenu` |  |  | Brak | 0 | PD-REP-004 |
 
 ## Widok
 

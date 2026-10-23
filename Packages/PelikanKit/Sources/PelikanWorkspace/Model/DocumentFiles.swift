@@ -81,6 +81,7 @@ extension DocumentKind {
         case "pck", "pks", "pkb", "spc", "bdy", "fnc", "prc", "trg", "typ", "tps", "tpb", "jav", "mle": .program
         case "tst": .test
         case "pdd": .diagram
+        case "rep": .report
         default: .sql
         }
     }
@@ -103,7 +104,12 @@ extension Workspace {
         }
         let docKind = kind ?? DocumentKind.forFile(std)
         let doc: Document
-        if docKind == .diagram {
+        if docKind == .report {
+            // Raport Pelikana: definicja JSON z zapytaniem (PD-REP-004).
+            let def = try ReportDefinition.decode(data)
+            doc = newDocument(.report, text: def.sql, fileURL: std)
+            doc.report = def
+        } else if docKind == .diagram {
             // Diagram Pelikana: JSON (PD-DIAG-003).
             doc = newDocument(.diagram, fileURL: std)
             doc.diagram = try Diagram.decode(data)
@@ -131,6 +137,15 @@ extension Workspace {
             doc.text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines) + "\n/\n"
         }
         var format = doc.fileFormat
+        if doc.kind == .report {
+            var def = doc.report
+            def.sql = doc.text
+            try def.encoded().write(to: url, options: .atomic)
+            doc.fileURL = url.standardizedFileURL
+            doc.isModified = false
+            rememberRecentFile(url)
+            return
+        }
         if doc.kind == .diagram {
             try doc.diagram.encoded().write(to: url, options: .atomic)
             doc.fileURL = url.standardizedFileURL

@@ -114,6 +114,11 @@ public final class Document: Identifiable {
     public var compileMessages: [CompileMessage] = []
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
+    /// Okno raportu: definicja (zapytanie w `text`), wynik HTML i dane, błąd (PD-REP-002).
+    public var report = ReportDefinition(title: "", sql: "")
+    public var reportHTML: String?
+    public var reportData: ReportData?
+    public var reportError: String?
     public var diagramSelection: Set<UUID> = []
     /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
     public var plan: ExplainPlanResult?
