@@ -102,6 +102,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var agent = AgentSettings()
     /// Zapytania przeglądarki sesji (Define Session Queries).
     public var sessionQueries = SessionQueries.standard
+    /// Raporty przebiegów zadań schedulera z regułami kolorów (UG 10.4).
+    public var schedulerReports = Scheduler.RunReport.standard
 
     public init() {}
 
@@ -155,5 +157,6 @@ public struct Settings: Sendable, Codable, Hashable {
         keyOverrides = v(.keyOverrides, keyOverrides)
         agent = v(.agent, agent)
         sessionQueries = v(.sessionQueries, sessionQueries)
+        schedulerReports = v(.schedulerReports, schedulerReports)
     }
 }

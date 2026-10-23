@@ -30,6 +30,7 @@
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
+		5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */; };
 		69E230C586667A4B779396E7 /* TestWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A838393A0802C7E216722E /* TestWindowViewController.swift */; };
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		923CEBCD965BF601901F2C11 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = D507270E4637937E6D6C6235 /* PelikanBridgeKit */; };
@@ -117,6 +118,7 @@
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
+		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
 		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
@@ -329,6 +331,7 @@
 			isa = PBXGroup;
 			children = (
 				A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */,
+				83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */,
 				0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */,
 				CA27E74D0C918323B465606B /* ToolWindows.swift */,
 			);
@@ -567,6 +570,7 @@
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
+				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
