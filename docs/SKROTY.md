@@ -175,8 +175,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | 0 | PD-OPT-002 |
 | Plan › Zapisz plan jako… | `plan.export` |  |  | Brak | 0 | PD-OPT-003 |
+| Sesje | `tools.sessions` |  |  | Brak | 0 | PD-TOOL-015 |
+| Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | 0 | PD-TOOL-015 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
-| Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |
 | Import tabel… | `tools.importTables` |  |  | Brak | 6 | PD-TOOL-006 |
