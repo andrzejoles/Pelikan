@@ -48,6 +48,8 @@ public protocol UIServices: AnyObject {
     func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
     /// Prosty edytor obiektu (sekwencja, synonim, indeks, użytkownik, rola — UG 9.2–9.11).
     func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID)
+    /// Okno debugera (stos, zmienne, przyciski kroków) dla okna testu.
+    func showDebugger(_ debugger: DebuggerEngine, document: Document)
     /// Formularz zmiennych szablonu (UG 31.2); nil = anulowano.
     func askTemplateValues(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
 
@@ -57,6 +59,7 @@ extension UIServices {
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
+    public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
@@ -133,6 +136,9 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
     /// Zmienia się po zapisie lub usunięciu szablonu (Template Window przeładowuje listę).
     public var templatesGeneration = 0
+    /// Punkty przerwania (UG 5.10) i debugery okien testu.
+    public var breakpoints: [Breakpoint] = []
+    @ObservationIgnored var debuggers: [DocumentID: DebuggerEngine] = [:]
     /// Historia skoków (UG 25.20) — Wstecz / Naprzód.
     public internal(set) var navigationBack: [NavigationPoint] = []
     public internal(set) var navigationForward: [NavigationPoint] = []

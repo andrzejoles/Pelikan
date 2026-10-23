@@ -15,6 +15,7 @@
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
 		1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */; };
 		26F8AB58DC1192AD7A7DCE23 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
+		2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62611D2986EABAD106F9D86C /* DebuggerPanel.swift */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
 		371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */; };
@@ -64,6 +65,7 @@
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
+		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 			children = (
 				CA48D35749C698677F8C081C /* CommandWindow */,
 				42B5903D5D9EF245A7512677 /* Connections */,
+				DE8A198D51A8A988E6CC6BD6 /* Debug */,
 				94B8513C5D09CD2AC6BAC631 /* Diff */,
 				ECB3825E12C3C711DC48304D /* Editor */,
 				D9C9B335E92845276A865184 /* Editors */,
@@ -268,6 +271,14 @@
 				8E6E52538571C1727BD5E642 /* TableEditorView.swift */,
 			);
 			path = Editors;
+			sourceTree = "<group>";
+		};
+		DE8A198D51A8A988E6CC6BD6 /* Debug */ = {
+			isa = PBXGroup;
+			children = (
+				62611D2986EABAD106F9D86C /* DebuggerPanel.swift */,
+			);
+			path = Debug;
 			sourceTree = "<group>";
 		};
 		E26C4A5524EC80F8E8BE39B3 /* Resources */ = {
@@ -382,6 +393,7 @@
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
+				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,

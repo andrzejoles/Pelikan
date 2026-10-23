@@ -1,0 +1,85 @@
+import AppKit
+import PelikanWorkspace
+import SwiftUI
+
+/// Okno debugera (UG 5.10): przyciski Start/Kontynuuj/Wejdź/Przejdź/Wyjdź/Do wyjątku/Zatrzymaj, miejsce zatrzymania,
+/// stos wywołań (klik = zmienne ramki) i zmienne z rozwijanymi rekordami i kolekcjami.
+struct DebuggerPanel: View {
+    let workspace: Workspace
+    @Bindable var debugger: DebuggerEngine
+    let document: PelikanWorkspace.Document
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            toolbar
+            Text(status).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+            HSplitView {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.tr("Stos wywołań")).font(.caption.bold())
+                    List(Array(debugger.stack.enumerated()), id: \.offset) { i, f in
+                        Button { Task { await debugger.selectFrame(i) } } label: {
+                            HStack {
+                                Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.caption2)
+                                Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.system(.body, design: .monospaced))
+                                Spacer()
+                                Text("\(f.line)").foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .frame(minWidth: 200)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.tr("Zmienne")).font(.caption.bold())
+                    List(debugger.variables, children: \.children) { v in
+                        HStack {
+                            Text(v.name).font(.system(.body, design: .monospaced))
+                            Spacer()
+                            Text(v.value).font(.system(.body, design: .monospaced)).foregroundStyle(v.children == nil ? .primary : .secondary)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .frame(minWidth: 260)
+            }
+        }
+        .padding(10)
+        .frame(minWidth: 560, minHeight: 320)
+    }
+
+    private var status: String {
+        switch debugger.state {
+        case .idle: L10n.tr("Gotowy — Start (F9) uruchamia skrypt okna testu z debugerem")
+        case .running: L10n.tr("Wykonywanie…")
+        case .paused:
+            debugger.location.map { $0.isTestBlock ? L10n.tr("Zatrzymano: blok testu, linia \($0.line)") : L10n.tr("Zatrzymano: \($0.owner).\($0.name), linia \($0.line)") } ?? ""
+        case .finished: debugger.message ?? L10n.tr("Zakończono")
+        }
+    }
+
+    private var toolbar: some View {
+        HStack(spacing: 6) {
+            button("play.fill", L10n.tr("Rozpocznij debugowanie (F9)"), "debug.start", enabled: debugger.state != .paused && debugger.state != .running)
+            Divider().frame(height: 18)
+            button("forward.end.fill", L10n.tr("Kontynuuj (⌃R)"), "debug.run")
+            button("arrow.down.to.line", L10n.tr("Wejdź (⌃N)"), "debug.stepInto")
+            button("arrow.turn.down.right", L10n.tr("Przejdź (⌃O)"), "debug.stepOver")
+            button("arrow.up.to.line", L10n.tr("Wyjdź (⌃T)"), "debug.stepOut")
+            button("exclamationmark.triangle", L10n.tr("Wykonaj do wyjątku"), "debug.runToException")
+            Divider().frame(height: 18)
+            button("stop.fill", L10n.tr("Zatrzymaj (⇧F9)"), "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
+            Spacer()
+            if debugger.state == .running { ProgressView().controlSize(.small) }
+        }
+    }
+
+    private func button(_ symbol: String, _ help: String, _ command: String, enabled: Bool? = nil) -> some View {
+        Button {
+            // Komenda działa na oknie testu tego debugera (aktywuje je na czas startu).
+            if command == "debug.start" { workspace.activate(document.id) }
+            workspace.perform(CommandID(rawValue: command))
+        } label: { Image(systemName: symbol) }
+        .help(help)
+        .disabled(!(enabled ?? (debugger.state == .paused)))
+    }
+}

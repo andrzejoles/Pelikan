@@ -85,6 +85,24 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return nil }
             return self.document.foldedStarts.contains(r.start)
         }
+        ruler.breakpointLines = { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace, [.test, .program].contains(self.document.kind) else { return [] }
+            return Set(ws.breakpointLines(in: self.document).map { $0 - 1 })
+        }
+        if [.test, .program].contains(document.kind) {
+            ruler.onBreakpointClick = { [weak self] line in
+                guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace,
+                      let bp = ws.breakpointAt(document: self.document, line: line + 1) else { return }
+                ws.toggleBreakpoint(bp)
+                self.ruler.needsDisplay = true
+            }
+        }
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            self.textView.executionLine = self.document.executionLine
+            if let ws = (NSApp.delegate as? AppDelegate)?.workspace { _ = ws.breakpoints }
+            self.ruler.needsDisplay = true
+        })
         ruler.onFoldClick = { [weak self] line in
             guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return }
             if self.document.foldedStarts.contains(r.start) { self.document.foldedStarts.remove(r.start) } else {
@@ -368,6 +386,9 @@ final class CodeTextView: NSTextView {
     var indentUnit = "  "
     var keywordCase: KeywordCase = .unchanged
     var highlightCurrentLine = true
+    /// Linia debugera (od 1) — wyróżniona tłem (UG 5.10).
+    var executionLine: Int? { didSet { if executionLine != oldValue { needsDisplay = true } } }
+    static let executionLineColor = NSColor.systemGreen.withAlphaComponent(0.22)
     /// Początki zwiniętych struktur — za ich linią rysowany jest znacznik „⋯”.
     var foldedLines: [Int] = [] { didSet { needsDisplay = true } }
     static let currentLineColor = NSColor(name: nil) { $0.isDark ? NSColor(white: 1, alpha: 0.05) : NSColor(srgbRed: 0.95, green: 0.97, blue: 1, alpha: 1) }
@@ -375,6 +396,32 @@ final class CodeTextView: NSTextView {
     /// Podświetlenie linii z kursorem (UG 23.12 „Highlight current line”).
     override func drawBackground(in rect: NSRect) {
         super.drawBackground(in: rect)
+        if let line = executionLine, let tlm = textLayoutManager, let content = tlm.textContentManager {
+            let ns = string as NSString
+            var offset = 0, current = 1
+            while current < line, offset < ns.length {
+                let r = ns.lineRange(for: NSRange(location: offset, length: 0))
+                offset = r.location + r.length
+                current += 1
+            }
+            if let loc = content.location(content.documentRange.location, offsetBy: min(offset, ns.length)),
+               let f = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame {
+                // Na wierzchu podświetlenia bieżącej linii (rysowanego niżej).
+                let rect = NSRect(x: 0, y: f.minY + textContainerInset.height, width: bounds.width, height: f.height)
+                defer {
+                    Self.executionLineColor.setFill()
+                    rect.fill()
+                    NSColor.systemGreen.setFill()
+                    NSRect(x: 0, y: rect.minY, width: 3, height: rect.height).fill()
+                }
+                drawCurrentLine()
+                return
+            }
+        }
+        drawCurrentLine()
+    }
+
+    private func drawCurrentLine() {
         guard highlightCurrentLine, selectedRange().length == 0, let tlm = textLayoutManager, let content = tlm.textContentManager,
               let loc = content.location(content.documentRange.location, offsetBy: selectedRange().location) else { return }
         var frame = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame ?? .zero
@@ -540,6 +587,9 @@ final class LineNumberRulerView: NSView {
     /// Stan znacznika zwijania linii: nil — brak obszaru, true — zwinięty, false — rozwinięty.
     var foldState: ((Int) -> Bool?)?
     var onFoldClick: ((Int) -> Void)?
+    /// Linie (od 0) z punktami przerwania i przełączenie kliknięciem w numer linii (UG 5.10).
+    var breakpointLines: (() -> Set<Int>)?
+    var onBreakpointClick: ((Int) -> Void)?
     /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
     private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
 
@@ -558,10 +608,10 @@ final class LineNumberRulerView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
-        guard let hit = drawnLines.first(where: { p.y >= $0.minY && p.y < $0.maxY }), foldState?(hit.line) != nil else {
-            return super.mouseDown(with: event)
-        }
-        onFoldClick?(hit.line)
+        guard let hit = drawnLines.first(where: { p.y >= $0.minY && p.y < $0.maxY }) else { return super.mouseDown(with: event) }
+        if p.x < 14, foldState?(hit.line) != nil { onFoldClick?(hit.line); return }
+        if let onBreakpointClick { onBreakpointClick(hit.line); return }
+        super.mouseDown(with: event)
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -578,6 +628,12 @@ final class LineNumberRulerView: NSView {
         let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
         func label(_ line: Int, y: CGFloat, height: CGFloat) {
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            if bps.contains(line) {
+                // Punkt przerwania: czerwone kółko pod numerem linii.
+                let d = min(height, lineHeight) - 2
+                NSColor.systemRed.withAlphaComponent(0.85).setFill()
+                NSBezierPath(ovalIn: NSRect(x: bounds.width - 8 - d - 10, y: y + 1, width: d, height: d)).fill()
+            }
             let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
             let size = s.size()
             s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
@@ -588,6 +644,7 @@ final class LineNumberRulerView: NSView {
             }
         }
         drawnLines.removeAll(keepingCapacity: true)
+        let bps = breakpointLines?() ?? []
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)
             return

@@ -22,13 +22,13 @@ run: build
 
 # Wszystkie testy pakietu: jednostkowe + integracyjne (te drugie wymagają bazy: make testdb).
 test:
-	cd $(PKG) && swift test
+	cd $(PKG) && swift test --skip PelikanDBTests && swift test --no-parallel --filter PelikanDBTests
 
 test-unit:
 	cd $(PKG) && swift test --skip PelikanDBTests
 
 test-integration:
-	cd $(PKG) && swift test --filter PelikanDBTests
+	cd $(PKG) && swift test --no-parallel --filter PelikanDBTests
 
 # Testy wydajności w konfiguracji Release.
 test-release:

@@ -459,23 +459,7 @@ public enum BuiltinCommands {
 
     // MARK: Debugowanie (skróty do weryfikacji — docs/research/keys.md)
 
-    @MainActor static var debug: [Command] {
-        let d: [(String, String, [String], String)] = [
-            ("debug.start", L10n.tr("Rozpocznij debugowanie"), ["f9"], L10n.tr("Uruchamia skrypt testu z debugerem.")),
-            ("debug.run", L10n.tr("Kontynuuj"), ["ctrl+r"], L10n.tr("Wykonuje do następnego punktu przerwania.")),
-            ("debug.stepInto", L10n.tr("Wejdź"), ["ctrl+n"], L10n.tr("Wchodzi do wywołania w bieżącej linii.")),
-            ("debug.stepOver", L10n.tr("Przejdź"), ["ctrl+o"], L10n.tr("Wykonuje bieżącą linię bez wchodzenia.")),
-            ("debug.stepOut", L10n.tr("Wyjdź"), ["ctrl+t"], L10n.tr("Wykonuje do końca bieżącej jednostki.")),
-            ("debug.runToCursor", L10n.tr("Wykonaj do kursora"), [], L10n.tr("Wykonuje do linii z kursorem.")),
-            ("debug.runToException", L10n.tr("Wykonaj do wyjątku"), [], L10n.tr("Wykonuje do wystąpienia wyjątku.")),
-            ("debug.toggleBreakpoint", L10n.tr("Punkt przerwania"), ["ctrl+b"], L10n.tr("Ustawia lub usuwa punkt przerwania w linii.")),
-            ("debug.breakpoints", L10n.tr("Punkty przerwania…"), [], L10n.tr("Edycja punktów przerwania, warunków i komunikatów.")),
-        ]
-        return d.map { id, title, pd, summary in
-            .planned(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .debug, pd: pd, mac: pd.isEmpty ? [] : nil,
-                                       agent: .none, effect: .modifiesDatabase, summary: summary, stage: 3, feature: "PD-DBG-001"))
-        }
-    }
+    @MainActor static var debug: [Command] { DebugCommands.all }
 
     // MARK: Narzędzia
 
