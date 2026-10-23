@@ -138,7 +138,7 @@ public final class SessionManager {
         var password = store.password(for: def.id) ?? sessionPasswords[def.id]
         // Hasło zapisujemy dopiero po udanym połączeniu i tylko gdy użytkownik zaznaczył „Zapamiętaj”.
         var rememberOnSuccess = false
-        if password == nil, !def.target.externalAuth {
+        if password == nil, !def.target.usesExternalCredentials {
             guard let answer = await prompter?.askPassword(for: def, reason: nil) else { throw CommandError.cancelledByUser }
             password = answer.password
             rememberOnSuccess = answer.remember
@@ -182,7 +182,7 @@ public final class SessionManager {
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
                 guard let np = await prompter?.askNewPassword(for: def, message: e.message) else { throw CommandError.cancelledByUser }
                 credentials = Credentials(password: password, newPassword: np)
-            } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.externalAuth {
+            } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.usesExternalCredentials {
                 // ORA-01017: błędne hasło — pytamy ponownie (zapisane hasło jest nieaktualne).
                 sessionPasswords[def.id] = nil
                 guard let answer = await prompter?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
@@ -238,7 +238,7 @@ public final class SessionManager {
     public func status(of connectionID: UUID) -> ConnectionStatus {
         let n = sessions.keys.filter { $0.connectionID == connectionID }.count
         if n > 0 { return .connected(sessions: n) }
-        return store.password(for: connectionID) != nil || sessionPasswords[connectionID] != nil || store.connection(connectionID)?.target.externalAuth == true
+        return store.password(for: connectionID) != nil || sessionPasswords[connectionID] != nil || store.connection(connectionID)?.target.usesExternalCredentials == true
             ? .passwordKnown : .passwordUnknown
     }
 

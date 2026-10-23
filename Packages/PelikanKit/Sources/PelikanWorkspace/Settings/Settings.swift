@@ -47,6 +47,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var pinWindowConnectionsByDefault = false
     public var allowMultipleConnections = true
     public var instantClientDirectory: String?
+    /// Katalog Oracle Net użytkownika (tnsnames.ora, sqlnet.ora) i portfel magazynu haseł (Oracle Wallet) — trafiają
+    /// do katalogu Oracle Net zarządzanego przez Pelikana; zmiana działa po ponownym uruchomieniu (D53).
+    public var oracleNetDirectory: String?
+    public var walletDirectory: String?
     // Oracle — Options
     public var confirmCommitRollback = false
     /// Potwierdzanie poleceń zmieniających na połączeniach produkcyjnych (PD-CONN-006).
@@ -146,6 +150,8 @@ public struct Settings: Sendable, Codable, Hashable {
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
         allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)
+        oracleNetDirectory = v(.oracleNetDirectory, oracleNetDirectory)
+        walletDirectory = v(.walletDirectory, walletDirectory)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)

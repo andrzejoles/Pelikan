@@ -397,3 +397,16 @@ wzorce `NumberFormatter` (np. `#,##0.00`), dat — wzorce Unicode (np. `yyyy-MM-
 Blokada ukrywa zapytanie i układ oraz uniemożliwia ich zmianę w oknie; odblokowanie wymaga potwierdzenia, ale nie hasła
 — hasło lub jego skrót w pliku `.rep` byłoby sekretem w pliku, a plik JSON i tak da się otworzyć w edytorze tekstu.
 Blokada chroni przed przypadkową zmianą, nie przed świadomym odczytem definicji.
+
+### D53 · 2026-10-23 — Oracle Wallet: magazyn haseł przez katalog Oracle Net Pelikana, TLS per połączenie
+Próby z Instant Client 23 pokazały, że portfel magazynu haseł (SEPS, logowanie `/@alias`) działa tylko przez
+`WALLET_LOCATION` w `sqlnet.ora` katalogu TNS_ADMIN klienta — portfel wskazany w deskryptorze (`MY_WALLET_DIRECTORY`,
+`WALLET_LOCATION`) albo w EZConnect (`wallet_location`) dotyczy wyłącznie TLS. Dlatego Preferencje › Oracle mają
+katalog konfiguracji Oracle Net użytkownika i katalog portfela; Pelikan generuje z nich własny katalog
+(`oracle-net/` w katalogu danych: `sqlnet.ora` z portfelem i `IFILE` do plików użytkownika, `tnsnames.ora` z `IFILE`)
+i przekazuje go klientowi przy inicjalizacji (`oracleClientConfigDir`) — zmiana działa po ponownym uruchomieniu.
+Połączenie w trybie „Oracle Wallet” to dla sterownika uwierzytelnianie zewnętrzne, a alias trafia do klienta bez
+rozwijania (poświadczenie jest szukane po dokładnym tekście). Portfel TLS (mTLS, np. Autonomous Database) jest
+ustawieniem połączenia (import ZIP rozpakowuje portfel obok archiwum). Hasła z portfela nigdy nie trafiają do Pelikana;
+w plikach generowanych są tylko ścieżki. Test na bazie testowej używa portfela z `scripts/testdb.sh wallet`; właściciel
+potwierdził działanie na własnym aliasie (jednorazowa próba `select 'OK' from dual`, bez zapisu danych).

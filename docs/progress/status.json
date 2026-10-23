@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T14:15:50+02:00",
+  "heartbeat": "2026-10-23T14:30:01+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Oracle Wallet (prośba właściciela): portfel magazynu haseł w Preferencjach (katalog Oracle Net Pelikana), tryb połączenia „Oracle Wallet” (/@alias), portfel TLS per połączenie i import ZIP; test na bazie z portfelem testowym; jednorazowa próba na aliasie właściciela — OK (D53)",
     "Etap 6 / projekty (Build, Make, Find in Project, pulpit) i edytor zewnętrzny Large Data Editor (RTF) — wszystkie wiersze Etapu 6 zrobione",
     "Etap 6 — wykresy, narzędzia użytkownika i raporty (subagenci) zintegrowane z narzędziami siatki, Test Managerem, monitorem i testem obciążenia; testy 132+70+16 bez bazy, 110 na bazie (D49–D52)",
     "Etap 6 / Monitor zdarzeń (DBMS_ALERT, DBMS_PIPE) i test obciążenia (wątki, wyniki na żywo, CSV) — 2 testy na bazie (D48); subagent zakończył raporty",
@@ -91,8 +92,7 @@
     "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie",
     "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
     "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
-    "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)",
-    "Etap 2 / szablony: panel Szablony (foldery, filtr, szablony wbudowane — jednostki programów, DML, pętle, bloki, typy), wstawianie z formularzem zmiennych ([Nazwa=domyślna], listy, [#], $DBUSER $DATE…), nowy program z szablonu, zapis i usuwanie szablonów użytkownika; zapis okna programu z nazwą i rozszerzeniem z jednostki i końcowym / — 4 testy"
+    "Etap 2 / różnice: silnik porównania (Myers, różnice w linii, ignorowanie wielkości liter/białych znaków/komentarzy, unified), przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, zamiana stron), porównanie okna programu ze źródłem w bazie i z plikiem, obiektu z oknem, plików i tekstów (dla agenta) — 6 testów (1 na bazie)"
   ],
   "next": [
     "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"

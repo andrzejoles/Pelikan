@@ -35,7 +35,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
         workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore())
         super.init()
-        workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory))
+        // Katalog Oracle Net zarządzany przez Pelikana: portfel magazynu haseł i IFILE do konfiguracji użytkownika (D53).
+        let oracleNet = try? OracleNet.prepareManagedDirectory(dir.appendingPathComponent("oracle-net", isDirectory: true),
+                                                               userDirectory: workspace.settings.oracleNetDirectory,
+                                                               walletDirectory: workspace.settings.walletDirectory)
+        workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory, configDirectory: oracleNet ?? nil))
         workspace.sessions.setDriver(ThinDriver())
     }
 

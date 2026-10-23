@@ -20,8 +20,11 @@ final class ConnectionDraft {
     var connectString: String
     var role: ConnectRole
     var proxyClient: String
-    var externalAuth: Bool
+    /// Logowanie: hasło, Oracle Wallet (magazyn haseł, `/@alias`) albo uwierzytelnianie zewnętrzne (Kerberos, system).
+    enum AuthMode: String, CaseIterable { case password, wallet, external }
+    var authMode: AuthMode
     var configDirectory: String
+    var walletDirectory: String
     var edition: String
     var workspaceManager: String
     var currentSchema: String
@@ -49,7 +52,9 @@ final class ConnectionDraft {
         useCustomColor = d.color != nil
         color = d.color.map { Color(red: $0.red, green: $0.green, blue: $0.blue) } ?? .accentColor
         driver = d.driver; user = d.target.user; savePassword = d.savePassword; connectString = d.target.connectString
-        role = d.target.role; proxyClient = d.target.proxyClient ?? ""; externalAuth = d.target.externalAuth
+        role = d.target.role; proxyClient = d.target.proxyClient ?? ""
+        authMode = d.target.walletAuth == true ? .wallet : d.target.externalAuth ? .external : .password
+        walletDirectory = d.target.walletDirectory ?? ""
         configDirectory = d.target.configDirectory ?? ""; edition = d.target.edition ?? ""
         workspaceManager = d.workspaceManager ?? ""; currentSchema = d.currentSchema ?? ""
         readOnly = d.readOnly; connectOnStartup = d.connectOnStartup; initScript = d.initScript; logonMessage = d.logonMessage
@@ -73,7 +78,7 @@ final class ConnectionDraft {
         var def = ConnectionDefinition(
             id: id, name: name.trimmingCharacters(in: .whitespaces), folderID: folderID,
             target: ConnectionTarget(user: user.trimmingCharacters(in: .whitespaces), connectString: connectString.trimmingCharacters(in: .whitespaces),
-                                     role: role, proxyClient: opt(proxyClient), externalAuth: externalAuth,
+                                     role: role, proxyClient: opt(proxyClient), externalAuth: authMode == .external,
                                      configDirectory: opt(configDirectory), edition: opt(edition)),
             driver: driver, environment: environment, color: rgb, savePassword: savePassword, readOnly: readOnly,
             connectOnStartup: connectOnStartup, initScript: initScript, logonMessage: logonMessage,
@@ -81,6 +86,8 @@ final class ConnectionDraft {
             agent: AgentConnectionPolicy(visibleToAgent: agentVisible, allowChanges: agentAllowChanges, agentUser: opt(agentUser),
                                          maskedColumns: maskedColumns.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }),
             currentSchema: opt(currentSchema))
+        def.target.walletAuth = authMode == .wallet ? true : nil
+        def.target.walletDirectory = opt(walletDirectory)
         if sshEnabled, let host = opt(sshHost) {
             def.sshTunnel = SSHTunnel(host: host, port: sshPort, user: sshUser.trimmingCharacters(in: .whitespaces),
                                       identityFile: opt(sshIdentity), jumpHost: opt(sshJump))
@@ -89,7 +96,7 @@ final class ConnectionDraft {
     }
 
     var isValid: Bool {
-        !connectString.trimmingCharacters(in: .whitespaces).isEmpty && (externalAuth || !user.trimmingCharacters(in: .whitespaces).isEmpty)
+        !connectString.trimmingCharacters(in: .whitespaces).isEmpty && (authMode != .password || !user.trimmingCharacters(in: .whitespaces).isEmpty)
     }
 }
 
@@ -101,6 +108,34 @@ struct ConnectionEditorView: View {
     let onTest: () -> Void
     let onSave: () -> Void
     let onCancel: () -> Void
+
+    static func chooseDirectory() -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.showsHiddenFiles = true
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    /// Portfel z pliku ZIP (np. Autonomous Database): rozpakowany obok archiwum do katalogu o tej samej nazwie (0700);
+    /// staje się portfelem TLS połączenia, a jego tnsnames.ora — katalogiem konfiguracji.
+    private func importWalletZip() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.zip]
+        guard panel.runModal() == .OK, let zip = panel.url else { return }
+        let target = zip.deletingPathExtension()
+        do {
+            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+            p.arguments = ["-x", "-k", zip.path, target.path]
+            try p.run()
+            p.waitUntilExit()
+            guard p.terminationStatus == 0 else { return }
+            draft.walletDirectory = target.path
+            if FileManager.default.fileExists(atPath: target.appendingPathComponent("tnsnames.ora").path) { draft.configDirectory = target.path }
+        } catch {}
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -121,10 +156,10 @@ struct ConnectionEditorView: View {
                         }
                     }
                     Section(L10n.tr("Logowanie")) {
-                        TextField(L10n.tr("Użytkownik"), text: $draft.user).disabled(draft.externalAuth)
+                        TextField(L10n.tr("Użytkownik"), text: $draft.user).disabled(draft.authMode != .password)
                         SecureField(L10n.tr("Hasło"), text: $draft.password,
-                                    prompt: Text(draft.isNew ? "" : L10n.tr("bez zmian"))).disabled(draft.externalAuth)
-                        Toggle(L10n.tr("Zapamiętaj hasło w Pęku kluczy"), isOn: $draft.savePassword).disabled(draft.externalAuth)
+                                    prompt: Text(draft.isNew ? "" : L10n.tr("bez zmian"))).disabled(draft.authMode != .password)
+                        Toggle(L10n.tr("Zapamiętaj hasło w Pęku kluczy"), isOn: $draft.savePassword).disabled(draft.authMode != .password)
                         HStack {
                             TextField(L10n.tr("Baza"), text: $draft.connectString, prompt: Text(L10n.tr("alias TNS albo host:port/usługa")))
                             if !tnsAliases.isEmpty {
@@ -136,7 +171,15 @@ struct ConnectionEditorView: View {
                         Picker(L10n.tr("Połącz jako"), selection: $draft.role) {
                             ForEach(ConnectRole.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                         }
-                        Toggle(L10n.tr("Uwierzytelnianie zewnętrzne (wallet, Kerberos, system)"), isOn: $draft.externalAuth)
+                        Picker(L10n.tr("Uwierzytelnianie"), selection: $draft.authMode) {
+                            Text(L10n.tr("Hasło")).tag(ConnectionDraft.AuthMode.password)
+                            Text(L10n.tr("Oracle Wallet (magazyn haseł)")).tag(ConnectionDraft.AuthMode.wallet)
+                            Text(L10n.tr("Zewnętrzne (Kerberos, system)")).tag(ConnectionDraft.AuthMode.external)
+                        }
+                        if draft.authMode == .wallet {
+                            Text(L10n.tr("Logowanie /@baza poświadczeniem z portfela wskazanego w Preferencjach › Oracle (Oracle Wallet). Pole „Baza” musi być dokładnie aliasem albo connect stringiem zapisanym w portfelu; alias musi być w konfiguracji Oracle Net z Preferencji."))
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                         Picker(L10n.tr("Sterownik"), selection: $draft.driver) {
                             Text(L10n.tr("Instant Client (zalecany)")).tag(DriverKind.instantClient)
                             Text(L10n.tr("Thin (bez Instant Client)")).tag(DriverKind.thin)
@@ -153,7 +196,19 @@ struct ConnectionEditorView: View {
                 Form {
                     Section(L10n.tr("Połączenie")) {
                         TextField(L10n.tr("Proxy: schemat docelowy"), text: $draft.proxyClient, prompt: Text(L10n.tr("użytkownik[schemat]")))
-                        TextField(L10n.tr("Katalog konfiguracji (TNS_ADMIN, wallet)"), text: $draft.configDirectory, prompt: Text("~/Oracle/network/admin"))
+                        TextField(L10n.tr("Katalog konfiguracji (tnsnames.ora)"), text: $draft.configDirectory, prompt: Text("~/Oracle/network/admin"))
+                        HStack {
+                            TextField(L10n.tr("Portfel TLS (mTLS, np. Autonomous Database)"), text: $draft.walletDirectory, prompt: Text(L10n.tr("katalog z cwallet.sso")))
+                            Button(L10n.tr("Wybierz…")) { if let u = Self.chooseDirectory() { draft.walletDirectory = u.path } }
+                            Button(L10n.tr("Importuj ZIP…")) { importWalletZip() }
+                        }
+                        if !draft.walletDirectory.isEmpty {
+                            switch OracleNet.walletStatus(draft.walletDirectory) {
+                            case .autoLogin: Text(L10n.tr("Portfel z automatycznym logowaniem (cwallet.sso)")).font(.caption).foregroundStyle(.green)
+                            case .passwordOnly: Text(L10n.tr("Tylko ewallet.p12 — potrzebny portfel z automatycznym logowaniem (cwallet.sso)")).font(.caption).foregroundStyle(.orange)
+                            case .missing: Text(L10n.tr("W katalogu nie ma portfela")).font(.caption).foregroundStyle(.red)
+                            }
+                        }
                         TextField(L10n.tr("Edition (EBR)"), text: $draft.edition)
                         TextField(L10n.tr("Workspace (DBMS_WM)"), text: $draft.workspaceManager)
                         TextField(L10n.tr("Bieżący schemat"), text: $draft.currentSchema)

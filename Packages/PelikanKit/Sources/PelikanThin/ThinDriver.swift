@@ -52,7 +52,7 @@ public struct ThinDriver: DatabaseDriver {
     }
 
     public func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
-        if target.externalAuth { throw DatabaseError.unsupported("Uwierzytelnianie zewnętrzne (wallet, Kerberos) wymaga sterownika Instant Client") }
+        if target.usesExternalCredentials { throw DatabaseError.unsupported("Uwierzytelnianie zewnętrzne (wallet, Kerberos) wymaga sterownika Instant Client") }
         if credentials.newPassword != nil { throw DatabaseError.unsupported("Zmiana wygasłego hasła wymaga sterownika Instant Client") }
         var connect = target.connectString
         if !connect.hasPrefix("("), !connect.contains("/") {

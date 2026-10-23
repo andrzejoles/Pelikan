@@ -45,7 +45,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-CONN-009 | Edition (EBR) i Workspace (DBMS_WM) połączenia | UG 19.2, NF10 | Configure > Connections | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-010 | Connect on startup; eksport i import definicji połączeń (bez haseł) | UG 19.2, NF13 | Configure > Connections | 1 | P2 | Brak | w toku |
 | PD-CONN-011 | TNS: tnsnames.ora, sqlnet.ora, TNS_ADMIN (katalog konfiguracji per połączenie), EZConnect | PROMPT §3.1, UG 37.4 | Log on | 1 | P1 | Brak | ✅ test |
-| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ⚠️ częściowo (MY_WALLET_DIRECTORY z katalogu połączenia; bez testu TCPS) |
+| PD-CONN-012 | Wallet (mTLS, Autonomous Database) | PROMPT §3.1 | Log on | 1 | P1 | Brak | ✅ test (portfel magazynu haseł SEPS /@alias z Preferencji przez katalog Oracle Net Pelikana — test na bazie i ręczna próba właściciela; portfel TLS per połączenie: tcps:// wallet_location, MY_WALLET_DIRECTORY; import portfela ZIP; status cwallet.sso; TCPS bez testu na żywo — brak listenera TCPS w bazie testowej) |
 | PD-CONN-013 | LDAP (directory naming) | PROMPT §3.1 | Log on | 1 | P3 | Brak | do zrobienia |
 | PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | PROMPT §3.1 | Log on | 1 | P2 | Brak | do zrobienia |
 | PD-CONN-015 | Role SYSDBA, SYSOPER, SYSBACKUP, SYSDG, SYSKM, SYSASM | UG 19.2 | Log on | 1 | P1 | Brak | ✅ test |
