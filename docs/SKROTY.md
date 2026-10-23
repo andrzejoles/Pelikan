@@ -173,18 +173,18 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL › utPLSQL: eksport wyników… | `utplsql.export` |  |  | Za zgodą | 0 | UT-CI-001 |
 | utPLSQL › utPLSQL: skrypt dla wiersza poleceń | `utplsql.cliScript` |  |  | Pełny | 0 | UT-CI-001 |
 | Obiekt › Uruchom testy utPLSQL | `ob.utplsqlRun` |  |  | Za zgodą | 0 | UT-RUN-003 |
+| Eksport tabel… | `tools.exportTables` |  |  | Brak | 0 | PD-TOOL-003 |
+| Import tabel… | `tools.importTables` |  |  | Brak | 0 | PD-TOOL-006 |
+| Import tekstu… | `tools.textImporter` |  |  | Brak | 0 | PD-TOOL-008 |
+| Import z Excela… | `tools.excelImporter` |  |  | Brak | 0 | PD-TOOL-009 |
+| Generator danych… | `tools.dataGenerator` |  |  | Brak | 0 | PD-TOOL-011 |
+| Porównaj dane tabel… | `tools.compareTableData` |  |  | Brak | 0 | PD-TOOL-013 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Odczyt | 6 | PD-OPT-002 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | 6 | PD-QB-001 |
 | Sesje | `tools.sessions` |  |  | Odczyt | 6 | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Odczyt | 6 | PD-SCHED-001 |
-| Eksport tabel… | `tools.exportTables` |  |  | Brak | 6 | PD-TOOL-003 |
-| Import tabel… | `tools.importTables` |  |  | Brak | 6 | PD-TOOL-006 |
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | 6 | PD-TOOL-007 |
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Odczyt | 6 | PD-TOOL-012 |
-| Porównaj dane tabel… | `tools.compareTableData` |  |  | Odczyt | 6 | PD-TOOL-013 |
-| Import tekstu… | `tools.textImporter` |  |  | Brak | 6 | PD-TOOL-008 |
-| Import z Excela… | `tools.excelImporter` |  |  | Brak | 6 | PD-TOOL-009 |
-| Generator danych… | `tools.dataGenerator` |  |  | Brak | 6 | PD-TOOL-011 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 6 | PD-TOOL-014 |
 | Menedżer testów… | `tools.testManager` |  |  | Brak | 6 | PD-TOOL-018 |
 | Test obciążenia… | `tools.loadTester` |  |  | Brak | 6 | PD-TOOL-019 |

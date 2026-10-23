@@ -17,6 +17,7 @@
 		1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */; };
 		26F8AB58DC1192AD7A7DCE23 /* PelikanAgent in Frameworks */ = {isa = PBXBuildFile; productRef = C91D66ECD039E3A75B4C6536 /* PelikanAgent */; };
 		28954A51FF6185B872436C72 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */; };
+		2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9355F810C37B2D27045A31 /* DataTransferViews.swift */; };
 		2C9A6FBF8290C58405B2A4DA /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62611D2986EABAD106F9D86C /* DebuggerPanel.swift */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
@@ -112,6 +113,7 @@
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		763E3F551A3684075944A130 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		7C9355F810C37B2D27045A31 /* DataTransferViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTransferViews.swift; sourceTree = "<group>"; };
 		7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionListViewController.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
@@ -313,6 +315,7 @@
 		98C2053BF992EBE778C7C8F4 /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				7C9355F810C37B2D27045A31 /* DataTransferViews.swift */,
 				CA27E74D0C918323B465606B /* ToolWindows.swift */,
 			);
 			path = Tools;
@@ -534,6 +537,7 @@
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
+				2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,

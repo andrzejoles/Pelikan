@@ -213,6 +213,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showDataTransfer(_ tool: DataTransferTool) {
+        switch tool {
+        case .exportTables:
+            ToolWindowController.show(key: "exportTables", title: L10n.tr("Eksport tabel"), size: NSSize(width: 760, height: 600)) { ExportTablesView(workspace: workspace) }
+        case .importTables:
+            ToolWindowController.show(key: "importTables", title: L10n.tr("Import tabel"), size: NSSize(width: 720, height: 560)) { ImportTablesView(workspace: workspace) }
+        case .textImporter:
+            ToolWindowController.show(key: "textImporter", title: L10n.tr("Import tekstu"), size: NSSize(width: 900, height: 680)) { ImporterView(workspace: workspace, excel: false) }
+        case .excelImporter:
+            ToolWindowController.show(key: "excelImporter", title: L10n.tr("Import z Excela"), size: NSSize(width: 900, height: 680)) { ImporterView(workspace: workspace, excel: true) }
+        case .dataGenerator:
+            ToolWindowController.show(key: "dataGenerator", title: L10n.tr("Generator danych"), size: NSSize(width: 900, height: 640)) { DataGeneratorView(workspace: workspace) }
+        case .compareTableData:
+            ToolWindowController.show(key: "compareTableData", title: L10n.tr("Porównanie danych tabel"), size: NSSize(width: 900, height: 580)) { CompareTableDataView(workspace: workspace) }
+        }
+    }
+
     func showTestExplorer() {
         ToolWindowController.show(key: "testExplorer", title: L10n.tr("Eksplorator testów"), size: NSSize(width: 460, height: 560)) {
             TestExplorerView(workspace: workspace)
