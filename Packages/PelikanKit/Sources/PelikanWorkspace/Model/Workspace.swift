@@ -54,6 +54,13 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Etap 7: Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu.
+    func showAutotrace(_ result: AutotraceResult, sql: String)
+    func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String)
+    func showDBAPanel()
+    func showInstanceViewer()
+    func showTaskMonitor()
+    func showSchemaDoc()
     /// Okno projektu (PD-PROJ-001).
     func showProject()
     /// Monitor zdarzeń i test obciążenia (PD-TOOL-014, PD-TOOL-019).
@@ -61,6 +68,8 @@ public protocol UIServices: AnyObject {
     func showLoadTester()
     /// Okna narzędzi siatki (zapytania powiązane, porównania, kolumna do plików).
     func showGridTool(_ request: GridToolRequest)
+    /// Biblioteka snippetów (SC-SNIP-001).
+    func showSnippets()
     /// Diagram: eksport obrazu (png/pdf), kopia do schowka, druk (PD-DIAG-003); Query Builder (PD-QB-001).
     func exportDiagram(_ doc: Document, format: String)
     func copyDiagramImage(_ doc: Document)
@@ -120,10 +129,17 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showAutotrace(_ result: AutotraceResult, sql: String) {}
+    public func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {}
+    public func showDBAPanel() {}
+    public func showInstanceViewer() {}
+    public func showTaskMonitor() {}
+    public func showSchemaDoc() {}
     public func showProject() {}
     public func showEventMonitor() {}
     public func showLoadTester() {}
     public func showGridTool(_ request: GridToolRequest) {}
+    public func showSnippets() {}
     public func printHTML(_ html: String, title: String) {}
     public func exportDiagram(_ doc: Document, format: String) {}
     public func copyDiagramImage(_ doc: Document) {}
@@ -225,6 +241,10 @@ public final class Workspace {
     public let dataDirectory: URL?
     /// Szablony kodu (UG 31): wbudowane i użytkownika z katalogu danych.
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
+    /// Snippety (SC-SNIP-001): wbudowane i własne w `Snippets/snippets.json`.
+    @ObservationIgnored public private(set) lazy var snippets = SnippetLibrary(directory: dataDirectory?.appendingPathComponent("Snippets", isDirectory: true))
+    /// Panel wartości obok siatki wyników (DB-PANEL-001).
+    public var valuePanelVisible = false
     /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
     @ObservationIgnored public private(set) lazy var fileBrowser = FileBrowser(fileURL: dataDirectory?.appendingPathComponent("file-browser.json"))
     /// Worksety (UG 15) i zapisany układ okna (UG 23.10).
@@ -255,6 +275,8 @@ public final class Workspace {
     public var project: Project?
     public var projectURL: URL?
     public var projectBuildResults: [ProjectBuildResult] = []
+    /// Zadania w tle (Task Monitor, SD-MON-002).
+    public let tasks = WorkspaceTaskCenter()
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.

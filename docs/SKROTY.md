@@ -113,6 +113,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | 0 | PD-GRID-013 |
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
+| Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Pełny | 0 | PD-TPL-002 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
@@ -164,6 +165,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Zapytania powiązane… | `grid.linkedQueries` |  |  | Brak | 0 | PD-SQLW-019 |
 | Wynik › Porównaj rekordy | `grid.compareRecords` |  |  | Brak | 0 | PD-SQLW-020 |
 | Wynik › Porównaj wyniki | `grid.compareResults` |  |  | Brak | 0 | PD-SQLW-021 |
+| Wynik › Filtruj według wartości komórki | `grid.filterByValue` |  |  | Brak | 0 | DB-GRID-001 |
+| Wynik › Filtr wyrażeniem… | `grid.filterExpression` |  |  | Brak | 0 | DB-GRID-001 |
+| Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
+| Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
+| Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
 | Zaloguj… | `session.logon` | ⇧⌘L | ⇧⌘L | Brak | 0 | PD-CONN-002 |
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | 0 | PD-CONN-018 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | 0 | PD-CONN-004 |
@@ -197,6 +203,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Obiekt › Zapytanie standardowe | `ob.standardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
+| Obiekt › Generuj kod… | `ob.generateCode` |  |  | Brak | 0 | SD-GEN-001 |
+| Autotrace | `tools.autotrace` |  |  | Brak | 0 | SD-PLAN-002 |
+| Plan › Porównaj z poprzednim planem | `plan.compare` |  |  | Brak | 0 | SD-PLAN-003 |
+| DBA › Zmień parametr instancji | `dba.alterParameter` |  |  | Brak | 0 | SD-DBA-001 |
+| DBA › Zablokuj / odblokuj konto | `dba.lockUser` |  |  | Brak | 0 | SD-DBA-001 |
+| Instance Viewer | `tools.instanceViewer` |  |  | Brak | 0 | SD-DBA-004 |
+| Dokumentacja schematu… | `tools.schemaDoc` |  |  | Brak | 0 | SD-DOC-001 |
 | Test Manager | `tools.testManager` |  |  | Brak | 0 | PD-TOOL-018 |
 | Test Manager › Uruchom zestaw testów | `testManager.run` |  |  | Brak | 0 | PD-TOOL-018 |
 | Monitor zdarzeń… | `tools.eventMonitor` |  |  | Brak | 0 | PD-TOOL-014 |
@@ -291,6 +304,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Panel wartości | `grid.valuePanel` | ⌥⌘V | ⌥⌘V | Brak | 0 | DB-PANEL-001 |
+| Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
+| Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
+| Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |
 | Zadania To-Do | `view.todoItems` |  |  | Odczyt | 0 | PD-TODO-001 |

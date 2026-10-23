@@ -463,22 +463,22 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 |---|---|---|---|---|---|---|---|
 | SD-NB-001 | SQL Notebook: komórki SQL/PL/SQL i Markdown, Run All, wyniki zapisywane w pliku | SD VS Code 25.2, gap-analysis §1 | File > New > SQL Notebook | 7 | P2 | Pełny | do zrobienia |
 | SD-NB-002 | Wykresy z wyników komórek notatnika | SD VS Code 25.3 | SQL Notebook | 7 | P2 | — | do zrobienia |
-| SD-PLAN-001 | Plan wykonania jako diagram (kardynalność, koszty, kolejność) i flame graph; widok zaawansowany | SD VS Code 24.1, gap-analysis §1 | Explain Plan Window | 7 | P2 | Odczyt | do zrobienia |
-| SD-PLAN-002 | Autotrace (plan rzeczywisty i statystyki z V$SQL_PLAN_STATISTICS_ALL) | SQL Developer UG | SQL Window > Autotrace | 7 | P2 | Odczyt | do zrobienia |
-| SD-PLAN-003 | Porównanie dwóch planów | SQL Developer UG | Explain Plan Window | 7 | P3 | Odczyt | do zrobienia |
+| SD-PLAN-001 | Plan wykonania jako diagram (kardynalność, koszty, kolejność) i flame graph; widok zaawansowany | SD VS Code 24.1, gap-analysis §1 | Explain Plan Window | 7 | P2 | Odczyt | ✅ test (diagram: węzeł na wiersz, głębokość, koszt, kardynalność, kolejność; flame graph kosztu proporcjonalny do rodzica; widoki bez zrzutu — D30) |
+| SD-PLAN-002 | Autotrace (plan rzeczywisty i statystyki z V$SQL_PLAN_STATISTICS_ALL) | SQL Developer UG | SQL Window > Autotrace | 7 | P2 | Odczyt | ✅ test (GATHER_PLAN_STATISTICS, plan z V$SQL_PLAN_STATISTICS_ALL: Starts, E-Rows, A-Rows z oznaczeniem rozbieżności, czasy, bufory, odczyty; statystyki V$MYSTAT przed/po; ALLSTATS LAST; DML wycofywane) |
+| SD-PLAN-003 | Porównanie dwóch planów | SQL Developer UG | Explain Plan Window | 7 | P3 | Odczyt | ✅ test (dopasowanie operacji, różnice kosztu, kardynalności, kolejności i predykatów; z poprzednim planem okna albo drugim oknem planu) |
 | SD-MON-001 | Real-Time SQL Monitoring (Tuning Pack: ostrzeżenie licencyjne, zgoda zapamiętana na połączeniu) | SD VS Code 24.4, PROMPT §3.3 | Tools > SQL Monitor | 7 | P2 | Brak | do zrobienia |
-| SD-MON-002 | Task Monitor (zadania w tle: status, czasy, anulowanie) | SD VS Code 24.3 | View > Task Monitor | 7 | P2 | — | do zrobienia |
-| SD-DBA-001 | Panel DBA: przestrzenie tabel, pliki danych, parametry, użytkownicy, role, sesje, blokady | SQL Developer UG, SD VS Code 26.2 | View > DBA | 7 | P2 | Odczyt | do zrobienia |
+| SD-MON-002 | Task Monitor (zadania w tle: status, czasy, anulowanie) | SD VS Code 24.3 | View > Task Monitor | 7 | P2 | — | ✅ test (wspólna lista zadań w tle w Workspace: stan, czas, postęp, anulowanie; Autotrace i dokumentacja jako zadania) |
+| SD-DBA-001 | Panel DBA: przestrzenie tabel, pliki danych, parametry, użytkownicy, role, sesje, blokady | SQL Developer UG, SD VS Code 26.2 | View > DBA | 7 | P2 | Odczyt | ✅ test (przestrzenie tabel z zajętością, pliki danych, parametry, użytkownicy, role, sesje, blokady; brak uprawnień jako komunikat; ALTER SYSTEM SET i blokada konta po potwierdzeniu i strażniku zmian) |
 | SD-DBA-002 | Raporty AWR, ASH, ADDM (Diagnostics Pack — ostrzeżenie licencyjne) | SQL Developer UG, SD VS Code 26.2, PROMPT §3.3 | DBA > Performance | 7 | P2 | Brak | do zrobienia |
 | SD-DBA-003 | SQL Tuning Advisor (Tuning Pack) | SQL Developer UG | SQL Window > Tuning Advisor | 7 | P3 | Brak | do zrobienia |
-| SD-DBA-004 | Instance Viewer (pulpit instancji) | SQL Developer UG | DBA > Instance Viewer | 7 | P3 | Odczyt | do zrobienia |
+| SD-DBA-004 | Instance Viewer (pulpit instancji) | SQL Developer UG | DBA > Instance Viewer | 7 | P3 | Odczyt | ✅ test (wersja, czas pracy, sesje, klasy oczekiwań z przyrostem na sekundę, top SQL z V$SQL, SGA/PGA, odświeżanie; części bez uprawnień jako komunikaty) |
 | SD-LIC-001 | Licencje Diagnostics/Tuning Pack na połączeniu (CONTROL_MANAGEMENT_PACK_ACCESS), pytanie przy pierwszym użyciu | SD VS Code 26.2, PROMPT §3.3 | Configure > Connections | 7 | P1 | Brak | do zrobienia |
 | SD-REP-001 | Raporty predefiniowane w kategoriach (Grid/Chart/DBMS_OUTPUT, zmienne, szczegóły, Open in Worksheet, eksport) | SD VS Code 24.4 | Reports | 7 | P2 | Odczyt | do zrobienia |
 | SD-DIFF-001 | Database Diff i Cart (pakiet zmian do wdrożenia jako skrypt) | SQL Developer UG | Tools > Database Diff / Cart | 7 | P2 | Odczyt | do zrobienia |
 | SD-COPY-001 | Kreator kopiowania bazy/schematu (Database Copy) | SQL Developer UG | Tools > Database Copy | 7 | P3 | Brak | do zrobienia |
-| SD-DOC-001 | Generowanie dokumentacji schematu (HTML) | SQL Developer UG | Tools > Generate DB Doc | 7 | P3 | Odczyt | do zrobienia |
+| SD-DOC-001 | Generowanie dokumentacji schematu (HTML) | SQL Developer UG | Tools > Generate DB Doc | 7 | P3 | Odczyt | ✅ test (HTML: spis, tabele z kolumnami, komentarzami, ograniczeniami i indeksami, widoki z definicją, programy z parametrami i opcjonalnie źródłem, sekwencje) |
 | SD-IMP-001 | Kreator importu danych (CSV, rozdzielany, tekst, XLS/XLSX; podgląd, kodowanie, mapowanie, nowa/istniejąca tabela, zapis stanu) | SD VS Code 25.4, 26.1 | Object Browser > Import | 7 | P2 | Brak | do zrobienia |
-| SD-GEN-001 | Generowanie kodu przez przeciąganie obiektu/połączenia (SQL, Java JDBC: SELECT/INSERT/UPDATE/DELETE/JOIN, łańcuch połączenia) | SD VS Code 25.3, 25.4 | Object Browser > przeciągnij | 7 | P3 | — | do zrobienia |
+| SD-GEN-001 | Generowanie kodu przez przeciąganie obiektu/połączenia (SQL, Java JDBC: SELECT/INSERT/UPDATE/DELETE/JOIN, łańcuch połączenia) | SD VS Code 25.3, 25.4 | Object Browser > przeciągnij | 7 | P3 | — | ✅ test (SELECT/INSERT/UPDATE/DELETE z kolumnami i kluczem, wywołanie programu, Java JDBC i Python; menu obiektu i przeciągnięcie z Option; łańcuch połączenia jako alias) |
 | SD-AUTH-001 | Uwierzytelnianie Entra ID (Oracle na Azure) | SD VS Code 25.4 | Configure > Connections | 7 | P3 | Brak | do zrobienia |
 | SD-DV-001 | Widoki dualności JSON-relacyjnej (tworzenie, edycja, rekordy, diagram JSON Data Guide) | SD VS Code 24.2 | Object Browser | 7 | P3 | Za zgodą | do zrobienia |
 | SD-MLE-001 | Środowiska MLE (tworzenie, import modułów, kompilacja) i debugowanie modułów JavaScript po wykonaniu | SD VS Code 26.1–26.3 | Object Browser | 7 | P3 | Za zgodą | do zrobienia |
@@ -486,9 +486,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | SD-ORDS-001 | ORDS: włączenie REST dla schematu i obiektów, lista modułów | SQL Developer UG | Object Browser > REST | 7 | P3 | Za zgodą | do zrobienia |
 | SD-APEX-001 | APEXlang (eksport/import/porównanie aplikacji APEX) | SD VS Code 26.1–26.2 | — | 7 | P3 | — | pominięte (wymaga APEX; poza codzienną pracą z PL/SQL — D11) |
 | SC-CMD-001 | Command Window: INFO / INFO+, DDL, LOAD (CSV do tabeli), FORMAT (formatowanie skryptu), HISTORY z czasami, ALIAS, REPEAT, CTAS | SQLcl UG | Command Window | 7 | P2 | Brak | do zrobienia |
-| SC-CMD-002 | SET SQLFORMAT (csv, json, xml, html, insert, loader, fixed, delimited, ansiconsole) | SQLcl UG | Command Window | 7 | P2 | Brak | do zrobienia |
+| SC-CMD-002 | SET SQLFORMAT (csv, json, xml, html, insert, loader, fixed, delimited, ansiconsole) | SQLcl UG | Command Window | 7 | P2 | Brak | ✅ test (csv, json, xml, html, insert, loader, fixed, delimited, ansiconsole, default; SHOW SQLFORMAT) |
 | SC-LB-001 | Liquibase (`lb`) | SQLcl UG | Command Window | 7 | P3 | — | pominięte w pierwszej wersji (wymaga Javy i biblioteki Liquibase — D11) |
-| SC-SNIP-001 | Snippets (biblioteka fragmentów kodu do przeciągania) | SD VS Code, SQL Developer | View > Snippets | 7 | P3 | — | do zrobienia |
+| SC-SNIP-001 | Snippets (biblioteka fragmentów kodu do przeciągania) | SD VS Code, SQL Developer | View > Snippets | 7 | P3 | — | ✅ test (biblioteka wbudowana i własna w Snippets/snippets.json, wstawianie w miejscu kursora, przeciąganie z okna; okno bez zrzutu — D30) |
 
 ## Dodatki z DBeaver
 
@@ -496,9 +496,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 |---|---|---|---|---|---|---|---|
 | DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | ⚠️ częściowo (bez hasła SSH — D19) |
 | DB-DIAG-001 | Diagramy ER z bazy (automatyczny układ, relacje FK, eksport obrazu) | gap-analysis §3 | Object Browser > ER Diagram | 7 | P2 | Odczyt | do zrobienia |
-| DB-PANEL-001 | Panel wartości obok siatki (tekst, JSON, XML, HTML, obraz z BLOB, hex) | gap-analysis §3 | Siatka > Value panel | 7 | P2 | — | do zrobienia |
-| DB-GRID-001 | Filtr wyników w siatce (po wartości komórki, wyrażenie) i grupowanie z licznikami | gap-analysis §3 | Siatka | 7 | P2 | — | do zrobienia |
-| DB-GRID-002 | Generowanie SQL z zaznaczonych wierszy (INSERT/UPDATE/DELETE/MERGE) | gap-analysis §3 | Siatka > Generate SQL | 7 | P3 | — | do zrobienia |
+| DB-PANEL-001 | Panel wartości obok siatki (tekst, JSON, XML, HTML, obraz z BLOB, hex) | gap-analysis §3 | Siatka > Value panel | 7 | P2 | — | ✅ test (tekst, JSON i XML z wcięciami, HTML bez JavaScriptu i sieci, obraz z BLOB, hex; panel obok siatki bez zrzutu — D30) |
+| DB-GRID-001 | Filtr wyników w siatce (po wartości komórki, wyrażenie) i grupowanie z licznikami | gap-analysis §3 | Siatka | 7 | P2 | — | ✅ test (filtr po wartości komórki i wyrażeniem =,<>,<,>,LIKE,IS NULL,AND/OR na pobranych wierszach, z sortowaniem; grupowanie z licznikami, dwuklik filtruje) |
+| DB-GRID-002 | Generowanie SQL z zaznaczonych wierszy (INSERT/UPDATE/DELETE/MERGE) | gap-analysis §3 | Siatka > Generate SQL | 7 | P3 | — | ✅ test (INSERT, UPDATE, DELETE, MERGE dla zaznaczonych wierszy; klucz główny albo ROWID; nowe okno SQL bez wykonania) |
 | DB-XFER-001 | Przenoszenie danych między tabelami/schematami/połączeniami z mapowaniem | gap-analysis §3 | Tools > Data Transfer | 7 | P2 | Brak | do zrobienia |
 | DB-TASK-001 | Zaplanowane zadania lokalne (eksport, skrypt cyklicznie) bez haseł w plikach | gap-analysis §3 | Tools > Tasks | 7 | P3 | Brak | do zrobienia |
 

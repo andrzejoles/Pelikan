@@ -43,9 +43,11 @@
 		8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229E7A0294B2BA8203F506AF /* BeautifierPane.swift */; };
 		923CEBCD965BF601901F2C11 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = D507270E4637937E6D6C6235 /* PelikanBridgeKit */; };
 		92F74B6D7C2D435DBF289BEA /* AgentSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2456C231334B998B64CE9501 /* AgentSheets.swift */; };
+		950E9DE97966450BC3AAF2A4 /* DBAViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */; };
 		972EF459C57D996C11CF97EC /* EditorToolViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */; };
 		997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FB679B3AA90E719B503472 /* TemplatePane.swift */; };
 		9D0D71F4F1BE4497AF8BA9EC /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 763E3F551A3684075944A130 /* main.swift */; };
+		A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 570D3064D5201AF56E748711 /* PlanVisualViews.swift */; };
 		A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335AC06B5D604A8B96621019 /* DiffViewer.swift */; };
 		A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D0384446313A0E19A6A80FF /* ConnectionListViewController.swift */; };
 		A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */; };
@@ -59,6 +61,7 @@
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
 		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
+		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
 		DD90C5023ABF02A6EAE06E42 /* AgentUIController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */; };
@@ -121,10 +124,13 @@
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		3429C3E6085A0A6E4E4B0843 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUIController.swift; sourceTree = "<group>"; };
+		36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBAViews.swift; sourceTree = "<group>"; };
 		3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridToolViews.swift; sourceTree = "<group>"; };
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
+		553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7Views.swift; sourceTree = "<group>"; };
+		570D3064D5201AF56E748711 /* PlanVisualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanVisualViews.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -271,6 +277,7 @@
 			isa = PBXGroup;
 			children = (
 				E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */,
+				570D3064D5201AF56E748711 /* PlanVisualViews.swift */,
 			);
 			path = ExplainPlan;
 			sourceTree = "<group>";
@@ -299,6 +306,7 @@
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
 				6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */,
+				553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */,
 				9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */,
 			);
 			path = SQLWindow;
@@ -359,6 +367,7 @@
 			isa = PBXGroup;
 			children = (
 				7C9355F810C37B2D27045A31 /* DataTransferViews.swift */,
+				36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */,
 				7BDD00050FBA5650E960C7ED /* GraphView.swift */,
 				0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */,
 				A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */,
@@ -619,6 +628,7 @@
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
+				950E9DE97966450BC3AAF2A4 /* DBAViews.swift in Sources */,
 				2BB6857A69B280020AEE77BF /* DataTransferViews.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
 				03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */,
@@ -637,6 +647,7 @@
 				0F3CC52E4AAE28FA9CF5306C /* ObjectBrowserViewController.swift in Sources */,
 				F4DD0E5A44AD7B7874E85021 /* ObjectToolsViews.swift in Sources */,
 				52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */,
+				A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
 				01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */,
@@ -648,6 +659,7 @@
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
 				D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */,
 				E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */,
+				D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */,
 				44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */,
 				DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */,
 				997BE49C1E719BB8A45B2F88 /* TemplatePane.swift in Sources */,

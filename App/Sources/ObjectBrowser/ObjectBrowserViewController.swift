@@ -292,11 +292,18 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         workspace.selectedObject = n?.object
     }
 
-    /// Przeciąganie obiektu do edytora wstawia nazwę (UG 21.1).
+    /// Typ schowka z obiektem (właściciel, nazwa, typ) — upuszczenie z Option generuje kod (SD-GEN-001).
+    static let objectPasteboardType = NSPasteboard.PasteboardType("local.pelikan.dbobject")
+
+    /// Przeciąganie obiektu do edytora wstawia nazwę (UG 21.1); z klawiszem Option — kod (SELECT albo wywołanie).
     func outlineView(_ outlineView: NSOutlineView, pasteboardWriterForItem item: Any) -> (any NSPasteboardWriting)? {
         guard let n = item as? Node else { return nil }
         switch n.kind {
-        case .object(let o): return o.name.lowercased() as NSString
+        case .object(let o):
+            let p = NSPasteboardItem()
+            p.setString(o.name.lowercased(), forType: .string)
+            p.setString([o.owner, o.name, o.type.rawValue].joined(separator: "\u{1}"), forType: Self.objectPasteboardType)
+            return p
         case .child(let c): return c.name.lowercased() as NSString
         default: return nil
         }
@@ -327,6 +334,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         }
         for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.recompile", "ob.drop",
                    "-", "ob.copyName", "ob.refresh"] {
+            if id == "ob.copyName", let o = workspace.selectedObject, let gen = generateCodeMenu(o) { menu.addItem(gen) }
             if id == "-" { menu.addItem(.separator()); continue }
             guard let c = workspace.registry.command(CommandID(rawValue: id)) else { continue }
             let item = menu.addItem(withTitle: c.descriptor.title, action: #selector(runCommand(_:)), keyEquivalent: "")
@@ -344,6 +352,31 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                 menu.addItem(withTitle: L10n.tr("Zapytania standardowe"), action: nil, keyEquivalent: "").submenu = sub
             }
         }
+    }
+
+    /// Generowanie kodu z obiektu (SD-GEN-001): SQL dla tabel i widoków, wywołanie dla procedur i funkcji.
+    private func generateCodeMenu(_ o: DBObject) -> NSMenuItem? {
+        let kinds: [CodeGenerator.Kind]
+        switch o.type {
+        case .table, .view, .materializedView, .synonym: kinds = CodeGenerator.Kind.allCases.filter { $0 != .call }
+        case .procedure, .function: kinds = [.call]
+        default: return nil
+        }
+        let sub = NSMenu()
+        for k in kinds {
+            let item = sub.addItem(withTitle: k.displayName, action: #selector(generateCode(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = k.rawValue
+        }
+        let item = NSMenuItem(title: L10n.tr("Generuj kod"), action: nil, keyEquivalent: "")
+        item.submenu = sub
+        return item
+    }
+
+    @objc private func generateCode(_ sender: NSMenuItem) {
+        guard let kind = sender.representedObject as? String, let o = workspace.selectedObject else { return }
+        workspace.perform("ob.generateCode", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue),
+                                                              "kind": .string(kind)]))
     }
 
     @objc private func runStandardQuery(_ sender: NSMenuItem) {

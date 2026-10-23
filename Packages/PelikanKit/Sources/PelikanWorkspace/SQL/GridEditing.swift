@@ -239,7 +239,7 @@ extension ResultGridModel {
         edit.deleted = Set(edit.deleted.subtracting(remove).map(shift))
         edit.overflow = Set(edit.overflow.filter { !remove.contains($0.row) }.map { CellRef(row: shift($0.row), column: $0.column) })
         if order != nil {
-            if sortKeys.isEmpty {
+            if sortKeys.isEmpty && filter == nil {
                 order = order!.filter { !remove.contains($0) }.map(shift)
             } else {
                 applySort()

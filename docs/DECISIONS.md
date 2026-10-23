@@ -440,3 +440,31 @@ użyciem zapisanego hasła prosi o potwierdzenie przez LocalAuthentication (Touc
 w trakcie działania aplikacji — także dla sesji agenta. Stan „hasło zapisane” na liście połączeń sprawdzany bez odczytu
 sekretu. Ograniczenie: inna aplikacja, której użytkownik pozwoli czytać wpis Pelikana w Pęku kluczy, nie przejdzie
 przez to potwierdzenie (macOS i tak pyta wtedy o zgodę na dostęp do wpisu).
+
+### D57 · 2026-10-23 — Filtr siatki lokalny, w modelu siatki
+Filtr wyników (DB-GRID-001) działa na pobranych wierszach jako część permutacji widoku (`order`) modelu siatki,
+razem z sortowaniem: `rowCount` to liczba wierszy widoku, a `fetchedRowCount` — pobranych. Dociągnięte wiersze
+przechodzą przez filtr. Wyrażenie ma składnię podobną do SQL (porównania, LIKE, IS NULL, AND/OR), ale nie jest
+wysyłane do bazy — nie da się przez nie wykonać kodu. NULL nie spełnia porównań (jak w SQL). Grupowanie liczy
+wartości w wierszach widoku.
+
+### D58 · 2026-10-23 — Generowanie SQL i kodu bez danych logowania; podgląd HTML bez skryptów
+SQL z wierszy (DB-GRID-002) używa klucza głównego tabeli, a gdy nie ma go w wyniku — ROWID (MERGE wymaga klucza
+głównego). Kod generowany z obiektu (SD-GEN-001) ma zmienne wiązane zamiast wartości, a połączenie w Java/Python
+wskazuje alias — bez hasła, hosta i użytkownika. Przeciągnięcie obiektu z Option wstawia SELECT albo wywołanie
+programu; zwykłe przeciągnięcie — nazwę. Panel wartości pokazuje HTML z bazy bez JavaScriptu i bez zasobów
+sieciowych (Content-Security-Policy), bo treść z bazy jest niezaufana. SET SQLFORMAT formatuje tylko wyniki zapytań
+okna poleceń; `ansiconsole` to wyrównane kolumny z nagłówkiem (bez kolorów ANSI w konsoli okna).
+
+### D59 · 2026-10-23 — Autotrace bez Tuning Pack; kursor odnajdywany znacznikiem
+Autotrace wykonuje polecenie w sesji narzędzi ze wskazówką `GATHER_PLAN_STATISTICS` i unikalnym komentarzem, po którym
+odnajduje kursor w V$SQL (niezależnie od kolejności zapytań pomocniczych), a plan rzeczywisty czyta z
+V$SQL_PLAN_STATISTICS_ALL i DBMS_XPLAN.DISPLAY_CURSOR('ALLSTATS LAST') — bez Real-Time SQL Monitoring (Tuning Pack).
+DML jest wykonywane przez strażnika zmian i zawsze wycofywane. A-Rows różniące się od E-Rows×Starts ponad 10 razy są
+wyróżniane (wskazówka do statystyk optymalizatora).
+
+### D60 · 2026-10-23 — Panel DBA i Instance Viewer tolerują brak uprawnień; zadania w tle w Workspace
+Sekcje panelu DBA i części Instance Viewera czytają słownik DBA_/V$ i przy ORA-00942/01031 pokazują komunikat o braku
+uprawnień zamiast błędu (użytkownik bez SELECT_CATALOG_ROLE widzi to, do czego ma dostęp). Zmiany (ALTER SYSTEM SET,
+blokada konta) to komendy z potwierdzeniem i strażnikiem zmian. Task Monitor to wspólna lista `WorkspaceTaskCenter`
+w Workspace (nazwa bez kolizji z `BackgroundTask` SwiftUI); długie operacje uruchamia się przez `ws.tasks.run`.

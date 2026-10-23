@@ -1,6 +1,7 @@
 import AppKit
 import PelikanDB
 import PelikanWorkspace
+import SwiftUI
 
 /// Siatka wyników (ADR 0004): NSTableView z wirtualizacją wierszy, kolumna numeru wiersza, NULL na kolorowym tle
 /// (UG 7.2), liczby do prawej, dociąganie porcjami przy zbliżeniu do końca, sortowanie klikiem nagłówka (Shift —
@@ -22,6 +23,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private var tokens: [ObservationToken] = []
     private var lastRowCount = 0
     private var lastSort: [ResultGridModel.SortKey] = []
+    private var lastFilter: String?
+    private var valuePanel: NSView?
+    private var scrollTrailing: NSLayoutConstraint?
+    private var panelWidth: NSLayoutConstraint?
     static let nullColor = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.30, green: 0.28, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.98, blue: 0.80, alpha: 1) }
     private let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
@@ -152,13 +157,28 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             { let c = bar.heightAnchor.constraint(equalToConstant: 24); c.priority = .defaultHigh; return c }(),
             scroll.topAnchor.constraint(equalTo: bar.bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
             scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
             record.topAnchor.constraint(equalTo: bar.bottomAnchor),
             record.leadingAnchor.constraint(equalTo: leadingAnchor),
             record.trailingAnchor.constraint(equalTo: trailingAnchor),
             record.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
+        // Panel wartości bieżącej komórki po prawej (DB-PANEL-001), widoczny przełącznikiem z menu Widok.
+        let panel = NSHostingView(rootView: CellValuePanelView(tab: tab, grid: grid))
+        panel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(panel)
+        let trailing = scroll.trailingAnchor.constraint(equalTo: panel.leadingAnchor)
+        let width = panel.widthAnchor.constraint(equalToConstant: 0)
+        NSLayoutConstraint.activate([
+            panel.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            panel.bottomAnchor.constraint(equalTo: bottomAnchor),
+            panel.trailingAnchor.constraint(equalTo: trailingAnchor),
+            trailing, width,
+        ])
+        valuePanel = panel
+        scrollTrailing = trailing
+        panelWidth = width
+        panel.isHidden = true
     }
 
     static func initialWidth(_ c: ColumnInfo) -> CGFloat {
@@ -176,12 +196,25 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     }
 
     private func modelChanged() {
+        let showPanel = workspace.valuePanelVisible
+        if valuePanel?.isHidden == showPanel {
+            valuePanel?.isHidden = !showPanel
+            panelWidth?.constant = showPanel ? 300 : 0
+        }
+        let filterText = grid.filter?.text
+        if filterText != lastFilter {
+            lastFilter = filterText
+            lastRowCount = grid.rowCount
+            table.deselectAll(nil)
+            table.reloadData()
+        }
         let count = grid.rowCount
         let more = grid.hasMore
         let sort = grid.sortKeys
         let edit = grid.edit
         let focus = tab.focusedColumn
         countLabel.stringValue = (more ? L10n.tr("\(count) wierszy (więcej…)") : L10n.tr("\(count) wierszy"))
+            + (filterText.map { L10n.tr("  ·  filtr: \($0) (z \(grid.fetchedRowCount))") } ?? "")
             + (edit.hasChanges ? L10n.tr("  ·  zmiany do zatwierdzenia") : "")
         if edit.isEditing != lastEditing {
             lastEditing = edit.isEditing
@@ -405,7 +438,53 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.target = self
             item.representedObject = id
         }
+        menu.addItem(.separator())
+        for (title, id, exclude) in [(L10n.tr("Filtruj: tylko ta wartość"), "grid.filterByValue", false),
+                                     (L10n.tr("Filtruj: bez tej wartości"), "grid.filterByValue", true)] {
+            let item = menu.addItem(withTitle: title, action: #selector(filterByValue(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = exclude
+            _ = id
+        }
+        for (title, id) in [(L10n.tr("Filtr wyrażeniem…"), "grid.filterExpression"), (L10n.tr("Wyczyść filtr"), "grid.clearFilter"),
+                            (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel")] {
+            let item = menu.addItem(withTitle: title, action: #selector(cellCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = id
+        }
+        let gen = NSMenu()
+        for k in RowSQLGenerator.Kind.allCases {
+            let item = gen.addItem(withTitle: k.rawValue.uppercased(), action: #selector(generateSQL(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = k.rawValue
+        }
+        menu.addItem(withTitle: L10n.tr("Generuj SQL z wierszy"), action: nil, keyEquivalent: "").submenu = gen
         return menu
+    }
+
+    /// Komórka spod kursora menu jako bieżąca (prawy klik nie zmienia zaznaczenia tabeli).
+    private func adoptClickedCell() {
+        if let c = dataColumn(atTableColumn: table.clickedColumn) { tab.currentColumn = c }
+        if table.clickedRow >= 0, !(tab.selectedRows ?? []).contains(table.clickedRow) {
+            table.selectRowIndexes([table.clickedRow], byExtendingSelection: false)
+            tab.selectedRows = [table.clickedRow]
+        }
+    }
+
+    @objc private func filterByValue(_ sender: NSMenuItem) {
+        adoptClickedCell()
+        workspace.perform("grid.filterByValue", CommandArguments(["exclude": .bool(sender.representedObject as? Bool ?? false)]))
+    }
+
+    @objc private func cellCommand(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        adoptClickedCell()
+        workspace.perform(CommandID(rawValue: id))
+    }
+
+    @objc private func generateSQL(_ sender: NSMenuItem) {
+        guard let kind = sender.representedObject as? String else { return }
+        workspace.perform("grid.generateSQL", CommandArguments(["kind": .string(kind)]))
     }
 
     @objc private func contextCommand(_ sender: NSMenuItem) {
