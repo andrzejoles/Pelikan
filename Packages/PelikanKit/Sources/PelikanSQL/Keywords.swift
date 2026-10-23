@@ -26,6 +26,7 @@ public enum Keywords {
         "MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "SELF", "OVERRIDING", "FINAL", "INSTANTIABLE", "UNDER",
         "EDITIONABLE", "NONEDITIONABLE", "ACCESSIBLE", "CONTINUE", "CALL", "LANGUAGE", "EXTERNAL", "LIBRARY",
         "MLE", "MODULE", "SIGNATURE", "ENV", "JAVASCRIPT", "TRUE", "FALSE", "SQLCODE", "SQLERRM", "NEXT",
+        "TRIGGER", "BEFORE", "AFTER", "INSTEAD", "EACH", "REFERENCING", "FOLLOWS", "PRECEDES", "COMPOUND",
     ]
 
     public static let sql: Set<String> = [

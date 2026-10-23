@@ -109,6 +109,7 @@ extension Workspace {
 
     /// Zapis dokumentu do pliku (w formacie, w jakim go otwarto; znaki spoza kodowania — UTF-8).
     public func save(_ doc: Document, to url: URL) throws {
+        if settings.beautifier.beforeSave { autoBeautify(doc) }
         var format = doc.fileFormat
         var data = TextFileCodec.encode(doc.text, format: format)
         if data == nil {

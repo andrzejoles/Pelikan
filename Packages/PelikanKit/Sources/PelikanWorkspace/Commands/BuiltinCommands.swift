@@ -264,6 +264,27 @@ public enum BuiltinCommands {
                 doc.selectedRange = o..<o
                 return .ok
             },
+            Command(CommandDescriptor(id: "edit.beautify", title: L10n.tr("Formatuj kod PL/SQL"), category: .edit,
+                                      mac: ["cmd+shift+f"], agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Formatuje całe źródło albo zaznaczone linie według reguł formatera; zmienia tylko odstępy, układ linii i wielkość liter."),
+                                      feature: "PD-BEAU-002"),
+                    validate: { editable($0) != nil }) { ctx in
+                guard let doc = editable(ctx.workspace) else { return .ok }
+                let options = ctx.workspace.settings.beautifier
+                let len = (doc.text as NSString).length
+                let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
+                if sel.isEmpty {
+                    let f = try Beautifier.format(doc.text, options: options)
+                    let caret = min(sel.lowerBound, (f as NSString).length)
+                    doc.text = f
+                    doc.selectedRange = caret..<caret
+                } else {
+                    let (f, range) = try Beautifier.format(doc.text, range: sel, options: options)
+                    doc.text = f
+                    doc.selectedRange = range
+                }
+                return CommandResult(message: L10n.tr("Sformatowano"))
+            },
             Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
                                       pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .read, effect: .none,
                                       summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),
@@ -397,9 +418,6 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
                 TextEditing.removeTrailingSpaces($0, selection: $1)
             },
-            .planned(CommandDescriptor(id: "edit.beautify", title: L10n.tr("Formatuj kod (PL/SQL Beautifier)"), category: .edit,
-                                       mac: ["cmd+shift+f"], agent: .full, effect: .modifiesEditor,
-                                       summary: L10n.tr("Formatuje kod według reguł."), stage: 2, feature: "PD-BEAU-002")),
             .planned(CommandDescriptor(id: "edit.macroRecord", title: L10n.tr("Nagrywaj makro"), category: .edit, submenu: L10n.tr("Makra"),
                                        pd: ["f11"], agent: .none, effect: .uiState,
                                        summary: L10n.tr("Rozpoczyna lub kończy nagrywanie makra."), stage: 6, feature: "PD-EDIT-015")),

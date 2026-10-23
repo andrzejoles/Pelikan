@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 import PelikanDB
 
 /// Komendy obiektu Object Browsera (UG 21.1): dane, DDL, opis, właściwości, edycja, rekompilacja, usunięcie.
@@ -121,6 +122,9 @@ public enum ObjectCommands {
                     if o.type == .package || o.type == .type {
                         let bodyType: DBObjectType = o.type == .package ? .packageBody : .typeBody
                         if let body = try? await m.source(of: DBObject(owner: o.owner, name: o.name, type: bodyType)) { text += "\n" + body + "\n/\n" }
+                    }
+                    if ctx.workspace.settings.beautifier.afterLoad, let f = try? Beautifier.format(text, options: ctx.workspace.settings.beautifier) {
+                        text = f
                     }
                     let doc = ctx.workspace.newDocument(.program, text: text)
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)

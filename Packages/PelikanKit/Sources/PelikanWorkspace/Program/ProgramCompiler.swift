@@ -92,6 +92,7 @@ public enum ProgramCompiler {
     /// preferencji PLSQL_WARNINGS. Linie błędów przeliczane na linie dokumentu (od 1).
     @MainActor
     public static func compile(_ doc: Document, in ws: Workspace) async throws -> Result {
+        if ws.settings.beautifier.beforeCompile { ws.autoBeautify(doc) }
         let units = units(in: doc.text)
         guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
