@@ -147,12 +147,12 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 |---|---|---|---|---|---|---|---|
 | PD-CMDW-001 | Karta Dialog (linia poleceń, historia linii) i karta Editor (plik skryptu z podświetlaniem) | UG 8.1–8.2 | Command Window | 1 | P1 | Brak | ✅ test |
 | PD-CMDW-002 | Pasek stanu opcji Echo, Termout, Feedback, Verify, Autoprint, Heading, Timing (dwuklik przełącza) | UG 8.1 | Command Window | 1 | P2 | Brak | 👁 ręcznie |
-| PD-CMDW-003 | Krokowanie skryptu: Pause Execution, Execute Next Command, SET EXECPAUSE | UG 8.2 | Command Window | 1 | P3 | Brak | do zrobienia |
+| PD-CMDW-003 | Krokowanie skryptu: Pause Execution, Execute Next Command, SET EXECPAUSE | UG 8.2 | Command Window | 1 | P3 | Brak | ✅ test (SET EXECPAUSE ON i komenda Wstrzymaj wykonanie: pytanie przed każdym poleceniem — Wykonaj, Wykonaj resztę, Przerwij) |
 | PD-CMDW-004 | Polecenia SQL*Plus: /, ?, @, @@, ACCEPT, CLEAR, COLUMN (FORMAT, NEW_VALUE), CONNECT, DEFINE, DESCRIBE, DISCONNECT, EDIT, EXECUTE, EXIT/QUIT, GET, HELP, PAUSE, PRINT, PROMPT, RUN, REMARK, START, STORE SET, UNDEFINE, VARIABLE, WHENEVER | UG 8.3 | Command Window | 1 | P1 | Brak | ⚠️ częściowo (bez GET/STORE/CHANGE/INPUT/COPY/BREAK/COMPUTE) |
 | PD-CMDW-005 | SET: AUTOPRINT, COLSEP, CONCAT, DEFINE, ECHO, ESCAPE, FEEDBACK (ONLY, SQL_ID), HEADING, LONG, NUMWIDTH, PAGESIZE, PROMPT, SCAN, SERVEROUTPUT (SIZE UNLIMITED), SPOOLDIRECTORY, TERMOUT, TIMING, VERIFY | UG 8.3, NF17 | Command Window | 1 | P1 | Brak | ✅ test |
 | PD-CMDW-006 | SHOW ERRORS / RELEASE / SQLCODE / USER / CONNECTION / ENVVAR | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
 | PD-CMDW-007 | SPOOL (APPEND, OFF, OUT, .zip) | UG 8.3 | Command Window | 1 | P2 | Brak | ✅ test |
-| PD-CMDW-008 | HOST (polecenie systemu — tylko użytkownik; agent nigdy) | UG 8.3, PROMPT §7.3 p.9 | Command Window | 1 | P3 | Brak | do zrobienia |
+| PD-CMDW-008 | HOST (polecenie systemu — tylko użytkownik; agent nigdy) | UG 8.3, PROMPT §7.3 p.9 | Command Window | 1 | P3 | Brak | ✅ test (HOST, !, $ — tylko użytkownik, zawsze po potwierdzeniu z treścią polecenia, /bin/sh w katalogu CD bez zmiennych Pelikana, limit 120 s, wyjście w oknie; agent nie ma dostępu do Command Window, D105) |
 | PD-CMDW-009 | Polecenia własne: BEAUTIFY, BROWSE, CD, DIR, EDIT obiekt, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH, SET ENVVAR | UG 8.3 | Command Window | 6 | P3 | Brak | ✅ test (BEAUTIFY, BROWSE, CD, DIR, EDIT, EDITDATA, INFO, PROPERTIES, QUERYDATA, RECOMPILE, TEST, VIEW, ZIP, SET COLWIDTH; SET ENVVAR pominięte — D47) |
 | PD-CMDW-010 | EXPORT TABLES / EXPORT OBJECTS (składnia jak narzędzia eksportu), RUNTESTSET | UG 8.4–8.5 | Command Window | 6 | P3 | Brak | ✅ test (EXPORT TABLES / EXPORT OBJECTS, RUNTESTSET) |
 | PD-CMDW-011 | Nieobsługiwane SET w skrypcie wsadowym bez błędu | NF17 | Command Window | 1 | P3 | Brak | ✅ test |

@@ -137,7 +137,18 @@ extension SQLPlusEngine {
                 try? FileManager.default.removeItem(at: dir.appendingPathComponent(args[1]))
                 return .finished
             }
-            throw SQLPlusError(L10n.tr("HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)."))
+            // HOST (PD-CMDW-008): tylko użytkownik (agent nie ma dostępu do Command Window), zawsze po potwierdzeniu
+            // z treścią polecenia — także w skryptach @plik; powłoka /bin/sh w katalogu CD, limit czasu, wyjście w oknie.
+            let command = Self.rest(text).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !command.isEmpty else { throw SQLPlusError(L10n.tr("SP2-0042: brak polecenia systemu po HOST")) }
+            guard let ui = workspace.ui, await ui.ask(L10n.tr("Wykonać polecenie systemu?"), message: command,
+                                                     buttons: [L10n.tr("Wykonaj"), L10n.tr("Anuluj")]) == 0 else {
+                emit(L10n.tr("Anulowano"), .info)
+                return .finished
+            }
+            let r = try HostCommand.run(command, directory: state.directory ?? baseDirectory)
+            if !r.output.isEmpty { emit(r.output.trimmingCharacters(in: .newlines), .output) }
+            if r.status != 0 { emit(L10n.tr("Kod wyjścia: \(r.status)"), .error) }
         case "TIMING":
             state.timing.toggle()
         case "HELP":

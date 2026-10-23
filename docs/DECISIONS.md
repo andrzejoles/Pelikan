@@ -803,3 +803,10 @@ których edytor nie generuje, a subpartycje i tabele zewnętrzne zostają poza z
 lista nazwa=wartość; zmiana wartości to DROP i ADD (Oracle nie ma zamiany w miejscu). Uprawnienia ze zmienioną opcją
 nadawania są odbierane i nadawane ponownie. Domena: szablon CREATE DOMAIN i DDL z DBMS_METADATA (typ SQL_DOMAIN);
 asercje (26ai) czekają na wersję bazy testowej, która je obsługuje.
+
+### D105 · 2026-10-24 — HOST w Command Window dla użytkownika, z potwierdzeniem (zmienia D31)
+Wiersz PD-CMDW-008 wymaga HOST dla użytkownika (agent nigdy). HOST, `!` i `$` uruchamiają polecenie przez `/bin/sh -c`
+w katalogu ustawionym przez CD, ze środowiskiem bez zmiennych `PELIKAN_*` i bez TNS_ADMIN katalogu zarządzanego, z limitem
+120 s i wyjściem w oknie. Każde wywołanie — także ze skryptu `@plik` — wymaga potwierdzenia z pełną treścią polecenia,
+żeby cudzy skrypt nie uruchomił niczego po cichu. Agent nie ma dostępu do Command Window (AI-SEC-011, test), więc nie
+dociera do HOST. Wyjątek instalatora utPLSQL (D31: `! rm plik` bez powłoki i bez pytania) zostaje bez zmian.

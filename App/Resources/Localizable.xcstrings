@@ -17221,34 +17221,6 @@
         }
       }
     },
-    "HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST is not available in the Pelikan Command Window (run system commands in Terminal)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST недоступна в Command Window Pelikan (системні команди запускайте в Терміналі)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST no está disponible en la Command Window de Pelikan (ejecute los comandos del sistema en Terminal)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST ist im Command Window von Pelikan nicht verfügbar (Systembefehle im Terminal ausführen)."
-          }
-        }
-      }
-    },
     "HTML" : {
       "localizations" : {
         "en" : {
@@ -29033,6 +29005,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nächstes Fenster"
+          }
+        }
+      }
+    },
+    "Następne polecenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next command"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächster Befehl"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente comando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна команда"
           }
         }
       }
@@ -44241,6 +44241,34 @@
         }
       }
     },
+    "Polecenie systemu przekroczyło limit %@ s i zostało przerwane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system command exceeded the %@ s limit and was stopped"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Systembefehl hat das Limit von %@ s überschritten und wurde abgebrochen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El comando del sistema superó el límite de %@ s y se detuvo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системна команда перевищила ліміт %@ с і була перервана"
+          }
+        }
+      }
+    },
     "Polecenie szukane jest w PATH powłoki logowania. „Konfiguracja MCP jak” wybiera sposób przekazania serwera MCP Pelikana tylko dla jednej sesji." : {
       "localizations" : {
         "en" : {
@@ -53225,6 +53253,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0003: Variablenname fehlt."
+          }
+        }
+      }
+    },
+    "SP2-0042: brak polecenia systemu po HOST" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: no system command after HOST"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: kein Systembefehl nach HOST"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: falta el comando del sistema después de HOST"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: немає системної команди після HOST"
           }
         }
       }
@@ -69161,6 +69217,62 @@
         }
       }
     },
+    "Wstrzymaj wykonanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause Execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführung anhalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупинити виконання"
+          }
+        }
+      }
+    },
+    "Wstrzymuje skrypt Command Window przed następnym poleceniem; dalej krok po kroku albo resztę naraz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pauses the Command Window script before the next command; then continue step by step or run the rest at once."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hält das Command Window-Skript vor dem nächsten Befehl an; danach schrittweise oder den Rest auf einmal ausführen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa el script de la Command Window antes del siguiente comando; después continúa paso a paso o ejecuta el resto de una vez."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Призупиняє скрипт Command Window перед наступною командою; далі крок за кроком або решту одразу."
+          }
+        }
+      }
+    },
     "Wszystkie" : {
       "localizations" : {
         "en" : {
@@ -71093,6 +71205,34 @@
         }
       }
     },
+    "Wykonaj resztę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the rest"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rest ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar el resto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати решту"
+          }
+        }
+      }
+    },
     "Wykonaj skrypt (agent)" : {
       "localizations" : {
         "en" : {
@@ -71425,6 +71565,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgeführt: %@"
+          }
+        }
+      }
+    },
+    "Wykonać polecenie systemu?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run the system command?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systembefehl ausführen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Ejecutar el comando del sistema?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати системну команду?"
           }
         }
       }
