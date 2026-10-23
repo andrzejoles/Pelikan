@@ -27,6 +27,8 @@ struct TableEditorView: View {
                 keys.tabItem { Text(L10n.tr("Klucze")) }.tag(2)
                 checks.tabItem { Text(L10n.tr("Warunki")) }.tag(3)
                 indexes.tabItem { Text(L10n.tr("Indeksy")) }.tag(4)
+                privileges.tabItem { Text(L10n.tr("Uprawnienia")) }.tag(6)
+                partitionsAndTriggers.tabItem { Text(L10n.tr("Partycje i wyzwalacze")) }.tag(7)
                 sql.tabItem { Text("SQL") }.tag(5)
             }
             .padding(10)
@@ -56,8 +58,90 @@ struct TableEditorView: View {
             }
             Toggle(L10n.tr("Organizacja indeksowa (IOT)"), isOn: $definition.indexOrganized).disabled(original != nil || definition.temporary)
             TextField(L10n.tr("Komentarz"), text: $definition.comment, axis: .vertical).lineLimit(2...4)
+            Toggle(L10n.tr("Archiwizacja wierszy (ROW ARCHIVAL)"), isOn: $definition.rowArchival).disabled(definition.temporary)
+            TextField(L10n.tr("Adnotacje tabeli (nazwa=wartość, …; 23ai)"), text: annotations($definition.annotations))
         }
         .formStyle(.grouped)
+    }
+
+    private var privileges: some View {
+        VStack(alignment: .leading) {
+            Table($definition.grants) {
+                TableColumn(L10n.tr("Odbiorca")) { $g in TextField("", text: upper($g.grantee)) }.width(min: 140, ideal: 200)
+                TableColumn(L10n.tr("Uprawnienie")) { $g in
+                    Picker("", selection: $g.privilege) {
+                        ForEach(["SELECT", "INSERT", "UPDATE", "DELETE", "REFERENCES", "ALTER", "INDEX", "READ", "DEBUG", "FLASHBACK"], id: \.self) { Text($0).tag($0) }
+                    }.labelsHidden()
+                }.width(140)
+                TableColumn(L10n.tr("Z prawem nadawania")) { $g in Toggle("", isOn: $g.grantable).labelsHidden() }.width(120)
+            }
+            listButtons(add: { definition.grants.append(TableDefinition.Grant(grantee: "PUBLIC", privilege: "SELECT")) },
+                        remove: { if !definition.grants.isEmpty { definition.grants.removeLast() } })
+        }
+    }
+
+    private var partitionsAndTriggers: some View {
+        Form {
+            Section(L10n.tr("Partycjonowanie")) {
+                if original != nil {
+                    Text(definition.partitionInfo.isEmpty ? L10n.tr("Tabela nie jest partycjonowana") : L10n.tr("Partycjonowanie: \(definition.partitionInfo)"))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Toggle(L10n.tr("Partycjonuj tabelę"), isOn: Binding(get: { definition.partitioning != nil },
+                                                                       set: { definition.partitioning = $0 ? TableDefinition.Partitioning(method: .range, columns: []) : nil }))
+                    if definition.partitioning != nil {
+                        Picker(L10n.tr("Metoda"), selection: Binding(get: { definition.partitioning?.method ?? .range }, set: { definition.partitioning?.method = $0 })) {
+                            ForEach(TableDefinition.Partitioning.Method.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        }
+                        TextField(L10n.tr("Kolumny klucza"), text: Binding(get: { definition.partitioning?.columns.joined(separator: ", ") ?? "" },
+                                                                           set: { definition.partitioning?.columns = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty } }))
+                        if definition.partitioning?.method == .range {
+                            TextField(L10n.tr("INTERVAL (np. NUMTOYMINTERVAL(1,'MONTH'))"), text: Binding(get: { definition.partitioning?.interval ?? "" }, set: { definition.partitioning?.interval = $0 }))
+                        }
+                        TextField(L10n.tr("Partycje: nazwa: wartości (po jednej w linii)"), text: Binding(get: {
+                            definition.partitioning?.partitions.map { $0.values.isEmpty ? $0.name : "\($0.name): \($0.values)" }.joined(separator: "\n") ?? ""
+                        }, set: { text in
+                            definition.partitioning?.partitions = text.split(separator: "\n").compactMap { line in
+                                let parts = line.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                                guard let n = parts.first, !n.isEmpty else { return nil }
+                                return TableDefinition.Partition(name: n.uppercased(), values: parts.count > 1 ? parts[1] : "")
+                            }
+                        }), axis: .vertical).lineLimit(3...8).font(.system(.body, design: .monospaced))
+                    }
+                }
+            }
+            Section(L10n.tr("Wyzwalacze")) {
+                if definition.triggers.isEmpty { Text(L10n.tr("Brak wyzwalaczy")).foregroundStyle(.secondary) }
+                ForEach(definition.triggers, id: \.name) { trg in
+                    HStack {
+                        Text(trg.name)
+                        Spacer()
+                        Button(trg.enabled ? L10n.tr("Wyłącz") : L10n.tr("Włącz")) {
+                            Task {
+                                do {
+                                    try await workspace.invoke(trg.enabled ? "ob.disable" : "ob.enable",
+                                                               CommandArguments(["object": .string("\(definition.owner).\(trg.name)"), "type": "TRIGGER"]))
+                                    refresh()
+                                } catch { message = error.localizedDescription }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    /// Adnotacje jako tekst „nazwa=wartość, nazwa2”.
+    private func annotations(_ b: Binding<[TableDefinition.Annotation]>) -> Binding<String> {
+        Binding(get: { b.wrappedValue.map { $0.value.isEmpty ? $0.name : "\($0.name)=\($0.value)" }.joined(separator: ", ") },
+                set: { text in
+                    b.wrappedValue = text.split(separator: ",").compactMap { part in
+                        let kv = part.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                        guard let n = kv.first, !n.isEmpty else { return nil }
+                        return TableDefinition.Annotation(name: n, value: kv.count > 1 ? kv[1] : "")
+                    }
+                })
     }
 
     private var columns: some View {
@@ -71,6 +155,8 @@ struct TableEditorView: View {
                 TableColumn(L10n.tr("Wirtualna (wyrażenie)")) { $c in TextField("", text: $c.virtualExpression).disabled(c.originalName != nil) }
                     .width(min: 80, ideal: 120)
                 TableColumn(L10n.tr("Identity")) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
+                TableColumn(L10n.tr("Domena")) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
+                TableColumn(L10n.tr("Adnotacje")) { $c in TextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
                 TableColumn(L10n.tr("Komentarz")) { $c in TextField("", text: $c.comment) }
             }
             listButtons(add: { definition.columns.append(TableDefinition.Column(name: "KOLUMNA\(definition.columns.count + 1)", type: "VARCHAR2(30 CHAR)")) },

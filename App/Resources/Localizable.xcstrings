@@ -1513,6 +1513,62 @@
         }
       }
     },
+    "Adnotacje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotations"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annotationen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anotaciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Анотації"
+          }
+        }
+      }
+    },
+    "Adnotacje tabeli (nazwa=wartość, …; 23ai)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Table annotations (name=value, …; 23ai)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabellenannotationen (Name=Wert, …; 23ai)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anotaciones de la tabla (nombre=valor, …; 23ai)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Анотації таблиці (назва=значення, …; 23ai)"
+          }
+        }
+      }
+    },
     "Adres wyszukiwania „%@” nie jest adresem http(s)" : {
       "localizations" : {
         "en" : {
@@ -2853,6 +2909,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Програма (назва або шлях .app; порожньо — програма, пов'язана з файлом)"
+          }
+        }
+      }
+    },
+    "Archiwizacja wierszy (ROW ARCHIVAL)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row archival (ROW ARCHIVAL)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenarchivierung (ROW ARCHIVAL)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivado de filas (ROW ARCHIVAL)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Архівування рядків (ROW ARCHIVAL)"
           }
         }
       }
@@ -6073,6 +6157,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає пошуків — додайте їх у Параметрах › Інструменти"
+          }
+        }
+      }
+    },
+    "Brak wyzwalaczy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No triggers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Trigger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin disparadores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає тригерів"
           }
         }
       }
@@ -12125,6 +12237,62 @@
         }
       }
     },
+    "Domena" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domain"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domäne"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dominio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Домен"
+          }
+        }
+      }
+    },
+    "Domena…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domain…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domäne …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dominio…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Домен…"
+          }
+        }
+      }
+    },
     "Domeny" : {
       "localizations" : {
         "en" : {
@@ -18089,6 +18257,34 @@
         }
       }
     },
+    "INTERVAL (np. NUMTOYMINTERVAL(1,'MONTH'))" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INTERVAL (e.g. NUMTOYMINTERVAL(1,'MONTH'))"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INTERVAL (z. B. NUMTOYMINTERVAL(1,'MONTH'))"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INTERVAL (p. ej. NUMTOYMINTERVAL(1,'MONTH'))"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INTERVAL (напр. NUMTOYMINTERVAL(1,'MONTH'))"
+          }
+        }
+      }
+    },
     "Identity" : {
       "localizations" : {
         "en" : {
@@ -22033,6 +22229,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spalten / Ausdrücke (DESC)"
+          }
+        }
+      }
+    },
+    "Kolumny klucza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key columns"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüsselspalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columnas clave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпці ключа"
           }
         }
       }
@@ -34833,6 +35057,34 @@
         }
       }
     },
+    "Odbiorca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grantee"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empfänger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receptor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одержувач"
+          }
+        }
+      }
+    },
     "Odblokować definicję raportu?" : {
       "localizations" : {
         "en" : {
@@ -38249,6 +38501,34 @@
         }
       }
     },
+    "Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a SQL Window with a CREATE DOMAIN template (23ai): type, constraint, display, annotations."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein SQL Window mit einer CREATE DOMAIN-Vorlage (23ai): Typ, Constraint, Anzeige, Annotationen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una SQL Window con una plantilla CREATE DOMAIN (23ai): tipo, restricción, visualización, anotaciones."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває SQL Window із шаблоном CREATE DOMAIN (23ai): тип, обмеження, відображення, анотації."
+          }
+        }
+      }
+    },
     "Otwiera okno SQL z szablonem CREATE OR REPLACE VIEW." : {
       "localizations" : {
         "en" : {
@@ -40177,6 +40457,146 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Partitionen"
+          }
+        }
+      }
+    },
+    "Partycje i wyzwalacze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitions and Triggers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitionen und Trigger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particiones y disparadores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розділи й тригери"
+          }
+        }
+      }
+    },
+    "Partycje: nazwa: wartości (po jednej w linii)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitions: name: values (one per line)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitionen: Name: Werte (eine pro Zeile)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particiones: nombre: valores (una por línea)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розділи: назва: значення (по одному в рядку)"
+          }
+        }
+      }
+    },
+    "Partycjonowanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitioning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitionierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particionado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секціонування"
+          }
+        }
+      }
+    },
+    "Partycjonowanie: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitioning: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partitionierung: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particionado: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секціонування: %@"
+          }
+        }
+      }
+    },
+    "Partycjonuj tabelę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partition the table"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle partitionieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Particionar la tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секціонувати таблицю"
           }
         }
       }
@@ -57765,6 +58185,34 @@
         }
       }
     },
+    "Tabela nie jest partycjonowana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The table is not partitioned"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tabelle ist nicht partitioniert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La tabla no está particionada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таблиця не секціонована"
+          }
+        }
+      }
+    },
     "Tabela tymczasowa (GLOBAL TEMPORARY)" : {
       "localizations" : {
         "en" : {
@@ -61541,6 +61989,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Benutzerberechtigungen"
+          }
+        }
+      }
+    },
+    "Uprawnienie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privilege"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privileg"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privilegio"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілей"
           }
         }
       }
@@ -73637,6 +74113,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Codeabdeckung"
+          }
+        }
+      }
+    },
+    "Z prawem nadawania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With grant option"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Grant Option"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con opción de concesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З правом надання"
           }
         }
       }

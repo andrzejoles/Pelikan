@@ -795,3 +795,11 @@ filtra z podwojonymi apostrofami; gdy filtr go używa, pole nie filtruje już na
 obiektów i zapytanie zwracające OWNER, OBJECT_NAME, OBJECT_TYPE; widoczność według wzorca połączenia jak w zestawach
 preferencji. Ukrywanie właściciela w nazwach folderu jest w modelu, a widok pokazuje nazwy jak w drzewie bieżącego
 użytkownika.
+
+### D104 · 2026-10-24 — Edytor tabeli 23ai: zakres partycji i domen
+Partycjonowanie jest edytowane tylko przy tworzeniu tabeli (RANGE z opcjonalnym INTERVAL, LIST, HASH); dla istniejącej
+tabeli edytor pokazuje opis z ALL_PART_TABLES — zmiany partycji (ADD/SPLIT/MERGE) to osobne operacje administracyjne,
+których edytor nie generuje, a subpartycje i tabele zewnętrzne zostają poza zakresem. Adnotacje są przechowywane jako
+lista nazwa=wartość; zmiana wartości to DROP i ADD (Oracle nie ma zamiany w miejscu). Uprawnienia ze zmienioną opcją
+nadawania są odbierane i nadawane ponownie. Domena: szablon CREATE DOMAIN i DDL z DBMS_METADATA (typ SQL_DOMAIN);
+asercje (26ai) czekają na wersję bazy testowej, która je obsługuje.

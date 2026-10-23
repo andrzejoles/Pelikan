@@ -400,6 +400,7 @@ public final class MetadataProvider {
         case .databaseLink: "DB_LINK"
         case .javaSource: "JAVA_SOURCE"
         case .mleModule: "MLE_MODULE"
+        case .domain: "SQL_DOMAIN"
         default: o.type.rawValue.replacingOccurrences(of: " ", with: "_")
         }
         let r = try await s.execute("""

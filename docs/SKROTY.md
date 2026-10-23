@@ -56,6 +56,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Indeks… | `file.newIndex` |  |  | Brak | 0 | PD-OED-010 |
 | Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Domena… | `file.newDomain` |  |  | Brak | 0 | PD-OED-011 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
 | Zapisz test jako skrypt SQL*Plus | `test.saveAsSQLPlus` |  |  | Pełny | 0 | PD-TEST-005 |
 | Przeglądarka plików › Dodaj lokalizację… | `fb.addLocation` |  |  | Brak | 0 | PD-FB-001 |

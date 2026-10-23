@@ -41,6 +41,13 @@ enum EditorCommands {
             newSimple(.index, id: "file.newIndex", title: L10n.tr("Indeks…"), feature: "PD-OED-010"),
             newSimple(.user, id: "file.newUser", title: L10n.tr("Użytkownik…"), feature: "PD-OED-009"),
             newSimple(.role, id: "file.newRole", title: L10n.tr("Rola…"), feature: "PD-OED-009"),
+            Command(CommandDescriptor(id: "file.newDomain", title: L10n.tr("Domena…"), category: .file, submenu: L10n.tr("Nowy"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje."),
+                                      feature: "PD-OED-011")) { ctx in
+                try await ctx.workspace.invoke("file.newFromTemplate", CommandArguments(["template": .string(TemplateLibrary.objectsFolder + "/" + L10n.tr("Domena"))]),
+                                               invoker: ctx.invoker)
+            },
             Command(CommandDescriptor(id: "file.newView", title: L10n.tr("Widok…"), category: .file, submenu: L10n.tr("Nowy"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno SQL z szablonem CREATE OR REPLACE VIEW."), feature: "PD-OED-010")) { ctx in
