@@ -81,7 +81,7 @@ Kolejność podzadań (każde = gałąź `etap-2/<nazwa>` i PR):
 6. **etap-2/narzedzia** — Find Database Objects, Compile Invalid Objects, Difference Viewer, edytory obiektów
    (tabela, sekwencja, synonim, widok, indeks, użytkownik, rola), test wydajności (pakiet 50 000 linii, 100 000 obiektów).
 
-## Etap 3 — Test Window, debuger, profiler
+## Etap 3 — Test Window, debuger, profiler ✅ (zakończony 2026-10-23, PR #25–#31, szkic wydania — D29)
 Test Window (zmienne, typy, wykonanie, stos błędu), debuger DBMS_DEBUG (Step into/over/out, run to cursor, punkty
 przerwania z warunkami i logpointami, error breakpoints, zmienne Local/Global/Input z drzewem rekordów, kolekcji,
 obiektów, `:old`/`:new`, stos, watches) i DBMS_DEBUG_JDWP (Pelikan jako serwer JDWP), statystyki, profiler
