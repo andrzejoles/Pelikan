@@ -100,16 +100,23 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         ruler.needsDisplay = true
     }
 
-    /// Zmiany modelu z zewnątrz (historia okna, agent `replace_range`, błąd do zaznaczenia).
+    /// Zmiany modelu z zewnątrz (komendy edycji, historia okna, agent `replace_range`, błąd do zaznaczenia).
+    /// Tekst nakładany jako minimalna zamiana przez NSTextView — z rejestracją cofania i podświetlaniem przyrostowym.
     private func syncFromModel() {
         let text = document.text
+        let selection = document.selectedRange
         let error = document.errorRange
         if text != textView.string {
-            load(text)
-            textView.setSelectedRange(NSRange(location: min(document.selectedRange.lowerBound, (text as NSString).length), length: 0))
+            applyExternal(text)
+        }
+        let len = (textView.string as NSString).length
+        let current = textView.selectedRange()
+        let wanted = NSRange(location: min(selection.lowerBound, len), length: max(0, min(selection.upperBound, len) - min(selection.lowerBound, len)))
+        if !updatingFromModel, current != wanted {
+            textView.setSelectedRange(wanted)
+            textView.scrollRangeToVisible(wanted)
         }
         if let error {
-            let len = (textView.string as NSString).length
             let r = NSRange(location: min(error.lowerBound, len), length: 0)
             textView.setSelectedRange(r)
             textView.scrollRangeToVisible(r)
@@ -117,6 +124,34 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let word = textView.selectionRange(forProposedRange: r, granularity: .selectByWord)
             if word.length > 0 { textView.showFindIndicator(for: word) }
         }
+    }
+
+    private func applyExternal(_ text: String) {
+        let old = textView.string as NSString
+        let new = text as NSString
+        // Wspólny początek i koniec — zamieniamy tylko środek.
+        var prefix = 0
+        let minLen = min(old.length, new.length)
+        while prefix < minLen, old.character(at: prefix) == new.character(at: prefix) { prefix += 1 }
+        var suffix = 0
+        while suffix < minLen - prefix, old.character(at: old.length - 1 - suffix) == new.character(at: new.length - 1 - suffix) { suffix += 1 }
+        let range = NSRange(location: prefix, length: old.length - prefix - suffix)
+        let replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        updatingFromModel = true
+        defer { updatingFromModel = false }
+        if old.length == 0 || range.length == old.length && old.length > 200_000 {
+            load(text)
+            return
+        }
+        if textView.shouldChangeText(in: range, replacementString: replacement) {
+            textView.textStorage?.replaceCharacters(in: range, with: replacement)
+            textView.didChangeText()
+        }
+        if let storage = textView.textStorage {
+            highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
+                                  delta: (replacement as NSString).length - range.length, font: font)
+        }
+        ruler.needsDisplay = true
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)

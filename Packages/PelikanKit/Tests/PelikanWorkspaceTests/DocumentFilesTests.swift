@@ -23,6 +23,10 @@ final class FakeUI: UIServices {
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool { true }
     func showLargeDataEditor(_ model: LargeDataModel) {}
     func chooseFilesToOpen() async -> [URL] { openURLs }
+    var textAnswer: String?
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
+    func showFindReplace() {}
+    func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
 }
 

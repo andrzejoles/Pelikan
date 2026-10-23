@@ -232,6 +232,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 220, height: 24))
+        field.stringValue = defaultValue
+        alert.accessoryView = field
+        alert.addButton(withTitle: L10n.tr("OK"))
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        alert.window.initialFirstResponder = field
+        guard let window = mainWindow?.window else { return alert.runModal() == .alertFirstButtonReturn ? field.stringValue : nil }
+        let r = await alert.beginSheetModal(for: window)
+        mainWindow?.documentArea.focusActiveDocument()
+        return r == .alertFirstButtonReturn ? field.stringValue : nil
+    }
+
+    private var findPanel: NSPanel?
+    func showFindReplace() {
+        if findPanel == nil {
+            let p = NSPanel(contentViewController: NSHostingController(rootView: FindReplaceView(model: FindReplaceModel(workspace: workspace))))
+            p.title = L10n.tr("Znajdź i zamień")
+            p.styleMask = [.titled, .closable, .utilityWindow, .nonactivatingPanel]
+            p.isFloatingPanel = true
+            p.hidesOnDeactivate = true
+            if let f = mainWindow?.window?.frame { p.setFrameTopLeftPoint(NSPoint(x: f.maxX - 600, y: f.maxY - 80)) }
+            findPanel = p
+        }
+        findPanel?.makeKeyAndOrderFront(nil)
+    }
+
+    func showRecallStatement() {
+        guard let window = mainWindow?.window else { return }
+        var sheet: NSWindow?
+        let view = RecallStatementView(workspace: workspace) { [weak self] in
+            if let sheet { window.endSheet(sheet) }
+            self?.mainWindow?.documentArea.focusActiveDocument()
+        }
+        let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+        sheet = w
+        window.beginSheet(w)
+    }
+
     func chooseFilesToOpen() async -> [URL] {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true

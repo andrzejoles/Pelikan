@@ -28,6 +28,10 @@ final class TestUI: UIServices {
     var openURLs: [URL] = []
     var saveURL: URL?
     func chooseFilesToOpen() async -> [URL] { openURLs }
+    var textAnswer: String?
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { textAnswer }
+    func showFindReplace() {}
+    func showRecallStatement() {}
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
     func showLargeDataEditor(_ model: LargeDataModel) { largeData = model }
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {

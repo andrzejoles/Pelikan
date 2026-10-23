@@ -190,12 +190,12 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-002 | Lekser przyrostowy (stan na końcu linii), tolerancyjny | PROMPT §4.1 | Edytor | 1 | P1 | — | ✅ test |
 | PD-EDIT-003 | Numery linii (interwał), status linii (zmieniona/nowa), podświetlenie bieżącej linii, margines pionowy, znaki specjalne | UG 23.12 | Edytor | 1 | P1 | — | w toku |
 | PD-EDIT-004 | Wcięcia None/Automatic/Smart, Backspace/Delete unindents, tabulacje, zawijanie, kursor za końcem linii | UG 23.12 | Edytor | 1 | P1 | — | do zrobienia |
-| PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | do zrobienia |
-| PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | do zrobienia |
+| PD-EDIT-005 | Funkcje zaznaczenia: wcięcie, usuń końcowe spacje, wielkie/małe litery (bez literałów), komentarz, Apply Syntax Case, sortowanie | UG 25.1 | Edit > Selection | 1 | P1 | Pełny | ✅ test |
+| PD-EDIT-006 | Komentarz/odkomentowanie linii (Ctrl+−) | NF15 | Edytor | 1 | P1 | — | ✅ test |
 | PD-EDIT-007 | Zaznaczenie kolumnowe (Alt+przeciąganie) z pisaniem w wielu liniach | UG 25.2, NF13 | Edytor | 1 | P2 | — | do zrobienia |
-| PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | do zrobienia |
-| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | w toku |
-| PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | do zrobienia |
+| PD-EDIT-008 | Find & Replace: regex (z `$1`, `\t`), całe słowa, wielkość liter, Preserve case, Search in (komentarze/literały/kod), zakres, kierunek, Search All | UG 25.3, NF13, NF16 | Ctrl+F | 1 | P1 | Pełny | ✅ test |
+| PD-EDIT-009 | Recall Statement: globalna historia wykonanych poleceń (bez haseł), filtr, wiele naraz, eksport | UG 25.5 | Ctrl+E | 1 | P1 | Odczyt | ✅ test |
+| PD-EDIT-010 | Go to line (od początku / kursora / początku polecenia) | UG 25.12 | Ctrl+G | 1 | P1 | Pełny | ✅ test |
 | PD-EDIT-011 | Zakładki 0–9 (Ctrl+K n / Ctrl+Q n), nazwy, lista zakładek | UG 25.13, NF15 | Edit > Bookmarks | 2 | P2 | — | do zrobienia |
 | PD-EDIT-012 | Color marks (kolorowanie fragmentów) | UG 25.14 | Edit > Color marker | 2 | P3 | — | do zrobienia |
 | PD-EDIT-013 | Zwijanie kodu (+/−, Fold All, podgląd zwiniętego), klawisze zwijania | UG 25.17, NF13 | Edytor | 2 | P1 | — | do zrobienia |
@@ -205,9 +205,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-017 | AutoReplace (skróty → tekst lub szablon), także po symbolach | UG 23.12, NF16 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-018 | Podświetlanie nawiasów, zmiennych, pasujących słów przy zaznaczeniu, kolumn INSERT ↔ VALUES, tabela.kolumna | UG 23.12, NF13, NF14 | Edytor | 2 | P2 | — | do zrobienia |
 | PD-EDIT-019 | Oznaczanie identyfikatorów > 30 znaków | UG 23.12, NF10 | Edytor | 2 | P3 | — | do zrobienia |
-| PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | do zrobienia |
+| PD-EDIT-020 | Duplicate line, Delete next word, First Character on Line | NF13, NF9 | Edytor | 1 | P2 | — | ⚠️ częściowo (Duplicate line; bez Delete next word) |
 | PD-EDIT-021 | Ctrl +/− rozmiar czcionki edytora; ligatury (Fira Code, JetBrains Mono…) | NF13, NF17 | Edytor | 1 | P3 | — | do zrobienia |
-| PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | do zrobienia |
+| PD-EDIT-022 | Pasek stanu: `linia:kolumna [długość zaznaczenia]` | NF15 | Edytor | 1 | P2 | — | 👁 ręcznie |
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | do zrobienia |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | do zrobienia |
@@ -373,7 +373,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-VCS-001 | Git (i SVN): status pliku na pasku stanu, w File Browserze i projekcie, gałąź Git, operacje z menu | UG 17, NF14, NF17 | Pasek stanu okna | 6 | P2 | Odczyt | do zrobienia |
 | PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | do zrobienia |
 | PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | do zrobienia |
-| PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | do zrobienia |
+| PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |
 | PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | do zrobienia |
 

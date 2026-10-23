@@ -22,6 +22,12 @@ public protocol UIServices: AnyObject {
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool
     /// Large Data Editor (UG 27) dla komórki siatki.
     func showLargeDataEditor(_ model: LargeDataModel)
+    /// Pytanie o tekst (np. numer linii); nil — anulowano.
+    func askText(_ title: String, message: String, defaultValue: String) async -> String?
+    /// Okno Znajdź i zamień dla aktywnego edytora.
+    func showFindReplace()
+    /// Okno historii poleceń (Recall Statement, UG 25.5).
+    func showRecallStatement()
     /// Okno wyboru plików do otwarcia.
     func chooseFilesToOpen() async -> [URL]
     /// Okno wyboru nazwy pliku do zapisu; nil — anulowano.
@@ -75,6 +81,8 @@ public final class Workspace {
         didSet { rebuildKeymap() }
     }
     public var statusMessage: String?
+    /// Ostatnie wyszukiwanie (Znajdź następne — F3).
+    public var lastSearch: TextSearch?
     /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
     public private(set) var history: [HistoryEntry] = []
     public var settings: Settings {
