@@ -64,7 +64,7 @@ final class SidebarViewController: NSViewController {
     private let container = NSView()
     private lazy var panes: [NSViewController] = [
         ConnectionListViewController(workspace: workspace),
-        PlaceholderPaneController(text: L10n.tr("Przeglądarka obiektów — Etap 2")),
+        ObjectBrowserViewController(workspace: workspace),
         WindowListViewController(workspace: workspace),
     ]
 
@@ -285,6 +285,7 @@ final class DocumentAreaViewController: NSViewController {
             vc.removeFromParent()
             controllers[id] = nil
         }
+        container.clipsToBounds = true
         if workspace.activeDocument?.id != installedID { container.subviews.forEach { $0.removeFromSuperview() } }
         if let doc = workspace.activeDocument {
             let vc = controllers[doc.id] ?? {

@@ -262,6 +262,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         findPanel?.makeKeyAndOrderFront(nil)
     }
 
+    func showObjectInfo(title: String, columns: [String], rows: [[String]]) {
+        ObjectInfoWindowController.show(title: title, columns: columns, rows: rows)
+    }
+
     /// Ekran pomocy przy braku Instant Client (PD-CONN-029): pobranie od Oracle, wskazanie katalogu, sterownik thin.
     func showClientMissingHelp(_ message: String) {
         let alert = NSAlert()

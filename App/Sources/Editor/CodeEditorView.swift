@@ -72,6 +72,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = true
         scrollView.autohidesScrollers = true
+        // Okno ma treść pod paskiem tytułu — bez automatycznych wcięć edytor nie wchodzi pod pasek kart.
+        scrollView.automaticallyAdjustsContentInsets = false
+        scrollView.contentInsets = NSEdgeInsetsZero
         // Margines numerów linii jako osobny widok obok (NSRulerView w TextKit 2 zasłaniał tekst).
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         ruler.translatesAutoresizingMaskIntoConstraints = false
