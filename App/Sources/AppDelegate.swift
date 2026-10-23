@@ -259,6 +259,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func clipboardText() -> String? { NSPasteboard.general.string(forType: .string) }
 
+    func exportDiagram(_ doc: PelikanWorkspace.Document, format: String) {
+        DiagramOutput.export(doc, format: format, workspace: workspace)
+    }
+
+    func copyDiagramImage(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.copy(doc)
+    }
+
+    func printDiagram(_ doc: PelikanWorkspace.Document) {
+        DiagramOutput.print(doc)
+    }
+
+    func showQueryBuilder(sql: String?, connectionID: UUID?) {
+        let target = workspace.activeDocument.flatMap { [.sql, .program, .test].contains($0.kind) ? $0.id : nil }
+        ToolWindowController.close(key: "queryBuilder")
+        ToolWindowController.show(key: "queryBuilder", title: L10n.tr("Query Builder"), size: NSSize(width: 1000, height: 720)) {
+            QueryBuilderView(workspace: workspace, connectionID: connectionID, targetDocument: target, initialSQL: sql)
+        }
+    }
+
     func showExportObjects() {
         ToolWindowController.show(key: "exportObjects", title: L10n.tr("Eksport obiektów użytkownika"), size: NSSize(width: 680, height: 620)) {
             ExportObjectsView(workspace: workspace)

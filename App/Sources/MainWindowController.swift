@@ -241,6 +241,7 @@ final class DocumentAreaViewController: NSViewController {
         guard let id = installedID, let vc = controllers[id] else { return }
         let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? CommandWindowViewController)?.preferredFirstResponder
             ?? (vc as? ProgramWindowViewController)?.preferredFirstResponder ?? (vc as? TestWindowViewController)?.preferredFirstResponder
+            ?? (vc as? DiagramViewController)?.preferredFirstResponder
             ?? (vc as? ExplainPlanViewController)?.preferredFirstResponder
             ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
@@ -365,6 +366,7 @@ final class DocumentAreaViewController: NSViewController {
                 case .command: CommandWindowViewController(document: doc, workspace: workspace)
                 case .program: ProgramWindowViewController(document: doc, workspace: workspace)
                 case .test: TestWindowViewController(document: doc, workspace: workspace)
+                case .diagram: DiagramViewController(document: doc, workspace: workspace)
                 case .explainPlan: ExplainPlanViewController(document: doc, workspace: workspace)
                 default: DocumentViewController(document: doc, workspace: workspace)
                 }

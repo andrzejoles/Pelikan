@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -459,7 +459,6 @@ public enum BuiltinCommands {
 
     @MainActor static var tools: [Command] {
         let t: [(String, String, [String], Int, String, AgentAccess)] = [
-            ("tools.queryBuilder", L10n.tr("Query Builder…"), [], 6, "PD-QB-001", .none),
             ("tools.exportTables", L10n.tr("Eksport tabel…"), [], 6, "PD-TOOL-003", .none),
             ("tools.importTables", L10n.tr("Import tabel…"), [], 6, "PD-TOOL-006", .none),
             ("tools.compareTableData", L10n.tr("Porównaj dane tabel…"), [], 6, "PD-TOOL-013", .read),

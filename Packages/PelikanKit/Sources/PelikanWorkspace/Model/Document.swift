@@ -112,6 +112,9 @@ public final class Document: Identifiable {
     public var commandLineHistory: [String] = []
     /// Program Window: błędy, ostrzeżenia i podpowiedzi ostatniej kompilacji (UG 4.4).
     public var compileMessages: [CompileMessage] = []
+    /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
+    public var diagram = Diagram()
+    public var diagramSelection: Set<UUID> = []
     /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
     public var plan: ExplainPlanResult?
     public var planGoal: OptimizerGoal = .session

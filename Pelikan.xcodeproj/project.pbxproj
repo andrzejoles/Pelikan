@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */; };
 		0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */; };
+		03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A244677BB2A02F711F72B0 /* DiagramViewController.swift */; };
 		069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */; };
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
 		0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52082891AAB3D01CF123726D /* LogonView.swift */; };
@@ -50,6 +51,7 @@
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
 		C252BEC5D799ACD07E9F8B83 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 910C5AB0C7B52DF921BC7E98 /* SwiftTerm */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
+		CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */; };
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
@@ -110,6 +112,7 @@
 		341BB93097046C46EB2F523B /* ObjectBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectBrowserViewController.swift; sourceTree = "<group>"; };
 		3429C3E6085A0A6E4E4B0843 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentUIController.swift; sourceTree = "<group>"; };
+		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
 		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
+		90A244677BB2A02F711F72B0 /* DiagramViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagramViewController.swift; sourceTree = "<group>"; };
 		967E1B4C45088DBF2A3C240B /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
 		987FAF7ACFFCC021864BC626 /* UtplsqlResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtplsqlResultsView.swift; sourceTree = "<group>"; };
 		9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VariablesView.swift; sourceTree = "<group>"; };
@@ -300,6 +304,7 @@
 				CA48D35749C698677F8C081C /* CommandWindow */,
 				42B5903D5D9EF245A7512677 /* Connections */,
 				DE8A198D51A8A988E6CC6BD6 /* Debug */,
+				9C0E1BAA6A3E8C5F7ECA07D4 /* Diagram */,
 				94B8513C5D09CD2AC6BAC631 /* Diff */,
 				ECB3825E12C3C711DC48304D /* Editor */,
 				D9C9B335E92845276A865184 /* Editors */,
@@ -341,6 +346,15 @@
 				CA27E74D0C918323B465606B /* ToolWindows.swift */,
 			);
 			path = Tools;
+			sourceTree = "<group>";
+		};
+		9C0E1BAA6A3E8C5F7ECA07D4 /* Diagram */ = {
+			isa = PBXGroup;
+			children = (
+				90A244677BB2A02F711F72B0 /* DiagramViewController.swift */,
+				3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */,
+			);
+			path = Diagram;
 			sourceTree = "<group>";
 		};
 		A72F30A1EC975E16BE5E4C35 /* Agent */ = {
@@ -569,6 +583,7 @@
 				2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */,
 				A35AB5B785F24DFE71D4EE4E /* ConnectionListViewController.swift in Sources */,
 				2D222E60B408BB5115D2F892 /* DebuggerPanel.swift in Sources */,
+				03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */,
 				A31A871F39BE737A965BFC71 /* DiffViewer.swift in Sources */,
 				972EF459C57D996C11CF97EC /* EditorToolViews.swift in Sources */,
 				0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */,
@@ -584,6 +599,7 @@
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,
+				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,
