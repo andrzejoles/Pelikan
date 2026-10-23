@@ -154,15 +154,9 @@ public enum SQLExecutor {
         var newTabs: [ResultTab] = []
         for s in stmts {
             let prepared = doc.substitutionEnabled ? Variables.prepare(s.text, values: values) : Variables.Prepared(sql: s.text, binds: [])
-            let binds = prepared.binds.map { b -> BindVariable in
-                switch b.value {
-                case .null: BindVariable(name: b.name, type: .varchar2, value: .null, maxSize: 4000)
-                case .text(let t): BindVariable(name: b.name, type: .varchar2, value: .text(t), maxSize: 32767)
-                case .list(let l): BindVariable(name: b.name, type: .varchar2, value: .text(l.joined(separator: ",")), maxSize: 32767)
-                }
-            }
+            let binds = bindVariables(prepared)
             do {
-                let r = try await session.execute(prepared.sql, binds: binds, options: ExecuteOptions(autoCommit: ws.settings.autoCommitSQL))
+                let r = try await session.execute(prepared.sql, binds: binds, options: executeOptions(ws))
                 ws.recordHistory(s.text)
                 doc.statementHistory.append(s.text)
                 doc.historyPosition = nil
@@ -171,12 +165,15 @@ public enum SQLExecutor {
                 case .query:
                     guard let rs = r.resultSet else { break }
                     let grid = ResultGridModel(columns: rs.columns, resultSet: rs.id, session: session, sql: prepared.sql, format: ws.settings.valueFormat)
+                    configure(grid, ws: ws)
                     let tab = ResultTab(title: tabTitle(for: s), statementRange: range, grid: grid)
                     tab.elapsed = r.elapsed
+                    tab.statementText = s.text
                     await grid.fetchMore(initialRows(for: s, settings: ws.settings))
                     if directive("tab", in: s.text)?.range(of: "&Count", options: .caseInsensitive) != nil {
                         tab.title = tabTitle(for: s, rowCount: grid.rowCount)
                     }
+                    try await applyDirectives(s.text, tab: tab, grid: grid, doc: doc, ws: ws, values: values)
                     newTabs.append(tab)
                 default:
                     changedData = changedData || r.kind != StatementKind.ddl
@@ -191,6 +188,7 @@ public enum SQLExecutor {
                     tab.elapsed = r.elapsed
                     for rs in r.implicitResults {
                         let g = ResultGridModel(columns: rs.columns, resultSet: rs.id, session: session, sql: prepared.sql, format: ws.settings.valueFormat)
+                        configure(g, ws: ws)
                         await g.fetchMore(initialRows(for: s, settings: ws.settings))
                         newTabs.append(ResultTab(title: tabTitle(for: s) + " #\(newTabs.count + 1)", statementRange: range, grid: g))
                     }
@@ -218,12 +216,125 @@ public enum SQLExecutor {
         if changedData || !ok {
             doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
         }
+        let elapsed = ContinuousClock.now - start
         if ok {
-            let elapsed = ContinuousClock.now - start
             // Liczbę wierszy aktywnej siatki pokazuje `Document.resultSummary` (zmienia się przy dociąganiu).
             doc.statusText = [newTabs.first?.message, L10n.tr("Czas: \(format(elapsed))")].compactMap { $0 }.joined(separator: "   ·   ")
         }
+        // Powiadomienie o końcu długiego wykonania (PD-SQLW-015, NF8).
+        let threshold = ws.settings.notifyLongQuerySeconds
+        if threshold > 0, elapsed >= .seconds(threshold) { ws.ui?.notifyExecutionFinished(title: doc.title, elapsed: format(elapsed), success: ok) }
         return ok
+    }
+
+    /// Zmienne wiązane z przygotowanego polecenia (listy jako tekst po przecinku).
+    static func bindVariables(_ prepared: Variables.Prepared) -> [BindVariable] {
+        prepared.binds.map { b -> BindVariable in
+            switch b.value {
+            case .null: BindVariable(name: b.name, type: .varchar2, value: .null, maxSize: 4000)
+            case .text(let t): BindVariable(name: b.name, type: .varchar2, value: .text(t), maxSize: 32767)
+            case .list(let l): BindVariable(name: b.name, type: .varchar2, value: .text(l.joined(separator: ",")), maxSize: 32767)
+            }
+        }
+    }
+
+    /// LOB na żądanie (PD-GRID-023): w siatce tylko początek wartości, całość w Large Data Editor.
+    static let lobPreviewBytes = 4000
+
+    static func executeOptions(_ ws: Workspace) -> ExecuteOptions {
+        ExecuteOptions(autoCommit: ws.settings.autoCommitSQL, lobLimit: ws.settings.fetchLOBsOnDemand ? lobPreviewBytes : nil)
+    }
+
+    /// Limit rozmiaru wyniku z pytaniem przed dalszym pobieraniem (PD-SQLW-026).
+    static func configure(_ grid: ResultGridModel, ws: Workspace) {
+        grid.sizeLimitBytes = max(0, ws.settings.maximumResultSetMegabytes) << 20
+        grid.confirmSizeLimit = { [weak ws] bytes in
+            guard let ui = ws?.ui else { return false }
+            return await ui.ask(L10n.tr("Wynik zajmuje ponad \(bytes >> 20) MB"),
+                                message: L10n.tr("Pobieranie kolejnych wierszy zwiększy zużycie pamięci (limit w Preferencjach › SQL Window)."),
+                                buttons: [L10n.tr("Pobieraj dalej"), L10n.tr("Zatrzymaj")]) == 0
+        }
+    }
+
+    /// Dyrektywy wyniku (UG 7.12): `Totals=`, `AltRowColor=`, `Excel=`/`CSV=` (eksport całego wyniku do pliku); sumy
+    /// zapamiętane w oknie dla nazw kolumn i szablon wyrównania zapytania.
+    static func applyDirectives(_ text: String, tab: ResultTab, grid: ResultGridModel, doc: Document, ws: Workspace,
+                                values: [String: VariableValue]) async throws {
+        var totals = ColumnTotals.parse(directive("totals", in: text) ?? "", columns: grid.columns)
+        for (i, c) in grid.columns.enumerated() {
+            if let aggs = doc.columnTotals[c.name.uppercased()], totals[i] == nil { totals[i] = aggs }
+        }
+        tab.totals = totals
+        tab.altRowColor = directive("altrowcolor", in: text)
+        if ws.settings.autoAlign, let t = ws.settings.alignTemplates[GridAlign.key(for: grid.sql)] { GridAlign.apply(t, to: grid, tab: tab) }
+        let targets: [(String, ExportFormat)] = [("excel", ExportFormat.xlsx), ("csv", .csv)].compactMap { k, f in directive(k, in: text).map { ($0, f) } }
+        guard !targets.isEmpty else { return }
+        await grid.fetchAll()
+        let data = grid.exportData(title: tab.title)
+        let def = ws.effectiveConnection(of: doc).flatMap { ws.connections.connection($0) }
+        let base = doc.fileURL?.deletingLastPathComponent() ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents")
+        var o = ExportOptions()
+        o.format = ws.settings.valueFormat
+        for (template, format) in targets {
+            let url = ExportDirectives.path(template, user: def?.target.user ?? "", database: def?.target.connectString ?? "", values: values,
+                                            now: Date(), base: base)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            let bytes = format == .xlsx ? ResultExporter.xlsx([data], options: o) : Data(ResultExporter.text(format, data, options: o).utf8)
+            try bytes.write(to: url, options: .atomic)
+            doc.output.append(L10n.tr("Wynik zapisany do pliku \(url.path) (wierszy: \(data.rows.count))"))
+        }
+    }
+
+    /// Ponowne wykonanie polecenia karty (Refresh, Auto Refresh, QBE — PD-SQLW-006, PD-SQLW-022): wartości zmiennych
+    /// zapamiętane w oknie bez pytania (PD-VAR-008), kryteria QBE karty, sumy i filtr kolumn zachowane.
+    public static func rerun(_ tab: ResultTab, in doc: Document, ws: Workspace) async throws {
+        guard let text = tab.statementText else { throw CommandError.notAvailable(L10n.tr("Karta nie pochodzi z zapytania")) }
+        let session = try await ws.session(for: doc)
+        let prepared = doc.substitutionEnabled ? Variables.prepare(text, values: doc.variableValues) : Variables.Prepared(sql: text, binds: [])
+        var sql = prepared.sql
+        if let old = tab.grid, !tab.qbeCriteria.isEmpty {
+            let criteria = tab.qbeCriteria.sorted { $0.key < $1.key }.compactMap { k, v in k < old.columns.count ? (old.columns[k], v) : nil }
+            sql = try QueryByExample.apply(sql: sql, criteria: criteria, options: qbeOptions(ws))
+        }
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
+        let r = try await session.execute(sql, binds: bindVariables(prepared), options: executeOptions(ws))
+        guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Polecenie nie zwróciło wyniku")) }
+        let grid = ResultGridModel(columns: rs.columns, resultSet: rs.id, session: session, sql: sql, format: ws.settings.valueFormat)
+        configure(grid, ws: ws)
+        let previous = tab.grid
+        await previous?.close()
+        await grid.fetchMore(max(previous?.rowCount ?? 0, ws.settings.recordsPerPage.initialRows))
+        tab.grid = grid
+        tab.elapsed = r.elapsed
+        tab.columnInfo = nil
+        if let f = tab.columnFilter { tab.hiddenColumns = Set(grid.columns.indices).subtracting(f.visible(grid.columns)) }
+        doc.statusText = L10n.tr("Odświeżono: \(grid.rowCount) wierszy   ·   Czas: \(format(r.elapsed))")
+    }
+
+    static func qbeOptions(_ ws: Workspace) -> QBEOptions {
+        QBEOptions(caseInsensitive: ws.settings.qbeCaseInsensitive, autoContains: ws.settings.qbeAutoContains, ignoreTime: ws.settings.qbeIgnoreTime)
+    }
+
+    /// Automatyczne odświeżanie wyników okna co `seconds` sekund (nil/0 — wyłączone; PD-SQLW-006).
+    public static func setAutoRefresh(_ doc: Document, seconds: Int?, ws: Workspace) {
+        doc.autoRefreshTask?.cancel()
+        doc.autoRefreshTask = nil
+        guard let seconds, seconds > 0 else { doc.autoRefreshSeconds = nil; return }
+        doc.autoRefreshSeconds = seconds
+        doc.autoRefreshTask = Task { @MainActor [weak doc, weak ws] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(seconds))
+                guard !Task.isCancelled, let doc, let ws, ws.documents.contains(where: { $0 === doc }) else { return }
+                guard !doc.isExecuting else { continue }
+                for tab in doc.results where tab.statementText != nil && tab.grid != nil {
+                    do { try await rerun(tab, in: doc, ws: ws) } catch {
+                        doc.statusText = error.localizedDescription
+                        break
+                    }
+                }
+            }
+        }
     }
 
     /// Liczba wierszy pobieranych na start (UG 23.20 Records per page; dyrektywa `-- Records=` — UG 7.12).

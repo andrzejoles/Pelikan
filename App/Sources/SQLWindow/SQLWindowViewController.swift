@@ -116,7 +116,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         let results = document.results
         let active = document.activeResultID
         let output = document.output
-        _ = results.map { ($0.title, $0.message, $0.pinned) }
+        _ = results.map { ($0.title, $0.message, $0.pinned, $0.grid) }
         // Pokaż obszar wyników po pierwszym wyniku albo wyjściu.
         if resultsCollapsed, !results.isEmpty || !output.isEmpty {
             resultsCollapsed = false
@@ -129,6 +129,12 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         for r in results {
             tabBar.addArrangedSubview(tabButton(title: (r.pinned ? "📌 " : "") + r.title,
                                                 selected: !showingOutput && r.id == active, isError: r.grid == nil && r.message?.hasPrefix("ORA-") == true) { [weak self] in
+                // Shift+klik karty przypina albo odpina wynik (UG 7.10, PD-SQLW-017).
+                if NSEvent.modifierFlags.contains(.shift) {
+                    r.pinned.toggle()
+                    self?.refreshResults()
+                    return
+                }
                 self?.showingOutput = false
                 self?.document.activeResultID = r.id
                 self?.select(r)
@@ -170,7 +176,8 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
     }
 
     private func view(for r: ResultTab) -> NSView {
-        if let v = gridViews[r.id] { return v }
+        // Odświeżenie karty (Refresh, QBE) podmienia model siatki — widok budowany od nowa.
+        if let v = gridViews[r.id], r.grid == nil || (v as? ResultGridView)?.model === r.grid { return v }
         let v: NSView
         if let grid = r.grid {
             v = ResultGridView(tab: r, grid: grid, workspace: workspace)

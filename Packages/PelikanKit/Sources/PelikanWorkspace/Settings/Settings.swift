@@ -72,6 +72,21 @@ public struct Settings: Sendable, Codable, Hashable {
     public var recordsPerPage: RecordsPerPage = .automatic
     public var maximumResultSetMegabytes = 512
     public var fetchLOBsOnDemand = true
+    /// Czcionka siatki wyników w punktach (PD-GRID-025).
+    public var gridFontSize: Double = 12
+    /// Numer wiersza jako pierwsza kolumna przy kopiowaniu i eksporcie (PD-GRID-027).
+    public var rowNumbersInCopyExport = false
+    /// Dźwięk po zakończeniu zapytania dłuższego niż tyle sekund; 0 — wyłączone (PD-SQLW-015).
+    public var notifyLongQuerySeconds = 10
+    /// Szablony wyrównania kolumn wg zapytania i ich automatyczne stosowanie (PD-GRID-012).
+    public var alignTemplates: [String: AlignTemplate] = [:]
+    public var autoAlign = true
+    /// Query By Example: bez rozróżniania wielkości liter, automatyczne „zawiera”, daty bez czasu (PD-SQLW-022).
+    public var qbeCaseInsensitive = true
+    public var qbeAutoContains = false
+    public var qbeIgnoreTime = true
+    /// Historia filtrów kolumn (PD-GRID-011), najnowsze pierwsze.
+    public var columnFilterHistory: [String] = []
     // UI — NLS Options
     public var dateFormat = "YYYY-MM-DD HH24:MI:SS"
     public var timestampFormat = "YYYY-MM-DD HH24:MI:SS.FF6"
@@ -198,6 +213,15 @@ public struct Settings: Sendable, Codable, Hashable {
         autoCommitPostedRecords = v(.autoCommitPostedRecords, autoCommitPostedRecords)
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
+        gridFontSize = v(.gridFontSize, gridFontSize)
+        rowNumbersInCopyExport = v(.rowNumbersInCopyExport, rowNumbersInCopyExport)
+        notifyLongQuerySeconds = v(.notifyLongQuerySeconds, notifyLongQuerySeconds)
+        alignTemplates = v(.alignTemplates, alignTemplates)
+        autoAlign = v(.autoAlign, autoAlign)
+        qbeCaseInsensitive = v(.qbeCaseInsensitive, qbeCaseInsensitive)
+        qbeAutoContains = v(.qbeAutoContains, qbeAutoContains)
+        qbeIgnoreTime = v(.qbeIgnoreTime, qbeIgnoreTime)
+        columnFilterHistory = v(.columnFilterHistory, columnFilterHistory)
         maximumResultSetMegabytes = v(.maximumResultSetMegabytes, maximumResultSetMegabytes)
         fetchLOBsOnDemand = v(.fetchLOBsOnDemand, fetchLOBsOnDemand)
         dateFormat = v(.dateFormat, dateFormat)

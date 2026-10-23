@@ -36,6 +36,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij wszystkie okna | `file.closeAll` | ⌥⌘W | ⌥⌘W | Brak | 0 | PD-UI-004 |
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 0 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
+| Wklej jako nowe SQL Window | `file.pasteAsSQLWindow` |  |  | Brak | 0 | PD-SQLW-025 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |
 | Odzyskaj okna… | `file.restoreRecovery` |  |  | Brak | 0 | PD-FILE-001 |
@@ -122,6 +123,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | 0 | PD-GRID-013 |
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
+| Wynik › Wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | 0 | PD-GRID-026 |
+| Wynik › Małe litery w komórkach | `grid.lowerCase` |  |  | Brak | 0 | PD-GRID-026 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | 0 | PD-EDIT-027 |
 | Otwórz w zewnętrznym edytorze | `edit.openInExternalEditor` |  |  | Brak | 0 | PD-EDIT-028 |
@@ -179,6 +182,24 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Zatwierdź zmiany (Post) | `grid.post` | ⌥⌘S | ⌥⌘S | Za zgodą | 0 | PD-GRID-017 |
 | Wynik › Anuluj zmiany | `grid.cancelChanges` |  |  | Brak | 0 | PD-GRID-017 |
 | Wynik › Kopiuj SQL zmian | `grid.copyChangesSQL` |  |  | Odczyt | 0 | PD-GRID-020 |
+| Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | 0 | PD-GRID-006 |
+| Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Zapisz wyrównanie dla zapytania | `grid.saveAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Usuń wyrównanie zapytania | `grid.removeAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Informacje o kolumnie | `grid.columnInfo` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Lista wartości… | `grid.valueList` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Sumy kolumny… | `grid.totals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Wyłącz sumy | `grid.clearTotals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Odśwież wynik | `sql.refreshResult` | ⇧⌘R | ⇧⌘R | Brak | 0 | PD-SQLW-006 |
+| Wynik › Automatyczne odświeżanie… | `sql.autoRefresh` |  |  | Brak | 0 | PD-SQLW-006 |
+| Wynik › Przypnij wynik | `sql.pinResult` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Przypnij wszystkie wyniki | `sql.pinAllResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Wyczyść karty wyników | `sql.clearResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Eksportuj zapytanie do pliku… | `sql.exportQuery` |  |  | Brak | 0 | PD-SQLW-018 |
+| Wynik › Query By Example… | `grid.queryByExample` | ⇧⌘E | ⇧⌘E | Brak | 0 | PD-SQLW-022 |
+| Wynik › Wyczyść Query By Example | `grid.clearQueryByExample` |  |  | Brak | 0 | PD-SQLW-022 |
 | Wynik › Zapisz jako zapytanie standardowe… | `grid.saveAsStandardQuery` |  |  | Brak | 0 | PD-SQLW-013 |
 | Wynik › Zapytania powiązane… | `grid.linkedQueries` |  |  | Brak | 0 | PD-SQLW-019 |
 | Wynik › Porównaj rekordy | `grid.compareRecords` |  |  | Brak | 0 | PD-SQLW-020 |
@@ -371,6 +392,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Siatka › Większa czcionka siatki | `grid.fontLarger` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Mniejsza czcionka siatki | `grid.fontSmaller` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Domyślna czcionka siatki | `grid.fontReset` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Numer wiersza w kopiowaniu i eksporcie | `grid.toggleRowNumbers` |  |  | Brak | 0 | PD-GRID-027 |
 | Panel wartości | `grid.valuePanel` | ⌥⌘V | ⌥⌘V | Brak | 0 | DB-PANEL-001 |
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |

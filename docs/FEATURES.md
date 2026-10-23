@@ -74,27 +74,27 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-003 | AutoSelect statement / Execute current statement (polecenie pod kursorem) | UG 23.20, NF10 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-004 | Wynik w siatce z pobieraniem pierwszej strony i dociąganiem (Next Page, Last Page, „(more…)”) | UG 7.1, UG 23.20 | SQL Window | 1 | P1 | Odczyt | ✅ test |
 | PD-SQLW-005 | Break w trakcie wykonania i w trakcie pobierania (zostają pobrane wiersze) | UG 7.1 | Break (Shift+Esc) | 1 | P1 | — | ✅ test |
-| PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | do zrobienia |
+| PD-SQLW-006 | Refresh result set (ponowne wykonanie karty) i Auto Refresh okna co n s | UG 7.1, NF8 | Siatka | 1 | P2 | — | ✅ test (Odśwież wynik karty i automatyczne odświeżanie okna co n s z zapamiętanymi wartościami zmiennych) |
 | PD-SQLW-007 | Historia poleceń okna (wstecz/dalej) | UG 7.1 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-008 | Karta Statistics (statystyki wykonania) | UG 6.2 | SQL Window > Statistics | 3 | P2 | Odczyt | do zrobienia |
 | PD-SQLW-009 | Karta Output z DBMS_OUTPUT (bufor, limit, włącz/wyłącz, czyszczenie, wskaźnik nowego wyjścia) | UG 5.8, UG 23.5 | SQL Window > Output | 1 | P1 | Odczyt | ✅ test |
 | PD-SQLW-010 | Tytuł karty z komentarza `-- tab=…` i `&Count` | UG 7.1, NF17 | SQL Window | 1 | P2 | — | ✅ test |
-| PD-SQLW-011 | Dyrektywy komentarzy: Excel=, CSV=, Records=, Totals=, AltRowColor= | UG 7.12 | SQL Window | 1 | P3 | — | w toku |
+| PD-SQLW-011 | Dyrektywy komentarzy: Excel=, CSV=, Records=, Totals=, AltRowColor= | UG 7.12 | SQL Window | 1 | P3 | — | ✅ test (Tab=, Records=, Excel=/CSV= z %dbuser%, %dbname%, %date%, %time%, %&zmienna%, Totals=[funkcje:]kolumny, AltRowColor=) |
 | PD-SQLW-012 | Zapis .sql (bieżące polecenie / z historią), Load do istniejącego okna | UG 7.13 | File > Save | 1 | P1 | Pełny | ✅ test |
 | PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | ✅ test (zapytania standardowe [owner]/[table]/[columns] w menu obiektu, zapis z siatki; menu bez zrzutu — D30) |
 | PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | ✅ test |
-| PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | w toku |
+| PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | ✅ test (dźwięk i podskok ikony w Docku po wykonaniu dłuższym niż próg z preferencji; czas na pasku stanu, hh:mm:ss > 100 s) |
 | PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | ✅ test (Plik › Drukuj… ⌘P: nagłówek z oknem, połączeniem i datą, kod z kolorami składni i numerami linii, w oknie SQL siatka — zaznaczone wiersze albo wszystkie pobrane; okno druku bez zrzutu — D30) |
-| PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | do zrobienia |
-| PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | do zrobienia |
+| PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | ✅ test (Przypnij wynik i Shift+klik karty, Przypnij wszystkie, Wyczyść karty wyników — także przypięte) |
+| PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | ✅ test (polecenie pod kursorem prosto do CSV, TSV, HTML, XML, SQL, xlsx albo schowka, bez siatki) |
 | PD-SQLW-019 | Linked Queries: tabele nadrzędne/podrzędne z FK, master/detail ze zmiennymi `:m_…`, Custom | UG 7.4, NF10 | Siatka > Linked Query | 6 | P2 | — | ✅ test (tabele nadrzędne i podrzędne z FK dla bieżącego wiersza, nowe okno SQL z warunkiem na wartości wiersza) |
 | PD-SQLW-020 | Compare records (identyczne/różne, kolumna/rekord, wielkość liter) | UG 7.8, NF11 | Siatka | 6 | P3 | — | ✅ test (zaznaczone rekordy kolumna po kolumnie, identyczne/różne, bez wielkości liter, tylko różne) |
 | PD-SQLW-021 | Compare result sets (dwie karty naraz, podświetlenie różnic, układ pionowy/poziomy) | UG 7.9, NF14 | Karty wyników | 6 | P3 | — | ✅ test (dwie karty, kolumny po nazwie, różne komórki podświetlone, wiersze tylko po jednej stronie, układ pionowy/poziomy) |
-| PD-SQLW-022 | Query By Example (wiersz kryteriów, wyrażenia, preferencje QBE) | UG 7.3, UG 23.20 | Siatka > QBE | 1 | P2 | — | do zrobienia |
+| PD-SQLW-022 | Query By Example (wiersz kryteriów, wyrażenia, preferencje QBE) | UG 7.3, UG 23.20 | Siatka > QBE | 1 | P2 | — | ✅ test (kryteria pod nazwami kolumn: wartość, %, operatory, in, between, null; bez wielkości liter, „zawiera”, daty bez czasu w preferencjach; okno QBE bez zrzutu — D30) |
 | PD-SQLW-023 | Wyróżnienie całego słowa przy błędzie, przejście do pozycji błędu ORA | NF15 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-SQLW-024 | Pytanie o zapis nowego okna przy zamykaniu; ostrzeżenie o niezatwierdzonej transakcji przy zamykaniu okna i aplikacji | UG 23.20, PROMPT §3.1 | SQL Window | 1 | P1 | — | ✅ test |
-| PD-SQLW-025 | Wklejenie tekstu na pusty obszar tworzy SQL Window | NF8 | — | 1 | P3 | — | do zrobienia |
-| PD-SQLW-026 | Maksymalny rozmiar wyniku (MB) z pytaniem przed dalszym pobieraniem | UG 23.20 | Preferences | 1 | P2 | — | do zrobienia |
+| PD-SQLW-025 | Wklejenie tekstu na pusty obszar tworzy SQL Window | NF8 | — | 1 | P3 | — | ✅ test (komenda Wklej jako nowe SQL Window; wklejenie na pusty obszar okien w aplikacji — bez zrzutu, D30) |
+| PD-SQLW-026 | Maksymalny rozmiar wyniku (MB) z pytaniem przed dalszym pobieraniem | UG 23.20 | Preferences | 1 | P2 | — | ✅ test (szacowany rozmiar pobranych wierszy; po przekroczeniu limitu MB z preferencji pytanie przed dalszym pobieraniem) |
 
 ## PL/SQL Developer — siatka wyników
 
@@ -105,28 +105,28 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-GRID-003 | `<CLOB>`, `<BLOB>`, `<Long>`… z przyciskiem komórki → Large Data Editor; przycisk dla tekstu > 20 znaków | UG 7.2 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-004 | Liczby z pełną precyzją Oracle; układ liczb (lewo/prawo/formatowane/z separatorem tysięcy) | NF17, UG 23.20 | Siatka | 1 | P1 | — | ⚠️ częściowo (pełna precyzja; bez wyboru układu liczb) |
 | PD-GRID-005 | Daty i znaczniki czasu wg formatu (NLS / własny), kalendarz przy edycji DATE | UG 7.2, UG 23.17 | Siatka | 1 | P1 | — | ⚠️ częściowo (formaty z preferencji; bez kalendarza) |
-| PD-GRID-006 | Kursor zagnieżdżony `<Cursor>` → nowe okno z wynikiem | UG 7.2 | Siatka | 1 | P3 | — | do zrobienia |
+| PD-GRID-006 | Kursor zagnieżdżony `<Cursor>` → nowe okno z wynikiem | UG 7.2 | Siatka | 1 | P3 | — | ✅ test (grid.openCursor: wynik kursora zagnieżdżonego w nowej karcie okna — D-S8G-1) |
 | PD-GRID-007 | Zaznaczanie wierszy, kolumn i bloków komórek; Select All; przenoszenie kolumn | UG 7.2 | Siatka | 1 | P1 | — | ⚠️ częściowo (wiersze, przenoszenie kolumn; bez bloków komórek) |
-| PD-GRID-008 | Blokada przewijania kolumn i wierszy (Scroll lock) | UG 7.2, NF9 | Siatka > Scroll lock | 1 | P2 | — | do zrobienia |
+| PD-GRID-008 | Blokada przewijania kolumn i wierszy (Scroll lock) | UG 7.2, NF9 | Siatka > Scroll lock | 1 | P2 | — | pominięte (NSTableView nie zamraża kolumn ani wierszy; kolumna numerów wierszy i nagłówek zostają widoczne — D-S8G-2) |
 | PD-GRID-009 | Sortowanie lokalne klikiem nagłówka (rosnąco/malejąco/brak, wtórne, wielkość liter) | UG 7.2 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-010 | Single Record View (kolumna, wartość, typ, komentarz; poprzedni/następny rekord) | UG 7.2, NF11 | Siatka | 1 | P1 | — | ⚠️ częściowo (bez komentarzy kolumn) |
-| PD-GRID-011 | Filtr kolumn (nazwy, typy, obowiązkowe, PK/UK/FK, historia, wklejanie wielu linii) | UG 7.2, NF13, NF17 | Siatka > Filter columns | 1 | P2 | — | do zrobienia |
-| PD-GRID-012 | Align (szerokość wg nagłówka/treści, wysokość, szablony wyrównania z kolejnością, auto-align), Hide Editor, Adjust Window width | UG 7.2, NF11 | Siatka > Align | 1 | P2 | — | do zrobienia |
+| PD-GRID-011 | Filtr kolumn (nazwy, typy, obowiązkowe, PK/UK/FK, historia, wklejanie wielu linii) | UG 7.2, NF13, NF17 | Siatka > Filter columns | 1 | P2 | — | ✅ test (fragmenty nazw z wklejonej listy, grupy typów, NOT NULL i PK/UK/FK ze słownika, historia; kolumny ukryte pomijane w kopii i eksporcie; okno filtra bez zrzutu — D30) |
+| PD-GRID-012 | Align (szerokość wg nagłówka/treści, wysokość, szablony wyrównania z kolejnością, auto-align), Hide Editor, Adjust Window width | UG 7.2, NF11 | Siatka > Align | 1 | P2 | — | ⚠️ częściowo (szerokości wg nagłówka/treści/obu, szablon kolejności i szerokości per zapytanie stosowany automatycznie ✅ test; wysokość wierszy, Hide Editor, Adjust Window width — nie, D-S8G-3) |
 | PD-GRID-013 | Eksport zaznaczenia: CSV, TSV, HTML, XML, SQL (INSERT), do pliku i do schowka | UG 7.2 | Siatka > Export Results | 1 | P1 | Brak | ✅ test |
 | PD-GRID-014 | Excel (xlsx; „Copy all” — arkusz na wynik; z SQL na osobnym arkuszu, formatowanie, kolory) | UG 7.2, UG 23.30 | Siatka > Copy to Excel | 1 | P2 | Brak | ✅ test |
 | PD-GRID-015 | Copy, Copy with Header, Copy Header, Copy as Expression List; kopiowanie także jako HTML | UG 7.2, NF12, NF17 | Siatka | 1 | P1 | — | ✅ test |
 | PD-GRID-016 | Column to files (kolumna → plik na wiersz, katalog i nazwa z wyrażeń) | UG 7.2, NF15 | Siatka > Export Results | 6 | P3 | Brak | ✅ test (kolumna → plik na wiersz, szablon nazwy z kolumnami i [#], katalog) |
 | PD-GRID-017 | Edycja wyniku z ROWID lub FOR UPDATE: Edit data, Insert record, Delete record, Post changes | UG 7.6 | Siatka | 1 | P1 | Za zgodą | ✅ test |
 | PD-GRID-018 | Tabela edytowana ustalana z ROWID (złączenia), kolumny z aliasem tylko do odczytu, kolumny niewidoczne edytowalne | UG 7.6, NF17, NF13 | Siatka | 1 | P1 | — | ✅ test |
-| PD-GRID-019 | Czerwony tekst przy przekroczeniu rozmiaru/precyzji; przeliczanie kolumn wirtualnych; wartości z wyzwalaczy po Post | UG 7.6, NF9 | Siatka | 1 | P2 | — | w toku |
+| PD-GRID-019 | Czerwony tekst przy przekroczeniu rozmiaru/precyzji; przeliczanie kolumn wirtualnych; wartości z wyzwalaczy po Post | UG 7.6, NF9 | Siatka | 1 | P2 | — | ✅ test (czerwony tekst przy przekroczeniu rozmiaru/precyzji, wartości z wyzwalaczy i kolumny wirtualne odświeżane po Post) |
 | PD-GRID-020 | Podgląd SQL zmian siatki (SQL Window / Command Window / schowek) przed Post | UG 7.6, NF15 | Siatka > Post changes ▾ | 1 | P1 | — | ✅ test |
 | PD-GRID-021 | Przejście do komórki z błędem po INSERT/UPDATE | NF12 | Siatka | 1 | P2 | — | ✅ test |
-| PD-GRID-022 | Informacje słownika w siatce: typ, NOT NULL, komentarz na pasku; listy wartości z CHECK IN i FK do małych tabel | UG 23.20 | Siatka | 1 | P2 | — | do zrobienia |
-| PD-GRID-023 | LOB pobierane na żądanie (preferencja) | UG 23.20, NF14 | Preferences | 1 | P2 | — | do zrobienia |
-| PD-GRID-024 | Sumy kolumn (Sum/Count/Avg/Min/Max), trwałe po ponownym wykonaniu | UG 7.12, NF11 | Siatka | 1 | P2 | — | do zrobienia |
-| PD-GRID-025 | Ctrl +/− rozmiar czcionki siatki | NF13 | Siatka | 1 | P3 | — | do zrobienia |
-| PD-GRID-026 | Wielkie/małe litery klawiszem w edytowalnej siatce | NF17 | Siatka | 1 | P3 | — | do zrobienia |
-| PD-GRID-027 | Numer wiersza w kopiowaniu/eksporcie (preferencja) | UG 23.20 | Preferences | 1 | P3 | — | do zrobienia |
+| PD-GRID-022 | Informacje słownika w siatce: typ, NOT NULL, komentarz na pasku; listy wartości z CHECK IN i FK do małych tabel | UG 23.20 | Siatka | 1 | P2 | — | ✅ test (typ, NOT NULL, klucze i komentarz kolumny na pasku stanu po kliknięciu komórki; lista wartości z CHECK … IN (…) i z FK do tabel ≤ 1000 wierszy) |
+| PD-GRID-023 | LOB pobierane na żądanie (preferencja) | UG 23.20, NF14 | Preferences | 1 | P2 | — | ✅ test (preferencja „LOB na żądanie”: w siatce 4000 bajtów wartości, całość w Large Data Editor — D-S8G-4) |
+| PD-GRID-024 | Sumy kolumn (Sum/Count/Avg/Min/Max), trwałe po ponownym wykonaniu | UG 7.12, NF11 | Siatka | 1 | P2 | — | ✅ test (Sum/Count/Avg/Min/Max pod siatką, zapamiętane w oknie dla nazw kolumn po ponownym wykonaniu; dyrektywa Totals=) |
+| PD-GRID-025 | Ctrl +/− rozmiar czcionki siatki | NF13 | Siatka | 1 | P3 | — | ✅ test (większa/mniejsza/domyślna czcionka siatki, zapamiętana w preferencjach; skróty do przypisania w Klawiaturze) |
+| PD-GRID-026 | Wielkie/małe litery klawiszem w edytowalnej siatce | NF17 | Siatka | 1 | P3 | — | ✅ test (wielkie/małe litery w zaznaczonych komórkach edytowalnej kolumny) |
+| PD-GRID-027 | Numer wiersza w kopiowaniu/eksporcie (preferencja) | UG 23.20 | Preferences | 1 | P3 | — | ✅ test (preferencja: kolumna # z numerem wiersza widoku w kopii i eksporcie) |
 
 ## PL/SQL Developer — zmienne
 
@@ -135,11 +135,11 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-VAR-001 | Zmienne podstawiania `&nazwa`, `&&nazwa`, wiele wystąpień, okno pytania o wartości | UG 7.5 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-VAR-002 | Zmienne wiązane `:nazwa` w SQL Window (typ domyślnie tekst), pomijanie `:new`/`:old` w wyzwalaczach | UG 7.5, NF16 | SQL Window | 1 | P1 | — | ✅ test |
 | PD-VAR-003 | Składnia opcji `&"Nazwa"` i `&<name= hint= type= required= default= ifempty= uppercase= lowercase= readonly= hidden= list= description= restricted= multiselect= checkbox= prefix= suffix= lines= editor=>` | UG 12.3, NF11 | SQL / Report Window, szablony | 1 | P1 | — | ✅ test |
-| PD-VAR-004 | Listy zależne (`:inna_zmienna` w zapytaniu listy, `&zmienna` w listach) | UG 12.3, NF14 | Okno zmiennych | 1 | P2 | — | do zrobienia |
+| PD-VAR-004 | Listy zależne (`:inna_zmienna` w zapytaniu listy, `&zmienna` w listach) | UG 12.3, NF14 | Okno zmiennych | 1 | P2 | — | ✅ test (zapytanie listy widzi inne zmienne jako :nazwa i &nazwa; pusta zależność — lista pusta) |
 | PD-VAR-005 | Przycisk `&` na pasku stanu wyłącza podstawianie (także zmiennych wiązanych) | UG 7.5, NF17 | Pasek stanu | 1 | P2 | — | 👁 ręcznie |
 | PD-VAR-006 | `&&` jako literał `&` w tekście (np. 'R&&D') | UG 12.3 | SQL Window | 1 | P2 | — | ✅ test |
 | PD-VAR-007 | Parametry JasperReports `$P{}`, `$P!{}`, `$X{IN/NOTIN/EQUAL/NOTEQUAL/LESS/GREATER/BETWEEN…}` jako zmienne (decyzja właściciela D6) | D6 | SQL Window | 1 | P1 | — | ✅ test |
-| PD-VAR-008 | Zapamiętywanie wartości zmiennych w oknie (.pfi) i przy Auto Refresh | UG 23.18, NF8 | SQL Window | 1 | P2 | — | do zrobienia |
+| PD-VAR-008 | Zapamiętywanie wartości zmiennych w oknie (.pfi) i przy Auto Refresh | UG 23.18, NF8 | SQL Window | 1 | P2 | — | ✅ test (wartości zmiennych pamiętane w oknie i w worksecie zamiast pliku .pfi; odświeżanie bez ponownego pytania — D-S8G-5) |
 
 ## PL/SQL Developer — Command Window
 

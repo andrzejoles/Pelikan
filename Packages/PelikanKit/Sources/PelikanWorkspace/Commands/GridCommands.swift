@@ -20,7 +20,19 @@ public enum GridCommands {
     static func selection(_ ws: Workspace) -> ExportData? {
         guard let (tab, grid) = activeGrid(ws) else { return nil }
         let rows = tab.selectedRows.flatMap { $0.isEmpty ? nil : $0 }
-        return grid.exportData(rows: rows, columns: tab.columnOrder, title: tab.title)
+        // Kolumny ukryte filtrem kolumn nie trafiają do kopii ani eksportu (PD-GRID-011).
+        let columns = (tab.columnOrder ?? Array(grid.columns.indices)).filter { !tab.hiddenColumns.contains($0) }
+        var data = grid.exportData(rows: rows, columns: columns, title: tab.title)
+        if ws.settings.rowNumbersInCopyExport { data = withRowNumbers(data, viewRows: rows ?? Array(0..<grid.rowCount)) }
+        return data
+    }
+
+    /// Numer wiersza (widoku, od 1) jako pierwsza kolumna kopii i eksportu (PD-GRID-027).
+    static func withRowNumbers(_ d: ExportData, viewRows: [Int]) -> ExportData {
+        var out = d
+        out.columns.insert(ColumnInfo(name: "#", type: .number, typeName: "NUMBER"), at: 0)
+        out.rows = zip(d.rows, viewRows).map { [OracleValue.number(String($1 + 1))] + $0 }
+        return out
     }
 
     @MainActor

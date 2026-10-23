@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import PelikanSQL
 
 /// Okno zapisane w worksecie (UG 15): plik albo tekst (zmiany niezapisane przetrwają zamknięcie aplikacji).
 public struct WorksetDocument: Sendable, Codable, Hashable {
@@ -13,6 +14,24 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var selectionEnd: Int
     public var connectionID: UUID?
     public var testVariables: [TestVariable]?
+    /// Wartości zmiennych `&`/`:` zapamiętane w oknie (PD-VAR-008, jak `.pfi` wzorca).
+    public var variables: [String: WorksetVariable]?
+}
+
+/// Wartość zmiennej okna w worksecie: tekst albo lista; brak obu — NULL.
+public struct WorksetVariable: Sendable, Codable, Hashable {
+    public var text: String?
+    public var list: [String]?
+
+    public init(_ v: VariableValue) {
+        switch v {
+        case .null: break
+        case .text(let t): text = t
+        case .list(let l): list = l
+        }
+    }
+
+    public var value: VariableValue { list.map { .list($0) } ?? text.map { .text($0) } ?? .null }
 }
 
 /// Workset: zestaw okien z kolejnością i oknem aktywnym.
@@ -161,7 +180,8 @@ extension Workspace {
             return WorksetDocument(kind: d.kind, title: d.customTitle, filePath: d.fileURL?.path, text: keepText ? d.text : nil,
                                    modified: d.isModified, selectionStart: d.selectedRange.lowerBound, selectionEnd: d.selectedRange.upperBound,
                                    connectionID: d.connectionPinned ? d.connectionID : nil,
-                                   testVariables: d.kind == .test && keepText ? d.testVariables : nil)
+                                   testVariables: d.kind == .test && keepText ? d.testVariables : nil,
+                                   variables: d.variableValues.isEmpty ? nil : d.variableValues.mapValues(WorksetVariable.init))
         }
         let active = documents.filter { [.sql, .program, .test, .command].contains($0.kind) }.firstIndex { $0.id == activeDocumentID }
         return Workset(name: name ?? worksets.current, documents: docs, activeIndex: active)
@@ -194,6 +214,7 @@ extension Workspace {
                 continue
             }
             doc.customTitle = e.title
+            if let v = e.variables { doc.variableValues = v.mapValues(\.value) }
             if let c = e.connectionID, connections.connection(c) != nil {
                 doc.connectionID = c
                 doc.connectionPinned = true
