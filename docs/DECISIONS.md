@@ -667,3 +667,13 @@ akceptacja na AIX 6.1 / ksh88 i próbki komunikatów proc/xlc — właściciel (
 (sshd testowy bez dziedziczenia stdout/stderr, zestawy SSH w CI osobno z limitem i diagnostyką). Okna nowe w tych
 etapach nie mają zrzutów (D30) — do zrobienia w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
 Szkic wydania po scaleniu zamknięcia.
+
+### D87 · 2026-10-23 — Klucze tłumaczeń odtwarzalne ze źródeł; język przez AppleLanguages
+`L10n.tr` przyjmuje własny typ `L10n.Key` (interpolacja) zamiast `String.LocalizationValue`: Xcode nie wyciągał tekstów
+z wywołań własnej funkcji ani z pakietu SPM, więc katalog był pusty. Klucz to polski tekst, każda interpolacja → `%@`,
+`%` → `%%`; ten sam klucz buduje `scripts/l10n.py` z literałów źródeł (mini-lekser z zagnieżdżonymi interpolacjami),
+co pozwala utrzymywać `Localizable.xcstrings` skryptem i sprawdzać go w CI. Argumenty jako tekst (`String(describing:)`)
+— bez formatowania liczb zależnego od języka; tłumaczenia mogą zmieniać kolejność (`%2$@`). Podstawianie własne, bez
+`String(format:)`, żeby błędny specyfikator w tłumaczeniu nie wywrócił aplikacji. Okna i narzędzia wzorca zostają w
+tłumaczeniach pod angielskimi nazwami (SQL Window, Object Browser…). Wybór języka w Preferencjach zapisuje standardowe
+`AppleLanguages` w domenie aplikacji (jak Ustawienia systemowe › Język › Aplikacje) — działa po ponownym uruchomieniu.
