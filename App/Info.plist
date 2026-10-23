@@ -44,6 +44,12 @@
 	<string>$(PELIKAN_REPOSITORY)</string>
 	<key>SUFeedURL</key>
 	<string>$(PELIKAN_UPDATE_FEED_URL)</string>
+	<key>SUPublicEDKey</key>
+	<string>$(PELIKAN_SPARKLE_PUBLIC_KEY)</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

@@ -13,6 +13,7 @@
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
 		1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */; };
+		26F8AB58DC1192AD7A7DCE23 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 967E1B4C45088DBF2A3C240B /* Prompts.swift */; };
 		2F3A955B53072B93097F9B9F /* ConnectionEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */; };
 		371540A31E54F45AF92377B2 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 7AF3C5B27E7DB2871EEA26AD /* PelikanSQL */; };
@@ -70,6 +71,7 @@
 				AEB544CE55614B5C814809C0 /* PelikanDB in Frameworks */,
 				DE09E189F1C2266923C22346 /* PelikanODPI in Frameworks */,
 				1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */,
+				26F8AB58DC1192AD7A7DCE23 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +217,7 @@
 				68DCC77A1DA6108E25EBC9B9 /* PelikanDB */,
 				9D16B7D56F23E44BF345738A /* PelikanODPI */,
 				20A0AADF6109FF559605C47E /* PelikanThin */,
+				17B2E96D730996376F52B97F /* Sparkle */,
 			);
 			productName = Pelikan;
 			productReference = 683515088F140833D5EF9EE2 /* Pelikan.app */;
@@ -245,6 +248,7 @@
 			mainGroup = 11ADE4571DCB8BBCEF9CA7BD;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				2A006BA8D82ADD9929740E01 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				5EBB7C2BA9850E5C2A3EB6C6 /* XCLocalSwiftPackageReference "Packages/PelikanKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -498,7 +502,23 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		2A006BA8D82ADD9929740E01 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		17B2E96D730996376F52B97F /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2A006BA8D82ADD9929740E01 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
 		20A0AADF6109FF559605C47E /* PelikanThin */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PelikanThin;

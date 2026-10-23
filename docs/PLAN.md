@@ -51,7 +51,7 @@ Kolejność podzadań (każde = gałąź `etap-1/<nazwa>` i PR):
    PD-PREF-001/004–007, MAC-FILE-001)
 8. **etap-1/thin** — sterownik OracleNIO za `DatabaseSession`, wybór w połączeniu, testy sparametryzowane sterownikiem,
    wyszarzanie funkcji niedostępnych. (PD-CONN-028)
-9. Szkic wydania: `scripts/release.sh`, podpis, DMG/PKG, Sparkle (przeniesione z Etapu 8 — D13).
+9. Szkic wydania: `scripts/release.sh`, podpis, DMG/PKG, Sparkle (przeniesione z Etapu 8 — D13). ✅ `docs/WYDANIA.md`
 
 **Kryteria odbioru:** codzienna praca z zapytaniami tylko z klawiatury; 1 mln wierszy przewijany płynnie (pomiar w
 Release); brak blokad interfejsu przy długim zapytaniu (Break działa); zrzuty ekranu SQL Window, Command Window,

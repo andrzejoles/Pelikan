@@ -4,7 +4,7 @@ DERIVED = build/DerivedData.noindex
 APP = $(DERIVED)/Build/Products/Debug/Pelikan.app
 PKG = Packages/PelikanKit
 
-.PHONY: generate build release run test test-unit test-integration test-release test-ui testdb report version clean strings
+.PHONY: installer draft-release generate build release run test test-unit test-integration test-release test-ui testdb report version clean strings
 
 generate:
 	xcodegen generate --quiet
@@ -53,3 +53,10 @@ strings:
 
 clean:
 	rm -rf build $(PKG)/.build
+
+# Instalatory DMG i PKG (podpis stałym certyfikatem — scripts/signing.sh) i szkic wydania na GitHubie (docs/WYDANIA.md).
+installer:
+	scripts/build-installer.sh
+
+draft-release:
+	scripts/release.sh

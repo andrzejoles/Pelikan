@@ -10,6 +10,8 @@ PELIKAN_COPYRIGHT = © 2026 Andrzej Oleś w kooperacji z Claude AI
 // Repozytorium wydań i kanał aktualizacji Sparkle (`//` w xcconfig to komentarz, stąd `/$()/`).
 PELIKAN_REPOSITORY = andrzejoles/Pelikan
 PELIKAN_UPDATE_FEED_URL = https:/$()/github.com/$(PELIKAN_REPOSITORY)/releases/latest/download/appcast.xml
+// Klucz publiczny EdDSA aktualizacji (prywatny w Pęku kluczy, konto „pelikan” — scripts/sparkle-tools.sh, docs/WYDANIA.md).
+PELIKAN_SPARKLE_PUBLIC_KEY = GKJUVap7wIeFawGzLi2oBEOHK61r7t/Ix0JCpI3dTuI=
 DEVELOPMENT_TEAM =
 
 // Wygenerowane przed budowaniem przez scripts/set-version.sh (poza repozytorium).

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T03:03:54+02:00",
+  "heartbeat": "2026-10-23T03:26:09+02:00",
   "stage": {
     "id": 1,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Wydania jak w Bifoldzie: stały podpis „Pelikan Self-Signed” (osobny pęk kluczy), make installer (DMG i PKG z licencjami zewnętrznymi i kontrolą danych w pakiecie), Sparkle 2.10.0 z kluczem EdDSA w Pęku kluczy i menu „Sprawdź uaktualnienia…”, make draft-release (zip, appcast.xml, tag, szkic wydania), docs/WYDANIA.md; instalatory 1.8.0 zbudowane i sprawdzone lokalnie",
+    "PR #8 scalony (sterownik thin), wersja 1.8.0",
     "Sterownik thin (OracleNIO): EZConnect i alias TNS, SYSDBA, proxy, bindy IN/OUT, LOB jako lokator z limitem (CLOB w AL16UTF16), NUMBER/DATE/TIMESTAMP dekodowane z surowych bajtów bez utraty precyzji, metadane kolumn, błędy ORA, DBMS_OUTPUT, SQL Window na thin; Przerwij wyszarzone (brak w API); 1 mln wierszy w 4,3 s (Instant Client 1,2 s); OracleNIO przypięty do commitu z poprawką dla Swift 6.4 (D20) — 9 testów (6 na bazie)",
     "PR #7 scalony (tunel SSH), wersja 1.7.0",
     "Tunel SSH: systemowy ssh -L (klucz, agent SSH, ~/.ssh/config, ProxyJump, known_hosts), losowy port lokalny, przepisywanie connect stringu (EZConnect, tcps, deskryptor, alias TNS), tunel współdzielony przez sesje i zamykany z ostatnią, karta „Tunel SSH” w definicji połączenia i test połączenia przez tunel; serwer SSH testów w kontenerze (testdb.sh ssh-up); DatabaseError z czytelnym komunikatem — 5 testów (2 przez prawdziwy tunel)",
