@@ -168,8 +168,8 @@ struct TableEditorView: View {
 
     private func listButtons(add: @escaping () -> Void, remove: @escaping () -> Void) -> some View {
         HStack {
-            Button { add() } label: { Image(systemName: "plus") }.help(L10n.tr("Dodaj"))
-            Button { remove() } label: { Image(systemName: "minus") }.help(L10n.tr("Usuń ostatni"))
+            Button { add() } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj"))
+            Button { remove() } label: { Image(systemName: "minus") }.iconLabel(L10n.tr("Usuń ostatni"))
         }
     }
 

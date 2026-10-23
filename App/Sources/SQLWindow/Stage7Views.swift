@@ -135,7 +135,7 @@ struct SnippetsView: View {
             HStack {
                 TextField(L10n.tr("Szukaj"), text: $filter).textFieldStyle(.roundedBorder)
                 Button { editing = Snippet(category: L10n.tr("Moje"), name: L10n.tr("Nowy"), text: "") } label: { Image(systemName: "plus") }
-                    .help(L10n.tr("Nowy snippet"))
+                    .iconLabel(L10n.tr("Nowy snippet"))
             }
             List(selection: $selection) {
                 ForEach(Array(Set(visible.map(\.category))).sorted(), id: \.self) { cat in

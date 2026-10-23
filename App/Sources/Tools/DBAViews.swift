@@ -27,7 +27,7 @@ struct DBAPanelView: View {
                         Button(L10n.tr("Zablokuj")) { lock(true) }.disabled(selected == nil)
                         Button(L10n.tr("Odblokuj")) { lock(false) }.disabled(selected == nil)
                     }
-                    Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.help(L10n.tr("Odśwież"))
+                    Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 }
                 switch result {
                 case .rows(let cols, _):
@@ -125,7 +125,7 @@ struct InstanceViewerView: View {
                 Spacer()
                 Toggle(L10n.tr("Odświeżaj co"), isOn: $auto).toggleStyle(.checkbox)
                 Stepper("\(Int(interval)) s", value: $interval, in: 2...120).fixedSize()
-                Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await refresh() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             if let s = snap {
                 HStack(alignment: .top) {

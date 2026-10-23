@@ -61,7 +61,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.sql</string>
+				<string>$(PELIKAN_BUNDLE_ID).sql</string>
 			</array>
 		</dict>
 		<dict>
@@ -73,7 +73,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.package</string>
+				<string>$(PELIKAN_BUNDLE_ID).package</string>
 			</array>
 		</dict>
 		<dict>
@@ -85,7 +85,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.program</string>
+				<string>$(PELIKAN_BUNDLE_ID).program</string>
 			</array>
 		</dict>
 		<dict>
@@ -97,7 +97,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.test</string>
+				<string>$(PELIKAN_BUNDLE_ID).test</string>
 			</array>
 		</dict>
 		<dict>
@@ -109,15 +109,83 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>local.aoles.pelikan.notebook</string>
+				<string>$(PELIKAN_BUNDLE_ID).notebook</string>
 			</array>
+		</dict>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).open</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(PELIKAN_URL_SCHEME)</string>
+			</array>
+		</dict>
+	</array>
+	<key>PelikanURLScheme</key>
+	<string>$(PELIKAN_URL_SCHEME)</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>$(PELIKAN_APP_NAME): Formatuj SQL</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>formatSQL</string>
+			<key>NSPortName</key>
+			<string>$(PELIKAN_APP_NAME)</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>public.utf8-plain-text</string>
+			</array>
+			<key>NSReturnTypes</key>
+			<array>
+				<string>public.utf8-plain-text</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>$(PELIKAN_APP_NAME): Otwórz w SQL Window</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openInSQLWindow</string>
+			<key>NSPortName</key>
+			<string>$(PELIKAN_APP_NAME)</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>public.utf8-plain-text</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>$(PELIKAN_APP_NAME): Otwórz plik</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openFiles</string>
+			<key>NSPortName</key>
+			<string>$(PELIKAN_APP_NAME)</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.plain-text</string>
+				<string>public.source-code</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict/>
 		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.sql</string>
+			<string>$(PELIKAN_BUNDLE_ID).sql</string>
 			<key>UTTypeDescription</key>
 			<string>SQL Script</string>
 			<key>UTTypeConformsTo</key>
@@ -134,7 +202,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.package</string>
+			<string>$(PELIKAN_BUNDLE_ID).package</string>
 			<key>UTTypeDescription</key>
 			<string>PL/SQL Package</string>
 			<key>UTTypeConformsTo</key>
@@ -155,7 +223,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.program</string>
+			<string>$(PELIKAN_BUNDLE_ID).program</string>
 			<key>UTTypeDescription</key>
 			<string>PL/SQL Program</string>
 			<key>UTTypeConformsTo</key>
@@ -177,7 +245,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.test</string>
+			<string>$(PELIKAN_BUNDLE_ID).test</string>
 			<key>UTTypeDescription</key>
 			<string>Pelikan Test Script</string>
 			<key>UTTypeConformsTo</key>
@@ -194,7 +262,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>local.aoles.pelikan.notebook</string>
+			<string>$(PELIKAN_BUNDLE_ID).notebook</string>
 			<key>UTTypeDescription</key>
 			<string>SQL Notebook</string>
 			<key>UTTypeConformsTo</key>

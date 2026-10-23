@@ -16,7 +16,9 @@ struct PreferencesView: View {
             BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
             KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
             OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
+            ToolsPane(workspace: workspace).tabItem { Label(L10n.tr("Narzędzia"), systemImage: "wrench.and.screwdriver") }
             AgentsPane(workspace: workspace).tabItem { Label(L10n.tr("Agenci"), systemImage: "cpu") }
+            PreferenceSetsPane(workspace: workspace).tabItem { Label(L10n.tr("Zestawy"), systemImage: "square.stack.3d.up") }
         }
         .frame(width: 860, height: 560)
         .padding(.top, 8)
@@ -171,6 +173,11 @@ struct OraclePane: View {
                 }
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            Section(L10n.tr("Dokumentacja Oracle (F1)")) {
+                Picker(L10n.tr("Wersja dokumentacji"), selection: setting(workspace, \.oracleDocsRelease)) {
+                    ForEach(OracleDocs.releases, id: \.self) { r in Text(r == "19" ? "19c" : r == "21" ? "21c" : r + "ai").tag(r) }
+                }
             }
             Section(L10n.tr("Hasła połączeń")) {
                 Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))

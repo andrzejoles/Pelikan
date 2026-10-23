@@ -30,6 +30,7 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
             table.addTableColumn(c)
         }
         table.headerView = nil
+        table.setAccessibilityLabel(L10n.tr("Komendy"))
         table.rowHeight = 24
         table.dataSource = self
         table.delegate = self

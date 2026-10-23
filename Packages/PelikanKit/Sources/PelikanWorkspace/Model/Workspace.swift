@@ -54,9 +54,21 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Otwarcie adresu (przeglądarka, dokumenty — PD-EDIT-027, PD-DOC-002) i pliku w aplikacji (nil — skojarzonej; PD-EDIT-028).
+    func openURL(_ url: URL)
+    func openInApplication(_ file: URL, application: String?)
+    /// Pytanie z polem „Nie pytaj więcej” (PD-PREF-008): odpowiedź (nil — anulowano) i stan pola.
+    func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool)
+    /// Dostosowanie paska narzędzi okna głównego (PD-UI-006) i karta zestawów preferencji (PD-PREF-002).
+    func customizeToolbar()
+    func showPreferenceSets()
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
+    /// Instrukcja użytkownika (PL-INFRA-010).
+    func showUserManual()
+    /// Okno druku dla dokumentu HTML (PD-SQLW-016).
+    func printHTML(title: String, html: String)
     /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
     func showDualityViews()
     func showMLEModules()
@@ -154,8 +166,17 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func customizeToolbar() {}
+    public func showPreferenceSets() {}
     public func showHTMLReport(title: String, html: String) {}
+    public func openURL(_ url: URL) {}
+    public func openInApplication(_ file: URL, application: String?) {}
+    public func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool) {
+        (await ask(title, message: message, buttons: buttons), false)
+    }
     public func showSQLMonitor() {}
+    public func showUserManual() {}
+    public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
     public func showMLEModules() {}
     public func showSpatialPreview(title: String, wkt: [String]) {}
@@ -260,13 +281,26 @@ public final class Workspace {
     public var lastSearch: TextSearch?
     /// Globalna historia wykonanych poleceń (Recall Statement, UG 25.5).
     public private(set) var history: [HistoryEntry] = []
+    /// Preferencje obowiązujące: wartości wbudowane z nałożonymi zestawami (PD-PREF-002). Zmiana trafia do zestawu
+    /// edytowanego (`preferenceEditTarget`; domyślnie osobisty użytkownika) i jest zapisywana.
     public var settings: Settings {
         didSet {
             if settings.shortcutProfile != oldValue.shortcutProfile { shortcutProfile = settings.shortcutProfile }
             if settings.keyOverrides != oldValue.keyOverrides { keyOverrides = settings.keyOverrides }
-            saveSettings()
+            guard !applyingPreferenceSets else { settingsBox.value = settings; return }
+            recordPreferenceChange(from: oldValue, to: settings)
         }
     }
+    /// Zestawy preferencji domyślne i połączeniowe (`Preferences/sets.json`).
+    public private(set) var preferenceSets: [PreferenceSet] = []
+    /// Zestaw osobisty użytkownika (`settings.json`, tylko wartości ustawione przez użytkownika).
+    public private(set) var personalPreferences: [String: JSONValue] = [:]
+    /// Zestaw, do którego trafiają zmiany z Preferencji (nil — osobisty użytkownika).
+    public var preferenceEditTarget: UUID?
+    /// Połączenia tylko do odczytu w tym uruchomieniu (parametr startowy `readonly=`, PD-CLI-001).
+    public var startupReadOnlyPatterns: [String] = []
+    @ObservationIgnored private var applyingPreferenceSets = false
+    @ObservationIgnored private let preferenceStore: PreferenceSetStore
     public let connections: ConnectionStore
     public let sessions: SessionManager
     /// Katalog danych aplikacji (nil = bez zapisu: testy, `persists: false`).
@@ -279,6 +313,22 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
     @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
+    @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
+    @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))
+    /// Okna z poprzedniego, nieczysto zakończonego uruchomienia — do przywrócenia (Plik › Odzyskaj okna).
+    public var pendingRecovery: Workset?
+    /// Uruchomienie programu zewnętrznego bez powłoki (argumenty jako tablica); w testach podmieniane.
+    @ObservationIgnored public var launchProgram: @Sendable (URL, [String]) throws -> Void = { exe, args in
+        let p = Process()
+        p.executableURL = exe
+        p.arguments = args
+        p.environment = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("PELIKAN_") }
+        p.standardInput = FileHandle.nullDevice
+        p.standardOutput = FileHandle.nullDevice
+        p.standardError = FileHandle.nullDevice
+        try p.run()
+    }
     /// Problemy edytora z rozwiązywania nazw i inspekcji (DG-RES-001, DG-INSP-001) według okna.
     public var diagnostics: [DocumentID: [EditorDiagnostic]] = [:]
     /// Panel wartości obok siatki wyników (DB-PANEL-001).
@@ -361,12 +411,19 @@ public final class Workspace {
     public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
                 secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
         self.dataDirectory = dataDirectory
-        var loaded = Settings()
+        preferenceStore = PreferenceSetStore(directory: dataDirectory)
+        let sets = preferenceStore.load()
+        var personal: [String: JSONValue] = [:]
         if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")),
-           let s = try? JSONDecoder.pelikan.decode(Settings.self, from: data) {
-            loaded = s
+           case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
+            personal = o
         }
-        if let profile { loaded.shortcutProfile = profile }
+        if let profile { personal["shortcutProfile"] = .string(profile.rawValue) }
+        // Przy starcie bez połączenia: zestawy globalne i osobisty użytkownika.
+        let loaded = PreferenceSets.merge(sets.filter { !$0.kind.isConnection }
+                                          + [PreferenceSet(name: "", kind: .personalUser, values: personal)])
+        preferenceSets = sets
+        personalPreferences = personal
         settings = loaded
         shortcutProfile = loaded.shortcutProfile
         keyOverrides = loaded.keyOverrides
@@ -391,6 +448,7 @@ public final class Workspace {
             registerUserToolCommands()
             registerUserReports()
         }
+        sessions.onMainConnectionChange = { [weak self] in self?.applyPreferenceSets() }
     }
 
     /// Dopisuje polecenie do historii (bez poleceń z hasłami, bez duplikatu ostatniego), limit 200 (UG 23.26).
@@ -414,9 +472,91 @@ public final class Workspace {
         settingsBox.value = settings
         guard let dir = dataDirectory else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        if let data = try? JSONEncoder.pelikan.encode(settings) {
+        if let data = try? JSONEncoder.pelikan.encode(JSONValue.object(personalPreferences)) {
             try? data.write(to: dir.appendingPathComponent("settings.json"), options: [.atomic])
         }
+    }
+
+    // MARK: Zestawy preferencji (PD-PREF-002)
+
+    /// Wszystkie zestawy z osobistym użytkownika (do listy w Preferencjach).
+    public var allPreferenceSets: [PreferenceSet] {
+        (preferenceSets + [PreferenceSet(id: Self.personalSetID, name: L10n.tr("Osobisty"), kind: .personalUser, values: personalPreferences)])
+            .sorted { ($0.kind.rank, $0.name) < ($1.kind.rank, $1.name) }
+    }
+
+    public static let personalSetID = UUID(uuidString: "00000000-0000-0000-0000-00000000F00D")!
+
+    /// Zestawy obowiązujące dla połączenia głównego (z osobistym użytkownika).
+    public var activePreferenceSets: [PreferenceSet] {
+        let names = PreferenceSets.candidates(for: sessions.mainConnectionID.flatMap { connections.connection($0) })
+        return allPreferenceSets.filter { $0.applies(to: names) }
+    }
+
+    /// Zestaw, z którego pochodzi wartość pola w obecnym połączeniu (nil — wartość wbudowana).
+    public func preferenceSource(of key: String) -> PreferenceSet? {
+        PreferenceSets.source(of: key, in: activePreferenceSets)
+    }
+
+    /// Przelicza preferencje po zmianie zestawów albo połączenia głównego.
+    public func applyPreferenceSets() {
+        let merged = PreferenceSets.merge(activePreferenceSets)
+        guard merged != settings else { settingsBox.value = settings; return }
+        applyingPreferenceSets = true
+        settings = merged
+        applyingPreferenceSets = false
+    }
+
+    private func recordPreferenceChange(from old: Settings, to new: Settings) {
+        let changed = PreferenceSets.difference(new, from: old)
+        guard !changed.isEmpty else { saveSettings(); return }
+        if let id = preferenceEditTarget, let i = preferenceSets.firstIndex(where: { $0.id == id }) {
+            for (k, v) in changed { preferenceSets[i].values[k] = v }
+            try? preferenceStore.save(preferenceSets)
+        } else {
+            for (k, v) in changed { personalPreferences[k] = v }
+        }
+        saveSettings()
+        applyPreferenceSets()
+    }
+
+    /// Dodaje albo zastępuje zestaw (domyślny albo połączeniowy) i przelicza preferencje.
+    public func savePreferenceSet(_ set: PreferenceSet) throws {
+        guard set.kind != .personalUser else { personalPreferences = set.values; saveSettings(); applyPreferenceSets(); return }
+        if let i = preferenceSets.firstIndex(where: { $0.id == set.id }) { preferenceSets[i] = set } else { preferenceSets.append(set) }
+        try preferenceStore.save(preferenceSets)
+        applyPreferenceSets()
+    }
+
+    public func deletePreferenceSet(_ id: UUID) throws {
+        preferenceSets.removeAll { $0.id == id }
+        if preferenceEditTarget == id { preferenceEditTarget = nil }
+        try preferenceStore.save(preferenceSets)
+        applyPreferenceSets()
+    }
+
+    /// Usuwa wartość pola z zestawu — wraca wartość dziedziczona z zestawu niższego (albo wbudowana).
+    public func inheritPreference(_ key: String, in setID: UUID) throws {
+        if setID == Self.personalSetID {
+            personalPreferences[key] = nil
+            saveSettings()
+        } else if let i = preferenceSets.firstIndex(where: { $0.id == setID }) {
+            preferenceSets[i].values[key] = nil
+            try preferenceStore.save(preferenceSets)
+        }
+        applyPreferenceSets()
+    }
+
+    /// Wczytuje wartości (np. z pliku eksportu) do zestawu edytowanego.
+    public func importPreferences(_ values: [String: JSONValue]) throws {
+        if let id = preferenceEditTarget, let i = preferenceSets.firstIndex(where: { $0.id == id }) {
+            preferenceSets[i].values.merge(values) { $1 }
+            try preferenceStore.save(preferenceSets)
+        } else {
+            personalPreferences.merge(values) { $1 }
+            saveSettings()
+        }
+        applyPreferenceSets()
     }
 
     // MARK: Dokumenty

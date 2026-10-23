@@ -18,7 +18,7 @@ struct DualityViewsView: View {
         HSplitView {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }
+                    Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                     Spacer()
                 }
                 List(views, selection: $selection) { v in
@@ -99,7 +99,7 @@ struct MLEModulesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Importuj plik JavaScript…")) {
                     let p = NSOpenPanel()
                     p.allowedContentTypes = [.javaScript]

@@ -64,7 +64,17 @@ enum CompareCommands {
     /// Użytkownik: przeglądarka różnic; agent: różnica unified w wyniku.
     @MainActor
     static func show(_ ctx: CommandContext, left: String, right: String, leftTitle: String, rightTitle: String) -> CommandResult {
-        if ctx.invoker == .user { ctx.ui?.showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle) }
+        if ctx.invoker == .user {
+            if let tool = ctx.workspace.settings.externalDiff, !tool.program.trimmingCharacters(in: .whitespaces).isEmpty {
+                do {
+                    try ctx.workspace.openExternalDiff(tool, left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+                } catch {
+                    ctx.ui?.showError(error.localizedDescription)
+                }
+            } else {
+                ctx.ui?.showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+            }
+        }
         let u = TextDiff.unified(left, right, leftName: leftTitle, rightName: rightTitle)
         return CommandResult(message: u.isEmpty ? L10n.tr("Brak różnic") : L10n.tr("Różnice: \(TextDiff.rows(left, right).filter { $0.kind != .same }.count) linii"),
                              value: .string(u))

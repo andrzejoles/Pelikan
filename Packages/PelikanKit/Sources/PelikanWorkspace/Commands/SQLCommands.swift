@@ -147,8 +147,8 @@ public enum SQLCommands {
     static func endTransaction(_ ctx: CommandContext, commit: Bool) async throws -> CommandResult {
         guard let doc = ctx.workspace.activeDocument else { return .ok }
         if ctx.workspace.settings.confirmCommitRollback {
-            let a = await ctx.ui?.ask(commit ? L10n.tr("Zatwierdzić transakcję?") : L10n.tr("Wycofać transakcję?"),
-                                      message: doc.fullTitle, buttons: [commit ? L10n.tr("Zatwierdź") : L10n.tr("Wycofaj")])
+            let a = await ctx.workspace.askSuppressible(.commitRollback, title: commit ? L10n.tr("Zatwierdzić transakcję?") : L10n.tr("Wycofać transakcję?"),
+                                                        message: doc.fullTitle, buttons: [commit ? L10n.tr("Zatwierdź") : L10n.tr("Wycofaj")])
             guard a == 0 else { throw CommandError.cancelledByUser }
         }
         try await ctx.workspace.endTransactions(of: [doc], commit: commit)

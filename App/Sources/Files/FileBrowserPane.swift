@@ -73,7 +73,7 @@ struct FileBrowserPane: View {
                 }
                 .labelsHidden()
                 Button { workspace.perform("fb.addLocation") } label: { Image(systemName: "plus") }
-                    .help(L10n.tr("Dodaj lokalizację…"))
+                    .iconLabel(L10n.tr("Dodaj lokalizację…"))
                 Menu {
                     if let loc = model.location {
                         Button(L10n.tr("Usuń lokalizację „\(loc.name)”")) {
@@ -84,11 +84,11 @@ struct FileBrowserPane: View {
                     Toggle(L10n.tr("Pokaż ukryte pliki"), isOn: Binding(get: { workspace.fileBrowser.showHidden },
                                                                        set: { workspace.fileBrowser.showHidden = $0; model.reload() }))
                     Button(L10n.tr("Wyczyść historię filtra")) { workspace.perform("fb.clearFilterHistory") }
-                } label: { Image(systemName: "ellipsis.circle") }
+                } label: { Image(systemName: "ellipsis.circle") }.iconLabel(L10n.tr("Więcej"))
                     .menuIndicator(.hidden)
                     .fixedSize()
                 Button { model.reload() } label: { Image(systemName: "arrow.clockwise") }
-                    .help(L10n.tr("Odśwież"))
+                    .iconLabel(L10n.tr("Odśwież"))
             }
             .padding(.horizontal, 8)
             filterBar
@@ -97,6 +97,7 @@ struct FileBrowserPane: View {
                     FileTreeLevel(model: model, directory: loc.url, workspace: workspace)
                 }
                 .listStyle(.sidebar)
+                .accessibilityLabel(L10n.tr("File Browser"))
                 .contextMenu(forSelectionType: String.self) { ids in
                     if let path = ids.first { menu(for: URL(fileURLWithPath: path)) }
                 } primaryAction: { ids in
@@ -128,10 +129,10 @@ struct FileBrowserPane: View {
                     .onSubmit { applyFilter() }
                 Menu {
                     ForEach(workspace.fileBrowser.filterHistory, id: \.self) { h in Button(h) { nameFilter = h; applyFilter() } }
-                } label: { Image(systemName: "clock") }
+                } label: { Image(systemName: "clock") }.iconLabel(L10n.tr("Historia filtra"))
                     .menuIndicator(.hidden).fixedSize().disabled(workspace.fileBrowser.filterHistory.isEmpty)
                 Button { showOptions.toggle() } label: { Image(systemName: model.filter.isEmpty ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill") }
-                    .help(L10n.tr("Filtr: stan, Git, rozmiar, data"))
+                    .iconLabel(L10n.tr("Filtr: stan, Git, rozmiar, data"))
             }
             if showOptions {
                 Picker(L10n.tr("Stan"), selection: $model.filter.status) {

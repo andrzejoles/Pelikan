@@ -18,7 +18,7 @@ struct TestExplorerView: View {
                 Button { runSelected(coverage: false) } label: { Label(L10n.tr("Zaznaczone"), systemImage: "play") }.disabled(selection == nil)
                 Button { runSelected(coverage: true) } label: { Label(L10n.tr("Z pokryciem"), systemImage: "chart.bar") }.disabled(selection == nil)
                 Spacer()
-                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.help(L10n.tr("Odśwież"))
+                Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
             List(selection: $selection) {
                 ForEach(items) { ExplorerRow(item: $0, workspace: workspace) }

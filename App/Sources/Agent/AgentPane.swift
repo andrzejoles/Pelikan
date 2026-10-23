@@ -87,6 +87,7 @@ final class AgentPane: NSView {
             activityTable.addTableColumn(c)
         }
         activityTable.dataSource = self
+        activityTable.setAccessibilityLabel(L10n.tr("Aktywność agenta"))
         activityTable.delegate = self
         activityTable.rowHeight = 18
         activityTable.usesAlternatingRowBackgroundColors = true
@@ -303,6 +304,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         fileColumn.width = 240
         files.addTableColumn(fileColumn)
         files.dataSource = self
+        files.setAccessibilityLabel(L10n.tr("Pliki dziennika"))
         files.delegate = self
         for (id, title, width) in [("time", L10n.tr("Czas"), 150.0), ("tool", L10n.tr("Narzędzie / zdarzenie"), 160.0),
                                    ("decision", L10n.tr("Decyzja"), 110.0), ("details", L10n.tr("Argumenty / wynik"), 420.0)] {
@@ -312,6 +314,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
             entries.addTableColumn(c)
         }
         entries.dataSource = self
+        entries.setAccessibilityLabel(L10n.tr("Wpisy dziennika"))
         entries.delegate = self
         entries.usesAlternatingRowBackgroundColors = true
         entries.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle

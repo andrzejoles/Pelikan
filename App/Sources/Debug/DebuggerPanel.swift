@@ -43,7 +43,7 @@ struct DebuggerPanel: View {
                     HStack {
                         TextField(L10n.tr("Wyrażenie do obserwowania (np. v, r.pole, t(3))"), text: $newWatch)
                             .onSubmit { addWatch() }
-                        Button { addWatch() } label: { Image(systemName: "plus") }.disabled(newWatch.isEmpty)
+                        Button { addWatch() } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj")).disabled(newWatch.isEmpty)
                     }
                 }
                 .frame(minWidth: 260)
@@ -117,7 +117,7 @@ struct DebuggerPanel: View {
             Divider().frame(height: 18)
             button("stop.fill", L10n.tr("Zatrzymaj (⇧F9)"), "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
             Button { executeInTarget() } label: { Image(systemName: "terminal") }
-                .help(L10n.tr("Wykonaj SQL w sesji debugowanej…")).disabled(debugger.state != .paused)
+                .iconLabel(L10n.tr("Wykonaj SQL w sesji debugowanej…")).disabled(debugger.state != .paused)
             Spacer()
             if debugger.state == .running { ProgressView().controlSize(.small) }
         }
@@ -129,7 +129,7 @@ struct DebuggerPanel: View {
             if command == "debug.start" { workspace.activate(document.id) }
             workspace.perform(CommandID(rawValue: command))
         } label: { Image(systemName: symbol) }
-        .help(help)
+        .iconLabel(help)
         .disabled(!(enabled ?? (debugger.state == .paused)))
     }
 }

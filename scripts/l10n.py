@@ -3,7 +3,7 @@
 
 Klucz = polski tekst literału; każda interpolacja `\\(…)` to `%@`, a `%` to `%%` (tak samo buduje go `L10n.Key`).
 
-  scripts/l10n.py extract            dopisuje nowe klucze do katalogu, oznacza nieużywane (state "stale")
+  scripts/l10n.py extract            dopisuje nowe klucze do katalogu, usuwa klucze, których nie ma w źródłach
   scripts/l10n.py check [--strict]   klucze ze źródeł bez wpisu w katalogu (--strict: także bez tłumaczeń)
   scripts/l10n.py export LANG [N]    JSON {klucz: ""} kluczy bez tłumaczenia na LANG (stdout; N — limit)
   scripts/l10n.py import LANG PLIK   wczytuje JSON {klucz: tłumaczenie}; placeholdery muszą się zgadzać
@@ -199,15 +199,12 @@ def cmd_extract():
         if e is None:
             strings[k] = {}
             added += 1
-        elif e.get("extractionState") == "stale":
-            del e["extractionState"]
-    stale = 0
-    for k, e in strings.items():
-        if k not in keys and e.get("extractionState") != "stale":
-            e["extractionState"] = "stale"
-            stale += 1
+    # Teksty usunięte ze źródeł znikają z katalogu (razem z tłumaczeniami) — katalog = dokładnie klucze ze źródeł.
+    removed = [k for k in strings if k not in keys]
+    for k in removed:
+        del strings[k]
     save_catalog(cat)
-    print(f"klucze w źródłach: {len(keys)}, nowe: {added}, nieużywane: {stale}")
+    print(f"klucze w źródłach: {len(keys)}, nowe: {added}, usunięte: {len(removed)}")
     return 1 if errors else 0
 
 

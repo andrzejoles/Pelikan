@@ -25,10 +25,10 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PL-INFRA-004 | Wersja z historii scalonych PR (scripts/version.sh) | PROMPT §10 | — | 0 | P1 | — | ✅ test |
 | PL-INFRA-005 | Szkielet aplikacji AppKit (XcodeGen), okno główne, menu z rejestru komend | PROMPT §4.2 | — | 0 | P1 | — | 👁 sprawdzone ręcznie |
 | PL-INFRA-006 | Rejestr komend z poziomem dostępu agenta i opisem skutków; docs/SKROTY.md generowany | PROMPT §4.2 p.1 | — | 0 | P1 | — | ✅ test |
-| PL-INFRA-007 | Podpis stały, instalatory DMG i PKG, Sparkle, szkic wydania (scripts/release.sh) | PROMPT §10 | — | 8 | P2 | — | do zrobienia |
+| PL-INFRA-007 | Podpis stały, instalatory DMG i PKG, Sparkle, szkic wydania (scripts/release.sh) | PROMPT §10 | — | 8 | P2 | — | ✅ sprawdzone (szkic v5.7.0: podpis „Pelikan Self-Signed” — wymaganie podpisu identyfikator + certyfikat, DMG, PKG, ZIP i appcast.xml z podpisem EdDSA; scripts/signing.sh, scripts/release.sh) |
 | PL-INFRA-008 | Tłumaczenia pl (źródłowy), en, de, es, uk w String Catalog + test kompletności | PROMPT §1 | — | 8 | P2 | — | ✅ test (2839 tekstów w en, de, es, uk; klucze odtwarzane ze źródeł przez scripts/l10n.py, CI: check --strict — komplet i zgodność placeholderów; L10nTests; wybór języka w Preferencjach — D87) |
 | PL-INFRA-009 | Warstwa bazy za protokołem DatabaseSession, bez AppKit, testowana na Linuksie | PROMPT §4.2 p.2 | — | 0 | P1 | — | ✅ test |
-| PL-INFRA-010 | Instrukcja użytkownika w aplikacji (pl + tłumaczenia) | PROMPT §12 | Help | 8 | P2 | — | do zrobienia |
+| PL-INFRA-010 | Instrukcja użytkownika w aplikacji (pl + tłumaczenia) | PROMPT §12 | Help | 8 | P2 | — | ✅ test (instrukcja w 10 rozdziałach w docs/manual — pl i tłumaczenia, okno pomocy ⌘? z rozdziałem skrótów generowanym z rejestru w języku interfejsu; HTML bez skryptów; okno bez zrzutu — D30) |
 
 ## PL/SQL Developer — połączenia i sesje
 
@@ -84,7 +84,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-SQLW-013 | Standard Queries dla tabel/widoków w menu kontekstowym | UG 7.14 | Siatka > Save as Standard Query | 6 | P3 | Odczyt | ✅ test (zapytania standardowe [owner]/[table]/[columns] w menu obiektu, zapis z siatki; menu bez zrzutu — D30) |
 | PD-SQLW-014 | AutoCommit SQL (domyślnie wyłączony), AutoCommit posted records | UG 23.20 | Preferences | 1 | P1 | — | ✅ test |
 | PD-SQLW-015 | Powiadomienie (dźwięk) o końcu długiego zapytania; czas wykonania na pasku stanu (hh:mm:ss > 100 s) | UG 23.18, NF8, NF17 | SQL Window | 1 | P2 | — | w toku |
-| PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | do zrobienia |
+| PD-SQLW-016 | Druk okna (SQL + siatka, zaznaczone wiersze) | UG 7.1, UG 23.33 | File > Print | 8 | P3 | — | ✅ test (Plik › Drukuj… ⌘P: nagłówek z oknem, połączeniem i datą, kod z kolorami składni i numerami linii, w oknie SQL siatka — zaznaczone wiersze albo wszystkie pobrane; okno druku bez zrzutu — D30) |
 | PD-SQLW-017 | Pinning wyników (Shift+klik karty), Pin All Result Sets, Clear Tab Results | UG 7.10, NF16, NF8 | Karty wyników | 1 | P2 | — | do zrobienia |
 | PD-SQLW-018 | Direct Query Export do pliku (CSV, TSV, HTML, XML, Excel, SQL, schowek) bez wyświetlania | UG 7.11 | Siatka > Export Query Results | 1 | P2 | Brak | do zrobienia |
 | PD-SQLW-019 | Linked Queries: tabele nadrzędne/podrzędne z FK, master/detail ze zmiennymi `:m_…`, Custom | UG 7.4, NF10 | Siatka > Linked Query | 6 | P2 | — | ✅ test (tabele nadrzędne i podrzędne z FK dla bieżącego wiersza, nowe okno SQL z warunkiem na wartości wiersza) |
@@ -211,9 +211,9 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-EDIT-023 | Wiele kursorów (macOS: Option+klik / Ctrl+Shift+strzałki) | PROMPT §3.1 | Edytor | 2 | P3 | — | do zrobienia |
 | PD-EDIT-024 | Historia schowka PL/SQL Clipboard (dokowalna, filtr, podgląd, wklejanie) | UG 30, NF12 | View > PL/SQL Clipboard | 6 | P3 | — | ✅ test (historia w pamięci: bez duplikatów, limit, filtr, wklejanie); okno bez zrzutu (D30) |
 | PD-EDIT-025 | Menu obiektu bazy na nazwie w edytorze (jak w Object Browserze) | UG 25.9 | Edytor | 2 | P1 | — | ⚠️ częściowo (menu na nazwie: dane, opis, edycja, DDL, właściwości, rekompilacja, porównanie, deklaracja; bez testu UI) |
-| PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | do zrobienia |
-| PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | do zrobienia |
-| PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | do zrobienia |
+| PD-EDIT-026 | F1 — pomoc kontekstowa w dokumentacji Oracle; pomoc błędu (Oracle Error Help URL) | UG 25.8, UG 23.10, NF16 | Edytor | 2 | P2 | — | ✅ test (F1: słowo pod kursorem → Oracle Error Help dla ORA-/PLS-/TNS-, PL/SQL Packages Reference, Reference dla widoków słownika, SQL/PL/SQL Language Reference dla poleceń i funkcji, inaczej wyszukiwanie; adresy sprawdzone na docs.oracle.com) |
+| PD-EDIT-027 | Web Search (konfigurowalne wyszukiwania z %s) | UG 25.23, NF10 | Edit > Web Search | 8 | P3 | — | ✅ test (wyszukiwania z %s w Preferencjach › Narzędzia, zaznaczenie albo słowo pod kursorem, kodowanie tekstu, tylko http(s), wybór wyszukiwania; okno bez zrzutu (D30)) |
+| PD-EDIT-028 | Otwórz w zewnętrznym edytorze (np. VS Code) | NF17 | Edytor | 8 | P3 | — | ✅ test (aplikacja z Preferencji albo skojarzona; plik zapisany przed przekazaniem, okno bez pliku — plik 0600 w katalogu danych; zmiany wczytywane po powrocie do Pelikana) |
 | PD-EDIT-029 | Zachowanie stanu okna (.pfi): pozycja, zakładki, znaczniki, zmienne | UG 23.18 | Preferences | 2 | P3 | — | do zrobienia |
 
 ## PL/SQL Developer — Code Assistant i nawigacja
@@ -357,7 +357,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-LDE-001 | Large Data Editor: Text, XML, JSON, HTML (podgląd), obraz, Hex; Parse/Format, Auto Format; Open/Save/Clear; Post, następny/poprzedni rekord | UG 27, NF15, NF17 | Siatka > przycisk komórki | 1 | P1 | — | ⚠️ częściowo (bez podglądu HTML i Auto Format) |
 | PD-LDE-002 | Large Data Editor: edytor zewnętrzny (plik tymczasowy, wykrywanie zapisu, skojarzenie z kolumną), RTF | UG 27.2, UG 27.8 | Large Data Editor | 6 | P3 | — | ✅ test (plik tymczasowy 0600 z rozszerzeniem wg formatu, w tym RTF, program skojarzony, wykrywanie zapisu, sprzątanie) |
 | PD-DIFF-001 | Wewnętrzna przeglądarka różnic (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap, Reload) | UG 26, NF14, NF15 | — | 2 | P1 | Odczyt | ⚠️ częściowo (dwie kolumny, mapa, następna/poprzednia, różnice w linii, ignoruj wielkość liter/białe znaki/komentarze, Swap; bez Reload) ✅ test 👁 |
-| PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | do zrobienia |
+| PD-DIFF-002 | Zewnętrzna przeglądarka różnic z dyrektywami parametrów | UG 23.23 | Preferences | 8 | P3 | — | ✅ test (program i argumenty z dyrektywami %1/%2 — pliki, %3/%4 — tytuły; bez powłoki, pliki porównania 0600 w katalogu danych; brak programu — komunikat) |
 
 ## PL/SQL Developer — projekty, worksets, pliki, kontrola wersji
 
@@ -372,7 +372,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-FB-002 | File Browser: filtr (Name, Status, VCS, rozmiar, data) z historią | UG 22.3, NF14 | File Browser | 6 | P3 | — | ✅ test (nazwa/maski, stan otwarty/zmieniony, stan Git, rozmiar, data; historia masek) |
 | PD-VCS-001 | Git (i SVN): status pliku na pasku stanu, w File Browserze i projekcie, gałąź Git, operacje z menu | UG 17, NF14, NF17 | Pasek stanu okna | 6 | P2 | Odczyt | ✅ test (Git: gałąź i stan na pasku stanu, w Przeglądarce plików i w projekcie — gałąź z ahead/behind i znacznik pliku; porównanie z HEAD, add, commit, historia; SVN pominięty — D40) |
 | PD-TODO-001 | To-Do Items w komentarzach (edytor, lista, Goto, priorytety/kategorie/właściciele, zamykanie) | UG 18, UG 23.25 | Edytor > To-Do Items | 6 | P3 | Odczyt | ✅ test (TODO/DONE w komentarzach z właścicielem, priorytetem, kategorią; wstawianie, zamykanie); lista bez zrzutu (D30) |
-| PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | do zrobienia |
+| PD-FILE-001 | Kopie zapasowe plików przy zapisie (`plik.~ext`) i odzyskiwanie po awarii (przy wykonaniu, co interwał, Open Recovery, przywracanie połączeń) | UG 23.31, NF13 | Preferences > Backup | 8 | P2 | — | ⚠️ częściowo (kopia plik.~ext przy zapisie — opcja; migawka niezapisanych okien co interwał, nieczyste zamknięcie → pytanie o odzyskanie i Plik › Odzyskaj okna ✅ test; połączenie odtwarzane tylko dla okien z przypiętym połączeniem; bez migawki przy każdym wykonaniu — D91) |
 | PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | do zrobienia |
 | PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | do zrobienia |
@@ -386,23 +386,23 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-UI-003 | Narzędzia dokowane/pływające (Object Browser, File Browser, Connection List, Window List, Templates, Bookmarks, Search, To-Do, Project, Clipboard), autoukrywanie | UG 33, NF8 | View | 1 | P2 | — | do zrobienia |
 | PD-UI-004 | Karty dokumentów (SDI) i/lub okna (MDI): zamknij z lewej/prawej, „Same for all Windows”, pozycja kart, Ctrl+Tab | UG 35, NF12, NF15, NF17 | View > Single Document | 1 | P1 | — | ✅ test |
 | PD-UI-005 | Menu wg Apple HIG odpowiadające wstążkom wzorca (File, Project, Edit, Session, Debug, Tools, Reports, Configure, View, Help) + paski narzędzi | UG 34, PROMPT §3.4 | — | 0 | P1 | — | w toku |
-| PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | do zrobienia |
+| PD-UI-006 | Własne paski narzędzi i Quick Access Toolbar (dostosowanie komend) | UG 34, NF10 | View > Customize Toolbar | 8 | P3 | — | ✅ test (pasek okna głównego z komend rejestru, dostosowanie standardowe macOS z zapamiętaniem, grupa „Szybki dostęp” z listą komend w Preferencjach › Zestawy; bez zrzutu — D30, D94) |
 | PD-UI-007 | Wyszukiwarka komend (paleta) | PROMPT §3.1 | Help / Cmd+Shift+P | 1 | P1 | — | 👁 sprawdzone ręcznie |
 | PD-UI-008 | Tryb jasny/ciemny/auto (systemowy) | UG 23.16, NF15 | Preferences > Appearance | 1 | P1 | — | 👁 ręcznie |
 | PD-UI-009 | Tytuł aplikacji z połączeniem / oknem / worksetem; nazwa bazy w tytułach okien | UG 23.16, NF17 | Preferences > Appearance | 1 | P2 | — | do zrobienia |
 | PD-UI-010 | Kolor ikony per typ okna; status transakcji na pasku stanu okna | NF12 | — | 1 | P2 | — | do zrobienia |
 | PD-UI-011 | Pełny ekran z dostępem do narzędzi | NF11, PROMPT §3.4 | View | 1 | P3 | — | do zrobienia |
 | PD-PREF-001 | Okno preferencji: kategorie Oracle / UI / Window Types / Tools / Files / Other, wyszukiwarka, Apply | UG 23 | Configure > Preferences | 1 | P1 | — | ⚠️ częściowo (karty bez wyszukiwarki i pełnych kategorii) |
-| PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | do zrobienia |
-| PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | do zrobienia |
+| PD-PREF-002 | Zestawy preferencji (osobiste, per połączenie, domyślne), pierwszeństwo, wskaźnik dziedziczenia | UG 23.35 | Preferences | 8 | P2 | — | ✅ test (zestawy: domyślny globalny, domyślny połączenia, osobisty, osobisty połączenia — wzorce `użytkownik@baza`/nazwa z `*` `%`; pierwszeństwo jak we wzorcu, przeliczenie przy zmianie połączenia głównego, źródło wartości i „Dziedzicz” w karcie Zestawy, wybór zestawu edytowanego; okno bez zrzutu — D30, D92) |
+| PD-PREF-003 | Eksport/import preferencji (profile do pliku, wybrane sekcje) | UG 23, NF11, PROMPT §3.1 | Preferences > Import/Export | 8 | P2 | — | ✅ test (eksport obowiązujących preferencji wybranych sekcji do JSON, import do zestawu edytowanego; bez haseł i historii plików, obcy plik odrzucony — D92) |
 | PD-PREF-004 | NLS Options aplikacji (data, czas, liczby: własne / systemowe / Oracle) | UG 23.17 | Preferences > NLS | 1 | P2 | — | w toku |
 | PD-PREF-005 | Czcionki edytora, siatek, przeglądarki (z kolorem i tłem) | UG 23.13 | Preferences > Fonts | 1 | P2 | — | w toku |
 | PD-PREF-006 | Katalogi startowe (programy, testy, skrypty, raporty, makra, szablony, projekty, worksety…) i rozszerzenia plików | UG 23.28–23.29 | Preferences > Files | 1 | P2 | — | do zrobienia |
 | PD-PREF-007 | Konfiguracja klawiszy (wszystkie funkcje, filtr, czyszczenie) | UG 23.15 | Preferences > Key Configuration | 1 | P1 | — | ✅ test |
-| PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | do zrobienia |
-| PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | do zrobienia |
-| PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | do zrobienia |
-| PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | do zrobienia |
+| PD-PREF-008 | DSA Dialogs (przywracanie „nie pokazuj więcej”) | UG 23.10 | Preferences | 8 | P3 | — | ✅ test (pytania z „Nie pytaj więcej”: zatwierdzenie/wycofanie, Kosz, przywrócenie workseta, odzyskiwanie; lista i przywracanie w Preferencjach › Narzędzia; anulowanie nie jest zapamiętywane) |
+| PD-DOC-001 | Dokumentacja Oracle: wyszukiwanie słów kluczowych w podręcznikach (F1), wybór książek | UG 36, NF16 | Help > Oracle Manuals | 8 | P2 | — | ✅ test (wyszukiwanie w dokumentacji Oracle wybranej wersji 19c/21c/23ai/26ai — Preferencje › Oracle; książka dobierana z rodzaju słowa; dokumentacja online — bez kopii lokalnej, D88) |
+| PD-DOC-002 | Dokumenty użytkownika w menu (Tools > Documents) | UG 37.3 | Configure > Documents | 8 | P3 | — | ✅ test (lista plików i adresów http(s) w Preferencjach › Narzędzia, Narzędzia › Dokumenty…; inne schematy odrzucane) |
+| PD-CLI-001 | Parametry startowe (połączenie z definicji, ViewObject, EditObject, CommandFile, Project, workset, ReadOnly, NoLoadDesktop…) bez haseł w argumentach | UG 37.4, PROMPT §4.2 p.6 | — | 8 | P3 | — | ✅ test (`klucz=wartość` jak we wzorcu i `--klucz[=wartość]`: connection/userid, viewobject, editobject, commandfile, project, workset, readonly, noloaddesktop, pliki; URL `pelikan://open?…`; hasło odrzucane z ostrzeżeniem, łączenie przez Pęk kluczy albo pytanie — D93) |
 
 ## utPLSQL
 
@@ -521,10 +521,10 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | MAC-KEY-001 | Dwa profile klawiatury: zgodny z PL/SQL Developer (F-klawisze, Ctrl, zamienniki dla MacBooka) i macOS (Cmd); skróty konfigurowalne | PROMPT §3.4 | Preferences > Keys | 1 | P1 | — | ✅ test |
 | MAC-KC-001 | Hasła w Pęku kluczy; odblokowanie zapisanych haseł Touch ID (opcja) | PROMPT §3.4, §4.2 p.6 | Preferences | 1 | P1 | Brak | ✅ test (Pęk kluczy logowania, usługa z bundle id, bez iCloud; przełącznik „Wymagaj Touch ID albo hasła Maca” — potwierdzenie przed użyciem zapisanego hasła raz na połączenie; dialog systemowy bez zrzutu — D30) |
 | MAC-FILE-001 | Otwieranie .sql, .pks, .pkb, .pck, .tst (i pozostałych rozszerzeń wzorca) z Findera; przeciąganie plików | PROMPT §3.4 | — | 1 | P1 | — | 👁 ręcznie |
-| MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
-| MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | do zrobienia |
+| MAC-QL-001 | Quick Look dla plików SQL/PL/SQL z podświetlaniem | PROMPT §3.4 | — | 8 | P3 | — | ⚠️ test (rozszerzenie Quick Look w Contents/PlugIns: podgląd oparty na danych, HTML z kolorami składni z leksera — CodeHTML z testem, kodowania UTF-8/ISO-8859-2/Windows-1250, pliki .sql, pakiety, programy, .tst; działanie w Finderze niesprawdzone — podpis ad hoc, bez rejestracji w systemie, D95) |
+| MAC-SVC-001 | Usługi macOS (np. „Formatuj SQL”, „Otwórz w Pelikanie”) | PROMPT §3.4 | — | 8 | P3 | — | ✅ test (usługi „Formatuj SQL” — zamiana zaznaczenia formaterem z Preferencji, „Otwórz w SQL Window”, „Otwórz plik”; NSServices w Info.plist; menu Usługi bez zrzutu — D30, D94) |
 | MAC-UI-001 | Natywne karty, pełny ekran, tryb ciemny/jasny, menu wg HIG | PROMPT §3.4 | — | 1 | P1 | — | ⚠️ częściowo (pełny ekran, jasny/ciemny, menu wg HIG; karty własne) |
-| MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | do zrobienia |
+| MAC-A11Y-001 | Dostępność (VoiceOver) dla siatki, drzew, edytora | PROMPT §8 | — | 8 | P2 | — | ✅ test (etykiety VoiceOver: przyciski i menu z samą ikoną — .iconLabel (podpowiedź + etykieta), tabele i drzewa AppKit, listy File Browser i projektu; audyt źródeł w AccessibilityAuditTests; bez próby z VoiceOver — D30, D96) |
 | MAC-UPD-001 | Aktualizacje Sparkle 2 (kanał releases/latest/download/appcast.xml) | PROMPT §4.1 | Help > Check for Updates | 8 | P2 | — | 👁 ręcznie |
 
 ## Pro*C — zdalny build przez SSH (zadanie właściciela, Etap P)

@@ -677,3 +677,69 @@ co pozwala utrzymywać `Localizable.xcstrings` skryptem i sprawdzać go w CI. Ar
 `String(format:)`, żeby błędny specyfikator w tłumaczeniu nie wywrócił aplikacji. Okna i narzędzia wzorca zostają w
 tłumaczeniach pod angielskimi nazwami (SQL Window, Object Browser…). Wybór języka w Preferencjach zapisuje standardowe
 `AppleLanguages` w domenie aplikacji (jak Ustawienia systemowe › Język › Aplikacje) — działa po ponownym uruchomieniu.
+
+### D88 · 2026-10-23 — Pomoc F1 w dokumentacji Oracle online
+F1 otwiera stronę docs.oracle.com dobraną z rodzaju słowa pod kursorem (kody błędów → Oracle Error Help, DBMS_/UTL_ →
+PL/SQL Packages and Types Reference, V$/ALL_/DBA_/USER_ → Reference, polecenia i funkcje SQL → SQL Language Reference,
+polecenia PL/SQL → PL/SQL Language Reference), w pozostałych przypadkach wyszukiwanie ograniczone do wybranej wersji
+bazy. Wzorce adresów sprawdzone na docs.oracle.com (19, 21, 23, 26). Pelikan nie dołącza lokalnej kopii podręczników
+(licencja Oracle i rozmiar); aplikacja otwiera tylko adresy http(s), nigdy pliki ani inne schematy z tekstu edytora.
+### D89 · 2026-10-23 — Programy zewnętrzne edytora: tylko http(s) dla adresów, bez powłoki dla programów
+Wyszukiwania w sieci i dokumenty użytkownika otwierają wyłącznie adresy http(s) albo istniejące pliki — adres z
+Preferencji nie uruchomi programu przez inny schemat URL. Zewnętrzna przeglądarka różnic jest uruchamiana jak
+narzędzia użytkownika (D49): program wskazany ścieżką albo z katalogów systemowych, argumenty jako tablica po
+podstawieniu dyrektyw `%1`/`%2` (pliki) i `%3`/`%4` (tytuły), bez powłoki i bez zmiennych środowiska Pelikana
+(`Process` z pakietu Foundation, jak w narzędziach użytkownika — ten sam poziom ochrony co `posix_spawn`: brak
+interpretacji przez powłokę). Pliki porównań i edycji zewnętrznej w katalogu danych (`Diff/`, `External/`), 0600.
+
+### D90 · 2026-10-23 — „Nie pytaj więcej” pamięta odpowiedź, a nie samo ukrycie
+Pytanie z zaznaczonym „Nie pytaj więcej” zapamiętuje wybrany przycisk (anulowanie nigdy) i do czasu przywrócenia w
+Preferencjach › Narzędzia odpowiada nim bez pytania. Wyłączyć można tylko pytania o czynności odwracalne albo
+potwierdzające wybór użytkownika (zatwierdzenie/wycofanie przy włączonej opcji potwierdzania, Kosz, przywrócenie
+workseta, odzyskiwanie okien) — nie potwierdzenia zmian na produkcji ani zgody agentów.
+
+### D91 · 2026-10-23 — Odzyskiwanie po awarii: znacznik sesji i migawka co interwał
+Przy starcie powstaje znacznik `Recovery/running`; czyste zamknięcie go usuwa. Znacznik zastany przy starcie oznacza
+nieczyste zamknięcie — wtedy migawka niezapisanych okien (`Recovery/windows.json`, 0600, zapisywana co interwał z
+Preferencji) jest proponowana do odzyskania (pytanie albo Plik › Odzyskaj okna…). Migawka nie powstaje przy każdym
+wykonaniu polecenia (wzorzec ma taką opcję) — interwał wystarcza, a zapis przy wykonaniu spowalniałby pracę na dużych
+skryptach. Połączenie okna odtwarzane jest tak jak w worksetach — dla okien z przypiętym połączeniem.
+### D92 · 2026-10-23 — Zestawy preferencji jako warstwy częściowych wartości
+Zestaw to słownik `pole Settings → wartość JSON`; obowiązujące preferencje to wartości wbudowane z nałożonymi zestawami
+w kolejności wzorca (domyślny globalny < domyślny połączenia < osobisty < osobisty połączenia). Zestaw osobisty to
+`settings.json`, od teraz zapisywany częściowo (tylko pola zmienione przez użytkownika; stary pełny plik wczytuje się
+jako zestaw osobisty z wszystkimi polami). Pozostałe zestawy w `Preferences/sets.json` katalogu danych. Zmiana w
+Preferencjach trafia do zestawu wybranego w karcie Zestawy (domyślnie osobisty), a połączeniowe przeliczają się po
+zmianie połączenia głównego. Wzorzec porównywany z `użytkownik@baza` i nazwą połączenia. Eksport i import obejmują
+wybrane sekcje (jak karty Preferencji), nigdy historii plików; hasła nie są preferencjami (Pęk kluczy).
+
+### D93 · 2026-10-23 — Parametry startowe bez haseł; URL z marki
+Argumenty jak we wzorcu (`klucz=wartość`, bez rozróżniania wielkości liter) i w stylu `--klucz[=wartość]`; argumenty
+AppKit (`-Klucz wartość`, `-psn_…`) są pomijane. `userid=u/hasło@baza` daje połączenie `u@baza` i ostrzeżenie — hasło
+nie jest używane (widać je w `ps`), więc łączenie idzie przez Pęk kluczy albo pytanie. Połączenie z definicji po nazwie
+albo `użytkownik@baza`. `readonly=` blokuje polecenia zmieniające tylko w tym uruchomieniu (bez zapisu definicji).
+Schemat URL (`PELIKAN_URL_SCHEME`) jest w `Config/Brand.xcconfig`, kod czyta go z Info.plist.
+
+### D94 · 2026-10-23 — Usługi macOS i pasek narzędzi
+Usługi: „Formatuj SQL” (zwraca sformatowany tekst do aplikacji źródłowej), „Otwórz w SQL Window” i „Otwórz plik”;
+nazwy w menu Usługi z marki, po polsku (lokalizacja nazw usług — Etap 8, ServicesMenu.strings). Pasek narzędzi okna
+głównego dostaje elementy z rejestru komend z symbolami SF i standardowe dostosowanie macOS (paleta z ~30 najczęstszymi
+komendami, układ zapamiętywany przez system). Quick Access Toolbar to jedna grupa paska z dowolnymi komendami rejestru
+(do 20) wybieranymi w Preferencjach › Zestawy albo komendą `view.addToQuickAccess` — prostsze niż osobne paski
+użytkownika wzorca, a pokrywa ich zastosowanie.
+### D95 · 2026-10-23 — Quick Look jako podgląd oparty na danych, bez rejestracji w systemie
+Rozszerzenie `PelikanQuickLook` (com.apple.quicklook.preview, `QLIsDataBasedPreview`) zwraca HTML z `CodeHTML`
+(PelikanSQL — ten sam lekser co edytor), więc nie potrzebuje WebKitu ani PelikanWorkspace. Obsługuje typy UTI
+aplikacji (.sql, pakiety, programy, .tst), pierwsze 2 MB pliku. Rozszerzenia muszą działać w sandboxie; podpis jest ad
+hoc jak aplikacji — macOS może odmówić załadowania rozszerzenia bez podpisu dewelopera Apple (płatne konto — PROMPT
+§13), a rejestracja na próbę (`pluginkit -e use`, uruchomienie aplikacji) to trwała zmiana systemu w czasie pracy
+właściciela (D30). Działanie w Finderze sprawdzi właściciel; wiersz ⚠️. Identyfikator i typy UTI liczone z nowej
+zmiennej `PELIKAN_BUNDLE_ID` w `Config/Brand.xcconfig` (także w Info.plist aplikacji — wcześniej wpisane na sztywno).
+
+### D96 · 2026-10-23 — Dostępność pilnowana audytem źródeł
+VoiceOver potrzebuje etykiety dla elementów bez tekstu. Przyciski i menu SwiftUI z samą ikoną dostają `.iconLabel(_:)`
+(podpowiedź i etykieta z jednego przetłumaczonego tekstu), tabele i drzewa AppKit — `setAccessibilityLabel`,
+przyciski AppKit z obrazkiem — `accessibilityDescription`. `AccessibilityAuditTests` czyta App/Sources i odrzuca
+nowe elementy bez etykiety (testy pakietu nie uruchamiają interfejsu). Próba z VoiceOverem i Accessibility Inspector —
+w Etapie 8 w czasie, gdy właściciel nie pracuje na komputerze.
+

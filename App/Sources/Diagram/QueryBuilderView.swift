@@ -91,7 +91,7 @@ struct QueryBuilderView: View {
                 Text(t.wrappedValue.name.lowercased()).bold()
                 TextField(L10n.tr("alias"), text: t.alias).frame(width: 50).textFieldStyle(.plain).foregroundStyle(.secondary)
                 Spacer()
-                Button { model.removeTable(t.wrappedValue.id) } label: { Image(systemName: "xmark") }.buttonStyle(.borderless)
+                Button { model.removeTable(t.wrappedValue.id) } label: { Image(systemName: "xmark") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
             }
             .padding(.bottom, 2)
             ScrollView {
@@ -151,7 +151,7 @@ struct QueryBuilderView: View {
                             .font(.caption)
                         Picker("", selection: $j.kind) { ForEach(QBJoin.Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
                             .labelsHidden().frame(width: 130)
-                        Button { model.joins.removeAll { $0.id == j.id } } label: { Image(systemName: "trash") }.buttonStyle(.borderless)
+                        Button { model.joins.removeAll { $0.id == j.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
                     }
                 }
             }

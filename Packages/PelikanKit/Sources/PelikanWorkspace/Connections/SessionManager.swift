@@ -84,9 +84,14 @@ public final class SessionManager {
 
     // MARK: Połączenie główne
 
+    /// Wywoływane po zmianie połączenia głównego (zestawy preferencji połączeń, PD-PREF-002).
+    @ObservationIgnored public var onMainConnectionChange: (@MainActor () -> Void)?
+
     public func setMainConnection(_ id: UUID?) {
+        let changed = mainConnectionID != id
         mainConnectionID = id
         if let id { store.markUsed(id) }
+        if changed { onMainConnectionChange?() }
     }
 
     // MARK: Klucze sesji wg trybu

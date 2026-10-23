@@ -468,6 +468,7 @@ final class ObjectInfoWindowController: NSWindowController, NSTableViewDataSourc
                          backing: .buffered, defer: false)
         w.title = title
         super.init(window: w)
+        table.setAccessibilityLabel(title)
         for (i, name) in columns.enumerated() {
             let c = NSTableColumn(identifier: .init("c\(i)"))
             c.title = name
