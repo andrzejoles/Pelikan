@@ -25,7 +25,8 @@ struct UserManualView: View {
 
     private func load() {
         var list: [UserManual.Chapter] = []
-        if let root = Bundle.main.url(forResource: "Manual", withExtension: nil),
+        // Folder z docs/manual trafia do zasobów jako „manual”; wyszukiwanie zasobów rozróżnia wielkość liter.
+        if let root = Bundle.main.url(forResource: "manual", withExtension: nil) ?? Bundle.main.url(forResource: "Manual", withExtension: nil),
            let dir = UserManual.directory(in: root, preferred: Bundle.main.preferredLocalizations + Locale.preferredLanguages) {
             list = UserManual.chapters(in: dir)
         }

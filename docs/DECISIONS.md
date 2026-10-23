@@ -847,3 +847,14 @@ Wzorzec pozwala dokować i odrywać każde narzędzie oraz ustawiać kolor i tł
 lewej kolumny (zwijanej) i w osobnych oknach narzędzi — to układ zgodny z HIG i z trybem jasnym/ciemnym; dowolne
 dokowanie paneli wymagałoby własnego menedżera układu na AppKit. Kolory tekstu i tła biorą się z motywu systemu
 (czytelność w obu trybach, VoiceOver); w Preferencjach są czcionka i rozmiary. Oba wiersze ⚠️.
+
+### D113 · 2026-10-24 — Przebieg zrzutów w tle
+`scripts/screenshots.sh` uruchamia aplikację Debug przez `open -g -n` (bez aktywacji) z osobnym katalogiem danych
+(`PELIKAN_DATA_DIR`) i skryptem komend (`PELIKAN_UI_SCRIPT`, hak tylko w kompilacji Debug): aplikacja nie aktywuje się,
+nie pyta o odzyskanie okien, łączy się z bazą testową przez portfel z magazynem haseł (bez hasła w plikach, środowisku
+i Pęku kluczy), wykonuje komendy i zapisuje znacznik końca. Zrzuty pojedynczych okien robi `screencapture -l` według listy
+okien procesu (CGWindowList) — nic nie steruje klawiaturą ani myszą (D30). WebKit nie rysuje okien w tle w takim zrzucie,
+więc treść WKWebView zapisuje krok `debug.snapshotWebViews` (zrzut w procesie). Instant Client jest kopiowany do
+`.testdb/instantclient`, bo odczyt chronionego folderu Pobrane przez aplikację Debug wywołuje pytanie macOS o dostęp.
+Przebieg znalazł dwa błędy: karty edytora tabeli chowały się pod przepełnieniem (teraz przełącznik segmentowy) i
+instrukcja nie znajdowała rozdziałów (folder zasobów `manual` małą literą).

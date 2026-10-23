@@ -21,15 +21,31 @@ struct TableEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TabView(selection: $tab) {
-                general.tabItem { Text(L10n.tr("Ogólne")) }.tag(0)
-                columns.tabItem { Text(L10n.tr("Kolumny")) }.tag(1)
-                keys.tabItem { Text(L10n.tr("Klucze")) }.tag(2)
-                checks.tabItem { Text(L10n.tr("Warunki")) }.tag(3)
-                indexes.tabItem { Text(L10n.tr("Indeksy")) }.tag(4)
-                privileges.tabItem { Text(L10n.tr("Uprawnienia")) }.tag(6)
-                partitionsAndTriggers.tabItem { Text(L10n.tr("Partycje i wyzwalacze")) }.tag(7)
-                sql.tabItem { Text("SQL") }.tag(5)
+            // Przełącznik segmentowy zamiast TabView: przy ośmiu kartach TabView chował je pod przyciskiem przepełnienia.
+            Picker("", selection: $tab) {
+                Text(L10n.tr("Ogólne")).tag(0)
+                Text(L10n.tr("Kolumny")).tag(1)
+                Text(L10n.tr("Klucze")).tag(2)
+                Text(L10n.tr("Warunki")).tag(3)
+                Text(L10n.tr("Indeksy")).tag(4)
+                Text(L10n.tr("Uprawnienia")).tag(6)
+                Text(L10n.tr("Partycje i wyzwalacze")).tag(7)
+                Text("SQL").tag(5)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding([.horizontal, .top], 10)
+            Group {
+                switch tab {
+                case 0: general
+                case 1: columns
+                case 2: keys
+                case 3: checks
+                case 4: indexes
+                case 6: privileges
+                case 7: partitionsAndTriggers
+                default: sql
+                }
             }
             .padding(10)
             Divider()

@@ -8,6 +8,7 @@ import Sparkle
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
+import WebKit
 import UniformTypeIdentifiers
 
 final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
@@ -127,9 +128,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
-        startRecovery()
-        NSApp.activate()
+        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”.
+        if Self.uiScriptURL == nil { startRecovery() }
+        // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
+        if Self.uiScriptURL == nil { NSApp.activate() }
         startConnectionCheck()
+        if let script = Self.uiScriptURL {
+            runUIScript(script)
+            return
+        }
         if !startup.isEmpty || !startup.warnings.isEmpty {
             runStartup(startup)
             if startup.connection != nil { return }
@@ -932,6 +939,60 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         case .test: "test"
         case .report: "report"
         default: "sql"
+        }
+    }
+
+    /// Skrypt przebiegu zrzutów (tylko kompilacja Debug): JSON [{"command": id, "args": {…}, "delay": s}], wykonywany
+    /// po starcie zamiast okna logowania; na końcu plik `PELIKAN_UI_SCRIPT.done`. Bez klawiszy, kliknięć i aktywacji.
+    static var uiScriptURL: URL? {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["PELIKAN_UI_SCRIPT"].map { URL(fileURLWithPath: $0) }
+        #else
+        nil
+        #endif
+    }
+
+    private func runUIScript(_ url: URL) {
+        struct Step: Decodable { var command: String; var args: [String: PelikanWorkspace.JSONValue]?; var delay: Double? }
+        let steps = (try? JSONDecoder().decode([Step].self, from: Data(contentsOf: url))) ?? []
+        let logURL = url.appendingPathExtension("log")
+        func log(_ s: String) {
+            let line = Data((ISO8601DateFormatter().string(from: Date()) + " " + s + "\n").utf8)
+            if let h = try? FileHandle(forWritingTo: logURL) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: logURL) }
+        }
+        log("start: kroki \(steps.count), okna \(workspace.documents.count)")
+        Task { @MainActor in
+            // Połączenie „przy starcie” (portfel bazy testowej) przed krokami skryptu.
+            if let first = workspace.connections.connections.first(where: \.connectOnStartup) {
+                log("łączenie \(first.displayName)")
+                do { _ = try await workspace.invoke("connection.connectAsMain", CommandArguments(["connection": .string(first.id.uuidString)])); log("połączono") }
+                catch { log("połączenie: \(error.localizedDescription)") }
+            }
+            for s in steps {
+                // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
+                if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
+                    await snapshotWebViews(into: URL(fileURLWithPath: dir))
+                    log("ok snapshotWebViews")
+                    continue
+                }
+                do { _ = try await workspace.invoke(CommandID(rawValue: s.command), CommandArguments(s.args ?? [:])); log("ok \(s.command)") }
+                catch { log("\(s.command): \(error.localizedDescription)") }
+                try? await Task.sleep(for: .seconds(s.delay ?? 1))
+            }
+            try? Data().write(to: url.appendingPathExtension("done"))
+        }
+    }
+
+    private func snapshotWebViews(into dir: URL) async {
+        func webViews(_ v: NSView) -> [WKWebView] { (v as? WKWebView).map { [$0] } ?? v.subviews.flatMap(webViews) }
+        var i = 0
+        for w in NSApp.windows where w.isVisible {
+            for wv in webViews(w.contentView ?? NSView()) {
+                guard let image = try? await wv.takeSnapshot(configuration: nil), let tiff = image.tiffRepresentation,
+                      let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else { continue }
+                i += 1
+                try? png.write(to: dir.appendingPathComponent("web-\(w.title.replacingOccurrences(of: "/", with: "-"))-\(i).png"))
+            }
         }
     }
 
