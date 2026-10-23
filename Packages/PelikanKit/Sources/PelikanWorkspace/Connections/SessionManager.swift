@@ -17,11 +17,18 @@ public enum SessionPurpose: Hashable, Sendable {
     case debugger(DocumentID)
     /// Sesje utPLSQL: produkująca (`run`) i konsumująca zdarzenia reportera (`events`).
     case utplsql(String)
+    /// Sesje narzędzi bez transakcji użytkownika (np. `plan` — Explain Plan wstawia wiersze do PLAN_TABLE).
+    case tool(String)
 }
 
 public struct SessionKey: Hashable, Sendable {
     public var connectionID: UUID
     public var purpose: SessionPurpose
+
+    public init(connectionID: UUID, purpose: SessionPurpose) {
+        self.connectionID = connectionID
+        self.purpose = purpose
+    }
 }
 
 /// Stan połączenia na liście (ikona klucza wzorca, UG 19.1).
@@ -274,6 +281,7 @@ extension SessionKey {
         case .agent(let id): "agent \(id)"
         case .debugger: "debuger"
         case .utplsql(let r): "utPLSQL \(r)"
+        case .tool(let r): "narzędzie \(r)"
         }
     }
 }

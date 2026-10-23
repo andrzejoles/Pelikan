@@ -115,6 +115,10 @@ public final class Document: Identifiable {
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
     public var diagramSelection: Set<UUID> = []
+    /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
+    public var plan: ExplainPlanResult?
+    public var planGoal: OptimizerGoal = .session
+    public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
     public var errorStack: [ErrorStackFrame] = []
