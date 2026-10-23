@@ -232,3 +232,11 @@ tylko w jego przebiegu takie polecenie usuwa plik z katalogu instalatora bez pow
 niedostępny. Komenda działa tylko dla połączeń deweloperskich i testowych i zawsze pyta o potwierdzenie (agent —
 poziom „za zgodą”). Przy okazji: `COLUMN … NEW_VALUE` przy zapytaniu bez wierszy definiuje brakującą zmienną jako pustą,
 jak SQL*Plus (opcjonalne parametry skryptów).
+
+### D32 · 2026-10-23 — Zamknięcie Etapu 4 (utPLSQL)
+Kryteria etapu spełnione testami na bazie testowej: wygenerowany szkielet pakietu testowego kompiluje się i uruchamia,
+testy uruchamiają się z eksploratora (ścieżki `schemat:ścieżka`) i z edytora (test pod kursorem), pokrycie trafia do
+okna programu (linie pokryte i niepokryte z reportera Sonar). Wszystkie wiersze UT- macierzy mają test; walidacja
+adnotacji przy kompilacji jest częściowa (nieznane nazwy, bez sprawdzania procedur wskazanych w `--%beforetest` itd.).
+Zrzuty okien eksploratora i wyników czekają na zgodę właściciela na sterowanie interfejsem (D30). Szkic wydania
+tworzony z `main` po scaleniu zamknięcia; publikuje właściciel.
