@@ -13,6 +13,8 @@ public enum SessionPurpose: Hashable, Sendable {
     case compile
     /// Sesja agenta AI.
     case agent(String)
+    /// Sesja nadzorująca debugera okna (DBMS_DEBUG wymaga drugiej sesji — ADR 0006).
+    case debugger(DocumentID)
 }
 
 public struct SessionKey: Hashable, Sendable {
@@ -82,6 +84,11 @@ public final class SessionManager {
     }
 
     /// Klucz sesji kompilacji: w trybie single — sesja główna.
+    /// Sesja nadzorująca debugera — zawsze osobna, także w trybie jednej sesji.
+    public func debuggerKey(document: DocumentID, connection: UUID) -> SessionKey {
+        SessionKey(connectionID: connection, purpose: .debugger(document))
+    }
+
     public func compileKey(connection: UUID) -> SessionKey {
         settings().sessionMode == .single ? SessionKey(connectionID: connection, purpose: .main)
             : SessionKey(connectionID: connection, purpose: .compile)
@@ -248,6 +255,7 @@ extension SessionKey {
         case .document: "okno"
         case .compile: "kompilacja"
         case .agent(let id): "agent \(id)"
+        case .debugger: "debuger"
         }
     }
 }

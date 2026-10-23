@@ -249,13 +249,13 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-TEST-007 | Ostrzeżenia ORA-04068 / ORA-29549 na pasku stanu | UG 5.6 | Test Window | 3 | P3 | — | do zrobienia |
 | PD-TEST-008 | Karty Results (SELECT), Output (DBMS_OUTPUT), HTP Output, niejawne wyniki 12c jako zmienne | UG 5.7–5.9, NF12 | Test Window | 3 | P2 | Odczyt | do zrobienia |
 | PD-TEST-009 | Standard Tests dla funkcji/procedur w menu kontekstowym | UG 5.13, NF12 | Test Window | 3 | P3 | Odczyt | do zrobienia |
-| PD-DBG-001 | Debuger DBMS_DEBUG: Start, Run, Step into (także do wyzwalacza), Step over, Step out, Run to cursor, Run until exception | UG 5.10, NF11 | Test Window > Debug | 3 | P1 | Brak | do zrobienia |
+| PD-DBG-001 | Debuger DBMS_DEBUG: Start, Run, Step into (także do wyzwalacza), Step over, Step out, Run to cursor, Run until exception | UG 5.10, NF11 | Test Window > Debug | 3 | P1 | Brak | ✅ test 👁 (Start, Kontynuuj, Wejdź — także do wyzwalacza, Przejdź, Wyjdź, do kursora, do wyjątku, Zatrzymaj; DBMS_DEBUG, ADR 0006) |
 | PD-DBG-002 | Debuger DBMS_DEBUG_JDWP (wybór systemu, port, kreator konfiguracji JDWP); sprawdzenie dostępności na wersji bazy | UG 5.10, NF17 | Test Window > Start ▾ | 3 | P2 | Brak | do zrobienia |
-| PD-DBG-003 | Stos wywołań (klik = ramka i jej zmienne), panel po prawej/lewej/dole | UG 5.10, NF17 | Test Window | 3 | P1 | Brak | do zrobienia |
-| PD-DBG-004 | Zmienne automatycznie: Local, Global Private, Global Public, Input Values; rekordy, kolekcje, obiekty jako drzewo; Self; Old/New w wyzwalaczu | UG 5.10, NF17, NF12 | Test Window | 3 | P1 | Brak | do zrobienia |
+| PD-DBG-003 | Stos wywołań (klik = ramka i jej zmienne), panel po prawej/lewej/dole | UG 5.10, NF17 | Test Window | 3 | P1 | Brak | ✅ test 👁 (stos z typami jednostek, klik = zmienne ramki; okno debugera) |
+| PD-DBG-004 | Zmienne automatycznie: Local, Global Private, Global Public, Input Values; rekordy, kolekcje, obiekty jako drzewo; Self; Old/New w wyzwalaczu | UG 5.10, NF17, NF12 | Test Window | 3 | P1 | Brak | ⚠️ częściowo (zmienne lokalne i parametry z parsera, rekordy %ROWTYPE i lokalne, kolekcje z GET_INDEXES jako drzewo, rekordy pętli; bez globalnych pakietu, Self i :old/:new) ✅ test |
 | PD-DBG-005 | Wartość w dymku po najechaniu; Set Variable; Copy variable / Append to clipboard | UG 5.10, UG 23.4, NF14, NF17 | Test Window | 3 | P2 | Brak | do zrobienia |
 | PD-DBG-006 | Obserwowane wyrażenia (watches) | PROMPT §3.1, UG 5.4 | Test Window | 3 | P2 | Brak | do zrobienia |
-| PD-DBG-007 | Punkty przerwania na marginesie (Program i Test Window), znacznik nie zastosowanego, warunki, komunikaty, Don't Break, Pass Count, Logpoint | UG 5.10, NF13 | Edit > Breakpoints | 3 | P1 | Brak | do zrobienia |
+| PD-DBG-007 | Punkty przerwania na marginesie (Program i Test Window), znacznik nie zastosowanego, warunki, komunikaty, Don't Break, Pass Count, Logpoint | UG 5.10, NF13 | Edit > Breakpoints | 3 | P1 | Brak | ⚠️ częściowo (punkty w marginesie okna testu i programu, w bloku testu — emulacja, Pass Count; bez warunków, komunikatów, logpointów i znacznika niezastosowanego) ✅ test |
 | PD-DBG-008 | Error breakpoints (kody błędów), zapis/odczyt punktów, Enable/Disable All | UG 5.10, NF12, NF10 | Modify Breakpoints | 3 | P2 | Brak | do zrobienia |
 | PD-DBG-009 | Wykonanie SQL w sesji debugowanej (DBMS_DEBUG) z wynikiem | UG 5.10, NF10 | Test Window > Debug | 3 | P3 | Brak | do zrobienia |
 | PD-DBG-010 | DBMS_OUTPUT w trakcie debugowania | NF10 | Test Window | 3 | P2 | Brak | do zrobienia |

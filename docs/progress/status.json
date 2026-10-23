@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T09:47:40+02:00",
+  "heartbeat": "2026-10-23T09:56:13+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 3 / debuger (DBMS_DEBUG, ADR 0006): Start, Kontynuuj, Wejdź (także do wyzwalacza), Przejdź, Wyjdź, do kursora, do wyjątku, Zatrzymaj; stos z typami jednostek; zmienne lokalne, rekordy i kolekcje jako drzewo; punkty przerwania w marginesie okna testu i programu; bieżąca linia w edytorze; okno debugera — 2 testy na bazie (pakiet z wyzwalaczem)",
     "Etap 3 / okno testu: blok ze zmiennymi (automatyczne skanowanie, typy, IN OUT, kursory jako tabela, BOOLEAN, LOB), zmienione na żółto, DBMS_OUTPUT, stos błędu z przejściem do linii, Test z Object Browsera (notacja nazwana, wynik funkcji), pliki .tst i skrypt SQL*Plus — 3 testy (1 na bazie)",
     "PR #21–#23 scalone (edytor tabeli, edytory obiektów, pary nawiasów i bloków)",
     "PR #20 scalony (wydajność, nawigacja, menu obiektu w edytorze)",
@@ -91,8 +92,7 @@
     "Tunel SSH: systemowy ssh -L (klucz, agent SSH, ~/.ssh/config, ProxyJump, known_hosts), losowy port lokalny, przepisywanie connect stringu (EZConnect, tcps, deskryptor, alias TNS), tunel współdzielony przez sesje i zamykany z ostatnią, karta „Tunel SSH” w definicji połączenia i test połączenia przez tunel; serwer SSH testów w kontenerze (testdb.sh ssh-up); DatabaseError z czytelnym komunikatem — 5 testów (2 przez prawdziwy tunel)",
     "PR #6 scalony (pliki, preferencje, klawiatura), wersja 1.6.0",
     "Pliki i preferencje: Otwórz / Zapisz / Zapisz jako / Otwórz ponownie (lista ostatnich), kodowanie UTF-8/UTF-16/Windows-1250 i CRLF zachowane przy zapisie, typ okna z rozszerzenia, otwieranie z Findera i przeciąganie plików, pytania przy zamykaniu (niezapisane zmiany, otwarta transakcja, sesja okna zamykana) i przy wyjściu; okno Preferencji (Ogólne, Okno SQL, Edytor, Klawiatura z nagrywaniem skrótów i konfliktami, Oracle — katalog Instant Client), wygląd jasny/ciemny/systemowy, ⌘W w oknach pomocniczych — 7 testów",
-    "PR #5 scalony (Command Window), wersja 1.5.0",
-    "Command Window — interfejs: karta Dialog (konsola z kolorami, linia poleceń z historią strzałkami, wielowierszowe SQL do „;” i PL/SQL do „/”, kolejka poleceń wpisanych w trakcie wykonania), karta Edytor (F8 wykonuje i przełącza na Dialog), pasek SET (Echo, Feedback, Verify, Heading, Timing, Output, Termout); SET z wieloma opcjami w linii — sprawdzone ręcznie"
+    "PR #5 scalony (Command Window), wersja 1.5.0"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",
@@ -120,11 +120,11 @@
       "at": "2026-10-23T08:32:43+02:00"
     },
     "integration": {
-      "total": 70,
-      "passed": 70,
+      "total": 75,
+      "passed": 75,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T08:54:43+02:00"
+      "at": "2026-10-23T09:56:13+02:00"
     },
     "perf": {
       "total": 9,
@@ -191,6 +191,11 @@
     }
   ],
   "screenshots": [
+    {
+      "file": "docs/progress/img/etap3-debuger.png",
+      "title": "Okno debugera: zatrzymanie w bloku testu, zmienne",
+      "reference": "PD-DBG-001"
+    },
     {
       "file": "docs/progress/img/etap3-okno-testu.png",
       "title": "Okno testu ze zmiennymi wykrytymi w bloku",

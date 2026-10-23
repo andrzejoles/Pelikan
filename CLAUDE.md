@@ -39,4 +39,8 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
 - `DBMS_SESSION.SLEEP` nie reaguje na Break do końca uśpienia (tak samo w SQL*Plus) — testy przerwania na długim zapytaniu.
 - Komunikaty SourceKit „No such module”/„Cannot find type” w edytorze to nieaktualny indeks — liczy się `swift build`.
 - Runner CI macOS to macOS 26.6 / Swift 6.3 (stan 2026-10-22) — pakiet ma cel macOS 27, testy SPM przechodzą.
+- Testy na bazie dzielą schemat testowy — uruchamiać szeregowo (`swift test --no-parallel --filter PelikanDBTests`, tak robi
+  `make test` i CI); równoległe zestawy kolidują (np. kompilacja niepoprawnych obiektów).
+- Debuger: po `DBMS_DEBUG.DEBUG_ON` każde wywołanie PL/SQL w sesji docelowej czeka na debuger — DBMS_OUTPUT włączać
+  przed `DEBUG_ON`, a `DEBUG_OFF` obsłużyć z sesji nadzorującej (ADR 0006, `DebuggerEngine.cleanUp`).
 - Instant Client lokalnie: `~/Downloads/instantclient_23_26` (wykrywany automatycznie); w CI Linux: `/opt/oracle/instantclient`.

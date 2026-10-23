@@ -123,15 +123,15 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
-| Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 3 | PD-DBG-001 |
-| Kontynuuj | `debug.run` | ⌃R † | ⌃R | Brak | 3 | PD-DBG-001 |
-| Wejdź | `debug.stepInto` | ⌃N † | ⌃N | Brak | 3 | PD-DBG-001 |
-| Przejdź | `debug.stepOver` | ⌃O † | ⌃O | Brak | 3 | PD-DBG-001 |
-| Wyjdź | `debug.stepOut` | ⌃T † | ⌃T | Brak | 3 | PD-DBG-001 |
-| Wykonaj do kursora | `debug.runToCursor` |  |  | Brak | 3 | PD-DBG-001 |
-| Wykonaj do wyjątku | `debug.runToException` |  |  | Brak | 3 | PD-DBG-001 |
-| Punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | 3 | PD-DBG-001 |
-| Punkty przerwania… | `debug.breakpoints` |  |  | Brak | 3 | PD-DBG-001 |
+| Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | 0 | PD-DBG-001 |
+| Kontynuuj | `debug.run` | ⌃R † | ⌃R | Brak | 0 | PD-DBG-001 |
+| Wejdź | `debug.stepInto` | ⌃N † | ⌃N | Brak | 0 | PD-DBG-001 |
+| Przejdź | `debug.stepOver` | ⌃O † | ⌃O | Brak | 0 | PD-DBG-001 |
+| Wyjdź | `debug.stepOut` | ⌃T † | ⌃T | Brak | 0 | PD-DBG-001 |
+| Wykonaj do wyjątku | `debug.runToException` |  |  | Brak | 0 | PD-DBG-001 |
+| Wykonaj do kursora | `debug.runToCursor` |  |  | Brak | 0 | PD-DBG-001 |
+| Zatrzymaj debugowanie | `debug.stop` | ⇧F9 † | ⇧F9 | Brak | 0 | PD-DBG-001 |
+| Punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | 0 | PD-DBG-007 |
 
 ## Narzędzia
 

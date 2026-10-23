@@ -191,6 +191,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showDebugger(_ debugger: DebuggerEngine, document: PelikanWorkspace.Document) {
+        ToolWindowController.show(key: "debugger-\(document.id)", title: L10n.tr("Debuger — \(document.title)"), size: NSSize(width: 640, height: 380)) {
+            DebuggerPanel(workspace: workspace, debugger: debugger, document: document)
+        }
+        // Fokus zostaje w oknie głównym — kroki skrótami (⌃N, ⌃O, ⌃T, ⌃R) jak w edytorze.
+        mainWindow?.window?.makeKeyAndOrderFront(nil)
+    }
+
     func showCompileInvalid() {
         ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)

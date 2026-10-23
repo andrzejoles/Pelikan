@@ -1,0 +1,518 @@
+import Foundation
+import Observation
+import PelikanDB
+import PelikanSQL
+
+/// Miejsce w programie: jednostka (bez nazwy — blok testu) i linia.
+public struct DebugLocation: Sendable, Hashable {
+    public var owner: String
+    public var name: String
+    /// Typ jednostki wg DBMS_DEBUG (LibunitType: 0 kursor/blok, 7 procedura, 8 funkcja, 9 pakiet, 11 ciało pakietu, 12 wyzwalacz).
+    public var unitType: Int
+    public var line: Int
+
+    public var isTestBlock: Bool { name.isEmpty }
+
+    /// Typ obiektu bazy dla jednostki (do otwarcia źródła i punktów przerwania).
+    public var objectType: DBObjectType? {
+        switch unitType {
+        case 7: .procedure
+        case 8: .function
+        case 9: .package
+        case 11: .packageBody
+        case 12: .trigger
+        case 13: .type
+        case 14: .typeBody
+        default: nil
+        }
+    }
+
+    /// Przestrzeń nazw DBMS_DEBUG dla punktów przerwania.
+    var namespace: Int {
+        switch unitType {
+        case 11, 14: 2      // namespace_pkg_body
+        case 12: 3          // namespace_trigger
+        case 0: 0           // namespace_cursor
+        default: 1          // namespace_pkgspec_or_toplevel
+        }
+    }
+}
+
+/// Zmienna w podglądzie debugera (UG 5.10): wartość albo dzieci (pola rekordu, elementy kolekcji).
+public struct DebugVariable: Sendable, Hashable, Identifiable {
+    public var name: String
+    /// Pełna nazwa dla GET_VALUE (np. `r.sal`, `t(3)`).
+    public var path: String
+    public var value: String
+    public var type: String
+    public var children: [DebugVariable]?
+    public var id: String { path }
+}
+
+/// Punkt przerwania: jednostka (nil — blok testu okna) i linia (1 = pierwsza linia jednostki).
+public struct Breakpoint: Sendable, Hashable, Identifiable, Codable {
+    public var id = UUID()
+    public var owner: String?
+    public var unit: String?
+    public var type: DBObjectType?
+    public var document: UUID?
+    public var line: Int
+    public var enabled = true
+    /// Liczba przejść do zatrzymania (0 — za każdym razem) — liczona po stronie Pelikana.
+    public var passCount = 0
+
+    public init(owner: String? = nil, unit: String? = nil, type: DBObjectType? = nil, document: UUID? = nil, line: Int) {
+        self.owner = owner; self.unit = unit; self.type = type; self.document = document; self.line = line
+    }
+}
+
+/// Debuger PL/SQL na DBMS_DEBUG (ADR 0006): sesja docelowa okna testu wykonuje blok, sesja nadzorująca steruje krokami.
+@MainActor
+@Observable
+public final class DebuggerEngine {
+    public enum State: Sendable, Equatable { case idle, running, paused, finished }
+    public enum Step: Sendable { case into, over, out, run, runToException }
+
+    public private(set) var state: State = .idle
+    public private(set) var location: DebugLocation?
+    public private(set) var stack: [DebugLocation] = []
+    public private(set) var variables: [DebugVariable] = []
+    /// Ramka wybrana na stosie (0 — bieżąca).
+    public private(set) var selectedFrame = 0
+    public private(set) var lastReason = 0
+    public private(set) var message: String?
+
+    @ObservationIgnored let workspace: Workspace
+    @ObservationIgnored let document: Document
+    @ObservationIgnored var target: (any DatabaseSession)?
+    @ObservationIgnored var debug: (any DatabaseSession)?
+    @ObservationIgnored var execution: Task<ExecutionResult, any Error>?
+    @ObservationIgnored var bindsUsed: [BindVariable] = []
+    @ObservationIgnored var hitCounts: [UUID: Int] = [:]
+    @ObservationIgnored var bpNumbers: [Int: UUID] = [:]
+    @ObservationIgnored var sourceCache: [String: String] = [:]
+
+    /// Śledzenie wywołań DBMS_DEBUG do pliku (PELIKAN_DEBUG_TRACE=ścieżka) — diagnostyka, bez danych użytkownika poza nazwami jednostek.
+    nonisolated static func trace(_ s: String) {
+        guard let path = ProcessInfo.processInfo.environment["PELIKAN_DEBUG_TRACE"], !path.isEmpty,
+              let h = FileHandle(forWritingAtPath: path) ?? (FileManager.default.createFile(atPath: path, contents: nil) ? FileHandle(forWritingAtPath: path) : nil) else { return }
+        h.seekToEndOfFile()
+        h.write(Data("[debuger] \(s)\n".utf8))
+        try? h.close()
+    }
+
+    init(workspace: Workspace, document: Document) {
+        self.workspace = workspace
+        self.document = document
+    }
+
+    // MARK: Start i kroki
+
+    /// Start: inicjalizacja DBMS_DEBUG w sesji okna, dołączenie sesji nadzorującej, uruchomienie bloku i zatrzymanie
+    /// w pierwszej linii (Step into przy starcie, UG 5.10).
+    public func start() async throws {
+        guard state == .idle || state == .finished else { return }
+        TestRunner.synchronize(document)
+        guard let conn = workspace.effectiveConnection(of: document) else { throw CommandError.notConnected }
+        var sql = document.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if sql.hasSuffix("/") { sql = String(sql.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
+        try await workspace.guardModification([sql], connectionID: conn)
+        let binds = try document.testVariables.map { v -> BindVariable in
+            let (t, size) = v.type.bind
+            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try TestRunner.value(v), maxSize: size)
+        }
+        let target = try await workspace.session(for: document)
+        let debug = try await workspace.sessions.session(workspace.sessions.debuggerKey(document: document.id, connection: conn))
+        self.target = target
+        self.debug = debug
+        hitCounts = [:]
+        bpNumbers = [:]
+        sourceCache = [:]
+        message = nil
+        // Informacja debugowania dla bloku testu (PLSQL_OPTIMIZE_LEVEL 1 zachowuje wszystkie linie i zmienne).
+        Self.trace("start")
+        _ = try? await target.execute("alter session set plsql_optimize_level = 1")
+        // DBMS_OUTPUT przed DEBUG_ON — potem każde wywołanie PL/SQL w tej sesji czeka na debuger.
+        if document.outputEnabled && workspace.settings.dbmsOutputEnabled {
+            if workspace.settings.dbmsOutputClearBeforeExecute { document.output = [] }
+            try? await SessionUtilities.enableOutput(target, bufferSize: workspace.settings.dbmsOutputBufferSize)
+        }
+        let initResult = try await target.execute("begin :id := dbms_debug.initialize; dbms_debug.debug_on; end;",
+                                                  binds: [BindVariable(name: "id", direction: .output, maxSize: 100)])
+        guard let id = initResult.outBinds["id"]?.displayText ?? initResult.outBinds["ID"]?.displayText else {
+            throw CommandError.notAvailable(L10n.tr("DBMS_DEBUG nie zwrócił identyfikatora sesji"))
+        }
+        Self.trace("initialize -> \(id)")
+        _ = try await debug.execute("begin dbms_debug.attach_session(:id); end;", binds: [BindVariable(name: "id", value: .text(id))])
+        Self.trace("attached")
+        bindsUsed = binds
+        document.isExecuting = true
+        document.errorStack = []
+        execution = Task.detached { try await target.execute(sql, binds: binds) }
+        state = .running
+        // Pierwsze zdarzenie: start interpretera; punkty przerwania; potem pierwsza linia.
+        let info = try await runtimeCall("dbms_debug.synchronize(ri, dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+        if info.terminated { return try await finish() }
+        try await applyBreakpoints(block: false)
+        try await continueExecution(breakflags: "dbms_debug.break_any_call")
+    }
+
+    /// Krok albo uruchomienie do punktu przerwania / wyjątku / końca (UG 5.10).
+    public func step(_ s: Step) async throws {
+        guard state == .paused else { return }
+        // Punkty przerwania bloku testu: SET_BREAKPOINT nie działa w bloku anonimowym — emulacja (kroki w bloku,
+        // w jednostkach do powrotu; punkty w jednostkach i wyjątki zatrzymują jak zwykle).
+        let blockLines = Set(workspace.breakpoints.filter { $0.enabled && $0.document == document.id.raw }.map(\.line))
+        if !blockLines.isEmpty, s == .run || s == .runToException {
+            let exc = s == .runToException ? " + dbms_debug.break_exception" : ""
+            while state == .paused {
+                let inBlock = location?.isTestBlock == true
+                try await continueExecution(breakflags: (inBlock ? "dbms_debug.break_next_line" : "dbms_debug.break_any_return") + exc)
+                guard state == .paused, let l = location else { return }
+                if lastReason == 3 || lastReason == 11 { return }                  // punkt przerwania jednostki / wyjątek
+                if l.isTestBlock, blockLines.contains(l.line) { return }
+            }
+            return
+        }
+        let flags: String = switch s {
+        case .into: "dbms_debug.break_any_call"
+        case .over: "dbms_debug.break_next_line"
+        case .out: "dbms_debug.break_any_return"
+        case .run: "0"
+        case .runToException: "dbms_debug.break_exception"
+        }
+        try await continueExecution(breakflags: flags)
+    }
+
+    /// Przerywa program (abort) i kończy sesję debugowania.
+    public func stop() async {
+        guard state == .paused || state == .running else { return }
+        if state == .paused { _ = try? await runtimeCall("dbms_debug.continue(ri, dbms_debug.abort_execution, 0)") }
+        _ = try? await execution?.value
+        await cleanUp()
+        location = nil
+        stack = []
+        variables = []
+        state = .finished
+        message = L10n.tr("Przerwano")
+    }
+
+    /// Wybór ramki stosu — zmienne tej ramki (UG 5.10 „klik = ramka i jej zmienne”).
+    public func selectFrame(_ index: Int) async {
+        guard state == .paused, index >= 0, index < stack.count else { return }
+        selectedFrame = index
+        await loadVariables()
+    }
+
+    // MARK: Pętla zdarzeń
+
+    struct RuntimeInfo {
+        var status: Int
+        var line: Int
+        var terminated: Bool
+        var breakpoint: Int
+        var reason: Int
+        var owner: String
+        var name: String
+        var unitType: Int
+    }
+
+    /// Wywołanie SYNCHRONIZE / CONTINUE w bloku rozpakowującym RUNTIME_INFO do zmiennych skalarnych.
+    func runtimeCall(_ call: String) async throws -> RuntimeInfo {
+        guard let debug else { throw CommandError.notAvailable(L10n.tr("Debuger nie jest uruchomiony")) }
+        Self.trace("call \(call.prefix(40))")
+        defer { Self.trace("call done") }
+        let names = ["ret", "line", "term", "bp", "reason", "owner", "name", "utype"]
+        let binds = names.map { n in BindVariable(name: n, type: ["owner", "name"].contains(n) ? .varchar2 : .number, direction: .output, maxSize: 200) }
+        let r = try await debug.execute("""
+            declare
+              ri dbms_debug.runtime_info;
+            begin
+              :ret := \(call);
+              :line := ri.line#; :term := ri.terminated; :bp := ri.breakpoint; :reason := ri.reason;
+              :owner := ri.program.owner; :name := ri.program.name; :utype := ri.program.libunittype;
+            end;
+            """, binds: binds)
+        func n(_ k: String) -> Int { Int(r.outBinds[k]?.displayText ?? r.outBinds[k.uppercased()]?.displayText ?? "") ?? 0 }
+        func s(_ k: String) -> String { r.outBinds[k]?.displayText ?? r.outBinds[k.uppercased()]?.displayText ?? "" }
+        return RuntimeInfo(status: n("ret"), line: n("line"), terminated: n("term") != 0, breakpoint: n("bp"), reason: n("reason"),
+                           owner: s("owner"), name: s("name"), unitType: n("utype"))
+    }
+
+    func continueExecution(breakflags: String) async throws {
+        state = .running
+        while true {
+            let info = try await runtimeCall("dbms_debug.continue(ri, \(breakflags), dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            lastReason = info.reason
+            Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner).\(info.name)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
+            // reason_exit (15) / reason_knl_exit (25) / zakończony program.
+            if info.terminated || info.reason == 15 || info.reason == 25 { return try await finish() }
+            // Punkt przerwania z licznikiem przejść: kontynuacja do osiągnięcia liczby (UG 5.10 „Pass Count”).
+            if info.breakpoint > 0, let id = bpNumbers[info.breakpoint],
+               let bp = workspace.breakpoints.first(where: { $0.id == id }), bp.passCount > 0 {
+                hitCounts[id, default: 0] += 1
+                if hitCounts[id, default: 0] < bp.passCount { continue }
+            }
+            // Wejście do jednostki (reason_enter) i jednostki bez informacji debugowania (linia 0) — dalej do pierwszej linii.
+            if info.line == 0 || info.reason == 6 { continue }
+            location = DebugLocation(owner: info.owner, name: info.name, unitType: info.unitType, line: info.line)
+            selectedFrame = 0
+            state = .paused
+            await loadStack()
+            // Typ jednostki z RUNTIME_INFO bywa 0 — poprawny jest w ramce stosu (PRINT_BACKTRACE).
+            if location?.unitType == 0, let top = stack.first, top.name == location?.name, top.unitType != 0 {
+                location?.unitType = top.unitType
+            }
+            await loadVariables()
+            return
+        }
+    }
+
+    /// Koniec programu: wynik wykonania (zmienne OUT jak w Test Window) albo błąd ze stosem.
+    func finish() async throws {
+        state = .finished
+        location = nil
+        stack = []
+        variables = []
+        guard let execution else { return }
+        do {
+            let r = try await execution.value
+            for i in document.testVariables.indices {
+                let v = document.testVariables[i]
+                let out = r.outBinds[v.name] ?? r.outBinds[v.name.uppercased()] ?? .null
+                var n = v
+                if case .cursor = out { n.value = L10n.tr("(kursor)"); n.isNull = false } else {
+                    n.isNull = out.isNull
+                    n.value = out.isNull ? "" : out.format(workspace.settings.valueFormat)
+                }
+                n.changed = n.value != v.value || n.isNull != v.isNull
+                document.testVariables[i] = n
+            }
+            message = L10n.tr("Zakończono")
+        } catch let e as OracleError {
+            document.errorStack = TestRunner.errorStack(e.message)
+            message = e.message.components(separatedBy: "\n").first
+        }
+        await cleanUp()
+        if document.outputEnabled && workspace.settings.dbmsOutputEnabled, let t = target, let lines = try? await SessionUtilities.readOutput(t) {
+            document.output.append(contentsOf: lines)
+        }
+        document.isExecuting = false
+    }
+
+    /// Wyłączenie trybu debugowania: DEBUG_OFF w sesji docelowej też jest „debugowanym” wywołaniem — sesja nadzorująca
+    /// odbiera jego zdarzenia (SYNCHRONIZE, CONTINUE do końca), potem się odłącza.
+    func cleanUp() async {
+        if let target, let debug {
+            Self.trace("debug_off")
+            let off = Task.detached { try await target.execute("begin dbms_debug.debug_off; end;") }
+            if let info = try? await runtimeCall("dbms_debug.synchronize(ri, 0)"), !info.terminated {
+                for _ in 0..<20 {
+                    guard let i = try? await runtimeCall("dbms_debug.continue(ri, 0, 0)") else { break }
+                    if i.terminated || i.reason == 15 || i.reason == 25 { break }
+                }
+            }
+            _ = try? await off.value
+            _ = try? await debug.execute("begin dbms_debug.detach_session; end;")
+        }
+        execution = nil
+        document.isExecuting = false
+    }
+
+    // MARK: Stos i zmienne
+
+    func loadStack() async {
+        guard let debug else { return }
+        let r = try? await debug.execute("""
+            declare
+              bt dbms_debug.backtrace_table;
+              s varchar2(32767);
+            begin
+              dbms_debug.print_backtrace(bt);
+              for i in reverse 1 .. bt.count loop
+                s := s || bt(i).owner || '|' || bt(i).name || '|' || bt(i).line# || '|' || bt(i).libunittype || chr(10);
+              end loop;
+              :s := s;
+            end;
+            """, binds: [BindVariable(name: "s", direction: .output, maxSize: 32767)])
+        let text = r?.outBinds["s"]?.displayText ?? r?.outBinds["S"]?.displayText ?? ""
+        stack = text.split(separator: "\n").compactMap { l in
+            let p = l.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            guard p.count == 4 else { return nil }
+            return DebugLocation(owner: p[0], name: p[1], unitType: Int(p[3]) ?? 0, line: Int(p[2]) ?? 0)
+        }
+        if stack.isEmpty, let location { stack = [location] }
+    }
+
+    /// Źródło jednostki ramki (blok testu — tekst okna) do ustalenia deklaracji w zasięgu.
+    func source(of l: DebugLocation) async -> String {
+        if l.isTestBlock { return document.text }
+        let key = "\(l.owner).\(l.name).\(l.unitType)"
+        if let c = sourceCache[key] { return c }
+        guard let type = l.objectType, let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) else { return "" }
+        let s = (try? await m.source(of: DBObject(owner: l.owner, name: l.name, type: type))) ?? ""
+        sourceCache[key] = s
+        return s
+    }
+
+    /// Zmienne ramki: deklaracje w zasięgu linii (parser) i wartości z GET_VALUE; rekordy i kolekcje jako drzewo.
+    func loadVariables() async {
+        guard stack.indices.contains(selectedFrame) else { variables = []; return }
+        let frame = stack[selectedFrame]
+        Self.trace("vars: source \(frame.name)")
+        let text = await source(of: frame)
+        Self.trace("vars: source done \(text.count)")
+        let offset = ProgramCompiler.offset(line: frame.line, column: 1, in: text)
+        let ctx = CompletionContext.analyze(text, offset: offset)
+        // Ramka dla GET_VALUE: 0 — bieżąca; numeracja od najnowszej.
+        let frameNo = selectedFrame
+        var out: [DebugVariable] = []
+        for d in ctx.declarations where [.variable, .constant, .parameter, .cursor].contains(d.kind) {
+            if d.kind == .cursor { continue }
+            out.append(await variable(d.name, path: d.name, type: d.detail, frame: frameNo, context: ctx))
+        }
+        // Zmienne pętli FOR (rekordy, liczniki) obejmujących linię.
+        for (name, _) in ctx.loopRecords.sorted(by: { $0.key < $1.key }) {
+            out.append(await variable(name.lowercased(), path: name.lowercased(), type: "record", frame: frameNo, context: ctx))
+        }
+        variables = out
+    }
+
+    /// Wartość zmiennej; rekord (pola z typu) i kolekcja (indeksy z GET_INDEXES) — rozwinięte jeden poziom.
+    func variable(_ name: String, path: String, type: String, frame: Int, context ctx: CompletionContext) async -> DebugVariable {
+        let (status, value) = await getValue(path, frame: frame)
+        var v = DebugVariable(name: name, path: path, value: value ?? "", type: type)
+        switch status {
+        case 0: break                                              // success
+        case 2: v.value = L10n.tr("(brak informacji debugowania)")  // error_no_debug_info
+        case 3, 11:                                                  // error_no_such_object / error_name_incomplete
+            let fields = await recordFields(type, context: ctx)
+            if fields.isEmpty { v.value = L10n.tr("(niedostępna)"); break }
+            var children: [DebugVariable] = []
+            for f in fields { children.append(await variable(f.lowercased(), path: path + "." + f.lowercased(), type: "", frame: frame, context: ctx)) }
+            v.children = children
+            v.value = L10n.tr("(rekord)")
+        case 32: v.value = "NULL"                                    // error_nullvalue
+        case 40: v.value = L10n.tr("(kolekcja NULL)")               // error_nullcollection
+        case 18:                                                     // error_indexed_table
+            v.children = await collection(path, frame: frame, type: type, context: ctx)
+            v.value = L10n.tr("(\(v.children?.count ?? 0) elementów)")
+        default:
+            // Rekord: pola wg typu (%ROWTYPE, typ lokalny).
+            let fields = await recordFields(type, context: ctx)
+            if !fields.isEmpty {
+                var children: [DebugVariable] = []
+                for f in fields { children.append(await variable(f.lowercased(), path: path + "." + f.lowercased(), type: "", frame: frame, context: ctx)) }
+                v.children = children
+                v.value = L10n.tr("(rekord)")
+            } else if value == nil {
+                v.value = "NULL"
+            }
+        }
+        return v
+    }
+
+    func getValue(_ path: String, frame: Int) async -> (Int, String?) {
+        guard let debug else { return (-1, nil) }
+        let r = try? await debug.execute("begin :st := dbms_debug.get_value(:n, :f, :v, null); end;", binds: [
+            BindVariable(name: "st", type: .number, direction: .output),
+            // Nazwy bez cudzysłowu — wielkimi literami (tak zapisuje je kompilator w informacji debugowania).
+            BindVariable(name: "n", value: .text(path.contains("\"") ? path : path.uppercased())),
+            BindVariable(name: "f", type: .number, value: .number(String(frame))),
+            BindVariable(name: "v", direction: .output, maxSize: 4000),
+        ])
+        let st = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
+        let v = r?.outBinds["v"] ?? r?.outBinds["V"]
+        Self.trace("get_value \(path) frame=\(frame) status=\(st) value=\(v.map { "\($0)" } ?? "-") binds=\(r?.outBinds.keys.sorted() ?? [])")
+        return (st, v.flatMap { $0.isNull ? nil : $0.displayText })
+    }
+
+    func collection(_ path: String, frame: Int, type: String, context ctx: CompletionContext) async -> [DebugVariable] {
+        guard let debug else { return [] }
+        let r = try? await debug.execute("""
+            declare
+              ix dbms_debug.index_table;
+              h dbms_debug.program_info;
+              st binary_integer;
+              s varchar2(32767);
+            begin
+              st := dbms_debug.get_indexes(:n, :f, h, ix);
+              if ix.count > 0 then
+                for i in ix.first .. ix.last loop
+                  if ix.exists(i) and length(s) < 30000 or s is null then s := s || ix(i) || ','; end if;
+                end loop;
+              end if;
+              :s := s;
+            end;
+            """, binds: [BindVariable(name: "n", value: .text(path.uppercased())), BindVariable(name: "f", type: .number, value: .number(String(frame))),
+                         BindVariable(name: "s", direction: .output, maxSize: 32767)])
+        let idx = (r?.outBinds["s"]?.displayText ?? r?.outBinds["S"]?.displayText ?? "").split(separator: ",").map(String.init).prefix(200)
+        var out: [DebugVariable] = []
+        for i in idx { out.append(await variable("(\(i))", path: "\(path)(\(i))", type: "", frame: frame, context: ctx)) }
+        return out
+    }
+
+    /// Pola rekordu: typ lokalny RECORD albo `tabela%ROWTYPE` (kolumny ze słownika).
+    func recordFields(_ type: String, context ctx: CompletionContext) async -> [String] {
+        let up = type.uppercased().trimmingCharacters(in: .whitespaces)
+        if let decl = ctx.typeDeclarations[up] { return CodeAssistant.recordFields(decl).map(\.name) }
+        if up.hasSuffix("%ROWTYPE"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) {
+            let base = String(up.dropLast("%ROWTYPE".count))
+            let parts = base.split(separator: ".").map(String.init)
+            if let o = try? await m.resolve(owner: parts.count > 1 ? parts[0] : nil, name: parts.last ?? base) {
+                return ((try? await m.columns(of: o)) ?? []).map(\.name)
+            }
+        }
+        return []
+    }
+
+    // MARK: Punkty przerwania
+
+    /// Tymczasowy punkt przerwania (Wykonaj do kursora) w trakcie sesji.
+    func applyTemporary(_ bp: Breakpoint) async throws {
+        guard bp.document == nil else { return }       // blok testu — emulacja w `step(.run)`
+        try await applyBreakpoints(block: false, only: bp.id)
+    }
+
+    func applyBreakpoints(block: Bool, only: UUID? = nil) async throws {
+        guard let debug else { return }
+        let schema = target?.info.currentSchema ?? ""
+        for bp in workspace.breakpoints where bp.enabled && (only == nil || bp.id == only) {
+            let isBlock = bp.document == document.id.raw
+            guard isBlock == block, isBlock || (bp.unit != nil && bp.type != nil) else { continue }
+            let ns: Int
+            switch bp.type {
+            case .packageBody?, .typeBody?: ns = 2
+            case .trigger?: ns = 3
+            default: ns = isBlock ? 0 : 1
+            }
+            let r = try? await debug.execute("""
+                declare
+                  p dbms_debug.program_info;
+                  n binary_integer;
+                begin
+                  p.namespace := :ns; p.owner := :o; p.name := :u; p.dblink := null; p.line# := :l;
+                  :st := dbms_debug.set_breakpoint(p, :l, n);
+                  :bp := n;
+                end;
+                """, binds: [BindVariable(name: "ns", type: .number, value: isBlock ? .null : .number(String(ns))),
+                             BindVariable(name: "o", value: isBlock ? .null : .text(bp.owner ?? schema)),
+                             BindVariable(name: "u", value: isBlock ? .null : .text(bp.unit ?? "")),
+                             BindVariable(name: "l", type: .number, value: .number(String(bp.line))),
+                             BindVariable(name: "st", type: .number, direction: .output),
+                             BindVariable(name: "bp", type: .number, direction: .output)])
+            Self.trace("breakpoint \(bp.unit ?? "<blok>"):\(bp.line) status=\(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "?") nr=\(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? "?")")
+            if let n = Int(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? ""), n > 0 { bpNumbers[n] = bp.id }
+        }
+    }
+}
+
+extension Workspace {
+    /// Debuger okna testu (jeden na okno).
+    public func debugger(for doc: Document) -> DebuggerEngine {
+        if let d = debuggers[doc.id] { return d }
+        let d = DebuggerEngine(workspace: self, document: doc)
+        debuggers[doc.id] = d
+        return d
+    }
+}

@@ -70,4 +70,5 @@ jobs:
         working-directory: Packages/PelikanKit
         run: |
           export LD_LIBRARY_PATH=/opt/oracle/instantclient
-          swift test --filter 'PelikanSQLTests|PelikanDBTests'
+          # Testy bazy dzielą jeden schemat — bez równoległości między zestawami.
+          swift test --no-parallel --filter 'PelikanSQLTests|PelikanDBTests'

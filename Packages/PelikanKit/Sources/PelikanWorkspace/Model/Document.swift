@@ -115,6 +115,8 @@ public final class Document: Identifiable {
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
     public var errorStack: [ErrorStackFrame] = []
+    /// Linia (od 1), w której zatrzymał się debuger — wyróżniona w edytorze (UG 5.10).
+    public var executionLine: Int?
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
     public var foldedStarts: Set<Int> = []
     public var historyPosition: Int?
