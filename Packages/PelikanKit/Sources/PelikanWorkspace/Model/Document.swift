@@ -83,6 +83,8 @@ public final class Document: Identifiable {
     /// Połączenie okna (nil = połączenie główne) i przypięcie (UG 20.2).
     public var connectionID: UUID?
     public var connectionPinned = false
+    /// Konsola zapytań połączenia (DG-CONS-001): tekst zachowywany automatycznie, bez pliku.
+    public var consoleConnectionID: UUID?
 
     // MARK: SQL Window (UG 7)
     /// Karty wyników (przypięte zostają przy kolejnym wykonaniu — UG 7.10).
@@ -114,6 +116,8 @@ public final class Document: Identifiable {
     public var compileMessages: [CompileMessage] = []
     /// Okno diagramu: model i zaznaczone elementy (PD-DIAG-001).
     public var diagram = Diagram()
+    /// Notatnik SQL: komórki z wynikami (SD-NB-001).
+    public var notebook = Notebook()
     /// Okno raportu: definicja (zapytanie w `text`), wynik HTML i dane, błąd (PD-REP-002).
     public var report = ReportDefinition(title: "", sql: "")
     public var reportHTML: String?

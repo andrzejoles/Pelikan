@@ -58,6 +58,20 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         if target.walletAuth == true { resolved.externalAuth = true }
         resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory,
                                                                walletDirectory: target.walletDirectory, keepAlias: resolved.externalAuth)
+        // Token (Entra ID / OAuth2): klient Oracle sam pobiera token; logowanie bez użytkownika i hasła (SD-AUTH-001).
+        if let token = target.tokenAuth {
+            let missing = token.missingFields
+            guard missing.isEmpty else { throw DatabaseError.unsupported("Uwierzytelnianie tokenem: brak \(missing.joined(separator: ", "))") }
+            // Alias bez katalogu połączenia: rozwinięcie z konfiguracji Oracle Net Pelikana (IFILE do tnsnames.ora użytkownika).
+            let expanded = TNSNames.applyTokenAuth(resolved.connectString, parameters: token.parameters) == nil && configDirectory != nil
+                ? TNSNames.resolveForConnection(resolved.connectString, configDirectory: configDirectory) : resolved.connectString
+            guard let s = TNSNames.applyTokenAuth(expanded, parameters: token.parameters) else {
+                throw DatabaseError.unsupported("Uwierzytelnianie tokenem: nie znaleziono aliasu w tnsnames.ora — podaj EZConnect albo deskryptor")
+            }
+            resolved.connectString = s
+            resolved.externalAuth = true
+            resolved.user = ""
+        }
         let finalTarget = resolved
         return try await withCheckedThrowingContinuation { cont in
             queue.async {

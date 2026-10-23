@@ -424,6 +424,23 @@ Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 �
 Pelikan nie łączy się z serwerem właściciela; skrypty ksh88 i parsery są testowane na lokalnym `sshd` i próbkach
 z dokumentacji, a akceptację na AIX 6.1 i prawdziwe próbki wyjścia (fixture'y) dostarcza właściciel.
 
+### D61 · 2026-10-23 — Warstwa SSH jako moduł PelikanRemote (tylko macOS)
+Kod z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`) trafił do osobnego celu SPM
+`PelikanRemote` bez zależności od PelikanWorkspace — jak PelikanAgent, w `#if canImport(Darwin)`, więc Linux CI buduje
+pusty moduł. Zależności BifoldCore zastąpił `SSHError` z przypadkami strukturalnymi (negotiationFailed,
+permissionDenied, hostKeyChanged, timeout, cancelled, io, invalidName, unencodable) — teksty dla użytkownika powstaną
+w warstwie interfejsu przez `L10n.tr`. Sekrety SSH trafią do istniejącego `SecretStore` (Pęk kluczy) przy menedżerze
+połączeń; sesja dostaje sekret przez domknięcie, a do `ssh` idzie on przez kolejkę FIFO (w środowisku procesu tylko
+ścieżka kolejki, `PELIKAN_ASKPASS_FIFO`). Parser zwraca własny typ `RemoteFileEntry` zamiast `FileItem` z VFS Bifolda.
+
+### D62 · 2026-10-23 — Stop zdalnego builda i prolog środowiska
+Każde polecenie strumieniowe zaczyna się od `echo "@@PID $$"` — powłoka polecenia jest liderem sesji i grupy
+procesów na serwerze (sshd robi `setsid`). Stop kończy lokalne `ssh` (przy `-tt` zamknięcie pty wysyła SIGHUP do
+grupy), a zapasowo osobnym połączeniem wysyła `kill -TERM -<pid>`, sprawdza grupę `kill -0` i po 5 s `kill -KILL`;
+znacznik jest odcinany z wyjścia. Prolog środowiska ustawia zmienne w dwóch krokach (`NAZWA='wartość'; export NAZWA;`)
+z wartościami dosłownymi (bez rozwijania `$PATH`) — konfiguracja celu podaje pełne wartości; nazwy tylko
+`[A-Za-z_][A-Za-z0-9_]*`. Na AIX 6.1 (ksh88, stary OpenSSH) zachowanie Stop wymaga potwierdzenia przez właściciela.
+
 ### D55 · 2026-10-23 — Plik nie zmienia kodowania po cichu
 Zapis znaku spoza kodowania pliku (np. „ ” w ISO-8859-2) jest blokowany z linią, kolumną i znakiem — wcześniej plik
 przechodził na UTF-8, co dla źródeł Pro*C na AIX psułoby repozytorium. Zmiana kodowania tylko jawnie (Plik › Kodowanie
@@ -468,3 +485,141 @@ Sekcje panelu DBA i części Instance Viewera czytają słownik DBA_/V$ i przy O
 uprawnień zamiast błędu (użytkownik bez SELECT_CATALOG_ROLE widzi to, do czego ma dostęp). Zmiany (ALTER SYSTEM SET,
 blokada konta) to komendy z potwierdzeniem i strażnikiem zmian. Task Monitor to wspólna lista `WorkspaceTaskCenter`
 w Workspace (nazwa bez kolizji z `BackgroundTask` SwiftUI); długie operacje uruchamia się przez `ws.tasks.run`.
+
+### D63 · 2026-10-23 — Funkcje Diagnostics/Tuning Pack za deklaracją licencji
+AWR, ASH, ADDM (Diagnostics Pack), SQL Monitor i SQL Tuning Advisor (Tuning Pack) działają tylko wtedy, gdy parametr
+bazy CONTROL_MANAGEMENT_PACK_ACCESS na nie pozwala i użytkownik zadeklarował licencję dla połączenia — przy pierwszym
+użyciu Pelikan pyta, a odpowiedź zapamiętuje w definicji połączenia (zmiana w edytorze połączenia). Agent nie ma do nich
+dostępu (PROMPT §7.3). W PDB migawki AWR mają DBID kontenera (`CON_DBID`), więc raporty używają go zamiast DBID z
+V$DATABASE. Oracle Free ma pakiety w licencji — testy działają na bazie testowej.
+
+### D64 · 2026-10-23 — Widoki dualności, MLE i dane przestrzenne: zakres
+Generator widoku dualności tworzy DDL z tabeli głównej (klucz główny → `_id`) i tabel podrzędnych połączonych kluczem
+obcym (tablice obiektów, insert/update/delete na każdym poziomie) i otwiera go w oknie SQL — Pelikan nie wykonuje DDL
+sam. Słownik 23ai: `ALL_MLE_MODULES.MODULE_OWNER`, `ALL_MLE_ENVS.ENV_OWNER`, flagi widoków dualności jako TRUE/FALSE.
+Debugowanie po wykonaniu: DBMS_MLE.ENABLE_DEBUGGING ze specyfikacją JSON (nazwa modułu kwalifikowana schematem,
+migawka albo obserwacja), kod wywołujący w jednym bloku z wyłączeniem debugowania także przy wyjątku, wynik z
+PARSE_DEBUG_OUTPUT jako lista trafień. Podgląd przestrzenny rysuje WKT z SDO_UTIL (bez układów współrzędnych i podkładu mapy).
+### D65 · 2026-10-23 — Analiza kodu w czasie pisania bez łączenia z bazą; agent tylko inspekcje
+Rozwiązywanie nazw (DG-RES-001) i inspekcje (DG-INSP-001) liczy `Workspace.analyzeCode` z opóźnieniem po zmianie
+tekstu. Inspekcje są lokalne (lekser, zarys PL/SQL). Nazwy sprawdza się w słowniku tylko wtedy, gdy połączenie okna
+ma już otwartą sesję główną — analiza nigdy nie łączy z bazą ani nie pyta o hasło; odpowiedzi słownika są w pamięci
+podręcznej na 5 minut. Źródło metadanych to protokół `NameResolutionSource` (atrapa w testach). Ostrzeżenia są
+zachowawcze: kwalifikator w SQL osadzonym w PL/SQL może być zmienną rekordową, więc nie jest zgłaszany, a funkcje
+tabelaryczne i linki baz są pomijane. Agent (`edit.analyzeCode`) dostaje tylko inspekcje tekstu — słownik czyta
+wyłącznie przez własną sesję i narzędzia `agent.*`.
+
+### D66 · 2026-10-23 — Find Usages dla użytkownika, agent przez istniejące find_usages
+`edit.findUsages` (DG-USE-001) łączy ALL_DEPENDENCIES, linie kodu obiektów zależnych (tylko wystąpienia
+identyfikatora, bez komentarzy i literałów), ALL_IDENTIFIERS z PL/Scope (gdy kod skompilowano z PLSCOPE_SETTINGS) oraz
+otwarte okna i pliki projektu. Komenda działa w sesji głównej użytkownika, więc nie jest narzędziem agenta (poziom
+`.none`); agent ma `agent.findUsages` z własną sesją i regułami dostępu.
+
+### D67 · 2026-10-23 — Refaktoryzacja zmienia teksty, DDL tylko do przejrzenia
+Zmiana nazwy (DG-REF-001) zmienia tokeny identyfikatorów w oknach i plikach projektu po podglądzie różnic. Zmiennej
+lub parametru — w zakresie deklaracji, bez pól po kropce i notacji nazwanej `=>`; obiektu — `NAZWA` i
+`WŁAŚCICIEL.NAZWA`, bez nazw kwalifikowanych innym schematem; kolumny — tylko w poleceniach z tą tabelą. Skrypt
+DDL (ALTER TABLE … RENAME, RENAME) trafia do nowego okna SQL bez wykonania: zmiana w bazie przechodzi zwykłą ścieżką
+ze strażnikiem zmian. Przed zmianą tekstu wersja trafia do historii lokalnej. Agent — za zgodą, z podglądem
+zmienionych linii.
+
+### D68 · 2026-10-23 — Historia lokalna w katalogu danych, bez bazy
+Historia lokalna (DG-HIST-001) to jeden plik JSON na plik albo obiekt w `LocalHistory/` katalogu danych aplikacji
+(nazwa: czytelny fragment klucza + skrót FNV-1a). Wersje powstają przy zapisie pliku, kompilacji jednostki (klucz:
+połączenie, właściciel, typ, nazwa), refaktoryzacji, przed przywróceniem i ręcznie; tekst identyczny z ostatnią
+wersją jest pomijany; najwyżej 50 wersji i 30 dni. Przywrócenie zapisuje najpierw bieżący tekst, więc da się je
+cofnąć. Historia może zawierać kod, ale nie hasła (te są tylko w Pęku kluczy).
+
+### D69 · 2026-10-23 — Konsola połączenia to okno SQL z tekstem w katalogu danych
+Konsola (DG-CONS-001) to zwykłe okno SQL przypięte do połączenia, jedno na połączenie, z tekstem w
+`Consoles/<id połączenia>.sql`. Tekst zapisuje się przy zamknięciu okna, co 30 s i przy zakończeniu aplikacji, więc
+okno nie pyta o zapis. Wyniki zapytań nie są zachowywane.
+
+### D70 · 2026-10-23 — Zmiany oczekujące liczone względem wartości pierwotnych
+Wyróżnienie zmian w siatce (DG-GRID-001) korzysta z istniejącego stanu edycji (`changed`, `inserted`, `deleted`).
+Komórka zmieniona i przywrócona do wartości pierwotnej nie jest już zmianą (znacznik i licznik). Nagłówek wiersza
+pokazuje `+`, `~`, `−` z kolorem tła; nawigacja po zmianach i cofnięcie zmian wybranych wierszy to komendy rejestru.
+### D71 · 2026-10-23 — Notatnik SQL jako plik JSON z wynikami
+Notatnik (`.sqlnb`) to JSON z komórkami SQL/PL/SQL i Markdown; wynik komórki (kolumny, typy, do 200 wierszy jako
+tekst, komunikaty, DBMS_OUTPUT, błąd, czas) i opcjonalny wykres zapisują się w pliku, więc notatnik otwiera się z
+wynikami bez bazy. Komórka wykonuje się w sesji okna przez strażnika zmian; polecenia SQL*Plus w komórce są
+pomijane. Run All zatrzymuje się na pierwszym błędzie. Eksport do Markdown (tabele wyników). Komendy notatnika mają
+poziom agenta Brak — agent pracuje przez własne narzędzia zapytań.
+
+### D72 · 2026-10-23 — Raporty predefiniowane na słowniku ALL_/USER_
+Katalog raportów predefiniowanych (SD-REP-001) jest wbudowany w kod i używa tylko widoków ALL_/USER_ (bez uprawnień
+DBA), z zmienną `:owner` domyślnie równą bieżącemu schematowi. Styl: siatka, wykres (definicja wykresu w raporcie)
+albo DBMS_OUTPUT. Raport szczegółów dostaje wartości wiersza jako `:parent_<kolumna>`. Raporty standardowe okna
+raportu (PD-REP-001, HTML) zostają osobno — to inny mechanizm wzorca.
+
+### D73 · 2026-10-23 — Database Diff wyrównuje kolumny tabel; koszyk w katalogu danych
+Diff korzysta z porównania obiektów (PD-TOOL-012); dla różnych tabel generuje ALTER TABLE ADD/MODIFY (typ, DEFAULT,
+NULL/NOT NULL), a kolumny tylko w celu — DROP COLUMN jako komentarz, chyba że użytkownik zaznaczy usuwanie.
+Różnice więzów i indeksów pozostają do ręcznego przejrzenia. Koszyk (`cart.json` w katalogu danych, eksport `.cart`)
+przechowuje obiekty po nazwie; skrypt wdrożenia ma DDL w kolejności typów i dane INSERT (tabele nadrzędne pierwsze).
+
+### D74 · 2026-10-23 — Kolejność kopiowania schematu
+Kopiowanie: sekwencje i typy, tabele bez więzów FK (`REF_CONSTRAINTS=false`), dane (format własny tabel),
+pozostałe obiekty, klucze obce, na końcu wyzwalacze — żeby wyzwalacze nie odpalały się na kopiowanych danych.
+DDL bez nazwy schematu, wykonywane z `CURRENT_SCHEMA` celu (przywracanym po zakończeniu). Istniejące obiekty są
+pomijane (raport), chyba że wybrano zastępowanie (DROP tabel, sekwencji, indeksów, typów; kod przez CREATE OR REPLACE).
+
+### D75 · 2026-10-23 — Kreator importu obok importerów tekstu i Excela
+Importery PD-TOOL-008/009 zostają; kreator SD-IMP-001 łączy je i dodaje pliki o stałej szerokości (wykrywanie kolumn
+po wspólnych spacjach), jawny wybór kodowania (UTF-8, UTF-16, ISO-8859-2, Windows-1250/1252), podgląd i profile
+(`ImportProfiles/*.json` w katalogu danych, bez danych połączenia).
+
+### D76 · 2026-10-23 — Polecenia SQLcl w oknie poleceń
+INFO+ (statystyki kolumn z ALL_TAB_COL_STATISTICS), DDL [plik] (DBMS_METADATA), LOAD tabela plik [NEW] (wykrycie
+separatora, NEW tworzy tabelę z typów danych), FORMAT BUFFER/FILE (formater Pelikana), HISTORY [TIME|n|CLEAR]
+(historia okna z czasami — w pamięci okna), ALIAS nazwa=polecenie / LIST / DROP (aliasy okna), REPEAT n [s]
+(bufor), CTAS tabela nowa (polecenie do bufora). Linia aliasu bez średnika łączy się przy podziale skryptu z
+następnym poleceniem — po aliasie wykonuje się reszta.
+
+### D77 · 2026-10-23 — Układ diagramu ER warstwami kluczy obcych
+Diagram ER z bazy umieszcza tabele w kolumnach według poziomu w grafie FK (rodzice po lewej; cykle przerywane),
+w kolumnie alfabetycznie; wysokie kolumny dzielone dla proporcji obrazu. Powyżej 60 tabel bez listy kolumn.
+Eksport obrazu — istniejący eksport diagramu (PD-DIAG-003).
+
+### D78 · 2026-10-23 — Przenoszenie danych literałami, definicje bez haseł
+Przenoszenie (DB-XFER-001) czyta źródło partiami i wstawia wiersze do celu jako INSERT z literałami (jak porównanie
+danych) — działa między dowolnymi połączeniami i typami kosztem szybkości. Definicje (`Transfers/*.json`) wskazują
+połączenia nazwą; zmiana celu przechodzi przez strażnika zmian.
+
+### D79 · 2026-10-23 — Zadania lokalne tylko w działającej aplikacji
+Zadania lokalne (DB-TASK-001) uruchamia planista w aplikacji (co 30 s sprawdza terminy) — bez agenta launchd, bo to
+trwała zmiana konfiguracji systemu (PROMPT §13). Definicje (`Tasks/tasks.json`) zawierają nazwę połączenia, nigdy
+hasła; hasło pochodzi z Pęku kluczy w chwili uruchomienia. Stan i dzienniki osobno (`Tasks/state.json`,
+`Tasks/logs/`). Skrypt bez zaznaczonego COMMIT jest wycofywany; z COMMIT — przez strażnika zmian.
+### D80 · 2026-10-23 — Cele SSH: osobny moduł, plik bez sekretów, osobna usługa Pęku kluczy
+Model `PelikanSSHTarget`, magazyn celów, „Testuj” i parsery błędów są w nowym module `PelikanProC` (zależy od
+`PelikanWorkspace` i `PelikanRemote`), żeby `PelikanWorkspace` nie zależał od warstwy SSH, która działa tylko na macOS;
+komendy (`ssh.manager`, `ssh.test`, `ssh.export`, `ssh.import`, agent — Brak) są w rejestrze i otwierają okno przez
+`UIServices.showSSHTargets`. Cele i foldery w `ssh-targets.json` w katalogu danych — bez haseł; hasło SSH albo hasło
+klucza w pęku logowania w usłudze `<bundle id>.ssh` (konto = id celu), osobnej od haseł baz (`.connection`), z tym samym
+potwierdzeniem właściciela co hasła baz, gdy włączone (D56) — raz na cel w trakcie działania aplikacji. Sekret podany
+bez „Zapamiętaj” zostaje tylko w pamięci. Eksport/import nie przenosi sekretów, a import nadaje nowe identyfikatory
+(dołącza, nie nadpisuje). Gałąź porównywana dokładnie (`MASTER` ≠ `master`). Katalog roboczy Pelikana
+`<backupy>/.pelikan` nie może leżeć w working copy (walidacja). Brak katalogu backupów przy „Testuj” — utworzenie po
+potwierdzeniu, dla PROD dodatkowo wpisaniem nazwy celu (`ProductionConfirmation`, gotowe dla pipeline'u wdrożenia).
+Wersja serwera SSH czytana z banera TCP (przed logowaniem, bez sekretów) — log negocjacji `ssh` jest kasowany przez
+`SSHSession` po połączeniu. `which make` zamiast `make -v`, bo `make` z AIX może nie mieć opcji wersji.
+
+### D81 · 2026-10-23 — Parsery proc/xlc z formatu dokumentowanego
+Parsery rozpoznają: Pro*C `Error at line L, column C in file F` / `Semantic error at line L, column C, file F:` /
+`Syntax error …` z następującym kodem `PCC-x-NNNNN` (przy SQLCHECK=SEMANTICS także `PLS-x-NNNNN`; F = błąd krytyczny,
+także bez lokalizacji); XL C `"plik", line L.C: NNNN-NNN[N] (I|W|E|S|U) treść` (kolumna opcjonalna, numery komunikatów
+trzy- i czterocyfrowe) oraz układ `-qsrcmsg` (linia `  N | źródło`, znacznik `....a..`, komunikat `a - NNNN-NNN (S)`,
+plik z ostatniego polecenia kompilacji `xlc… -c plik.c` w wyjściu `make`). Ścieżka z komunikatu (względna wobec katalogu
+`make` albo bezwzględna) jest mapowana na ścieżkę względną working copy; pliki spoza repozytorium (nagłówki Oracle) nie
+dają skoku. Fixture'y odtwarzają format z dokumentacji — do zastąpienia prawdziwymi próbkami z AIX właściciela.
+Sukces builda wyznacza kod wyjścia `make`, nie parser.
+
+### D82 · 2026-10-23 — Entra ID i ORDS bez środowisk do prób
+**Entra ID:** Pelikan nie implementuje OAuth sam — używa obsługi tokenów w Instant Client 23 (`TOKEN_AUTH=AZURE_INTERACTIVE`
+z `TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_DB_APP_ID_URI`; albo `TOKEN_AUTH=OAUTH` z `TOKEN_LOCATION`). Parametry trafiają
+do sekcji SECURITY deskryptora albo do EZConnect; alias rozwijany z konfiguracji Oracle Net. Logowanie bez użytkownika
+i hasła; token nie przechodzi przez Pelikana i nie jest zapisywany. Bez konta Azure (płatne konto — PROMPT §13) nie da
+się sprawdzić logowania, więc wiersz ⚠️ do potwierdzenia przez właściciela.
+**ORDS:** baza testowa (gvenzl/oracle-free) nie ma ORDS; Pelikan wykrywa jego brak, pokazuje moduły i obiekty AutoREST
+z widoków USER_ORDS_*, a włączenie REST generuje jako skrypt do okna SQL (jak DDL — bez samodzielnego wykonania).

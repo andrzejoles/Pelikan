@@ -1,6 +1,8 @@
 import AppKit
 import PelikanDB
 import PelikanODPI
+import PelikanProC
+import PelikanRemote
 import PelikanThin
 import Sparkle
 import PelikanSQL
@@ -15,6 +17,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var palette: CommandPalette?
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
+    /// Okresowy zapis konsol połączeń (DG-CONS-001).
+    private var consoleSave: Timer?
     private var keyMonitor: Any?
     /// Aktualizacje Sparkle (kanał releases/latest/download/appcast.xml, podpis EdDSA). W kompilacji Debug wyłączone.
     #if DEBUG
@@ -66,7 +70,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func applicationDidFinishLaunching(_ notification: Notification) {
         startStallLog()
         workspace.ui = self
+        consoleSave = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.workspace.persistConsoles() }
+        }
         workspace.sessions.prompter = prompts
+        // Zadania lokalne według harmonogramu (DB-TASK-001) — tylko gdy są zdefiniowane.
+        if !workspace.localTasks.definitions.isEmpty { workspace.localTasks.start(workspace) }
         let builder = MenuBuilder(workspace: workspace)
         NSApp.mainMenu = builder.build()
         menuBuilder = builder
@@ -140,7 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.settings.autosaveLayout, let l = mainWindow?.layout { workspace.worksets.saveLayout(l) }
         // Autozapis workseta: niezapisane okna przetrwają w worksecie — bez pytania o zapis (UG 15).
         let worksetSaved = workspace.settings.worksetAutosave && (try? workspace.saveCurrentWorkset()) != nil
-        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
+        let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && $0.consoleConnectionID == nil && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
         if !modified.isEmpty {
             // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
             Task { @MainActor in
@@ -173,6 +182,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Procesy ssh tuneli kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
+        workspace.persistConsoles()
         agentUI?.stop()
         workspace.sessions.tunnels.closeAll()
     }
@@ -204,6 +214,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
     }
 
+    /// Cele SSH zdalnego builda Pro*C: plik w katalogu danych bez sekretów, sekrety w Pęku kluczy (`<bundle id>.ssh`).
+    private lazy var sshTargets: SSHTargetManagerModel = {
+        let bundle = Bundle.main.bundleIdentifier ?? (Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan")
+        let dir = workspace.dataDirectory
+        let store = SSHTargetStore(fileURL: dir?.appendingPathComponent(SSHTargetStore.fileName),
+                                   secrets: KeychainSecretStore(service: SSHTargetStore.keychainService(bundleIdentifier: bundle)))
+        let preferred = (dir ?? FileManager.default.temporaryDirectory).appendingPathComponent("run", isDirectory: true)
+        let run = (try? SocketDirectory.make(preferred: preferred)) ?? FileManager.default.temporaryDirectory
+        return SSHTargetManagerModel(store: store, workspace: workspace, runDirectory: run)
+    }()
+
+    func showSSHTargets(_ action: SSHTargetAction) {
+        let model = sshTargets
+        switch action {
+        case .manage, .test:
+            ToolWindowController.show(key: "sshTargets", title: L10n.tr("Cele SSH"), size: NSSize(width: 900, height: 640)) {
+                SSHTargetManagerView(model: model)
+            }
+            if case .test(let name) = action {
+                if let name { model.select(name: name) }
+                Task { await model.test() }
+            }
+        case .export:
+            let panel = NSSavePanel()
+            panel.allowedContentTypes = [.json]
+            panel.nameFieldStringValue = SSHTargetStore.fileName
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do { try model.store.exportData().write(to: url, options: .atomic) } catch { NSAlert(error: error).runModal() }
+        case .import:
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.json]
+            guard panel.runModal() == .OK, let url = panel.url else { return }
+            do { try model.store.importData(Data(contentsOf: url)) } catch { NSAlert(error: error).runModal() }
+        }
+    }
+
     func currentLayout() -> WindowLayout? { mainWindow?.layout }
 
     func applyLayout(_ layout: WindowLayout) { mainWindow?.apply(layout) }
@@ -212,6 +258,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
             DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+        }
+    }
+
+    func showUsages(title: String, hits: [UsageHit]) {
+        ToolWindowController.close(key: "usages")
+        ToolWindowController.show(key: "usages", title: L10n.tr("Użycia: \(title)"), size: NSSize(width: 820, height: 420)) {
+            UsagesView(workspace: workspace, title: title, hits: hits)
+        }
+    }
+
+    func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool {
+        guard let window = mainWindow?.window else { return false }
+        return await withCheckedContinuation { cont in
+            var sheet: NSWindow?
+            var finished = false
+            let view = RefactoringPreviewView(plan: plan) { apply in
+                guard !finished else { return }
+                finished = true
+                if let sheet { window.endSheet(sheet) }
+                cont.resume(returning: apply)
+            }
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            sheet = w
+            window.beginSheet(w)
+        }
+    }
+
+    func showLocalHistory(document: PelikanWorkspace.Document) {
+        ToolWindowController.close(key: "localHistory")
+        ToolWindowController.show(key: "localHistory", title: L10n.tr("Historia lokalna — \(document.title)"), size: NSSize(width: 820, height: 480)) {
+            LocalHistoryView(workspace: workspace, document: document)
+        }
+    }
+
+    func showProblems(document: PelikanWorkspace.Document) {
+        ToolWindowController.close(key: "problems")
+        ToolWindowController.show(key: "problems", title: L10n.tr("Problemy — \(document.title)"), size: NSSize(width: 640, height: 320)) {
+            ProblemsView(workspace: workspace, document: document)
         }
     }
 
@@ -284,6 +368,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             QueryBuilderView(workspace: workspace, connectionID: connectionID, targetDocument: target, initialSQL: sql)
         }
     }
+
+    func showStage7Tool(_ tool: Stage7Tool) { Stage7ToolWindows.show(tool, workspace: workspace) }
 
     func showDataTransfer(_ tool: DataTransferTool) {
         switch tool {
@@ -436,6 +522,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         ToolWindowController.show(key: "schemaDoc", title: L10n.tr("Dokumentacja schematu"), size: NSSize(width: 560, height: 220)) {
             SchemaDocView(workspace: workspace)
         }
+    }
+
+    func showHTMLReport(title: String, html: String) {
+        let key = "html-" + UUID().uuidString
+        ToolWindowController.show(key: key, title: title, size: NSSize(width: 960, height: 680)) { HTMLReportView(title: title, html: html) }
+    }
+
+    func showDualityViews() {
+        ToolWindowController.show(key: "dualityViews", title: L10n.tr("Widoki dualności JSON"), size: NSSize(width: 860, height: 520)) { DualityViewsView(workspace: workspace) }
+    }
+
+    func showMLEModules() {
+        ToolWindowController.show(key: "mleModules", title: L10n.tr("Moduły i środowiska MLE"), size: NSSize(width: 680, height: 420)) { MLEModulesView(workspace: workspace) }
+    }
+
+    func showSpatialPreview(title: String, wkt: [String]) {
+        ToolWindowController.show(key: "spatial-" + UUID().uuidString, title: L10n.tr("Podgląd przestrzenny: \(title)"), size: NSSize(width: 640, height: 520)) { SpatialPreviewView(wkt: wkt) }
+    }
+
+    func showSQLMonitor() {
+        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }
 
     func showTestManager() {

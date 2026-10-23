@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-23T14:54:14+02:00",
+  "heartbeat": "2026-10-23T21:03:41+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
   },
-  "task": "Etap 4: utPLSQL",
+  "task": "Czekam na CI #50 (poprawka Observation dla Linuksa); lokalnie: Entra ID/OAuth2 i ORDS gotowe (do wypchnięcia po scaleniu), pełne testy bazy w toku; subagent — pipeline wdrożenia Pro*C i konsola",
   "stages": [
     {
       "id": 0,
@@ -53,6 +53,10 @@
     }
   ],
   "done": [
+    "Scalone: narzędzia Etapu 7 (subagent C: notatnik, raporty predefiniowane, Diff/Cart, kopia schematu, import, SQLcl, ER, przenoszenie danych, zadania lokalne) i Etap P (menedżer celów SSH, parsery proc/xlc) w jeden PR",
+    "Etap 7 / DataGrip (subagent D): analiza nazw w czasie pisania, inspekcje, Find Usages, zmiana nazwy z podglądem, historia lokalna, konsole połączeń, zmiany oczekujące w siatce — scalone, testy na bazie OK (D65–D70)",
+    "Etap 7 / Oracle 23ai: widoki dualności JSON (lista, generator DDL, dokumenty, Data Guide), moduły i środowiska MLE, podgląd SDO_GEOMETRY — testy na bazie (D64)",
+    "Etap 7 / licencje pakietów Oracle: deklaracja na połączeniu, AWR, ASH, ADDM, SQL Monitor, SQL Tuning Advisor — test na bazie (D63)",
     "Etap 7 / plany i DBA (subagent) zintegrowane: diagram i flame graph planu, Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu (D59–D60); poprawka wyścigu w teście kanału agenta",
     "Etap 7 / siatka i edytor (subagent) zintegrowane: filtr i grupowanie w siatce, SQL z wierszy, generowanie kodu, panel wartości, snippety, SET SQLFORMAT; test bazy zielony (D57–D58)",
     "Etap 6 / projekty (Build, Make, Find in Project, pulpit) i edytor zewnętrzny Large Data Editor (RTF) — wszystkie wiersze Etapu 6 zrobione",
@@ -88,17 +92,10 @@
     "PR #20 scalony (wydajność, nawigacja, menu obiektu w edytorze)",
     "PR #19 scalony (przeglądarka różnic i porównania)",
     "Etap 2 / pary: podświetlenie pary nawiasów i BEGIN/IF/LOOP/CASE ↔ END przy kursorze (liczone w tle) — 2 testy",
-    "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie",
-    "PR #18 scalony (szablony kodu)",
-    "Etap 2 / edytor tabeli: Ogólne, Kolumny (typ, domyślna, wirtualna, identity, komentarze), Klucze (PK/UK/FK), Warunki, Indeksy (funkcyjne, DESC, niewidoczne), SQL; zmiany jako ALTER z zatrzymaniem przy błędzie; Edytuj na tabeli otwiera edytor; poprawka: pełna treść błędów Oracle w komunikatach — 1 test na bazie",
-    "Etap 2 / wydajność i nawigacja: 100 000 obiektów w folderze Object Browsera w 0,3 s bez blokady (przerwa głównego wątku < 10 ms), analizy pakietu 50 000 linii w tle (< 50 ms w Release), Wstecz / Naprzód po skokach, menu obiektu na nazwie w edytorze — 2 testy (1 wydajnościowy na żądanie)",
-    "PR #17 scalony (Znajdź obiekty bazy, Kompiluj niepoprawne obiekty)",
-    "Przełącznik „Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła” (Preferencje › Oracle); hasła w pęku logowania, usługa z bundle id; test menedżera sesji (D56)",
-    "Pro*C / kodowanie plików — ISO-8859-2 i Windows-1250 rozpoznawane, kodowanie projektu, blokada zapisu niekodowalnych znaków z linią i kolumną, jawna zmiana kodowania (PC-ENC-001, D55)",
-    "Oracle Wallet (prośba właściciela): portfel magazynu haseł w Preferencjach (katalog Oracle Net Pelikana), tryb połączenia „Oracle Wallet” (/@alias), portfel TLS per połączenie i import ZIP; test na bazie z portfelem testowym; jednorazowa próba na aliasie właściciela — OK (D53)"
+    "Etap 2 / edytory obiektów: sekwencja, synonim, indeks, użytkownik (hasło maskowane, role, uprawnienia, limity), rola; widok z szablonu w oknie SQL; Edytuj w Object Browserze otwiera edytor; pomiar: pisanie w pakiecie 50 403 linii bez przestojów (Release) — 2 testy na bazie"
   ],
   "next": [
-    "Etap 5 — agenci AI: kanał MCP jak w Bifoldzie, panel agenta, poziomy dostępu, sesja agenta, dziennik i cofanie, testy bezpieczeństwa (SECURITY §5)"
+    "Wstrzymane na prośbę właściciela (wyłączenie komputera). Do wznowienia: pełne testy bazy po scaleniu Etapu 7 i Etapu P, SD-NB/REP/… zrobione; pozostały SD-AUTH-001, SD-ORDS-001, debugowanie MLE, zamknięcie Etapów 6–7, Etap P faza 2 (pipeline, konsola)"
   ],
   "blockers": [],
   "questions": [],

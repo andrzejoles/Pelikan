@@ -54,6 +54,13 @@ public protocol UIServices: AnyObject {
     func showTestExplorer()
     /// Test Manager (PD-TOOL-018).
     func showTestManager()
+    /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
+    func showHTMLReport(title: String, html: String)
+    func showSQLMonitor()
+    /// Widoki dualności (SD-DV-001), moduły MLE (SD-MLE-001), podgląd przestrzenny (SD-DATA-001).
+    func showDualityViews()
+    func showMLEModules()
+    func showSpatialPreview(title: String, wkt: [String])
     /// Etap 7: Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu.
     func showAutotrace(_ result: AutotraceResult, sql: String)
     func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String)
@@ -113,11 +120,27 @@ public protocol UIServices: AnyObject {
     func applyLayout(_ layout: WindowLayout)
     /// Historia Git (lista zatwierdzeń) w oknie informacji.
     func showGitLog(_ commits: [GitCommit], title: String)
+    /// Wyniki Find Usages (DG-USE-001), podgląd refaktoryzacji z różnicami — true: zastosuj (DG-REF-001),
+    /// historia lokalna okna (DG-HIST-001), lista problemów analizy kodu (DG-RES-001, DG-INSP-001).
+    func showUsages(title: String, hits: [UsageHit])
+    func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool
+    func showLocalHistory(document: Document)
+    func showProblems(document: Document)
+    /// Okna narzędzi etapu 7: raporty predefiniowane, Database Diff, koszyk, kopiowanie schematu, kreator importu,
+    /// przenoszenie danych z mapowaniem, zadania lokalne.
+    func showStage7Tool(_ tool: Stage7Tool)
+    /// Cele SSH zdalnego builda Pro*C: menedżer, Testuj, eksport/import (Etap P).
+    func showSSHTargets(_ action: SSHTargetAction)
 
 }
 
 extension UIServices {
+    public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
+    public func showUsages(title: String, hits: [UsageHit]) {}
+    public func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool { false }
+    public func showLocalHistory(document: Document) {}
+    public func showProblems(document: Document) {}
     public func showMacroLibrary() {}
     public func showClipboardHistory() {}
     public func showTodoItems() {}
@@ -129,6 +152,11 @@ extension UIServices {
     public func showUtplsqlResults(_ run: UtplsqlRun) {}
     public func showTestExplorer() {}
     public func showTestManager() {}
+    public func showHTMLReport(title: String, html: String) {}
+    public func showSQLMonitor() {}
+    public func showDualityViews() {}
+    public func showMLEModules() {}
+    public func showSpatialPreview(title: String, wkt: [String]) {}
     public func showAutotrace(_ result: AutotraceResult, sql: String) {}
     public func showPlanComparison(_ comparison: PlanComparison, leftTitle: String, rightTitle: String) {}
     public func showDBAPanel() {}
@@ -160,6 +188,7 @@ extension UIServices {
     public func chooseDirectory() async -> URL? { nil }
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
+    public func showSSHTargets(_ action: SSHTargetAction) {}
     public func showGitLog(_ commits: [GitCommit], title: String) {
         showObjectInfo(title: title, columns: [L10n.tr("Zatwierdzenie"), L10n.tr("Autor"), L10n.tr("Data"), L10n.tr("Opis")],
                        rows: commits.map { [String($0.hash.prefix(10)), $0.author, $0.date.map { ISO8601DateFormatter().string(from: $0) } ?? "", $0.subject] })
@@ -243,6 +272,12 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var templates = TemplateLibrary(directory: dataDirectory?.appendingPathComponent("Templates", isDirectory: true))
     /// Snippety (SC-SNIP-001): wbudowane i własne w `Snippets/snippets.json`.
     @ObservationIgnored public private(set) lazy var snippets = SnippetLibrary(directory: dataDirectory?.appendingPathComponent("Snippets", isDirectory: true))
+    /// Lokalna historia plików i obiektów (DG-HIST-001) i konsole zapytań połączeń (DG-CONS-001).
+    @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
+    @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
+    @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Problemy edytora z rozwiązywania nazw i inspekcji (DG-RES-001, DG-INSP-001) według okna.
+    public var diagnostics: [DocumentID: [EditorDiagnostic]] = [:]
     /// Panel wartości obok siatki wyników (DB-PANEL-001).
     public var valuePanelVisible = false
     /// File Browser (UG 22): lokalizacje i historia filtrów z katalogu danych.
@@ -277,6 +312,8 @@ public final class Workspace {
     public var projectBuildResults: [ProjectBuildResult] = []
     /// Zadania w tle (Task Monitor, SD-MON-002).
     public let tasks = WorkspaceTaskCenter()
+    /// Zadania lokalne według harmonogramu (DB-TASK-001); definicje w katalogu danych `Tasks/`.
+    @ObservationIgnored public private(set) lazy var localTasks = LocalTaskScheduler(directory: dataDirectory?.appendingPathComponent("Tasks", isDirectory: true))
     /// Kod obiektów przed i po zmianach agentów (cofanie sesji agenta).
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
@@ -403,8 +440,10 @@ public final class Workspace {
 
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
+        consoles.persist(documents[i])
         documents.remove(at: i)
         sqlplusEngines[id] = nil
+        diagnostics[id] = nil
         if activeDocumentID == id {
             activeDocumentID = documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id
         }
