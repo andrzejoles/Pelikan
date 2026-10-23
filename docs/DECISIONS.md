@@ -204,3 +204,14 @@ produkcja: potwierdzenie). DBMS_PROFILER zapisuje dane przebiegu w transakcji se
 je w tej samej sesji; zatwierdzenie albo wycofanie transakcji okna decyduje o ich zachowaniu, jak w SQL*Plus.
 Wariant `START_PROFILER` z numerem przebiegu (OUT) zwraca w 26ai `error_io`, więc numer przebiegu jest odczytywany po
 zatrzymaniu z unikalnego komentarza. Bloki pomocnicze Pelikana (start/stop) są pomijane w raporcie.
+
+### D29 · 2026-10-23 — Etap 3 zamknięty; JDWP, ślad i pozostałe P2/P3 przechodzą dalej
+Kryterium spełnione testami integracyjnymi na bazie testowej: krokowanie przez pakiet z wyzwalaczem (stos trzech
+ramek z typami jednostek), podgląd rekordu (%ROWTYPE) i kolekcji (GET_INDEXES), zmienne globalne pakietu, punkty
+przerwania w jednostkach i w bloku testu, zatrzymanie na wyjątku i na kodzie błędu, zmiana wartości, obserwowane
+wyrażenia, DBMS_OUTPUT w trakcie, wykonanie SQL w sesji debugowanej. Okno testu (zmienne z typami, kursory, BOOLEAN,
+stos błędu, Test z Object Browsera, pliki .tst), profiler liniowy i hierarchiczny, statystyki sesji. Wszystkie wiersze
+P1 Etapu 3 zrobione. Przechodzą dalej (najpóźniej audyt Etapu 8): DBMS_DEBUG_JDWP (PD-DBG-002 — także jako droga do
+`:new`/`:old`, których DBMS_DEBUG nie udostępnia), karta statystyk okna SQL (PD-SQLW-008), DBMS_TRACE i SQL Trace
+(PD-OPT-007/008), ostrzeżenia ORA-04068 (PD-TEST-007), testy standardowe (PD-TEST-009), nadawanie uprawnień DEBUG
+(PD-DBG-013), warunki i logpointy punktów przerwania.
