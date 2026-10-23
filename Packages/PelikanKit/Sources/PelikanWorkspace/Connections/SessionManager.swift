@@ -15,6 +15,8 @@ public enum SessionPurpose: Hashable, Sendable {
     case agent(String)
     /// Sesja nadzorująca debugera okna (DBMS_DEBUG wymaga drugiej sesji — ADR 0006).
     case debugger(DocumentID)
+    /// Sesje utPLSQL: produkująca (`run`) i konsumująca zdarzenia reportera (`events`).
+    case utplsql(String)
 }
 
 public struct SessionKey: Hashable, Sendable {
@@ -97,6 +99,12 @@ public final class SessionManager {
     // MARK: Sesje
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
+
+    /// Bieżący schemat dowolnej otwartej sesji połączenia (bez łączenia) — nil, gdy brak sesji.
+    public func connectedSchema(_ connection: UUID?) -> String? {
+        guard let connection else { return nil }
+        return sessions.first { $0.key.connectionID == connection }?.value.info.currentSchema
+    }
 
     /// Sesja dla klucza: istniejąca albo nowa (pyta o hasło, obsługuje wygasłe hasło, wykonuje skrypt inicjalizacji).
     public func session(_ key: SessionKey) async throws -> any DatabaseSession {
@@ -256,6 +264,7 @@ extension SessionKey {
         case .compile: "kompilacja"
         case .agent(let id): "agent \(id)"
         case .debugger: "debuger"
+        case .utplsql(let r): "utPLSQL \(r)"
         }
     }
 }

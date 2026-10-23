@@ -408,26 +408,26 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| UT-RUN-001 | Uruchom wszystkie testy bieżącego użytkownika | docs/research/utplsql.md (wtyczka PL/SQL Developer) | Tools > utPLSQL | 4 | P1 | Za zgodą | do zrobienia |
-| UT-RUN-002 | Uruchom testy ze ścieżki (`schemat.pakiet.procedura`, `schemat:ścieżka.suity`) | wtyczka PL/SQL Developer | Tools > utPLSQL > Run path | 4 | P1 | Za zgodą | do zrobienia |
-| UT-RUN-003 | Menu Object Browsera: testy lub pokrycie dla pakietu, ciała, procedury, użytkownika | wtyczka PL/SQL Developer | Object Browser | 4 | P1 | Za zgodą | do zrobienia |
-| UT-RUN-004 | Uruchomienie z edytora: test/suita pod kursorem, cały pakiet | wtyczka SQL Developer | Program Window | 4 | P1 | Za zgodą | do zrobienia |
-| UT-RUN-005 | Wyniki na żywo przez ut_realtime_reporter (dwie sesje: produkująca i konsumująca; postęp, licznik, bieżący test) | utPLSQL-dotnet-api RealTimeTestRunner | Okno wyników testów | 4 | P1 | Odczyt | do zrobienia |
-| UT-RUN-006 | Ponowne uruchomienie nieudanych; uruchomienie pojedynczego testu z wyników; przerwanie | wtyczka PL/SQL Developer, PROMPT §6.2 | Okno wyników | 4 | P1 | Za zgodą | do zrobienia |
+| UT-RUN-001 | Uruchom wszystkie testy bieżącego użytkownika | docs/research/utplsql.md (wtyczka PL/SQL Developer) | Tools > utPLSQL | 4 | P1 | Za zgodą | ✅ test 👁 |
+| UT-RUN-002 | Uruchom testy ze ścieżki (`schemat.pakiet.procedura`, `schemat:ścieżka.suity`) | wtyczka PL/SQL Developer | Tools > utPLSQL > Run path | 4 | P1 | Za zgodą | ✅ test (kilka ścieżek po przecinku, schemat:suitepath) |
+| UT-RUN-003 | Menu Object Browsera: testy lub pokrycie dla pakietu, ciała, procedury, użytkownika | wtyczka PL/SQL Developer | Object Browser | 4 | P1 | Za zgodą | ⚠️ częściowo (pakiet, ciało, procedura, użytkownik, z pokryciem; bez osobnego okna opcji) ✅ test |
+| UT-RUN-004 | Uruchomienie z edytora: test/suita pod kursorem, cały pakiet | wtyczka SQL Developer | Program Window | 4 | P1 | Za zgodą | ✅ test (procedura pod kursorem w ciele albo specyfikacji, cały pakiet) |
+| UT-RUN-005 | Wyniki na żywo przez ut_realtime_reporter (dwie sesje: produkująca i konsumująca; postęp, licznik, bieżący test) | utPLSQL-dotnet-api RealTimeTestRunner | Okno wyników testów | 4 | P1 | Odczyt | ✅ test 👁 (dwie sesje, zdarzenia XML pobierane po jednym, postęp, licznik, bieżący test) |
+| UT-RUN-006 | Ponowne uruchomienie nieudanych; uruchomienie pojedynczego testu z wyników; przerwanie | wtyczka PL/SQL Developer, PROMPT §6.2 | Okno wyników | 4 | P1 | Za zgodą | ✅ test (ponownie nieudane, pojedynczy test z menu wyników, przerwanie) |
 | UT-RUN-007 | Uruchomienie testu z debugerem (blok wygenerowany, wydłużony limit reportera) | wtyczka SQL Developer | Okno wyników | 4 | P2 | Brak | do zrobienia |
-| UT-RES-001 | Okno wyników: drzewo suit/kontekstów/testów, czasy, statusy, filtr statusu, sortowanie | wtyczka PL/SQL Developer 1.1.0 | Okno wyników | 4 | P1 | Odczyt | do zrobienia |
-| UT-RES-002 | Szczegóły: oczekiwane vs otrzymane (porównanie), DBMS_OUTPUT testu, stos błędu z przejściem do linii | PROMPT §6.2 | Okno wyników | 4 | P1 | Odczyt | do zrobienia |
+| UT-RES-001 | Okno wyników: drzewo suit/kontekstów/testów, czasy, statusy, filtr statusu, sortowanie | wtyczka PL/SQL Developer 1.1.0 | Okno wyników | 4 | P1 | Odczyt | ⚠️ częściowo (drzewo suit/kontekstów/testów, czasy, statusy, filtr statusów; bez sortowania) ✅ test 👁 |
+| UT-RES-002 | Szczegóły: oczekiwane vs otrzymane (porównanie), DBMS_OUTPUT testu, stos błędu z przejściem do linii | PROMPT §6.2 | Okno wyników | 4 | P1 | Odczyt | ⚠️ częściowo (komunikat oczekiwania z wartościami, miejsce wywołania i stos z przejściem do linii, DBMS_OUTPUT; bez porównania obok siebie) ✅ test |
 | UT-RES-003 | Historia uruchomień i porównanie dwóch uruchomień | PROMPT §6.2 | Okno wyników | 4 | P2 | Odczyt | do zrobienia |
 | UT-EXP-001 | Eksplorator testów (ut_runner.get_suites_info), odświeżany po kompilacji, z ostatnim wynikiem | PROMPT §6.2 | View > Test Explorer | 4 | P1 | Odczyt | do zrobienia |
-| UT-COV-001 | Pokrycie kodu: okno opcji (schematy, include/exclude), raport HTML (ut_coverage_html_reporter) | wtyczka PL/SQL Developer | Tools > utPLSQL > Coverage | 4 | P1 | Za zgodą | do zrobienia |
-| UT-COV-002 | Pokrycie na marginesie edytora (linie pokryte/niepokryte/częściowo), procent obiektu i schematu | PROMPT §6.2 | Program Window | 4 | P1 | Odczyt | do zrobienia |
+| UT-COV-001 | Pokrycie kodu: okno opcji (schematy, include/exclude), raport HTML (ut_coverage_html_reporter) | wtyczka PL/SQL Developer | Tools > utPLSQL > Coverage | 4 | P1 | Za zgodą | ⚠️ częściowo (pokrycie schematu, raport HTML w przeglądarce; bez okna include/exclude) ✅ test |
+| UT-COV-002 | Pokrycie na marginesie edytora (linie pokryte/niepokryte/częściowo), procent obiektu i schematu | PROMPT §6.2 | Program Window | 4 | P1 | Odczyt | ⚠️ częściowo (linie pokryte/niepokryte na marginesie okna programu; bez częściowo pokrytych i procentu w pasku) ✅ test |
 | UT-COV-003 | Eksport pokrycia Cobertura i Sonar; ostrzeżenie o uprawnieniach i danych profilera | PROMPT §6.2 | Coverage | 4 | P2 | Brak | do zrobienia |
 | UT-GEN-001 | Generowanie szkieletu pakietu testowego ze specyfikacji (test na procedurę/funkcję, adnotacje) — kompiluje się | wtyczka SQL Developer, PROMPT §6.2 | Object Browser > Generate test | 4 | P1 | Za zgodą | do zrobienia |
 | UT-GEN-002 | Szablony i fragmenty adnotacji `--%…` oraz oczekiwań | wtyczka SQL Developer | Templates | 4 | P2 | — | do zrobienia |
 | UT-CA-001 | Code Assistant dla adnotacji `--%` i matcherów `ut.expect(...).to_…` | PROMPT §6.2 | Edytor | 4 | P1 | — | do zrobienia |
 | UT-CA-002 | Walidacja adnotacji przy kompilacji (nieznana adnotacja, brak `--%suite`, zła lista procedur) | PROMPT §6.2 | Program Window | 4 | P2 | Odczyt | do zrobienia |
 | UT-NAV-001 | Przejście między pakietem a jego pakietem testowym | PROMPT §6.2 | Program Window | 4 | P2 | Pełny | do zrobienia |
-| UT-INS-001 | Wykrycie utPLSQL i wersji (ut_runner.version) na połączeniu | PROMPT §6.2 | Status | 4 | P1 | Odczyt | do zrobienia |
+| UT-INS-001 | Wykrycie utPLSQL i wersji (ut_runner.version) na połączeniu | PROMPT §6.2 | Status | 4 | P1 | Odczyt | ✅ test (ut_runner.version; komunikat, gdy brak utPLSQL) |
 | UT-INS-002 | Instalacja/aktualizacja z oficjalnego wydania tylko dla połączeń dev/test, po potwierdzeniu | PROMPT §6.2 | Tools > utPLSQL > Install | 4 | P2 | Za zgodą | do zrobienia |
 | UT-CI-001 | Eksport wyników JUnit, Sonar, TeamCity; skrypt uruchamiania tych samych testów z wiersza poleceń | PROMPT §6.2 | Okno wyników | 4 | P2 | Brak | do zrobienia |
 

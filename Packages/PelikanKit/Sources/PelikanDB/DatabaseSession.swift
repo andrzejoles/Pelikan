@@ -217,9 +217,13 @@ public struct ExecuteOptions: Sendable {
     /// Limit pobierania treści LOB (bajty) dla wyników tego polecenia; nil — z opcji połączenia (Large Data Editor
     /// pobiera całość).
     public var lobLimit: Int?
+    /// Liczba wierszy pobieranych naraz dla wyników tego polecenia (także kursorów OUT); nil — z opcji połączenia.
+    /// 1 — wiersze potokowe dostępne od razu (zdarzenia reportera utPLSQL czasu rzeczywistego).
+    public var fetchArraySize: UInt32?
 
-    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil) {
+    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil, fetchArraySize: UInt32? = nil) {
         self.describeOnly = describeOnly; self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs; self.lobLimit = lobLimit
+        self.fetchArraySize = fetchArraySize
     }
 }
 

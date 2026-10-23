@@ -16,6 +16,12 @@ final class ToolWindowController: NSWindowController, NSWindowDelegate {
         c.showWindow(nil)
     }
 
+    /// Zamyka okno o danym kluczu (np. przed pokazaniem nowej zawartości).
+    static func close(key: String) {
+        open[key]?.close()
+        open[key] = nil
+    }
+
     init(key: String, title: String, size: NSSize, view: AnyView) {
         self.key = key
         let w = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .resizable, .miniaturizable],

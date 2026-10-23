@@ -205,6 +205,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showUtplsqlResults(_ run: UtplsqlRun) {
+        // Jedno okno wyników — nowy przebieg zastępuje zawartość.
+        ToolWindowController.close(key: "utplsql")
+        ToolWindowController.show(key: "utplsql", title: L10n.tr("Wyniki utPLSQL"), size: NSSize(width: 900, height: 560)) {
+            UtplsqlResultsView(workspace: workspace, run: run)
+        }
+    }
+
     func showCompileInvalid() {
         ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)

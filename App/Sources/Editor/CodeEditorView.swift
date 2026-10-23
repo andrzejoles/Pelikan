@@ -89,6 +89,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace, [.test, .program].contains(self.document.kind) else { return [] }
             return Set(ws.breakpointLines(in: self.document).map { $0 - 1 })
         }
+        ruler.coverageLines = { [weak self] in
+            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], []) }
+            let c = ws.coverageLines(in: self.document)
+            return (Set(c.covered.map { $0 - 1 }), Set(c.uncovered.map { $0 - 1 }))
+        }
         if [.test, .program].contains(document.kind) {
             ruler.onBreakpointClick = { [weak self] line in
                 guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace,
@@ -100,7 +105,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             self.textView.executionLine = self.document.executionLine
-            if let ws = (NSApp.delegate as? AppDelegate)?.workspace { _ = ws.breakpoints }
+            if let ws = (NSApp.delegate as? AppDelegate)?.workspace { _ = ws.breakpoints; _ = ws.lastUtplsqlRun?.coverage }
             self.ruler.needsDisplay = true
         })
         ruler.onFoldClick = { [weak self] line in
@@ -589,6 +594,8 @@ final class LineNumberRulerView: NSView {
     var onFoldClick: ((Int) -> Void)?
     /// Linie (od 0) z punktami przerwania i przełączenie kliknięciem w numer linii (UG 5.10).
     var breakpointLines: (() -> Set<Int>)?
+    /// Pokrycie utPLSQL: linie (od 0) pokryte i niepokryte (UT-COV-002).
+    var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>))?
     var onBreakpointClick: ((Int) -> Void)?
     /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
     private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
@@ -628,6 +635,11 @@ final class LineNumberRulerView: NSView {
         let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
         func label(_ line: Int, y: CGFloat, height: CGFloat) {
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            // Pokrycie: pasek przy prawej krawędzi marginesu.
+            if cov.covered.contains(line) || cov.uncovered.contains(line) {
+                (cov.covered.contains(line) ? NSColor.systemGreen : NSColor.systemRed).withAlphaComponent(0.8).setFill()
+                NSRect(x: bounds.width - 5, y: y, width: 3, height: height).fill()
+            }
             if bps.contains(line) {
                 // Punkt przerwania: czerwone kółko pod numerem linii.
                 let d = min(height, lineHeight) - 2
@@ -645,6 +657,7 @@ final class LineNumberRulerView: NSView {
         }
         drawnLines.removeAll(keepingCapacity: true)
         let bps = breakpointLines?() ?? []
+        let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>())
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)
             return
