@@ -104,6 +104,8 @@ public final class Workspace {
     @ObservationIgnored private var ordinals: [DocumentKind: Int] = [:]
     /// Silniki SQL*Plus okien Command Window (stan SET/DEFINE/VARIABLE trwa przez życie okna).
     @ObservationIgnored private var sqlplusEngines: [DocumentID: SQLPlusEngine] = [:]
+    /// Metadane słownika per połączenie (Object Browser, Code Assistant).
+    @ObservationIgnored var metadataProviders: [UUID: MetadataProvider] = [:]
 
     public func sqlplusEngine(for doc: Document) -> SQLPlusEngine {
         if let e = sqlplusEngines[doc.id] { return e }

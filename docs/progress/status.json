@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-23T03:53:23+02:00",
+  "heartbeat": "2026-10-23T04:00:47+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Etap 1 zakończony: PR #10 scalony, wersja 2.0.0, szkic wydania v2.0.0 na GitHubie (do publikacji przez właściciela)",
     "Katalog konfiguracji połączenia (tnsnames.ora, wallet) przekazywany do Instant Client: alias rozwijany do deskryptora, MY_WALLET_DIRECTORY dla TCPS (test na bazie po aliasie); test sprawdzania połączeń; Etap 1 zamknięty (D21) — P1 bez pełnej realizacji oznaczone jako częściowe",
     "Karty dokumentów: menu Zamknij / pozostałe / z lewej / z prawej, zamykanie krzyżykiem i środkowym przyciskiem przez komendę (pytania o zapis i transakcję); edytor: wielkość liter słów kluczowych przy pisaniu (preferencja), podświetlenie bieżącej linii, wcięcie z preferencji — 1 test, sprawdzone ręcznie",
     "Okna wykonują się równolegle (test na bazie), edytor zablokowany w trakcie wykonania, wylogowanie z otwartą transakcją pyta (test), rola SYSDBA (test na koncie SYS kontenera), ekran pomocy przy braku Instant Client (pobranie od Oracle, wskazanie katalogu, sterownik thin) — 4 testy",
@@ -91,8 +92,7 @@
     "Baza testowa: Oracle AI Database 26ai Free (23.26.3) w kontenerze, schematy PELIKAN_TEST/PELIKAN_AGENT, obiekty testowe (pakiety, błędny pakiet, wyzwalacz, typy, kolekcje, LOB, JSON, domena, moduł MLE), utPLSQL v3.2.3 — przykładowe testy uruchomione (5 testów, 1 celowo nieudany)",
     "Repozytorium github.com/andrzejoles/Pelikan (publiczne, MIT), pierwszy commit na main",
     "Przeczytany prompt i repozytorium Bifolda (rejestr komend, most MCP, skrypty wersji/wydań/podpisu)",
-    "Środowisko kontenerów: Colima + Docker CLI (Homebrew), obraz gvenzl/oracle-free (26ai, arm64)",
-    "Skrypty: version.sh, set-version.sh, progress.py (ten raport), testdb.sh"
+    "Środowisko kontenerów: Colima + Docker CLI (Homebrew), obraz gvenzl/oracle-free (26ai, arm64)"
   ],
   "next": [
     "Uruchomić aplikację i sprawdzić SQL Window ręcznie (F8, Ctrl+F8, zmienne, siatka, Output, COMMIT/ROLLBACK), zrzuty ekranu",

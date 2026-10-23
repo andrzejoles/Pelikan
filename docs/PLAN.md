@@ -64,6 +64,20 @@ rola…), Program Window (karty jednostek, kompilacja w osobnej sesji, błędy i
 Code Contents/Hierarchy, zwijanie, hiperłącza, nawigacja, refaktoryzacja, szablony, Beautifier, Find Database Objects,
 Compile Invalid Objects, przeglądarka różnic. Kryterium: edycja i kompilacja pakietu 50 000 linii bez opóźnień w pisaniu.
 
+Kolejność podzadań (każde = gałąź `etap-2/<nazwa>` i PR):
+1. **etap-2/object-browser** — `MetadataProvider` (osobna sesja przeglądarki, cache, widoki DBA/ALL, zapytania odporne
+   na wersję, foldery 23ai/26ai), Object Browser (typy, użytkownik, filtr, elementy obiektu, niepoprawne, Recent),
+   menu obiektu: Query/Edit data, Describe, DDL, Properties, View/Edit, Recompile, Drop, Copy name, Refresh.
+   (PD-OB-001…006, 009, 012–018, 024, 026)
+2. **etap-2/program-window** — Program Window: karty jednostek (spec/body), zapis .pck/.spc/.bdy…, kompilacja w sesji
+   kompilacji, lista błędów i ostrzeżeń (PLSQL_WARNINGS) z przejściem, wskaźniki zmieniony/nieskompilowany, Compare.
+3. **etap-2/parser** — parser strukturalny PL/SQL (ADR 0002): jednostki, podprogramy, deklaracje; Code Contents,
+   Code Hierarchy, zwijanie, Go to declaration, hiperłącza do obiektów.
+4. **etap-2/code-assistant** — podpowiedzi (kolumny, aliasy, elementy pakietów, parametry, słowa kluczowe), szablony.
+5. **etap-2/beautifier** — PL/SQL Beautifier z regułami i podglądem.
+6. **etap-2/narzedzia** — Find Database Objects, Compile Invalid Objects, Difference Viewer, edytory obiektów
+   (tabela, sekwencja, synonim, widok, indeks, użytkownik, rola), test wydajności (pakiet 50 000 linii, 100 000 obiektów).
+
 ## Etap 3 — Test Window, debuger, profiler
 Test Window (zmienne, typy, wykonanie, stos błędu), debuger DBMS_DEBUG (Step into/over/out, run to cursor, punkty
 przerwania z warunkami i logpointami, error breakpoints, zmienne Local/Global/Input z drzewem rekordów, kolekcji,
