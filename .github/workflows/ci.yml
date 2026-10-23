@@ -28,7 +28,7 @@ jobs:
           ls /Applications | grep -i xcode || true
           scripts/version.sh
       - name: Teksty interfejsu w katalogu (scripts/l10n.py)
-        run: python3 scripts/l10n.py check
+        run: python3 scripts/l10n.py check --strict
       - name: Testy jednostkowe (bez bazy)
         working-directory: Packages/PelikanKit
         run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
