@@ -673,6 +673,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    /// Koniec długiego wykonania (PD-SQLW-015): dźwięk, a gdy Pelikan jest w tle — podskok ikony w Docku.
+    func notifyExecutionFinished(title: String, elapsed: String, success: Bool) {
+        NSSound(named: success ? "Glass" : "Basso")?.play()
+        if !NSApp.isActive { NSApp.requestUserAttention(.informationalRequest) }
+    }
+
+    func showQueryByExample(_ tab: ResultTab) {
+        ToolWindowController.show(key: "qbe", title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
+            QueryByExampleView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "qbe") }
+        }
+    }
+
+    func showColumnFilter(_ tab: ResultTab) {
+        ToolWindowController.show(key: "columnFilter", title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
+            ColumnFilterView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "columnFilter") }
+        }
+    }
+
+    /// Lista wartości kolumny (PD-GRID-022): wybór w okienku z listą rozwijaną.
+    func chooseValue(_ title: String, values: [String]) async -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = L10n.tr("Wybierz wartość")
+        let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 260, height: 26), pullsDown: false)
+        popup.addItems(withTitles: values)
+        alert.accessoryView = popup
+        alert.addButton(withTitle: L10n.tr("Wybierz"))
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        return alert.runModal() == .alertFirstButtonReturn ? popup.titleOfSelectedItem : nil
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }

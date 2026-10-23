@@ -110,6 +110,11 @@ public final class Document: Identifiable {
     public var errorRange: Range<Int>?
     /// Wartości zmiennych (&, :, Jasper) — zapamiętywane w oknie (UG 23.18).
     public var variableValues: [String: VariableValue] = [:]
+    /// Sumy kolumn trwałe po ponownym wykonaniu (PD-GRID-024): nazwa kolumny (wielkie litery) → funkcje.
+    public var columnTotals: [String: [ColumnAggregate]] = [:]
+    /// Automatyczne odświeżanie wyników co n sekund (PD-SQLW-006); nil — wyłączone.
+    public var autoRefreshSeconds: Int?
+    @ObservationIgnored public var autoRefreshTask: Task<Void, Never>?
     /// Podstawianie zmiennych włączone (przycisk `&` na pasku stanu — UG 7.5, NF17).
     public var substitutionEnabled = true
     /// Historia poleceń okna (przyciski wstecz/dalej — UG 7.1).

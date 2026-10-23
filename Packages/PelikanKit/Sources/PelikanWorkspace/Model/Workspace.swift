@@ -65,6 +65,13 @@ public protocol UIServices: AnyObject {
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
     func showSQLMonitor()
+    /// Koniec długiego wykonania (dźwięk, uwaga aplikacji — PD-SQLW-015).
+    func notifyExecutionFinished(title: String, elapsed: String, success: Bool)
+    /// Okno Query By Example (PD-SQLW-022) i filtr kolumn (PD-GRID-011) dla karty wyniku.
+    func showQueryByExample(_ tab: ResultTab)
+    func showColumnFilter(_ tab: ResultTab)
+    /// Wybór wartości z listy (lista wartości kolumny ze słownika — PD-GRID-022); nil — anulowano.
+    func chooseValue(_ title: String, values: [String]) async -> String?
     /// Instrukcja użytkownika (PL-INFRA-010).
     func showUserManual()
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
@@ -178,6 +185,10 @@ extension UIServices {
         (await ask(title, message: message, buttons: buttons), false)
     }
     public func showSQLMonitor() {}
+    public func notifyExecutionFinished(title: String, elapsed: String, success: Bool) {}
+    public func showQueryByExample(_ tab: ResultTab) {}
+    public func showColumnFilter(_ tab: ResultTab) {}
+    public func chooseValue(_ title: String, values: [String]) async -> String? { nil }
     public func showUserManual() {}
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}

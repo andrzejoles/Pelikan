@@ -37,6 +37,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | 0 | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | 0 | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | 0 | PD-GRID-016 |
+| Wklej jako nowe SQL Window | `file.pasteAsSQLWindow` |  |  | Brak | 0 | PD-SQLW-025 |
 | Tylko do odczytu | `file.readOnly` |  |  | Brak | 0 | PD-FILE-003 |
 | Otwórz z połączeniem… | `file.openWithConnection` |  |  | Brak | 0 | PD-FILE-004 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | 0 | PD-CLI-001 |
@@ -126,6 +127,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
+| Wynik › Wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | 0 | PD-GRID-026 |
+| Wynik › Małe litery w komórkach | `grid.lowerCase` |  |  | Brak | 0 | PD-GRID-026 |
 | Zakładki › Przełącz zakładkę | `edit.toggleBookmark` | ⌘F3 | ⌘F3 | Brak | 0 | PD-EDIT-011 |
 | Zakładki › Przejdź do zakładki | `edit.gotoBookmark` |  |  | Brak | 0 | PD-EDIT-011 |
 | Zakładki › Następna zakładka | `edit.nextBookmark` | ⌥⌘F3 | ⌥⌘F3 | Brak | 0 | PD-EDIT-011 |
@@ -209,6 +212,24 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | 0 | PD-GRID-006 |
+| Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
+| Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Zapisz wyrównanie dla zapytania | `grid.saveAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Usuń wyrównanie zapytania | `grid.removeAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Informacje o kolumnie | `grid.columnInfo` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Lista wartości… | `grid.valueList` |  |  | Brak | 0 | PD-GRID-022 |
+| Wynik › Sumy kolumny… | `grid.totals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Wyłącz sumy | `grid.clearTotals` |  |  | Brak | 0 | PD-GRID-024 |
+| Wynik › Odśwież wynik | `sql.refreshResult` | ⇧⌘R | ⇧⌘R | Brak | 0 | PD-SQLW-006 |
+| Wynik › Automatyczne odświeżanie… | `sql.autoRefresh` |  |  | Brak | 0 | PD-SQLW-006 |
+| Wynik › Przypnij wynik | `sql.pinResult` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Przypnij wszystkie wyniki | `sql.pinAllResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Wyczyść karty wyników | `sql.clearResults` |  |  | Brak | 0 | PD-SQLW-017 |
+| Wynik › Eksportuj zapytanie do pliku… | `sql.exportQuery` |  |  | Brak | 0 | PD-SQLW-018 |
+| Wynik › Query By Example… | `grid.queryByExample` | ⇧⌘E | ⇧⌘E | Brak | 0 | PD-SQLW-022 |
+| Wynik › Wyczyść Query By Example | `grid.clearQueryByExample` |  |  | Brak | 0 | PD-SQLW-022 |
 | Wczytaj ponownie z bazy | `prog.reloadFromDatabase` |  |  | Brak | 0 | PD-PROG-011 |
 | Kompilacja próbna | `prog.safeCompile` |  |  | Brak | 0 | PD-PROG-010 |
 | Sprawdź zmiany obiektów w bazie | `prog.checkChanges` |  |  | Odczyt | 0 | PD-PROG-011 |
@@ -424,6 +445,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Siatka › Większa czcionka siatki | `grid.fontLarger` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Mniejsza czcionka siatki | `grid.fontSmaller` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Domyślna czcionka siatki | `grid.fontReset` |  |  | Brak | 0 | PD-GRID-025 |
+| Siatka › Numer wiersza w kopiowaniu i eksporcie | `grid.toggleRowNumbers` |  |  | Brak | 0 | PD-GRID-027 |
 | Podziel edytor | `view.splitEditor` |  |  | Brak | 0 | PD-EDIT-014 |
 | Powiększ czcionkę edytora | `view.zoomIn` | ⌃= †, ⌘= | ⌘= | Brak | 0 | PD-EDIT-021 |
 | Pomniejsz czcionkę edytora | `view.zoomOut` | ⌃⇧- †, ⌘- | ⌘- | Brak | 0 | PD-EDIT-021 |

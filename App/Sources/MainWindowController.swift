@@ -202,6 +202,15 @@ final class PlaceholderPaneController: NSViewController {
 /// Widok obszaru dokumentów przyjmujący upuszczone pliki (MAC-FILE-001).
 final class FileDropView: NSView {
     var onDrop: (([URL]) -> Void)?
+    /// Wklejenie tekstu na pusty obszar okien tworzy SQL Window (PD-SQLW-025).
+    var onPaste: (() -> Void)?
+
+    override var acceptsFirstResponder: Bool { onPaste != nil }
+    @objc func paste(_ sender: Any?) { onPaste?() }
+    override func mouseDown(with event: NSEvent) {
+        if onPaste != nil { window?.makeFirstResponder(self) }
+        super.mouseDown(with: event)
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -265,6 +274,10 @@ final class DocumentAreaViewController: NSViewController {
             for u in urls {
                 do { try self.workspace.openFile(u) } catch { self.workspace.ui?.showError(error.localizedDescription) }
             }
+        }
+        root.onPaste = { [weak self] in
+            guard let self, self.workspace.documents.isEmpty else { return }
+            self.workspace.perform("file.pasteAsSQLWindow")
         }
         tabBar.orientation = .horizontal
         tabBar.spacing = 2

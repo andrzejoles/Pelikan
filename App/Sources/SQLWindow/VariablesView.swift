@@ -53,9 +53,8 @@ final class VariablesModel {
 
     func reloadList(_ i: Int) async {
         guard let q = fields[i].request.options.list else { return }
-        // Pusta wartość zmiennej, od której lista zależy → pusta lista (UG 12.3).
-        let deps = Variables.find(in: q).filter { $0.kind == .bind }.map(\.name)
-        if deps.contains(where: { d in value(forBind: d)?.isEmpty ?? true }) {
+        // Pusta wartość zmiennej, od której lista zależy (`:x` albo `&x`) → pusta lista (UG 12.3, PD-VAR-004).
+        guard VariableLists.prepare(q, values: dependencyValues) != nil else {
             fields[i].items = []
             return
         }
@@ -74,7 +73,7 @@ final class VariablesModel {
         let bind = fields.first { $0.id == name }?.request.options.bindName ?? name
         for i in fields.indices {
             guard let q = fields[i].request.options.list, fields[i].request.options.listIsQuery else { continue }
-            if Variables.find(in: q).contains(where: { $0.kind == .bind && $0.name.lowercased() == bind }) {
+            if VariableLists.dependencies(of: q).contains(bind) {
                 Task { await reloadList(i) }
             }
         }
@@ -84,12 +83,18 @@ final class VariablesModel {
         fields.first { $0.request.options.bindName == bind.lowercased() }.map { $0.text }
     }
 
+    /// Wartości zmiennych okna wg nazwy wiązanej (dla list zależnych).
+    private var dependencyValues: [String: String] {
+        Dictionary(fields.map { ($0.request.options.bindName, $0.text) }, uniquingKeysWith: { a, _ in a })
+    }
+
     private func run(_ sql: String, single: Bool) async throws -> [(value: String, label: String)] {
         let session = try await workspace.session(for: document)
-        let binds = Variables.find(in: sql).filter { $0.kind == .bind }.map { o in
-            BindVariable(name: o.name, type: .varchar2, value: value(forBind: o.name).map { .text($0) } ?? .null, maxSize: 4000)
+        let prepared = VariableLists.prepare(sql, values: dependencyValues) ?? Variables.Prepared(sql: sql, binds: [])
+        let binds = prepared.binds.map { b in
+            BindVariable(name: b.name, type: .varchar2, value: { if case .text(let t) = b.value { return .text(t) } else { return .null } }(), maxSize: 4000)
         }
-        let (_, rows) = try await session.queryAll(sql, binds: binds, limit: single ? 1 : 10_000)
+        let (_, rows) = try await session.queryAll(prepared.sql, binds: binds, limit: single ? 1 : 10_000)
         return rows.map { r in
             let v = r.first?.displayText ?? ""
             return (v, r.count > 1 ? (r[1].displayText ?? v) : v)

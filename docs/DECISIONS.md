@@ -818,3 +818,26 @@ obsługiwanych wersjach, także 26ai. Wiersz PD-DBG-002 pominięty do czasu, gdy
 tabel SYS.PLSQL_TRACE_RUNS/EVENTS z `tracetab.sql`; bez nich Pelikan podaje, co zainstalować (instaluje administrator),
 a baza testowa dostaje je w `scripts/testdb.sh seed`. Uprawnienia debugera Pelikan tylko przygotowuje jako skrypt
 w oknie SQL — nadaje je administrator, nie aplikacja.
+### D107 · 2026-10-24 — Kursor zagnieżdżony w nowej karcie wyniku
+Wzorzec otwiera wynik `<Cursor>` w nowym SQL Window. Pelikan dokłada kartę wyniku w tym samym oknie: kursor jest częścią
+sesji okna (zamknięcie okna zamyka kursor), a nowe okno nie miałoby polecenia do ponownego wykonania.
+
+### D108 · 2026-10-24 — Bez blokady przewijania kolumn i wierszy
+NSTableView nie ma zamrażania kolumn ani wierszy; dwie zsynchronizowane tabele komplikowałyby edycję, sortowanie i
+przenoszenie kolumn. Kolumna numerów wierszy i nagłówek zostają widoczne przy przewijaniu; filtr kolumn (PD-GRID-011)
+pozwala zawęzić siatkę do potrzebnych kolumn.
+
+### D109 · 2026-10-24 — Wyrównanie kolumn bez wysokości wierszy i zmiany okna
+„Align” ustawia szerokości (nagłówek, treść z pierwszych 500 wierszy, oba) i zapisuje szablon kolejności i szerokości
+dla zapytania (klucz: tekst zapytania ze zwiniętymi odstępami), stosowany automatycznie (preferencja). Wysokość
+wierszy, „Hide Editor” i „Adjust Window width” pominięte — siatka ma stałą wysokość wiersza zależną od czcionki.
+
+### D110 · 2026-10-24 — LOB na żądanie jako podgląd 4000 bajtów
+Sterownik zawsze zwraca lokator i rozmiar LOB; przy „LOB na żądanie” siatka pobiera tylko 4000 bajtów (zamiast 1 MB),
+oznaczonych jako obcięte, a Large Data Editor dociąga całość przez ROWID. Zero bajtów odebrałoby panelowi wartości
+podgląd i znacznik obcięcia.
+
+### D111 · 2026-10-24 — Wartości zmiennych okna w worksecie zamiast .pfi
+Wzorzec trzyma wartości zmiennych w pliku `.pfi` obok skryptu. Pelikan zapisuje je w stanie okna w worksecie (także dla
+okien bez pliku); odświeżenie karty i automatyczne odświeżanie używają zapamiętanych wartości bez pytania (NF8).
+

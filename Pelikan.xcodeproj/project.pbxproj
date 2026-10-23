@@ -98,6 +98,7 @@
 		F8B8CFF66E3E7975CD5AEC0A /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */; };
 		F98A11652F3F95A8B92579A8 /* TestManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */; };
 		FAAF90E324ECC7C31475E5D7 /* PelikanSQL in Frameworks */ = {isa = PBXBuildFile; productRef = 5142E8A5C924AE927969AC4F /* PelikanSQL */; };
+		FAD1F211CE8B500424B14AA7 /* GridStage8Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DCBCC640C9755CF573D7C56 /* GridStage8Views.swift */; };
 		FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */; };
 /* End PBXBuildFile section */
 
@@ -170,6 +171,7 @@
 		36AE2DE94D1F2561A8FB1436 /* DBAViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBAViews.swift; sourceTree = "<group>"; };
 		3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridToolViews.swift; sourceTree = "<group>"; };
 		3F1388C8C3CF0823B04FBDF5 /* QueryBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryBuilderView.swift; sourceTree = "<group>"; };
+		4DCBCC640C9755CF573D7C56 /* GridStage8Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridStage8Views.swift; sourceTree = "<group>"; };
 		51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleObjectEditorView.swift; sourceTree = "<group>"; };
 		52082891AAB3D01CF123726D /* LogonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogonView.swift; sourceTree = "<group>"; };
 		553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7Views.swift; sourceTree = "<group>"; };
@@ -393,6 +395,7 @@
 		6047C9C37C3A0D921D8B27F2 /* SQLWindow */ = {
 			isa = PBXGroup;
 			children = (
+				4DCBCC640C9755CF573D7C56 /* GridStage8Views.swift */,
 				3CD00EBBD1B1E5BDF5BE3469 /* GridToolViews.swift */,
 				578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */,
 				F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */,
@@ -791,6 +794,7 @@
 				010582D4EDBE630144FC63DA /* FileBrowserPane.swift in Sources */,
 				41E08B96BFE94263E3A57077 /* FindReplacePanel.swift in Sources */,
 				85D7D2C4AF2796E156679AA2 /* GraphView.swift in Sources */,
+				FAD1F211CE8B500424B14AA7 /* GridStage8Views.swift in Sources */,
 				3155D9F0BF642BB198068577 /* GridToolViews.swift in Sources */,
 				E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */,
 				0E61FF4ECCB59E326C8E2FC9 /* LogonView.swift in Sources */,
