@@ -74,6 +74,26 @@ struct P2ToolsDBTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Wiele obiektów: rekompilacja z listą nieprawidłowych, DDL w jednym oknie, usunięcie po jednym potwierdzeniu (PD-OB-011)")
+    func multiObjects() async throws {
+        let (ws, def) = try workspace()
+        ws.ui = TestUI()
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        let schema = try await ws.metadata()!.currentSchema()
+        _ = try await s.execute("create or replace procedure pelikan_p2_m1 is begin null; end;")
+        _ = try? await s.execute("create or replace procedure pelikan_p2_m2 is begin nie_ma_takiej; end;")
+        let list = "\(schema).PELIKAN_P2_M1:PROCEDURE, \(schema).PELIKAN_P2_M2:PROCEDURE"
+        let r = try await ws.invoke("ob.recompileSelected", CommandArguments(["objects": .string(list)]))
+        #expect(r.value == .array([.string("\(schema).PELIKAN_P2_M2")]))
+        _ = try await ws.invoke("ob.ddlSelected", CommandArguments(["objects": .string(list)]))
+        let text = ws.activeDocument?.text.uppercased() ?? ""
+        #expect(text.contains("PELIKAN_P2_M1") && text.contains("PELIKAN_P2_M2"))
+        let d = try await ws.invoke("ob.dropSelected", CommandArguments(["objects": .string(list)]))
+        #expect(d.value == .int(2))
+        #expect(try await s.scalar("select count(*) from user_objects where object_name like 'PELIKAN_P2_M_'") == "0")
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("HTP Output: strona z HTP.P po wykonaniu; bez zbierania HTP — błąd OWA i brak strony")
     func htp() async throws {
         let (ws, def) = try workspace()

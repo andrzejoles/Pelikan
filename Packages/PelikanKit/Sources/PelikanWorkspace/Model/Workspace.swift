@@ -305,6 +305,8 @@ public final class Workspace {
     public var statusMessage: String?
     /// Obiekt zaznaczony w Object Browserze (cel komend `ob.*`).
     public var selectedObject: DBObject?
+    /// Wszystkie obiekty zaznaczone w Object Browserze (PD-OB-011); `selectedObject` — ostatnio kliknięty.
+    public var selectedObjects: [DBObject] = []
     /// Filtry nazwane i foldery użytkownika Object Browsera (`browser.json`, PD-OB-007/008) i filtr bieżący.
     public private(set) var browserCustomization = BrowserCustomization()
     public var browserFilter: BrowserFilter?
