@@ -456,16 +456,20 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     /// Podkreślenie falowane (kropkowane): błąd — czerwone, ostrzeżenie — pomarańczowe; atrybuty renderowania, bez zmiany tekstu.
     private func showDiagnostics(_ list: [EditorDiagnostic]) {
         diagnostics = list
-        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
-        tlm.removeRenderingAttribute(.underlineStyle, for: content.documentRange)
-        tlm.removeRenderingAttribute(.underlineColor, for: content.documentRange)
-        let len = (textView.string as NSString).length
+        // Atrybuty magazynu tekstu, nie renderowania: TextKit 2 nie rysuje podkreślenia z atrybutów renderowania
+        // (podkreślenia były niewidoczne — wykryte zrzutem w tle). Zmiana atrybutów nie zmienia tekstu ani historii cofania;
+        // kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada podkreślenia ponownie.
+        guard let storage = textView.textStorage else { return }
+        let len = storage.length
+        storage.beginEditing()
+        storage.removeAttribute(.underlineStyle, range: NSRange(location: 0, length: len))
+        storage.removeAttribute(.underlineColor, range: NSRange(location: 0, length: len))
         for d in list where d.range.upperBound <= len && !d.range.isEmpty {
-            guard let a = content.location(content.documentRange.location, offsetBy: d.range.lowerBound),
-                  let b = content.location(a, offsetBy: d.range.count), let r = NSTextRange(location: a, end: b) else { continue }
-            tlm.addRenderingAttribute(.underlineStyle, value: NSUnderlineStyle.thick.rawValue | NSUnderlineStyle.patternDot.rawValue, for: r)
-            tlm.addRenderingAttribute(.underlineColor, value: d.severity == .error ? NSColor.systemRed : NSColor.systemOrange, for: r)
+            let r = NSRange(location: d.range.lowerBound, length: d.range.count)
+            storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.thick.rawValue | NSUnderlineStyle.patternDot.rawValue, range: r)
+            storage.addAttribute(.underlineColor, value: d.severity == .error ? NSColor.systemRed : NSColor.systemOrange, range: r)
         }
+        storage.endEditing()
         updateDiagnosticTip()
     }
 

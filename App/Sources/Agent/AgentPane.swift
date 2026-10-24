@@ -112,7 +112,8 @@ final class AgentPane: NSView {
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            stack.topAnchor.constraint(equalTo: topAnchor),
+            // Pod paskiem narzędzi okna (pełnowymiarowa treść okna — nagłówek chował się pod tytułem, D145).
+            stack.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor),
             activityScroll.heightAnchor.constraint(greaterThanOrEqualToConstant: 120),
             terminalContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 160),

@@ -1085,7 +1085,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     log("ok snapshotWebViews")
                     continue
                 }
-                do { _ = try await workspace.invoke(CommandID(rawValue: s.command), CommandArguments(s.args ?? [:])); log("ok \(s.command)") }
+                do {
+                    let r = try await workspace.invoke(CommandID(rawValue: s.command), CommandArguments(s.args ?? [:]))
+                    log("ok \(s.command)" + (r.message.map { ": \($0)" } ?? ""))
+                }
                 catch { log("\(s.command): \(error.localizedDescription)") }
                 try? await Task.sleep(for: .seconds(s.delay ?? 1))
             }
