@@ -9493,34 +9493,6 @@
         }
       }
     },
-    "Czas [ms]" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time [ms]"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeit [ms]"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tiempo [ms]"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Час [мс]"
-          }
-        }
-      }
-    },
     "Czas pracy: %@ · sesje: %@, aktywne: %@" : {
       "localizations" : {
         "en" : {
@@ -14785,34 +14757,6 @@
         }
       }
     },
-    "Drukuje bieżące okno." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prints the current window."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Druckt das aktuelle Fenster."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imprime la ventana actual."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друкує поточне вікно."
-          }
-        }
-      }
-    },
     "Drukuje bieżące okno: kod z kolorami składni, a w oknie SQL także siatkę wyniku (zaznaczone wiersze albo wszystkie pobrane)." : {
       "localizations" : {
         "en" : {
@@ -19849,34 +19793,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "HEAD auf dem Server"
-          }
-        }
-      }
-    },
-    "HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST is not available in the Pelikan Command Window (run system commands in Terminal)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST ist im Command Window von Pelikan nicht verfügbar (Systembefehle im Terminal ausführen)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST no está disponible en la Command Window de Pelikan (ejecute los comandos del sistema en Terminal)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST недоступна в Command Window Pelikan (системні команди запускайте в Терміналі)."
           }
         }
       }
@@ -43005,6 +42921,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenster mit den Codeanalyse-Problemen des aktiven Fensters; Auswahl springt an die Textstelle."
+          }
+        }
+      }
+    },
+    "Okno „%@” jest tylko do odczytu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window “%@” is read-only"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster „%@“ ist schreibgeschützt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana «%@» es de solo lectura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно «%@» лише для читання"
           }
         }
       }
@@ -66753,34 +66697,6 @@
         }
       }
     },
-    "Szuka słowa pod kursorem w dokumentacji Oracle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looks up the word under the cursor in the Oracle documentation."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sucht das Wort unter dem Cursor in der Oracle-Dokumentation."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busca la palabra bajo el cursor en la documentación de Oracle."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шукає слово під курсором у документації Oracle."
-          }
-        }
-      }
-    },
     "Szuka tekstu w bieżącym edytorze, we wszystkich edytorach albo w plikach skryptów w katalogach; lista wyników przenosi do miejsca." : {
       "localizations" : {
         "en" : {
@@ -70757,34 +70673,6 @@
         }
       }
     },
-    "Tunel SSH z hasłem nie jest jeszcze obsługiwany — użyj klucza albo agenta SSH (ssh-add)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH tunnel with a password is not supported yet — use a key or the SSH agent (ssh-add)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH-Tunnel mit Passwort wird noch nicht unterstützt — Schlüssel oder SSH-Agent verwenden (ssh-add)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel SSH con contraseña aún no es compatible: use una clave o el agente SSH (ssh-add)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель SSH з паролем ще не підтримується — використайте ключ або агент SSH (ssh-add)."
-          }
-        }
-      }
-    },
     "Tunel SSH: przekroczony czas oczekiwania" : {
       "localizations" : {
         "en" : {
@@ -70837,34 +70725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у Зв’язці ключів: ssh-add --apple-use-keychain) і відомі хости. Вкажіть хост і порт бази в полі «База» так, як їх бачить сервер SSH. Пароль SSH зберігається лише у Зв’язці ключів і потрапляє до ssh через одноразову чергу, ніколи через аргументи, середовище чи файли."
-          }
-        }
-      }
-    },
-    "Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH nie jest obsługiwane — użyj klucza." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The tunnel uses the system ssh: ~/.ssh/config, the SSH agent (keys in Keychain: ssh-add --apple-use-keychain) and known hosts. Enter the database host and port in the “Database” field as the SSH server sees them. SSH password is not supported — use a key."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Tunnel verwendet das System-ssh: ~/.ssh/config, SSH-Agent (Schlüssel im Schlüsselbund: ssh-add --apple-use-keychain) und bekannte Hosts. Host und Port der Datenbank im Feld „Datenbank“ so angeben, wie der SSH-Server sie sieht. SSH-Passwort wird nicht unterstützt — Schlüssel verwenden."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel usa el ssh del sistema: ~/.ssh/config, el agente SSH (claves en el Llavero: ssh-add --apple-use-keychain) y los hosts conocidos. Indique el host y el puerto de la base de datos en el campo «Base de datos» tal como los ve el servidor SSH. La contraseña SSH no es compatible: use una clave."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у В'язці ключів: ssh-add --apple-use-keychain) і відомі хости. Хост і порт бази в полі «База» вкажіть так, як їх бачить сервер SSH. Пароль SSH не підтримується — використайте ключ."
           }
         }
       }
