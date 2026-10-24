@@ -1106,3 +1106,10 @@ w tle. Plan DBMS_XPLAN w oknie zgody przewija się w poziomie (zawijanie łamał
 bez formy „polecenie/a”. Zrzut edytora pokazał, że numer pustej ostatniej linii (po końcowym „\n”) i podświetlenie
 bieżącej linii na końcu pliku były o linię za nisko: TextKit 2 dokłada tę linię do ostatniego fragmentu tekstu jako
 pusty fragment linii, więc pozycja to jego `typographicBounds`, nie dół ramki fragmentu.
+
+### D150 · 2026-10-24 — Raport z grupami w jednej tabeli
+Zrzut raportu z kolumną Break pokazał osobną tabelę na każdą grupę (różne szerokości kolumn) i wiersz „Razem” jako
+krótką tabelę pod spodem, niewyrównaną z kolumnami. Układ tabelaryczny bez nowej strony po grupie renderuje teraz
+jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, „Razem” na końcu. Z nową stroną po grupie
+zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
+tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
