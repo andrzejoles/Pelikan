@@ -60,6 +60,13 @@ public struct Breakpoint: Sendable, Hashable, Identifiable, Codable {
     public var enabled = true
     /// Liczba przejść do zatrzymania (0 — za każdym razem) — liczona po stronie Pelikana.
     public var passCount = 0
+    /// Warunek zatrzymania (wyrażenie SQL ze zmiennymi ramki), komunikat do wyjścia (`{zmienna}` — wartość) i tryb
+    /// „nie zatrzymuj” (logpoint) — wszystko po stronie Pelikana, DBMS_DEBUG ich nie ma (PD-DBG-007).
+    public var condition: String?
+    public var message: String?
+    public var dontBreak: Bool?
+
+    var hasActions: Bool { !(condition ?? "").isEmpty || !(message ?? "").isEmpty || dontBreak == true }
 
     public init(owner: String? = nil, unit: String? = nil, type: DBObjectType? = nil, document: UUID? = nil, line: Int) {
         self.owner = owner; self.unit = unit; self.type = type; self.document = document; self.line = line
@@ -185,7 +192,11 @@ public final class DebuggerEngine {
                 try await continueExecution(breakflags: (inBlock ? "dbms_debug.break_next_line" : "dbms_debug.break_any_return") + exc)
                 guard state == .paused, let l = location else { return }
                 if lastReason == 3 || lastReason == 11 || lastReason == 26 { return }                  // punkt przerwania jednostki / wyjątek
-                if l.isTestBlock, blockLines.contains(l.line) { return }
+                if l.isTestBlock, blockLines.contains(l.line) {
+                    let bp = workspace.breakpoints.first { $0.enabled && $0.document == document.id.raw && $0.line == l.line }
+                    if let bp, bp.hasActions, !(await shouldStop(at: bp)) { continue }
+                    return
+                }
             }
             return
         }
@@ -276,6 +287,9 @@ public final class DebuggerEngine {
                 hitCounts[id, default: 0] += 1
                 if hitCounts[id, default: 0] < bp.passCount { continue }
             }
+            // Warunek, komunikat i logpoint (PD-DBG-007).
+            if info.breakpoint > 0, let id = bpNumbers[info.breakpoint],
+               let bp = workspace.breakpoints.first(where: { $0.id == id }), bp.hasActions, !(await shouldStop(at: bp)) { continue }
             // Wejście do jednostki (reason_enter) i jednostki bez informacji debugowania (linia 0) — dalej do pierwszej linii.
             if info.line == 0 || info.reason == 6 { continue }
             // Pomijanie kodu SYS (wyjście z jednostki) i inicjalizacji specyfikacji pakietu (preferencje debugera).
@@ -296,6 +310,7 @@ public final class DebuggerEngine {
                 continue
             }
             await loadVariables()
+            Self.trace("paused: watches")
             await loadWatches()
             await readOutputWhilePaused()
             return
@@ -305,6 +320,8 @@ public final class DebuggerEngine {
     /// DBMS_OUTPUT zebrany do chwili zatrzymania — odczyt w sesji docelowej przez DBMS_DEBUG.EXECUTE (PD-DBG-010).
     func readOutputWhilePaused() async {
         guard document.outputEnabled, workspace.settings.dbmsOutputEnabled, let debug else { return }
+        Self.trace("output: read while paused")
+        defer { Self.trace("output: done") }
         let block = "declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); l varchar2(32767); st integer; " +
             "begin loop dbms_output.get_line(l, st); exit when st <> 0; pp.extend; pp(pp.count) := l; end loop; :1 := pp; end;"
         let r = try? await debug.execute("""
@@ -439,6 +456,7 @@ public final class DebuggerEngine {
 
     public func addWatch(_ expression: String) async {
         let e = expression.trimmingCharacters(in: .whitespaces)
+        if Self.isUnsupportedName(e) { workspace.ui?.showError(L10n.tr("Wyrażenia z dwukropkiem (:new, :old, zmienne wiązane) nie są dostępne w debugerze DBMS_DEBUG")); return }
         guard !e.isEmpty, !watches.contains(e) else { return }
         watches.append(e)
         if state == .paused { await loadWatches() }
@@ -565,6 +583,7 @@ public final class DebuggerEngine {
         Self.trace("vars: source done \(text.count)")
         let offset = ProgramCompiler.offset(line: frame.line, column: 1, in: text)
         let ctx = CompletionContext.analyze(text, offset: offset)
+        Self.trace("vars: \(ctx.declarations.count) declarations, \(ctx.loopRecords.count) loop records")
         // Ramka dla GET_VALUE: 0 — bieżąca; numeracja od najnowszej.
         let frameNo = selectedFrame
         var out: [DebugVariable] = []
@@ -575,6 +594,14 @@ public final class DebuggerEngine {
         // Zmienne globalne pakietu: prywatne (ciało) i publiczne (specyfikacja) — GET_VALUE z uchwytem pakietu (UG 5.10).
         if [9, 11].contains(frame.unitType) {
             out += await packageGlobals(owner: frame.owner, name: frame.name, context: ctx)
+        }
+        // SELF w metodzie typu (ciało typu, LibunitType 14): atrybuty jako drzewo (GET_VALUE „SELF.ATRYBUT”).
+        if frame.unitType == 14 {
+            out.insert(await variable("self", path: "self", type: "\(frame.owner).\(frame.name)", frame: frameNo, context: ctx), at: 0)
+        }
+        // Wyzwalacz (12): DBMS_DEBUG nie udostępnia :new/:old — informacja zamiast wartości.
+        if frame.unitType == 12 {
+            out.append(DebugVariable(name: ":new / :old", path: "#trigger", value: L10n.tr("(niedostępne przez DBMS_DEBUG)"), type: ""))
         }
         // Zmienne pętli FOR (rekordy, liczniki) obejmujących linię.
         for (name, _) in ctx.loopRecords.sorted(by: { $0.key < $1.key }) {
@@ -665,6 +692,9 @@ public final class DebuggerEngine {
 
     func getValue(_ path: String, frame: Int) async -> (Int, String?) {
         guard let debug else { return (-1, nil) }
+        // `:new`/`:old` i inne nazwy z dwukropkiem zawieszają GET_VALUE w sesji debugera (sprawdzone na 23ai) —
+        // DBMS_DEBUG ich nie udostępnia, więc odpowiedź „brak takiego obiektu” bez wywołania.
+        if Self.isUnsupportedName(path) { return (3, nil) }
         let r = try? await debug.execute("begin :st := dbms_debug.get_value(:n, :f, :v, null); end;", binds: [
             BindVariable(name: "st", type: .number, direction: .output),
             // Nazwy bez cudzysłowu — wielkimi literami (tak zapisuje je kompilator w informacji debugowania).
@@ -707,6 +737,19 @@ public final class DebuggerEngine {
     func recordFields(_ type: String, context ctx: CompletionContext) async -> [String] {
         let up = type.uppercased().trimmingCharacters(in: .whitespaces)
         if let decl = ctx.typeDeclarations[up] { return CodeAssistant.recordFields(decl).map(\.name) }
+        // Typ obiektowy schematu (zmienna obiektu, SELF w metodzie): atrybuty z ALL_TYPE_ATTRS.
+        if !up.isEmpty, !up.contains("%"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)),
+           let s = try? await m.session() {
+            let parts = up.split(separator: ".").map(String.init)
+            let owner = parts.count > 1 ? parts[0] : nil
+            let name = parts.last ?? up
+            let sql = "select attr_name from all_type_attrs where type_name = :t" + (owner == nil ? " and owner in (sys_context('userenv', 'current_schema'), 'SYS', 'PUBLIC')" : " and owner = :o") + " order by attr_no"
+            var binds = [BindVariable(name: "t", value: .text(name))]
+            if let owner { binds.append(BindVariable(name: "o", value: .text(owner))) }
+            if let rows = try? await s.queryAll(sql, binds: binds, limit: 500).rows, !rows.isEmpty {
+                return rows.compactMap { $0[0].displayText }
+            }
+        }
         if up.hasSuffix("%ROWTYPE"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) {
             let base = String(up.dropLast("%ROWTYPE".count))
             let parts = base.split(separator: ".").map(String.init)
@@ -718,6 +761,74 @@ public final class DebuggerEngine {
     }
 
     // MARK: Punkty przerwania
+
+    /// Nazwa z dwukropkiem poza cudzysłowem (`:new.x`, `:b`) — GET_VALUE/SET_VALUE nie obsługują jej i zawieszają sesję.
+    nonisolated static func isUnsupportedName(_ s: String) -> Bool {
+        var quoted = false
+        for ch in s {
+            if ch == "\"" { quoted.toggle() } else if ch == ":", !quoted { return true }
+        }
+        return false
+    }
+
+    /// Komunikat punktu przerwania z `{zmienna}` zastąpionymi wartościami bieżącej ramki.
+    func expandMessage(_ m: String) async -> String {
+        var out = ""
+        var rest = Substring(m)
+        while let open = rest.firstIndex(of: "{"), let close = rest[open...].firstIndex(of: "}") {
+            out += rest[..<open]
+            let name = rest[rest.index(after: open)..<close].trimmingCharacters(in: .whitespaces)
+            let (st, v) = await getValue(name, frame: 0)
+            out += st == 0 ? (v ?? "") : st == 32 ? "NULL" : "{\(name)?}"
+            rest = rest[rest.index(after: close)...]
+        }
+        return out + rest
+    }
+
+    /// Warunek: identyfikatory (także ścieżki `a.b`) ze zmiennymi ramki zastępowane literałami, wynik z
+    /// `select case when … then 1 else 0 end from dual` w sesji nadzorującej. Błąd warunku — zatrzymanie z komunikatem.
+    func evaluateCondition(_ c: String) async -> Bool {
+        guard let debug else { return true }
+        let ns = c as NSString
+        var sql = ""
+        var pos = 0
+        let tokens = Lexer(c).tokenize().filter { !$0.isTrivia }
+        var i = 0
+        while i < tokens.count {
+            let t = tokens[i]
+            guard t.kind == .identifier || t.kind == .quotedIdentifier else { i += 1; continue }
+            // Ścieżka a.b.c
+            var end = i
+            while end + 2 < tokens.count, tokens[end + 1].kind == .dot, [.identifier, .quotedIdentifier].contains(tokens[end + 2].kind) { end += 2 }
+            let start = t.start, stop = tokens[end].start + tokens[end].length
+            let name = ns.substring(with: NSRange(location: start, length: stop - start))
+            let (st, v) = await getValue(name, frame: 0)
+            if st == 0 || st == 32 {
+                sql += ns.substring(with: NSRange(location: pos, length: start - pos))
+                if st == 32 || v == nil { sql += "NULL" } else if let v, Double(v) != nil { sql += v } else { sql += "'" + (v ?? "").replacingOccurrences(of: "'", with: "''") + "'" }
+                pos = stop
+            }
+            i = end + 1
+        }
+        sql += ns.substring(from: pos)
+        do {
+            let r = try await debug.queryAll("select case when (\(sql)) then 1 else 0 end from dual", limit: 1)
+            return r.rows.first?.first?.displayText == "1"
+        } catch {
+            document.output.append(L10n.tr("Błąd warunku punktu przerwania „\(c)”: \(error.localizedDescription)"))
+            return true
+        }
+    }
+
+    /// Czy zatrzymać na punkcie z akcjami: komunikat do wyjścia, logpoint (nigdy), warunek.
+    func shouldStop(at bp: Breakpoint) async -> Bool {
+        if let m = bp.message, !m.isEmpty {
+            document.output.append("▸ " + (await expandMessage(m)))
+        }
+        if bp.dontBreak == true { return false }
+        if let c = bp.condition, !c.trimmingCharacters(in: .whitespaces).isEmpty { return await evaluateCondition(c) }
+        return true
+    }
 
     /// Tymczasowy punkt przerwania (Wykonaj do kursora) w trakcie sesji.
     func applyTemporary(_ bp: Breakpoint) async throws {
@@ -754,6 +865,10 @@ public final class DebuggerEngine {
                              BindVariable(name: "bp", type: .number, direction: .output)])
             Self.trace("breakpoint \(bp.unit ?? "<blok>"):\(bp.line) status=\(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "?") nr=\(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? "?")")
             if let n = Int(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? ""), n > 0 { bpNumbers[n] = bp.id }
+            // Niezastosowany (brak jednostki, brak informacji debugowania, linia bez kodu): pusty znacznik na marginesie.
+            let status = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
+            if isBlock { continue }
+            if status == 0 { workspace.unappliedBreakpoints.remove(bp.id) } else { workspace.unappliedBreakpoints.insert(bp.id) }
         }
     }
 }

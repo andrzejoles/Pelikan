@@ -379,6 +379,8 @@ public final class Workspace {
     public var templatesGeneration = 0
     /// Punkty przerwania (UG 5.10) i debugery okien testu.
     public var breakpoints: [Breakpoint] = []
+    /// Punkty, których DBMS_DEBUG nie przyjął w ostatniej sesji (pusty znacznik na marginesie, PD-DBG-007).
+    public var unappliedBreakpoints: Set<UUID> = []
     /// Punkty przerwania na kodach błędów Oracle (bez „ORA-”, np. 1403).
     public var errorBreakpoints: [Int] = []
     /// Ostatni przebieg testów utPLSQL (okno wyników, pokrycie na marginesie).
