@@ -1244,6 +1244,12 @@ katalog — de „Ansicht” zamiast „View”, en „Debug”, jednolite „Ex
 — zmiana hasła z menu, aktualne ograniczenia (ORDS, Workspace Manager i LDAP sprawdzone — D156–D158; Kerberos na
 macOS — D159).
 
+### D161 · 2026-10-24 — Kerberos na macOS odłożony; pierwsza beta opublikowana
+Właściciel odłożył proces pomocniczy dla połączeń Kerberos na macOS jako ewentualny plan na przyszłość: sam Kerberosa
+nie używa, a proces pomocniczy oznacza przeniesienie całej komunikacji z bazą przez IPC. PD-CONN-014 zostaje ⚠️ z
+czytelnym błędem z D159; wrócimy do tematu, gdy tester zgłosi potrzebę. Właściciel opublikował też Pelikan 7.9.0 beta
+jako pierwsze publiczne wydanie i polecił usunąć starsze szkice wydań (1.9.0–7.7.0); tagi zostały w repozytorium.
+
 ### D162 · 2026-10-24 — Bez ścieżek budowania w binarce; nazwy usług macOS przetłumaczone
 Próba opublikowanej bety 7.9.0 (pobranej z GitHuba) potwierdziła podpis aplikacji, wersję, zawartość DMG i PKG oraz
 podpis EdDSA archiwum aktualizacji (zmieniony plik odrzucany). Wykryła za to w pliku wykonywalnym 384 ścieżki budowania
