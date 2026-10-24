@@ -271,21 +271,26 @@ struct UserToolsView: View {
     private var index: Int? { tools.firstIndex { $0.id == selection } }
 
     var body: some View {
-        HSplitView {
-            VStack(alignment: .leading) {
-                List(tools, selection: $selection) { Text($0.name).tag($0.id) }
-                HStack {
-                    Button { tools.append(UserTool(name: L10n.tr("Nowe narzędzie"))); selection = tools.last?.id } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj"))
-                    Button { tools.removeAll { $0.id == selection } } label: { Image(systemName: "minus") }.iconLabel(L10n.tr("Usuń")).disabled(selection == nil)
+        // Stopka pod podziałem (safeAreaInset nie działa z HSplitView — stopka zachodziła na listę).
+        VStack(spacing: 0) {
+            HSplitView {
+                VStack(alignment: .leading, spacing: 4) {
+                    List(tools, selection: $selection) { Text($0.name).tag($0.id) }
+                    HStack {
+                        Button { tools.append(UserTool(name: L10n.tr("Nowe narzędzie"))); selection = tools.last?.id } label: { Image(systemName: "plus") }.iconLabel(L10n.tr("Dodaj"))
+                        Button { tools.removeAll { $0.id == selection } } label: { Image(systemName: "minus") }.iconLabel(L10n.tr("Usuń")).disabled(selection == nil)
+                    }
+                    .buttonStyle(.borderless)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 6)
                 }
+                .frame(minWidth: 180, idealWidth: 200)
+                Group {
+                    if let i = index { editor($tools[i]) } else { Text(L10n.tr("Wybierz albo dodaj narzędzie")).foregroundStyle(.secondary) }
+                }
+                .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(minWidth: 180, idealWidth: 200)
-            Group {
-                if let i = index { editor($tools[i]) } else { Text(L10n.tr("Wybierz albo dodaj narzędzie")).foregroundStyle(.secondary) }
-            }
-            .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .safeAreaInset(edge: .bottom) {
+            Divider()
             HStack {
                 Text(L10n.tr("Zmienne: ") + UserToolContext.variables.map(\.0).joined(separator: " ")).font(.caption).foregroundStyle(.secondary)
                 Spacer()

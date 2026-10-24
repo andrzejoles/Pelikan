@@ -1062,3 +1062,12 @@ HTP Output: przełącznik w karcie Wyjście okna testu — OWA.INIT_CGI_ENV + HT
 (bez inicjalizacji HTP.P zgłasza ORA-06502). Wiele obiektów w Object Browserze: Cmd+C kopiuje nazwy po przecinku,
 menu akcji wspólnych (DDL, rekompilacja, usuwanie po jednym potwierdzeniu, błędy nie przerywają pozostałych).
 Query Builder: podzapytania w FROM i JOIN jako widoki wbudowane z kolumnami z opisu wyniku (`select * … where 1 = 0`).
+
+### D145 · 2026-10-24 — Okna narzędzi: HSplitView zamiast NavigationSplitView, stopki pod podziałem
+Zrzuty w tle pokazały trzy błędy układu w oknach SwiftUI hostowanych w AppKit: `NavigationSplitView` dokłada pasek
+narzędzi okna i treść szczegółów wchodzi pod tytuł (DBMS Scheduler, Panel DBA — przyciski i nagłówki tabel schowane),
+`safeAreaInset` nie działa z `HSplitView` (stopka Narzędzi użytkownika na liście), a w pionowym `NSStackView` widok
+przewijany bez wysokości własnej zapada się do zera (płótno diagramu — puste okno od Etapu 6). Zasada: w oknach
+narzędzi `HSplitView` z listą po lewej, stopki jako ostatni element `VStack`, układ AppKit z jawnymi więzami zamiast
+stosu, gdy jeden z widoków ma wypełnić resztę. Okno instrukcji zostaje przy `NavigationSplitView` (pasek z przyciskiem
+panelu jest tam potrzebny, treść WebKit nie wchodzi pod tytuł).
