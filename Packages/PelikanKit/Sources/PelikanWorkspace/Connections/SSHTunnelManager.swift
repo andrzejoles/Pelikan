@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import Synchronization
 #if canImport(Darwin)
 import Darwin
 private let sockStream = SOCK_STREAM
@@ -62,7 +63,8 @@ public enum ConnectStringRewriter {
 
 /// Tunele SSH dla połączeń (UG nie ma tej funkcji — jak SQL Developer/DBeaver): systemowy `ssh -N -L`, więc działają
 /// `~/.ssh/config`, agent SSH (klucze w Pęku kluczy przez `ssh-add --apple-use-keychain`), ProxyJump i known_hosts.
-/// Hasła SSH nigdy nie trafiają do argumentów ani środowiska — w Etapie 1 tylko klucze i agent (D19).
+/// Hasło SSH (DB-SSH-001, D134) nie trafia do argumentów, środowiska ani plików: `SSH_ASKPASS` to skrypt `cat` z kolejki
+/// FIFO (w środowisku tylko jej ścieżka), a sekret z Pęku kluczy jest do niej zapisywany jednorazowo.
 @MainActor
 public final class SSHTunnelManager {
     public struct Tunnel: Sendable {
@@ -75,6 +77,52 @@ public final class SSHTunnelManager {
         let tunnel: Tunnel
         var users = 1
         init(process: Process, tunnel: Tunnel) { self.process = process; self.tunnel = tunnel }
+    }
+
+    /// Katalog prywatny (0700) na skrypt askpass i kolejki FIFO.
+    nonisolated static let runDirectory: URL = {
+        let d = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-tunnel-\(getuid())", isDirectory: true)
+        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        chmod(d.path, 0o700)
+        return d
+    }()
+
+    /// Przygotowuje askpass: skrypt bez sekretu, kolejka FIFO 0600 i wątek, który zapisze hasło raz (albo zakończy się,
+    /// gdy `done` zostanie ustawione). Zwraca zmienne środowiska dla `ssh` i funkcję sprzątającą.
+    nonisolated static func askpass(secret: String) throws -> (environment: [String: String], cleanup: @Sendable () -> Void) {
+        let askpass = runDirectory.appendingPathComponent("askpass.sh").path
+        try Data("#!/bin/sh\nexec /bin/cat -- \"$PELIKAN_ASKPASS_FIFO\"\n".utf8).write(to: URL(fileURLWithPath: askpass))
+        chmod(askpass, 0o700)
+        let fifo = runDirectory.appendingPathComponent("askpass-\(UUID().uuidString.prefix(8))").path
+        guard mkfifo(fifo, 0o600) == 0 else { throw DatabaseError.driverUnavailable(L10n.tr("Nie można utworzyć kolejki dla hasła SSH")) }
+        let done = Flag()
+        let bytes = Array((secret + "\n").utf8)
+        Thread.detachNewThread {
+            while !done.isSet {
+                #if canImport(Darwin)
+                let fd = Darwin.open(fifo, O_WRONLY | O_NONBLOCK)
+                #else
+                let fd = Glibc.open(fifo, O_WRONLY | O_NONBLOCK)
+                #endif
+                if fd >= 0 {
+                    _ = fcntl(fd, F_SETFL, 0)
+                    bytes.withUnsafeBytes { _ = write(fd, $0.baseAddress, $0.count) }
+                    close(fd)
+                    unlink(fifo)
+                    return
+                }
+                usleep(20_000)
+            }
+        }
+        let env = ["SSH_ASKPASS": askpass, "SSH_ASKPASS_REQUIRE": "force", "DISPLAY": ":0", "PELIKAN_ASKPASS_FIFO": fifo]
+        return (env, { done.set(); unlink(fifo) })
+    }
+
+    /// Znacznik zakończenia współdzielony z wątkiem zapisu kolejki.
+    final class Flag: Sendable {
+        private let value = Mutex<Bool>(false)
+        var isSet: Bool { value.withLock { $0 } }
+        func set() { value.withLock { $0 = true } }
     }
 
     private var running: [UUID: Running] = [:]
@@ -113,9 +161,13 @@ public final class SSHTunnelManager {
         }
     }
 
-    /// Argumenty ssh dla tunelu (bez haseł).
+    /// Argumenty ssh dla tunelu (bez haseł; z hasłem — askpass i jedna próba hasła zamiast BatchMode).
     nonisolated static func arguments(_ t: SSHTunnel, localPort: Int, remote: ConnectStringRewriter.Endpoint, extra: [String]) -> [String] {
-        var a = ["-N", "-T", "-o", "ExitOnForwardFailure=yes", "-o", "BatchMode=yes", "-o", "ServerAliveInterval=30",
+        let auth = t.usesPassword
+            ? ["-o", "BatchMode=no", "-o", "PreferredAuthentications=password,keyboard-interactive", "-o", "NumberOfPasswordPrompts=1",
+               "-o", "PubkeyAuthentication=no"]
+            : ["-o", "BatchMode=yes"]
+        var a = ["-N", "-T", "-o", "ExitOnForwardFailure=yes"] + auth + ["-o", "ServerAliveInterval=30",
                  "-o", "ConnectTimeout=15", "-L", "127.0.0.1:\(localPort):\(remote.host):\(remote.port)", "-p", String(t.port)]
         if let id = t.identityFile, !id.isEmpty { a += ["-i", (id as NSString).expandingTildeInPath, "-o", "IdentitiesOnly=yes"] }
         if let j = t.jumpHost, !j.isEmpty { a += ["-J", j] }
@@ -125,14 +177,14 @@ public final class SSHTunnelManager {
     }
 
     /// Otwiera (albo współdzieli) tunel połączenia; zwraca lokalny port.
-    public func open(for def: ConnectionDefinition, tns: [TNSEntry] = []) async throws -> Tunnel {
+    public func open(for def: ConnectionDefinition, tns: [TNSEntry] = [], secret: String? = nil) async throws -> Tunnel {
         if let r = running[def.id], r.process.isRunning {
             r.users += 1
             return r.tunnel
         }
         guard let t = def.sshTunnel else { throw DatabaseError.driverUnavailable(L10n.tr("Połączenie nie ma tunelu SSH")) }
-        if t.usesPassword {
-            throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH z hasłem nie jest jeszcze obsługiwany — użyj klucza albo agenta SSH (ssh-add)."))
+        if t.usesPassword, (secret ?? "").isEmpty {
+            throw DatabaseError.driverUnavailable(L10n.tr("Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia."))
         }
         var connect = def.target.connectString
         if !connect.hasPrefix("("), !connect.contains("/"), !connect.contains(":"),
@@ -150,6 +202,13 @@ public final class SSHTunnelManager {
         p.standardError = err
         p.standardOutput = FileHandle.nullDevice
         p.standardInput = FileHandle.nullDevice
+        var cleanup: (@Sendable () -> Void)?
+        if t.usesPassword, let secret {
+            let a = try Self.askpass(secret: secret)
+            p.environment = ProcessInfo.processInfo.environment.merging(a.environment) { _, new in new }
+            cleanup = a.cleanup
+        }
+        defer { cleanup?() }
         try p.run()
         // Czekamy, aż port przyjmuje połączenia albo ssh się zakończy (błąd uwierzytelnienia, host key, sieć).
         let deadline = ContinuousClock.now + .seconds(20)

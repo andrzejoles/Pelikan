@@ -5349,6 +5349,34 @@
         }
       }
     },
+    "Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SSH tunnel password in the Keychain — enter it in the connection definition."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein SSH-Tunnelpasswort im Schlüsselbund — geben Sie es in der Verbindungsdefinition ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay contraseña SSH del túnel en el Llavero: introdúzcala en la definición de la conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає пароля SSH тунелю в Зв’язці ключів — введіть його у визначенні підключення."
+          }
+        }
+      }
+    },
     "Brak identyfikatora pod kursorem" : {
       "localizations" : {
         "en" : {
@@ -29457,6 +29485,34 @@
         }
       }
     },
+    "Logowanie hasłem SSH (zamiast klucza)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH password login (instead of a key)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH-Anmeldung mit Passwort (statt Schlüssel)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de sesión SSH con contraseña (en lugar de clave)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід SSH за паролем (замість ключа)"
+          }
+        }
+      }
+    },
     "Logowanie zmian (LOGGING)" : {
       "localizations" : {
         "en" : {
@@ -33597,6 +33653,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verzeichnis %@ kann nicht erstellt werden: %@"
+          }
+        }
+      }
+    },
+    "Nie można utworzyć kolejki dla hasła SSH" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot create the queue for the SSH password"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange für das SSH-Passwort kann nicht erstellt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede crear la cola para la contraseña SSH"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається створити чергу для пароля SSH"
           }
         }
       }
@@ -67369,34 +67453,6 @@
         }
       }
     },
-    "Tunel SSH z hasłem nie jest jeszcze obsługiwany — użyj klucza albo agenta SSH (ssh-add)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH tunnel with a password is not supported yet — use a key or the SSH agent (ssh-add)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель SSH з паролем ще не підтримується — використайте ключ або агент SSH (ssh-add)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel SSH con contraseña aún no es compatible: use una clave o el agente SSH (ssh-add)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH-Tunnel mit Passwort wird noch nicht unterstützt — Schlüssel oder SSH-Agent verwenden (ssh-add)."
-          }
-        }
-      }
-    },
     "Tunel SSH: przekroczony czas oczekiwania" : {
       "localizations" : {
         "en" : {
@@ -67425,30 +67481,30 @@
         }
       }
     },
-    "Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH nie jest obsługiwane — użyj klucza." : {
+    "Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH jest tylko w Pęku kluczy i trafia do ssh przez jednorazową kolejkę, nigdy przez argumenty, środowisko ani pliki." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The tunnel uses the system ssh: ~/.ssh/config, the SSH agent (keys in Keychain: ssh-add --apple-use-keychain) and known hosts. Enter the database host and port in the “Database” field as the SSH server sees them. SSH password is not supported — use a key."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у В'язці ключів: ssh-add --apple-use-keychain) і відомі хости. Хост і порт бази в полі «База» вкажіть так, як їх бачить сервер SSH. Пароль SSH не підтримується — використайте ключ."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel usa el ssh del sistema: ~/.ssh/config, el agente SSH (claves en el Llavero: ssh-add --apple-use-keychain) y los hosts conocidos. Indique el host y el puerto de la base de datos en el campo «Base de datos» tal como los ve el servidor SSH. La contraseña SSH no es compatible: use una clave."
+            "value" : "The tunnel uses the system ssh: ~/.ssh/config, the SSH agent (keys in the Keychain: ssh-add --apple-use-keychain) and known hosts. Enter the database host and port in the “Database” field as the SSH server sees them. The SSH password is kept only in the Keychain and reaches ssh through a one-time queue, never through arguments, the environment or files."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Tunnel verwendet das System-ssh: ~/.ssh/config, SSH-Agent (Schlüssel im Schlüsselbund: ssh-add --apple-use-keychain) und bekannte Hosts. Host und Port der Datenbank im Feld „Datenbank“ so angeben, wie der SSH-Server sie sieht. SSH-Passwort wird nicht unterstützt — Schlüssel verwenden."
+            "value" : "Der Tunnel verwendet das System-ssh: ~/.ssh/config, den SSH-Agenten (Schlüssel im Schlüsselbund: ssh-add --apple-use-keychain) und bekannte Hosts. Geben Sie Host und Port der Datenbank im Feld „Datenbank“ so an, wie der SSH-Server sie sieht. Das SSH-Passwort liegt nur im Schlüsselbund und erreicht ssh über eine einmalige Warteschlange, nie über Argumente, Umgebung oder Dateien."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El túnel usa el ssh del sistema: ~/.ssh/config, el agente SSH (claves en el Llavero: ssh-add --apple-use-keychain) y los hosts conocidos. Indique el host y el puerto de la base en el campo «Base de datos» tal como los ve el servidor SSH. La contraseña SSH solo está en el Llavero y llega a ssh mediante una cola de un solo uso, nunca por argumentos, entorno ni archivos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у Зв’язці ключів: ssh-add --apple-use-keychain) і відомі хости. Вкажіть хост і порт бази в полі «База» так, як їх бачить сервер SSH. Пароль SSH зберігається лише у Зв’язці ключів і потрапляє до ssh через одноразову чергу, ніколи через аргументи, середовище чи файли."
           }
         }
       }

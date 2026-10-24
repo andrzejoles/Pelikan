@@ -494,7 +494,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 
 | ID | Funkcja | Źródło | Okno / menu | Etap | Priorytet | Agent | Stan |
 |---|---|---|---|---|---|---|---|
-| DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | ⚠️ częściowo (bez hasła SSH — D19) |
+| DB-SSH-001 | Tunel SSH (hasło z Pęku kluczy, klucz, agent, jump host) przez systemowy ssh | gap-analysis §3 | Configure > Connections | 1 | P1 | — | ✅ test (systemowy ssh -L: klucz, agent, ~/.ssh/config, ProxyJump, known_hosts; hasło SSH z Pęku kluczy przez askpass z jednorazowej kolejki — D134; tunel współdzielony przez sesje) |
 | DB-DIAG-001 | Diagramy ER z bazy (automatyczny układ, relacje FK, eksport obrazu) | gap-analysis §3 | Object Browser > ER Diagram | 7 | P2 | Odczyt | ✅ test (diagram ER z tabel schematu/maski: kolumny, linie FK, układ warstwowy rodzic→dziecko bez nakładania; eksport obrazu z okna diagramu) (D77) |
 | DB-PANEL-001 | Panel wartości obok siatki (tekst, JSON, XML, HTML, obraz z BLOB, hex) | gap-analysis §3 | Siatka > Value panel | 7 | P2 | — | ✅ test (tekst, JSON i XML z wcięciami, HTML bez JavaScriptu i sieci, obraz z BLOB, hex; panel obok siatki bez zrzutu — D30) |
 | DB-GRID-001 | Filtr wyników w siatce (po wartości komórki, wyrażenie) i grupowanie z licznikami | gap-analysis §3 | Siatka | 7 | P2 | — | ✅ test (filtr po wartości komórki i wyrażeniem =,<>,<,>,LIKE,IS NULL,AND/OR na pobranych wierszach, z sortowaniem; grupowanie z licznikami, dwuklik filtruje) |

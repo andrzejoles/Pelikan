@@ -990,3 +990,12 @@ punktów: Pelikan po zatrzymaniu wypisuje komunikat (`{zmienna}` → wartość),
 liczy jako `select case when … then 1 else 0 end from dual` z wartościami zmiennych ramki podstawionymi jako literały
 (błąd warunku — zatrzymanie z komunikatem). Punkt odrzucony przez SET_BREAKPOINT ma pusty znacznik. Jedna linia —
 jeden punkt (DBMS_DEBUG trzyma jeden punkt na linię).
+
+### D134 · 2026-10-24 — Hasło SSH tunelu przez askpass z kolejki (zmienia D19)
+D19 wykluczyło hasło SSH, bo `SSH_ASKPASS` wymagałby hasła w środowisku albo pliku. Etap P pokazał rozwiązanie bez
+tego: `SSH_ASKPASS` to skrypt `exec cat "$PELIKAN_ASKPASS_FIFO"` (bez sekretu), kolejka FIFO 0600 w prywatnym katalogu
+0700, a wątek Pelikana zapisuje do niej hasło z Pęku kluczy jeden raz i usuwa kolejkę. W środowisku `ssh` jest tylko
+ścieżka kolejki. Tunel z hasłem: `BatchMode=no`, `PreferredAuthentications=password,keyboard-interactive`,
+`NumberOfPasswordPrompts=1`, bez kluczy. Hasło tunelu leży w Pęku kluczy pod kontem `<uuid połączenia>.ssh`, osobno od
+hasła bazy; edytor połączenia zapisuje je tylko tam. Test: użytkownik `haslo` w kontenerze sshd testów (losowe hasło
+w `.testdb/env`, jak hasła bazy testowej).

@@ -1,3 +1,4 @@
+#if canImport(Darwin)
 import Foundation
 @testable import PelikanAgent
 import PelikanWorkspace
@@ -39,3 +40,4 @@ struct PermissionMatrixTests {
         #expect(AgentPolicy.effectiveAccess(command: d, session: session, settings: AgentSettings()) == .read)
     }
 }
+#endif

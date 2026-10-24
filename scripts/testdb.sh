@@ -266,12 +266,22 @@ ssh_up() {
     [ -f "$STATE/ssh/id_ed25519" ] || ssh-keygen -q -t ed25519 -N "" -C "pelikan-test" -f "$STATE/ssh/id_ed25519"
     docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
     docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
-    docker image inspect pelikan-test-sshd >/dev/null 2>&1 || docker build -q -t pelikan-test-sshd "$ROOT/scripts/testdb/ssh" >/dev/null
+    # Obraz w wersji 2 (użytkownik z hasłem); kontener ze starszego obrazu jest tworzony od nowa.
+    local image=pelikan-test-sshd:2
+    docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/ssh" >/dev/null
+    if docker container inspect "$SSH_NAME" >/dev/null 2>&1 \
+       && [ "$(docker container inspect -f '{{.Config.Image}}' "$SSH_NAME")" != "$image" ]; then
+        docker rm -f "$SSH_NAME" >/dev/null
+    fi
     if ! docker container inspect "$SSH_NAME" >/dev/null 2>&1; then
-        docker run -d --name "$SSH_NAME" --network "$NET" -p "127.0.0.1:${SSH_PORT}:22" pelikan-test-sshd >/dev/null
+        docker run -d --name "$SSH_NAME" --network "$NET" -p "127.0.0.1:${SSH_PORT}:22" "$image" >/dev/null
     else
         docker start "$SSH_NAME" >/dev/null
     fi
+    # Hasło użytkownika `haslo` (test tunelu z hasłem): losowe, tylko w .testdb/env jak hasła bazy testowej.
+    grep -q '^PELIKAN_TESTDB_SSH_PASSWORD=' "$ENVFILE" || echo "PELIKAN_TESTDB_SSH_PASSWORD=S$(rand)" >> "$ENVFILE"
+    load_env
+    printf 'haslo:%s\n' "$PELIKAN_TESTDB_SSH_PASSWORD" | docker exec -i "$SSH_NAME" chpasswd >/dev/null 2>&1
     docker cp "$STATE/ssh/id_ed25519.pub" "$SSH_NAME:/home/tunnel/.ssh/authorized_keys"
     docker exec "$SSH_NAME" sh -c 'chown tunnel:tunnel /home/tunnel/.ssh/authorized_keys && chmod 600 /home/tunnel/.ssh/authorized_keys'
     # known_hosts testu: klucz hosta kontenera (tunel weryfikuje host jak zwykły ssh).

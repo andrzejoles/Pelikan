@@ -18,6 +18,8 @@ enum TestDatabase {
         var sshPort: Int?
         var sshDBHost: String?
         var sshDirectory: String?
+        /// Hasło użytkownika `haslo` serwera SSH testów (tunel z hasłem, DB-SSH-001).
+        var sshPassword: String?
     }
 
     static let config: Config? = {
@@ -52,7 +54,8 @@ enum TestDatabase {
                       agentPassword: env["PELIKAN_TESTDB_AGENT_PASSWORD"] ?? "",
                       systemPassword: env["PELIKAN_TESTDB_SYSTEM_PASSWORD"] ?? "",
                       sshPort: env["PELIKAN_TESTDB_SSH_PORT"].flatMap(Int.init), sshDBHost: env["PELIKAN_TESTDB_SSH_DBHOST"],
-                      sshDirectory: envFile().map { ($0 as NSString).deletingLastPathComponent + "/ssh" })
+                      sshDirectory: envFile().map { ($0 as NSString).deletingLastPathComponent + "/ssh" },
+                      sshPassword: env["PELIKAN_TESTDB_SSH_PASSWORD"])
     }()
 
     /// .testdb/env w katalogu głównym repozytorium (szukany w górę od tego pliku).
