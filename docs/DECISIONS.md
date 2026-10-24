@@ -1113,3 +1113,20 @@ krótką tabelę pod spodem, niewyrównaną z kolumnami. Układ tabelaryczny bez
 jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, „Razem” na końcu. Z nową stroną po grupie
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
+
+### D-ENV-1 · 2026-10-24 — Workspace Manager w bazie testowej
+Obraz Oracle Free 26ai (23.26.3) nie ma zainstalowanego Workspace Managera (brak WMSYS i DBMS_WM), ale ma jego skrypty
+w `ORACLE_HOME/rdbms/admin`. `scripts/testdb.sh owm` uruchamia `owminst.plb` w PDB testowej (ok. 40 s, raz), nadaje
+użytkownikowi testowemu WM_ADMIN_ROLE i tworzy przestrzeń DEV_PELIKAN_WS jego własnym wywołaniem — `GrantSystemPriv`
+jako SYS kończy się ORA-06598 (pakiet WMSYS z prawami wywołującego). Test PD-CONN-009 łączy się definicją połączenia
+z przestrzenią i sprawdza `DBMS_WM.GetWorkspace`; bez instalacji OWM test nie ma czego sprawdzić i kończy się od razu.
+Krok jest tani, więc CI wykonuje go po `seed`.
+
+### D-ENV-2 · 2026-10-24 — ORDS na żywo tylko w testach
+ORDS (publiczne `ords-latest.zip`, bez konta) jest pobierany do `.testdb/` i uruchamiany samodzielnie w kontenerze
+z JRE (`eclipse-temurin:21-jre`) w sieci Docker bazy testowej; schemat ORDS instalowany w PDB testowej, konfiguracja
+w wolumenie Dockera, hasła SYS i ORDS_PUBLIC_USER przez stdin, HTTP tylko na 127.0.0.1 (`scripts/testdb.sh ords-up`,
+`ords-down`). ORDS nie trafia do Pelikana. Test na żywym serwerze wykonał skrypty komend i wykrył błąd: widok
+USER_ORDS_ENABLED_OBJECTS ma kolumnę TYPE, nie OBJECT_TYPE — lista obiektów AutoREST kończyła się ORA-00904.
+ORDS buforuje metadane kilka sekund, więc test HTTP czeka na oczekiwany status (do 20 s). Do CI nie dodajemy
+(pobranie 200 MB i obraz JRE w każdym przebiegu); test bez `PELIKAN_TESTDB_ORDS_URL` jest pomijany.

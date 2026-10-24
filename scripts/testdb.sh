@@ -9,6 +9,8 @@
 #         scripts/testdb.sh sql [U]  sqlplus w kontenerze jako U (domyślnie SYSTEM), skrypt ze stdin
 #         scripts/testdb.sh ssh-up   serwer SSH w kontenerze (testy tunelu): klucz w .testdb/ssh, port 127.0.0.1:2222
 #         scripts/testdb.sh ssh-down usuwa kontener SSH
+#         scripts/testdb.sh owm      instaluje Workspace Manager (WMSYS) i przestrzeń DEV_PELIKAN_WS (PD-CONN-009)
+#         scripts/testdb.sh ords-up  ORDS (tylko testy) w kontenerze z JRE, HTTP 127.0.0.1:8181 (SD-ORDS-001); ords-down
 #
 # Hasła: losowe przy pierwszym `up`, w .testdb/env (poza repozytorium, 0600). Port tylko na 127.0.0.1.
 # Testy łączą się WYŁĄCZNIE z tą bazą (PELIKAN_TESTDB_*); żadnych innych baz (docs/PROMPT.md §9, §13).
@@ -335,7 +337,96 @@ wallet() {
     [ -f "$w/cwallet.sso" ] && echo "Portfel testowy: $w" >&2
 }
 
+# Workspace Manager (PD-CONN-009): obraz Oracle Free ma skrypty OWM w ORACLE_HOME, ale bez zainstalowanego WMSYS.
+# owminst.plb w PDB testowej (kilka minut, raz), potem przestrzeń robocza DEV_PELIKAN_WS dla użytkownika testowego.
+install_owm() {
+    load_env
+    local n log="$STATE/owm-install.log"
+    n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
+    if [ "${n:-0}" = "0" ]; then
+        echo "Instaluję Workspace Manager (owminst.plb)…" >&2
+        { printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
+          printf 'WHENEVER SQLERROR CONTINUE\nSET ECHO OFF\n@?/rdbms/admin/owminst.plb\nEXIT\n'
+        } | docker exec -i "$NAME" sqlplus -S -L /nolog > "$log" 2>&1 || true
+        n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
+        [ "${n:-0}" != "0" ] || { tail -30 "$log" >&2; echo "Instalacja Workspace Manager nie powiodła się (log: $log)" >&2; exit 1; }
+    fi
+    # GrantSystemPriv jako SYS kończy się ORA-06598 (pakiet WMSYS z prawami wywołującego) — rola administracyjna OWM
+    # dla użytkownika testowego (tylko baza testowa), przestrzeń tworzy on sam.
+    sql_sys <<SQL
+GRANT WM_ADMIN_ROLE TO $PELIKAN_TESTDB_USER;
+GRANT EXECUTE ON DBMS_WM TO $PELIKAN_TESTDB_USER;
+SQL
+    sql_as "$PELIKAN_TESTDB_USER" "$PELIKAN_TESTDB_PASSWORD" <<SQL
+DECLARE
+  n PLS_INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO n FROM all_workspaces WHERE workspace = 'DEV_PELIKAN_WS';
+  IF n = 0 THEN DBMS_WM.CreateWorkspace('DEV_PELIKAN_WS'); END IF;
+END;
+/
+SQL
+    echo "Workspace Manager gotowy: przestrzeń DEV_PELIKAN_WS." >&2
+}
+
+ORDS_NAME="${PELIKAN_TESTDB_ORDS_CONTAINER:-pelikan-testdb-ords}"
+ORDS_PORT="${PELIKAN_TESTDB_ORDS_PORT:-8181}"
+ORDS_IMAGE="${PELIKAN_TESTDB_ORDS_IMAGE:-eclipse-temurin:21-jre}"
+
+docker_net() {
+    docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
+    docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
+}
+
+# ORDS tylko do testów (SD-ORDS-001, nigdy w Pelikanie): publiczne ords-latest.zip w .testdb/ords, samodzielny ORDS
+# w kontenerze z JRE, w sieci Docker bazy testowej; instalacja schematu ORDS w PDB testowej (hasło SYS i nowe
+# losowe hasło ORDS_PUBLIC_USER przez stdin), konfiguracja w wolumenie Dockera. HTTP tylko na 127.0.0.1.
+ords_up() {
+    load_env
+    local dist="$STATE/ords" zip="$STATE/ords-dist/ords-latest.zip" vol="${ORDS_NAME}-config"
+    if [ ! -x "$dist/bin/ords" ]; then
+        mkdir -p "$STATE/ords-dist"
+        [ -f "$zip" ] || curl -fsSL -o "$zip" https://download.oracle.com/otn_software/java/ords/ords-latest.zip
+        rm -rf "$dist"; mkdir -p "$dist"
+        unzip -q "$zip" -d "$dist"
+    fi
+    docker_net
+    grep -q '^PELIKAN_TESTDB_ORDS_PASSWORD=' "$ENVFILE" || echo "PELIKAN_TESTDB_ORDS_PASSWORD=O$(rand)" >> "$ENVFILE"
+    load_env
+    local have
+    have=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_users WHERE username = 'ORDS_METADATA';\n" | sql_sys | tr -dc '0-9')
+    if [ "${have:-0}" = "0" ] || ! docker volume inspect "$vol" >/dev/null 2>&1; then
+        echo "Instaluję ORDS w ${NAME}/FREEPDB1…" >&2
+        docker rm -f "$ORDS_NAME" >/dev/null 2>&1 || true
+        printf '%s\n%s\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD" "$PELIKAN_TESTDB_ORDS_PASSWORD" \
+            | docker run --rm -i --network "$NET" -v "$dist:/opt/ords:ro" -v "$vol:/etc/ords/config" \
+                -e JAVA_TOOL_OPTIONS=-Xmx512m "$ORDS_IMAGE" \
+                /opt/ords/bin/ords --config /etc/ords/config install --admin-user "SYS AS SYSDBA" \
+                --db-hostname "$NAME" --db-port 1521 --db-servicename FREEPDB1 \
+                --feature-sdw false --feature-db-api false --feature-rest-enabled-sql false \
+                --log-folder /tmp --password-stdin > "$STATE/ords-install.log" 2>&1 \
+            || { tail -30 "$STATE/ords-install.log" >&2; echo "Instalacja ORDS nie powiodła się" >&2; exit 1; }
+    fi
+    if docker container inspect "$ORDS_NAME" >/dev/null 2>&1; then
+        docker start "$ORDS_NAME" >/dev/null
+    else
+        docker run -d --name "$ORDS_NAME" --network "$NET" -p "127.0.0.1:${ORDS_PORT}:8080" \
+            -v "$dist:/opt/ords:ro" -v "$vol:/etc/ords/config" -e JAVA_TOOL_OPTIONS=-Xmx512m "$ORDS_IMAGE" \
+            /opt/ords/bin/ords --config /etc/ords/config serve --port 8080 >/dev/null
+    fi
+    for _ in $(seq 1 90); do
+        # Dowolna odpowiedź HTTP (przekierowanie z /ords/, 404) — serwer działa.
+        [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${ORDS_PORT}/ords/" || true)" != "000" ] && break
+        sleep 2
+    done
+    grep -q '^PELIKAN_TESTDB_ORDS_URL=' "$ENVFILE" || echo "PELIKAN_TESTDB_ORDS_URL=http://127.0.0.1:${ORDS_PORT}/ords" >> "$ENVFILE"
+    echo "ORDS gotowy: http://127.0.0.1:${ORDS_PORT}/ords → ${NAME}/FREEPDB1" >&2
+}
+
 case "${1:-}" in
+    ords-up) ords_up ;;
+    ords-down) docker rm -f "$ORDS_NAME" >/dev/null 2>&1; echo "Usunięto ${ORDS_NAME} (ORDS zostaje w bazie)" ;;
+    owm) install_owm ;;
     wallet) wallet ;;
     ssh-up) ssh_up ;;
     ssh-down) docker rm -f "$SSH_NAME" >/dev/null 2>&1; echo "Usunięto ${SSH_NAME}" ;;
