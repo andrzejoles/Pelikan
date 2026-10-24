@@ -49,7 +49,9 @@ struct PlanPanel: View {
     let workspace: Workspace
     @State private var selection: PlanLine.ID?
     /// Widok planu: drzewo, diagram, flame graph kosztu, tekst DBMS_XPLAN (SD-PLAN-001).
-    @State private var mode = 0
+    @State private var mode = PlanPanel.initialMode
+    /// Widok startowy panelu (krok `debug.planMode` skryptu zrzutów).
+    static var initialMode = 0
 
     private var ordered: [PlanLine] { document.plan?.executionOrder ?? [] }
 

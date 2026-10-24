@@ -30,7 +30,7 @@ for name in "${scenarios[@]}"; do
     [ -f "$script" ] || { echo "Brak scenariusza $name" >&2; continue; }
     run="$WORK/$name.json"
     # @OUT@ w scenariuszu — katalog zrzutów (bez ścieżek domowych w repozytorium).
-    sed "s|@OUT@|$OUT|g" "$script" > "$run"
+    sed -e "s|@OUT@|$OUT|g" -e "s|@ROOT@|$ROOT|g" "$script" > "$run"
     rm -f "$run.done"
     rm -rf "$DATA/Recovery"
     started=$(date +%s)

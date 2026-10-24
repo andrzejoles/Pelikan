@@ -1,0 +1,33 @@
+{
+  "format": "pelikan-notebook",
+  "version": 1,
+  "maxRows": 200,
+  "cells": [
+    {
+      "id": "0A53AB16-43BC-4591-B6ED-FCBD66CE64A2",
+      "kind": "markdown",
+      "text": "# Pensje\nSuma pensji według stanowiska — wykres z wyniku komórki."
+    },
+    {
+      "id": "CD2AD5FA-9610-497A-87C8-E6FDD808752B",
+      "kind": "sql",
+      "text": "select job, sum(sal) suma\n  from emp\n group by job\n order by 2 desc",
+      "chart": {
+        "id": "F1281E34-F7DA-4176-BEB4-470A95B89155",
+        "name": "Pensje",
+        "kind": "bar",
+        "title": "Suma pensji według stanowiska",
+        "categoryColumn": "JOB",
+        "seriesColumns": [
+          "SUMA"
+        ],
+        "aggregation": "none",
+        "stacked": false,
+        "showLegend": true,
+        "showValues": true,
+        "colors": [],
+        "refreshSeconds": 0
+      }
+    }
+  ]
+}

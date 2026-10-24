@@ -126,13 +126,22 @@ struct LocalHistoryView: View {
                     if let id = ids.first { run("file.localHistoryCompare", id) }
                 }
                 .frame(minWidth: 260)
-                ScrollView {
-                    Text(list.first { $0.id == selection }?.text ?? "")
-                        .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(6)
+                Group {
+                    if let e = list.first(where: { $0.id == selection }) {
+                        ScrollView {
+                            Text(e.text)
+                                .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading).padding(6)
+                        }
+                    } else {
+                        Text(list.isEmpty ? L10n.tr("Brak zapisanych wersji") : L10n.tr("Wybierz wersję, aby zobaczyć jej tekst"))
+                            .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
                 }
                 .frame(minWidth: 320)
             }
+            // Najnowsza wersja wybrana od razu — podgląd zamiast pustego panelu.
+            .onAppear { if selection == nil { selection = list.first?.id } }
             HStack {
                 Text(L10n.tr("Wersji: \(list.count)")).foregroundStyle(.secondary).font(.callout)
                 Spacer()
