@@ -23,6 +23,7 @@ struct QueryBuilderView: View {
                     .onSubmit { add(tableName) }
                 Button(L10n.tr("Dodaj")) { add(tableName) }.disabled(tableName.isEmpty)
                 Button(L10n.tr("Dodaj zaznaczony obiekt")) { if let o = workspace.selectedObject { add("\"\(o.owner)\".\"\(o.name)\"") } }
+                Button(L10n.tr("Dodaj podzapytanie…")) { addSubquery() }
                     .disabled(workspace.selectedObject == nil)
                 Spacer()
                 Toggle("DISTINCT", isOn: $model.distinct).toggleStyle(.checkbox)
@@ -193,6 +194,11 @@ struct QueryBuilderView: View {
             let source = try await workspace.schemaSource(connection: connectionID)
             for i in parsed.tables.indices {
                 let t = parsed.tables[i]
+                // Podzapytanie w FROM: kolumny z opisu wyniku (PD-QB-001).
+                if let sub = t.subquery {
+                    parsed.tables[i].columns = (try? await workspace.describeQuery(sub, connection: connectionID)) ?? []
+                    continue
+                }
                 guard let q = try await source.queryTable(t.owner.isEmpty ? t.name : "\"\(t.owner)\".\"\(t.name)\"") else {
                     message = L10n.tr("Nie znaleziono \(t.name)")
                     continue
@@ -217,6 +223,20 @@ struct QueryBuilderView: View {
                     ? try await source.foreignKeys(owner: q.owner, table: q.name) : []
                 model.addTable(owner: q.owner, name: q.name, columns: cols, foreignKeys: fks)
                 tableName = ""
+                message = L10n.tr("Tabele: \(model.tables.count), złączenia: \(model.joins.count)")
+            } catch { message = error.localizedDescription }
+        }
+    }
+
+    private func addSubquery() {
+        Task {
+            guard let ui = workspace.ui,
+                  let sql = await ui.askText(L10n.tr("Podzapytanie"), message: L10n.tr("SELECT używany w FROM jako widok wbudowany"), defaultValue: "select "),
+                  !sql.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+            let alias = await ui.askText(L10n.tr("Alias podzapytania"), message: L10n.tr("Nazwa, przez którą odwołują się pola i złączenia"), defaultValue: model.uniqueAlias(for: "SUBQ")) ?? ""
+            do {
+                let cols = try await workspace.describeQuery(sql, connection: connectionID)
+                model.addSubquery(sql, alias: alias, columns: cols)
                 message = L10n.tr("Tabele: \(model.tables.count), złączenia: \(model.joins.count)")
             } catch { message = error.localizedDescription }
         }

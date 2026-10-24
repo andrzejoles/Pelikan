@@ -990,3 +990,27 @@ punktów: Pelikan po zatrzymaniu wypisuje komunikat (`{zmienna}` → wartość),
 liczy jako `select case when … then 1 else 0 end from dual` z wartościami zmiennych ramki podstawionymi jako literały
 (błąd warunku — zatrzymanie z komunikatem). Punkt odrzucony przez SET_BREAKPOINT ma pusty znacznik. Jedna linia —
 jeden punkt (DBMS_DEBUG trzyma jeden punkt na linię).
+
+### D-P2N-1 · 2026-10-24 — Edytory obiektów: zadanie przez DBMS_SCHEDULER, kolejki AQ, łącza bez hasła w podglądzie
+Edytor „Zadanie” tworzy i zmienia zadania DBMS_SCHEDULER (folder Object Browsera to zadania Schedulera; DBMS_JOB jest
+przestarzały i od 19c działa na Schedulerze) — wspólny kod z oknem Schedulera (`Scheduler.createSQL/alterSQL`).
+Kolejka AQ w jednym formularzu z opcją utworzenia tabeli kolejki (CREATE_QUEUE_TABLE + CREATE_QUEUE + START_QUEUE),
+zmiany przez ALTER_QUEUE i START/STOP_QUEUE tylko dla zmienionych kierunków. Hasło łącza bazy danych jak hasło
+użytkownika: maskowane w podglądzie, nigdzie nie zapisywane; zmiana użytkownika lub bazy łącza wymaga hasła (DROP +
+CREATE), bez hasła edytor pokazuje powód i nie generuje DDL. Widok w edytorze formularza zdejmuje z tekstu słownika
+klauzule WITH READ ONLY / CHECK OPTION (są polami). Pola tekstowe zamieniają na wielkie litery tylko nazwy obiektów.
+
+### D-P2N-2 · 2026-10-24 — Dymek debugera bez wywołań DBMS_DEBUG
+Wartość pod myszą pochodzi z już wczytanych zmiennych i obserwowanych zatrzymanego debugera (także pola rekordów i
+globalne pakietu bez kwalifikatora). Dymek powstaje synchronicznie, a GET_VALUE w trakcie ruchu myszy mnożyłby
+wywołania w sesji nadzorującej; nazwy z dwukropkiem są i tak pomijane (D133).
+
+### D-P2N-3 · 2026-10-24 — Listy informacji debugowania, statystyki, profiler, HTP, wiele obiektów
+Listy NEVER/ALWAYS (Preferencje › Oracle › Debuger) przyjmują `user@baza` albo `[SCHEMAT.]OBIEKT` z `*` i `?`; NEVER
+wygrywa. Statystyki: kolumna „Suma” sumuje różnice wszystkich wykonań okna; wybór statystyk w Preferencjach › Okno SQL
+(puste — wszystkie niezerowe), eksport CSV. Profiler: historia przebiegów z tabel PLSQL_PROFILER_RUNS/DBMSHP_RUNS,
+jednostka czasu i próg udziału w preferencjach, drzewo HPROF z DBMSHP_PARENT_CHILD_INFO (rekurencja przerwana).
+HTP Output: przełącznik w karcie Wyjście okna testu — OWA.INIT_CGI_ENV + HTP.INIT przed blokiem, OWA.GET_PAGE po nim
+(bez inicjalizacji HTP.P zgłasza ORA-06502). Wiele obiektów w Object Browserze: Cmd+C kopiuje nazwy po przecinku,
+menu akcji wspólnych (DDL, rekompilacja, usuwanie po jednym potwierdzeniu, błędy nie przerywają pozostałych).
+Query Builder: podzapytania w FROM i JOIN jako widoki wbudowane z kolumnami z opisu wyniku (`select * … where 1 = 0`).

@@ -171,7 +171,9 @@ struct DiagramTests {
         #expect(m.fields.filter(\.groupBy).count == 2 && m.whereClause == "e.sal > 100")
         #expect(m.sql().contains("left join dept d on e.deptno = d.deptno"))
         #expect(QueryModel.parse("select * from emp, dept where emp.deptno = dept.deptno", resolve: resolve)?.tables.count == 2)
-        #expect(QueryModel.parse("select * from (select 1 from dual)", resolve: resolve) == nil)
+        // Podzapytanie w FROM jest widokiem wbudowanym (PD-QB-001); nawias z czymś innym niż SELECT/WITH — poza zakresem.
+        #expect(QueryModel.parse("select * from (select 1 from dual)", resolve: resolve)?.tables.first?.subquery == "select 1 from dual")
+        #expect(QueryModel.parse("select * from table(f(1)) t", resolve: resolve) == nil)
         #expect(QueryModel.parse("select a from emp union select b from dept", resolve: resolve) == nil)
         #expect(QueryModel.parse("select * from nieznana", resolve: resolve) == nil)
     }

@@ -94,6 +94,24 @@ struct P2ToolsDBTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Query Builder: kolumny podzapytania z opisu wyniku, wygenerowany SQL z podzapytaniem wykonuje się (PD-QB-001)")
+    func queryBuilderSubquery() async throws {
+        let (ws, def) = try workspace()
+        let cols = try await ws.describeQuery("select deptno, count(*) cnt from emp group by deptno;", connection: def.id)
+        #expect(cols.map(\.name) == ["DEPTNO", "CNT"])
+        let source = try await ws.schemaSource(connection: def.id)
+        let schema = try await ws.metadata()!.currentSchema()
+        var m = QueryModel()
+        let d = m.addTable(owner: schema, name: "DEPT", columns: try await source.columns(owner: schema, name: "DEPT"), foreignKeys: [])
+        let s = m.addSubquery("select deptno, count(*) cnt from emp group by deptno", alias: "x", columns: cols)
+        m.joins.append(QBJoin(left: d, leftColumns: ["DEPTNO"], right: s, rightColumns: ["DEPTNO"], kind: .left))
+        m.fields = [QBField(table: d, expression: "DNAME"), QBField(table: s, expression: "CNT")]
+        let session = try await ws.metadata()!.session()
+        let (_, rows) = try await session.queryAll(m.sql())
+        #expect(!rows.isEmpty)
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("HTP Output: strona z HTP.P po wykonaniu; bez zbierania HTP — błąd OWA i brak strony")
     func htp() async throws {
         let (ws, def) = try workspace()
