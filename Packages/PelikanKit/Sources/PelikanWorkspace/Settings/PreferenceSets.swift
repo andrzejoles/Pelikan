@@ -122,7 +122,7 @@ public enum PreferenceSets {
                              "quickAccessCommands"]),
         (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitPostedRecords", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
-                                 "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "rowNumbersInCopyExport",
+                                 "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "rowNumbersInCopyExport", "gridNumberLayout",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
         (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "tabSize", "keywordCase", "highlightCurrentLine", "liveCodeAnalysis",

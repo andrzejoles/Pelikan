@@ -159,6 +159,52 @@ public final class LargeDataModel {
         return String(decoding: out, as: UTF8.self)
     }
 
+    /// XML z wcięciami (bez parsera z Foundation XML — także na Linuksie): elementy z samym tekstem w jednej linii,
+    /// komentarze, CDATA, deklaracje bez zmian. nil — to nie XML.
+    nonisolated public static func prettyXML(_ s: String, indent: String = "  ") -> String? {
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("<"),
+              let re = try? NSRegularExpression(pattern: #"<!\[CDATA\[.*?\]\]>|<!--.*?-->|<[^>]+>|[^<]+"#, options: [.dotMatchesLineSeparators]) else { return nil }
+        let ns = trimmed as NSString
+        var lines: [String] = []
+        var depth = 0
+        // Linia otwarcia elementu, do której dopisujemy tekst i zamknięcie (<a>tekst</a>).
+        var openLine: Int?
+        for m in re.matches(in: trimmed, range: NSRange(location: 0, length: ns.length)) {
+            let tok = ns.substring(with: m.range)
+            let pad = { (d: Int) in String(repeating: indent, count: d) }
+            if tok.hasPrefix("</") {
+                depth = max(0, depth - 1)
+                if let i = openLine { lines[i] += tok } else { lines.append(pad(depth) + tok) }
+                openLine = nil
+            } else if tok.hasPrefix("<") {
+                lines.append(pad(depth) + tok)
+                let standalone = tok.hasSuffix("/>") || tok.hasPrefix("<?") || tok.hasPrefix("<!")
+                if standalone { openLine = nil } else { depth += 1; openLine = lines.count - 1 }
+            } else {
+                let text = tok.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else { continue }
+                if let i = openLine { lines[i] += text } else { lines.append(pad(depth) + text) }
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    /// Auto Format (PD-LDE-001): tekst JSON/XML sformatowany do wyświetlenia; nil — bez zmian (inny format, błąd).
+    nonisolated public static func autoFormatted(_ s: String, format: LargeDataFormat) -> String? {
+        let out: String? = switch format {
+        case .json: prettyJSON(s)
+        case .xml: prettyXML(s)
+        default: nil
+        }
+        return out == s ? nil : out
+    }
+
+    /// Dokument podglądu HTML (PD-LDE-001): bez skryptów i zasobów zewnętrznych (CSP), obrazy tylko `data:`.
+    nonisolated public static func htmlPreviewDocument(_ s: String) -> String {
+        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">" + s
+    }
+
     /// Szesnastkowy podgląd (offset, bajty, ASCII), ograniczony do `limit` bajtów.
     nonisolated public static func hexDump(_ d: Data, limit: Int = 1 << 20) -> String {
         var out = ""

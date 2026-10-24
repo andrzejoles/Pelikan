@@ -125,7 +125,8 @@ enum Stage7Commands {
                                       parameters: ObjectCommands.objectParams + [
                                           CommandParameter("kind", .string, required: true, L10n.tr("Rodzaj kodu"), allowed: CodeGenerator.Kind.allCases.map(\.rawValue)),
                                           CommandParameter("member", .string, L10n.tr("Podprogram pakietu (wywołanie)")),
-                                          CommandParameter("newWindow", .boolean, L10n.tr("W nowym oknie zamiast w miejscu kursora"))],
+                                          CommandParameter("newWindow", .boolean, L10n.tr("W nowym oknie zamiast w miejscu kursora")),
+                                          CommandParameter("returnOnly", .boolean, L10n.tr("Tylko zwróć kod (bez wstawiania)"))],
                                       agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("SELECT/INSERT/UPDATE/DELETE z kolumnami tabeli, wywołanie procedury z parametrami albo fragment Java JDBC / Python — w miejscu kursora albo w nowym oknie."),
                                       feature: "SD-GEN-001")) { ctx in
@@ -154,6 +155,7 @@ enum Stage7Commands {
                     let alias = ws.sessions.mainConnectionID.flatMap { ws.connections.connection($0)?.agentAlias } ?? "ALIAS"
                     code = CodeGenerator.generate(kind, object: o, columns: cols, connectionAlias: alias)
                 }
+                if ctx.arguments.bool("returnOnly") == true { return CommandResult(value: .string(code)) }
                 if ctx.arguments.bool("newWindow") != true, let doc = editor(ws) {
                     insert(code, into: doc)
                 } else {

@@ -2,6 +2,7 @@ import AppKit
 import PDFKit
 import PelikanWorkspace
 import UniformTypeIdentifiers
+import WebKit
 
 /// Large Data Editor (UG 27): okno dla komórki LOB/LONG/RAW/długiego tekstu — tekst (z formatowaniem JSON/XML),
 /// podgląd szesnastkowy, obraz, PDF; zapis do pliku, wczytanie z pliku, zastosowanie zmian w siatce.
@@ -12,6 +13,13 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     private let textView = NSTextView.scrollableTextView()
     private let imageView = NSImageView()
     private let pdfView = PDFView()
+    /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych.
+    private lazy var webView: WKWebView = {
+        let config = WKWebViewConfiguration()
+        config.defaultWebpagePreferences.allowsContentJavaScript = false
+        return WKWebView(frame: .zero, configuration: config)
+    }()
+    private let autoFormat = NSButton(checkboxWithTitle: "", target: nil, action: nil)
     private let info = NSTextField(labelWithString: "")
     private let applyButton = NSButton()
     private let content = NSView()
@@ -48,8 +56,8 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     required init?(coder: NSCoder) { fatalError() }
 
     private func build() {
-        mode.segmentCount = 4
-        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF")].enumerated() { mode.setLabel(title, forSegment: i) }
+        mode.segmentCount = 5
+        for (i, title) in [L10n.tr("Tekst"), L10n.tr("Hex"), L10n.tr("Obraz"), L10n.tr("PDF"), "HTML"].enumerated() { mode.setLabel(title, forSegment: i) }
         mode.target = self
         mode.action = #selector(modeChanged)
         let tv = textView.documentView as! NSTextView
@@ -76,7 +84,12 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         applyButton.action = #selector(apply)
         let format = button(L10n.tr("Formatuj"), #selector(prettyPrint))
         format.toolTip = L10n.tr("Wcięcia dla JSON i XML")
-        let top = NSStackView(views: [mode, format, NSView(), info])
+        autoFormat.title = L10n.tr("Auto Format")
+        autoFormat.toolTip = L10n.tr("Formatuje JSON i XML automatycznie po otwarciu")
+        autoFormat.state = workspace.settings.largeDataAutoFormat ? .on : .off
+        autoFormat.target = self
+        autoFormat.action = #selector(toggleAutoFormat)
+        let top = NSStackView(views: [mode, format, autoFormat, NSView(), info])
         let external = button(L10n.tr("Edytor zewnętrzny"), #selector(openExternal))
         external.toolTip = L10n.tr("Otwiera treść w programie skojarzonym z formatem; zapis w tym programie wraca do edytora")
         let bottom = NSStackView(views: [button(L10n.tr("Wczytaj z pliku…"), #selector(load)), button(L10n.tr("Zapisz do pliku…"), #selector(save)), external,
@@ -101,6 +114,20 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         window?.contentView = root
         mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : (model.isBinary && !model.format.isText ? 1 : 0)
         modeChanged()
+    }
+
+    /// Auto Format: przełącznik zapamiętany w preferencjach (komenda grid.largeDataAutoFormat).
+    @objc private func toggleAutoFormat() {
+        Task {
+            _ = try? await workspace.invoke("grid.largeDataAutoFormat")
+            autoFormat.state = workspace.settings.largeDataAutoFormat ? .on : .off
+            applyAutoFormat()
+        }
+    }
+
+    /// Sformatowany JSON/XML w widoku tekstu; wartość w siatce zmienia się tylko przy edycji.
+    private func applyAutoFormat() {
+        if mode.selectedSegment == 0 { modeChanged() }
     }
 
     /// Edytor zewnętrzny (UG 27.2): plik tymczasowy, program skojarzony z rozszerzeniem, wykrywanie zapisu co sekundę.
@@ -137,6 +164,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         if !updating { modeChanged() }
         mode.setEnabled(format.isImage, forSegment: 2)
         mode.setEnabled(format == .pdf, forSegment: 3)
+        mode.setEnabled(format.isText, forSegment: 4)
     }
 
     @objc private func modeChanged() {
@@ -156,12 +184,19 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         case 3:
             pdfView.document = PDFDocument(data: model.fileData)
             view = pdfView
+        case 4:
+            webView.loadHTMLString(LargeDataModel.htmlPreviewDocument(model.text ?? String(decoding: model.fileData, as: UTF8.self)), baseURL: nil)
+            view = webView
         default:
             updating = true
             if model.bytes != nil, model.text == nil {
                 tv.string = String(data: model.fileData, encoding: .utf8) ?? LargeDataModel.hexDump(model.fileData)
             } else {
                 tv.string = model.text ?? ""
+            }
+            // Auto Format: tylko widok (wartość zmienia się dopiero po edycji).
+            if workspace.settings.largeDataAutoFormat, !model.modified, let out = LargeDataModel.autoFormatted(tv.string, format: model.format) {
+                tv.string = out
             }
             tv.isEditable = model.isEditable
             updating = false

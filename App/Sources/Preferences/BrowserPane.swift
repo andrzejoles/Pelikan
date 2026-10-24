@@ -42,6 +42,14 @@ struct BrowserPane: View {
                     }
                 }
             }
+            Section(L10n.tr("Przeciąganie (UG 23.11)")) {
+                Picker(L10n.tr("Upuszczenie w edytorze"), selection: $workspace.settings.browserDropAction) {
+                    ForEach(BrowserDropAction.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
+                Picker(L10n.tr("Upuszczenie na obszarze okien"), selection: $workspace.settings.browserWorkspaceDrop) {
+                    ForEach(BrowserWorkspaceDrop.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
+            }
             Section(L10n.tr("Filtry nazwane")) {
                 ForEach($customization.filters) { $f in
                     VStack(alignment: .leading) {

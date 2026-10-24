@@ -711,6 +711,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return alert.runModal() == .alertFirstButtonReturn ? popup.titleOfSelectedItem : nil
     }
 
+    /// Kalendarz przy edycji daty (PD-GRID-005): graficzny wybór dnia, z czasem — pole godziny.
+    func chooseDate(_ title: String, initial: OracleTimestamp?, withTime: Bool) async -> OracleTimestamp? {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let start = initial.flatMap { t in
+            cal.date(from: DateComponents(year: Int(t.year), month: Int(t.month), day: Int(t.day), hour: Int(t.hour), minute: Int(t.minute),
+                                          second: Int(t.second)))
+        } ?? Date()
+        let picker = NSDatePicker()
+        picker.datePickerStyle = .clockAndCalendar
+        picker.datePickerElements = .yearMonthDay
+        picker.timeZone = cal.timeZone
+        picker.calendar = cal
+        picker.dateValue = start
+        picker.sizeToFit()
+        let time = NSDatePicker()
+        time.datePickerStyle = .textFieldAndStepper
+        time.datePickerElements = .hourMinuteSecond
+        time.timeZone = cal.timeZone
+        time.calendar = cal
+        time.dateValue = start
+        time.sizeToFit()
+        let stack = NSStackView(views: withTime ? [picker, time] : [picker])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.frame = NSRect(x: 0, y: 0, width: max(picker.frame.width, 200), height: picker.frame.height + (withTime ? time.frame.height + 8 : 0))
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = L10n.tr("Wybierz datę")
+        alert.accessoryView = stack
+        alert.addButton(withTitle: L10n.tr("Wybierz"))
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let d = cal.dateComponents([.year, .month, .day], from: picker.dateValue)
+        let h = cal.dateComponents([.hour, .minute, .second], from: time.dateValue)
+        return OracleTimestamp(year: Int16(d.year ?? 2000), month: UInt8(d.month ?? 1), day: UInt8(d.day ?? 1),
+                               hour: UInt8(withTime ? h.hour ?? 0 : 0), minute: UInt8(withTime ? h.minute ?? 0 : 0),
+                               second: UInt8(withTime ? h.second ?? 0 : 0))
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }
