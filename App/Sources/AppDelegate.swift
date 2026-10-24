@@ -1103,6 +1103,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
+                // Otwarcie pliku (np. notatnika z wykresem) bez panelu wyboru.
+                if s.command == "debug.openFile", case .string(let path)? = s.args?["path"] {
+                    do { _ = try workspace.openFile(URL(fileURLWithPath: path)); log("ok debug.openFile") }
+                    catch { log("debug.openFile: \(error.localizedDescription)") }
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Okno preferencji na wskazanym panelu (np. "BrowserPane").
+                if s.command == "debug.preferences" {
+                    let pane = s.args?["pane"].flatMap { if case .string(let v) = $0 { v } else { nil } }
+                    PreferencesWindowController.show(workspace: workspace, pane: pane)
+                    log("ok debug.preferences")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Widok planu wykonania otwieranego w następnych krokach: 0 drzewo, 1 diagram, 2 flame graph, 3 tekst.
+                if s.command == "debug.planMode", case .int(let m)? = s.args?["mode"] {
+                    PlanPanel.initialMode = Int(m)
+                    log("ok debug.planMode")
+                    continue
+                }
                 // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
                 if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
                     await snapshotWebViews(into: URL(fileURLWithPath: dir))

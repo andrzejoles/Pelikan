@@ -1090,3 +1090,10 @@ z ControlMaster przekazuje swoje stdio procesowi głównemu, więc po zabiciu kl
 master aż do zamknięcia zdalnej sesji, a `read` bez limitu czekał bez końca — mimo limitu czasu i Stop. `Spawn.run`
 i `Spawn.stream` czytają przez `poll` (200 ms) i po zakończeniu procesu lokalnego dają 3 s na dociągnięcie danych,
 potem kończą odczyt. Test regresji: potomek w tle trzymający stdout 30 s nie wydłuża `run`/`stream` ponad kilka sekund.
+
+### D148 · 2026-10-24 — Kroki pomocnicze skryptu zrzutów: plik, preferencje, widok planu
+Notatnik z wykresem, historia lokalna pliku i widoki planu (diagram, flame graph) nie dają się pokazać samymi komendami
+bez okien dialogowych. Hak skryptu zrzutów (tylko Debug) ma kroki `debug.openFile` {path}, `debug.preferences` {pane}
+i `debug.planMode` {mode}; `@ROOT@` w scenariuszu zastępuje `scripts/screenshots.sh` (bez ścieżek domowych w repozytorium).
+Pliki wejściowe scenariuszy leżą w `scripts/screenshots/fixtures/`. Okno historii lokalnej wybiera od razu najnowszą
+wersję (wcześniej prawy panel był pusty do pierwszego kliknięcia).

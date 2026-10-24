@@ -7393,6 +7393,34 @@
         }
       }
     },
+    "Brak zapisanych wersji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved versions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine gespeicherten Versionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay versiones guardadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає збережених версій"
+          }
+        }
+      }
+    },
     "Brak zapytania słownika" : {
       "localizations" : {
         "en" : {
@@ -82065,6 +82093,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виберіть значення"
+          }
+        }
+      }
+    },
+    "Wybierz wersję, aby zobaczyć jej tekst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a version to see its text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählen Sie eine Version, um ihren Text zu sehen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione una versión para ver su texto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виберіть версію, щоб побачити її текст"
           }
         }
       }
