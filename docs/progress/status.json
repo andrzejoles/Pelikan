@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T23:15:47+02:00",
+  "heartbeat": "2026-10-24T23:41:56+02:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Przegląd bezpieczeństwa: 10 znalezisk (3 wysokie) poprawionych — przypięte połączenie agenta, link bez skryptów, PL/SQL nie zatwierdzi DML agenta, potwierdzanie kluczy SSH (D163)",
     "Próba opublikowanej bety: podpisy i aktualizacje OK; usunięte ścieżki budowania z binarek (strip, mapa prefiksów), nazwy usług macOS przetłumaczone (D162); test Stop 120/120 lokalnie",
     "Kerberos na macOS odłożony decyzją właściciela (D161)",
     "Opublikowano Pelikan 7.9.0 beta (pierwsze publiczne wydanie); usunięto 11 starych szkiców wydań (tagi zostają)",
@@ -96,8 +97,7 @@
     "Etap 8 zamknięty (D114): docs/STATUS.md z ograniczeniami i listą do potwierdzenia przez właściciela; PR #56 w CI, potem szkic wydania",
     "Etap 8: przebieg zrzutów w tle (scripts/screenshots.sh, D113) — 11 scenariuszy, znalezione i poprawione 2 błędy (karty edytora tabeli, rozdziały instrukcji)",
     "Etap 8 / audyt macierzy: scalone siatka i edytor (subagenty), Object Browser (filtry, foldery, preferencje), edytor tabeli 23ai, podpowiedzi kompilatora, HOST i krokowanie, DBMS_TRACE, tytuł okna, katalogi startowe; testy bazy 174/174",
-    "Etap 8 / audyt obiektów i okna programu: włącz/wyłącz, kosz, CCFlags, odświeżenie MV, źródło do edytora, kompilacja próbna, zmiany w bazie, blok w oknie testu, pliki tylko do odczytu, MLE w oknie programu (D99)",
-    "Scalony PR #54 (Etap 8 część 1); audyt macierzy: połączenia, Kill, SQL Trace, NLS, statystyki, testy standardowe, ORA-04068, menu połączenia, zakazy agenta"
+    "Etap 8 / audyt obiektów i okna programu: włącz/wyłącz, kosz, CCFlags, odświeżenie MV, źródło do edytora, kompilacja próbna, zmiany w bazie, blok w oknie testu, pliki tylko do odczytu, MLE w oknie programu (D99)"
   ],
   "next": [
     "Test Stop przez SSH sporadycznie zawiesza się na CI macOS — diagnostyka etapów gotowa, czekam na następne wystąpienie",
