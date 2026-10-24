@@ -183,6 +183,8 @@ public enum TestRunner {
             if ws.settings.dbmsOutputClearBeforeExecute { doc.output = [] }
             try? await SessionUtilities.enableOutput(session, bufferSize: ws.settings.dbmsOutputBufferSize)
         }
+        // HTP Output (PD-TEST-008): środowisko OWA przed wykonaniem, strona odczytywana po nim.
+        if doc.htpEnabled { _ = try await session.execute(htpInitSQL) }
         // Statystyki sesji i profiler wokół wykonania (UG 6.2, 6.3).
         let statsBefore = await Profiler.statistics(session)
         var profileID: Int?
@@ -213,7 +215,7 @@ public enum TestRunner {
                 }
             }
             if let before = statsBefore, let after = await Profiler.statistics(session) {
-                doc.statistics = Profiler.difference(before, after)
+                doc.recordStatistics(Profiler.difference(before, after))
             }
         }
         do {
@@ -246,6 +248,7 @@ public enum TestRunner {
                 if batch.hasMore { await session.closeResultSet(rs.id) }
             }
             doc.testResults = results
+            doc.htpOutput = doc.htpEnabled ? try await readHTP(session) : nil
             if doc.outputEnabled && ws.settings.dbmsOutputEnabled, let lines = try? await SessionUtilities.readOutput(session) {
                 doc.output.append(contentsOf: lines)
             }
@@ -268,6 +271,32 @@ public enum TestRunner {
             doc.statusText = SQLExecutor.statusMessage(for: e)
             throw e
         }
+    }
+
+    /// Inicjalizacja OWA dla HTP bez serwera WWW (jak w PL/SQL Developerze): puste środowisko CGI i nowa strona.
+    static let htpInitSQL = "declare n owa.vc_arr; v owa.vc_arr; begin owa.init_cgi_env(0, n, v); htp.init; end;"
+
+    /// Strona HTP z bufora OWA (OWA.GET_PAGE) jako tekst; pusta strona — nil.
+    static func readHTP(_ s: any DatabaseSession) async throws -> String? {
+        let r = try await s.execute("""
+            declare
+              p htp.htbuf_arr;
+              n integer := 1000000;
+              c clob;
+            begin
+              owa.get_page(p, n);
+              dbms_lob.createtemporary(c, true);
+              for i in 1 .. n loop
+                if p(i) is not null then dbms_lob.writeappend(c, length(p(i)), p(i)); end if;
+              end loop;
+              :page := c;
+            end;
+            """, binds: [BindVariable(name: "page", type: .clob, direction: .output)])
+        let v = r.outBinds["page"] ?? r.outBinds["PAGE"]
+        guard let v, !v.isNull else { return nil }
+        let text: String
+        if case .lob(let l) = v { text = l.text ?? "" } else { text = v.displayText ?? "" }
+        return text.isEmpty ? nil : text
     }
 
     /// Zmienne typu Substitution: `:nazwa` zastąpione tekstem wartości przed wykonaniem (nie są wiązane; PD-TEST-002).

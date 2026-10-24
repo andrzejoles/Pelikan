@@ -180,6 +180,11 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Listy NEVER/ALWAYS informacji debugowania (PD-DBG-011): `user@baza` albo `[SCHEMAT.]OBIEKT`, wzorce `*` i `?`.
     public var debugInfoNever: [String] = []
     public var debugInfoAlways: [String] = []
+    /// Statystyki pokazywane po wykonaniu (PD-OPT-004); puste — wszystkie niezerowe.
+    public var selectedStatistics: [String] = []
+    /// Profiler (PD-OPT-005): jednostka czasu raportu liniowego i minimalny udział linii w procentach (0 — wszystkie).
+    public var profilerTimeUnit: ProfilerTimeUnit = .milliseconds
+    public var profilerMinShare: Double = 0
     /// Debuger: pomijanie inicjalizacji specyfikacji pakietów i obiektów SYS przy krokowaniu (UG 23.4).
     public var debuggerSkipPackageInit = true
     public var debuggerSkipSys = true
@@ -268,6 +273,9 @@ public struct Settings: Sendable, Codable, Hashable {
         debugInfoOnCompile = v(.debugInfoOnCompile, debugInfoOnCompile)
         debugInfoNever = v(.debugInfoNever, debugInfoNever)
         debugInfoAlways = v(.debugInfoAlways, debugInfoAlways)
+        selectedStatistics = v(.selectedStatistics, selectedStatistics)
+        profilerTimeUnit = v(.profilerTimeUnit, profilerTimeUnit)
+        profilerMinShare = v(.profilerMinShare, profilerMinShare)
         debuggerSkipPackageInit = v(.debuggerSkipPackageInit, debuggerSkipPackageInit)
         debuggerSkipSys = v(.debuggerSkipSys, debuggerSkipSys)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)

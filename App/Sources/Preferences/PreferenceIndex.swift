@@ -23,6 +23,7 @@ enum PreferenceIndex {
         ("SQLWindowPane", "Wykonywanie (UG 23.20)"),
         ("SQLWindowPane", "AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"),
         ("SQLWindowPane", "AutoCommit poleceń SQL"),
+        ("SQLWindowPane", "Statystyki po wykonaniu"),
         ("SQLWindowPane", "AutoCommit po wykonaniu okna testu"),
         ("SQLWindowPane", "Potwierdzaj COMMIT i ROLLBACK"),
         ("SQLWindowPane", "Wyniki"),

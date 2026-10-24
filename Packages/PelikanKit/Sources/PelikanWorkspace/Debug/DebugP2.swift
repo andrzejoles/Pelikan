@@ -126,10 +126,23 @@ public enum DebugHover {
     }
 }
 
-/// Komendy pliku punktów przerwania (PD-DBG-008).
+/// Komendy pliku punktów przerwania (PD-DBG-008) i eksportu statystyk (PD-OPT-004).
 enum DebugP2Commands {
     @MainActor static var all: [Command] {
         [
+            Command(CommandDescriptor(id: "stats.export", title: L10n.tr("Eksportuj statystyki…"), category: .tools,
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Ścieżka pliku .csv"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje statystyki aktywnego okna (ostatnie wykonanie i suma) do pliku CSV."), feature: "PD-OPT-004"),
+                    validate: { $0.activeDocument?.statisticTotals.isEmpty == false }) { ctx in
+                guard let d = ctx.workspace.activeDocument, !d.statisticTotals.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak statystyk w aktywnym oknie")) }
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil { url = await ctx.ui?.chooseSaveURL(suggestedName: L10n.tr("statystyki"), fileExtension: "csv") }
+                guard let url else { throw CommandError.cancelledByUser }
+                let rows = Profiler.rows(last: d.statistics, totals: d.statisticTotals, selected: ctx.workspace.settings.selectedStatistics)
+                try Profiler.csv(rows).write(to: url, atomically: true, encoding: .utf8)
+                return CommandResult(message: L10n.tr("Zapisano statystyki: \(rows.count)"), value: .int(Int64(rows.count)))
+            },
             Command(CommandDescriptor(id: "debug.saveBreakpoints", title: L10n.tr("Zapisz punkty przerwania…"), category: .debug,
                                       parameters: [CommandParameter("file", .string, L10n.tr("Ścieżka pliku .json"))],
                                       agent: .none, effect: .external,

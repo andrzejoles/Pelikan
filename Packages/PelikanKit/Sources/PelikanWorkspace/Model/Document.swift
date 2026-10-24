@@ -155,6 +155,9 @@ public final class Document: Identifiable {
     public var errorStack: [ErrorStackFrame] = []
     /// Niejawne wyniki ostatniego wykonania okna testu (UG 5.7).
     public var testResults: [TestResultSet] = []
+    /// HTP Output okna testu (PD-TEST-008): zbieranie strony HTP/HTF przy wykonaniu i jej treść z ostatniego wykonania.
+    public var htpEnabled = false
+    public var htpOutput: String?
     /// Profiler przy wykonaniu okna testu (nil — wyłączony) i raport ostatniego przebiegu (UG 6.3).
     public var profiler: ProfilerKind?
     public var profilerReport: ProfilerReport?
@@ -164,6 +167,14 @@ public final class Document: Identifiable {
     public var traceEvents: [PLSQLTrace.Event] = []
     /// Statystyki sesji ostatniego wykonania (różnica V$MYSTAT, UG 6.2) — nazwa i wartość.
     public var statistics: [SessionStatistic] = []
+    /// Suma różnic statystyk wszystkich wykonań okna (kolumna „Suma”, PD-OPT-004).
+    public var statisticTotals: [String: Double] = [:]
+
+    /// Zapisuje statystyki ostatniego wykonania i dolicza je do sumy okna.
+    public func recordStatistics(_ s: [SessionStatistic]) {
+        statistics = s
+        for x in s { statisticTotals[x.name, default: 0] += x.value }
+    }
     /// Linia (od 1), w której zatrzymał się debuger — wyróżniona w edytorze (UG 5.10).
     public var executionLine: Int?
     /// Zwinięte obszary kodu (UG 25.17) — początki struktur (`FoldRegion.start`), przesuwane przy zmianach tekstu.
