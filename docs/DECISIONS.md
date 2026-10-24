@@ -1079,4 +1079,7 @@ rysuje `underlineStyle` z atrybutów renderowania `NSTextLayoutManager`. Podkre�
 kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada je ponownie. Test logiki analizy przechodził
 od początku — błąd był tylko w rysowaniu, stąd zrzuty w tle jako stała część weryfikacji okien. Ten sam przebieg naprawił
 nagłówek panelu agenta schowany pod paskiem narzędzi okna (przypięcie do `safeAreaLayoutGuide`).
+Ten sam przebieg pokazał, że kursor ustawiony z modelu (Idź do linii, nawigacja po błędach, agent) nie odświeżał
+pozycji na pasku, numeru bieżącej linii na marginesie ani wyróżnień par i wystąpień — wspólna aktualizacja jest teraz
+wywoływana także po synchronizacji zaznaczenia z modelu. Hak skryptu zrzutów ma krok `debug.select` (tylko Debug).
 

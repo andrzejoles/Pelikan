@@ -591,6 +591,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             revealSelection(wanted.location)
             textView.setSelectedRange(wanted)
             textView.scrollRangeToVisible(wanted)
+            selectionDidChange()
         }
         if let error {
             let r = NSRange(location: min(error.lowerBound, len), length: 0)
@@ -671,7 +672,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             document.additionalSelections = Array(extra)
             updatingFromModel = false
         }
-        // Po edycji początki linii przelicza podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.
+        selectionDidChange()
+    }
+
+    /// Pozycja na pasku, margines, pary i wystąpienia po zmianie kursora — także ustawionego z modelu (Idź do linii,
+    /// nawigacja po błędach), gdy `textViewDidChangeSelection` jest pomijane. Po edycji początki linii przelicza
+    /// podświetlanie w następnym obiegu pętli — pozycję liczymy po nim.
+    private func selectionDidChange() {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             let r = self.textView.selectedRange()
