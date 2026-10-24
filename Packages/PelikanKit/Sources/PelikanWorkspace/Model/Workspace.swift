@@ -153,6 +153,8 @@ public protocol UIServices: AnyObject {
     /// Wyniki Find Usages (DG-USE-001), podgląd refaktoryzacji z różnicami — true: zastosuj (DG-REF-001),
     /// historia lokalna okna (DG-HIST-001), lista problemów analizy kodu (DG-RES-001, DG-INSP-001).
     func showUsages(title: String, hits: [UsageHit])
+    /// Wyniki paska wyszukiwania (PD-CA-015) — okno trafień z własnym tytułem.
+    func showSearchResults(query: String, hits: [UsageHit])
     /// Search Bar — wyszukiwanie w edytorach i plikach (PD-CA-015).
     func showSearchBar()
     func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool
@@ -172,6 +174,7 @@ extension UIServices {
     public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
     public func showUsages(title: String, hits: [UsageHit]) {}
+    public func showSearchResults(query: String, hits: [UsageHit]) { showUsages(title: query, hits: hits) }
     public func showSearchBar() {}
     public func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool { false }
     public func showLocalHistory(document: Document) {}

@@ -8,6 +8,8 @@ struct UsagesView: View {
     let workspace: Workspace
     let title: String
     let hits: [UsageHit]
+    /// Stopka zamiast „Użycia …: n” (np. wyniki paska wyszukiwania).
+    var summary: String? = nil
     @State private var selection: UsageHit.ID?
 
     static func kindText(_ k: UsageHit.Kind) -> String {
@@ -31,7 +33,7 @@ struct UsagesView: View {
             .contextMenu(forSelectionType: UsageHit.ID.self) { _ in } primaryAction: { ids in
                 if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
             }
-            Text(hits.isEmpty ? L10n.tr("Brak użyć \(title)") : L10n.tr("Użycia \(title): \(hits.count)"))
+            Text(summary ?? (hits.isEmpty ? L10n.tr("Brak użyć \(title)") : L10n.tr("Użycia \(title): \(hits.count)")))
                 .foregroundStyle(.secondary).font(.callout)
         }
         .padding(12)

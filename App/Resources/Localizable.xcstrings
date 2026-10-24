@@ -7253,6 +7253,34 @@
         }
       }
     },
+    "Brak wyników „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results for “%@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ergebnisse für „%@“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin resultados para «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає результатів для «%@»"
+          }
+        }
+      }
+    },
     "Brak wystąpień do zmiany" : {
       "localizations" : {
         "en" : {
@@ -70281,6 +70309,34 @@
         }
       }
     },
+    "Trafień „%@”: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matches for “%@”: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Treffer für „%@“: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coincidencias de «%@»: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збігів «%@»: %@"
+          }
+        }
+      }
+    },
     "Trafień: %@" : {
       "localizations" : {
         "en" : {
@@ -85233,30 +85289,30 @@
         }
       }
     },
-    "Wyniki: „%@”" : {
+    "Wyniki wyszukiwania „%@”" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Results: “%@”"
+            "value" : "Search results for “%@”"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ergebnisse: „%@“"
+            "value" : "Suchergebnisse für „%@“"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Resultados: «%@»"
+            "value" : "Resultados de búsqueda de «%@»"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Результати: «%@»"
+            "value" : "Результати пошуку «%@»"
           }
         }
       }
