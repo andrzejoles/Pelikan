@@ -34,11 +34,11 @@ public enum TableDataCompare {
 
     static func rows(_ table: String, owner: String, columns: [String], in s: any DatabaseSession) async throws -> [[OracleValue]] {
         let r = try await s.execute("select \(columns.map(q).joined(separator: ", ")) from \(q(owner)).\(q(table))", binds: [],
-                                    options: ExecuteOptions(lobLimit: 10_000_000))
+                                    options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
         guard let rs = r.resultSet else { return [] }
         var out: [[OracleValue]] = []
         while true {
-            let b = try await s.fetch(rs.id, maxRows: 1000)
+            let b = try await s.fetch(rs.id, maxRows: 5000)
             out += b.rows
             if !b.hasMore { break }
             if out.count > 5_000_000 { throw CommandError.notAvailable(L10n.tr("Tabela \(table) jest za duża do porównania (ponad 5 mln wierszy)")) }
