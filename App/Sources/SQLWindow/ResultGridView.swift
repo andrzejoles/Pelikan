@@ -33,6 +33,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private var lastHidden: Set<Int> = []
     private var lastWidths: [Int: Int]?
     private var lastOrder: [Int]?
+    /// Układ liczb (PD-GRID-004) i kotwica bloku komórek (PD-GRID-007: klik, potem Shift+klik).
+    private var layout: NumberLayout = .right
+    private var anchor: (row: Int, column: Int)?
+    private var lastBlock: [Int]?
     /// Model siatki widoku (kontroler okna sprawdza, czy karta nie dostała nowego wyniku).
     var model: ResultGridModel { grid }
 
@@ -83,7 +87,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             col.headerToolTip = "\(c.name) — \(c.typeName)\(c.nullable ? "" : " NOT NULL")"
             col.width = Self.initialWidth(c)
             col.minWidth = 24
-            if c.type.isNumeric { col.headerCell.alignment = .right }
+            layout = workspace.settings.gridNumberLayout
+            if c.type.isNumeric, layout.alignsRight { col.headerCell.alignment = .right }
             col.isHidden = tab.hiddenColumns.contains(i)
             if let w = tab.columnWidths?[i] { col.width = charWidth * CGFloat(w) + 14 }
             table.addTableColumn(col)
@@ -217,6 +222,16 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     /// Czcionka (PD-GRID-025), kolumny ukryte filtrem (PD-GRID-011), szerokości i kolejność z wyrównania (PD-GRID-012).
     private func applyLayout() {
+        let numberLayout = workspace.settings.gridNumberLayout
+        if numberLayout != layout {
+            layout = numberLayout
+            for col in table.tableColumns {
+                guard let i = dataColumnIndex(col) else { continue }
+                col.headerCell.alignment = grid.columns[i].type.isNumeric && layout.alignsRight ? .right : .left
+            }
+            table.headerView?.needsDisplay = true
+            table.reloadData()
+        }
         let size = workspace.settings.gridFontSize
         if size != lastFontSize {
             lastFontSize = size
@@ -286,6 +301,16 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
                              columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
         }
+        // Zaznaczenie ustawione komendą (blok komórek, cała kolumna) — PD-GRID-007.
+        let block = tab.selectedColumns
+        if block != lastBlock {
+            lastBlock = block
+            if let rows = tab.selectedRows, Set(rows) != Set(table.selectedRowIndexes) {
+                table.selectRowIndexes(IndexSet(rows.filter { $0 < table.numberOfRows }), byExtendingSelection: false)
+            }
+            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+                             columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
+        }
         if let r = tab.revealRow {
             tab.revealRow = nil
             if r < table.numberOfRows {
@@ -348,6 +373,14 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     @objc private func cellClicked() {
         if let c = dataColumn(atTableColumn: table.clickedColumn) {
+            // Shift+klik: blok od komórki kotwicy do klikniętej (wiersze zaznacza tabela, kolumny — model).
+            let row = table.clickedRow
+            if NSEvent.modifierFlags.contains(.shift), let a = anchor, row >= 0 {
+                tab.selectedColumns = GridBlock.columns(from: a.column, to: c, order: visibleColumns().filter { !tab.hiddenColumns.contains($0) })
+            } else {
+                anchor = row >= 0 ? (row, c) : nil
+                tab.selectedColumns = nil
+            }
             tab.currentColumn = c
             // Typ, NOT NULL i komentarz kolumny na pasku stanu (PD-GRID-022).
             workspace.perform("grid.columnInfo")
@@ -384,10 +417,15 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         }
         guard let i = Int(id.dropFirst()) else { return nil }
         let v = grid.value(row: row, column: i)
-        cell.configure(text: grid.text(row: row, column: i), alignRight: grid.columns[i].type.isNumeric, isNull: v.isNull, secondary: false,
+        cell.configure(text: grid.displayText(row: row, column: i, layout: layout), alignRight: grid.columns[i].type.isNumeric && layout.alignsRight,
+                       isNull: v.isNull, secondary: false,
                        state: grid.edit.isEditing ? grid.pendingCellState(row: row, column: i) : .normal,
                        overflow: grid.edit.isEditing && grid.isOverflow(row: row, column: i),
                        editable: grid.isEditable(column: i))
+        // Komórka bloku (PD-GRID-007): tło zaznaczenia zamiast podświetlenia całego wiersza.
+        if let block = tab.selectedColumns, block.contains(i), table.isRowSelected(row) {
+            cell.layer?.backgroundColor = NSColor.selectedContentBackgroundColor.withAlphaComponent(0.45).cgColor
+        }
         cell.textField?.delegate = self
         return cell
     }
@@ -425,9 +463,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     /// Kolor naprzemiennych wierszy z dyrektywy `AltRowColor=` (PD-SQLW-011).
     func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
-        guard let raw = tab.altRowColor, let color = Self.color(raw) else { return nil }
-        let v = NSTableRowView()
-        if row % 2 == 1 { v.backgroundColor = color }
+        let v = GridRowView()
+        v.blockMode = { [weak self] in self?.tab.selectedColumns != nil }
+        if let raw = tab.altRowColor, let color = Self.color(raw), row % 2 == 1 { v.backgroundColor = color }
         return v
     }
 
@@ -445,6 +483,11 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     func tableViewSelectionDidChange(_ notification: Notification) {
         let rows = Array(table.selectedRowIndexes)
         tab.selectedRows = rows.isEmpty ? nil : rows
+        if rows.isEmpty { tab.selectedColumns = nil }
+        if tab.selectedColumns != nil {
+            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+                             columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
+        }
         if !record.isHidden { showRecord() }
     }
 
@@ -479,6 +522,13 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         if !record.isHidden {
             if table.selectedRow < 0, grid.rowCount > 0 { table.selectRowIndexes([0], byExtendingSelection: false) }
             showRecord()
+            // Komentarze kolumn ze słownika (PD-GRID-010) — wczytywane raz na kartę.
+            if tab.columnInfo == nil {
+                Task { [weak self] in
+                    _ = try? await self?.workspace.invoke("grid.recordView")
+                    self?.showRecord()
+                }
+            }
         }
     }
 
@@ -492,9 +542,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     private func showRecord() {
         let row = max(0, table.selectedRow)
         guard row < grid.rowCount else { record.show(row: 0, of: 0, fields: []); return }
-        let fields = visibleColumns().map { i in
-            SingleRecordView.Field(name: grid.columns[i].name, value: grid.text(row: row, column: i),
-                                   type: grid.columns[i].typeName, isNull: grid.value(row: row, column: i).isNull)
+        let fields = tab.recordFields(row: row, columns: visibleColumns().filter { !tab.hiddenColumns.contains($0) }).map {
+            SingleRecordView.Field(name: $0.name, value: $0.value, type: $0.type, comment: $0.comment, isNull: $0.isNull)
         }
         record.show(row: row, of: grid.rowCount, fields: fields)
     }
@@ -546,7 +595,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
                             (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel"),
                             (L10n.tr("Otwórz kursor zagnieżdżony"), "grid.openCursor"), (L10n.tr("Sumy kolumny…"), "grid.totals"),
                             (L10n.tr("Lista wartości…"), "grid.valueList"), (L10n.tr("Wielkie litery w komórkach"), "grid.upperCase"),
-                            (L10n.tr("Małe litery w komórkach"), "grid.lowerCase")] {
+                            (L10n.tr("Małe litery w komórkach"), "grid.lowerCase"), (L10n.tr("Kalendarz…"), "grid.chooseDate"),
+                            (L10n.tr("Zaznacz kolumnę"), "grid.selectColumn")] {
             let item = menu.addItem(withTitle: title, action: #selector(cellCommand(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = id
@@ -621,6 +671,16 @@ final class GridTableView: NSTableView {
     }
 }
 
+/// Wiersz siatki: w trybie bloku komórek (PD-GRID-007) bez podświetlenia całego wiersza — zaznaczone są komórki bloku.
+final class GridRowView: NSTableRowView {
+    var blockMode: (() -> Bool)?
+
+    override func drawSelection(in dirtyRect: NSRect) {
+        if blockMode?() == true { return }
+        super.drawSelection(in: dirtyRect)
+    }
+}
+
 /// Lekka komórka siatki (jeden NSTextField, bez autolayoutu w każdym wierszu).
 final class GridCell: NSTableCellView {
     private let label = NSTextField(labelWithString: "")
@@ -682,6 +742,7 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         let name: String
         let value: String
         let type: String
+        let comment: String
         let isNull: Bool
     }
 
@@ -692,7 +753,8 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        for (id, title, width) in [("name", L10n.tr("Kolumna"), 180.0), ("value", L10n.tr("Wartość"), 420.0), ("type", L10n.tr("Typ"), 160.0)] {
+        for (id, title, width) in [("name", L10n.tr("Kolumna"), 180.0), ("value", L10n.tr("Wartość"), 380.0), ("type", L10n.tr("Typ"), 140.0),
+                                   ("comment", L10n.tr("Komentarz"), 260.0)] {
             let c = NSTableColumn(identifier: .init(id))
             c.title = title
             c.width = width
@@ -756,6 +818,9 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
                 tf.drawsBackground = true
                 tf.backgroundColor = ResultGridView.nullColor
             }
+        case "comment":
+            tf.stringValue = f.comment
+            tf.textColor = .secondaryLabelColor
         default:
             tf.stringValue = f.type
             tf.textColor = .secondaryLabelColor

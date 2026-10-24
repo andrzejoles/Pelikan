@@ -79,12 +79,64 @@ struct FindObjectsView: View {
                 Toggle(L10n.tr("Całe słowa"), isOn: $criteria.wholeWords)
                 Toggle(L10n.tr("Wyrażenie regularne"), isOn: $criteria.regularExpression)
                 Toggle(L10n.tr("Nazwy obiektów"), isOn: $criteria.searchNames)
+                Toggle(L10n.tr("Definicje tabel"), isOn: $criteria.searchTableDefinitions)
+                    .help(L10n.tr("Nazwy i komentarze kolumn, komentarze tabel, warunki CHECK"))
             }
             .toggleStyle(.checkbox)
             HStack {
                 TextField(L10n.tr("Właściciele (po przecinku; puste — bieżący)"), text: $owner)
                 TextField(L10n.tr("Nazwa obiektu (%)"), text: $criteria.nameFilter)
+                typesMenu
+                savedMenu
             }
+        }
+    }
+
+    /// Typy obiektów (puste — wszystkie źródła i widoki).
+    private var typesMenu: some View {
+        Menu(criteria.types.isEmpty ? L10n.tr("Wszystkie typy") : L10n.tr("Typy: \(criteria.types.count)")) {
+            Button(L10n.tr("Wszystkie typy")) { criteria.types = [] }
+            Divider()
+            ForEach(DatabaseSearch.selectableTypes, id: \.self) { t in
+                Toggle(t.rawValue, isOn: Binding(get: { criteria.types.contains(t) },
+                                                 set: { on in if on { criteria.types.append(t) } else { criteria.types.removeAll { $0 == t } } }))
+            }
+        }
+        .fixedSize()
+    }
+
+    /// Zapisane kryteria (PD-TOOL-001): wczytanie, zapis bieżących, usunięcie.
+    private var savedMenu: some View {
+        Menu(L10n.tr("Kryteria")) {
+            ForEach(workspace.settings.savedDatabaseSearches) { s in
+                Button(s.name) {
+                    criteria = s.criteria
+                    owner = s.criteria.owners.joined(separator: ", ")
+                }
+            }
+            if !workspace.settings.savedDatabaseSearches.isEmpty { Divider() }
+            Button(L10n.tr("Zapisz bieżące…")) { saveCriteria() }
+            if !workspace.settings.savedDatabaseSearches.isEmpty {
+                Menu(L10n.tr("Usuń")) {
+                    ForEach(workspace.settings.savedDatabaseSearches) { s in
+                        Button(s.name) { workspace.perform("tools.deleteObjectSearch", CommandArguments(["saved": .string(s.name)])) }
+                    }
+                }
+            }
+        }
+        .fixedSize()
+    }
+
+    private func saveCriteria() {
+        Task {
+            guard let name = await workspace.ui?.askText(L10n.tr("Zapisz kryteria wyszukiwania"), message: L10n.tr("Nazwa"), defaultValue: criteria.text),
+                  !name.isEmpty else { return }
+            var args: [String: JSONValue] = ["saveAs": .string(name), "text": .string(criteria.text), "caseSensitive": .bool(criteria.caseSensitive),
+                                             "wholeWords": .bool(criteria.wholeWords), "regex": .bool(criteria.regularExpression),
+                                             "owner": .string(owner), "name": .string(criteria.nameFilter), "names": .bool(criteria.searchNames),
+                                             "tableDefinitions": .bool(criteria.searchTableDefinitions)]
+            if !criteria.types.isEmpty { args["types"] = .string(criteria.types.map(\.rawValue).joined(separator: ",")) }
+            workspace.perform("tools.saveObjectSearch", CommandArguments(args))
         }
     }
 
@@ -105,6 +157,7 @@ struct FindObjectsView: View {
             if running { ProgressView().controlSize(.small) }
             Text(message).foregroundStyle(.secondary).font(.callout)
             Spacer()
+            Button(L10n.tr("Eksportuj CSV…")) { exportResults() }.disabled(hits.isEmpty)
             Button(L10n.tr("Kopiuj wyniki")) { copyResults() }.disabled(hits.isEmpty)
         }
     }
@@ -140,6 +193,11 @@ struct FindObjectsView: View {
             do { try await workspace.openObject(h.object, line: h.line) } catch { workspace.ui?.showError(error.localizedDescription) }
             NSApp.mainWindow?.makeKeyAndOrderFront(nil)
         }
+    }
+
+    private func exportResults() {
+        let data = Data(DatabaseSearch.exportText(hits, csv: true).utf8)
+        Task { _ = await workspace.ui?.saveFile(suggestedName: L10n.tr("wyniki-wyszukiwania"), fileExtension: "csv", data: data) }
     }
 
     private func copyResults() {

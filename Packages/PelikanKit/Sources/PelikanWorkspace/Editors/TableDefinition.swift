@@ -21,6 +21,8 @@ public struct TableDefinition: Sendable, Hashable {
         /// Domena SQL kolumny (23ai, `WŁAŚCICIEL.NAZWA`) i adnotacje (PD-OED-003).
         public var domain = ""
         public var annotations: [Annotation] = []
+        /// Kolumna niewidoczna (INVISIBLE, 12c) — PD-OED-002.
+        public var invisible = false
 
         public init(name: String, type: String, nullable: Bool = true) {
             self.name = name; self.type = type; self.nullable = nullable
@@ -105,8 +107,39 @@ public struct TableDefinition: Sendable, Hashable {
         public var columns: [String]
         public var tablespace = ""
         public var invisible = false
+        /// Kompresja klucza (PD-OED-004): "" — brak, liczba — COMPRESS n (kolumny prefiksu), `ADVANCED LOW` / `ADVANCED HIGH`.
+        public var compression = ""
+        public var reverse = false
+        /// Indeks lokalny tabeli partycjonowanej (LOCAL).
+        public var local = false
+        public var pctFree = ""
 
         public init(name: String, columns: [String]) { self.name = name; self.columns = columns }
+    }
+
+    /// Parametry składowania (PD-OED-001): puste pola — domyślne serwera.
+    public struct Storage: Sendable, Hashable {
+        public enum Compression: String, Sendable, Hashable, CaseIterable { case none = "", basic = "BASIC", advanced = "ADVANCED" }
+        public var pctFree = ""
+        public var iniTrans = ""
+        /// INITIAL / NEXT w bajtach albo z jednostką (np. 64K, 1M).
+        public var initial = ""
+        public var next = ""
+        public var logging = true
+        public var compression: Compression = .none
+        public init() {}
+    }
+
+    /// Tabela zewnętrzna (ORGANIZATION EXTERNAL) — PD-OED-001.
+    public struct External: Sendable, Hashable {
+        /// ORACLE_LOADER, ORACLE_DATAPUMP, ORACLE_HDFS, ORACLE_HIVE, ORACLE_BIGDATA.
+        public var driver = "ORACLE_LOADER"
+        public var directory = ""
+        public var accessParameters = ""
+        public var locations: [String] = []
+        /// REJECT LIMIT: liczba albo UNLIMITED; puste — domyślne (0).
+        public var rejectLimit = "UNLIMITED"
+        public init(directory: String = "", locations: [String] = []) { self.directory = directory; self.locations = locations }
     }
 
     public var owner: String
@@ -132,6 +165,18 @@ public struct TableDefinition: Sendable, Hashable {
     public var partitionInfo = ""
     /// Wyzwalacze tabeli (nazwa, stan) — karta Wyzwalacze, włączanie przez Object Browser.
     public var triggers: [Trigger] = []
+    /// Składowanie, klaster, tabela zewnętrzna, tabela obiektowa (PD-OED-001/002); klaster i typ — tylko przy tworzeniu.
+    public var storage = Storage()
+    public var cluster = ""
+    public var clusterColumns: [String] = []
+    public var external: External?
+    /// Tabela obiektowa: `CREATE TABLE … OF typ` (kolumny z typu).
+    public var objectType = ""
+    /// Recreate table (PD-OED-001): zmiany przez odtworzenie tabeli z przeniesieniem danych zamiast ALTER.
+    public var recreate = false
+    /// Dla odtworzenia: DDL wyzwalaczy tabeli i kluczy obcych innych tabel wskazujących tę tabelę.
+    public var triggerDDL: [String] = []
+    public var referencingForeignKeys: [String] = []
 
     public init(owner: String, name: String) { self.owner = owner; self.name = name }
 
@@ -158,23 +203,58 @@ public enum TableDDL {
         let b = [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "n", value: .text(name))]
         var d = TableDefinition(owner: owner, name: name)
         d.originalName = name
-        let (_, t) = try await s.queryAll("""
-            select t.tablespace_name, t.temporary, t.duration, t.iot_type, c.comments
-            from all_tables t left join all_tab_comments c on c.owner = t.owner and c.table_name = t.table_name
-            where t.owner = :o and t.table_name = :n
-            """, binds: b, limit: 1)
-        guard let tr = t.first else { throw CommandError.invalidArgument("object", L10n.tr("nie znaleziono tabeli \(owner).\(name)")) }
+        // Tabele obiektowe są w ALL_OBJECT_TABLES (nie w ALL_TABLES) — PD-OED-002.
+        var found: [OracleValue]?
+        for view in ["all_tables", "all_object_tables"] {
+            let (_, t) = try await s.queryAll("""
+                select t.tablespace_name, t.temporary, t.duration, t.iot_type, c.comments, t.pct_free, t.ini_trans, t.initial_extent,
+                       t.next_extent, t.logging, t.compression, t.compress_for, t.cluster_name, \(view == "all_tables" ? "null, null" : "t.table_type_owner, t.table_type")
+                from \(view) t left join all_tab_comments c on c.owner = t.owner and c.table_name = t.table_name
+                where t.owner = :o and t.table_name = :n
+                """, binds: b, limit: 1)
+            if let r = t.first { found = r; break }
+        }
+        guard let tr = found else { throw CommandError.invalidArgument("object", L10n.tr("nie znaleziono tabeli \(owner).\(name)")) }
         d.tablespace = tr[0].displayText ?? ""
         d.temporary = tr[1].displayText == "Y"
         d.preserveRows = tr[2].displayText == "SYS$SESSION"
         d.indexOrganized = tr[3].displayText == "IOT"
         d.comment = tr[4].displayText ?? ""
+        d.storage.pctFree = tr[5].displayText ?? ""
+        d.storage.iniTrans = tr[6].displayText ?? ""
+        d.storage.initial = tr[7].displayText ?? ""
+        d.storage.next = tr[8].displayText ?? ""
+        d.storage.logging = tr[9].displayText != "NO"
+        if tr[10].displayText == "ENABLED" {
+            d.storage.compression = (tr[11].displayText ?? "").contains("ADVANCED") || tr[11].displayText == "OLTP" ? .advanced : .basic
+        }
+        d.cluster = tr[12].displayText ?? ""
+        if let typeName = tr[14].displayText { d.objectType = (tr[13].displayText.map { q($0) + "." } ?? "") + q(typeName) }
+        if !d.cluster.isEmpty {
+            let (_, cc) = try await s.queryAll("""
+                select tab_column_name from all_clu_columns where owner = :o and table_name = :n order by clu_column_name
+                """, binds: b, limit: 100)
+            d.clusterColumns = cc.compactMap { $0.first?.displayText }
+        }
+        // Tabela zewnętrzna: sterownik, katalog, parametry dostępu, pliki.
+        if let (_, ext) = try? await s.queryAll("""
+            select type_name, default_directory_name, access_parameters, reject_limit from all_external_tables where owner = :o and table_name = :n
+            """, binds: b, limit: 1), let e = ext.first {
+            var x = TableDefinition.External(directory: e[1].displayText ?? "")
+            x.driver = e[0].displayText ?? x.driver
+            x.accessParameters = (e[2].displayText ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            x.rejectLimit = e[3].displayText ?? ""
+            let (_, loc) = (try? await s.queryAll("select location from all_external_locations where owner = :o and table_name = :n",
+                                                   binds: b, limit: 1000)) ?? ([], [])
+            x.locations = loc.compactMap { $0.first?.displayText }
+            d.external = x
+        }
         let (_, cols) = try await s.queryAll("""
             select c.column_name, c.data_type, c.char_length, c.char_used, c.data_precision, c.data_scale, c.data_length, c.nullable,
-                   c.data_default_vc, c.default_on_null, c.identity_column, c.virtual_column, cc.comments
+                   c.data_default_vc, c.default_on_null, c.identity_column, c.virtual_column, cc.comments, c.hidden_column
             from all_tab_cols c left join all_col_comments cc on cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name
-            where c.owner = :o and c.table_name = :n and c.hidden_column = 'NO'
-            order by c.column_id
+            where c.owner = :o and c.table_name = :n and (c.hidden_column = 'NO' or c.user_generated = 'YES')
+            order by c.column_id nulls last, c.internal_column_id
             """, binds: b, limit: 10_000)
         d.columns = cols.map { r in
             var c = TableDefinition.Column(name: r[0].displayText ?? "", type: typeText(r), nullable: r[7].displayText != "N")
@@ -184,6 +264,8 @@ public enum TableDDL {
             c.identity = r[10].displayText == "YES"
             if r[11].displayText == "YES" { c.virtualExpression = def } else if !c.identity { c.defaultValue = def }
             c.comment = r[12].displayText ?? ""
+            // Kolumna niewidoczna: ukryta, ale utworzona przez użytkownika (bez COLUMN_ID).
+            c.invisible = r[13].displayText == "YES"
             return c
         }
         let (_, cons) = try await s.queryAll("""
@@ -225,7 +307,9 @@ public enum TableDDL {
         let (_, idx) = try await s.queryAll("""
             select i.index_name, i.uniqueness, i.index_type, i.tablespace_name, i.visibility,
                    (select listagg(ic.column_name || case when ic.descend = 'DESC' then ' DESC' end, '|') within group (order by ic.column_position)
-                      from all_ind_columns ic where ic.index_owner = i.owner and ic.index_name = i.index_name), i.owner
+                      from all_ind_columns ic where ic.index_owner = i.owner and ic.index_name = i.index_name), i.owner,
+                   i.compression, i.prefix_length, i.pct_free,
+                   (select p.locality from all_part_indexes p where p.owner = i.owner and p.index_name = i.index_name)
             from all_indexes i
             where i.table_owner = :o and i.table_name = :n
               and not exists (select 1 from all_constraints c where c.owner = i.table_owner and c.index_name = i.index_name and c.constraint_type in ('P', 'U'))
@@ -251,6 +335,11 @@ public enum TableDDL {
             x.kind = (r[2].displayText ?? "").hasPrefix("BITMAP") ? .bitmap : r[1].displayText == "UNIQUE" ? .unique : .normal
             x.tablespace = r[3].displayText ?? ""
             x.invisible = r[4].displayText == "INVISIBLE"
+            x.reverse = (r[2].displayText ?? "").hasSuffix("/REV")
+            let comp = r[7].displayText ?? ""
+            x.compression = comp.hasPrefix("ADVANCED") ? comp : comp == "ENABLED" ? (r[8].displayText ?? "") : ""
+            x.pctFree = r[9].displayText ?? ""
+            x.local = r[10].displayText == "LOCAL"
             d.indexes.append(x)
         }
         // Uprawnienia (PD-OED-005), wyzwalacze (PD-OED-006), partycjonowanie (opis), ROW ARCHIVAL (PD-OED-012).
@@ -283,7 +372,66 @@ public enum TableDDL {
                 else if r[0].displayText == nil { d.annotations.append(a) }
             }
         }
+        // Klucze obce innych tabel wskazujące tę tabelę (do odtworzenia po Recreate table).
+        let (_, refs) = (try? await s.queryAll("""
+            select c.owner, c.table_name, c.constraint_name, c.delete_rule,
+                   (select listagg(cc.column_name, ',') within group (order by cc.position) from all_cons_columns cc
+                     where cc.owner = c.owner and cc.constraint_name = c.constraint_name),
+                   (select listagg(rc.column_name, ',') within group (order by rc.position) from all_cons_columns rc
+                     where rc.owner = r.owner and rc.constraint_name = r.constraint_name)
+            from all_constraints c join all_constraints r on r.owner = c.r_owner and r.constraint_name = c.r_constraint_name
+            where c.constraint_type = 'R' and r.owner = :o and r.table_name = :n and not (c.owner = :o and c.table_name = :n)
+            order by 1, 2, 3
+            """, binds: b, limit: 10_000)) ?? ([], [])
+        d.referencingForeignKeys = refs.map { r in
+            let cols = (r[4].displayText ?? "").split(separator: ",").map { q(String($0)) }.joined(separator: ", ")
+            let rcols = (r[5].displayText ?? "").split(separator: ",").map { q(String($0)) }.joined(separator: ", ")
+            let rule = r[3].displayText ?? ""
+            return "ALTER TABLE \(q(r[0].displayText ?? "")).\(q(r[1].displayText ?? "")) ADD CONSTRAINT \(q(r[2].displayText ?? "")) FOREIGN KEY (\(cols)) "
+                + "REFERENCES \(q(owner)).\(q(name)) (\(rcols))" + (rule == "NO ACTION" || rule.isEmpty ? "" : " ON DELETE \(rule)")
+        }
         return d
+    }
+
+    /// DDL wyzwalaczy tabeli (DBMS_METADATA) — do odtworzenia po Recreate table.
+    @MainActor
+    public static func triggerDDL(_ d: TableDefinition, metadata m: MetadataProvider) async throws -> [String] {
+        var out: [String] = []
+        for trg in d.triggers {
+            var text = try await m.ddl(of: DBObject(owner: d.owner, name: trg.name, type: .trigger))
+            // DBMS_METADATA kończy wyzwalacz `/` i dodaje ALTER TRIGGER … ENABLE — jedno polecenie PL/SQL na wyzwalacz.
+            if let r = text.range(of: #"\n\s*/\s*(\n|$)"#, options: .regularExpression) { text = String(text[..<r.lowerBound]) }
+            out.append(text.trimmingCharacters(in: .whitespacesAndNewlines))
+            if !trg.enabled { out.append("ALTER TRIGGER \(q(d.owner)).\(q(trg.name)) DISABLE") }
+        }
+        return out
+    }
+
+    /// Kolumny i klucz obcy do tabeli wskazywanej (Add foreign key columns, PD-OED-002): kolumny klucza głównego
+    /// wskazywanej tabeli z typami; nazwy kolumn jak w tabeli wskazywanej (albo z przedrostkiem, gdy już istnieją).
+    @MainActor
+    public static func foreignKeyColumns(for d: TableDefinition, referencing spec: String, metadata m: MetadataProvider) async throws
+        -> (columns: [TableDefinition.Column], key: TableDefinition.Key) {
+        let parts = spec.split(separator: ".").map { $0.hasPrefix("\"") ? String($0.dropFirst().dropLast()) : $0.uppercased() }
+        let rOwner = parts.count > 1 ? parts[0] : d.owner, rTable = parts.last ?? spec.uppercased()
+        let s = try await m.session()
+        let (_, rows) = try await s.queryAll("""
+            select c.column_name, c.data_type, c.char_length, c.char_used, c.data_precision, c.data_scale, c.data_length
+            from all_constraints k join all_cons_columns kc on kc.owner = k.owner and kc.constraint_name = k.constraint_name
+            join all_tab_columns c on c.owner = k.owner and c.table_name = k.table_name and c.column_name = kc.column_name
+            where k.owner = :o and k.table_name = :n and k.constraint_type = 'P' order by kc.position
+            """, binds: [BindVariable(name: "o", value: .text(rOwner)), BindVariable(name: "n", value: .text(rTable))], limit: 100)
+        guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Tabela \(rOwner).\(rTable) nie ma klucza głównego")) }
+        let existing = Set(d.columns.map(\.name))
+        let cols = rows.map { r -> TableDefinition.Column in
+            let n = r[0].displayText ?? ""
+            let name = existing.contains(n) ? String((rTable + "_" + n).prefix(128)) : n
+            return TableDefinition.Column(name: name, type: typeText(r))
+        }
+        var key = TableDefinition.Key(name: String((d.name + "_" + rTable + "_FK").prefix(128)), kind: .foreign, columns: cols.map(\.name))
+        key.referencedTable = rOwner == d.owner ? rTable : "\(q(rOwner)).\(q(rTable))"
+        key.referencedColumns = rows.compactMap { $0[0].displayText }
+        return (cols, key)
     }
 
     /// Typ kolumny w składni DDL ze słownika.
@@ -313,6 +461,7 @@ public enum TableDDL {
     /// Polecenia DDL zmieniające `old` w `new` (dla nowej tabeli — CREATE i dodatki).
     public static func statements(from old: TableDefinition?, to new: TableDefinition) -> [String] {
         guard let old, !new.isNew else { return create(new) }
+        if new.recreate { return recreate(from: old, to: new) }
         var out: [String] = []
         let table = qualified(new, old.name)
         if old.name != new.name {
@@ -351,6 +500,12 @@ public enum TableDDL {
         }
         out += annotationChanges(old.annotations, new.annotations) { "ALTER TABLE \(t) \($0)" }
         if old.rowArchival != new.rowArchival { out.append("ALTER TABLE \(t) \(new.rowArchival ? "ROW ARCHIVAL" : "NO ROW ARCHIVAL")") }
+        // Kolumny niewidoczne (PD-OED-002).
+        for c in new.columns {
+            guard let orig = c.originalName, let before = old.columns.first(where: { $0.name == orig }), before.invisible != c.invisible else { continue }
+            out.append("ALTER TABLE \(t) MODIFY (\(q(c.name)) \(c.invisible ? "INVISIBLE" : "VISIBLE"))")
+        }
+        out += storageChanges(old, new, table: t)
         // Uprawnienia: odebrane, nadane, zmiana opcji nadawania (REVOKE + GRANT).
         let newGrants = Dictionary(new.grants.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let oldGrants = Dictionary(old.grants.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
@@ -383,7 +538,8 @@ public enum TableDDL {
         for x in old.indexes where !keepIdx.contains(x.name) { out.append("DROP INDEX \(q(new.owner)).\(q(x.name))") }
         for x in new.indexes {
             guard let on = x.originalName, let before = old.indexes.first(where: { $0.name == on }) else { out.append(createIndex(x, table: new)); continue }
-            if before.kind != x.kind || before.columns != x.columns || before.tablespace != x.tablespace {
+            if before.kind != x.kind || before.columns != x.columns || before.tablespace != x.tablespace || before.compression != x.compression
+                || before.reverse != x.reverse || before.local != x.local || before.pctFree != x.pctFree {
                 out.append("DROP INDEX \(q(new.owner)).\(q(on))")
                 out.append(createIndex(x, table: new))
                 continue
@@ -409,13 +565,37 @@ public enum TableDDL {
     static func create(_ d: TableDefinition) -> [String] {
         let t = qualified(d)
         var body = d.columns.map(columnClause)
-        // Więzy w CREATE TABLE (tabela IOT wymaga tu klucza głównego).
-        body += d.keys.map { keyClause($0, owner: d.owner) }
-        body += d.checks.map { checkClause($0) }
-        var sql = "CREATE \(d.temporary ? "GLOBAL TEMPORARY " : "")TABLE \(t) (\n  " + body.joined(separator: ",\n  ") + "\n)"
+        // Więzy w CREATE TABLE (tabela IOT wymaga tu klucza głównego); tabela zewnętrzna nie ma więzów.
+        if d.external == nil {
+            body += d.keys.map { keyClause($0, owner: d.owner) }
+            body += d.checks.map { checkClause($0) }
+        }
+        var sql: String
+        if !d.objectType.isEmpty {
+            // Tabela obiektowa (PD-OED-002): kolumny z typu, więzy w nawiasie.
+            sql = "CREATE TABLE \(t) OF \(d.objectType)"
+            let cons = d.keys.map { keyClause($0, owner: d.owner) } + d.checks.map { checkClause($0) }
+            if !cons.isEmpty { sql += " (\n  " + cons.joined(separator: ",\n  ") + "\n)" }
+        } else {
+            sql = "CREATE \(d.temporary ? "GLOBAL TEMPORARY " : "")TABLE \(t) (\n  " + body.joined(separator: ",\n  ") + "\n)"
+        }
         if d.temporary { sql += "\nON COMMIT \(d.preserveRows ? "PRESERVE" : "DELETE") ROWS" }
+        if let e = d.external {
+            sql += "\n" + externalClause(e)
+            var out = [sql]
+            if !d.comment.isEmpty { out.append("COMMENT ON TABLE \(t) IS \(literal(d.comment))") }
+            for c in d.columns where !c.comment.isEmpty { out.append("COMMENT ON COLUMN \(t).\(q(c.name)) IS \(literal(c.comment))") }
+            out += d.grants.map { grantStatement($0, table: t) }
+            return out
+        }
         if d.indexOrganized, !d.temporary { sql += "\nORGANIZATION INDEX" }
-        if !d.tablespace.isEmpty, !d.temporary { sql += "\nTABLESPACE \(q(d.tablespace))" }
+        if !d.cluster.isEmpty, !d.temporary {
+            // Tabela w klastrze: składowanie z klastra (bez przestrzeni i parametrów składowania).
+            sql += "\nCLUSTER " + d.cluster.split(separator: ".").map { q(String($0)) }.joined(separator: ".") + " (" + d.clusterColumns.map(q).joined(separator: ", ") + ")"
+        } else {
+            if !d.tablespace.isEmpty, !d.temporary { sql += "\nTABLESPACE \(q(d.tablespace))" }
+            if !d.temporary, let s = storageClause(d.storage) { sql += "\n" + s }
+        }
         if let p = d.partitioning, !d.temporary, !p.columns.isEmpty { sql += "\n" + partitionClause(p) }
         if d.rowArchival { sql += "\nROW ARCHIVAL" }
         if !d.annotations.isEmpty { sql += "\n" + annotationsClause(d.annotations) }
@@ -455,6 +635,7 @@ public enum TableDDL {
 
     static func columnClause(_ c: TableDefinition.Column) -> String {
         var s = q(c.name) + " " + c.type
+        if c.invisible { s += " INVISIBLE" }
         if !c.virtualExpression.isEmpty {
             s += " GENERATED ALWAYS AS (\(c.virtualExpression)) VIRTUAL"
         } else if c.identity {
@@ -491,9 +672,81 @@ public enum TableDDL {
     static func createIndex(_ x: TableDefinition.Index, table d: TableDefinition) -> String {
         let kind = x.kind == .unique ? "UNIQUE " : x.kind == .bitmap ? "BITMAP " : ""
         var s = "CREATE \(kind)INDEX \(q(d.owner)).\(q(x.name)) ON \(qualified(d)) (\(x.columns.joined(separator: ", ")))"
+        if x.local { s += " LOCAL" }
+        if !x.pctFree.isEmpty { s += " PCTFREE \(x.pctFree)" }
         if !x.tablespace.isEmpty { s += " TABLESPACE \(q(x.tablespace))" }
+        let comp = x.compression.trimmingCharacters(in: .whitespaces).uppercased()
+        if !comp.isEmpty, comp != "0" { s += " COMPRESS" + (comp == "ENABLED" ? "" : " " + comp) }
+        if x.reverse, x.kind != .bitmap { s += " REVERSE" }
         if x.invisible { s += " INVISIBLE" }
         return s
+    }
+
+    /// Klauzula składowania tabeli (PCTFREE, INITRANS, STORAGE, LOGGING, kompresja); nil — wszystko domyślne.
+    static func storageClause(_ st: TableDefinition.Storage) -> String? {
+        var parts: [String] = []
+        if !st.pctFree.isEmpty { parts.append("PCTFREE \(st.pctFree)") }
+        if !st.iniTrans.isEmpty { parts.append("INITRANS \(st.iniTrans)") }
+        let storage = [st.initial.isEmpty ? nil : "INITIAL \(st.initial)", st.next.isEmpty ? nil : "NEXT \(st.next)"].compactMap { $0 }
+        if !storage.isEmpty { parts.append("STORAGE (" + storage.joined(separator: " ") + ")") }
+        if !st.logging { parts.append("NOLOGGING") }
+        if st.compression != .none { parts.append("ROW STORE COMPRESS \(st.compression.rawValue)") }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
+    }
+
+    /// Zmiany składowania istniejącej tabeli: PCTFREE/INITRANS, NEXT, LOGGING, kompresja; przestrzeń — MOVE z indeksami.
+    /// INITIAL nie zmienia się przez ALTER (tylko Recreate table).
+    static func storageChanges(_ old: TableDefinition, _ new: TableDefinition, table t: String) -> [String] {
+        guard new.external == nil, new.cluster.isEmpty, !new.temporary else { return [] }
+        var out: [String] = []
+        let a = old.storage, b = new.storage
+        if old.tablespace != new.tablespace, !new.tablespace.isEmpty { out.append("ALTER TABLE \(t) MOVE TABLESPACE \(q(new.tablespace)) UPDATE INDEXES") }
+        var phys: [String] = []
+        if a.pctFree != b.pctFree, !b.pctFree.isEmpty { phys.append("PCTFREE \(b.pctFree)") }
+        if a.iniTrans != b.iniTrans, !b.iniTrans.isEmpty { phys.append("INITRANS \(b.iniTrans)") }
+        if !phys.isEmpty { out.append("ALTER TABLE \(t) " + phys.joined(separator: " ")) }
+        if a.next != b.next, !b.next.isEmpty { out.append("ALTER TABLE \(t) STORAGE (NEXT \(b.next))") }
+        if a.logging != b.logging { out.append("ALTER TABLE \(t) \(b.logging ? "LOGGING" : "NOLOGGING")") }
+        if a.compression != b.compression {
+            out.append("ALTER TABLE \(t) " + (b.compression == .none ? "NOCOMPRESS" : "ROW STORE COMPRESS \(b.compression.rawValue)"))
+        }
+        return out
+    }
+
+    /// ORGANIZATION EXTERNAL (…) REJECT LIMIT.
+    static func externalClause(_ e: TableDefinition.External) -> String {
+        var s = "ORGANIZATION EXTERNAL (\n  TYPE \(e.driver.uppercased())\n  DEFAULT DIRECTORY \(q(e.directory.uppercased()))"
+        let ap = e.accessParameters.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !ap.isEmpty { s += "\n  ACCESS PARAMETERS (\n    \(ap)\n  )" }
+        s += "\n  LOCATION (" + e.locations.map(literal).joined(separator: ", ") + ")\n)"
+        if !e.rejectLimit.isEmpty { s += "\nREJECT LIMIT \(e.rejectLimit.uppercased())" }
+        return s
+    }
+
+    /// Recreate table (PD-OED-001): kopia danych do tabeli roboczej, usunięcie tabeli (do kosza), utworzenie wg nowej
+    /// definicji, przeniesienie wierszy (kolumny zachowane i przemianowane), wyzwalacze i klucze obce innych tabel.
+    public static func recreate(from old: TableDefinition, to new: TableDefinition) -> [String] {
+        let backupName = String(("PLK$" + old.name).prefix(128))
+        let backup = q(old.owner) + "." + q(backupName)
+        let oldTable = qualified(old)
+        var out = ["CREATE TABLE \(backup) AS SELECT * FROM \(oldTable)", "DROP TABLE \(oldTable) CASCADE CONSTRAINTS"]
+        var created = new
+        created.recreate = false
+        out += create(created)
+        // Kolumny przenoszone: istniejące wcześniej (wg nazwy pierwotnej), bez wirtualnych.
+        let pairs: [(String, String)] = new.columns.compactMap { c in
+            guard let orig = c.originalName, c.virtualExpression.isEmpty, old.columns.contains(where: { $0.name == orig && $0.virtualExpression.isEmpty })
+            else { return nil }
+            return (q(c.name), q(orig))
+        }
+        if !pairs.isEmpty, new.external == nil {
+            out.append("INSERT INTO \(qualified(new)) (" + pairs.map(\.0).joined(separator: ", ") + ") SELECT "
+                       + pairs.map(\.1).joined(separator: ", ") + " FROM \(backup)")
+        }
+        out += new.triggerDDL
+        out += new.referencingForeignKeys
+        out.append("DROP TABLE \(backup) PURGE")
+        return out
     }
 }
 
@@ -508,6 +761,11 @@ extension TableDDL {
     /// Wykonuje DDL zmian w sesji kompilacji po sprawdzeniu strażnika (tylko do odczytu / produkcja).
     @MainActor
     public static func apply(from old: TableDefinition?, to new: TableDefinition, in ws: Workspace, connectionID: UUID) async throws -> ApplyResult {
+        var new = new
+        // Recreate table: wyzwalacze odtwarzane z DDL pobranego przed usunięciem tabeli.
+        if new.recreate, new.triggerDDL.isEmpty, !new.triggers.isEmpty, let m = ws.metadata(for: connectionID) {
+            new.triggerDDL = try await triggerDDL(new, metadata: m)
+        }
         let sql = statements(from: old, to: new)
         guard !sql.isEmpty else { return ApplyResult(executed: []) }
         try await ws.guardModification(sql, connectionID: connectionID)

@@ -219,6 +219,8 @@ public final class ResultTab: Identifiable {
     public var elapsed: Duration = .zero
     /// Zaznaczenie w siatce (wiersze widoku; nil — brak) i kolejność kolumn po przeciąganiu — ustawia interfejs.
     public var selectedRows: [Int]?
+    /// Kolumny bloku komórek (PD-GRID-007); nil — całe wiersze.
+    public var selectedColumns: [Int]?
     public var columnOrder: [Int]?
     /// Kolumna do pokazania (np. z błędem po zatwierdzaniu zmian — NF12).
     public var focusedColumn: Int?

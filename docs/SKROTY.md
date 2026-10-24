@@ -130,6 +130,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | 0 | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | 0 | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | 0 | SC-SNIP-001 |
+| Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | 0 | PD-GRID-005 |
+| Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | 0 | PD-GRID-007 |
+| Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | 0 | PD-GRID-007 |
 | Wynik › Wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | 0 | PD-GRID-026 |
 | Wynik › Małe litery w komórkach | `grid.lowerCase` |  |  | Brak | 0 | PD-GRID-026 |
 | Zakładki › Przełącz zakładkę | `edit.toggleBookmark` | ⌘F3 | ⌘F3 | Brak | 0 | PD-EDIT-011 |
@@ -219,6 +222,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | 0 | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | 0 | DB-GRID-002 |
+| Wynik › Rekord z komentarzami kolumn | `grid.recordView` |  |  | Brak | 0 | PD-GRID-010 |
 | Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | 0 | PD-GRID-006 |
 | Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
 | Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
@@ -304,6 +308,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Obiekt › Zmień nazwę… | `ob.rename` |  |  | Za zgodą | 0 | PD-OB-016 |
+| Obiekt › Zmień nazwę elementu… | `ob.renameChild` |  |  | Za zgodą | 0 | PD-OB-016 |
+| Obiekt › Duplikuj… | `ob.duplicate` |  |  | Za zgodą | 0 | PD-OB-016 |
+| Obiekt › Wstaw obiekt do edytora | `ob.dropText` |  |  | Brak | 0 | PD-OB-010 |
+| Obiekt › Upuść obiekt na obszar okien | `ob.dropOnWorkspace` |  |  | Brak | 0 | PD-OB-010 |
 | Object Browser › Filtr nazwany… | `ob.applyFilter` |  |  | Brak | 0 | PD-OB-007 |
 | Obiekt › Dodaj do folderu… | `ob.addToFolder` |  |  | Brak | 0 | PD-OB-008 |
 | Obiekt › Włącz | `ob.enable` |  |  | Brak | 0 | PD-OB-019 |
@@ -365,6 +374,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Usuń obiekt… | `ob.drop` |  |  | Za zgodą | 0 | PD-OB-016 |
 | Obiekt › Kopiuj nazwę | `ob.copyName` |  |  | Brak | 0 | PD-OB-011 |
 | Obiekt › Odśwież Object Browser | `ob.refresh` |  |  | Pełny | 0 | PD-OB-004 |
+| Zapisz kryteria wyszukiwania | `tools.saveObjectSearch` |  |  | Brak | 0 | PD-TOOL-001 |
+| Usuń zapisane kryteria wyszukiwania | `tools.deleteObjectSearch` |  |  | Brak | 0 | PD-TOOL-001 |
 | Znajdź obiekty bazy… | `tools.findObjects` | ⌃⇧O †, ⇧⌘O | ⇧⌘O | Odczyt | 0 | PD-TOOL-001 |
 | Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Za zgodą | 0 | PD-TOOL-002 |
 | Szablony › Zapisz zaznaczenie jako szablon… | `templates.save` |  |  | Pełny | 0 | PD-TPL-003 |
@@ -453,6 +464,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Snippety | `view.snippets` |  |  | Brak | 0 | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | 0 | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | 0 | SD-MON-002 |
+| Siatka › Układ liczb w siatce | `grid.numberLayout` |  |  | Brak | 0 | PD-GRID-004 |
+| Siatka › Auto Format w Large Data Editor | `grid.largeDataAutoFormat` |  |  | Brak | 0 | PD-LDE-001 |
 | Siatka › Większa czcionka siatki | `grid.fontLarger` |  |  | Brak | 0 | PD-GRID-025 |
 | Siatka › Mniejsza czcionka siatki | `grid.fontSmaller` |  |  | Brak | 0 | PD-GRID-025 |
 | Siatka › Domyślna czcionka siatki | `grid.fontReset` |  |  | Brak | 0 | PD-GRID-025 |

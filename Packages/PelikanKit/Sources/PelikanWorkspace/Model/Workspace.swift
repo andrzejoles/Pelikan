@@ -79,6 +79,8 @@ public protocol UIServices: AnyObject {
     func showColumnFilter(_ tab: ResultTab)
     /// Wybór wartości z listy (lista wartości kolumny ze słownika — PD-GRID-022); nil — anulowano.
     func chooseValue(_ title: String, values: [String]) async -> String?
+    /// Kalendarz przy edycji daty (PD-GRID-005): wybrana data (z czasem, gdy `withTime`); nil — anulowano.
+    func chooseDate(_ title: String, initial: OracleTimestamp?, withTime: Bool) async -> OracleTimestamp?
     /// Instrukcja użytkownika (PL-INFRA-010).
     func showUserManual()
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
@@ -196,6 +198,7 @@ extension UIServices {
     public func showQueryByExample(_ tab: ResultTab) {}
     public func showColumnFilter(_ tab: ResultTab) {}
     public func chooseValue(_ title: String, values: [String]) async -> String? { nil }
+    public func chooseDate(_ title: String, initial: OracleTimestamp?, withTime: Bool) async -> OracleTimestamp? { nil }
     public func showUserManual() {}
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}

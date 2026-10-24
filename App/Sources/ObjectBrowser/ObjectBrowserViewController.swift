@@ -193,7 +193,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                     if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak)")))] }
                 case .object(let o):
                     let items = try await m.children(of: o)
-                    let order: [DBObjectChild.Kind] = [.column, .attribute, .subprogram, .index, .constraint, .trigger, .dependency, .referencedBy]
+                    let order: [DBObjectChild.Kind] = [.column, .attribute, .subprogram, .index, .constraint, .trigger, .usage, .dependency, .referencedBy]
                     node.children = order.compactMap { k in
                         let list = items.filter { $0.kind == k }
                         return list.isEmpty ? nil : Node(.group(k, list), children: list.map { Node(.child($0)) })
@@ -322,6 +322,12 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             p.setString([o.owner, o.name, o.type.rawValue].joined(separator: "\u{1}"), forType: Self.objectPasteboardType)
             return p
         case .child(let c): return c.name.lowercased() as NSString
+        case .group(_, let items):
+            // Folder elementów (np. Kolumny) → nazwy po przecinku (UG 21.1).
+            return BrowserDrop.namesList(items.map(\.name)) as NSString
+        case .folder, .userFolder:
+            let names = (n.children ?? []).compactMap(\.object).map(\.name)
+            return names.isEmpty ? nil : BrowserDrop.namesList(names) as NSString
         default: return nil
         }
     }
@@ -345,15 +351,26 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         if row >= 0, let n = outline.item(atRow: row) as? Node {
             workspace.selectedObject = n.object
             outline.selectRowIndexes([row], byExtendingSelection: false)
+            // Kolumna albo więz tabeli: zmiana nazwy elementu (PD-OB-016).
+            if case .child(let c) = n.kind, [.column, .constraint].contains(c.kind), let table = parentObject(of: n), table.type == .table {
+                let item = ClosureMenuItem(title: L10n.tr("Zmień nazwę elementu…")) { [weak self] in
+                    self?.workspace.perform("ob.renameChild", CommandArguments(["object": .string("\"\(table.owner)\".\"\(table.name)\""), "type": "TABLE",
+                                                                                "kind": .string(c.kind.rawValue), "name": .string(c.name)]))
+                }
+                menu.addItem(item)
+                if n.object == nil { return }
+                menu.addItem(.separator())
+            }
         }
         guard workspace.selectedObject != nil else {
             menu.addItem(withTitle: L10n.tr("Odśwież"), action: #selector(refreshAll), keyEquivalent: "").target = self
             return
         }
         // Pozycje niedostępne dla typu obiektu (np. Włącz/Wyłącz poza wyzwalaczami i tabelami) są pomijane, nie wyszarzane.
-        let optional: Set<String> = ["ob.enable", "ob.disable", "ob.ccflags", "ob.test", "ob.standardTest", "ob.addSourceToEditor"]
+        let optional: Set<String> = ["ob.enable", "ob.disable", "ob.ccflags", "ob.test", "ob.standardTest", "ob.addSourceToEditor", "ob.rename",
+                                     "ob.duplicate"]
         for id in ["ob.queryData", "ob.editData", "-", "ob.edit", "ob.ddl", "ob.describe", "ob.properties", "-", "ob.test", "ob.standardTest",
-                   "ob.addSourceToEditor", "-", "ob.recompile", "ob.enable", "ob.disable", "ob.ccflags", "ob.drop",
+                   "ob.addSourceToEditor", "-", "ob.recompile", "ob.enable", "ob.disable", "ob.ccflags", "ob.rename", "ob.duplicate", "ob.drop",
                    "-", "ob.copyName", "ob.refresh"] {
             if optional.contains(id), !workspace.isEnabled(CommandID(rawValue: id)) { continue }
             if id == "ob.copyName", let o = workspace.selectedObject, let gen = generateCodeMenu(o) { menu.addItem(gen) }
@@ -411,6 +428,16 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         workspace.perform(CommandID(rawValue: id))
     }
 
+    /// Obiekt nadrzędny elementu drzewa (element → grupa → obiekt).
+    private func parentObject(of node: Node) -> DBObject? {
+        var item: Any? = outline.parent(forItem: node)
+        while let n = item as? Node {
+            if case .object(let o) = n.kind { return o }
+            item = outline.parent(forItem: n)
+        }
+        return nil
+    }
+
     // MARK: Wygląd
 
     static func namedColor(_ name: String) -> NSColor? {
@@ -435,6 +462,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .databaseLink: "link"
         case .mleModule, .mleEnvironment: "curlybraces"
         case .domain: "checkmark.seal"
+        case .annotation: "tag"
+        case .assertion: "checkmark.shield"
         default: "doc"
         }
     }
@@ -460,6 +489,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .dependency: L10n.tr("Zależy od")
         case .referencedBy: L10n.tr("Używany przez")
         case .partition: L10n.tr("Partycje")
+        case .usage: L10n.tr("Użycie")
         }
     }
 
@@ -473,6 +503,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .dependency: "arrow.right"
         case .referencedBy: "arrow.left"
         case .partition: "square.split.2x1"
+        case .usage: "tag"
         }
     }
 }

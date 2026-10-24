@@ -57,6 +57,11 @@ public struct Settings: Sendable, Codable, Hashable {
     public var browserFolders: [String] = []
     public var browserRecentLimit = 20
     public var browserDoubleClick: [String: String] = [:]
+    /// Przeciąganie obiektu (PD-OB-010, UG 23.11): tekst po upuszczeniu w edytorze i akcja na obszarze okien.
+    public var browserDropAction: BrowserDropAction = .name
+    public var browserWorkspaceDrop: BrowserWorkspaceDrop = .edit
+    /// Zapisane kryteria Find Database Objects (PD-TOOL-001).
+    public var savedDatabaseSearches: [SavedDatabaseSearch] = []
     public var confirmRecompile = false
     /// Podpowiedzi kompilatora i konwencje nazw (PD-PROG-005).
     public var compilerHints = true
@@ -101,6 +106,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var gridFontSize: Double = 12
     /// Numer wiersza jako pierwsza kolumna przy kopiowaniu i eksporcie (PD-GRID-027).
     public var rowNumbersInCopyExport = false
+    /// Układ liczb w siatce (PD-GRID-004).
+    public var gridNumberLayout: NumberLayout = .right
+    /// Large Data Editor: automatyczne formatowanie JSON/XML po otwarciu (PD-LDE-001).
+    public var largeDataAutoFormat = false
     /// Dźwięk po zakończeniu zapytania dłuższego niż tyle sekund; 0 — wyłączone (PD-SQLW-015).
     public var notifyLongQuerySeconds = 10
     /// Szablony wyrównania kolumn wg zapytania i ich automatyczne stosowanie (PD-GRID-012).
@@ -271,6 +280,9 @@ public struct Settings: Sendable, Codable, Hashable {
         browserFolders = v(.browserFolders, browserFolders)
         browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
         browserDoubleClick = v(.browserDoubleClick, browserDoubleClick)
+        browserDropAction = v(.browserDropAction, browserDropAction)
+        browserWorkspaceDrop = v(.browserWorkspaceDrop, browserWorkspaceDrop)
+        savedDatabaseSearches = v(.savedDatabaseSearches, savedDatabaseSearches)
         confirmRecompile = v(.confirmRecompile, confirmRecompile)
         compilerHints = v(.compilerHints, compilerHints)
         namingConventions = v(.namingConventions, namingConventions)
@@ -307,6 +319,8 @@ public struct Settings: Sendable, Codable, Hashable {
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)
         rowNumbersInCopyExport = v(.rowNumbersInCopyExport, rowNumbersInCopyExport)
+        gridNumberLayout = v(.gridNumberLayout, gridNumberLayout)
+        largeDataAutoFormat = v(.largeDataAutoFormat, largeDataAutoFormat)
         notifyLongQuerySeconds = v(.notifyLongQuerySeconds, notifyLongQuerySeconds)
         alignTemplates = v(.alignTemplates, alignTemplates)
         autoAlign = v(.autoAlign, autoAlign)

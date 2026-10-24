@@ -1022,6 +1022,36 @@ final class CodeTextView: NSTextView {
             ws.perform("edit.insertTemplate", CommandArguments(["template": .string(id)]))
             return true
         }
+        // Obiekt z Object Browsera (PD-OB-010): z klawiszem Control albo przy preferencji „Pytaj” — menu (nazwa, kolumny,
+        // SELECT/INSERT/UPDATE/DELETE, wywołanie, DDL); inna preferencja niż „Nazwa” — tekst wg preferencji.
+        if !NSEvent.modifierFlags.contains(.option),
+           let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
+           let ws = (NSApp.delegate as? AppDelegate)?.workspace {
+            let parts = raw.components(separatedBy: "\u{1}")
+            let preferred = ws.settings.browserDropAction
+            if parts.count == 3, let type = DBObjectType(rawValue: parts[2]), NSEvent.modifierFlags.contains(.control) || preferred != .name {
+                let point = convert(sender.draggingLocation, from: nil)
+                let i = characterIndexForInsertion(at: point)
+                setSelectedRange(NSRange(location: i, length: 0))
+                window?.makeFirstResponder(self)
+                let args: (BrowserDropAction) -> CommandArguments = { a in
+                    CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2]), "action": .string(a.rawValue)])
+                }
+                if NSEvent.modifierFlags.contains(.control) || preferred == .ask {
+                    let menu = NSMenu()
+                    for a in BrowserDropAction.actions(for: type) {
+                        menu.addItem(ClosureMenuItem(title: a.displayName) { ws.perform("ob.dropText", args(a)) })
+                    }
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        menu.popUp(positioning: nil, at: point, in: self)
+                    }
+                } else {
+                    ws.perform("ob.dropText", args(preferred))
+                }
+                return true
+            }
+        }
         // Obiekt z Object Browsera upuszczony z klawiszem Option: wygenerowany kod zamiast nazwy (SD-GEN-001).
         if NSEvent.modifierFlags.contains(.option),
            let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
