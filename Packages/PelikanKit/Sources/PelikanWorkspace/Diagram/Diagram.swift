@@ -222,3 +222,68 @@ public struct Diagram: Sendable, Codable, Hashable {
         try JSONDecoder().decode(Diagram.self, from: data)
     }
 }
+
+/// Punkty łamania linii (PD-DIAG-002): geometria w układzie diagramu, trafienie i edycja.
+extension Diagram {
+    /// Punkt na krawędzi prostokąta w kierunku `toward` (początek i koniec linii).
+    static func edge(_ r: DiagramRect, toward p: DiagramPoint) -> DiagramPoint {
+        let c = r.center
+        let dx = p.x - c.x, dy = p.y - c.y
+        guard dx != 0 || dy != 0 else { return c }
+        let sx = dx == 0 ? Double.infinity : (r.width / 2) / abs(dx)
+        let sy = dy == 0 ? Double.infinity : (r.height / 2) / abs(dy)
+        let s = min(sx, sy)
+        return DiagramPoint(c.x + dx * s, c.y + dy * s)
+    }
+
+    /// Łamana linii: krawędź elementu źródłowego, punkty łamania, krawędź elementu docelowego.
+    public func polyline(_ l: DiagramLink) -> [DiagramPoint]? {
+        guard let a = item(l.from), let b = item(l.to) else { return nil }
+        let start = Self.edge(a.frame, toward: l.bends.first ?? b.frame.center)
+        let end = Self.edge(b.frame, toward: l.bends.last ?? a.frame.center)
+        return [start] + l.bends + [end]
+    }
+
+    static func distance(_ p: DiagramPoint, toSegment a: DiagramPoint, _ b: DiagramPoint) -> Double {
+        let dx = b.x - a.x, dy = b.y - a.y
+        let len = dx * dx + dy * dy
+        let t = len == 0 ? 0 : max(0, min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len))
+        let px = a.x + t * dx - p.x, py = a.y + t * dy - p.y
+        return (px * px + py * py).squareRoot()
+    }
+
+    /// Punkt łamania pod `p` (w promieniu `tolerance`).
+    public func bend(at p: DiagramPoint, tolerance: Double = 6) -> (link: UUID, index: Int)? {
+        for l in links.reversed() {
+            if let i = l.bends.firstIndex(where: { abs($0.x - p.x) <= tolerance && abs($0.y - p.y) <= tolerance }) { return (l.id, i) }
+        }
+        return nil
+    }
+
+    /// Linia pod `p` i numer odcinka (0 — od elementu źródłowego do pierwszego punktu łamania).
+    public func link(at p: DiagramPoint, tolerance: Double = 5) -> (link: UUID, segment: Int)? {
+        for l in links.reversed() {
+            guard let pts = polyline(l) else { continue }
+            for i in 0..<(pts.count - 1) where Self.distance(p, toSegment: pts[i], pts[i + 1]) <= tolerance { return (l.id, i) }
+        }
+        return nil
+    }
+
+    /// Wstawia punkt łamania w odcinku linii pod `p` (z dociąganiem do siatki); zwraca jego numer.
+    @discardableResult
+    public mutating func insertBend(at p: DiagramPoint, tolerance: Double = 5) -> (link: UUID, index: Int)? {
+        guard let hit = link(at: p, tolerance: tolerance), let i = links.firstIndex(where: { $0.id == hit.link }) else { return nil }
+        links[i].bends.insert(DiagramPoint(Self.snap(p.x), Self.snap(p.y)), at: hit.segment)
+        return (hit.link, hit.segment)
+    }
+
+    public mutating func moveBend(link id: UUID, index: Int, to p: DiagramPoint) {
+        guard let i = links.firstIndex(where: { $0.id == id }), links[i].bends.indices.contains(index) else { return }
+        links[i].bends[index] = DiagramPoint(Self.snap(p.x), Self.snap(p.y))
+    }
+
+    public mutating func removeBend(link id: UUID, index: Int) {
+        guard let i = links.firstIndex(where: { $0.id == id }), links[i].bends.indices.contains(index) else { return }
+        links[i].bends.remove(at: index)
+    }
+}

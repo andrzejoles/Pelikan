@@ -48,3 +48,4 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
 - Instant Client lokalnie: `~/Downloads/instantclient_23_26` (wykrywany automatycznie); w CI Linux: `/opt/oracle/instantclient`.
 - Zrzuty w tle: `scripts/screenshots.sh [scenariusz]` (scenariusze w `scripts/screenshots/*.json`, D113). Aplikacja Debug
   nie może czytać `~/Downloads` (pytanie macOS o dostęp przerywa właścicielowi) — skrypt używa kopii w `.testdb/instantclient`.
+  Scenariusz musi podać wszystkie argumenty komend: brakujący argument otwiera okno dialogowe, które aktywuje aplikację.

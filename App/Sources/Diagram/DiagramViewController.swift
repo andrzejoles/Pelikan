@@ -69,12 +69,27 @@ final class DiagramViewController: NSViewController {
         ])
         bar.spacing = 6
         bar.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
-        let root = NSStackView(views: [bar, scroll])
-        root.orientation = .vertical
-        root.spacing = 0
-        root.alignment = .leading
+        // Wąskie okno: przyciski, które się nie mieszczą, są chowane od końca listy — zoom i eksport zostają.
+        bar.setClippingResistancePriority(.defaultLow, for: .horizontal)
+        for (i, v) in bar.arrangedSubviews.enumerated() {
+            bar.setVisibilityPriority(v === zoomPopup || v === export ? .mustHold : NSStackView.VisibilityPriority(rawValue: Float(900 - i * 10)), for: v)
+        }
+        // Pasek u góry, płótno wypełnia resztę (w pionowym NSStackView widok przewijany bez wysokości własnej się zapadał).
+        let root = NSView()
+        for v in [bar, scroll] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            root.addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: root.topAnchor),
+            bar.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            bar.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: root.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: root.trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+        ])
         bar.setHuggingPriority(.required, for: .vertical)
-        scroll.widthAnchor.constraint(equalTo: root.widthAnchor).isActive = true
         view = root
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -113,6 +128,7 @@ final class DiagramCanvas: NSView {
     private var dragStart: NSPoint?
     private var dragOffset = CGSize.zero
     private var rubber: NSRect?
+    private var bendDrag: (link: UUID, index: Int)?
 
     override var isFlipped: Bool { true }
     override var acceptsFirstResponder: Bool { true }
@@ -259,6 +275,11 @@ final class DiagramCanvas: NSView {
         path.stroke()
         drawEnd(l.startEnd, at: pts[0], from: pts[1], color: color)
         drawEnd(l.endEnd, at: pts[pts.count - 1], from: pts[pts.count - 2], color: color)
+        // Zaznaczona linia: uchwyty punktów łamania (przeciąganie, Option+klik usuwa; dwuklik na linii dodaje).
+        if selection.contains(l.id) {
+            NSColor.controlAccentColor.setFill()
+            for b in pts.dropFirst().dropLast() { NSRect(x: b.x - 3.5, y: b.y - 3.5, width: 7, height: 7).fill() }
+        }
         if !l.label.isEmpty {
             let mid = NSPoint(x: (pts[0].x + pts[pts.count - 1].x) / 2, y: (pts[0].y + pts[pts.count - 1].y) / 2)
             (l.label.lowercased() as NSString).draw(at: NSPoint(x: mid.x + 4, y: mid.y - 12),
@@ -313,6 +334,26 @@ final class DiagramCanvas: NSView {
             }
             return
         }
+        // Punkty łamania linii (PD-DIAG-002): przeciąganie, Option+klik usuwa, dwuklik na linii dodaje.
+        let tolerance = 6 / Double(zoom)
+        if let b = diagram.bend(at: m, tolerance: tolerance) {
+            if event.modifierFlags.contains(.option) {
+                document.diagram.removeBend(link: b.link, index: b.index)
+                document.isModified = true
+            } else {
+                document.diagramSelection = [b.link]
+                bendDrag = b
+            }
+            return
+        }
+        if hit(m) == nil, let l = diagram.link(at: m, tolerance: tolerance) {
+            if event.clickCount == 2, let b = document.diagram.insertBend(at: m, tolerance: tolerance) {
+                document.isModified = true
+                bendDrag = b
+            }
+            document.diagramSelection = [l.link]
+            return
+        }
         if let id = hit(m) {
             if event.modifierFlags.contains(.shift) || event.modifierFlags.contains(.command) {
                 if document.diagramSelection.contains(id) { document.diagramSelection.remove(id) } else { document.diagramSelection.insert(id) }
@@ -328,6 +369,12 @@ final class DiagramCanvas: NSView {
     }
 
     override func mouseDragged(with event: NSEvent) {
+        if let b = bendDrag {
+            document.diagram.moveBend(link: b.link, index: b.index, to: model(convert(event.locationInWindow, from: nil)))
+            document.isModified = true
+            needsDisplay = true
+            return
+        }
         guard let s = dragStart else { return }
         let p = convert(event.locationInWindow, from: nil)
         if rubber != nil {
@@ -339,7 +386,7 @@ final class DiagramCanvas: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        defer { dragStart = nil; dragOffset = .zero; rubber = nil; needsDisplay = true }
+        defer { dragStart = nil; dragOffset = .zero; rubber = nil; bendDrag = nil; needsDisplay = true }
         if let r = rubber {
             let mr = DiagramRect(x: Double(r.minX / zoom), y: Double(r.minY / zoom), width: Double(r.width / zoom), height: Double(r.height / zoom))
             document.diagramSelection.formUnion(diagram.items.filter { $0.frame.intersects(mr) }.map(\.id))
