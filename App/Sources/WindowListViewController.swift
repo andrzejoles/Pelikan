@@ -1,8 +1,9 @@
 import AppKit
 import PelikanWorkspace
 
-/// Lista okien (UG 32): tytuł z typem, status (zmieniony / transakcja), klik aktywuje, środkowy klik zamyka.
-final class WindowListViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
+/// Lista okien (UG 32): tytuł z typem, status (zmieniony / transakcja), kolor połączenia, klik aktywuje, środkowy klik
+/// zamyka; menu: Wykonaj, Połącz ponownie, Zmień nazwę, Krótkie nazwy, Nowe, Sortuj, Zamknij (PD-UI-002).
+final class WindowListViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, NSMenuDelegate {
     private let workspace: Workspace
     private let table = NSTableView()
     private var documents: [Document] = []
@@ -27,6 +28,9 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         table.target = self
         table.action = #selector(rowClicked)
         table.setAccessibilityLabel(L10n.tr("Lista okien"))
+        let menu = NSMenu()
+        menu.delegate = self
+        table.menu = menu
         let scroll = NSScrollView()
         scroll.documentView = table
         scroll.hasVerticalScroller = true
@@ -36,9 +40,9 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
     }
 
     private func reload() {
-        documents = workspace.documents
-        // Odczyt właściwości rejestruje śledzenie zmian tytułu i stanu.
-        _ = documents.map { ($0.title, $0.isModified, $0.transactionOpen) }
+        documents = workspace.windowListDocuments
+        // Odczyt właściwości rejestruje śledzenie zmian tytułu, stanu i połączenia.
+        _ = documents.map { ($0.title, $0.isModified, $0.transactionOpen, $0.connectionID, workspace.indicatorColor(for: $0)) }
         table.reloadData()
         if let i = documents.firstIndex(where: { $0.id == workspace.activeDocumentID }) {
             table.selectRowIndexes(IndexSet(integer: i), byExtendingSelection: false)
@@ -74,8 +78,58 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         let symbol = doc.transactionOpen ? "circle.fill" : (doc.isModified ? "pencil.circle" : "doc.text")
         cell.imageView?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         cell.imageView?.contentTintColor = doc.transactionOpen ? .systemGreen : DocumentTabButton.color(for: doc.kind)
-        cell.textField?.stringValue = doc.fullTitle
+        // Kolor połączenia (wskaźnik, PD-CONN-005) jako kropka przed tytułem.
+        let title = NSMutableAttributedString()
+        if let c = workspace.indicatorColor(for: doc) {
+            title.append(NSAttributedString(string: "● ", attributes: [.foregroundColor: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)]))
+        }
+        title.append(NSAttributedString(string: workspace.windowListTitle(doc), attributes: [.foregroundColor: NSColor.labelColor]))
+        cell.textField?.attributedStringValue = title
         return cell
+    }
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        let row = table.clickedRow
+        let doc = row >= 0 && row < documents.count ? documents[row] : nil
+        func item(_ title: String, _ command: String, _ args: [String: JSONValue] = [:], enabled: Bool = true) -> NSMenuItem {
+            let i = NSMenuItem(title: title, action: #selector(performMenuCommand(_:)), keyEquivalent: "")
+            i.target = self
+            i.representedObject = (command, args) as (String, [String: JSONValue])
+            i.isEnabled = enabled
+            return i
+        }
+        if let doc {
+            let a: [String: JSONValue] = ["document": .string(doc.id.description)]
+            menu.addItem(item(L10n.tr("Wykonaj"), "window.execute", a, enabled: !doc.isExecuting))
+            menu.addItem(item(L10n.tr("Połącz ponownie"), "window.reconnect", a, enabled: !doc.transactionOpen && !doc.isExecuting))
+            menu.addItem(item(L10n.tr("Zmień nazwę…"), "window.rename", a))
+            menu.addItem(item(L10n.tr("Zamknij"), "file.closeWindow", a))
+            menu.addItem(.separator())
+        }
+        let short = item(L10n.tr("Krótkie nazwy"), "window.listShortTitles")
+        short.state = workspace.settings.windowListShortTitles ? .on : .off
+        menu.addItem(short)
+        let new = NSMenuItem(title: L10n.tr("Nowe"), action: nil, keyEquivalent: "")
+        new.submenu = NSMenu()
+        for (t, c) in [(L10n.tr("Okno SQL"), "file.new.sql"), (L10n.tr("Okno testu"), "file.new.test"),
+                       (L10n.tr("Okno programu"), "file.new.program"), (L10n.tr("Okno poleceń"), "file.new.command")] {
+            new.submenu?.addItem(item(t, c))
+        }
+        menu.addItem(new)
+        let sort = NSMenuItem(title: L10n.tr("Sortuj"), action: nil, keyEquivalent: "")
+        sort.submenu = NSMenu()
+        for (t, o) in [(L10n.tr("Kolejność otwarcia"), WindowListSort.opening), (L10n.tr("Nazwa"), .name), (L10n.tr("Typ okna"), .type)] {
+            let i = item(t, "window.listSort", ["order": .string(o.rawValue)])
+            i.state = workspace.settings.windowListSort == o ? .on : .off
+            sort.submenu?.addItem(i)
+        }
+        menu.addItem(sort)
+    }
+
+    @objc private func performMenuCommand(_ sender: NSMenuItem) {
+        guard let (command, args) = sender.representedObject as? (String, [String: JSONValue]) else { return }
+        workspace.perform(CommandID(rawValue: command), CommandArguments(args))
     }
 
     @objc private func rowClicked() {

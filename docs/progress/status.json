@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T07:27:40+02:00",
+  "heartbeat": "2026-10-24T07:34:07+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Lista okien: menu Wykonaj/Połącz ponownie/Zmień nazwę/Nowe/Sortuj, krótkie nazwy; wskaźniki połączeń user@baza z kolorem na kartach, liście okien, pasku stanu i tle edytora (PD-UI-002, PD-CONN-005)",
     "utPLSQL: okno opcji przebiegu z include/exclude, sortowanie wyników, porównanie oczekiwane/otrzymane, linie częściowo pokryte i procent na pasku stanu (UT-RUN-003, UT-RES-001/002, UT-COV-001/002)",
     "PD-TEST-003/005: AutoCommit po wykonaniu okna testu, obserwowane wyrażenia w pliku .tst; PD-TEST-002: typ Substitution",
     "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
@@ -91,8 +92,7 @@
     "PR #30 scalony (niejawne wyniki, SQL w sesji debugowanej)",
     "Etap 4 / utPLSQL — uruchamianie: wszystkie testy, ścieżka, z edytora (test pod kursorem), z Object Browsera, ponownie nieudane, przerwanie; wyniki na żywo (ut_realtime_reporter w dwóch sesjach), okno wyników z drzewem, czasami, filtrem i szczegółami; pokrycie (Sonar → margines edytora, raport HTML); wersja utPLSQL — 3 testy na bazie",
     "Etap 3 zamknięty (D29): krokowanie przez pakiet z wyzwalaczem, rekord i kolekcja w testach na bazie; JDWP i pozostałe P2/P3 przeniesione",
-    "PR #28 i #29 scalone (profilery, zmienne globalne pakietu w debugerze)",
-    "Etap 3 / wyniki: niejawne wyniki (DBMS_SQL.RETURN_RESULT) w karcie Wyniki okna testu; wykonanie zapytania albo bloku w sesji debugowanej (DBMS_DEBUG.EXECUTE, wiersze przez JSON — DBMS_SQL zablokowany) — 2 testy"
+    "PR #28 i #29 scalone (profilery, zmienne globalne pakietu w debugerze)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

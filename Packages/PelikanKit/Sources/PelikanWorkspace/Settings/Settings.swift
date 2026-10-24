@@ -87,6 +87,12 @@ public struct Settings: Sendable, Codable, Hashable {
     public var autoCommitPostedRecords = false
     /// Test Window: AutoCommit after execute (PD-TEST-003).
     public var autoCommitTestWindow = false
+    /// Wskaźniki połączeń `user@baza` i tło okna w kolorze połączenia (PD-CONN-005).
+    public var connectionIndicators: [ConnectionIndicator] = []
+    public var colorWindowBackground = false
+    /// Lista okien: krótkie tytuły i kolejność (PD-UI-002).
+    public var windowListShortTitles = false
+    public var windowListSort: WindowListSort = .opening
     public var autoSelectStatement = true   // D12
     public var recordsPerPage: RecordsPerPage = .automatic
     public var maximumResultSetMegabytes = 512
@@ -293,6 +299,10 @@ public struct Settings: Sendable, Codable, Hashable {
         autoCommitSQL = v(.autoCommitSQL, autoCommitSQL)
         autoCommitPostedRecords = v(.autoCommitPostedRecords, autoCommitPostedRecords)
         autoCommitTestWindow = v(.autoCommitTestWindow, autoCommitTestWindow)
+        connectionIndicators = v(.connectionIndicators, connectionIndicators)
+        colorWindowBackground = v(.colorWindowBackground, colorWindowBackground)
+        windowListShortTitles = v(.windowListShortTitles, windowListShortTitles)
+        windowListSort = v(.windowListSort, windowListSort)
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)

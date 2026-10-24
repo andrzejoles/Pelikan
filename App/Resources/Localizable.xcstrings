@@ -2381,6 +2381,34 @@
         }
       }
     },
+    "Aktywuje okno z listy i wykonuje je (SQL, test, program albo skrypt poleceń)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activates the window from the list and executes it (SQL, test, program or command script)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert das Fenster aus der Liste und führt es aus (SQL, Test, Programm oder Befehlsskript)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la ventana de la lista y la ejecuta (SQL, prueba, programa o script de comandos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активує вікно зі списку й виконує його (SQL, тест, програма або скрипт команд)."
+          }
+        }
+      }
+    },
     "Aktywuje poprzednie okno z Listy okien." : {
       "localizations" : {
         "en" : {
@@ -11593,6 +11621,34 @@
         }
       }
     },
+    "Dodaj regułę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add rule"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regel hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir regla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати правило"
+          }
+        }
+      }
+    },
     "Dodaj skrót" : {
       "localizations" : {
         "en" : {
@@ -13297,6 +13353,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zugriff: %@"
+          }
+        }
+      }
+    },
+    "Dozwolone: opening, name, type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed: opening, name, type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubt: opening, name, type"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitidos: opening, name, type"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дозволено: opening, name, type"
           }
         }
       }
@@ -19433,6 +19517,34 @@
         }
       }
     },
+    "Identyfikator okna (domyślnie aktywne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window identifier (active by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterkennung (standardmäßig das aktive)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador de ventana (por defecto, la activa)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор вікна (типово активне)"
+          }
+        }
+      }
+    },
     "Identyfikator okna z get_state (domyślnie aktywne)" : {
       "localizations" : {
         "en" : {
@@ -22845,6 +22957,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reihenfolge"
+          }
+        }
+      }
+    },
+    "Kolejność listy okien: otwarcia, nazwa albo typ okna." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window list order: opening, name or window type."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reihenfolge der Fensterliste: Öffnen, Name oder Fenstertyp."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de la lista de ventanas: apertura, nombre o tipo de ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок списку вікон: відкриття, назва або тип вікна."
+          }
+        }
+      }
+    },
+    "Kolejność otwarcia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening order"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reihenfolge des Öffnens"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de apertura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок відкриття"
           }
         }
       }
@@ -26489,6 +26657,62 @@
         }
       }
     },
+    "Krótkie nazwy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short names"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurze Namen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombres cortos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Короткі назви"
+          }
+        }
+      }
+    },
+    "Krótkie nazwy na liście okien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short names in the window list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurze Namen in der Fensterliste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombres cortos en la lista de ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Короткі назви у списку вікон"
+          }
+        }
+      }
+    },
     "Kto" : {
       "localizations" : {
         "en" : {
@@ -29765,6 +29989,34 @@
         }
       }
     },
+    "Nadaje oknu własną nazwę na karcie i liście okien." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives the window a custom name on its tab and in the window list."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibt dem Fenster einen eigenen Namen auf dem Tab und in der Fensterliste."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da a la ventana un nombre propio en su pestaña y en la lista de ventanas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дає вікну власну назву на вкладці та у списку вікон."
+          }
+        }
+      }
+    },
     "Nadaje zakładce nazwę widoczną na liście zakładek." : {
       "localizations" : {
         "en" : {
@@ -31805,6 +32057,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає з'єднання «%@»"
+          }
+        }
+      }
+    },
+    "Nie ma takiego okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein solches Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No existe esa ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такого вікна немає"
           }
         }
       }
@@ -34073,6 +34353,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Name für %@"
+          }
+        }
+      }
+    },
+    "Nowa nazwa okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New window name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Fenstername"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo nombre de la ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова назва вікна"
+          }
+        }
+      }
+    },
+    "Nowa nazwa; pusta przywraca domyślną" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New name; empty restores the default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Name; leer stellt den Standard wieder her"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo nombre; vacío restaura el predeterminado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова назва; порожня відновлює типову"
           }
         }
       }
@@ -38613,6 +38949,34 @@
         }
       }
     },
+    "Okno ma otwartą transakcję — zatwierdź albo wycofaj ją przed ponownym połączeniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has an open transaction — commit or roll it back before reconnecting"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat eine offene Transaktion — bestätigen oder zurücksetzen Sie sie vor dem erneuten Verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene una transacción abierta: confírmela o deshágala antes de reconectar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має відкриту транзакцію — зафіксуйте або відкотіть її перед повторним підключенням"
+          }
+        }
+      }
+    },
     "Okno nie ma historii lokalnej (zapisz plik albo skompiluj obiekt)" : {
       "localizations" : {
         "en" : {
@@ -38777,6 +39141,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Command Window"
+          }
+        }
+      }
+    },
+    "Okno połączy się ponownie przy następnym wykonaniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window will reconnect on the next execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster verbindet sich bei der nächsten Ausführung erneut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana se reconectará en la próxima ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно підключиться повторно під час наступного виконання"
           }
         }
       }
@@ -39057,6 +39449,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgabefenster"
+          }
+        }
+      }
+    },
+    "Okno wykonuje polecenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window is executing a statement"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster führt eine Anweisung aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana está ejecutando una instrucción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно виконує команду"
           }
         }
       }
@@ -49533,6 +49953,34 @@
         }
       }
     },
+    "Połącz ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключити повторно"
+          }
+        }
+      }
+    },
     "Połącz ponownie okna połączenia" : {
       "localizations" : {
         "en" : {
@@ -49557,6 +50005,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перепідключити вікна з'єднання"
+          }
+        }
+      }
+    },
+    "Połącz ponownie okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster erneut verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключити вікно повторно"
           }
         }
       }
@@ -52585,6 +53061,34 @@
         }
       }
     },
+    "Przełącza listę okien między pełnymi tytułami (z połączeniem) a krótkimi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switches the window list between full titles (with connection) and short ones."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet die Fensterliste zwischen vollständigen Titeln (mit Verbindung) und kurzen um."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterna la lista de ventanas entre títulos completos (con conexión) y cortos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемикає список вікон між повними назвами (з підключенням) і короткими."
+          }
+        }
+      }
+    },
     "Przełącza okno w tryb tylko do odczytu (tekst nie może być zmieniany w edytorze)." : {
       "localizations" : {
         "en" : {
@@ -54765,6 +55269,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refactoring"
+          }
+        }
+      }
+    },
+    "Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "user@database rules (* and ?) take precedence over the connection and environment color; they apply to tabs, the window list and the background."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regeln user@Datenbank (* und ?) haben Vorrang vor der Farbe der Verbindung und Umgebung; sie gelten für Tabs, Fensterliste und Hintergrund."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las reglas usuario@base (* y ?) tienen prioridad sobre el color de la conexión y del entorno; se aplican a pestañas, lista de ventanas y fondo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правила user@база (* і ?) мають перевагу над кольором підключення та середовища; стосуються вкладок, списку вікон і тла."
           }
         }
       }
@@ -59553,6 +60085,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сортувати"
+          }
+        }
+      }
+    },
+    "Sortuj listę okien…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort window list…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterliste sortieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar lista de ventanas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати список вікон…"
           }
         }
       }
@@ -65577,6 +66137,34 @@
         }
       }
     },
+    "Typ okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstertyp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип вікна"
+          }
+        }
+      }
+    },
     "Typ okna: sql, program, test, command" : {
       "localizations" : {
         "en" : {
@@ -65825,6 +66413,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hintergrund (CSS-Farbe)"
+          }
+        }
+      }
+    },
+    "Tło edytora w kolorze połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor background in connection color"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editorhintergrund in Verbindungsfarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo del editor con el color de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тло редактора в кольорі підключення"
           }
         }
       }
@@ -68653,6 +69269,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung löschen"
+          }
+        }
+      }
+    },
+    "Usuń regułę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove rule"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regel entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar regla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити правило"
           }
         }
       }
@@ -73081,6 +73725,34 @@
         }
       }
     },
+    "Wskaźniki połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection indicators"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsindikatoren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicadores de conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Індикатори підключень"
+          }
+        }
+      }
+    },
     "Wskaż katalog…" : {
       "localizations" : {
         "en" : {
@@ -75937,6 +76609,34 @@
         }
       }
     },
+    "Wykonaj okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати вікно"
+          }
+        }
+      }
+    },
     "Wykonaj parametry startowe" : {
       "localizations" : {
         "en" : {
@@ -78733,6 +79433,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шаблон з'єднань, напр. app@prod*"
+          }
+        }
+      }
+    },
+    "Wzorzec, np. sys@*" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pattern, e.g. sys@*"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muster, z. B. sys@*"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patrón, p. ej. sys@*"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон, напр. sys@*"
           }
         }
       }
@@ -82541,6 +83269,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Закриває сеанси вікон без відкритої транзакції; вікна перепідключаться під час наступного виконання."
+          }
+        }
+      }
+    },
+    "Zamyka sesję okna (bez otwartej transakcji); okno łączy się ponownie przy następnym wykonaniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the window session (without an open transaction); the window reconnects on the next execution."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt die Sitzung des Fensters (ohne offene Transaktion); das Fenster verbindet sich bei der nächsten Ausführung erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra la sesión de la ventana (sin transacción abierta); la ventana se reconecta en la próxima ejecución."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закриває сеанс вікна (без відкритої транзакції); вікно підключиться повторно під час наступного виконання."
           }
         }
       }
@@ -88705,6 +89461,62 @@
         }
       }
     },
+    "Zmień nazwę okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster umbenennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати вікно"
+          }
+        }
+      }
+    },
+    "Zmień nazwę okna…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename window…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster umbenennen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar ventana…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати вікно…"
+          }
+        }
+      }
+    },
     "Zmień nazwę…" : {
       "localizations" : {
         "en" : {
@@ -93013,6 +93825,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "optional"
+          }
+        }
+      }
+    },
+    "opening, name albo type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name or type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name oder type"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name o type"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name або type"
           }
         }
       }

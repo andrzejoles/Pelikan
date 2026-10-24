@@ -60,6 +60,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             self.lineStatusEnabled = ws.settings.showLineStatus
             self.scheduleLineStatus(delay: 0)
         })
+        // Tło w kolorze połączenia (wskaźniki połączeń, PD-CONN-005) — delikatny odcień, tekst pozostaje czytelny.
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            _ = self.document.connectionID
+            if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
+                self.textView.backgroundColor = NSColor.textBackgroundColor.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? .textBackgroundColor
+            } else {
+                self.textView.backgroundColor = .textBackgroundColor
+            }
+        })
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }

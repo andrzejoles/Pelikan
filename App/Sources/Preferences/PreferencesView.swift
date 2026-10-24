@@ -52,6 +52,29 @@ struct GeneralPane: View {
                 }
                 Toggle(L10n.tr("Przypinaj połączenie nowych okien"), isOn: setting(workspace, \.pinWindowConnectionsByDefault))
             }
+            Section(L10n.tr("Wskaźniki połączeń")) {
+                Toggle(L10n.tr("Tło edytora w kolorze połączenia"), isOn: setting(workspace, \.colorWindowBackground))
+                Text(L10n.tr("Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła."))
+                    .font(.caption).foregroundStyle(.secondary)
+                ForEach(workspace.settings.connectionIndicators.indices, id: \.self) { i in
+                    HStack {
+                        TextField(L10n.tr("Wzorzec, np. sys@*"), text: Binding(get: { workspace.settings.connectionIndicators[i].pattern },
+                                                                          set: { workspace.settings.connectionIndicators[i].pattern = $0 }))
+                        ColorPicker("", selection: Binding(get: {
+                            let c = workspace.settings.connectionIndicators[i].color
+                            return Color(red: c.red, green: c.green, blue: c.blue)
+                        }, set: { c in
+                            let n = NSColor(c).usingColorSpace(.sRGB) ?? .systemRed
+                            workspace.settings.connectionIndicators[i].color = RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent)
+                        }), supportsOpacity: false).labelsHidden()
+                        Button { workspace.settings.connectionIndicators.remove(at: i) } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń regułę"))
+                    }
+                }
+                Button(L10n.tr("Dodaj regułę")) {
+                    workspace.settings.connectionIndicators.append(ConnectionIndicator(pattern: "*@*", color: RGBColor(red: 0.85, green: 0.2, blue: 0.2)))
+                }
+            }
             Section(L10n.tr("Wygląd (UG 23.16)")) {
                 Picker(L10n.tr("Tryb"), selection: setting(workspace, \.appearance)) {
                     Text(L10n.tr("Jak system")).tag(AppearanceMode.system)

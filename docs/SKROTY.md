@@ -484,6 +484,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Wykonaj okno | `window.execute` |  |  | Brak | 0 | PD-UI-002 |
+| Połącz ponownie okno | `window.reconnect` |  |  | Brak | 0 | PD-UI-002 |
+| Zmień nazwę okna… | `window.rename` |  |  | Brak | 0 | PD-UI-002 |
+| Krótkie nazwy na liście okien | `window.listShortTitles` |  |  | Brak | 0 | PD-UI-002 |
+| Sortuj listę okien… | `window.listSort` |  |  | Brak | 0 | PD-UI-002 |
 | Następne okno | `window.next` | ⌃⇥, ⇧⌘] | ⇧⌘], ⌃⇥ | Pełny | 0 | PD-UI-004 |
 | Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ | ⇧⌘[, ⌃⇧⇥ | Pełny | 0 | PD-UI-004 |
 
