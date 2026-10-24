@@ -150,6 +150,30 @@ struct TableEditorView: View {
                 if original != nil {
                     Text(definition.partitionInfo.isEmpty ? L10n.tr("Tabela nie jest partycjonowana") : L10n.tr("Partycjonowanie: \(definition.partitionInfo)"))
                         .foregroundStyle(.secondary)
+                    // Partycje istniejącej tabeli (PD-OED-006): zmiana nazwy, usunięcie, nowe partycje (ADD PARTITION).
+                    if let p = definition.partitioning {
+                        ForEach(p.partitions.indices, id: \.self) { i in
+                            HStack {
+                                TextField(L10n.tr("Nazwa"), text: Binding(get: { definition.partitioning?.partitions[i].name ?? "" },
+                                                                          set: { definition.partitioning?.partitions[i].name = $0.uppercased() }))
+                                    .frame(width: 180)
+                                if p.partitions[i].originalName != nil || p.method == .hash {
+                                    Text(p.partitions[i].values).font(.system(.body, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                                } else {
+                                    TextField(p.method == .range ? L10n.tr("VALUES LESS THAN") : L10n.tr("VALUES"),
+                                              text: Binding(get: { definition.partitioning?.partitions[i].values ?? "" },
+                                                            set: { definition.partitioning?.partitions[i].values = $0 }))
+                                        .font(.system(.body, design: .monospaced))
+                                }
+                                Spacer()
+                                Button { definition.partitioning?.partitions.remove(at: i) } label: { Image(systemName: "minus.circle") }
+                                    .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń partycję"))
+                            }
+                        }
+                        Button(L10n.tr("Dodaj partycję")) {
+                            definition.partitioning?.partitions.append(TableDefinition.Partition(name: "P\((definition.partitioning?.partitions.count ?? 0) + 1)"))
+                        }
+                    }
                 } else {
                     Toggle(L10n.tr("Partycjonuj tabelę"), isOn: Binding(get: { definition.partitioning != nil },
                                                                        set: { definition.partitioning = $0 ? TableDefinition.Partitioning(method: .range, columns: []) : nil }))
@@ -161,6 +185,12 @@ struct TableEditorView: View {
                                                                            set: { definition.partitioning?.columns = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty } }))
                         if definition.partitioning?.method == .range {
                             TextField(L10n.tr("INTERVAL (np. NUMTOYMINTERVAL(1,'MONTH'))"), text: Binding(get: { definition.partitioning?.interval ?? "" }, set: { definition.partitioning?.interval = $0 }))
+                        }
+                        HStack {
+                            TextField(L10n.tr("Podpartycje HASH — kolumny"), text: Binding(get: { definition.partitioning?.subpartitionColumns.joined(separator: ", ") ?? "" },
+                                set: { definition.partitioning?.subpartitionColumns = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty } }))
+                            Stepper(L10n.tr("Liczba: \(definition.partitioning?.subpartitionCount ?? 0)"),
+                                    value: Binding(get: { definition.partitioning?.subpartitionCount ?? 0 }, set: { definition.partitioning?.subpartitionCount = $0 }), in: 0...64)
                         }
                         TextField(L10n.tr("Partycje: nazwa: wartości (po jednej w linii)"), text: Binding(get: {
                             definition.partitioning?.partitions.map { $0.values.isEmpty ? $0.name : "\($0.name): \($0.values)" }.joined(separator: "\n") ?? ""

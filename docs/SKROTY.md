@@ -322,6 +322,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Odśwież widok zmaterializowany | `ob.refreshMV` |  |  | Brak | 0 | PD-OB-019 |
 | Obiekt › Testuj łącze | `ob.testLink` |  |  | Odczyt | 0 | PD-OB-019 |
 | Obiekt › Uruchom zadanie | `ob.runJob` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Uruchom kolejkę | `ob.startQueue` |  |  | Brak | 0 | PD-OB-019 |
+| Obiekt › Zatrzymaj kolejkę | `ob.stopQueue` |  |  | Brak | 0 | PD-OB-019 |
 | Kosz | `ob.recycleBin` |  |  | Odczyt | 0 | PD-OB-021 |
 | Kosz › Przywróć z kosza… | `ob.restoreFromRecycleBin` |  |  | Brak | 0 | PD-OB-021 |
 | Kosz › Opróżnij kosz… | `ob.purgeRecycleBin` |  |  | Brak | 0 | PD-OB-021 |

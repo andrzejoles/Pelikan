@@ -9577,6 +9577,62 @@
         }
       }
     },
+    "DBMS_AQADM.START_QUEUE: włącza kolejkowanie i odbieranie wiadomości kolejki AQ." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: enables enqueuing and dequeuing of AQ queue messages."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: aktiviert Einreihen und Abrufen von Nachrichten der AQ-Warteschlange."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: activa el encolado y desencolado de mensajes de la cola AQ."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: вмикає постановку й отримання повідомлень черги AQ."
+          }
+        }
+      }
+    },
+    "DBMS_AQADM.STOP_QUEUE: wyłącza kolejkowanie i odbieranie wiadomości kolejki AQ (czeka na bieżące transakcje)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: disables enqueuing and dequeuing of AQ queue messages (waits for current transactions)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: deaktiviert Einreihen und Abrufen von Nachrichten der AQ-Warteschlange (wartet auf laufende Transaktionen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: desactiva el encolado y desencolado de mensajes de la cola AQ (espera a las transacciones en curso)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: вимикає постановку й отримання повідомлень черги AQ (чекає на поточні транзакції)."
+          }
+        }
+      }
+    },
     "DBMS_DEBUG nie zwrócił identyfikatora sesji" : {
       "localizations" : {
         "en" : {
@@ -12093,6 +12149,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt zum Projekt hinzufügen"
+          }
+        }
+      }
+    },
+    "Dodaj partycję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add partition"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partition hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir partición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати секцію"
           }
         }
       }
@@ -23773,6 +23857,62 @@
         }
       }
     },
+    "Kolejka %@ uruchomiona" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue %@ started"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange %@ gestartet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola %@ iniciada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чергу %@ запущено"
+          }
+        }
+      }
+    },
+    "Kolejka %@ zatrzymana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue %@ stopped"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange %@ angehalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola %@ detenida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чергу %@ зупинено"
+          }
+        }
+      }
+    },
     "Kolejki" : {
       "localizations" : {
         "en" : {
@@ -23797,6 +23937,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Queues"
+          }
+        }
+      }
+    },
+    "Kolejkowanie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enqueue (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einreihen (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encolar (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Постановка в чергу (типово так)"
           }
         }
       }
@@ -28305,6 +28473,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zahl, z. B. #,##0.00"
+          }
+        }
+      }
+    },
+    "Liczba: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzahl: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кількість: %@"
           }
         }
       }
@@ -38837,6 +39033,34 @@
         }
       }
     },
+    "Odbieranie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dequeue (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufen (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desencolar (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримання (типово так)"
+          }
+        }
+      }
+    },
     "Odbiorca" : {
       "localizations" : {
         "en" : {
@@ -47289,6 +47513,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unterverzeichnis für Quellen"
+          }
+        }
+      }
+    },
+    "Podpartycje HASH — kolumny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH subpartitions — columns"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH-Subpartitionen — Spalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subparticiones HASH — columnas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підсекції HASH — стовпці"
           }
         }
       }
@@ -70169,6 +70421,34 @@
         }
       }
     },
+    "Uruchom kolejkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start queue"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar cola"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити чергу"
+          }
+        }
+      }
+    },
     "Uruchom ponownie" : {
       "localizations" : {
         "en" : {
@@ -71933,6 +72213,34 @@
         }
       }
     },
+    "Usuń partycję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove partition"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partition entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar partición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити секцію"
+          }
+        }
+      }
+    },
     "Usuń po zakończeniu" : {
       "localizations" : {
         "en" : {
@@ -73329,6 +73637,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verwendet von"
+          }
+        }
+      }
+    },
+    "VALUES" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        }
+      }
+    },
+    "VALUES LESS THAN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
           }
         }
       }
@@ -89461,6 +89825,62 @@
         }
       }
     },
+    "Zatrzymaj kolejkowanie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop enqueuing (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einreihen anhalten (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener encolado (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити постановку (типово так)"
+          }
+        }
+      }
+    },
+    "Zatrzymaj kolejkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop queue"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange anhalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener cola"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити чергу"
+          }
+        }
+      }
+    },
     "Zatrzymaj na błędach ORA-:" : {
       "localizations" : {
         "en" : {
@@ -89485,6 +89905,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bei ORA-Fehlern anhalten:"
+          }
+        }
+      }
+    },
+    "Zatrzymaj odbieranie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop dequeuing (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufen anhalten (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener desencolado (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити отримання (типово так)"
           }
         }
       }

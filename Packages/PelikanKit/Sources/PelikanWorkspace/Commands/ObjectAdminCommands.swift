@@ -65,6 +65,31 @@ enum ObjectAdminCommands {
                 _ = try await mainSession(ctx).execute("begin dbms_job.run(:j); end;", binds: [BindVariable(name: "j", type: .number, value: .text(o.name))])
                 return CommandResult(message: L10n.tr("Zadanie \(o.name) wykonane"))
             },
+            command("ob.startQueue", L10n.tr("Uruchom kolejkę"), params: objectParams + [
+                        CommandParameter("enqueue", .boolean, L10n.tr("Kolejkowanie (domyślnie tak)")),
+                        CommandParameter("dequeue", .boolean, L10n.tr("Odbieranie (domyślnie tak)"))],
+                    effect: .modifiesDatabase,
+                    summary: L10n.tr("DBMS_AQADM.START_QUEUE: włącza kolejkowanie i odbieranie wiadomości kolejki AQ."), feature: "PD-OB-019",
+                    validate: { $0.selectedObject?.type == .queue }) { ctx in
+                let (o, m) = try await ObjectCommands.target(ctx)
+                let sql = "begin dbms_aqadm.start_queue(queue_name => :q, enqueue => \(ctx.arguments.bool("enqueue") ?? true ? "true" : "false"), dequeue => \(ctx.arguments.bool("dequeue") ?? true ? "true" : "false")); end;"
+                try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
+                _ = try await mainSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text("\(o.owner).\(o.name)"))])
+                return CommandResult(message: L10n.tr("Kolejka \(o.name) uruchomiona"))
+            },
+            command("ob.stopQueue", L10n.tr("Zatrzymaj kolejkę"), params: objectParams + [
+                        CommandParameter("enqueue", .boolean, L10n.tr("Zatrzymaj kolejkowanie (domyślnie tak)")),
+                        CommandParameter("dequeue", .boolean, L10n.tr("Zatrzymaj odbieranie (domyślnie tak)"))],
+                    effect: .modifiesDatabase,
+                    summary: L10n.tr("DBMS_AQADM.STOP_QUEUE: wyłącza kolejkowanie i odbieranie wiadomości kolejki AQ (czeka na bieżące transakcje)."),
+                    feature: "PD-OB-019",
+                    validate: { $0.selectedObject?.type == .queue }) { ctx in
+                let (o, m) = try await ObjectCommands.target(ctx)
+                let sql = "begin dbms_aqadm.stop_queue(queue_name => :q, enqueue => \(ctx.arguments.bool("enqueue") ?? true ? "true" : "false"), dequeue => \(ctx.arguments.bool("dequeue") ?? true ? "true" : "false"), wait => true); end;"
+                try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
+                _ = try await mainSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text("\(o.owner).\(o.name)"))])
+                return CommandResult(message: L10n.tr("Kolejka \(o.name) zatrzymana"))
+            },
             command("prog.reloadFromDatabase", L10n.tr("Wczytaj ponownie z bazy"), .session, submenu: nil, agent: .none, effect: .modifiesEditor,
                     summary: L10n.tr("Zastępuje tekst okna programu źródłem obiektów z bazy (po potwierdzeniu, gdy są niezapisane zmiany)."), feature: "PD-PROG-011",
                     validate: { programDocument($0).map { !$0.objectTimestamps.isEmpty } ?? false }) { ctx in

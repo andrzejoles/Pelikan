@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T13:01:05+02:00",
+  "heartbeat": "2026-10-24T13:07:42+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "P2: test łącza, DBMS_JOB.RUN i start/stop kolejek AQ (PD-OB-019); partycje istniejącej tabeli i podpartycje (PD-OED-006)",
     "P2: porównanie z obiektami w innej bazie, asercje 26ai (szablon, DDL, Drop), podświetlanie JavaScriptu w modułach MLE (PD-PROG-008, PD-OB-022, PD-OED-011, PD-PROG-014)",
     "Tunel SSH z hasłem z Pęku kluczy przez askpass z jednorazowej kolejki (DB-SSH-001, D134); testowy sshd z użytkownikiem hasłowym",
     "Okno testu: typ BFile (PD-TEST-002); macierz uprawnień sesji agenta w pakiecie z testami (AI-PERM-001)",
@@ -91,8 +92,7 @@
     "Etap 5 / zmiany — execute/script/compile/commit/rollback agenta z podglądem, DML niezatwierdzone, DDL odrzucone przy otwartej transakcji, historia kodu i cofanie sesji z konfliktami, testy i szkielet w sesjach agenta; 5 testów (D35). Równolegle subagent buduje panel agenta (5.4)",
     "Etap 5 / baza — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, użytkownik proxy), 15 narzędzi odczytu, run_query READ ONLY z limitami i maskowaniem, open_object; 4 testy na bazie (D34)",
     "Etap 4 (utPLSQL) zamknięty — D32; PR #34 scalony",
-    "Etap 4 / utPLSQL — instalacja i aktualizacja z oficjalnego wydania (suma kontrolna, okno poleceń, tylko dev/test, po potwierdzeniu; konto właściciela z losowym hasłem i zablokowane); COLUMN NEW_VALUE bez wierszy jak w SQL*Plus — test instalacji obok w osobnym schemacie",
-    "Etap 4 / utPLSQL — eksport JUnit/Sonar/TeamCity/TAP i pokrycia Cobertura/Sonar/HTML, skrypt CLI bez hasła (sprawdzony w SQL*Plus), ostrzeżenie o pokryciu, szablony adnotacji, historia i porównanie przebiegów, debugowanie testu pod kursorem; naprawa wyścigu buforów reportera (ORA-00001) i konfliktu skrótu ⌥⌘U"
+    "Etap 4 / utPLSQL — instalacja i aktualizacja z oficjalnego wydania (suma kontrolna, okno poleceń, tylko dev/test, po potwierdzeniu; konto właściciela z losowym hasłem i zablokowane); COLUMN NEW_VALUE bez wierszy jak w SQL*Plus — test instalacji obok w osobnym schemacie"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."
