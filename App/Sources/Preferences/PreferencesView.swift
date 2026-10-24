@@ -6,9 +6,16 @@ import SwiftUI
 
 /// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
 /// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
+/// Wybrana karta Preferencji — wspólna dla okna, żeby komendy mogły otwierać konkretną kartę (np. Zestawy).
+@MainActor
+@Observable
+final class PreferencesNavigation {
+    var pane = "GeneralPane"
+}
+
 struct PreferencesView: View {
     let workspace: Workspace
-    @State private var pane = "GeneralPane"
+    @Bindable var navigation: PreferencesNavigation
     @State private var query = ""
 
     static let panes: [(id: String, title: String, icon: String)] = [
@@ -38,7 +45,7 @@ struct PreferencesView: View {
             .padding(.horizontal, 12)
             .padding(.top, 8)
             if query.isEmpty {
-                TabView(selection: $pane) {
+                TabView(selection: $navigation.pane) {
                     GeneralPane(workspace: workspace).tag("GeneralPane").tabItem { tab("GeneralPane") }
                     SQLWindowPane(workspace: workspace).tag("SQLWindowPane").tabItem { tab("SQLWindowPane") }
                     EditorPane(workspace: workspace).tag("EditorPane").tabItem { tab("EditorPane") }
@@ -57,7 +64,7 @@ struct PreferencesView: View {
                     if found.isEmpty { Text(L10n.tr("Nic nie znaleziono")).foregroundStyle(.secondary) }
                     ForEach(Array(found.enumerated()), id: \.offset) { _, f in
                         Button {
-                            pane = f.pane
+                            navigation.pane = f.pane
                             query = ""
                         } label: {
                             HStack {
@@ -593,15 +600,19 @@ struct KeyboardPane: View {
 final class PreferencesWindowController: NSWindowController {
     private static var shared: PreferencesWindowController?
 
-    static func show(workspace: Workspace) {
+    private let navigation = PreferencesNavigation()
+
+    /// `pane` — karta do pokazania (nazwa struktury panelu, np. "PreferenceSetsPane").
+    static func show(workspace: Workspace, pane: String? = nil) {
         let c = shared ?? PreferencesWindowController(workspace: workspace)
         shared = c
+        if let pane { c.navigation.pane = pane }
         c.showWindow(nil)
         c.window?.makeKeyAndOrderFront(nil)
     }
 
     init(workspace: Workspace) {
-        let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace)))
+        let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace, navigation: navigation)))
         w.title = L10n.tr("Preferencje")
         w.styleMask = [.titled, .closable]
         super.init(window: w)

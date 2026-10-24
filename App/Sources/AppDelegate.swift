@@ -163,7 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showPreferenceSets() {
-        PreferencesWindowController.show(workspace: workspace)
+        PreferencesWindowController.show(workspace: workspace, pane: "PreferenceSetsPane")
     }
 
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
