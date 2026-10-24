@@ -10,7 +10,7 @@ struct UtplsqlTests {
     func workspace() throws -> (Workspace, UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def.id)

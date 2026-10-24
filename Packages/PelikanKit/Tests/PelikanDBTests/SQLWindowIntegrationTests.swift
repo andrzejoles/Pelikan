@@ -54,7 +54,7 @@ struct SQLWindowIntegrationTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql)
@@ -182,7 +182,7 @@ struct SQLWindowBreakTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql)
@@ -209,7 +209,7 @@ struct GridEditingIntegrationTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql)
@@ -311,7 +311,7 @@ struct LargeDataIntegrationTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql)
@@ -376,7 +376,7 @@ struct CommandWindowIntegrationTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, ws.newDocument(.command), ui)
@@ -488,12 +488,12 @@ struct CommandWindowIntegrationTests {
     func connectAndDialog() async throws {
         let (ws, doc, _) = try make()
         let c = TestDatabase.config!
-        let agent = ConnectionDefinition(name: "agent-test", target: ConnectionTarget(user: c.agentUser, connectString: c.connectString))
+        let agent = ConnectionDefinition(name: "dev_agent_test", target: ConnectionTarget(user: c.agentUser, connectString: c.connectString))
         try ws.connections.upsert(agent, password: c.agentPassword)
-        try await ws.invoke("cmd.executeLine", CommandArguments(["line": .string("connect agent-test")]))
+        try await ws.invoke("cmd.executeLine", CommandArguments(["line": .string("connect dev_agent_test")]))
         try await ws.invoke("cmd.executeLine", CommandArguments(["line": .string("show user")]))
         #expect(output(doc).contains("USER to „\(c.agentUser.uppercased())”"))
-        #expect(doc.commandLineHistory == ["connect agent-test", "show user"])
+        #expect(doc.commandLineHistory == ["connect dev_agent_test", "show user"])
         #expect(doc.console.contains { $0.kind == .prompt && $0.text == "SQL> show user" })
         await ws.sessions.disconnectAll()
     }
@@ -510,7 +510,7 @@ struct SSHTunnelIntegrationTests {
         let dir = c.sshDirectory!
         ws.sessions.tunnels.extraOptions = ["-o", "UserKnownHostsFile=\(dir)/known_hosts", "-o", "StrictHostKeyChecking=yes", "-F", "/dev/null"]
         // Baza widziana z bastionu (sieć Docker), nie z Maca.
-        var def = ConnectionDefinition(name: "przez-ssh", target: ConnectionTarget(user: c.user, connectString: "\(c.sshDBHost ?? "pelikan-testdb"):1521/FREEPDB1"))
+        var def = ConnectionDefinition(name: "dev_przez_ssh", target: ConnectionTarget(user: c.user, connectString: "\(c.sshDBHost ?? "pelikan-testdb"):1521/FREEPDB1"))
         def.sshTunnel = SSHTunnel(host: "127.0.0.1", port: c.sshPort!, user: "tunnel", identityFile: identity)
         try ws.connections.upsert(def, password: c.password)
         return (ws, def)
@@ -563,7 +563,7 @@ struct WindowSessionsIntegrationTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def, ui)

@@ -52,13 +52,13 @@ struct OracleNetTests {
 struct OracleWalletDBTests {
     @Test("Połączenie /@alias poświadczeniem z portfela (bez hasła w Pelikanie), także przez SessionManager")
     func sepsConnection() async throws {
-        var t = ConnectionTarget(user: "", connectString: "pelikan_seps")
+        var t = ConnectionTarget(user: "", connectString: "dev_pelikan_seps")
         t.walletAuth = true
         let s = try await ODPISession.connect(target: t, credentials: Credentials(password: nil))
         #expect(try await s.scalar("select user from dual") == TestDatabase.config!.user.uppercased())
         await s.close()
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        var def = ConnectionDefinition(name: "Portfel", target: t)
+        var def = ConnectionDefinition(name: "dev_portfel", target: t)
         def.savePassword = false
         try ws.connections.upsert(def, password: nil)
         ws.sessions.setMainConnection(def.id)

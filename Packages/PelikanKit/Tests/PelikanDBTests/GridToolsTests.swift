@@ -13,7 +13,7 @@ struct GridToolsTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql, text: "select empno, ename, deptno from emp order by empno;\nselect empno, ename, deptno from emp where deptno = 10 order by empno;")
@@ -66,7 +66,7 @@ struct GridToolsTests {
     func externalEditor() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql, text: "select to_clob('{\\rtf1 tekst}') tresc from dual")

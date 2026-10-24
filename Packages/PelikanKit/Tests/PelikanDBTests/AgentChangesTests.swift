@@ -12,7 +12,7 @@ struct AgentChangesTests {
     func workspace() throws -> (Workspace, ConnectionDefinition, Invoker) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "Testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .test)
+        let def = ConnectionDefinition(name: "dev_testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .test)
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         ws.agentGate = Self.gate

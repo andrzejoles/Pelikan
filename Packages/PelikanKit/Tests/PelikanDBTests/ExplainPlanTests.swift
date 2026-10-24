@@ -11,7 +11,7 @@ struct ExplainPlanDBTests {
     func explain() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let sql = ws.newDocument(.sql, text: "select e.ename, d.dname from emp e join dept d on d.deptno = e.deptno where e.sal > 1000;\nselect 1 from dual;")

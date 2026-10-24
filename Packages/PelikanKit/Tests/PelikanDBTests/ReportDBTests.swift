@@ -11,7 +11,7 @@ struct ReportDBTests {
     func workspace(dataDirectory: URL? = nil) throws -> (Workspace, UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(dataDirectory: dataDirectory, drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "Testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def.id)

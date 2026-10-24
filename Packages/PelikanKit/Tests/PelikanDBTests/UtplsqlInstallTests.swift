@@ -11,7 +11,7 @@ struct UtplsqlInstallTests {
     func installSideBySide() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "sys", target: ConnectionTarget(user: "SYS", connectString: c.connectString, role: .sysdba),
+        let def = ConnectionDefinition(name: "dev_sys", target: ConnectionTarget(user: "SYS", connectString: c.connectString, role: .sysdba),
                                        environment: .test)
         try ws.connections.upsert(def, password: c.systemPassword)
         ws.sessions.setMainConnection(def.id)
@@ -50,7 +50,7 @@ struct UtplsqlInstallTests {
     func refusesProduction() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "prod", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .production)
+        let def = ConnectionDefinition(name: "dev_jak_produkcja", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .production)
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         await #expect(throws: CommandError.self) { try await ws.invoke("utplsql.install") }
