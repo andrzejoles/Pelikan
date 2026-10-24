@@ -141,19 +141,13 @@ public enum Spawn {
         let p = try launch(executable, args, environment: environment, stdin: stdin, output: output)
         let collected = Mutex<(out: Data, err: Data)>((Data(), Data()))
         let group = DispatchGroup()
+        let readStop = ReadStop()
         if case .capture = output {
             for (fd, isError) in [(p.stdout, false), (p.stderr, true)] {
                 group.enter()
                 DispatchQueue.global(qos: .utility).async {
-                    var buffer = [UInt8](repeating: 0, count: 65536)
                     var data = Data()
-                    while true {
-                        let n = read(fd, &buffer, buffer.count)
-                        if n < 0, errno == EINTR { continue }
-                        if n <= 0 { break }
-                        data.append(buffer, count: n)
-                    }
-                    close(fd)
+                    readUntilEOF(fd, stop: readStop) { buffer, n in data.append(buffer, count: n) }
                     collected.withLock { if isError { $0.err = data } else { $0.out = data } }
                     group.leave()
                 }
@@ -188,7 +182,10 @@ public enum Spawn {
             }
             usleep(20_000)
         }
-        group.wait()
+        if group.wait(timeout: .now() + readGraceAfterExit) == .timedOut {
+            readStop.set()
+            group.wait()
+        }
         if cancelled { throw SSHError.cancelled }
         if timedOut { throw SSHError.timeout }
         let (out, err) = collected.withLock { $0 }
@@ -204,6 +201,35 @@ public enum Spawn {
         return SpawnedProcess(p, timeout: timeout, silenceTimeout: silenceTimeout)
     }
 }
+
+/// Odczyt deskryptora do końca danych albo do sygnału `stop`. Klient `ssh` z ControlMaster przekazuje swoje stdio
+/// procesowi głównemu, więc po zabiciu klienta koniec zapisu potoku może trzymać master aż do zamknięcia zdalnej sesji —
+/// `read` bez limitu potrafił wtedy wisieć bez końca (zawieszenia testów Stop na CI). `poll` co 200 ms i flaga `stop`
+/// ograniczają czas odczytu po zakończeniu procesu lokalnego.
+final class ReadStop: Sendable {
+    private let flag = Mutex(false)
+    var isSet: Bool { flag.withLock { $0 } }
+    func set() { flag.withLock { $0 = true } }
+}
+
+func readUntilEOF(_ fd: Int32, stop: ReadStop, _ chunk: ([UInt8], Int) -> Void) {
+    var buffer = [UInt8](repeating: 0, count: 65536)
+    var pfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+    while true {
+        pfd.revents = 0
+        let pr = poll(&pfd, 1, 200)
+        if pr < 0 { if errno == EINTR { continue }; break }
+        if pr == 0 { if stop.isSet { break }; continue }
+        let n = read(fd, &buffer, buffer.count)
+        if n < 0, errno == EINTR || errno == EAGAIN { continue }
+        if n <= 0 { break }
+        chunk(buffer, n)
+    }
+    close(fd)
+}
+
+/// Po zakończeniu procesu: czas na dociągnięcie danych, potem przerwanie odczytu (master `ssh` może trzymać potok).
+let readGraceAfterExit: TimeInterval = 3
 
 /// Stan procesu dzielony przez wątki odczytu, nadzoru i Stop.
 final class SpawnState: Sendable {
@@ -225,22 +251,18 @@ public final class SpawnedProcess: Sendable {
         let shared = shared
         let pid = p.pid
         let group = DispatchGroup()
+        let readStop = ReadStop()
         // Jeden wątek na deskryptor; zdarzenia wysyłane pod blokadą, więc kolejność w każdym potoku zachowana.
         for (fd, isError) in [(p.stdout, false), (p.stderr, true)] {
             group.enter()
             Thread.detachNewThread {
-                var buffer = [UInt8](repeating: 0, count: 65536)
-                while true {
-                    let n = read(fd, &buffer, buffer.count)
-                    if n < 0, errno == EINTR { continue }
-                    if n <= 0 { break }
+                readUntilEOF(fd, stop: readStop) { buffer, n in
                     let d = Data(buffer[0..<n])
                     shared.emit.withLock { _ in
                         shared.value.withLock { $0.lastActivity = Date() }
                         continuation.yield(isError ? .stderr(d) : .stdout(d))
                     }
                 }
-                close(fd)
                 group.leave()
             }
         }
@@ -262,7 +284,10 @@ public final class SpawnedProcess: Sendable {
                 }
                 usleep(20_000)
             }
-            group.wait()
+            if group.wait(timeout: .now() + readGraceAfterExit) == .timedOut {
+                readStop.set()
+                group.wait()
+            }
             let reason = shared.value.withLock { s -> SSHError? in
                 s.finished = true
                 return s.reason
