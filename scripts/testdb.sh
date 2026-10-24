@@ -502,9 +502,30 @@ KDC_NAME="${PELIKAN_TESTDB_KDC_CONTAINER:-pelikan-testdb-kdc}"
 KDC_PORT="${PELIKAN_TESTDB_KDC_PORT:-1088}"
 
 # Kerberos (PD-CONN-014): KDC MIT w kontenerze (scripts/testdb/kdc), realm PELIKAN.TEST. Serwer bazy: tablica kluczy
-# usługi oracle/localhost i sqlnet.ora z KERBEROS5; użytkownik DEV_KRB IDENTIFIED EXTERNALLY AS 'dev_krb@PELIKAN.TEST'.
+# usługi (sqlnet.ora z KERBEROS5 dopiero w kdc-linux); użytkownik DEV_KRB IDENTIFIED EXTERNALLY AS 'dev_krb@PELIKAN.TEST'.
 # Klient: pamięć podręczna biletów (TGT i bilet usługi z kinit -k w KDC, bez haseł) i krb5.conf w .testdb/kerberos,
 # sqlnet.ora klienta z parametrami Kerberos w .testdb/kerberos/net (użycie: kdc-linux; na macOS zob. D-ENV-4).
+# KERBEROS5 w sqlnet.ora serwera tylko na czas testu: ten plik czytają też procesy serwera jako klient (łącza bazy
+# danych, sqlplus w kontenerze) i bez biletów kończą się ORA-12641 (np. test łącza-pętli PD-OB-019).
+krb_server_on() {
+    # Katalog klienta narzędzi skryptu (sqlplus w kontenerze) — sqlnet.ora serwera bez bloku Kerberos.
+    docker exec "$NAME" bash -c 'mkdir -p /opt/oracle/client-net && sed "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora > /opt/oracle/client-net/sqlnet.ora'
+    docker exec -i "$NAME" bash -c 'f=$ORACLE_HOME/network/admin/sqlnet.ora; sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" "$f"; cat >> "$f"' <<'ORA'
+# PELIKAN-KERBEROS (scripts/testdb.sh kdc-linux)
+SQLNET.AUTHENTICATION_SERVICES=(BEQ, KERBEROS5)
+SQLNET.AUTHENTICATION_KERBEROS5_SERVICE=oracle
+SQLNET.KERBEROS5_KEYTAB=/opt/oracle/krb5/v5srvtab
+SQLNET.KERBEROS5_CONF=/opt/oracle/krb5/krb5.conf
+SQLNET.KERBEROS5_CONF_MIT=TRUE
+# PELIKAN-KERBEROS-END
+ORA
+}
+
+krb_server_off() {
+    container_exists || return 0
+    docker exec "$NAME" bash -c 'sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora && rm -rf /opt/oracle/client-net' || true
+}
+
 kdc_up() {
     load_env
     local image=pelikan-test-kdc:1 k="$STATE/kerberos"
@@ -544,17 +565,6 @@ kdc_up() {
     docker cp "$ROOT/scripts/testdb/kdc/krb5.conf" "$NAME:/opt/oracle/krb5/krb5.conf"
     rm -f "$k/oracle.keytab"
     docker exec -u root "$NAME" sh -c 'chown -R oracle /opt/oracle/krb5 && chmod 600 /opt/oracle/krb5/v5srvtab'
-    # Katalog klienta narzędzi skryptu (sqlplus w kontenerze) — sqlnet.ora serwera bez bloku Kerberos.
-    docker exec "$NAME" bash -c 'mkdir -p /opt/oracle/client-net && sed "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora > /opt/oracle/client-net/sqlnet.ora'
-    docker exec -i "$NAME" bash -c 'f=$ORACLE_HOME/network/admin/sqlnet.ora; sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" "$f"; cat >> "$f"' <<'ORA'
-# PELIKAN-KERBEROS (scripts/testdb.sh kdc-up)
-SQLNET.AUTHENTICATION_SERVICES=(BEQ, KERBEROS5)
-SQLNET.AUTHENTICATION_KERBEROS5_SERVICE=oracle
-SQLNET.KERBEROS5_KEYTAB=/opt/oracle/krb5/v5srvtab
-SQLNET.KERBEROS5_CONF=/opt/oracle/krb5/krb5.conf
-SQLNET.KERBEROS5_CONF_MIT=TRUE
-# PELIKAN-KERBEROS-END
-ORA
     sql_sys <<SQL
 DECLARE
   n PLS_INTEGER;
@@ -603,6 +613,8 @@ kdc_linux() {
     (umask 077
      printf 'PELIKAN_TESTDB_HOST=%s\nPELIKAN_TESTDB_PORT=1521\nPELIKAN_TESTDB_SERVICE=%s\n' "$NAME" "${PELIKAN_TESTDB_SERVICE:-FREEPDB1}" > "$t/env"
      printf 'PELIKAN_TESTDB_USER=%s\nPELIKAN_TESTDB_PASSWORD=%s\nPELIKAN_TESTDB_KERBEROS_USER=DEV_KRB\n' "$PELIKAN_TESTDB_USER" "$PELIKAN_TESTDB_PASSWORD" >> "$t/env")
+    krb_server_on
+    trap krb_server_off EXIT
     docker run --rm --network "$NET" -v "$lb:/src" -v "$ic:/opt/oracle/instantclient:ro" -w /src \
         -e CI=1 -e PELIKAN_OCI_LIB_DIR=/opt/oracle/instantclient -e LD_LIBRARY_PATH=/opt/oracle/instantclient \
         swift:6.3-noble bash -c 'apt-get update -qq >/dev/null && apt-get install -y -qq libaio1t64 >/dev/null \
@@ -613,9 +625,7 @@ kdc_linux() {
 kdc_down() {
     docker rm -f "$KDC_NAME" >/dev/null 2>&1 || true
     rm -rf "$STATE/kerberos"
-    if container_exists; then
-        docker exec "$NAME" bash -c 'sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora && rm -rf /opt/oracle/client-net' || true
-    fi
+    krb_server_off
     echo "Usunięto ${KDC_NAME} i konfigurację Kerberos" >&2
 }
 

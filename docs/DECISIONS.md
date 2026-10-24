@@ -1153,10 +1153,12 @@ portfel SEPS (`/@alias`) przekazuje alias dosłownie. Na Linuksie (tylko testy C
 `scripts/testdb.sh kdc-up` uruchamia KDC MIT (Alpine, realm PELIKAN.TEST, klucze losowe, główne hasło tylko w pliku
 stash w kontenerze), dodaje principal usługi `oracle/<nazwa hosta kontenera bazy>` (klient Oracle prosi o bilet dla
 nazwy hosta serwera, nie hosta z deskryptora — `oracle/localhost` nie wystarczał), kopiuje tablicę kluczy do kontenera
-bazy, dopisuje blok KERBEROS5 do sqlnet.ora serwera i tworzy użytkownika `DEV_KRB IDENTIFIED EXTERNALLY AS
+bazy i tworzy użytkownika `DEV_KRB IDENTIFIED EXTERNALLY AS
 'dev_krb@PELIKAN.TEST'` (bez zmiany OS_AUTHENT_PREFIX i restartu). Bilety (TGT i bilety usługi) powstają przez
-`kinit -k` w KDC i trafiają do `.testdb/kerberos/ccache` — klient nie musi łączyć się z KDC. sqlplus w kontenerze bazy
-czyta sqlnet.ora serwera także jako klient, więc narzędzia skryptu używają wtedy `/opt/oracle/client-net` bez Kerberos.
+`kinit -k` w KDC i trafiają do `.testdb/kerberos/ccache` — klient nie musi łączyć się z KDC. Blok KERBEROS5 w sqlnet.ora
+serwera jest dopisywany tylko na czas testu (`kdc-linux`, usuwany pułapką EXIT): ten plik czytają też procesy serwera
+jako klient — łącze bazy danych do siebie (test PD-OB-019) i sqlplus w kontenerze kończyły się ORA-12641; narzędzia
+skryptu używają w tym czasie `/opt/oracle/client-net` bez Kerberos.
 Wynik: `sqlplus` z Instant Client dla macOS loguje się jako DEV_KRB, ale ten sam klient w procesie Pelikana (i każdym
 procesie z AppKit) kończy się SIGABRT (ORA-24550) — także przy logowaniu hasłem, gdy sqlnet.ora włącza KERBEROS5.
 Przyczyna jak w D-ENV-3: `libclntsh.dylib` z płaską przestrzenią nazw i systemowy Kerberos.framework (ładowany przez
