@@ -97,7 +97,7 @@ struct ExportTablesView: View {
                 .frame(maxWidth: 320)
             }
             HSplitView {
-                TablePicker(tables: tables, selected: $selected).frame(minWidth: 260)
+                TablePicker(tables: tables, selected: $selected).frame(minWidth: 260, maxHeight: .infinity, alignment: .top)
                 Form {
                     switch method {
                     case .sql:
@@ -120,7 +120,8 @@ struct ExportTablesView: View {
                         Text(L10n.tr("Bez zaznaczonych tabel — cały schemat. Plik powstaje na serwerze bazy.")).font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                .frame(minWidth: 300)
+                .formStyle(.grouped)
+                .frame(minWidth: 300, maxHeight: .infinity, alignment: .top)
             }
             HStack {
                 ScrollView { Text(message).font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 90)
@@ -614,14 +615,19 @@ struct CompareTableDataView: View {
             HSplitView {
                 TablePicker(tables: tables, selected: $selected).frame(minWidth: 260)
                 VStack(alignment: .leading) {
+                    // Dwa wiersze opcji — w jednym przy węższym oknie etykiety łamały się w środku słów.
                     HStack {
                         Toggle("INSERT", isOn: $options.insert)
                         Toggle("UPDATE", isOn: $options.update)
                         Toggle("DELETE", isOn: $options.delete)
-                        Toggle(L10n.tr("Schemat w SQL"), isOn: $options.ownerInScript)
-                        Stepper(L10n.tr("COMMIT co \(options.commitEvery)"), value: $options.commitEvery, in: 0...100_000, step: 100).fixedSize()
                     }
                     .toggleStyle(.checkbox)
+                    .fixedSize()
+                    HStack {
+                        Toggle(L10n.tr("Schemat w SQL"), isOn: $options.ownerInScript).toggleStyle(.checkbox)
+                        Stepper(L10n.tr("COMMIT co \(options.commitEvery)"), value: $options.commitEvery, in: 0...100_000, step: 100)
+                    }
+                    .fixedSize()
                     Table(diffs, columns: {
                         TableColumn(L10n.tr("Tabela"), value: \.table)
                         TableColumn(L10n.tr("Nowe")) { d in Text("\(d.inserts.count)") }.width(60)
