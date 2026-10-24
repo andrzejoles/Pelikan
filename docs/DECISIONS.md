@@ -1071,3 +1071,12 @@ przewijany bez wysokości własnej zapada się do zera (płótno diagramu — pu
 narzędzi `HSplitView` z listą po lewej, stopki jako ostatni element `VStack`, układ AppKit z jawnymi więzami zamiast
 stosu, gdy jeden z widoków ma wypełnić resztę. Tak samo poprawione okna planu (panel SwiftUI wyśrodkowany w NSHostingView — rama na całą wysokość, pasek w dwóch wierszach) i raportu (NSStackView). W trybie skryptu zrzutów okna dialogowe nie są pokazywane — pytanie trafia do dziennika jako „Anuluj”, żeby nic nie aktywowało aplikacji. Okno instrukcji zostaje przy `NavigationSplitView` (pasek z przyciskiem
 panelu jest tam potrzebny, treść WebKit nie wchodzi pod tytuł).
+
+### D146 · 2026-10-24 — Podkreślenia analizy kodu w atrybutach tekstu, nie renderowania
+Zrzut w tle pokazał, że podkreślenia analizy kodu (DG-RES-001, DG-INSP-001) nigdy nie były widoczne: TextKit 2 nie
+rysuje `underlineStyle` z atrybutów renderowania `NSTextLayoutManager`. Podkreślenia są teraz atrybutami
+`NSTextStorage` (zmiana atrybutów nie zmienia tekstu, nie trafia do historii cofania i nie wywołuje obsługi edycji);
+kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada je ponownie. Test logiki analizy przechodził
+od początku — błąd był tylko w rysowaniu, stąd zrzuty w tle jako stała część weryfikacji okien. Ten sam przebieg naprawił
+nagłówek panelu agenta schowany pod paskiem narzędzi okna (przypięcie do `safeAreaLayoutGuide`).
+

@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select * from emp"}, "delay": 1}, {"command": "sql.execute", "delay": 3}, {"command": "grid.columnFilter", "delay": 2}]

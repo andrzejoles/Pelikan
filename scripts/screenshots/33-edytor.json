@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select e.ename, x.nic\n  from emp e\n  join nie_ma_takiej x on x.id = e.empno;\n\nselect * from dept;"}, "delay": 3}, {"command": "view.splitEditor", "delay": 2}]
