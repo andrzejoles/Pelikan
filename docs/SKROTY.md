@@ -49,6 +49,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Historia lokalna › Porównaj z wersją | `file.localHistoryCompare` |  |  | Brak | 0 | DG-HIST-001 |
 | Historia lokalna › Przywróć wersję | `file.localHistoryRestore` |  |  | Brak | 0 | DG-HIST-001 |
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Pełny | 0 | PD-PROG-002 |
+| Okno programu › Dodaj jednostkę… | `prog.addUnit` |  |  | Pełny | 0 | PD-PROG-001 |
+| Okno programu › Usuń jednostkę | `prog.removeUnit` |  |  | Pełny | 0 | PD-PROG-001 |
+| Przywróć | `prog.revert` |  |  | Pełny | 0 | PD-PROG-009 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
 | Nowy › Tabela… | `file.newTable` |  |  | Brak | 0 | PD-OED-001 |
@@ -156,6 +159,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Znajdź użycia | `edit.findUsages` |  | ⌥F7 | Brak | 0 | DG-USE-001 |
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Za zgodą | 0 | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Pełny | 0 | PD-TPL-002 |
+| Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Pełny | 0 | PD-CA-010 |
+| Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Odczyt | 0 | PD-CA-010 |
+| Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Pełny | 0 | PD-CA-010 |
+| Zawartość kodu › Testuj podprogram | `codeContents.test` |  |  | Pełny | 0 | PD-CA-010 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 0 | PD-EDIT-015 |
@@ -370,6 +377,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | utPLSQL › utPLSQL: uruchom wszystkie testy | `utplsql.runAll` | ⌃⇧U †, ⇧⌘U | ⇧⌘U | Za zgodą | 0 | UT-RUN-001 |
 | utPLSQL › utPLSQL: uruchom testy ze ścieżki… | `utplsql.runPath` |  |  | Za zgodą | 0 | UT-RUN-002 |
+| utPLSQL › utPLSQL: uruchom z opcjami… | `utplsql.runWithOptions` |  |  | Za zgodą | 0 | UT-RUN-003 |
 | utPLSQL › utPLSQL: testy z pokryciem kodu | `utplsql.coverage` |  |  | Za zgodą | 0 | UT-COV-001 |
 | utPLSQL › utPLSQL: uruchom test pod kursorem | `utplsql.runEditor` | ⌃⌥U †, ⌃⌘U | ⌃⌘U | Za zgodą | 0 | UT-RUN-004 |
 | utPLSQL › utPLSQL: uruchom ponownie nieudane | `utplsql.rerunFailed` |  |  | Za zgodą | 0 | UT-RUN-006 |
@@ -457,6 +465,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
 | Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | 0 | PD-UI-006 |
 | Podgląd przestrzenny | `grid.spatialPreview` |  |  | Brak | 0 | SD-DATA-001 |
+| Zawijaj wiersze | `view.wordWrap` |  |  | Brak | 0 | PD-EDIT-004 |
+| Okno szablonów | `view.templateWindow` |  |  | Brak | 0 | PD-TPL-001 |
+| Znaki specjalne | `view.specialCharacters` |  |  | Brak | 0 | PD-EDIT-003 |
+| Status linii | `view.lineStatus` |  |  | Brak | 0 | PD-EDIT-003 |
 | Eksplorator testów utPLSQL | `utplsql.explorer` |  |  | Odczyt | 0 | UT-EXP-001 |
 | Historia schowka | `view.clipboardHistory` |  |  | Brak | 0 | PD-EDIT-024 |
 | Zadania To-Do | `view.todoItems` |  |  | Odczyt | 0 | PD-TODO-001 |
@@ -472,6 +484,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Wykonaj okno | `window.execute` |  |  | Brak | 0 | PD-UI-002 |
+| Połącz ponownie okno | `window.reconnect` |  |  | Brak | 0 | PD-UI-002 |
+| Zmień nazwę okna… | `window.rename` |  |  | Brak | 0 | PD-UI-002 |
+| Krótkie nazwy na liście okien | `window.listShortTitles` |  |  | Brak | 0 | PD-UI-002 |
+| Sortuj listę okien… | `window.listSort` |  |  | Brak | 0 | PD-UI-002 |
 | Następne okno | `window.next` | ⌃⇥, ⇧⌘] | ⇧⌘], ⌃⇥ | Pełny | 0 | PD-UI-004 |
 | Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ | ⇧⌘[, ⌃⇧⇥ | Pełny | 0 | PD-UI-004 |
 

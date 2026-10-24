@@ -43,7 +43,7 @@ struct GridStage8DBTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = Stage8UI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql, text: sql)
@@ -153,7 +153,7 @@ struct GridStage8DBTests {
         let ui = Stage8UI()
         ui.variables = ["min": .text("0")]
         ws.ui = ui
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql, text: "select n, txt from pelikan_g8_ar where n > :min order by n")
@@ -247,7 +247,7 @@ struct GridStage8DBTests {
         let ui = Stage8UI()
         ws.ui = ui
         ws.settings.notifyLongQuerySeconds = 1
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let doc = ws.newDocument(.sql, text: "begin dbms_session.sleep(1.2); end;")

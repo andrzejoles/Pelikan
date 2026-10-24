@@ -63,13 +63,16 @@ enum UtplsqlCommands {
     }
 
     @MainActor
-    static func run(_ ctx: CommandContext, paths: [String]?, coverage: Bool) async throws -> CommandResult {
+    static func run(_ ctx: CommandContext, paths: [String]?, coverage: Bool, schemes: [String] = [],
+                    include: [String] = [], exclude: [String] = []) async throws -> CommandResult {
         let ws = ctx.workspace
         if coverage { try await confirmCoverage(ctx) }
         guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
         let schema = try await m.currentSchema()
         let p = paths ?? [schema]
-        let run = try await UtplsqlRunner.start(paths: p, coverageSchemes: coverage ? [schema] : [], in: ws, connectionID: conn)
+        let run = try await UtplsqlRunner.start(paths: p, coverageSchemes: coverage ? (schemes.isEmpty ? [schema] : schemes) : [],
+                                                include: coverage ? include : [], exclude: coverage ? exclude : [],
+                                                in: ws, connectionID: conn)
         if ctx.invoker == .user {
             ctx.ui?.showUtplsqlResults(run)
             return CommandResult(message: L10n.tr("Uruchomiono testy: \(p.joined(separator: ", "))"))
@@ -86,6 +89,28 @@ enum UtplsqlCommands {
                                 }),
                                 "runError": run.failure.map { .string($0) } ?? .null,
                              ]))
+    }
+
+    /// Formularz opcji przebiegu (UT-RUN-003, UT-COV-001) — pola jak parametry `utplsql.runWithOptions`.
+    @MainActor
+    static func optionsForm(_ ui: any UIServices, document: Document, path: String) async throws -> [String: String] {
+        func field(_ name: String, _ label: String, hint: String, value: String = "", checkbox: Bool = false) -> VariableRequest {
+            var o = VariableOptions(name: label)
+            o.hint = hint
+            if checkbox { o.checkbox = ("true", "false") }
+            return VariableRequest(name: name, kind: .substitution, options: o, value: .text(value))
+        }
+        let requests = [
+            field("path", L10n.tr("Ścieżki testów"), hint: L10n.tr("schemat, schemat.pakiet[.procedura] albo schemat:suitepath; kilka po przecinku"), value: path),
+            field("coverage", L10n.tr("Pokrycie kodu"), hint: L10n.tr("Zbieraj pokrycie przez profiler PL/SQL"), value: "false", checkbox: true),
+            field("schemes", L10n.tr("Schematy pokrycia"), hint: L10n.tr("Puste — bieżący schemat")),
+            field("include", L10n.tr("Uwzględnij obiekty"), hint: L10n.tr("np. emp_api, dept_api")),
+            field("exclude", L10n.tr("Pomiń obiekty"), hint: L10n.tr("np. emp_api_test")),
+        ]
+        guard let answers = await ui.askVariables(requests, document: document) else { throw CommandError.cancelledByUser }
+        var out: [String: String] = [:]
+        for (k, v) in answers { if case .text(let s) = v { out[k] = s } }
+        return out
     }
 
     /// Ścieżka utPLSQL dla pozycji kursora w oknie programu: procedura testowa pod kursorem albo cały pakiet.
@@ -127,6 +152,31 @@ enum UtplsqlCommands {
                 }
                 let paths = path.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
                 return try await run(ctx, paths: paths, coverage: ctx.arguments.bool("coverage") ?? false)
+            },
+            Command(CommandDescriptor(id: "utplsql.runWithOptions", title: L10n.tr("utPLSQL: uruchom z opcjami…"), category: .tools, submenu: "utPLSQL",
+                                      parameters: runParams + [
+                                        CommandParameter("schemes", .string, L10n.tr("Schematy pokrycia po przecinku (domyślnie bieżący)")),
+                                        CommandParameter("include", .string, L10n.tr("Obiekty uwzględniane w pokryciu po przecinku")),
+                                        CommandParameter("exclude", .string, L10n.tr("Obiekty pomijane w pokryciu po przecinku")),
+                                      ],
+                                      agent: .approval, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Okno opcji przebiegu: ścieżki testów, pokrycie, schematy pokrycia oraz obiekty uwzględniane i pomijane."),
+                                      feature: "UT-RUN-003"),
+                    validate: { connection($0) != nil }) { ctx in
+                var a = ctx.arguments
+                if ctx.invoker == .user, a.string("path") == nil, let ui = ctx.ui, let doc = ctx.workspace.activeDocument ?? ctx.workspace.documents.first {
+                    let defaultPath = await editorPath(ctx.workspace) ?? ctx.workspace.selectedObject.map { o in
+                        (o.type == .user ? o.name : "\(o.owner).\(o.name)").lowercased()
+                    } ?? ""
+                    let answers = try await optionsForm(ui, document: doc, path: defaultPath)
+                    a = CommandArguments(answers.mapValues { $0 == "true" || $0 == "false" ? .bool($0 == "true") : .string($0) })
+                }
+                func list(_ k: String) -> [String] {
+                    (a.string(k) ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+                }
+                let paths = list("path")
+                return try await run(ctx, paths: paths.isEmpty ? nil : paths, coverage: a.bool("coverage") ?? false,
+                                     schemes: list("schemes"), include: list("include"), exclude: list("exclude"))
             },
             Command(CommandDescriptor(id: "utplsql.coverage", title: L10n.tr("utPLSQL: testy z pokryciem kodu"), category: .tools, submenu: "utPLSQL",
                                       parameters: runParams, agent: .approval, effect: .modifiesDatabase,
@@ -304,8 +354,23 @@ enum UtplsqlCommands {
 extension Workspace {
     /// Pokrycie z ostatniego przebiegu utPLSQL dla jednostek okna programu: linie dokumentu (od 1) pokryte i niepokryte.
     public func coverageLines(in doc: Document) -> (covered: Set<Int>, uncovered: Set<Int>) {
-        guard doc.kind == .program, let cov = lastUtplsqlRun?.coverage, !cov.isEmpty else { return ([], []) }
-        var covered = Set<Int>(), uncovered = Set<Int>()
+        let d = coverageDetail(in: doc)
+        return (d.covered, d.uncovered)
+    }
+
+    /// Tekst paska stanu: procent pokrycia jednostek okna i ich schematu z ostatniego przebiegu (UT-COV-002).
+    public func coverageStatus(in doc: Document) -> String? {
+        let d = coverageDetail(in: doc)
+        guard let o = d.objectPercent else { return nil }
+        let schema = d.schemaPercent.map { L10n.tr(" (schemat \(String(format: "%.0f", $0))%)") } ?? ""
+        return L10n.tr("Pokrycie \(String(format: "%.0f", o))%") + schema
+    }
+
+    /// Pokrycie okna programu: linie (z częściowo pokrytymi) i procent jednostek okna oraz ich schematu (UT-COV-002).
+    public func coverageDetail(in doc: Document) -> (covered: Set<Int>, uncovered: Set<Int>, partial: Set<Int>, objectPercent: Double?, schemaPercent: Double?) {
+        guard doc.kind == .program, let cov = lastUtplsqlRun?.coverage, !cov.isEmpty else { return ([], [], [], nil, nil) }
+        var covered = Set<Int>(), uncovered = Set<Int>(), partial = Set<Int>()
+        var owners = Set<String>()
         let schema = sessions.connectedSchema(effectiveConnection(of: doc))
         for u in ProgramCompiler.units(in: doc.text) {
             let key = "\(u.type.rawValue) \(u.owner ?? schema ?? "").\(u.name)".uppercased()
@@ -317,7 +382,14 @@ extension Workspace {
             guard let lines = cov[key] ?? match?.value else { continue }
             covered.formUnion(lines.covered.map { u.line + $0 })
             uncovered.formUnion(lines.uncovered.map { u.line + $0 })
+            partial.formUnion(lines.partial.map { u.line + $0 })
+            if let k = cov[key] != nil ? key : match?.key, let space = k.lastIndex(of: " "), let dot = k[space...].firstIndex(of: ".") {
+                owners.insert(String(k[k.index(after: space)..<dot]))
+            }
         }
-        return (covered, uncovered)
+        func percent(_ c: Int, _ u: Int) -> Double? { c + u == 0 ? nil : Double(c) * 100 / Double(c + u) }
+        let schemaLines = cov.filter { k, _ in owners.contains { k.contains(" \($0).") } }.values
+        return (covered, uncovered, partial, percent(covered.count, uncovered.count),
+                percent(schemaLines.map(\.covered.count).reduce(0, +), schemaLines.map(\.uncovered.count).reduce(0, +)))
     }
 }

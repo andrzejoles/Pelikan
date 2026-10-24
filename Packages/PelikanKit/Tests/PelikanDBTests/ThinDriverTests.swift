@@ -128,7 +128,7 @@ struct ThinSQLWindowTests {
     func sqlWindow() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.thin: ThinDriver()])
-        var def = ConnectionDefinition(name: "thin", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        var def = ConnectionDefinition(name: "dev_thin", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         def.driver = .thin
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)

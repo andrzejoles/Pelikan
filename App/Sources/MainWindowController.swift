@@ -366,6 +366,11 @@ final class DocumentAreaViewController: NSViewController {
                 self?.workspace.perform("file.closeWindow", CommandArguments(["document": .string(doc.id.description)]))
             }
             tab.menu = tabMenu(for: doc)
+            // Kolor połączenia (wskaźniki, PD-CONN-005) jako obramowanie karty.
+            if let c = workspace.indicatorColor(for: doc) {
+                tab.layer?.borderWidth = 1.5
+                tab.layer?.borderColor = NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 0.9).cgColor
+            }
             tabBar.addArrangedSubview(tab)
         }
         // Widoki dokumentów (zachowywane dla otwartych okien).
@@ -402,8 +407,10 @@ final class DocumentAreaViewController: NSViewController {
                 focusActiveDocument()
             }
             connectionButton.title = connectionDescription(for: doc) + " ▾"
+            connectionButton.contentTintColor = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .labelColor
             connectionButton.isHidden = false
-            statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
+            statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
+                                       doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
             refreshGit(file: doc.fileURL, modified: doc.isModified)
         } else {

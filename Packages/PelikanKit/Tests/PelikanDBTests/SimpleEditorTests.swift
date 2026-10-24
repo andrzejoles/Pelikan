@@ -10,7 +10,7 @@ struct SimpleEditorTests {
     func workspace(user: String, password: String) throws -> (Workspace, UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: user, connectString: c.connectString))
         try ws.connections.upsert(def, password: password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def.id)

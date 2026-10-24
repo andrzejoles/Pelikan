@@ -29,6 +29,34 @@
         }
       }
     },
+    " (schemat %@%%)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (schema %@%%)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (Schema %@%%)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (esquema %@%%)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (схема %@%%)"
+          }
+        }
+      }
+    },
     " · ostrzeżeń: %@" : {
       "localizations" : {
         "en" : {
@@ -2353,6 +2381,34 @@
         }
       }
     },
+    "Aktywuje okno z listy i wykonuje je (SQL, test, program albo skrypt poleceń)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activates the window from the list and executes it (SQL, test, program or command script)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktiviert das Fenster aus der Liste und führt es aus (SQL, Test, Programm oder Befehlsskript)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la ventana de la lista y la ejecuta (SQL, prueba, programa o script de comandos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активує вікно зі списку й виконує його (SQL, тест, програма або скрипт команд)."
+          }
+        }
+      }
+    },
     "Aktywuje poprzednie okno z Listy okien." : {
       "localizations" : {
         "en" : {
@@ -2377,6 +2433,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert das vorherige Fenster der Fensterliste."
+          }
+        }
+      }
+    },
+    "Alfabetycznie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alphabetically"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alphabetisch"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alfabéticamente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За абеткою"
           }
         }
       }
@@ -3165,6 +3249,34 @@
         }
       }
     },
+    "AutoCommit po wykonaniu okna testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit after Test Window execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit nach Ausführung des Testfensters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit tras ejecutar la ventana de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit після виконання вікна тесту"
+          }
+        }
+      }
+    },
     "AutoCommit poleceń SQL" : {
       "localizations" : {
         "en" : {
@@ -3245,6 +3357,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AutoSelect — ohne Auswahl den Befehl unter dem Cursor ausführen"
+          }
+        }
+      }
+    },
+    "Automatyczne (jak poprzednia linia)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic (like previous line)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch (wie vorherige Zeile)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automática (como la línea anterior)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматичний (як попередній рядок)"
           }
         }
       }
@@ -3529,6 +3669,34 @@
         }
       }
     },
+    "Backspace usuwa wcięcie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backspace unindents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rücktaste entfernt Einrückung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceso quita la sangría"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backspace зменшує відступ"
+          }
+        }
+      }
+    },
     "Backup binarek" : {
       "localizations" : {
         "en" : {
@@ -3721,6 +3889,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ohne Gruppe"
+          }
+        }
+      }
+    },
+    "Bez pionowego marginesu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No vertical margin"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein vertikaler Rand"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin margen vertical"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без вертикального поля"
           }
         }
       }
@@ -4789,6 +4985,34 @@
         }
       }
     },
+    "Brak elementu w tym miejscu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No element at this position"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Element an dieser Stelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ningún elemento en esta posición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У цьому місці немає елемента"
+          }
+        }
+      }
+    },
     "Brak fast-forward — pull przerwany" : {
       "localizations" : {
         "en" : {
@@ -4953,6 +5177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Einheiten zum Kompilieren (CREATE … abgeschlossen mit /)"
+          }
+        }
+      }
+    },
+    "Brak jednostki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Einheit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає одиниці"
           }
         }
       }
@@ -9997,6 +10249,34 @@
         }
       }
     },
+    "Deklaracje parametrów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parameter declarations"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parameterdeklarationen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declaraciones de parámetros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оголошення параметрів"
+          }
+        }
+      }
+    },
     "Deweloperskie" : {
       "localizations" : {
         "en" : {
@@ -10837,6 +11117,62 @@
         }
       }
     },
+    "Dodaj jednostkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати одиницю"
+          }
+        }
+      }
+    },
+    "Dodaj jednostkę…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Unit…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit hinzufügen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir unidad…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати одиницю…"
+          }
+        }
+      }
+    },
     "Dodaj katalog jako lokalizację (+)" : {
       "localizations" : {
         "en" : {
@@ -11285,6 +11621,34 @@
         }
       }
     },
+    "Dodaj regułę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add rule"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regel hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir regla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати правило"
+          }
+        }
+      }
+    },
     "Dodaj skrót" : {
       "localizations" : {
         "en" : {
@@ -11705,6 +12069,34 @@
         }
       }
     },
+    "Dodaje na końcu okna programu nową jednostkę (z szablonu albo z tekstu) jako kolejną kartę." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appends a new unit (from a template or text) to the end of the program window as another tab."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fügt am Ende des Programmfensters eine neue Einheit (aus einer Vorlage oder einem Text) als weitere Registerkarte hinzu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade al final de la ventana de programa una nueva unidad (desde una plantilla o un texto) como otra pestaña."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додає в кінець вікна програми нову одиницю (із шаблону або тексту) як ще одну вкладку."
+          }
+        }
+      }
+    },
     "Dodaje notatkę na diagramie." : {
       "localizations" : {
         "en" : {
@@ -12009,6 +12401,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Debug-Informationen hinzugefügt: %@"
+          }
+        }
+      }
+    },
+    "Dodano jednostkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unit added"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit hinzugefügt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad añadida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одиницю додано"
           }
         }
       }
@@ -12933,6 +13353,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zugriff: %@"
+          }
+        }
+      }
+    },
+    "Dozwolone: opening, name, type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed: opening, name, type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaubt: opening, name, type"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitidos: opening, name, type"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дозволено: opening, name, type"
           }
         }
       }
@@ -14697,6 +15145,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Exportieren …"
+          }
+        }
+      }
+    },
+    "Element nie jest procedurą ani funkcją" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The element is not a procedure or function"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Element ist keine Prozedur oder Funktion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El elemento no es un procedimiento ni una función"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Елемент не є процедурою чи функцією"
           }
         }
       }
@@ -17305,6 +17781,34 @@
         }
       }
     },
+    "Gotowy tekst jednostki zamiast szablonu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready unit text instead of a template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fertiger Einheitentext statt einer Vorlage"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto de unidad listo en lugar de una plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готовий текст одиниці замість шаблону"
+          }
+        }
+      }
+    },
     "Gotowy — Start (F9) uruchamia skrypt okna testu z debugerem" : {
       "localizations" : {
         "en" : {
@@ -19013,6 +19517,34 @@
         }
       }
     },
+    "Identyfikator okna (domyślnie aktywne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window identifier (active by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterkennung (standardmäßig das aktive)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador de ventana (por defecto, la activa)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор вікна (типово активне)"
+          }
+        }
+      }
+    },
     "Identyfikator okna z get_state (domyślnie aktywne)" : {
       "localizations" : {
         "en" : {
@@ -20413,6 +20945,34 @@
         }
       }
     },
+    "Inteligentne (struktura PL/SQL)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Smart (PL/SQL structure)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Intelligent (PL/SQL-Struktur)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inteligente (estructura PL/SQL)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розумний (структура PL/SQL)"
+          }
+        }
+      }
+    },
     "Istniejące tabele" : {
       "localizations" : {
         "en" : {
@@ -20549,6 +21109,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wie in der Sitzung"
+          }
+        }
+      }
+    },
+    "Jak w źródle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As in source"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie in der Quelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como en el código fuente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як у джерелі"
           }
         }
       }
@@ -20941,6 +21529,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Einheit"
+          }
+        }
+      }
+    },
+    "Jednostka: nazwa albo „nazwa body” (domyślnie jednostka pod kursorem)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unit: name or “name body” (default: unit at the cursor)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit: Name oder „Name body“ (Standard: Einheit am Cursor)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad: nombre o «nombre body» (por defecto, la unidad bajo el cursor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одиниця: назва або «назва body» (типово — одиниця під курсором)"
           }
         }
       }
@@ -22341,6 +22957,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reihenfolge"
+          }
+        }
+      }
+    },
+    "Kolejność listy okien: otwarcia, nazwa albo typ okna." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window list order: opening, name or window type."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reihenfolge der Fensterliste: Öffnen, Name oder Fenstertyp."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de la lista de ventanas: apertura, nombre o tipo de ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок списку вікон: відкриття, назва або тип вікна."
+          }
+        }
+      }
+    },
+    "Kolejność otwarcia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opening order"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reihenfolge des Öffnens"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de apertura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок відкриття"
+          }
+        }
+      }
+    },
+    "Kolejność w Zawartości kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code Contents order"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reihenfolge im Codeinhalt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden en Contenido del código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок у вмісті коду"
+          }
+        }
+      }
+    },
+    "Kolejność wykonania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution order"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungsreihenfolge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок виконання"
           }
         }
       }
@@ -24669,6 +25397,34 @@
         }
       }
     },
+    "Kopiuj element" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Element"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar elemento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати елемент"
+          }
+        }
+      }
+    },
     "Kopiuj jako" : {
       "localizations" : {
         "en" : {
@@ -24973,6 +25729,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Überschrift kopieren"
+          }
+        }
+      }
+    },
+    "Kopiuje do schowka tekst elementu Code Contents." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the text of a Code Contents element to the clipboard."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopiert den Text eines Codeinhalt-Elements in die Zwischenablage."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia al portapapeles el texto de un elemento de Contenido del código."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіює в буфер обміну текст елемента вмісту коду."
           }
         }
       }
@@ -25869,6 +26653,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Критерії: значення, шаблон із %%, > < >= <= <>, in (…), between … and …, null, not null"
+          }
+        }
+      }
+    },
+    "Krótkie nazwy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short names"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurze Namen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombres cortos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Короткі назви"
+          }
+        }
+      }
+    },
+    "Krótkie nazwy na liście okien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short names in the window list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kurze Namen in der Fensterliste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombres cortos en la lista de ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Короткі назви у списку вікон"
           }
         }
       }
@@ -27581,6 +28421,34 @@
         }
       }
     },
+    "Listy INSERT (kolumny, VALUES)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INSERT lists (columns, VALUES)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INSERT-Listen (Spalten, VALUES)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listas INSERT (columnas, VALUES)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Списки INSERT (стовпці, VALUES)"
+          }
+        }
+      }
+    },
     "Literał PL/SQL albo tekst; NULL — wartość pusta." : {
       "localizations" : {
         "en" : {
@@ -28617,6 +29485,34 @@
         }
       }
     },
+    "Moduł MLE (JavaScript)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE module (JavaScript)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE-Modul (JavaScript)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Módulo MLE (JavaScript)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модуль MLE (JavaScript)"
+          }
+        }
+      }
+    },
     "Moduły JavaScript (MLE) i środowiska schematu: źródło, import pliku .js jako modułu, nowe środowisko." : {
       "localizations" : {
         "en" : {
@@ -29089,6 +29985,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kurzbefehl drücken … (Esc — abbrechen)"
+          }
+        }
+      }
+    },
+    "Nadaje oknu własną nazwę na karcie i liście okien." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gives the window a custom name on its tab and in the window list."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gibt dem Fenster einen eigenen Namen auf dem Tab und in der Fensterliste."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Da a la ventana un nombre propio en su pestaña y en la lista de ventanas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дає вікну власну назву на вкладці та у списку вікон."
           }
         }
       }
@@ -31053,6 +31977,34 @@
         }
       }
     },
+    "Nic nie znaleziono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts gefunden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró nada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не знайдено"
+          }
+        }
+      }
+    },
     "Nie" : {
       "localizations" : {
         "en" : {
@@ -31133,6 +32085,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає з'єднання «%@»"
+          }
+        }
+      }
+    },
+    "Nie ma takiego okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein solches Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No existe esa ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такого вікна немає"
           }
         }
       }
@@ -31861,6 +32841,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht speichern"
+          }
+        }
+      }
+    },
+    "Nie zdefiniowano BREAK." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No BREAK defined."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein BREAK definiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay BREAK definido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BREAK не визначено."
+          }
+        }
+      }
+    },
+    "Nie zdefiniowano COMPUTE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No COMPUTE defined."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein COMPUTE definiert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay COMPUTE definido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMPUTE не визначено."
           }
         }
       }
@@ -33349,6 +34385,62 @@
         }
       }
     },
+    "Nowa nazwa okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New window name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Fenstername"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo nombre de la ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова назва вікна"
+          }
+        }
+      }
+    },
+    "Nowa nazwa; pusta przywraca domyślną" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New name; empty restores the default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Name; leer stellt den Standard wieder her"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo nombre; vacío restaura el predeterminado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова назва; порожня відновлює типову"
+          }
+        }
+      }
+    },
     "Nowa strona po każdej grupie" : {
       "localizations" : {
         "en" : {
@@ -34581,6 +35673,62 @@
         }
       }
     },
+    "Numer co %@ linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number every %@ lines"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nummer alle %@ Zeilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número cada %@ líneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер кожного %@-го рядка"
+          }
+        }
+      }
+    },
+    "Numer każdej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number every line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jede Zeile nummerieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Numerar cada línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер кожного рядка"
+          }
+        }
+      }
+    },
     "Numer komórki (od 0)" : {
       "localizations" : {
         "en" : {
@@ -35421,6 +36569,34 @@
         }
       }
     },
+    "Obiekty pomijane w pokryciu po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects excluded from coverage, comma-separated"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von der Abdeckung ausgeschlossene Objekte, durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos excluidos de la cobertura, separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкти, виключені з покриття, через кому"
+          }
+        }
+      }
+    },
     "Obiekty typu" : {
       "localizations" : {
         "en" : {
@@ -35473,6 +36649,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Об’єкти, видалені до кошика (USER_RECYCLEBIN): первинна назва, тип, час видалення."
+          }
+        }
+      }
+    },
+    "Obiekty uwzględniane w pokryciu po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects included in coverage, comma-separated"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Abdeckung einbezogene Objekte, durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos incluidos en la cobertura, separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкти, включені до покриття, через кому"
           }
         }
       }
@@ -36453,6 +37657,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verwirft Fensteränderungen seit dem letzten Speichern des Worksets und stellt den gespeicherten Zustand wieder her (nach Bestätigung)."
+          }
+        }
+      }
+    },
+    "Odrzuca zmiany okna: przywraca tekst z chwili otwarcia, wczytania z bazy albo zapisu (albo ponownie wczytuje źródło jednostek z bazy)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discards window changes: restores the text from when it was opened, loaded from the database or saved (or reloads the units' source from the database)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verwirft Änderungen im Fenster: stellt den Text vom Öffnen, Laden aus der Datenbank oder Speichern wieder her (oder lädt die Quelle der Einheiten erneut aus der Datenbank)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarta los cambios de la ventana: restaura el texto del momento de abrirla, cargarla desde la base de datos o guardarla (o vuelve a cargar el código de las unidades desde la base de datos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасовує зміни у вікні: відновлює текст на момент відкриття, завантаження з бази або збереження (або повторно завантажує джерело одиниць із бази)."
+          }
+        }
+      }
+    },
+    "Odrzucić zmiany w oknie „%@”?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard changes in window “%@”?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen im Fenster „%@“ verwerfen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Descartar los cambios en la ventana «%@»?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати зміни у вікні «%@»?"
           }
         }
       }
@@ -37717,6 +38977,34 @@
         }
       }
     },
+    "Okno ma otwartą transakcję — zatwierdź albo wycofaj ją przed ponownym połączeniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has an open transaction — commit or roll it back before reconnecting"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat eine offene Transaktion — bestätigen oder zurücksetzen Sie sie vor dem erneuten Verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene una transacción abierta: confírmela o deshágala antes de reconectar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має відкриту транзакцію — зафіксуйте або відкотіть її перед повторним підключенням"
+          }
+        }
+      }
+    },
     "Okno nie ma historii lokalnej (zapisz plik albo skompiluj obiekt)" : {
       "localizations" : {
         "en" : {
@@ -37769,6 +39057,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вікно не має сеансу"
+          }
+        }
+      }
+    },
+    "Okno opcji przebiegu: ścieżki testów, pokrycie, schematy pokrycia oraz obiekty uwzględniane i pomijane." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run options window: test paths, coverage, coverage schemas, and included and excluded objects."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster mit Laufoptionen: Testpfade, Abdeckung, Abdeckungsschemas sowie einbezogene und ausgeschlossene Objekte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventana de opciones de ejecución: rutas de prueba, cobertura, esquemas de cobertura y objetos incluidos y excluidos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно параметрів запуску: шляхи тестів, покриття, схеми покриття, а також включені й виключені об’єкти."
           }
         }
       }
@@ -37857,6 +39173,34 @@
         }
       }
     },
+    "Okno połączy się ponownie przy następnym wykonaniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window will reconnect on the next execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster verbindet sich bei der nächsten Ausführung erneut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana se reconectará en la próxima ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно підключиться повторно під час наступного виконання"
+          }
+        }
+      }
+    },
     "Okno programu" : {
       "localizations" : {
         "en" : {
@@ -37937,6 +39281,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Report Window"
+          }
+        }
+      }
+    },
+    "Okno szablonów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Template Window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagenfenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventana de plantillas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно шаблонів"
           }
         }
       }
@@ -38105,6 +39477,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausgabefenster"
+          }
+        }
+      }
+    },
+    "Okno wykonuje polecenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window is executing a statement"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster führt eine Anweisung aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana está ejecutando una instrucción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно виконує команду"
           }
         }
       }
@@ -39313,6 +40713,34 @@
         }
       }
     },
+    "Otrzymane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actual"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримане"
+          }
+        }
+      }
+    },
     "Otwarte kursory" : {
       "localizations" : {
         "en" : {
@@ -39985,6 +41413,34 @@
         }
       }
     },
+    "Otwiera okno testu procedury lub funkcji wskazanej w Code Contents (z pakietem jako obiektem)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a test window for the procedure or function selected in Code Contents (with the package as the object)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein Testfenster für die im Codeinhalt gewählte Prozedur oder Funktion (mit dem Paket als Objekt)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una ventana de prueba del procedimiento o función indicado en Contenido del código (con el paquete como objeto)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває вікно тесту процедури або функції, вказаної у вмісті коду (з пакетом як об’єктом)."
+          }
+        }
+      }
+    },
     "Otwiera okno testu z testu standardowego (szablon z %%CALL%%) dla procedury lub funkcji." : {
       "localizations" : {
         "en" : {
@@ -40233,6 +41689,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet ein SQL*Plus/SQLcl-Skript, das dieselben Tests mit JUnit-Ergebnis ausführt, sowie ein Shell-Skript (ohne Passwort)."
+          }
+        }
+      }
+    },
+    "Otwiera szablony kodu w osobnym, pływającym oknie (odłączone od paska bocznego)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the code templates in a separate floating window (undocked from the sidebar)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die Codevorlagen in einem separaten, schwebenden Fenster (von der Seitenleiste gelöst)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre las plantillas de código en una ventana flotante independiente (desacoplada de la barra lateral)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває шаблони коду в окремому плаваючому вікні (від’єднаному від бічної панелі)."
           }
         }
       }
@@ -41749,6 +43233,34 @@
         }
       }
     },
+    "Parametry wywołań" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call parameters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufrufparameter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros de llamadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри викликів"
+          }
+        }
+      }
+    },
     "Parametrów: %@" : {
       "localizations" : {
         "en" : {
@@ -42221,6 +43733,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erste Datei"
+          }
+        }
+      }
+    },
+    "Pionowy margines w kolumnie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertical margin at column %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertikaler Rand in Spalte %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Margen vertical en la columna %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вертикальне поле в стовпці %@"
           }
         }
       }
@@ -44493,6 +46033,34 @@
         }
       }
     },
+    "Pokazuj znaki specjalne (spacje, tabulacje, końce linii)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show special characters (spaces, tabs, line ends)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonderzeichen anzeigen (Leerzeichen, Tabulatoren, Zeilenenden)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar caracteres especiales (espacios, tabulaciones, finales de línea)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати спеціальні символи (пробіли, табуляції, кінці рядків)"
+          }
+        }
+      }
+    },
     "Pokazuj znowu" : {
       "localizations" : {
         "en" : {
@@ -44689,6 +46257,34 @@
         }
       }
     },
+    "Pokazuje lub ukrywa na marginesie znaczniki linii zmienionych i nowych od otwarcia albo zapisu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides gutter markers for lines changed or added since opening or saving."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt oder verbirgt am Rand Markierungen für seit dem Öffnen oder Speichern geänderte und neue Zeilen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta en el margen las marcas de líneas modificadas y nuevas desde la apertura o el guardado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує на полі позначки рядків, змінених і нових від відкриття або збереження."
+          }
+        }
+      }
+    },
     "Pokazuje lub ukrywa panel Zawartość kodu (struktura jednostek) obok edytora okna programu." : {
       "localizations" : {
         "en" : {
@@ -44769,6 +46365,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blendet das 8-px-Raster und das Einrasten daran ein oder aus."
+          }
+        }
+      }
+    },
+    "Pokazuje lub ukrywa w edytorach spacje, tabulacje i końce linii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides spaces, tabs and line ends in editors."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt oder verbirgt Leerzeichen, Tabulatoren und Zeilenenden in Editoren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta espacios, tabulaciones y finales de línea en los editores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує в редакторах пробіли, табуляції та кінці рядків."
           }
         }
       }
@@ -45217,6 +46841,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anzeigen:"
+          }
+        }
+      }
+    },
+    "Pokrycie %@%%" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage %@%%"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckung %@%%"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cobertura %@%%"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покриття %@%%"
           }
         }
       }
@@ -45973,6 +47625,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überspringen"
+          }
+        }
+      }
+    },
+    "Pomiń obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exclude objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte ausschließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluir objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виключити об’єкти"
           }
         }
       }
@@ -48161,6 +49841,34 @@
         }
       }
     },
+    "Pozycja elementu w tekście (domyślnie kursor)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element position in the text (default: cursor)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position des Elements im Text (Standard: Cursor)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posición del elemento en el texto (por defecto, el cursor)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиція елемента в тексті (типово — курсор)"
+          }
+        }
+      }
+    },
     "Pozycja w historii (0 — najnowszy)" : {
       "localizations" : {
         "en" : {
@@ -48273,6 +49981,34 @@
         }
       }
     },
+    "Połącz ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключити повторно"
+          }
+        }
+      }
+    },
     "Połącz ponownie okna połączenia" : {
       "localizations" : {
         "en" : {
@@ -48297,6 +50033,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перепідключити вікна з'єднання"
+          }
+        }
+      }
+    },
+    "Połącz ponownie okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster erneut verbinden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconectar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підключити вікно повторно"
           }
         }
       }
@@ -51325,6 +53089,34 @@
         }
       }
     },
+    "Przełącza listę okien między pełnymi tytułami (z połączeniem) a krótkimi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switches the window list between full titles (with connection) and short ones."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet die Fensterliste zwischen vollständigen Titeln (mit Verbindung) und kurzen um."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterna la lista de ventanas entre títulos completos (con conexión) y cortos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемикає список вікон між повними назвами (з підключенням) і короткими."
+          }
+        }
+      }
+    },
     "Przełącza okno w tryb tylko do odczytu (tekst nie może być zmieniany w edytorze)." : {
       "localizations" : {
         "en" : {
@@ -51885,6 +53677,34 @@
         }
       }
     },
+    "Przywrócono tekst okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window text restored"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstertext wiederhergestellt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto de la ventana restaurado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст вікна відновлено"
+          }
+        }
+      }
+    },
     "Przywrócono wersję z %@" : {
       "localizations" : {
         "en" : {
@@ -52329,6 +54149,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Haltepunkte …"
+          }
+        }
+      }
+    },
+    "Puste — bieżący schemat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty — current schema"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer — aktuelles Schema"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vacío: esquema actual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожньо — поточна схема"
           }
         }
       }
@@ -53449,6 +55297,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Refactoring"
+          }
+        }
+      }
+    },
+    "Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "user@database rules (* and ?) take precedence over the connection and environment color; they apply to tabs, the window list and the background."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regeln user@Datenbank (* und ?) haben Vorrang vor der Farbe der Verbindung und Umgebung; sie gelten für Tabs, Fensterliste und Hintergrund."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las reglas usuario@base (* y ?) tienen prioridad sobre el color de la conexión y del entorno; se aplican a pestañas, lista de ventanas y fondo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Правила user@база (* і ?) мають перевагу над кольором підключення та середовища; стосуються вкладок, списку вікон і тла."
           }
         }
       }
@@ -54965,6 +56841,90 @@
         }
       }
     },
+    "SP2-0023: Nie znaleziono ciągu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: String not found."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Zeichenfolge nicht gefunden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Cadena no encontrada."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0023: Рядок не знайдено."
+          }
+        }
+      }
+    },
+    "SP2-0025: Nieprawidłowy format polecenia CHANGE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Invalid CHANGE command format."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Ungültiges Format des CHANGE-Befehls."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Formato del comando CHANGE no válido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0025: Неправильний формат команди CHANGE."
+          }
+        }
+      }
+    },
+    "SP2-0042: INPUT wymaga tekstu nowej linii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT requires the text of the new line."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT erfordert den Text der neuen Zeile."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT requiere el texto de la nueva línea."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0042: INPUT потребує тексту нового рядка."
+          }
+        }
+      }
+    },
     "SP2-0042: brak polecenia systemu po HOST" : {
       "localizations" : {
         "en" : {
@@ -54989,6 +56949,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0042: немає системної команди після HOST"
+          }
+        }
+      }
+    },
+    "SP2-0082: COMPUTE wymaga funkcji, OF kolumna i ON kolumna albo REPORT." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE requires a function, OF column and ON column or REPORT."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE erfordert eine Funktion, OF Spalte und ON Spalte oder REPORT."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE requiere una función, OF columna y ON columna o REPORT."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0082: COMPUTE потребує функції, OF стовпець і ON стовпець або REPORT."
+          }
+        }
+      }
+    },
+    "SP2-0084: Brak nazwy kolumny po ON." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Missing column name after ON."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Spaltenname nach ON fehlt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Falta el nombre de columna después de ON."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0084: Бракує назви стовпця після ON."
+          }
+        }
+      }
+    },
+    "SP2-0087: Nieznana funkcja COMPUTE: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Unknown COMPUTE function: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Unbekannte COMPUTE-Funktion: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Función COMPUTE desconocida: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0087: Невідома функція COMPUTE: %@"
           }
         }
       }
@@ -55021,6 +57065,62 @@
         }
       }
     },
+    "SP2-0107: Nic do zapisania — bufor SQL jest pusty." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nothing to save — the SQL buffer is empty."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nichts zu speichern — der SQL-Puffer ist leer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Nada que guardar: el búfer SQL está vacío."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0107: Нічого зберігати — буфер SQL порожній."
+          }
+        }
+      }
+    },
+    "SP2-0110: Podaj nazwę pliku." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Specify a file name."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Geben Sie einen Dateinamen an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Indique un nombre de archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0110: Вкажіть назву файлу."
+          }
+        }
+      }
+    },
     "SP2-0135: Symbol %@ nie jest zdefiniowany." : {
       "localizations" : {
         "en" : {
@@ -55045,6 +57145,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0135: Symbol %@ ist nicht definiert."
+          }
+        }
+      }
+    },
+    "SP2-0158: Nieznana opcja BREAK: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Unknown BREAK option: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Unbekannte BREAK-Option: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Opción BREAK desconocida: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0158: Невідомий параметр BREAK: %@"
           }
         }
       }
@@ -55105,6 +57233,34 @@
         }
       }
     },
+    "SP2-0160: Nie można otworzyć pliku %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Unable to open file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Datei %@ kann nicht geöffnet werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: No se puede abrir el archivo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0160: Не вдається відкрити файл %@"
+          }
+        }
+      }
+    },
     "SP2-0223: Bufor SQL jest pusty." : {
       "localizations" : {
         "en" : {
@@ -55129,6 +57285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0223: SQL-Puffer ist leer."
+          }
+        }
+      }
+    },
+    "SP2-0226: Nieprawidłowy numer linii: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Invalid line number: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Ungültige Zeilennummer: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Número de línea no válido: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0226: Неправильний номер рядка: %@"
           }
         }
       }
@@ -55185,6 +57369,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0268: Ungültiger numerischer Wert."
+          }
+        }
+      }
+    },
+    "SP2-0285: Składnia: STORE SET plik [CREATE|REPLACE|APPEND]" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Syntax: STORE SET file [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Syntax: STORE SET Datei [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Sintaxis: STORE SET archivo [CREATE|REPLACE|APPEND]"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0285: Синтаксис: STORE SET файл [CREATE|REPLACE|APPEND]"
           }
         }
       }
@@ -55325,6 +57537,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SP2-0310: Datei „%@“ kann nicht geöffnet werden."
+          }
+        }
+      }
+    },
+    "SP2-0540: Plik %@ już istnieje. Użyj opcji REPLACE." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: File %@ already exists. Use the REPLACE option."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: Die Datei %@ existiert bereits. Verwenden Sie die Option REPLACE."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: El archivo %@ ya existe. Use la opción REPLACE."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0540: Файл %@ уже існує. Використайте параметр REPLACE."
           }
         }
       }
@@ -56053,6 +58293,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quellschema"
+          }
+        }
+      }
+    },
+    "Schematy pokrycia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage schemas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckungsschemas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquemas de cobertura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схеми покриття"
+          }
+        }
+      }
+    },
+    "Schematy pokrycia po przecinku (domyślnie bieżący)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage schemas, comma-separated (current by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckungsschemas, durch Kommas getrennt (standardmäßig das aktuelle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquemas de cobertura separados por comas (por defecto, el actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схеми покриття через кому (типово поточна)"
           }
         }
       }
@@ -57681,6 +59977,34 @@
         }
       }
     },
+    "Skąd: baseline — stan z otwarcia lub zapisu (domyślnie), database — źródło z bazy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source: baseline — state at opening or saving (default), database — source from the database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelle: baseline — Stand beim Öffnen oder Speichern (Standard), database — Quelle aus der Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen: baseline — estado al abrir o guardar (por defecto), database — código de la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело: baseline — стан на момент відкриття або збереження (типово), database — джерело з бази"
+          }
+        }
+      }
+    },
     "Składnia: -- TODO(właściciel) !priorytet #kategoria: tekst" : {
       "localizations" : {
         "en" : {
@@ -57761,6 +60085,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Snippets"
+          }
+        }
+      }
+    },
+    "Sortuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати"
+          }
+        }
+      }
+    },
+    "Sortuj listę okien…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort window list…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterliste sortieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar lista de ventanas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати список вікон…"
+          }
+        }
+      }
+    },
+    "Sortuj:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortieren:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати:"
           }
         }
       }
@@ -58209,6 +60617,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start: %@"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Статус"
+          }
+        }
+      }
+    },
+    "Status linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line Status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenstatus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado de líneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан рядків"
+          }
+        }
+      }
+    },
+    "Status linii (zmienione i nowe od otwarcia lub zapisu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line status (changed and new since opening or saving)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenstatus (geändert und neu seit Öffnen oder Speichern)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado de líneas (modificadas y nuevas desde la apertura o el guardado)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стан рядків (змінені й нові від відкриття або збереження)"
           }
         }
       }
@@ -58941,6 +61433,34 @@
         }
       }
     },
+    "Szablon jednostki: folder/nazwa albo nazwa (domyślnie procedura)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unit template: folder/name or name (default: procedure)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheitenvorlage: Ordner/Name oder Name (Standard: Prozedur)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantilla de unidad: carpeta/nombre o nombre (por defecto, procedimiento)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон одиниці: тека/назва або назва (типово — процедура)"
+          }
+        }
+      }
+    },
     "Szablon użytkownika: folder/nazwa" : {
       "localizations" : {
         "en" : {
@@ -59329,6 +61849,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung suchen"
+          }
+        }
+      }
+    },
+    "Szukaj ustawienia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search settings"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar ajustes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати налаштування"
           }
         }
       }
@@ -61013,6 +63561,34 @@
         }
       }
     },
+    "Tekst jednostki zniknie z okna programu (można cofnąć). Obiekt w bazie nie jest usuwany." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The unit text will be removed from the program window (can be undone). The database object is not dropped."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text der Einheit wird aus dem Programmfenster entfernt (rückgängig machbar). Das Datenbankobjekt wird nicht gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto de la unidad desaparecerá de la ventana de programa (se puede deshacer). El objeto de la base de datos no se elimina."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст одиниці зникне з вікна програми (можна скасувати). Об’єкт у базі не видаляється."
+          }
+        }
+      }
+    },
     "Tekst lewy" : {
       "localizations" : {
         "en" : {
@@ -61149,6 +63725,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rechter Text"
+          }
+        }
+      }
+    },
+    "Tekst wróci do stanu z chwili otwarcia lub ostatniego zapisu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The text will return to its state when opened or last saved."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text kehrt zum Stand beim Öffnen oder letzten Speichern zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto volverá al estado del momento de abrirlo o del último guardado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст повернеться до стану на момент відкриття або останнього збереження."
+          }
+        }
+      }
+    },
+    "Tekst zostanie zastąpiony źródłem z bazy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The text will be replaced with the source from the database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text wird durch die Quelle aus der Datenbank ersetzt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto se sustituirá por el código de la base de datos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст буде замінено джерелом із бази."
           }
         }
       }
@@ -61653,6 +64285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SSH-Ziel testen"
+          }
+        }
+      }
+    },
+    "Testuj podprogram" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test Subprogram"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterprogramm testen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar subprograma"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тестувати підпрограму"
           }
         }
       }
@@ -63533,6 +66193,34 @@
         }
       }
     },
+    "Typ okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenstertyp"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип вікна"
+          }
+        }
+      }
+    },
     "Typ okna: sql, program, test, command" : {
       "localizations" : {
         "en" : {
@@ -63781,6 +66469,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hintergrund (CSS-Farbe)"
+          }
+        }
+      }
+    },
+    "Tło edytora w kolorze połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor background in connection color"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editorhintergrund in Verbindungsfarbe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo del editor con el color de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тло редактора в кольорі підключення"
           }
         }
       }
@@ -65465,6 +68181,34 @@
         }
       }
     },
+    "Usunięto jednostkę %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed unit %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit %@ entfernt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad %@ eliminada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одиницю %@ видалено"
+          }
+        }
+      }
+    },
     "Usunięto szablon %@" : {
       "localizations" : {
         "en" : {
@@ -65605,6 +68349,34 @@
         }
       }
     },
+    "Usunąć jednostkę %@ z okna?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove unit %@ from the window?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit %@ aus dem Fenster entfernen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar la unidad %@ de la ventana?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити одиницю %@ з вікна?"
+          }
+        }
+      }
+    },
     "Usunąć połączenie „%@”?" : {
       "localizations" : {
         "en" : {
@@ -65713,6 +68485,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вилучає додаткові курсори й виділення."
+          }
+        }
+      }
+    },
+    "Usuwa jednostkę (kartę) z tekstu okna programu razem z kończącym ukośnikiem; obiekt w bazie zostaje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes a unit (tab) from the program window text together with its terminating slash; the database object stays."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt eine Einheit (Registerkarte) samt abschließendem Schrägstrich aus dem Text des Programmfensters; das Datenbankobjekt bleibt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina una unidad (pestaña) del texto de la ventana de programa junto con la barra final; el objeto de la base de datos se conserva."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляє одиницю (вкладку) з тексту вікна програми разом із завершальною скісною рискою; об’єкт у базі залишається."
           }
         }
       }
@@ -66221,6 +69021,34 @@
         }
       }
     },
+    "Usuń jednostkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити одиницю"
+          }
+        }
+      }
+    },
     "Usuń końcowe spacje" : {
       "localizations" : {
         "en" : {
@@ -66497,6 +69325,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung löschen"
+          }
+        }
+      }
+    },
+    "Usuń regułę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove rule"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regel entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar regla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити правило"
           }
         }
       }
@@ -67365,6 +70221,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentifizierung"
+          }
+        }
+      }
+    },
+    "Uwzględnij obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte einbeziehen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включити об’єкти"
           }
         }
       }
@@ -68629,6 +71513,34 @@
         }
       }
     },
+    "Wcięcie nowej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New line indent"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einrückung neuer Zeilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sangría de nueva línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відступ нового рядка"
+          }
+        }
+      }
+    },
     "Wcięcie znakami tabulacji" : {
       "localizations" : {
         "en" : {
@@ -68737,6 +71649,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spalten laden"
+          }
+        }
+      }
+    },
+    "Wczytaj ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перезавантажити"
           }
         }
       }
@@ -68965,6 +71905,34 @@
         }
       }
     },
+    "Wczytuje ponownie obie strony porównania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloads both sides of the comparison"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt beide Seiten des Vergleichs neu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a cargar ambos lados de la comparación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторно завантажує обидві сторони порівняння"
+          }
+        }
+      }
+    },
     "Wczytuje preferencje z pliku (wybrane sekcje) do zestawu edytowanego w Preferencjach." : {
       "localizations" : {
         "en" : {
@@ -69101,6 +72069,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Auf Ziel deployen …"
+          }
+        }
+      }
+    },
+    "Według rodzaju" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By kind"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Art"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por tipo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За видом"
           }
         }
       }
@@ -70785,6 +73781,34 @@
         }
       }
     },
+    "Wskaźniki połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection indicators"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsindikatoren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicadores de conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Індикатори підключень"
+          }
+        }
+      }
+    },
     "Wskaż katalog…" : {
       "localizations" : {
         "en" : {
@@ -72437,6 +75461,62 @@
         }
       }
     },
+    "Wycina element Code Contents z tekstu okna (do schowka)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuts a Code Contents element from the window text (to the clipboard)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schneidet ein Codeinhalt-Element aus dem Fenstertext aus (in die Zwischenablage)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Corta un elemento de Contenido del código del texto de la ventana (al portapapeles)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирізає елемент вмісту коду з тексту вікна (у буфер обміну)."
+          }
+        }
+      }
+    },
+    "Wycięto %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cut %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ausgeschnitten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha cortado %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирізано %@"
+          }
+        }
+      }
+    },
     "Wycofaj" : {
       "localizations" : {
         "en" : {
@@ -73581,6 +76661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sofort ausführen"
+          }
+        }
+      }
+    },
+    "Wykonaj okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати вікно"
           }
         }
       }
@@ -75825,6 +78933,34 @@
         }
       }
     },
+    "Wytnij element" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cut Element"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element ausschneiden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cortar elemento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирізати елемент"
+          }
+        }
+      }
+    },
     "Wywołanie generuje się dla procedury, funkcji albo podprogramu pakietu" : {
       "localizations" : {
         "en" : {
@@ -76353,6 +79489,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Шаблон з'єднань, напр. app@prod*"
+          }
+        }
+      }
+    },
+    "Wzorzec, np. sys@*" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pattern, e.g. sys@*"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muster, z. B. sys@*"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Patrón, p. ej. sys@*"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон, напр. sys@*"
           }
         }
       }
@@ -77109,6 +80273,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktiviert oder deaktiviert die Ersetzung der Variablen & und : im Fenster."
+          }
+        }
+      }
+    },
+    "Włącza lub wyłącza zawijanie długich wierszy w edytorach do szerokości okna." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turns wrapping of long lines to the window width on or off in editors."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet in Editoren den Umbruch langer Zeilen auf Fensterbreite ein oder aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa o desactiva el ajuste de líneas largas al ancho de la ventana en los editores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вмикає або вимикає перенесення довгих рядків до ширини вікна в редакторах."
           }
         }
       }
@@ -80137,6 +83329,34 @@
         }
       }
     },
+    "Zamyka sesję okna (bez otwartej transakcji); okno łączy się ponownie przy następnym wykonaniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the window session (without an open transaction); the window reconnects on the next execution."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt die Sitzung des Fensters (ohne offene Transaktion); das Fenster verbindet sich bei der nächsten Ausführung erneut."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra la sesión de la ventana (sin transacción abierta); la ventana se reconecta en la próxima ejecución."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закриває сеанс вікна (без відкритої транзакції); вікно підключиться повторно під час наступного виконання."
+          }
+        }
+      }
+    },
     "Zamyka wszystkie okna oprócz bieżącego." : {
       "localizations" : {
         "en" : {
@@ -80553,6 +83773,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Makro „%@“ gespeichert"
+          }
+        }
+      }
+    },
+    "Zapisano plik %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei %@ gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo %@ guardado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@ збережено"
           }
         }
       }
@@ -83749,6 +86997,34 @@
         }
       }
     },
+    "Zawijaj wiersze" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrap Lines"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen umbrechen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar líneas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переносити рядки"
+          }
+        }
+      }
+    },
     "Zawęża wynik kryteriami wpisanymi pod nazwami kolumn i wykonuje zapytanie ponownie." : {
       "localizations" : {
         "en" : {
@@ -83777,6 +87053,34 @@
         }
       }
     },
+    "Zaznacz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділити"
+          }
+        }
+      }
+    },
     "Zaznacz blok anonimowy (DECLARE … BEGIN … END;)" : {
       "localizations" : {
         "en" : {
@@ -83801,6 +87105,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виділіть анонімний блок (DECLARE … BEGIN … END;)"
+          }
+        }
+      }
+    },
+    "Zaznacz element" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Element"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Element auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar elemento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділити елемент"
           }
         }
       }
@@ -84253,6 +87585,34 @@
         }
       }
     },
+    "Zaznacza w edytorze cały element Code Contents (podprogram, deklarację, jednostkę)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selects a whole Code Contents element (subprogram, declaration, unit) in the editor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wählt im Editor ein ganzes Codeinhalt-Element (Unterprogramm, Deklaration, Einheit) aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona en el editor un elemento completo de Contenido del código (subprograma, declaración, unidad)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділяє в редакторі весь елемент вмісту коду (підпрограму, оголошення, одиницю)."
+          }
+        }
+      }
+    },
     "Zaznaczenie" : {
       "localizations" : {
         "en" : {
@@ -84613,6 +87973,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Codeabdeckung des aktuellen Schemas erfassen"
+          }
+        }
+      }
+    },
+    "Zbieraj pokrycie przez profiler PL/SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collect coverage with the PL/SQL profiler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckung mit dem PL/SQL-Profiler erfassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recoger cobertura con el profiler de PL/SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирати покриття профайлером PL/SQL"
           }
         }
       }
@@ -86129,6 +89517,62 @@
         }
       }
     },
+    "Zmień nazwę okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster umbenennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати вікно"
+          }
+        }
+      }
+    },
+    "Zmień nazwę okna…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename window…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster umbenennen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar ventana…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати вікно…"
+          }
+        }
+      }
+    },
     "Zmień nazwę…" : {
       "localizations" : {
         "en" : {
@@ -86573,6 +90017,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeichen „%@“ (Zeile %@, Spalte %@) existiert nicht in der Kodierung %@ — Speichern blockiert. Zeichen ändern oder die Dateikodierung ausdrücklich ändern (Datei › Dateikodierung)."
+          }
+        }
+      }
+    },
+    "Znaki specjalne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Special Characters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonderzeichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caracteres especiales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спеціальні символи"
           }
         }
       }
@@ -88061,6 +91533,34 @@
         }
       }
     },
+    "dodaje elementy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "adds elements"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fügt Elemente hinzu"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "añade elementos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "додає елементи"
+          }
+        }
+      }
+    },
     "dodany" : {
       "localizations" : {
         "en" : {
@@ -89097,6 +92597,34 @@
         }
       }
     },
+    "maksymalna liczba elementów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maximum number of elements"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "maximale Anzahl Elemente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "número máximo de elementos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "максимальна кількість елементів"
+          }
+        }
+      }
+    },
     "malejąco" : {
       "localizations" : {
         "en" : {
@@ -89209,6 +92737,34 @@
         }
       }
     },
+    "następny indeks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "next index"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nächster Index"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "índice siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "наступний індекс"
+          }
+        }
+      }
+    },
     "nazwa obiektu" : {
       "localizations" : {
         "en" : {
@@ -89317,6 +92873,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ні"
+          }
+        }
+      }
+    },
+    "nie ma takiej jednostki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no such unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "keine solche Einheit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no existe esa unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "немає такої одиниці"
           }
         }
       }
@@ -89881,6 +93465,62 @@
         }
       }
     },
+    "np. emp_api, dept_api" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. emp_api, dept_api"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. emp_api, dept_api"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. emp_api, dept_api"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. emp_api, dept_api"
+          }
+        }
+      }
+    },
+    "np. emp_api_test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. emp_api_test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. emp_api_test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. emp_api_test"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. emp_api_test"
+          }
+        }
+      }
+    },
     "obcięte — pełna treść niedostępna (brak ROWID)" : {
       "localizations" : {
         "en" : {
@@ -90245,6 +93885,62 @@
         }
       }
     },
+    "opening, name albo type" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name or type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name oder type"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name o type"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opening, name або type"
+          }
+        }
+      }
+    },
+    "ostatni indeks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "last index"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "letzter Index"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "último índice"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "останній індекс"
+          }
+        }
+      }
+    },
     "ostatnie dni: #Dni" : {
       "localizations" : {
         "en" : {
@@ -90353,6 +94049,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vollständiger Dateipfad des aktiven Fensters"
+          }
+        }
+      }
+    },
+    "pierwszy indeks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "first index"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "erster Index"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "primer índice"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "перший індекс"
           }
         }
       }
@@ -90633,6 +94357,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gültig"
+          }
+        }
+      }
+    },
+    "poprzedni indeks" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "previous index"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vorheriger Index"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "índice anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "попередній індекс"
           }
         }
       }
@@ -91225,6 +94977,34 @@
         }
       }
     },
+    "schemat, schemat.pakiet[.procedura] albo schemat:suitepath; kilka po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schema, schema.package[.procedure] or schema:suitepath; several separated by commas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema, Schema.Paket[.Prozedur] oder Schema:Suitepfad; mehrere durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esquema, esquema.paquete[.procedimiento] o esquema:suitepath; varios separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "схема, схема.пакет[.процедура] або схема:suitepath; кілька через кому"
+          }
+        }
+      }
+    },
     "schemat.pakiet[.procedura] albo schemat:suitepath; kilka po przecinku" : {
       "localizations" : {
         "en" : {
@@ -91529,6 +95309,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "sum, count, avg, min, max (через кому; порожньо — вимкнути)"
+          }
+        }
+      }
+    },
+    "synonim publiczny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "public synonym"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "öffentliches Synonym"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sinónimo público"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "публічний синонім"
           }
         }
       }
@@ -91893,6 +95701,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gelöscht"
+          }
+        }
+      }
+    },
+    "usuwa elementy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "deletes elements"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "löscht Elemente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "elimina elementos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видаляє елементи"
+          }
+        }
+      }
+    },
+    "usuwa elementy z końca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "removes elements from the end"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "entfernt Elemente am Ende"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "elimina elementos del final"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видаляє елементи з кінця"
           }
         }
       }
@@ -92397,6 +96261,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "utPLSQL: alle Tests ausführen"
+          }
+        }
+      }
+    },
+    "utPLSQL: uruchom z opcjami…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: run with options…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: mit Optionen ausführen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: ejecutar con opciones…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: запустити з параметрами…"
           }
         }
       }
@@ -93269,6 +97161,34 @@
         }
       }
     },
+    "zatwierdzono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "committed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "festgeschrieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "confirmado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зафіксовано"
+          }
+        }
+      }
+    },
     "zaznaczony tekst" : {
       "localizations" : {
         "en" : {
@@ -94053,6 +97973,34 @@
         }
       }
     },
+    "Ścieżki testów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test paths"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testpfade"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rutas de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шляхи тестів"
+          }
+        }
+      }
+    },
     "Ślad" : {
       "localizations" : {
         "en" : {
@@ -94413,6 +98361,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quelle"
+          }
+        }
+      }
+    },
+    "Źródło Java" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Java source"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Java-Quelle"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código Java"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело Java"
           }
         }
       }

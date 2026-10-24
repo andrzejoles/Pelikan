@@ -12,7 +12,7 @@ struct Stage7ToolsDBTests {
         let c = TestDatabase.config!
         let ws = Workspace(dataDirectory: dataDirectory, drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def.id)
@@ -230,13 +230,13 @@ struct Stage7ToolsDBTests {
         _ = try? await s.execute("drop table pelikan_xfer purge")
         _ = try await s.execute("create table pelikan_xfer (nr number, nazwisko varchar2(30), zrodlo varchar2(10))")
         var job = DataTransferJob()
-        job.sourceConnection = "t"
-        job.targetConnection = "t"
+        job.sourceConnection = "dev_test"
+        job.targetConnection = "dev_test"
         job.sourceQuery = "select empno, ename from emp where deptno = 10"
         job.targetOwner = TestDatabase.config!.user
         job.targetTable = "pelikan_xfer"
         job.mode = .truncate
-        let tsess = try await ws.sessions.session(SessionKey(connectionID: try #require(ws.connectionID(named: "t")), purpose: .tool("x")))
+        let tsess = try await ws.sessions.session(SessionKey(connectionID: try #require(ws.connectionID(named: "dev_test")), purpose: .tool("x")))
         let srcCols = try await DataTransferRunner.sourceColumns(job, in: tsess)
         job.mappings = DataTransferRunner.defaultMappings(targetColumns: try await DataTransferRunner.targetColumns(job, in: tsess), sourceColumns: srcCols)
         #expect(job.mappings.map(\.source) == [nil, nil, nil])
@@ -258,10 +258,10 @@ struct Stage7ToolsDBTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let (ws, _) = try workspace(dataDirectory: dir)
         let out = dir.appendingPathComponent("out")
-        let export = LocalTaskDefinition(name: "eksport", connection: "t",
+        let export = LocalTaskDefinition(name: "eksport", connection: "dev_test",
                                          action: .export(query: "select deptno, dname from dept order by 1", directory: out.path, fileName: "dept-{date}", format: .csv),
                                          schedule: .daily(hour: 3, minute: 0))
-        let script = LocalTaskDefinition(name: "skrypt", connection: "t",
+        let script = LocalTaskDefinition(name: "skrypt", connection: "dev_test",
                                          action: .script(file: nil, text: "set echo on\nupdate dept set loc = loc;\nbegin dbms_output.put_line('x'); end;\n/", commit: false),
                                          schedule: .interval(minutes: 60))
         try ws.localTasks.upsert(export)

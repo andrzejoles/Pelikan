@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -53,6 +54,10 @@ struct SQLPlusUnitTests {
         #expect(SQLPlusEngine.isComplete("begin\n null;\nend;\n/"))
         #expect(!SQLPlusEngine.isComplete("create or replace procedure p as begin null; end;"))
         #expect(SQLPlusEngine.isComplete("/"))
+        // Samotny `/` w Command Window: po `;` — separator; na początku i po poleceniu SQL*Plus — wykonanie bufora.
+        #expect(ScriptSplitter.split("select 1 from dual;\n/", mode: .commandWindow).map(\.text) == ["select 1 from dual"])
+        #expect(ScriptSplitter.split("/", mode: .commandWindow).map(\.text) == ["/"])
+        #expect(ScriptSplitter.split("get q\n/", mode: .commandWindow).map(\.text) == ["get q", "/"])
     }
 
     @Test("SET z kilkoma opcjami i SERVEROUTPUT z SIZE/FORMAT")
@@ -112,5 +117,80 @@ struct SQLPlusHostStepTests {
         ui.answers = [2]
         let o = await engine.run("prompt cztery")
         #expect(o == .stopped && !doc.console.map(\.text).contains("cztery"))
+    }
+}
+
+@MainActor
+@Suite("Command Window: bufor, pliki, BREAK i COMPUTE (PD-CMDW-004)")
+struct SQLPlusBufferTests {
+    @Test("Bufor: LIST z numerami i bieżącą linią, APPEND, CHANGE, DEL, INPUT")
+    func buffer() throws {
+        var b = SQLPlusBuffer("select ename\nfrom emp\nwhere deptno = 10")
+        #expect(try b.list() == ["  1  select ename", "  2  from emp", "  3* where deptno = 10"])
+        _ = try b.list(["1"])
+        try b.append(", sal")
+        #expect(b.lines[0] == "select ename, sal")
+        try b.change("/ename/empno/")
+        #expect(b.lines[0] == "select empno, sal")
+        #expect(throws: SQLPlusError.self) { try b.change("/nie ma/x/") }
+        b.input("  and 1 = 1")
+        #expect(b.current == 1 && b.lines[1] == "  and 1 = 1")
+        try b.delete([])
+        #expect(b.lines == ["select empno, sal", "from emp", "where deptno = 10"] && b.current == 1)
+        try b.delete(["2", "LAST"])
+        #expect(b.lines == ["select empno, sal"])
+        #expect(throws: SQLPlusError.self) { _ = try b.list(["5"]) }
+    }
+
+    @Test("Polecenia w oknie: APPEND ;; dokleja średnik, SAVE/GET pliku z .sql, STORE SET, CLEAR BREAKS")
+    func commands() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("buf-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        engine.state.directory = dir
+        engine.state.buffer = "select 1\nfrom dual"
+        _ = await engine.run("input where 1 = 1\nappend  ;;\nsave zapytanie")
+        let saved = try String(contentsOf: dir.appendingPathComponent("zapytanie.sql"), encoding: .utf8)
+        #expect(saved == "select 1\nfrom dual\nwhere 1 = 1 ;\n/\n")
+        _ = await engine.run("save zapytanie")
+        #expect(doc.console.contains { $0.kind == .error && $0.text.contains("SP2-0540") })
+        engine.state.buffer = nil
+        doc.console.removeAll()
+        _ = await engine.run("get zapytanie")
+        #expect(engine.state.buffer == "select 1\nfrom dual\nwhere 1 = 1 ;")
+        #expect(doc.console.map(\.text).joined(separator: "\n").contains("  3* where 1 = 1 ;"))
+        _ = await engine.run("set pagesize 20\nstore set ustawienia")
+        let set = try String(contentsOf: dir.appendingPathComponent("ustawienia.sql"), encoding: .utf8)
+        #expect(set.contains("set pagesize 20\n") && set.contains("set feedback 1\n"))
+        _ = await engine.run("break on deptno skip 1\ncompute sum of sal on deptno report")
+        #expect(engine.state.breaks == [SQLPlusBreak(column: "DEPTNO", skip: 1)])
+        #expect(engine.state.computes.first?.on == ["DEPTNO", "REPORT"])
+        _ = await engine.run("clear breaks\nclear computes")
+        #expect(engine.state.breaks.isEmpty && engine.state.computes.isEmpty)
+    }
+
+    @Test("BREAK ukrywa powtórzenia i dodaje SKIP; COMPUTE SUM/COUNT na grupie i REPORT")
+    func breakCompute() throws {
+        var s = SQLPlusState()
+        s.breaks = try SQLPlusBreak.parse(["on", "deptno", "skip", "1", "on", "report"])
+        s.computes = [try SQLPlusCompute.parse(["sum", "count", "of", "sal", "on", "deptno"]),
+                      try SQLPlusCompute.parse(["sum", "label", "Razem", "of", "sal", "on", "report"])]
+        let cols = [ColumnInfo(name: "DEPTNO", type: .number, typeName: "NUMBER"), ColumnInfo(name: "ENAME", type: .varchar2, typeName: "VARCHAR2(10)"),
+                    ColumnInfo(name: "SAL", type: .number, typeName: "NUMBER")]
+        var f = TextResultFormatter(columns: cols, state: s, format: .default)
+        var lines = f.lines([[.number("10"), .text("KING"), .number("5000")], [.number("10"), .text("CLARK"), .number("2450")],
+                             [.number("20"), .text("FORD"), .number("3000")]], first: true)
+        lines += f.finish()
+        #expect(lines == [
+            "    DEPTNO ENAME        SAL", "---------- ----- ----------",
+            "        10 KING        5000", "           CLARK       2450",
+            "**********       ----------", "sum                    7450", "count                     2", "",
+            "        20 FORD        3000",
+            "**********       ----------", "sum                    3000", "count                     1",
+            "                 ----------", "Razem                 10450",
+        ])
     }
 }

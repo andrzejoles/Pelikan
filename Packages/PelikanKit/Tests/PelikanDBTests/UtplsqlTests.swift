@@ -10,7 +10,7 @@ struct UtplsqlTests {
     func workspace() throws -> (Workspace, UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        let def = ConnectionDefinition(name: "test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         return (ws, def.id)
@@ -55,6 +55,21 @@ struct UtplsqlTests {
         #expect(!lines.covered.isEmpty)
         let bodyStart = ProgramCompiler.units(in: doc.text).first { $0.type == .packageBody }?.line ?? 0
         #expect(lines.covered.allSatisfy { $0 > bodyStart })
+        #expect(ws.coverageStatus(in: doc)?.hasPrefix("Pokrycie ") == true)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("Opcje przebiegu: pokrycie tylko obiektów z listy uwzględnionych; pominięte nie trafiają do raportu (UT-COV-001)")
+    func coverageOptions() async throws {
+        let (ws, id) = try workspace()
+        let schema = try await ws.metadata()!.currentSchema()
+        let run = try await UtplsqlRunner.start(paths: ["\(schema).test_emp_api"], coverageSchemes: [schema], include: ["emp_api"], in: ws, connectionID: id)
+        await wait(run)
+        #expect(run.failure == nil, "\(run.failure ?? "")")
+        #expect(!run.coverage.isEmpty && run.coverage.keys.allSatisfy { $0.hasSuffix(".EMP_API") }, "\(run.coverage.keys)")
+        let excluded = try await UtplsqlRunner.start(paths: ["\(schema).test_emp_api"], coverageSchemes: [schema], exclude: ["emp_api"], in: ws, connectionID: id)
+        await wait(excluded)
+        #expect(!excluded.coverage.keys.contains { $0.hasSuffix(".EMP_API") }, "\(excluded.coverage.keys)")
         await ws.sessions.disconnectAll()
     }
 

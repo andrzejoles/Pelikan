@@ -20,9 +20,9 @@ struct ScreenshotFixtureTests {
         ws.settings.instantClientDirectory = root.appendingPathComponent("instantclient").path
         ws.settings.worksetAutosave = false
         ws.settings.recoveryEnabled = false
-        var target = ConnectionTarget(user: "", connectString: "pelikan_seps")
+        var target = ConnectionTarget(user: "", connectString: "dev_pelikan_seps")
         target.walletAuth = true
-        var def = ConnectionDefinition(name: "Baza testowa", target: target, connectOnStartup: true)
+        var def = ConnectionDefinition(name: "dev_baza_testowa", target: target, connectOnStartup: true)
         def.environment = .test
         try ws.connections.upsert(def)
         #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("connections.json").path))

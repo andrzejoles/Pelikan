@@ -41,6 +41,35 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             textView.indentUnit = ws.settings.useTabCharacter ? "\t" : String(repeating: " ", count: ws.settings.tabSize)
         }
         load(document.text)
+        // Wcięcia i zawijanie wierszy z Preferencji na żywo (PD-EDIT-004).
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            self.textView.indentMode = ws.settings.indentMode
+            self.textView.rightMarginColumn = ws.settings.rightMarginColumn
+            self.textView.showSpecialCharacters = ws.settings.showSpecialCharacters
+            self.ruler.interval = ws.settings.lineNumberInterval
+            self.ruler.needsDisplay = true
+            self.textView.backspaceUnindents = ws.settings.backspaceUnindents
+            self.textView.indentUnit = ws.settings.useTabCharacter ? "\t" : String(repeating: " ", count: ws.settings.tabSize)
+            self.setWordWrap(ws.settings.wordWrap)
+        })
+        // Status linii względem stanu z otwarcia/zapisu (PD-EDIT-003).
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            _ = self.document.baselineText
+            self.lineStatusEnabled = ws.settings.showLineStatus
+            self.scheduleLineStatus(delay: 0)
+        })
+        // Tło w kolorze połączenia (wskaźniki połączeń, PD-CONN-005) — delikatny odcień, tekst pozostaje czytelny.
+        tokens.append(trackChanges { [weak self] in
+            guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+            _ = self.document.connectionID
+            if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
+                self.textView.backgroundColor = NSColor.textBackgroundColor.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? .textBackgroundColor
+            } else {
+                self.textView.backgroundColor = .textBackgroundColor
+            }
+        })
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
@@ -106,6 +135,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var splitView: NSSplitView?
     private var ligatures = true
     private var colorMarkRanges: [NSTextRange] = []
+    private var lineStatusEnabled = true
+    private var lineStatusWork: DispatchWorkItem?
+    private var wordWrap = false
 
     convenience init(secondaryOf primary: CodeEditorView, document: Document, fontSize: CGFloat) {
         self.init(document: document, fontSize: fontSize, secondary: true)
@@ -215,14 +247,19 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return nil }
             return self.document.foldedStarts.contains(r.start)
         }
+        // Podgląd zwiniętego obszaru pod znacznikiem „⋯” (PD-EDIT-013).
+        textView.foldPreview = { [weak self] start in
+            guard let self, let r = self.regions.first(where: { $0.start == start }) else { return nil }
+            return CodeFolding.preview(r, in: self.textView.string)
+        }
         ruler.breakpointLines = { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace, [.test, .program].contains(self.document.kind) else { return [] }
             return Set(ws.breakpointLines(in: self.document).map { $0 - 1 })
         }
         ruler.coverageLines = { [weak self] in
-            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], []) }
-            let c = ws.coverageLines(in: self.document)
-            return (Set(c.covered.map { $0 - 1 }), Set(c.uncovered.map { $0 - 1 }))
+            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], [], []) }
+            let c = ws.coverageDetail(in: self.document)
+            return (Set(c.covered.map { $0 - 1 }), Set(c.uncovered.map { $0 - 1 }), Set(c.partial.map { $0 - 1 }))
         }
         if [.test, .program].contains(document.kind) {
             ruler.onBreakpointClick = { [weak self] line in
@@ -282,6 +319,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Widok tekstu co najmniej tak duży jak obszar przewijania (inaczej zerowa szerokość = niewidoczny tekst).
         let size = scrollView.contentSize
         textView.minSize = NSSize(width: size.width, height: size.height)
+        // Zawijanie: szerokość widoku tekstu równa obszarowi przewijania (także przy zwężeniu okna).
+        if wordWrap, textView.frame.width != size.width {
+            textView.setFrameSize(NSSize(width: size.width, height: max(textView.frame.height, size.height)))
+        }
         if textView.frame.width < size.width || textView.frame.height < size.height {
             textView.setFrameSize(NSSize(width: max(textView.frame.width, size.width), height: max(textView.frame.height, size.height)))
         }
@@ -409,6 +450,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     /// Obszary zwijania przeliczane z opóźnieniem po zmianie tekstu (znaczniki ± w marginesie).
     private func scheduleRegions(delay: Double = 0.3) {
+        scheduleLineStatus()
         regionsWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
@@ -426,6 +468,51 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         regionsWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    /// Status linii (zmienione, nowe) liczony w tle z opóźnieniem po zmianie tekstu.
+    private func scheduleLineStatus(delay: Double = 0.5) {
+        lineStatusWork?.cancel()
+        guard lineStatusEnabled else {
+            if !ruler.lineStatus.isEmpty { ruler.lineStatus = [:]; ruler.needsDisplay = true }
+            return
+        }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            let text = self.textView.string, baseline = self.document.baselineText
+            Task.detached(priority: .utility) {
+                let status = TextDiff.lineStatus(baseline: baseline, current: text)
+                await MainActor.run { [weak self] in
+                    guard let self, self.textView.string == text else { return }
+                    self.ruler.lineStatus = status
+                    self.ruler.needsDisplay = true
+                }
+            }
+        }
+        lineStatusWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    /// Zawijanie wierszy do szerokości okna (PD-EDIT-004); bez zawijania — duża, skończona szerokość kontenera.
+    private func setWordWrap(_ on: Bool) {
+        guard on != wordWrap, let container = textView.textContainer else { return }
+        wordWrap = on
+        textView.isHorizontallyResizable = !on
+        scrollView.hasHorizontalScroller = !on
+        container.widthTracksTextView = on
+        if on {
+            let width = scrollView.contentSize.width
+            textView.setFrameSize(NSSize(width: width, height: textView.frame.height))
+            container.size = NSSize(width: width - 2 * textView.textContainerInset.width, height: CGFloat.greatestFiniteMagnitude)
+        } else {
+            container.size = NSSize(width: 1_000_000, height: CGFloat.greatestFiniteMagnitude)
+        }
+        if let tlm = textView.textLayoutManager {
+            tlm.invalidateLayout(for: tlm.documentRange)
+            tlm.textViewportLayoutController.layoutViewport()
+        }
+        textView.needsDisplay = true
+        ruler.needsDisplay = true
     }
 
     private func applyFolds() {
@@ -586,6 +673,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 /// NSTextView z dodatkami edytora kodu: wcięcie zaznaczenia Tab/Shift+Tab (UG 25.1), auto-wcięcie po Enter.
 final class CodeTextView: NSTextView {
     var indentUnit = "  "
+    /// Tryb wcięcia po Enter i Backspace usuwający jednostkę wcięcia (UG 23.12, PD-EDIT-004).
+    var indentMode: IndentMode = .automatic
+    var backspaceUnindents = true
+    /// Tekst podglądu zwiniętego obszaru (klucz — początek struktury) i miejsca znaczników „⋯” (PD-EDIT-013).
+    var foldPreview: ((Int) -> String?)?
+    /// Pionowy margines w kolumnie (0 — bez) i znaki specjalne: spacje, tabulacje, końce linii (PD-EDIT-003).
+    var rightMarginColumn = 0 { didSet { if rightMarginColumn != oldValue { needsDisplay = true } } }
+    var showSpecialCharacters = false { didSet { if showSpecialCharacters != oldValue { needsDisplay = true } } }
+    private var foldBoxes: [(rect: NSRect, start: Int)] = []
     var keywordCase: KeywordCase = .unchanged
     var highlightCurrentLine = true
     /// Linia debugera (od 1) — wyróżniona tłem (UG 5.10).
@@ -598,6 +694,12 @@ final class CodeTextView: NSTextView {
     /// Podświetlenie linii z kursorem (UG 23.12 „Highlight current line”).
     override func drawBackground(in rect: NSRect) {
         super.drawBackground(in: rect)
+        if rightMarginColumn > 0, let font {
+            let advance = ("0" as NSString).size(withAttributes: [.font: font]).width
+            let x = textContainerInset.width + (textContainer?.lineFragmentPadding ?? 5) + CGFloat(rightMarginColumn) * advance
+            NSColor.separatorColor.setFill()
+            NSRect(x: x, y: rect.minY, width: 1, height: rect.height).fill()
+        }
         if let line = executionLine, let tlm = textLayoutManager, let content = tlm.textContentManager {
             let ns = string as NSString
             var offset = 0, current = 1
@@ -638,7 +740,11 @@ final class CodeTextView: NSTextView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         drawExtraCarets()
+        drawSpecialCharacters(in: dirtyRect)
+        if foldedLines.isEmpty { foldBoxes = [] }
         guard !foldedLines.isEmpty, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
+        var boxes: [(rect: NSRect, start: Int)] = []
+        defer { foldBoxes = boxes }
         let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: max(9, (font?.pointSize ?? 13) - 2)),
                                                     .foregroundColor: NSColor.secondaryLabelColor]
         let mark = NSAttributedString(string: "⋯", attributes: attrs)
@@ -649,6 +755,7 @@ final class CodeTextView: NSTextView {
             let width = fragment.textLineFragments.first?.typographicBounds.width ?? 0
             let box = NSRect(x: f.minX + width + textContainerInset.width + 6, y: f.minY + textContainerInset.height + 2,
                              width: mark.size().width + 10, height: max(10, f.height - 4))
+            boxes.append((box, start))
             guard box.intersects(dirtyRect) else { continue }
             NSColor.quaternaryLabelColor.setFill()
             NSBezierPath(roundedRect: box, xRadius: 4, yRadius: 4).fill()
@@ -682,6 +789,13 @@ final class CodeTextView: NSTextView {
     override func deleteBackward(_ sender: Any?) {
         if selectedRanges.count > 1 {
             applyMulti { MultiCursor.deleteBackward(in: $0, ranges: $1) }
+        } else if backspaceUnindents, selectedRange().length == 0, let n = unindentLength() {
+            // Backspace w wiodących spacjach usuwa całą jednostkę wcięcia (PD-EDIT-004).
+            let r = NSRange(location: selectedRange().location - n, length: n)
+            if shouldChangeText(in: r, replacementString: "") {
+                replaceCharacters(in: r, with: "")
+                didChangeText()
+            }
         } else {
             super.deleteBackward(sender)
         }
@@ -725,6 +839,10 @@ final class CodeTextView: NSTextView {
     }
 
     @objc func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
+        // Podgląd zwiniętego kodu pod znacznikiem „⋯”.
+        if let box = foldBoxes.first(where: { $0.rect.insetBy(dx: -2, dy: -2).contains(point) }), let preview = foldPreview?(box.start) {
+            return preview
+        }
         let i = characterIndexForInsertion(at: point)
         return hoverText?(i) ?? ""
     }
@@ -749,6 +867,34 @@ final class CodeTextView: NSTextView {
             return true
         }
         return false
+    }
+
+    /// Znaki specjalne (UG 23.12 „Show special characters”): kropka dla spacji, strzałka dla tabulacji, ¶ na końcu linii.
+    private func drawSpecialCharacters(in dirtyRect: NSRect) {
+        guard showSpecialCharacters, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
+        let ns = string as NSString
+        let attrs: [NSAttributedString.Key: Any] = [.font: font ?? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular),
+                                                    .foregroundColor: NSColor.tertiaryLabelColor]
+        let start = tlm.textViewportLayoutController.viewportRange?.location ?? tlm.documentRange.location
+        tlm.enumerateTextLayoutFragments(from: start, options: []) { fragment in
+            let f = fragment.layoutFragmentFrame
+            if f.minY + self.textContainerInset.height > dirtyRect.maxY { return false }
+            if f.maxY + self.textContainerInset.height < dirtyRect.minY { return true }
+            let base = content.offset(from: content.documentRange.location, to: fragment.rangeInElement.location)
+            for line in fragment.textLineFragments {
+                let r = line.characterRange
+                for k in r.location..<(r.location + r.length) {
+                    let i = base + k
+                    guard i < ns.length else { break }
+                    guard let mark = LineNumbering.specialMark(ns.character(at: i)) else { continue }
+                    let p = line.locationForCharacter(at: k)
+                    let origin = NSPoint(x: f.minX + line.typographicBounds.minX + p.x + self.textContainerInset.width,
+                                         y: f.minY + line.typographicBounds.minY + self.textContainerInset.height)
+                    (mark as NSString).draw(at: origin, withAttributes: attrs)
+                }
+            }
+            return true
+        }
     }
 
     /// Dodatkowe kursory (zaznaczenia zerowej długości poza pierwszym) — NSTextView rysuje tylko jeden.
@@ -849,18 +995,14 @@ final class CodeTextView: NSTextView {
         let menu = super.menu(for: event) ?? NSMenu()
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return menu }
         let i = characterIndexForInsertion(at: convert(event.locationInWindow, from: nil))
-        guard let word = TextEditing.identifier(at: i, in: string), !Keywords.isKeyword(word) || word.contains(".") else { return menu }
+        guard let word = EditorObjectMenu.objectName(at: i, in: string) else { return menu }
         if selectedRange().length == 0 { setSelectedRange(NSRange(location: i, length: 0)) }
         var items: [NSMenuItem] = []
         let header = NSMenuItem(title: L10n.tr("Obiekt „\(word)”"), action: nil, keyEquivalent: "")
         header.isEnabled = false
         items.append(header)
-        let actions: [(String, String)] = [("ob.queryData", L10n.tr("Pokaż dane")), ("ob.editData", L10n.tr("Edytuj dane")),
-                                           ("ob.describe", L10n.tr("Opis")), ("ob.edit", L10n.tr("Edytuj")), ("ob.ddl", L10n.tr("DDL")),
-                                           ("ob.properties", L10n.tr("Właściwości")), ("ob.recompile", L10n.tr("Rekompiluj")),
-                                           ("ob.compare", L10n.tr("Porównaj z aktywnym oknem"))]
-        for (id, title) in actions {
-            let item = ClosureMenuItem(title: title) { ws.perform(CommandID(rawValue: id), CommandArguments(["object": .string(word)])) }
+        for (id, title) in EditorObjectMenu.actions {
+            let item = ClosureMenuItem(title: title) { ws.perform(id, CommandArguments(["object": .string(word)])) }
             items.append(item)
         }
         items.append(ClosureMenuItem(title: L10n.tr("Przejdź do deklaracji")) { ws.perform("edit.gotoDeclaration") })
@@ -871,6 +1013,15 @@ final class CodeTextView: NSTextView {
 
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        // Szablon z okna szablonów: wstawienie w miejscu upuszczenia (formularz zmiennych, PD-TPL-002).
+        if let data = sender.draggingPasteboard.data(forType: TemplatePane.pasteboardType), let ws = (NSApp.delegate as? AppDelegate)?.workspace {
+            let id = String(decoding: data, as: UTF8.self)
+            let i = characterIndexForInsertion(at: convert(sender.draggingLocation, from: nil))
+            setSelectedRange(NSRange(location: i, length: 0))
+            window?.makeFirstResponder(self)
+            ws.perform("edit.insertTemplate", CommandArguments(["template": .string(id)]))
+            return true
+        }
         // Obiekt z Object Browsera upuszczony z klawiszem Option: wygenerowany kod zamiast nazwy (SD-GEN-001).
         if NSEvent.modifierFlags.contains(.option),
            let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
@@ -896,12 +1047,43 @@ final class CodeTextView: NSTextView {
         return super.performDragOperation(sender)
     }
 
-    override func insertNewline(_ sender: Any?) {
-        // Automatyczne wcięcie jak poprzednia linia (UG 23.12 „Automatic”).
+    /// Liczba spacji do usunięcia Backspace w wiodących odstępach linii albo nil.
+    private func unindentLength() -> Int? {
         let ns = string as NSString
-        let lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
-        let line = ns.substring(with: lineRange)
-        let indent = String(line.prefix { $0 == " " || $0 == "\t" })
+        let caret = selectedRange().location
+        let lineStart = ns.lineRange(for: NSRange(location: caret, length: 0)).location
+        return SmartIndent.backspaceUnindent(lineBeforeCaret: ns.substring(with: NSRange(location: lineStart, length: caret - lineStart)), unit: indentUnit)
+    }
+
+    override func insertNewline(_ sender: Any?) {
+        // Wcięcie nowej linii wg trybu (UG 23.12 None / Automatic / Smart, PD-EDIT-004).
+        var ns = string as NSString
+        let caret = selectedRange().location
+        var lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
+        if indentMode == .smart, selectedRange().length == 0 {
+            // Smart: END/ELSE/ELSIF/EXCEPTION wyrównane do poziomu struktury przed przejściem do nowej linii.
+            let line = ns.substring(with: NSRange(location: lineRange.location, length: caret - lineRange.location))
+            var previous: String?
+            var p = lineRange.location
+            while p > 0 {
+                let r = ns.lineRange(for: NSRange(location: p - 1, length: 0))
+                let s = ns.substring(with: r).trimmingCharacters(in: .newlines)
+                if !s.trimmingCharacters(in: .whitespaces).isEmpty { previous = s; break }
+                p = r.location
+            }
+            if let fixed = SmartIndent.reindentClosingLine(line, previous: previous, unit: indentUnit) {
+                let r = NSRange(location: lineRange.location, length: caret - lineRange.location)
+                if shouldChangeText(in: r, replacementString: fixed) {
+                    replaceCharacters(in: r, with: fixed)
+                    didChangeText()
+                    setSelectedRange(NSRange(location: lineRange.location + (fixed as NSString).length, length: 0))
+                }
+                ns = string as NSString
+                lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
+            }
+        }
+        let before = ns.substring(with: NSRange(location: lineRange.location, length: selectedRange().location - lineRange.location))
+        let indent = SmartIndent.newlineIndent(lineBeforeCaret: before, mode: indentMode, unit: indentUnit)
         super.insertNewline(sender)
         if !indent.isEmpty { insertText(indent, replacementRange: selectedRange()) }
     }
@@ -944,10 +1126,14 @@ final class LineNumberRulerView: NSView {
     /// Linie (od 0) z punktami przerwania i przełączenie kliknięciem w numer linii (UG 5.10).
     var breakpointLines: (() -> Set<Int>)?
     /// Pokrycie utPLSQL: linie (od 0) pokryte i niepokryte (UT-COV-002).
-    var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>))?
+    var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>, partial: Set<Int>))?
     var onBreakpointClick: ((Int) -> Void)?
     /// Zakładki: linia (od 0) → numer 0–9 (PD-EDIT-011).
     var bookmarkLines: (() -> [Int: Int])?
+    /// Status linii (od 0) względem stanu z otwarcia/zapisu: zmieniona — pomarańczowy, nowa — zielony pasek (PD-EDIT-003).
+    var lineStatus: [Int: LineChange] = [:]
+    /// Numer co n-tą linię (pierwsza i bieżąca zawsze).
+    var interval = 1
     /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
     private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
 
@@ -986,9 +1172,15 @@ final class LineNumberRulerView: NSView {
         let lineHeight = tv.font.map { $0.ascender - $0.descender + $0.leading } ?? 16
         func label(_ line: Int, y: CGFloat, height: CGFloat) {
             let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: line == caretLine ? NSColor.labelColor : NSColor.tertiaryLabelColor]
+            if let s = lineStatus[line] {
+                (s == .added ? NSColor.systemGreen : NSColor.systemOrange).withAlphaComponent(0.85).setFill()
+                NSRect(x: 0, y: y, width: 2.5, height: height).fill()
+            }
             // Pokrycie: pasek przy prawej krawędzi marginesu.
             if cov.covered.contains(line) || cov.uncovered.contains(line) {
-                (cov.covered.contains(line) ? NSColor.systemGreen : NSColor.systemRed).withAlphaComponent(0.8).setFill()
+                // Zielony — pokryta, żółty — częściowo (nie wszystkie bloki), czerwony — niepokryta (UT-COV-002).
+                (cov.partial.contains(line) ? NSColor.systemYellow : cov.covered.contains(line) ? NSColor.systemGreen : NSColor.systemRed)
+                    .withAlphaComponent(0.8).setFill()
                 NSRect(x: bounds.width - 5, y: y, width: 3, height: height).fill()
             }
             if bps.contains(line) {
@@ -1006,9 +1198,15 @@ final class LineNumberRulerView: NSView {
                 NSBezierPath(roundedRect: box, xRadius: 3, yRadius: 3).fill()
                 badge.draw(at: NSPoint(x: box.midX - badge.size().width / 2, y: box.midY - badge.size().height / 2))
             }
-            let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
-            let size = s.size()
-            s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
+            if LineNumbering.shows(line: line, caretLine: caretLine, interval: interval) {
+                let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
+                let size = s.size()
+                s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
+            } else if (line + 1) % max(1, interval / 2) == 0 {
+                // Kreska między numerami (jak w edytorach z interwałem numeracji).
+                NSColor.quaternaryLabelColor.setFill()
+                NSRect(x: bounds.width - 14, y: y + min(height, lineHeight) / 2, width: 6, height: 1).fill()
+            }
             drawnLines.append((line, y, y + height))
             if let folded = foldState?(line) {
                 let marker = NSAttributedString(string: folded ? "▸" : "▾", attributes: [.font: font, .foregroundColor: folded ? NSColor.controlAccentColor : NSColor.tertiaryLabelColor])
@@ -1018,7 +1216,7 @@ final class LineNumberRulerView: NSView {
         drawnLines.removeAll(keepingCapacity: true)
         let bps = breakpointLines?() ?? []
         let marks = bookmarkLines?() ?? [:]
-        let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>())
+        let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>(), partial: Set<Int>())
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)
             return

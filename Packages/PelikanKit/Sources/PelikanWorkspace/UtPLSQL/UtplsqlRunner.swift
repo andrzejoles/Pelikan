@@ -28,6 +28,12 @@ public enum UtplsqlRunner {
         _ = try await s.execute(block + "end;", binds: binds)
     }
 
+    /// `a_include_objects` / `a_exclude_objects` (UT-COV-001) — tylko niepuste listy.
+    static func coverageOptions(include: [String], exclude: [String]) -> String {
+        (include.isEmpty ? "" : ", a_include_objects => " + literalList(include.map { $0.uppercased() }))
+            + (exclude.isEmpty ? "" : ", a_exclude_objects => " + literalList(exclude.map { $0.uppercased() }))
+    }
+
     static func literalList(_ items: [String]) -> String {
         "ut_varchar2_list(" + items.map { "'" + $0.replacingOccurrences(of: "'", with: "''") + "'" }.joined(separator: ", ") + ")"
     }
@@ -35,7 +41,8 @@ public enum UtplsqlRunner {
     /// Uruchamia testy ze ścieżek (`schemat`, `schemat.pakiet[.procedura]`, `schemat:suitepath`); `coverage` — schematy,
     /// dla których zbierane jest pokrycie (puste — bez pokrycia). Zwraca przebieg aktualizowany na żywo.
     /// `purposes` — sesje produkująca i konsumująca (agent uruchamia testy w swoich sesjach).
-    public static func start(paths: [String], coverageSchemes: [String] = [], in ws: Workspace, connectionID: UUID,
+    public static func start(paths: [String], coverageSchemes: [String] = [], include: [String] = [], exclude: [String] = [],
+                             in ws: Workspace, connectionID: UUID,
                              purposes: (SessionPurpose, SessionPurpose) = (.utplsql("run"), .utplsql("events"))) async throws -> UtplsqlRun {
         let run = UtplsqlRun(paths: paths)
         let producer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: purposes.0))
@@ -55,7 +62,7 @@ public enum UtplsqlRunner {
               r.set_reporter_id(:rid);
               r.output_buffer.init();
               \(coverage ? "s.set_reporter_id(:sid); s.output_buffer.init(); h.set_reporter_id(:hid); h.output_buffer.init();" : "")
-              ut_runner.run(a_paths => \(literalList(paths)), a_reporters => ut_reporters(r\(coverage ? ", s, h" : ""))\(coverage ? ", a_coverage_schemes => " + literalList(coverageSchemes.map { $0.uppercased() }) : ""));
+              ut_runner.run(a_paths => \(literalList(paths)), a_reporters => ut_reporters(r\(coverage ? ", s, h" : ""))\(coverage ? ", a_coverage_schemes => " + literalList(coverageSchemes.map { $0.uppercased() }) : "")\(coverageOptions(include: include, exclude: exclude)));
             end;
             """
         var binds = [BindVariable(name: "rid", value: .text(rid))]
@@ -128,6 +135,8 @@ public enum UtplsqlRunner {
                     if out[file] == nil { out[file] = CoverageLines(covered: [], uncovered: []) }
                 } else if name == "lineToCover", let n = Int(attributes["lineNumber"] ?? "") {
                     if attributes["covered"] == "true" { out[file]?.covered.insert(n) } else { out[file]?.uncovered.insert(n) }
+                    if attributes["covered"] == "true", let all = Int(attributes["branchesToCover"] ?? ""),
+                       let hit = Int(attributes["coveredBranches"] ?? ""), hit < all { out[file]?.partial.insert(n) }
                 }
             }
         }

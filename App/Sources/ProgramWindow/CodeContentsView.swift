@@ -3,8 +3,8 @@ import PelikanSQL
 import PelikanWorkspace
 
 /// Code Contents (UG 25.15): drzewo struktury kodu — jednostki, podprogramy, deklaracje; śledzi kursor (zaznacza
-/// element zawierający pozycję), klik przenosi do nazwy elementu.
-final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate {
+/// element zawierający pozycję), klik przenosi do nazwy elementu; sortowanie i menu elementu (PD-CA-010).
+final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
     /// Węzeł drzewa (NSOutlineView wymaga obiektów o stałej tożsamości).
     final class Item {
         let node: OutlineNode
@@ -20,7 +20,12 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     private let scroll = NSScrollView()
     private var roots: [Item] = []
     private var selecting = false
+    private var rawNodes: [OutlineNode] = []
     var onSelect: ((OutlineNode) -> Void)?
+    /// Kolejność elementów (Preferencje › Edytor, menu panelu).
+    var order: CodeContents.Order = .source {
+        didSet { if order != oldValue { update(rawNodes) } }
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -36,6 +41,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         outline.target = self
         outline.action = #selector(clicked)
         outline.setAccessibilityLabel(L10n.tr("Zawartość kodu"))
+        outline.menu = NSMenu()
+        outline.menu?.delegate = self
         scroll.documentView = outline
         scroll.hasVerticalScroller = true
         scroll.drawsBackground = false
@@ -62,7 +69,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         }
         let first = roots.isEmpty
         collect(roots, "")
-        roots = nodes.map(Item.init)
+        rawNodes = nodes
+        roots = CodeContents.sorted(nodes, order: order).map(Item.init)
         outline.reloadData()
         func restore(_ items: [Item], _ prefix: String, depth: Int) {
             for i in items {
@@ -90,6 +98,34 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         outline.selectRowIndexes([row], byExtendingSelection: false)
         outline.scrollRowToVisible(row)
         selecting = false
+    }
+
+    // MARK: Menu elementu (PD-CA-010)
+
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        guard let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
+        if let item = outline.item(atRow: outline.clickedRow) as? Item {
+            let n = item.node
+            let args = CommandArguments(["offset": .int(Int64(n.nameOffset))])
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Przejdź")) { [weak self] in self?.onSelect?(n) })
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Zaznacz")) { ws.perform("codeContents.select", args) })
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Kopiuj")) { ws.perform("codeContents.copy", args) })
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Wytnij")) { ws.perform("codeContents.cut", args) })
+            if [.procedure, .function].contains(n.kind) {
+                menu.addItem(ClosureMenuItem(title: L10n.tr("Testuj")) { ws.perform("codeContents.test", args) })
+            }
+            menu.addItem(.separator())
+        }
+        let sort = NSMenuItem(title: L10n.tr("Sortuj"), action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        for (o, title) in [(CodeContents.Order.source, L10n.tr("Jak w źródle")), (.name, L10n.tr("Alfabetycznie")), (.kind, L10n.tr("Według rodzaju"))] {
+            let i = ClosureMenuItem(title: title) { ws.settings.codeContentsOrder = o }
+            i.state = order == o ? .on : .off
+            sub.addItem(i)
+        }
+        sort.submenu = sub
+        menu.addItem(sort)
     }
 
     @objc private func clicked() {

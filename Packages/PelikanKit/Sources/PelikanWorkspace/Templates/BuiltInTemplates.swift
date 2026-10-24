@@ -1,7 +1,7 @@
 import Foundation
 
 extension TemplateLibrary {
-    static var programFolder: String { L10n.tr("Jednostki programów") }
+    public static var programFolder: String { L10n.tr("Jednostki programów") }
     static var objectsFolder: String { L10n.tr("Obiekty") }
 
     /// Szablony dostarczane z Pelikanem (własne teksty; użytkownik może je zastąpić własnymi o tej samej ścieżce).
@@ -68,6 +68,22 @@ extension TemplateLibrary {
                 begin
                   [#]null;
                 end [Nazwa];
+                /
+                """, isBuiltIn: true),
+            CodeTemplate(folder: units, name: L10n.tr("Źródło Java"), text: """
+                create or replace and compile java source named "[Klasa=NowaKlasa]" as
+                public class [Klasa] {
+                    public static String [Metoda=hello](String s) {
+                        [#]return s;
+                    }
+                }
+                /
+                """, isBuiltIn: true),
+            CodeTemplate(folder: units, name: L10n.tr("Moduł MLE (JavaScript)"), text: """
+                create or replace mle module [Nazwa=nowy_modul] language javascript as
+                export function [Funkcja=hello](s) {
+                  [#]return s;
+                }
                 /
                 """, isBuiltIn: true),
             CodeTemplate(folder: "utPLSQL", name: L10n.tr("Pakiet testowy"), text: """

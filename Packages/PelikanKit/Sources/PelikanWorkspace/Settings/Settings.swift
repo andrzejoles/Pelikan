@@ -85,6 +85,14 @@ public struct Settings: Sendable, Codable, Hashable {
     // Window Types — SQL Window
     public var autoCommitSQL = false
     public var autoCommitPostedRecords = false
+    /// Test Window: AutoCommit after execute (PD-TEST-003).
+    public var autoCommitTestWindow = false
+    /// Wskaźniki połączeń `user@baza` i tło okna w kolorze połączenia (PD-CONN-005).
+    public var connectionIndicators: [ConnectionIndicator] = []
+    public var colorWindowBackground = false
+    /// Lista okien: krótkie tytuły i kolejność (PD-UI-002).
+    public var windowListShortTitles = false
+    public var windowListSort: WindowListSort = .opening
     public var autoSelectStatement = true   // D12
     public var recordsPerPage: RecordsPerPage = .automatic
     public var maximumResultSetMegabytes = 512
@@ -124,6 +132,18 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Analiza kodu w czasie pisania: nieznane nazwy (ze słownika połączenia) i inspekcje (DG-RES-001, DG-INSP-001).
     public var liveCodeAnalysis = true
     public var useTabCharacter = false
+    /// Wcięcia przy pisaniu (PD-EDIT-004): tryb Enter, Backspace usuwający jednostkę wcięcia, zawijanie wierszy.
+    public var indentMode: IndentMode = .automatic
+    public var backspaceUnindents = true
+    public var wordWrap = false
+    /// Status linii zmienionych i nowych od otwarcia albo zapisu na marginesie (PD-EDIT-003).
+    public var showLineStatus = true
+    /// Numer co n-tą linię (1 — każda), pionowy margines w kolumnie (0 — bez) i znaki specjalne (PD-EDIT-003).
+    public var lineNumberInterval = 1
+    public var rightMarginColumn = 0
+    public var showSpecialCharacters = false
+    /// Kolejność elementów Code Contents (PD-CA-010).
+    public var codeContentsOrder: CodeContents.Order = .source
     /// Panel Code Contents obok edytora Program Window (UG 25.15).
     public var showCodeContents = true
     /// Code Assistant (UG 23.14): automatyczna aktywacja po kropce i jej opóźnienie w milisekundach.
@@ -212,6 +232,14 @@ public struct Settings: Sendable, Codable, Hashable {
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
         liveCodeAnalysis = v(.liveCodeAnalysis, liveCodeAnalysis)
         showCodeContents = v(.showCodeContents, showCodeContents)
+        indentMode = v(.indentMode, indentMode)
+        backspaceUnindents = v(.backspaceUnindents, backspaceUnindents)
+        wordWrap = v(.wordWrap, wordWrap)
+        showLineStatus = v(.showLineStatus, showLineStatus)
+        lineNumberInterval = v(.lineNumberInterval, lineNumberInterval)
+        rightMarginColumn = v(.rightMarginColumn, rightMarginColumn)
+        showSpecialCharacters = v(.showSpecialCharacters, showSpecialCharacters)
+        codeContentsOrder = v(.codeContentsOrder, codeContentsOrder)
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
         codeAssistantMatch = v(.codeAssistantMatch, codeAssistantMatch)
@@ -270,6 +298,11 @@ public struct Settings: Sendable, Codable, Hashable {
         dbmsOutputBufferSize = v(.dbmsOutputBufferSize, dbmsOutputBufferSize)
         autoCommitSQL = v(.autoCommitSQL, autoCommitSQL)
         autoCommitPostedRecords = v(.autoCommitPostedRecords, autoCommitPostedRecords)
+        autoCommitTestWindow = v(.autoCommitTestWindow, autoCommitTestWindow)
+        connectionIndicators = v(.connectionIndicators, connectionIndicators)
+        colorWindowBackground = v(.colorWindowBackground, colorWindowBackground)
+        windowListShortTitles = v(.windowListShortTitles, windowListShortTitles)
+        windowListSort = v(.windowListSort, windowListSort)
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)

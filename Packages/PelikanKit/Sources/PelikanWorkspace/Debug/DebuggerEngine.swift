@@ -84,7 +84,11 @@ public final class DebuggerEngine {
     public var stoppedOnException: Bool { state == .paused && (lastReason == 11 || lastReason == 26) }
     public private(set) var message: String?
     /// Obserwowane wyrażenia (nazwy zmiennych, pola `r.pole`, elementy `t(3)`) i ich wartości po zatrzymaniu (UG 5.10).
-    public var watches: [String] = []
+    /// Obserwowane wyrażenia — w dokumencie okna testu (zapis w .tst).
+    public var watches: [String] {
+        get { document.testWatches }
+        set { document.testWatches = newValue }
+    }
     public private(set) var watchValues: [DebugVariable] = []
 
     @ObservationIgnored let workspace: Workspace

@@ -12,7 +12,7 @@ struct Stage8AuditDBTests {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let other = try await TestDatabase.connect()
         let spec = "create or replace package pelikan_state as n number := 0; procedure bump; end;"
@@ -39,7 +39,7 @@ struct Stage8AuditDBTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let ws = Workspace(dataDirectory: dir, drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let other = try await TestDatabase.connect()
@@ -62,7 +62,7 @@ struct Stage8AuditDBTests {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let args = CommandArguments(["connection": .string(def.id.uuidString), "kind": "sql"])
         _ = try await ws.invoke("connection.openWindow", args)
@@ -90,7 +90,7 @@ struct Stage8AuditDBTests {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let other = try await TestDatabase.connect()

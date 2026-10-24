@@ -26,6 +26,62 @@ public struct UtExpectation: Sendable, Hashable, Codable {
     public var description: String
     public var message: String
     public var caller: String
+
+    /// Wartość otrzymana i oczekiwana z komunikatu utPLSQL (`Actual: … was expected to equal: …`, także dla kursorów
+    /// z sekcją `Diff:` — wiersze `Row No. n - Actual:/Expected:`) do porównania obok siebie (UT-RES-002).
+    public var comparison: (actual: String, expected: String)? {
+        let lines = message.components(separatedBy: "\n")
+        let rows = lines.compactMap { l -> (Bool, String)? in
+            let t = l.trimmingCharacters(in: .whitespaces)
+            guard t.hasPrefix("Row No.") || t.hasPrefix("Column") else { return nil }
+            if let r = t.range(of: " - Actual:") { return (true, t[..<r.lowerBound] + ":" + t[r.upperBound...].trimmingCharacters(in: .whitespaces)) }
+            if let r = t.range(of: " - Expected:") { return (false, t[..<r.lowerBound] + ":" + t[r.upperBound...].trimmingCharacters(in: .whitespaces)) }
+            return nil
+        }
+        if !rows.isEmpty {
+            return (rows.filter(\.0).map(\.1).joined(separator: "\n"), rows.filter { !$0.0 }.map(\.1).joined(separator: "\n"))
+        }
+        let first = lines.first ?? ""
+        guard let a = first.range(of: "Actual: "), let e = first.range(of: #" was expected (not )?to [a-z_ ]+?:? "#, options: .regularExpression),
+              a.upperBound <= e.lowerBound else { return nil }
+        let actual = String(first[a.upperBound..<e.lowerBound])
+        let expected = String(first[e.upperBound...])
+        return (actual, expected.isEmpty ? String(first[e]).trimmingCharacters(in: .whitespaces) : expected)
+    }
+
+    public static func == (a: Self, b: Self) -> Bool { a.description == b.description && a.message == b.message && a.caller == b.caller }
+    public func hash(into h: inout Hasher) { h.combine(message); h.combine(caller) }
+}
+
+/// Sortowanie drzewa wyników (UT-RES-001): kolejność wykonania, nazwa, czas (malejąco), status (najpierw błędy).
+public enum UtSortOrder: String, Sendable, CaseIterable {
+    case execution, name, time, status
+
+    public var displayName: String {
+        switch self {
+        case .execution: L10n.tr("Kolejność wykonania")
+        case .name: L10n.tr("Nazwa")
+        case .time: L10n.tr("Czas")
+        case .status: L10n.tr("Status")
+        }
+    }
+
+    public func sorted(_ nodes: [UtNode]) -> [UtNode] {
+        let children = nodes.map { n -> UtNode in
+            var c = n
+            c.children = n.children.map(sorted)
+            return c
+        }
+        func rank(_ s: UtStatus) -> Int {
+            switch s { case .error: 0; case .failure: 1; case .disabled: 4; case .success: 5; default: 3 }
+        }
+        switch self {
+        case .execution: return children
+        case .name: return children.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        case .time: return children.sorted { ($0.executionTime ?? 0) > ($1.executionTime ?? 0) }
+        case .status: return children.sorted { rank($0.status) < rank($1.status) }
+        }
+    }
 }
 
 /// Węzeł drzewa wyników: suita (logiczna albo pakiet, kontekst) albo test.
@@ -168,6 +224,8 @@ public final class UtplsqlRun: Identifiable {
 public struct CoverageLines: Sendable, Hashable, Codable {
     public var covered: Set<Int>
     public var uncovered: Set<Int>
+    /// Linie pokryte częściowo (nie wszystkie gałęzie/bloki — `branchesToCover` > `coveredBranches`; UT-COV-002).
+    public var partial: Set<Int> = []
     public var percent: Double {
         let all = covered.count + uncovered.count
         return all == 0 ? 0 : Double(covered.count) * 100 / Double(all)

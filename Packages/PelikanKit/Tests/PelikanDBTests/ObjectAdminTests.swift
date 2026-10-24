@@ -12,7 +12,7 @@ struct ObjectAdminTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))

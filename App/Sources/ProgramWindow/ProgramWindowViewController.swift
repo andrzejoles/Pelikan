@@ -127,6 +127,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             self.contents.isHidden = !self.workspace.settings.showCodeContents
+            self.contents.order = self.workspace.settings.codeContentsOrder
             self.outerSplit.adjustSubviews()
         })
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
@@ -187,8 +188,37 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             b.bezelStyle = .accessoryBarAction
             b.font = .systemFont(ofSize: 11)
             b.toolTip = "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)"
+            // Menu karty: usunięcie jednostki z okna (PD-PROG-001).
+            let menu = NSMenu()
+            let spec = unit.name + ([.packageBody, .typeBody].contains(unit.type) ? " body" : "")
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Usuń jednostkę")) { [weak self] in
+                self?.workspace.perform("prog.removeUnit", CommandArguments(["unit": .string(spec)]))
+            })
+            b.menu = menu
             unitBar.addArrangedSubview(b)
         }
+        // „+” — nowa jednostka z szablonu jednostek programów (PD-PROG-001).
+        let add = ClosureButton(title: "+") { [weak self] in self?.showAddUnitMenu() }
+        add.bezelStyle = .accessoryBarAction
+        add.font = .systemFont(ofSize: 11)
+        add.setAccessibilityLabel(L10n.tr("Dodaj jednostkę"))
+        add.toolTip = L10n.tr("Dodaj jednostkę")
+        addButton = add
+        unitBar.addArrangedSubview(add)
+    }
+
+    private weak var addButton: NSButton?
+
+    /// Menu „+”: szablony folderu jednostek programów (procedura, funkcja, pakiet, typ, wyzwalacz, Java, MLE).
+    private func showAddUnitMenu() {
+        guard let add = addButton else { return }
+        let menu = NSMenu()
+        for t in workspace.templates.all where t.folder == TemplateLibrary.programFolder {
+            menu.addItem(ClosureMenuItem(title: t.name) { [weak self] in
+                self?.workspace.perform("prog.addUnit", CommandArguments(["template": .string(t.id)]))
+            })
+        }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: add.bounds.height + 2), in: add)
     }
 
     /// Code Hierarchy (UG 25.16): ścieżka od jednostki do podprogramu/bloku pod kursorem; Code Contents śledzi kursor.

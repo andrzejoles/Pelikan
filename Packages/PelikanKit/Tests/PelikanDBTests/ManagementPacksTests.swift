@@ -26,7 +26,7 @@ struct ManagementPacksTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         let ui = TestUI()
         ws.ui = ui
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .tool("packs")))
         await #expect(throws: AgentDenial.self) {

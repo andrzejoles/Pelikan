@@ -363,6 +363,7 @@ public final class SQLPlusEngine {
             lastRow = batch.rows.last ?? lastRow
             if !batch.hasMore { break }
         }
+        if custom == nil { let s = formatter.finish(); if !s.isEmpty { emit(s.joined(separator: "\n")) } }
         if total >= limit { await session.closeResultSet(rs.id); emit(L10n.tr("Pokazano pierwszy milion wierszy."), .info) }
         // COLUMN … NEW_VALUE: wartość z ostatniego wiersza do zmiennej podstawiania.
         // Bez wierszy zmienna zachowuje wartość, a niezdefiniowana jest definiowana jako pusta (jak w SQL*Plus —

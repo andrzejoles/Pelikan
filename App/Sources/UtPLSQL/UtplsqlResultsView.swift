@@ -11,6 +11,7 @@ struct UtplsqlResultsView: View {
     @State private var selection: String?
     @State private var shown: Set<UtStatus> = Set(UtStatus.allCases)
     @State private var showChanges = false
+    @State private var sortOrder: UtSortOrder = .execution
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -92,6 +93,12 @@ struct UtplsqlResultsView: View {
                     Toggle(s.displayName, isOn: Binding(get: { shown.contains(s) }, set: { if $0 { shown.insert(s) } else { shown.remove(s) } }))
                         .toggleStyle(.checkbox).font(.caption)
                 }
+                Spacer()
+                Picker(L10n.tr("Sortuj:"), selection: $sortOrder) {
+                    ForEach(UtSortOrder.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
+                .font(.caption)
+                .fixedSize()
             }
         }
     }
@@ -113,7 +120,7 @@ struct UtplsqlResultsView: View {
             c.children = (n.children ?? []).compactMap(filter)
             return c.children?.isEmpty == false ? c : nil
         }
-        return run.roots.compactMap(filter)
+        return sortOrder.sorted(run.roots.compactMap(filter))
     }
 
     private var tree: some View {
@@ -131,6 +138,28 @@ struct UtplsqlResultsView: View {
         return find(run.roots)
     }
 
+    /// Otrzymane i oczekiwane obok siebie; linie różniące się wyróżnione (UT-RES-002).
+    private func comparison(_ c: (actual: String, expected: String)) -> some View {
+        let a = c.actual.components(separatedBy: "\n"), e = c.expected.components(separatedBy: "\n")
+        func column(_ title: String, _ lines: [String], _ other: [String]) -> some View {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.caption2.bold()).foregroundStyle(.secondary)
+                ForEach(Array(lines.enumerated()), id: \.offset) { i, l in
+                    Text(l).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(i < other.count && other[i] == l ? Color.clear : Color.red.opacity(0.12))
+                }
+            }
+        }
+        return HStack(alignment: .top, spacing: 8) {
+            column(L10n.tr("Otrzymane"), a, e)
+            Divider()
+            column(L10n.tr("Oczekiwane"), e, a)
+        }
+        .padding(6)
+        .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 4))
+    }
+
     private var details: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
@@ -143,6 +172,7 @@ struct UtplsqlResultsView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             if !e.description.isEmpty { Text(e.description).bold() }
                             Text(e.message).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                            if let c = e.comparison { comparison(c) }
                             if !e.caller.isEmpty { stackText(e.caller, node: n) }
                         }
                         .padding(8)

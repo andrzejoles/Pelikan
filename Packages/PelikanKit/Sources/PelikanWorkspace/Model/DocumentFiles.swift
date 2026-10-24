@@ -179,6 +179,7 @@ extension Workspace {
             let f = TestScriptFile.decode(text)
             doc = newDocument(.test, text: f.block, fileURL: std)
             doc.testVariables = f.variables
+            doc.testWatches = f.watches ?? []
             TestRunner.synchronize(doc)
         } else {
             doc = newDocument(docKind, text: text, fileURL: std)
@@ -230,7 +231,7 @@ extension Workspace {
             return
         }
         if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
-            try TestScriptFile(block: doc.text, variables: doc.testVariables).encoded().write(to: url, options: .atomic)
+            try TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded().write(to: url, options: .atomic)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)

@@ -17,16 +17,16 @@ struct ConnectionOptionsTests {
         ws.ui = TestUI()
         var target = ConnectionTarget(user: c.user, connectString: c.connectString)
         target.edition = "ORA$BASE"
-        let def = ConnectionDefinition(name: "edycja", target: target)
+        let def = ConnectionDefinition(name: "dev_edycja", target: target)
         try ws.connections.upsert(def, password: c.password)
         let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
         #expect(try await s.scalar("select sys_context('userenv', 'current_edition_name') from dual") == "ORA$BASE")
         let file = dir.appendingPathComponent("conn.json")
         _ = try await ws.invoke("connection.export", CommandArguments(["file": .string(file.path)]))
         let text = try String(contentsOf: file, encoding: .utf8)
-        #expect(text.contains("edycja") && !text.contains(c.password))
+        #expect(text.contains("dev_edycja") && !text.contains(c.password))
         let r = try await ws.invoke("connection.import", CommandArguments(["file": .string(file.path)]))
-        #expect(r.value == .int(1) && ws.connections.connections.filter { $0.name == "edycja" }.count == 2)
+        #expect(r.value == .int(1) && ws.connections.connections.filter { $0.name == "dev_edycja" }.count == 2)
         await ws.sessions.disconnectAll()
     }
 
@@ -38,7 +38,7 @@ struct ConnectionOptionsTests {
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
         ws.settings.sessionNLS = ["NLS_DATE_FORMAT": "DD.MM.YYYY", "NLS_NUMERIC_CHARACTERS": ", "]
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let a = ws.newDocument(.sql), b = ws.newDocument(.sql)
         let ka = ws.sessions.key(forDocument: a.id, connection: def.id), kb = ws.sessions.key(forDocument: b.id, connection: def.id)
@@ -59,7 +59,7 @@ struct ConnectionOptionsTests {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
         ws.ui = TestUI()
-        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let doc = ws.newDocument(.sql, text: "select count(*) from all_objects")
         doc.connectionID = def.id

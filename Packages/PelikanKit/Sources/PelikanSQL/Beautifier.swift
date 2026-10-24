@@ -18,6 +18,11 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
     public var listLayout: ListLayout = .onePerLine
     /// Przecinek na początku kolejnej linii listy zamiast na końcu poprzedniej.
     public var commaBefore = false
+    /// Osobne reguły list (UG 29.2): deklaracje parametrów podprogramów, parametry wywołań w PL/SQL, listy kolumn
+    /// i wartości INSERT — do marginesu albo element w linii (wyrównany za nawiasem).
+    public var parameterDeclarations: ListLayout = .fit
+    public var callParameters: ListLayout = .fit
+    public var insertLists: ListLayout = .fit
     /// Zachowanie pojedynczych pustych linii między instrukcjami (więcej pustych linii — jedna).
     public var keepBlankLines = true
     /// Wyrazy o zadanej pisowni (Special Case, np. `DBMS_Output`), niezależnie od reguł wielkości liter.
@@ -38,6 +43,8 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         listLayout = v(.listLayout, listLayout); commaBefore = v(.commaBefore, commaBefore); keepBlankLines = v(.keepBlankLines, keepBlankLines)
         specialCase = v(.specialCase, specialCase); afterLoad = v(.afterLoad, afterLoad); beforeCompile = v(.beforeCompile, beforeCompile)
         beforeSave = v(.beforeSave, beforeSave)
+        parameterDeclarations = v(.parameterDeclarations, parameterDeclarations); callParameters = v(.callParameters, callParameters)
+        insertLists = v(.insertLists, insertLists)
     }
 }
 
@@ -498,7 +505,14 @@ struct Formatter {
                 length += k.text.count + 1
                 j += 1
             }
-            wrap = hasComma && column + length > options.rightMargin
+            // Reguła listy wg miejsca nawiasu: INSERT (kolumny, VALUES), nagłówek podprogramu, wywołanie w PL/SQL.
+            var layout = BeautifierOptions.ListLayout.fit
+            if let f = frames.last, f.kind == .sql {
+                if ["INSERT", "VALUES"].contains(f.clause) { layout = options.insertLists }
+            } else if frames.last?.kind != .paren {
+                if headerLevel != nil { layout = options.parameterDeclarations } else if prev?.isWord == true { layout = options.callParameters }
+            }
+            wrap = hasComma && (layout == .onePerLine || column + length > options.rightMargin)
         }
         frames.append(Frame(kind: .paren, level: level, column: column, clause: "", wrap: wrap, subquery: sub))
     }

@@ -4,25 +4,81 @@ import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
-/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json.
+/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
+/// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
 struct PreferencesView: View {
     let workspace: Workspace
+    @State private var pane = "GeneralPane"
+    @State private var query = ""
+
+    static let panes: [(id: String, title: String, icon: String)] = [
+        ("GeneralPane", L10n.tr("Ogólne"), "gearshape"), ("SQLWindowPane", L10n.tr("Okno SQL"), "tablecells"),
+        ("EditorPane", L10n.tr("Edytor"), "text.cursor"), ("BeautifierPane", L10n.tr("Formater"), "text.alignleft"),
+        ("KeyboardPane", L10n.tr("Klawiatura"), "keyboard"), ("OraclePane", L10n.tr("Oracle"), "cylinder"),
+        ("BrowserPane", L10n.tr("Object Browser"), "list.bullet.indent"), ("ToolsPane", L10n.tr("Narzędzia"), "wrench.and.screwdriver"),
+        ("AgentsPane", L10n.tr("Agenci"), "cpu"), ("PreferenceSetsPane", L10n.tr("Zestawy"), "square.stack.3d.up"),
+    ]
+
+    static func matches(_ query: String) -> [(pane: String, label: String)] {
+        PreferenceSearch.filter(PreferenceIndex.entries, query: query)
+    }
 
     var body: some View {
-        TabView {
-            GeneralPane(workspace: workspace).tabItem { Label(L10n.tr("Ogólne"), systemImage: "gearshape") }
-            SQLWindowPane(workspace: workspace).tabItem { Label(L10n.tr("Okno SQL"), systemImage: "tablecells") }
-            EditorPane(workspace: workspace).tabItem { Label(L10n.tr("Edytor"), systemImage: "text.cursor") }
-            BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
-            KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
-            OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
-            BrowserPane(workspace: workspace).tabItem { Label(L10n.tr("Object Browser"), systemImage: "list.bullet.indent") }
-            ToolsPane(workspace: workspace).tabItem { Label(L10n.tr("Narzędzia"), systemImage: "wrench.and.screwdriver") }
-            AgentsPane(workspace: workspace).tabItem { Label(L10n.tr("Agenci"), systemImage: "cpu") }
-            PreferenceSetsPane(workspace: workspace).tabItem { Label(L10n.tr("Zestawy"), systemImage: "square.stack.3d.up") }
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField(L10n.tr("Szukaj ustawienia"), text: $query).textFieldStyle(.plain)
+                if !query.isEmpty {
+                    Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }.buttonStyle(.borderless)
+                        .iconLabel(L10n.tr("Wyczyść"))
+                }
+            }
+            .padding(6)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            if query.isEmpty {
+                TabView(selection: $pane) {
+                    GeneralPane(workspace: workspace).tag("GeneralPane").tabItem { tab("GeneralPane") }
+                    SQLWindowPane(workspace: workspace).tag("SQLWindowPane").tabItem { tab("SQLWindowPane") }
+                    EditorPane(workspace: workspace).tag("EditorPane").tabItem { tab("EditorPane") }
+                    BeautifierPane(workspace: workspace).tag("BeautifierPane").tabItem { tab("BeautifierPane") }
+                    KeyboardPane(workspace: workspace).tag("KeyboardPane").tabItem { tab("KeyboardPane") }
+                    OraclePane(workspace: workspace).tag("OraclePane").tabItem { tab("OraclePane") }
+                    BrowserPane(workspace: workspace).tag("BrowserPane").tabItem { tab("BrowserPane") }
+                    ToolsPane(workspace: workspace).tag("ToolsPane").tabItem { tab("ToolsPane") }
+                    AgentsPane(workspace: workspace).tag("AgentsPane").tabItem { tab("AgentsPane") }
+                    PreferenceSetsPane(workspace: workspace).tag("PreferenceSetsPane").tabItem { tab("PreferenceSetsPane") }
+                }
+                .padding(.top, 8)
+            } else {
+                let found = Self.matches(query)
+                List {
+                    if found.isEmpty { Text(L10n.tr("Nic nie znaleziono")).foregroundStyle(.secondary) }
+                    ForEach(Array(found.enumerated()), id: \.offset) { _, f in
+                        Button {
+                            pane = f.pane
+                            query = ""
+                        } label: {
+                            HStack {
+                                Text(f.label)
+                                Spacer()
+                                Text(Self.panes.first { $0.id == f.pane }?.title ?? "").foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, 8)
+            }
         }
-        .frame(width: 860, height: 560)
-        .padding(.top, 8)
+        .frame(width: 860, height: 600)
+    }
+
+    private func tab(_ id: String) -> some View {
+        let p = Self.panes.first { $0.id == id }!
+        return Label(p.title, systemImage: p.icon)
     }
 }
 
@@ -51,6 +107,29 @@ struct GeneralPane: View {
                     Text(L10n.tr("Sprawdzanie połączenia co \(workspace.settings.checkConnectionIntervalSeconds) s (0 — wyłączone)"))
                 }
                 Toggle(L10n.tr("Przypinaj połączenie nowych okien"), isOn: setting(workspace, \.pinWindowConnectionsByDefault))
+            }
+            Section(L10n.tr("Wskaźniki połączeń")) {
+                Toggle(L10n.tr("Tło edytora w kolorze połączenia"), isOn: setting(workspace, \.colorWindowBackground))
+                Text(L10n.tr("Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła."))
+                    .font(.caption).foregroundStyle(.secondary)
+                ForEach(workspace.settings.connectionIndicators.indices, id: \.self) { i in
+                    HStack {
+                        TextField(L10n.tr("Wzorzec, np. sys@*"), text: Binding(get: { workspace.settings.connectionIndicators[i].pattern },
+                                                                          set: { workspace.settings.connectionIndicators[i].pattern = $0 }))
+                        ColorPicker("", selection: Binding(get: {
+                            let c = workspace.settings.connectionIndicators[i].color
+                            return Color(red: c.red, green: c.green, blue: c.blue)
+                        }, set: { c in
+                            let n = NSColor(c).usingColorSpace(.sRGB) ?? .systemRed
+                            workspace.settings.connectionIndicators[i].color = RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent)
+                        }), supportsOpacity: false).labelsHidden()
+                        Button { workspace.settings.connectionIndicators.remove(at: i) } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń regułę"))
+                    }
+                }
+                Button(L10n.tr("Dodaj regułę")) {
+                    workspace.settings.connectionIndicators.append(ConnectionIndicator(pattern: "*@*", color: RGBColor(red: 0.85, green: 0.2, blue: 0.2)))
+                }
             }
             Section(L10n.tr("Wygląd (UG 23.16)")) {
                 Picker(L10n.tr("Tryb"), selection: setting(workspace, \.appearance)) {
@@ -101,6 +180,7 @@ struct SQLWindowPane: View {
             Section(L10n.tr("Wykonywanie (UG 23.20)")) {
                 Toggle(L10n.tr("AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"), isOn: setting(workspace, \.autoSelectStatement))
                 Toggle(L10n.tr("AutoCommit poleceń SQL"), isOn: setting(workspace, \.autoCommitSQL))
+                Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
             }
             Section(L10n.tr("Wyniki")) {
@@ -214,8 +294,30 @@ struct EditorPane: View {
                     Text(L10n.tr("Pierwsza wielka")).tag(KeywordCase.initCap)
                 }
                 Toggle(L10n.tr("Podświetlaj bieżącą linię"), isOn: setting(workspace, \.highlightCurrentLine))
+                Toggle(L10n.tr("Status linii (zmienione i nowe od otwarcia lub zapisu)"), isOn: setting(workspace, \.showLineStatus))
+                Toggle(L10n.tr("Zawijaj wiersze"), isOn: setting(workspace, \.wordWrap))
+                Stepper(value: setting(workspace, \.lineNumberInterval), in: 1...10) {
+                    Text(workspace.settings.lineNumberInterval <= 1 ? L10n.tr("Numer każdej linii")
+                         : L10n.tr("Numer co \(workspace.settings.lineNumberInterval) linii"))
+                }
+                Stepper(value: setting(workspace, \.rightMarginColumn), in: 0...250, step: 10) {
+                    Text(workspace.settings.rightMarginColumn == 0 ? L10n.tr("Bez pionowego marginesu")
+                         : L10n.tr("Pionowy margines w kolumnie \(workspace.settings.rightMarginColumn)"))
+                }
+                Toggle(L10n.tr("Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"), isOn: setting(workspace, \.showSpecialCharacters))
+                Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
+                    Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
+                    Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)
+                    Text(L10n.tr("Według rodzaju")).tag(CodeContents.Order.kind)
+                }
             }
             Section(L10n.tr("Wcięcia")) {
+                Picker(L10n.tr("Wcięcie nowej linii"), selection: setting(workspace, \.indentMode)) {
+                    Text(L10n.tr("Brak")).tag(IndentMode.none)
+                    Text(L10n.tr("Automatyczne (jak poprzednia linia)")).tag(IndentMode.automatic)
+                    Text(L10n.tr("Inteligentne (struktura PL/SQL)")).tag(IndentMode.smart)
+                }
+                Toggle(L10n.tr("Backspace usuwa wcięcie"), isOn: setting(workspace, \.backspaceUnindents))
                 Stepper(value: setting(workspace, \.tabSize), in: 1...8) { Text(L10n.tr("Szerokość tabulacji: \(workspace.settings.tabSize)")) }
                 Toggle(L10n.tr("Wstawiaj znak tabulacji zamiast spacji"), isOn: setting(workspace, \.useTabCharacter))
             }

@@ -286,7 +286,7 @@ ssh_up() {
     echo "SSH gotowy: tunnel@127.0.0.1:${SSH_PORT} → ${NAME}:1521" >&2
 }
 
-# Portfel magazynu haseł (SEPS) dla testów Oracle Wallet (D53): .testdb/wallet z poświadczeniem aliasu PELIKAN_SEPS
+# Portfel magazynu haseł (SEPS) dla testów Oracle Wallet (D53): .testdb/wallet z poświadczeniem aliasu DEV_PELIKAN_SEPS
 # oraz .testdb/oracle-net-user/tnsnames.ora. mkstore z bibliotek PKI Oracle (Maven Central) i lokalnej Javy; hasła
 # (portfela — losowe, nigdzie niezapisywane, i bazy testowej) przekazywane przez stdin, nie w argumentach.
 wallet() {
@@ -304,8 +304,8 @@ wallet() {
     rm -rf "$w"; mkdir -p "$w" "$net"; chmod 700 "$w"
     printf '%s\n%s\n' "$wp" "$wp" | "$java" -cp "$cp" oracle.security.pki.OracleSecretStoreTextUI -wrl "$w" -create >/dev/null
     printf '%s\n%s\n%s\n' "$PELIKAN_TESTDB_PASSWORD" "$PELIKAN_TESTDB_PASSWORD" "$wp" \
-        | "$java" -cp "$cp" oracle.security.pki.OracleSecretStoreTextUI -wrl "$w" -createCredential pelikan_seps "$PELIKAN_TESTDB_USER" >/dev/null
-    echo "pelikan_seps=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${PELIKAN_TESTDB_HOST:-127.0.0.1})(PORT=${PELIKAN_TESTDB_PORT:-$PORT}))(CONNECT_DATA=(SERVICE_NAME=${PELIKAN_TESTDB_SERVICE:-FREEPDB1})))" > "$net/tnsnames.ora"
+        | "$java" -cp "$cp" oracle.security.pki.OracleSecretStoreTextUI -wrl "$w" -createCredential dev_pelikan_seps "$PELIKAN_TESTDB_USER" >/dev/null
+    echo "dev_pelikan_seps=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${PELIKAN_TESTDB_HOST:-127.0.0.1})(PORT=${PELIKAN_TESTDB_PORT:-$PORT}))(CONNECT_DATA=(SERVICE_NAME=${PELIKAN_TESTDB_SERVICE:-FREEPDB1})))" > "$net/tnsnames.ora"
     [ -f "$w/cwallet.sso" ] && echo "Portfel testowy: $w" >&2
 }
 

@@ -14,7 +14,7 @@ struct AgentDatabaseTests {
     func workspace(_ configure: (inout ConnectionDefinition) -> Void = { _ in }) throws -> (Workspace, ConnectionDefinition) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        var def = ConnectionDefinition(name: "Testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .test)
+        var def = ConnectionDefinition(name: "dev_testowa", target: ConnectionTarget(user: c.user, connectString: c.connectString), environment: .test)
         configure(&def)
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)

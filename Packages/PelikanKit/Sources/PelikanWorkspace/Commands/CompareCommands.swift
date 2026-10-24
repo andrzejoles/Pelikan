@@ -13,7 +13,9 @@ enum CompareCommands {
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .program else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu")) }
                 guard let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc)) else { throw CommandError.notConnected }
                 let db = try await databaseText(of: doc.text, metadata: m)
-                return show(ctx, left: db, right: doc.text, leftTitle: L10n.tr("Baza danych"), rightTitle: doc.title)
+                return show(ctx, left: db, right: doc.text, leftTitle: L10n.tr("Baza danych"), rightTitle: doc.title) {
+                    (try await databaseText(of: doc.text, metadata: m), doc.text)
+                }
             },
             Command(CommandDescriptor(id: "prog.compareWithFile", title: L10n.tr("Porównaj z plikiem…"), category: .file, submenu: L10n.tr("Porównaj"),
                                       parameters: [CommandParameter("file", .string, L10n.tr("Ścieżka pliku (bez — okno wyboru)"))],
@@ -22,7 +24,9 @@ enum CompareCommands {
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let doc = BuiltinCommands.editable(ctx.workspace) else { return .ok }
                 guard let url = try await file(ctx, "file") else { throw CommandError.cancelledByUser }
-                return show(ctx, left: try read(url), right: doc.text, leftTitle: url.lastPathComponent, rightTitle: doc.title)
+                return show(ctx, left: try read(url), right: doc.text, leftTitle: url.lastPathComponent, rightTitle: doc.title) {
+                    (try read(url), doc.text)
+                }
             },
             Command(CommandDescriptor(id: "ob.compare", title: L10n.tr("Porównaj z aktywnym oknem"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams, agent: .read, effect: .none,
@@ -30,18 +34,18 @@ enum CompareCommands {
                     validate: { ws in ws.selectedObject != nil && BuiltinCommands.editable(ws) != nil }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
-                var text = o.type.isProgram ? try await m.source(of: o) + "\n/\n" : try await m.ddl(of: o)
-                if o.type == .package || o.type == .type {
-                    let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody)
-                    if let b = try? await m.source(of: body) { text += "\n" + b + "\n/\n" }
+                let text = try await objectText(o, metadata: m)
+                return show(ctx, left: text, right: doc.text, leftTitle: "\(o.owner).\(o.name)", rightTitle: doc.title) {
+                    (try await objectText(o, metadata: m), doc.text)
                 }
-                return show(ctx, left: text, right: doc.text, leftTitle: "\(o.owner).\(o.name)", rightTitle: doc.title)
             },
             Command(CommandDescriptor(id: "tools.compareFiles", title: L10n.tr("Porównaj pliki…"), category: .tools,
                                       parameters: [CommandParameter("left", .string, L10n.tr("Pierwszy plik")), CommandParameter("right", .string, L10n.tr("Drugi plik"))],
                                       agent: .none, effect: .none, summary: L10n.tr("Porównuje dwa pliki w przeglądarce różnic."), feature: "PD-DIFF-001")) { ctx in
                 guard let l = try await file(ctx, "left"), let r = try await file(ctx, "right") else { throw CommandError.cancelledByUser }
-                return show(ctx, left: try read(l), right: try read(r), leftTitle: l.lastPathComponent, rightTitle: r.lastPathComponent)
+                return show(ctx, left: try read(l), right: try read(r), leftTitle: l.lastPathComponent, rightTitle: r.lastPathComponent) {
+                    (try read(l), try read(r))
+                }
             },
             Command(CommandDescriptor(id: "tools.compareTexts", title: L10n.tr("Porównaj teksty"), category: .tools,
                                       parameters: [
@@ -61,9 +65,21 @@ enum CompareCommands {
         ]
     }
 
-    /// Użytkownik: przeglądarka różnic; agent: różnica unified w wyniku.
+    /// Źródło (z ciałem pakietu/typu) albo DDL obiektu do porównania.
     @MainActor
-    static func show(_ ctx: CommandContext, left: String, right: String, leftTitle: String, rightTitle: String) -> CommandResult {
+    static func objectText(_ o: DBObject, metadata m: MetadataProvider) async throws -> String {
+        var text = o.type.isProgram ? try await m.source(of: o) + "\n/\n" : try await m.ddl(of: o)
+        if o.type == .package || o.type == .type {
+            let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody)
+            if let b = try? await m.source(of: body) { text += "\n" + b + "\n/\n" }
+        }
+        return text
+    }
+
+    /// Użytkownik: przeglądarka różnic (z Reload — ponownym wczytaniem obu stron); agent: różnica unified w wyniku.
+    @MainActor
+    static func show(_ ctx: CommandContext, left: String, right: String, leftTitle: String, rightTitle: String,
+                     reload: DiffReload? = nil) -> CommandResult {
         if ctx.invoker == .user {
             if let tool = ctx.workspace.settings.externalDiff, !tool.program.trimmingCharacters(in: .whitespaces).isEmpty {
                 do {
@@ -72,7 +88,7 @@ enum CompareCommands {
                     ctx.ui?.showError(error.localizedDescription)
                 }
             } else {
-                ctx.ui?.showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+                ctx.ui?.showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle, reload: reload)
             }
         }
         let u = TextDiff.unified(left, right, leftName: leftTitle, rightName: rightTitle)

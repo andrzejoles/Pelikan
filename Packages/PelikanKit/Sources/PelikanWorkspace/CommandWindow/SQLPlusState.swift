@@ -47,7 +47,12 @@ public struct SQLPlusState: Sendable {
     /// COLUMN … FORMAT/HEADING/NEW_VALUE.
     public var columns: [String: ColumnFormat] = [:]
     /// Bufor SQL (ostatnie polecenie SQL/PL/SQL — `/`, RUN, LIST).
-    public var buffer: String?
+    public var buffer: String? { didSet { bufferLine = nil } }
+    /// Bieżąca linia bufora (LIST, APPEND, CHANGE, DEL, INPUT); nil — ostatnia.
+    public var bufferLine: Int?
+    /// BREAK i COMPUTE (PD-CMDW-004).
+    public var breaks: [SQLPlusBreak] = []
+    public var computes: [SQLPlusCompute] = []
     /// Ostatnio kompilowany obiekt (SHOW ERRORS bez argumentów).
     public var lastCompiled: (type: String, owner: String?, name: String)?
     public var whenever: Whenever = .continue
