@@ -58,6 +58,35 @@ public protocol NameResolutionSource: Sendable {
     func columns(owner: String?, relation: String) async -> [String]?
     /// Jakikolwiek obiekt (pakiet, sekwencja, funkcja…) albo schemat o tej nazwie — kwalifikator, który nie jest aliasem.
     func objectOrSchemaExists(_ name: String) async -> Bool
+    /// Wersje hurtowe (jedno zapytanie na wiele nazw — przy zdalnej bazie każda podróż to dziesiątki ms).
+    func existingRelations(_ keys: [RelationKey]) async -> Set<RelationKey>
+    func columns(of keys: [RelationKey]) async -> [RelationKey: [String]]
+    func existingObjectsOrSchemas(_ names: [String]) async -> Set<String>
+}
+
+/// Relacja w tekście: właściciel (nil — schemat domyślny albo synonim publiczny) i nazwa.
+public struct RelationKey: Hashable, Sendable {
+    public var owner: String?
+    public var name: String
+    public init(owner: String?, name: String) { self.owner = owner; self.name = name }
+}
+
+extension NameResolutionSource {
+    public func existingRelations(_ keys: [RelationKey]) async -> Set<RelationKey> {
+        var out = Set<RelationKey>()
+        for k in keys where await relationExists(owner: k.owner, name: k.name) { out.insert(k) }
+        return out
+    }
+    public func columns(of keys: [RelationKey]) async -> [RelationKey: [String]] {
+        var out: [RelationKey: [String]] = [:]
+        for k in keys { if let c = await columns(owner: k.owner, relation: k.name) { out[k] = c } }
+        return out
+    }
+    public func existingObjectsOrSchemas(_ names: [String]) async -> Set<String> {
+        var out = Set<String>()
+        for n in names where await objectOrSchemaExists(n) { out.insert(n) }
+        return out
+    }
 }
 
 public enum NameResolver {
@@ -107,18 +136,19 @@ public enum NameResolver {
     static func relations(_ t: [SQLToken], _ range: Range<Int>) -> [Relation] {
         var out: [Relation] = []
         var ctes = Set<String>()
-        // WITH nazwa AS ( … ), nazwa2 AS ( … )
+        // WITH nazwa AS ( … ), nazwa2 AS ( … ) — na początku polecenia i dalej (INSERT … WITH … SELECT, podzapytania).
         var i = range.lowerBound
-        if t[i].upper == "WITH" {
-            var j = i + 1
-            if j < range.upperBound, ["FUNCTION", "PROCEDURE"].contains(t[j].upper) { return [] }
+        if t[i].upper == "WITH", i + 1 < range.upperBound, ["FUNCTION", "PROCEDURE"].contains(t[i + 1].upper) { return [] }
+        for w in range where t[w].upper == "WITH" && (w == range.lowerBound || t[w - 1].upper != "START") {
+            var j = w + 1
             while j + 1 < range.upperBound, t[j].isWord {
-                ctes.insert(t[j].name)
+                let name = t[j].name
                 var k = j + 1
                 if k < range.upperBound, t[k].kind == .leftParen { var d = 0; repeat { if t[k].kind == .leftParen { d += 1 } else if t[k].kind == .rightParen { d -= 1 }; k += 1 } while k < range.upperBound && d > 0 }
                 guard k < range.upperBound, t[k].upper == "AS" else { break }
                 k += 1
                 guard k < range.upperBound, t[k].kind == .leftParen else { break }
+                ctes.insert(name)
                 var d = 0
                 repeat { if t[k].kind == .leftParen { d += 1 } else if t[k].kind == .rightParen { d -= 1 }; k += 1 } while k < range.upperBound && d > 0
                 if k < range.upperBound, t[k].kind == .comma { j = k + 1 } else { break }
@@ -126,12 +156,15 @@ public enum NameResolver {
         }
         let starter = t[range.lowerBound].upper
         func readRelation(at k: Int) -> (Relation, Int)? {
-            guard k < range.upperBound, t[k].kind == .identifier || t[k].kind == .quotedIdentifier else { return nil }
+            // Nazwa tabeli bywa słowem kluczowym (GROUPS, LEVELS); TABLE(…), LATERAL (…), ONLY (…) — nie relacja.
+            guard k < range.upperBound, t[k].kind == .identifier || t[k].kind == .quotedIdentifier
+                    || (t[k].kind == .keyword && !clauseEnd.contains(t[k].upper) && !joinWords.contains(t[k].upper)
+                        && !["TABLE", "ONLY", "XMLTABLE", "JSON_TABLE", "THE"].contains(t[k].upper)) else { return nil }
             var owner: String?
             var name = t[k].name
             var start = t[k].start, end = t[k].end
             var n = k + 1
-            if n + 1 < range.upperBound, t[n].kind == .dot, t[n + 1].kind == .identifier || t[n + 1].kind == .quotedIdentifier {
+            if n + 1 < range.upperBound, t[n].kind == .dot, t[n + 1].isWord {
                 owner = name; name = t[n + 1].name; end = t[n + 1].end; n += 2
             }
             // Funkcja tabelaryczna albo link bazy — poza zakresem sprawdzania.
@@ -177,6 +210,15 @@ public enum NameResolver {
                 if clauseEnd.contains(tk.upper), !["ON", "USING", "AS", "PARTITION"].contains(tk.upper) { fromDepths.remove(depth) }
             }
             if tk.kind == .comma && inFrom { next = i + 1 }
+            // Widok wbudowany `( … ) alias`: alias zapisany jako nie do sprawdzania (jak CTE); treść czytana dalej normalnie.
+            if let k = next, k < range.upperBound, t[k].kind == .leftParen {
+                var m = k, d = 0
+                repeat { if t[m].kind == .leftParen { d += 1 } else if t[m].kind == .rightParen { d -= 1 }; m += 1 } while m < range.upperBound && d > 0
+                if m < range.upperBound, t[m].upper == "AS" { m += 1 }
+                if m < range.upperBound, t[m].kind == .identifier || t[m].kind == .quotedIdentifier, !clauseEnd.contains(t[m].upper), !joinWords.contains(t[m].upper) {
+                    out.append(Relation(owner: nil, name: t[m].name, alias: t[m].name, range: t[m].start..<t[m].end, isCTE: true))
+                }
+            }
             if let k = next, let (rel, n) = readRelation(at: k) {
                 out.append(rel)
                 i = n
@@ -197,33 +239,33 @@ public enum NameResolver {
         return nil
     }
 
-    /// Nieznane relacje, kolumny po aliasie i kwalifikatory, które nie są aliasem ani obiektem.
+    /// Nieznane relacje, kolumny po aliasie i kwalifikatory, które nie są aliasem ani obiektem. Najpierw zbiera wszystkie
+    /// nazwy tekstu, potem sprawdza je hurtowo (pakiet z 13 tys. linii na zdalnej bazie: 34 s pojedynczo → kilka zapytań).
     public static func unresolved(in text: String, source: any NameResolutionSource) async -> [EditorDiagnostic] {
         let t = SQLToken.significant(text)
-        var out: [EditorDiagnostic] = []
-        var relationCache: [String: Bool] = [:]
-        var columnCache: [String: [String]?] = [:]
-        var objectCache: [String: Bool] = [:]
-        for st in statements(t) {
-            let rels = relations(t, st)
-            var aliases: [String: Relation] = [:]
+        let sts = statements(t).map { ($0, relations(t, $0)) }
+        func key(_ r: Relation) -> RelationKey { RelationKey(owner: r.owner, name: r.name) }
+        let existing = await source.existingRelations(Array(Set(sts.flatMap { $0.1 }.filter { !$0.isCTE }.map(key))))
+
+        /// Odwołanie `q.kolumna` w poleceniu: indeks tokenu kwalifikatora i relacje aliasu (ten sam alias bywa użyty
+        /// w kilku podzapytaniach jednego polecenia — kolumna jest poprawna, gdy ma ją którakolwiek).
+        struct Qualified { var index: Int; var relations: [Relation]? }
+        var plan: [(rels: [Relation], unknown: [Relation], refs: [Qualified])] = []
+        var columnKeys = Set<RelationKey>(), qualifiers = Set<String>()
+        for (st, rels) in sts {
+            var aliases: [String: [Relation]] = [:]
+            var unknown: [Relation] = []
+            // Alias relacji nieznanej (już zgłoszonej) albo CTE — kolumn nie da się sprawdzić.
+            var unchecked = Set<String>()
             for r in rels {
-                if r.isCTE { if let a = r.alias { aliases[a] = r }; aliases[r.name] = r; continue }
-                let key = "\(r.owner ?? "").\(r.name)"
-                let exists: Bool
-                if let c = relationCache[key] { exists = c } else {
-                    exists = await source.relationExists(owner: r.owner, name: r.name)
-                    relationCache[key] = exists
-                }
-                if !exists {
-                    out.append(EditorDiagnostic(range: r.range, severity: .error, source: .names, code: "unknown-table",
-                                                message: L10n.tr("Nieznana tabela albo widok: \(r.owner.map { "\($0)." } ?? "")\(r.name)")))
-                    continue
-                }
-                aliases[r.alias ?? r.name] = r
-                if r.alias != nil { aliases[r.name] = aliases[r.name] ?? r }
+                if r.isCTE { unchecked.insert(r.alias ?? r.name); unchecked.insert(r.name); continue }
+                guard existing.contains(key(r)) else { unknown.append(r); unchecked.insert(r.alias ?? r.name); continue }
+                aliases[r.alias ?? r.name, default: []].append(r)
+                if r.alias != nil, aliases[r.name] == nil { aliases[r.name] = [r] }
             }
-            // q.kolumna: kolumna znanej relacji
+            var refs: [Qualified] = []
+            // `schemat.tabela` w FROM/JOIN to relacja, nie kolumna aliasu (alias bywa równy nazwie schematu).
+            let relationStarts = Set(rels.filter { $0.owner != nil }.map(\.range.lowerBound))
             var i = st.lowerBound
             while i + 2 < st.upperBound {
                 defer { i += 1 }
@@ -232,31 +274,45 @@ public enum NameResolver {
                 // Część dłuższej ścieżki (schemat.tabela.kolumna) albo wywołanie (pakiet.funkcja(…)) — pomijane.
                 if i > st.lowerBound, t[i - 1].kind == .dot { continue }
                 if i + 3 < st.upperBound, t[i + 3].kind == .dot || t[i + 3].kind == .leftParen { continue }
-                if t[i + 2].upper == "*" { continue }
+                if t[i + 2].upper == "*" || relationStarts.contains(t[i].start) { continue }
                 let q = t[i].name, col = t[i + 2].name
-                if let r = aliases[q] {
-                    guard !r.isCTE, !pseudoColumns.contains(col) else { continue }
-                    let key = "\(r.owner ?? "").\(r.name)"
-                    let cols: [String]?
-                    if let c = columnCache[key] { cols = c } else {
-                        cols = await source.columns(owner: r.owner, relation: r.name)
-                        columnCache[key] = cols
-                    }
-                    if let cols, !cols.contains(col) {
-                        out.append(EditorDiagnostic(range: t[i + 2].start..<t[i + 2].end, severity: .error, source: .names, code: "unknown-column",
-                                                    message: L10n.tr("Kolumna \(col) nie istnieje w \(r.name)")))
-                    }
-                } else if !rels.isEmpty, rels.allSatisfy({ !$0.isCTE || true }) {
+                if unchecked.contains(q) { continue }
+                if let rs = aliases[q] {
+                    guard !pseudoColumns.contains(col) else { continue }
+                    rs.forEach { columnKeys.insert(key($0)) }
+                    refs.append(Qualified(index: i, relations: rs))
+                } else if !rels.isEmpty {
                     // Kwalifikator spoza aliasów: obiekt (pakiet, sekwencja), schemat albo zmienna PL/SQL — błąd tylko,
                     // gdy żadnym z nich nie jest (zmienne rekordowe w PL/SQL pomijane: polecenie w bloku).
                     let insidePLSQL = st.lowerBound > 0 && t[..<st.lowerBound].contains { ["BEGIN", "DECLARE"].contains($0.upper) }
                     if insidePLSQL { continue }
-                    let known: Bool
-                    if let c = objectCache[q] { known = c } else { known = await source.objectOrSchemaExists(q); objectCache[q] = known }
-                    if !known {
-                        out.append(EditorDiagnostic(range: t[i].start..<t[i].end, severity: .error, source: .names, code: "unknown-alias",
-                                                    message: L10n.tr("Nieznany alias albo obiekt: \(q)")))
+                    qualifiers.insert(q)
+                    refs.append(Qualified(index: i, relations: nil))
+                }
+            }
+            plan.append((rels, unknown, refs))
+        }
+        let columns = columnKeys.isEmpty ? [:] : await source.columns(of: Array(columnKeys))
+        let known = qualifiers.isEmpty ? [] : await source.existingObjectsOrSchemas(Array(qualifiers))
+
+        var out: [EditorDiagnostic] = []
+        for p in plan {
+            for r in p.unknown {
+                out.append(EditorDiagnostic(range: r.range, severity: .error, source: .names, code: "unknown-table",
+                                            message: L10n.tr("Nieznana tabela albo widok: \(r.owner.map { "\($0)." } ?? "")\(r.name)")))
+            }
+            for ref in p.refs {
+                let i = ref.index
+                if let rs = ref.relations {
+                    let col = t[i + 2].name
+                    let known = rs.compactMap { columns[key($0)] }
+                    if known.count == rs.count, !known.contains(where: { $0.contains(col) }), let r = rs.first {
+                        out.append(EditorDiagnostic(range: t[i + 2].start..<t[i + 2].end, severity: .error, source: .names, code: "unknown-column",
+                                                    message: L10n.tr("Kolumna \(col) nie istnieje w \(r.name)")))
                     }
+                } else if !known.contains(t[i].name) {
+                    out.append(EditorDiagnostic(range: t[i].start..<t[i].end, severity: .error, source: .names, code: "unknown-alias",
+                                                message: L10n.tr("Nieznany alias albo obiekt: \(t[i].name)")))
                 }
             }
         }
@@ -265,38 +321,132 @@ public enum NameResolver {
 }
 
 /// Metadane do rozwiązywania nazw ze słownika bazy (sesja metadanych połączenia; wyniki w pamięci podręcznej dostawcy).
+/// Nazwy bez schematu rozwiązywane w `defaultSchema` (program z innego schematu — schemat właściciela), inaczej
+/// w bieżącym schemacie sesji; potem synonimy publiczne.
 public struct MetadataNameSource: NameResolutionSource {
     let session: any DatabaseSession
+    let defaultSchema: String?
 
-    public init(session: any DatabaseSession) { self.session = session }
+    public init(session: any DatabaseSession, defaultSchema: String? = nil) { self.session = session; self.defaultSchema = defaultSchema }
 
     func bind(_ name: String, _ v: String?) -> BindVariable { BindVariable(name: name, value: v.map { .text($0) } ?? .null) }
+    static let currentSchema = "nvl(:d, sys_context('userenv', 'current_schema'))"
+    /// Lista IN do 900 nazw na zapytanie (limit Oracle: 1000 wyrażeń).
+    static let chunk = 900
 
     public func relationExists(owner: String?, name: String) async -> Bool {
-        let n = try? await session.scalar("""
-            select count(*) from all_objects
-             where object_name = :n and object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW', 'SYNONYM')
-               and (owner = nvl(:o, sys_context('userenv', 'current_schema')) or (:o is null and owner = 'PUBLIC'))
-            """, binds: [bind("n", name), bind("o", owner)])
-        return (Int(n ?? "") ?? 1) > 0
+        await existingRelations([RelationKey(owner: owner, name: name)]).contains(RelationKey(owner: owner, name: name))
     }
 
     public func columns(owner: String?, relation: String) async -> [String]? {
-        guard let (_, rows) = try? await session.queryAll("""
-            select c.column_name from all_tab_columns c
-             where c.table_name = (select nvl(max(s.table_name), :n) from all_synonyms s
-                                    where s.synonym_name = :n and s.owner in (nvl(:o, sys_context('userenv', 'current_schema')), 'PUBLIC'))
-               and c.owner = (select nvl(max(s.table_owner), nvl(:o, sys_context('userenv', 'current_schema'))) from all_synonyms s
-                               where s.synonym_name = :n and s.owner in (nvl(:o, sys_context('userenv', 'current_schema')), 'PUBLIC'))
-            """, binds: [bind("n", relation), bind("o", owner)], limit: 5000), !rows.isEmpty else { return nil }
-        return rows.compactMap { $0.first?.displayText }
+        await columns(of: [RelationKey(owner: owner, name: relation)])[RelationKey(owner: owner, name: relation)]
     }
 
     public func objectOrSchemaExists(_ name: String) async -> Bool {
-        let n = try? await session.scalar("""
-            select (select count(*) from all_objects where object_name = :n and rownum = 1) + (select count(*) from all_users where username = :n) from dual
-            """, binds: [bind("n", name)])
-        return (Int(n ?? "") ?? 1) > 0
+        await existingObjectsOrSchemas([name]).contains(name)
+    }
+
+    /// Słownik: DBA_*, gdy sesja może go czytać (uprawnienia sesji nie dają wtedy fałszywych „nieznanych” obiektów
+    /// w kodzie innego schematu), inaczej ALL_*.
+    func dictionary() async -> String {
+        (try? await session.scalar("select 'DBA' from dba_objects where rownum = 1")) == "DBA" ? "dba" : "all"
+    }
+
+    /// Schemat domyślny po stronie bazy (jedna podróż na analizę).
+    func schema() async -> String {
+        if let defaultSchema { return defaultSchema }
+        return (try? await session.scalar("select sys_context('userenv', 'current_schema') from dual")) ?? ""
+    }
+
+    func inList(_ prefix: String, _ values: [String]) -> (sql: String, binds: [BindVariable]) {
+        let binds = values.enumerated().map { BindVariable(name: "\(prefix)\($0.offset)", value: .text($0.element)) }
+        return (binds.map { ":\($0.name)" }.joined(separator: ", "), binds)
+    }
+
+    public func existingRelations(_ keys: [RelationKey]) async -> Set<RelationKey> {
+        guard !keys.isEmpty else { return [] }
+        let schema = await schema(), dict = await dictionary()
+        var found = Set<String>()   // "WŁAŚCICIEL.NAZWA"
+        let names = Array(Set(keys.map(\.name)))
+        let owners = Array(Set(keys.compactMap(\.owner) + [schema, "PUBLIC"]))
+        for part in stride(from: 0, to: names.count, by: Self.chunk) {
+            let n = inList("n", Array(names[part..<min(part + Self.chunk, names.count)]))
+            let o = inList("o", owners)
+            guard let (_, rows) = try? await session.queryAll("""
+                select owner || '.' || object_name from \(dict)_objects
+                 where object_type in ('TABLE', 'VIEW', 'MATERIALIZED VIEW', 'SYNONYM')
+                   and object_name in (\(n.sql)) and owner in (\(o.sql))
+                """, binds: n.binds + o.binds, limit: 100_000) else { return Set(keys) }   // błąd słownika — bez fałszywych alarmów
+            for r in rows { if let s = r.first?.displayText { found.insert(s) } }
+        }
+        return Set(keys.filter { k in
+            if let owner = k.owner { return found.contains("\(owner).\(k.name)") }
+            return found.contains("\(schema).\(k.name)") || found.contains("PUBLIC.\(k.name)")
+        })
+    }
+
+    public func columns(of keys: [RelationKey]) async -> [RelationKey: [String]] {
+        guard !keys.isEmpty else { return [:] }
+        let schema = await schema(), dict = await dictionary()
+        // Kolejność jak w Oracle: obiekt w schemacie, synonim prywatny w schemacie, synonim publiczny (tylko bez schematu).
+        func direct(_ k: RelationKey) -> String { "\(k.owner ?? schema).\(k.name)" }
+        var cols = await tableColumns(Set(keys.map(direct)), dict: dict)
+        let viaSynonym = keys.filter { cols[direct($0)] == nil }
+        var target: [RelationKey: String] = [:]
+        if !viaSynonym.isEmpty {
+            var synonyms: [String: String] = [:]   // "WŁAŚCICIEL_SYNONIMU.NAZWA" → "WŁAŚCICIEL.TABELA"
+            let names = Array(Set(viaSynonym.map(\.name)))
+            for part in stride(from: 0, to: names.count, by: Self.chunk) {
+                let n = inList("n", Array(names[part..<min(part + Self.chunk, names.count)]))
+                let rows = (try? await session.queryAll("select owner, synonym_name, table_owner, table_name from \(dict)_synonyms where synonym_name in (\(n.sql)) and db_link is null",
+                                                        binds: n.binds, limit: 100_000).rows) ?? []
+                for r in rows where r.count == 4 {
+                    synonyms["\(r[0].displayText ?? "").\(r[1].displayText ?? "")"] = "\(r[2].displayText ?? "").\(r[3].displayText ?? "")"
+                }
+            }
+            for k in viaSynonym {
+                if let s = synonyms[direct(k)] ?? (k.owner == nil ? synonyms["PUBLIC.\(k.name)"] : nil) { target[k] = s }
+            }
+            let more = await tableColumns(Set(target.values), dict: dict)
+            cols.merge(more) { a, _ in a }
+        }
+        var out: [RelationKey: [String]] = [:]
+        for k in keys { if let c = cols[direct(k)] ?? target[k].flatMap({ cols[$0] }) { out[k] = c } }
+        return out
+    }
+
+    /// Kolumny tabel i widoków "WŁAŚCICIEL.NAZWA" (pary w liście IN).
+    func tableColumns(_ names: Set<String>, dict: String) async -> [String: [String]] {
+        var cols: [String: [String]] = [:]
+        let list = Array(names)
+        for part in stride(from: 0, to: list.count, by: Self.chunk / 2) {
+            let slice = Array(list[part..<min(part + Self.chunk / 2, list.count)])
+            let pairs = slice.indices.map { "(:o\($0), :t\($0))" }.joined(separator: ", ")
+            let binds = slice.enumerated().flatMap { i, s -> [BindVariable] in
+                let p = s.split(separator: ".", maxSplits: 1).map(String.init)
+                return [BindVariable(name: "o\(i)", value: .text(p[0])), BindVariable(name: "t\(i)", value: .text(p.count > 1 ? p[1] : ""))]
+            }
+            let rows = (try? await session.queryAll("select owner, table_name, column_name from \(dict)_tab_columns where (owner, table_name) in (\(pairs))",
+                                                    binds: binds, limit: 1_000_000).rows) ?? []
+            for r in rows where r.count == 3 { cols["\(r[0].displayText ?? "").\(r[1].displayText ?? "")", default: []].append(r[2].displayText ?? "") }
+        }
+        return cols
+    }
+
+    public func existingObjectsOrSchemas(_ names: [String]) async -> Set<String> {
+        guard !names.isEmpty else { return [] }
+        let dict = await dictionary()
+        var found = Set<String>()
+        let unique = Array(Set(names))
+        for part in stride(from: 0, to: unique.count, by: Self.chunk) {
+            let n = inList("n", Array(unique[part..<min(part + Self.chunk, unique.count)]))
+            guard let (_, rows) = try? await session.queryAll("""
+                select object_name from \(dict)_objects where object_name in (\(n.sql))
+                union select username from \(dict)_users where username in (\(n.sql))
+                """, binds: n.binds, limit: 100_000) else { return Set(names) }
+            for r in rows { if let s = r.first?.displayText { found.insert(s) } }
+        }
+        return found
     }
 }
 
@@ -469,6 +619,37 @@ public actor CachedNameSource: NameResolutionSource {
         objects[name] = (v, Date())
         return v
     }
+
+    func k(_ r: RelationKey) -> String { "\(r.owner ?? "").\(r.name)" }
+
+    public func existingRelations(_ keys: [RelationKey]) async -> Set<RelationKey> {
+        let missing = keys.filter { relations[k($0)].map { !fresh($0.1) } ?? true }
+        if !missing.isEmpty {
+            let found = await base.existingRelations(missing)
+            for m in missing { relations[k(m)] = (found.contains(m), Date()) }
+        }
+        return Set(keys.filter { relations[k($0)]?.0 == true })
+    }
+
+    public func columns(of keys: [RelationKey]) async -> [RelationKey: [String]] {
+        let missing = keys.filter { cols[k($0)].map { !fresh($0.1) } ?? true }
+        if !missing.isEmpty {
+            let found = await base.columns(of: missing)
+            for m in missing { cols[k(m)] = (found[m], Date()) }
+        }
+        var out: [RelationKey: [String]] = [:]
+        for key in keys { if let c = cols[k(key)]?.0 { out[key] = c } }
+        return out
+    }
+
+    public func existingObjectsOrSchemas(_ names: [String]) async -> Set<String> {
+        let missing = names.filter { objects[$0].map { !fresh($0.1) } ?? true }
+        if !missing.isEmpty {
+            let found = await base.existingObjectsOrSchemas(missing)
+            for m in missing { objects[m] = (found.contains(m), Date()) }
+        }
+        return Set(names.filter { objects[$0]?.0 == true })
+    }
 }
 
 extension Workspace {
@@ -480,8 +661,11 @@ extension Workspace {
         let text = doc.text
         var found = CodeInspections.inspect(text, identifierLimit: settings.identifierLengthWarning)
         if names, let c = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: c, purpose: .main)) {
-            let source = nameSources[c] ?? CachedNameSource(MetadataNameSource(session: s))
-            nameSources[c] = source
+            // Program z innego schematu (nagłówek z właścicielem): nazwy bez schematu — w schemacie właściciela.
+            let schema = doc.kind == .program ? ProgramCompiler.units(in: text).first?.owner : nil
+            let key = NameSourceKey(connection: c, schema: schema)
+            let source = nameSources[key] ?? CachedNameSource(MetadataNameSource(session: s, defaultSchema: schema))
+            nameSources[key] = source
             found += await NameResolver.unresolved(in: text, source: source)
         }
         found.sort { $0.range.lowerBound < $1.range.lowerBound }
@@ -493,6 +677,12 @@ extension Workspace {
 
     /// Czyści pamięć słownika analizy (po DDL, odświeżeniu metadanych).
     public func resetNameResolutionCache(_ connection: UUID? = nil) {
-        if let connection { nameSources[connection] = nil } else { nameSources.removeAll() }
+        if let connection { nameSources = nameSources.filter { $0.key.connection != connection } } else { nameSources.removeAll() }
     }
+}
+
+/// Pamięć słownika analizy: połączenie i schemat domyślny (nil — bieżący schemat sesji).
+struct NameSourceKey: Hashable {
+    var connection: UUID
+    var schema: String?
 }

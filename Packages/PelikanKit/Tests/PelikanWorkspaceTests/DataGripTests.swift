@@ -5,7 +5,8 @@ import Testing
 
 /// Atrapa słownika: EMP(EMPNO, ENAME, DEPTNO, SAL), DEPT(DEPTNO, DNAME); pakiet EMP_API, schemat SCOTT.
 struct FakeNames: NameResolutionSource {
-    let tables = ["EMP": ["EMPNO", "ENAME", "DEPTNO", "SAL"], "DEPT": ["DEPTNO", "DNAME"]]
+    let tables = ["EMP": ["EMPNO", "ENAME", "DEPTNO", "SAL"], "DEPT": ["DEPTNO", "DNAME"], "GROUPS": ["GROUP_NO", "NAZWA"],
+                  "STORE": ["STORE", "AREA"], "SALES": ["STORE", "QTY"]]
     func relationExists(owner: String?, name: String) async -> Bool { tables[name] != nil || name == "DUAL" }
     func columns(owner: String?, relation: String) async -> [String]? { tables[relation] }
     func objectOrSchemaExists(_ name: String) async -> Bool { ["EMP_API", "SCOTT", "EMP_SEQ"].contains(name) }
@@ -13,6 +14,21 @@ struct FakeNames: NameResolutionSource {
 
 @Suite("DataGrip: rozwiązywanie nazw i inspekcje")
 struct NameResolutionTests {
+    @Test("Wzorce z dużej bazy bez fałszywych alarmów: tabela-słowo kluczowe, ten sam alias w podzapytaniach i widoku wbudowanym, alias równy schematowi, CTE w INSERT")
+    func realWorldPatterns() async {
+        let sql = """
+            select g.nazwa from scott.groups g join emp e on e.deptno = g.group_no;
+            select st.area from store st union all select st.qty from sales st;
+            select t.empno from scott.emp t, scott.dept scott where t.deptno = scott.deptno;
+            insert into emp (empno) with head as (select 1 store from dual) select head.store from sales s join head on head.store = s.store;
+            select x.nie_ma from (select 1 a from dual) x, emp x;
+            """
+        let d = await NameResolver.unresolved(in: sql, source: FakeNames())
+        #expect(d.isEmpty, "\(d.map(\.message))")
+        let bad = await NameResolver.unresolved(in: "select st.brak from store st union all select st.qty from sales st", source: FakeNames())
+        #expect(bad.map(\.code) == ["unknown-column"])
+    }
+
     @Test("Nieznana tabela, kolumna po aliasie, nieznany alias; CTE, pseudokolumny, pakiet i schemat bez fałszywych alarmów")
     func names() async {
         let sql = """

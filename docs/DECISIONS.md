@@ -1113,3 +1113,30 @@ krótką tabelę pod spodem, niewyrównaną z kolumnami. Układ tabelaryczny bez
 jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, „Razem” na końcu. Z nową stroną po grupie
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
+
+### D151 · 2026-10-24 — Pobieranie hurtowe z paczką dobraną do wiersza; próba na dużej bazie właściciela
+Właściciel udostępnił połączenie przez Oracle Wallet do kopii swojej bazy (Oracle 19.3, przez sieć z opóźnieniem
+~50 ms). Sonda tylko do odczytu (poza repozytorium, `SET TRANSACTION READ ONLY`, bez kompilacji i DML, kod źródłowy
+tylko w pamięci; do repozytorium i raportu trafiają wyłącznie liczby) sprawdziła Pelikana na dużym schemacie:
+metadane Object Browsera (23 tys. tabel w 4 s, 48 tys. synonimów w 6,3 s), lekser, konspekt, zwijanie i inspekcję
+kodu oraz formater na 3000 jednostkach PL/SQL (34 MB) — formater bez odmów i idempotentny, wszystko razem kilka sekund.
+Wąskim gardłem okazało się pobieranie: stała paczka 500 wierszy = jedna podróż sieciowa na 500 wierszy, ~7,5 tys. w/s.
+`ExecuteOptions.bulk` (queryAll, eksport tabel i do pliku, transfer danych, porównanie danych) ustawia paczkę po
+wykonaniu, przed definicją zmiennych (później ODPI-C nie pozwala jej powiększyć — DPI-1015): do 10 000 wierszy i ~16 MB
+buforów według szerokości wiersza. Na tej bazie 300 tys. wierszy: 38,1 s → 7,9 s. Siatka okna SQL zostaje przy paczce
+z opcji połączenia — duża paczka opóźniłaby pierwsze wiersze wolnego zapytania.
+
+### D152 · 2026-10-24 — Program z innego schematu: właściciel w nagłówku; analiza nazw hurtowo i bez fałszywych alarmów
+Sonda na dużej bazie właściciela (D151) wykazała, że źródło programu z innego schematu dostawało nagłówek
+`CREATE OR REPLACE PACKAGE BODY nazwa` bez właściciela — kompilacja z okna programu utworzyłaby kopię w schemacie sesji.
+`MetadataProvider.source` dodaje właściciela, gdy różni się od bieżącego schematu sesji (`ProgramCompiler.withOwner`;
+własne obiekty bez zmian). Analiza nazw (podkreślenia w edytorze):
+- nazwy bez schematu rozwiązywane w schemacie właściciela z nagłówka programu, potem synonimy publiczne;
+- kolumny: obiekt w schemacie → synonim prywatny → publiczny (wcześniej synonim publiczny wygrywał z własną tabelą);
+- słownik `DBA_*`, gdy sesja może go czytać (uprawnienia sesji nie dają fałszywych „nieznanych tabel”);
+- zapytania hurtowe (listy IN po 900 nazw) zamiast jednego zapytania na nazwę: pakiet 13,5 tys. linii 34 s → 1,8 s;
+- bez fałszywych alarmów: tabela o nazwie słowa kluczowego (`schemat.groups`), ten sam alias w kilku podzapytaniach
+  (kolumna poprawna, gdy ma ją którakolwiek relacja aliasu), alias widoku wbudowanego, alias równy nazwie schematu
+  (`schemat.tabela` w FROM to relacja), CTE poza początkiem polecenia (`INSERT … WITH … SELECT`).
+Na 40 największych poprawnych (VALID) ciałach pakietów (279 tys. linii): 478 zgłoszeń → 1, czas 40 s → 16,6 s. Wzorce
+odtworzone syntetycznie w testach jednostkowych i na bazie testowej (żadnych danych z bazy właściciela w repozytorium).
