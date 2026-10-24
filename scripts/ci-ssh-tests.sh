@@ -14,7 +14,7 @@ for suite in $suites; do
   # (pseudoterminal — buforowanie wierszami), żeby po przerwaniu w dzienniku zostały linie „started” zawieszonego testu.
   script -q "$log" perl -e 'alarm shift; exec @ARGV' "$limit" swift test --skip-build --filter "\\.$suite/" >/dev/null 2>&1 </dev/null
   rc=$?
-  grep -E "✔|✘|↳|error|Test run with|Suite" "$log" | grep -v "Testing Library\|Target Platform" | tail -60
+  grep -E "✔|✘|↳|error|Test run with|Suite|\[stop-test\]|limit etapu" "$log" | grep -v "Testing Library\|Target Platform" | tail -60
   echo "::endgroup::"
   if [ $rc -ne 0 ]; then
     status=1
@@ -23,7 +23,7 @@ for suite in $suites; do
       grep -o 'Test "[^"]*" started' "$log" | sed 's/ started$//' | sort -u > "$log.s"
       grep -oE 'Test "[^"]*" (passed|failed|skipped)' "$log" | sed -E 's/ (passed|failed|skipped)$//' | sort -u > "$log.f"
       comm -23 "$log.s" "$log.f"
-      echo "--- procesy ssh/sshd ---"; ps -Ao pid,ppid,etime,command | grep -E "ssh|swiftpm|xctest" | grep -v grep | cut -c1-200
+      echo "--- procesy ssh/sshd ---"; ps -Ao pid,ppid,pgid,etime,command | grep -E "ssh|swiftpm|xctest|sleep 300" | grep -v grep | cut -c1-200
       for f in "${TMPDIR:-/tmp}"/pelikan-sshd-*/sshd.log; do [ -f "$f" ] && { echo "--- $f"; tail -20 "$f"; }; done
       pkill -f swiftpm-testing-helper || true
     else
