@@ -11,6 +11,7 @@ Klucz = polski tekst literału; każda interpolacja `\\(…)` to `%@`, a `%` to 
 """
 import json
 import os
+import plistlib
 import re
 import sys
 
@@ -159,7 +160,21 @@ def extract_keys():
                         errors.append(f"{rel}:{line}: {e}")
                         continue
                     keys.setdefault(key, f"{rel}:{line}")
+    for key in services_menu_keys():
+        keys.setdefault(key, "App/Info.plist (NSServices)")
     return keys, errors
+
+
+SERVICES_PREFIX = "$(PELIKAN_APP_NAME): "
+
+
+def services_menu_keys():
+    """Nazwy usług z NSServices bez przedrostka z nazwą aplikacji; tłumaczenia trafiają do ServicesMenu.strings
+    (scripts/services-menu.py przy budowaniu)."""
+    with open(os.path.join(ROOT, "App/Info.plist"), "rb") as fh:
+        info = plistlib.load(fh)
+    names = [s.get("NSMenuItem", {}).get("default", "") for s in info.get("NSServices", [])]
+    return [n[len(SERVICES_PREFIX):] if n.startswith(SERVICES_PREFIX) else n for n in names if n]
 
 
 def load_catalog():

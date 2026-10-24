@@ -2,7 +2,7 @@ import AppKit
 import PelikanWorkspace
 
 /// Usługi macOS (MAC-SVC-001; wpisy NSServices w Info.plist): „Formatuj SQL” zamienia zaznaczenie w innej aplikacji,
-/// „Otwórz w SQL Window” i „Otwórz plik” przenoszą tekst albo pliki do Pelikana.
+/// „Otwórz w oknie SQL” i „Otwórz plik” przenoszą tekst albo pliki do Pelikana.
 @MainActor
 final class ServicesProvider: NSObject {
     private let workspace: Workspace

@@ -655,6 +655,7 @@
 				1DAF9FC709C8BC247966D477 /* Frameworks */,
 				83C31F064D65AA9943417F69 /* Embed Foundation Extensions */,
 				E2045759C8D11B6D2375F7A7 /* Embed Dependencies */,
+				E9EA260C3DD0041DA17F604B /* ServicesMenu.strings */,
 			);
 			buildRules = (
 			);
@@ -763,6 +764,34 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E9EA260C3DD0041DA17F604B /* ServicesMenu.strings */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/services-menu.py",
+				"$(SRCROOT)/App/Resources/Localizable.xcstrings",
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = ServicesMenu.strings;
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/en.lproj/ServicesMenu.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/de.lproj/ServicesMenu.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/es.lproj/ServicesMenu.strings",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/uk.lproj/ServicesMenu.strings",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "python3 \"$SRCROOT/scripts/services-menu.py\"";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7EE6A9464B535A0FDFE6B8D0 /* Sources */ = {

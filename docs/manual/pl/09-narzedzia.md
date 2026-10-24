@@ -173,4 +173,4 @@ okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia sta
   anulowaniem.
 - **Narzędzia › Dokumenty…** — Twoje dokumenty i adresy http(s) z listy w **Preferencje › Narzędzia**.
 - Usługi macOS (menu **Usługi** w dowolnej aplikacji): **Pelikan: Formatuj SQL** formatuje zaznaczony tekst w miejscu,
-  a **Pelikan: Otwórz w SQL Window** przenosi zaznaczony tekst do nowego okna SQL Pelikana.
+  a **Pelikan: Otwórz w oknie SQL** przenosi zaznaczony tekst do nowego okna SQL Pelikana.
