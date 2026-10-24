@@ -936,3 +936,9 @@ jak inne narzędzia (D112). Przeciągnięcie szablonu do edytora wstawia go w mi
 Porównania, których źródło da się odczytać ponownie (okno z bazą, okno z plikiem, obiekt z oknem, dwa pliki), przekazują
 przeglądarce funkcję ponownego wczytania obu stron; przycisk ⟳ zachowuje zamianę stron i opcje ignorowania. Porównania
 stałych tekstów (historia lokalna, wyniki narzędzi) nie mają Reload.
+
+### D126 · 2026-10-24 — Preferencje: wyszukiwarka z generowanego indeksu, bez przycisku Zastosuj
+Zmiany ustawień zapisują się od razu, jak w ustawieniach macOS (przycisk Zastosuj wzorca nie ma odpowiednika).
+Wyszukiwarka nad kartami dopasowuje etykiety kontrolek (bez wielkości liter i znaków diakrytycznych, w języku
+interfejsu i po polsku) i przełącza na kartę ustawienia. Indeks etykiet generuje `scripts/prefs-index.py` z paneli
+`App/Sources/Preferences`; CI sprawdza, że jest aktualny, więc nowe ustawienie bez regeneracji indeksu zatrzyma CI.

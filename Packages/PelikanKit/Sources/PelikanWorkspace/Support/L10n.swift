@@ -42,6 +42,9 @@ public enum L10n {
         }
     }
 
+    /// Tłumaczenie klucza, który już występuje w źródłach jako literał (np. indeks etykiet Preferencji).
+    public static func translated(key: String) -> String { tr(Key(stringLiteral: key)) }
+
     public static func tr(_ key: Key) -> String {
         let bundle = selected.withLock { $0 } ?? .main
         let translated = bundle.localizedString(forKey: key.format, value: key.format, table: nil)

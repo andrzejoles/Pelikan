@@ -4,25 +4,81 @@ import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
-/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json.
+/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
+/// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
 struct PreferencesView: View {
     let workspace: Workspace
+    @State private var pane = "GeneralPane"
+    @State private var query = ""
+
+    static let panes: [(id: String, title: String, icon: String)] = [
+        ("GeneralPane", L10n.tr("Ogólne"), "gearshape"), ("SQLWindowPane", L10n.tr("Okno SQL"), "tablecells"),
+        ("EditorPane", L10n.tr("Edytor"), "text.cursor"), ("BeautifierPane", L10n.tr("Formater"), "text.alignleft"),
+        ("KeyboardPane", L10n.tr("Klawiatura"), "keyboard"), ("OraclePane", L10n.tr("Oracle"), "cylinder"),
+        ("BrowserPane", L10n.tr("Object Browser"), "list.bullet.indent"), ("ToolsPane", L10n.tr("Narzędzia"), "wrench.and.screwdriver"),
+        ("AgentsPane", L10n.tr("Agenci"), "cpu"), ("PreferenceSetsPane", L10n.tr("Zestawy"), "square.stack.3d.up"),
+    ]
+
+    static func matches(_ query: String) -> [(pane: String, label: String)] {
+        PreferenceSearch.filter(PreferenceIndex.entries, query: query)
+    }
 
     var body: some View {
-        TabView {
-            GeneralPane(workspace: workspace).tabItem { Label(L10n.tr("Ogólne"), systemImage: "gearshape") }
-            SQLWindowPane(workspace: workspace).tabItem { Label(L10n.tr("Okno SQL"), systemImage: "tablecells") }
-            EditorPane(workspace: workspace).tabItem { Label(L10n.tr("Edytor"), systemImage: "text.cursor") }
-            BeautifierPane(workspace: workspace).tabItem { Label(L10n.tr("Formater"), systemImage: "text.alignleft") }
-            KeyboardPane(workspace: workspace).tabItem { Label(L10n.tr("Klawiatura"), systemImage: "keyboard") }
-            OraclePane(workspace: workspace).tabItem { Label(L10n.tr("Oracle"), systemImage: "cylinder") }
-            BrowserPane(workspace: workspace).tabItem { Label(L10n.tr("Object Browser"), systemImage: "list.bullet.indent") }
-            ToolsPane(workspace: workspace).tabItem { Label(L10n.tr("Narzędzia"), systemImage: "wrench.and.screwdriver") }
-            AgentsPane(workspace: workspace).tabItem { Label(L10n.tr("Agenci"), systemImage: "cpu") }
-            PreferenceSetsPane(workspace: workspace).tabItem { Label(L10n.tr("Zestawy"), systemImage: "square.stack.3d.up") }
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField(L10n.tr("Szukaj ustawienia"), text: $query).textFieldStyle(.plain)
+                if !query.isEmpty {
+                    Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }.buttonStyle(.borderless)
+                        .iconLabel(L10n.tr("Wyczyść"))
+                }
+            }
+            .padding(6)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 6))
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+            if query.isEmpty {
+                TabView(selection: $pane) {
+                    GeneralPane(workspace: workspace).tag("GeneralPane").tabItem { tab("GeneralPane") }
+                    SQLWindowPane(workspace: workspace).tag("SQLWindowPane").tabItem { tab("SQLWindowPane") }
+                    EditorPane(workspace: workspace).tag("EditorPane").tabItem { tab("EditorPane") }
+                    BeautifierPane(workspace: workspace).tag("BeautifierPane").tabItem { tab("BeautifierPane") }
+                    KeyboardPane(workspace: workspace).tag("KeyboardPane").tabItem { tab("KeyboardPane") }
+                    OraclePane(workspace: workspace).tag("OraclePane").tabItem { tab("OraclePane") }
+                    BrowserPane(workspace: workspace).tag("BrowserPane").tabItem { tab("BrowserPane") }
+                    ToolsPane(workspace: workspace).tag("ToolsPane").tabItem { tab("ToolsPane") }
+                    AgentsPane(workspace: workspace).tag("AgentsPane").tabItem { tab("AgentsPane") }
+                    PreferenceSetsPane(workspace: workspace).tag("PreferenceSetsPane").tabItem { tab("PreferenceSetsPane") }
+                }
+                .padding(.top, 8)
+            } else {
+                let found = Self.matches(query)
+                List {
+                    if found.isEmpty { Text(L10n.tr("Nic nie znaleziono")).foregroundStyle(.secondary) }
+                    ForEach(Array(found.enumerated()), id: \.offset) { _, f in
+                        Button {
+                            pane = f.pane
+                            query = ""
+                        } label: {
+                            HStack {
+                                Text(f.label)
+                                Spacer()
+                                Text(Self.panes.first { $0.id == f.pane }?.title ?? "").foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, 8)
+            }
         }
-        .frame(width: 860, height: 560)
-        .padding(.top, 8)
+        .frame(width: 860, height: 600)
+    }
+
+    private func tab(_ id: String) -> some View {
+        let p = Self.panes.first { $0.id == id }!
+        return Label(p.title, systemImage: p.icon)
     }
 }
 

@@ -90,6 +90,7 @@
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
 		ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */; };
+		EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8877900ED39A5D37A825941 /* PreferenceIndex.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
 		F147BE03144C72C7C41A0947 /* DataGripViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C22FA5C168C63547B4D8E77 /* DataGripViews.swift */; };
 		F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2CBEB9D36BCB859C5CA59E5 /* ProgramWindowViewController.swift */; };
@@ -227,6 +228,7 @@
 		F136E3B9B1845E4CFA8442CC /* ResultGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultGridView.swift; sourceTree = "<group>"; };
 		F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PelikanQuickLook.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1892296F597E772265A2D4D /* BrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserPane.swift; sourceTree = "<group>"; };
+		F8877900ED39A5D37A825941 /* PreferenceIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferenceIndex.swift; sourceTree = "<group>"; };
 		FFB39F5E33CB77154FA95420 /* ConnectionEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -284,6 +286,7 @@
 				C866A6E13301104082FC8632 /* AgentsPane.swift */,
 				229E7A0294B2BA8203F506AF /* BeautifierPane.swift */,
 				F1892296F597E772265A2D4D /* BrowserPane.swift */,
+				F8877900ED39A5D37A825941 /* PreferenceIndex.swift */,
 				81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */,
 				31283604CBB6B024351A4FFF /* PreferencesView.swift */,
 				2418148C5988E2B9B4DC3781 /* ToolsPane.swift */,
@@ -809,6 +812,7 @@
 				40419B4A25B38AB31CFDF7A6 /* Oracle23Views.swift in Sources */,
 				B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */,
 				A2A4DB2FE33716A33108215C /* PlanVisualViews.swift in Sources */,
+				EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */,
 				16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				022DEED31A8996A834AEAFA9 /* ProCDeployViews.swift in Sources */,
