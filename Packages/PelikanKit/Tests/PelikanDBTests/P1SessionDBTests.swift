@@ -18,7 +18,6 @@ struct P1SessionDBTests {
         let other = try await TestDatabase.connect()
         _ = try? await other.execute("drop table pelikan_ac purge")
         _ = try await other.execute("create table pelikan_ac (n number)")
-        defer { Task { _ = try? await other.execute("drop table pelikan_ac purge") } }
         let doc = ws.newDocument(.test, text: "begin\n  insert into :tab values (1);\n  select count(*) into :n from :tab;\nend;")
         doc.connectionID = def.id
         doc.connectionPinned = true
@@ -37,6 +36,7 @@ struct P1SessionDBTests {
         seen = try await other.queryAll("select count(*) from pelikan_ac").rows[0][0].format(.default)
         #expect(seen == "1" && !doc.transactionOpen)
         ws.settings.autoCommitTestWindow = false
+        _ = try? await other.execute("drop table pelikan_ac purge")
     }
 
     @Test("BFile: wartość KATALOG:plik na wejściu i odczyt lokalizatora przypisanego w bloku (PD-TEST-002)")
@@ -72,21 +72,21 @@ struct P1SessionDBTests {
         try ws.connections.upsert(b, password: c.password)
         ws.sessions.setMainConnection(a.id)
         let s = try await ws.sessions.session(SessionKey(connectionID: a.id, purpose: .main))
-        _ = try await s.execute("create or replace procedure pelikan_cmp_p is begin null; end;")
-        defer { Task { _ = try? await s.execute("drop procedure pelikan_cmp_p") } }
+        _ = try await s.execute("create or replace procedure pelikan_cmpc_p is begin null; end;")
         let schema = try await ws.metadata()!.currentSchema()
-        ws.selectedObject = DBObject(owner: schema, name: "PELIKAN_CMP_P", type: .procedure)
+        ws.selectedObject = DBObject(owner: schema, name: "PELIKAN_CMPC_P", type: .procedure)
         let same = try await ws.invoke("ob.compareWithConnection", CommandArguments(["connection": .string("dev_test_2")]))
         #expect(same.message == "Brak różnic")
         let other = try await ws.invoke("ob.compareWithConnection", CommandArguments(["connection": .string("dev_test_2"), "schema": .string("NIE_MA_TAKIEGO")]))
         #expect(other.message != "Brak różnic")
-        let doc = ws.newDocument(.program, text: "create or replace procedure pelikan_cmp_p is begin null; /* zmiana */ end;\n/\n")
+        let doc = ws.newDocument(.program, text: "create or replace procedure pelikan_cmpc_p is begin null; /* zmiana */ end;\n/\n")
         doc.connectionID = a.id
         ws.activate(doc.id)
         let prog = try await ws.invoke("prog.compareWithConnection", CommandArguments(["connection": .string("dev_test_2")]))
         guard case .string(let diff)? = prog.value else { Issue.record("brak różnicy"); return }
         #expect(diff.contains("zmiana"))
         await #expect(throws: (any Error).self) { try await ws.invoke("ob.compareWithConnection", CommandArguments(["connection": .string("nie_ma")])) }
+        _ = try? await s.execute("drop procedure pelikan_cmpc_p")
         await ws.sessions.disconnectAll()
     }
 
@@ -103,7 +103,6 @@ struct P1SessionDBTests {
         _ = try? await s.execute("drop assertion pelikan_as_t_dodatnie")
         _ = try? await s.execute("drop table pelikan_as_t2 purge")
         _ = try await s.execute("create table pelikan_as_t2 (n number)")
-        defer { Task { _ = try? await s.execute("drop table pelikan_as_t2 purge") } }
         #expect(ws.registry.command("file.newAssertion") != nil)
         #expect(ws.templates.all.contains { $0.name == "Asercja" && $0.text.contains("create assertion") })
         do {
@@ -121,6 +120,7 @@ struct P1SessionDBTests {
         ui.askAnswer = 0
         try await ws.invoke("ob.drop", CommandArguments())
         #expect(try await m.objects(.assertion, owner: schema).contains { $0.name == "PELIKAN_AS_T2_DODATNIE" } == false)
+        _ = try? await s.execute("drop table pelikan_as_t2 purge")
         await ws.sessions.disconnectAll()
     }
 
