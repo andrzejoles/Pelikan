@@ -16,8 +16,13 @@ echo "=== $APP_NAME $VERSION ($BUILD) ==="
 
 echo "[1/4] Budowanie (Release)…"
 scripts/set-version.sh
+# Mapa prefiksów: kod C zależności (np. BoringSSL w __FILE__) wpisuje do binarki ścieżki budowania — z katalogiem
+# domowym budującego. Ustawienia z wiersza poleceń obejmują też cele pakietów SPM. Dla Swifta bez mapy
+# (-file-prefix-map psuje jawne moduły Xcode), a kod Swift ścieżek nie zostawia — pilnuje tego sprawdzenie niżej.
 xcodebuild -project Pelikan.xcodeproj -scheme Pelikan -configuration Release -derivedDataPath build/DerivedData.noindex \
-    -skipPackagePluginValidation -skipMacroValidation build -quiet
+    -skipPackagePluginValidation -skipMacroValidation \
+    OTHER_CFLAGS="\$(inherited) -ffile-prefix-map=$ROOT=." \
+    build -quiet
 SRC="build/DerivedData.noindex/Build/Products/Release/$APP_NAME.app"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SRC/Contents/Info.plist")" = "$VERSION" ] \
     || { echo "BŁĄD: wersja w Info.plist nie zgadza się z $VERSION" >&2; exit 1; }
@@ -33,6 +38,14 @@ ditto "$SRC" "$APP"
 LEAKED="$(find "$APP" \( -name "connections.json" -o -name "settings.json" -o -name "history.json" -o -name "*.p12" \
     -o -name "*.pem" -o -name "tnsnames.ora" -o -name "cwallet.sso" -o -name "env" -o -name "id_ed25519*" -o -name "libclntsh*" \) -print)"
 [ -z "$LEAKED" ] || { echo "BŁĄD: w pakiecie są pliki z danymi: $LEAKED" >&2; exit 1; }
+# Symbole debugowania (tablica STABS z ścieżkami plików .o i źródeł) zostają w kompilacji Release bez instalacji — usuwamy
+# je z naszych plików wykonywalnych przed podpisem (Sparkle ma już własny, podpisany i ostrzyżony).
+find "$APP/Contents/MacOS" "$APP/Contents/PlugIns" -type f -perm -u+x -print0 | while IFS= read -r -d '' f; do
+    if file -b "$f" | grep -q Mach-O; then strip -S -x "$f" 2>/dev/null; fi
+done
+# Ani ścieżek budowania, ani katalogu domowego w plikach wykonywalnych i zasobach.
+PATHS="$(grep -rlF -e "$ROOT" -e "$HOME/" "$APP" || true)"
+[ -z "$PATHS" ] || { echo "BŁĄD: pliki w pakiecie zawierają ścieżki z katalogu domowego: $PATHS" >&2; exit 1; }
 scripts/third-party-licenses.sh "$APP/Contents/Resources/Licencje zewnętrzne.txt"
 scripts/signing.sh sign "$APP"
 

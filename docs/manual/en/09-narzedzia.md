@@ -169,5 +169,5 @@ from the last 30 days.
 - **View › Background tasks** — a list of long operations (Autotrace, exports, documentation) with state, time and
   cancellation.
 - **Tools › Documents…** — your documents and http(s) addresses from the list in **Preferences › Tools**.
-- macOS services (the **Services** menu in any application): **Pelikan: Formatuj SQL** formats the selected text in
-  place, and **Pelikan: Otwórz w SQL Window** moves the selected text to a new Pelikan SQL Window.
+- macOS services (the **Services** menu in any application): **Pelikan: Format SQL** formats the selected text in
+  place, and **Pelikan: Open in SQL Window** moves the selected text to a new Pelikan SQL Window.

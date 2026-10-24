@@ -1243,3 +1243,20 @@ Poprawione też: komunikat o braku Instant Client wskazuje kartę Ogólne defini
 katalog — de „Ansicht” zamiast „View”, en „Debug”, jednolite „Explain Plan Window”; instrukcja we wszystkich językach
 — zmiana hasła z menu, aktualne ograniczenia (ORDS, Workspace Manager i LDAP sprawdzone — D156–D158; Kerberos na
 macOS — D159).
+
+### D162 · 2026-10-24 — Bez ścieżek budowania w binarce; nazwy usług macOS przetłumaczone
+Próba opublikowanej bety 7.9.0 (pobranej z GitHuba) potwierdziła podpis aplikacji, wersję, zawartość DMG i PKG oraz
+podpis EdDSA archiwum aktualizacji (zmieniony plik odrzucany). Wykryła za to w pliku wykonywalnym 384 ścieżki budowania
+z katalogiem domowym (pełne przeszukanie bajtów: kilka tysięcy) — z makra `__FILE__` w kodzie C BoringSSL i z tablicy
+symboli debugowania (STABS ze ścieżkami plików .o i źródeł), która zostaje w kompilacji Release bez instalacji.
+`scripts/build-installer.sh` buduje z `-ffile-prefix-map` dla C (ustawienie z wiersza poleceń xcodebuild obejmuje cele
+pakietów), usuwa symbole debugowania z naszych plików wykonywalnych (`strip -S -x`; aplikacja 66 → 35 MB, DMG 29 →
+22 MB), `scripts/signing.sh` podpisuje też rozszerzenia z PlugIns (z dotychczasowymi uprawnieniami, piaskownica Quick
+Look zostaje), a wydanie przerywa się, gdy jakikolwiek plik w aplikacji zawiera katalog repozytorium albo domowy.
+Swift bez mapy prefiksów: `-file-prefix-map` psuje jawne moduły Xcode. Ta poprawka obejmie następne wydanie; 7.9.0
+zostaje, bo ścieżki ujawniają tylko układ katalogów budującego (bez haseł i danych).
+Nazwy w menu Usługi były tylko po polsku. Klucze ServicesMenu.strings muszą zawierać nazwę aplikacji po rozwinięciu
+(„Pelikan: …”), a nazwa ma być tylko w Brand.xcconfig — dlatego plik generuje faza skryptu przy budowaniu
+(`scripts/services-menu.py`) z tłumaczeń w String Catalog; `scripts/l10n.py` dopisuje nazwy usług z Info.plist do
+katalogu, więc `check --strict` pilnuje kompletu. Usługa „Otwórz w SQL Window” nazywa się teraz „Otwórz w oknie SQL”,
+jak polecenie w aplikacji.

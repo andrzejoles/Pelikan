@@ -93,7 +93,7 @@ public enum MacServices {
         try Beautifier.format(text, options: ws.settings.beautifier)
     }
 
-    /// „Otwórz w SQL Window”: nowe okno SQL z zaznaczonym tekstem.
+    /// „Otwórz w oknie SQL”: nowe okno SQL z zaznaczonym tekstem.
     @discardableResult
     public static func openInSQLWindow(_ text: String, in ws: Workspace) -> Document {
         let doc = ws.newDocument(.sql, text: text)
