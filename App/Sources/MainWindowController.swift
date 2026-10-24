@@ -403,7 +403,8 @@ final class DocumentAreaViewController: NSViewController {
             }
             connectionButton.title = connectionDescription(for: doc) + " ▾"
             connectionButton.isHidden = false
-            statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, doc.isExecuting ? nil : doc.resultSummary,
+            statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
+                                       doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
             refreshGit(file: doc.fileURL, modified: doc.isModified)
         } else {

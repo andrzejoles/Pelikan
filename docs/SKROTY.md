@@ -377,6 +377,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |
 | utPLSQL › utPLSQL: uruchom wszystkie testy | `utplsql.runAll` | ⌃⇧U †, ⇧⌘U | ⇧⌘U | Za zgodą | 0 | UT-RUN-001 |
 | utPLSQL › utPLSQL: uruchom testy ze ścieżki… | `utplsql.runPath` |  |  | Za zgodą | 0 | UT-RUN-002 |
+| utPLSQL › utPLSQL: uruchom z opcjami… | `utplsql.runWithOptions` |  |  | Za zgodą | 0 | UT-RUN-003 |
 | utPLSQL › utPLSQL: testy z pokryciem kodu | `utplsql.coverage` |  |  | Za zgodą | 0 | UT-COV-001 |
 | utPLSQL › utPLSQL: uruchom test pod kursorem | `utplsql.runEditor` | ⌃⌥U †, ⌃⌘U | ⌃⌘U | Za zgodą | 0 | UT-RUN-004 |
 | utPLSQL › utPLSQL: uruchom ponownie nieudane | `utplsql.rerunFailed` |  |  | Za zgodą | 0 | UT-RUN-006 |

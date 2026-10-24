@@ -247,9 +247,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             return Set(ws.breakpointLines(in: self.document).map { $0 - 1 })
         }
         ruler.coverageLines = { [weak self] in
-            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], []) }
-            let c = ws.coverageLines(in: self.document)
-            return (Set(c.covered.map { $0 - 1 }), Set(c.uncovered.map { $0 - 1 }))
+            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], [], []) }
+            let c = ws.coverageDetail(in: self.document)
+            return (Set(c.covered.map { $0 - 1 }), Set(c.uncovered.map { $0 - 1 }), Set(c.partial.map { $0 - 1 }))
         }
         if [.test, .program].contains(document.kind) {
             ruler.onBreakpointClick = { [weak self] line in
@@ -1116,7 +1116,7 @@ final class LineNumberRulerView: NSView {
     /// Linie (od 0) z punktami przerwania i przełączenie kliknięciem w numer linii (UG 5.10).
     var breakpointLines: (() -> Set<Int>)?
     /// Pokrycie utPLSQL: linie (od 0) pokryte i niepokryte (UT-COV-002).
-    var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>))?
+    var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>, partial: Set<Int>))?
     var onBreakpointClick: ((Int) -> Void)?
     /// Zakładki: linia (od 0) → numer 0–9 (PD-EDIT-011).
     var bookmarkLines: (() -> [Int: Int])?
@@ -1168,7 +1168,9 @@ final class LineNumberRulerView: NSView {
             }
             // Pokrycie: pasek przy prawej krawędzi marginesu.
             if cov.covered.contains(line) || cov.uncovered.contains(line) {
-                (cov.covered.contains(line) ? NSColor.systemGreen : NSColor.systemRed).withAlphaComponent(0.8).setFill()
+                // Zielony — pokryta, żółty — częściowo (nie wszystkie bloki), czerwony — niepokryta (UT-COV-002).
+                (cov.partial.contains(line) ? NSColor.systemYellow : cov.covered.contains(line) ? NSColor.systemGreen : NSColor.systemRed)
+                    .withAlphaComponent(0.8).setFill()
                 NSRect(x: bounds.width - 5, y: y, width: 3, height: height).fill()
             }
             if bps.contains(line) {
@@ -1204,7 +1206,7 @@ final class LineNumberRulerView: NSView {
         drawnLines.removeAll(keepingCapacity: true)
         let bps = breakpointLines?() ?? []
         let marks = bookmarkLines?() ?? [:]
-        let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>())
+        let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>(), partial: Set<Int>())
         if content.documentRange.isEmpty {
             label(0, y: inset - visible.minY, height: lineHeight)
             return

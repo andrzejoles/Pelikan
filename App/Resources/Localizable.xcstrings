@@ -29,6 +29,34 @@
         }
       }
     },
+    " (schemat %@%%)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (schema %@%%)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (Schema %@%%)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (esquema %@%%)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (схема %@%%)"
+          }
+        }
+      }
+    },
     " · ostrzeżeń: %@" : {
       "localizations" : {
         "en" : {
@@ -22849,6 +22877,34 @@
         }
       }
     },
+    "Kolejność wykonania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution order"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführungsreihenfolge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orden de ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порядок виконання"
+          }
+        }
+      }
+    },
     "Kolekcja" : {
       "localizations" : {
         "en" : {
@@ -36149,6 +36205,34 @@
         }
       }
     },
+    "Obiekty pomijane w pokryciu po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects excluded from coverage, comma-separated"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von der Abdeckung ausgeschlossene Objekte, durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos excluidos de la cobertura, separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкти, виключені з покриття, через кому"
+          }
+        }
+      }
+    },
     "Obiekty typu" : {
       "localizations" : {
         "en" : {
@@ -36201,6 +36285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Об’єкти, видалені до кошика (USER_RECYCLEBIN): первинна назва, тип, час видалення."
+          }
+        }
+      }
+    },
+    "Obiekty uwzględniane w pokryciu po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects included in coverage, comma-separated"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Abdeckung einbezogene Objekte, durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos incluidos en la cobertura, separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об’єкти, включені до покриття, через кому"
           }
         }
       }
@@ -38557,6 +38669,34 @@
         }
       }
     },
+    "Okno opcji przebiegu: ścieżki testów, pokrycie, schematy pokrycia oraz obiekty uwzględniane i pomijane." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run options window: test paths, coverage, coverage schemas, and included and excluded objects."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster mit Laufoptionen: Testpfade, Abdeckung, Abdeckungsschemas sowie einbezogene und ausgeschlossene Objekte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventana de opciones de ejecución: rutas de prueba, cobertura, esquemas de cobertura y objetos incluidos y excluidos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно параметрів запуску: шляхи тестів, покриття, схеми покриття, а також включені й виключені об’єкти."
+          }
+        }
+      }
+    },
     "Okno planu" : {
       "localizations" : {
         "en" : {
@@ -40121,6 +40261,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Warnung: mit Kompilierungsfehlern erstellt."
+          }
+        }
+      }
+    },
+    "Otrzymane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actual"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ist"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримане"
           }
         }
       }
@@ -46229,6 +46397,34 @@
         }
       }
     },
+    "Pokrycie %@%%" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage %@%%"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckung %@%%"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cobertura %@%%"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Покриття %@%%"
+          }
+        }
+      }
+    },
     "Pokrycie kodu" : {
       "localizations" : {
         "en" : {
@@ -46981,6 +47177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überspringen"
+          }
+        }
+      }
+    },
+    "Pomiń obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exclude objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte ausschließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excluir objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виключити об’єкти"
           }
         }
       }
@@ -53397,6 +53621,34 @@
         }
       }
     },
+    "Puste — bieżący schemat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty — current schema"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer — aktuelles Schema"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vacío: esquema actual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожньо — поточна схема"
+          }
+        }
+      }
+    },
     "Pusty komunikat zatwierdzenia" : {
       "localizations" : {
         "en" : {
@@ -57485,6 +57737,62 @@
         }
       }
     },
+    "Schematy pokrycia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage schemas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckungsschemas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquemas de cobertura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схеми покриття"
+          }
+        }
+      }
+    },
+    "Schematy pokrycia po przecinku (domyślnie bieżący)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coverage schemas, comma-separated (current by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckungsschemas, durch Kommas getrennt (standardmäßig das aktuelle)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquemas de cobertura separados por comas (por defecto, el actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схеми покриття через кому (типово поточна)"
+          }
+        }
+      }
+    },
     "Schowek nie zawiera tekstu" : {
       "localizations" : {
         "en" : {
@@ -59249,6 +59557,34 @@
         }
       }
     },
+    "Sortuj:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortieren:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати:"
+          }
+        }
+      }
+    },
     "Specyfikacja i ciało pakietu testowego utPLSQL (z --%%suite)" : {
       "localizations" : {
         "en" : {
@@ -59693,6 +60029,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start: %@"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Status"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Статус"
           }
         }
       }
@@ -69157,6 +69521,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Authentifizierung"
+          }
+        }
+      }
+    },
+    "Uwzględnij obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte einbeziehen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включити об’єкти"
           }
         }
       }
@@ -86773,6 +87165,34 @@
         }
       }
     },
+    "Zbieraj pokrycie przez profiler PL/SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collect coverage with the PL/SQL profiler"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abdeckung mit dem PL/SQL-Profiler erfassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recoger cobertura con el profiler de PL/SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збирати покриття профайлером PL/SQL"
+          }
+        }
+      }
+    },
     "Zdalny build Pro*C" : {
       "localizations" : {
         "en" : {
@@ -92177,6 +92597,62 @@
         }
       }
     },
+    "np. emp_api, dept_api" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. emp_api, dept_api"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. emp_api, dept_api"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. emp_api, dept_api"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. emp_api, dept_api"
+          }
+        }
+      }
+    },
+    "np. emp_api_test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. emp_api_test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. emp_api_test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. emp_api_test"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. emp_api_test"
+          }
+        }
+      }
+    },
     "obcięte — pełna treść niedostępna (brak ROWID)" : {
       "localizations" : {
         "en" : {
@@ -93605,6 +94081,34 @@
         }
       }
     },
+    "schemat, schemat.pakiet[.procedura] albo schemat:suitepath; kilka po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "schema, schema.package[.procedure] or schema:suitepath; several separated by commas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema, Schema.Paket[.Prozedur] oder Schema:Suitepfad; mehrere durch Kommas getrennt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "esquema, esquema.paquete[.procedimiento] o esquema:suitepath; varios separados por comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "схема, схема.пакет[.процедура] або схема:suitepath; кілька через кому"
+          }
+        }
+      }
+    },
     "schemat.pakiet[.procedura] albo schemat:suitepath; kilka po przecinku" : {
       "localizations" : {
         "en" : {
@@ -94861,6 +95365,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "utPLSQL: alle Tests ausführen"
+          }
+        }
+      }
+    },
+    "utPLSQL: uruchom z opcjami…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: run with options…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: mit Optionen ausführen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: ejecutar con opciones…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL: запустити з параметрами…"
           }
         }
       }
@@ -96541,6 +97073,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durch Kommas getrennte Pfade (schema, schema.paket[.prozedur], schema:suitepath); standardmäßig aktuelles Schema"
+          }
+        }
+      }
+    },
+    "Ścieżki testów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test paths"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testpfade"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rutas de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шляхи тестів"
           }
         }
       }
