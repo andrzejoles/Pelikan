@@ -41,7 +41,7 @@ utrwalona w środowisku Oracle (pozostaje bez tłumaczenia także w innych języ
 | Linked Query | Zapytanie powiązane | |
 | Workset | Zestaw roboczy | |
 | Desktop / Layout | Układ okien | |
-| Package, Package Body, Type, Trigger, Sequence, Synonym, View, Materialized View, Index, Constraint, Domain, Annotation, Assertion, MLE Module, Job, Queue, Database Link, Directory, Library, Profile, Role | bez tłumaczenia w Przeglądarce obiektów (nazwy typów Oracle) | w opisach tekstowych można: pakiet, wyzwalacz, sekwencja, synonim, widok |
+| Package, Package Body, Type, Trigger, Sequence, Synonym, View, Materialized View, Index, Constraint, Domain, Annotation, Assertion, MLE Module, Job, Queue, Database Link, Directory, Library, Profile, Role | w Przeglądarce obiektów foldery po polsku (Tabele, Pakiety, Wyzwalacze…); w DDL, typach kolumn i komunikatach Oracle — oryginalne nazwy | w opisach tekstowych: pakiet, wyzwalacz, sekwencja, synonim, widok |
 | DDL, DML, PL/SQL, SQL*Plus, NLS, ROWID, LOB, CLOB, BLOB, JSON, AWR, ASH, ADDM | bez tłumaczenia | |
 | Suite / Test / Context (utPLSQL) | Suita / test / kontekst | |
 | Coverage | Pokrycie kodu | |

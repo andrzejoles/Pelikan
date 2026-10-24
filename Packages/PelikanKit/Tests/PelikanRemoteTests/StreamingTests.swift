@@ -1,8 +1,23 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
+import Synchronization
 import Testing
 @testable import PelikanRemote
+
+/// Oczekiwanie z limitem: przekroczenie kończy test błędem z nazwą etapu zamiast zawieszenia.
+struct StageTimeout: Error, CustomStringConvertible { let stage: String; var description: String { "przekroczony limit etapu: \(stage)" } }
+func withLimit<T: Sendable>(_ seconds: Double, _ stage: String, _ body: @escaping @Sendable () async throws -> T) async throws -> T {
+    // Wyścig dwóch niezależnych zadań (grupa zadań czekałaby na zawieszone zadanie potomne).
+    let resumed = Mutex(false)
+    return try await withCheckedThrowingContinuation { (c: CheckedContinuation<T, any Error>) in
+        let finish: @Sendable (Result<T, any Error>) -> Void = { r in
+            if resumed.withLock({ was in defer { was = true }; return !was }) { c.resume(with: r) }
+        }
+        Task.detached { do { finish(.success(try await body())) } catch { finish(.failure(error)) } }
+        Task.detached { try? await Task.sleep(for: .seconds(seconds)); finish(.failure(StageTimeout(stage: stage))) }
+    }
+}
 
 /// Zbiera zdarzenia strumienia (porcje tego samego rodzaju następujące po sobie są sklejane).
 func collect(_ events: AsyncThrowingStream<SpawnEvent, any Error>) async throws -> [SpawnEvent] {
@@ -194,7 +209,11 @@ struct RemoteStreamTests {
     func stop() async throws {
         let (sshd, s, run) = try connected()
         defer { s.disconnect(); try? FileManager.default.removeItem(at: run); _ = sshd }
+        // Znaczniki etapów i limit każdego oczekiwania: sporadyczne zawieszenie na CI (macOS 26) ma wskazać etap,
+        // zamiast zużyć limit całego testu.
+        func stage(_ s: String) { print("[stop-test] \(s)"); fflush(stdout) }
         for tty in [true, false] {
+            stage("tty \(tty): stream")
             let p = try s.stream("sleep 300; echo nie", tty: tty)
             for _ in 0..<100 where p.remoteProcessID == nil {
                 // Zdarzenia czyta zadanie RemoteProcess; czekamy na znacznik @@PID.
@@ -202,14 +221,20 @@ struct RemoteStreamTests {
             }
             let pid = try #require(p.remoteProcessID)
             #expect(kill(-pid, 0) == 0, "grupa procesów działa (tty: \(tty))")
-            await Task.detached { p.stop() }.value
+            stage("tty \(tty): stop (pid \(pid))")
+            try await withLimit(40, "stop") { await Task.detached { p.stop() }.value }
             var gone = false
             for _ in 0..<60 {
                 if kill(-pid, 0) != 0 && errno == ESRCH { gone = true; break }
                 try await Task.sleep(for: .milliseconds(100))
             }
             #expect(gone, "proces zdalny zakończony (tty: \(tty))")
-            await #expect(throws: SSHError.cancelled) { _ = try await collect(p.events) }
+            stage("tty \(tty): zdarzenia")
+            let outcome = try await withLimit(20, "zdarzenia") { () -> Result<[RemoteEvent], any Error> in
+                do { return .success(try await collect(p.events)) } catch { return .failure(error) }
+            }
+            #expect(throws: SSHError.cancelled) { _ = try outcome.get() }
+            stage("tty \(tty): koniec")
         }
     }
 }

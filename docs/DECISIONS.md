@@ -1166,6 +1166,16 @@ sesji z OSUSER/MACHINE) nie trafiły do instrukcji. Test pilnuje, że każdy obr
 w katalogu języka, z polskiego (zamiast go gubić), a test wymaga tylko, żeby tłumaczenia nie miały rozdziałów spoza
 polskiej instrukcji. Po przetłumaczeniu można przywrócić wymóg kompletu.
 
+### D155 · 2026-10-24 — Rozbieżności macierzy i kodu znalezione przy pisaniu instrukcji
+Subagent piszący instrukcję (D154) porównał opisy z kodem i znalazł miejsca, w których macierz obiecywała więcej, niż
+dawał interfejs. Poprawione w kodzie: „Sesja › Zmień hasło…” działa (OCIPasswordChange przez ODPI-C — hasło nie trafia
+do tekstu SQL ani historii; nowe hasło w Pęku kluczy, gdy połączenie je zapisuje; test na bazie), „Widok › Przeglądarka
+obiektów” przełącza lewą kolumnę, przełączniki w Preferencjach dla opcji Query By Example i potwierdzania zmian na
+produkcji, menu kontekstowe Przeglądarki obiektów z testami utPLSQL, informacją debugowania, odświeżeniem widoku
+zmaterializowanego, testem łącza, uruchomieniem zadania, kolejkami, porównaniem i „Dodaj do folderu” (pozycje
+pokazywane tylko dla pasujących typów), debugowanie wyszarzone na sterowniku thin (deklaracja JDWP usunięta też z
+Instant Client — D106). Poprawione w opisach: edycja wyniku wymaga ROWID, lewe karty to połączenia, obiekty, okna,
+szablony i pliki, słowniczek — foldery Przeglądarki obiektów są po polsku.
 ### D156 · 2026-10-24 — Workspace Manager w bazie testowej
 Obraz Oracle Free 26ai (23.26.3) nie ma zainstalowanego Workspace Managera (brak WMSYS i DBMS_WM), ale ma jego skrypty
 w `ORACLE_HOME/rdbms/admin`. `scripts/testdb.sh owm` uruchamia `owminst.plb` w PDB testowej (ok. 40 s, raz), nadaje

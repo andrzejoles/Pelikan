@@ -3,6 +3,13 @@ import PelikanDB
 
 /// Debuger (UG 5.10, ADR 0006). Agent nie ma dostępu do debugera (PROMPT §7).
 enum DebugCommands {
+    /// Sterownik połączenia okna obsługuje DBMS_DEBUG (thin — nie; polecenie wyszarzone, PD-CONN-028).
+    @MainActor
+    static func supportsDebugging(_ ws: Workspace, _ doc: Document) -> Bool {
+        guard let id = ws.effectiveConnection(of: doc), let def = ws.connections.connection(id) else { return true }
+        return ws.sessions.driver(for: def.driver)?.capabilities.contains(.dbmsDebug) ?? true
+    }
+
     @MainActor
     static func testDocument(_ ws: Workspace) -> Document? {
         if let d = ws.activeDocument, d.kind == .test { return d }
@@ -28,7 +35,8 @@ enum DebugCommands {
             Command(CommandDescriptor(id: "debug.start", title: L10n.tr("Rozpocznij debugowanie"), category: .debug, pd: ["f9"],
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia skrypt okna testu z debugerem i zatrzymuje się w pierwszej linii."), feature: "PD-DBG-001"),
-                    validate: { ws in ws.activeDocument.map { $0.kind == .test && ws.debugger(for: $0).state != .paused && ws.debugger(for: $0).state != .running } ?? false }) { ctx in
+                    validate: { ws in ws.activeDocument.map { $0.kind == .test && ws.debugger(for: $0).state != .paused && ws.debugger(for: $0).state != .running
+                                                             && supportsDebugging(ws, $0) } ?? false }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .test else { return .ok }
                 let d = ctx.workspace.debugger(for: doc)
                 ctx.ui?.showDebugger(d, document: doc)

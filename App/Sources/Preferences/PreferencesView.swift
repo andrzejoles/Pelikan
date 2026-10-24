@@ -192,6 +192,7 @@ struct SQLWindowPane: View {
                           prompt: Text(L10n.tr("puste — wszystkie niezerowe, np. consistent gets, physical reads")))
                 Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
+                Toggle(L10n.tr("Potwierdzaj polecenia zmieniające na połączeniach produkcyjnych"), isOn: setting(workspace, \.confirmProductionChanges))
             }
             Section(L10n.tr("Wyniki")) {
                 Picker(L10n.tr("Wierszy na stronę"), selection: Binding(
@@ -210,6 +211,11 @@ struct SQLWindowPane: View {
                     ForEach(NumberLayout.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
                 Toggle(L10n.tr("Large Data Editor: Auto Format (JSON, XML)"), isOn: setting(workspace, \.largeDataAutoFormat))
+            }
+            Section(L10n.tr("Query By Example")) {
+                Toggle(L10n.tr("Bez rozróżniania wielkości liter"), isOn: setting(workspace, \.qbeCaseInsensitive))
+                Toggle(L10n.tr("Tekst bez symboli wieloznacznych jako „zawiera”"), isOn: setting(workspace, \.qbeAutoContains))
+                Toggle(L10n.tr("Daty bez czasu (porównanie dnia)"), isOn: setting(workspace, \.qbeIgnoreTime))
             }
             Section(L10n.tr("Statystyki")) {
                 Toggle(L10n.tr("Karta Statystyki: statystyki sesji z każdego wykonania (wymaga dostępu do V$MYSTAT)"), isOn: setting(workspace, \.sqlWindowStatistics))
