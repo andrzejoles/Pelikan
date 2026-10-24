@@ -67,4 +67,19 @@ public enum CodeFolding {
             return nil
         })
     }
+
+    /// Podgląd zwiniętego obszaru (UG 25.17): ukryte linie bez wspólnego wcięcia, najwyżej `maxLines` (dalej „…”).
+    public static func preview(_ region: FoldRegion, in text: String, maxLines: Int = 20) -> String {
+        let ns = text as NSString
+        let r = region.hidden.clamped(to: 0..<ns.length)
+        var lines = ns.substring(with: NSRange(location: r.lowerBound, length: r.count)).components(separatedBy: "\n")
+        if lines.last == "" { lines.removeLast() }
+        let more = lines.count > maxLines
+        lines = Array(lines.prefix(maxLines))
+        let indent = lines.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            .map { $0.prefix { $0 == " " || $0 == "\t" }.count }.min() ?? 0
+        var out = lines.map { String($0.dropFirst(min(indent, $0.prefix { $0 == " " || $0 == "\t" }.count))) }
+        if more { out.append("…") }
+        return out.joined(separator: "\n")
+    }
 }

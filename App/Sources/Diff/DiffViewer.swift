@@ -4,12 +4,17 @@ import PelikanWorkspace
 import SwiftUI
 
 /// Przeglądarka różnic (UG 26): dwie kolumny z numerami linii, różnice w obrębie linii, mapa zmian, następna /
-/// poprzednia różnica, ignorowanie wielkości liter / białych znaków / komentarzy, zamiana stron.
+/// poprzednia różnica, ignorowanie wielkości liter / białych znaków / komentarzy, zamiana stron, ponowne wczytanie
+/// obu stron (Reload — gdy źródło porównania to umożliwia).
 struct DiffViewer: View {
     @State var left: String
     @State var right: String
     @State var leftTitle: String
     @State var rightTitle: String
+    var reload: DiffReload? = nil
+    @State private var swapped = false
+    @State private var reloadError: String?
+    @State private var reloading = false
     @State private var options = DiffOptions()
     @State private var rows: [DiffRow] = []
     @State private var current = -1
@@ -55,7 +60,14 @@ struct DiffViewer: View {
             Button(L10n.tr("Zamień strony")) {
                 swap(&left, &right)
                 swap(&leftTitle, &rightTitle)
+                swapped.toggle()
                 recompute()
+            }
+            if let reload {
+                Button { runReload(reload) } label: { Image(systemName: "arrow.clockwise") }
+                    .iconLabel(L10n.tr("Wczytaj ponownie"))
+                    .disabled(reloading)
+                    .help(reloadError ?? L10n.tr("Wczytuje ponownie obie strony porównania"))
             }
         }
         .toggleStyle(.checkbox)
@@ -85,6 +97,23 @@ struct DiffViewer: View {
         rows = TextDiff.rows(left, right, options: options)
         current = -1
         if let first = changes.first { scrollTarget = max(0, first - 3); current = 0 }
+    }
+
+    /// Reload: obie strony wczytane ponownie (z zachowaniem zamiany stron i pozycji bieżącej różnicy).
+    private func runReload(_ reload: @escaping DiffReload) {
+        reloading = true
+        Task { @MainActor in
+            defer { reloading = false }
+            do {
+                let (l, r) = try await reload()
+                left = swapped ? r : l
+                right = swapped ? l : r
+                reloadError = nil
+                recompute()
+            } catch {
+                reloadError = error.localizedDescription
+            }
+        }
     }
 
     private func jump(_ d: Int) {

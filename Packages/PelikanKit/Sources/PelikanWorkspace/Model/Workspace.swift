@@ -3,6 +3,9 @@ import Observation
 import PelikanDB
 import PelikanSQL
 
+/// Ponowne wczytanie obu stron porównania (Reload w przeglądarce różnic, PD-DIFF-001).
+public typealias DiffReload = @MainActor @Sendable () async throws -> (left: String, right: String)
+
 /// Usługi interfejsu, których potrzebują komendy (implementuje aplikacja; w testach — atrapy).
 @MainActor
 public protocol UIServices: AnyObject {
@@ -46,6 +49,10 @@ public protocol UIServices: AnyObject {
     func showCompileInvalid()
     /// Przeglądarka różnic (UG 26): lewy i prawy tekst z tytułami.
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String)
+    /// Przeglądarka różnic z ponownym wczytaniem obu stron (Reload, PD-DIFF-001).
+    func showDiff(left: String, right: String, leftTitle: String, rightTitle: String, reload: DiffReload?)
+    /// Template Window jako osobne, pływające okno (PD-TPL-001).
+    func showTemplateWindow()
     /// Edytor definicji tabeli (UG 9.1): `original` nil — nowa tabela.
     func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID)
     /// Prosty edytor obiektu (sekwencja, synonim, indeks, użytkownik, rola — UG 9.2–9.11).
@@ -221,6 +228,10 @@ extension UIServices {
     public func showObjectEditor(_ editor: SimpleObjectEditor, connectionID: UUID) {}
     public func showTableEditor(_ definition: TableDefinition, original: TableDefinition?, connectionID: UUID) {}
     public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {}
+    public func showDiff(left: String, right: String, leftTitle: String, rightTitle: String, reload: DiffReload?) {
+        showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+    }
+    public func showTemplateWindow() {}
     public func showFileBrowser() {}
     public func chooseDirectory() async -> URL? { nil }
     public func currentLayout() -> WindowLayout? { nil }

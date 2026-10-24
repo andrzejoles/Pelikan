@@ -44,6 +44,29 @@ public enum ProgramCompiler {
         }
     }
 
+    /// Tekst bez jednostki (PD-PROG-001): od początku jej linii przez kończący „/” i następujące puste linie.
+    public static func removing(_ unit: ProgramUnit, from text: String) -> String {
+        let ns = text as NSString
+        let start = ns.lineRange(for: NSRange(location: min(unit.range.lowerBound, ns.length), length: 0)).location
+        var end = min(unit.range.upperBound, ns.length)
+        func isSpace(_ c: unichar) -> Bool { c == 0x20 || c == 0x09 || c == 0x0D || c == 0x0A }
+        var k = end
+        while k < ns.length, isSpace(ns.character(at: k)) { k += 1 }
+        if k < ns.length, ns.character(at: k) == 0x2F {
+            let line = ns.lineRange(for: NSRange(location: k, length: 0))
+            if ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" { end = line.upperBound }
+        } else {
+            end = ns.lineRange(for: NSRange(location: max(start, end - 1), length: 0)).upperBound
+        }
+        // Puste linie za jednostką.
+        while end < ns.length {
+            let line = ns.lineRange(for: NSRange(location: end, length: 0))
+            guard ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, line.length > 0 else { break }
+            end = line.upperBound
+        }
+        return ns.replacingCharacters(in: NSRange(location: start, length: end - start), with: "")
+    }
+
     /// Typ i nazwa z nagłówka `CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] <typ> [BODY] [schemat.]nazwa`.
     static func header(_ sql: String) -> (DBObjectType, String?, String)? {
         let tokens = Lexer(sql).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment].contains($0.kind) }
@@ -52,7 +75,8 @@ public enum ProgramCompiler {
         let up = words.map { $0.uppercased() }
         guard up.first == "CREATE" else { return nil }
         var i = 1
-        let skip: Set<String> = ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE", "EDITIONING", "FORCE", "NOFORCE"]
+        // CREATE [OR REPLACE] AND {RESOLVE|COMPILE} [NOFORCE] JAVA SOURCE — źródło Java (PD-PROG-002).
+        let skip: Set<String> = ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE", "EDITIONING", "FORCE", "NOFORCE", "AND", "RESOLVE", "COMPILE"]
         while i < up.count, skip.contains(up[i]) { i += 1 }
         guard i < up.count else { return nil }
         var type: DBObjectType

@@ -24,6 +24,9 @@ public struct DiffRow: Sendable, Hashable {
 }
 
 /// Porównanie tekstów liniami (najdłuższy wspólny podciąg, algorytm Myersa) z różnicami w obrębie linii.
+/// Stan linii względem tekstu bazowego (otwarty albo zapisany): zmieniona albo nowa.
+public enum LineChange: Sendable, Hashable { case modified, added }
+
 public enum TextDiff {
     public static func rows(_ a: String, _ b: String, options: DiffOptions = DiffOptions()) -> [DiffRow] {
         let la = lines(a), lb = lines(b)
@@ -60,6 +63,35 @@ public enum TextDiff {
             }
         }
         flush()
+        return out
+    }
+
+    /// Status linii tekstu względem stanu bazowego (UG 23.12 „Line status”): linie (od 0) zmienione albo nowe.
+    public static func lineStatus(baseline: String, current: String) -> [Int: LineChange] {
+        guard baseline != current else { return [:] }
+        let a = baseline.components(separatedBy: "\n"), b = current.components(separatedBy: "\n")
+        // Wspólny początek i koniec pomijane — diff tylko środka (pakiet 50 000 linii z drobną zmianą).
+        var p = 0
+        while p < a.count, p < b.count, a[p] == b[p] { p += 1 }
+        var s = 0
+        while s < a.count - p, s < b.count - p, a[a.count - 1 - s] == b[b.count - 1 - s] { s += 1 }
+        let ma = Array(a[p..<(a.count - s)]), mb = Array(b[p..<(b.count - s)])
+        var out: [Int: LineChange] = [:]
+        // Duża zmiana (np. formatowanie całości) — bez kosztownego diffu: cały środek zmieniony.
+        if ma.isEmpty || ma.count * mb.count > 4_000_000 {
+            for k in mb.indices { out[p + k] = k < ma.count ? .modified : .added }
+            return out
+        }
+        guard !mb.isEmpty else { return out }
+        // Końcowy znak nowej linii — puste linie na końcu fragmentu są liniami, nie końcem tekstu.
+        for r in rows(ma.joined(separator: "\n") + "\n", mb.joined(separator: "\n") + "\n") {
+            guard let line = r.right else { continue }
+            switch r.kind {
+            case .changed: out[p + line - 1] = .modified
+            case .added: out[p + line - 1] = .added
+            case .same, .removed: break
+            }
+        }
         return out
     }
 

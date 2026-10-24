@@ -214,8 +214,30 @@ struct EditorPane: View {
                     Text(L10n.tr("Pierwsza wielka")).tag(KeywordCase.initCap)
                 }
                 Toggle(L10n.tr("Podświetlaj bieżącą linię"), isOn: setting(workspace, \.highlightCurrentLine))
+                Toggle(L10n.tr("Status linii (zmienione i nowe od otwarcia lub zapisu)"), isOn: setting(workspace, \.showLineStatus))
+                Toggle(L10n.tr("Zawijaj wiersze"), isOn: setting(workspace, \.wordWrap))
+                Stepper(value: setting(workspace, \.lineNumberInterval), in: 1...10) {
+                    Text(workspace.settings.lineNumberInterval <= 1 ? L10n.tr("Numer każdej linii")
+                         : L10n.tr("Numer co \(workspace.settings.lineNumberInterval) linii"))
+                }
+                Stepper(value: setting(workspace, \.rightMarginColumn), in: 0...250, step: 10) {
+                    Text(workspace.settings.rightMarginColumn == 0 ? L10n.tr("Bez pionowego marginesu")
+                         : L10n.tr("Pionowy margines w kolumnie \(workspace.settings.rightMarginColumn)"))
+                }
+                Toggle(L10n.tr("Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"), isOn: setting(workspace, \.showSpecialCharacters))
+                Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
+                    Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
+                    Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)
+                    Text(L10n.tr("Według rodzaju")).tag(CodeContents.Order.kind)
+                }
             }
             Section(L10n.tr("Wcięcia")) {
+                Picker(L10n.tr("Wcięcie nowej linii"), selection: setting(workspace, \.indentMode)) {
+                    Text(L10n.tr("Brak")).tag(IndentMode.none)
+                    Text(L10n.tr("Automatyczne (jak poprzednia linia)")).tag(IndentMode.automatic)
+                    Text(L10n.tr("Inteligentne (struktura PL/SQL)")).tag(IndentMode.smart)
+                }
+                Toggle(L10n.tr("Backspace usuwa wcięcie"), isOn: setting(workspace, \.backspaceUnindents))
                 Stepper(value: setting(workspace, \.tabSize), in: 1...8) { Text(L10n.tr("Szerokość tabulacji: \(workspace.settings.tabSize)")) }
                 Toggle(L10n.tr("Wstawiaj znak tabulacji zamiast spacji"), isOn: setting(workspace, \.useTabCharacter))
             }

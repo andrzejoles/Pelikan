@@ -363,9 +363,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func applyLayout(_ layout: WindowLayout) { mainWindow?.apply(layout) }
 
     func showDiff(left: String, right: String, leftTitle: String, rightTitle: String) {
+        showDiff(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle, reload: nil)
+    }
+
+    func showDiff(left: String, right: String, leftTitle: String, rightTitle: String, reload: DiffReload?) {
         ToolWindowController.show(key: "diff-\(UUID().uuidString)", title: L10n.tr("Różnice: \(leftTitle) ↔ \(rightTitle)"),
                                   size: NSSize(width: 1100, height: 680)) {
-            DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle)
+            DiffViewer(left: left, right: right, leftTitle: leftTitle, rightTitle: rightTitle, reload: reload)
+        }
+    }
+
+    func showTemplateWindow() {
+        ToolWindowController.show(key: "templates", title: L10n.tr("Szablony"), size: NSSize(width: 320, height: 560)) {
+            TemplatePane(workspace: workspace)
         }
     }
 

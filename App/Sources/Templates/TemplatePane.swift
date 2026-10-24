@@ -2,9 +2,12 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 
-/// Template Window (UG 31.1): szablony w folderach z filtrem; dwuklik wstawia w aktywnym edytorze (formularz
-/// zmiennych), menu kontekstowe: wstaw, nowe okno, usuń szablon użytkownika, zapisz zaznaczenie jako szablon.
+/// Template Window (UG 31.1): szablony w folderach z filtrem; dwuklik albo przeciągnięcie do edytora wstawia szablon
+/// (formularz zmiennych), menu kontekstowe: wstaw, nowe okno, usuń szablon użytkownika, zapisz zaznaczenie jako
+/// szablon; w pasku bocznym albo w osobnym, pływającym oknie (PD-TPL-001).
 struct TemplatePane: View {
+    /// Przeciągany szablon (identyfikator folder/nazwa) — upuszczenie w edytorze wstawia go z formularzem (PD-TPL-002).
+    static let pasteboardType = NSPasteboard.PasteboardType("local.pelikan.template")
     let workspace: Workspace
     @State private var filter = ""
     @State private var selection: String?
@@ -28,6 +31,7 @@ struct TemplatePane: View {
                             Label(t.name, systemImage: t.isBuiltIn ? "doc.text" : "doc.text.fill")
                                 .tag(t.id)
                                 .help(t.text)
+                                .onDrag { Self.dragItem(t) }
                         }
                     }
                 }
@@ -49,6 +53,17 @@ struct TemplatePane: View {
             }
         }
         .padding(.bottom, 6)
+    }
+
+    /// Element przeciągania: identyfikator szablonu i — dla celów spoza edytora — jego tekst.
+    static func dragItem(_ t: CodeTemplate) -> NSItemProvider {
+        let p = NSItemProvider(object: t.text as NSString)
+        let id = Data(t.id.utf8)
+        p.registerDataRepresentation(forTypeIdentifier: pasteboardType.rawValue, visibility: .ownProcess) { done in
+            done(id, nil)
+            return nil
+        }
+        return p
     }
 
     private func insert(_ id: String) {

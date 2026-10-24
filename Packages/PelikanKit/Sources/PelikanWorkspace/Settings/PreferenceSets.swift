@@ -126,7 +126,7 @@ public enum PreferenceSets {
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
         (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "tabSize", "keywordCase", "highlightCurrentLine", "liveCodeAnalysis",
-                             "useTabCharacter", "showCodeContents", "codeAssistantAutomatic", "codeAssistantDelay",
+                             "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeAssistantAutomatic", "codeAssistantDelay",
                              "codeAssistantMatch", "codeAssistantCase", "codeAssistantMinChars", "codeAssistantStandardFunctions",
                              "codeAssistantAllPerLine", "codeAssistantCommaFirst", "autoReplace", "identifierLengthWarning", "editorLigatures",
                              "rememberWindowState"]),
