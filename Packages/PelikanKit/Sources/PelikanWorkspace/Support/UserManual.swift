@@ -1,8 +1,9 @@
 import Foundation
 
 /// Instrukcja użytkownika w aplikacji (PL-INFRA-010): rozdziały Markdown z zasobów aplikacji (`Manual/<język>/*.md`,
-/// brak języka — polski), wyświetlane jako HTML bez skryptów, oraz rozdział skrótów generowany z rejestru komend
-/// (nazwy komend w bieżącym języku, skróty z bieżącego profilu i własnych ustawień).
+/// brak języka — polski; rozdział jeszcze nieprzetłumaczony — jego polska wersja), wyświetlane jako HTML bez skryptów,
+/// z obrazkami z `Manual/img` osadzonymi jako `data:` (WKWebView nie dostaje dostępu do plików), oraz rozdział skrótów
+/// generowany z rejestru komend (nazwy komend w bieżącym języku, skróty z bieżącego profilu i własnych ustawień).
 public enum UserManual {
     public struct Chapter: Sendable, Hashable, Identifiable {
         public var id: String
@@ -22,13 +23,20 @@ public enum UserManual {
         return nil
     }
 
-    /// Rozdziały z katalogu w kolejności nazw plików (01-…, 02-…); tytuł z pierwszego nagłówka `#`.
-    public static func chapters(in directory: URL) -> [Chapter] {
-        let files = ((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []).filter { $0.hasSuffix(".md") }.sorted()
+    /// Rozdziały z katalogu w kolejności nazw plików (01-…, 02-…); tytuł z pierwszego nagłówka `#`. Rozdział, którego
+    /// nie ma w katalogu języka, a jest w katalogu zapasowym (polskim), pochodzi z zapasowego — instrukcja w innym języku
+    /// nie gubi rozdziałów dopisanych przed tłumaczeniem.
+    public static func chapters(in directory: URL, fallback: URL? = nil) -> [Chapter] {
+        let fm = FileManager.default
+        func markdownFiles(_ d: URL) -> [String] { ((try? fm.contentsOfDirectory(atPath: d.path)) ?? []).filter { $0.hasSuffix(".md") } }
+        let own = Set(markdownFiles(directory))
+        let extra = fallback.map { markdownFiles($0).filter { !own.contains($0) } } ?? []
+        let files = (Array(own) + extra).sorted()
         return files.compactMap { f in
-            guard let text = try? String(contentsOf: directory.appendingPathComponent(f), encoding: .utf8) else { return nil }
+            let dir = own.contains(f) ? directory : fallback!
+            guard let text = try? String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8) else { return nil }
             let title = text.split(separator: "\n").first { $0.hasPrefix("# ") }.map { String($0.dropFirst(2)) } ?? f
-            return Chapter(id: f, title: title, html: html(markdown: text))
+            return Chapter(id: f, title: title, html: html(markdown: text, imageBase: dir))
         }
     }
 
@@ -52,7 +60,7 @@ public enum UserManual {
     public static func page(_ chapter: Chapter) -> String {
         """
         <!doctype html><html><head><meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
         <style>
         :root { color-scheme: light dark; }
         body { font: 13px -apple-system, sans-serif; line-height: 1.5; margin: 18px 24px; max-width: 760px; }
@@ -61,6 +69,11 @@ public enum UserManual {
         pre code { display: block; padding: 8px; white-space: pre-wrap; }
         table { border-collapse: collapse; width: 100%; } td { padding: 3px 8px; border-bottom: 1px solid rgba(127,127,127,.25); }
         td.keys { white-space: nowrap; font-family: ui-monospace, Menlo, monospace; text-align: right; }
+        th { text-align: left; padding: 3px 8px; border-bottom: 2px solid rgba(127,127,127,.35); vertical-align: bottom; }
+        td { vertical-align: top; } table.md { margin: 8px 0 12px; }
+        figure { margin: 12px 0 16px; } figcaption { font-size: 12px; color: rgba(127,127,127,1); margin-top: 4px; }
+        figure img { max-width: 100%; height: auto; border: 1px solid rgba(127,127,127,.3); border-radius: 6px; }
+        p.missing { color: rgba(127,127,127,1); font-style: italic; }
         </style></head><body>
         \(chapter.html)
         </body></html>
@@ -87,17 +100,53 @@ public enum UserManual {
         }.joined()
     }
 
-    /// Markdown (podzbiór: nagłówki, akapity, listy punktowane i numerowane z kontynuacją wcięciem, bloki kodu ```).
-    public static func html(markdown: String) -> String {
+    /// Obrazek z linii `![opis](ścieżka)`: tylko plik PNG/JPEG wewnątrz katalogu instrukcji (rodzic katalogu języka),
+    /// osadzony jako `data:` — bez odwołań do plików i sieci z WKWebView. Brak pliku albo ścieżka spoza instrukcji —
+    /// sam opis.
+    static func image(alt: String, path: String, base: URL?) -> String {
+        let caption = alt.isEmpty ? "" : "<figcaption>" + inline(alt) + "</figcaption>"
+        let missing = "<p class=\"missing\">[" + inline(alt.isEmpty ? path : alt) + "]</p>"
+        let ext = (path as NSString).pathExtension.lowercased()
+        guard let base, !path.contains(":"), !path.hasPrefix("/"), ["png", "jpg", "jpeg"].contains(ext) else { return missing }
+        let root = base.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL.path
+        let file = base.appendingPathComponent(path).resolvingSymlinksInPath().standardizedFileURL
+        guard file.path.hasPrefix(root + "/"),
+              let size = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.size] as? Int, size <= 4_000_000,
+              let data = try? Data(contentsOf: file) else { return missing }
+        let mime = ext == "png" ? "image/png" : "image/jpeg"
+        return "<figure><img src=\"data:\(mime);base64,\(data.base64EncodedString())\" alt=\"\(escape(alt))\">\(caption)</figure>"
+    }
+
+    /// Wiersz tabeli `| a | b |` → komórki (bez skrajnych `|`; `\|` to znak `|` w komórce).
+    static func tableCells(_ line: String) -> [String] {
+        var t = line.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\\|", with: "\u{1}")
+        if t.hasPrefix("|") { t.removeFirst() }
+        if t.hasSuffix("|") { t.removeLast() }
+        return t.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\u{1}", with: "|") }
+    }
+
+    /// Markdown (podzbiór: nagłówki, akapity, listy punktowane i numerowane z kontynuacją wcięciem, bloki kodu ```,
+    /// tabele z wierszem nagłówka i obrazki w osobnej linii — `imageBase` to katalog pliku rozdziału).
+    public static func html(markdown: String, imageBase: URL? = nil) -> String {
         var out: [String] = []
         var paragraph: [String] = []
         var list: (tag: String, items: [String])?
         var code: [String]?
+        var table: [String] = []
         func flushParagraph() {
             if !paragraph.isEmpty { out.append("<p>" + inline(paragraph.joined(separator: " ")) + "</p>"); paragraph = [] }
         }
         func flushList() {
             if let l = list { out.append("<\(l.tag)>" + l.items.map { "<li>" + inline($0) + "</li>" }.joined() + "</\(l.tag)>"); list = nil }
+        }
+        func flushTable() {
+            guard !table.isEmpty else { return }
+            defer { table = [] }
+            let separator = table.count > 1 && table[1].allSatisfy { "|-: ".contains($0) } && table[1].contains("-")
+            guard separator else { paragraph += table; flushParagraph(); return }
+            var h = "<table class=\"md\"><thead><tr>" + tableCells(table[0]).map { "<th>" + inline($0) + "</th>" }.joined() + "</tr></thead><tbody>"
+            for row in table.dropFirst(2) { h += "<tr>" + tableCells(row).map { "<td>" + inline($0) + "</td>" }.joined() + "</tr>" }
+            out.append(h + "</tbody></table>")
         }
         for line in markdown.components(separatedBy: "\n") {
             if code != nil {
@@ -105,8 +154,15 @@ public enum UserManual {
                 continue
             }
             let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.hasPrefix("|") { flushParagraph(); flushList(); table.append(trimmed); continue }
+            flushTable()
             if line.hasPrefix("```") { flushParagraph(); flushList(); code = []; continue }
             if trimmed.isEmpty { flushParagraph(); flushList(); continue }
+            if let m = trimmed.firstMatch(of: #/^!\[([^\]]*)\]\(([^)\s]+)\)$/#) {
+                flushParagraph(); flushList()
+                out.append(image(alt: String(m.1), path: String(m.2), base: imageBase))
+                continue
+            }
             if let m = line.firstMatch(of: #/^(#{1,3}) (.+)$/#) {
                 flushParagraph(); flushList()
                 out.append("<h\(m.1.count)>" + inline(String(m.2)) + "</h\(m.1.count)>")
@@ -131,7 +187,7 @@ public enum UserManual {
             flushList()
             paragraph.append(trimmed)
         }
-        flushParagraph(); flushList()
+        flushTable(); flushParagraph(); flushList()
         if let c = code { out.append("<pre><code>" + escape(c.joined(separator: "\n")) + "</code></pre>") }
         return out.joined(separator: "\n")
     }
