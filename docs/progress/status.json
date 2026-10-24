@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T14:47:53+02:00",
+  "heartbeat": "2026-10-24T15:45:11+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,8 @@
     }
   ],
   "done": [
+    "Koszyk wdrożenia: pakiet i typ dodawane razem z ciałem (skrypt miał samą specyfikację) — wykryte zrzutem; zrzuty QBE, Użyć, raportów predefiniowanych, zapytań standardowych",
+    "Scalone #62 (edytor po ustawieniu kursora z modelu; ograniczony odczyt potoków ssh — zawieszenia Stop); szkic wydania v6.7.0 do publikacji przez właściciela",
     "Scalone #60 (P2) i #61 (zrzuty: podkreślenia analizy kodu, panel agenta); #62 w CI (odświeżanie edytora po ustawieniu kursora z modelu)",
     "Przebieg zrzutów: podkreślenia analizy kodu były niewidoczne (TextKit 2) — naprawione (D146); nagłówek panelu agenta pod paskiem narzędzi — naprawiony",
     "Przebieg zrzutów: naprawione układy okien planu i raportu; okna dialogowe pomijane w trybie skryptu (bez aktywacji aplikacji)",
@@ -90,9 +92,7 @@
     "Etap 7 / siatka i edytor (subagent) zintegrowane: filtr i grupowanie w siatce, SQL z wierszy, generowanie kodu, panel wartości, snippety, SET SQLFORMAT; test bazy zielony (D57–D58)",
     "Etap 6 / projekty (Build, Make, Find in Project, pulpit) i edytor zewnętrzny Large Data Editor (RTF) — wszystkie wiersze Etapu 6 zrobione",
     "Etap 6 — wykresy, narzędzia użytkownika i raporty (subagenci) zintegrowane z narzędziami siatki, Test Managerem, monitorem i testem obciążenia; testy 132+70+16 bez bazy, 110 na bazie (D49–D52)",
-    "Etap 6 / Monitor zdarzeń (DBMS_ALERT, DBMS_PIPE) i test obciążenia (wątki, wyniki na żywo, CSV) — 2 testy na bazie (D48); subagent zakończył raporty",
-    "Etap 6 / Test Manager — zestawy testów z oczekiwaniami, zmienne globalne, DBMS_OUTPUT, limit czasu, RUNTESTSET; polecenia własne okna poleceń i EXPORT; subagent zakończył wykresy i narzędzia użytkownika",
-    "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie"
+    "Etap 6 / Monitor zdarzeń (DBMS_ALERT, DBMS_PIPE) i test obciążenia (wątki, wyniki na żywo, CSV) — 2 testy na bazie (D48); subagent zakończył raporty"
   ],
   "next": [
     "Po #62: dalsze zrzuty w tle tam, gdzie to możliwe; szkic wydania po scaleniu serii poprawek."

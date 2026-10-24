@@ -1,0 +1,1 @@
+[{"command": "cart.add", "args": {"object": "PELIKAN_TEST.EMP_API"}, "delay": 1}, {"command": "cart.add", "args": {"object": "PELIKAN_TEST.DEPT"}, "delay": 1}, {"command": "cart.script", "delay": 3}]
