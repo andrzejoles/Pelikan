@@ -21,7 +21,9 @@ public enum GridCommands {
         guard let (tab, grid) = activeGrid(ws) else { return nil }
         let rows = tab.selectedRows.flatMap { $0.isEmpty ? nil : $0 }
         // Kolumny ukryte filtrem kolumn nie trafiają do kopii ani eksportu (PD-GRID-011).
-        let columns = (tab.columnOrder ?? Array(grid.columns.indices)).filter { !tab.hiddenColumns.contains($0) }
+        var columns = (tab.columnOrder ?? Array(grid.columns.indices)).filter { !tab.hiddenColumns.contains($0) }
+        // Blok komórek (PD-GRID-007): tylko kolumny bloku, w kolejności widocznej.
+        if let block = tab.selectedColumns, !block.isEmpty { columns = columns.filter { block.contains($0) } }
         var data = grid.exportData(rows: rows, columns: columns, title: tab.title)
         if ws.settings.rowNumbersInCopyExport { data = withRowNumbers(data, viewRows: rows ?? Array(0..<grid.rowCount)) }
         return data

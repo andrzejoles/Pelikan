@@ -10,6 +10,8 @@ public enum DBObjectType: String, Sendable, Codable, CaseIterable, Hashable {
     case table = "TABLE", view = "VIEW", materializedView = "MATERIALIZED VIEW", sequence = "SEQUENCE", synonym = "SYNONYM"
     case index = "INDEX", databaseLink = "DATABASE LINK", queue = "QUEUE", job = "JOB"
     case mleModule = "MLE MODULE", mleEnvironment = "MLE ENVIRONMENT", domain = "DOMAIN", property = "PROPERTY GRAPH"
+    /// Adnotacje 23ai (ALL_ANNOTATIONS, nie są obiektami ALL_OBJECTS) i asercje SQL 23.26 (ALL_ASSERTIONS).
+    case annotation = "ANNOTATION", assertion = "ASSERTION"
     case user = "USER", role = "ROLE", profile = "PROFILE", directory = "DIRECTORY"
 
     /// Nazwa folderu w drzewie.
@@ -37,6 +39,8 @@ public enum DBObjectType: String, Sendable, Codable, CaseIterable, Hashable {
         case .mleEnvironment: L10n.tr("Środowiska MLE")
         case .domain: L10n.tr("Domeny")
         case .property: L10n.tr("Grafy właściwości")
+        case .annotation: L10n.tr("Adnotacje")
+        case .assertion: L10n.tr("Asercje")
         case .user: L10n.tr("Użytkownicy")
         case .role: L10n.tr("Role")
         case .profile: L10n.tr("Profile")
@@ -47,14 +51,14 @@ public enum DBObjectType: String, Sendable, Codable, CaseIterable, Hashable {
     /// Kolejność folderów jak we wzorcu (programy, potem dane, potem obiekty globalne).
     public static let browserOrder: [DBObjectType] = [
         .function, .procedure, .package, .packageBody, .type, .typeBody, .trigger, .javaSource, .library, .mleModule,
-        .mleEnvironment, .table, .view, .materializedView, .sequence, .synonym, .index, .domain, .property, .databaseLink,
+        .mleEnvironment, .table, .view, .materializedView, .sequence, .synonym, .index, .domain, .annotation, .assertion, .property, .databaseLink,
         .queue, .job, .directory, .user, .role, .profile,
     ]
 
     /// Minimalna wersja główna serwera (MLE i domeny — 23ai).
     public var minimumServerMajor: Int {
         switch self {
-        case .mleModule, .mleEnvironment, .domain, .property: 23
+        case .mleModule, .mleEnvironment, .domain, .property, .annotation, .assertion: 23
         default: 0
         }
     }
@@ -93,6 +97,8 @@ public struct DBObject: Sendable, Hashable, Identifiable {
 public struct DBObjectChild: Sendable, Hashable, Identifiable {
     public enum Kind: String, Sendable, Hashable {
         case column, index, constraint, trigger, subprogram, attribute, dependency, referencedBy, partition
+        /// Użycie adnotacji (obiekt / kolumna z wartością — PD-OB-002).
+        case usage
     }
     public var kind: Kind
     public var name: String
@@ -165,6 +171,7 @@ public final class MetadataProvider {
     @ObservationIgnored private var cache: [String: [DBObject]] = [:]
     @ObservationIgnored private var childCache: [String: [DBObjectChild]] = [:]
     @ObservationIgnored private var dbaViews: Bool?
+    @ObservationIgnored private var features: DictionaryFeatures?
     /// Pamięć podręczna Code Assistant: nazwy obiektów schematu, rozwiązane nazwy (synonimy), linki.
     @ObservationIgnored var nameCache: [String: [(name: String, type: String)]] = [:]
     @ObservationIgnored var resolveCache: [String: DBObject?] = [:]
@@ -188,6 +195,7 @@ public final class MetadataProvider {
         nameCache.removeAll()
         resolveCache.removeAll()
         linkCache = nil
+        features = nil
         generation += 1
     }
 
@@ -215,10 +223,17 @@ public final class MetadataProvider {
         try await session().info.currentSchema
     }
 
-    /// Foldery dostępne na serwerze (wersja).
+    /// Możliwości słownika serwera (wersja, widoki 23ai/26ai — PD-OB-026), pamiętane do odświeżenia.
+    public func dictionaryFeatures() async throws -> DictionaryFeatures {
+        if let features { return features }
+        let f = await DictionaryQuery.features(in: try await session())
+        features = f
+        return f
+    }
+
+    /// Foldery dostępne na serwerze (wersja i obecne widoki słownika).
     public func availableTypes() async throws -> [DBObjectType] {
-        let major = try await session().info.server.major
-        return DBObjectType.browserOrder.filter { $0.minimumServerMajor <= major }
+        try await dictionaryFeatures().availableTypes
     }
 
     /// Użytkownicy (wybór schematu w Object Browserze).
@@ -249,6 +264,17 @@ public final class MetadataProvider {
         case .directory:
             sql = "select owner, directory_name, 'VALID', null, null from all_directories o where 1 = 1"
             sql = applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
+        case .annotation, .assertion:
+            // Adnotacje (23ai) i asercje (23.26) nie mają wierszy w ALL_OBJECTS (asercja: typ UNDEFINED) — PD-OB-002.
+            let (column, ownerColumn) = type == .annotation ? ("annotation_name", "annotation_owner") : ("assertion_name", "owner")
+            sql = type == .annotation
+                ? "select distinct annotation_owner, annotation_name, 'VALID', null, null from all_annotations o where 1 = 1"
+                : "select owner, assertion_name, case when invalid = 'YES' then 'INVALID' else 'VALID' end, null, null from all_assertions o where 1 = 1"
+            if let owner {
+                binds.append(BindVariable(name: "own", value: .text(owner)))
+                sql += " and \(ownerColumn) = :own"
+            }
+            sql = applyNameFilter(sql, column: column, filter: filter, binds: &binds) + " order by 2, 1"
         default:
             sql = "select o.owner, o.object_name, o.status, o.created, o.last_ddl_time from \(px)_objects o where o.object_type = :t"
             binds.append(BindVariable(name: "t", value: .text(type.rawValue)))
@@ -341,9 +367,18 @@ public final class MetadataProvider {
                     DBObjectChild(kind: .attribute, name: $0[0].displayText ?? "", detail: $0[1].displayText ?? "")
                 }
             }
+        case .annotation:
+            // Użycie adnotacji: obiekt (i kolumna) z wartością.
+            try await q("""
+                select object_type || ' ' || object_name || nvl2(column_name, '.' || column_name, ''), annotation_value, object_type, object_name
+                from all_annotations_usage where annotation_owner = :o and annotation_name = :n order by object_type, object_name, column_name
+                """) { r in
+                DBObjectChild(kind: .usage, name: r[0].displayText ?? "", detail: r[1].displayText ?? "",
+                              object: (r[2].displayText).flatMap(DBObjectType.init(rawValue:)).map { DBObject(owner: o.owner, name: r[3].displayText ?? "", type: $0) })
+            }
         default: break
         }
-        if o.type != .user, o.type != .role {
+        if o.type != .user, o.type != .role, o.type != .annotation {
             try await q("""
                 select referenced_owner || '.' || referenced_name, referenced_type, referenced_owner, referenced_name from all_dependencies
                 where owner = :o and name = :n and referenced_owner not in ('SYS', 'PUBLIC') order by 1
@@ -393,6 +428,8 @@ public final class MetadataProvider {
 
     /// DDL obiektu w podanej sesji (także sesji agenta).
     public nonisolated static func ddl(of o: DBObject, in s: any DatabaseSession) async throws -> String {
+        // DBMS_METADATA nie obsługuje asercji ani adnotacji (ORA-31600) — DDL ze słownika (PD-OB-002).
+        if o.type == .assertion || o.type == .annotation { return try await Oracle23Dictionary.ddl(of: o, in: s) }
         let metaType: String = switch o.type {
         case .packageBody: "PACKAGE_BODY"
         case .typeBody: "TYPE_BODY"
@@ -422,21 +459,26 @@ public final class MetadataProvider {
         let s = try await session()
         let b = [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name))]
         var out: [(String, String)] = []
-        func add(_ sql: String, _ binds: [BindVariable]) async throws {
-            let (cols, rows) = try await s.queryAll(sql, binds: binds, limit: 1)
+        // Warianty zapasowe dla starszych serwerów (kolumny 12c — PD-OB-026).
+        func add(_ sql: String, _ binds: [BindVariable], fallback: [String] = []) async throws {
+            let (cols, rows) = try await DictionaryQuery.queryAll([sql] + fallback, binds: binds, limit: 1, in: s)
             guard let r = rows.first else { return }
             for (i, c) in cols.enumerated() where !r[i].isNull { out.append((c.name, r[i].format(workspace.settings.valueFormat))) }
         }
-        if !o.type.isGlobal {
+        if !o.type.isGlobal, o.type != .annotation, o.type != .assertion {
             try await add("select object_type, status, created, last_ddl_time, timestamp, temporary, generated, secondary, editionable from all_objects where owner = :o and object_name = :n and object_type = :t",
-                          b + [BindVariable(name: "t", value: .text(o.type.rawValue))])
+                          b + [BindVariable(name: "t", value: .text(o.type.rawValue))],
+                          fallback: ["select object_type, status, created, last_ddl_time, timestamp, temporary, generated, secondary from all_objects where owner = :o and object_name = :n and object_type = :t"])
         }
         switch o.type {
         case .table: try await add("select tablespace_name, num_rows, last_analyzed, partitioned, temporary, iot_type, logging, compression from all_tables where owner = :o and table_name = :n", b)
         case .sequence: try await add("select min_value, max_value, increment_by, cycle_flag, order_flag, cache_size, last_number from all_sequences where sequence_owner = :o and sequence_name = :n", b)
         case .synonym: try await add("select table_owner, table_name, db_link from all_synonyms where owner = :o and synonym_name = :n", b)
         case .view: try await add("select text_length, read_only from all_views where owner = :o and view_name = :n", b)
-        case .user: try await add("select user_id, created, common, oracle_maintained, default_collation from all_users where username = :n", [b[1]])
+        case .user: try await add("select user_id, created, common, oracle_maintained, default_collation from all_users where username = :n", [b[1]],
+                                  fallback: ["select user_id, created, common, oracle_maintained from all_users where username = :n",
+                                             "select user_id, created from all_users where username = :n"])
+        case .assertion: try await add("select status, deferrable, deferred, validated, invalid from all_assertions where owner = :o and assertion_name = :n", b)
         default: break
         }
         if o.type == .table || o.type == .view {

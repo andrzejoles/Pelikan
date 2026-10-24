@@ -12,6 +12,7 @@ struct TableEditorView: View {
     @State private var tab = 1
     @State private var message = ""
     @State private var running = false
+    @State private var fkTable = ""
 
     static let typeSuggestions = ["NUMBER", "NUMBER(10)", "NUMBER(10,2)", "INTEGER", "VARCHAR2(30 CHAR)", "VARCHAR2(100 CHAR)", "VARCHAR2(4000 CHAR)",
                                   "CHAR(1 CHAR)", "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "CLOB", "BLOB", "RAW(16)", "BOOLEAN", "JSON",
@@ -76,6 +77,53 @@ struct TableEditorView: View {
             TextField(L10n.tr("Komentarz"), text: $definition.comment, axis: .vertical).lineLimit(2...4)
             Toggle(L10n.tr("Archiwizacja wierszy (ROW ARCHIVAL)"), isOn: $definition.rowArchival).disabled(definition.temporary)
             TextField(L10n.tr("Adnotacje tabeli (nazwa=wartość, …; 23ai)"), text: annotations($definition.annotations))
+            Section(L10n.tr("Składowanie")) {
+                HStack {
+                    TextField("PCTFREE", text: $definition.storage.pctFree)
+                    TextField("INITRANS", text: $definition.storage.iniTrans)
+                }
+                HStack {
+                    TextField("INITIAL", text: upper($definition.storage.initial)).disabled(original != nil && !definition.recreate)
+                    TextField("NEXT", text: upper($definition.storage.next))
+                }
+                Toggle(L10n.tr("Logowanie zmian (LOGGING)"), isOn: $definition.storage.logging)
+                Picker(L10n.tr("Kompresja"), selection: $definition.storage.compression) {
+                    Text(L10n.tr("Brak")).tag(TableDefinition.Storage.Compression.none)
+                    Text("BASIC").tag(TableDefinition.Storage.Compression.basic)
+                    Text("ADVANCED").tag(TableDefinition.Storage.Compression.advanced)
+                }
+            }
+            .disabled(definition.temporary || definition.external != nil || !definition.cluster.isEmpty)
+            Section(L10n.tr("Organizacja")) {
+                TextField(L10n.tr("Klaster"), text: upper($definition.cluster)).disabled(original != nil && !definition.recreate)
+                if !definition.cluster.isEmpty {
+                    TextField(L10n.tr("Kolumny klastra"), text: list($definition.clusterColumns)).disabled(original != nil && !definition.recreate)
+                }
+                TextField(L10n.tr("Tabela obiektowa — typ (OF …)"), text: upper($definition.objectType)).disabled(original != nil)
+                Toggle(L10n.tr("Tabela zewnętrzna (ORGANIZATION EXTERNAL)"), isOn: Binding(
+                    get: { definition.external != nil }, set: { definition.external = $0 ? TableDefinition.External() : nil }))
+                    .disabled(original != nil)
+                if definition.external != nil {
+                    Picker(L10n.tr("Sterownik"), selection: Binding(get: { definition.external?.driver ?? "ORACLE_LOADER" }, set: { definition.external?.driver = $0 })) {
+                        ForEach(["ORACLE_LOADER", "ORACLE_DATAPUMP", "ORACLE_BIGDATA"], id: \.self) { Text($0).tag($0) }
+                    }
+                    TextField(L10n.tr("Katalog (DIRECTORY)"), text: upper(Binding(get: { definition.external?.directory ?? "" }, set: { definition.external?.directory = $0 })))
+                    TextField(L10n.tr("Pliki (po przecinku)"), text: list(Binding(get: { definition.external?.locations ?? [] }, set: { definition.external?.locations = $0 })))
+                    TextField(L10n.tr("Parametry dostępu"), text: Binding(get: { definition.external?.accessParameters ?? "" }, set: { definition.external?.accessParameters = $0 }),
+                              axis: .vertical).lineLimit(2...6).font(.system(.body, design: .monospaced))
+                    TextField("REJECT LIMIT", text: upper(Binding(get: { definition.external?.rejectLimit ?? "" }, set: { definition.external?.rejectLimit = $0 })))
+                }
+            }
+            .disabled(definition.temporary)
+            if original != nil {
+                Section(L10n.tr("Recreate table")) {
+                    Toggle(L10n.tr("Zastosuj przez odtworzenie tabeli (kopia danych, DROP, CREATE, przeniesienie wierszy)"), isOn: $definition.recreate)
+                    if definition.recreate {
+                        Text(L10n.tr("Wyzwalacze, uprawnienia i klucze obce innych tabel są odtwarzane; tabela trafia do kosza (FLASHBACK TABLE … TO BEFORE DROP)."))
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
     }
@@ -171,6 +219,7 @@ struct TableEditorView: View {
                 TableColumn(L10n.tr("Wirtualna (wyrażenie)")) { $c in TextField("", text: $c.virtualExpression).disabled(c.originalName != nil) }
                     .width(min: 80, ideal: 120)
                 TableColumn(L10n.tr("Identity")) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
+                TableColumn(L10n.tr("Niewidoczna")) { $c in Toggle("", isOn: $c.invisible).labelsHidden() }.width(70)
                 TableColumn(L10n.tr("Domena")) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
                 TableColumn(L10n.tr("Adnotacje")) { $c in TextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
                 TableColumn(L10n.tr("Komentarz")) { $c in TextField("", text: $c.comment) }
@@ -200,8 +249,14 @@ struct TableEditorView: View {
                 }.width(100)
                 TableColumn(L10n.tr("Włączony")) { $k in Toggle("", isOn: $k.enabled).labelsHidden() }.width(60)
             }
-            listButtons(add: { definition.keys.append(TableDefinition.Key(name: "\(definition.name)_UK\(definition.keys.count + 1)", kind: .unique, columns: [])) },
-                        remove: { if !definition.keys.isEmpty { definition.keys.removeLast() } })
+            HStack {
+                listButtons(add: { definition.keys.append(TableDefinition.Key(name: "\(definition.name)_UK\(definition.keys.count + 1)", kind: .unique, columns: [])) },
+                            remove: { if !definition.keys.isEmpty { definition.keys.removeLast() } })
+                Spacer()
+                // Add foreign key columns (PD-OED-002): kolumny klucza głównego wskazanej tabeli i klucz obcy.
+                TextField(L10n.tr("Tabela wskazywana"), text: upper($fkTable)).frame(width: 180)
+                Button(L10n.tr("Dodaj kolumny klucza obcego")) { addForeignKeyColumns() }.disabled(fkTable.isEmpty)
+            }
         }
     }
 
@@ -230,6 +285,18 @@ struct TableEditorView: View {
                 }.width(110)
                 TableColumn(L10n.tr("Kolumny / wyrażenia (DESC)")) { $x in TextField("", text: list($x.columns)) }
                 TableColumn(L10n.tr("Przestrzeń tabel")) { $x in TextField("", text: upper($x.tablespace)) }.width(min: 90, ideal: 120)
+                TableColumn(L10n.tr("Kompresja")) { $x in
+                    Picker("", selection: $x.compression) {
+                        Text("—").tag("")
+                        ForEach(["1", "2", "3"], id: \.self) { Text("COMPRESS \($0)").tag($0) }
+                        Text("ADVANCED LOW").tag("ADVANCED LOW")
+                        Text("ADVANCED HIGH").tag("ADVANCED HIGH")
+                        if !["", "1", "2", "3", "ADVANCED LOW", "ADVANCED HIGH"].contains(x.compression) { Text(x.compression).tag(x.compression) }
+                    }.labelsHidden()
+                }.width(130)
+                TableColumn("PCTFREE") { $x in TextField("", text: $x.pctFree) }.width(56)
+                TableColumn(L10n.tr("Odwrócony")) { $x in Toggle("", isOn: $x.reverse).labelsHidden().disabled(x.kind == .bitmap) }.width(70)
+                TableColumn(L10n.tr("Lokalny")) { $x in Toggle("", isOn: $x.local).labelsHidden() }.width(56)
                 TableColumn(L10n.tr("Niewidoczny")) { $x in Toggle("", isOn: $x.invisible).labelsHidden() }.width(76)
             }
             listButtons(add: { definition.indexes.append(TableDefinition.Index(name: "\(definition.name)_IX\(definition.indexes.count + 1)", columns: [])) },
@@ -285,11 +352,30 @@ struct TableEditorView: View {
                 set: { b.wrappedValue = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } })
     }
 
+    private func addForeignKeyColumns() {
+        guard let m = workspace.metadata(for: connectionID) else { return }
+        Task {
+            do {
+                let (cols, key) = try await TableDDL.foreignKeyColumns(for: definition, referencing: fkTable, metadata: m)
+                definition.columns += cols
+                definition.keys.append(key)
+                message = L10n.tr("Dodano kolumn: \(cols.count)")
+                fkTable = ""
+            } catch { message = error.localizedDescription }
+        }
+    }
+
     private func apply() {
         running = true
         message = ""
         Task {
             do {
+                if definition.recreate {
+                    let choice = await workspace.ui?.ask(L10n.tr("Odtworzyć tabelę \(definition.name)?"),
+                                                         message: L10n.tr("Tabela zostanie usunięta (do kosza) i utworzona od nowa z przeniesieniem danych."),
+                                                         buttons: [L10n.tr("Odtwórz"), L10n.tr("Anuluj")])
+                    guard choice == 0 else { throw CommandError.cancelledByUser }
+                }
                 let r = try await TableDDL.apply(from: original, to: definition, in: workspace, connectionID: connectionID)
                 if let e = r.error {
                     message = L10n.tr("Błąd w poleceniu \(r.executed.count + 1): \(e)")

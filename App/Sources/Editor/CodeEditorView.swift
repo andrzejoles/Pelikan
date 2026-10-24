@@ -256,6 +256,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace, [.test, .program].contains(self.document.kind) else { return [] }
             return Set(ws.breakpointLines(in: self.document).map { $0 - 1 })
         }
+        ruler.unappliedBreakpointLines = { [weak self] in
+            guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return [] }
+            return Set(ws.breakpointLines(in: self.document, onlyUnapplied: true).map { $0 - 1 })
+        }
         ruler.coverageLines = { [weak self] in
             guard let self, self.document.kind == .program, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return ([], [], []) }
             let c = ws.coverageDetail(in: self.document)
@@ -272,7 +276,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             self.textView.executionLine = self.document.executionLine
-            if let ws = (NSApp.delegate as? AppDelegate)?.workspace { _ = ws.breakpoints; _ = ws.lastUtplsqlRun?.coverage }
+            if let ws = (NSApp.delegate as? AppDelegate)?.workspace { _ = ws.breakpoints; _ = ws.unappliedBreakpoints; _ = ws.lastUtplsqlRun?.coverage }
             self.ruler.needsDisplay = true
         })
         ruler.onFoldClick = { [weak self] line in
@@ -1022,6 +1026,36 @@ final class CodeTextView: NSTextView {
             ws.perform("edit.insertTemplate", CommandArguments(["template": .string(id)]))
             return true
         }
+        // Obiekt z Object Browsera (PD-OB-010): z klawiszem Control albo przy preferencji „Pytaj” — menu (nazwa, kolumny,
+        // SELECT/INSERT/UPDATE/DELETE, wywołanie, DDL); inna preferencja niż „Nazwa” — tekst wg preferencji.
+        if !NSEvent.modifierFlags.contains(.option),
+           let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
+           let ws = (NSApp.delegate as? AppDelegate)?.workspace {
+            let parts = raw.components(separatedBy: "\u{1}")
+            let preferred = ws.settings.browserDropAction
+            if parts.count == 3, let type = DBObjectType(rawValue: parts[2]), NSEvent.modifierFlags.contains(.control) || preferred != .name {
+                let point = convert(sender.draggingLocation, from: nil)
+                let i = characterIndexForInsertion(at: point)
+                setSelectedRange(NSRange(location: i, length: 0))
+                window?.makeFirstResponder(self)
+                let args: (BrowserDropAction) -> CommandArguments = { a in
+                    CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2]), "action": .string(a.rawValue)])
+                }
+                if NSEvent.modifierFlags.contains(.control) || preferred == .ask {
+                    let menu = NSMenu()
+                    for a in BrowserDropAction.actions(for: type) {
+                        menu.addItem(ClosureMenuItem(title: a.displayName) { ws.perform("ob.dropText", args(a)) })
+                    }
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else { return }
+                        menu.popUp(positioning: nil, at: point, in: self)
+                    }
+                } else {
+                    ws.perform("ob.dropText", args(preferred))
+                }
+                return true
+            }
+        }
         // Obiekt z Object Browsera upuszczony z klawiszem Option: wygenerowany kod zamiast nazwy (SD-GEN-001).
         if NSEvent.modifierFlags.contains(.option),
            let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
@@ -1125,6 +1159,7 @@ final class LineNumberRulerView: NSView {
     var onFoldClick: ((Int) -> Void)?
     /// Linie (od 0) z punktami przerwania i przełączenie kliknięciem w numer linii (UG 5.10).
     var breakpointLines: (() -> Set<Int>)?
+    var unappliedBreakpointLines: (() -> Set<Int>)?
     /// Pokrycie utPLSQL: linie (od 0) pokryte i niepokryte (UT-COV-002).
     var coverageLines: (() -> (covered: Set<Int>, uncovered: Set<Int>, partial: Set<Int>))?
     var onBreakpointClick: ((Int) -> Void)?
@@ -1184,10 +1219,17 @@ final class LineNumberRulerView: NSView {
                 NSRect(x: bounds.width - 5, y: y, width: 3, height: height).fill()
             }
             if bps.contains(line) {
-                // Punkt przerwania: czerwone kółko pod numerem linii.
+                // Punkt przerwania: czerwone kółko pod numerem linii; niezastosowany — pusty okrąg (PD-DBG-007).
                 let d = min(height, lineHeight) - 2
-                NSColor.systemRed.withAlphaComponent(0.85).setFill()
-                NSBezierPath(ovalIn: NSRect(x: bounds.width - 8 - d - 10, y: y + 1, width: d, height: d)).fill()
+                let oval = NSBezierPath(ovalIn: NSRect(x: bounds.width - 8 - d - 10, y: y + 1, width: d, height: d))
+                if unappliedLines.contains(line) {
+                    NSColor.systemRed.withAlphaComponent(0.85).setStroke()
+                    oval.lineWidth = 1.5
+                    oval.stroke()
+                } else {
+                    NSColor.systemRed.withAlphaComponent(0.85).setFill()
+                    oval.fill()
+                }
             }
             if let n = marks[line] {
                 // Zakładka: numer w zaokrąglonym znaczniku przy lewej krawędzi (obok znacznika zwijania).
@@ -1215,6 +1257,7 @@ final class LineNumberRulerView: NSView {
         }
         drawnLines.removeAll(keepingCapacity: true)
         let bps = breakpointLines?() ?? []
+        let unappliedLines = unappliedBreakpointLines?() ?? []
         let marks = bookmarkLines?() ?? [:]
         let cov = coverageLines?() ?? (covered: Set<Int>(), uncovered: Set<Int>(), partial: Set<Int>())
         if content.documentRange.isEmpty {

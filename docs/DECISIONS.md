@@ -942,3 +942,51 @@ Zmiany ustawień zapisują się od razu, jak w ustawieniach macOS (przycisk Zast
 Wyszukiwarka nad kartami dopasowuje etykiety kontrolek (bez wielkości liter i znaków diakrytycznych, w języku
 interfejsu i po polsku) i przełącza na kartę ustawienia. Indeks etykiet generuje `scripts/prefs-index.py` z paneli
 `App/Sources/Preferences`; CI sprawdza, że jest aktualny, więc nowe ustawienie bez regeneracji indeksu zatrzyma CI.
+### D127 · 2026-10-24 — Układ liczb w siatce
+„Formatowane” stosuje separator dziesiętny z ustawień regionalnych, „z separatorem tysięcy” dodatkowo grupuje cyfry
+części całkowitej. Pełna precyzja zostaje (tekst liczby z bazy), notacja wykładnicza i Inf/Nan bez zmian. Układ dotyczy
+tylko wyświetlania w siatce — w trybie edycji komórka pokazuje tekst surowy, a kopiowanie i eksport wartości bez
+separatorów (żeby dało się je wkleić i wczytać).
+
+### D128 · 2026-10-24 — Blok komórek przez Shift+klik
+NSTableView zaznacza wiersze, nie komórki. Blok to zaznaczone wiersze i zakres kolumn od komórki kotwicy (zwykły klik)
+do komórki klikniętej z Shift, w kolejności widocznej; wiersz w trybie bloku nie jest podświetlany w całości, tylko
+komórki bloku. Kopiowanie i eksport biorą kolumny bloku. Agent i makra używają `grid.selectBlock` / `grid.selectColumn`.
+
+### D129 · 2026-10-24 — Zakres edytora tabeli: składowanie, klaster, tabela zewnętrzna, Recreate
+Składowanie: PCTFREE, INITRANS, INITIAL/NEXT, LOGGING i kompresja wierszy; INITIAL zmienia się tylko przez Recreate.
+Klaster, tabela obiektowa i zewnętrzna — tylko przy tworzeniu. Zmiana przestrzeni istniejącej tabeli to
+`MOVE TABLESPACE … UPDATE INDEXES`. Recreate table: kopia `CREATE TABLE PLK$nazwa AS SELECT`, `DROP … CASCADE CONSTRAINTS`
+(tabela w koszu — można ją przywrócić), CREATE wg nowej definicji, przeniesienie zachowanych i przemianowanych kolumn,
+DDL wyzwalaczy (DBMS_METADATA pobrany przed usunięciem) i klucze obce innych tabel, na końcu usunięcie kopii. Przed
+wykonaniem edytor pyta o zgodę. Parametry partycji indeksów lokalnych i składowanie LOB-ów — poza zakresem.
+
+### D130 · 2026-10-24 — Duplicate jako skrypt, nie wykonanie
+„Duplikuj” otwiera w nowym oknie SQL skrypt kopii (DDL z DBMS_METADATA albo źródło z ALL_SOURCE) z nową nazwą w
+nagłówku CREATE i w `END nazwa;`; w tabeli nazwy więzów zawierające starą nazwę dostają nową, pozostałe — przedrostek
+nowej nazwy (inaczej kolidowałyby z oryginałem). Użytkownik przegląda i wykonuje skrypt sam, dla tabel opcjonalnie z
+`INSERT … SELECT`. Zmiana nazwy widoków, sekwencji i synonimów to `RENAME` — tylko w bieżącym schemacie.
+
+### D131 · 2026-10-24 — Słownik wg wersji: opis możliwości i warianty zapasowe
+Foldery zależą od `DictionaryFeatures`: wersji serwera i obecności widoków ALL_MLE_*, ALL_DOMAINS, ALL_PROPERTY_GRAPHS,
+ALL_ANNOTATIONS, ALL_ASSERTIONS (jedno zapytanie do ALL_VIEWS na 23+; bez dostępu — wnioskowanie z wersji, asercje od
+23.26). Zapytania z kolumnami nowszych wersji mają warianty zapasowe wykonywane przy ORA-00904/00942. Adnotacje nie są
+obiektami ALL_OBJECTS, a asercje mają tam typ UNDEFINED — foldery czytają ALL_ANNOTATIONS i ALL_ASSERTIONS, DDL powstaje
+ze słownika (DBMS_METADATA zwraca ORA-31600). Seed bazy testowej nadaje CREATE ASSERTION tam, gdzie uprawnienie istnieje.
+
+### D132 · 2026-10-24 — Przeciąganie z Object Browsera
+Domyślnie upuszczenie wstawia nazwę (jak dotąd), z Option — kod (SD-GEN-001), z Control albo przy preferencji „Pytaj” —
+menu: nazwa, z właścicielem, lista kolumn, SELECT/INSERT/UPDATE/DELETE, wywołanie, DDL. Preferencja może też ustawić
+jedną z tych akcji na stałe. Obiekt upuszczony poza edytorem (pasek kart, pusty obszar okien) wykonuje akcję z
+preferencji: Edytuj, Pokaż dane, DDL, Opis albo Właściwości. Folder elementów albo folder obiektów daje nazwy po przecinku.
+
+
+### D133 · 2026-10-24 — Debuger: SELF i obiekty, bez :new/:old, warunki i logpointy po stronie Pelikana
+Sonda na 23.26: `DBMS_DEBUG.GET_VALUE('SELF.ATRYBUT')` działa w metodzie typu, więc SELF i zmienne obiektowe są
+drzewem atrybutów z ALL_TYPE_ATTRS. `NEW.KOL`/`OLD.KOL` zwracają „brak obiektu”, a nazwa z dwukropkiem (`:NEW.KOL`)
+**zawiesza** sesję debugera — Pelikan nie wysyła do GET_VALUE/SET_VALUE nazw z dwukropkiem (obserwowane i warunki
+też), a w wyzwalaczu pokazuje informację, że :new/:old są niedostępne. DBMS_DEBUG nie ma warunków ani komunikatów
+punktów: Pelikan po zatrzymaniu wypisuje komunikat (`{zmienna}` → wartość), dla „Nie zatrzymuj” kontynuuje, a warunek
+liczy jako `select case when … then 1 else 0 end from dual` z wartościami zmiennych ramki podstawionymi jako literały
+(błąd warunku — zatrzymanie z komunikatem). Punkt odrzucony przez SET_BREAKPOINT ma pusty znacznik. Jedna linia —
+jeden punkt (DBMS_DEBUG trzyma jeden punkt na linię).

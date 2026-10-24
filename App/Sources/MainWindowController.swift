@@ -206,6 +206,8 @@ final class FileDropView: NSView {
     var onDrop: (([URL]) -> Void)?
     /// Wklejenie tekstu na pusty obszar okien tworzy SQL Window (PD-SQLW-025).
     var onPaste: (() -> Void)?
+    /// Obiekt z Object Browsera upuszczony poza edytorem (PD-OB-010): właściciel, nazwa, typ.
+    var onObjectDrop: (([String]) -> Void)?
 
     override var acceptsFirstResponder: Bool { onPaste != nil }
     @objc func paste(_ sender: Any?) { onPaste?() }
@@ -216,7 +218,13 @@ final class FileDropView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        registerForDraggedTypes([.fileURL])
+        registerForDraggedTypes([.fileURL, ObjectBrowserViewController.objectPasteboardType])
+    }
+
+    private func object(_ info: NSDraggingInfo) -> [String]? {
+        guard let raw = info.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType) else { return nil }
+        let parts = raw.components(separatedBy: "\u{1}")
+        return parts.count == 3 ? parts : nil
     }
 
     @available(*, unavailable)
@@ -226,9 +234,13 @@ final class FileDropView: NSView {
         (info.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
     }
 
-    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { urls(sender).isEmpty ? [] : .copy }
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { urls(sender).isEmpty && object(sender) == nil ? [] : .copy }
 
     override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if let o = object(sender) {
+            onObjectDrop?(o)
+            return true
+        }
         let u = urls(sender)
         guard !u.isEmpty else { return false }
         onDrop?(u)
@@ -276,6 +288,9 @@ final class DocumentAreaViewController: NSViewController {
             for u in urls {
                 do { try self.workspace.openFile(u) } catch { self.workspace.ui?.showError(error.localizedDescription) }
             }
+        }
+        root.onObjectDrop = { [weak self] parts in
+            self?.workspace.perform("ob.dropOnWorkspace", CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2])]))
         }
         root.onPaste = { [weak self] in
             guard let self, self.workspace.documents.isEmpty else { return }

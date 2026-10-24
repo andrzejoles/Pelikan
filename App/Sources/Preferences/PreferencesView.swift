@@ -196,6 +196,10 @@ struct SQLWindowPane: View {
                 Stepper(value: setting(workspace, \.maximumResultSetMegabytes), in: 16...8192, step: 64) {
                     Text(L10n.tr("Maksymalny rozmiar wyniku: \(workspace.settings.maximumResultSetMegabytes) MB"))
                 }
+                Picker(L10n.tr("Układ liczb"), selection: setting(workspace, \.gridNumberLayout)) {
+                    ForEach(NumberLayout.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
+                Toggle(L10n.tr("Large Data Editor: Auto Format (JSON, XML)"), isOn: setting(workspace, \.largeDataAutoFormat))
             }
             Section(L10n.tr("Statystyki")) {
                 Toggle(L10n.tr("Karta Statystyki: statystyki sesji z każdego wykonania (wymaga dostępu do V$MYSTAT)"), isOn: setting(workspace, \.sqlWindowStatistics))

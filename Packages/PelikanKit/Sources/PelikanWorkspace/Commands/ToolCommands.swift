@@ -3,8 +3,69 @@ import PelikanDB
 
 /// Narzędzia (menu Narzędzia): Find Database Objects, Compile Invalid Objects.
 enum ToolCommands {
+    /// Kryteria Find Database Objects z argumentów; `saved` — zapisane kryteria jako podstawa.
+    @MainActor static func searchCriteria(_ ctx: CommandContext) throws -> DatabaseSearchCriteria {
+        var c = DatabaseSearchCriteria()
+        if let name = ctx.arguments.string("saved") {
+            guard let s = ctx.workspace.settings.savedDatabaseSearches.first(where: { $0.name == name }) else {
+                throw CommandError.invalidArgument("saved", name)
+            }
+            c = s.criteria
+        }
+        if let t = ctx.arguments.string("text") { c.text = t }
+        if let b = ctx.arguments.bool("caseSensitive") { c.caseSensitive = b }
+        if let b = ctx.arguments.bool("wholeWords") { c.wholeWords = b }
+        if let b = ctx.arguments.bool("regex") { c.regularExpression = b }
+        if let o = ctx.arguments.string("owner") {
+            c.owners = o.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }
+        }
+        if let n = ctx.arguments.string("name") { c.nameFilter = n }
+        if let raw = ctx.arguments.string("types") {
+            c.types = try raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }.map {
+                guard let t = DBObjectType(rawValue: $0) else { throw CommandError.invalidArgument("types", $0) }
+                return t
+            }
+        }
+        if let b = ctx.arguments.bool("names") { c.searchNames = b }
+        if let b = ctx.arguments.bool("tableDefinitions") { c.searchTableDefinitions = b }
+        return c
+    }
+
     @MainActor static var all: [Command] {
         [
+            Command(CommandDescriptor(id: "tools.saveObjectSearch", title: L10n.tr("Zapisz kryteria wyszukiwania"), category: .tools,
+                                      parameters: [
+                                          CommandParameter("saveAs", .string, required: true, L10n.tr("Nazwa kryteriów")),
+                                          CommandParameter("text", .string, L10n.tr("Szukany tekst")),
+                                          CommandParameter("caseSensitive", .boolean, L10n.tr("Rozróżniaj wielkość liter")),
+                                          CommandParameter("wholeWords", .boolean, L10n.tr("Całe słowa")),
+                                          CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne (składnia REGEXP_LIKE)")),
+                                          CommandParameter("owner", .string, L10n.tr("Właściciele po przecinku")),
+                                          CommandParameter("name", .string, L10n.tr("Filtr nazw obiektów z %")),
+                                          CommandParameter("types", .string, L10n.tr("Typy po przecinku, np. PACKAGE BODY, VIEW, TABLE, MLE MODULE")),
+                                          CommandParameter("names", .boolean, L10n.tr("Szukaj także w nazwach obiektów (domyślnie tak)")),
+                                          CommandParameter("tableDefinitions", .boolean, L10n.tr("Szukaj w definicjach tabel (kolumny, komentarze, CHECK)")),
+                                      ],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zapisuje kryteria Find Database Objects pod nazwą (zastępuje kryteria o tej samej nazwie)."),
+                                      inMenu: false, feature: "PD-TOOL-001")) { ctx in
+                guard let name = ctx.arguments.string("saveAs")?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
+                    throw CommandError.missingArgument("saveAs")
+                }
+                let c = try searchCriteria(ctx)
+                var list = ctx.workspace.settings.savedDatabaseSearches.filter { $0.name != name }
+                list.append(SavedDatabaseSearch(name: name, criteria: c))
+                ctx.workspace.settings.savedDatabaseSearches = list.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+                return CommandResult(message: L10n.tr("Zapisano kryteria: \(name)"))
+            },
+            Command(CommandDescriptor(id: "tools.deleteObjectSearch", title: L10n.tr("Usuń zapisane kryteria wyszukiwania"), category: .tools,
+                                      parameters: [CommandParameter("saved", .string, required: true, L10n.tr("Nazwa zapisanych kryteriów"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Usuwa zapisane kryteria Find Database Objects."), inMenu: false, feature: "PD-TOOL-001")) { ctx in
+                guard let name = ctx.arguments.string("saved") else { throw CommandError.missingArgument("saved") }
+                ctx.workspace.settings.savedDatabaseSearches.removeAll { $0.name == name }
+                return .ok
+            },
             Command(CommandDescriptor(id: "tools.findObjects", title: L10n.tr("Znajdź obiekty bazy…"), category: .tools,
                                       pd: ["ctrl+shift+o"], mac: ["cmd+shift+o"],
                                       parameters: [
@@ -14,17 +75,16 @@ enum ToolCommands {
                                           CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne (składnia REGEXP_LIKE)")),
                                           CommandParameter("owner", .string, L10n.tr("Właściciel (domyślnie bieżący schemat)")),
                                           CommandParameter("name", .string, L10n.tr("Filtr nazw obiektów z %")),
+                                          CommandParameter("types", .string, L10n.tr("Typy po przecinku, np. PACKAGE BODY, VIEW, TABLE, MLE MODULE")),
+                                          CommandParameter("names", .boolean, L10n.tr("Szukaj także w nazwach obiektów (domyślnie tak)")),
+                                          CommandParameter("tableDefinitions", .boolean, L10n.tr("Szukaj w definicjach tabel (kolumny, komentarze, CHECK)")),
+                                          CommandParameter("saved", .string, L10n.tr("Nazwa zapisanych kryteriów")),
                                       ],
                                       agent: .read, effect: .none,
                                       summary: L10n.tr("Wyszukuje tekst w źródłach PL/SQL, zapytaniach widoków i nazwach obiektów; wynik: obiekt, linia, tekst."),
                                       feature: "PD-TOOL-001"),
                     validate: { $0.metadata() != nil }) { ctx in
-                var c = DatabaseSearchCriteria(text: ctx.arguments.string("text") ?? "")
-                c.caseSensitive = ctx.arguments.bool("caseSensitive") ?? false
-                c.wholeWords = ctx.arguments.bool("wholeWords") ?? false
-                c.regularExpression = ctx.arguments.bool("regex") ?? false
-                if let o = ctx.arguments.string("owner") { c.owners = [o.uppercased()] }
-                c.nameFilter = ctx.arguments.string("name") ?? ""
+                let c = try searchCriteria(ctx)
                 guard !c.text.isEmpty else {
                     ctx.ui?.showFindObjects(c)
                     return .ok

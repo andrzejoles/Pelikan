@@ -115,14 +115,16 @@ extension Workspace {
     }
 
     /// Linie dokumentu (od 1) z punktami przerwania — do znaczników w marginesie.
-    public func breakpointLines(in doc: Document) -> Set<Int> {
+    public func breakpointLines(in doc: Document, onlyUnapplied: Bool = false) -> Set<Int> {
         switch doc.kind {
         case .test:
-            return Set(breakpoints.filter { $0.document == doc.id.raw }.map(\.line))
+            return onlyUnapplied ? [] : Set(breakpoints.filter { $0.document == doc.id.raw }.map(\.line))
         case .program:
             var out = Set<Int>()
             for u in ProgramCompiler.units(in: doc.text) {
-                for bp in breakpoints where bp.unit == u.name && bp.type == u.type { out.insert(u.line + bp.line) }
+                for bp in breakpoints where bp.unit == u.name && bp.type == u.type && (!onlyUnapplied || unappliedBreakpoints.contains(bp.id)) {
+                    out.insert(u.line + bp.line)
+                }
             }
             return out
         default:
