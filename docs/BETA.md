@@ -29,6 +29,8 @@ mogą się zmieniać, a nieznane błędy — zdarzać.
 - Karty okien są własne, w jednym oknie (nie natywne karty macOS); narzędzia nie dokują się swobodnie jak w Windows —
   są kartami lewej kolumny i osobnymi oknami.
 - Bez próby na prawdziwym środowisku: logowanie Entra ID (Azure), Quick Look dla plików SQL (wymaga notaryzacji).
+- Kerberos (sqlnet.ora z KERBEROS5) na macOS: adapter Instant Client koliduje z systemowym Kerberos w aplikacji —
+  Pelikan zgłasza błąd zamiast łączyć; na Linuksie działa. Logowanie hasłem, walletem i przez SSH bez zmian.
 - Wydajność sprawdzona na łączu z opóźnieniem ~50 ms; przy wolniejszym łączu duże eksporty i metadane trwają dłużej.
 
 ## Zgłaszanie błędów
