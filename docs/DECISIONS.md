@@ -1130,3 +1130,21 @@ w wolumenie Dockera, hasła SYS i ORDS_PUBLIC_USER przez stdin, HTTP tylko na 12
 USER_ORDS_ENABLED_OBJECTS ma kolumnę TYPE, nie OBJECT_TYPE — lista obiektów AutoREST kończyła się ORA-00904.
 ORDS buforuje metadane kilka sekund, więc test HTTP czeka na oczekiwany status (do 20 s). Do CI nie dodajemy
 (pobranie 200 MB i obraz JRE w każdym przebiegu); test bez `PELIKAN_TESTDB_ORDS_URL` jest pomijany.
+
+### D-ENV-3 · 2026-10-24 — LDAP: alias rozwiązuje Pelikan, nie adapter Instant Client
+Próba z serwerem OpenLDAP 2.6 (`scripts/testdb.sh ldap-up`: kontener Alpine, własny minimalny schemat
+`orclNetService`/`orclNetDescString` z OID-ami z gałęzi dokumentacyjnej, odczyt anonimowy, bez haseł) pokazała, że
+`sqlplus` z Instant Client rozwiązuje alias przez LDAP, ale ten sam klient w procesie Pelikana — nie. Przyczyna:
+`libclntsh.dylib` jest konsolidowany z płaską przestrzenią nazw, a w każdym procesie z AppKit jest już załadowany
+systemowy LDAP.framework. Część wywołań `ldap_*` adaptera trafia do biblioteki systemowej: wiązanie idzie jako LDAPv2
+(OpenLDAP 2.5+ odrzuca: „historical protocol version requested”), a po wymuszeniu v3 proces kończył się asercją
+`LDAP_VALID(ld)` w `ldap_first_entry` — przy serwerze przyjmującym LDAPv2 (np. starsze OID/AD) groziło to awarią
+aplikacji. Potwierdzone `sqlplus` z `DYLD_INSERT_LIBRARIES` na LDAP.framework (ten sam błąd).
+Na macOS Pelikan rozwiązuje więc bare alias sam, zanim przekaże go klientowi: konfiguracja z `ldap.ora` i
+`sqlnet.ora` (z IFILE) w katalogu połączenia, katalogu Oracle Net Pelikana albo TNS_ADMIN; metody w kolejności
+NAMES.DIRECTORY_PATH (domyślnie `tnsnames, ezconnect, ldap`) — tnsnames.ora, potem LDAP (LDAPv3, wiązanie anonimowe,
+zapytanie bazowe o `cn=alias,cn=OracleContext,<DEFAULT_ADMIN_CONTEXT>`, wyłącznie przez LDAP.framework). Klient dostaje
+gotowy deskryptor, więc jego adapter LDAP nie jest używany. Alias nieznaleziony nigdzie — ORA-12154 od Pelikana
+(nie oddajemy go klientowi, by nie wejść w adapter LDAP); tak samo nazwa hosta bez portu i usługi przy aktywnym LDAP.
+Nie obsługujemy wiązania portfelem (NAMES.LDAP_AUTHENTICATE_BIND), LDAPS ani NAMES.DEFAULT_DOMAIN; połączenie przez
+portfel SEPS (`/@alias`) przekazuje alias dosłownie. Na Linuksie (tylko testy CI) zostaje adapter klienta — bez próby.

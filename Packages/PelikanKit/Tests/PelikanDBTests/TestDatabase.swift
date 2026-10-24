@@ -40,15 +40,20 @@ enum TestDatabase {
         guard isLocal || env["CI"] != nil else {
             fatalError("Testy łączą się tylko z lokalną bazą testową, nie z \(host)")
         }
-        // Portfel testowy (scripts/testdb.sh wallet): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN procesu testów —
-        // ustawiany przed pierwszym połączeniem (klient czyta konfigurację raz). Bez portfela — bez zmian.
+        // Portfel testowy (scripts/testdb.sh wallet) i LDAP (ldap-up): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN
+        // procesu testów — ustawiany przed pierwszym połączeniem (klient czyta konfigurację raz). Bez nich — bez zmian.
         if let file = envFile() {
             let state = (file as NSString).deletingLastPathComponent
-            if FileManager.default.fileExists(atPath: state + "/wallet/cwallet.sso"),
+            let fm = FileManager.default
+            let wallet = fm.fileExists(atPath: state + "/wallet/cwallet.sso")
+            let ldap = fm.fileExists(atPath: state + "/oracle-net-user/ldap.ora")
+            if wallet || ldap,
                let dir = try? OracleNet.prepareManagedDirectory(URL(fileURLWithPath: state + "/oracle-net"), userDirectory: state + "/oracle-net-user",
-                                                               walletDirectory: state + "/wallet") {
+                                                               walletDirectory: wallet ? state + "/wallet" : nil) {
                 setenv("TNS_ADMIN", dir, 1)
-                walletReady = true
+                walletReady = wallet
+                ldapReady = ldap
+                oracleNetDirectory = dir
             }
         }
         return Config(connectString: "\(host):\(port)/\(service)", user: user, password: password,
@@ -80,6 +85,11 @@ enum TestDatabase {
     /// Portfel SEPS bazy testowej przygotowany (scripts/testdb.sh wallet).
     nonisolated(unsafe) static var walletReady = false
     static var isWalletAvailable: Bool { isAvailable && walletReady }
+
+    /// Nazewnictwo katalogowe przygotowane (scripts/testdb.sh ldap-up): ldap.ora i sqlnet.ora w katalogu użytkownika.
+    nonisolated(unsafe) static var ldapReady = false
+    nonisolated(unsafe) static var oracleNetDirectory: String?
+    static var isLDAPAvailable: Bool { isAvailable && ldapReady }
 
     static func connect(agent: Bool = false, tags: SessionTags = SessionTags(module: "Pelikan tests")) async throws -> ODPISession {
         guard let c = config else { throw DatabaseError.driverUnavailable("Brak konfiguracji bazy testowej (scripts/testdb.sh up)") }

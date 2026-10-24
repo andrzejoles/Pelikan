@@ -11,6 +11,7 @@
 #         scripts/testdb.sh ssh-down usuwa kontener SSH
 #         scripts/testdb.sh owm      instaluje Workspace Manager (WMSYS) i przestrzeń DEV_PELIKAN_WS (PD-CONN-009)
 #         scripts/testdb.sh ords-up  ORDS (tylko testy) w kontenerze z JRE, HTTP 127.0.0.1:8181 (SD-ORDS-001); ords-down
+#         scripts/testdb.sh ldap-up  OpenLDAP z aliasem dev_pelikan_ldap, ldap.ora i sqlnet.ora w .testdb/oracle-net-user (PD-CONN-013); ldap-down
 #
 # Hasła: losowe przy pierwszym `up`, w .testdb/env (poza repozytorium, 0600). Port tylko na 127.0.0.1.
 # Testy łączą się WYŁĄCZNIE z tą bazą (PELIKAN_TESTDB_*); żadnych innych baz (docs/PROMPT.md §9, §13).
@@ -423,7 +424,57 @@ ords_up() {
     echo "ORDS gotowy: http://127.0.0.1:${ORDS_PORT}/ords → ${NAME}/FREEPDB1" >&2
 }
 
+LDAP_NAME="${PELIKAN_TESTDB_LDAP_CONTAINER:-pelikan-testdb-ldap}"
+LDAP_PORT="${PELIKAN_TESTDB_LDAP_PORT:-1389}"
+
+# Nazewnictwo katalogowe (PD-CONN-013): OpenLDAP z własnym minimalnym schematem Oracle Net (scripts/testdb/ldap),
+# alias DEV_PELIKAN_LDAP → baza testowa; po stronie klienta ldap.ora i sqlnet.ora (NAMES.DIRECTORY_PATH z LDAP)
+# w .testdb/oracle-net-user — katalogu użytkownika, który Pelikan dołącza do swojego katalogu Oracle Net. Bez haseł:
+# odczyt anonimowy, wpisy ładowane przez slapadd przy starcie kontenera.
+ldap_up() {
+    load_env
+    local image=pelikan-test-ldap:1 dir="$STATE/ldap" net="$STATE/oracle-net-user"
+    docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/ldap" >/dev/null
+    mkdir -p "$dir" "$net"
+    cat > "$dir/pelikan.ldif" <<LDIF
+dn: dc=pelikan,dc=test
+objectClass: dcObject
+objectClass: organization
+dc: pelikan
+o: Pelikan test
+
+dn: cn=OracleContext,dc=pelikan,dc=test
+objectClass: orclContext
+cn: OracleContext
+
+dn: cn=dev_pelikan_ldap,cn=OracleContext,dc=pelikan,dc=test
+objectClass: orclNetService
+cn: dev_pelikan_ldap
+orclNetDescString: (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${PELIKAN_TESTDB_HOST:-127.0.0.1})(PORT=${PELIKAN_TESTDB_PORT:-$PORT}))(CONNECT_DATA=(SERVICE_NAME=${PELIKAN_TESTDB_SERVICE:-FREEPDB1})))
+LDIF
+    docker rm -f "$LDAP_NAME" >/dev/null 2>&1 || true
+    docker run -d --name "$LDAP_NAME" -p "127.0.0.1:${LDAP_PORT}:389" -v "$dir:/ldif:ro" "$image" >/dev/null
+    for _ in $(seq 1 30); do
+        docker exec "$LDAP_NAME" ldapsearch -x -H ldap://127.0.0.1 -b "cn=OracleContext,dc=pelikan,dc=test" "(cn=dev_pelikan_ldap)" cn 2>/dev/null \
+            | grep -q '^cn: dev_pelikan_ldap' && break
+        sleep 1
+    done
+    printf 'DIRECTORY_SERVERS=(127.0.0.1:%s)\nDEFAULT_ADMIN_CONTEXT="dc=pelikan,dc=test"\nDIRECTORY_SERVER_TYPE=OID\n' "$LDAP_PORT" > "$net/ldap.ora"
+    # TNSNAMES przed LDAP (portfel SEPS z tnsnames.ora), EZCONNECT na końcu — przy zatrzymanym LDAP odmowa połączenia
+    # na 127.0.0.1 jest natychmiastowa.
+    printf 'NAMES.DIRECTORY_PATH=(TNSNAMES, LDAP, EZCONNECT)\n' > "$net/sqlnet.ora"
+    echo "LDAP gotowy: ldap://127.0.0.1:${LDAP_PORT}, alias dev_pelikan_ldap → ${PELIKAN_TESTDB_HOST:-127.0.0.1}:${PELIKAN_TESTDB_PORT:-$PORT}" >&2
+}
+
+ldap_down() {
+    docker rm -f "$LDAP_NAME" >/dev/null 2>&1 || true
+    rm -f "$STATE/oracle-net-user/ldap.ora" "$STATE/oracle-net-user/sqlnet.ora"
+    echo "Usunięto ${LDAP_NAME} i konfigurację LDAP klienta" >&2
+}
+
 case "${1:-}" in
+    ldap-up) ldap_up ;;
+    ldap-down) ldap_down ;;
     ords-up) ords_up ;;
     ords-down) docker rm -f "$ORDS_NAME" >/dev/null 2>&1; echo "Usunięto ${ORDS_NAME} (ORDS zostaje w bazie)" ;;
     owm) install_owm ;;
