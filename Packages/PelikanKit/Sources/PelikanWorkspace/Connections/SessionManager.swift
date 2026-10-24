@@ -46,9 +46,15 @@ public protocol ConnectionPrompter: AnyObject {
     /// Nowe hasło po ORA-28001 (nil = anulowano).
     func askNewPassword(for connection: ConnectionDefinition, message: String) async -> String?
     func authenticateOwner(reason: String) async -> Bool
+    /// Nowe hasło przy zmianie z menu (PD-CONN-017; nil = anulowano).
+    func askPasswordChange(for connection: ConnectionDefinition) async -> String?
 }
 
 extension ConnectionPrompter {
+    public func askPasswordChange(for connection: ConnectionDefinition) async -> String? {
+        await askNewPassword(for: connection, message: L10n.tr("Zmiana hasła użytkownika \(connection.target.user)."))
+    }
+
     /// Potwierdzenie właściciela Maca (Touch ID albo hasło) przed użyciem zapisanego hasła (D56). Domyślnie odmowa —
     /// prompter bez tej funkcji nie odblokuje zapisanych haseł, gdy ochrona jest włączona.
     public func authenticateOwner(reason: String) async -> Bool { false }
@@ -160,6 +166,25 @@ public final class SessionManager {
     // MARK: Sesje
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
+
+    /// Zmiana hasła użytkownika połączenia w otwartej sesji głównej (PD-CONN-017): OCIPasswordChange, nowe hasło
+    /// w pamięci sesji i — gdy definicja zapisuje hasło — w Pęku kluczy. false — anulowano.
+    public func changePassword(_ id: UUID) async throws -> Bool {
+        guard let def = store.connection(id), let s = sessions[SessionKey(connectionID: id, purpose: .main)] else { throw CommandError.notConnected }
+        guard !def.target.usesExternalCredentials else {
+            throw CommandError.notAvailable(L10n.tr("Połączenie bez hasła (wallet, Kerberos, uwierzytelnianie zewnętrzne)"))
+        }
+        var old = sessionPasswords[id] ?? store.sessionPassword(for: id)
+        if old == nil {
+            guard let answer = await prompter?.askPassword(for: def, reason: L10n.tr("Podaj bieżące hasło")) else { return false }
+            old = answer.password
+        }
+        guard let old, let new = await prompter?.askPasswordChange(for: def) else { return false }
+        try await s.changePassword(user: def.target.user, oldPassword: old, newPassword: new)
+        sessionPasswords[id] = new
+        if def.savePassword { try store.rememberPassword(new, for: id) }
+        return true
+    }
 
     /// Klucze otwartych sesji o danym przeznaczeniu (np. wszystkie sesje jednej sesji agenta).
     public func keys(purpose: SessionPurpose) -> [SessionKey] { sessions.keys.filter { $0.purpose == purpose } }

@@ -286,6 +286,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showObjectBrowser() {
+        mainWindow?.sidebarController.select(pane: SidebarViewController.objectBrowserPane)
+    }
+
     func showFileBrowser() {
         mainWindow?.sidebarController.select(pane: SidebarViewController.fileBrowserPane)
     }

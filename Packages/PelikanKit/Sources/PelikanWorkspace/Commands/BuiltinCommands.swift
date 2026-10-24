@@ -9,6 +9,11 @@ public enum BuiltinCommands {
         file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
     }
 
+    /// Połączenie aktywnego okna, inaczej główne — dla zmiany hasła.
+    @MainActor static func passwordConnection(_ ws: Workspace) -> UUID? {
+        ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
+    }
+
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
                                     feature: String) -> Command {
         Command(CommandDescriptor(
@@ -503,9 +508,14 @@ public enum BuiltinCommands {
                 await ws.sessions.close(key)
                 return CommandResult(message: L10n.tr("Sesja \(id.sid) zakończona"))
             },
-            .planned(CommandDescriptor(id: "session.setPassword", title: L10n.tr("Zmień hasło…"), category: .session,
-                                       agent: .none, effect: .settings, summary: L10n.tr("Zmienia hasło w bazie i w definicji połączenia."),
-                                       stage: 1, feature: "PD-CONN-017")),
+            Command(CommandDescriptor(id: "session.setPassword", title: L10n.tr("Zmień hasło…"), category: .session,
+                                      agent: .none, effect: .settings, summary: L10n.tr("Zmienia hasło w bazie (bez tekstu SQL) i w Pęku kluczy, jeśli połączenie je zapisuje."),
+                                      feature: "PD-CONN-017"),
+                    validate: { ws in passwordConnection(ws).map { ws.sessions.existingSession(SessionKey(connectionID: $0, purpose: .main)) != nil } ?? false }) { ctx in
+                guard let id = passwordConnection(ctx.workspace) else { throw CommandError.notConnected }
+                guard try await ctx.workspace.sessions.changePassword(id) else { throw CommandError.cancelledByUser }
+                return CommandResult(message: L10n.tr("Hasło zmienione"))
+            },
             Command(CommandDescriptor(id: "session.sqlTrace", title: L10n.tr("SQL Trace"), category: .session,
                                       agent: .none, effect: .settings, summary: L10n.tr("Włącza lub wyłącza SQL Trace sesji okna."),
                                       feature: "PD-OPT-008"),
@@ -561,9 +571,12 @@ public enum BuiltinCommands {
                 ctx.workspace.settings.showCodeContents.toggle()
                 return .ok
             },
-            .planned(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
-                                       agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje lub ukrywa Przeglądarkę obiektów."),
-                                       stage: 2, feature: "PD-OB-001")),
+            Command(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje Przeglądarkę obiektów w lewej kolumnie."),
+                                      feature: "PD-OB-001")) { ctx in
+                ctx.ui?.showObjectBrowser()
+                return .ok
+            },
         ]
     }
 

@@ -4397,6 +4397,34 @@
         }
       }
     },
+    "Bez rozróżniania wielkości liter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Case-insensitive"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groß-/Kleinschreibung ignorieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin distinguir mayúsculas y minúsculas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без урахування регістру"
+          }
+        }
+      }
+    },
     "Bez scalania widoku" : {
       "localizations" : {
         "en" : {
@@ -10833,6 +10861,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datumswerte"
+          }
+        }
+      }
+    },
+    "Daty bez czasu (porównanie dnia)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dates without time (compare the day)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum ohne Uhrzeit (Tag vergleichen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechas sin hora (comparar el día)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дати без часу (порівняння дня)"
           }
         }
       }
@@ -20325,6 +20381,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort abgelaufen — %@"
+          }
+        }
+      }
+    },
+    "Hasło zmienione" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password changed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort geändert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraseña cambiada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль змінено"
           }
         }
       }
@@ -37773,6 +37857,34 @@
         }
       }
     },
+    "Nowe hasło użytkownika %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New password for user %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Passwort für Benutzer %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva contraseña del usuario %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий пароль користувача %@."
+          }
+        }
+      }
+    },
     "Nowe narzędzie" : {
       "localizations" : {
         "en" : {
@@ -45277,6 +45389,34 @@
         }
       }
     },
+    "Otwiera program w oknie programu; tabelę, sekwencję, synonim, indeks, użytkownika i rolę w edytorze; pozostałe obiekty jako DDL." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a program in the program window; a table, sequence, synonym, index, user or role in its editor; other objects as DDL."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein Programm im Programmfenster; Tabelle, Sequenz, Synonym, Index, Benutzer und Rolle im Editor; andere Objekte als DDL."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre un programa en la ventana de programa; tabla, secuencia, sinónimo, índice, usuario y rol en su editor; los demás objetos como DDL."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває програму у вікні програми; таблицю, послідовність, синонім, індекс, користувача й роль — у редакторі; інші об’єкти — як DDL."
+          }
+        }
+      }
+    },
     "Otwiera projekt z pliku." : {
       "localizations" : {
         "en" : {
@@ -45553,34 +45693,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet die Programmquelle (oder DDL eines anderen Objekts) in einem neuen Fenster, ohne Kompilierung; Rückgängigmachen der Agentensitzung schließt das Fenster."
-          }
-        }
-      }
-    },
-    "Otwiera źródło programu w oknie programu, widok w oknie SQL, pozostałe — DDL." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens program source in a Program Window, a view in a SQL Window, others — DDL."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відкриває джерело програми в Program Window, подання — в SQL Window, решту — як DDL."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre el código fuente del programa en una Program Window, una vista en una SQL Window y el resto como DDL."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet die Programmquelle im Program Window, eine View im SQL Window, alles andere als DDL."
           }
         }
       }
@@ -49057,6 +49169,34 @@
         }
       }
     },
+    "Podaj bieżące hasło" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter the current password"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelles Passwort eingeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Introduzca la contraseña actual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть поточний пароль"
+          }
+        }
+      }
+    },
     "Podaj hasło użytkownika bazy." : {
       "localizations" : {
         "en" : {
@@ -50205,6 +50345,34 @@
         }
       }
     },
+    "Pokazuje Przeglądarkę obiektów w lewej kolumnie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the Object Browser in the left column."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt den Objekt-Browser in der linken Spalte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra el explorador de objetos en la columna izquierda."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує браузер об’єктів у лівій колонці."
+          }
+        }
+      }
+    },
     "Pokazuje Przeglądarkę plików w lewej kolumnie (lokalizacje, drzewo plików, filtr, stan Git)." : {
       "localizations" : {
         "en" : {
@@ -50313,34 +50481,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blendet versteckte Dateien und Verzeichnisse im File Browser ein oder aus."
-          }
-        }
-      }
-    },
-    "Pokazuje lub ukrywa Przeglądarkę obiektów." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows or hides the Object Browser."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показує або приховує Object Browser."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Muestra u oculta el Object Browser."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blendet den Object Browser ein oder aus."
           }
         }
       }
@@ -53621,6 +53761,34 @@
         }
       }
     },
+    "Potwierdzaj polecenia zmieniające na połączeniach produkcyjnych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm modifying statements on production connections"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ändernde Anweisungen auf Produktionsverbindungen bestätigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmar sentencias que modifican en conexiones de producción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підтверджувати змінні команди на робочих (production) з’єднаннях"
+          }
+        }
+      }
+    },
     "Potwierdzaj rekompilację" : {
       "localizations" : {
         "en" : {
@@ -54625,6 +54793,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung"
+          }
+        }
+      }
+    },
+    "Połączenie bez hasła (wallet, Kerberos, uwierzytelnianie zewnętrzne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection without a password (wallet, Kerberos, external authentication)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung ohne Passwort (Wallet, Kerberos, externe Authentifizierung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexión sin contraseña (wallet, Kerberos, autenticación externa)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З’єднання без пароля (wallet, Kerberos, зовнішня автентифікація)"
           }
         }
       }
@@ -68821,6 +69017,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Текст (типово — виділення або слово під курсором)"
+          }
+        }
+      }
+    },
+    "Tekst bez symboli wieloznacznych jako „zawiera”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text without wildcards as “contains”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text ohne Platzhalter als „enthält“"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sin comodines como «contiene»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст без символів підстановки як «містить»"
           }
         }
       }
@@ -96293,6 +96517,34 @@
         }
       }
     },
+    "Zmiana hasła użytkownika %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changing the password of user %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwortänderung für Benutzer %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambio de contraseña del usuario %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміна пароля користувача %@."
+          }
+        }
+      }
+    },
     "Zmiana nazwy %@ na %@" : {
       "localizations" : {
         "en" : {
@@ -96657,30 +96909,30 @@
         }
       }
     },
-    "Zmienia hasło w bazie i w definicji połączenia." : {
+    "Zmienia hasło w bazie (bez tekstu SQL) i w Pęku kluczy, jeśli połączenie je zapisuje." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Changes the password in the database and in the connection definition."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Змінює пароль у базі та у визначенні з'єднання."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cambia la contraseña en la base de datos y en la definición de la conexión."
+            "value" : "Changes the password in the database (no SQL text) and in the Keychain if the connection saves it."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ändert das Passwort in der Datenbank und in der Verbindungsdefinition."
+            "value" : "Ändert das Passwort in der Datenbank (ohne SQL-Text) und im Schlüsselbund, wenn die Verbindung es speichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia la contraseña en la base de datos (sin texto SQL) y en el Llavero si la conexión la guarda."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінює пароль у базі (без тексту SQL) і в Зв’язці ключів, якщо з’єднання його зберігає."
           }
         }
       }
@@ -97437,6 +97689,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort ändern"
+          }
+        }
+      }
+    },
+    "Zmień hasło — %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change password — %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwort ändern — %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar contraseña — %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити пароль — %@"
           }
         }
       }

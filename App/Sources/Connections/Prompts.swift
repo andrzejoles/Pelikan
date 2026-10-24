@@ -36,8 +36,17 @@ final class ConnectionPrompts: ConnectionPrompter {
     }
 
     func askNewPassword(for connection: ConnectionDefinition, message: String) async -> String? {
+        await newPassword(title: L10n.tr("Hasło wygasło — \(connection.displayName)"), message: message)
+    }
+
+    func askPasswordChange(for connection: ConnectionDefinition) async -> String? {
+        await newPassword(title: L10n.tr("Zmień hasło — \(connection.displayName)"),
+                          message: L10n.tr("Nowe hasło użytkownika \(connection.target.user)."))
+    }
+
+    private func newPassword(title: String, message: String) async -> String? {
         let alert = NSAlert()
-        alert.messageText = L10n.tr("Hasło wygasło — \(connection.displayName)")
+        alert.messageText = title
         alert.informativeText = message + "\n" + L10n.tr("Podaj nowe hasło (dwa razy).")
         let first = NSSecureTextField(frame: NSRect(x: 0, y: 30, width: 300, height: 24))
         let second = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))

@@ -9,7 +9,8 @@ import Synchronization
 /// funkcje spoza `capabilities` są w interfejsie wyszarzone z podpowiedzią „przełącz na Instant Client”.
 public struct ThinDriver: DatabaseDriver {
     public let kind = DriverKind.thin
-    public static let capabilitySet: DriverCapabilities = [.lobs, .proxyUser, .sysdba, .json, .tnsNames, .dbmsDebugJDWP]
+    // Bez debugowania: DBMS_DEBUG wymaga Instant Client, JDWP pominięte (D106).
+    public static let capabilitySet: DriverCapabilities = [.lobs, .proxyUser, .sysdba, .json, .tnsNames]
     public var capabilities: DriverCapabilities { Self.capabilitySet }
 
     public init() {}

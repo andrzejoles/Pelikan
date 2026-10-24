@@ -142,6 +142,8 @@ public protocol UIServices: AnyObject {
     func clipboardText() -> String?
     /// Pokazuje File Browser w lewej kolumnie (UG 22).
     func showFileBrowser()
+    /// Karta Obiekty lewej kolumny (Przeglądarka obiektów, PD-OB-001).
+    func showObjectBrowser()
     /// Wybór katalogu (lokalizacja File Browsera); nil — anulowano.
     func chooseDirectory() async -> URL?
     /// Bieżący układ okna głównego (nil — brak okna).
@@ -242,6 +244,7 @@ extension UIServices {
     }
     public func showTemplateWindow() {}
     public func showFileBrowser() {}
+    public func showObjectBrowser() {}
     public func chooseDirectory() async -> URL? { nil }
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
