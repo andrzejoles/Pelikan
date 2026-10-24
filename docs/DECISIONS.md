@@ -1114,7 +1114,7 @@ jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, 
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
 
-### D-ENV-1 · 2026-10-24 — Workspace Manager w bazie testowej
+### D156 · 2026-10-24 — Workspace Manager w bazie testowej
 Obraz Oracle Free 26ai (23.26.3) nie ma zainstalowanego Workspace Managera (brak WMSYS i DBMS_WM), ale ma jego skrypty
 w `ORACLE_HOME/rdbms/admin`. `scripts/testdb.sh owm` uruchamia `owminst.plb` w PDB testowej (ok. 40 s, raz), nadaje
 użytkownikowi testowemu WM_ADMIN_ROLE i tworzy przestrzeń DEV_PELIKAN_WS jego własnym wywołaniem — `GrantSystemPriv`
@@ -1122,7 +1122,7 @@ jako SYS kończy się ORA-06598 (pakiet WMSYS z prawami wywołującego). Test PD
 z przestrzenią i sprawdza `DBMS_WM.GetWorkspace`; bez instalacji OWM test nie ma czego sprawdzić i kończy się od razu.
 Krok jest tani, więc CI wykonuje go po `seed`.
 
-### D-ENV-2 · 2026-10-24 — ORDS na żywo tylko w testach
+### D157 · 2026-10-24 — ORDS na żywo tylko w testach
 ORDS (publiczne `ords-latest.zip`, bez konta) jest pobierany do `.testdb/` i uruchamiany samodzielnie w kontenerze
 z JRE (`eclipse-temurin:21-jre`) w sieci Docker bazy testowej; schemat ORDS instalowany w PDB testowej, konfiguracja
 w wolumenie Dockera, hasła SYS i ORDS_PUBLIC_USER przez stdin, HTTP tylko na 127.0.0.1 (`scripts/testdb.sh ords-up`,
@@ -1131,7 +1131,7 @@ USER_ORDS_ENABLED_OBJECTS ma kolumnę TYPE, nie OBJECT_TYPE — lista obiektów 
 ORDS buforuje metadane kilka sekund, więc test HTTP czeka na oczekiwany status (do 20 s). Do CI nie dodajemy
 (pobranie 200 MB i obraz JRE w każdym przebiegu); test bez `PELIKAN_TESTDB_ORDS_URL` jest pomijany.
 
-### D-ENV-3 · 2026-10-24 — LDAP: alias rozwiązuje Pelikan, nie adapter Instant Client
+### D158 · 2026-10-24 — LDAP: alias rozwiązuje Pelikan, nie adapter Instant Client
 Próba z serwerem OpenLDAP 2.6 (`scripts/testdb.sh ldap-up`: kontener Alpine, własny minimalny schemat
 `orclNetService`/`orclNetDescString` z OID-ami z gałęzi dokumentacyjnej, odczyt anonimowy, bez haseł) pokazała, że
 `sqlplus` z Instant Client rozwiązuje alias przez LDAP, ale ten sam klient w procesie Pelikana — nie. Przyczyna:
@@ -1149,7 +1149,7 @@ gotowy deskryptor, więc jego adapter LDAP nie jest używany. Alias nieznalezion
 Nie obsługujemy wiązania portfelem (NAMES.LDAP_AUTHENTICATE_BIND), LDAPS ani NAMES.DEFAULT_DOMAIN; połączenie przez
 portfel SEPS (`/@alias`) przekazuje alias dosłownie. Na Linuksie (tylko testy CI) zostaje adapter klienta — bez próby.
 
-### D-ENV-4 · 2026-10-24 — Kerberos: KDC w kontenerze, na macOS blokada zamiast awarii
+### D159 · 2026-10-24 — Kerberos: KDC w kontenerze, na macOS blokada zamiast awarii
 `scripts/testdb.sh kdc-up` uruchamia KDC MIT (Alpine, realm PELIKAN.TEST, klucze losowe, główne hasło tylko w pliku
 stash w kontenerze), dodaje principal usługi `oracle/<nazwa hosta kontenera bazy>` (klient Oracle prosi o bilet dla
 nazwy hosta serwera, nie hosta z deskryptora — `oracle/localhost` nie wystarczał), kopiuje tablicę kluczy do kontenera
@@ -1161,7 +1161,7 @@ jako klient — łącze bazy danych do siebie (test PD-OB-019) i sqlplus w konte
 skryptu używają w tym czasie `/opt/oracle/client-net` bez Kerberos.
 Wynik: `sqlplus` z Instant Client dla macOS loguje się jako DEV_KRB, ale ten sam klient w procesie Pelikana (i każdym
 procesie z AppKit) kończy się SIGABRT (ORA-24550) — także przy logowaniu hasłem, gdy sqlnet.ora włącza KERBEROS5.
-Przyczyna jak w D-ENV-3: `libclntsh.dylib` z płaską przestrzenią nazw i systemowy Kerberos.framework (ładowany przez
+Przyczyna jak w D158: `libclntsh.dylib` z płaską przestrzenią nazw i systemowy Kerberos.framework (ładowany przez
 AppKit) eksportujący te same funkcje `krb5_*`; potwierdzone `sqlplus` z `DYLD_INSERT_LIBRARIES` na Kerberos.framework.
 W procesie aplikacji nie da się tego obejść (framework jest załadowany przed `libclntsh`); wymagałoby to osobnego
 procesu pomocniczego bez AppKit dla sesji OCI. Do tego czasu Pelikan na macOS przed połączeniem sprawdza

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Nazewnictwo katalogowe Oracle Net (LDAP, PD-CONN-013): konfiguracja z `ldap.ora` i `sqlnet.ora` katalogu TNS_ADMIN
-/// oraz kolejność metod rozwiązywania nazw. Samo zapytanie do serwera wykonuje sterownik (D-ENV-3).
+/// oraz kolejność metod rozwiązywania nazw. Samo zapytanie do serwera wykonuje sterownik (D158).
 public enum DirectoryNaming {
     public struct Server: Sendable, Equatable {
         public var host: String

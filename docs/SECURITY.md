@@ -67,10 +67,10 @@
 - Nazewnictwo katalogowe (LDAP, PD-CONN-013): na macOS Pelikan sam pyta katalog o deskryptor aliasu — wiązanie
   anonimowe LDAPv3 bez poświadczeń, tylko odczyt atrybutu `orclNetDescString`, limit czasu 5 s na połączenie i 10 s na
   zapytanie. Wiązanie uwierzytelnione portfelem (`NAMES.LDAP_AUTHENTICATE_BIND`) i LDAPS nie są obsługiwane; Pelikan
-  nie przechowuje żadnych haseł katalogu. Deskryptor z katalogu jest traktowany jak wpis tnsnames.ora (D-ENV-3).
+  nie przechowuje żadnych haseł katalogu. Deskryptor z katalogu jest traktowany jak wpis tnsnames.ora (D158).
 - Kerberos (PD-CONN-014): Pelikan nie pobiera ani nie przechowuje biletów — klient Oracle czyta pamięć podręczną biletów
   wskazaną w sqlnet.ora użytkownika (SQLNET.KERBEROS5_CC_NAME). Na macOS połączenie z KERBEROS5 w
-  SQLNET.AUTHENTICATION_SERVICES jest blokowane czytelnym błędem, bo adapter Instant Client przerwałby proces (D-ENV-4).
+  SQLNET.AUTHENTICATION_SERVICES jest blokowane czytelnym błędem, bo adapter Instant Client przerwałby proces (D159).
   Środowisko testowe: KDC w kontenerze, klucze losowe, tablice kluczy i bilety tylko w `.testdb/` (poza repozytorium).
 
 ### 4.1 Pierwotny opis (Etap 0)

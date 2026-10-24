@@ -6,7 +6,7 @@ import Testing
 
 /// PD-CONN-014 z KDC MIT (scripts/testdb.sh kdc-up): uwierzytelnianie zewnętrzne (`/`) biletem Kerberos z pamięci
 /// podręcznej wskazanej w sqlnet.ora użytkownika (dołączonym do katalogu Oracle Net Pelikana), bez hasła w Pelikanie.
-/// Na macOS adapter Kerberos Instant Client nie działa w procesie z Kerberos.framework (D-ENV-4) — test na żywo
+/// Na macOS adapter Kerberos Instant Client nie działa w procesie z Kerberos.framework (D159) — test na żywo
 /// uruchamia `scripts/testdb.sh kdc-linux` (Instant Client dla Linuksa, jak w CI).
 @MainActor
 @Suite("Kerberos na bazie testowej", .enabled(if: TestDatabase.isKerberosAvailable), .serialized)

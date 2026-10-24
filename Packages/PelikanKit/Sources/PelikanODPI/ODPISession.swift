@@ -59,7 +59,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory,
                                                                walletDirectory: target.walletDirectory, keepAlias: resolved.externalAuth)
         // Nazewnictwo katalogowe: alias rozwiązany przez Pelikana, nie adapter LDAP klienta (płaska przestrzeń nazw
-        // libclntsh na macOS miesza go z LDAP.framework — D-ENV-3). Magazyn haseł potrzebuje dosłownego aliasu.
+        // libclntsh na macOS miesza go z LDAP.framework — D158). Magazyn haseł potrzebuje dosłownego aliasu.
         let netDirectories = [target.configDirectory, configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"]].compactMap { $0 }
         try DirectoryLookup.checkKerberos(directories: [configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"],
                                                         env.libraryDirectory.map { $0 + "/network/admin" }].compactMap { $0 })

@@ -504,7 +504,7 @@ KDC_PORT="${PELIKAN_TESTDB_KDC_PORT:-1088}"
 # Kerberos (PD-CONN-014): KDC MIT w kontenerze (scripts/testdb/kdc), realm PELIKAN.TEST. Serwer bazy: tablica kluczy
 # usługi (sqlnet.ora z KERBEROS5 dopiero w kdc-linux); użytkownik DEV_KRB IDENTIFIED EXTERNALLY AS 'dev_krb@PELIKAN.TEST'.
 # Klient: pamięć podręczna biletów (TGT i bilet usługi z kinit -k w KDC, bez haseł) i krb5.conf w .testdb/kerberos,
-# sqlnet.ora klienta z parametrami Kerberos w .testdb/kerberos/net (użycie: kdc-linux; na macOS zob. D-ENV-4).
+# sqlnet.ora klienta z parametrami Kerberos w .testdb/kerberos/net (użycie: kdc-linux; na macOS zob. D159).
 # KERBEROS5 w sqlnet.ora serwera tylko na czas testu: ten plik czytają też procesy serwera jako klient (łącza bazy
 # danych, sqlplus w kontenerze) i bez biletów kończą się ORA-12641 (np. test łącza-pętli PD-OB-019).
 krb_server_on() {
@@ -576,7 +576,7 @@ END;
 GRANT CREATE SESSION TO DEV_KRB;
 SQL
     # Konfiguracja klienta osobno w .testdb/kerberos/net: Instant Client dla macOS nie może jej używać w procesie
-    # z Kerberos.framework (D-ENV-4) — w katalogu użytkownika zablokowałaby wszystkie testy bazy na macOS.
+    # z Kerberos.framework (D159) — w katalogu użytkownika zablokowałaby wszystkie testy bazy na macOS.
     mkdir -p "$k/net"
     krb_client_sqlnet "$k" > "$k/net/sqlnet.ora"
     grep -q '^PELIKAN_TESTDB_KERBEROS_USER=' "$ENVFILE" || echo "PELIKAN_TESTDB_KERBEROS_USER=DEV_KRB" >> "$ENVFILE"

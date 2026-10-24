@@ -1,7 +1,7 @@
 import Foundation
 import PelikanDB
 
-/// Rozwiązywanie aliasów przez katalog LDAP przed przekazaniem ich klientowi Oracle (PD-CONN-013, D-ENV-3).
+/// Rozwiązywanie aliasów przez katalog LDAP przed przekazaniem ich klientowi Oracle (PD-CONN-013, D158).
 ///
 /// `libclntsh.dylib` z Instant Client dla macOS jest konsolidowany z płaską przestrzenią nazw. W procesie z AppKit
 /// systemowy LDAP.framework jest już załadowany, więc część wywołań `ldap_*` adaptera LDAP klienta Oracle trafia
@@ -33,7 +33,7 @@ enum DirectoryLookup {
 #endif
     }
 
-    /// Kerberos w Instant Client dla macOS (PD-CONN-014, D-ENV-4): adapter KERBEROS5 `libclntsh` (płaska przestrzeń
+    /// Kerberos w Instant Client dla macOS (PD-CONN-014, D159): adapter KERBEROS5 `libclntsh` (płaska przestrzeń
     /// nazw) miesza swoje funkcje `krb5_*` z systemowym Kerberos.framework, który każdy proces z AppKit ma załadowany —
     /// proces kończy się SIGABRT (ORA-24550) przy pierwszym połączeniu, także hasłem, gdy sqlnet.ora włącza KERBEROS5.
     /// Zamiast awarii aplikacji — czytelny błąd. Bez Kerberos.framework w procesie (np. narzędzia CLI) nic nie blokuje.
