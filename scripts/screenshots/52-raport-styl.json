@@ -1,0 +1,1 @@
+[{"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/pensje.rep"}, "delay": 2}, {"command": "report.execute", "delay": 4}, {"command": "debug.snapshotWebViews", "args": {"directory": "@OUT@"}, "delay": 1}]

@@ -41,6 +41,13 @@ struct ReportOfflineTests {
         #expect(html.contains("DEPT: 10") && html.contains("DEPT: 20") && !html.contains(">HIRED<"))
         #expect(html.contains(">7450.5</td>") && html.contains(">8250.5</td>"))
         #expect(html.contains("break-after: page"))
+        // Suma końcowa w tabeli ostatniej grupy (wspólne kolumny), nie w osobnej tabeli.
+        #expect(html.components(separatedBy: "<table>").count == 3)
+        #expect(html.range(of: "Razem")!.lowerBound < html.range(of: "</table>", options: .backwards)!.lowerBound)
+        def.pageBreakOnGroup = false
+        let one = ReportRenderer.html(def, data: data, locale: Locale(identifier: "en_US_POSIX"))
+        #expect(one.components(separatedBy: "<table>").count == 2 && one.components(separatedBy: "class=\"break\"").count == 3)
+        #expect(one.contains("<td>Razem</td>") && !one.contains("class=\"group\""))
     }
 
     @Test("Układ formularza i nagłówek ze zmiennymi; zapis i odczyt definicji")

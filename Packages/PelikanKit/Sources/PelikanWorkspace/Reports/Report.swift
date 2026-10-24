@@ -249,12 +249,16 @@ public enum ReportRenderer {
             if let last = groups.last, last.key == key { groups[groups.count - 1].rows.append(r) } else { groups.append((key, [r])) }
         }
         if groups.isEmpty { groups = [([], [])] }
-        for g in groups {
-            body += "<div class=\"group\">\n"
+        // Tabela: jedna dla wszystkich grup — wspólne szerokości kolumn, „Razem” pod tymi samymi kolumnami. Przy nowej
+        // stronie po grupie tabela na grupę (blok `.group` dzielony przy druku), „Razem” w tabeli ostatniej grupy.
+        let single = def.layout == .table && !def.pageBreakOnGroup
+        if single { body += "<table>\n" }
+        for (gi, g) in groups.enumerated() {
+            if !single { body += "<div class=\"group\">\n" }
             if !breaks.isEmpty {
                 let master = breaks.map { "\(heading($0)): \(escape(text(g.key[breaks.firstIndex(of: $0)!], formats[$0], locale: locale)))" }.joined(separator: " · ")
                 if def.layout == .form { body += "<h2>\(master)</h2>\n" }
-                else { body += "<table>\n<tr class=\"break\"><td colspan=\"\(max(1, visible.count))\">\(master)</td></tr>\n" }
+                else { body += (single ? "" : "<table>\n") + "<tr class=\"break\"><td colspan=\"\(max(1, visible.count))\">\(master)</td></tr>\n" }
             }
             if def.layout == .form {
                 for r in g.rows {
@@ -263,17 +267,18 @@ public enum ReportRenderer {
                     body += "</table>\n"
                 }
             } else {
-                if breaks.isEmpty { body += "<table>\n" }
+                if breaks.isEmpty && !single { body += "<table>\n" }
                 body += "<tr>" + visible.map { "<th style=\"text-align:\(align(formats[$0], data.rows.first?[$0]))\">\(heading($0))</th>" }.joined() + "</tr>\n"
                 for r in g.rows { body += "<tr>" + visible.map { cell(r, $0) }.joined() + "</tr>\n" }
                 if !breaks.isEmpty { body += sumRow(g.rows, label: L10n.tr("Suma grupy")) }
-                body += "</table>\n"
+                if !single {
+                    if gi == groups.count - 1 { body += sumRow(data.rows, label: L10n.tr("Razem")) }
+                    body += "</table>\n"
+                }
             }
-            body += "</div>\n"
+            if !single { body += "</div>\n" }
         }
-        if def.layout == .table, !sums.isEmpty, !data.rows.isEmpty {
-            body += "<table>\n" + sumRow(data.rows, label: L10n.tr("Razem")) + "</table>\n"
-        }
+        if single { body += sumRow(data.rows, label: L10n.tr("Razem")) + "</table>\n" }
         if data.truncated { body += "<p class=\"header\">" + escape(L10n.tr("Pokazano pierwsze \(data.rows.count) wierszy.")) + "</p>\n" }
         return "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>\(escape(def.title))</title>\n<style>\n\(css)\n</style></head>\n<body>\n\(body)</body></html>\n"
     }

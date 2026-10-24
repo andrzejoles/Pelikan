@@ -1,0 +1,57 @@
+{
+  "title": "Pensje według działów",
+  "sql": "select d.dname, e.ename, e.job, e.hiredate, e.sal\n  from emp e join dept d on d.deptno = e.deptno\n order by d.dname, e.sal desc",
+  "styleName": "Zielony",
+  "extraCSS": "",
+  "layout": "table",
+  "pageBreakOnGroup": false,
+  "header": "Pensje — #date",
+  "background": "",
+  "connection": "",
+  "locked": false,
+  "maxRows": 10000,
+  "columns": [
+    {
+      "column": "DNAME",
+      "heading": "Dział",
+      "alignment": "automatic",
+      "hidden": false,
+      "sum": false,
+      "breakGroup": true
+    },
+    {
+      "column": "ENAME",
+      "heading": "Pracownik",
+      "alignment": "automatic",
+      "hidden": false,
+      "sum": false,
+      "breakGroup": false
+    },
+    {
+      "column": "JOB",
+      "heading": "Stanowisko",
+      "alignment": "automatic",
+      "hidden": false,
+      "sum": false,
+      "breakGroup": false
+    },
+    {
+      "column": "HIREDATE",
+      "heading": "Zatrudniony",
+      "alignment": "automatic",
+      "dateFormat": "yyyy-MM-dd",
+      "hidden": false,
+      "sum": false,
+      "breakGroup": false
+    },
+    {
+      "column": "SAL",
+      "heading": "Pensja",
+      "alignment": "right",
+      "numberFormat": "#,##0.00",
+      "hidden": false,
+      "sum": true,
+      "breakGroup": false
+    }
+  ]
+}
