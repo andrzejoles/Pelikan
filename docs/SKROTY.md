@@ -117,6 +117,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Brak | 0 | PD-EDIT-009 |
 | Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 0 | PD-EDIT-006 |
 | Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Pełny | 0 | PD-EDIT-020 |
+| Zaznaczenie › Usuń następne słowo | `edit.deleteNextWord` | ⌃⌦ † | ⌃⌥⌦ | Pełny | 0 | PD-EDIT-020 |
+| Zaznaczenie › Pierwszy znak w linii | `edit.firstCharacterOnLine` | ⌥↖ † | ⌃⌥← | Pełny | 0 | PD-EDIT-020 |
 | Zaznaczenie › Wielkie litery | `edit.uppercase` | ⌥⌘U | ⌥⌘U | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Małe litery | `edit.lowercase` | ⌥⇧⌘U | ⌥⇧⌘U | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Zwiększ wcięcie | `edit.indent` | ⌘] | ⌘] | Pełny | 0 | PD-EDIT-005 |
@@ -166,6 +168,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Odczyt | 0 | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Pełny | 0 | PD-CA-010 |
 | Zawartość kodu › Testuj podprogram | `codeContents.test` |  |  | Pełny | 0 | PD-CA-010 |
+| Zawartość kodu › Zaznacz poziom hierarchii kodu | `codeHierarchy.select` |  |  | Pełny | 0 | PD-CA-011 |
+| Zawartość kodu › Przejdź do poziomu hierarchii kodu | `codeHierarchy.goto` |  |  | Pełny | 0 | PD-CA-011 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 0 | PD-EDIT-015 |
@@ -227,6 +231,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
 | Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
 | Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Ukryj edytor | `sql.toggleEditor` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Wysokość wierszy… | `grid.rowHeight` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Zapisz wyrównanie dla zapytania | `grid.saveAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Usuń wyrównanie zapytania | `grid.removeAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Informacje o kolumnie | `grid.columnInfo` |  |  | Brak | 0 | PD-GRID-022 |
@@ -380,6 +386,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Za zgodą | 0 | PD-TOOL-002 |
 | Szablony › Zapisz zaznaczenie jako szablon… | `templates.save` |  |  | Pełny | 0 | PD-TPL-003 |
 | Szablony › Usuń szablon | `templates.delete` |  |  | Za zgodą | 0 | PD-TPL-003 |
+| Szablony › Edytuj szablon… | `templates.edit` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Nowy folder szablonów… | `templates.newFolder` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Zmień nazwę folderu szablonów… | `templates.renameFolder` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Usuń folder szablonów | `templates.deleteFolder` |  |  | Za zgodą | 0 | PD-TPL-003 |
 | Obiekt › Porównaj z aktywnym oknem | `ob.compare` |  |  | Odczyt | 0 | PD-OB-022 |
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |

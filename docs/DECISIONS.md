@@ -990,3 +990,44 @@ punktów: Pelikan po zatrzymaniu wypisuje komunikat (`{zmienna}` → wartość),
 liczy jako `select case when … then 1 else 0 end from dual` z wartościami zmiennych ramki podstawionymi jako literały
 (błąd warunku — zatrzymanie z komunikatem). Punkt odrzucony przez SET_BREAKPOINT ma pusty znacznik. Jedna linia —
 jeden punkt (DBMS_DEBUG trzyma jeden punkt na linię).
+
+### D-P2E-1 · 2026-10-24 — Parametry kompilatora przez ALTER SESSION
+Preferencje kompilatora (PLSQL_WARNINGS, PLSQL_OPTIMIZE_LEVEL, PLSQL_CODE_TYPE, PLSCOPE_SETTINGS, PLSQL_CCFLAGS) są
+ustawiane w sesji kompilacji przed kompilacją okna programu; puste — parametr serwera bez zmian. Wartości przechodzą
+przez filtr znaków (bez apostrofu i średnika — idą do literału), błąd parametru (np. NATIVE bez uprawnień) nie zatrzymuje
+kompilacji. Program Window kompiluje tekst bez podstawiania zmiennych `&` (jak domyślnie wzorzec) — podstawianie jest
+w SQL Window i Command Window.
+
+### D-P2E-2 · 2026-10-24 — Podświetlenia w edytorze: wystąpienia, INSERT ↔ VALUES, polecenia transakcyjne
+Wystąpienia identyfikatora pod kursorem albo zaznaczonego słowa (co najmniej dwa, bez słów kluczowych, literałów i
+komentarzy; nazwa w cudzysłowie — dokładnie) mają żółte tło; para kolumna INSERT ↔ wartość VALUES — tło jak pary
+nawiasów (pozycje po przecinkach najwyższego poziomu, różna liczba elementów — brak pary). COMMIT/ROLLBACK/SAVEPOINT
+tylko na początku polecenia (po `;`, `/`, BEGIN, THEN, ELSE, LOOP…), więc `ON COMMIT` w DDL i `ROLLBACK SEGMENT` się
+nie liczą; tło pomarańczowe. Obie funkcje mają przełącznik w Preferencjach › Edytor.
+
+### D-P2E-3 · 2026-10-24 — Edycja szablonów i foldery
+Edycja szablonu wbudowanego zapisuje szablon użytkownika o tej samej ścieżce (zastępuje wbudowany; usunięcie przywraca
+wbudowany). Zmiana nazwy albo folderu zapisuje nowy plik i usuwa stary. Foldery użytkownika to katalogi w `Templates`
+(także puste); zmiana nazwy folderu nie nadpisuje istniejącego, usunięcie folderu usuwa tylko szablony użytkownika.
+
+### D-P2E-4 · 2026-10-24 — Migawka odzyskiwania przed wykonaniem jako opcja (zmienia D91)
+D91 pominęło migawkę przy każdym wykonaniu. Jest teraz opcją (domyślnie wyłączoną) w Preferencjach › Narzędzia:
+migawka przed F8, kompilacją i wykonaniem okna testu, najwyżej jedna na 5 sekund — seria wykonań nie spowalnia pracy,
+a awaria w trakcie długiego polecenia nie traci niezapisanych okien.
+
+### D-P2E-5 · 2026-10-24 — Wysokość wierszy siatki i ukrycie edytora (zmienia D109)
+„Align › wysokość” ustawia liczbę linii tekstu na wiersz siatki (1–10 albo wg treści z pierwszych 500 wierszy);
+wartości wieloliniowe są wtedy zawijane zamiast znaku ⏎. „Ukryj edytor” chowa edytor okna SQL (same wyniki).
+„Adjust Window width” nie ma odpowiednika — wyniki są w karcie jednego okna głównego (D15).
+
+### D-P2E-6 · 2026-10-24 — Własne kolory czcionek jako opcja (zmienia D112)
+Edytor, siatka wyników i Object Browser mogą mieć własny kolor tekstu i tła (Preferencje › Edytor › Kolory czcionek).
+Domyślnie — i po „Systemowe” — obowiązują kolory motywu systemu dla trybu jasnego i ciemnego; własny kolor działa w obu
+trybach (wybór użytkownika). Kolor składni (słowa kluczowe, literały, komentarze) zostaje z motywu Pelikana; tło edytora
+jest bazą odcienia koloru połączenia (PD-CONN-005).
+
+### D-P2E-7 · 2026-10-24 — Walidacja adnotacji utPLSQL przy kompilacji
+Specyfikacja z `--%suite` albo `--%test` dostaje ostrzeżenia kompilacji: nieznana adnotacja, procedura z listy
+`--%beforeall/afterall/beforeeach/aftereach/beforetest/aftertest(…)` nieobecna w specyfikacji (nazwy `pakiet.procedura`
+pomijane — mogą być w innym pakiecie), `--%test` bez `--%suite` (utPLSQL nie uruchomi pakietu), niesparowane
+`--%context`/`--%endcontext`.

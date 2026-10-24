@@ -71,6 +71,8 @@ struct ToolsPane: View {
                 Toggle(L10n.tr("Zachowuj niezapisane okna do odzyskania po nieoczekiwanym zamknięciu"), isOn: setting(workspace, \.recoveryEnabled))
                 Stepper(L10n.tr("Co \(workspace.settings.recoveryIntervalSeconds) s"), value: setting(workspace, \.recoveryIntervalSeconds), in: 15...600, step: 15)
                     .disabled(!workspace.settings.recoveryEnabled)
+                Toggle(L10n.tr("Migawka także przed każdym wykonaniem (F8, kompilacja, test)"), isOn: setting(workspace, \.recoveryOnExecute))
+                    .disabled(!workspace.settings.recoveryEnabled)
             }
             Section(L10n.tr("Pytania „Nie pytaj więcej”")) {
                 let suppressed = SuppressibleDialog.allCases.filter { workspace.settings.suppressedDialogs[$0.rawValue] != nil }

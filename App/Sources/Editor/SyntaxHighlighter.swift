@@ -10,7 +10,9 @@ enum SyntaxTheme {
     static let variable = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.40, green: 0.80, blue: 0.94, alpha: 1) : NSColor(srgbRed: 0.0, green: 0.45, blue: 0.62, alpha: 1) }
     static let quoted = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.85, green: 0.60, blue: 0.95, alpha: 1) : NSColor(srgbRed: 0.42, green: 0.22, blue: 0.62, alpha: 1) }
     static let hint = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.55, green: 0.85, blue: 0.75, alpha: 1) : NSColor(srgbRed: 0.10, green: 0.50, blue: 0.45, alpha: 1) }
-    static let plain = NSColor.textColor
+    /// Własny kolor zwykłego tekstu edytora z Preferencji (PD-PREF-005); nil — kolor systemu (jasny/ciemny).
+    nonisolated(unsafe) static var customPlain: NSColor?
+    static let plain = NSColor(name: nil) { _ in customPlain ?? NSColor.textColor }
     static let op = NSColor.secondaryLabelColor
 
     static func color(for kind: TokenKind) -> NSColor? {

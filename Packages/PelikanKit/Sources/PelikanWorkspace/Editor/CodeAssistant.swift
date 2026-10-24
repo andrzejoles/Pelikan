@@ -183,6 +183,10 @@ public enum CodeAssistant {
         if params.isEmpty, let m {
             params = (try? await m.arguments(owner: parts.count == 3 ? parts[0] : nil, package: parts.count >= 2 ? parts[parts.count - 2] : nil, name: name)) ?? []
         }
+        // Konstruktor typu obiektowego (`typ(` albo `schemat.typ(`): atrybuty typu w kolejności (PD-CA-006).
+        if params.isEmpty, let m, parts.count <= 2 {
+            params = (try? await m.typeAttributes(owner: parts.count == 2 ? parts[0] : nil, name: name)) ?? []
+        }
         return params
     }
 

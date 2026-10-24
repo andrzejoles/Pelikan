@@ -62,6 +62,79 @@ enum TemplateCommands {
                 ctx.workspace.templatesGeneration += 1
                 return CommandResult(message: L10n.tr("Usunięto szablon \(t.id)"))
             },
+            Command(CommandDescriptor(id: "templates.edit", title: L10n.tr("Edytuj szablon…"), category: .tools, submenu: L10n.tr("Szablony"),
+                                      parameters: [
+                                          CommandParameter("template", .string, L10n.tr("Szablon: folder/nazwa; pusty — nowy szablon")),
+                                          CommandParameter("folder", .string, L10n.tr("Nowy folder")),
+                                          CommandParameter("name", .string, L10n.tr("Nowa nazwa")),
+                                          CommandParameter("text", .string, L10n.tr("Nowy tekst")),
+                                      ],
+                                      agent: .full, effect: .settings,
+                                      summary: L10n.tr("Edytuje tekst, nazwę i folder szablonu (wbudowany — zapisany jako szablon użytkownika) albo tworzy nowy."),
+                                      feature: "PD-TPL-003")) { ctx in
+                let lib = ctx.workspace.templates
+                let old = ctx.arguments.string("template").flatMap { lib.template($0) }
+                if ctx.arguments.string("template") != nil, old == nil { throw CommandError.invalidArgument("template", L10n.tr("nie znaleziono szablonu")) }
+                let base = old ?? CodeTemplate(folder: L10n.tr("Moje"), name: "", text: "")
+                var new = CodeTemplate(folder: ctx.arguments.string("folder") ?? base.folder, name: ctx.arguments.string("name") ?? base.name,
+                                       text: ctx.arguments.string("text") ?? base.text)
+                // Użytkownik bez argumentów zmian — edytor szablonu.
+                if ctx.invoker == .user, ctx.arguments.string("text") == nil, ctx.arguments.string("name") == nil, let ui = ctx.ui {
+                    guard let edited = await ui.editTemplate(new, folders: lib.folders) else { throw CommandError.cancelledByUser }
+                    new = edited
+                }
+                guard !new.name.trimmingCharacters(in: .whitespaces).isEmpty, !new.text.isEmpty else { throw CommandError.missingArgument("name") }
+                if let old { try lib.update(old, to: new) } else { try lib.save(new) }
+                ctx.workspace.templatesGeneration += 1
+                return CommandResult(message: L10n.tr("Zapisano szablon \(new.folder)/\(new.name)"))
+            },
+            Command(CommandDescriptor(id: "templates.newFolder", title: L10n.tr("Nowy folder szablonów…"), category: .tools, submenu: L10n.tr("Szablony"),
+                                      parameters: [CommandParameter("folder", .string, L10n.tr("Nazwa folderu"))],
+                                      agent: .full, effect: .settings, summary: L10n.tr("Tworzy pusty folder szablonów użytkownika."),
+                                      inMenu: false, feature: "PD-TPL-003")) { ctx in
+                var name = ctx.arguments.string("folder") ?? ""
+                if name.isEmpty {
+                    guard let n = await ctx.ui?.askText(L10n.tr("Nowy folder szablonów"), message: "", defaultValue: ""), !n.isEmpty else {
+                        throw CommandError.cancelledByUser
+                    }
+                    name = n
+                }
+                try ctx.workspace.templates.createFolder(name)
+                ctx.workspace.templatesGeneration += 1
+                return .ok
+            },
+            Command(CommandDescriptor(id: "templates.renameFolder", title: L10n.tr("Zmień nazwę folderu szablonów…"), category: .tools,
+                                      submenu: L10n.tr("Szablony"),
+                                      parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder")),
+                                                   CommandParameter("name", .string, L10n.tr("Nowa nazwa"))],
+                                      agent: .full, effect: .settings, summary: L10n.tr("Zmienia nazwę folderu szablonów użytkownika (z szablonami)."),
+                                      inMenu: false, feature: "PD-TPL-003")) { ctx in
+                guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }
+                var name = ctx.arguments.string("name") ?? ""
+                if name.isEmpty {
+                    guard let n = await ctx.ui?.askText(L10n.tr("Zmień nazwę folderu szablonów"), message: "", defaultValue: folder), !n.isEmpty else {
+                        throw CommandError.cancelledByUser
+                    }
+                    name = n
+                }
+                try ctx.workspace.templates.renameFolder(folder, to: name)
+                ctx.workspace.templatesGeneration += 1
+                return .ok
+            },
+            Command(CommandDescriptor(id: "templates.deleteFolder", title: L10n.tr("Usuń folder szablonów"), category: .tools, submenu: L10n.tr("Szablony"),
+                                      parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder"))],
+                                      agent: .approval, effect: .settings,
+                                      summary: L10n.tr("Usuwa folder szablonów użytkownika z jego szablonami (wbudowane zostają)."),
+                                      inMenu: false, feature: "PD-TPL-003")) { ctx in
+                guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }
+                if ctx.invoker == .user, let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Usuń folder szablonów"), message: L10n.tr("Usunąć folder „\(folder)” razem z jego szablonami użytkownika?"),
+                                       buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                try ctx.workspace.templates.deleteFolder(folder)
+                ctx.workspace.templatesGeneration += 1
+                return .ok
+            },
         ]
     }
 

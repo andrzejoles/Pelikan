@@ -131,7 +131,39 @@ enum CodeContentsCommands {
                 if let m = t.member { args["member"] = .string(m) }
                 return try await ctx.workspace.invoke("ob.test", CommandArguments(args), invoker: ctx.invoker)
             },
+            Command(CommandDescriptor(id: "codeHierarchy.select", title: L10n.tr("Zaznacz poziom hierarchii kodu"), category: .edit,
+                                      submenu: L10n.tr("Zawartość kodu"),
+                                      parameters: [CommandParameter("level", .integer, L10n.tr("Poziom ścieżki od jednostki (0); domyślnie najgłębszy"))],
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Zaznacza element ścieżki Code Hierarchy (jednostkę, podprogram, blok) obejmujący kursor."),
+                                      inMenu: false, feature: "PD-CA-011"),
+                    validate: { BuiltinCommands.editable($0) != nil }) { ctx in
+                let (doc, node) = try hierarchyTarget(ctx)
+                doc.selectedRange = CodeContents.lineRange(of: node, in: doc.text)
+                return CommandResult(message: "\(node.kind.rawValue) \(node.name)")
+            },
+            Command(CommandDescriptor(id: "codeHierarchy.goto", title: L10n.tr("Przejdź do poziomu hierarchii kodu"), category: .edit,
+                                      submenu: L10n.tr("Zawartość kodu"),
+                                      parameters: [CommandParameter("level", .integer, L10n.tr("Poziom ścieżki od jednostki (0); domyślnie najgłębszy"))],
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Przenosi kursor do nazwy elementu ścieżki Code Hierarchy."), inMenu: false, feature: "PD-CA-011"),
+                    validate: { BuiltinCommands.editable($0) != nil }) { ctx in
+                let (doc, node) = try hierarchyTarget(ctx)
+                doc.selectedRange = node.nameOffset..<node.nameOffset
+                return CommandResult(message: "\(node.kind.rawValue) \(node.name)")
+            },
         ]
+    }
+
+    /// Element ścieżki Code Hierarchy (PD-CA-011) przy kursorze aktywnego okna: poziom od jednostki (0).
+    @MainActor
+    static func hierarchyTarget(_ ctx: CommandContext) throws -> (Document, OutlineNode) {
+        guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
+        let path = PLSQLOutline.path(at: doc.selectedRange.lowerBound, in: PLSQLOutline.parse(doc.text))
+        guard !path.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak elementu w tym miejscu")) }
+        let level = ctx.arguments.int("level").map(Int.init) ?? path.count - 1
+        guard path.indices.contains(level) else { throw CommandError.invalidArgument("level", L10n.tr("Poziom poza ścieżką (0–\(path.count - 1))")) }
+        return (doc, path[level])
     }
 
     @MainActor

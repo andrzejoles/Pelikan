@@ -296,6 +296,14 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .message(let m): title = m; symbol = "info.circle"; textColor = .secondaryLabelColor
         }
         cell.textField?.stringValue = title
+        // Własne kolory Object Browsera (PD-PREF-005): tekst zwykłych pozycji i tło listy.
+        let colors = workspace.settings.browserColors
+        if textColor == .labelColor, let c = colors.text { textColor = NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1) }
+        let background = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+        if outline.backgroundColor != background ?? .clear {
+            outline.backgroundColor = background ?? .clear
+            outline.enclosingScrollView?.drawsBackground = background != nil
+        }
         cell.textField?.textColor = textColor
         let size = workspace.settings.browserFontSize
         cell.textField?.font = .systemFont(ofSize: size > 0 ? size : NSFont.smallSystemFontSize + 1)

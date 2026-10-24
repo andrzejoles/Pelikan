@@ -148,6 +148,53 @@ public final class TemplateLibrary {
         if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }
 
+    /// Edycja szablonu (PD-TPL-003): zapis pod nowym folderem/nazwą i usunięcie starego pliku użytkownika. Szablon
+    /// wbudowany zostaje — edycja tworzy szablon użytkownika (o tej samej ścieżce zastępuje wbudowany).
+    public func update(_ old: CodeTemplate, to new: CodeTemplate) throws {
+        try save(new)
+        if !old.isBuiltIn, Self.safe(old.folder) != Self.safe(new.folder) || Self.safe(old.name) != Self.safe(new.name) {
+            try delete(old)
+        }
+    }
+
+    /// Foldery szablonów: wbudowane i użytkownika (także puste).
+    public var folders: [String] {
+        var set = Set(Self.builtIn.map(\.folder))
+        if let dir = directory, let items = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.isDirectoryKey]) {
+            for f in items where (try? f.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true { set.insert(f.lastPathComponent) }
+        }
+        return set.sorted()
+    }
+
+    /// Nowy (pusty) folder użytkownika.
+    public func createFolder(_ name: String) throws {
+        guard let dir = directory else { throw CommandError.notAvailable(L10n.tr("Brak katalogu danych")) }
+        let n = Self.safe(name)
+        guard !n.isEmpty else { throw CommandError.invalidArgument("folder", L10n.tr("pusta nazwa")) }
+        try FileManager.default.createDirectory(at: dir.appendingPathComponent(n, isDirectory: true), withIntermediateDirectories: true)
+    }
+
+    /// Zmiana nazwy folderu użytkownika (szablony przechodzą razem z nim); folder docelowy nie może istnieć.
+    public func renameFolder(_ old: String, to new: String) throws {
+        guard let dir = directory else { throw CommandError.notAvailable(L10n.tr("Brak katalogu danych")) }
+        let from = dir.appendingPathComponent(Self.safe(old), isDirectory: true), to = dir.appendingPathComponent(Self.safe(new), isDirectory: true)
+        guard !Self.safe(new).isEmpty else { throw CommandError.invalidArgument("name", L10n.tr("pusta nazwa")) }
+        guard FileManager.default.fileExists(atPath: from.path) else {
+            throw CommandError.invalidArgument("folder", L10n.tr("Folder „\(old)” nie ma szablonów użytkownika"))
+        }
+        guard !FileManager.default.fileExists(atPath: to.path) else {
+            throw CommandError.invalidArgument("name", L10n.tr("Folder „\(new)” już istnieje"))
+        }
+        try FileManager.default.moveItem(at: from, to: to)
+    }
+
+    /// Usuwa folder użytkownika z jego szablonami (szablony wbudowane w folderze o tej nazwie zostają).
+    public func deleteFolder(_ name: String) throws {
+        guard let dir = directory else { return }
+        let url = dir.appendingPathComponent(Self.safe(name), isDirectory: true)
+        if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
+    }
+
     nonisolated static func safe(_ s: String) -> String {
         s.components(separatedBy: CharacterSet(charactersIn: "/\\:\0")).joined(separator: "-").trimmingCharacters(in: .whitespaces)
             .trimmingCharacters(in: CharacterSet(charactersIn: "."))

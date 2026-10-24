@@ -81,6 +81,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var confirmProductionChanges = true
     /// PLSQL_WARNINGS dla kompilacji (UG 23.3); puste — ustawienie serwera.
     public var plsqlWarnings = "ENABLE:ALL"
+    /// Parametry kompilatora (PLSQL_OPTIMIZE_LEVEL, PLSQL_CODE_TYPE, PL/Scope, PLSQL_CCFLAGS — PD-PROG-013).
+    public var compiler = CompilerOptions()
     public var useDBAViews = true
     // Oracle — Output
     public var dbmsOutputEnabled = true
@@ -104,6 +106,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var fetchLOBsOnDemand = true
     /// Czcionka siatki wyników w punktach (PD-GRID-025).
     public var gridFontSize: Double = 12
+    /// Własne kolory tekstu i tła edytora, siatki i Object Browsera (PD-PREF-005); nil — kolory motywu systemu.
+    public var editorColors = AreaColors()
+    public var gridColors = AreaColors()
+    public var browserColors = AreaColors()
     /// Numer wiersza jako pierwsza kolumna przy kopiowaniu i eksporcie (PD-GRID-027).
     public var rowNumbersInCopyExport = false
     /// Układ liczb w siatce (PD-GRID-004).
@@ -138,6 +144,9 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
     public var highlightCurrentLine = true
+    /// Wystąpienia nazwy pod kursorem / zaznaczonego słowa i polecenia COMMIT/ROLLBACK/SAVEPOINT (PD-EDIT-018, PD-PROG-015).
+    public var highlightOccurrences = true
+    public var highlightTransactions = true
     /// Analiza kodu w czasie pisania: nieznane nazwy (ze słownika połączenia) i inspekcje (DG-RES-001, DG-INSP-001).
     public var liveCodeAnalysis = true
     public var useTabCharacter = false
@@ -199,6 +208,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var backupOnSave = false
     public var recoveryEnabled = true
     public var recoveryIntervalSeconds = 60
+    /// Migawka odzyskiwania także przed każdym wykonaniem (F8, kompilacja, okno testu) — PD-FILE-001.
+    public var recoveryOnExecute = false
     /// Odpowiedzi zapamiętane w pytaniach „Nie pytaj więcej” (PD-PREF-008): identyfikator okna → numer przycisku.
     public var suppressedDialogs: [String: Int] = [:]
     /// Dokumenty użytkownika w menu Narzędzia › Dokumenty (PD-DOC-002).
@@ -239,6 +250,8 @@ public struct Settings: Sendable, Codable, Hashable {
         recentFiles = v(.recentFiles, recentFiles)
         keywordCase = v(.keywordCase, keywordCase)
         highlightCurrentLine = v(.highlightCurrentLine, highlightCurrentLine)
+        highlightOccurrences = v(.highlightOccurrences, highlightOccurrences)
+        highlightTransactions = v(.highlightTransactions, highlightTransactions)
         liveCodeAnalysis = v(.liveCodeAnalysis, liveCodeAnalysis)
         showCodeContents = v(.showCodeContents, showCodeContents)
         indentMode = v(.indentMode, indentMode)
@@ -267,6 +280,7 @@ public struct Settings: Sendable, Codable, Hashable {
         debuggerSkipSys = v(.debuggerSkipSys, debuggerSkipSys)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)
         plsqlWarnings = v(.plsqlWarnings, plsqlWarnings)
+        compiler = v(.compiler, compiler)
         appearance = v(.appearance, appearance)
         confirmSaveNewWindows = v(.confirmSaveNewWindows, confirmSaveNewWindows)
         worksetAutosave = v(.worksetAutosave, worksetAutosave)
@@ -300,6 +314,7 @@ public struct Settings: Sendable, Codable, Hashable {
         backupOnSave = v(.backupOnSave, backupOnSave)
         recoveryEnabled = v(.recoveryEnabled, recoveryEnabled)
         recoveryIntervalSeconds = v(.recoveryIntervalSeconds, recoveryIntervalSeconds)
+        recoveryOnExecute = v(.recoveryOnExecute, recoveryOnExecute)
         suppressedDialogs = v(.suppressedDialogs, suppressedDialogs)
         userDocuments = v(.userDocuments, userDocuments)
         quickAccessCommands = v(.quickAccessCommands, quickAccessCommands)
@@ -318,6 +333,9 @@ public struct Settings: Sendable, Codable, Hashable {
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)
+        editorColors = v(.editorColors, editorColors)
+        gridColors = v(.gridColors, gridColors)
+        browserColors = v(.browserColors, browserColors)
         rowNumbersInCopyExport = v(.rowNumbersInCopyExport, rowNumbersInCopyExport)
         gridNumberLayout = v(.gridNumberLayout, gridNumberLayout)
         largeDataAutoFormat = v(.largeDataAutoFormat, largeDataAutoFormat)

@@ -104,6 +104,11 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
     }
 
     private func refreshState() {
+        // „Ukryj edytor” (PD-GRID-012): same wyniki w oknie.
+        if let editorPane = split.arrangedSubviews.first, editorPane.isHidden != document.editorHidden {
+            editorPane.isHidden = document.editorHidden
+            split.adjustSubviews()
+        }
         let executing = document.isExecuting
         if executing { executingIndicator.startAnimation(nil) } else { executingIndicator.stopAnimation(nil) }
         substitutionButton.contentTintColor = document.substitutionEnabled ? nil : .systemRed
