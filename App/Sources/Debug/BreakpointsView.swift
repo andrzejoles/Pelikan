@@ -42,6 +42,9 @@ struct BreakpointsView: View {
                 Button(L10n.tr("Włącz wszystkie")) { for i in workspace.breakpoints.indices { workspace.breakpoints[i].enabled = true } }
                 Button(L10n.tr("Wyłącz wszystkie")) { for i in workspace.breakpoints.indices { workspace.breakpoints[i].enabled = false } }
                 Button(L10n.tr("Usuń wszystkie")) { workspace.breakpoints.removeAll() }
+                Spacer()
+                Button(L10n.tr("Zapisz…")) { workspace.perform("debug.saveBreakpoints") }
+                Button(L10n.tr("Wczytaj…")) { workspace.perform("debug.loadBreakpoints") }
             }
             Divider()
             HStack {

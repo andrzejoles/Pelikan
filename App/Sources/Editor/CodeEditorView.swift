@@ -126,6 +126,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         textView.hoverText = { [weak self] offset in
             guard let self else { return nil }
             if let d = self.diagnostics.first(where: { $0.range.lowerBound <= offset && offset < max($0.range.upperBound, $0.range.lowerBound + 1) }) { return d.message }
+            // Zatrzymany debuger: wartość zmiennej pod myszą (PD-DBG-005).
+            if [.test, .program].contains(self.document.kind), let ws = (NSApp.delegate as? AppDelegate)?.workspace,
+               let word = DebugHover.word(in: self.textView.string, at: offset), let v = ws.debugHoverText(word) {
+                return v
+            }
             return DeclarationHover.text(at: offset, in: self.textView.string)
         }
         ruler.bookmarkLines = { [weak self] in

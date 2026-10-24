@@ -180,6 +180,9 @@ struct SQLWindowPane: View {
             Section(L10n.tr("Wykonywanie (UG 23.20)")) {
                 Toggle(L10n.tr("AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"), isOn: setting(workspace, \.autoSelectStatement))
                 Toggle(L10n.tr("AutoCommit poleceń SQL"), isOn: setting(workspace, \.autoCommitSQL))
+                TextField(L10n.tr("Statystyki po wykonaniu"), text: Binding(get: { workspace.settings.selectedStatistics.joined(separator: ", ") },
+                    set: { workspace.settings.selectedStatistics = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("puste — wszystkie niezerowe, np. consistent gets, physical reads")))
                 Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
             }
@@ -435,6 +438,12 @@ struct OraclePane: View {
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+                TextField(L10n.tr("Zawsze z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoAlways.joined(separator: ", ") },
+                    set: { workspace.settings.debugInfoAlways = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("np. scott@dev*, HR.PKG_*")))
+                TextField(L10n.tr("Nigdy z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoNever.joined(separator: ", ") },
+                    set: { workspace.settings.debugInfoNever = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("np. *@prod*")))
                 Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))

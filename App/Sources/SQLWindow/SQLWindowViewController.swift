@@ -163,8 +163,13 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         let alive = Set(results.map(\.id))
         gridViews = gridViews.filter { alive.contains($0.key) }
         if showingStatistics, !stats.isEmpty {
-            let width = stats.map(\.name.count).max() ?? 0
-            install(textView(stats.map { $0.name.padding(toLength: width, withPad: " ", startingAt: 0) + "  " + String(format: "%.0f", $0.value) }.joined(separator: "\n"), isError: false))
+            // Ostatnie wykonanie i suma okna, statystyki wybrane w Preferencjach (PD-OPT-004).
+            let ws = (NSApp.delegate as? AppDelegate)?.workspace
+            let rows = Profiler.rows(last: stats, totals: document.statisticTotals, selected: ws?.settings.selectedStatistics ?? [])
+            let width = max(rows.map(\.name.count).max() ?? 0, 10)
+            let header = L10n.tr("Statystyka").padding(toLength: width, withPad: " ", startingAt: 0) + "  " + L10n.tr("Ostatnie") + "  " + L10n.tr("Suma")
+            install(textView(([header] + rows.map { $0.name.padding(toLength: width, withPad: " ", startingAt: 0) + "  " + String(format: "%.0f", $0.last) + "  " + String(format: "%.0f", $0.total) })
+                .joined(separator: "\n"), isError: false))
         } else if showingOutput || results.isEmpty {
             install(outputView(output))
         } else if let r = results.first(where: { $0.id == active }) ?? results.first {

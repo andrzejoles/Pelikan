@@ -50,7 +50,7 @@ public struct ProfilerReport: Sendable, Hashable {
 }
 
 @MainActor
-enum Profiler {
+public enum Profiler {
     /// Tabele profilera liniowego w schemacie użytkownika (jak w PROFTAB.SQL), tworzone, gdy ich brak.
     static func ensureLineTables(_ s: any DatabaseSession) async throws {
         let n = try await s.scalar("select count(*) from user_tables where table_name = 'PLSQL_PROFILER_RUNS'")
@@ -175,6 +175,33 @@ extension Profiler {
         var out: [String: Double] = [:]
         for r in rows { out[r[0].displayText ?? ""] = Double(r[1].format(.default)) ?? 0 }
         return out
+    }
+
+    /// Wiersz widoku statystyk: ostatnie wykonanie i suma okna.
+    public struct StatisticRow: Sendable, Hashable, Identifiable {
+        public var name: String
+        public var last: Double
+        public var total: Double
+        public var id: String { name }
+    }
+
+    /// Statystyki do pokazania (PD-OPT-004): wybrane w Preferencjach (puste — wszystkie niezerowe), z filtrem tekstu;
+    /// wybrane statystyki są pokazywane także z zerem ostatniego wykonania, jeśli mają sumę.
+    public nonisolated static func rows(last: [SessionStatistic], totals: [String: Double], selected: [String], filter: String = "") -> [StatisticRow] {
+        let lastMap = Dictionary(last.map { ($0.name, $0.value) }, uniquingKeysWith: { a, _ in a })
+        let chosen = Set(selected.map { $0.lowercased() })
+        let names: [String] = chosen.isEmpty ? last.map(\.name) : Array(Set(lastMap.keys).union(totals.keys)).filter { chosen.contains($0.lowercased()) }
+        return names
+            .filter { filter.isEmpty || $0.localizedCaseInsensitiveContains(filter) }
+            .map { StatisticRow(name: $0, last: lastMap[$0] ?? 0, total: totals[$0] ?? lastMap[$0] ?? 0) }
+            .sorted { $0.last != $1.last ? $0.last > $1.last : $0.name < $1.name }
+    }
+
+    /// Eksport statystyk do CSV (nazwa, ostatnie, suma).
+    public nonisolated static func csv(_ rows: [StatisticRow]) -> String {
+        func num(_ d: Double) -> String { d.rounded() == d ? String(format: "%.0f", d) : String(d) }
+        return (["\"statystyka\",\"ostatnie\",\"suma\""] + rows.map { "\"\($0.name.replacingOccurrences(of: "\"", with: "\"\""))\",\(num($0.last)),\(num($0.total))" })
+            .joined(separator: "\n") + "\n"
     }
 
     /// Różnica migawek — niezerowe statystyki, malejąco.

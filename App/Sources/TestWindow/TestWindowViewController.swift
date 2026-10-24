@@ -116,11 +116,29 @@ struct TestPanel: View {
         }
     }
 
+    @State private var showHTP = false
+
+    /// DBMS_OUTPUT albo HTP Output (PD-TEST-008) — strona HTP jako tekst HTML.
     private var output: some View {
-        ScrollView {
-            Text(document.output.joined(separator: "\n"))
-                .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Picker("", selection: $showHTP) {
+                    Text("DBMS_OUTPUT").tag(false)
+                    Text(L10n.tr("HTP Output")).tag(true)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                Toggle(L10n.tr("Zbieraj HTP przy wykonaniu"), isOn: $document.htpEnabled).toggleStyle(.checkbox)
+                Spacer()
+            }
+            .font(.caption)
+            .padding(.horizontal, 6)
+            ScrollView {
+                Text(showHTP ? (document.htpOutput ?? (document.htpEnabled ? L10n.tr("(pusta strona HTP)") : L10n.tr("Włącz zbieranie HTP i wykonaj blok."))) : document.output.joined(separator: "\n"))
+                    .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
+            }
         }
     }
 
@@ -141,6 +159,16 @@ struct TestPanel: View {
 
     @State private var statFilter = ""
 
+    @State private var profilerRuns: [ProfilerRun] = []
+    @State private var showCallTree = true
+
+    private func loadRuns() {
+        Task {
+            guard let s = try? await workspace.session(for: document) else { return }
+            profilerRuns = (try? await Profiler.runs(document.profiler ?? document.profilerReport?.kind ?? .lines, session: s, limit: 30)) ?? []
+        }
+    }
+
     private var profiler: some View {
         VStack(alignment: .leading, spacing: 6) {
             Picker(L10n.tr("Profiler przy wykonaniu"), selection: $document.profiler) {
@@ -150,16 +178,52 @@ struct TestPanel: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 6)
+            // Historia przebiegów, jednostka czasu, próg udziału i drzewo wywołań (PD-OPT-005, PD-OPT-006).
+            HStack {
+                Menu(L10n.tr("Przebiegi")) {
+                    if profilerRuns.isEmpty { Text(L10n.tr("Brak zapisanych przebiegów")) }
+                    ForEach(profilerRuns) { run in
+                        Button("\(run.run) · \(run.date) · \(run.comment)") {
+                            workspace.perform("test.profilerOpenRun", CommandArguments(["run": .int(Int64(run.run))]))
+                        }
+                    }
+                }
+                .fixedSize()
+                .onAppear { loadRuns() }
+                .onChange(of: document.profilerReport?.run) { loadRuns() }
+                Picker(L10n.tr("Czas"), selection: Bindable(workspace).settings.profilerTimeUnit) {
+                    ForEach(ProfilerTimeUnit.allCases, id: \.self) { Text($0.symbol).tag($0) }
+                }
+                .fixedSize()
+                Stepper(L10n.tr("Udział ≥ \(Int(workspace.settings.profilerMinShare))%"), value: Bindable(workspace).settings.profilerMinShare, in: 0...50, step: 1)
+                    .fixedSize()
+                if document.profilerReport?.kind == .hierarchical { Toggle(L10n.tr("Drzewo wywołań"), isOn: $showCallTree).toggleStyle(.checkbox) }
+                Spacer()
+            }
+            .font(.caption)
+            .padding(.horizontal, 6)
             if let r = document.profilerReport {
                 if r.kind == .lines {
                     let total = max(r.lines.reduce(0) { $0 + $1.totalTime }, 1)
-                    Table(r.lines) {
+                    let unit = workspace.settings.profilerTimeUnit
+                    Table(Profiler.lines(r, minShare: workspace.settings.profilerMinShare)) {
                         TableColumn(L10n.tr("Jednostka")) { (l: ProfilerLine) in Text(l.unitName.isEmpty ? L10n.tr("blok") : l.unitName) }.width(min: 90, ideal: 140)
                         TableColumn(L10n.tr("Linia")) { (l: ProfilerLine) in Text(String(l.line)) }.width(44)
                         TableColumn(L10n.tr("Wykonań")) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
-                        TableColumn(L10n.tr("Czas [ms]")) { (l: ProfilerLine) in Text(String(format: "%.3f", l.totalTime / 1e6)) }.width(74)
+                        TableColumn(L10n.tr("Czas [\(unit.symbol)]")) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
                         TableColumn("%") { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
                         TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.system(size: 11, design: .monospaced)).lineLimit(1) }
+                    }
+                } else if showCallTree {
+                    let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
+                    List(Profiler.callTree(r), children: \.children) { n in
+                        HStack {
+                            Text(n.function.displayName).font(.system(.body, design: .monospaced))
+                            Spacer()
+                            Text(L10n.tr("\(n.function.calls) wyw.")).foregroundStyle(.secondary)
+                            Text(String(format: "%.0f µs", n.function.subtreeTime)).monospacedDigit().frame(width: 100, alignment: .trailing)
+                            bar(n.function.subtreeTime / total).frame(width: 90)
+                        }
                     }
                 } else {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
@@ -233,12 +297,20 @@ struct TestPanel: View {
         .padding(6)
     }
 
+    static func number(_ d: Double) -> String { String(format: d.rounded() == d ? "%.0f" : "%.2f", d) }
+
     private var statistics: some View {
         VStack(alignment: .leading, spacing: 4) {
-            TextField(L10n.tr("Filtr statystyk"), text: $statFilter).textFieldStyle(.roundedBorder).padding(.horizontal, 6)
-            Table(document.statistics.filter { statFilter.isEmpty || $0.name.localizedCaseInsensitiveContains(statFilter) }) {
-                TableColumn(L10n.tr("Statystyka")) { (s: SessionStatistic) in Text(s.name) }
-                TableColumn(L10n.tr("Wartość")) { (s: SessionStatistic) in Text(String(format: s.value.rounded() == s.value ? "%.0f" : "%.2f", s.value)) }.width(120)
+            HStack {
+                TextField(L10n.tr("Filtr statystyk"), text: $statFilter).textFieldStyle(.roundedBorder)
+                Button(L10n.tr("Eksportuj…")) { workspace.perform("stats.export") }.disabled(document.statisticTotals.isEmpty)
+            }
+            .padding(.horizontal, 6)
+            // Ostatnie wykonanie i suma okna; wybór statystyk w Preferencjach › Okno SQL (PD-OPT-004).
+            Table(Profiler.rows(last: document.statistics, totals: document.statisticTotals, selected: workspace.settings.selectedStatistics, filter: statFilter)) {
+                TableColumn(L10n.tr("Statystyka")) { (s: Profiler.StatisticRow) in Text(s.name) }
+                TableColumn(L10n.tr("Ostatnie")) { (s: Profiler.StatisticRow) in Text(Self.number(s.last)).monospacedDigit() }.width(110)
+                TableColumn(L10n.tr("Suma")) { (s: Profiler.StatisticRow) in Text(Self.number(s.total)).monospacedDigit() }.width(110)
             }
         }
     }

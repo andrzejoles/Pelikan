@@ -62,7 +62,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         outline.delegate = self
         outline.target = self
         outline.doubleAction = #selector(doubleClicked)
-        outline.allowsMultipleSelection = false
+        outline.allowsMultipleSelection = true
         outline.setDraggingSourceOperationMask(.copy, forLocal: false)
         outline.setAccessibilityLabel(L10n.tr("Object Browser"))
         let menu = NSMenu()
@@ -313,8 +313,17 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
-        let n = outline.item(atRow: outline.selectedRow) as? Node
-        workspace.selectedObject = n?.object
+        // Wiele obiektów (PD-OB-011): wszystkie zaznaczone obiekty; bieżący — kliknięty albo pierwszy.
+        let objs = outline.selectedRowIndexes.compactMap { (outline.item(atRow: $0) as? Node)?.object }
+        workspace.selectedObjects = objs
+        let clicked = outline.clickedRow >= 0 ? (outline.item(atRow: outline.clickedRow) as? Node)?.object : nil
+        workspace.selectedObject = clicked.flatMap { c in objs.contains(c) ? c : nil } ?? objs.first
+            ?? (outline.item(atRow: outline.selectedRow) as? Node)?.object
+    }
+
+    /// Cmd+C: nazwy zaznaczonych obiektów po przecinku.
+    @objc func copy(_ sender: Any?) {
+        workspace.perform("ob.copyNames")
     }
 
     /// Typ schowka z obiektem (właściciel, nazwa, typ) — upuszczenie z Option generuje kod (SD-GEN-001).
@@ -356,6 +365,17 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let row = outline.clickedRow
+        // Kliknięcie w zaznaczenie wielu obiektów: menu akcji wspólnych (PD-OB-011).
+        if row >= 0, outline.selectedRowIndexes.contains(row), workspace.selectedObjects.count > 1 {
+            for id in ["ob.copyNames", "ob.ddlSelected", "-", "ob.recompileSelected", "ob.dropSelected"] {
+                if id == "-" { menu.addItem(.separator()); continue }
+                guard let c = workspace.registry.command(CommandID(rawValue: id)) else { continue }
+                let item = menu.addItem(withTitle: c.descriptor.title, action: #selector(runCommand(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = id
+            }
+            return
+        }
         if row >= 0, let n = outline.item(atRow: row) as? Node {
             workspace.selectedObject = n.object
             outline.selectRowIndexes([row], byExtendingSelection: false)
