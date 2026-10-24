@@ -1141,6 +1141,15 @@ własne obiekty bez zmian). Analiza nazw (podkreślenia w edytorze):
 Na 40 największych poprawnych (VALID) ciałach pakietów (279 tys. linii): 478 zgłoszeń → 1, czas 40 s → 16,6 s. Wzorce
 odtworzone syntetycznie w testach jednostkowych i na bazie testowej (żadnych danych z bazy właściciela w repozytorium).
 
+### D153 · 2026-10-24 — Pierwsze wydanie beta jako zwykłe wydanie z „beta” w tytule
+Właściciel poprosił o pierwsze wydanie testowe. Kanał aktualizacji Sparkle to `releases/latest/download/appcast.xml`,
+a GitHub nie zalicza wydań oznaczonych „pre-release” do `latest` — testerzy bety nie dostaliby kolejnych wersji (bez
+wydania stabilnego `latest` zwraca 404). Dlatego `make beta-release` tworzy zwykły szkic wydania z tytułem
+„Pelikan X.Y.Z beta”, notatkami z `docs/BETA.md` (co testować, znane ograniczenia, zgłaszanie błędów bez haseł i danych)
+i listą zmian. Osobny kanał beta w Sparkle (`sparkle:channel`) — dopiero, gdy pojawią się wydania stabilne.
+Publikacja szkicu jak dotąd: właściciel (`gh release edit vX.Y.Z --draft=false`). README opisuje teraz produkt dla
+testerów (funkcje, instalacja, bezpieczeństwo, budowanie) zamiast stanu budowy.
+
 ### D156 · 2026-10-24 — Workspace Manager w bazie testowej
 Obraz Oracle Free 26ai (23.26.3) nie ma zainstalowanego Workspace Managera (brak WMSYS i DBMS_WM), ale ma jego skrypty
 w `ORACLE_HOME/rdbms/admin`. `scripts/testdb.sh owm` uruchamia `owminst.plb` w PDB testowej (ok. 40 s, raz), nadaje
