@@ -1097,3 +1097,12 @@ bez okien dialogowych. Hak skryptu zrzutów (tylko Debug) ma kroki `debug.openFi
 i `debug.planMode` {mode}; `@ROOT@` w scenariuszu zastępuje `scripts/screenshots.sh` (bez ścieżek domowych w repozytorium).
 Pliki wejściowe scenariuszy leżą w `scripts/screenshots/fixtures/`. Okno historii lokalnej wybiera od razu najnowszą
 wersję (wcześniej prawy panel był pusty do pierwszego kliknięcia).
+
+### D149 · 2026-10-24 — Okno zgody agenta w zrzucie; pusta ostatnia linia w TextKit 2
+Okno zgody w aplikacji jest arkuszem na oknie głównym, przed którym Pelikan pokazuje panel agenta i podskakuje ikoną
+w Docku — w zrzucie w tle to by przeszkadzało właścicielowi. Krok `debug.approval` (tylko Debug) liczy prawdziwy
+podgląd skutków (`Workspace.preview`, ten sam co dla agenta) i pokazuje ten sam `ApprovalView` w osobnym oknie
+w tle. Plan DBMS_XPLAN w oknie zgody przewija się w poziomie (zawijanie łamało tabelę planu); podsumowanie
+bez formy „polecenie/a”. Zrzut edytora pokazał, że numer pustej ostatniej linii (po końcowym „\n”) i podświetlenie
+bieżącej linii na końcu pliku były o linię za nisko: TextKit 2 dokłada tę linię do ostatniego fragmentu tekstu jako
+pusty fragment linii, więc pozycja to jego `typographicBounds`, nie dół ramki fragmentu.

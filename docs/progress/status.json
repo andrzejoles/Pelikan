@@ -1,8 +1,8 @@
 {
-  "heartbeat": "2026-10-24T16:11:12+02:00",
+  "heartbeat": "2026-10-24T16:33:33+02:00",
   "stage": {
-    "id": 2,
-    "name": "Połączenia, SQL Window, Command Window"
+    "id": "po 8",
+    "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
   "task": "Czekam na CI #50 (poprawka Observation dla Linuksa); lokalnie: Entra ID/OAuth2 i ORDS gotowe (do wypchnięcia po scaleniu), pełne testy bazy w toku; subagent — pipeline wdrożenia Pro*C i konsola",
   "stages": [
@@ -19,40 +19,47 @@
     {
       "id": 2,
       "name": "Object Browser i Program Window",
-      "state": "w toku"
+      "state": "zakończony"
     },
     {
       "id": 3,
       "name": "Test Window, debuger, profiler",
-      "state": "do zrobienia"
+      "state": "zakończony"
     },
     {
       "id": 4,
       "name": "utPLSQL",
-      "state": "do zrobienia"
+      "state": "zakończony"
     },
     {
       "id": 5,
       "name": "Agenci AI (MCP jak w Bifoldzie)",
-      "state": "do zrobienia"
+      "state": "zakończony"
     },
     {
       "id": 6,
       "name": "Narzędzia",
-      "state": "do zrobienia"
+      "state": "zakończony"
+    },
+    {
+      "id": "P",
+      "name": "Pro*C: zdalny build przez SSH (akceptacja na AIX — właściciel)",
+      "state": "zakończony"
     },
     {
       "id": 7,
       "name": "Dodatki z SQL Developer, DBeaver, DataGrip",
-      "state": "do zrobienia"
+      "state": "zakończony"
     },
     {
       "id": 8,
       "name": "Dopracowanie i wydanie",
-      "state": "do zrobienia"
+      "state": "zakończony"
     }
   ],
   "done": [
+    "Zrzuty: okno zgody agenta (plan przewijany w poziomie, podsumowanie bez „polecenie/a”), status linii, Preferencje › Narzędzia (pola wyszukiwań bez uciętych etykiet); numer pustej ostatniej linii i podświetlenie na końcu pliku o linię za nisko — poprawione (D149); stan etapów w raporcie",
+    "Scalone #64 (notatnik z wykresem, historia lokalna, diagram i flame graph planu; kroki pomocnicze zrzutów D148)",
     "Zrzuty: notatnik z wykresem, historia lokalna (domyślnie najnowsza wersja), plan jako diagram i flame graph; kroki debug.openFile/preferences/planMode (D148)",
     "Scalone #63 (koszyk z ciałem pakietu, tytuł wyników wyszukiwania, 7 zrzutów)",
     "Koszyk wdrożenia: pakiet i typ dodawane razem z ciałem (skrypt miał samą specyfikację) — wykryte zrzutem; zrzuty QBE, Użyć, raportów predefiniowanych, zapytań standardowych",
@@ -90,12 +97,11 @@
     "Etap 7 / DataGrip (subagent D): analiza nazw w czasie pisania, inspekcje, Find Usages, zmiana nazwy z podglądem, historia lokalna, konsole połączeń, zmiany oczekujące w siatce — scalone, testy na bazie OK (D65–D70)",
     "Etap 7 / Oracle 23ai: widoki dualności JSON (lista, generator DDL, dokumenty, Data Guide), moduły i środowiska MLE, podgląd SDO_GEOMETRY — testy na bazie (D64)",
     "Etap 7 / licencje pakietów Oracle: deklaracja na połączeniu, AWR, ASH, ADDM, SQL Monitor, SQL Tuning Advisor — test na bazie (D63)",
-    "Etap 7 / plany i DBA (subagent) zintegrowane: diagram i flame graph planu, Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu (D59–D60); poprawka wyścigu w teście kanału agenta",
-    "Etap 7 / siatka i edytor (subagent) zintegrowane: filtr i grupowanie w siatce, SQL z wierszy, generowanie kodu, panel wartości, snippety, SET SQLFORMAT; test bazy zielony (D57–D58)",
-    "Etap 6 / projekty (Build, Make, Find in Project, pulpit) i edytor zewnętrzny Large Data Editor (RTF) — wszystkie wiersze Etapu 6 zrobione"
+    "Etap 7 / plany i DBA (subagent) zintegrowane: diagram i flame graph planu, Autotrace, porównanie planów, panel DBA, Instance Viewer, Task Monitor, dokumentacja schematu (D59–D60); poprawka wyścigu w teście kanału agenta"
   ],
   "next": [
-    "Po #62: dalsze zrzuty w tle tam, gdzie to możliwe; szkic wydania po scaleniu serii poprawek."
+    "Dalsze zrzuty w tle (edytor: status linii, Preferencje › Narzędzia, raport ze stylem, okno zgody agenta, SQL Monitor)",
+    "Akceptacja Pro*C na AIX, Entra ID/ORDS na bazach — właściciel"
   ],
   "blockers": [],
   "questions": [],

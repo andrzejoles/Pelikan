@@ -770,10 +770,11 @@ final class CodeTextView: NSTextView {
     private func drawCurrentLine() {
         guard highlightCurrentLine, selectedRange().length == 0, let tlm = textLayoutManager, let content = tlm.textContentManager,
               let loc = content.location(content.documentRange.location, offsetBy: selectedRange().location) else { return }
-        var frame = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame ?? .zero
+        let fragment = tlm.textLayoutFragment(for: loc)
+        var frame = fragment?.layoutFragmentFrame ?? .zero
         if frame == .zero || selectedRange().location == (string as NSString).length && string.hasSuffix("\n") {
             let h = (font?.ascender ?? 12) - (font?.descender ?? -3) + (font?.leading ?? 0)
-            frame = NSRect(x: 0, y: frame == .zero ? 0 : frame.maxY, width: bounds.width, height: h)
+            frame = NSRect(x: 0, y: fragment.map(trailingEmptyLineY) ?? 0, width: bounds.width, height: h)
         }
         Self.currentLineColor.setFill()
         NSRect(x: 0, y: frame.minY + textContainerInset.height, width: bounds.width, height: frame.height).fill()
@@ -1304,6 +1305,7 @@ final class LineNumberRulerView: NSView {
         }
         let start = tlm.textViewportLayoutController.viewportRange?.location ?? tlm.documentRange.location
         var lastFrame = NSRect.zero
+        var lastFragment: NSTextLayoutFragment?
         tlm.enumerateTextLayoutFragments(from: start, options: []) { fragment in
             let frame = fragment.layoutFragmentFrame
             if frame.maxY < visible.minY - 50 { return true }
@@ -1311,11 +1313,24 @@ final class LineNumberRulerView: NSView {
             let offset = content.offset(from: content.documentRange.location, to: fragment.rangeInElement.location)
             label(self.highlighter.line(containing: offset), y: frame.minY + inset - visible.minY, height: frame.height)
             lastFrame = frame
+            lastFragment = fragment
             return true
         }
         // Pusta ostatnia linia po końcowym znaku nowej linii nie ma własnego fragmentu.
         if tv.string.hasSuffix("\n"), lastFrame.maxY < visible.maxY {
-            label(highlighter.lineStarts.count - 1, y: lastFrame.maxY + inset - visible.minY, height: lineHeight)
+            let y = lastFragment.map(trailingEmptyLineY) ?? lastFrame.maxY
+            label(highlighter.lineStarts.count - 1, y: y + inset - visible.minY, height: lineHeight)
         }
     }
+}
+
+/// Górna krawędź pustej linii po końcowym „\n”. TextKit 2 dokłada ją do ostatniego fragmentu jako pusty fragment linii
+/// (wtedy leży wewnątrz ramki fragmentu); bez niego — pod fragmentem.
+@MainActor
+private func trailingEmptyLineY(_ fragment: NSTextLayoutFragment) -> CGFloat {
+    let frame = fragment.layoutFragmentFrame
+    if fragment.textLineFragments.count > 1, let extra = fragment.textLineFragments.last, extra.characterRange.length == 0 {
+        return frame.minY + extra.typographicBounds.minY
+    }
+    return frame.maxY
 }

@@ -46,7 +46,10 @@ struct ApprovalView: View {
                     }
                     if let plan = preview.plan, !plan.isEmpty {
                         section(L10n.tr("Plan wykonania")) {
-                            Text(plan).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled)
+                            // Wiersze DBMS_XPLAN są szersze niż okno — przewijanie w poziomie zamiast zawijania.
+                            ScrollView(.horizontal) {
+                                Text(plan).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled).fixedSize()
+                            }
                         }
                     }
                     let args = request.arguments.values.filter { !$0.key.hasPrefix("__") }
