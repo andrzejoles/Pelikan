@@ -1165,3 +1165,5 @@ sesji z OSUSER/MACHINE) nie trafiły do instrukcji. Test pilnuje, że każdy obr
 14-bezpieczenstwo, 15-problemy) także w en/de/es/uk; tłumaczenia to osobny krok, więc loader bierze rozdział, którego nie ma
 w katalogu języka, z polskiego (zamiast go gubić), a test wymaga tylko, żeby tłumaczenia nie miały rozdziałów spoza
 polskiej instrukcji. Po przetłumaczeniu można przywrócić wymóg kompletu.
+Uzupełnienie: tłumaczenia en/de/es/uk mają komplet 15 rozdziałów (etykiety menu i okien z String Catalog, nie własne),
+więc test znów wymaga kompletu; zapas po polsku w loaderze zostaje na wypadek nowego rozdziału.
