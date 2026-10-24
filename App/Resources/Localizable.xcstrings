@@ -1149,7 +1149,34 @@
         }
       }
     },
-    "(niedostępne przez DBMS_DEBUG)" : {},
+    "(niedostępne przez DBMS_DEBUG)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(not available through DBMS_DEBUG)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(über DBMS_DEBUG nicht verfügbar)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(no disponible mediante DBMS_DEBUG)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(недоступно через DBMS_DEBUG)"
+          }
+        }
+      }
+    },
     "(nieużywana)" : {
       "localizations" : {
         "en" : {
@@ -7310,7 +7337,34 @@
         }
       }
     },
-    "Błąd warunku punktu przerwania „%@”: %@" : {},
+    "Błąd warunku punktu przerwania „%@”: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breakpoint condition error “%@”: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehler in der Haltepunktbedingung „%@“: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error en la condición del punto de interrupción «%@»: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Помилка умови точки зупинки «%@»: %@"
+          }
+        }
+      }
+    },
     "Błąd wyrażenia filtra: %@" : {
       "localizations" : {
         "en" : {
@@ -14031,34 +14085,6 @@
         }
       }
     },
-    "Drukuje bieżące okno." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prints the current window."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Druckt das aktuelle Fenster."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Imprime la ventana actual."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Друкує поточне вікно."
-          }
-        }
-      }
-    },
     "Drukuje bieżące okno: kod z kolorami składni, a w oknie SQL także siatkę wyniku (zaznaczone wiersze albo wszystkie pobrane)." : {
       "localizations" : {
         "en" : {
@@ -18759,34 +18785,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "HEAD auf dem Server"
-          }
-        }
-      }
-    },
-    "HOST nie jest dostępne w Command Window Pelikana (polecenia systemu uruchamiaj w Terminalu)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST is not available in the Pelikan Command Window (run system commands in Terminal)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST ist im Command Window von Pelikan nicht verfügbar (Systembefehle im Terminal ausführen)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST no está disponible en la Command Window de Pelikan (ejecute los comandos del sistema en Terminal)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HOST недоступна в Command Window Pelikan (системні команди запускайте в Терміналі)."
           }
         }
       }
@@ -34019,6 +34017,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nicht speichern"
+          }
+        }
+      }
+    },
+    "Nie zatrzymuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't break"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht anhalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No detener"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не зупинятися"
           }
         }
       }
@@ -55583,6 +55609,34 @@
         }
       }
     },
+    "Punkt niezastosowany: brak jednostki, informacji debugowania albo kodu w tej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breakpoint not applied: no unit, no debug information or no code on this line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haltepunkt nicht gesetzt: keine Einheit, keine Debug-Informationen oder kein Code in dieser Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Punto de interrupción no aplicado: sin unidad, sin información de depuración o sin código en esta línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Точку зупинки не застосовано: немає одиниці, налагоджувальної інформації або коду в цьому рядку"
+          }
+        }
+      }
+    },
     "Punkt przerwania" : {
       "localizations" : {
         "en" : {
@@ -63419,34 +63473,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabulatorbreite: %@"
-          }
-        }
-      }
-    },
-    "Szuka słowa pod kursorem w dokumentacji Oracle." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Looks up the word under the cursor in the Oracle documentation."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sucht das Wort unter dem Cursor in der Oracle-Dokumentation."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Busca la palabra bajo el cursor en la documentación de Oracle."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шукає слово під курсором у документації Oracle."
           }
         }
       }
@@ -81035,7 +81061,34 @@
         }
       }
     },
-    "Wyrażenia z dwukropkiem (:new, :old, zmienne wiązane) nie są dostępne w debugerze DBMS_DEBUG" : {},
+    "Wyrażenia z dwukropkiem (:new, :old, zmienne wiązane) nie są dostępne w debugerze DBMS_DEBUG" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expressions with a colon (:new, :old, bind variables) are not available in the DBMS_DEBUG debugger"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausdrücke mit Doppelpunkt (:new, :old, Bindevariablen) sind im DBMS_DEBUG-Debugger nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las expresiones con dos puntos (:new, :old, variables de enlace) no están disponibles en el depurador DBMS_DEBUG"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирази з двокрапкою (:new, :old, змінні прив’язки) недоступні в налагоджувачі DBMS_DEBUG"
+          }
+        }
+      }
+    },
     "Wyrażenie" : {
       "localizations" : {
         "en" : {
@@ -96600,6 +96653,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "напр. emp_api_test"
+          }
+        }
+      }
+    },
+    "np. i > 3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. i > 3"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. i > 3"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. i > 3"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. i > 3"
+          }
+        }
+      }
+    },
+    "np. i={i}" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "e.g. i={i}"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "z. B. i={i}"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "p. ej. i={i}"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "напр. i={i}"
           }
         }
       }

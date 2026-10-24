@@ -2,8 +2,8 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 
-/// Punkty przerwania (UG 5.10 „Modify Breakpoints”): lista z włączeniem, licznikiem przejść i usuwaniem; punkty na
-/// kodach błędów Oracle; włącz / wyłącz wszystkie.
+/// Punkty przerwania (UG 5.10 „Modify Breakpoints”): lista z włączeniem, licznikiem przejść, warunkiem, komunikatem
+/// (`{zmienna}`), „nie zatrzymuj” (logpoint) i usuwaniem; znacznik punktu niezastosowanego; punkty na kodach błędów.
 struct BreakpointsView: View {
     @Bindable var workspace: Workspace
     @State private var codes = ""
@@ -12,11 +12,28 @@ struct BreakpointsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Table($workspace.breakpoints) {
                 TableColumn(L10n.tr("Włączony")) { $b in Toggle("", isOn: $b.enabled).labelsHidden() }.width(60)
-                TableColumn(L10n.tr("Miejsce")) { $b in Text(place(b)).font(.system(.body, design: .monospaced)) }
+                TableColumn(L10n.tr("Miejsce")) { $b in
+                    HStack(spacing: 4) {
+                        if workspace.unappliedBreakpoints.contains(b.id) {
+                            Image(systemName: "circle").foregroundStyle(.red)
+                                .help(L10n.tr("Punkt niezastosowany: brak jednostki, informacji debugowania albo kodu w tej linii"))
+                        }
+                        Text(place(b)).font(.system(.body, design: .monospaced))
+                    }
+                }
                 TableColumn(L10n.tr("Linia")) { $b in Text("\(b.line)") }.width(50)
                 TableColumn(L10n.tr("Liczba przejść")) { $b in
                     TextField("", value: $b.passCount, format: .number).frame(width: 60)
                 }.width(100)
+                TableColumn(L10n.tr("Warunek")) { $b in
+                    TextField(L10n.tr("np. i > 3"), text: Binding(get: { b.condition ?? "" }, set: { b.condition = $0.isEmpty ? nil : $0 }))
+                }
+                TableColumn(L10n.tr("Komunikat")) { $b in
+                    TextField(L10n.tr("np. i={i}"), text: Binding(get: { b.message ?? "" }, set: { b.message = $0.isEmpty ? nil : $0 }))
+                }
+                TableColumn(L10n.tr("Nie zatrzymuj")) { $b in
+                    Toggle("", isOn: Binding(get: { b.dontBreak ?? false }, set: { b.dontBreak = $0 ? true : nil })).labelsHidden()
+                }.width(90)
                 TableColumn("") { $b in
                     Button { workspace.breakpoints.removeAll { $0.id == b.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
                 }.width(30)
@@ -34,7 +51,7 @@ struct BreakpointsView: View {
             }
         }
         .padding(12)
-        .frame(minWidth: 560, minHeight: 300)
+        .frame(minWidth: 860, minHeight: 300)
         .onAppear { codes = workspace.errorBreakpoints.map(String.init).joined(separator: ", ") }
     }
 

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T08:49:30+02:00",
+  "heartbeat": "2026-10-24T10:57:20+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Debuger: SELF i obiekty jako drzewo, warunki/komunikaty/logpointy punktów przerwania, znacznik niezastosowanego, blokada nazw z dwukropkiem zawieszających DBMS_DEBUG (PD-DBG-004, PD-DBG-007, D133); scalona gałąź danych: 13 wierszy ✅",
     "Aliasy połączeń z lokalnymi bazami testowymi z przedrostkiem dev_ (prośba właściciela); 179 testów na bazie zielonych",
     "Preferencje: wyszukiwarka ustawień z przejściem do karty, indeks z paneli sprawdzany w CI (PD-PREF-001, D126)",
     "Lista okien: menu Wykonaj/Połącz ponownie/Zmień nazwę/Nowe/Sortuj, krótkie nazwy; wskaźniki połączeń user@baza z kolorem na kartach, liście okien, pasku stanu i tle edytora (PD-UI-002, PD-CONN-005)",
@@ -91,8 +92,7 @@
     "Etap 4 / utPLSQL — eksport JUnit/Sonar/TeamCity/TAP i pokrycia Cobertura/Sonar/HTML, skrypt CLI bez hasła (sprawdzony w SQL*Plus), ostrzeżenie o pokryciu, szablony adnotacji, historia i porównanie przebiegów, debugowanie testu pod kursorem; naprawa wyścigu buforów reportera (ORA-00001) i konfliktu skrótu ⌥⌘U",
     "Szkic wydania v4.1.0 (Etap 3) — publikuje właściciel; PR #31 i #32 scalone (zamknięcie Etapu 3, utPLSQL)",
     "Etap 4 / utPLSQL — eksplorator testów (get_suites_info, ostatni wynik, odświeżanie po kompilacji), generator szkieletu pakietu testowego (kompiluje się i uruchamia), podpowiedzi adnotacji --% i matcherów ut.expect, ostrzeżenia o nieznanych adnotacjach, przejście pakiet ↔ test — 2 testy (1 na bazie); weryfikacja bez sterowania interfejsem (D30)",
-    "PR #30 scalony (niejawne wyniki, SQL w sesji debugowanej)",
-    "Etap 4 / utPLSQL — uruchamianie: wszystkie testy, ścieżka, z edytora (test pod kursorem), z Object Browsera, ponownie nieudane, przerwanie; wyniki na żywo (ut_realtime_reporter w dwóch sesjach), okno wyników z drzewem, czasami, filtrem i szczegółami; pokrycie (Sonar → margines edytora, raport HTML); wersja utPLSQL — 3 testy na bazie"
+    "PR #30 scalony (niejawne wyniki, SQL w sesji debugowanej)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

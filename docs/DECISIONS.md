@@ -980,3 +980,13 @@ menu: nazwa, z właścicielem, lista kolumn, SELECT/INSERT/UPDATE/DELETE, wywoł
 jedną z tych akcji na stałe. Obiekt upuszczony poza edytorem (pasek kart, pusty obszar okien) wykonuje akcję z
 preferencji: Edytuj, Pokaż dane, DDL, Opis albo Właściwości. Folder elementów albo folder obiektów daje nazwy po przecinku.
 
+
+### D133 · 2026-10-24 — Debuger: SELF i obiekty, bez :new/:old, warunki i logpointy po stronie Pelikana
+Sonda na 23.26: `DBMS_DEBUG.GET_VALUE('SELF.ATRYBUT')` działa w metodzie typu, więc SELF i zmienne obiektowe są
+drzewem atrybutów z ALL_TYPE_ATTRS. `NEW.KOL`/`OLD.KOL` zwracają „brak obiektu”, a nazwa z dwukropkiem (`:NEW.KOL`)
+**zawiesza** sesję debugera — Pelikan nie wysyła do GET_VALUE/SET_VALUE nazw z dwukropkiem (obserwowane i warunki
+też), a w wyzwalaczu pokazuje informację, że :new/:old są niedostępne. DBMS_DEBUG nie ma warunków ani komunikatów
+punktów: Pelikan po zatrzymaniu wypisuje komunikat (`{zmienna}` → wartość), dla „Nie zatrzymuj” kontynuuje, a warunek
+liczy jako `select case when … then 1 else 0 end from dual` z wartościami zmiennych ramki podstawionymi jako literały
+(błąd warunku — zatrzymanie z komunikatem). Punkt odrzucony przez SET_BREAKPOINT ma pusty znacznik. Jedna linia —
+jeden punkt (DBMS_DEBUG trzyma jeden punkt na linię).
