@@ -105,6 +105,10 @@ połączenia użyje agent AI.
 Gdy hasło w bazie wygasło (ORA-28001), Pelikan pokaże okno zmiany hasła: wpisz nowe hasło dwa razy. Przy włączonym
 zapamiętywaniu nowe hasło zastąpi w Pęku kluczy stare, gdy tylko połączenie się powiedzie.
 
+Hasło możesz też zmienić w każdej chwili: **Sesja › Zmień hasło…** (połączenie musi być otwarte). Pelikan zmienia je
+przez interfejs OCI — hasło nie trafia do tekstu SQL ani do historii poleceń — i zapisuje nowe w Pęku kluczy, jeśli
+połączenie zapamiętuje hasło.
+
 ## Oracle Wallet
 
 Pelikan obsługuje dwa rodzaje portfela:

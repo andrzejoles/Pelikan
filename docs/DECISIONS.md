@@ -1165,6 +1165,8 @@ sesji z OSUSER/MACHINE) nie trafiły do instrukcji. Test pilnuje, że każdy obr
 14-bezpieczenstwo, 15-problemy) także w en/de/es/uk; tłumaczenia to osobny krok, więc loader bierze rozdział, którego nie ma
 w katalogu języka, z polskiego (zamiast go gubić), a test wymaga tylko, żeby tłumaczenia nie miały rozdziałów spoza
 polskiej instrukcji. Po przetłumaczeniu można przywrócić wymóg kompletu.
+Uzupełnienie: tłumaczenia en/de/es/uk mają komplet 15 rozdziałów (etykiety menu i okien z String Catalog, nie własne),
+więc test znów wymaga kompletu; zapas po polsku w loaderze zostaje na wypadek nowego rozdziału.
 
 ### D155 · 2026-10-24 — Rozbieżności macierzy i kodu znalezione przy pisaniu instrukcji
 Subagent piszący instrukcję (D154) porównał opisy z kodem i znalazł miejsca, w których macierz obiecywała więcej, niż
@@ -1232,3 +1234,12 @@ Ta sama ścieżka Pelikana (ODPISession, SessionManager, `/` bez hasła) działa
 `scripts/testdb.sh kdc-linux` uruchamia test w kontenerze `swift:6.3-noble` w sieci bazy testowej (Basic Light
 arm64/x64, konfiguracja w `.linux-build/.testdb`, CI=1 dla hosta kontenera). Wiersz PD-CONN-014 zostaje ⚠️, bo
 aplikacja jest na macOS. Do CI nie dodajemy (konfiguracja Kerberos dotyczyłaby całego procesu testów bazy).
+
+### D160 · 2026-10-24 — Okno zgody agenta: „Zezwól” i „Odmów”; spójność katalogu i instrukcji
+Tłumaczenia instrukcji (D154) pokazały, że przyciski okna zgody agenta używały wspólnych kluczy „Zatwierdź”/„Odrzuć”,
+które w katalogu znaczą COMMIT i „Discard/Verwerfen” — w oknie zgody mylące (zgoda na operację to nie zatwierdzenie
+transakcji, a DML agenta i tak czeka na osobną zgodę na COMMIT). Okno ma teraz własne „Zezwól”/„Odmów” (Allow/Deny).
+Poprawione też: komunikat o braku Instant Client wskazuje kartę Ogólne definicji połączenia (tam jest Sterownik),
+katalog — de „Ansicht” zamiast „View”, en „Debug”, jednolite „Explain Plan Window”; instrukcja we wszystkich językach
+— zmiana hasła z menu, aktualne ograniczenia (ORDS, Workspace Manager i LDAP sprawdzone — D156–D158; Kerberos na
+macOS — D159).

@@ -86,18 +86,19 @@ struct UserManualTests {
         #expect(ws.registry.commands.contains { $0.descriptor.id == "help.manual" && !$0.isPlanned })
     }
 
-    @Test("Instrukcja w repozytorium: tłumaczenia bez rozdziałów spoza polskiej; obrazki istnieją i są używane")
+    @Test("Instrukcja w repozytorium: tłumaczenia mają komplet rozdziałów polskich; obrazki istnieją i są używane")
     func repositoryManual() throws {
         let fm = FileManager.default
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../../docs/manual").standardizedFileURL
         let pl = try fm.contentsOfDirectory(atPath: root.appendingPathComponent("pl").path).filter { $0.hasSuffix(".md") }.sorted()
         #expect(pl.count >= 10)
-        // Rozdział jeszcze nieprzetłumaczony wyświetla się po polsku; plik bez polskiego odpowiednika to błąd nazwy.
+        // Tłumaczenia są kompletne (D154): każdy język ma te same pliki co polski — brak rozdziału albo plik bez polskiego
+        // odpowiednika to błąd. Loader i tak pokazałby brakujący rozdział po polsku.
         var referenced: Set<String> = []
         for lang in UserManual.languages {
             let dir = root.appendingPathComponent(lang)
-            guard let files = try? fm.contentsOfDirectory(atPath: dir.path).filter({ $0.hasSuffix(".md") }) else { continue }
-            #expect(Set(files).isSubset(of: Set(pl)), "Rozdziały \(lang) spoza polskiej instrukcji: \(Set(files).subtracting(pl).sorted())")
+            let files = try fm.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".md") }
+            #expect(Set(files) == Set(pl), "Rozdziały \(lang): brak \(Set(pl).subtracting(files).sorted()), nadmiarowe \(Set(files).subtracting(pl).sorted())")
             for f in files {
                 let text = try String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8)
                 for m in text.matches(of: #/!\[[^\]]*\]\(([^)\s]+)\)/#) {

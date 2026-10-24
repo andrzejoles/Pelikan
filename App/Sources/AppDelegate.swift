@@ -1001,7 +1001,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = L10n.tr("Brak Oracle Instant Client")
-        alert.informativeText = message + "\n\n" + L10n.tr("Licencja Oracle nie pozwala dołączyć Instant Client do Pelikana. Bez niego możesz użyć sterownika „thin” (Definicja połączenia › Zaawansowane › Sterownik) — z ograniczeniami: bez TCPS/wallet, Kerberos i przerwania wykonania.")
+        alert.informativeText = message + "\n\n" + L10n.tr("Licencja Oracle nie pozwala dołączyć Instant Client do Pelikana. Bez niego możesz użyć sterownika „thin” (Definicja połączenia › Ogólne › Sterownik) — z ograniczeniami: bez TCPS/wallet, Kerberos i przerwania wykonania.")
         alert.addButton(withTitle: L10n.tr("Wskaż katalog…"))
         alert.addButton(withTitle: L10n.tr("Otwórz stronę Oracle"))
         alert.addButton(withTitle: L10n.tr("Zamknij"))

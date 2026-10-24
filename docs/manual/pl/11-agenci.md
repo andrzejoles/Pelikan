@@ -78,8 +78,8 @@ argumenty. Gdy zmiany nie da się cofnąć (COMMIT, DDL na tabeli), okno mówi t
 Okno jest zaprojektowane tak, żeby nie zatwierdzić niczego przypadkiem:
 
 - nie ma przycisku domyślnego — ↩ (np. naciśnięty podczas pisania w terminalu agenta) niczego nie zatwierdza;
-- **Zatwierdź** staje się aktywny dopiero po 0,8 sekundy;
-- Esc odrzuca prośbę (**Odrzuć**);
+- **Zezwól** staje się aktywny dopiero po 0,8 sekundy;
+- Esc odrzuca prośbę (**Odmów**);
 - kolejne prośby czekają w kolejce, aż rozpatrzysz bieżącą.
 
 ## Transakcje i cofanie

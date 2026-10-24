@@ -4,7 +4,7 @@ import PelikanWorkspace
 import SwiftUI
 
 /// Okno zgody na operację agenta (PROMPT §7.4, Bifold D23): bez przycisku domyślnego (Enter nic nie zatwierdza —
-/// użytkownik mógł właśnie pisać w terminalu agenta), „Zatwierdź” aktywny dopiero po 0,8 s, Esc odrzuca.
+/// użytkownik mógł właśnie pisać w terminalu agenta), „Zezwól” aktywny dopiero po 0,8 s, Esc odmawia.
 struct ApprovalView: View {
     let request: ApprovalRequest
     let onDecision: (Bool) -> Void
@@ -64,9 +64,9 @@ struct ApprovalView: View {
             .frame(minHeight: 160, maxHeight: 360)
             HStack {
                 Spacer()
-                Button(L10n.tr("Odrzuć"), role: .cancel) { onDecision(false) }
+                Button(L10n.tr("Odmów"), role: .cancel) { onDecision(false) }
                     .keyboardShortcut(.cancelAction)
-                Button(L10n.tr("Zatwierdź")) { onDecision(true) }
+                Button(L10n.tr("Zezwól")) { onDecision(true) }
                     .disabled(!armed)
             }
         }

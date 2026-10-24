@@ -11010,7 +11010,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Debugging"
+            "value" : "Debug"
           }
         },
         "uk" : {
@@ -29541,30 +29541,30 @@
         }
       }
     },
-    "Licencja Oracle nie pozwala dołączyć Instant Client do Pelikana. Bez niego możesz użyć sterownika „thin” (Definicja połączenia › Zaawansowane › Sterownik) — z ograniczeniami: bez TCPS/wallet, Kerberos i przerwania wykonania." : {
+    "Licencja Oracle nie pozwala dołączyć Instant Client do Pelikana. Bez niego możesz użyć sterownika „thin” (Definicja połączenia › Ogólne › Sterownik) — z ograniczeniami: bez TCPS/wallet, Kerberos i przerwania wykonania." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Oracle license does not allow Instant Client to be bundled with Pelikan. Without it you can use the “thin” driver (Connection definition › Advanced › Driver) — with limitations: no TCPS/wallet, Kerberos or execution break."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ліцензія Oracle не дозволяє долучити Instant Client до Pelikan. Без нього можна використати драйвер «thin» (Визначення з'єднання › Додатково › Драйвер) — з обмеженнями: без TCPS/wallet, Kerberos і переривання виконання."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La licencia de Oracle no permite incluir Instant Client en Pelikan. Sin él puede usar el controlador «thin» (Definición de conexión › Avanzado › Controlador), con limitaciones: sin TCPS/wallet, Kerberos ni interrupción de la ejecución."
+            "value" : "The Oracle license does not allow Instant Client to be bundled with Pelikan. Without it you can use the “thin” driver (Connection definition › General › Driver) — with limitations: no TCPS/wallet, Kerberos or execution break."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Oracle-Lizenz erlaubt nicht, Instant Client mit Pelikan auszuliefern. Ohne ihn kann der „Thin“-Treiber verwendet werden (Verbindungsdefinition › Erweitert › Treiber) — mit Einschränkungen: ohne TCPS/Wallet, Kerberos und Abbruch der Ausführung."
+            "value" : "Die Oracle-Lizenz erlaubt nicht, Instant Client mit Pelikan auszuliefern. Ohne ihn kann der „Thin“-Treiber verwendet werden (Verbindungsdefinition › Allgemein › Treiber) — mit Einschränkungen: ohne TCPS/Wallet, Kerberos und Abbruch der Ausführung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La licencia de Oracle no permite incluir Instant Client en Pelikan. Sin él puede usar el controlador «thin» (Definición de conexión › General › Controlador), con limitaciones: sin TCPS/wallet, Kerberos ni interrupción de la ejecución."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліцензія Oracle не дозволяє долучити Instant Client до Pelikan. Без нього можна використати драйвер «thin» (Визначення з'єднання › Загальні › Драйвер) — з обмеженнями: без TCPS/wallet, Kerberos і переривання виконання."
           }
         }
       }
@@ -41105,6 +41105,34 @@
         }
       }
     },
+    "Odmów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deny"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablehnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denegar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відмовити"
+          }
+        }
+      }
+    },
     "Odrzuca zmiany okien od ostatniego zapisu workseta i przywraca zapisany stan (po potwierdzeniu)." : {
       "localizations" : {
         "en" : {
@@ -42622,7 +42650,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plan window"
+            "value" : "Explain Plan Window"
           }
         },
         "uk" : {
@@ -42656,13 +42684,13 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Explain Plan Window (Explain Plan)"
+            "value" : "Explain Plan Window"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Explain Plan Window (Explain Plan)"
+            "value" : "Explain Plan Window"
           }
         },
         "de" : {
@@ -79180,7 +79208,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "View"
+            "value" : "Ansicht"
           }
         }
       }
@@ -96401,6 +96429,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Extern (Kerberos, Betriebssystem)"
+          }
+        }
+      }
+    },
+    "Zezwól" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zulassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дозволити"
           }
         }
       }
