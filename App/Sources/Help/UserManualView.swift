@@ -28,7 +28,8 @@ struct UserManualView: View {
         // Folder z docs/manual trafia do zasobów jako „manual”; wyszukiwanie zasobów rozróżnia wielkość liter.
         if let root = Bundle.main.url(forResource: "manual", withExtension: nil) ?? Bundle.main.url(forResource: "Manual", withExtension: nil),
            let dir = UserManual.directory(in: root, preferred: Bundle.main.preferredLocalizations + Locale.preferredLanguages) {
-            list = UserManual.chapters(in: dir)
+            // Rozdział bez tłumaczenia — wersja polska (katalog źródłowy instrukcji).
+            list = UserManual.chapters(in: dir, fallback: root.appendingPathComponent("pl", isDirectory: true))
         }
         list.append(UserManual.shortcutsChapter(commands: workspace.registry.commands.filter { !$0.isPlanned }.map(\.descriptor),
                                                 chords: { workspace.keymap.chords(for: $0) }))
