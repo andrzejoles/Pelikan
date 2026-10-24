@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "update emp set sal = 1 where empno = 7369;\nupdate emp set sal = 2 where empno = 7499;\nupdate emp set sal = 3 where empno = 7521;"}, "delay": 1}, {"command": "debug.select", "args": {"from": 15, "to": 18, "extra": [[58, 61], [101, 104]]}, "delay": 2}]
