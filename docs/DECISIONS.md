@@ -1113,3 +1113,19 @@ krótką tabelę pod spodem, niewyrównaną z kolumnami. Układ tabelaryczny bez
 jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, „Razem” na końcu. Z nową stroną po grupie
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
+
+### D-MAN-1 · 2026-10-24 — Instrukcja: zrzuty w docs/manual/img jako data:, tabele, rozdziały bez tłumaczenia po polsku
+Instrukcja na beta dostała 15 rozdziałów (wcześniej 10). Zrzuty z `docs/screenshots` (83 pliki, ~15 MB) nie trafiają do
+pakietu aplikacji, a okno pomocy ładuje HTML bez `baseURL` i z CSP `default-src 'none'` — odwołanie do pliku i tak by się
+nie wyświetliło. Dlatego wybrane 19 zrzutów (~4,5 MB, PNG 1400 px jak w docs/screenshots — ostre na Retinie przy szerokości
+strony 760 pt; zmniejszenie do 1120 px oszczędzało ~1 MB kosztem czytelności) leży w `docs/manual/img` pod opisowymi
+nazwami i jest wspólne dla wszystkich języków. Rozdział odwołuje się do nich zwykłym Markdownem `![opis](../img/plik.png)`
+— działa to też na GitHubie. `UserManual` osadza obrazek jako `data:` (CSP strony `img-src data:`) tylko wtedy, gdy plik
+jest PNG/JPEG, ma ≤ 4 MB i leży wewnątrz katalogu instrukcji (ścieżka bez schematu, bez `/` na początku, po rozwinięciu
+dowiązań); inaczej pokazuje sam opis. WKWebView nie dostaje dostępu do plików. Podzbiór Markdownu dostał tabele z wierszem
+nagłówka (`\|` w komórce) — potrzebne do skrótów i macierzy uprawnień. Zrzuty pokazujące nazwę konta albo hosta (np. lista
+sesji z OSUSER/MACHINE) nie trafiły do instrukcji. Test pilnuje, że każdy obrazek z rozdziałów istnieje, a każdy plik w
+`img` jest używany (bez balastu w pakiecie). Rozdziały przenumerowane (nowe: 05-obiekty, 08-utplsql, 10-wydajnosc,
+14-bezpieczenstwo, 15-problemy) także w en/de/es/uk; tłumaczenia to osobny krok, więc loader bierze rozdział, którego nie ma
+w katalogu języka, z polskiego (zamiast go gubić), a test wymaga tylko, żeby tłumaczenia nie miały rozdziałów spoza
+polskiej instrukcji. Po przetłumaczeniu można przywrócić wymóg kompletu.
