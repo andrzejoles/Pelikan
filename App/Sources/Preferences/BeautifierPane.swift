@@ -15,6 +15,7 @@ struct BeautifierPane: View {
         if r.sal < 1000 then update emp set sal = sal * (1 + p_procent / 100), comm = 0 where empno = r.empno;
         elsif r.sal is null then null; end if;
         end loop;
+        insert into log_zmian (dzial, procent, kiedy) values (p_dzial, p_procent, sysdate);
         dbms_output.put_line('Gotowe');
         exception when others then raise;
         end;
@@ -40,6 +41,9 @@ struct BeautifierPane: View {
                         Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
                         Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.fit)
                     }
+                    Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { layoutOptions }
+                    Picker(L10n.tr("Parametry wywołań"), selection: setting(workspace, \.beautifier.callParameters)) { layoutOptions }
+                    Picker(L10n.tr("Listy INSERT (kolumny, VALUES)"), selection: setting(workspace, \.beautifier.insertLists)) { layoutOptions }
                     Toggle(L10n.tr("Przecinek na początku linii"), isOn: setting(workspace, \.beautifier.commaBefore))
                     Toggle(L10n.tr("Zachowuj puste linie"), isOn: setting(workspace, \.beautifier.keepBlankLines))
                 }
@@ -69,6 +73,11 @@ struct BeautifierPane: View {
         }
         .onAppear { specialCase = workspace.settings.beautifier.specialCase.joined(separator: ", ") }
         .onDisappear(perform: saveSpecialCase)
+    }
+
+    @ViewBuilder private var layoutOptions: some View {
+        Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
+        Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.fit)
     }
 
     @ViewBuilder private var caseOptions: some View {

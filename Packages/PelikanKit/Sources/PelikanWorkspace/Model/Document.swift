@@ -80,7 +80,11 @@ public final class Document: Identifiable {
         }
     }
     public var selectedRange: Range<Int> = 0..<0
-    public var isModified = false
+    public var isModified = false {
+        didSet { if !isModified { baselineText = text } }
+    }
+    /// Tekst z chwili otwarcia, wczytania z bazy albo zapisu — status linii (PD-EDIT-003) i Revert (PD-PROG-009).
+    public internal(set) var baselineText = ""
     /// Zmieniony, nieskompilowany (Program Window).
     public var isCompileStale = false
     public var isExecuting = false
@@ -181,6 +185,7 @@ public final class Document: Identifiable {
         self.text = text
         self.fileURL = fileURL
         isModified = false
+        baselineText = text
     }
 
     public var title: String {

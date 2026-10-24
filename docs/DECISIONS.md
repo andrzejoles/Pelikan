@@ -874,3 +874,65 @@ grup od najgłębszej i REPORT na końcu. Samotny `/` w Command Window wykonuje 
 `;` (wtedy pozostaje separatorem) — wcześniej był pomijany zawsze. COPY pominięte: Oracle oznacza je jako przestarzałe,
 a składnia wymaga haseł w poleceniu (`user/hasło@baza`), co łamie zasadę haseł tylko w Pęku kluczy; kopiowanie danych
 między połączeniami robi Transfer danych (DB-XFER-001).
+### D116 · 2026-10-24 — Status linii, margines i podgląd zwiniętego kodu
+Stan bazowy okna (`Document.baselineText`) to tekst z chwili otwarcia, wczytania z bazy albo zapisu — ustawiany przy
+każdym `isModified = false`, więc obejmuje wszystkie ścieżki otwierania i zapisu. Margines rysuje pasek: pomarańczowy —
+linia zmieniona, zielony — nowa (diff linii w tle; wspólny początek i koniec pomijane, przy bardzo dużej zmianie cały
+środek oznaczony bez kosztownego diffu). Wzorzec rozróżnia też „zmienione i zapisane” — Pelikan po zapisie zeruje
+znaczniki (stan bazowy = zapisany tekst), bo historia lokalna i porównanie z plikiem pokazują starsze zmiany. Numer co n
+linii (pierwsza i bieżąca zawsze), pionowy margines w kolumnie i znaki specjalne (·, →, ¶) rysuje edytor TextKit 2.
+Podgląd zwiniętego obszaru: podpowiedź nad znacznikiem „⋯” z ukrytymi liniami (do 20).
+
+### D117 · 2026-10-24 — Wcięcia Smart i bez kursora za końcem linii
+Tryb Smart wcina nową linię o jednostkę po słowie otwierającym (BEGIN, THEN, LOOP, ELSE, DECLARE, IS, AS, EXCEPTION,
+CASE, „(”), a linię zaczynającą się od END/ELSE/ELSIF/EXCEPTION z wcięciem nadanym automatycznie wyrównuje do poziomu
+struktury przy Enter (wcięcie poprawione ręcznie zostaje). Backspace w wiodących spacjach usuwa do poprzedniej
+wielokrotności jednostki. Zawijanie wierszy — przełącznik w Widoku i Preferencjach. Kursor za końcem linii (virtual
+space) pominięty: NSTextView nie ma pozycji poza tekstem, a emulacja dopisywałaby spacje do pliku.
+
+### D118 · 2026-10-24 — Code Assistant: notacja nazwana, kolekcje, SELF, synonimy publiczne
+Parametry w notacji nazwanej są podpowiadane po „(” i po każdym przecinku wywołania (nawias szukany po tokenach, bez
+literałów i komentarzy), bez parametrów już podanych z `=>`. Z wpisanym prefiksem pozycje parametrów trafiają na początek
+zwykłej listy — zmienne jako argumenty pozycyjne nadal są dostępne. Kolekcje lokalne: COUNT, FIRST, LAST, NEXT, PRIOR,
+EXISTS, DELETE, a dla tablic zagnieżdżonych i VARRAY także EXTEND i TRIM (LIMIT tylko VARRAY). `self.` w ciele typu —
+atrybuty i metody ze specyfikacji w tym samym oknie, a bez niej z bazy. Bez kwalifikatora po obiektach schematu idą
+synonimy publiczne (obiekty dostępne).
+
+### D119 · 2026-10-24 — Code Contents: sortowanie i menu przez komendy
+Kolejność: jak w źródle, alfabetycznie, według rodzaju (preferencja `codeContentsOrder`, menu panelu). Menu elementu:
+Przejdź, Zaznacz, Kopiuj, Wytnij, Testuj — komendy `codeContents.*` z pozycją elementu (dostępne też dla agenta); element
+obejmuje pełne linie, Testuj otwiera okno testu z pakietem jako obiektem i podprogramem jako elementem.
+
+### D120 · 2026-10-24 — Nawigacja hiperłączami: źródło, okna, baza
+Wzorzec ma preferencję, gdzie otwierać deklarację. Pelikan szuka kolejno: lokalna deklaracja w zasięgu, jednostka albo
+jej podprogram w źródle bieżącego okna, w innych otwartych oknach (programu, SQL, testu — ciało przed specyfikacją dla
+podprogramu), a dopiero potem obiekt z bazy w nowym oknie. Bez osobnej preferencji — kolejność zawsze daje najbliższą
+deklarację, a otwarte okno ma pierwszeństwo przed źródłem z bazy (niezapisane zmiany). Menu obiektu na nazwie w edytorze
+ma listę działań w warstwie modelu (`EditorObjectMenu`), sprawdzaną testem względem rejestru komend; doszło „Testuj”.
+
+### D121 · 2026-10-24 — Dodawanie i usuwanie jednostek, szablony Java i MLE
+„+” na pasku kart okna programu dodaje jednostkę z szablonu folderu jednostek programów (na końcu, po „/”); menu karty
+usuwa jednostkę razem z kończącym ukośnikiem i pustymi liniami (z potwierdzeniem; obiekt w bazie zostaje). Agent używa
+`prog.addUnit` (szablon z wartościami albo gotowy tekst) i `prog.removeUnit`. Nowe szablony: źródło Java
+(`CREATE AND COMPILE JAVA SOURCE`, nagłówek rozpoznawany przez kompilator okna) i moduł MLE w JavaScript.
+
+### D122 · 2026-10-24 — Przywróć (Revert)
+`prog.revert` przywraca stan bazowy okna (z chwili otwarcia, wczytania z bazy albo zapisu) albo — z `source=database` —
+źródło jednostek okna z bazy (ALL_SOURCE, jak przy porównaniu). Użytkownik potwierdza odrzucenie zmian; cofnięcie w
+edytorze nadal działa. Po przywróceniu stanu bazowego okno jest niezmienione; po wczytaniu z bazy — zgodne z bazą, ale
+nadal zmienione względem pliku.
+
+### D123 · 2026-10-24 — Osobne reguły formatera dla parametrów i INSERT
+Do wspólnej reguły list SQL doszły trzy osobne: deklaracje parametrów podprogramów, parametry wywołań w PL/SQL i listy
+kolumn oraz wartości INSERT — „do marginesu” (domyślnie, jak dotąd) albo „element w linii” wyrównany za nawiasem.
+Formater nadal porównuje tokeny wyniku ze źródłem.
+
+### D124 · 2026-10-24 — Okno szablonów: pływające okno i przeciąganie
+Dokowanie realizuje para: panel w pasku bocznym i to samo drzewo w osobnym, pływającym oknie (Widok › Okno szablonów) —
+jak inne narzędzia (D112). Przeciągnięcie szablonu do edytora wstawia go w miejscu upuszczenia przez
+`edit.insertTemplate` (formularz zmiennych); poza edytorem przeciąga się tekst szablonu.
+
+### D125 · 2026-10-24 — Reload w przeglądarce różnic
+Porównania, których źródło da się odczytać ponownie (okno z bazą, okno z plikiem, obiekt z oknem, dwa pliki), przekazują
+przeglądarce funkcję ponownego wczytania obu stron; przycisk ⟳ zachowuje zamianę stron i opcje ignorowania. Porównania
+stałych tekstów (historia lokalna, wyniki narzędzi) nie mają Reload.

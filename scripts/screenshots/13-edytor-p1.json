@@ -1,0 +1,6 @@
+[
+  {"command": "file.newFromTemplate", "args": {"template": "Pakiet", "values": {"Nazwa": "kadry", "Procedura": "zwolnij"}}, "delay": 1},
+  {"command": "prog.addUnit", "args": {"template": "Funkcja", "values": {"Nazwa": "premia", "Parametr": "p_emp", "Typ zwracany": "number"}}, "delay": 1},
+  {"command": "view.specialCharacters", "delay": 0.5},
+  {"command": "view.templateWindow", "delay": 1.5}
+]

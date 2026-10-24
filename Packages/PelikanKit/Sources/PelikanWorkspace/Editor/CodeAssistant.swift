@@ -61,16 +61,19 @@ public enum CodeAssistant {
         if let ut = utplsql(text: text, offset: offset) { return ut }
         let c = CompletionContext.analyze(text, offset: offset)
         guard !c.inLiteralOrComment else { return nil }
-        if let p = await parameters(text: text, offset: offset, metadata: metadata, options: options) { return p }
+        let named = await parameters(text: text, offset: offset, metadata: metadata, options: options)
+        if let named, named.prefix.isEmpty { return named }
         var items: [CompletionItem] = []
         if c.afterAt {
             items = (try? await metadata?.databaseLinks())?.map { CompletionItem(label: $0, kind: .databaseLink) } ?? []
         } else if !c.qualifier.isEmpty {
-            items = await members(of: c, metadata: metadata)
+            items = await members(of: c, metadata: metadata, text: text, offset: offset)
         } else {
             items = await unqualified(c, metadata: metadata, options: options)
         }
         var filtered = filter(items, prefix: c.prefix, match: options.match).map { applyCase($0, prefix: c.prefix, letterCase: options.letterCase) }
+        // Parametry w notacji nazwanej pasujące do prefiksu — przed zmiennymi i obiektami (PD-CA-001).
+        if let named, named.prefix == c.prefix { filtered = named.items + filtered }
         guard !filtered.isEmpty else { return nil }
         // „(all)” — wszystkie kolumny/pola po kwalifikatorze (PD-CA-006).
         let columns = filtered.filter { [.column, .field].contains($0.kind) }
@@ -101,15 +104,72 @@ public enum CodeAssistant {
         return CompletionItem(label: L10n.tr("(all)"), insertText: text, kind: .keyword, detail: L10n.tr("Elementów: \(names.count)"))
     }
 
-    /// Parametry po `nazwa(` podprogramu (lokalnego z zarysu kodu albo z bazy): pozycje `parametr => ` i „(all)” z
-    /// wyrównaniem `=>` (PD-CA-006).
-    static func parameters(text: String, offset: Int, metadata m: MetadataProvider?, options: CompletionOptions) async -> CompletionResult? {
+    /// Wywołanie podprogramu wokół kursora: nazwa przed niezamkniętym „(”, parametry już podane w notacji nazwanej,
+    /// wpisywany prefiks bieżącego argumentu i czy to pierwszy argument (PD-CA-001).
+    struct CallContext {
+        var parts: [String]
+        var used: Set<String>
+        var prefix: String
+        var first: Bool
+    }
+
+    static func callContext(text: String, offset: Int) -> CallContext? {
         let ns = text as NSString
         let o = min(offset, ns.length)
-        let before = ns.substring(with: NSRange(location: max(0, o - 300), length: min(300, o)))
-        guard let match = before.firstMatch(of: #/([A-Za-z_][A-Za-z0-9_$#]*(?:\.[A-Za-z_][A-Za-z0-9_$#]*)*)\s*\(\s*$/#) else { return nil }
-        let parts = String(match.1).uppercased().split(separator: ".").map(String.init)
+        let start = max(0, o - 2000)
+        let window = ns.substring(with: NSRange(location: start, length: o - start))
+        let wns = window as NSString
+        let toks = Lexer(window).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment, .hint].contains($0.kind) }
+        func str(_ t: Token) -> String { wns.substring(with: NSRange(location: t.start, length: t.length)) }
+        // Bieżący argument: pusty albo sam identyfikator (prefiks nazwy parametru).
+        var k = toks.count - 1
+        var prefix = ""
+        if k >= 0, [.identifier, .keyword].contains(toks[k].kind), toks[k].end == wns.length {
+            prefix = str(toks[k])
+            k -= 1
+        }
+        guard k >= 0, [.leftParen, .comma].contains(toks[k].kind) else { return nil }
+        // Niezamknięty nawias wywołania i przecinki na jego poziomie.
+        var depth = 0
+        var open: Int?
+        var j = k
+        while j >= 0 {
+            switch toks[j].kind {
+            case .rightParen: depth += 1
+            case .leftParen:
+                if depth == 0 { open = j } else { depth -= 1 }
+            case .semicolon: return nil
+            default: break
+            }
+            if open != nil { break }
+            j -= 1
+        }
+        guard let open, open > 0 else { return nil }
+        var parts: [String] = []
+        var n = open - 1
+        while n >= 0, [.identifier, .quotedIdentifier, .keyword].contains(toks[n].kind) {
+            parts.insert(str(toks[n]).uppercased(), at: 0)
+            if n > 0, toks[n - 1].kind == .dot { n -= 2 } else { break }
+        }
         guard let name = parts.last, !Keywords.isKeyword(name) || parts.count > 1 else { return nil }
+        // Parametry już podane: `nazwa =>` na poziomie wywołania.
+        var used = Set<String>()
+        depth = 0
+        var i = open + 1
+        while i < toks.count {
+            let t = toks[i]
+            if t.kind == .leftParen { depth += 1 } else if t.kind == .rightParen { depth -= 1 }
+            if depth == 0, t.kind == .operator, str(t) == "=>", i > open + 1, [.identifier, .keyword].contains(toks[i - 1].kind) {
+                used.insert(str(toks[i - 1]).uppercased())
+            }
+            i += 1
+        }
+        return CallContext(parts: parts, used: used, prefix: prefix, first: k == open)
+    }
+
+    /// Parametry podprogramu (lokalnego z zarysu kodu albo z bazy): nazwa i opis.
+    static func parameterList(_ parts: [String], text: String, metadata m: MetadataProvider?) async -> [(String, String)] {
+        guard let name = parts.last else { return [] }
         var params: [(String, String)] = []
         func collect(_ nodes: [OutlineNode]) {
             for n in nodes {
@@ -123,11 +183,27 @@ public enum CodeAssistant {
         if params.isEmpty, let m {
             params = (try? await m.arguments(owner: parts.count == 3 ? parts[0] : nil, package: parts.count >= 2 ? parts[parts.count - 2] : nil, name: name)) ?? []
         }
+        return params
+    }
+
+    /// Parametry w notacji nazwanej po `nazwa(` i po przecinku w wywołaniu: pozycje `parametr => ` (bez podanych
+    /// wcześniej) i — przy pierwszym argumencie — „(all)” z wyrównaniem `=>` (PD-CA-001, PD-CA-006). Z wpisanym
+    /// prefiksem pozycje parametrów trafiają na początek zwykłej listy (zmienne jako argumenty pozycyjne zostają).
+    static func parameters(text: String, offset: Int, metadata m: MetadataProvider?, options: CompletionOptions) async -> CompletionResult? {
+        guard let call = callContext(text: text, offset: offset) else { return nil }
+        let ns = text as NSString
+        let o = min(offset, ns.length)
+        let params = await parameterList(call.parts, text: text, metadata: m).filter { !call.used.contains($0.0.uppercased()) }
         guard !params.isEmpty else { return nil }
-        let letterCase: CompletionCase = options.letterCase == .auto ? .lower : options.letterCase
+        let letterCase: CompletionCase = options.letterCase == .auto ? (call.prefix.isEmpty || call.prefix != call.prefix.uppercased() ? .lower : .upper) : options.letterCase
         let names = params.map { applyCase(CompletionItem(label: $0.0, kind: .column), prefix: "", letterCase: letterCase).insertText }
         var items = zip(names, params).map { CompletionItem(label: $0.0, insertText: $0.0 + " => ", kind: .parameter, detail: $0.1.1) }
-        if params.count >= 2 {
+        let start = o - (call.prefix as NSString).length
+        if !call.prefix.isEmpty {
+            items = filter(items, prefix: call.prefix, match: options.match)
+            return items.isEmpty ? nil : CompletionResult(replaceRange: start..<o, prefix: call.prefix, items: items)
+        }
+        if params.count >= 2, call.first {
             let width = names.map(\.count).max() ?? 0
             let lineStart = ns.lineRange(for: NSRange(location: o, length: 0)).location
             let indent = String(repeating: " ", count: o - lineStart)
@@ -234,8 +310,13 @@ public enum CodeAssistant {
 
     // MARK: Po kropce
 
-    static func members(of c: CompletionContext, metadata m: MetadataProvider?) async -> [CompletionItem] {
+    static func members(of c: CompletionContext, metadata m: MetadataProvider?, text: String = "", offset: Int = 0) async -> [CompletionItem] {
         let q = c.qualifier
+        // SELF w ciele typu obiektowego — atrybuty i metody typu (specyfikacja z okna albo z bazy).
+        if q == ["SELF"], !c.bindQualifier, let type = enclosingTypeBody(text, offset: offset) {
+            if let spec = localTypeSpecification(type.name, in: text) { return typeSpecificationMembers(spec) }
+            return await columnItems(owner: type.owner, name: type.name, metadata: m)
+        }
         // :new / :old w wyzwalaczu — kolumny tabeli wyzwalacza.
         if c.bindQualifier, ["NEW", "OLD"].contains(q.last ?? ""), let t = c.triggerTable {
             return await columnItems(owner: t.owner, name: t.name, metadata: m)
@@ -339,11 +420,93 @@ public enum CodeAssistant {
             return await columnItems(owner: parts.count > 1 ? parts[0] : nil, name: parts.last ?? base, metadata: m)
         }
         if let decl = c.typeDeclarations[upper] {
-            return recordFields(decl).map { CompletionItem(label: $0.name, kind: .field, detail: $0.type) }
+            let fields = recordFields(decl)
+            if !fields.isEmpty { return fields.map { CompletionItem(label: $0.name, kind: .field, detail: $0.type) } }
+            return collectionMethods(decl)
         }
         // Typ obiektowy bazy.
         guard let m, !upper.isEmpty, !upper.contains("%"), let o = try? await m.resolve(owner: nil, name: upper), o.type == .type else { return [] }
         return await objectMembers(o, metadata: m)
+    }
+
+    /// Metody kolekcji (PD-CA-002) dla `TYPE t IS TABLE OF …` / `VARRAY(n) OF …`; tablica asocjacyjna (INDEX BY)
+    /// bez EXTEND, TRIM i LIMIT.
+    static func collectionMethods(_ declaration: String) -> [CompletionItem] {
+        let up = declaration.uppercased().replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        let varray = up.range(of: #"\b(VARRAY|VARYING ARRAY)\b"#, options: .regularExpression) != nil
+        guard varray || up.range(of: #"\bTABLE OF\b"#, options: .regularExpression) != nil else { return [] }
+        let associative = up.contains(" INDEX BY ")
+        var methods: [(String, String)] = [("COUNT", "integer"), ("FIRST", L10n.tr("pierwszy indeks")), ("LAST", L10n.tr("ostatni indeks")),
+                                           ("NEXT(", L10n.tr("następny indeks")), ("PRIOR(", L10n.tr("poprzedni indeks")),
+                                           ("EXISTS(", "boolean"), ("DELETE", L10n.tr("usuwa elementy"))]
+        if !associative { methods += [("EXTEND", L10n.tr("dodaje elementy")), ("TRIM", L10n.tr("usuwa elementy z końca"))] }
+        if varray { methods.append(("LIMIT", L10n.tr("maksymalna liczba elementów"))) }
+        return methods.map { CompletionItem(label: $0.0.trimmingCharacters(in: CharacterSet(charactersIn: "(")), insertText: $0.0, kind: .function, detail: $0.1) }
+    }
+
+    /// Typ obiektowy, którego ciało (`CREATE TYPE BODY`) obejmuje pozycję.
+    static func enclosingTypeBody(_ text: String, offset: Int) -> (owner: String?, name: String)? {
+        let ns = text as NSString
+        let head = ns.substring(to: min(offset, ns.length))
+        let pattern = #"(?i)\bcreate\s+(?:or\s+replace\s+)?(?:(?:editionable|noneditionable)\s+)?type\s+body\s+(?:("?[\w$#]+"?)\s*\.\s*)?("?[\w$#]+"?)"#
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let m = re.matches(in: head, range: NSRange(location: 0, length: (head as NSString).length)).last else { return nil }
+        // Ciało typu kończy się „/” w osobnej linii — za nim pozycja nie należy już do typu.
+        let after = (head as NSString).substring(from: m.range.upperBound)
+        if after.range(of: #"(?m)^\s*/\s*$"#, options: .regularExpression) != nil { return nil }
+        func clean(_ r: NSRange) -> String? {
+            guard r.location != NSNotFound else { return nil }
+            let s = (head as NSString).substring(with: r)
+            return s.hasPrefix("\"") ? String(s.dropFirst().dropLast()) : s.uppercased()
+        }
+        guard let name = clean(m.range(at: 2)) else { return nil }
+        return (clean(m.range(at: 1)), name)
+    }
+
+    /// Treść specyfikacji typu obiektowego z tego samego tekstu: lista w nawiasie po `AS|IS OBJECT`.
+    static func localTypeSpecification(_ name: String, in text: String) -> String? {
+        let pattern = #"(?is)\bcreate\s+(?:or\s+replace\s+)?(?:(?:editionable|noneditionable)\s+)?type\s+(?:"?[\w$#]+"?\s*\.\s*)?"?"# + NSRegularExpression.escapedPattern(for: name) + #""?\s+(?:force\s+)?(?:authid\s+\w+\s+)?(?:as|is|under\s+[\w$#."]+)\s*(?:object\s*)?\("#
+        guard let re = try? NSRegularExpression(pattern: pattern),
+              let m = re.firstMatch(in: text, range: NSRange(location: 0, length: (text as NSString).length)) else { return nil }
+        let ns = text as NSString
+        var depth = 0
+        var k = m.range.upperBound
+        let start = k
+        while k < ns.length {
+            let ch = ns.character(at: k)
+            if ch == 0x28 { depth += 1 }
+            if ch == 0x29 { if depth == 0 { return ns.substring(with: NSRange(location: start, length: k - start)) }; depth -= 1 }
+            k += 1
+        }
+        return nil
+    }
+
+    /// Atrybuty i metody ze specyfikacji typu (elementy rozdzielone przecinkami na najwyższym poziomie).
+    static func typeSpecificationMembers(_ spec: String) -> [CompletionItem] {
+        var parts: [String] = [""]
+        var depth = 0
+        for ch in spec {
+            if ch == "(" { depth += 1 }
+            if ch == ")" { depth -= 1 }
+            if ch == ",", depth == 0 { parts.append("") } else { parts[parts.count - 1].append(ch) }
+        }
+        let modifiers: Set<String> = ["MEMBER", "STATIC", "MAP", "ORDER", "CONSTRUCTOR", "OVERRIDING", "FINAL", "NOT", "INSTANTIABLE"]
+        var out: [CompletionItem] = []
+        for p in parts {
+            // Komentarze w specyfikacji pomijane.
+            let clean = p.replacingOccurrences(of: #"--[^\n]*"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"(?s)/\*.*?\*/"#, with: "", options: .regularExpression)
+            let words = clean.split(whereSeparator: { $0.isWhitespace || $0 == "(" }).map(String.init)
+            guard let first = words.first else { continue }
+            if modifiers.contains(first.uppercased()) {
+                guard let k = words.firstIndex(where: { ["PROCEDURE", "FUNCTION"].contains($0.uppercased()) }), k + 1 < words.count else { continue }
+                let isFunction = words[k].uppercased() == "FUNCTION"
+                out.append(CompletionItem(label: words[k + 1], kind: isFunction ? .function : .procedure, detail: words[k].lowercased()))
+            } else {
+                out.append(CompletionItem(label: first, kind: .field, detail: words.dropFirst().joined(separator: " ")))
+            }
+        }
+        return out
     }
 
     /// Pola typu `TYPE t IS RECORD (pole typ, …)`.
@@ -385,6 +548,12 @@ public enum CodeAssistant {
             let p = c.prefix.uppercased()
             out += names.lazy.filter { $0.name.hasPrefix(p) }.prefix(300).map {
                 CompletionItem(label: $0.name, kind: kind(ofObjectType: $0.type), detail: $0.type.lowercased())
+            }
+            // Obiekty dostępne przez synonimy publiczne (PD-CA-003) — po obiektach własnego schematu.
+            if schema != "PUBLIC", let pub = try? await m.objectNames(owner: "PUBLIC") {
+                out += pub.lazy.filter { $0.name.hasPrefix(p) }.prefix(200).map {
+                    CompletionItem(label: $0.name, kind: .synonym, detail: L10n.tr("synonim publiczny"))
+                }
             }
         }
         let p = c.prefix.uppercased()
