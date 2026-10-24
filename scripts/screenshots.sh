@@ -33,17 +33,26 @@ for name in "${scenarios[@]}"; do
     sed "s|@OUT@|$OUT|g" "$script" > "$run"
     rm -f "$run.done"
     rm -rf "$DATA/Recovery"
+    started=$(date +%s)
     open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" "$APP"
     for _ in $(seq 1 120); do [ -f "$run.done" ] && break; sleep 0.5; done
     sleep 1.5
     pid=$(pgrep -n -f "$APP/Contents/MacOS/Pelikan" || true)
     [ -n "$pid" ] || { echo "$name: aplikacja nie wystartowała" >&2; continue; }
-    i=0
+    # Nazwa pliku od tytułu okna (kolejność okien między przebiegami nie jest stała): 17-narzedzia-dbms-scheduler.png,
+    # okno główne — „glowne”; powtórzony tytuł dostaje numer.
     while IFS=$'\t' read -r wid title size; do
-        i=$((i + 1))
-        file="$OUT/$name-$i.png"
+        slug=$(python3 -c 'import sys,re,unicodedata
+t=sys.argv[1]
+t="glowne" if t.startswith("Pelikan — ") else t
+t=t.replace("ł","l").replace("Ł","L")
+t=unicodedata.normalize("NFKD",t).encode("ascii","ignore").decode().lower()
+print(re.sub(r"[^a-z0-9]+","-",t).strip("-") or "okno")' "$title")
+        file="$OUT/$name-$slug.png"
+        n=2
+        while [ -f "$file" ] && [ "$(stat -f %m "$file")" -ge "$started" ]; do file="$OUT/$name-$slug-$n.png"; n=$((n + 1)); done
         screencapture -l "$wid" -o -x "$file"
-        echo "$name-$i.png  $title  $size"
+        echo "$(basename "$file")  $title  $size"
     done < <(swift "$ROOT/scripts/screenshots/windows.swift" "$pid" 2>/dev/null)
     kill "$pid" 2>/dev/null || true
     sleep 1
