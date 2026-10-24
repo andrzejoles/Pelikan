@@ -57,4 +57,22 @@ struct CodeAssistantTests {
         for o in ["table pelikan_ca_t purge", "sequence pelikan_ca_seq", "package pelikan_ca_pkg"] { _ = try? await s.execute("drop \(o)") }
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Po @ — łącza bazy z ALL_DB_LINKS (PD-CA-005)")
+    func databaseLinks() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try? await s.execute("drop database link pelikan_ca_link")
+        // Łącze nie musi działać — lista pochodzi ze słownika (hasło testowe tylko w poleceniu do bazy testowej).
+        _ = try await s.execute("create database link pelikan_ca_link connect to \(c.user) identified by \"\(c.password)\" using 'localhost:1521/FREEPDB1'")
+        let items = await labels(ws, "select * from dual@|")
+        #expect(items.contains { $0.hasPrefix("PELIKAN_CA_LINK") })
+        #expect(await labels(ws, "select * from dual@pelikan_ca|").allSatisfy { $0.hasPrefix("PELIKAN_CA") })
+        _ = try? await s.execute("drop database link pelikan_ca_link")
+        await ws.sessions.disconnectAll()
+    }
 }
