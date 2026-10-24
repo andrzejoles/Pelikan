@@ -125,6 +125,30 @@ enum GridStage8Commands {
                 tab.columnWidths = GridAlign.widths(grid, mode: mode)
                 return .ok
             },
+            command("sql.toggleEditor", L10n.tr("Ukryj edytor"),
+                    summary: L10n.tr("Ukrywa albo pokazuje edytor okna SQL — wyniki zajmują całe okno."), feature: "PD-GRID-012",
+                    validate: { $0.activeDocument?.kind == .sql }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind == .sql else { throw CommandError.notAvailable(L10n.tr("Brak okna SQL")) }
+                doc.editorHidden.toggle()
+                return CommandResult(message: doc.editorHidden ? L10n.tr("Edytor ukryty") : L10n.tr("Edytor widoczny"))
+            },
+            command("grid.rowHeight", L10n.tr("Wysokość wierszy…"),
+                    params: [CommandParameter("lines", .string, L10n.tr("Linie na wiersz 1–10 albo auto (wg treści)"))],
+                    summary: L10n.tr("Ustawia wysokość wierszy siatki w liniach tekstu (wieloliniowe wartości zawijane) albo wg treści."),
+                    feature: "PD-GRID-012", validate: hasGrid) { ctx in
+                let (tab, grid) = try grid(ctx)
+                var raw = ctx.arguments.string("lines")
+                if raw == nil, ctx.invoker == .user, let ui = ctx.ui {
+                    raw = await ui.chooseValue(L10n.tr("Wysokość wierszy"), values: ["auto"] + (1...10).map(String.init))
+                    if raw == nil { throw CommandError.cancelledByUser }
+                }
+                let value = raw ?? "auto"
+                if value == "auto" { tab.rowLines = GridAlign.rowLines(grid) } else {
+                    guard let n = Int(value), (1...10).contains(n) else { throw CommandError.invalidArgument("lines", value) }
+                    tab.rowLines = n
+                }
+                return CommandResult(message: L10n.tr("Linii na wiersz: \(tab.rowLines)"), value: .int(Int64(tab.rowLines)))
+            },
             command("grid.saveAlignTemplate", L10n.tr("Zapisz wyrównanie dla zapytania"),
                     summary: L10n.tr("Zapamiętuje kolejność i szerokości kolumn dla tego zapytania; stosowane przy kolejnych wykonaniach."),
                     feature: "PD-GRID-012", validate: hasGrid) { ctx in

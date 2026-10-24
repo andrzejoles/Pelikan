@@ -130,9 +130,10 @@ public enum ProgramCompiler {
         }
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
-        let warnings = ws.settings.plsqlWarnings.trimmingCharacters(in: .whitespaces)
-        if !warnings.isEmpty, ws.settings.plsqlWarnings.range(of: #"^[A-Za-z0-9:_, ()]+$"#, options: .regularExpression) != nil {
-            _ = try? await s.execute("ALTER SESSION SET PLSQL_WARNINGS = '\(warnings)'")
+        // Ostrzeżenia i parametry kompilatora z Preferencji (PD-PROG-013); błąd parametru (np. NATIVE bez uprawnień)
+        // nie zatrzymuje kompilacji — obowiązuje ustawienie serwera.
+        for statement in ws.settings.compiler.statements(warnings: ws.settings.plsqlWarnings) {
+            _ = try? await s.execute(statement)
         }
         var result = Result(messages: [], compiled: 0, stoppedAt: nil)
         let schema = s.info.currentSchema
@@ -154,7 +155,7 @@ public enum ProgramCompiler {
             // Historia lokalna obiektu (DG-HIST-001): wersja wysłana do bazy.
             ws.localHistory.record(key: LocalHistory.key(object: u.owner ?? schema, type: u.type.rawValue, name: u.name, connection: conn),
                                    title: "\(u.owner ?? schema).\(u.name) (\(u.type.rawValue))", text: u.text, label: L10n.tr("kompilacja"))
-            if ws.settings.debugInfoOnCompile,
+            if ws.addsDebugInfo(object: DBObject(owner: u.owner ?? schema, name: u.name, type: u.type), connectionID: conn),
                let dbg = ObjectCommands.debugCompileStatement(DBObject(owner: u.owner ?? schema, name: u.name, type: u.type)) {
                 _ = try? await s.execute(dbg)
             }
@@ -184,11 +185,11 @@ public enum ProgramCompiler {
                 }
             }
         }
-        // Adnotacje utPLSQL w specyfikacjach z --%suite: nieznane nazwy jako ostrzeżenia (UT-CA-002).
-        for u in units where u.type == .package && u.text.lowercased().contains("--%suite") {
-            for a in UtplsqlExplorer.unknownAnnotations(in: u.text) {
-                result.messages.append(CompileMessage(severity: .warning, unit: u.tabTitle, line: u.line + a.line, column: 1,
-                                                      text: L10n.tr("Nieznana adnotacja utPLSQL --%\(a.name)")))
+        // Adnotacje utPLSQL w specyfikacjach z --%suite albo --%test: nieznane nazwy, listy procedur, brak --%suite,
+        // niesparowane konteksty — ostrzeżenia (UT-CA-002).
+        for u in units where u.type == .package && (u.text.lowercased().contains("--%suite") || u.text.lowercased().contains("--%test")) {
+            for a in UtplsqlExplorer.annotationProblems(in: u.text) {
+                result.messages.append(CompileMessage(severity: .warning, unit: u.tabTitle, line: u.line + a.line, column: 1, text: a.message))
             }
         }
         ws.compileGeneration += 1

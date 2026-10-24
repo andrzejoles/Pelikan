@@ -81,6 +81,8 @@ public protocol UIServices: AnyObject {
     func chooseValue(_ title: String, values: [String]) async -> String?
     /// Kalendarz przy edycji daty (PD-GRID-005): wybrana data (z czasem, gdy `withTime`); nil — anulowano.
     func chooseDate(_ title: String, initial: OracleTimestamp?, withTime: Bool) async -> OracleTimestamp?
+    /// Edytor szablonu (PD-TPL-003): folder, nazwa i tekst; nil — anulowano.
+    func editTemplate(_ template: CodeTemplate, folders: [String]) async -> CodeTemplate?
     /// Instrukcja użytkownika (PL-INFRA-010).
     func showUserManual()
     /// Okno druku dla dokumentu HTML (PD-SQLW-016).
@@ -199,6 +201,7 @@ extension UIServices {
     public func showColumnFilter(_ tab: ResultTab) {}
     public func chooseValue(_ title: String, values: [String]) async -> String? { nil }
     public func chooseDate(_ title: String, initial: OracleTimestamp?, withTime: Bool) async -> OracleTimestamp? { nil }
+    public func editTemplate(_ template: CodeTemplate, folders: [String]) async -> CodeTemplate? { nil }
     public func showUserManual() {}
     public func printHTML(title: String, html: String) {}
     public func showDualityViews() {}
@@ -305,6 +308,8 @@ public final class Workspace {
     public var statusMessage: String?
     /// Obiekt zaznaczony w Object Browserze (cel komend `ob.*`).
     public var selectedObject: DBObject?
+    /// Wszystkie obiekty zaznaczone w Object Browserze (PD-OB-011); `selectedObject` — ostatnio kliknięty.
+    public var selectedObjects: [DBObject] = []
     /// Filtry nazwane i foldery użytkownika Object Browsera (`browser.json`, PD-OB-007/008) i filtr bieżący.
     public private(set) var browserCustomization = BrowserCustomization()
     public var browserFilter: BrowserFilter?
@@ -356,6 +361,8 @@ public final class Workspace {
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))
+    /// Czas ostatniej migawki odzyskiwania przed wykonaniem (PD-FILE-001) — co najwyżej jedna na kilka sekund.
+    @ObservationIgnored var lastExecuteSnapshot: Date?
     /// Okna z poprzedniego, nieczysto zakończonego uruchomienia — do przywrócenia (Plik › Odzyskaj okna).
     public var pendingRecovery: Workset?
     /// Uruchomienie programu zewnętrznego bez powłoki (argumenty jako tablica); w testach podmieniane.

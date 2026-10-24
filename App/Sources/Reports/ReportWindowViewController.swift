@@ -39,12 +39,20 @@ final class ReportWindowViewController: NSViewController {
         pages = [editorPage, NSHostingView(rootView: ReportLayoutView(document: document)),
                  NSHostingView(rootView: ReportOptionsView(document: document, workspace: workspace)), web]
         let bar = NSHostingView(rootView: ReportToolbar(document: document, workspace: workspace, selection: selection))
-        let stack = NSStackView(views: [bar, container])
-        stack.orientation = .vertical
-        stack.spacing = 0
-        stack.alignment = .leading
+        // Pasek u góry, strony wypełniają resztę (w pionowym NSStackView kontener bez wysokości własnej się zapadał, D145).
+        let stack = NSView()
+        for v in [bar, container] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            stack.addSubview(v)
+            v.leadingAnchor.constraint(equalTo: stack.leadingAnchor).isActive = true
+            v.trailingAnchor.constraint(equalTo: stack.trailingAnchor).isActive = true
+        }
+        NSLayoutConstraint.activate([
+            bar.topAnchor.constraint(equalTo: stack.topAnchor),
+            container.topAnchor.constraint(equalTo: bar.bottomAnchor),
+            container.bottomAnchor.constraint(equalTo: stack.bottomAnchor),
+        ])
         bar.setContentHuggingPriority(.required, for: .vertical)
-        for v in [bar, container] { v.translatesAutoresizingMaskIntoConstraints = false; v.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true }
         for p in pages {
             p.translatesAutoresizingMaskIntoConstraints = false
             container.addSubview(p)

@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select deptno, count(*) liczba, sum(sal) suma from emp group by deptno order by deptno"}, "delay": 1}, {"command": "sql.execute", "delay": 3}, {"command": "grid.graph", "delay": 2}, {"command": "grid.valuePanel", "delay": 2}]

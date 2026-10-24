@@ -14,10 +14,10 @@ struct DBAPanelView: View {
     @State private var message = ""
 
     var body: some View {
-        NavigationSplitView {
+        // HSplitView zamiast NavigationSplitView: ten dokłada pasek narzędzi okna i treść wchodziła pod tytuł.
+        HSplitView {
             List(DBAPanel.Section.allCases, selection: $section) { Text($0.displayName).tag($0) }
-                .navigationSplitViewColumnWidth(min: 160, ideal: 180)
-        } detail: {
+                .frame(minWidth: 160, idealWidth: 180, maxWidth: 240)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     TextField(L10n.tr("Filtr"), text: $filter).textFieldStyle(.roundedBorder).frame(maxWidth: 260)

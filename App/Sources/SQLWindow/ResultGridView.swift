@@ -30,6 +30,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     static let nullColor = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.30, green: 0.28, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.98, blue: 0.80, alpha: 1) }
     private var font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     private var lastFontSize: Double = 0
+    private var lastRowLines = 1
+    private var lastColors = AreaColors()
     private var lastHidden: Set<Int> = []
     private var lastWidths: [Int: Int]?
     private var lastOrder: [Int]?
@@ -232,11 +234,27 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             table.headerView?.needsDisplay = true
             table.reloadData()
         }
+        // Własne kolory siatki (PD-PREF-005): tło tabeli i tekst komórek.
+        let colors = workspace.settings.gridColors
+        if colors != lastColors {
+            lastColors = colors
+            GridCell.customText = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            if let b = colors.background {
+                table.backgroundColor = NSColor(red: b.red, green: b.green, blue: b.blue, alpha: 1)
+                table.usesAlternatingRowBackgroundColors = false
+            } else {
+                table.backgroundColor = .controlBackgroundColor
+                table.usesAlternatingRowBackgroundColors = tab.altRowColor == nil
+            }
+            table.reloadData()
+        }
         let size = workspace.settings.gridFontSize
-        if size != lastFontSize {
+        if size != lastFontSize || tab.rowLines != lastRowLines {
             lastFontSize = size
+            lastRowLines = tab.rowLines
             font = NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
-            table.rowHeight = CGFloat(size) + 8
+            // Wysokość wiersza w liniach tekstu (PD-GRID-012).
+            table.rowHeight = (CGFloat(size) + 4) * CGFloat(max(1, tab.rowLines)) + 4
             table.reloadData()
         }
         let hidden = tab.hiddenColumns
@@ -421,7 +439,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
                        isNull: v.isNull, secondary: false,
                        state: grid.edit.isEditing ? grid.pendingCellState(row: row, column: i) : .normal,
                        overflow: grid.edit.isEditing && grid.isOverflow(row: row, column: i),
-                       editable: grid.isEditable(column: i))
+                       editable: grid.isEditable(column: i), lines: tab.rowLines)
         // Komórka bloku (PD-GRID-007): tło zaznaczenia zamiast podświetlenia całego wiersza.
         if let block = tab.selectedColumns, block.contains(i), table.isRowSelected(row) {
             cell.layer?.backgroundColor = NSColor.selectedContentBackgroundColor.withAlphaComponent(0.45).cgColor
@@ -706,18 +724,25 @@ final class GridCell: NSTableCellView {
     }
 
     static let modifiedColor = NSColor.systemBlue
+    /// Własny kolor tekstu komórek z Preferencji (PD-PREF-005); nil — kolor systemu.
+    nonisolated(unsafe) static var customText: NSColor?
     static let insertedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.28, blue: 0.16, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.97, blue: 0.88, alpha: 1) }
     static let modifiedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.20, blue: 0.32, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.93, blue: 1.0, alpha: 1) }
     static let deletedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.32, green: 0.12, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.90, blue: 0.90, alpha: 1) }
 
     func configure(text: String, alignRight: Bool, isNull: Bool, secondary: Bool,
-                   state: CellEditState = .normal, overflow: Bool = false, editable: Bool = false, rowMarker: CellEditState = .normal) {
-        // Wielowierszowy tekst w jednej linii komórki (pełna treść — widok rekordu, Large Data Editor).
-        let shown = editable ? text : (text.count > 500 ? String(text.prefix(500)) + "…" : text.replacingOccurrences(of: "\n", with: " ⏎ "))
+                   state: CellEditState = .normal, overflow: Bool = false, editable: Bool = false, rowMarker: CellEditState = .normal,
+                   lines: Int = 1) {
+        // Wielowierszowy tekst w jednej linii komórki (pełna treść — widok rekordu, Large Data Editor); przy wysokości
+        // wiersza w kilku liniach (PD-GRID-012) — z zawijaniem.
+        let clipped = text.count > 500 ? String(text.prefix(500)) + "…" : text
+        let shown = editable ? text : (lines > 1 ? clipped : clipped.replacingOccurrences(of: "\n", with: " ⏎ "))
+        label.maximumNumberOfLines = lines
+        label.lineBreakMode = lines > 1 ? .byWordWrapping : .byTruncatingTail
         label.isEditable = editable && state != .deleted
         label.isSelectable = label.isEditable
         label.alignment = alignRight ? .right : .left
-        let color: NSColor = overflow ? .systemRed : state == .modified ? Self.modifiedColor : secondary ? .tertiaryLabelColor : .labelColor
+        let color: NSColor = overflow ? .systemRed : state == .modified ? Self.modifiedColor : secondary ? .tertiaryLabelColor : Self.customText ?? .labelColor
         if state == .deleted {
             label.attributedStringValue = NSAttributedString(string: shown, attributes: [
                 .strikethroughStyle: NSUnderlineStyle.single.rawValue, .foregroundColor: NSColor.systemRed, .font: label.font!])

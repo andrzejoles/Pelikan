@@ -1,0 +1,1 @@
+[{"command": "tools.sessions", "delay": 3}, {"command": "tools.scheduler", "delay": 3}, {"command": "tools.eventMonitor", "delay": 2}, {"command": "tools.testManager", "delay": 2}, {"command": "tools.configureTools", "delay": 2}, {"command": "agent.showLog", "delay": 2}]

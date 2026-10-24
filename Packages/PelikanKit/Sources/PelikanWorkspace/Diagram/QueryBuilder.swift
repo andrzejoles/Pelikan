@@ -9,6 +9,8 @@ public struct QBTable: Sendable, Codable, Hashable, Identifiable {
     public var alias: String
     public var columns: [SchemaColumn]
     public var position = DiagramPoint(16, 16)
+    /// Podzapytanie w FROM (widok wbudowany, PD-QB-001) — wtedy `name` jest tylko etykietą.
+    public var subquery: String?
 
     public init(owner: String, name: String, alias: String, columns: [SchemaColumn]) {
         self.owner = owner; self.name = name; self.alias = alias; self.columns = columns
@@ -100,6 +102,19 @@ public struct QueryModel: Sendable, Codable, Hashable {
         return t.id
     }
 
+    /// Dodaje podzapytanie w FROM z aliasem; kolumny z opisu zapytania (PD-QB-001).
+    @discardableResult
+    public mutating func addSubquery(_ sql: String, alias: String, columns: [SchemaColumn]) -> UUID {
+        var q = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        while q.hasSuffix(";") { q = String(q.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
+        let a = alias.trimmingCharacters(in: .whitespaces).isEmpty ? uniqueAlias(for: "SUBQ") : alias.lowercased()
+        var t = QBTable(owner: "", name: a.uppercased(), alias: a, columns: columns)
+        t.subquery = q
+        t.position = DiagramPoint(16 + Double(tables.count % 4) * 232, 16 + Double(tables.count / 4) * 220)
+        tables.append(t)
+        return t.id
+    }
+
     public mutating func removeTable(_ id: UUID) {
         tables.removeAll { $0.id == id }
         joins.removeAll { $0.left == id || $0.right == id }
@@ -134,7 +149,11 @@ public struct QueryModel: Sendable, Codable, Hashable {
     }
 
     func tableText(_ t: QBTable) -> String {
-        (format.qualifyWithOwner && !t.owner.isEmpty ? ident(t.owner) + "." : "") + ident(t.name) + " " + t.alias
+        if let q = t.subquery {
+            let indented = q.components(separatedBy: "\n").map { "         " + $0 }.joined(separator: "\n")
+            return "(\n" + indented + "\n     ) " + t.alias
+        }
+        return (format.qualifyWithOwner && !t.owner.isEmpty ? ident(t.owner) + "." : "") + ident(t.name) + " " + t.alias
     }
 
     func condition(_ j: QBJoin) -> String {
@@ -202,10 +221,11 @@ public struct QueryModel: Sendable, Codable, Hashable {
 
     // MARK: Odczyt istniejącego SELECT (modyfikacja zapytania)
 
-    /// Model z prostego SELECT: lista pól, FROM z tabelami (przecinki albo [INNER|LEFT|RIGHT|FULL] JOIN … ON a.x = b.y),
-    /// WHERE, GROUP BY, HAVING, ORDER BY. Kolumny tabel z `columnsOf` (słownik). Nil — zapytanie spoza tego zakresu
-    /// (podzapytania w FROM, UNION, WITH).
-    public static func parse(_ sql: String, resolve: (String?, String) -> (owner: String, name: String, columns: [SchemaColumn])?) -> QueryModel? {
+    /// Model z prostego SELECT: lista pól, FROM z tabelami i podzapytaniami (przecinki albo [INNER|LEFT|RIGHT|FULL] JOIN …
+    /// ON a.x = b.y), WHERE, GROUP BY, HAVING, ORDER BY. Kolumny tabel z `resolve` (słownik), podzapytań — z `describe`.
+    /// Nil — zapytanie spoza tego zakresu (UNION, WITH, CONNECT BY).
+    public static func parse(_ sql: String, resolve: (String?, String) -> (owner: String, name: String, columns: [SchemaColumn])?,
+                             describe: (String) -> [SchemaColumn] = { _ in [] }) -> QueryModel? {
         var text = sql.trimmingCharacters(in: .whitespacesAndNewlines)
         while text.hasSuffix(";") { text.removeLast() }
         let ns = text as NSString
@@ -233,7 +253,29 @@ public struct QueryModel: Sendable, Codable, Hashable {
             let end = k + 1 < marks.count ? marks[k + 1].start : ns.length
             return ns.substring(with: NSRange(location: marks[k].bodyStart, length: end - marks[k].bodyStart)).trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        guard var select = body("SELECT"), let from = body("FROM"), !from.contains("(") else { return nil }
+        guard var select = body("SELECT"), var from = body("FROM") else { return nil }
+        // Podzapytania w FROM (nawiasy najwyższego poziomu zaczynające się od SELECT/WITH) → znaczniki na czas podziału.
+        var subqueries: [String] = []
+        do {
+            let f = from as NSString
+            var out = "", depth = 0, start = -1, last = 0
+            for i in 0..<f.length {
+                let c = f.character(at: i)
+                if c == 0x28 { if depth == 0 { start = i }; depth += 1 }
+                else if c == 0x29 {
+                    depth -= 1
+                    if depth == 0, start >= 0 {
+                        let inner = f.substring(with: NSRange(location: start + 1, length: i - start - 1)).trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard let w = inner.split(whereSeparator: \.isWhitespace).first?.uppercased(), w == "SELECT" || w == "WITH" else { return nil }
+                        out += f.substring(with: NSRange(location: last, length: start - last)) + " PELIKAN_SUBQ_\(subqueries.count) "
+                        subqueries.append(inner)
+                        last = i + 1
+                    }
+                }
+            }
+            guard depth == 0 else { return nil }
+            from = out + f.substring(from: last)
+        }
         var m = QueryModel()
         if select.uppercased().hasPrefix("DISTINCT ") { m.distinct = true; select = String(select.dropFirst(9)) }
         m.into = body("INTO") ?? ""
@@ -245,6 +287,12 @@ public struct QueryModel: Sendable, Codable, Hashable {
         func addTable(_ spec: String) -> UUID? {
             let words = spec.split(whereSeparator: \.isWhitespace).map(String.init)
             guard let ref = words.first else { return nil }
+            if ref.hasPrefix("PELIKAN_SUBQ_"), let n = Int(ref.dropFirst("PELIKAN_SUBQ_".count)), n < subqueries.count {
+                let alias = words.count > 1 && words[1].uppercased() != "AS" ? words[1] : words.count > 2 ? words[2] : ""
+                let id = m.addSubquery(subqueries[n], alias: alias, columns: describe(subqueries[n]))
+                if let t = m.table(id) { aliasToID[t.alias] = id }
+                return id
+            }
             let parts = ref.split(separator: ".").map { String($0).replacingOccurrences(of: "\"", with: "") }
             guard let found = resolve(parts.count == 2 ? parts[0].uppercased() : nil, (parts.last ?? ref).uppercased()) else { return nil }
             var t = QBTable(owner: found.owner, name: found.name, alias: words.count > 1 && words[1].uppercased() != "AS" ? words[1].lowercased()

@@ -78,6 +78,15 @@ extension Workspace {
         return try await m.schemaSource()
     }
 
+    /// Kolumny wyniku zapytania bez pobierania wierszy (podzapytanie w Query Builderze, PD-QB-001).
+    public func describeQuery(_ sql: String, connection: UUID?) async throws -> [SchemaColumn] {
+        guard let m = metadata(for: connection) else { throw CommandError.notConnected }
+        var q = sql.trimmingCharacters(in: .whitespacesAndNewlines)
+        while q.hasSuffix(";") { q = String(q.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
+        let (cols, _) = try await m.session().queryAll("select * from (\n\(q)\n) where 1 = 0", limit: 1)
+        return cols.map { SchemaColumn(name: $0.name, type: $0.typeName) }
+    }
+
     /// Źródło metadanych połączenia (Query Builder).
     public func schemaSource(connection: UUID?) async throws -> any SchemaMetadataSource {
         guard let m = metadata(for: connection) else { throw CommandError.notConnected }

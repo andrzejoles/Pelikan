@@ -6,9 +6,16 @@ import SwiftUI
 
 /// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
 /// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
+/// Wybrana karta Preferencji — wspólna dla okna, żeby komendy mogły otwierać konkretną kartę (np. Zestawy).
+@MainActor
+@Observable
+final class PreferencesNavigation {
+    var pane = "GeneralPane"
+}
+
 struct PreferencesView: View {
     let workspace: Workspace
-    @State private var pane = "GeneralPane"
+    @Bindable var navigation: PreferencesNavigation
     @State private var query = ""
 
     static let panes: [(id: String, title: String, icon: String)] = [
@@ -38,7 +45,7 @@ struct PreferencesView: View {
             .padding(.horizontal, 12)
             .padding(.top, 8)
             if query.isEmpty {
-                TabView(selection: $pane) {
+                TabView(selection: $navigation.pane) {
                     GeneralPane(workspace: workspace).tag("GeneralPane").tabItem { tab("GeneralPane") }
                     SQLWindowPane(workspace: workspace).tag("SQLWindowPane").tabItem { tab("SQLWindowPane") }
                     EditorPane(workspace: workspace).tag("EditorPane").tabItem { tab("EditorPane") }
@@ -57,7 +64,7 @@ struct PreferencesView: View {
                     if found.isEmpty { Text(L10n.tr("Nic nie znaleziono")).foregroundStyle(.secondary) }
                     ForEach(Array(found.enumerated()), id: \.offset) { _, f in
                         Button {
-                            pane = f.pane
+                            navigation.pane = f.pane
                             query = ""
                         } label: {
                             HStack {
@@ -180,6 +187,9 @@ struct SQLWindowPane: View {
             Section(L10n.tr("Wykonywanie (UG 23.20)")) {
                 Toggle(L10n.tr("AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"), isOn: setting(workspace, \.autoSelectStatement))
                 Toggle(L10n.tr("AutoCommit poleceń SQL"), isOn: setting(workspace, \.autoCommitSQL))
+                TextField(L10n.tr("Statystyki po wykonaniu"), text: Binding(get: { workspace.settings.selectedStatistics.joined(separator: ", ") },
+                    set: { workspace.settings.selectedStatistics = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("puste — wszystkie niezerowe, np. consistent gets, physical reads")))
                 Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
             }
@@ -245,6 +255,13 @@ struct EditorPane: View {
                 }
                 Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
             }
+            Section(L10n.tr("Kolory czcionek")) {
+                colorRow(L10n.tr("Edytor"), \.editorColors)
+                colorRow(L10n.tr("Siatka wyników"), \.gridColors)
+                colorRow(L10n.tr("Object Browser"), \.browserColors)
+                Text(L10n.tr("Bez własnego koloru obowiązują kolory motywu systemu (tryb jasny i ciemny). Własny kolor działa w obu trybach."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Code Assistant")) {
                 Toggle(L10n.tr("Automatycznie po kropce"), isOn: setting(workspace, \.codeAssistantAutomatic))
                 Stepper(value: setting(workspace, \.codeAssistantDelay), in: 0...2000, step: 100) {
@@ -298,6 +315,8 @@ struct EditorPane: View {
                     Text(L10n.tr("Pierwsza wielka")).tag(KeywordCase.initCap)
                 }
                 Toggle(L10n.tr("Podświetlaj bieżącą linię"), isOn: setting(workspace, \.highlightCurrentLine))
+                Toggle(L10n.tr("Podświetlaj wystąpienia nazwy pod kursorem i zaznaczonego słowa"), isOn: setting(workspace, \.highlightOccurrences))
+                Toggle(L10n.tr("Wyróżniaj polecenia COMMIT, ROLLBACK i SAVEPOINT"), isOn: setting(workspace, \.highlightTransactions))
                 Toggle(L10n.tr("Status linii (zmienione i nowe od otwarcia lub zapisu)"), isOn: setting(workspace, \.showLineStatus))
                 Toggle(L10n.tr("Zawijaj wiersze"), isOn: setting(workspace, \.wordWrap))
                 Stepper(value: setting(workspace, \.lineNumberInterval), in: 1...10) {
@@ -327,6 +346,26 @@ struct EditorPane: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// Kolor tekstu i tła obszaru (PD-PREF-005): wybór koloru albo powrót do koloru systemu.
+    private func colorRow(_ title: String, _ key: WritableKeyPath<PelikanWorkspace.Settings, AreaColors>) -> some View {
+        func binding(_ part: WritableKeyPath<AreaColors, PelikanWorkspace.RGBColor?>, fallback: NSColor) -> Binding<Color> {
+            Binding(get: {
+                workspace.settings[keyPath: key][keyPath: part].map { Color(red: $0.red, green: $0.green, blue: $0.blue) } ?? Color(nsColor: fallback)
+            }, set: { c in
+                let n = NSColor(c).usingColorSpace(.sRGB) ?? fallback
+                workspace.settings[keyPath: key][keyPath: part] = PelikanWorkspace.RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent)
+            })
+        }
+        return HStack {
+            Text(title)
+            Spacer()
+            ColorPicker(L10n.tr("Tekst"), selection: binding(\.text, fallback: .textColor), supportsOpacity: false)
+            ColorPicker(L10n.tr("Tło"), selection: binding(\.background, fallback: .textBackgroundColor), supportsOpacity: false)
+            Button(L10n.tr("Systemowe")) { workspace.settings[keyPath: key] = AreaColors() }
+                .disabled(workspace.settings[keyPath: key].isSystem)
+        }
     }
 }
 
@@ -388,8 +427,30 @@ struct OraclePane: View {
                 Text(L10n.tr("Połączenia w trybie „Oracle Wallet” logują się poświadczeniami z portfela (/@alias) — alias albo connect string połączenia musi odpowiadać wpisowi w portfelu. Hasła z portfela nie trafiają do Pelikana. Portfel TLS (mTLS, np. Autonomous Database) ustawia się w połączeniu. Zmiana działa po ponownym uruchomieniu aplikacji."))
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Kompilator (UG 23.3)")) {
+                TextField(L10n.tr("Ostrzeżenia PLSQL_WARNINGS"), text: setting(workspace, \.plsqlWarnings), prompt: Text("ENABLE:ALL"))
+                Picker(L10n.tr("Poziom optymalizacji PLSQL_OPTIMIZE_LEVEL"), selection: setting(workspace, \.compiler.optimizeLevel)) {
+                    Text(L10n.tr("Jak serwer")).tag(Int?.none)
+                    ForEach(0...3, id: \.self) { Text("\($0)").tag(Int?.some($0)) }
+                }
+                Picker(L10n.tr("Typ kodu PLSQL_CODE_TYPE"), selection: setting(workspace, \.compiler.codeType)) {
+                    Text(L10n.tr("Jak serwer")).tag("")
+                    Text("INTERPRETED").tag("INTERPRETED")
+                    Text("NATIVE").tag("NATIVE")
+                }
+                TextField(L10n.tr("PL/Scope PLSCOPE_SETTINGS"), text: setting(workspace, \.compiler.plscope), prompt: Text("IDENTIFIERS:ALL"))
+                TextField(L10n.tr("Flagi kompilacji warunkowej PLSQL_CCFLAGS"), text: setting(workspace, \.compiler.ccflags), prompt: Text("debug:TRUE"))
+                Text(L10n.tr("Puste pole albo „Jak serwer” — parametr sesji kompilacji nie jest zmieniany. Wartości z apostrofem albo średnikiem są pomijane."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
+                TextField(L10n.tr("Zawsze z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoAlways.joined(separator: ", ") },
+                    set: { workspace.settings.debugInfoAlways = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("np. scott@dev*, HR.PKG_*")))
+                TextField(L10n.tr("Nigdy z informacją debugowania"), text: Binding(get: { workspace.settings.debugInfoNever.joined(separator: ", ") },
+                    set: { workspace.settings.debugInfoNever = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
+                          prompt: Text(L10n.tr("np. *@prod*")))
                 Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
@@ -539,15 +600,19 @@ struct KeyboardPane: View {
 final class PreferencesWindowController: NSWindowController {
     private static var shared: PreferencesWindowController?
 
-    static func show(workspace: Workspace) {
+    private let navigation = PreferencesNavigation()
+
+    /// `pane` — karta do pokazania (nazwa struktury panelu, np. "PreferenceSetsPane").
+    static func show(workspace: Workspace, pane: String? = nil) {
         let c = shared ?? PreferencesWindowController(workspace: workspace)
         shared = c
+        if let pane { c.navigation.pane = pane }
         c.showWindow(nil)
         c.window?.makeKeyAndOrderFront(nil)
     }
 
     init(workspace: Workspace) {
-        let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace)))
+        let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace, navigation: navigation)))
         w.title = L10n.tr("Preferencje")
         w.styleMask = [.titled, .closable]
         super.init(window: w)

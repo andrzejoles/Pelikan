@@ -22,10 +22,10 @@ struct SchedulerView: View {
     private var reports: [Scheduler.RunReport] { workspace.settings.schedulerReports }
 
     var body: some View {
-        NavigationSplitView {
+        // HSplitView zamiast NavigationSplitView: ten dokłada pasek narzędzi okna i treść wchodziła pod tytuł.
+        HSplitView {
             List(SchedulerObjectKind.allCases, id: \.self, selection: $kind) { Text($0.displayName) }
-                .navigationSplitViewColumnWidth(min: 170, ideal: 190)
-        } detail: {
+                .frame(minWidth: 170, idealWidth: 190, maxWidth: 260)
             VStack(alignment: .leading, spacing: 6) {
                 Picker("", selection: $tab) {
                     Text(L10n.tr("Obiekty")).tag(0)
@@ -42,6 +42,7 @@ struct SchedulerView: View {
                 Text(message).font(.caption).foregroundStyle(.secondary)
             }
             .padding(10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 900, minHeight: 560)
         .task { reportName = reports.first?.name ?? ""; await reload() }

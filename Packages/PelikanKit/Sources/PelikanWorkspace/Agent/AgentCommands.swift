@@ -26,6 +26,13 @@ extension Workspace {
     }
 
     /// Okno wskazane przez agenta identyfikatorem z `get_state` (bez — aktywne).
+    /// Okno do zmiany tekstu przez agenta: okno tylko do odczytu (Plik › Tylko do odczytu) jest odrzucane (PD-FILE-003).
+    func agentEditableDocument(_ id: String?) throws -> Document {
+        let d = try agentDocument(id)
+        guard !d.isReadOnly else { throw CommandError.notAvailable(L10n.tr("Okno „\(d.title)” jest tylko do odczytu")) }
+        return d
+    }
+
     func agentDocument(_ id: String?) throws -> Document {
         if let id, !id.isEmpty {
             guard let d = documents.first(where: { Self.agentWindowID($0) == id.lowercased() }) else {
@@ -163,7 +170,7 @@ enum AgentCommands {
                                       agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia tekst w oknie (w miejscu kursora albo podanej linii i kolumny), bez kompilacji ani wykonania."),
                                       inMenu: false, feature: "AI-TOOL-002")) { ctx in
-                let d = try ctx.workspace.agentDocument(ctx.arguments.string("window"))
+                let d = try ctx.workspace.agentEditableDocument(ctx.arguments.string("window"))
                 guard let text = ctx.arguments.string("text") else { throw CommandError.missingArgument("text") }
                 let before = d.text
                 let at = ctx.arguments.int("line").map { position(before, line: Int($0), column: Int(ctx.arguments.int("column") ?? 1)) }
@@ -181,7 +188,7 @@ enum AgentCommands {
                                       agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Zamienia linie od–do w oknie na podany tekst, bez kompilacji ani wykonania."),
                                       inMenu: false, feature: "AI-TOOL-002")) { ctx in
-                let d = try ctx.workspace.agentDocument(ctx.arguments.string("window"))
+                let d = try ctx.workspace.agentEditableDocument(ctx.arguments.string("window"))
                 guard let from = ctx.arguments.int("fromLine"), let to = ctx.arguments.int("toLine"), from >= 1, to >= from,
                       var text = ctx.arguments.string("text") else { throw CommandError.missingArgument("fromLine, toLine, text") }
                 let before = d.text
@@ -209,7 +216,7 @@ enum AgentCommands {
                                       parameters: [windowParam], agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Formatuje cały tekst okna regułami formatera PL/SQL (tylko odstępy, układ linii, wielkość liter)."),
                                       inMenu: false, feature: "AI-TOOL-002")) { ctx in
-                let d = try ctx.workspace.agentDocument(ctx.arguments.string("window"))
+                let d = try ctx.workspace.agentEditableDocument(ctx.arguments.string("window"))
                 let before = d.text
                 d.text = try Beautifier.format(before, options: ctx.workspace.settings.beautifier)
                 ctx.workspace.recordAgentEdit(ctx, d, before: before)

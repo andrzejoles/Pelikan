@@ -54,6 +54,18 @@ extension MetadataProvider {
         return list
     }
 
+    /// Atrybuty typu obiektowego jako parametry konstruktora (ALL_TYPE_ATTRS, w kolejności; PD-CA-006): nazwa i typ.
+    /// Bez schematu — typ z bieżącego schematu.
+    public func typeAttributes(owner: String?, name: String) async throws -> [(String, String)] {
+        let (_, rows) = try await session().queryAll("""
+            select attr_name, attr_type_name from all_type_attrs
+             where type_name = :n and owner = nvl(:o, sys_context('userenv', 'current_schema'))
+             order by attr_no
+            """, binds: [BindVariable(name: "n", value: .text(name)), BindVariable(name: "o", value: owner.map { .text($0) } ?? .null)],
+            limit: 500)
+        return rows.compactMap { r in r[0].displayText.map { ($0, r[1].displayText ?? "") } }
+    }
+
     /// Parametry podprogramu (ALL_ARGUMENTS, poziom 0, w kolejności): nazwa i typ z kierunkiem (PD-CA-006).
     /// `package` — pakiet albo, przy wywołaniu `schemat.procedura`, schemat (sprawdzane oba warianty).
     public func arguments(owner: String?, package: String?, name: String) async throws -> [(String, String)] {

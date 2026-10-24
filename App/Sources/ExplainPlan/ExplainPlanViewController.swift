@@ -55,19 +55,23 @@ struct PlanPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            // Dwa wiersze: przy jednym w oknie o typowej szerokości selektor celu i „Wyjaśnij” ściskały się do zera.
             HStack(spacing: 8) {
                 Button { workspace.perform("tools.explainPlan") } label: { Label(L10n.tr("Wyjaśnij"), systemImage: "play.fill") }
                     .disabled(document.isExecuting)
+                    .fixedSize()
                 Picker(L10n.tr("Cel optymalizatora"), selection: $document.planGoal) {
                     ForEach(OptimizerGoal.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
-                .frame(maxWidth: 260)
+                .fixedSize()
                 Divider().frame(height: 18)
                 Button { move(to: ordered.first) } label: { Image(systemName: "backward.end") }.iconLabel(L10n.tr("Pierwszy krok wykonania"))
                 Button { step(-1) } label: { Image(systemName: "backward") }.iconLabel(L10n.tr("Poprzedni krok wykonania"))
                 Button { step(1) } label: { Image(systemName: "forward") }.iconLabel(L10n.tr("Następny krok wykonania"))
                 Button { move(to: ordered.last) } label: { Image(systemName: "forward.end") }.iconLabel(L10n.tr("Ostatni krok wykonania"))
                 Spacer()
+            }
+            HStack(spacing: 8) {
                 Picker("", selection: $mode) {
                     Text(L10n.tr("Drzewo")).tag(0)
                     Text(L10n.tr("Diagram")).tag(1)
@@ -75,6 +79,7 @@ struct PlanPanel: View {
                     Text(L10n.tr("Tekst")).tag(3)
                 }
                 .pickerStyle(.segmented).fixedSize()
+                Spacer()
                 Button(L10n.tr("Porównaj")) { workspace.perform("plan.compare") }.disabled(document.previousPlan == nil)
                     .help(L10n.tr("Porównaj z poprzednim planem okna"))
                 Button(L10n.tr("Autotrace")) { workspace.perform("tools.autotrace") }.disabled(document.isExecuting)
@@ -117,6 +122,7 @@ struct PlanPanel: View {
             }
         }
         .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func move(to line: PlanLine?) { selection = line?.id }

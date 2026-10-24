@@ -6,7 +6,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
     }
 
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
@@ -443,6 +443,14 @@ public enum BuiltinCommands {
             editCommand("edit.duplicateLine", L10n.tr("Powiel linię"), mac: ["cmd+shift+d"],
                         summary: L10n.tr("Powiela bieżącą linię albo zaznaczone linie."), feature: "PD-EDIT-020") {
                 TextEditing.duplicateLines($0, selection: $1)
+            },
+            editCommand("edit.deleteNextWord", L10n.tr("Usuń następne słowo"), pd: ["ctrl+delete"], mac: ["ctrl+alt+delete"],
+                        summary: L10n.tr("Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)."), feature: "PD-EDIT-020") {
+                TextEditing.deleteNextWord($0, selection: $1)
+            },
+            editCommand("edit.firstCharacterOnLine", L10n.tr("Pierwszy znak w linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
+                        summary: L10n.tr("Przenosi kursor na pierwszy niebiały znak linii, a ponownie — na początek linii."), feature: "PD-EDIT-020") {
+                TextEditing.firstCharacterOnLine($0, selection: $1)
             },
             editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
                         summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {

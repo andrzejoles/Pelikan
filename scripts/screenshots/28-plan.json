@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select e.ename, d.dname from emp e join dept d on d.deptno = e.deptno where e.sal > 1000"}, "delay": 1}, {"command": "tools.explainPlan", "delay": 4}]

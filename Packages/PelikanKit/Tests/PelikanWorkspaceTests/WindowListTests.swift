@@ -71,3 +71,23 @@ struct SSHTunnelPasswordTests {
         #expect(!FileManager.default.fileExists(atPath: fifo))
     }
 }
+
+@MainActor
+@Suite("Okno tylko do odczytu a narzędzia agenta (PD-FILE-003)")
+struct ReadOnlyAgentTests {
+    @Test("Wstawianie, zamiana zakresu i formatowanie odrzucone w oknie tylko do odczytu; przejście do linii działa")
+    func readOnly() async throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.sql, text: "select 1 from dual;\n")
+        doc.isReadOnly = true
+        let w = CommandArguments(["window": .string(Workspace.agentWindowID(doc))])
+        await #expect(throws: (any Error).self) { try await ws.invoke("agent.insertText", CommandArguments(["window": .string(Workspace.agentWindowID(doc)), "text": .string("x")])) }
+        await #expect(throws: (any Error).self) { try await ws.invoke("agent.replaceRange", CommandArguments(["window": .string(Workspace.agentWindowID(doc)), "startLine": .int(1), "endLine": .int(1), "text": .string("x")])) }
+        await #expect(throws: (any Error).self) { try await ws.invoke("agent.format", w) }
+        #expect(doc.text == "select 1 from dual;\n")
+        _ = try await ws.invoke("agent.navigate", CommandArguments(["window": .string(Workspace.agentWindowID(doc)), "line": .int(1)]))
+        doc.isReadOnly = false
+        _ = try await ws.invoke("agent.insertText", CommandArguments(["window": .string(Workspace.agentWindowID(doc)), "text": .string("-- x\n")]))
+        #expect(doc.text.contains("-- x"))
+    }
+}

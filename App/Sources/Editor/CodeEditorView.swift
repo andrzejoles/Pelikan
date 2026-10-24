@@ -20,6 +20,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var assistWork: DispatchWorkItem?
     private var pairGeneration = 0
     private var pairRanges: [NSTextRange] = []
+    /// Wystąpienia nazwy pod kursorem i polecenia transakcyjne (PD-EDIT-018, PD-PROG-015) — osobne kolory.
+    private var occurrenceRanges: [NSTextRange] = []
+    private var transactionRanges: [NSTextRange] = []
     private var analysisWork: DispatchWorkItem?
     private var analyzedText: String?
     private var diagnostics: [EditorDiagnostic] = []
@@ -64,11 +67,17 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             _ = self.document.connectionID
+            // Własne kolory edytora (PD-PREF-005) — tło jako baza odcienia połączenia.
+            let colors = ws.settings.editorColors
+            let base = colors.background.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .textBackgroundColor
+            SyntaxTheme.customPlain = colors.text.map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            self.textView.insertionPointColor = SyntaxTheme.customPlain ?? .textColor
             if ws.settings.colorWindowBackground, let c = ws.indicatorColor(for: self.document) {
-                self.textView.backgroundColor = NSColor.textBackgroundColor.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? .textBackgroundColor
+                self.textView.backgroundColor = base.blended(withFraction: 0.08, of: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)) ?? base
             } else {
-                self.textView.backgroundColor = .textBackgroundColor
+                self.textView.backgroundColor = base
             }
+            self.textView.needsDisplay = true
         })
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         tokens.append(trackChanges { [weak self] in
@@ -117,6 +126,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         textView.hoverText = { [weak self] offset in
             guard let self else { return nil }
             if let d = self.diagnostics.first(where: { $0.range.lowerBound <= offset && offset < max($0.range.upperBound, $0.range.lowerBound + 1) }) { return d.message }
+            // Zatrzymany debuger: wartość zmiennej pod myszą (PD-DBG-005).
+            if [.test, .program].contains(self.document.kind), let ws = (NSApp.delegate as? AppDelegate)?.workspace,
+               let word = DebugHover.word(in: self.textView.string, at: offset), let v = ws.debugHoverText(word) {
+                return v
+            }
             return DeclarationHover.text(at: offset, in: self.textView.string)
         }
         ruler.bookmarkLines = { [weak self] in
@@ -387,27 +401,40 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         pairGeneration += 1
         let generation = pairGeneration
         let sel = textView.selectedRange()
-        guard sel.length == 0 else { return showPairs([]) }
         let text = textView.string
+        let ws = (NSApp.delegate as? AppDelegate)?.workspace
+        let occurrencesOn = ws?.settings.highlightOccurrences ?? true
+        let transactionsOn = ws?.settings.highlightTransactions ?? true
         Task.detached(priority: .utility) {
-            let pairs = PairMatcher.pairs(text, offset: sel.location)
+            let selection = sel.location..<(sel.location + sel.length)
+            // Pary (nawiasy, bloki, INSERT ↔ VALUES) tylko przy kursorze; wystąpienia także dla zaznaczonego słowa.
+            let pairs = sel.length == 0 ? PairMatcher.pairs(text, offset: sel.location) + PairMatcher.insertValuesPair(text, offset: sel.location) : []
+            let occurrences = occurrencesOn ? PairMatcher.occurrences(text, selection: selection) : []
+            let transactions = transactionsOn ? PairMatcher.transactionStatements(text) : []
             await MainActor.run { [weak self] in
                 guard let self, self.pairGeneration == generation, self.textView.string == text else { return }
                 self.showPairs(pairs)
+                self.occurrenceRanges = self.show(occurrences, replacing: self.occurrenceRanges, color: NSColor.systemYellow.withAlphaComponent(0.22))
+                self.transactionRanges = self.show(transactions, replacing: self.transactionRanges, color: NSColor.systemOrange.withAlphaComponent(0.18))
             }
         }
     }
 
     private func showPairs(_ ranges: [Range<Int>]) {
-        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
-        for r in pairRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
-        pairRanges = ranges.compactMap { r in
+        pairRanges = show(ranges, replacing: pairRanges, color: NSColor.findHighlightColor.withAlphaComponent(0.35))
+    }
+
+    /// Tło dla zakresów (atrybut renderowania — bez zmiany tekstu); zwraca nowe zakresy do późniejszego usunięcia.
+    private func show(_ ranges: [Range<Int>], replacing old: [NSTextRange], color: NSColor) -> [NSTextRange] {
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return [] }
+        for r in old { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
+        let new = ranges.compactMap { r -> NSTextRange? in
             guard let a = content.location(content.documentRange.location, offsetBy: r.lowerBound),
                   let b = content.location(a, offsetBy: r.count) else { return nil }
             return NSTextRange(location: a, end: b)
         }
-        let color = NSColor.findHighlightColor.withAlphaComponent(0.35)
-        for r in pairRanges { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
+        for r in new { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
+        return new
     }
 
     // MARK: Analiza kodu w czasie pisania (DG-RES-001, DG-INSP-001)

@@ -219,7 +219,7 @@ public enum SQLExecutor {
             doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
         }
         if let before = statsBefore, let after = await Profiler.statistics(session) {
-            doc.statistics = Profiler.difference(before, after)
+            doc.recordStatistics(Profiler.difference(before, after))
         }
         let elapsed = ContinuousClock.now - start
         if ok {

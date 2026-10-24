@@ -61,6 +61,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Indeks… | `file.newIndex` |  |  | Brak | 0 | PD-OED-010 |
 | Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Biblioteka… | `file.newLibrary` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Katalog… | `file.newDirectory` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Zadanie… | `file.newJob` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Kolejka… | `file.newQueue` |  |  | Brak | 0 | PD-OED-008 |
+| Nowy › Profil… | `file.newProfile` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Łącze bazy danych… | `file.newDatabaseLink` |  |  | Brak | 0 | PD-OED-009 |
+| Nowy › Widok (edytor)… | `file.newViewEditor` |  |  | Brak | 0 | PD-OED-010 |
 | Nowy › Domena… | `file.newDomain` |  |  | Brak | 0 | PD-OED-011 |
 | Nowy › Asercja… | `file.newAssertion` |  |  | Brak | 0 | PD-OED-011 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
@@ -119,6 +126,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Brak | 0 | PD-EDIT-009 |
 | Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Pełny | 0 | PD-EDIT-006 |
 | Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Pełny | 0 | PD-EDIT-020 |
+| Zaznaczenie › Usuń następne słowo | `edit.deleteNextWord` | ⌃⌦ † | ⌃⌥⌦ | Pełny | 0 | PD-EDIT-020 |
+| Zaznaczenie › Pierwszy znak w linii | `edit.firstCharacterOnLine` | ⌥↖ † | ⌃⌥← | Pełny | 0 | PD-EDIT-020 |
 | Zaznaczenie › Wielkie litery | `edit.uppercase` | ⌥⌘U | ⌥⌘U | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Małe litery | `edit.lowercase` | ⌥⇧⌘U | ⌥⇧⌘U | Pełny | 0 | PD-EDIT-005 |
 | Zaznaczenie › Zwiększ wcięcie | `edit.indent` | ⌘] | ⌘] | Pełny | 0 | PD-EDIT-005 |
@@ -168,6 +177,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Odczyt | 0 | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Pełny | 0 | PD-CA-010 |
 | Zawartość kodu › Testuj podprogram | `codeContents.test` |  |  | Pełny | 0 | PD-CA-010 |
+| Zawartość kodu › Zaznacz poziom hierarchii kodu | `codeHierarchy.select` |  |  | Pełny | 0 | PD-CA-011 |
+| Zawartość kodu › Przejdź do poziomu hierarchii kodu | `codeHierarchy.goto` |  |  | Pełny | 0 | PD-CA-011 |
 | Nawigacja › Wstecz | `edit.navigateBack` | ⌃⌥← †, ⌃⌘← | ⌃⌘← | Pełny | 0 | PD-CA-013 |
 | Nawigacja › Naprzód | `edit.navigateForward` | ⌃⌥→ †, ⌃⌘→ | ⌃⌘→ | Pełny | 0 | PD-CA-013 |
 | Makra › Nagrywaj makro | `edit.macroRecord` | F11 | F11 | Brak | 0 | PD-EDIT-015 |
@@ -229,6 +240,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | 0 | PD-GRID-011 |
 | Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | 0 | PD-GRID-011 |
 | Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Ukryj edytor | `sql.toggleEditor` |  |  | Brak | 0 | PD-GRID-012 |
+| Wynik › Wysokość wierszy… | `grid.rowHeight` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Zapisz wyrównanie dla zapytania | `grid.saveAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Usuń wyrównanie zapytania | `grid.removeAlignTemplate` |  |  | Brak | 0 | PD-GRID-012 |
 | Wynik › Informacje o kolumnie | `grid.columnInfo` |  |  | Brak | 0 | PD-GRID-022 |
@@ -275,6 +288,10 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
+| Przebiegi profilera | `test.profilerRuns` |  |  | Brak | 0 | PD-OPT-005 |
+| Otwórz przebieg profilera… | `test.profilerOpenRun` |  |  | Brak | 0 | PD-OPT-005 |
+| Zapisz punkty przerwania… | `debug.saveBreakpoints` |  |  | Brak | 0 | PD-DBG-008 |
+| Wczytaj punkty przerwania… | `debug.loadBreakpoints` |  |  | Brak | 0 | PD-DBG-008 |
 | Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | 0 | PD-TEST-009 |
 | Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | 0 | PD-OPT-007 |
 | Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | 0 | PD-OPT-007 |
@@ -310,6 +327,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wydajność (pakiety Oracle) › Raport SQL Monitor | `tools.sqlMonitorReport` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Monitor | `tools.sqlMonitor` |  |  | Brak | 0 | SD-MON-001 |
 | Wydajność (pakiety Oracle) › SQL Tuning Advisor | `tools.sqlTuningAdvisor` |  |  | Brak | 0 | SD-DBA-003 |
+| Obiekt › Kopiuj nazwy po przecinku | `ob.copyNames` |  |  | Brak | 0 | PD-OB-011 |
+| Obiekt › Rekompiluj zaznaczone | `ob.recompileSelected` |  |  | Za zgodą | 0 | PD-OB-011 |
+| Obiekt › DDL zaznaczonych | `ob.ddlSelected` |  |  | Brak | 0 | PD-OB-011 |
+| Obiekt › Usuń zaznaczone… | `ob.dropSelected` |  |  | Za zgodą | 0 | PD-OB-011 |
+| Eksportuj statystyki… | `stats.export` |  |  | Brak | 0 | PD-OPT-004 |
 | Obiekt › Zmień nazwę… | `ob.rename` |  |  | Za zgodą | 0 | PD-OB-016 |
 | Obiekt › Zmień nazwę elementu… | `ob.renameChild` |  |  | Za zgodą | 0 | PD-OB-016 |
 | Obiekt › Duplikuj… | `ob.duplicate` |  |  | Za zgodą | 0 | PD-OB-016 |
@@ -384,10 +406,15 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Za zgodą | 0 | PD-TOOL-002 |
 | Szablony › Zapisz zaznaczenie jako szablon… | `templates.save` |  |  | Pełny | 0 | PD-TPL-003 |
 | Szablony › Usuń szablon | `templates.delete` |  |  | Za zgodą | 0 | PD-TPL-003 |
+| Szablony › Edytuj szablon… | `templates.edit` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Nowy folder szablonów… | `templates.newFolder` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Zmień nazwę folderu szablonów… | `templates.renameFolder` |  |  | Pełny | 0 | PD-TPL-003 |
+| Szablony › Usuń folder szablonów | `templates.deleteFolder` |  |  | Za zgodą | 0 | PD-TPL-003 |
 | Obiekt › Porównaj z aktywnym oknem | `ob.compare` |  |  | Odczyt | 0 | PD-OB-022 |
 | Obiekt › Porównaj z obiektem w innej bazie… | `ob.compareWithConnection` |  |  | Odczyt | 0 | PD-OB-022 |
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
+| Obiekt › Edytor widoku | `ob.viewEditor` |  |  | Brak | 0 | PD-OED-010 |
 | Obiekt › Testuj | `ob.test` |  |  | Pełny | 0 | PD-TEST-004 |
 | Obiekt › Test standardowy… | `ob.standardTest` |  |  | Odczyt | 0 | PD-TEST-009 |
 | Obiekt › Edytuj definicję tabeli | `ob.editTable` |  |  | Odczyt | 0 | PD-OED-002 |

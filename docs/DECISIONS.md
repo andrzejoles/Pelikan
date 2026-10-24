@@ -999,3 +999,75 @@ tego: `SSH_ASKPASS` to skrypt `exec cat "$PELIKAN_ASKPASS_FIFO"` (bez sekretu), 
 `NumberOfPasswordPrompts=1`, bez kluczy. Hasło tunelu leży w Pęku kluczy pod kontem `<uuid połączenia>.ssh`, osobno od
 hasła bazy; edytor połączenia zapisuje je tylko tam. Test: użytkownik `haslo` w kontenerze sshd testów (losowe hasło
 w `.testdb/env`, jak hasła bazy testowej).
+### D135 · 2026-10-24 — Parametry kompilatora przez ALTER SESSION
+Preferencje kompilatora (PLSQL_WARNINGS, PLSQL_OPTIMIZE_LEVEL, PLSQL_CODE_TYPE, PLSCOPE_SETTINGS, PLSQL_CCFLAGS) są
+ustawiane w sesji kompilacji przed kompilacją okna programu; puste — parametr serwera bez zmian. Wartości przechodzą
+przez filtr znaków (bez apostrofu i średnika — idą do literału), błąd parametru (np. NATIVE bez uprawnień) nie zatrzymuje
+kompilacji. Program Window kompiluje tekst bez podstawiania zmiennych `&` (jak domyślnie wzorzec) — podstawianie jest
+w SQL Window i Command Window.
+
+### D136 · 2026-10-24 — Podświetlenia w edytorze: wystąpienia, INSERT ↔ VALUES, polecenia transakcyjne
+Wystąpienia identyfikatora pod kursorem albo zaznaczonego słowa (co najmniej dwa, bez słów kluczowych, literałów i
+komentarzy; nazwa w cudzysłowie — dokładnie) mają żółte tło; para kolumna INSERT ↔ wartość VALUES — tło jak pary
+nawiasów (pozycje po przecinkach najwyższego poziomu, różna liczba elementów — brak pary). COMMIT/ROLLBACK/SAVEPOINT
+tylko na początku polecenia (po `;`, `/`, BEGIN, THEN, ELSE, LOOP…), więc `ON COMMIT` w DDL i `ROLLBACK SEGMENT` się
+nie liczą; tło pomarańczowe. Obie funkcje mają przełącznik w Preferencjach › Edytor.
+
+### D137 · 2026-10-24 — Edycja szablonów i foldery
+Edycja szablonu wbudowanego zapisuje szablon użytkownika o tej samej ścieżce (zastępuje wbudowany; usunięcie przywraca
+wbudowany). Zmiana nazwy albo folderu zapisuje nowy plik i usuwa stary. Foldery użytkownika to katalogi w `Templates`
+(także puste); zmiana nazwy folderu nie nadpisuje istniejącego, usunięcie folderu usuwa tylko szablony użytkownika.
+
+### D138 · 2026-10-24 — Migawka odzyskiwania przed wykonaniem jako opcja (zmienia D91)
+D91 pominęło migawkę przy każdym wykonaniu. Jest teraz opcją (domyślnie wyłączoną) w Preferencjach › Narzędzia:
+migawka przed F8, kompilacją i wykonaniem okna testu, najwyżej jedna na 5 sekund — seria wykonań nie spowalnia pracy,
+a awaria w trakcie długiego polecenia nie traci niezapisanych okien.
+
+### D139 · 2026-10-24 — Wysokość wierszy siatki i ukrycie edytora (zmienia D109)
+„Align › wysokość” ustawia liczbę linii tekstu na wiersz siatki (1–10 albo wg treści z pierwszych 500 wierszy);
+wartości wieloliniowe są wtedy zawijane zamiast znaku ⏎. „Ukryj edytor” chowa edytor okna SQL (same wyniki).
+„Adjust Window width” nie ma odpowiednika — wyniki są w karcie jednego okna głównego (D15).
+
+### D140 · 2026-10-24 — Własne kolory czcionek jako opcja (zmienia D112)
+Edytor, siatka wyników i Object Browser mogą mieć własny kolor tekstu i tła (Preferencje › Edytor › Kolory czcionek).
+Domyślnie — i po „Systemowe” — obowiązują kolory motywu systemu dla trybu jasnego i ciemnego; własny kolor działa w obu
+trybach (wybór użytkownika). Kolor składni (słowa kluczowe, literały, komentarze) zostaje z motywu Pelikana; tło edytora
+jest bazą odcienia koloru połączenia (PD-CONN-005).
+
+### D141 · 2026-10-24 — Walidacja adnotacji utPLSQL przy kompilacji
+Specyfikacja z `--%suite` albo `--%test` dostaje ostrzeżenia kompilacji: nieznana adnotacja, procedura z listy
+`--%beforeall/afterall/beforeeach/aftereach/beforetest/aftertest(…)` nieobecna w specyfikacji (nazwy `pakiet.procedura`
+pomijane — mogą być w innym pakiecie), `--%test` bez `--%suite` (utPLSQL nie uruchomi pakietu), niesparowane
+`--%context`/`--%endcontext`.
+### D142 · 2026-10-24 — Edytory obiektów: zadanie przez DBMS_SCHEDULER, kolejki AQ, łącza bez hasła w podglądzie
+Edytor „Zadanie” tworzy i zmienia zadania DBMS_SCHEDULER (folder Object Browsera to zadania Schedulera; DBMS_JOB jest
+przestarzały i od 19c działa na Schedulerze) — wspólny kod z oknem Schedulera (`Scheduler.createSQL/alterSQL`).
+Kolejka AQ w jednym formularzu z opcją utworzenia tabeli kolejki (CREATE_QUEUE_TABLE + CREATE_QUEUE + START_QUEUE),
+zmiany przez ALTER_QUEUE i START/STOP_QUEUE tylko dla zmienionych kierunków. Hasło łącza bazy danych jak hasło
+użytkownika: maskowane w podglądzie, nigdzie nie zapisywane; zmiana użytkownika lub bazy łącza wymaga hasła (DROP +
+CREATE), bez hasła edytor pokazuje powód i nie generuje DDL. Widok w edytorze formularza zdejmuje z tekstu słownika
+klauzule WITH READ ONLY / CHECK OPTION (są polami). Pola tekstowe zamieniają na wielkie litery tylko nazwy obiektów.
+
+### D143 · 2026-10-24 — Dymek debugera bez wywołań DBMS_DEBUG
+Wartość pod myszą pochodzi z już wczytanych zmiennych i obserwowanych zatrzymanego debugera (także pola rekordów i
+globalne pakietu bez kwalifikatora). Dymek powstaje synchronicznie, a GET_VALUE w trakcie ruchu myszy mnożyłby
+wywołania w sesji nadzorującej; nazwy z dwukropkiem są i tak pomijane (D133).
+
+### D144 · 2026-10-24 — Listy informacji debugowania, statystyki, profiler, HTP, wiele obiektów
+Listy NEVER/ALWAYS (Preferencje › Oracle › Debuger) przyjmują `user@baza` albo `[SCHEMAT.]OBIEKT` z `*` i `?`; NEVER
+wygrywa. Statystyki: kolumna „Suma” sumuje różnice wszystkich wykonań okna; wybór statystyk w Preferencjach › Okno SQL
+(puste — wszystkie niezerowe), eksport CSV. Profiler: historia przebiegów z tabel PLSQL_PROFILER_RUNS/DBMSHP_RUNS,
+jednostka czasu i próg udziału w preferencjach, drzewo HPROF z DBMSHP_PARENT_CHILD_INFO (rekurencja przerwana).
+HTP Output: przełącznik w karcie Wyjście okna testu — OWA.INIT_CGI_ENV + HTP.INIT przed blokiem, OWA.GET_PAGE po nim
+(bez inicjalizacji HTP.P zgłasza ORA-06502). Wiele obiektów w Object Browserze: Cmd+C kopiuje nazwy po przecinku,
+menu akcji wspólnych (DDL, rekompilacja, usuwanie po jednym potwierdzeniu, błędy nie przerywają pozostałych).
+Query Builder: podzapytania w FROM i JOIN jako widoki wbudowane z kolumnami z opisu wyniku (`select * … where 1 = 0`).
+
+### D145 · 2026-10-24 — Okna narzędzi: HSplitView zamiast NavigationSplitView, stopki pod podziałem
+Zrzuty w tle pokazały trzy błędy układu w oknach SwiftUI hostowanych w AppKit: `NavigationSplitView` dokłada pasek
+narzędzi okna i treść szczegółów wchodzi pod tytuł (DBMS Scheduler, Panel DBA — przyciski i nagłówki tabel schowane),
+`safeAreaInset` nie działa z `HSplitView` (stopka Narzędzi użytkownika na liście), a w pionowym `NSStackView` widok
+przewijany bez wysokości własnej zapada się do zera (płótno diagramu — puste okno od Etapu 6). Zasada: w oknach
+narzędzi `HSplitView` z listą po lewej, stopki jako ostatni element `VStack`, układ AppKit z jawnymi więzami zamiast
+stosu, gdy jeden z widoków ma wypełnić resztę. Tak samo poprawione okna planu (panel SwiftUI wyśrodkowany w NSHostingView — rama na całą wysokość, pasek w dwóch wierszach) i raportu (NSStackView). W trybie skryptu zrzutów okna dialogowe nie są pokazywane — pytanie trafia do dziennika jako „Anuluj”, żeby nic nie aktywowało aplikacji. Okno instrukcji zostaje przy `NavigationSplitView` (pasek z przyciskiem
+panelu jest tam potrzebny, treść WebKit nie wchodzi pod tytuł).
