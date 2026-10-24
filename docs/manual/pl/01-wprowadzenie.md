@@ -1,27 +1,134 @@
-# Wprowadzenie
+# Wprowadzenie i pierwsze uruchomienie
 
-Pelikan to natywne środowisko macOS do pracy z bazą Oracle: pisania i uruchamiania SQL, tworzenia i testowania kodu
-PL/SQL, przeglądania obiektów bazy, debugowania, testów utPLSQL i narzędzi administracyjnych. Układ i skróty są zgodne
-z PL/SQL Developer, więc użytkownicy tego programu odnajdą znajome okna: **SQL Window**, **Command Window**,
-**Program Window**, **Test Window** i **Object Browser**.
+Pelikan to natywne środowisko macOS do pracy z bazą Oracle: pisania i wykonywania SQL, tworzenia, testowania i
+debugowania kodu PL/SQL, przeglądania i edycji obiektów bazy, testów utPLSQL oraz narzędzi porównywania, eksportu i
+administracji. Układ okien i skróty klawiszowe odpowiadają programowi PL/SQL Developer, więc jego użytkownicy odnajdą
+znajome okna — w Pelikanie noszą polskie nazwy: **Okno SQL**, **Okno poleceń**, **Okno programu**, **Okno testu**,
+**Okno planu** i **Przeglądarka obiektów** (karta **Obiekty**).
+
+Ta instrukcja opisuje, jak wykonać typowe zadania. Pełna lista komend z bieżącymi skrótami jest w ostatnim rozdziale,
+**Skróty klawiszowe**, generowanym z aplikacji.
+
+## Wymagania
+
+- Mac z procesorem Apple (M1 lub nowszym) i macOS 27 albo nowszy.
+- Oracle Instant Client dla macOS (ARM64) — pakiet Basic albo Basic Light. Pelikan go nie zawiera (nie pozwala na to
+  licencja Oracle), więc pobierasz go sam ze strony Oracle. Bez Instant Client działa sterownik *Thin* z
+  ograniczeniami (zobacz niżej).
+- Baza Oracle. Pelikan jest rozwijany i testowany na Oracle Database 26ai Free; zapytania słownika danych mają
+  warianty dla wersji 19c, 21c i 23ai. Na starszych wersjach część folderów i funkcji może być niedostępna.
+
+## Instalacja
+
+1. Pobierz najnowsze wydanie ze strony projektu:
+   [github.com/andrzejoles/Pelikan/releases](https://github.com/andrzejoles/Pelikan/releases) — plik `.dmg` albo
+   instalator `.pkg`.
+2. Z obrazu `.dmg` przeciągnij **Pelikan** na skrót **Aplikacje (Applications)**. Instalator `.pkg` zrobi to sam.
+3. Uruchom Pelikana z folderu Aplikacje.
+
+### Ostrzeżenie Gatekeepera przy pierwszym uruchomieniu
+
+Pelikan jest podpisany własnym certyfikatem autora („Pelikan Self-Signed”), ale nie jest notaryzowany przez Apple
+(wymagałoby to płatnego konta dewelopera). Dlatego przy pierwszym uruchomieniu macOS zablokuje aplikację i pokaże
+ostrzeżenie. Aby ją otworzyć:
+
+1. Zamknij okno ostrzeżenia.
+2. Otwórz **Ustawienia systemowe › Prywatność i ochrona**, przewiń do sekcji **Ochrona** i kliknij **Otwórz mimo to**
+   przy komunikacie o Pelikanie.
+3. Potwierdź hasłem albo Touch ID.
+
+Robisz to tylko raz. Stały podpis sprawia też, że po aktualizacji macOS nie pyta ponownie o dostęp Pelikana do haseł w
+Pęku kluczy.
+
+## Oracle Instant Client
+
+Pobierz „Instant Client for macOS (ARM64)”, pakiet **Basic** albo **Basic Light**, ze strony
+[oracle.com](https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html) i zainstaluj go
+według instrukcji Oracle. Pelikan szuka biblioteki `libclntsh.dylib` w tej kolejności:
+
+1. katalog wskazany w **Preferencje › Oracle › Oracle Instant Client**;
+2. `/opt/homebrew/lib`, `/usr/local/lib`, `/usr/local/oracle/instantclient` i katalogi `/opt/oracle/instantclient*`;
+3. katalogi `instantclient_*` w Twoich folderach **Pobrane** i **Aplikacje** (najnowsza wersja pierwsza).
+
+Przy przeszukiwaniu folderu Pobrane macOS może zapytać, czy pozwolić Pelikanowi na dostęp do niego — to zwykłe pytanie
+systemu o prywatność. Jeśli wolisz go uniknąć, wskaż katalog klienta ręcznie: **Pelikan › Ustawienia…** (⌘,), karta
+**Oracle**, przycisk **Wybierz…**. Zmiana katalogu działa po ponownym uruchomieniu Pelikana.
+
+Bez Instant Client możesz łączyć się sterownikiem *Thin* (wybór w definicji połączenia, zobacz rozdział *Połączenia*).
+Thin nie obsługuje połączeń TCPS i portfeli Oracle Wallet, uwierzytelniania zewnętrznego, zmiany wygasłego hasła ani
+przerywania wykonania (**Przerwij**).
 
 ## Pierwsze kroki
 
-1. Zainstaluj Oracle Instant Client (Basic albo Basic Light) i wskaż jego katalog w **Preferencje › Oracle**. Pelikan
-   wykrywa też najnowszy katalog `instantclient_*` w Pobranych. Bez Instant Client działa sterownik *Thin* z mniejszą
-   liczbą funkcji.
-2. Dodaj definicję połączenia: **Sesja › Połączenia › Nowe połączenie…** albo przycisk w liście połączeń.
-3. Połącz się i otwórz **SQL Window** (⌘N). Wpisz zapytanie i wykonaj je (F8 albo ⌘↩).
+1. Kliknij kartę **Połączenia** w lewej kolumnie, a potem przycisk **+** (albo wybierz **Sesja › Połączenia › Nowe
+   połączenie…**).
+2. Wpisz nazwę, użytkownika, hasło i bazę (`host:port/usługa` albo alias z `tnsnames.ora`), wybierz środowisko i
+   kliknij **Testuj**, a potem **Zapisz**.
+3. Kliknij dwukrotnie połączenie na liście — stanie się **połączeniem głównym** (pogrubione).
+4. Otwórz nowe okno SQL (**Plik › Nowy › Okno SQL**, ⌘N), wpisz zapytanie i wykonaj je klawiszem F8 albo ⌘↩.
+
+![Okno główne: lista połączeń po lewej, okno SQL z wynikiem zapytania](../img/okno-glowne.png)
 
 ## Okno główne
 
-Po lewej znajduje się panel z kartami: Object Browser, przeglądarka plików, lista okien, szablony, To-Do i projekt.
-W środku są karty dokumentów — każde okno SQL, programu czy testu ma własną kartę. Na pasku stanu widać połączenie
-okna, stan transakcji, pozycję kursora, kodowanie pliku i gałąź Git.
+Pelikan ma jedno okno główne:
 
-Każdą czynność można wywołać z menu, skrótem albo z **palety komend** (⇧⌘P), która wyszukuje komendy po nazwie.
+- **Lewa kolumna** z kartami: **Połączenia** (lista połączeń z folderami i ostatnio używanymi), **Obiekty**
+  (Przeglądarka obiektów), **Okna** (lista otwartych okien), **Szablony** i **Pliki** (przeglądarka plików).
+- **Karty dokumentów** w środku — każde okno SQL, programu, testu czy planu ma własną kartę z kolorową literą typu: S
+  — okno SQL, P — okno programu, T — okno testu, C — okno poleceń, E — okno planu, R — okno raportu, D — okno
+  diagramu, N — notatnik SQL. Środkowy klik na karcie zamyka okno; menu karty zamyka pozostałe okna albo okna z lewej
+  i prawej.
+- **Pasek narzędzi** z najczęstszymi czynnościami (nowe okno, otwórz, zapisz, wykonaj, przerwij, COMMIT, ROLLBACK,
+  logowanie) i grupą **Szybki dostęp**. Układ zmienisz przez **Widok › Dostosuj pasek narzędzi…**.
+- **Pasek stanu** okna: połączenie okna (z kolorem środowiska, przypięciem 📌 i oznaczeniem „tylko odczyt”), stan
+  transakcji („● transakcja otwarta”), liczba wierszy i czas wykonania, pozycja kursora oraz gałąź Git pliku.
+  Kliknięcie nazwy połączenia pozwala zmienić połączenie okna.
+- **Panel agenta** po prawej (domyślnie zwinięty) — terminal agenta AI z listą jego działań. Pokazuje go **Widok ›
+  Panel agenta** (zobacz rozdział *Agenci AI*).
+
+Tytuł okna pokazuje połączenie główne i aktywny zestaw roboczy (workset), a podtytuł — bieżące okno.
+
+## Paleta komend
+
+Każda czynność Pelikana jest komendą: ma pozycję w menu, opcjonalny skrót i opis skutków. **Paleta komend** (**Widok ›
+Paleta komend…**, ⇧⌘P) wyszukuje komendy po nazwie i pokazuje, w którym menu są i jaki mają skrót. To najszybszy
+sposób, żeby znaleźć funkcję, której położenia w menu nie pamiętasz.
+
+## Profile klawiatury
+
+Pelikan ma dwa profile skrótów: **PL/SQL Developer** (klawisze F, Ctrl — np. F8 wykonuje, F9 rozpoczyna debugowanie) i
+**macOS** (skróty z ⌘). W obu profilach działają odpowiedniki z ⌘, np. ⌘↩ wykonuje polecenie. Profil wybierasz w
+**Preferencje › Klawiatura**. Jeśli klawisze F1–F12 sterują jasnością czy głośnością, włącz w Ustawieniach systemowych
+opcję używania ich jako standardowych klawiszy funkcyjnych albo naciskaj je z klawiszem fn.
+
+## Aktualizacje
+
+Pelikan raz dziennie sprawdza, czy jest nowe wydanie, i proponuje jego instalację. Możesz też sprawdzić ręcznie:
+**Pelikan › Sprawdź uaktualnienia…**. Każde wydanie jest podpisane kluczem autora — aplikacja nie przyjmie pliku z
+innego źródła. Ustawienia, połączenia i hasła zostają bez zmian.
 
 ## Języki
 
-Interfejs jest dostępny po polsku, angielsku, niemiecku, hiszpańsku i ukraińsku. Język wybierasz w
-**Preferencje › Ogólne › Język interfejsu**; zmiana działa po ponownym uruchomieniu.
+Interfejs jest dostępny po polsku, angielsku, niemiecku, hiszpańsku i ukraińsku. Język wybierasz w **Preferencje ›
+Ogólne › Język interfejsu**; zmiana działa po ponownym uruchomieniu. Nazwy niektórych okien i narzędzi (np. Explain
+Plan, Large Data Editor, Query Builder) pozostają w oryginalnym brzmieniu.
+
+## Gdzie Pelikan trzyma dane
+
+Definicje połączeń (bez haseł), preferencje, historia, worksety, historia lokalna plików, dziennik agentów i inne dane
+aplikacji są w katalogu `~/Library/Application Support/Pelikan`. Hasła są wyłącznie w Pęku kluczy macOS — zobacz
+rozdział *Bezpieczeństwo i prywatność*.
+
+## Pomoc
+
+- **Pomoc › Instrukcja Pelikana** (⇧⌘/) otwiera tę instrukcję.
+- **F1** w edytorze otwiera dokumentację Oracle dla słowa pod kursorem (kod błędu, pakiet, widok słownika, polecenie
+  SQL).
+- **Pomoc › Dokumentacja Oracle…** wyszukuje w podręcznikach Oracle wybranej wersji.
+
+## O programie
+
+Pelikan jest projektem otwartym na licencji MIT:
+[github.com/andrzejoles/Pelikan](https://github.com/andrzejoles/Pelikan). Autor: Andrzej Oleś w kooperacji z Claude
+AI. Licencje użytych bibliotek są w pliku „Licencje zewnętrzne” dołączonym do aplikacji.
