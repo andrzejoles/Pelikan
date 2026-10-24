@@ -116,6 +116,7 @@ final class SidebarViewController: NSViewController {
         TemplatePaneController(workspace: workspace),
         FileBrowserPaneController(workspace: workspace),
     ]
+    static let objectBrowserPane = 1
     static let fileBrowserPane = 4
 
     /// Wybrana karta lewej kolumny (układ okna, PD-WSET-002).

@@ -30,6 +30,32 @@ struct ConnectionOptionsTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Workspace Manager z definicji połączenia: sesja po połączeniu jest w przestrzeni roboczej (DBMS_WM)")
+    func workspaceManager() async throws {
+        let c = TestDatabase.config!
+        let probe = try await TestDatabase.connect()
+        let installed = try await probe.scalar("select count(*) from all_workspaces where workspace = 'DEV_PELIKAN_WS'") == "1"
+        await probe.close()
+        // Bez `scripts/testdb.sh owm` baza testowa nie ma WMSYS — test nie ma czego sprawdzić.
+        guard installed else { return }
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let target = ConnectionTarget(user: c.user, connectString: c.connectString)
+        let wm = ConnectionDefinition(name: "dev_wm", target: target, workspaceManager: "DEV_PELIKAN_WS")
+        let plain = ConnectionDefinition(name: "dev_live", target: target)
+        try ws.connections.upsert(wm, password: c.password)
+        try ws.connections.upsert(plain, password: c.password)
+        let s = try await ws.sessions.session(SessionKey(connectionID: wm.id, purpose: .main))
+        #expect(try await s.scalar("select dbms_wm.getworkspace from dual") == "DEV_PELIKAN_WS")
+        let p = try await ws.sessions.session(SessionKey(connectionID: plain.id, purpose: .main))
+        #expect(try await p.scalar("select dbms_wm.getworkspace from dual") == "LIVE")
+        // Nieistniejąca przestrzeń: połączenie kończy się błędem DBMS_WM, nie cichym pozostaniem w LIVE.
+        let bad = ConnectionDefinition(name: "dev_wm_brak", target: target, workspaceManager: "DEV_BRAK_TAKIEJ")
+        try ws.connections.upsert(bad, password: c.password)
+        await #expect(throws: (any Error).self) { _ = try await ws.sessions.session(SessionKey(connectionID: bad.id, purpose: .main)) }
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("NLS sesji z Preferencji; zamykanie bezczynnych sesji okien bez transakcji, z transakcją — zostaje")
     func nlsAndIdle() async throws {
         #expect(SessionManager.nlsStatement(["nls_date_format": "DD.MM.YYYY", "BAD": "x", "NLS_SORT": "it's"]) == "ALTER SESSION SET NLS_DATE_FORMAT = 'DD.MM.YYYY'")

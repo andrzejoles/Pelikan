@@ -33,6 +33,8 @@ jobs:
         run: python3 scripts/prefs-index.py --check
       - name: Testy jednostkowe (bez bazy)
         working-directory: Packages/PelikanKit
+        # shell: bash = -eo pipefail — inaczej `| tee` ukrywa błąd kompilacji testów.
+        shell: bash
         run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
       # Testy SSH na lokalnym sshd: każdy zestaw osobno, z limitem i diagnostyką przy zawieszeniu.
       - name: Testy SSH na lokalnym sshd
@@ -72,10 +74,11 @@ jobs:
           sudo mkdir -p /opt/oracle && sudo unzip -q /tmp/ic.zip -d /opt/oracle
           sudo ln -sfn "$(ls -d /opt/oracle/instantclient_* | head -1)" /opt/oracle/instantclient
           ls /opt/oracle/instantclient | head
-      - name: Baza testowa (kontener) i utPLSQL
+      - name: Baza testowa (kontener), utPLSQL i Workspace Manager
         run: |
           scripts/testdb.sh up
           scripts/testdb.sh seed
+          scripts/testdb.sh owm
       - name: Testy warstwy SQL i bazy
         working-directory: Packages/PelikanKit
         run: |

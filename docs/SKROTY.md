@@ -205,7 +205,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Etap | Funkcja |
 |---|---|---|---|---|---|---|
 | Zakończ sesję okna (Kill) | `session.kill` |  |  | Brak | 0 | PD-CONN-027 |
-| Zmień hasło… | `session.setPassword` |  |  | Brak | 1 | PD-CONN-017 |
+| Zmień hasło… | `session.setPassword` |  |  | Brak | 0 | PD-CONN-017 |
 | SQL Trace | `session.sqlTrace` |  |  | Brak | 0 | PD-OPT-008 |
 | Wykonaj | `sql.execute` | F8, ⌘↩ | ⌘↩, F8 | Brak | 0 | PD-SQLW-002 |
 | Wykonaj (odwrotnie do AutoSelect) | `sql.executeAlternate` | ⌃F8, ⇧⌘↩ | ⇧⌘↩, ⌃F8 | Brak | 0 | PD-SQLW-003 |
@@ -523,7 +523,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Autozapis układu okna | `view.autosaveLayout` |  |  | Brak | 0 | PD-WSET-002 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | 0 | PD-UI-007 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | 0 | PD-CA-010 |
-| Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 2 | PD-OB-001 |
+| Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | 0 | PD-OB-001 |
 
 ## Okno
 

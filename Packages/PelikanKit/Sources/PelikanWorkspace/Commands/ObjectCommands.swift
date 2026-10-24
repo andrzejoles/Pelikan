@@ -125,7 +125,7 @@ public enum ObjectCommands {
             },
             Command(CommandDescriptor(id: "ob.edit", title: L10n.tr("Edytuj"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: objectParams, agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Otwiera źródło programu w oknie programu, widok w oknie SQL, pozostałe — DDL."), feature: "PD-OB-014"),
+                                      summary: L10n.tr("Otwiera program w oknie programu; tabelę, sekwencję, synonim, indeks, użytkownika i rolę w edytorze; pozostałe obiekty jako DDL."), feature: "PD-OB-014"),
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
                 m.touch(o)

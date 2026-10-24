@@ -33,7 +33,7 @@ public enum ORDSTools {
 
     /// Obiekty z włączonym AutoREST: nazwa, typ, alias URL, status.
     public static func enabledObjects(_ s: any DatabaseSession) async throws -> [[String]] {
-        let (_, rows) = try await s.queryAll("select parsing_object, object_type, object_alias, status from user_ords_enabled_objects order by parsing_object", limit: 100_000)
+        let (_, rows) = try await s.queryAll("select parsing_object, type, object_alias, status from user_ords_enabled_objects order by parsing_object", limit: 100_000)
         return rows.map { $0.map { $0.displayText ?? "" } }
     }
 

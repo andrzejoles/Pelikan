@@ -3,7 +3,7 @@ import Foundation
 @testable import PelikanODPI
 import Testing
 
-@Suite("Pobieranie hurtowe: paczka dopasowana do konsumenta", .serialized)
+@Suite("Pobieranie hurtowe: paczka dopasowana do konsumenta", .enabled(if: TestDatabase.isAvailable), .serialized)
 struct BulkFetchDBTests {
     @Test("Rozmiar paczki hurtowej: limit 10 000 i budżet pamięci, nie mniej niż bieżąca")
     func arraySize() {

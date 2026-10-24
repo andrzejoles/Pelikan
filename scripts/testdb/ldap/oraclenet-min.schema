@@ -1,0 +1,30 @@
+# Minimalny schemat nazw usług Oracle Net do testów nazewnictwa katalogowego Pelikana (PD-CONN-013).
+# Napisany od zera: tylko nazwy atrybutów i klas, których klient Oracle Net szuka przy rozwiązywaniu aliasu.
+# Identyfikatory OID z gałęzi 1.3.6.1.4.1.32473 (numer przedsiębiorstwa przeznaczony do dokumentacji, RFC 5612) —
+# serwer testowy, nie katalog produkcyjny.
+
+attributetype ( 1.3.6.1.4.1.32473.1.1.1 NAME 'orclNetDescString'
+    DESC 'Deskryptor połączenia Oracle Net'
+    EQUALITY caseIgnoreMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+
+attributetype ( 1.3.6.1.4.1.32473.1.1.2 NAME 'orclNetDescName'
+    DESC 'Nazwa deskryptora (opcjonalna)'
+    EQUALITY caseIgnoreMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+attributetype ( 1.3.6.1.4.1.32473.1.1.3 NAME 'orclVersion'
+    DESC 'Wersja wpisu'
+    EQUALITY caseIgnoreMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.32473.1.2.1 NAME 'orclContext'
+    DESC 'Kontener nazw usług (cn=OracleContext)'
+    SUP top STRUCTURAL
+    MUST cn )
+
+objectclass ( 1.3.6.1.4.1.32473.1.2.2 NAME 'orclNetService'
+    DESC 'Nazwa usługi Oracle Net'
+    SUP top STRUCTURAL
+    MUST cn
+    MAY ( orclNetDescString $ orclNetDescName $ orclVersion $ description ) )

@@ -240,6 +240,11 @@ public struct ExecuteOptions: Sendable {
     }
 }
 
+/// Sterownik umiejący zmienić hasło w otwartej sesji (`DriverCapabilities.changePassword`).
+public protocol PasswordChanging: Sendable {
+    func changePasswordNow(user: String, oldPassword: String, newPassword: String) async throws
+}
+
 /// Sesja bazy danych. Implementacje: `ODPISession` (Instant Client), sterownik thin (później).
 /// Wszystkie metody async wykonują się poza wątkiem głównym; `breakExecution` może być wołane w trakcie.
 public protocol DatabaseSession: AnyObject, Sendable {
@@ -262,6 +267,12 @@ public protocol DatabaseSession: AnyObject, Sendable {
 
 public extension DatabaseSession {
     func columns(of resultSet: ResultSetID) async -> [ColumnInfo] { [] }
+
+    /// Zmiana hasła użytkownika (OCIPasswordChange) — hasło nie trafia do tekstu SQL ani do historii poleceń.
+    func changePassword(user: String, oldPassword: String, newPassword: String) async throws {
+        guard let s = self as? any PasswordChanging else { throw DatabaseError.driverUnavailable("change password") }
+        try await s.changePasswordNow(user: user, oldPassword: oldPassword, newPassword: newPassword)
+    }
 
     func execute(_ sql: String, binds: [BindVariable] = []) async throws -> ExecutionResult {
         try await execute(sql, binds: binds, options: ExecuteOptions())

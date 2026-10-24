@@ -52,7 +52,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     /// Możliwości sterownika Instant Client (pełne OCI).
     public static let capabilities: DriverCapabilities = [
-        .breakExecution, .dbmsDebug, .dbmsDebugJDWP, .lobs, .objectTypes, .refCursors, .implicitResults,
+        .breakExecution, .dbmsDebug, .lobs, .objectTypes, .refCursors, .implicitResults,
         .wallet, .kerberos, .proxyUser, .changePassword, .tnsNames, .ldap, .sysdba, .json, .vector, .oldServers,
     ]
 
@@ -77,6 +77,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         if target.walletAuth == true { resolved.externalAuth = true }
         resolved.connectString = TNSNames.resolveForConnection(target.connectString, configDirectory: target.configDirectory,
                                                                walletDirectory: target.walletDirectory, keepAlias: resolved.externalAuth)
+        // Nazewnictwo katalogowe: alias rozwiązany przez Pelikana, nie adapter LDAP klienta (płaska przestrzeń nazw
+        // libclntsh na macOS miesza go z LDAP.framework — D158). Magazyn haseł potrzebuje dosłownego aliasu.
+        let netDirectories = [target.configDirectory, configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"]].compactMap { $0 }
+        try DirectoryLookup.checkKerberos(directories: [configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"],
+                                                        env.libraryDirectory.map { $0 + "/network/admin" }].compactMap { $0 })
+        if !resolved.externalAuth, let descriptor = try DirectoryLookup.resolve(resolved.connectString, directories: netDirectories) {
+            resolved.connectString = descriptor
+        }
         // Token (Entra ID / OAuth2): klient Oracle sam pobiera token; logowanie bez użytkownika i hasła (SD-AUTH-001).
         if let token = target.tokenAuth {
             let missing = token.missingFields
@@ -715,6 +723,20 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             }
         default:
             throw DatabaseError.unsupported("Nieobsługiwany typ zmiennej wiązanej: \(type.rawValue)")
+        }
+    }
+}
+
+extension ODPISession: PasswordChanging {
+    public func changePasswordNow(user: String, oldPassword: String, newPassword: String) async throws {
+        try await onQueue { [self] in
+            try user.withCString { u in
+                try oldPassword.withCString { o in
+                    try newPassword.withCString { n in
+                        try check(dpiConn_changePassword(conn, u, UInt32(user.utf8.count), o, UInt32(oldPassword.utf8.count), n, UInt32(newPassword.utf8.count)))
+                    }
+                }
+            }
         }
     }
 }
