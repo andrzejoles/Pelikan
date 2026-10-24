@@ -11,7 +11,7 @@ func withLimit<T: Sendable>(_ seconds: Double, _ stage: String, _ body: @escapin
     // Wyścig dwóch niezależnych zadań (grupa zadań czekałaby na zawieszone zadanie potomne).
     let resumed = Mutex(false)
     return try await withCheckedThrowingContinuation { (c: CheckedContinuation<T, any Error>) in
-        func finish(_ r: Result<T, any Error>) {
+        let finish: @Sendable (Result<T, any Error>) -> Void = { r in
             if resumed.withLock({ was in defer { was = true }; return !was }) { c.resume(with: r) }
         }
         Task.detached { do { finish(.success(try await body())) } catch { finish(.failure(error)) } }

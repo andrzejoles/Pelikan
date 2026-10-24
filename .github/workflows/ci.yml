@@ -33,6 +33,8 @@ jobs:
         run: python3 scripts/prefs-index.py --check
       - name: Testy jednostkowe (bez bazy)
         working-directory: Packages/PelikanKit
+        # shell: bash = -eo pipefail — inaczej `| tee` ukrywa błąd kompilacji testów.
+        shell: bash
         run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
       # Testy SSH na lokalnym sshd: każdy zestaw osobno, z limitem i diagnostyką przy zawieszeniu.
       - name: Testy SSH na lokalnym sshd
