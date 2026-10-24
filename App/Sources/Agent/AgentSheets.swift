@@ -87,9 +87,6 @@ struct ApprovalView: View {
     }
 }
 
-/// Wiersz macierzy uprawnień sesji: narzędzie, poziom domyślny i wybrany (tylko obniżenie).
-}
-
 /// Macierz uprawnień przy starcie sesji agenta (PROMPT §7.4): poziom każdego narzędzia można obniżyć dla tej sesji.
 struct PermissionMatrixView: View {
     let profileName: String
