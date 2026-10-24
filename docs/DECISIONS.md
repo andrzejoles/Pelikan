@@ -1113,3 +1113,12 @@ krótką tabelę pod spodem, niewyrównaną z kolumnami. Układ tabelaryczny bez
 jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, „Razem” na końcu. Z nową stroną po grupie
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
+
+### D153 · 2026-10-24 — Pierwsze wydanie beta jako zwykłe wydanie z „beta” w tytule
+Właściciel poprosił o pierwsze wydanie testowe. Kanał aktualizacji Sparkle to `releases/latest/download/appcast.xml`,
+a GitHub nie zalicza wydań oznaczonych „pre-release” do `latest` — testerzy bety nie dostaliby kolejnych wersji (bez
+wydania stabilnego `latest` zwraca 404). Dlatego `make beta-release` tworzy zwykły szkic wydania z tytułem
+„Pelikan X.Y.Z beta”, notatkami z `docs/BETA.md` (co testować, znane ograniczenia, zgłaszanie błędów bez haseł i danych)
+i listą zmian. Osobny kanał beta w Sparkle (`sparkle:channel`) — dopiero, gdy pojawią się wydania stabilne.
+Publikacja szkicu jak dotąd: właściciel (`gh release edit vX.Y.Z --draft=false`). README opisuje teraz produkt dla
+testerów (funkcje, instalacja, bezpieczeństwo, budowanie) zamiast stanu budowy.

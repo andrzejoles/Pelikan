@@ -2,7 +2,11 @@
 # Wydanie: instalatory, archiwum dla Sparkle, appcast.xml podpisany kluczem EdDSA i SZKIC wydania na GitHubie
 # (jak w Bifoldzie). Publikacja po sprawdzeniu szkicu: gh release edit vX.Y.Z --draft=false.
 # Zainstalowane kopie pobiorą aktualizację same dopiero po publikacji (kanał: releases/latest/download/appcast.xml).
+# --beta: tytuł „… beta” i notatki z docs/BETA.md. Celowo NIE „pre-release” na GitHubie: kanał Sparkle to
+# releases/latest, a GitHub pomija wydania wstępne w „latest” — testerzy nie dostaliby kolejnych wersji (D153).
 set -euo pipefail
+BETA=0
+[ "${1:-}" = "--beta" ] && BETA=1
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
@@ -35,9 +39,17 @@ scripts/sparkle-tools.sh generate_appcast \
     "$RELEASE_DIR"
 
 PREVIOUS="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+TITLE="$APP_NAME $VERSION"
+[ "$BETA" = 1 ] && TITLE="$TITLE beta"
 {
-    echo "$APP_NAME $VERSION"
+    echo "$TITLE"
     echo
+    if [ "$BETA" = 1 ]; then
+        sed -e '1d' -e '/^Autor: /d' docs/BETA.md
+        echo
+        echo "## Zmiany od poprzedniego wydania"
+        echo
+    fi
     # Zmiany wchodzą na main przez scalenia PR: tytuł PR jest w treści commita scalającego.
     git log --first-parent --format='%s%n%b' ${PREVIOUS:+"$PREVIOUS..HEAD"} \
         | awk '/^Merge pull request #[0-9]+ from /{n=$4; next} n!="" && NF{print "- " $0 " (" n ")"; n=""}' | head -40 || true
@@ -57,6 +69,6 @@ NOTES
 
 git tag "$TAG"
 git push origin "$TAG"
-gh release create "$TAG" --draft --title "$APP_NAME $VERSION" --notes-file "$RELEASE_DIR/notes.md" \
+gh release create "$TAG" --draft --title "$TITLE" --notes-file "$RELEASE_DIR/notes.md" \
     "$RELEASE_DIR/$APP_NAME-$VERSION.zip" "$RELEASE_DIR/appcast.xml" "dist/$APP_NAME-$VERSION.dmg" "dist/$APP_NAME-$VERSION.pkg"
 echo "Szkic wydania $TAG gotowy. Sprawdź go na GitHubie i opublikuj: gh release edit $TAG --draft=false"

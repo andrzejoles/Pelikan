@@ -4,7 +4,7 @@ DERIVED = build/DerivedData.noindex
 APP = $(DERIVED)/Build/Products/Debug/Pelikan.app
 PKG = Packages/PelikanKit
 
-.PHONY: installer draft-release generate build release run test test-unit test-integration test-release test-ui testdb report version clean strings
+.PHONY: installer draft-release beta-release generate build release run test test-unit test-integration test-release test-ui testdb report version clean strings
 
 generate:
 	xcodegen generate --quiet
@@ -60,3 +60,7 @@ installer:
 
 draft-release:
 	scripts/release.sh
+
+
+beta-release:
+	scripts/release.sh --beta
