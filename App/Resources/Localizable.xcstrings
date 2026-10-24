@@ -3165,6 +3165,34 @@
         }
       }
     },
+    "AutoCommit po wykonaniu okna testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit after Test Window execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit nach Ausführung des Testfensters"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit tras ejecutar la ventana de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoCommit після виконання вікна тесту"
+          }
+        }
+      }
+    },
     "AutoCommit poleceń SQL" : {
       "localizations" : {
         "en" : {
@@ -93713,6 +93741,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "festgeschrieben"
+          }
+        }
+      }
+    },
+    "zatwierdzono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "committed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "festgeschrieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "confirmado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зафіксовано"
           }
         }
       }

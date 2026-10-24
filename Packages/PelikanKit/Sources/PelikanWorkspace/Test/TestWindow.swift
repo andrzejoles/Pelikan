@@ -168,8 +168,9 @@ public enum TestRunner {
         // Blok bez końcowego „/” i średnika po END — tak jak w oknie SQL.
         var sql = text
         if sql.hasSuffix("/") { sql = String(sql.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
+        sql = substitute(sql, doc.testVariables)
         try await ws.guardModification([sql], connectionID: ws.effectiveConnection(of: doc))
-        let binds = try doc.testVariables.map { v -> BindVariable in
+        let binds = try doc.testVariables.filter { $0.type != .substitution }.map { v -> BindVariable in
             let (t, size) = v.type.bind
             return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try value(v), maxSize: size)
         }
@@ -218,7 +219,7 @@ public enum TestRunner {
         do {
             let r = try await session.execute(sql, binds: binds)
             await finishMeasurements()
-            for i in doc.testVariables.indices {
+            for i in doc.testVariables.indices where doc.testVariables[i].type != .substitution {
                 let v = doc.testVariables[i]
                 let out = r.outBinds[v.name] ?? r.outBinds[v.name.uppercased()] ?? .null
                 var n = v
@@ -249,6 +250,12 @@ public enum TestRunner {
                 doc.output.append(contentsOf: lines)
             }
             doc.statusText = L10n.tr("Wykonano w \(String(format: "%.3f", Double(r.elapsed.components.seconds) + Double(r.elapsed.components.attoseconds) / 1e18)) s")
+            // AutoCommit after execute (PD-TEST-003): zatwierdzenie po udanym wykonaniu, jak w opcji okna testu wzorca.
+            if ws.settings.autoCommitTestWindow {
+                try await session.commit()
+                doc.transactionOpen = false
+                doc.statusText = (doc.statusText ?? "") + " · " + L10n.tr("zatwierdzono")
+            }
             return r.elapsed
         } catch let e as OracleError {
             await finishMeasurements()
@@ -261,6 +268,23 @@ public enum TestRunner {
             doc.statusText = SQLExecutor.statusMessage(for: e)
             throw e
         }
+    }
+
+    /// Zmienne typu Substitution: `:nazwa` zastąpione tekstem wartości przed wykonaniem (nie są wiązane; PD-TEST-002).
+    public static func substitute(_ text: String, _ variables: [TestVariable]) -> String {
+        let subs = Dictionary(variables.filter { $0.type == .substitution }.map { ($0.name.uppercased(), $0.isNull ? "" : $0.value) },
+                              uniquingKeysWith: { a, _ in a })
+        guard !subs.isEmpty else { return text }
+        let ns = text as NSString
+        var out = ""
+        var pos = 0
+        for t in Lexer(text).tokenize() where t.kind == .bindVariable {
+            let name = ns.substring(with: NSRange(location: t.start + 1, length: t.length - 1)).uppercased()
+            guard let v = subs[name] else { continue }
+            out += ns.substring(with: NSRange(location: pos, length: t.start - pos)) + v
+            pos = t.start + t.length
+        }
+        return out + ns.substring(from: pos)
     }
 
     /// Ramki z komunikatu błędu: `ORA-06512: at "OWNER.UNIT", line n` oraz `at line n` (blok anonimowy).
@@ -326,11 +350,16 @@ public struct TestScriptFile: Codable, Sendable, Equatable {
     public var version = 1
     public var block: String
     public var variables: [TestVariable]
+    /// Wyrażenia obserwowane debugera (nil w plikach sprzed tej wersji).
+    public var watches: [String]?
 
-    public init(block: String, variables: [TestVariable]) { self.block = block; self.variables = variables }
+    public init(block: String, variables: [TestVariable], watches: [String] = []) {
+        self.block = block; self.variables = variables; self.watches = watches.isEmpty ? nil : watches
+    }
 
     public static func == (a: Self, b: Self) -> Bool {
         a.block == b.block && a.variables.map { [$0.name, $0.type.rawValue, $0.value] } == b.variables.map { [$0.name, $0.type.rawValue, $0.value] }
+            && (a.watches ?? []) == (b.watches ?? [])
     }
 
     public func encoded() throws -> Data {

@@ -146,6 +146,8 @@ public final class Document: Identifiable {
     public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
+    /// Wyrażenia obserwowane debugera okna testu — zapisywane w pliku .tst (PD-TEST-005).
+    public var testWatches: [String] = []
     public var errorStack: [ErrorStackFrame] = []
     /// Niejawne wyniki ostatniego wykonania okna testu (UG 5.7).
     public var testResults: [TestResultSet] = []

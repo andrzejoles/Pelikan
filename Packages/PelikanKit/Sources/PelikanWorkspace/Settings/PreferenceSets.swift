@@ -120,7 +120,7 @@ public enum PreferenceSets {
         (L10n.tr("Ogólne"), ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
                              "allowMultipleConnections", "appearance", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
                              "quickAccessCommands"]),
-        (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitPostedRecords", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
+        (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitPostedRecords", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "rowNumbersInCopyExport",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",

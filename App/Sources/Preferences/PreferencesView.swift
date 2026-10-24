@@ -101,6 +101,7 @@ struct SQLWindowPane: View {
             Section(L10n.tr("Wykonywanie (UG 23.20)")) {
                 Toggle(L10n.tr("AutoSelect — bez zaznaczenia wykonuj polecenie pod kursorem"), isOn: setting(workspace, \.autoSelectStatement))
                 Toggle(L10n.tr("AutoCommit poleceń SQL"), isOn: setting(workspace, \.autoCommitSQL))
+                Toggle(L10n.tr("AutoCommit po wykonaniu okna testu"), isOn: setting(workspace, \.autoCommitTestWindow))
                 Toggle(L10n.tr("Potwierdzaj COMMIT i ROLLBACK"), isOn: setting(workspace, \.confirmCommitRollback))
             }
             Section(L10n.tr("Wyniki")) {

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T01:56:23+02:00",
+  "heartbeat": "2026-10-24T07:19:53+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "PD-TEST-003/005: AutoCommit po wykonaniu okna testu, obserwowane wyrażenia w pliku .tst; PD-TEST-002: typ Substitution",
     "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
     "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela",
     "Etap 8 zamknięty (D114): docs/STATUS.md z ograniczeniami i listą do potwierdzenia przez właściciela; PR #56 w CI, potem szkic wydania",
@@ -91,8 +92,7 @@
     "Etap 3 zamknięty (D29): krokowanie przez pakiet z wyzwalaczem, rekord i kolekcja w testach na bazie; JDWP i pozostałe P2/P3 przeniesione",
     "PR #28 i #29 scalone (profilery, zmienne globalne pakietu w debugerze)",
     "Etap 3 / wyniki: niejawne wyniki (DBMS_SQL.RETURN_RESULT) w karcie Wyniki okna testu; wykonanie zapytania albo bloku w sesji debugowanej (DBMS_DEBUG.EXECUTE, wiersze przez JSON — DBMS_SQL zablokowany) — 2 testy",
-    "PR #26 i #27 scalone (debuger, rozszerzenia debugera)",
-    "Etap 3 / debuger: zmienne globalne pakietu (prywatne i publiczne), pomijanie inicjalizacji pakietów i obiektów SYS przy krokowaniu (preferencje)"
+    "PR #26 i #27 scalone (debuger, rozszerzenia debugera)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

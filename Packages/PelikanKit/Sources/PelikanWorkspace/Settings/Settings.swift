@@ -85,6 +85,8 @@ public struct Settings: Sendable, Codable, Hashable {
     // Window Types — SQL Window
     public var autoCommitSQL = false
     public var autoCommitPostedRecords = false
+    /// Test Window: AutoCommit after execute (PD-TEST-003).
+    public var autoCommitTestWindow = false
     public var autoSelectStatement = true   // D12
     public var recordsPerPage: RecordsPerPage = .automatic
     public var maximumResultSetMegabytes = 512
@@ -270,6 +272,7 @@ public struct Settings: Sendable, Codable, Hashable {
         dbmsOutputBufferSize = v(.dbmsOutputBufferSize, dbmsOutputBufferSize)
         autoCommitSQL = v(.autoCommitSQL, autoCommitSQL)
         autoCommitPostedRecords = v(.autoCommitPostedRecords, autoCommitPostedRecords)
+        autoCommitTestWindow = v(.autoCommitTestWindow, autoCommitTestWindow)
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)
