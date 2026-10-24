@@ -73,6 +73,19 @@
   SQLNET.AUTHENTICATION_SERVICES jest blokowane czytelnym błędem, bo adapter Instant Client przerwałby proces (D159).
   Środowisko testowe: KDC w kontenerze, klucze losowe, tablice kluczy i bilety tylko w `.testdb/` (poza repozytorium).
 
+- Przegląd bezpieczeństwa 2026-10-24 (D163):
+  - połączenie narzędzia agenta jest przypinane w bramce (`Workspace.agentConnectionKey`), więc podgląd, zgoda i
+    wykonanie dotyczą tej samej bazy, nawet gdy w trakcie zgody zmieni się aktywne okno;
+  - bloki PL/SQL, CALL, DDL i polecenia nierozpoznane są odrzucane, gdy agent ma niezatwierdzone DML
+    (`AgentChanges.mayCommit`); okno zgody ostrzega, że blok PL/SQL może sam zatwierdzić zmiany;
+  - narzędzia edytora agenta nie sięgają okna poleceń;
+  - błędy łączenia widziane przez agenta mają tylko alias i kod ORA-/TNS-/DPI-;
+  - gniazda serwera agentów mają FD_CLOEXEC, a ślad `PELIKAN_MCP_TRACE` powstaje z prawami 0600;
+  - zmiana środowiska połączenia na produkcję wyłącza zmiany agenta;
+  - adres `pelikan://` przyjmuje tylko otwieranie — nigdy `commandfile`;
+  - cele SSH Pro\*C: `StrictHostKeyChecking=yes`, a klucz nowego serwera trafia do known_hosts dopiero po potwierdzeniu
+    odcisku w teście celu.
+
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność
 uwierzytelnienia (UID → PID i drzewo → ramka `hello` z tokenem w 5 s, porównanie stałoczasowe), ramki 4 B długości +

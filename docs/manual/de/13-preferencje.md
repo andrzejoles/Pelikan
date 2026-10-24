@@ -118,3 +118,7 @@ Unterstützt werden u. a. `connection` (Name einer Verbindung oder `benutzer@dat
 werden), `noloaddesktop` sowie Dateipfade. Auch die Adresse `pelikan://open?connection=…` funktioniert. Ein Passwort in
 den Parametern wird nicht unterstützt — `userid=u/passwort@db` wird ohne Passwort und mit einer Warnung angenommen, und
 das Passwort stammt aus dem Schlüsselbund oder aus einer Abfrage.
+
+Eine `pelikan://`-Adresse kann jede Webseite oder Nachricht öffnen; sie akzeptiert daher nur das Öffnen (Verbindung,
+Objekt, Datei, Workset, Projekt, `readonly`) – ein `commandfile`-Skript aus einer solchen Adresse führt Pelikan nie
+aus.

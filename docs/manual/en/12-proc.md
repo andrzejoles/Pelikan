@@ -34,6 +34,10 @@ the system (`uname -a`, on AIX `oslevel -s`), the availability of `make`, `git` 
 cleanliness of the working copy (`git status --porcelain`) and whether the directories are writable. Pelikan creates a
 missing backup directory after your confirmation.
 
+On the first test of a new server Pelikan shows its key fingerprint (SHA256) and saves the key to known_hosts only
+after you confirm it — compare the fingerprint with the one from your administrator. Deployment to a server whose key
+has not been confirmed is refused; a server with a changed key is always refused.
+
 ## Deployment
 
 1. Open a project with a local Git repository (Pelikan compares it with the server). Without a project, deployment

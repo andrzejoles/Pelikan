@@ -113,3 +113,6 @@ Obsługiwane parametry to m.in. `connection` (nazwa połączenia albo `użytkown
 `noloaddesktop` oraz ścieżki plików. Działa też adres `pelikan://open?connection=…`. Hasło w parametrach nie jest
 obsługiwane — `userid=u/hasło@baza` zostanie przyjęte bez hasła z ostrzeżeniem, a hasło pochodzi z Pęku kluczy albo z
 pytania.
+
+Adres `pelikan://` może otworzyć dowolna strona albo wiadomość, dlatego przyjmuje tylko otwieranie (połączenie,
+obiekt, plik, workset, projekt, `readonly`); skryptu z `commandfile` z takiego adresu Pelikan nie wykona.

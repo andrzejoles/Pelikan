@@ -12,6 +12,19 @@ public struct AgentEdit: Sendable, Hashable {
 }
 
 extension Workspace {
+    /// Klucz wewnętrzny z połączeniem ustalonym przez bramkę uprawnień (agent go nie poda — klucze `__` są usuwane):
+    /// zgoda, podgląd i wykonanie dotyczą tego samego połączenia, nawet gdy w trakcie zgody zmieni się aktywne okno.
+    public static let agentConnectionKey = "__connectionID"
+
+    /// Połączenie narzędzia agenta: przypięte przez bramkę albo z aliasu w argumencie `connection`.
+    public func agentConnection(_ arguments: CommandArguments) throws -> ConnectionDefinition {
+        if let raw = arguments.string(Self.agentConnectionKey) {
+            guard let id = UUID(uuidString: raw), let def = connections.connection(id), def.agent.visibleToAgent else { throw CommandError.notConnected }
+            return def
+        }
+        return try agentConnection(alias: arguments.string("connection"))
+    }
+
     /// Połączenie widoczne dla agenta pod aliasem (PROMPT §7.3 p.1); bez aliasu — połączenie aktywnego okna albo główne.
     public func agentConnection(alias: String?) throws -> ConnectionDefinition {
         if let alias, !alias.isEmpty {
@@ -33,14 +46,20 @@ extension Workspace {
         return d
     }
 
+    /// Okno poleceń jest poza zasięgiem agenta (PROMPT §7.3): jego tekst może zawierać `CONNECT u/hasło`, a tekst
+    /// wstawiony przez agenta (SPOOL, HOST, CONNECT) wykonałby użytkownik jednym Execute.
     func agentDocument(_ id: String?) throws -> Document {
+        let d: Document
         if let id, !id.isEmpty {
-            guard let d = documents.first(where: { Self.agentWindowID($0) == id.lowercased() }) else {
+            guard let found = documents.first(where: { Self.agentWindowID($0) == id.lowercased() }) else {
                 throw CommandError.invalidArgument("window", L10n.tr("nieznane okno „\(id)”"))
             }
-            return d
+            d = found
+        } else {
+            guard let active = activeDocument else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna")) }
+            d = active
         }
-        guard let d = activeDocument else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna")) }
+        guard d.kind != .command else { throw AgentDenial.permissionDenied(L10n.tr("okno poleceń jest niedostępne dla agenta")) }
         return d
     }
 

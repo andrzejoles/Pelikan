@@ -62,6 +62,10 @@ public enum AgentChanges {
         return [t.object]
     }
 
+    /// Polecenie może zatwierdzić transakcję agenta — niejawnie (DDL, polecenia systemowe, nierozpoznane) albo w kodzie
+    /// (blok PL/SQL i CALL: COMMIT, DDL dynamiczne, transakcje autonomiczne, zadania). Bezpieczne: zapytanie, DML, sesja.
+    static func mayCommit(_ c: StatementCategory) -> Bool { ![.query, .dml, .sessionControl].contains(c) }
+
     static func hasPendingTransaction(_ s: any DatabaseSession) async throws -> Bool {
         try await s.scalar("select dbms_transaction.local_transaction_id from dual") != nil
     }
@@ -124,20 +128,27 @@ public enum AgentChanges {
                                                        binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name))], limit: 200)
                     affected += dep.compactMap { $0.first?.displayText }
                 }
-            case .plsql, .query, .sessionControl:
+            case .query, .sessionControl:
                 break
             default:
                 irreversible = true
             }
         }
         var summary = L10n.tr("Agent chce wykonać polecenia na połączeniu „\(def.agentAlias)” (\(def.environment.rawValue)) — liczba poleceń: \(statements.count) (\(kinds.joined(separator: ", "))).")
-        if statements.contains(where: { StatementClassifier.classify($0).category == .dml }) {
+        let categories = statements.map { StatementClassifier.classify($0).category }
+        if categories.contains(.dml) {
             summary += " " + L10n.tr("DML pozostanie niezatwierdzone do osobnej zgody na COMMIT.")
+            if categories.contains(where: mayCommit) {
+                summary += " " + L10n.tr("DDL i bloki PL/SQL po DML zostaną odrzucone, bo mogłyby je zatwierdzić.")
+            }
         }
-        if pending, statements.contains(where: { StatementClassifier.classify($0).category == .ddl }) {
-            summary += " " + L10n.tr("Agent ma niezatwierdzone zmiany — DDL zostanie odrzucone.")
+        if pending, categories.contains(where: mayCommit) {
+            summary += " " + L10n.tr("Agent ma niezatwierdzone zmiany — DDL i bloki PL/SQL zostaną odrzucone.")
         }
-        if irreversible { summary += " " + L10n.tr("Tej zmiany nie da się cofnąć (DDL na tabelach albo polecenie nierozpoznane).") }
+        if categories.contains(.plsql) {
+            summary += " " + L10n.tr("Blok PL/SQL może sam zatwierdzić swoje zmiany (COMMIT, DDL dynamiczne, transakcje autonomiczne, zadania).")
+        }
+        if irreversible { summary += " " + L10n.tr("Tej zmiany nie da się cofnąć (DDL na tabelach, blok PL/SQL albo polecenie nierozpoznane).") }
         return EffectPreview(summary: summary, statements: statements, affectedObjects: Array(NSOrderedSet(array: affected)) as? [String] ?? affected,
                              estimatedRows: rows, plan: plans.isEmpty ? nil : plans.joined(separator: "\n\n"), irreversible: irreversible)
     }
@@ -174,8 +185,8 @@ extension Workspace {
         var results: [JSONValue] = []
         for sql in statements {
             let c = StatementClassifier.classify(sql)
-            if c.category == .ddl, try await AgentChanges.hasPendingTransaction(s) {
-                throw AgentDenial.permissionDenied(L10n.tr("agent ma niezatwierdzone zmiany, a DDL zatwierdziłoby je niejawnie — najpierw commit albo rollback"))
+            if AgentChanges.mayCommit(c.category), try await AgentChanges.hasPendingTransaction(s) {
+                throw AgentDenial.permissionDenied(L10n.tr("agent ma niezatwierdzone zmiany, a DDL albo blok PL/SQL mógłby je zatwierdzić — najpierw commit albo rollback"))
             }
             let code = c.category == .ddl ? AgentChanges.affectedCode(sql, schema: schema) : []
             var before: [DBObject: String?] = [:]
@@ -324,7 +335,7 @@ enum AgentChangeCommands {
                                       summary: L10n.tr("Zatwierdza niezatwierdzone zmiany agenta na połączeniu (po zgodzie z liczbą zmienionych wierszy) — nieodwracalne."),
                                       inMenu: false, feature: "AI-SEC-007"),
                     preview: { ctx in
-                        let def = try ctx.workspace.agentConnection(alias: ctx.arguments.string("connection"))
+                        let def = try ctx.workspace.agentConnection(ctx.arguments)
                         let rows = ctx.invoker.agentSessionID.flatMap { ctx.workspace.agentPendingRows[ctx.workspace.agentPendingKey($0, def.id)] } ?? 0
                         return EffectPreview(summary: L10n.tr("COMMIT zmian agenta na połączeniu „\(def.agentAlias)”: zmienione wiersze — \(rows). Po zatwierdzeniu zmian danych nie da się cofnąć."),
                                              statements: ["COMMIT"], estimatedRows: Int64(rows), irreversible: true)
@@ -339,7 +350,7 @@ enum AgentChangeCommands {
                                       summary: L10n.tr("Wycofuje niezatwierdzone zmiany agenta na połączeniu."),
                                       inMenu: false, feature: "AI-SEC-007"),
                     preview: { ctx in
-                        let def = try ctx.workspace.agentConnection(alias: ctx.arguments.string("connection"))
+                        let def = try ctx.workspace.agentConnection(ctx.arguments)
                         let rows = ctx.invoker.agentSessionID.flatMap { ctx.workspace.agentPendingRows[ctx.workspace.agentPendingKey($0, def.id)] } ?? 0
                         return EffectPreview(summary: L10n.tr("ROLLBACK zmian agenta na połączeniu „\(def.agentAlias)”: wycofane wiersze — \(rows)."),
                                              statements: ["ROLLBACK"], estimatedRows: Int64(rows))
@@ -390,11 +401,11 @@ enum AgentChangeCommands {
                                       summary: L10n.tr("Instaluje albo aktualizuje utPLSQL z oficjalnego wydania w oknie poleceń widocznym dla użytkownika — tylko połączenia deweloperskie i testowe."),
                                       inMenu: false, feature: "AI-TOOL-003"),
                     preview: { ctx in
-                        let def = try ctx.workspace.agentConnection(alias: ctx.arguments.string("connection"))
-                        return EffectPreview(summary: L10n.tr("Instalacja albo aktualizacja utPLSQL na połączeniu „\(def.agentAlias)” (\(def.environment.rawValue)) z oficjalnego wydania; potrzebne uprawnienia SYSDBA albo DBA."),
+                        let def = try ctx.workspace.agentConnection(ctx.arguments)
+                        return EffectPreview(summary: L10n.tr("Instalacja albo aktualizacja utPLSQL na połączeniu „\(def.agentAlias)” (\(def.environment.rawValue)) z oficjalnego wydania. Skrypty wykonuje okno poleceń na Twoim koncie (nie na koncie agenta), z uprawnieniami SYSDBA albo DBA."),
                                              statements: ["@install_headless.sql / @uninstall.sql + @install.sql"])
                     }) { ctx in
-                let def = try ctx.workspace.agentConnection(alias: ctx.arguments.string("connection"))
+                let def = try ctx.workspace.agentConnection(ctx.arguments)
                 return try await UtplsqlCommands.install(ctx, connection: def.id)
             },
         ]

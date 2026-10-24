@@ -27,7 +27,8 @@ public actor SocketTransport: Transport {
             h.write(line)
             h.closeFile()
         } else {
-            FileManager.default.createFile(atPath: path, contents: line)
+            // Ślad zawiera wyniki zapytań — tylko dla właściciela.
+            FileManager.default.createFile(atPath: path, contents: line, attributes: [.posixPermissions: 0o600])
         }
     }
 

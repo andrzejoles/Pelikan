@@ -37,6 +37,10 @@ servidor SSH, el inicio de sesión, el sistema (`uname -a`, en AIX `oslevel -s`)
 `compress`/`gzip`, la rama y la limpieza de la working copy (`git status --porcelain`) y la posibilidad de escribir en
 los directorios. Si falta el directorio de copias de seguridad, Pelikan lo crea tras tu confirmación.
 
+En la primera prueba de un servidor nuevo, Pelikan muestra la huella de su clave (SHA256) y guarda la clave en
+known_hosts solo tras tu confirmación: compara la huella con la que te dio el administrador. El despliegue en un
+servidor cuya clave no se ha confirmado se rechaza; un servidor con la clave cambiada, siempre.
+
 ## Despliegue
 
 1. Abre un proyecto con un repositorio Git local (Pelikan lo compara con el servidor). Sin proyecto, el despliegue

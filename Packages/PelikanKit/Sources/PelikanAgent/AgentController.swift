@@ -251,7 +251,7 @@ public final class AgentController: AgentInvocationGate {
 
     // MARK: AgentInvocationGate
 
-    public func authorize(_ command: Command, context: CommandContext) async throws {
+    public func authorize(_ command: Command, context: CommandContext) async throws -> CommandArguments {
         guard let sessionID = context.invoker.agentSessionID, let session = registry.session(sessionID) else {
             throw AgentDenial.sessionClosed
         }
@@ -262,20 +262,24 @@ public final class AgentController: AgentInvocationGate {
         var level = AgentPolicy.effectiveAccess(command: d, session: session, settings: settings, viaRunCommand: via)
         // Narzędzia bazy: poziom połączenia (prod domyślnie Odczyt, niewidoczne — Brak).
         var connection: ConnectionDefinition?
+        var arguments = context.arguments
         if d.parameters.contains(where: { $0.name == "connection" }), !AgentPolicy.appCommandEffects.contains(d.effect) {
-            let def = try workspace.agentConnection(alias: context.arguments.string("connection"))
+            let def = try workspace.agentConnection(arguments)
             level = min(level, AgentPolicy.connectionAccess(def))
             connection = def
+            // Połączenie ustalone teraz obowiązuje podgląd, zgodę i wykonanie (bez aliasu — aktywne okno mogłoby się
+            // zmienić w trakcie zgody, np. przez navigate_to agenta).
+            arguments[Workspace.agentConnectionKey] = .string(def.id.uuidString)
         }
         switch AgentPolicy.decide(level: level, effect: d.effect) {
         case .allow:
-            return
+            return arguments
         case .deny(let why):
             throw AgentDenial.permissionDenied(connection.map { "\(why) (połączenie \($0.agentAlias), środowisko \($0.environment.rawValue))" } ?? why)
         case .needsApproval:
-            let preview = try await workspace.preview(command.id, context.arguments, invoker: context.invoker)
+            let preview = try await workspace.preview(command.id, arguments, invoker: context.invoker)
             let request = ApprovalRequest(sessionID: sessionID, agentName: session.profile.name, command: command.id, title: d.title,
-                                          preview: preview, arguments: context.arguments, connection: connection?.agentAlias)
+                                          preview: preview, arguments: arguments, connection: connection?.agentAlias)
             pending.append(request)
             if let i = activities.lastIndex(where: { $0.sessionID == sessionID && $0.status == .running }) {
                 activities[i].status = .waitingForApproval
@@ -288,6 +292,7 @@ public final class AgentController: AgentInvocationGate {
                 activities[i].status = .running
             }
             guard approved, registry.session(sessionID) != nil else { throw AgentDenial.rejectedByUser }
+            return arguments
         }
     }
 }

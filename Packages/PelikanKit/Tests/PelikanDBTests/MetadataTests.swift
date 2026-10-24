@@ -174,5 +174,5 @@ struct ProgramCompileTests {
 /// Bramka agenta przepuszczająca wszystko (testy zachowania komend wywołanych przez agenta, bez PelikanAgent).
 @MainActor
 final class AllowingGate: AgentInvocationGate {
-    func authorize(_ command: Command, context: CommandContext) async throws {}
+    func authorize(_ command: Command, context: CommandContext) async throws -> CommandArguments { context.arguments }
 }

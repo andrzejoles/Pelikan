@@ -2017,30 +2017,30 @@
         }
       }
     },
-    "Agent ma niezatwierdzone zmiany — DDL zostanie odrzucone." : {
+    "Agent ma niezatwierdzone zmiany — DDL i bloki PL/SQL zostaną odrzucone." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The agent has uncommitted changes — DDL will be rejected."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Агент має незафіксовані зміни — DDL буде відхилено."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El agente tiene cambios sin confirmar: se rechazará el DDL."
+            "value" : "The agent has uncommitted changes — DDL and PL/SQL blocks will be rejected."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agent hat nicht festgeschriebene Änderungen — DDL wird abgelehnt."
+            "value" : "Der Agent hat nicht festgeschriebene Änderungen — DDL und PL/SQL-Blöcke werden abgelehnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El agente tiene cambios sin confirmar: se rechazarán DDL y bloques PL/SQL."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Агент має незафіксовані зміни — DDL і блоки PL/SQL буде відхилено."
           }
         }
       }
@@ -5093,6 +5093,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Binärdateien (durch Komma getrennt)"
+          }
+        }
+      }
+    },
+    "Blok PL/SQL może sam zatwierdzić swoje zmiany (COMMIT, DDL dynamiczne, transakcje autonomiczne, zadania)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A PL/SQL block can commit its own changes (COMMIT, dynamic DDL, autonomous transactions, jobs)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein PL/SQL-Block kann seine Änderungen selbst festschreiben (COMMIT, dynamisches DDL, autonome Transaktionen, Jobs)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un bloque PL/SQL puede confirmar sus propios cambios (COMMIT, DDL dinámico, transacciones autónomas, trabajos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Блок PL/SQL може сам зафіксувати свої зміни (COMMIT, динамічний DDL, автономні транзакції, завдання)."
           }
         }
       }
@@ -10329,6 +10357,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DDL / джерело"
+          }
+        }
+      }
+    },
+    "DDL i bloki PL/SQL po DML zostaną odrzucone, bo mogłyby je zatwierdzić." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DDL and PL/SQL blocks after DML will be rejected because they could commit it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DDL und PL/SQL-Blöcke nach DML werden abgelehnt, da sie es festschreiben könnten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se rechazarán DDL y bloques PL/SQL después de DML, porque podrían confirmarlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DDL і блоки PL/SQL після DML буде відхилено, бо вони могли б його зафіксувати."
           }
         }
       }
@@ -22401,30 +22457,30 @@
         }
       }
     },
-    "Instalacja albo aktualizacja utPLSQL na połączeniu „%@” (%@) z oficjalnego wydania; potrzebne uprawnienia SYSDBA albo DBA." : {
+    "Instalacja albo aktualizacja utPLSQL na połączeniu „%@” (%@) z oficjalnego wydania. Skrypty wykonuje okno poleceń na Twoim koncie (nie na koncie agenta), z uprawnieniami SYSDBA albo DBA." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install or upgrade utPLSQL on connection “%@” (%@) from the official release; SYSDBA or DBA privileges are required."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Встановлення або оновлення utPLSQL на з'єднанні «%@» (%@) з офіційного випуску; потрібні привілеї SYSDBA або DBA."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Instalación o actualización de utPLSQL en la conexión «%@» (%@) desde la versión oficial; se necesitan privilegios SYSDBA o DBA."
+            "value" : "Install or upgrade utPLSQL on connection “%@” (%@) from the official release. The scripts run in a Command Window under your account (not the agent’s), with SYSDBA or DBA privileges."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Installation oder Aktualisierung von utPLSQL auf der Verbindung „%@“ (%@) aus dem offiziellen Release; erfordert SYSDBA- oder DBA-Rechte."
+            "value" : "utPLSQL auf der Verbindung „%@“ (%@) aus dem offiziellen Release installieren oder aktualisieren. Die Skripte laufen in einem Command Window unter Ihrem Konto (nicht dem des Agenten), mit SYSDBA- oder DBA-Rechten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalar o actualizar utPLSQL en la conexión «%@» (%@) desde la versión oficial. Los scripts se ejecutan en una Command Window con tu cuenta (no la del agente), con privilegios SYSDBA o DBA."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Встановлення або оновлення utPLSQL на з’єднанні «%@» (%@) з офіційного випуску. Скрипти виконує Command Window під вашим обліковим записом (не агента), з правами SYSDBA або DBA."
           }
         }
       }
@@ -35701,6 +35757,62 @@
         }
       }
     },
+    "Nie udało się połączyć z „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not connect to “%@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung zu „%@“ fehlgeschlagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo conectar a «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося підключитися до «%@»"
+          }
+        }
+      }
+    },
+    "Nie udało się połączyć z „%@” (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not connect to “%@” (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung zu „%@“ fehlgeschlagen (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo conectar a «%@» (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося підключитися до «%@» (%@)"
+          }
+        }
+      }
+    },
     "Nie udało się rozpakować archiwum utPLSQL" : {
       "localizations" : {
         "en" : {
@@ -35921,6 +36033,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не зупинятися"
+          }
+        }
+      }
+    },
+    "Nie zaufano kluczowi serwera" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server key not trusted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serverschlüssel nicht vertraut"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se confió en la clave del servidor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключу сервера не довірено"
           }
         }
       }
@@ -37321,6 +37461,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Unbekanntes SQLFORMAT-Format: %@ (csv, json, xml, html, insert, loader, fixed, delimited, ansiconsole, default)"
+          }
+        }
+      }
+    },
+    "Nieznany klucz serwera — sprawdź cel (Testuj) w definicji i potwierdź odcisk klucza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown server key — test the target in its definition and confirm the key fingerprint"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannter Serverschlüssel — testen Sie das Ziel in seiner Definition und bestätigen Sie den Fingerabdruck"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de servidor desconocida: prueba el destino en su definición y confirma la huella de la clave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Невідомий ключ сервера — перевірте ціль (Тест) у визначенні та підтвердьте відбиток ключа"
           }
         }
       }
@@ -47065,6 +47233,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Параметр --%@ без значення"
+          }
+        }
+      }
+    },
+    "Parametr linku „%@” jest ignorowany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link parameter “%@” is ignored"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link-Parameter „%@“ wird ignoriert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ignora el parámetro de enlace «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметр посилання «%@» ігнорується"
           }
         }
       }
@@ -63897,6 +64093,62 @@
         }
       }
     },
+    "Serwera nie ma w known_hosts, a jego klucza nie udało się odczytać. Zaufaj tylko, jeśli masz pewność, że łączysz się z właściwym serwerem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server is not in known_hosts and its key could not be read. Trust it only if you are sure you are connecting to the right server."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server ist nicht in known_hosts und sein Schlüssel konnte nicht gelesen werden. Vertrauen Sie ihm nur, wenn Sie sicher sind, dass Sie sich mit dem richtigen Server verbinden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no está en known_hosts y no se pudo leer su clave. Confía solo si estás seguro de que te conectas al servidor correcto."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервера немає в known_hosts, і його ключ не вдалося прочитати. Довіряйте, лише якщо впевнені, що підключаєтеся до правильного сервера."
+          }
+        }
+      }
+    },
+    "Serwera nie ma w known_hosts. Porównaj odcisk klucza z podanym przez administratora:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server is not in known_hosts. Compare the key fingerprint with the one from your administrator:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Server ist nicht in known_hosts. Vergleichen Sie den Fingerabdruck mit dem Ihres Administrators:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El servidor no está en known_hosts. Compara la huella de la clave con la que te dio el administrador:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сервера немає в known_hosts. Порівняйте відбиток ключа з наданим адміністратором:"
+          }
+        }
+      }
+    },
     "Sesja" : {
       "localizations" : {
         "en" : {
@@ -68993,30 +69245,30 @@
         }
       }
     },
-    "Tej zmiany nie da się cofnąć (DDL na tabelach albo polecenie nierozpoznane)." : {
+    "Tej zmiany nie da się cofnąć (DDL na tabelach, blok PL/SQL albo polecenie nierozpoznane)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This change cannot be undone (DDL on tables or an unrecognized statement)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Цю зміну не можна скасувати (DDL на таблицях або нерозпізнана команда)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Este cambio no se puede deshacer (DDL sobre tablas o sentencia no reconocida)."
+            "value" : "This change cannot be undone (DDL on tables, a PL/SQL block or an unrecognized statement)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Änderung kann nicht rückgängig gemacht werden (DDL auf Tabellen oder unbekannter Befehl)."
+            "value" : "Diese Änderung kann nicht rückgängig gemacht werden (DDL auf Tabellen, PL/SQL-Block oder nicht erkannte Anweisung)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este cambio no se puede deshacer (DDL en tablas, un bloque PL/SQL o una sentencia no reconocida)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цю зміну не можна скасувати (DDL на таблицях, блок PL/SQL або нерозпізнана команда)."
           }
         }
       }
@@ -94753,6 +95005,62 @@
         }
       }
     },
+    "Zaufaj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trust"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertrauen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confiar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довіряти"
+          }
+        }
+      }
+    },
+    "Zaufać kluczowi serwera %@?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trust the key of server %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Schlüssel des Servers %@ vertrauen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Confiar en la clave del servidor %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Довіряти ключу сервера %@?"
+          }
+        }
+      }
+    },
     "Zawartość kodu" : {
       "localizations" : {
         "en" : {
@@ -98841,30 +99149,30 @@
         }
       }
     },
-    "agent ma niezatwierdzone zmiany, a DDL zatwierdziłoby je niejawnie — najpierw commit albo rollback" : {
+    "agent ma niezatwierdzone zmiany, a DDL albo blok PL/SQL mógłby je zatwierdzić — najpierw commit albo rollback" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "the agent has uncommitted changes, and DDL would commit them implicitly — commit or roll back first"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "агент має незафіксовані зміни, а DDL неявно зафіксувало б їх — спершу commit або rollback"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "el agente tiene cambios sin confirmar y el DDL los confirmaría implícitamente: primero commit o rollback"
+            "value" : "the agent has uncommitted changes and DDL or a PL/SQL block could commit them — commit or roll back first"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agent hat nicht festgeschriebene Änderungen, und DDL würde sie implizit festschreiben — zuerst Commit oder Rollback"
+            "value" : "der Agent hat nicht festgeschriebene Änderungen, und DDL oder ein PL/SQL-Block könnte sie festschreiben — zuerst commit oder rollback"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el agente tiene cambios sin confirmar y un DDL o bloque PL/SQL podría confirmarlos: primero commit o rollback"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "агент має незафіксовані зміни, а DDL або блок PL/SQL міг би їх зафіксувати — спочатку commit або rollback"
           }
         }
       }
@@ -102561,6 +102869,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenster"
+          }
+        }
+      }
+    },
+    "okno poleceń jest niedostępne dla agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the Command Window is not available to the agent"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "das Command Window ist für den Agenten nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la Command Window no está disponible para el agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command Window недоступне для агента"
           }
         }
       }

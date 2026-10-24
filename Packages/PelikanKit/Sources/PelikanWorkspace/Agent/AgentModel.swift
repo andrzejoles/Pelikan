@@ -91,7 +91,8 @@ public enum AgentDenial: Error, LocalizedError, Sendable, Equatable {
 /// (poziom efektywny, limit wywołań, zgoda użytkownika). Bez bramki agent nie wykona niczego.
 @MainActor
 public protocol AgentInvocationGate: AnyObject {
-    func authorize(_ command: Command, context: CommandContext) async throws
+    /// Zwraca argumenty do wykonania — z połączeniem przypiętym przy zgodzie (`Workspace.agentConnectionKey`).
+    func authorize(_ command: Command, context: CommandContext) async throws -> CommandArguments
 }
 
 extension Invoker {
