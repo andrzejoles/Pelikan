@@ -112,7 +112,8 @@ struct ORDSTests {
         #expect(ORDSTools.disableObjectScript(schema: "hr", object: "emp").contains("p_enabled => false"))
     }
 
-    @Test("Baza testowa bez ORDS: wykrycie braku", .enabled(if: TestDatabase.isAvailable))
+    // Z `scripts/testdb.sh ords-up` ORDS jest w bazie — wtedy działa ORDSLiveTests.
+    @Test("Baza testowa bez ORDS: wykrycie braku", .enabled(if: TestDatabase.isAvailable && TestDatabase.config?.ordsURL == nil))
     func detect() async throws {
         let s = try await TestDatabase.connect()
         #expect(try await ORDSTools.isInstalled(s) == false)
