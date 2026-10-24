@@ -20,6 +20,8 @@ enum TestDatabase {
         var sshDirectory: String?
         /// Hasło użytkownika `haslo` serwera SSH testów (tunel z hasłem, DB-SSH-001).
         var sshPassword: String?
+        /// ORDS testów (scripts/testdb.sh ords-up): bazowy adres HTTP, np. http://127.0.0.1:8181/ords.
+        var ordsURL: String?
     }
 
     static let config: Config? = {
@@ -55,7 +57,11 @@ enum TestDatabase {
                       systemPassword: env["PELIKAN_TESTDB_SYSTEM_PASSWORD"] ?? "",
                       sshPort: env["PELIKAN_TESTDB_SSH_PORT"].flatMap(Int.init), sshDBHost: env["PELIKAN_TESTDB_SSH_DBHOST"],
                       sshDirectory: envFile().map { ($0 as NSString).deletingLastPathComponent + "/ssh" },
-                      sshPassword: env["PELIKAN_TESTDB_SSH_PASSWORD"])
+                      sshPassword: env["PELIKAN_TESTDB_SSH_PASSWORD"],
+                      ordsURL: env["PELIKAN_TESTDB_ORDS_URL"].flatMap { url in
+                          // Tylko lokalny ORDS z kontenera testowego.
+                          URL(string: url).flatMap(\.host).map { ["127.0.0.1", "localhost"].contains($0) } == true ? url : nil
+                      })
     }()
 
     /// .testdb/env w katalogu głównym repozytorium (szukany w górę od tego pliku).
