@@ -94,10 +94,11 @@ public enum ChartBuilder {
         return t.hasPrefix("NUMBER") || t.hasPrefix("BINARY_") || t.hasPrefix("FLOAT") || t.hasPrefix("INTEGER")
     }
 
-    /// Propozycja wykresu: pierwsza kolumna nieliczbowa jako kategoria, kolumny liczbowe jako serie.
+    /// Propozycja wykresu: kategoria — pierwsza kolumna nieliczbowa, a gdy wszystkie są liczbowe i jest ich kilka —
+    /// pierwsza kolumna (zwykle klucz, np. DEPTNO); pozostałe kolumny liczbowe jako serie.
     public static func suggest(_ columns: [ColumnInfo], name: String = L10n.tr("Wykres")) -> ChartDefinition {
         var d = ChartDefinition(name: name)
-        d.categoryColumn = columns.first { !isNumeric($0) }?.name
+        d.categoryColumn = columns.first { !isNumeric($0) }?.name ?? (columns.count > 1 ? columns.first?.name : nil)
         d.seriesColumns = columns.filter { isNumeric($0) && $0.name != d.categoryColumn }.map(\.name)
         if d.seriesColumns.isEmpty, let last = columns.last(where: { $0.name != d.categoryColumn }) { d.seriesColumns = [last.name] }
         return d

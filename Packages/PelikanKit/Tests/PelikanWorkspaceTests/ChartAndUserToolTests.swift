@@ -17,6 +17,11 @@ struct ChartTests {
     func suggest() {
         let d = ChartBuilder.suggest(columns)
         #expect(d.categoryColumn == "DEPT" && d.seriesColumns == ["SAL", "COMM"])
+        // Same kolumny liczbowe: pierwsza (klucz, np. DEPTNO) jako kategoria; jedna kolumna — bez kategorii.
+        let numeric = [ColumnInfo(name: "DEPTNO", type: .number, typeName: "NUMBER(2)"), ColumnInfo(name: "SUMA", type: .number, typeName: "NUMBER")]
+        let n = ChartBuilder.suggest(numeric)
+        #expect(n.categoryColumn == "DEPTNO" && n.seriesColumns == ["SUMA"])
+        #expect(ChartBuilder.suggest([numeric[1]]).categoryColumn == nil)
     }
 
     @Test("Agregacje, kolejność kategorii, pominięte wartości nieliczbowe, przecinek dziesiętny")
