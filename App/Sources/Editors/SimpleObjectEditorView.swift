@@ -32,7 +32,7 @@ struct SimpleObjectEditorView: View {
             Divider()
             HStack {
                 if running { ProgressView().controlSize(.small) }
-                Text(message).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                Text(editor.issue ?? message).font(.callout).foregroundStyle(editor.issue == nil ? Color.secondary : Color.orange).lineLimit(2)
                 Spacer()
                 Button(L10n.tr("Odśwież")) { refresh() }.disabled(editor.isNew || running)
                 Button(L10n.tr("Zastosuj")) { apply() }.keyboardShortcut(.defaultAction).disabled(editor.statements().isEmpty || running)
@@ -41,6 +41,9 @@ struct SimpleObjectEditorView: View {
         }
         .frame(minWidth: 720, minHeight: 380)
     }
+
+    static let uppercaseKeys: Set<String> = ["name", "targetOwner", "target", "table", "tablespace", "defaultTablespace",
+                                             "temporaryTablespace", "profile", "queueTable", "user"]
 
     private var preview: String {
         let s = editor.statements(masked: true)
@@ -57,10 +60,14 @@ struct SimpleObjectEditorView: View {
             Picker(f.label, selection: binding) { ForEach(options, id: \.self) { Text($0).tag($0) } }.disabled(disabled)
         case .secret:
             SecureField(f.label, text: binding).disabled(disabled)
-        case .multiline, .list:
+        case .list:
             TextField(f.label, text: binding, axis: .vertical).lineLimit(1...4).disabled(disabled)
+        case .multiline:
+            TextField(f.label, text: binding, axis: .vertical).lineLimit(3...14).font(.system(size: 12, design: .monospaced)).disabled(disabled)
         case .text:
-            TextField(f.label, text: Binding(get: { binding.wrappedValue }, set: { binding.wrappedValue = f.key == "dblink" ? $0 : $0.uppercased() }))
+            // Nazwy obiektów wielkimi literami; ścieżki, pliki, komentarze i parametry bez zmiany wielkości liter.
+            TextField(f.label, text: Binding(get: { binding.wrappedValue },
+                                             set: { binding.wrappedValue = Self.uppercaseKeys.contains(f.key) ? $0.uppercased() : $0 }))
                 .disabled(disabled)
         case .number:
             TextField(f.label, text: binding).disabled(disabled)

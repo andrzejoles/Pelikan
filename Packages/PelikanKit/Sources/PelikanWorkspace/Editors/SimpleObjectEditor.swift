@@ -19,10 +19,13 @@ public struct EditorField: Sendable, Hashable, Identifiable {
     public var id: String { key }
 }
 
-/// Proste edytory obiektów (UG 9.2–9.11): sekwencja, synonim, indeks, użytkownik, rola — wartości pól jako tekst,
-/// DDL tworzenia albo zmian względem stanu z bazy.
+/// Proste edytory obiektów (UG 9.2–9.11): sekwencja, synonim, indeks, użytkownik, rola, biblioteka, katalog, zadanie,
+/// kolejka AQ, profil, łącze bazy danych, widok — wartości pól jako tekst, DDL tworzenia albo zmian względem stanu z bazy.
 public struct SimpleObjectEditor: Sendable, Hashable {
-    public enum Kind: String, Sendable, Hashable, CaseIterable { case sequence, synonym, index, user, role }
+    public enum Kind: String, Sendable, Hashable, CaseIterable {
+        case sequence, synonym, index, user, role
+        case library, directory, job, queue, profile, databaseLink, view
+    }
 
     public var kind: Kind
     public var owner: String
@@ -46,6 +49,13 @@ public struct SimpleObjectEditor: Sendable, Hashable {
         case .index: L10n.tr("Indeks")
         case .user: L10n.tr("Użytkownik")
         case .role: L10n.tr("Rola")
+        case .library: L10n.tr("Biblioteka")
+        case .directory: L10n.tr("Katalog")
+        case .job: L10n.tr("Zadanie")
+        case .queue: L10n.tr("Kolejka")
+        case .profile: L10n.tr("Profil")
+        case .databaseLink: L10n.tr("Łącze bazy danych")
+        case .view: L10n.tr("Widok")
         }
     }
 
@@ -83,11 +93,15 @@ public struct SimpleObjectEditor: Sendable, Hashable {
              EditorField(key: "expire", label: L10n.tr("Hasło wygasa przy logowaniu"), kind: .bool),
              EditorField(key: "roles", label: L10n.tr("Role"), kind: .list),
              EditorField(key: "privileges", label: L10n.tr("Uprawnienia systemowe"), kind: .list),
+             EditorField(key: "objectPrivileges", label: L10n.tr("Uprawnienia obiektowe (np. SELECT ON HR.EMP)"), kind: .list),
              EditorField(key: "quotas", label: L10n.tr("Limity (przestrzeń:rozmiar, np. USERS:UNLIMITED)"), kind: .list)]
         case .role:
             [EditorField(key: "name", label: L10n.tr("Nazwa"), kind: .text, createOnly: true),
              EditorField(key: "roles", label: L10n.tr("Role"), kind: .list),
-             EditorField(key: "privileges", label: L10n.tr("Uprawnienia systemowe"), kind: .list)]
+             EditorField(key: "privileges", label: L10n.tr("Uprawnienia systemowe"), kind: .list),
+             EditorField(key: "objectPrivileges", label: L10n.tr("Uprawnienia obiektowe (np. SELECT ON HR.EMP)"), kind: .list)]
+        case .library, .directory, .job, .queue, .profile, .databaseLink, .view:
+            extraFields
         }
     }
 
@@ -175,6 +189,8 @@ public struct SimpleObjectEditor: Sendable, Hashable {
             let r = Self.q(name)
             if isNew { out.append("CREATE ROLE \(r)") }
             out += grants(to: r)
+        case .library, .directory, .job, .queue, .profile, .databaseLink, .view:
+            out += extraStatements(name: name, masked: masked)
         }
         return out
     }
@@ -187,7 +203,21 @@ public struct SimpleObjectEditor: Sendable, Hashable {
             for g in now.subtracting(before).sorted() { out.append("GRANT \(k == "roles" ? Self.q(g) : g) TO \(grantee)") }
             for g in before.subtracting(now).sorted() { out.append("REVOKE \(k == "roles" ? Self.q(g) : g) FROM \(grantee)") }
         }
+        // Uprawnienia obiektowe „PRIV ON SCHEMAT.OBIEKT” (PD-OED-009).
+        let now = Set(Self.list(value("objectPrivileges"))), before = Set(Self.list(old("objectPrivileges")))
+        for g in now.subtracting(before).sorted() { if let s = Self.objectGrant(g) { out.append("GRANT \(s) TO \(grantee)") } }
+        for g in before.subtracting(now).sorted() { if let s = Self.objectGrant(g) { out.append("REVOKE \(s) FROM \(grantee)") } }
         return out
+    }
+
+    /// `SELECT ON HR.EMP` → `SELECT ON "HR"."EMP"`; nil dla wpisu bez `ON`.
+    static func objectGrant(_ entry: String) -> String? {
+        guard let r = entry.range(of: " ON ") else { return nil }
+        let priv = entry[..<r.lowerBound].trimmingCharacters(in: .whitespaces)
+        let obj = entry[r.upperBound...].trimmingCharacters(in: .whitespaces)
+        guard !priv.isEmpty, !obj.isEmpty else { return nil }
+        let parts = obj.split(separator: ".", maxSplits: 1).map { q(String($0)) }
+        return "\(priv) ON " + parts.joined(separator: ".")
     }
 
     // MARK: Wczytanie
@@ -230,11 +260,15 @@ public struct SimpleObjectEditor: Sendable, Hashable {
             v["defaultTablespace"] = r[0]; v["temporaryTablespace"] = r[1]; v["profile"] = r[2]; v["locked"] = r[3]; v["expire"] = r[4]
             v["roles"] = try await many("select granted_role from dba_role_privs where grantee = :n order by 1")
             v["privileges"] = try await many("select privilege from dba_sys_privs where grantee = :n order by 1")
+            v["objectPrivileges"] = try await many("select privilege || ' ON ' || owner || '.' || table_name from dba_tab_privs where grantee = :n and type <> 'DIRECTORY' order by 1")
             v["quotas"] = try await many("select tablespace_name || ':' || decode(max_bytes, -1, 'UNLIMITED', max_bytes) from dba_ts_quotas where username = :n order by 1")
         case .role:
             _ = try await one("select role from dba_roles where role = :n", bn)
             v["roles"] = try await many("select granted_role from dba_role_privs where grantee = :n order by 1")
             v["privileges"] = try await many("select privilege from dba_sys_privs where grantee = :n order by 1")
+            v["objectPrivileges"] = try await many("select privilege || ' ON ' || owner || '.' || table_name from dba_tab_privs where grantee = :n and type <> 'DIRECTORY' order by 1")
+        case .library, .directory, .job, .queue, .profile, .databaseLink, .view:
+            try await loadExtra(kind, owner: owner, name: name, into: &v, session: s)
         }
         return SimpleObjectEditor(kind: kind, owner: owner, values: v, original: v)
     }

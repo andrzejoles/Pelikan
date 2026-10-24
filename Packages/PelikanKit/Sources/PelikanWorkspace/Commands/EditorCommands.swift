@@ -16,6 +16,11 @@ enum EditorCommands {
             case .sequence: e.values = ["name": "NOWA_SEKWENCJA", "start": "1", "increment": "1", "cache": "20"]
             case .user: e.values = ["name": "NOWY_UZYTKOWNIK", "roles": "CONNECT", "defaultTablespace": "USERS"]
             case .index: e.values = ["type": "NORMAL"]
+            case .job: e.values = ["name": "NOWE_ZADANIE", "jobType": "PLSQL_BLOCK", "action": "begin\n  null;\nend;", "repeat": "FREQ=DAILY", "enabled": "N"]
+            case .queue: e.values = ["name": "NOWA_KOLEJKA", "queueTable": "NOWA_KOLEJKA_TAB", "createTable": "Y", "payload": "RAW",
+                                     "enqueue": "Y", "dequeue": "Y"]
+            case .profile: e.values = ["name": "NOWY_PROFIL", "limits": "FAILED_LOGIN_ATTEMPTS:5"]
+            case .view: e.values = ["name": "NOWY_WIDOK", "query": "select *\n  from dual"]
             default: break
             }
             ctx.ui?.showObjectEditor(e, connectionID: m.connectionID)
@@ -41,6 +46,24 @@ enum EditorCommands {
             newSimple(.index, id: "file.newIndex", title: L10n.tr("Indeks…"), feature: "PD-OED-010"),
             newSimple(.user, id: "file.newUser", title: L10n.tr("Użytkownik…"), feature: "PD-OED-009"),
             newSimple(.role, id: "file.newRole", title: L10n.tr("Rola…"), feature: "PD-OED-009"),
+            newSimple(.library, id: "file.newLibrary", title: L10n.tr("Biblioteka…"), feature: "PD-OED-008"),
+            newSimple(.directory, id: "file.newDirectory", title: L10n.tr("Katalog…"), feature: "PD-OED-008"),
+            newSimple(.job, id: "file.newJob", title: L10n.tr("Zadanie…"), feature: "PD-OED-008"),
+            newSimple(.queue, id: "file.newQueue", title: L10n.tr("Kolejka…"), feature: "PD-OED-008"),
+            newSimple(.profile, id: "file.newProfile", title: L10n.tr("Profil…"), feature: "PD-OED-009"),
+            newSimple(.databaseLink, id: "file.newDatabaseLink", title: L10n.tr("Łącze bazy danych…"), feature: "PD-OED-009"),
+            newSimple(.view, id: "file.newViewEditor", title: L10n.tr("Widok (edytor)…"), feature: "PD-OED-010"),
+            Command(CommandDescriptor(id: "ob.viewEditor", title: L10n.tr("Edytor widoku"), category: .tools, submenu: L10n.tr("Obiekt"),
+                                      parameters: ObjectCommands.objectParams, agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera widok w edytorze formularza (zapytanie, FORCE, READ ONLY, CHECK OPTION, komentarz) z podglądem DDL."),
+                                      feature: "PD-OED-010"),
+                    validate: { $0.selectedObject?.type == .view }) { ctx in
+                let (o, m) = try await ObjectCommands.target(ctx)
+                guard o.type == .view else { throw CommandError.notAvailable(L10n.tr("Edytor widoku dotyczy widoków")) }
+                let e = try await SimpleObjectEditor.load(.view, owner: o.owner, name: o.name, metadata: m)
+                ctx.ui?.showObjectEditor(e, connectionID: m.connectionID)
+                return CommandResult(message: e.value("query"))
+            },
             Command(CommandDescriptor(id: "file.newDomain", title: L10n.tr("Domena…"), category: .file, submenu: L10n.tr("Nowy"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje."),

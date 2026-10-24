@@ -177,6 +177,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var beautifier = BeautifierOptions()
     /// Kompilacja okna programu z informacją debugowania (UG 23.4 „Add debug information when compiling”).
     public var debugInfoOnCompile = false
+    /// Listy NEVER/ALWAYS informacji debugowania (PD-DBG-011): `user@baza` albo `[SCHEMAT.]OBIEKT`, wzorce `*` i `?`.
+    public var debugInfoNever: [String] = []
+    public var debugInfoAlways: [String] = []
     /// Debuger: pomijanie inicjalizacji specyfikacji pakietów i obiektów SYS przy krokowaniu (UG 23.4).
     public var debuggerSkipPackageInit = true
     public var debuggerSkipSys = true
@@ -263,6 +266,8 @@ public struct Settings: Sendable, Codable, Hashable {
         rememberWindowState = v(.rememberWindowState, rememberWindowState)
         beautifier = v(.beautifier, beautifier)
         debugInfoOnCompile = v(.debugInfoOnCompile, debugInfoOnCompile)
+        debugInfoNever = v(.debugInfoNever, debugInfoNever)
+        debugInfoAlways = v(.debugInfoAlways, debugInfoAlways)
         debuggerSkipPackageInit = v(.debuggerSkipPackageInit, debuggerSkipPackageInit)
         debuggerSkipSys = v(.debuggerSkipSys, debuggerSkipSys)
         confirmProductionChanges = v(.confirmProductionChanges, confirmProductionChanges)

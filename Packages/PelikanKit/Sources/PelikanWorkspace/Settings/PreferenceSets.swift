@@ -134,7 +134,7 @@ public enum PreferenceSets {
         (L10n.tr("Klawiatura"), ["shortcutProfile", "keyOverrides"]),
         (L10n.tr("Oracle"), ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
                              "confirmCommitRollback", "confirmProductionChanges", "plsqlWarnings", "useDBAViews",
-                             "debugInfoOnCompile", "debuggerSkipPackageInit", "debuggerSkipSys"]),
+                             "debugInfoOnCompile", "debugInfoNever", "debugInfoAlways", "debuggerSkipPackageInit", "debuggerSkipSys"]),
         (L10n.tr("Agenci"), ["agent"]),
         (L10n.tr("Narzędzia"), ["sessionQueries", "schedulerReports", "userTools"]),
     ]

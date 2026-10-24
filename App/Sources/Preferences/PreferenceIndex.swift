@@ -96,6 +96,8 @@ enum PreferenceIndex {
         ("OraclePane", "Oracle Net i Oracle Wallet"),
         ("OraclePane", "Debuger (UG 23.4)"),
         ("OraclePane", "Dodawaj informację debugowania przy kompilacji okna programu"),
+        ("OraclePane", "Zawsze z informacją debugowania"),
+        ("OraclePane", "Nigdy z informacją debugowania"),
         ("OraclePane", "Kompilacja tylko do odczytu plików"),
         ("OraclePane", "Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"),
         ("OraclePane", "Sprawdzaj konwencje nazw"),

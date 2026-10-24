@@ -244,6 +244,12 @@ public enum ObjectCommands {
         case .index: .index
         case .user: .user
         case .role: .role
+        case .library: .library
+        case .directory: .directory
+        case .job: .job
+        case .queue: .queue
+        case .profile: .profile
+        case .databaseLink: .databaseLink
         default: nil
         }
     }
