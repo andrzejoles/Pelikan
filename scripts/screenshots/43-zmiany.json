@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select t.*, t.rowid from dept t"}, "delay": 1}, {"command": "sql.execute", "delay": 3}, {"command": "grid.edit", "delay": 1}, {"command": "grid.insertRecord", "delay": 2}]

@@ -70,6 +70,11 @@ enum Stage7ToolCommands {
                 }
                 var c = ctx.workspace.loadCart()
                 c.add(o)
+                // Pakiet i typ razem z ciałem (skrypt ze samą specyfikacją wdrożyłby niekompletny kod).
+                if o.type == .package || o.type == .type {
+                    let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody)
+                    if let src = try? await m.source(of: body), !src.isEmpty { c.add(body) }
+                }
                 try ctx.workspace.saveCart(c)
                 return CommandResult(message: L10n.tr("W koszyku: \(c.items.count)"))
             },

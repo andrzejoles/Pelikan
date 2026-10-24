@@ -235,7 +235,7 @@ enum EditorExtraCommands {
                 let options = TextSearchOptions(caseSensitive: ctx.arguments.bool("caseSensitive") ?? false, wholeWord: ctx.arguments.bool("wholeWord") ?? false,
                                                 regex: ctx.arguments.bool("regex") ?? false)
                 let hits = EditorSearch.search(query, scope: scope, options: options, in: ws)
-                if !ctx.invoker.isAgent { ctx.ui?.showUsages(title: L10n.tr("Wyniki: „\(query)”"), hits: hits) }
+                if !ctx.invoker.isAgent { ctx.ui?.showSearchResults(query: query, hits: hits) }
                 return CommandResult(message: L10n.tr("Trafień: \(hits.count)"), value: .array(hits.map {
                     .object(["title": .string($0.title), "line": .int(Int64($0.line)), "text": .string($0.text)])
                 }))

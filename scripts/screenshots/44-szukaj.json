@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select ename from emp;\nselect dname from dept;\n-- emp_api\nselect * from emp where sal > 1000;"}, "delay": 1}, {"command": "edit.searchBar", "args": {"query": "emp"}, "delay": 3}]

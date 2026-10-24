@@ -393,6 +393,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
     }
 
+    func showSearchResults(query: String, hits: [UsageHit]) {
+        ToolWindowController.close(key: "usages")
+        ToolWindowController.show(key: "usages", title: L10n.tr("Wyniki wyszukiwania „\(query)”"), size: NSSize(width: 820, height: 420)) {
+            UsagesView(workspace: workspace, title: query, hits: hits,
+                       summary: hits.isEmpty ? L10n.tr("Brak wyników „\(query)”") : L10n.tr("Trafień „\(query)”: \(hits.count)"))
+        }
+    }
+
     func confirmRefactoring(_ plan: RefactoringPlan) async -> Bool {
         guard let window = mainWindow?.window else { return false }
         return await withCheckedContinuation { cont in

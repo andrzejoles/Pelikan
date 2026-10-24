@@ -213,4 +213,22 @@ struct P1SessionDBTests {
         for x in ["pelikan_part_t", "pelikan_sub_t"] { _ = try? await s.execute("drop table \(x) purge") }
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Koszyk: pakiet dodany po nazwie trafia do skryptu ze specyfikacją i ciałem (SD-DIFF-001)")
+    func cartPackageBody() async throws {
+        let c = TestDatabase.config!
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-cart-\(UUID().uuidString.prefix(6))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace(dataDirectory: dir, drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        _ = try await ws.invoke("cart.add", CommandArguments(["object": .string("EMP_API")]))
+        #expect(ws.loadCart().items.map(\.type) == ["PACKAGE", "PACKAGE BODY"])
+        _ = try await ws.invoke("cart.script")
+        let text = try #require(ws.activeDocument?.text)
+        #expect(text.contains("PACKAGE \"EMP_API\"") && text.contains("PACKAGE BODY \"EMP_API\""), "\(text.prefix(800))")
+        #expect(text.range(of: "PACKAGE BODY")!.lowerBound > text.range(of: "PACKAGE \"EMP_API\"")!.lowerBound)
+        await ws.sessions.disconnectAll()
+    }
 }
