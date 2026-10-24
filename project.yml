@@ -54,6 +54,19 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      # Tłumaczenia nazw w menu Usługi (klucze z nazwą aplikacji po rozwinięciu Brand.xcconfig).
+      - name: ServicesMenu.strings
+        script: python3 "$SRCROOT/scripts/services-menu.py"
+        inputFiles:
+          - $(SRCROOT)/scripts/services-menu.py
+          - $(SRCROOT)/App/Resources/Localizable.xcstrings
+          - $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/en.lproj/ServicesMenu.strings
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/de.lproj/ServicesMenu.strings
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/es.lproj/ServicesMenu.strings
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/uk.lproj/ServicesMenu.strings
     dependencies:
       - package: PelikanKit
         product: PelikanWorkspace

@@ -182,6 +182,6 @@ una descripción. El historial guarda hasta 50 versiones de los últimos 30 día
 - **Vista › Tareas en segundo plano**: lista de operaciones largas (Autotrace, exportaciones, documentación) con estado,
   tiempo y cancelación.
 - **Herramientas › Documentos…**: tus documentos y direcciones http(s) de la lista de **Preferencias › Herramientas**.
-- Servicios de macOS (menú **Servicios** en cualquier aplicación): **Pelikan: Formatuj SQL** formatea el texto
-  seleccionado en su lugar, y **Pelikan: Otwórz w SQL Window** pasa el texto seleccionado a una SQL Window nueva de
+- Servicios de macOS (menú **Servicios** en cualquier aplicación): **Pelikan: Formatear SQL** formatea el texto
+  seleccionado en su lugar, y **Pelikan: Abrir en SQL Window** pasa el texto seleccionado a una SQL Window nueva de
   Pelikan.

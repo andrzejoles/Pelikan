@@ -181,5 +181,5 @@ Beschreibung hinzu. Der Verlauf speichert bis zu 50 Versionen der letzten 30 Tag
 - **Ansicht › Hintergrundaufgaben** — eine Liste langer Operationen (Autotrace, Exporte, Dokumentation) mit Status, Zeit
   und Abbruchmöglichkeit.
 - **Werkzeuge › Dokumente …** — Ihre Dokumente und http(s)-Adressen aus der Liste unter **Einstellungen › Werkzeuge**.
-- macOS-Dienste (Menü **Dienste** in jeder Anwendung): **Pelikan: Formatuj SQL** formatiert den ausgewählten Text an Ort
-  und Stelle, **Pelikan: Otwórz w SQL Window** überträgt den ausgewählten Text in ein neues SQL Window von Pelikan.
+- macOS-Dienste (Menü **Dienste** in jeder Anwendung): **Pelikan: SQL formatieren** formatiert den ausgewählten Text an Ort
+  und Stelle, **Pelikan: Im SQL Window öffnen** überträgt den ausgewählten Text in ein neues SQL Window von Pelikan.

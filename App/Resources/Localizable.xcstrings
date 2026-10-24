@@ -18369,6 +18369,34 @@
         }
       }
     },
+    "Formatuj SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL formatieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматувати SQL"
+          }
+        }
+      }
+    },
     "Formatuj automatycznie" : {
       "localizations" : {
         "en" : {
@@ -46057,6 +46085,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt öffnen (Agent)"
+          }
+        }
+      }
+    },
+    "Otwórz plik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open File"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити файл"
           }
         }
       }

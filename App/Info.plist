@@ -151,7 +151,7 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>$(PELIKAN_APP_NAME): Otwórz w SQL Window</string>
+				<string>$(PELIKAN_APP_NAME): Otwórz w oknie SQL</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>openInSQLWindow</string>

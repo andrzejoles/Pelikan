@@ -98,6 +98,8 @@ case "${1:-}" in
         for f in "$APP"/Contents/Frameworks/*.framework; do
             [ "$(basename "$f")" = "Sparkle.framework" ] || sign_one "$f"
         done
+        # Rozszerzenia (Quick Look) — z uprawnieniami z dotychczasowego podpisu (build-installer.sh usuwa z nich symbole).
+        for x in "$APP"/Contents/PlugIns/*.appex; do [ -e "$x" ] && sign_one "$x"; done
         for exe in "$APP"/Contents/MacOS/*; do
             [ "$(basename "$exe")" = "$(defaults read "$APP/Contents/Info" CFBundleExecutable)" ] || sign_one "$exe"
         done
