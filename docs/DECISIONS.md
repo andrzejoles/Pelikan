@@ -1114,7 +1114,7 @@ jedną tabelę: wiersz grupy, nagłówki kolumn i suma grupy dla każdej grupy, 
 zostaje tabela na grupę (`.group` z `break-after: page`), a „Razem” trafia do tabeli ostatniej grupy. Brak separatora
 tysięcy w „3000,00” przy „19 925,00” to reguła polskiego CLDR (liczby czterocyfrowe bez grupowania), nie błąd.
 
-### D-MAN-1 · 2026-10-24 — Instrukcja: zrzuty w docs/manual/img jako data:, tabele, rozdziały bez tłumaczenia po polsku
+### D154 · 2026-10-24 — Instrukcja: zrzuty w docs/manual/img jako data:, tabele, rozdziały bez tłumaczenia po polsku
 Instrukcja na beta dostała 15 rozdziałów (wcześniej 10). Zrzuty z `docs/screenshots` (83 pliki, ~15 MB) nie trafiają do
 pakietu aplikacji, a okno pomocy ładuje HTML bez `baseURL` i z CSP `default-src 'none'` — odwołanie do pliku i tak by się
 nie wyświetliło. Dlatego wybrane 19 zrzutów (~4,5 MB, PNG 1400 px jak w docs/screenshots — ostre na Retinie przy szerokości
