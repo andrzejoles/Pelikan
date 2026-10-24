@@ -1079,6 +1079,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 catch { log("połączenie: \(error.localizedDescription)") }
             }
             for s in steps {
+                // Zaznaczenie w aktywnym oknie (kursor dla wyróżnień, zakres dla „Oznacz kolorem”) — bez klawiszy i myszy.
+                if s.command == "debug.select", let doc = workspace.activeDocument {
+                    let from = s.args?["from"].flatMap { if case .int(let v) = $0 { Int(v) } else { nil } } ?? 0
+                    let to = s.args?["to"].flatMap { if case .int(let v) = $0 { Int(v) } else { nil } } ?? from
+                    doc.selectedRange = from..<max(from, to)
+                    // Dodatkowe kursory / zaznaczenie kolumnowe: "extra": [[od, do], …].
+                    if case .array(let list)? = s.args?["extra"] {
+                        doc.additionalSelections = list.compactMap { item -> Range<Int>? in
+                            guard case .array(let p) = item, p.count == 2, case .int(let a) = p[0], case .int(let b) = p[1] else { return nil }
+                            return Int(a)..<Int(max(a, b))
+                        }
+                    }
+                    log("ok debug.select \(from)..<\(to)")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
                 // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
                 if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
                     await snapshotWebViews(into: URL(fileURLWithPath: dir))

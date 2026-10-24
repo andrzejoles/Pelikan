@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T14:29:38+02:00",
+  "heartbeat": "2026-10-24T14:47:53+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Scalone #60 (P2) i #61 (zrzuty: podkreślenia analizy kodu, panel agenta); #62 w CI (odświeżanie edytora po ustawieniu kursora z modelu)",
     "Przebieg zrzutów: podkreślenia analizy kodu były niewidoczne (TextKit 2) — naprawione (D146); nagłówek panelu agenta pod paskiem narzędzi — naprawiony",
     "Przebieg zrzutów: naprawione układy okien planu i raportu; okna dialogowe pomijane w trybie skryptu (bez aktywacji aplikacji)",
     "Przebieg zrzutów: naprawione układy okien DBMS Scheduler, Panel DBA, Narzędzia użytkownika (treść pod tytułem, stopka na liście) — D145",
@@ -91,11 +92,10 @@
     "Etap 6 — wykresy, narzędzia użytkownika i raporty (subagenci) zintegrowane z narzędziami siatki, Test Managerem, monitorem i testem obciążenia; testy 132+70+16 bez bazy, 110 na bazie (D49–D52)",
     "Etap 6 / Monitor zdarzeń (DBMS_ALERT, DBMS_PIPE) i test obciążenia (wątki, wyniki na żywo, CSV) — 2 testy na bazie (D48); subagent zakończył raporty",
     "Etap 6 / Test Manager — zestawy testów z oczekiwaniami, zmienne globalne, DBMS_OUTPUT, limit czasu, RUNTESTSET; polecenia własne okna poleceń i EXPORT; subagent zakończył wykresy i narzędzia użytkownika",
-    "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie",
-    "Etap 6 — gałąź integracyjna: narzędzia edytora, pliki i Git, scheduler, diagramy, dane; testy: 120+70+16 bez bazy, 103 na bazie (D46)"
+    "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie"
   ],
   "next": [
-    "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."
+    "Po #62: dalsze zrzuty w tle tam, gdzie to możliwe; szkic wydania po scaleniu serii poprawek."
   ],
   "blockers": [],
   "questions": [],

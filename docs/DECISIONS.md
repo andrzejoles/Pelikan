@@ -1079,4 +1079,14 @@ rysuje `underlineStyle` z atrybutów renderowania `NSTextLayoutManager`. Podkre�
 kolorowanie składni nadpisuje edytowaną linię, a analiza po zmianie nakłada je ponownie. Test logiki analizy przechodził
 od początku — błąd był tylko w rysowaniu, stąd zrzuty w tle jako stała część weryfikacji okien. Ten sam przebieg naprawił
 nagłówek panelu agenta schowany pod paskiem narzędzi okna (przypięcie do `safeAreaLayoutGuide`).
+Ten sam przebieg pokazał, że kursor ustawiony z modelu (Idź do linii, nawigacja po błędach, agent) nie odświeżał
+pozycji na pasku, numeru bieżącej linii na marginesie ani wyróżnień par i wystąpień — wspólna aktualizacja jest teraz
+wywoływana także po synchronizacji zaznaczenia z modelu. Hak skryptu zrzutów ma krok `debug.select` (tylko Debug).
 
+
+### D147 · 2026-10-24 — Odczyt potoków procesów ograniczony w czasie po ich zakończeniu
+Testy Stop na CI zawieszały się sporadycznie (nazwa testu widoczna dopiero po zmianie logów na `script`). Klient `ssh`
+z ControlMaster przekazuje swoje stdio procesowi głównemu, więc po zabiciu klienta koniec zapisu potoku może trzymać
+master aż do zamknięcia zdalnej sesji, a `read` bez limitu czekał bez końca — mimo limitu czasu i Stop. `Spawn.run`
+i `Spawn.stream` czytają przez `poll` (200 ms) i po zakończeniu procesu lokalnego dają 3 s na dociągnięcie danych,
+potem kończą odczyt. Test regresji: potomek w tle trzymający stdout 30 s nie wydłuża `run`/`stream` ponad kilka sekund.

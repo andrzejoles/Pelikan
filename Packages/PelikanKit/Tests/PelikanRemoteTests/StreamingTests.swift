@@ -128,6 +128,23 @@ struct SpawnStreamTests {
     }
 }
 
+@Suite("Potok trzymany przez potomka (jak master ssh z ControlMaster)", .timeLimit(.minutes(1)))
+struct SpawnHeldPipeTests {
+    @Test("Proces zakończony, potomek w tle trzyma stdout 30 s — run i stream kończą się po kilku sekundach z danymi")
+    func heldPipe() async throws {
+        let script = "echo przed; sleep 30 & exit 0"
+        let start = Date()
+        let r = try Spawn.run("/bin/sh", [Array("-c".utf8), Array(script.utf8)], environment: [:])
+        #expect(String(decoding: r.output, as: UTF8.self) == "przed\n" && r.status == 0)
+        #expect(Date().timeIntervalSince(start) < 10, "run czekał na potomka trzymającego potok")
+        let s2 = Date()
+        let p = try Spawn.stream("/bin/sh", [Array("-c".utf8), Array(script.utf8)], environment: [:])
+        let events = try await collect(p.events)
+        #expect(events == [.stdout(Data("przed\n".utf8)), .exit(0)], "\(events)")
+        #expect(Date().timeIntervalSince(s2) < 10, "strumień czekał na potomka trzymającego potok")
+    }
+}
+
 @Suite("Rozbudowa na lokalnym sshd: strumień, stdin, Stop, ISO-8859-2", .serialized, .enabled(if: sshdAvailable), .timeLimit(.minutes(2)))
 struct RemoteStreamTests {
     func connected(encoding: NameEncoding = .utf8) throws -> (TestSSHD, SSHSession, URL) {
