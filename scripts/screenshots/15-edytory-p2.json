@@ -1,0 +1,1 @@
+[{"command": "file.newViewEditor", "delay": 2}, {"command": "file.newQueue", "delay": 2}, {"command": "file.newUser", "delay": 3}, {"command": "debug.breakpoints", "delay": 2}]

@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T13:32:38+02:00",
+  "heartbeat": "2026-10-24T13:36:08+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Zrzuty w tle nowych edytorów P2 (widok, kolejka, użytkownik, punkty przerwania); poprawione wyrównanie pola zapytania w edytorze widoku",
     "Scalone #59; P2: 23 wiersze subagentów (edytor, kompilator, szablony, siatka, kolory; debuger, profilery, HTP, wiele obiektów, edytory obiektów, Query Builder) — 202/202 na bazie",
     "P2: test łącza, DBMS_JOB.RUN i start/stop kolejek AQ (PD-OB-019); partycje istniejącej tabeli i podpartycje (PD-OED-006)",
     "P2: porównanie z obiektami w innej bazie, asercje 26ai (szablon, DDL, Drop), podświetlanie JavaScriptu w modułach MLE (PD-PROG-008, PD-OB-022, PD-OED-011, PD-PROG-014)",
@@ -91,8 +92,7 @@
     "Etap 6 / prace subagentów zintegrowane: makra, Special Copy, historia schowka, To-Do, przeglądarka plików, Git, worksety i układy okna (D37–D40)",
     "Etap 5 / panel (subagent, równolegle) — terminal SwiftTerm z CLI, okno zgody, macierz uprawnień przy starcie, aktywność, przeglądarka dziennika, Preferencje › Agenci; pełne cofanie sesji (edytory, kod obiektów, ROLLBACK) podpięte w panelu",
     "Etap 5 / zmiany — execute/script/compile/commit/rollback agenta z podglądem, DML niezatwierdzone, DDL odrzucone przy otwartej transakcji, historia kodu i cofanie sesji z konfliktami, testy i szkielet w sesjach agenta; 5 testów (D35). Równolegle subagent buduje panel agenta (5.4)",
-    "Etap 5 / baza — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, użytkownik proxy), 15 narzędzi odczytu, run_query READ ONLY z limitami i maskowaniem, open_object; 4 testy na bazie (D34)",
-    "Etap 4 (utPLSQL) zamknięty — D32; PR #34 scalony"
+    "Etap 5 / baza — własna sesja bazy agenta (MODULE/ACTION/CLIENT_INFO, użytkownik proxy), 15 narzędzi odczytu, run_query READ ONLY z limitami i maskowaniem, open_object; 4 testy na bazie (D34)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

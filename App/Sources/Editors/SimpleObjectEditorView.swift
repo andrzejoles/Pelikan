@@ -63,7 +63,13 @@ struct SimpleObjectEditorView: View {
         case .list:
             TextField(f.label, text: binding, axis: .vertical).lineLimit(1...4).disabled(disabled)
         case .multiline:
-            TextField(f.label, text: binding, axis: .vertical).lineLimit(3...14).font(.system(size: 12, design: .monospaced)).disabled(disabled)
+            // Kod (zapytanie widoku, treść zadania) — etykieta nad polem, tekst wyrównany do lewej jak w edytorze.
+            VStack(alignment: .leading, spacing: 4) {
+                Text(f.label)
+                TextField("", text: binding, axis: .vertical).labelsHidden().lineLimit(3...14)
+                    .font(.system(size: 12, design: .monospaced)).multilineTextAlignment(.leading).disabled(disabled)
+                    .textFieldStyle(.roundedBorder)
+            }
         case .text:
             // Nazwy obiektów wielkimi literami; ścieżki, pliki, komentarze i parametry bez zmiany wielkości liter.
             TextField(f.label, text: Binding(get: { binding.wrappedValue },
