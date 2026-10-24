@@ -1249,3 +1249,31 @@ Właściciel odłożył proces pomocniczy dla połączeń Kerberos na macOS jako
 nie używa, a proces pomocniczy oznacza przeniesienie całej komunikacji z bazą przez IPC. PD-CONN-014 zostaje ⚠️ z
 czytelnym błędem z D159; wrócimy do tematu, gdy tester zgłosi potrzebę. Właściciel opublikował też Pelikan 7.9.0 beta
 jako pierwsze publiczne wydanie i polecił usunąć starsze szkice wydań (1.9.0–7.7.0); tagi zostały w repozytorium.
+
+### D163 · 2026-10-24 — Przegląd bezpieczeństwa: poprawki API agenta, linku pelikan:// i kluczy SSH
+Przegląd (subagent, tylko odczyt kodu) potwierdził w kodzie 3 wysokie, 3 średnie i 4 niskie problemy; wszystkie są
+poprawione:
+- **H1:** połączenie narzędzia bez aliasu było ustalane osobno przy zgodzie i przy wykonaniu, a agent mógł w trakcie
+  zgody przełączyć aktywne okno (`navigate_to`). Bramka przypina teraz połączenie kluczem wewnętrznym `__connectionID`
+  (agent go nie poda, bo klucze `__` są usuwane), a protokół `AgentInvocationGate.authorize` zwraca argumenty do
+  wykonania.
+- **H2:** link `pelikan://open?connection=…&commandfile=…` łączył się z zapisanym hasłem i wykonywał skrypt w oknie
+  poleceń (SPOOL bez pytania mógł dopisać polecenia do plików startowych powłoki). Link przyjmuje tylko otwieranie,
+  a nieznane klucze dają ostrzeżenie. Argumenty procesu (`commandfile=` z wiersza poleceń) działają jak dotąd, bo
+  podaje je sam użytkownik.
+- **H3:** blok PL/SQL, `CALL`, polecenia systemowe i nierozpoznane mogły zatwierdzić DML agenta bez osobnej zgody na
+  COMMIT. Wszystko poza zapytaniem, DML i kontrolą sesji (`mayCommit`) jest odrzucane przy niezatwierdzonym DML,
+  a podgląd oznacza PL/SQL jako nieodwracalne. `ALTER SESSION DISABLE COMMIT IN PROCEDURE` odrzucone: blokuje też
+  ROLLBACK w kodzie (utPLSQL), a transakcji autonomicznych i tak nie zatrzymuje.
+- **M1:** `install_utplsql` zostaje (wymaga go PROMPT §7), ale podgląd w oknie zgody mówi wprost, że skrypty wykonuje
+  okno poleceń na koncie użytkownika, a nie agenta, z uprawnieniami SYSDBA/DBA. Działa tylko dla połączeń dev/test.
+- **M2:** przełączenie połączenia na produkcję wyłącza zmiany agenta; włączenie z powrotem to świadoma decyzja.
+- **M3:** narzędzia edytora agenta (odczyt, wstawianie, zamiana, przejście) odrzucają okno poleceń.
+- **L1:** agent dostaje przy błędzie łączenia tylko alias i kod błędu (bez deskryptora, hosta i wyjścia ssh).
+- **L2:** gniazda serwera agentów mają FD_CLOEXEC, więc nie przechodzą do CLI agenta uruchamianego przez forkpty.
+- **L3:** cele SSH Pro\*C miały `StrictHostKeyChecking=accept-new`, czyli przy pierwszym kontakcie hasło mógł dostać
+  podstawiony serwer. Teraz jest `yes`; test celu pokazuje odcisk klucza (`ssh-keyscan`) do potwierdzenia, zanim zapisze
+  klucz, a nieznany serwer daje osobny błąd `hostKeyUnknown`.
+- **L4:** plik śladu `PELIKAN_MCP_TRACE` powstaje z prawami 0600.
+
+Testy: link z `commandfile`, PL/SQL i CALL po DML agenta, nieznany klucz serwera na lokalnym sshd.

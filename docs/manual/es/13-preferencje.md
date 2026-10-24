@@ -116,3 +116,6 @@ Entre los parámetros admitidos están `connection` (nombre de la conexión o `u
 inicio), `noloaddesktop` y rutas de archivos. También funciona la dirección `pelikan://open?connection=…`. No se admite
 una contraseña en los parámetros: `userid=u/contraseña@base` se acepta sin la contraseña y con una advertencia, y la
 contraseña procede del Llavero o de una pregunta.
+
+Cualquier página web o mensaje puede abrir una dirección `pelikan://`, por eso solo acepta abrir (conexión, objeto,
+archivo, workset, proyecto, `readonly`); Pelikan nunca ejecuta un script `commandfile` desde esa dirección.

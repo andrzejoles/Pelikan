@@ -87,6 +87,10 @@ struct PreferencesStartupTests {
         let u = StartupOptions.parse(url: URL(string: "pelikan://open?connection=Dev&edit=APP.PKG&file=/tmp/a.sql&password=x")!, scheme: "pelikan")
         #expect(u.connection == "Dev" && u.editObject == "APP.PKG" && u.files == ["/tmp/a.sql"] && !u.warnings.isEmpty)
         #expect(StartupOptions.parse(url: URL(string: "https://x?connection=Dev")!, scheme: "pelikan").isEmpty)
+        // Link z sieci nie uruchamia skryptu (przegląd bezpieczeństwa, D163).
+        let script = StartupOptions.parse(url: URL(string: "pelikan://open?connection=Prod&commandfile=~/Downloads/x.sql&noloaddesktop=1")!, scheme: "pelikan")
+        #expect(script.commandFile == nil && !script.noLoadDesktop && script.connection == "Prod")
+        #expect(script.warnings.contains { $0.contains("commandfile") })
     }
 
     @Test("Wykonanie parametrów: połączenie po nazwie (bez łączenia w testach — brak sterownika), pliki, tylko do odczytu")

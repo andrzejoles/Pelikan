@@ -99,6 +99,9 @@ La ventana está diseñada para que no se apruebe nada por accidente:
 - **El DML del agente queda sin confirmar** hasta que autorizas por separado un COMMIT. Cerrar la sesión del agente
   revierte los cambios sin confirmar (ROLLBACK). El DDL del agente se rechaza cuando el agente tiene DML sin confirmar
   (el DDL lo confirmaría implícitamente).
+- Los bloques PL/SQL y `CALL` del agente también se rechazan mientras tenga DML sin confirmar: podrían confirmarlo
+  (COMMIT en el código, DDL dinámico, transacciones autónomas). La ventana de aprobación avisa de que un bloque PL/SQL
+  no se puede deshacer. La Command Window está fuera del alcance del agente: no puede leer ni cambiar su texto.
 - Antes de modificar el código de un objeto (paquete, procedimiento, vista…), Pelikan guarda la versión anterior.
   **Herramientas › Agente de IA › Deshacer sesión de agente…** (o **Deshacer sesión…** en el panel) restaura el código
   de los objetos de antes de la sesión, elimina los objetos creados por el agente, deshace los cambios de texto en las

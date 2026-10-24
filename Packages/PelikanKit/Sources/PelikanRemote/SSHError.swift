@@ -9,6 +9,8 @@ public enum SSHError: Error, Sendable, Equatable, CustomStringConvertible {
     case permissionDenied(String)
     /// Klucz serwera inny niż zapamiętany w known_hosts.
     case hostKeyChanged(String)
+    /// Serwera nie ma w known_hosts — klucz trzeba najpierw potwierdzić (odcisk w teście celu).
+    case hostKeyUnknown(String)
     /// Przekroczony limit czasu (całkowity albo ciszy).
     case timeout
     case cancelled
@@ -24,6 +26,7 @@ public enum SSHError: Error, Sendable, Equatable, CustomStringConvertible {
         case .negotiationFailed(let m): "negotiation failed: \(m)"
         case .permissionDenied(let m): "permission denied: \(m)"
         case .hostKeyChanged(let m): "host key changed: \(m)"
+        case .hostKeyUnknown(let m): "host key unknown: \(m)"
         case .timeout: "timeout"
         case .cancelled: "cancelled"
         case .io(let code, let detail): "io(\(code)): \(detail)"

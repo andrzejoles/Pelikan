@@ -128,6 +128,26 @@ struct PortedServerTests {
         #expect(SSHSession.pathValue("/a b/%h") == "\"/a b/%%h\"")
     }
 
+    /// Nowy serwer nie jest przyjmowany po cichu: połączenie bez potwierdzonego klucza odpada, odcisk jest do
+    /// pokazania, a po `recordHostKey()` serwer jest znany (D163).
+    @Test("Nieznany klucz serwera: odmowa połączenia, odcisk do potwierdzenia, potem znany")
+    func unknownHostKey() throws {
+        let sshd = try TestSSHD()
+        let (session, run) = try sshd.session()
+        defer { session.disconnect(); try? FileManager.default.removeItem(at: run) }
+        #expect(try session.unknownHostFingerprints() != nil)
+        do {
+            try session.connect()
+            Issue.record("połączenie z nieznanym serwerem nie powinno się udać")
+        } catch let e as SSHError {
+            if case .hostKeyUnknown = e {} else { Issue.record("oczekiwano hostKeyUnknown, jest \(e)") }
+        }
+        try session.recordHostKey()
+        #expect(try session.unknownHostFingerprints() == nil)
+        try session.connect()
+        #expect(session.isConnected)
+    }
+
     @Test("Bez trybu zgodności stary serwer odrzuca negocjację")
     func modernClientWithoutLegacyModeFails() throws {
         let sshd = try TestSSHD()

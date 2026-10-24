@@ -136,6 +136,28 @@ final class SSHTargetManagerModel {
             return
         }
         let run = runDirectory
+        // Nowy serwer: odcisk klucza do potwierdzenia, zanim Pelikan zapisze go w known_hosts i wyśle hasło.
+        let scanned: Result<[String]?, any Error> = await Task.detached {
+            do { return .success(try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: run, secret: { nil }).unknownHostFingerprints()) }
+            catch { return .failure(error) }
+        }.value
+        if case .failure(let e) = scanned {
+            message = SSHTargetTester.describe(e)
+            return
+        }
+        if case .success(let fingerprints?) = scanned {
+            let alert = NSAlert()
+            alert.messageText = L10n.tr("Zaufać kluczowi serwera \(t.host)?")
+            alert.informativeText = fingerprints.isEmpty
+                ? L10n.tr("Serwera nie ma w known_hosts, a jego klucza nie udało się odczytać. Zaufaj tylko, jeśli masz pewność, że łączysz się z właściwym serwerem.")
+                : L10n.tr("Serwera nie ma w known_hosts. Porównaj odcisk klucza z podanym przez administratora:") + "\n\n" + fingerprints.joined(separator: "\n")
+            alert.addButton(withTitle: L10n.tr("Zaufaj"))
+            alert.addButton(withTitle: L10n.tr("Anuluj"))
+            guard alert.runModal() == .alertFirstButtonReturn else {
+                message = L10n.tr("Nie zaufano kluczowi serwera")
+                return
+            }
+        }
         let result: Result<[SSHTestCheck], any Error> = await Task.detached {
             do {
                 let s = try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: run, secret: { secret })

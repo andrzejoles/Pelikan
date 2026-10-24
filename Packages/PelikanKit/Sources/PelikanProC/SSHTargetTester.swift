@@ -161,6 +161,7 @@ public enum SSHTargetTester {
         case .negotiationFailed: return L10n.tr("Brak wspólnych algorytmów z serwerem — włącz „Stare algorytmy” (np. AIX 6.1)")
         case .permissionDenied: return L10n.tr("Odmowa dostępu — sprawdź użytkownika, klucz albo hasło")
         case .hostKeyChanged: return L10n.tr("Klucz serwera inny niż zapamiętany w known_hosts — możliwa podmiana serwera; sprawdź z administratorem")
+        case .hostKeyUnknown: return L10n.tr("Nieznany klucz serwera — sprawdź cel (Testuj) w definicji i potwierdź odcisk klucza")
         case .timeout: return L10n.tr("Przekroczony limit czasu")
         case .cancelled: return L10n.tr("Przerwano")
         case .io(_, let detail): return detail

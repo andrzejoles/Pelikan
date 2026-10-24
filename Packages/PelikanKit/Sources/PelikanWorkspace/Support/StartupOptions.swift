@@ -63,6 +63,8 @@ public struct StartupOptions: Sendable, Equatable {
 
     /// URL `<schemat>://open?connection=…&object=…&edit=…&file=…&workset=…&project=…` (schemat z Info.plist, marka
     /// w `Config/Brand.xcconfig`); hasło w URL jest ignorowane jak w argumentach.
+    /// Link może otworzyć dowolna strona albo wiadomość, więc przyjmuje tylko otwieranie (połączenie, obiekt, plik,
+    /// workset, projekt) i tryb tylko do odczytu — nigdy skryptu do wykonania (`commandfile`).
     public static func parse(url: URL, scheme: String) -> StartupOptions {
         var o = StartupOptions()
         guard url.scheme?.lowercased() == scheme.lowercased() else { return o }
@@ -72,7 +74,8 @@ public struct StartupOptions: Sendable, Equatable {
             case "object", "view": o.apply("viewobject", v)
             case "edit": o.apply("editobject", v)
             case "file": o.files.append(v)
-            default: o.apply(q.name, v)
+            case "connection", "connect", "userid", "workset", "project", "readonly", "password", "pwd": o.apply(q.name, v)
+            default: o.warnings.append(L10n.tr("Parametr linku „\(q.name)” jest ignorowany"))
             }
         }
         return o

@@ -327,7 +327,8 @@ struct ConnectionEditorView: View {
         }
         .frame(width: 620, height: 600)
         .onChange(of: draft.environment) { _, env in
-            if draft.isNew { draft.agentAllowChanges = env != .production }
+            // Przejście na produkcję zawsze wyłącza zmiany agenta (włączenie z powrotem to świadoma decyzja w tej karcie).
+            if draft.isNew || env == .production { draft.agentAllowChanges = env != .production }
         }
     }
 }

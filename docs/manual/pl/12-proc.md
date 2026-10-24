@@ -33,6 +33,10 @@ logowanie, system (`uname -a`, na AIX `oslevel -s`), dostępność `make`, `git`
 working copy (`git status --porcelain`) oraz możliwość zapisu w katalogach. Brakujący katalog backupów Pelikan utworzy
 po Twoim potwierdzeniu.
 
+Przy pierwszym teście nowego serwera Pelikan pokazuje odcisk jego klucza (SHA256) i zapisuje klucz w known_hosts
+dopiero po Twoim potwierdzeniu — porównaj odcisk z podanym przez administratora. Wdrożenie na serwer, którego klucza
+nie potwierdzono, jest odrzucane; serwer ze zmienionym kluczem — zawsze.
+
 ## Wdrożenie
 
 1. Otwórz projekt z lokalnym repozytorium Git (Pelikan porówna je z serwerem). Bez projektu wdrożenie działa, ale bez

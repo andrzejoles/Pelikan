@@ -36,6 +36,11 @@ SSH-Servers, die Anmeldung, das System (`uname -a`, auf AIX `oslevel -s`), die V
 `compress`/`gzip`, Branch und Sauberkeit der Working Copy (`git status --porcelain`) sowie die Schreibbarkeit der
 Verzeichnisse. Ein fehlendes Backup-Verzeichnis legt Pelikan nach Ihrer Bestätigung an.
 
+Beim ersten Test eines neuen Servers zeigt Pelikan den Fingerabdruck seines Schlüssels (SHA256) und speichert den
+Schlüssel erst nach Ihrer Bestätigung in known_hosts – vergleichen Sie den Fingerabdruck mit dem Ihres Administrators.
+Eine Bereitstellung auf einen Server mit unbestätigtem Schlüssel wird abgewiesen, ein Server mit geändertem Schlüssel
+immer.
+
 ## Deployment
 
 1. Öffnen Sie ein Projekt mit einem lokalen Git-Repository (Pelikan vergleicht es mit dem Server). Ohne Projekt

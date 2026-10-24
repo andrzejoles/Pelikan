@@ -92,6 +92,9 @@ Okno jest zaprojektowane tak, żeby nie zatwierdzić niczego przypadkiem:
 - **DML agenta zostaje niezatwierdzone**, dopóki nie zgodzisz się osobno na COMMIT. Zamknięcie sesji agenta wycofuje
   niezatwierdzone zmiany (ROLLBACK). DDL agenta jest odrzucane, gdy agent ma niezatwierdzone DML (DDL zatwierdziłoby
   je niejawnie).
+- Bloki PL/SQL i `CALL` agenta też są odrzucane przy niezatwierdzonym DML — mogłyby je zatwierdzić (COMMIT w kodzie,
+  DDL dynamiczne, transakcje autonomiczne). Okno zgody ostrzega, że bloku PL/SQL nie da się cofnąć. Okno poleceń jest
+  dla agenta niedostępne: nie odczyta ani nie zmieni jego tekstu.
 - Przed zmianą kodu obiektu (pakiet, procedura, widok…) Pelikan zapisuje poprzednią wersję. **Narzędzia › Agent AI ›
   Cofnij sesję agenta…** (albo **Cofnij sesję…** w panelu) przywraca kod obiektów sprzed sesji, usuwa obiekty
   utworzone przez agenta, cofa zmiany tekstu w oknach i zamyka okna otwarte przez agenta. Obiekt zmieniony później

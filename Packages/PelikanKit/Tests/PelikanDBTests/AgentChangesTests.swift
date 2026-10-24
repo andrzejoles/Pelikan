@@ -32,6 +32,15 @@ struct AgentChangesTests {
         await #expect(throws: AgentDenial.self) {
             try await ws.invoke("agent.execute", CommandArguments(["sql": "create table pelikan_agent_x (id number)"]), invoker: agent)
         }
+        // Blok PL/SQL i CALL mogą zatwierdzić DML agenta bez zgody na COMMIT — odrzucone, jak DDL (D163).
+        for sql in ["begin commit; end;", "call dbms_output.put_line('x')"] {
+            await #expect(throws: AgentDenial.self) {
+                try await ws.invoke("agent.execute", CommandArguments(["sql": .string(sql)]), invoker: agent)
+            }
+        }
+        #expect(try await count() == "0")
+        let script = try await ws.preview("agent.executeScript", CommandArguments(["script": "update dept set dname = dname where deptno = 96;\nbegin commit; end;\n/"]), invoker: agent)
+        #expect(script.irreversible && script.summary.contains("PL/SQL"))
         try await ws.invoke("agent.commit", invoker: agent)
         #expect(try await count() == "1")
         _ = try await ws.invoke("agent.execute", CommandArguments(["sql": "delete from dept where deptno = 96"]), invoker: agent)

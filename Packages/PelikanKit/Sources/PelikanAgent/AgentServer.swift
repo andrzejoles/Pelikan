@@ -48,6 +48,8 @@ public final class AgentServer: @unchecked Sendable {
 
         let fd = socket(AF_UNIX, SOCK_STREAM, 0)
         guard fd >= 0 else { throw StartError.socket(errno) }
+        // Terminal agenta startuje przez forkpty+execve bez zamykania deskryptorów — gniazda nie mogą przejść do CLI.
+        _ = fcntl(fd, F_SETFD, FD_CLOEXEC)
         var addr = sockaddr_un()
         addr.sun_family = sa_family_t(AF_UNIX)
         let bytes = Array(path.utf8)
@@ -110,6 +112,7 @@ public final class AgentServer: @unchecked Sendable {
                 if errno == EINTR { continue }
                 break
             }
+            _ = fcntl(client, F_SETFD, FD_CLOEXEC)
             var on: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
             let t = Thread { [self] in handshake(client) }

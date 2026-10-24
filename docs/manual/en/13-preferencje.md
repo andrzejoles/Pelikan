@@ -113,3 +113,6 @@ Supported parameters include `connection` (a connection name or `user@database`)
 `noloaddesktop` and file paths. The `pelikan://open?connection=…` address also works. A password in the parameters is
 not supported — `userid=u/password@db` is accepted without the password and with a warning, and the password comes from
 the Keychain or from a prompt.
+
+Any web page or message can open a `pelikan://` address, so it only accepts opening (connection, object, file,
+workset, project, `readonly`); Pelikan never runs a `commandfile` script from such an address.

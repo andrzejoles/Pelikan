@@ -694,13 +694,13 @@ public final class Workspace {
         if !command.isPlanned, arguments.values.isEmpty, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
-        let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
+        var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
         let started = Date()
         do {
             if invoker.isAgent {
                 // Agent bez bramki uprawnień (serwer agentów nie działa) nie wykonuje niczego.
                 guard let gate = agentGate else { throw AgentDenial.sessionClosed }
-                try await gate.authorize(command, context: context)
+                context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context))
             }
             let result = try await command.run(context)
             notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))

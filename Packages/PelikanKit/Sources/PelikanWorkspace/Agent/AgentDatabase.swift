@@ -10,10 +10,23 @@ extension Workspace {
         guard let id = ctx.invoker.agentSessionID else { throw AgentDenial.sessionClosed }
         let key = SessionKey(connectionID: def.id, purpose: .agent(id))
         let fresh = sessions.existingSession(key) == nil
-        let s = try await sessions.session(key)
+        let s: any DatabaseSession
+        do {
+            s = try await sessions.session(key)
+        } catch {
+            // Błąd łączenia zawiera deskryptor, host albo wyjście ssh — agent zna połączenia tylko z aliasu (PROMPT §7.3 p.1).
+            throw CommandError.notAvailable(Self.agentConnectError(error, alias: def.agentAlias))
+        }
         if fresh { _ = try? await s.execute("begin dbms_output.enable(null); end;") }
         try? await s.setTags(SessionTags(module: "Pelikan agent", action: action, clientInfo: "Pelikan agent \(id)"))
         return s
+    }
+
+    /// Komunikat błędu łączenia dla agenta: alias i sam kod błędu Oracle (ORA-, TNS-, DPI-), bez treści.
+    nonisolated static func agentConnectError(_ error: any Error, alias: String) -> String {
+        let text = error.localizedDescription
+        let code = text.range(of: #"\b(ORA|TNS|DPI)-\d{4,5}\b"#, options: .regularExpression).map { String(text[$0]) }
+        return code.map { L10n.tr("Nie udało się połączyć z „\(alias)” (\($0))") } ?? L10n.tr("Nie udało się połączyć z „\(alias)”")
     }
 
     /// Koniec sesji agenta: ROLLBACK niezatwierdzonych zmian i zamknięcie jego sesji bazy na wszystkich połączeniach.
@@ -26,7 +39,7 @@ extension Workspace {
 
     /// Kontekst narzędzia bazy: połączenie z argumentu `connection` i sesja agenta.
     func agentDatabase(_ ctx: CommandContext, action: String) async throws -> (ConnectionDefinition, any DatabaseSession) {
-        let def = try agentConnection(alias: ctx.arguments.string("connection"))
+        let def = try agentConnection(ctx.arguments)
         return (def, try await agentDatabaseSession(ctx, def, action: action))
     }
 }
@@ -232,7 +245,7 @@ enum AgentDatabaseCommands {
                                       summary: L10n.tr("Wykonuje jedno zapytanie SELECT/WITH w transakcji READ ONLY w sesji agenta, z limitem wierszy, czasu i rozmiaru wyniku; kolumny maskowane zakryte."),
                                       inMenu: false, feature: "AI-SEC-006")) { ctx in
                 let ws = ctx.workspace
-                let def = try ws.agentConnection(alias: ctx.arguments.string("connection"))
+                let def = try ws.agentConnection(ctx.arguments)
                 let masked = AgentQueryRules.maskedNames(def)
                 let sql = try AgentQueryRules.validate(ctx.arguments.string("sql") ?? "", masked: masked)
                 let s = try await ws.agentDatabaseSession(ctx, def, action: "run_query")

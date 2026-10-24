@@ -93,7 +93,7 @@ public final class SSHSession: Sendable {
         var o: [String] = []
         if let f = config.configFile { o += ["-F", f] }
         o += ["-o", "ControlPath=\(Self.pathValue(controlPath))", "-o", "ConnectTimeout=15", "-o", "ServerAliveInterval=30",
-              "-o", "StrictHostKeyChecking=accept-new", "-o", "NumberOfPasswordPrompts=1"]
+              "-o", "StrictHostKeyChecking=yes", "-o", "NumberOfPasswordPrompts=1"]
         // Połączenie główne pisze do pliku dziennika — tam potrzebne są komunikaty negocjacji (INFO).
         o += ["-o", master ? "LogLevel=INFO" : "LogLevel=ERROR"]
         if let k = config.knownHostsFile { o += ["-o", "UserKnownHostsFile=\(Self.pathValue(k))"] }
@@ -176,6 +176,7 @@ public final class SSHSession: Sendable {
     public static func explain(_ message: String) -> SSHError {
         if message.contains("no matching") || message.contains("Unable to negotiate") { return .negotiationFailed(message) }
         if message.contains("Permission denied") { return .permissionDenied(message) }
+        if message.contains("host key is known for") && !message.contains("IDENTIFICATION HAS CHANGED") { return .hostKeyUnknown(message) }
         if message.contains("REMOTE HOST IDENTIFICATION HAS CHANGED") || message.contains("Host key verification failed") {
             return .hostKeyChanged(message)
         }
@@ -185,13 +186,33 @@ public final class SSHSession: Sendable {
     /// Plik znanych kluczy serwerów, którego używa ta sesja.
     public var knownHostsPath: String { config.knownHostsFile ?? NSHomeDirectory() + "/.ssh/known_hosts" }
 
-    /// Zaufanie przy pierwszym połączeniu (jak `StrictHostKeyChecking=accept-new`): zapisuje klucz
-    /// nowego serwera do known_hosts bez logowania. Znany serwer z innym kluczem — błąd.
+    /// Nazwa serwera w known_hosts (`[host]:port` dla portu innego niż 22).
+    var knownHostsName: String { config.port.map { $0 == 22 ? config.host : "[\(config.host)]:\($0)" } ?? config.host }
+
+    /// Odciski kluczy serwera (SHA256, `ssh-keyscan` bez logowania), gdy serwera nie ma w known_hosts; `nil` — serwer
+    /// znany. Pusta lista — kluczy nie udało się odczytać (np. host z aliasu ~/.ssh/config). Pokazywane do potwierdzenia
+    /// przed `recordHostKey()` — zaufanie przy pierwszym kontakcie bez potwierdzenia oddałoby hasło podstawionemu serwerowi.
+    public func unknownHostFingerprints() throws -> [String]? {
+        let known = try Spawn.run("/usr/bin/ssh-keygen", ["-F", knownHostsName, "-f", knownHostsPath].map { Array($0.utf8) },
+                                  environment: environment, timeout: 10)
+        if known.status == 0, !known.output.isEmpty { return nil }
+        var scan = ["-T", "10"]
+        if let port = config.port { scan += ["-p", String(port)] }
+        scan.append(config.host)
+        let keys = try Spawn.run("/usr/bin/ssh-keyscan", scan.map { Array($0.utf8) }, environment: environment, timeout: 20)
+        guard !keys.output.isEmpty else { return [] }
+        let fp = try Spawn.run("/usr/bin/ssh-keygen", [Array("-lf".utf8), Array("-".utf8)], environment: environment, stdin: .data(keys.output), timeout: 10)
+        return String(decoding: fp.output, as: UTF8.self).split(separator: "\n").map { String($0) }.filter { !$0.isEmpty }
+    }
+
+    /// Zaufanie nowemu serwerowi (po potwierdzeniu odcisku w interfejsie albo dla serwera już znanego): zapisuje klucz
+    /// do known_hosts bez logowania. Znany serwer z innym kluczem — błąd.
     public func recordHostKey() throws {
         try? FileManager.default.createDirectory(atPath: (knownHostsPath as NSString).deletingLastPathComponent, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
-        // Pierwsze wystąpienie opcji wygrywa — własne ustawienia przed wspólnymi.
-        var args = ["-o", "PreferredAuthentications=none", "-o", "UserKnownHostsFile=\(Self.pathValue(knownHostsPath))"] + commonOptions(master: false)
+        // Pierwsze wystąpienie opcji wygrywa — własne ustawienia przed wspólnymi (tu accept-new zamiast yes).
+        var args = ["-o", "StrictHostKeyChecking=accept-new", "-o", "PreferredAuthentications=none",
+                    "-o", "UserKnownHostsFile=\(Self.pathValue(knownHostsPath))"] + commonOptions(master: false)
         if let port = config.port { args += ["-p", String(port)] }
         args += [destination, "exit"]
         let r = try Spawn.run(Self.ssh, args.map { Array($0.utf8) }, environment: environment, timeout: 30)

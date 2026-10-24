@@ -100,6 +100,10 @@ Das Fenster ist so gestaltet, dass nichts versehentlich genehmigt wird:
 - **DML des Agenten bleibt nicht festgeschrieben**, bis Sie einem COMMIT gesondert zustimmen. Das Schließen der
   Agentensitzung rollt nicht festgeschriebene Änderungen zurück (ROLLBACK). DDL des Agenten wird abgewiesen, wenn der
   Agent nicht festgeschriebene DML hat (DDL würde sie implizit festschreiben).
+- PL/SQL-Blöcke und `CALL` des Agenten werden ebenfalls abgewiesen, solange er nicht festgeschriebene DML hat — sie
+  könnten sie festschreiben (COMMIT im Code, dynamisches DDL, autonome Transaktionen). Das Zustimmungsfenster warnt,
+  dass sich ein PL/SQL-Block nicht rückgängig machen lässt. Das Command Window ist für den Agenten gesperrt: Er kann
+  dessen Text weder lesen noch ändern.
 - Vor einer Änderung am Code eines Objekts (Paket, Prozedur, View …) speichert Pelikan die vorherige Version.
   **Werkzeuge › KI-Agent › Agentensitzung rückgängig machen …** (oder **Sitzung rückgängig machen …** im Bereich) stellt
   den Code der Objekte vom Stand vor der Sitzung wieder her, löscht vom Agenten angelegte Objekte, macht Textänderungen

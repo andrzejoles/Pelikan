@@ -94,6 +94,9 @@ The window is designed so that nothing gets approved by accident:
 - **The agent's DML stays uncommitted** until you separately consent to a COMMIT. Closing the agent session rolls back
   uncommitted changes (ROLLBACK). The agent's DDL is rejected when the agent has uncommitted DML (DDL would commit it
   implicitly).
+- The agent's PL/SQL blocks and `CALL` are also rejected while it has uncommitted DML — they could commit it (COMMIT
+  in code, dynamic DDL, autonomous transactions). The approval window warns that a PL/SQL block cannot be undone. The
+  Command Window is off limits to the agent: it can neither read nor change its text.
 - Before changing an object's code (package, procedure, view…) Pelikan saves the previous version. **Tools › AI agent ›
   Revert agent session…** (or **Revert session…** in the panel) restores the code of objects from before the session,
   drops objects created by the agent, undoes text changes in windows and closes windows opened by the agent. An object
