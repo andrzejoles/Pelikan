@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T16:53:14+02:00",
+  "heartbeat": "2026-10-24T18:47:23+02:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,9 @@
     }
   ],
   "done": [
+    "Próba na dużej bazie właściciela (tylko odczyt): pobieranie hurtowe 4,9× szybsze (D151); program z innego schematu z właścicielem w nagłówku — kompilacja nie trafia już do schematu sesji; analiza nazw hurtowo 34 s → 1,8 s, fałszywe alarmy na poprawnym kodzie 478 → 1 (D152)",
+    "Szkic wydania v7.1.0 (poprawki z zrzutów #63–#66) — do publikacji przez właściciela",
+    "Scalone #66 (raport z grupami w jednej tabeli, D150)",
     "Raport z grupami: jedna tabela, „Razem” pod kolumnami (D150); zrzut raportu ze stylem, Break i sumami",
     "Scalone #65 (ostatnia linia edytora, okno zgody agenta, wyszukiwania w sieci; stan etapów w raporcie)",
     "Zrzuty: okno zgody agenta (plan przewijany w poziomie, podsumowanie bez „polecenie/a”), status linii, Preferencje › Narzędzia (pola wyszukiwań bez uciętych etykiet); numer pustej ostatniej linii i podświetlenie na końcu pliku o linię za nisko — poprawione (D149); stan etapów w raporcie",
@@ -94,14 +97,11 @@
     "Etap 8: scalone gałęzie — F1 i instrukcja (5 języków), narzędzia zewnętrzne edytora, kopie i odzyskiwanie, zestawy i eksport preferencji, parametry startowe, usługi macOS, pasek narzędzi, Quick Look, VoiceOver, druk",
     "Szkic wydania v5.7.0 (Etapy 6, 7 i P) — do publikacji przez właściciela; PR #53 tłumaczenia w CI",
     "Etap 8 / tłumaczenia: 2839 tekstów w en, de, es, uk (4 subagenty), klucze odtwarzalne ze źródeł, wybór języka, CI sprawdza komplet (D87)",
-    "Scalony PR #50 (Etap 7: pakiety Oracle, 23ai z debugowaniem MLE, DataGrip, narzędzia SQL Developer, Entra ID, ORDS; Etap P warstwa SSH i cele) — naprawione zawieszanie testów SSH w CI",
-    "Scalone: narzędzia Etapu 7 (subagent C: notatnik, raporty predefiniowane, Diff/Cart, kopia schematu, import, SQLcl, ER, przenoszenie danych, zadania lokalne) i Etap P (menedżer celów SSH, parsery proc/xlc) w jeden PR",
-    "Etap 7 / DataGrip (subagent D): analiza nazw w czasie pisania, inspekcje, Find Usages, zmiana nazwy z podglądem, historia lokalna, konsole połączeń, zmiany oczekujące w siatce — scalone, testy na bazie OK (D65–D70)",
-    "Etap 7 / Oracle 23ai: widoki dualności JSON (lista, generator DDL, dokumenty, Data Guide), moduły i środowiska MLE, podgląd SDO_GEOMETRY — testy na bazie (D64)"
+    "Scalony PR #50 (Etap 7: pakiety Oracle, 23ai z debugowaniem MLE, DataGrip, narzędzia SQL Developer, Entra ID, ORDS; Etap P warstwa SSH i cele) — naprawione zawieszanie testów SSH w CI"
   ],
   "next": [
-    "Dalsze zrzuty w tle (edytor: status linii, Preferencje › Narzędzia, raport ze stylem, okno zgody agenta, SQL Monitor)",
-    "Akceptacja Pro*C na AIX, Entra ID/ORDS na bazach — właściciel"
+    "Pozostałe wiersze bez zrzutu wymagają interakcji (dymki, przeciąganie, druk, pełny ekran) albo środowiska (AIX, Touch ID, terminal agenta)",
+    "Akceptacja Pro*C na AIX, Entra ID/ORDS na bazach, publikacja szkiców wydań — właściciel"
   ],
   "blockers": [],
   "questions": [],

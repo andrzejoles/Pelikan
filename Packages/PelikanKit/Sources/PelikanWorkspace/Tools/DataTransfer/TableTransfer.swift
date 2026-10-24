@@ -98,10 +98,10 @@ public enum TableTransfer {
         let cond = whereClause.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cond.contains(";") else { throw CommandError.invalidArgument("where", L10n.tr("warunek bez średnika")) }
         let r = try await s.execute("select * from \(q(owner)).\(q(table))\(cond.isEmpty ? "" : " where \(cond)")", binds: [],
-                                    options: ExecuteOptions(lobLimit: 10_000_000))
+                                    options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
         guard let rs = r.resultSet else { return [] }
         while true {
-            let batch = try await s.fetch(rs.id, maxRows: 500)
+            let batch = try await s.fetch(rs.id, maxRows: 5000)
             for v in batch.rows { try await row(rs.columns, v) }
             if !batch.hasMore { break }
         }
