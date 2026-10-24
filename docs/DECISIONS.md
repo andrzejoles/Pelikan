@@ -1069,5 +1069,5 @@ narzędzi okna i treść szczegółów wchodzi pod tytuł (DBMS Scheduler, Panel
 `safeAreaInset` nie działa z `HSplitView` (stopka Narzędzi użytkownika na liście), a w pionowym `NSStackView` widok
 przewijany bez wysokości własnej zapada się do zera (płótno diagramu — puste okno od Etapu 6). Zasada: w oknach
 narzędzi `HSplitView` z listą po lewej, stopki jako ostatni element `VStack`, układ AppKit z jawnymi więzami zamiast
-stosu, gdy jeden z widoków ma wypełnić resztę. Okno instrukcji zostaje przy `NavigationSplitView` (pasek z przyciskiem
+stosu, gdy jeden z widoków ma wypełnić resztę. Tak samo poprawione okna planu (panel SwiftUI wyśrodkowany w NSHostingView — rama na całą wysokość, pasek w dwóch wierszach) i raportu (NSStackView). W trybie skryptu zrzutów okna dialogowe nie są pokazywane — pytanie trafia do dziennika jako „Anuluj”, żeby nic nie aktywowało aplikacji. Okno instrukcji zostaje przy `NavigationSplitView` (pasek z przyciskiem
 panelu jest tam potrzebny, treść WebKit nie wchodzi pod tytuł).

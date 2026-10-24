@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T13:49:30+02:00",
+  "heartbeat": "2026-10-24T14:09:04+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Przebieg zrzutów: naprawione układy okien planu i raportu; okna dialogowe pomijane w trybie skryptu (bez aktywacji aplikacji)",
     "Przebieg zrzutów: naprawione układy okien DBMS Scheduler, Panel DBA, Narzędzia użytkownika (treść pod tytułem, stopka na liście) — D145",
     "Diagram: edycja punktów łamania myszą (PD-DIAG-002); naprawiony układ okna diagramu — płótno zapadało się do zera (błąd od Etapu 6, znaleziony zrzutem w tle)",
     "Zrzuty w tle nowych edytorów P2 (widok, kolejka, użytkownik, punkty przerwania); poprawione wyrównanie pola zapytania w edytorze widoku",
@@ -91,8 +92,7 @@
     "Etap 6 / Test Manager — zestawy testów z oczekiwaniami, zmienne globalne, DBMS_OUTPUT, limit czasu, RUNTESTSET; polecenia własne okna poleceń i EXPORT; subagent zakończył wykresy i narzędzia użytkownika",
     "Etap 6 / narzędzia siatki — zapytania standardowe, zapytania powiązane z FK, porównanie rekordów i wyników, kolumna do plików; testy offline i na bazie",
     "Etap 6 — gałąź integracyjna: narzędzia edytora, pliki i Git, scheduler, diagramy, dane; testy: 120+70+16 bez bazy, 103 na bazie (D46)",
-    "Etap 6 / prace subagentów zintegrowane: makra, Special Copy, historia schowka, To-Do, przeglądarka plików, Git, worksety i układy okna (D37–D40)",
-    "Etap 5 / panel (subagent, równolegle) — terminal SwiftTerm z CLI, okno zgody, macierz uprawnień przy starcie, aktywność, przeglądarka dziennika, Preferencje › Agenci; pełne cofanie sesji (edytory, kod obiektów, ROLLBACK) podpięte w panelu"
+    "Etap 6 / prace subagentów zintegrowane: makra, Special Copy, historia schowka, To-Do, przeglądarka plików, Git, worksety i układy okna (D37–D40)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

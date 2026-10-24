@@ -1,0 +1,1 @@
+[{"command": "tools.sqlMonitor", "delay": 3}, {"command": "file.localHistoryList", "delay": 2}]

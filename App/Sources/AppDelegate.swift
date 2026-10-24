@@ -290,6 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func chooseDirectory() async -> URL? {
+        if Self.scriptSkipsDialog("chooseDirectory") { return nil }
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
@@ -710,6 +711,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Lista wartości kolumny (PD-GRID-022): wybór w okienku z listą rozwijaną.
     func chooseValue(_ title: String, values: [String]) async -> String? {
+        if Self.scriptSkipsDialog(title) { return nil }
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = L10n.tr("Wybierz wartość")
@@ -832,6 +834,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showError(_ message: String) {
+        if Self.scriptSkipsDialog(message) { return }
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = L10n.tr("Nie udało się wykonać polecenia")
@@ -886,11 +889,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func askVariables(_ requests: [VariableRequest], document: PelikanWorkspace.Document) async -> [String: VariableValue]? {
-        await presentVariables(requests, document: document, title: L10n.tr("Zmienne"), submit: L10n.tr("Wykonaj"), legend: true)
+        if Self.scriptSkipsDialog("askVariables") { return nil }
+        return await presentVariables(requests, document: document, title: L10n.tr("Zmienne"), submit: L10n.tr("Wykonaj"), legend: true)
     }
 
     func askTemplateValues(_ requests: [VariableRequest], document: PelikanWorkspace.Document) async -> [String: VariableValue]? {
-        await presentVariables(requests, document: document, title: L10n.tr("Zmienne szablonu"), submit: L10n.tr("Wstaw"), legend: false)
+        if Self.scriptSkipsDialog("askTemplateValues") { return nil }
+        return await presentVariables(requests, document: document, title: L10n.tr("Zmienne szablonu"), submit: L10n.tr("Wstaw"), legend: false)
     }
 
     private func presentVariables(_ requests: [VariableRequest], document: PelikanWorkspace.Document, title: String, submit: String,
@@ -926,6 +931,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
+        if Self.scriptSkipsDialog("saveFile") { return false }
         guard let window = mainWindow?.window else { return false }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
@@ -943,6 +949,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func askText(_ title: String, message: String, defaultValue: String) async -> String? {
+        if Self.scriptSkipsDialog(title) { return nil }
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
@@ -1042,6 +1049,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         #endif
     }
 
+    /// Tryb skryptu zrzutów: okna dialogowe nie są pokazywane (mogłyby aktywować aplikację w trakcie pracy właściciela,
+    /// D30) — pytanie trafia do dziennika skryptu i jest traktowane jak „Anuluj”.
+    static func scriptSkipsDialog(_ what: String) -> Bool {
+        guard let script = uiScriptURL else { return false }
+        let line = "\(ISO8601DateFormatter().string(from: Date())) pominięto okno dialogowe: \(what)\n"
+        if let h = FileHandle(forWritingAtPath: script.path + ".log") {
+            h.seekToEndOfFile()
+            h.write(Data(line.utf8))
+            try? h.close()
+        }
+        return true
+    }
+
     private func runUIScript(_ url: URL) {
         struct Step: Decodable { var command: String; var args: [String: PelikanWorkspace.JSONValue]?; var delay: Double? }
         let steps = (try? JSONDecoder().decode([Step].self, from: Data(contentsOf: url))) ?? []
@@ -1087,6 +1107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func chooseFilesToOpen() async -> [URL] {
+        if Self.scriptSkipsDialog("chooseFilesToOpen") { return [] }
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
@@ -1099,6 +1120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? {
+        if Self.scriptSkipsDialog("chooseSaveURL") { return nil }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = suggestedName.replacingOccurrences(of: "/", with: "-") + "." + fileExtension
         panel.canCreateDirectories = true
@@ -1139,6 +1161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool) {
+        if Self.scriptSkipsDialog(title) { return (nil, false) }
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
@@ -1152,6 +1175,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func ask(_ title: String, message: String, buttons: [String]) async -> Int? {
+        if Self.scriptSkipsDialog(title) { return nil }
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
