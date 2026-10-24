@@ -61,7 +61,7 @@ Der Export enthält weder Passwörter noch den Dateiverlauf.
 
 ## Symbolleiste und Schnellzugriff
 
-**View › Symbolleiste anpassen …** ändert den Aufbau der Leiste mit dem Standardfenster von macOS. Die Gruppe
+**Ansicht › Symbolleiste anpassen …** ändert den Aufbau der Leiste mit dem Standardfenster von macOS. Die Gruppe
 **Schnellzugriff** in der Leiste enthält beliebige Befehle (bis zu 20) — Sie fügen sie im Tab **Sets**
 (**Schnellzugriffsleiste**) oder über die Befehlspalette hinzu.
 

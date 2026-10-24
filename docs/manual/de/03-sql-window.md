@@ -80,7 +80,7 @@ Einstellungen überschritten wird.
 - **CLOB, BLOB, XML, lange Texte** — die Schaltfläche in der Zelle oder **Bearbeiten › Ergebnis › Large Data Editor …**
   (⌥⌘L) öffnet den Editor für große Daten mit den Ansichten Text, XML, JSON, HTML, Bild, PDF und Hex, mit
   JSON/XML-Formatierung und Speichern in eine Datei.
-- Der **Wertebereich** (**View › Wertebereich**, ⌥⌘V) zeigt neben dem Raster die aktuelle Zelle als Text, JSON, XML,
+- Der **Wertebereich** (**Ansicht › Wertebereich**, ⌥⌘V) zeigt neben dem Raster die aktuelle Zelle als Text, JSON, XML,
   HTML, Bild oder Hex.
 - Die **Einzeldatensatzansicht** zeigt die aktuelle Zeile senkrecht mit den Typen und Kommentaren der Spalten.
 - Ein **verschachtelter Cursor** (`CURSOR(…)` in einer Abfrage) öffnet sich in einem neuen Ergebnis-Tab.
@@ -97,7 +97,7 @@ Einstellungen überschritten wird.
 - **Ergebnis aktualisieren** (⇧⌘R) führt den Befehl des Tabs erneut aus, **Automatische Aktualisierung …** alle
   angegebenen Sekunden.
 - **Ergebnis anheften** behält den Tab bei der nächsten Ausführung (auch ⇧+Klick auf den Tab).
-- Die Schriftgröße des Rasters ändern Sie unter **View › Raster**.
+- Die Schriftgröße des Rasters ändern Sie unter **Ansicht › Raster**.
 
 Die meisten dieser Aktionen finden Sie im Kontextmenü des Rasters und unter **Bearbeiten › Ergebnis** oder **Sitzung ›
 Ergebnis**.

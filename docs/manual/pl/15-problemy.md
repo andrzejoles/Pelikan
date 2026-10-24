@@ -7,7 +7,7 @@
 Pelikan nie jest notaryzowany przez Apple. Przy pierwszym uruchomieniu otwórz **Ustawienia systemowe › Prywatność i
 ochrona** i kliknij **Otwórz mimo to** (zobacz rozdział *Wprowadzenie*).
 
-### „Nie znaleziono Oracle Instant Client”
+### „Brak Oracle Instant Client”
 
 - Pobierz Instant Client dla macOS w wersji **ARM64** (Basic albo Basic Light) i rozpakuj go albo zainstaluj według
   instrukcji Oracle.
@@ -85,11 +85,11 @@ Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zost
 
 - **Sterownik Thin** nie obsługuje TCPS i portfeli, uwierzytelniania zewnętrznego, zmiany wygasłego hasła ani
   przerywania wykonania.
-- **Uwierzytelnianie Kerberos**, **LDAP** (katalog nazw), **Workspace Manager (DBMS_WM)**, **Microsoft Entra ID** i
-  **połączenia TCPS** są zaimplementowane według dokumentacji Oracle, ale nie zostały sprawdzone na prawdziwym
-  serwerze KDC, LDAP, bazie z DBMS_WM, Azure ani listenerze TCPS.
-- **ORDS**: lista modułów REST nie była sprawdzana na działającym ORDS; skrypty włączające REST trafiają do okna SQL
-  do przejrzenia.
+- **Kerberos** na macOS: gdy `sqlnet.ora` włącza KERBEROS5, połączenie kończy się czytelnym błędem (adapter
+  Instant Client koliduje z systemowym Kerberosem w aplikacji); na Linuksie logowanie biletem działa. **Microsoft
+  Entra ID** i **połączenia TCPS** są zaimplementowane według dokumentacji Oracle, ale nie były sprawdzone na Azure ani
+  listenerze TCPS. **LDAP** (katalog nazw): Pelikan rozwiązuje alias sam, przez LDAPv3 bez logowania — bez LDAPS
+  i wiązania portfelem.
 - **Debuger**: brak debugowania przez DBMS_DEBUG_JDWP; w wyzwalaczach nie są dostępne wartości `:new` i `:old`; w
   jednej linii może być tylko jeden punkt przerwania.
 - **Siatka** nie potrafi zablokować przewijania (zamrozić) kolumn ani wierszy.
@@ -98,9 +98,6 @@ Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zost
 - **Narzędzia w lewej kolumnie** są kartami jednego panelu (Połączenia, Obiekty, Okna, Szablony, Pliki); nie można ich
   dowolnie dokować ani automatycznie ukrywać. Zadania To-Do, projekt, historia schowka i inne narzędzia otwierają się
   w osobnych oknach. Dokumenty są kartami jednego okna głównego, a nie natywnymi kartami macOS.
-- **Sesja › Zmień hasło…** i **Widok › Przeglądarka obiektów** są w menu wyszarzone (zapowiedziane). Hasło w bazie
-  zmienisz poleceniem `ALTER USER … IDENTIFIED BY` w oknie SQL (nie trafi ono do historii) albo w oknie zmiany hasła
-  po jego wygaśnięciu; Przeglądarkę obiektów pokazuje karta **Obiekty**.
 - **Quick Look** dla plików SQL (podgląd w Finderze) może nie działać — rozszerzenie podpisane certyfikatem własnym
   macOS może odrzucić.
 - **Zdalny build Pro*C** był testowany na lokalnym serwerze SSH z powłoką ksh93; parsery komunikatów `proc` i `xlc`

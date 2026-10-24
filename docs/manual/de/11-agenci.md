@@ -35,7 +35,7 @@ ab.
    in einem gewöhnlichen Terminal.
 
 Das Arbeitsverzeichnis des Agenten ist der Ordner der Datei des aktiven Fensters (z. B. eines Projekts), hat das Fenster
-keine Datei, ein temporäres Sitzungsverzeichnis. Den Bereich blenden Sie über **View › Agentenbereich** ein und aus.
+keine Datei, ein temporäres Sitzungsverzeichnis. Den Bereich blenden Sie über **Ansicht › Agentenbereich** ein und aus.
 
 ![Agentenbereich rechts im Hauptfenster](../img/panel-agenta.png)
 
@@ -85,8 +85,8 @@ DDL auf einer Tabelle), sagt das Fenster dies mit einer roten Warnung deutlich.
 Das Fenster ist so gestaltet, dass nichts versehentlich genehmigt wird:
 
 - es gibt keine Standardschaltfläche — ↩ (z. B. beim Tippen im Terminal des Agenten gedrückt) genehmigt nichts;
-- **Festschreiben** wird erst nach 0,8 Sekunden aktiv;
-- Esc lehnt die Anfrage ab (**Verwerfen**);
+- **Zulassen** wird erst nach 0,8 Sekunden aktiv;
+- Esc lehnt die Anfrage ab (**Ablehnen**);
 - weitere Anfragen warten in einer Warteschlange, bis Sie die aktuelle bearbeitet haben.
 
 ## Transaktionen und Rückgängigmachen

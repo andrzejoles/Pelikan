@@ -114,6 +114,10 @@ Ist das Passwort in der Datenbank abgelaufen (ORA-28001), zeigt Pelikan ein Fens
 neue Passwort zweimal ein. Ist das Sichern aktiviert, ersetzt das neue Passwort das alte im Schlüsselbund, sobald die
 Verbindung gelingt.
 
+Sie können das Passwort auch jederzeit ändern: **Sitzung › Passwort ändern …** (die Verbindung muss geöffnet sein).
+Pelikan ändert es über die OCI-Schnittstelle — das Passwort erscheint weder im SQL-Text noch im Befehlsverlauf — und
+speichert das neue im Schlüsselbund, wenn die Verbindung ihr Passwort speichert.
+
 ## Oracle Wallet
 
 Pelikan unterstützt zwei Arten von Wallets:

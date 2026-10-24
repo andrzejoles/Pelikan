@@ -27,7 +27,7 @@ When a package's state is cleared after its recompilation (ORA-04068 and related
 executing again works normally.
 
 You save a test as a `.tst` file (the block, variables and debugger watches). **File › Save test as SQL*Plus script**
-creates a script to run outside Pelikan. **Debugging › Save as Standard Test…** saves the window as a template (with a
+creates a script to run outside Pelikan. **Debug › Save as Standard Test…** saves the window as a template (with a
 `%CALL%` marker in place of the call), which you can later choose for any procedure with **Standard Test…** in the
 object menu.
 
@@ -41,7 +41,7 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
 ### Preparation
 
 - The user needs the `DEBUG CONNECT SESSION` privilege and `DEBUG ANY PROCEDURE` or `DEBUG` on specific objects.
-  **Debugging › Debugger Privileges…** opens a SQL Window with ready GRANT statements to be executed by an
+  **Debug › Debugger Privileges…** opens a SQL Window with ready GRANT statements to be executed by an
   administrator.
 - The code you want to step through must be compiled with debug information: **Tools › Object › Add debug information**
   or automatically when compiling a Program Window (**Preferences › Oracle › Debugger**; there are also the lists of
@@ -49,8 +49,8 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
 
 ### Stepping
 
-1. Set breakpoints: click the line number margin in a program or test window, or press ⌃B (**Debugging › Breakpoint**).
-2. In the Test Window choose **Debugging › Start debugging** (F9). The **Debugger** window opens with the call stack,
+1. Set breakpoints: click the line number margin in a program or test window, or press ⌃B (**Debug › Breakpoint**).
+2. In the Test Window choose **Debug › Start debugging** (F9). The **Debugger** window opens with the call stack,
    variables and watches, and the cursor stops at the first line.
 3. Step:
 
@@ -83,7 +83,7 @@ Debugger**).
 
 ### Breakpoints, conditions and logpoints
 
-**Debugging › Breakpoints…** opens the list of all breakpoints:
+**Debug › Breakpoints…** opens the list of all breakpoints:
 
 ![Breakpoints window](../img/punkty-przerwania.png)
 
@@ -98,19 +98,19 @@ Debugger**).
 A breakpoint that the database did not accept (e.g. on a line without code) has an empty mark in the margin. There can
 be one breakpoint per line.
 
-utPLSQL tests can also be debugged: **Debugging › utPLSQL: debug test under cursor**.
+utPLSQL tests can also be debugged: **Debug › utPLSQL: debug test under cursor**.
 
 ## Profiler
 
 1. On the **Profiler** tab of the Test Window, choose the kind in the **Profiler on execution** field: **Line
-   (DBMS_PROFILER)** or **Hierarchical (DBMS_HPROF)**. The **Debugging › Profiler on execution** command turns the line
+   (DBMS_PROFILER)** or **Hierarchical (DBMS_HPROF)**. The **Debug › Profiler on execution** command turns the line
    profiler on and off.
 2. Execute the block (F8).
 3. The **Profiler** tab shows the report: for the line profiler — the time, number of executions and share of each line
    with a bar chart; for the hierarchical one — functions with their own time and time including calls, and the call
    tree. You set the time unit and the share threshold on this tab.
 
-The **Runs** menu on the tab (and **Debugging › Profiler runs**) opens the reports of earlier runs. Pelikan creates
+The **Runs** menu on the tab (and **Debug › Profiler runs**) opens the reports of earlier runs. Pelikan creates
 missing profiler tables in your schema (on a production connection after confirmation, on a read-only connection — not
 at all). The data of a line profiler run stays in the window's transaction — commit it if you want to keep it.
 
@@ -119,7 +119,7 @@ at all). The data of a line profiler run stays in the window's transaction — c
 - The **Statistics** tab shows the change in session statistics (V$MYSTAT) from the last execution and the total for the
   window, with a filter and export to CSV. The choice of statistics is in **Preferences › SQL Window**. Requires access
   to V$MYSTAT.
-- **Debugging › DBMS_TRACE on Execution** records the run (calls, exceptions, SQL, lines) on the **Trace** tab; the
+- **Debug › DBMS_TRACE on Execution** records the run (calls, exceptions, SQL, lines) on the **Trace** tab; the
   history of runs is in **DBMS_TRACE Run History**. Requires the trace tables installed by an administrator with the
   `tracetab.sql` script.
 - **Session › SQL Trace** turns SQL Trace of the window's session on and off; Pelikan shows the name of the trace file.

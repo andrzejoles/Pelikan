@@ -5,7 +5,7 @@
 Coloca el cursor en una sentencia (o selecciónala) y pulsa F5 (**Herramientas › Explain Plan**). Pelikan abre una
 ventana de plan con el plan de PLAN_TABLE. En el código PL/SQL, las variables se sustituyen por variables de enlace y se
 omite `INTO`, así que obtienes el plan de una consulta de un procedimiento sin reescribirla. Abres una ventana de plan
-vacía con **Archivo › Nuevo › Explain Plan Window (Explain Plan)**; Pelikan puede crear la tabla PLAN_TABLE si falta.
+vacía con **Archivo › Nuevo › Explain Plan Window**; Pelikan puede crear la tabla PLAN_TABLE si falta.
 
 ![Ventana de plan: vista Diagrama](../img/plan-diagram.png)
 

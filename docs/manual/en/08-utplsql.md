@@ -72,7 +72,7 @@ Coverage uses profiler data — before the first such run in a session, Pelikan 
 
 ## Debugging a test
 
-**Debugging › utPLSQL: debug test under cursor** opens a Test Window with a `ut.run` call for this test, sets a
+**Debug › utPLSQL: debug test under cursor** opens a Test Window with a `ut.run` call for this test, sets a
 breakpoint in the test procedure and starts the debugger (see the *Test Window, debugger and profiler* chapter).
 
 ## Results for CI

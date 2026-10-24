@@ -88,11 +88,11 @@ comprobado en un entorno real:
 
 - El **controlador Thin** no admite TCPS ni carteras, autenticación externa, cambio de una contraseña caducada ni
   interrupción de la ejecución.
-- La **autenticación Kerberos**, **LDAP** (resolución de nombres por directorio), **Workspace Manager (DBMS_WM)**,
-  **Microsoft Entra ID** y las **conexiones TCPS** están implementadas según la documentación de Oracle, pero no se han
-  comprobado con un servidor KDC, LDAP, una base de datos con DBMS_WM, Azure ni un listener TCPS reales.
-- **ORDS**: la lista de módulos REST no se ha comprobado con un ORDS en funcionamiento; los scripts que activan REST van
-  a una SQL Window para revisarlos.
+- **Kerberos** en macOS: cuando `sqlnet.ora` activa KERBEROS5, la conexión termina con un error claro (el adaptador
+  de Instant Client entra en conflicto con el Kerberos del sistema dentro de la aplicación); en Linux el inicio de
+  sesión con tique funciona. **Microsoft Entra ID** y las **conexiones TCPS** están implementados según la documentación
+  de Oracle, pero no se han probado con Azure ni con un listener TCPS. **LDAP** (nombres de directorio): Pelikan resuelve
+  el alias por sí mismo mediante LDAPv3 anónimo, sin LDAPS ni enlace con wallet.
 - **Depurador**: no hay depuración mediante DBMS_DEBUG_JDWP; en los disparadores no están disponibles los valores `:new`
   y `:old`; en una línea solo puede haber un punto de interrupción.
 - La **cuadrícula** no puede inmovilizar (congelar) columnas ni filas.
@@ -102,9 +102,6 @@ comprobado en un entorno real:
   Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Las tareas To-Do, el proyecto, el historial del
   portapapeles y otras herramientas se abren en ventanas aparte. Los documentos son pestañas de una única ventana
   principal, no pestañas nativas de macOS.
-- **Sesión › Cambiar contraseña…** y **Vista › Object Browser** aparecen atenuados en el menú (previstos). La contraseña
-  de la base de datos se cambia con la sentencia `ALTER USER … IDENTIFIED BY` en una SQL Window (no va al historial) o
-  en la ventana de cambio de contraseña cuando caduca; el Object Browser lo muestra la pestaña **Objetos**.
 - **Quick Look** para archivos SQL (vista previa en el Finder) puede no funcionar: macOS puede rechazar una extensión
   firmada con un certificado propio.
 - El **build remoto de Pro*C** se ha probado en un servidor SSH local con el shell ksh93; los analizadores de los

@@ -93,11 +93,11 @@ geprüft:
 
 - Der **Thin-Treiber** unterstützt kein TCPS und keine Wallets, keine externe Authentifizierung, kein Ändern eines
   abgelaufenen Passworts und kein Unterbrechen der Ausführung.
-- **Kerberos-Authentifizierung**, **LDAP** (Verzeichnisbenennung), **Workspace Manager (DBMS_WM)**, **Microsoft Entra
-  ID** und **TCPS-Verbindungen** sind gemäß der Oracle-Dokumentation implementiert, wurden aber nicht auf einem echten
-  KDC-Server, LDAP, einer Datenbank mit DBMS_WM, Azure oder einem TCPS-Listener geprüft.
-- **ORDS**: Die Liste der REST-Module wurde nicht auf einem laufenden ORDS geprüft; Skripte zum Aktivieren von REST
-  landen zur Prüfung im SQL Window.
+- **Kerberos** unter macOS: Wenn `sqlnet.ora` KERBEROS5 aktiviert, endet die Verbindung mit einer verständlichen
+  Fehlermeldung (der Adapter des Instant Client kollidiert in der App mit dem Kerberos des Systems); unter Linux
+  funktioniert die Anmeldung mit Ticket. **Microsoft Entra ID** und **TCPS-Verbindungen** sind nach der
+  Oracle-Dokumentation umgesetzt, aber nicht mit Azure oder einem TCPS-Listener geprüft. **LDAP**
+  (Verzeichnisbenennung): Pelikan löst den Alias selbst über anonymes LDAPv3 auf — ohne LDAPS und ohne Wallet-Bindung.
 - **Debugger**: kein Debuggen über DBMS_DEBUG_JDWP; in Triggern sind die Werte von `:new` und `:old` nicht verfügbar; in
   einer Zeile kann es nur einen Haltepunkt geben.
 - Das **Raster** kann keine Spalten oder Zeilen fixieren (einfrieren).
@@ -107,9 +107,6 @@ geprüft:
   sie lassen sich nicht frei andocken oder automatisch ausblenden. To-Do-Aufgaben, das Projekt, der
   Zwischenablageverlauf und andere Werkzeuge öffnen sich in eigenen Fenstern. Dokumente sind Tabs eines Hauptfensters,
   keine nativen macOS-Tabs.
-- **Sitzung › Passwort ändern …** und **View › Object Browser** sind im Menü ausgegraut (geplant). Das Passwort in der
-  Datenbank ändern Sie mit dem Befehl `ALTER USER … IDENTIFIED BY` im SQL Window (er gelangt nicht in den Verlauf) oder
-  im Fenster zur Passwortänderung nach dessen Ablauf; den Object Browser zeigt der Tab **Objekte**.
 - **Quick Look** für SQL-Dateien (Vorschau im Finder) funktioniert möglicherweise nicht — macOS kann eine mit einem
   selbst signierten Zertifikat signierte Erweiterung ablehnen.
 - Der **Pro*C-Remote-Build** wurde auf einem lokalen SSH-Server mit der Shell ksh93 getestet; die Parser für die

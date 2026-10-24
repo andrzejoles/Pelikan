@@ -109,6 +109,10 @@ When the database password has expired (ORA-28001), Pelikan shows a password cha
 twice. If remembering is enabled, the new password replaces the old one in the Keychain as soon as the connection
 succeeds.
 
+You can also change the password at any time: **Session › Change password…** (the connection must be open). Pelikan
+changes it through the OCI interface — the password never appears in SQL text or in the command history — and saves
+the new one in the Keychain if the connection remembers its password.
+
 ## Oracle Wallet
 
 Pelikan supports two kinds of wallet:

@@ -80,8 +80,8 @@ with a red warning.
 The window is designed so that nothing gets approved by accident:
 
 - there is no default button — ↩ (e.g. pressed while typing in the agent terminal) approves nothing;
-- **Commit** becomes active only after 0.8 seconds;
-- Esc rejects the request (**Discard**);
+- **Allow** becomes active only after 0.8 seconds;
+- Esc rejects the request (**Deny**);
 - further requests wait in a queue until you have dealt with the current one.
 
 ## Transactions and undo

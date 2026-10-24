@@ -76,7 +76,7 @@ Pelikan has one main window:
 
 - **Left column** with tabs: **Connections** (connection list with folders and recently used connections), **Objects**
   (Object Browser), **Windows** (list of open windows), **Templates** and **Files** (file browser).
-- **Document tabs** in the middle — each SQL, program, test or plan window has its own tab with a colored type letter: S
+- **Document tabs** in the middle — each SQL, program, test or Explain Plan Window has its own tab with a colored type letter: S
   — SQL Window, P — Program Window, T — Test Window, C — Command Window, E — Explain Plan Window, R — Report Window, D —
   diagram window, N — SQL notebook. A middle click on a tab closes the window; the tab menu closes the other windows or
   the windows to the left and right.

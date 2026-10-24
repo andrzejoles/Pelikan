@@ -1234,3 +1234,12 @@ Ta sama ścieżka Pelikana (ODPISession, SessionManager, `/` bez hasła) działa
 `scripts/testdb.sh kdc-linux` uruchamia test w kontenerze `swift:6.3-noble` w sieci bazy testowej (Basic Light
 arm64/x64, konfiguracja w `.linux-build/.testdb`, CI=1 dla hosta kontenera). Wiersz PD-CONN-014 zostaje ⚠️, bo
 aplikacja jest na macOS. Do CI nie dodajemy (konfiguracja Kerberos dotyczyłaby całego procesu testów bazy).
+
+### D160 · 2026-10-24 — Okno zgody agenta: „Zezwól” i „Odmów”; spójność katalogu i instrukcji
+Tłumaczenia instrukcji (D154) pokazały, że przyciski okna zgody agenta używały wspólnych kluczy „Zatwierdź”/„Odrzuć”,
+które w katalogu znaczą COMMIT i „Discard/Verwerfen” — w oknie zgody mylące (zgoda na operację to nie zatwierdzenie
+transakcji, a DML agenta i tak czeka na osobną zgodę na COMMIT). Okno ma teraz własne „Zezwól”/„Odmów” (Allow/Deny).
+Poprawione też: komunikat o braku Instant Client wskazuje kartę Ogólne definicji połączenia (tam jest Sterownik),
+katalog — de „Ansicht” zamiast „View”, en „Debug”, jednolite „Explain Plan Window”; instrukcja we wszystkich językach
+— zmiana hasła z menu, aktualne ograniczenia (ORDS, Workspace Manager i LDAP sprawdzone — D156–D158; Kerberos na
+macOS — D159).

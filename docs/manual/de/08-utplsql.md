@@ -45,7 +45,7 @@ utPLSQL-Tests ausführen**.
 
 ## Test-Explorer
 
-**View › utPLSQL-Test-Explorer** zeigt den Baum der Suiten, Kontexte und Tests des aktuellen Benutzers mit dem Ergebnis
+**Ansicht › utPLSQL-Test-Explorer** zeigt den Baum der Suiten, Kontexte und Tests des aktuellen Benutzers mit dem Ergebnis
 des letzten Laufs. Der Baum wird nach dem Kompilieren aktualisiert; ein Doppelklick auf einen Test öffnet seine
 Annotation in der Spezifikation. Ausgewählte Tests führen Sie mit der Schaltfläche **Ausführen** oder **Mit Abdeckung
 ausführen** aus.

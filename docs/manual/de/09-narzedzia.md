@@ -162,7 +162,7 @@ Beschreibung hinzu. Der Verlauf speichert bis zu 50 Versionen der letzten 30 Tag
   ersten Fehler und die Formatierung. **Projekt-Desktop speichern** merkt sich die offenen Fenster.
 - Ein **Workset** merkt sich die offenen Fenster — auch mit nicht gespeicherten Änderungen und Variablenwerten — und
   stellt sie beim nächsten Start wieder her (**Datei › Workset**: neu, öffnen, speichern, wiederherstellen, schließen,
-  vergleichen, automatisch speichern). Das Layout des Hauptfensters speichern Sie mit **View › Fensterlayout
+  vergleichen, automatisch speichern). Das Layout des Hauptfensters speichern Sie mit **Ansicht › Fensterlayout
   speichern**.
 - Der **File Browser** (Tab **Dateien**) zeigt ausgewählte Verzeichnisse (Orte mit Filter und Farbe) mit einem Menü:
   öffnen als, umbenennen, neue Datei oder neues Verzeichnis, in den Papierkorb legen, im Finder zeigen. Der Filter
@@ -178,7 +178,7 @@ Beschreibung hinzu. Der Verlauf speichert bis zu 50 Versionen der letzten 30 Tag
 - **Werkzeuge › Lokale Jobs …** — Skripte, Exporte und Datenübertragungen, die regelmäßig ausgeführt werden (alle n
   Minuten, täglich, an ausgewählten Tagen), solange Pelikan läuft. Die Definitionen enthalten keine Passwörter; das
   Protokoll zeigt das Ergebnis jedes Laufs.
-- **View › Hintergrundaufgaben** — eine Liste langer Operationen (Autotrace, Exporte, Dokumentation) mit Status, Zeit
+- **Ansicht › Hintergrundaufgaben** — eine Liste langer Operationen (Autotrace, Exporte, Dokumentation) mit Status, Zeit
   und Abbruchmöglichkeit.
 - **Werkzeuge › Dokumente …** — Ihre Dokumente und http(s)-Adressen aus der Liste unter **Einstellungen › Werkzeuge**.
 - macOS-Dienste (Menü **Dienste** in jeder Anwendung): **Pelikan: Formatuj SQL** formatiert den ausgewählten Text an Ort

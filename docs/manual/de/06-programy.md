@@ -61,7 +61,7 @@ von Zeilen ohne Verzögerung.
 - **⌘+Klick** auf einen Namen oder **Bearbeiten › Zur Deklaration springen** (⌃⌘J) springt zur Deklaration — in
   derselben Quelle, in einem anderen offenen Fenster oder in einem Objekt aus der Datenbank (in einem neuen Fenster).
   **Bearbeiten › Navigation › Zurück** (⌃⌘←) und **Vorwärts** (⌃⌘→) kehren nach Sprüngen zurück.
-- **View › Codeinhalt** zeigt den Strukturbaum der Einheit mit Cursorverfolgung, Sortierung und Menü (auswählen,
+- **Ansicht › Codeinhalt** zeigt den Strukturbaum der Einheit mit Cursorverfolgung, Sortierung und Menü (auswählen,
   kopieren, ausschneiden, Unterprogramm testen). Unter dem Editor zeigt die **Codehierarchie** den Pfad vom Cursor aus
   (Paket › Prozedur › Block); ein Klick auf eine Ebene wählt sie aus oder springt zu ihrem Namen.
 - Das Kontextmenü auf dem Namen eines Datenbankobjekts im Editor bietet dieselben Aktionen wie der Object Browser.
@@ -83,7 +83,7 @@ von Zeilen ohne Verzögerung.
 | Alle einklappen / ausklappen | ⌥⇧⌘← / ⌥⇧⌘→ | Bearbeiten |
 | Lesezeichen umschalten | ⌘F3 | Bearbeiten › Lesezeichen |
 | Cursor darüber / darunter hinzufügen | ⌃⇧↑ / ⌃⇧↓ | Bearbeiten › Mehrere Cursor |
-| Schrift vergrößern / verkleinern | ⌘= / ⌘− | View |
+| Schrift vergrößern / verkleinern | ⌘= / ⌘− | Ansicht |
 
 - **Mehrere Cursor**: ⌥+Klick fügt einen Cursor hinzu, Esc lässt einen übrig. **Spaltenauswahl**: mit ⌥ ziehen — Tippen,
   Rückschritt und Einsetzen wirken in allen Zeilen gleichzeitig.
@@ -95,7 +95,7 @@ von Zeilen ohne Verzögerung.
   zur Position in `VALUES` passende `INSERT`-Spalte sowie die Befehle `COMMIT`, `ROLLBACK` und `SAVEPOINT`.
 - **AutoReplace** (Einstellungen › Editor) ersetzt beim Tippen Abkürzungen durch Text; `|` im Ersatztext bestimmt die
   Cursorposition.
-- **View › Editor teilen** zeigt zwei Ansichten desselben Texts. **View** bietet außerdem **Zeilen umbrechen**,
+- **Ansicht › Editor teilen** zeigt zwei Ansichten desselben Texts. **Ansicht** bietet außerdem **Zeilen umbrechen**,
   **Sonderzeichen** und **Zeilenstatus** (Markierungen der seit dem Öffnen oder Speichern geänderten und neuen Zeilen).
 
 ### Formatieren
@@ -108,18 +108,18 @@ NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des
 
 ### Vorlagen, Snippets und Makros
 
-- **Templates** (Tab **Templates** in der linken Spalte oder **View › Vorlagenfenster**) fügen fertige Fragmente ein:
+- **Templates** (Tab **Templates** in der linken Spalte oder **Ansicht › Vorlagenfenster**) fügen fertige Fragmente ein:
   DML-Befehle, Schleifen, Typen, SQL-Funktionen, Programmeinheiten und utPLSQL-Vorlagen. Ein Doppelklick oder Ziehen in
   den Editor fügt eine Vorlage ein; die Vorlagenvariablen füllen Sie in einem Formular aus (`$OSUSER`, `$DBUSER`,
   `$DATE`, `$TIME` werden selbst ersetzt). Eigene Vorlagen legen Sie über **Werkzeuge › Templates › Auswahl als Vorlage
   speichern …** an.
-- **View › Snippets** ist eine Bibliothek kurzer Fragmente zum Ziehen (eingebaute und eigene).
+- **Ansicht › Snippets** ist eine Bibliothek kurzer Fragmente zum Ziehen (eingebaute und eigene).
 - **Makros**: F11 startet und beendet die Aufnahme, F12 spielt ab, ⇧F12 spielt mehrfach ab. Ein Makro speichern Sie mit
   einem Kurzbefehl in der Bibliothek (**Bearbeiten › Makros › Makro in Bibliothek speichern …**).
 - **Bearbeiten › Als Literal kopieren** kopiert das ausgewählte SQL als String-Literal einer Programmiersprache (Swift,
   Java, C#, JavaScript, Python, C/C++, PHP, Delphi, Visual Basic); **Aus Programmiersprache einsetzen** macht das
   Umgekehrte.
-- Der **Zwischenablageverlauf** (**View › Zwischenablageverlauf**) hält die zuletzt kopierten Texte im Speicher.
+- Der **Zwischenablageverlauf** (**Ansicht › Zwischenablageverlauf**) hält die zuletzt kopierten Texte im Speicher.
 
 ### Codeanalyse und Refactoring
 
@@ -142,7 +142,7 @@ NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des
 
 ### To-Do-Aufgaben
 
-Kommentare `TODO` und `DONE` (mit Verantwortlichem, Priorität und Kategorie) werden im Fenster **View › To-Do-Aufgaben**
+Kommentare `TODO` und `DONE` (mit Verantwortlichem, Priorität und Kategorie) werden im Fenster **Ansicht › To-Do-Aufgaben**
 gesammelt. **Bearbeiten › To-Do-Aufgabe einfügen** fügt einen Kommentar ein, **To-Do-Aufgabe schließen oder öffnen**
 ändert seinen Status.
 

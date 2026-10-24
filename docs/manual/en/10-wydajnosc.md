@@ -2,20 +2,20 @@
 
 ## Execution plan (Explain Plan)
 
-Place the cursor on a statement (or select it) and press F5 (**Tools › Explain Plan**). Pelikan opens a plan window with
+Place the cursor on a statement (or select it) and press F5 (**Tools › Explain Plan**). Pelikan opens a Explain Plan Window with
 the plan from PLAN_TABLE. In PL/SQL code, variables are replaced with bind variables and `INTO` is skipped, so you get
-the plan of a query from a procedure without rewriting it. You open an empty plan window with **File › New › Explain
+the plan of a query from a procedure without rewriting it. You open an empty Explain Plan Window with **File › New › Explain
 Plan Window**; Pelikan can create a missing PLAN_TABLE.
 
-![Plan window — Diagram view](../img/plan-diagram.png)
+![Explain Plan Window — Diagram view](../img/plan-diagram.png)
 
-- **Explain** refreshes the plan for the text in the plan window's editor, and **Optimizer goal** (*Same as session*,
+- **Explain** refreshes the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
   ALL_ROWS or FIRST_ROWS_n) adds a hint.
 - Views: **Tree** (operations with cost, number of rows, bytes, time, execution order, and access and filter
   predicates), **Diagram** (a node per operation with cost, cardinality and step number), **Flame graph** (the cost of
   operations proportional to the parent) and **Text** (DBMS_XPLAN).
 - The navigation buttons move through the operations in execution order: first, previous, next and last step.
-- **Compare** puts the plan side by side with the window's previous plan or with the plan in a second plan window: it
+- **Compare** puts the plan side by side with the window's previous plan or with the plan in a second Explain Plan Window: it
   matches operations and shows differences in cost, cardinality, order and predicates.
 - **Save** saves the plan as text, HTML or XML (DBMS_XPLAN).
 
@@ -23,7 +23,7 @@ The plan is calculated in a separate tool session, so it does not affect the win
 
 ## Autotrace
 
-**Tools › Autotrace** (or the **Autotrace** button in the plan window) executes the statement with measurement and shows
+**Tools › Autotrace** (or the **Autotrace** button in the Explain Plan Window) executes the statement with measurement and shows
 the actual plan: Starts, estimated (E-Rows) and actual (A-Rows) row counts with large discrepancies highlighted, times,
 buffers and reads, as well as the change in session statistics before and after execution. DML statements are rolled
 back after the measurement. Autotrace does not require the Tuning Pack.

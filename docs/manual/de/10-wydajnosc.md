@@ -64,7 +64,7 @@ Die Sitzungen von Pelikan haben in der Spalte MODULE den Wert „Pelikan“, die
 
 ## DBA-Bereich und Instance Viewer
 
-**View › DBA-Bereich** sammelt administrative Informationen: Tablespaces mit Belegung, Datendateien, Instanzparameter,
+**Ansicht › DBA-Bereich** sammelt administrative Informationen: Tablespaces mit Belegung, Datendateien, Instanzparameter,
 Benutzer, Rollen, Sitzungen und Sperren. In der Parameterliste führt **Wert ändern …** `ALTER SYSTEM SET … SCOPE=BOTH`
 aus, in der Benutzerliste ändern **Sperren** und **Entsperren** den Kontostatus — immer nach Bestätigung und mit
 denselben Schutzmechanismen wie das SQL Window. Bereiche, für die Ihnen die Berechtigungen fehlen, zeigen eine Meldung

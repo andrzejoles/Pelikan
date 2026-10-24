@@ -114,6 +114,10 @@ Cuando la contraseña de la base de datos ha caducado (ORA-28001), Pelikan muest
 escribe la contraseña nueva dos veces. Si está activado recordarla, la contraseña nueva sustituye a la antigua en el
 Llavero en cuanto la conexión tiene éxito.
 
+También puedes cambiar la contraseña en cualquier momento: **Sesión › Cambiar contraseña…** (la conexión debe estar
+abierta). Pelikan la cambia mediante la interfaz OCI —la contraseña no aparece en el texto SQL ni en el historial de
+comandos— y guarda la nueva en el Llavero si la conexión recuerda su contraseña.
+
 ## Oracle Wallet
 
 Pelikan admite dos tipos de cartera:

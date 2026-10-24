@@ -86,19 +86,19 @@ Pelikan hat ein Hauptfenster:
   Window, R — Report Window, D — Diagrammfenster, N — SQL-Notizbuch. Ein Mittelklick auf einen Tab schließt das Fenster;
   das Tab-Menü schließt die übrigen Fenster oder die Fenster links bzw. rechts.
 - **Symbolleiste** mit den häufigsten Aktionen (neues Fenster, öffnen, speichern, ausführen, unterbrechen, COMMIT,
-  ROLLBACK, anmelden) und der Gruppe **Schnellzugriff**. Den Aufbau ändern Sie über **View › Symbolleiste anpassen …**.
+  ROLLBACK, anmelden) und der Gruppe **Schnellzugriff**. Den Aufbau ändern Sie über **Ansicht › Symbolleiste anpassen …**.
 - **Statusleiste** des Fensters: die Verbindung des Fensters (mit Umgebungsfarbe, Anheften 📌 und Kennzeichnung „nur
   Lesen“), der Transaktionsstatus („● Transaktion offen“), Zeilenzahl und Ausführungszeit, Cursorposition sowie der
   Git-Branch der Datei. Ein Klick auf den Verbindungsnamen ermöglicht es, die Verbindung des Fensters zu wechseln.
 - **Agentenbereich** rechts (standardmäßig eingeklappt) — das Terminal des KI-Agenten mit einer Liste seiner Aktionen.
-  Er wird über **View › Agentenbereich** angezeigt (siehe Kapitel *KI-Agenten*).
+  Er wird über **Ansicht › Agentenbereich** angezeigt (siehe Kapitel *KI-Agenten*).
 
 Der Fenstertitel zeigt die Hauptverbindung und das aktive Workset, der Untertitel das aktuelle Fenster.
 
 ## Befehlspalette
 
 Jede Aktion in Pelikan ist ein Befehl: Er hat einen Menüeintrag, ein optionales Tastenkürzel und eine Beschreibung
-seiner Auswirkungen. Die **Befehlspalette** (**View › Befehlspalette …**, ⇧⌘P) sucht Befehle nach Namen und zeigt, in
+seiner Auswirkungen. Die **Befehlspalette** (**Ansicht › Befehlspalette …**, ⇧⌘P) sucht Befehle nach Namen und zeigt, in
 welchem Menü sie stehen und welches Tastenkürzel sie haben. So finden Sie am schnellsten eine Funktion, deren Platz im
 Menü Sie nicht mehr wissen.
 

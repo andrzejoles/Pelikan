@@ -84,8 +84,8 @@ una tabla), la ventana lo dice claramente con una advertencia en rojo.
 La ventana está diseñada para que no se apruebe nada por accidente:
 
 - no hay botón predeterminado: ↩ (p. ej., pulsada mientras escribes en el terminal del agente) no aprueba nada;
-- **Confirmar** se activa solo tras 0,8 segundos;
-- Esc rechaza la solicitud (**Descartar**);
+- **Permitir** se activa solo tras 0,8 segundos;
+- Esc rechaza la solicitud (**Denegar**);
 - las solicitudes siguientes esperan en cola hasta que resuelves la actual.
 
 ## Transacciones y deshacer

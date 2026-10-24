@@ -53,7 +53,7 @@ data** from the table's menu in the Object Browser. A read-only connection block
 
 ### The debugger does not stop
 
-- Check the `DEBUG CONNECT SESSION` and `DEBUG ANY PROCEDURE` privileges (or `DEBUG` on the object) — **Debugging ›
+- Check the `DEBUG CONNECT SESSION` and `DEBUG ANY PROCEDURE` privileges (or `DEBUG` on the object) — **Debug ›
   Debugger Privileges…** prepares the statements for the administrator.
 - Compile the object with debug information (**Tools › Object › Add debug information**).
 - A breakpoint with an empty mark was not accepted by the database (e.g. a line without executable code).
@@ -84,11 +84,11 @@ real environment:
 
 - The **Thin driver** does not support TCPS and wallets, external authentication, changing an expired password, or
   interrupting execution.
-- **Kerberos authentication**, **LDAP** (directory naming), **Workspace Manager (DBMS_WM)**, **Microsoft Entra ID** and
-  **TCPS connections** are implemented according to the Oracle documentation, but have not been verified on a real KDC
-  server, LDAP, a database with DBMS_WM, Azure or a TCPS listener.
-- **ORDS**: the list of REST modules has not been checked on a running ORDS; scripts that enable REST go to a SQL Window
-  for review.
+- **Kerberos** on macOS: when `sqlnet.ora` enables KERBEROS5, the connection ends with a clear error (the Instant
+  Client adapter conflicts with the system Kerberos inside the app); on Linux, logging in with a ticket works.
+  **Microsoft Entra ID** and **TCPS connections** are implemented according to the Oracle documentation but have not
+  been checked against Azure or a TCPS listener. **LDAP** (directory naming): Pelikan resolves the alias itself over
+  anonymous LDAPv3 — no LDAPS and no wallet bind.
 - **Debugger**: no debugging through DBMS_DEBUG_JDWP; in triggers the `:new` and `:old` values are not available; there
   can be only one breakpoint per line.
 - The **grid** cannot freeze columns or rows.
@@ -97,9 +97,6 @@ real environment:
 - **Tools in the left column** are tabs of one panel (Connections, Objects, Windows, Templates, Files); they cannot be
   docked freely or hidden automatically. To-Do items, the project, the clipboard history and other tools open in
   separate windows. Documents are tabs of one main window, not native macOS tabs.
-- **Session › Change password…** and **View › Object Browser** are grayed out in the menu (planned). You change the
-  password in the database with the `ALTER USER … IDENTIFIED BY` statement in a SQL Window (it does not go to the
-  history) or in the password change window after it expires; the Object Browser is shown by the **Objects** tab.
 - **Quick Look** for SQL files (preview in the Finder) may not work — macOS may reject an extension signed with a
   self-signed certificate.
 - The **Pro*C remote build** has been tested on a local SSH server with the ksh93 shell; the parsers for `proc` and
