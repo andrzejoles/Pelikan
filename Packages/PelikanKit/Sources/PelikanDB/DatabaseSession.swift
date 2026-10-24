@@ -229,10 +229,14 @@ public struct ExecuteOptions: Sendable {
     /// Liczba wierszy pobieranych naraz dla wyników tego polecenia (także kursorów OUT); nil — z opcji połączenia.
     /// 1 — wiersze potokowe dostępne od razu (zdarzenia reportera utPLSQL czasu rzeczywistego).
     public var fetchArraySize: UInt32?
+    /// Pobieranie hurtowe (metadane, eksport, porównania): paczka dobrana do szerokości wiersza zamiast stałej z opcji
+    /// połączenia — każda paczka to jedna podróż sieciowa. Nie dla siatki (duża paczka opóźnia pierwsze wiersze).
+    public var bulk: Bool
 
-    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil, fetchArraySize: UInt32? = nil) {
+    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil, fetchArraySize: UInt32? = nil,
+                bulk: Bool = false) {
         self.describeOnly = describeOnly; self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs; self.lobLimit = lobLimit
-        self.fetchArraySize = fetchArraySize
+        self.fetchArraySize = fetchArraySize; self.bulk = bulk
     }
 }
 
@@ -276,11 +280,11 @@ public extension DatabaseSession {
 
     /// Wykonuje zapytanie i pobiera wszystkie wiersze (do `limit`) — dla metadanych i testów.
     func queryAll(_ sql: String, binds: [BindVariable] = [], limit: Int = 100_000) async throws -> (columns: [ColumnInfo], rows: [[OracleValue]]) {
-        let r = try await execute(sql, binds: binds)
+        let r = try await execute(sql, binds: binds, options: ExecuteOptions(bulk: true))
         guard let rs = r.resultSet else { return ([], []) }
         var rows: [[OracleValue]] = []
         while rows.count < limit {
-            let batch = try await fetch(rs.id, maxRows: min(1000, limit - rows.count))
+            let batch = try await fetch(rs.id, maxRows: min(5000, limit - rows.count))
             rows += batch.rows
             if !batch.hasMore { return (rs.columns, rows) }
         }

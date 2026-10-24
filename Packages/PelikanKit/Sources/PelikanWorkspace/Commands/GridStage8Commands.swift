@@ -384,7 +384,7 @@ enum GridStage8Commands {
         doc.isExecuting = true
         defer { doc.isExecuting = false }
         let r = try await session.execute(prepared.sql, binds: SQLExecutor.bindVariables(prepared),
-                                          options: ExecuteOptions(autoCommit: ws.settings.autoCommitSQL, lobLimit: 64 << 20))
+                                          options: ExecuteOptions(autoCommit: ws.settings.autoCommitSQL, lobLimit: 64 << 20, bulk: true))
         guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Polecenie nie zwróciło wyniku")) }
         var rows: [[OracleValue]] = []
         while true {

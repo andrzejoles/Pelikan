@@ -360,7 +360,7 @@ public final class Workspace {
     @ObservationIgnored public private(set) lazy var snippets = SnippetLibrary(directory: dataDirectory?.appendingPathComponent("Snippets", isDirectory: true))
     /// Lokalna historia plików i obiektów (DG-HIST-001) i konsole zapytań połączeń (DG-CONS-001).
     @ObservationIgnored public private(set) lazy var localHistory = LocalHistory(directory: dataDirectory?.appendingPathComponent("LocalHistory", isDirectory: true))
-    @ObservationIgnored var nameSources: [UUID: CachedNameSource] = [:]
+    @ObservationIgnored var nameSources: [NameSourceKey: CachedNameSource] = [:]
     /// Stany okien plików (PD-EDIT-029).
     @ObservationIgnored public private(set) lazy var fileStates = FileStateStore(directory: dataDirectory?.appendingPathComponent("WindowState", isDirectory: true))
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
