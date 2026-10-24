@@ -1,4 +1,4 @@
-# Stan Pelikana — przed pierwszą betą (2026-10-24)
+# Stan Pelikana — pierwsza beta 7.9.0 (2026-10-24)
 
 Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) ma **434** wiersze:
 
@@ -51,8 +51,9 @@ Próba wykryła też błąd: program z innego schematu kompilowałby się w sche
   - Na Linuksie działa z KDC w kontenerze.
   - Na macOS adapter Kerberos z Instant Client koliduje z Kerberos.framework w procesie z AppKit.
   - Pelikan zgłasza czytelny błąd zamiast się wywracać (D159).
-  - Pełne rozwiązanie to proces pomocniczy bez AppKit — do decyzji.
-- **Szkice wydań** na GitHubie — publikuje właściciel (`gh release edit vX.Y.Z --draft=false`).
+  - Pełne rozwiązanie (proces pomocniczy bez AppKit) odłożone na przyszłość (D161).
+- **Wydania** — pierwsza publiczna beta to 7.9.0 (D161); kolejne szkice publikuje właściciel
+  (`gh release edit vX.Y.Z --draft=false`).
 
 ## Ograniczenia (wiersze częściowe)
 

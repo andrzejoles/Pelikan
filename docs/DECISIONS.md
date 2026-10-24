@@ -1243,3 +1243,9 @@ Poprawione też: komunikat o braku Instant Client wskazuje kartę Ogólne defini
 katalog — de „Ansicht” zamiast „View”, en „Debug”, jednolite „Explain Plan Window”; instrukcja we wszystkich językach
 — zmiana hasła z menu, aktualne ograniczenia (ORDS, Workspace Manager i LDAP sprawdzone — D156–D158; Kerberos na
 macOS — D159).
+
+### D161 · 2026-10-24 — Kerberos na macOS odłożony; pierwsza beta opublikowana
+Właściciel odłożył proces pomocniczy dla połączeń Kerberos na macOS jako ewentualny plan na przyszłość: sam Kerberosa
+nie używa, a proces pomocniczy oznacza przeniesienie całej komunikacji z bazą przez IPC. PD-CONN-014 zostaje ⚠️ z
+czytelnym błędem z D159; wrócimy do tematu, gdy tester zgłosi potrzebę. Właściciel opublikował też Pelikan 7.9.0 beta
+jako pierwsze publiczne wydanie i polecił usunąć starsze szkice wydań (1.9.0–7.7.0); tagi zostały w repozytorium.
