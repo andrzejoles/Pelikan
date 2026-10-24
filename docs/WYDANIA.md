@@ -39,6 +39,7 @@ Utrata klucza prywatnego = zainstalowane kopie nie przyjmą kolejnych aktualizac
 ```sh
 make installer        # dist/Pelikan-X.Y.Z.dmg i .pkg (Release, licencje zewnętrzne, podpis, kontrola danych w pakiecie)
 make draft-release    # z gałęzi main: instalatory, zip i appcast.xml dla Sparkle, tag vX.Y.Z, SZKIC wydania na GitHubie
+make beta-release     # jak wyżej, tytuł „… beta” i notatki z docs/BETA.md (zwykłe wydanie, nie „pre-release” — D153)
 gh release edit vX.Y.Z --draft=false   # publikacja — tylko właściciel
 ```
 Kanał aktualizacji: `https://github.com/andrzejoles/Pelikan/releases/latest/download/appcast.xml` — zainstalowane kopie
