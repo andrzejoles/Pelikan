@@ -10,14 +10,15 @@ suites=$(grep -hoE '^(final class|struct) [A-Za-z0-9_]+Tests\b' Tests/PelikanRem
 for suite in $suites; do
   log=$(mktemp)
   echo "::group::$suite"
-  # Wyjście do pliku (nie potoku), żeby proces potomny trzymający deskryptor nie blokował końca.
-  perl -e 'alarm shift; exec @ARGV' "$limit" swift test --skip-build --filter "\\.$suite/" >"$log" 2>&1
+  # Wyjście do pliku (nie potoku), żeby proces potomny trzymający deskryptor nie blokował końca; przez `script`
+  # (pseudoterminal — buforowanie wierszami), żeby po przerwaniu w dzienniku zostały linie „started” zawieszonego testu.
+  script -q "$log" perl -e 'alarm shift; exec @ARGV' "$limit" swift test --skip-build --filter "\\.$suite/" >/dev/null 2>&1 </dev/null
   rc=$?
   grep -E "✔|✘|↳|error|Test run with|Suite" "$log" | grep -v "Testing Library\|Target Platform" | tail -60
   echo "::endgroup::"
   if [ $rc -ne 0 ]; then
     status=1
-    if [ $rc -eq 142 ]; then
+    if [ $rc -eq 142 ] || [ $rc -eq 14 ]; then   # SIGALRM: 128+14, a przez `script` sam numer sygnału
       echo "::error::$suite przekroczył ${limit}s — rozpoczęte, niezakończone testy:"
       grep -o 'Test "[^"]*" started' "$log" | sed 's/ started$//' | sort -u > "$log.s"
       grep -oE 'Test "[^"]*" (passed|failed|skipped)' "$log" | sed -E 's/ (passed|failed|skipped)$//' | sort -u > "$log.f"
