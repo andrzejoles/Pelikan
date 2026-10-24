@@ -20,6 +20,10 @@ enum TestDatabase {
         var sshDirectory: String?
         /// Hasło użytkownika `haslo` serwera SSH testów (tunel z hasłem, DB-SSH-001).
         var sshPassword: String?
+        /// ORDS testów (scripts/testdb.sh ords-up): bazowy adres HTTP, np. http://127.0.0.1:8181/ords.
+        var ordsURL: String?
+        /// Użytkownik bazy uwierzytelniany Kerberosem (scripts/testdb.sh kdc-up).
+        var kerberosUser: String?
     }
 
     static let config: Config? = {
@@ -38,15 +42,23 @@ enum TestDatabase {
         guard isLocal || env["CI"] != nil else {
             fatalError("Testy łączą się tylko z lokalną bazą testową, nie z \(host)")
         }
-        // Portfel testowy (scripts/testdb.sh wallet): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN procesu testów —
-        // ustawiany przed pierwszym połączeniem (klient czyta konfigurację raz). Bez portfela — bez zmian.
+        // Portfel testowy (scripts/testdb.sh wallet) i LDAP (ldap-up): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN
+        // procesu testów — ustawiany przed pierwszym połączeniem (klient czyta konfigurację raz). Bez nich — bez zmian.
         if let file = envFile() {
             let state = (file as NSString).deletingLastPathComponent
-            if FileManager.default.fileExists(atPath: state + "/wallet/cwallet.sso"),
+            let fm = FileManager.default
+            let wallet = fm.fileExists(atPath: state + "/wallet/cwallet.sso")
+            let ldap = fm.fileExists(atPath: state + "/oracle-net-user/ldap.ora")
+            let sqlnet = fm.fileExists(atPath: state + "/oracle-net-user/sqlnet.ora")
+            if wallet || ldap || sqlnet,
                let dir = try? OracleNet.prepareManagedDirectory(URL(fileURLWithPath: state + "/oracle-net"), userDirectory: state + "/oracle-net-user",
-                                                               walletDirectory: state + "/wallet") {
+                                                               walletDirectory: wallet ? state + "/wallet" : nil) {
                 setenv("TNS_ADMIN", dir, 1)
-                walletReady = true
+                walletReady = wallet
+                ldapReady = ldap
+                kerberosReady = fm.fileExists(atPath: state + "/kerberos/ccache")
+                    && ((try? String(contentsOfFile: state + "/oracle-net-user/sqlnet.ora", encoding: .utf8)) ?? "").contains("KERBEROS5")
+                oracleNetDirectory = dir
             }
         }
         return Config(connectString: "\(host):\(port)/\(service)", user: user, password: password,
@@ -55,7 +67,12 @@ enum TestDatabase {
                       systemPassword: env["PELIKAN_TESTDB_SYSTEM_PASSWORD"] ?? "",
                       sshPort: env["PELIKAN_TESTDB_SSH_PORT"].flatMap(Int.init), sshDBHost: env["PELIKAN_TESTDB_SSH_DBHOST"],
                       sshDirectory: envFile().map { ($0 as NSString).deletingLastPathComponent + "/ssh" },
-                      sshPassword: env["PELIKAN_TESTDB_SSH_PASSWORD"])
+                      sshPassword: env["PELIKAN_TESTDB_SSH_PASSWORD"],
+                      ordsURL: env["PELIKAN_TESTDB_ORDS_URL"].flatMap { url in
+                          // Tylko lokalny ORDS z kontenera testowego.
+                          URL(string: url).flatMap(\.host).map { ["127.0.0.1", "localhost"].contains($0) } == true ? url : nil
+                      },
+                      kerberosUser: env["PELIKAN_TESTDB_KERBEROS_USER"])
     }()
 
     /// .testdb/env w katalogu głównym repozytorium (szukany w górę od tego pliku).
@@ -74,6 +91,15 @@ enum TestDatabase {
     /// Portfel SEPS bazy testowej przygotowany (scripts/testdb.sh wallet).
     nonisolated(unsafe) static var walletReady = false
     static var isWalletAvailable: Bool { isAvailable && walletReady }
+
+    /// Nazewnictwo katalogowe przygotowane (scripts/testdb.sh ldap-up): ldap.ora i sqlnet.ora w katalogu użytkownika.
+    nonisolated(unsafe) static var ldapReady = false
+    nonisolated(unsafe) static var oracleNetDirectory: String?
+    static var isLDAPAvailable: Bool { isAvailable && ldapReady }
+
+    /// Kerberos przygotowany (scripts/testdb.sh kdc-up): bilety w .testdb/kerberos, KERBEROS5 w sqlnet.ora użytkownika.
+    nonisolated(unsafe) static var kerberosReady = false
+    static var isKerberosAvailable: Bool { isAvailable && kerberosReady && config?.kerberosUser != nil }
 
     static func connect(agent: Bool = false, tags: SessionTags = SessionTags(module: "Pelikan tests")) async throws -> ODPISession {
         guard let c = config else { throw DatabaseError.driverUnavailable("Brak konfiguracji bazy testowej (scripts/testdb.sh up)") }

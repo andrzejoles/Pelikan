@@ -1176,3 +1176,59 @@ zmaterializowanego, testem łącza, uruchomieniem zadania, kolejkami, porównani
 pokazywane tylko dla pasujących typów), debugowanie wyszarzone na sterowniku thin (deklaracja JDWP usunięta też z
 Instant Client — D106). Poprawione w opisach: edycja wyniku wymaga ROWID, lewe karty to połączenia, obiekty, okna,
 szablony i pliki, słowniczek — foldery Przeglądarki obiektów są po polsku.
+### D156 · 2026-10-24 — Workspace Manager w bazie testowej
+Obraz Oracle Free 26ai (23.26.3) nie ma zainstalowanego Workspace Managera (brak WMSYS i DBMS_WM), ale ma jego skrypty
+w `ORACLE_HOME/rdbms/admin`. `scripts/testdb.sh owm` uruchamia `owminst.plb` w PDB testowej (ok. 40 s, raz), nadaje
+użytkownikowi testowemu WM_ADMIN_ROLE i tworzy przestrzeń DEV_PELIKAN_WS jego własnym wywołaniem — `GrantSystemPriv`
+jako SYS kończy się ORA-06598 (pakiet WMSYS z prawami wywołującego). Test PD-CONN-009 łączy się definicją połączenia
+z przestrzenią i sprawdza `DBMS_WM.GetWorkspace`; bez instalacji OWM test nie ma czego sprawdzić i kończy się od razu.
+Krok jest tani, więc CI wykonuje go po `seed`.
+
+### D157 · 2026-10-24 — ORDS na żywo tylko w testach
+ORDS (publiczne `ords-latest.zip`, bez konta) jest pobierany do `.testdb/` i uruchamiany samodzielnie w kontenerze
+z JRE (`eclipse-temurin:21-jre`) w sieci Docker bazy testowej; schemat ORDS instalowany w PDB testowej, konfiguracja
+w wolumenie Dockera, hasła SYS i ORDS_PUBLIC_USER przez stdin, HTTP tylko na 127.0.0.1 (`scripts/testdb.sh ords-up`,
+`ords-down`). ORDS nie trafia do Pelikana. Test na żywym serwerze wykonał skrypty komend i wykrył błąd: widok
+USER_ORDS_ENABLED_OBJECTS ma kolumnę TYPE, nie OBJECT_TYPE — lista obiektów AutoREST kończyła się ORA-00904.
+ORDS buforuje metadane kilka sekund, więc test HTTP czeka na oczekiwany status (do 20 s). Do CI nie dodajemy
+(pobranie 200 MB i obraz JRE w każdym przebiegu); test bez `PELIKAN_TESTDB_ORDS_URL` jest pomijany.
+
+### D158 · 2026-10-24 — LDAP: alias rozwiązuje Pelikan, nie adapter Instant Client
+Próba z serwerem OpenLDAP 2.6 (`scripts/testdb.sh ldap-up`: kontener Alpine, własny minimalny schemat
+`orclNetService`/`orclNetDescString` z OID-ami z gałęzi dokumentacyjnej, odczyt anonimowy, bez haseł) pokazała, że
+`sqlplus` z Instant Client rozwiązuje alias przez LDAP, ale ten sam klient w procesie Pelikana — nie. Przyczyna:
+`libclntsh.dylib` jest konsolidowany z płaską przestrzenią nazw, a w każdym procesie z AppKit jest już załadowany
+systemowy LDAP.framework. Część wywołań `ldap_*` adaptera trafia do biblioteki systemowej: wiązanie idzie jako LDAPv2
+(OpenLDAP 2.5+ odrzuca: „historical protocol version requested”), a po wymuszeniu v3 proces kończył się asercją
+`LDAP_VALID(ld)` w `ldap_first_entry` — przy serwerze przyjmującym LDAPv2 (np. starsze OID/AD) groziło to awarią
+aplikacji. Potwierdzone `sqlplus` z `DYLD_INSERT_LIBRARIES` na LDAP.framework (ten sam błąd).
+Na macOS Pelikan rozwiązuje więc bare alias sam, zanim przekaże go klientowi: konfiguracja z `ldap.ora` i
+`sqlnet.ora` (z IFILE) w katalogu połączenia, katalogu Oracle Net Pelikana albo TNS_ADMIN; metody w kolejności
+NAMES.DIRECTORY_PATH (domyślnie `tnsnames, ezconnect, ldap`) — tnsnames.ora, potem LDAP (LDAPv3, wiązanie anonimowe,
+zapytanie bazowe o `cn=alias,cn=OracleContext,<DEFAULT_ADMIN_CONTEXT>`, wyłącznie przez LDAP.framework). Klient dostaje
+gotowy deskryptor, więc jego adapter LDAP nie jest używany. Alias nieznaleziony nigdzie — ORA-12154 od Pelikana
+(nie oddajemy go klientowi, by nie wejść w adapter LDAP); tak samo nazwa hosta bez portu i usługi przy aktywnym LDAP.
+Nie obsługujemy wiązania portfelem (NAMES.LDAP_AUTHENTICATE_BIND), LDAPS ani NAMES.DEFAULT_DOMAIN; połączenie przez
+portfel SEPS (`/@alias`) przekazuje alias dosłownie. Na Linuksie (tylko testy CI) zostaje adapter klienta — bez próby.
+
+### D159 · 2026-10-24 — Kerberos: KDC w kontenerze, na macOS blokada zamiast awarii
+`scripts/testdb.sh kdc-up` uruchamia KDC MIT (Alpine, realm PELIKAN.TEST, klucze losowe, główne hasło tylko w pliku
+stash w kontenerze), dodaje principal usługi `oracle/<nazwa hosta kontenera bazy>` (klient Oracle prosi o bilet dla
+nazwy hosta serwera, nie hosta z deskryptora — `oracle/localhost` nie wystarczał), kopiuje tablicę kluczy do kontenera
+bazy i tworzy użytkownika `DEV_KRB IDENTIFIED EXTERNALLY AS
+'dev_krb@PELIKAN.TEST'` (bez zmiany OS_AUTHENT_PREFIX i restartu). Bilety (TGT i bilety usługi) powstają przez
+`kinit -k` w KDC i trafiają do `.testdb/kerberos/ccache` — klient nie musi łączyć się z KDC. Blok KERBEROS5 w sqlnet.ora
+serwera jest dopisywany tylko na czas testu (`kdc-linux`, usuwany pułapką EXIT): ten plik czytają też procesy serwera
+jako klient — łącze bazy danych do siebie (test PD-OB-019) i sqlplus w kontenerze kończyły się ORA-12641; narzędzia
+skryptu używają w tym czasie `/opt/oracle/client-net` bez Kerberos.
+Wynik: `sqlplus` z Instant Client dla macOS loguje się jako DEV_KRB, ale ten sam klient w procesie Pelikana (i każdym
+procesie z AppKit) kończy się SIGABRT (ORA-24550) — także przy logowaniu hasłem, gdy sqlnet.ora włącza KERBEROS5.
+Przyczyna jak w D158: `libclntsh.dylib` z płaską przestrzenią nazw i systemowy Kerberos.framework (ładowany przez
+AppKit) eksportujący te same funkcje `krb5_*`; potwierdzone `sqlplus` z `DYLD_INSERT_LIBRARIES` na Kerberos.framework.
+W procesie aplikacji nie da się tego obejść (framework jest załadowany przed `libclntsh`); wymagałoby to osobnego
+procesu pomocniczego bez AppKit dla sesji OCI. Do tego czasu Pelikan na macOS przed połączeniem sprawdza
+SQLNET.AUTHENTICATION_SERVICES (z IFILE) w katalogu Oracle Net i zgłasza czytelny błąd zamiast awarii aplikacji.
+Ta sama ścieżka Pelikana (ODPISession, SessionManager, `/` bez hasła) działa z Instant Client dla Linuksa:
+`scripts/testdb.sh kdc-linux` uruchamia test w kontenerze `swift:6.3-noble` w sieci bazy testowej (Basic Light
+arm64/x64, konfiguracja w `.linux-build/.testdb`, CI=1 dla hosta kontenera). Wiersz PD-CONN-014 zostaje ⚠️, bo
+aplikacja jest na macOS. Do CI nie dodajemy (konfiguracja Kerberos dotyczyłaby całego procesu testów bazy).
