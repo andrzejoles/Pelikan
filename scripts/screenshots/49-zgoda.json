@@ -1,0 +1,1 @@
+[{"command": "debug.approval", "args": {"command": "agent.execute", "args": {"sql": "update emp set sal = sal * 1.1 where deptno = 20"}}, "delay": 3}]

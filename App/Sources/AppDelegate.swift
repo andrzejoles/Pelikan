@@ -1,4 +1,5 @@
 import AppKit
+import PelikanAgent
 import PelikanDB
 import PelikanODPI
 import PelikanProC
@@ -1115,6 +1116,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     let pane = s.args?["pane"].flatMap { if case .string(let v) = $0 { v } else { nil } }
                     PreferencesWindowController.show(workspace: workspace, pane: pane)
                     log("ok debug.preferences")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Okno zgody z prawdziwym podglądem skutków komendy agenta — w osobnym oknie w tle (bez arkusza,
+                // panelu agenta i podskakującej ikony w Docku).
+                if s.command == "debug.approval", case .string(let id)? = s.args?["command"] {
+                    let args = CommandArguments(s.args?["args"].flatMap { if case .object(let o) = $0 { o } else { nil } } ?? [:])
+                    do {
+                        let cmd = CommandID(rawValue: id)
+                        let preview = try await workspace.preview(cmd, args, invoker: .agent(sessionID: "debug", agentName: "Claude"))
+                        let request = ApprovalRequest(sessionID: "debug", agentName: "Claude", command: cmd,
+                                                      title: workspace.registry.command(cmd)?.descriptor.title ?? id, preview: preview, arguments: args,
+                                                      connection: (try? workspace.agentConnection(alias: nil))?.agentAlias)
+                        ToolWindowController.show(key: "approval", title: L10n.tr("Zgoda na operację agenta"), size: NSSize(width: 640, height: 480)) {
+                            ApprovalView(request: request) { _ in ToolWindowController.close(key: "approval") }
+                        }
+                        log("ok debug.approval")
+                    } catch { log("debug.approval: \(error.localizedDescription)") }
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }

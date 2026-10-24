@@ -15,6 +15,17 @@ public struct ApprovalRequest: Sendable, Identifiable {
     public let arguments: CommandArguments
     /// Alias połączenia, którego dotyczy operacja.
     public let connection: String?
+
+    public init(sessionID: String, agentName: String, command: CommandID, title: String, preview: EffectPreview,
+                arguments: CommandArguments, connection: String?) {
+        self.sessionID = sessionID
+        self.agentName = agentName
+        self.command = command
+        self.title = title
+        self.preview = preview
+        self.arguments = arguments
+        self.connection = connection
+    }
 }
 
 /// Okno zatwierdzania (aplikacja) albo atrapa w testach.

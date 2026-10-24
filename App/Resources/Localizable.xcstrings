@@ -1989,30 +1989,30 @@
         }
       }
     },
-    "Agent chce wykonać na połączeniu „%@” (%@): %@ polecenie/a (%@)." : {
+    "Agent chce wykonać polecenia na połączeniu „%@” (%@) — liczba poleceń: %@ (%@)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The agent wants to execute on connection “%@” (%@): %@ command(s) (%@)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Агент хоче виконати на з'єднанні «%@» (%@): команд — %@ (%@)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El agente quiere ejecutar en la conexión «%@» (%@): %@ comando(s) (%@)."
+            "value" : "The agent wants to run statements on connection “%@” (%@) — statements: %@ (%@)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Agent möchte auf Verbindung „%@“ (%@) ausführen: %@ Befehl(e) (%@)."
+            "value" : "Der Agent möchte Anweisungen auf der Verbindung „%@“ (%@) ausführen — Anzahl: %@ (%@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El agente quiere ejecutar sentencias en la conexión «%@» (%@) — número de sentencias: %@ (%@)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Агент хоче виконати команди на з’єднанні «%@» (%@) — кількість команд: %@ (%@)."
           }
         }
       }
@@ -96177,6 +96177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Extern (Kerberos, Betriebssystem)"
+          }
+        }
+      }
+    },
+    "Zgoda na operację agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agent operation approval"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zustimmung zur Agentenoperation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprobación de la operación del agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згода на операцію агента"
           }
         }
       }

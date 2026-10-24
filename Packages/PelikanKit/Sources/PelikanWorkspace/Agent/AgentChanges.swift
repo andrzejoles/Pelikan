@@ -130,7 +130,7 @@ public enum AgentChanges {
                 irreversible = true
             }
         }
-        var summary = L10n.tr("Agent chce wykonać na połączeniu „\(def.agentAlias)” (\(def.environment.rawValue)): \(statements.count) polecenie/a (\(kinds.joined(separator: ", "))).")
+        var summary = L10n.tr("Agent chce wykonać polecenia na połączeniu „\(def.agentAlias)” (\(def.environment.rawValue)) — liczba poleceń: \(statements.count) (\(kinds.joined(separator: ", "))).")
         if statements.contains(where: { StatementClassifier.classify($0).category == .dml }) {
             summary += " " + L10n.tr("DML pozostanie niezatwierdzone do osobnej zgody na COMMIT.")
         }

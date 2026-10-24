@@ -13,11 +13,14 @@ struct ToolsPane: View {
         Form {
             Section(L10n.tr("Szukaj w sieci")) {
                 ForEach(workspace.settings.webSearches.indices, id: \.self) { i in
+                    // Pola bez etykiet formularza (etykieta w każdym wierszu ucinała nazwę) — opis w podpowiedzi pola.
                     HStack {
                         TextField(L10n.tr("Nazwa"), text: Binding(get: { workspace.settings.webSearches[i].name },
-                                                                 set: { workspace.settings.webSearches[i].name = $0 })).frame(width: 160)
+                                                                 set: { workspace.settings.webSearches[i].name = $0 }), prompt: Text(L10n.tr("Nazwa")))
+                            .labelsHidden().textFieldStyle(.roundedBorder).frame(width: 200)
                         TextField(L10n.tr("Adres z %s"), text: Binding(get: { workspace.settings.webSearches[i].url },
-                                                                      set: { workspace.settings.webSearches[i].url = $0 }))
+                                                                      set: { workspace.settings.webSearches[i].url = $0 }), prompt: Text(L10n.tr("Adres z %s")))
+                            .labelsHidden().textFieldStyle(.roundedBorder)
                         Button { workspace.settings.webSearches.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń wyszukiwanie"))
                     }
