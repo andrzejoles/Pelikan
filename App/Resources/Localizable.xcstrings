@@ -3277,6 +3277,62 @@
         }
       }
     },
+    "Asercja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aserción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Асерція"
+          }
+        }
+      }
+    },
+    "Asercja…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aserción…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Асерція…"
+          }
+        }
+      }
+    },
     "Asercje" : {
       "localizations" : {
         "en" : {
@@ -5349,6 +5405,34 @@
         }
       }
     },
+    "Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No SSH tunnel password in the Keychain — enter it in the connection definition."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein SSH-Tunnelpasswort im Schlüsselbund — geben Sie es in der Verbindungsdefinition ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay contraseña SSH del túnel en el Llavero: introdúzcala en la definición de la conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає пароля SSH тунелю в Зв’язці ключів — введіть його у визначенні підключення."
+          }
+        }
+      }
+    },
     "Brak identyfikatora pod kursorem" : {
       "localizations" : {
         "en" : {
@@ -5401,6 +5485,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Informationen über den Sperrinhaber."
+          }
+        }
+      }
+    },
+    "Brak innego połączenia do porównania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No other connection to compare with"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine andere Verbindung zum Vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay otra conexión con la que comparar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає іншого підключення для порівняння"
           }
         }
       }
@@ -9465,6 +9577,62 @@
         }
       }
     },
+    "DBMS_AQADM.START_QUEUE: włącza kolejkowanie i odbieranie wiadomości kolejki AQ." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: enables enqueuing and dequeuing of AQ queue messages."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: aktiviert Einreihen und Abrufen von Nachrichten der AQ-Warteschlange."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: activa el encolado y desencolado de mensajes de la cola AQ."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.START_QUEUE: вмикає постановку й отримання повідомлень черги AQ."
+          }
+        }
+      }
+    },
+    "DBMS_AQADM.STOP_QUEUE: wyłącza kolejkowanie i odbieranie wiadomości kolejki AQ (czeka na bieżące transakcje)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: disables enqueuing and dequeuing of AQ queue messages (waits for current transactions)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: deaktiviert Einreihen und Abrufen von Nachrichten der AQ-Warteschlange (wartet auf laufende Transaktionen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: desactiva el encolado y desencolado de mensajes de la cola AQ (espera a las transacciones en curso)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_AQADM.STOP_QUEUE: вимикає постановку й отримання повідомлень черги AQ (чекає на поточні транзакції)."
+          }
+        }
+      }
+    },
     "DBMS_DEBUG nie zwrócił identyfikatora sesji" : {
       "localizations" : {
         "en" : {
@@ -11981,6 +12149,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Objekt zum Projekt hinzufügen"
+          }
+        }
+      }
+    },
+    "Dodaj partycję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add partition"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partition hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir partición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати секцію"
           }
         }
       }
@@ -23661,6 +23857,62 @@
         }
       }
     },
+    "Kolejka %@ uruchomiona" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue %@ started"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange %@ gestartet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola %@ iniciada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чергу %@ запущено"
+          }
+        }
+      }
+    },
+    "Kolejka %@ zatrzymana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queue %@ stopped"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange %@ angehalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cola %@ detenida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чергу %@ зупинено"
+          }
+        }
+      }
+    },
     "Kolejki" : {
       "localizations" : {
         "en" : {
@@ -23685,6 +23937,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Queues"
+          }
+        }
+      }
+    },
+    "Kolejkowanie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enqueue (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einreihen (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encolar (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Постановка в чергу (типово так)"
           }
         }
       }
@@ -28197,6 +28477,34 @@
         }
       }
     },
+    "Liczba: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anzahl: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кількість: %@"
+          }
+        }
+      }
+    },
     "Liczby" : {
       "localizations" : {
         "en" : {
@@ -29453,6 +29761,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Anmeldung /@datenbank mit Zugangsdaten aus dem in Einstellungen › Oracle angegebenen Wallet (Oracle Wallet). Das Feld „Datenbank“ muss genau einem im Wallet gespeicherten Alias oder Connect-String entsprechen; der Alias muss in der Oracle-Net-Konfiguration aus den Einstellungen stehen."
+          }
+        }
+      }
+    },
+    "Logowanie hasłem SSH (zamiast klucza)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH password login (instead of a key)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SSH-Anmeldung mit Passwort (statt Schlüssel)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicio de sesión SSH con contraseña (en lugar de clave)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вхід SSH за паролем (замість ключа)"
           }
         }
       }
@@ -32593,6 +32929,34 @@
         }
       }
     },
+    "Nazwa połączenia (bez — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection name (none — choose from list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsname (leer — Auswahl aus Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la conexión (vacío: elegir de la lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва підключення (порожньо — вибір зі списку)"
+          }
+        }
+      }
+    },
     "Nazwa połączenia albo pusty tekst — połączenie główne" : {
       "localizations" : {
         "en" : {
@@ -33597,6 +33961,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verzeichnis %@ kann nicht erstellt werden: %@"
+          }
+        }
+      }
+    },
+    "Nie można utworzyć kolejki dla hasła SSH" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot create the queue for the SSH password"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange für das SSH-Passwort kann nicht erstellt werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede crear la cola para la contraseña SSH"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається створити чергу для пароля SSH"
           }
         }
       }
@@ -38641,6 +39033,34 @@
         }
       }
     },
+    "Odbieranie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dequeue (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufen (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desencolar (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримання (типово так)"
+          }
+        }
+      }
+    },
     "Odbiorca" : {
       "localizations" : {
         "en" : {
@@ -42641,6 +43061,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкриває SQL Window з GRANT DEBUG CONNECT SESSION і DEBUG ANY PROCEDURE для користувача (виконує адміністратор)."
+          }
+        }
+      }
+    },
+    "Otwiera okno SQL z szablonem CREATE ASSERTION (26ai): warunek NOT EXISTS na danych tabel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a SQL window with a CREATE ASSERTION template (26ai): a NOT EXISTS condition on table data."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein SQL-Fenster mit einer CREATE ASSERTION-Vorlage (26ai): NOT EXISTS-Bedingung auf Tabellendaten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una ventana SQL con una plantilla CREATE ASSERTION (26ai): condición NOT EXISTS sobre datos de tablas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває вікно SQL із шаблоном CREATE ASSERTION (26ai): умова NOT EXISTS на даних таблиць."
           }
         }
       }
@@ -47069,6 +47517,34 @@
         }
       }
     },
+    "Podpartycje HASH — kolumny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH subpartitions — columns"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HASH-Subpartitionen — Spalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subparticiones HASH — columnas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підсекції HASH — стовпці"
+          }
+        }
+      }
+    },
     "Podpowiedzi kodu" : {
       "localizations" : {
         "en" : {
@@ -50121,6 +50597,62 @@
         }
       }
     },
+    "Porównaj z obiektami w innej bazie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with objects in another database…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Objekten in einer anderen Datenbank vergleichen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con objetos de otra base de datos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з об’єктами в іншій базі…"
+          }
+        }
+      }
+    },
+    "Porównaj z obiektem w innej bazie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with object in another database…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Objekt in einer anderen Datenbank vergleichen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con un objeto de otra base de datos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з об’єктом в іншій базі…"
+          }
+        }
+      }
+    },
     "Porównaj z plikiem…" : {
       "localizations" : {
         "en" : {
@@ -50201,6 +50733,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit vorherigem Plan des Fensters vergleichen"
+          }
+        }
+      }
+    },
+    "Porównaj z połączeniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Verbindung vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з підключенням"
           }
         }
       }
@@ -50709,6 +51269,34 @@
         }
       }
     },
+    "Porównuje jednostki okna programu ze źródłem obiektów o tych nazwach w bazie innego połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the program window units with the source of objects with these names in another connection's database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht die Einheiten des Programmfensters mit dem Quelltext gleichnamiger Objekte in der Datenbank einer anderen Verbindung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara las unidades de la ventana de programa con el código de los objetos con esos nombres en la base de otra conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює одиниці вікна програми з кодом об’єктів із такими назвами в базі іншого підключення."
+          }
+        }
+      }
+    },
     "Porównuje jednostki okna programu ze źródłem tych obiektów w bazie (ALL_SOURCE)." : {
       "localizations" : {
         "en" : {
@@ -50845,6 +51433,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergleicht die Quelle (oder DDL) eines Datenbankobjekts mit dem Text des aktiven Fensters."
+          }
+        }
+      }
+    },
+    "Porównuje źródło (albo DDL) obiektu z obiektem o tej samej nazwie w bazie innego połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the object's source (or DDL) with the object of the same name in another connection's database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht Quelltext (oder DDL) des Objekts mit dem gleichnamigen Objekt in der Datenbank einer anderen Verbindung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara el código (o DDL) del objeto con el objeto del mismo nombre en la base de otra conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює код (або DDL) об’єкта з об’єктом із такою ж назвою в базі іншого підключення."
           }
         }
       }
@@ -59949,6 +60565,62 @@
         }
       }
     },
+    "Schemat w tamtej bazie (domyślnie ten sam)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in that database (same by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in jener Datenbank (standardmäßig dasselbe)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema en esa base (por defecto, el mismo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схема в тій базі (типово та сама)"
+          }
+        }
+      }
+    },
+    "Schemat w tamtej bazie (domyślnie z nagłówków albo bieżący)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in that database (from headers or current by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in jener Datenbank (standardmäßig aus Kopfzeilen oder aktuelles)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema en esa base (por defecto, de las cabeceras o el actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схема в тій базі (типово із заголовків або поточна)"
+          }
+        }
+      }
+    },
     "Schemat w zrzucie" : {
       "localizations" : {
         "en" : {
@@ -67369,34 +68041,6 @@
         }
       }
     },
-    "Tunel SSH z hasłem nie jest jeszcze obsługiwany — użyj klucza albo agenta SSH (ssh-add)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH tunnel with a password is not supported yet — use a key or the SSH agent (ssh-add)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель SSH з паролем ще не підтримується — використайте ключ або агент SSH (ssh-add)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel SSH con contraseña aún no es compatible: use una clave o el agente SSH (ssh-add)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SSH-Tunnel mit Passwort wird noch nicht unterstützt — Schlüssel oder SSH-Agent verwenden (ssh-add)."
-          }
-        }
-      }
-    },
     "Tunel SSH: przekroczony czas oczekiwania" : {
       "localizations" : {
         "en" : {
@@ -67425,30 +68069,30 @@
         }
       }
     },
-    "Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH nie jest obsługiwane — użyj klucza." : {
+    "Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH jest tylko w Pęku kluczy i trafia do ssh przez jednorazową kolejkę, nigdy przez argumenty, środowisko ani pliki." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The tunnel uses the system ssh: ~/.ssh/config, the SSH agent (keys in Keychain: ssh-add --apple-use-keychain) and known hosts. Enter the database host and port in the “Database” field as the SSH server sees them. SSH password is not supported — use a key."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у В'язці ключів: ssh-add --apple-use-keychain) і відомі хости. Хост і порт бази в полі «База» вкажіть так, як їх бачить сервер SSH. Пароль SSH не підтримується — використайте ключ."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El túnel usa el ssh del sistema: ~/.ssh/config, el agente SSH (claves en el Llavero: ssh-add --apple-use-keychain) y los hosts conocidos. Indique el host y el puerto de la base de datos en el campo «Base de datos» tal como los ve el servidor SSH. La contraseña SSH no es compatible: use una clave."
+            "value" : "The tunnel uses the system ssh: ~/.ssh/config, the SSH agent (keys in the Keychain: ssh-add --apple-use-keychain) and known hosts. Enter the database host and port in the “Database” field as the SSH server sees them. The SSH password is kept only in the Keychain and reaches ssh through a one-time queue, never through arguments, the environment or files."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Tunnel verwendet das System-ssh: ~/.ssh/config, SSH-Agent (Schlüssel im Schlüsselbund: ssh-add --apple-use-keychain) und bekannte Hosts. Host und Port der Datenbank im Feld „Datenbank“ so angeben, wie der SSH-Server sie sieht. SSH-Passwort wird nicht unterstützt — Schlüssel verwenden."
+            "value" : "Der Tunnel verwendet das System-ssh: ~/.ssh/config, den SSH-Agenten (Schlüssel im Schlüsselbund: ssh-add --apple-use-keychain) und bekannte Hosts. Geben Sie Host und Port der Datenbank im Feld „Datenbank“ so an, wie der SSH-Server sie sieht. Das SSH-Passwort liegt nur im Schlüsselbund und erreicht ssh über eine einmalige Warteschlange, nie über Argumente, Umgebung oder Dateien."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El túnel usa el ssh del sistema: ~/.ssh/config, el agente SSH (claves en el Llavero: ssh-add --apple-use-keychain) y los hosts conocidos. Indique el host y el puerto de la base en el campo «Base de datos» tal como los ve el servidor SSH. La contraseña SSH solo está en el Llavero y llega a ssh mediante una cola de un solo uso, nunca por argumentos, entorno ni archivos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тунель використовує системний ssh: ~/.ssh/config, агент SSH (ключі у Зв’язці ключів: ssh-add --apple-use-keychain) і відомі хости. Вкажіть хост і порт бази в полі «База» так, як їх бачить сервер SSH. Пароль SSH зберігається лише у Зв’язці ключів і потрапляє до ssh через одноразову чергу, ніколи через аргументи, середовище чи файли."
           }
         }
       }
@@ -69777,6 +70421,34 @@
         }
       }
     },
+    "Uruchom kolejkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start queue"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange starten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar cola"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити чергу"
+          }
+        }
+      }
+    },
     "Uruchom ponownie" : {
       "localizations" : {
         "en" : {
@@ -71541,6 +72213,34 @@
         }
       }
     },
+    "Usuń partycję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove partition"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partition entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar partición"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити секцію"
+          }
+        }
+      }
+    },
     "Usuń po zakończeniu" : {
       "localizations" : {
         "en" : {
@@ -72937,6 +73637,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verwendet von"
+          }
+        }
+      }
+    },
+    "VALUES" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES"
+          }
+        }
+      }
+    },
+    "VALUES LESS THAN" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VALUES LESS THAN"
           }
         }
       }
@@ -89069,6 +89825,62 @@
         }
       }
     },
+    "Zatrzymaj kolejkowanie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop enqueuing (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einreihen anhalten (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener encolado (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити постановку (типово так)"
+          }
+        }
+      }
+    },
+    "Zatrzymaj kolejkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop queue"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warteschlange anhalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener cola"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити чергу"
+          }
+        }
+      }
+    },
     "Zatrzymaj na błędach ORA-:" : {
       "localizations" : {
         "en" : {
@@ -89093,6 +89905,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bei ORA-Fehlern anhalten:"
+          }
+        }
+      }
+    },
+    "Zatrzymaj odbieranie (domyślnie tak)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop dequeuing (yes by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufen anhalten (standardmäßig ja)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener desencolado (sí por defecto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зупинити отримання (типово так)"
           }
         }
       }

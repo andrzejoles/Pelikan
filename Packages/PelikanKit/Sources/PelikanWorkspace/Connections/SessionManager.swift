@@ -225,7 +225,7 @@ public final class SessionManager {
         var tunnelOpened = false
         if def.sshTunnel != nil {
             let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
-            let tunnel = try await tunnels.open(for: def, tns: tns)
+            let tunnel = try await tunnels.open(for: def, tns: tns, secret: def.sshTunnel?.usesPassword == true ? store.sshPassword(for: def.id) : nil)
             tunnelOpened = true
             guard let rewritten = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) else {
                 tunnels.release(def.id)

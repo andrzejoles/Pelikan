@@ -44,7 +44,16 @@ final class SyntaxHighlighter {
         storage.beginEditing()
         storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: 0, length: text.count))
         lexer.lexAll(text, onLine: { _ in }, onToken: { Self.color($0, in: storage) })
+        Self.overlayJavaScript(text, storage: storage, font: font)
         storage.endEditing()
+    }
+
+    /// Ciało modułów MLE kolorowane jako JavaScript (PD-PROG-014) — po kolorach PL/SQL, na całym ciele.
+    private static func overlayJavaScript(_ text: [UInt16], storage: NSTextStorage, font: NSFont) {
+        for body in JavaScriptLexer.mleBodies(text) {
+            storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: body.lowerBound, length: body.count))
+            for t in JavaScriptLexer.tokens(text, range: body) { color(t, in: storage) }
+        }
     }
 
     /// Po edycji: `editedRange` (w nowym tekście) i `delta` (zmiana długości).
@@ -54,6 +63,7 @@ final class SyntaxHighlighter {
         lexer.relex(text, editedRange: editedRange.location..<(editedRange.location + editedRange.length), delta: delta,
                     onLine: { storage.setAttributes([.font: font, .foregroundColor: SyntaxTheme.plain], range: NSRange(location: $0.lowerBound, length: $0.count)) },
                     onToken: { Self.color($0, in: storage) })
+        Self.overlayJavaScript(text, storage: storage, font: font)
         storage.endEditing()
     }
 

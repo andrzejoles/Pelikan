@@ -532,6 +532,32 @@ struct SSHTunnelIntegrationTests {
         #expect(!ws.sessions.tunnels.isOpen(def.id))
     }
 
+    @Test("Tunel z hasłem SSH z Pęku kluczy (askpass przez kolejkę); złe hasło — czytelny błąd (DB-SSH-001)",
+          .enabled(if: TestDatabase.config?.sshPassword != nil))
+    func passwordTunnel() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let dir = c.sshDirectory!
+        ws.sessions.tunnels.extraOptions = ["-o", "UserKnownHostsFile=\(dir)/known_hosts", "-o", "StrictHostKeyChecking=yes", "-F", "/dev/null"]
+        var def = ConnectionDefinition(name: "dev_ssh_haslo", target: ConnectionTarget(user: c.user, connectString: "\(c.sshDBHost ?? "pelikan-testdb"):1521/FREEPDB1"))
+        def.sshTunnel = SSHTunnel(host: "127.0.0.1", port: c.sshPort!, user: "haslo", usesPassword: true)
+        try ws.connections.upsert(def, password: c.password)
+        await #expect(throws: (any Error).self) { _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)) }
+        try ws.connections.setSSHPassword(c.sshPassword!, for: def.id)
+        let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        #expect(try await s.queryAll("select 1 from dual").rows.first?.first?.displayText == "1")
+        await ws.sessions.close(SessionKey(connectionID: def.id, purpose: .main))
+        try ws.connections.setSSHPassword("zle-haslo", for: def.id)
+        do {
+            _ = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+            Issue.record("złe hasło nie powinno otworzyć tunelu")
+        } catch {
+            #expect("\(error)".contains("Permission denied") && !"\(error)".contains("zle-haslo"))
+        }
+        #expect(!ws.sessions.tunnels.isOpen(def.id))
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("Zły klucz: czytelny błąd ssh, bez wiszącego procesu")
     func wrongKey() async throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-ssh-\(UUID().uuidString)")

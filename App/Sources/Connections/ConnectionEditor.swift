@@ -47,6 +47,9 @@ final class ConnectionDraft {
     var sshUser: String
     var sshIdentity: String
     var sshJump: String
+    /// Hasło SSH zamiast klucza (DB-SSH-001): tylko Pęk kluczy; puste pole — bez zmian.
+    var sshUsesPassword: Bool
+    var sshPassword = ""
     var isNew: Bool
     var testResult: String?
     var testing = false
@@ -75,6 +78,7 @@ final class ConnectionDraft {
         sshUser = d.sshTunnel?.user ?? NSUserName()
         sshIdentity = d.sshTunnel?.identityFile ?? ""
         sshJump = d.sshTunnel?.jumpHost ?? ""
+        sshUsesPassword = d.sshTunnel?.usesPassword ?? false
         self.isNew = isNew
     }
 
@@ -105,7 +109,8 @@ final class ConnectionDraft {
         def.target.walletDirectory = opt(walletDirectory)
         if sshEnabled, let host = opt(sshHost) {
             def.sshTunnel = SSHTunnel(host: host, port: sshPort, user: sshUser.trimmingCharacters(in: .whitespaces),
-                                      identityFile: opt(sshIdentity), jumpHost: opt(sshJump))
+                                      identityFile: sshUsesPassword ? nil : opt(sshIdentity), jumpHost: opt(sshJump),
+                                      usesPassword: sshUsesPassword)
         }
         return def
     }
@@ -279,8 +284,11 @@ struct ConnectionEditorView: View {
                         .disabled(!draft.sshEnabled)
                         TextField(L10n.tr("Host pośredni (ProxyJump)"), text: $draft.sshJump, prompt: Text(L10n.tr("opcjonalnie")))
                             .disabled(!draft.sshEnabled)
+                        Toggle(L10n.tr("Logowanie hasłem SSH (zamiast klucza)"), isOn: $draft.sshUsesPassword).disabled(!draft.sshEnabled)
+                        SecureField(L10n.tr("Hasło SSH"), text: $draft.sshPassword, prompt: Text(draft.isNew ? "" : L10n.tr("bez zmian")))
+                            .disabled(!draft.sshEnabled || !draft.sshUsesPassword)
                     } footer: {
-                        Text(L10n.tr("Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH nie jest obsługiwane — użyj klucza."))
+                        Text(L10n.tr("Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH jest tylko w Pęku kluczy i trafia do ssh przez jednorazową kolejkę, nigdy przez argumenty, środowisko ani pliki."))
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                 }
@@ -340,6 +348,11 @@ enum ConnectionEditorPresenter {
             onSave: {
                 do {
                     try workspace.connections.upsert(draft.definition, password: draft.password.isEmpty ? nil : draft.password)
+                    if draft.sshEnabled, draft.sshUsesPassword, !draft.sshPassword.isEmpty {
+                        try workspace.connections.setSSHPassword(draft.sshPassword, for: draft.definition.id)
+                    } else if !draft.sshEnabled || !draft.sshUsesPassword {
+                        try? workspace.connections.setSSHPassword("", for: draft.definition.id)
+                    }
                     if let sheet { window?.endSheet(sheet) }
                 } catch {
                     draft.testResult = error.localizedDescription

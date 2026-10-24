@@ -54,6 +54,9 @@ public struct TableDefinition: Sendable, Hashable {
         public var partitions: [Partition] = []
         /// Przedział dla partycjonowania automatycznego (INTERVAL) w RANGE, np. NUMTOYMINTERVAL(1,'MONTH').
         public var interval = ""
+        /// Podpartycje HASH (szablon przy tworzeniu): kolumny i liczba podpartycji w każdej partycji (0 — bez).
+        public var subpartitionColumns: [String] = []
+        public var subpartitionCount = 0
         public init(method: Method, columns: [String]) { self.method = method; self.columns = columns }
     }
 
@@ -61,7 +64,9 @@ public struct TableDefinition: Sendable, Hashable {
         public var name: String
         /// RANGE: wartości VALUES LESS THAN, LIST: VALUES, HASH: puste.
         public var values: String
-        public init(name: String, values: String = "") { self.name = name; self.values = values }
+        /// Nazwa w bazie (istniejąca partycja) — zmiana nazwy i usuwanie; nil — nowa.
+        public var originalName: String?
+        public init(name: String, values: String = "", originalName: String? = nil) { self.name = name; self.values = values; self.originalName = originalName }
     }
 
     public struct Trigger: Sendable, Hashable {
@@ -354,6 +359,20 @@ public enum TableDDL {
             select partitioning_type || nvl2(subpartitioning_type, ' / ' || subpartitioning_type, '') || ', ' || partition_count
               from all_part_tables where owner = :o and table_name = :n
             """, binds: b) { d.partitionInfo = p }
+        // Partycje istniejącej tabeli (PD-OED-006): metoda, kolumny klucza i partycje z wartościami granicznymi.
+        if let (_, pt) = try? await s.queryAll("select partitioning_type, nvl(interval, '') from all_part_tables where owner = :o and table_name = :n", binds: b),
+           let row = pt.first, let method = TableDefinition.Partitioning.Method(rawValue: row[0].displayText ?? "") {
+            let (_, keys) = (try? await s.queryAll("""
+                select column_name from all_part_key_columns where owner = :o and name = :n and object_type = 'TABLE' order by column_position
+                """, binds: b)) ?? ([], [])
+            var p = TableDefinition.Partitioning(method: method, columns: keys.compactMap { $0[0].displayText })
+            p.interval = row[1].displayText ?? ""
+            let (_, parts) = (try? await s.queryAll("""
+                select partition_name, high_value from all_tab_partitions where table_owner = :o and table_name = :n order by partition_position
+                """, binds: b, limit: 100_000)) ?? ([], [])
+            p.partitions = parts.map { TableDefinition.Partition(name: $0[0].displayText ?? "", values: $0[1].displayText ?? "", originalName: $0[0].displayText) }
+            d.partitioning = p
+        }
         d.rowArchival = (try? await s.scalar("select count(*) from all_tab_cols where owner = :o and table_name = :n and column_name = 'ORA_ARCHIVE_STATE'",
                                              binds: b)) == "1"
         // Domeny i adnotacje (23ai, PD-OED-003) — na starszych bazach słownik ich nie ma (błąd pomijany).
@@ -547,6 +566,28 @@ public enum TableDDL {
             if on != x.name { out.append("ALTER INDEX \(q(new.owner)).\(q(on)) RENAME TO \(q(x.name))") }
             if before.invisible != x.invisible { out.append("ALTER INDEX \(q(new.owner)).\(q(x.name)) \(x.invisible ? "INVISIBLE" : "VISIBLE")") }
         }
+        out += partitionChanges(old.partitioning, new.partitioning, table: t)
+        return out
+    }
+
+    /// Partycje istniejącej tabeli (PD-OED-006): usunięte — DROP PARTITION, nowa nazwa — RENAME PARTITION, nowe — ADD
+    /// PARTITION (RANGE/LIST z wartościami, HASH — ADD PARTITION bez wartości). Zmiana metody albo klucza — tylko przez Recreate.
+    static func partitionChanges(_ old: TableDefinition.Partitioning?, _ new: TableDefinition.Partitioning?, table t: String) -> [String] {
+        guard let old, let new, old.method == new.method, old.columns == new.columns else { return [] }
+        var out: [String] = []
+        let kept = Set(new.partitions.compactMap(\.originalName))
+        for x in old.partitions where !kept.contains(x.name) { out.append("ALTER TABLE \(t) DROP PARTITION \(q(x.name))") }
+        for x in new.partitions {
+            if let on = x.originalName {
+                if on != x.name { out.append("ALTER TABLE \(t) RENAME PARTITION \(q(on)) TO \(q(x.name))") }
+                continue
+            }
+            switch new.method {
+            case .range: out.append("ALTER TABLE \(t) ADD PARTITION \(q(x.name)) VALUES LESS THAN (\(x.values))")
+            case .list: out.append("ALTER TABLE \(t) ADD PARTITION \(q(x.name)) VALUES (\(x.values))")
+            case .hash: out.append("ALTER TABLE \(t) ADD PARTITION \(q(x.name))")
+            }
+        }
         return out
     }
 
@@ -615,6 +656,9 @@ public enum TableDDL {
     static func partitionClause(_ p: TableDefinition.Partitioning) -> String {
         var s = "PARTITION BY \(p.method.rawValue) (" + p.columns.map(q).joined(separator: ", ") + ")"
         if p.method == .range, !p.interval.isEmpty { s += " INTERVAL (\(p.interval))" }
+        if !p.subpartitionColumns.isEmpty, p.subpartitionCount > 0 {
+            s += " SUBPARTITION BY HASH (" + p.subpartitionColumns.map(q).joined(separator: ", ") + ") SUBPARTITIONS \(p.subpartitionCount)"
+        }
         if p.method == .hash, p.partitions.allSatisfy({ $0.values.isEmpty }), !p.partitions.isEmpty {
             return s + " (" + p.partitions.map { "PARTITION \(q($0.name))" }.joined(separator: ", ") + ")"
         }

@@ -81,8 +81,22 @@ public final class ConnectionStore {
         connections.removeAll { $0.id == id }
         sessionPasswords[id] = nil
         try secrets.deletePassword(for: id.uuidString)
+        try? secrets.deletePassword(for: Self.sshAccount(id))
         try save()
     }
+
+    /// Konto hasła SSH tunelu w Pęku kluczy (DB-SSH-001): osobne od hasła bazy.
+    nonisolated static func sshAccount(_ id: UUID) -> String { id.uuidString + ".ssh" }
+
+    /// Hasło SSH tunelu (tylko Pęk kluczy; nil — brak).
+    public func sshPassword(for id: UUID) -> String? { try? secrets.password(for: Self.sshAccount(id)) }
+
+    /// Zapisuje (albo usuwa — pusty tekst) hasło SSH tunelu w Pęku kluczy.
+    public func setSSHPassword(_ password: String, for id: UUID) throws {
+        if password.isEmpty { try secrets.deletePassword(for: Self.sshAccount(id)) } else { try secrets.setPassword(password, for: Self.sshAccount(id)) }
+    }
+
+    public func hasSSHPassword(for id: UUID) -> Bool { (try? secrets.hasPassword(for: Self.sshAccount(id))) ?? false }
 
     /// Hasło: z Pęku kluczy (savePassword) albo podane wcześniej w tej sesji. nil = trzeba zapytać.
     /// Czy jest hasło do użycia (w pamięci sesji albo zapisane w Pęku kluczy) — bez odczytu zapisanego sekretu.

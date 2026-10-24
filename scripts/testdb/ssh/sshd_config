@@ -8,5 +8,9 @@ AllowTcpForwarding yes
 GatewayPorts no
 X11Forwarding no
 PermitTunnel no
-AllowUsers tunnel
+AllowUsers tunnel haslo
 Subsystem sftp internal-sftp
+
+# Hasło tylko dla użytkownika testu tunelu z hasłem (DB-SSH-001).
+Match User haslo
+    PasswordAuthentication yes

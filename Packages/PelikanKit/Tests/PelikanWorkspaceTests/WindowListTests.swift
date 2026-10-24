@@ -46,3 +46,28 @@ struct WindowListTests {
         await #expect(throws: (any Error).self) { try await ws.invoke("window.reconnect", CommandArguments(["document": .string(s.id.description)])) }
     }
 }
+
+@Suite("Tunel SSH z hasłem — bez serwera (DB-SSH-001)")
+struct SSHTunnelPasswordTests {
+    @Test("Argumenty bez hasła i bez BatchMode=yes; środowisko askpass bez sekretu; kolejka oddaje hasło raz")
+    func askpass() throws {
+        let t = SSHTunnel(host: "bastion", port: 22, user: "u", usesPassword: true)
+        let args = SSHTunnelManager.arguments(t, localPort: 5000, remote: .init(host: "db", port: 1521), extra: [])
+        #expect(args.contains("BatchMode=no") && !args.contains("BatchMode=yes") && args.contains("PubkeyAuthentication=no"))
+        #expect(SSHTunnelManager.arguments(SSHTunnel(host: "b", user: "u"), localPort: 1, remote: .init(host: "d", port: 1), extra: []).contains("BatchMode=yes"))
+        let secret = "tajne-\(UUID().uuidString.prefix(6))"
+        let a = try SSHTunnelManager.askpass(secret: secret)
+        defer { a.cleanup() }
+        #expect(!a.environment.values.contains { $0.contains(secret) })
+        let script = try String(contentsOfFile: a.environment["SSH_ASKPASS"]!, encoding: .utf8)
+        #expect(!script.contains(secret))
+        let fifo = a.environment["PELIKAN_ASKPASS_FIFO"]!
+        let h = try #require(FileHandle(forReadingAtPath: fifo))
+        let read = String(decoding: h.readDataToEndOfFile(), as: UTF8.self)
+        try? h.close()
+        #expect(read == secret + "\n")
+        // Wątek zapisu usuwa kolejkę zaraz po zapisie — jednorazowa.
+        for _ in 0..<50 where FileManager.default.fileExists(atPath: fifo) { usleep(20_000) }
+        #expect(!FileManager.default.fileExists(atPath: fifo))
+    }
+}

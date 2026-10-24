@@ -60,6 +60,10 @@
 - Maskowanie działa po nazwie kolumny (ostatni człon wpisu) w każdej tabeli; zapytanie odwołujące się do takiej nazwy
   jest odrzucane. To ułatwienie, nie granica — kolumnę można odczytać np. przez widok o innej nazwie kolumny; granicą są
   uprawnienia użytkownika bazy agenta.
+- Hasła SSH (tunel do bazy DB-SSH-001, cele SSH Pro*C): tylko Pęk kluczy (konto `<uuid>.ssh` dla tunelu). `ssh`
+  dostaje `SSH_ASKPASS` — skrypt `cat` z jednorazowej kolejki FIFO (0600, katalog 0700); w środowisku jest tylko ścieżka
+  kolejki, a sekret zapisuje do niej wątek Pelikana raz i kolejka znika. Hasło nie trafia do argumentów, środowiska,
+  plików ani dziennika; błąd logowania pokazuje komunikat `ssh` bez sekretu (D134).
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność

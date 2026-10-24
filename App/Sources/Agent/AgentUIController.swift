@@ -215,15 +215,7 @@ final class AgentUIController: ApprovalPresenter {
     // MARK: Macierz uprawnień
 
     private func askPermissions(_ profile: AgentProfile) async -> [CommandID: AgentAccess]? {
-        let settings = workspace.settings.agent
-        var rows: [PermissionRow] = []
-        for e in ToolCatalog.entries {
-            guard let d = workspace.registry.command(e.command)?.descriptor else { continue }
-            var base = d.agentAccess
-            if let o = settings.accessOverrides[e.command.rawValue] { base = min(base, o) }
-            guard base > .none else { continue }
-            rows.append(PermissionRow(tool: e.tool, command: e.command, title: d.title, base: base, chosen: base))
-        }
+        let rows = PermissionMatrix.rows(registry: workspace.registry, settings: workspace.settings.agent)
         return await presentSheet { finish in
             PermissionMatrixView(profileName: profile.name, rows: rows) { finish($0) }
         } ?? nil
