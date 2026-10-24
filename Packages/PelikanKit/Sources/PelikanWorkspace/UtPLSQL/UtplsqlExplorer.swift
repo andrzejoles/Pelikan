@@ -139,4 +139,44 @@ public enum UtplsqlExplorer {
         }
         return out
     }
+
+    /// Adnotacje z listą procedur (`--%beforeall(p1, p2)` itd.) — procedury muszą być w specyfikacji pakietu.
+    nonisolated static let procedureListAnnotations: Set<String> = ["beforeall", "afterall", "beforeeach", "aftereach", "beforetest", "aftertest"]
+
+    /// Problemy adnotacji specyfikacji (UT-CA-002): nieznane adnotacje, procedury z list (`--%beforeall(…)` …) nieobecne
+    /// w specyfikacji (nazwy `pakiet.procedura` — z innego pakietu — nie są sprawdzane), `--%test` bez `--%suite`,
+    /// niesparowane `--%context` / `--%endcontext`. Numer linii od 1.
+    public nonisolated static func annotationProblems(in text: String) -> [(line: Int, message: String)] {
+        var out = unknownAnnotations(in: text).map { (line: $0.line, message: L10n.tr("Nieznana adnotacja utPLSQL --%\($0.name)")) }
+        var procedures = Set<String>()
+        func collect(_ nodes: [OutlineNode]) {
+            for n in nodes {
+                if n.kind == .procedure { procedures.insert(n.name.uppercased()) }
+                collect(n.children)
+            }
+        }
+        collect(PLSQLOutline.parse(text))
+        var hasSuite = false, firstTest: Int?, depth = 0
+        for (i, line) in text.components(separatedBy: "\n").enumerated() {
+            guard let r = line.range(of: #"--%([A-Za-z_]+)(\s*\(([^)]*)\))?"#, options: .regularExpression) else { continue }
+            let match = String(line[r])
+            let name = String(match.dropFirst(3).prefix { $0.isLetter || $0 == "_" }).lowercased()
+            switch name {
+            case "suite": hasSuite = true
+            case "test": if firstTest == nil { firstTest = i + 1 }
+            case "context": depth += 1
+            case "endcontext":
+                if depth == 0 { out.append((i + 1, L10n.tr("--%endcontext bez otwierającego --%context"))) } else { depth -= 1 }
+            default: break
+            }
+            guard procedureListAnnotations.contains(name), let open = match.firstIndex(of: "("), let close = match.lastIndex(of: ")") else { continue }
+            let list = match[match.index(after: open)..<close].split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            for p in list where !p.contains(".") && !procedures.contains(p.uppercased()) {
+                out.append((i + 1, L10n.tr("Procedura „\(p)” z --%\(name) nie istnieje w specyfikacji pakietu")))
+            }
+        }
+        if let t = firstTest, !hasSuite { out.append((t, L10n.tr("Pakiet ma --%test, ale brak --%suite — utPLSQL go nie uruchomi"))) }
+        if depth > 0 { out.append((text.components(separatedBy: "\n").count, L10n.tr("Brak --%endcontext dla \(depth) --%context"))) }
+        return out.sorted { $0.line < $1.line }
+    }
 }

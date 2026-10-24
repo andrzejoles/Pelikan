@@ -13,6 +13,7 @@ public enum SQLCommands {
     static func execute(_ ctx: CommandContext, _ scope: ExecuteScope) async throws -> CommandResult {
         guard let doc = sqlDocument(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak okna SQL")) }
         if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
+        ctx.workspace.saveRecoverySnapshotBeforeExecute()
         if doc.kind == .command {
             // Command Window: F8 wykonuje zaznaczenie albo cały skrypt karty Editor (UG 8.2).
             let ns = doc.text as NSString

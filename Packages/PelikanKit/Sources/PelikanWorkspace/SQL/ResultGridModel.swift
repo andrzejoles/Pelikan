@@ -233,6 +233,8 @@ public final class ResultTab: Identifiable {
     public var columnFilter: ColumnFilter?
     /// Szerokości kolumn w znakach po „Align” (PD-GRID-012); nil — szerokości domyślne.
     public var columnWidths: [Int: Int]?
+    /// Linie tekstu na wiersz siatki (PD-GRID-012, „Align › wysokość”): 1 — jedna linia; więcej — zawijanie.
+    public var rowLines = 1
     /// Sumy kolumn (PD-GRID-024): kolumna → funkcje.
     public var totals: [Int: [ColumnAggregate]] = [:]
     /// Kolor naprzemiennych wierszy z dyrektywy `AltRowColor=` (PD-SQLW-011), np. `#F0F0FF` albo nazwa.

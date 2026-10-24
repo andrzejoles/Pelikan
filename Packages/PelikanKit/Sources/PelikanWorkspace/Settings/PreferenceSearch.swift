@@ -13,3 +13,12 @@ public enum PreferenceSearch {
         }
     }
 }
+
+/// Kolory tekstu i tła obszaru (edytor, siatka, Object Browser — PD-PREF-005). Puste — kolory motywu systemu
+/// (jasny/ciemny); własny kolor obowiązuje w obu trybach.
+public struct AreaColors: Sendable, Codable, Hashable {
+    public var text: RGBColor?
+    public var background: RGBColor?
+    public init(text: RGBColor? = nil, background: RGBColor? = nil) { self.text = text; self.background = background }
+    public var isSystem: Bool { text == nil && background == nil }
+}

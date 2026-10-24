@@ -1317,6 +1317,34 @@
         }
       }
     },
+    "(pusty folder)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(empty folder)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(leerer Ordner)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(carpeta vacía)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(порожня тека)"
+          }
+        }
+      }
+    },
     "(rekord)" : {
       "localizations" : {
         "en" : {
@@ -1425,6 +1453,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "-- Keine Änderungen"
+          }
+        }
+      }
+    },
+    "--%%endcontext bez otwierającego --%%context" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--%%endcontext without an opening --%%context"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--%%endcontext ohne öffnendes --%%context"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--%%endcontext sin --%%context de apertura"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--%%endcontext без відкривального --%%context"
           }
         }
       }
@@ -4229,6 +4285,34 @@
         }
       }
     },
+    "Bez własnego koloru obowiązują kolory motywu systemu (tryb jasny i ciemny). Własny kolor działa w obu trybach." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without a custom color, the system theme colors apply (light and dark mode). A custom color applies in both modes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne eigene Farbe gelten die Farben des Systemthemas (heller und dunkler Modus). Eine eigene Farbe gilt in beiden Modi."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin color propio se usan los colores del tema del sistema (modo claro y oscuro). Un color propio se aplica en ambos modos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без власного кольору діють кольори теми системи (світлий і темний режим). Власний колір діє в обох режимах."
+          }
+        }
+      }
+    },
     "Bez zaznaczonych tabel — cały schemat. Plik powstaje na serwerze bazy." : {
       "localizations" : {
         "en" : {
@@ -5009,6 +5093,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine"
+          }
+        }
+      }
+    },
+    "Brak --%%endcontext dla %@ --%%context" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing --%%endcontext for %@ --%%context"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlendes --%%endcontext für %@ --%%context"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta --%%endcontext para %@ --%%context"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бракує --%%endcontext для %@ --%%context"
           }
         }
       }
@@ -15009,6 +15121,62 @@
         }
       }
     },
+    "Edytor ukryty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor hidden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor ausgeblendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor oculto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор приховано"
+          }
+        }
+      }
+    },
+    "Edytor widoczny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor visible"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor visible"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор видимий"
+          }
+        }
+      }
+    },
     "Edytor zewnętrzny" : {
       "localizations" : {
         "en" : {
@@ -15173,6 +15341,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindung bearbeiten …"
+          }
+        }
+      }
+    },
+    "Edytuj szablon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage bearbeiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагувати шаблон"
+          }
+        }
+      }
+    },
+    "Edytuj szablon…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit template…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage bearbeiten…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar plantilla…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагувати шаблон…"
+          }
+        }
+      }
+    },
+    "Edytuje tekst, nazwę i folder szablonu (wbudowany — zapisany jako szablon użytkownika) albo tworzy nowy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edits a template's text, name and folder (a built-in one is saved as a user template) or creates a new one."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeitet Text, Namen und Ordner einer Vorlage (eine integrierte wird als Benutzervorlage gespeichert) oder erstellt eine neue."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edita el texto, el nombre y la carpeta de una plantilla (una integrada se guarda como plantilla de usuario) o crea una nueva."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагує текст, назву й теку шаблону (вбудований зберігається як шаблон користувача) або створює новий."
           }
         }
       }
@@ -16913,6 +17165,34 @@
         }
       }
     },
+    "Flagi kompilacji warunkowej PLSQL_CCFLAGS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conditional compilation flags PLSQL_CCFLAGS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Flags für bedingte Kompilierung PLSQL_CCFLAGS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indicadores de compilación condicional PLSQL_CCFLAGS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прапорці умовної компіляції PLSQL_CCFLAGS"
+          }
+        }
+      }
+    },
     "Flagi kompilacji warunkowej…" : {
       "localizations" : {
         "en" : {
@@ -17105,6 +17385,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тека користувача (буде створена, якщо не існує)"
+          }
+        }
+      }
+    },
+    "Folder „%@” już istnieje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder “%@” already exists"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ existiert bereits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carpeta «%@» ya existe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека «%@» уже існує"
+          }
+        }
+      }
+    },
+    "Folder „%@” nie ma szablonów użytkownika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder “%@” has no user templates"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ enthält keine Benutzervorlagen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La carpeta «%@» no tiene plantillas de usuario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека «%@» не має шаблонів користувача"
           }
         }
       }
@@ -21925,6 +22261,34 @@
         }
       }
     },
+    "Jak serwer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie Server"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como el servidor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як на сервері"
+          }
+        }
+      }
+    },
     "Jak system" : {
       "localizations" : {
         "en" : {
@@ -23409,6 +23773,34 @@
         }
       }
     },
+    "Kliknij, aby zaznaczyć albo przejść do elementu ścieżki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to select or go to an element of the path"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klicken, um ein Element des Pfads auszuwählen oder anzuspringen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haga clic para seleccionar o ir a un elemento de la ruta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Клацніть, щоб виділити елемент шляху або перейти до нього"
+          }
+        }
+      }
+    },
     "Klucz serwera inny niż zapamiętany w known_hosts — możliwa podmiana serwera; sprawdź z administratorem" : {
       "localizations" : {
         "en" : {
@@ -24189,6 +24581,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Колір 1–6 (0 — вилучити позначку з виділення)"
+          }
+        }
+      }
+    },
+    "Kolory czcionek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font colors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schriftfarben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colores de fuente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кольори шрифтів"
           }
         }
       }
@@ -25281,6 +25701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Компілювати файли лише для читання"
+          }
+        }
+      }
+    },
+    "Kompilator (UG 23.3)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiler (UG 23.3)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiler (UG 23.3)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilador (UG 23.3)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компілятор (UG 23.3)"
           }
         }
       }
@@ -29009,6 +29457,34 @@
         }
       }
     },
+    "Linie na wiersz 1–10 albo auto (wg treści)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines per row 1–10 or auto (by content)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen pro Datensatz 1–10 oder auto (nach Inhalt)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Líneas por fila 1–10 o auto (según contenido)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядків на запис 1–10 або auto (за вмістом)"
+          }
+        }
+      }
+    },
     "Linie punktów (po przecinku)" : {
       "localizations" : {
         "en" : {
@@ -29033,6 +29509,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Punktzeilen (durch Komma getrennt)"
+          }
+        }
+      }
+    },
+    "Linii na wiersz: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lines per row: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen pro Datensatz: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Líneas por fila: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядків на запис: %@"
           }
         }
       }
@@ -30657,6 +31161,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start-Snapshot"
+          }
+        }
+      }
+    },
+    "Migawka także przed każdym wykonaniem (F8, kompilacja, test)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Snapshot also before every execution (F8, compile, test)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Momentaufnahme auch vor jeder Ausführung (F8, Kompilierung, Test)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instantánea también antes de cada ejecución (F8, compilación, prueba)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знімок також перед кожним виконанням (F8, компіляція, тест)"
           }
         }
       }
@@ -36765,6 +37297,62 @@
         }
       }
     },
+    "Nowy folder szablonów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New template folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Vorlagenordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva carpeta de plantillas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова тека шаблонів"
+          }
+        }
+      }
+    },
+    "Nowy folder szablonów…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New template folder…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Vorlagenordner…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva carpeta de plantillas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова тека шаблонів…"
+          }
+        }
+      }
+    },
     "Nowy folder…" : {
       "localizations" : {
         "en" : {
@@ -37013,6 +37601,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neues Snippet"
+          }
+        }
+      }
+    },
+    "Nowy szablon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Vorlage"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий шаблон"
+          }
+        }
+      }
+    },
+    "Nowy szablon…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New template…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Vorlage…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva plantilla…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий шаблон…"
+          }
+        }
+      }
+    },
+    "Nowy tekst" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo texto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий текст"
           }
         }
       }
@@ -42421,6 +43093,34 @@
         }
       }
     },
+    "Ostrzeżenia PLSQL_WARNINGS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnings PLSQL_WARNINGS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen PLSQL_WARNINGS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencias PLSQL_WARNINGS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередження PLSQL_WARNINGS"
+          }
+        }
+      }
+    },
     "Ostrzeżenie" : {
       "localizations" : {
         "en" : {
@@ -44633,6 +45333,34 @@
         }
       }
     },
+    "PL/Scope PLSCOPE_SETTINGS" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PL/Scope PLSCOPE_SETTINGS"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PL/Scope PLSCOPE_SETTINGS"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PL/Scope PLSCOPE_SETTINGS"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PL/Scope PLSCOPE_SETTINGS"
+          }
+        }
+      }
+    },
     "PLSQL_CCFLAGS, np. debug:TRUE, level:2 (bez argumentu — odczyt)" : {
       "localizations" : {
         "en" : {
@@ -44685,6 +45413,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paket"
+          }
+        }
+      }
+    },
+    "Pakiet ma --%%test, ale brak --%%suite — utPLSQL go nie uruchomi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package has --%%test but no --%%suite — utPLSQL will not run it"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Paket hat --%%test, aber kein --%%suite — utPLSQL führt es nicht aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete tiene --%%test pero no --%%suite: utPLSQL no lo ejecutará"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет має --%%test, але немає --%%suite — utPLSQL його не запустить"
           }
         }
       }
@@ -45693,6 +46449,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перший рядок (від 1)"
+          }
+        }
+      }
+    },
+    "Pierwszy znak w linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First character on line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstes Zeichen der Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Primer carácter de la línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перший символ у рядку"
           }
         }
       }
@@ -47961,6 +48745,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aktuelle Zeile hervorheben"
+          }
+        }
+      }
+    },
+    "Podświetlaj wystąpienia nazwy pod kursorem i zaznaczonego słowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight occurrences of the name under the cursor and the selected word"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorkommen des Namens unter dem Cursor und des markierten Worts hervorheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resaltar las apariciones del nombre bajo el cursor y de la palabra seleccionada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підсвічувати входження назви під курсором і виділеного слова"
           }
         }
       }
@@ -51969,6 +52781,90 @@
         }
       }
     },
+    "Poziom optymalizacji PLSQL_OPTIMIZE_LEVEL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimization level PLSQL_OPTIMIZE_LEVEL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optimierungsstufe PLSQL_OPTIMIZE_LEVEL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel de optimización PLSQL_OPTIMIZE_LEVEL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рівень оптимізації PLSQL_OPTIMIZE_LEVEL"
+          }
+        }
+      }
+    },
+    "Poziom poza ścieżką (0–%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Level outside the path (0–%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebene außerhalb des Pfads (0–%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel fuera de la ruta (0–%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рівень поза шляхом (0–%@)"
+          }
+        }
+      }
+    },
+    "Poziom ścieżki od jednostki (0); domyślnie najgłębszy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Path level from the unit (0); deepest by default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfadebene ab der Einheit (0); standardmäßig die tiefste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel de la ruta desde la unidad (0); por defecto el más profundo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рівень шляху від одиниці (0); типово найглибший"
+          }
+        }
+      }
+    },
     "Poziom śladu: %@" : {
       "localizations" : {
         "en" : {
@@ -53145,6 +54041,34 @@
         }
       }
     },
+    "Procedura „%@” z --%%%@ nie istnieje w specyfikacji pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procedure “%@” from --%%%@ does not exist in the package specification"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prozedur „%@“ aus --%%%@ existiert nicht in der Paketspezifikation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El procedimiento «%@» de --%%%@ no existe en la especificación del paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Процедура «%@» з --%%%@ не існує в специфікації пакета"
+          }
+        }
+      }
+    },
     "Procedury" : {
       "localizations" : {
         "en" : {
@@ -54265,6 +55189,34 @@
         }
       }
     },
+    "Przejdź do poziomu hierarchii kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to code hierarchy level"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zur Ebene der Codehierarchie springen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ir al nivel de la jerarquía de código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейти до рівня ієрархії коду"
+          }
+        }
+      }
+    },
     "Przejdź do zakładki" : {
       "localizations" : {
         "en" : {
@@ -54629,6 +55581,34 @@
         }
       }
     },
+    "Przenosi kursor do nazwy elementu ścieżki Code Hierarchy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the cursor to the name of a Code Hierarchy path element."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt den Cursor auf den Namen eines Elements des Code-Hierarchy-Pfads."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve el cursor al nombre de un elemento de la ruta de Code Hierarchy."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує курсор до назви елемента шляху Code Hierarchy."
+          }
+        }
+      }
+    },
     "Przenosi kursor do poprzedniej zakładki w oknie." : {
       "localizations" : {
         "en" : {
@@ -54681,6 +55661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Переміщує курсор до закладки з номером (Ctrl+Q n)."
+          }
+        }
+      }
+    },
+    "Przenosi kursor na pierwszy niebiały znak linii, a ponownie — na początek linii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the cursor to the first non-blank character of the line, and again — to the start of the line."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzt den Cursor auf das erste nicht leere Zeichen der Zeile, erneut — an den Zeilenanfang."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve el cursor al primer carácter no blanco de la línea y, de nuevo, al inicio de la línea."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує курсор на перший непробільний символ рядка, а повторно — на початок рядка."
           }
         }
       }
@@ -56361,6 +57369,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Haltepunkte …"
+          }
+        }
+      }
+    },
+    "Puste pole albo „Jak serwer” — parametr sesji kompilacji nie jest zmieniany. Wartości z apostrofem albo średnikiem są pomijane." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty field or “Server default” — the compile session parameter is not changed. Values with an apostrophe or semicolon are ignored."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leeres Feld oder „Wie Server“ — der Parameter der Kompilierungssitzung wird nicht geändert. Werte mit Apostroph oder Semikolon werden ignoriert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campo vacío o «Como el servidor»: el parámetro de la sesión de compilación no se cambia. Los valores con apóstrofo o punto y coma se ignoran."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожнє поле або «Як на сервері» — параметр сеансу компіляції не змінюється. Значення з апострофом або крапкою з комою пропускаються."
           }
         }
       }
@@ -63897,6 +64933,34 @@
         }
       }
     },
+    "Systemowe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del sistema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системні"
+          }
+        }
+      }
+    },
     "Szablon jednostki: folder/nazwa albo nazwa (domyślnie procedura)" : {
       "localizations" : {
         "en" : {
@@ -63977,6 +65041,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vorlage: ordner/name oder name"
+          }
+        }
+      }
+    },
+    "Szablon: folder/nazwa; pusty — nowy szablon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Template: folder/name; empty — new template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage: Ordner/Name; leer — neue Vorlage"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantilla: carpeta/nombre; vacío: plantilla nueva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон: тека/назва; порожньо — новий шаблон"
           }
         }
       }
@@ -66389,6 +67481,34 @@
         }
       }
     },
+    "Tekst szablonu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Template text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagentext"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto de la plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст шаблону"
+          }
+        }
+      }
+    },
     "Tekst wróci do stanu z chwili otwarcia lub ostatniego zapisu." : {
       "localizations" : {
         "en" : {
@@ -68237,6 +69357,34 @@
         }
       }
     },
+    "Tworzy pusty folder szablonów użytkownika." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates an empty user template folder."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt einen leeren Ordner für Benutzervorlagen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una carpeta vacía de plantillas de usuario."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює порожню теку шаблонів користувача."
+          }
+        }
+      }
+    },
     "Tworzy pusty plik i otwiera go w oknie odpowiednim dla rozszerzenia." : {
       "localizations" : {
         "en" : {
@@ -68797,6 +69945,34 @@
         }
       }
     },
+    "Typ kodu PLSQL_CODE_TYPE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code type PLSQL_CODE_TYPE"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codetyp PLSQL_CODE_TYPE"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de código PLSQL_CODE_TYPE"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тип коду PLSQL_CODE_TYPE"
+          }
+        }
+      }
+    },
     "Typ obiektowy" : {
       "localizations" : {
         "en" : {
@@ -69189,6 +70365,34 @@
         }
       }
     },
+    "Tło" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hintergrund"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fondo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тло"
+          }
+        }
+      }
+    },
     "Tło (kolor CSS)" : {
       "localizations" : {
         "en" : {
@@ -69413,6 +70617,34 @@
         }
       }
     },
+    "Ukryj edytor" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide editor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editor ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar editor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховати редактор"
+          }
+        }
+      }
+    },
     "Ukryj pozostałe" : {
       "localizations" : {
         "en" : {
@@ -69437,6 +70669,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Andere ausblenden"
+          }
+        }
+      }
+    },
+    "Ukrywa albo pokazuje edytor okna SQL — wyniki zajmują całe okno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hides or shows the SQL Window editor — results fill the whole window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blendet den Editor des SQL-Fensters aus oder ein — Ergebnisse füllen das ganze Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oculta o muestra el editor de la ventana SQL: los resultados ocupan toda la ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховує або показує редактор вікна SQL — результати займають усе вікно."
           }
         }
       }
@@ -71009,6 +72269,34 @@
         }
       }
     },
+    "Ustawia wysokość wierszy siatki w liniach tekstu (wieloliniowe wartości zawijane) albo wg treści." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets the grid row height in lines of text (multi-line values wrapped) or by content."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Legt die Zeilenhöhe des Rasters in Textzeilen fest (mehrzeilige Werte umbrochen) oder nach Inhalt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establece la altura de las filas de la cuadrícula en líneas de texto (valores multilínea ajustados) o según el contenido."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задає висоту рядків сітки в рядках тексту (багаторядкові значення переносяться) або за вмістом."
+          }
+        }
+      }
+    },
     "Ustawienia NLS sesji" : {
       "localizations" : {
         "en" : {
@@ -71261,6 +72549,34 @@
         }
       }
     },
+    "Usunąć folder „%@” razem z jego szablonami użytkownika?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete folder “%@” together with its user templates?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ samt seinen Benutzervorlagen löschen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar la carpeta «%@» junto con sus plantillas de usuario?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити теку «%@» разом із її шаблонами користувача?"
+          }
+        }
+      }
+    },
     "Usunąć jednostkę %@ z okna?" : {
       "localizations" : {
         "en" : {
@@ -71397,6 +72713,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вилучає додаткові курсори й виділення."
+          }
+        }
+      }
+    },
+    "Usuwa folder szablonów użytkownika z jego szablonami (wbudowane zostają)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletes a user template folder with its templates (built-in ones remain)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht einen Benutzervorlagenordner mit seinen Vorlagen (integrierte bleiben)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina una carpeta de plantillas de usuario con sus plantillas (las integradas se conservan)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучає теку шаблонів користувача з її шаблонами (вбудовані залишаються)."
           }
         }
       }
@@ -71593,6 +72937,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Löscht eine Benutzervorlage (integrierte Vorlagen bleiben erhalten)."
+          }
+        }
+      }
+    },
+    "Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletes text from the cursor to the end of the next word (or the selection)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löscht den Text vom Cursor bis zum Ende des nächsten Worts (oder die Auswahl)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina el texto desde el cursor hasta el final de la siguiente palabra (o la selección)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучає текст від курсора до кінця наступного слова (або виділення)."
           }
         }
       }
@@ -71961,6 +73333,62 @@
         }
       }
     },
+    "Usuń folder szablonów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete template folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagenordner löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar carpeta de plantillas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити теку шаблонів"
+          }
+        }
+      }
+    },
+    "Usuń folder „%@”" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete folder “%@”"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar la carpeta «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити теку «%@»"
+          }
+        }
+      }
+    },
     "Usuń jednostkę" : {
       "localizations" : {
         "en" : {
@@ -72153,6 +73581,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Überzählige Objekte entfernen"
+          }
+        }
+      }
+    },
+    "Usuń następne słowo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete next word"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächstes Wort löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar la palabra siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити наступне слово"
           }
         }
       }
@@ -82097,6 +83553,90 @@
         }
       }
     },
+    "Wyróżniaj polecenia COMMIT, ROLLBACK i SAVEPOINT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlight COMMIT, ROLLBACK and SAVEPOINT statements"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT-, ROLLBACK- und SAVEPOINT-Anweisungen hervorheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resaltar las instrucciones COMMIT, ROLLBACK y SAVEPOINT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділяти команди COMMIT, ROLLBACK і SAVEPOINT"
+          }
+        }
+      }
+    },
+    "Wysokość wierszy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row height"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenhöhe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altura de filas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Висота рядків"
+          }
+        }
+      }
+    },
+    "Wysokość wierszy…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Row height…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilenhöhe…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Altura de filas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Висота рядків…"
+          }
+        }
+      }
+    },
     "Wyszukiwanie i zamiana w edytorze (tekst albo wyrażenie regularne)." : {
       "localizations" : {
         "en" : {
@@ -90917,6 +92457,34 @@
         }
       }
     },
+    "Zaznacz poziom hierarchii kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select code hierarchy level"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ebene der Codehierarchie auswählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar nivel de la jerarquía de código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділити рівень ієрархії коду"
+          }
+        }
+      }
+    },
     "Zaznacz sesję" : {
       "localizations" : {
         "en" : {
@@ -91109,6 +92677,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Виділяє весь стовпець (усі отримані рядки) як блок клітинок."
+          }
+        }
+      }
+    },
+    "Zaznacza element ścieżki Code Hierarchy (jednostkę, podprogram, blok) obejmujący kursor." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selects the Code Hierarchy path element (unit, subprogram, block) containing the cursor."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markiert das Element des Code-Hierarchy-Pfads (Einheit, Unterprogramm, Block), das den Cursor enthält."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona el elemento de la ruta de Code Hierarchy (unidad, subprograma, bloque) que contiene el cursor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділяє елемент шляху Code Hierarchy (одиницю, підпрограму, блок), що містить курсор."
           }
         }
       }
@@ -92653,6 +94249,34 @@
         }
       }
     },
+    "Zmienia nazwę folderu szablonów użytkownika (z szablonami)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renames a user template folder (with its templates)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benennt einen Benutzervorlagenordner um (mit seinen Vorlagen)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia el nombre de una carpeta de plantillas de usuario (con sus plantillas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменовує теку шаблонів користувача (разом із шаблонами)."
+          }
+        }
+      }
+    },
     "Zmienia nazwę kolumny, więzu, indeksu albo wyzwalacza tabeli." : {
       "localizations" : {
         "en" : {
@@ -93297,6 +94921,34 @@
         }
       }
     },
+    "Zmienne: [Nazwa], [Nazwa=domyślna], lista [Nazwa=*a,b,c]; kursor: [#]; nawias dosłownie: [[; wbudowane: $OSUSER $DBUSER $DATE $TIME." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables: [Name], [Name=default], list [Name=*a,b,c]; cursor: [#]; literal bracket: [[; built-in: $OSUSER $DBUSER $DATE $TIME."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variablen: [Name], [Name=Standard], Liste [Name=*a,b,c]; Cursor: [#]; wörtliche Klammer: [[; integriert: $OSUSER $DBUSER $DATE $TIME."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variables: [Nombre], [Nombre=predeterminado], lista [Nombre=*a,b,c]; cursor: [#]; corchete literal: [[; integradas: $OSUSER $DBUSER $DATE $TIME."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінні: [Назва], [Назва=типове], список [Назва=*a,b,c]; курсор: [#]; дужка буквально: [[; вбудовані: $OSUSER $DBUSER $DATE $TIME."
+          }
+        }
+      }
+    },
     "Zmień" : {
       "localizations" : {
         "en" : {
@@ -93461,6 +95113,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перейменувати елемент…"
+          }
+        }
+      }
+    },
+    "Zmień nazwę folderu szablonów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename template folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagenordner umbenennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar nombre de carpeta de plantillas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати теку шаблонів"
+          }
+        }
+      }
+    },
+    "Zmień nazwę folderu szablonów…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename template folder…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlagenordner umbenennen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar nombre de carpeta de plantillas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати теку шаблонів…"
+          }
+        }
+      }
+    },
+    "Zmień nazwę folderu „%@”…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename folder “%@”…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner „%@“ umbenennen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar nombre de la carpeta «%@»…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати теку «%@»…"
           }
         }
       }

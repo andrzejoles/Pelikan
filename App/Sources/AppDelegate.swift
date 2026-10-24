@@ -761,6 +761,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                                second: UInt8(withTime ? h.second ?? 0 : 0))
     }
 
+    /// Edytor szablonu (PD-TPL-003): folder (lista albo nowy), nazwa i tekst ze składnią szablonów.
+    func editTemplate(_ template: CodeTemplate, folders: [String]) async -> CodeTemplate? {
+        let folder = NSComboBox(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        folder.addItems(withObjectValues: folders)
+        folder.stringValue = template.folder
+        folder.setAccessibilityLabel(L10n.tr("Folder szablonu"))
+        let name = NSTextField(string: template.name)
+        name.placeholderString = L10n.tr("Nazwa szablonu")
+        name.setAccessibilityLabel(L10n.tr("Nazwa szablonu"))
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 520, height: 260))
+        text.string = template.text
+        text.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        text.isAutomaticQuoteSubstitutionEnabled = false
+        text.isAutomaticDashSubstitutionEnabled = false
+        text.isRichText = false
+        text.setAccessibilityLabel(L10n.tr("Tekst szablonu"))
+        let scroll = NSScrollView(frame: NSRect(x: 0, y: 0, width: 520, height: 260))
+        scroll.documentView = text
+        scroll.hasVerticalScroller = true
+        scroll.borderType = .bezelBorder
+        let hint = NSTextField(wrappingLabelWithString: L10n.tr("Zmienne: [Nazwa], [Nazwa=domyślna], lista [Nazwa=*a,b,c]; kursor: [#]; nawias dosłownie: [[; wbudowane: $OSUSER $DBUSER $DATE $TIME."))
+        hint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        hint.textColor = .secondaryLabelColor
+        let row = NSStackView(views: [folder, name])
+        let stack = NSStackView(views: [row, scroll, hint])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.frame = NSRect(x: 0, y: 0, width: 520, height: 330)
+        NSLayoutConstraint.activate([scroll.widthAnchor.constraint(equalToConstant: 520), scroll.heightAnchor.constraint(equalToConstant: 260),
+                                     name.widthAnchor.constraint(equalToConstant: 250), hint.widthAnchor.constraint(equalToConstant: 520)])
+        let alert = NSAlert()
+        alert.messageText = template.name.isEmpty ? L10n.tr("Nowy szablon") : L10n.tr("Edytuj szablon")
+        alert.accessoryView = stack
+        alert.addButton(withTitle: L10n.tr("Zapisz"))
+        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return CodeTemplate(folder: folder.stringValue.trimmingCharacters(in: .whitespaces), name: name.stringValue.trimmingCharacters(in: .whitespaces),
+                            text: text.string)
+    }
+
     func showSQLMonitor() {
         ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
     }

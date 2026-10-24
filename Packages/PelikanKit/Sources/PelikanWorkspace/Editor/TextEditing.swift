@@ -110,6 +110,41 @@ public enum TextEditing {
         return TextEdit(text: newText, selection: (selection.lowerBound + shift)..<(selection.upperBound + shift))
     }
 
+    /// Usuwa od kursora do końca następnego słowa (PD-EDIT-020, „Delete next word”): najpierw odstępy, potem znaki
+    /// słowa (litery, cyfry, `_ $ #`) albo jeden znak interpunkcji. Zaznaczenie — usuwane w całości.
+    public static func deleteNextWord(_ text: String, selection: Range<Int>) -> TextEdit {
+        let ns = text as NSString
+        if !selection.isEmpty {
+            return TextEdit(text: ns.replacingCharacters(in: NSRange(location: selection.lowerBound, length: selection.count), with: ""),
+                            selection: selection.lowerBound..<selection.lowerBound)
+        }
+        func isWord(_ c: unichar) -> Bool {
+            guard let s = Unicode.Scalar(c) else { return false }
+            return CharacterSet.alphanumerics.contains(s) || c == 0x5F || c == 0x24 || c == 0x23
+        }
+        var end = selection.lowerBound
+        while end < ns.length, ns.character(at: end) == 0x20 || ns.character(at: end) == 0x09 { end += 1 }
+        if end < ns.length, ns.character(at: end) == 0x0A { end += 1 } else if end < ns.length, isWord(ns.character(at: end)) {
+            while end < ns.length, isWord(ns.character(at: end)) { end += 1 }
+        } else if end < ns.length {
+            end += 1
+        }
+        let start = selection.lowerBound
+        return TextEdit(text: ns.replacingCharacters(in: NSRange(location: start, length: end - start), with: ""), selection: start..<start)
+    }
+
+    /// Pierwszy znak w linii (PD-EDIT-020, „First Character on Line”): kursor na pierwszy niebiały znak linii, a gdy
+    /// już tam jest — na początek linii (przełączanie jak Home w edytorze wzorca).
+    public static func firstCharacterOnLine(_ text: String, selection: Range<Int>) -> TextEdit {
+        let ns = text as NSString
+        let line = ns.lineRange(for: NSRange(location: min(selection.lowerBound, ns.length), length: 0))
+        var first = line.location
+        while first < line.location + line.length, ns.character(at: first) == 0x20 || ns.character(at: first) == 0x09 { first += 1 }
+        if first < ns.length, ns.character(at: first) == 0x0A || first == line.location + line.length { first = line.location }
+        let target = selection.lowerBound == first ? line.location : first
+        return TextEdit(text: text, selection: target..<target)
+    }
+
     /// Identyfikator z kropkami (schemat.pakiet.element) obejmujący pozycję, bez cudzysłowów.
     public static func identifier(at offset: Int, in text: String) -> String? {
         BuiltinCommands.identifier(at: offset, in: text)?.0

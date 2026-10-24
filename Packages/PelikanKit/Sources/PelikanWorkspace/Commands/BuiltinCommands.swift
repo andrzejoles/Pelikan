@@ -444,6 +444,14 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Powiela bieżącą linię albo zaznaczone linie."), feature: "PD-EDIT-020") {
                 TextEditing.duplicateLines($0, selection: $1)
             },
+            editCommand("edit.deleteNextWord", L10n.tr("Usuń następne słowo"), pd: ["ctrl+delete"], mac: ["ctrl+alt+delete"],
+                        summary: L10n.tr("Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)."), feature: "PD-EDIT-020") {
+                TextEditing.deleteNextWord($0, selection: $1)
+            },
+            editCommand("edit.firstCharacterOnLine", L10n.tr("Pierwszy znak w linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
+                        summary: L10n.tr("Przenosi kursor na pierwszy niebiały znak linii, a ponownie — na początek linii."), feature: "PD-EDIT-020") {
+                TextEditing.firstCharacterOnLine($0, selection: $1)
+            },
             editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
                         summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: true)

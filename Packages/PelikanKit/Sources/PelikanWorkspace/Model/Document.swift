@@ -108,6 +108,8 @@ public final class Document: Identifiable {
     /// Wyjście DBMS_OUTPUT (karta Output).
     public var output: [String] = []
     public var outputEnabled = true
+    /// Okno SQL z ukrytym edytorem — same wyniki (PD-GRID-012, „Hide Editor”).
+    public var editorHidden = false
     /// Komunikat na pasku stanu okna (czas wykonania, liczba wierszy, błąd).
     public var statusText: String?
     /// Zakres błędu w tekście (UTF-16) do zaznaczenia w edytorze.

@@ -170,6 +170,20 @@ public enum GridAlign {
         return out
     }
 
+    /// Wysokość wiersza w liniach wg treści (PD-GRID-012): najwięcej linii w komórkach pierwszych `sample` wierszy,
+    /// od 1 do `maxLines`.
+    @MainActor
+    public static func rowLines(_ grid: ResultGridModel, sample: Int = 500, maxLines: Int = 10) -> Int {
+        var most = 1
+        for r in 0..<min(grid.rowCount, sample) {
+            for c in grid.columns.indices {
+                let n = grid.text(row: r, column: c).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
+                if n > most { most = n }
+            }
+        }
+        return Swift.min(most, maxLines)
+    }
+
     /// Klucz szablonu: zapytanie bez komentarzy końcowych, białe znaki zwinięte, małe litery.
     public static func key(for sql: String) -> String {
         var s = sql.trimmingCharacters(in: .whitespacesAndNewlines)

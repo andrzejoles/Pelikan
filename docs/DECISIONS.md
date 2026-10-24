@@ -999,3 +999,43 @@ tego: `SSH_ASKPASS` to skrypt `exec cat "$PELIKAN_ASKPASS_FIFO"` (bez sekretu), 
 `NumberOfPasswordPrompts=1`, bez kluczy. Hasło tunelu leży w Pęku kluczy pod kontem `<uuid połączenia>.ssh`, osobno od
 hasła bazy; edytor połączenia zapisuje je tylko tam. Test: użytkownik `haslo` w kontenerze sshd testów (losowe hasło
 w `.testdb/env`, jak hasła bazy testowej).
+### D135 · 2026-10-24 — Parametry kompilatora przez ALTER SESSION
+Preferencje kompilatora (PLSQL_WARNINGS, PLSQL_OPTIMIZE_LEVEL, PLSQL_CODE_TYPE, PLSCOPE_SETTINGS, PLSQL_CCFLAGS) są
+ustawiane w sesji kompilacji przed kompilacją okna programu; puste — parametr serwera bez zmian. Wartości przechodzą
+przez filtr znaków (bez apostrofu i średnika — idą do literału), błąd parametru (np. NATIVE bez uprawnień) nie zatrzymuje
+kompilacji. Program Window kompiluje tekst bez podstawiania zmiennych `&` (jak domyślnie wzorzec) — podstawianie jest
+w SQL Window i Command Window.
+
+### D136 · 2026-10-24 — Podświetlenia w edytorze: wystąpienia, INSERT ↔ VALUES, polecenia transakcyjne
+Wystąpienia identyfikatora pod kursorem albo zaznaczonego słowa (co najmniej dwa, bez słów kluczowych, literałów i
+komentarzy; nazwa w cudzysłowie — dokładnie) mają żółte tło; para kolumna INSERT ↔ wartość VALUES — tło jak pary
+nawiasów (pozycje po przecinkach najwyższego poziomu, różna liczba elementów — brak pary). COMMIT/ROLLBACK/SAVEPOINT
+tylko na początku polecenia (po `;`, `/`, BEGIN, THEN, ELSE, LOOP…), więc `ON COMMIT` w DDL i `ROLLBACK SEGMENT` się
+nie liczą; tło pomarańczowe. Obie funkcje mają przełącznik w Preferencjach › Edytor.
+
+### D137 · 2026-10-24 — Edycja szablonów i foldery
+Edycja szablonu wbudowanego zapisuje szablon użytkownika o tej samej ścieżce (zastępuje wbudowany; usunięcie przywraca
+wbudowany). Zmiana nazwy albo folderu zapisuje nowy plik i usuwa stary. Foldery użytkownika to katalogi w `Templates`
+(także puste); zmiana nazwy folderu nie nadpisuje istniejącego, usunięcie folderu usuwa tylko szablony użytkownika.
+
+### D138 · 2026-10-24 — Migawka odzyskiwania przed wykonaniem jako opcja (zmienia D91)
+D91 pominęło migawkę przy każdym wykonaniu. Jest teraz opcją (domyślnie wyłączoną) w Preferencjach › Narzędzia:
+migawka przed F8, kompilacją i wykonaniem okna testu, najwyżej jedna na 5 sekund — seria wykonań nie spowalnia pracy,
+a awaria w trakcie długiego polecenia nie traci niezapisanych okien.
+
+### D139 · 2026-10-24 — Wysokość wierszy siatki i ukrycie edytora (zmienia D109)
+„Align › wysokość” ustawia liczbę linii tekstu na wiersz siatki (1–10 albo wg treści z pierwszych 500 wierszy);
+wartości wieloliniowe są wtedy zawijane zamiast znaku ⏎. „Ukryj edytor” chowa edytor okna SQL (same wyniki).
+„Adjust Window width” nie ma odpowiednika — wyniki są w karcie jednego okna głównego (D15).
+
+### D140 · 2026-10-24 — Własne kolory czcionek jako opcja (zmienia D112)
+Edytor, siatka wyników i Object Browser mogą mieć własny kolor tekstu i tła (Preferencje › Edytor › Kolory czcionek).
+Domyślnie — i po „Systemowe” — obowiązują kolory motywu systemu dla trybu jasnego i ciemnego; własny kolor działa w obu
+trybach (wybór użytkownika). Kolor składni (słowa kluczowe, literały, komentarze) zostaje z motywu Pelikana; tło edytora
+jest bazą odcienia koloru połączenia (PD-CONN-005).
+
+### D141 · 2026-10-24 — Walidacja adnotacji utPLSQL przy kompilacji
+Specyfikacja z `--%suite` albo `--%test` dostaje ostrzeżenia kompilacji: nieznana adnotacja, procedura z listy
+`--%beforeall/afterall/beforeeach/aftereach/beforetest/aftertest(…)` nieobecna w specyfikacji (nazwy `pakiet.procedura`
+pomijane — mogą być w innym pakiecie), `--%test` bez `--%suite` (utPLSQL nie uruchomi pakietu), niesparowane
+`--%context`/`--%endcontext`.

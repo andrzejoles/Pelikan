@@ -55,6 +55,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         hierarchyLabel.lineBreakMode = .byTruncatingHead
         hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         hierarchyLabel.setAccessibilityLabel(L10n.tr("Hierarchia kodu"))
+        hierarchyLabel.toolTip = L10n.tr("Kliknij, aby zaznaczyć albo przejść do elementu ścieżki")
+        hierarchyLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(hierarchyClicked)))
         unitBar.spacing = 2
         unitBar.edgeInsets = NSEdgeInsets(top: 3, left: 6, bottom: 3, right: 6)
 
@@ -219,6 +221,26 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             })
         }
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: add.bounds.height + 2), in: add)
+    }
+
+    /// Menu ścieżki Code Hierarchy (PD-CA-011): dla każdego poziomu — zaznacz cały element albo przejdź do nazwy.
+    @objc private func hierarchyClicked() {
+        let path = PLSQLOutline.path(at: document.selectedRange.lowerBound, in: outlineNodes)
+        guard !path.isEmpty else { return }
+        let menu = NSMenu()
+        for (level, node) in path.enumerated() {
+            let item = NSMenuItem(title: String(repeating: "  ", count: level) + node.name, action: nil, keyEquivalent: "")
+            item.submenu = NSMenu()
+            item.submenu?.addItem(ClosureMenuItem(title: L10n.tr("Zaznacz")) { [weak self] in
+                self?.workspace.perform("codeHierarchy.select", CommandArguments(["level": .int(Int64(level))]))
+            })
+            item.submenu?.addItem(ClosureMenuItem(title: L10n.tr("Przejdź")) { [weak self] in
+                self?.workspace.perform("codeHierarchy.goto", CommandArguments(["level": .int(Int64(level))]))
+                if let tv = self?.editor.textView { self?.view.window?.makeFirstResponder(tv) }
+            })
+            menu.addItem(item)
+        }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: hierarchyLabel.bounds.height + 2), in: hierarchyLabel)
     }
 
     /// Code Hierarchy (UG 25.16): ścieżka od jednostki do podprogramu/bloku pod kursorem; Code Contents śledzi kursor.

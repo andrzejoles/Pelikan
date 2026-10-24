@@ -274,6 +274,17 @@ extension Workspace {
         recovery.save(recoverySnapshot())
     }
 
+    /// Migawka przed wykonaniem (PD-FILE-001, opcja „przy każdym wykonaniu”): awaria w trakcie długiego polecenia nie
+    /// traci niezapisanych okien. Najwyżej jedna migawka na `minimumInterval` sekund — seria F8 nie spowalnia pracy.
+    @discardableResult
+    public func saveRecoverySnapshotBeforeExecute(now: Date = Date(), minimumInterval: TimeInterval = 5) -> Bool {
+        guard settings.recoveryEnabled, settings.recoveryOnExecute else { return false }
+        if let last = lastExecuteSnapshot, now.timeIntervalSince(last) < minimumInterval { return false }
+        lastExecuteSnapshot = now
+        recovery.save(recoverySnapshot())
+        return true
+    }
+
     /// Pytanie z opcją „Nie pytaj więcej” (PD-PREF-008): zapamiętana odpowiedź zastępuje pytanie, dopóki użytkownik
     /// nie przywróci okna w Preferencjach. Anulowanie nie jest zapamiętywane.
     public func askSuppressible(_ dialog: SuppressibleDialog, title: String, message: String, buttons: [String]) async -> Int? {
