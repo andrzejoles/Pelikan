@@ -144,6 +144,10 @@ extension TemplateLibrary {
                   display [Wyświetlanie=value]
                   annotations ([Adnotacja=opis] '[Opis]');[#]
                 """, isBuiltIn: true),
+            CodeTemplate(folder: objectsFolder, name: L10n.tr("Asercja"), text: """
+                create assertion [Nazwa=nowa_asercja]
+                  check (not exists (select 1 from [Tabela] where [Warunek naruszenia=1 = 0]));[#]
+                """, isBuiltIn: true),
             CodeTemplate(folder: dml, name: "select", text: """
                 select [#]*
                 from   [Tabela] t

@@ -3277,6 +3277,62 @@
         }
       }
     },
+    "Asercja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aserción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Асерція"
+          }
+        }
+      }
+    },
+    "Asercja…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assertion…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aserción…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Асерція…"
+          }
+        }
+      }
+    },
     "Asercje" : {
       "localizations" : {
         "en" : {
@@ -5429,6 +5485,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Informationen über den Sperrinhaber."
+          }
+        }
+      }
+    },
+    "Brak innego połączenia do porównania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No other connection to compare with"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine andere Verbindung zum Vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay otra conexión con la que comparar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає іншого підключення для порівняння"
           }
         }
       }
@@ -32649,6 +32733,34 @@
         }
       }
     },
+    "Nazwa połączenia (bez — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection name (none — choose from list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungsname (leer — Auswahl aus Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la conexión (vacío: elegir de la lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва підключення (порожньо — вибір зі списку)"
+          }
+        }
+      }
+    },
     "Nazwa połączenia albo pusty tekst — połączenie główne" : {
       "localizations" : {
         "en" : {
@@ -42729,6 +42841,34 @@
         }
       }
     },
+    "Otwiera okno SQL z szablonem CREATE ASSERTION (26ai): warunek NOT EXISTS na danych tabel." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a SQL window with a CREATE ASSERTION template (26ai): a NOT EXISTS condition on table data."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet ein SQL-Fenster mit einer CREATE ASSERTION-Vorlage (26ai): NOT EXISTS-Bedingung auf Tabellendaten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una ventana SQL con una plantilla CREATE ASSERTION (26ai): condición NOT EXISTS sobre datos de tablas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває вікно SQL із шаблоном CREATE ASSERTION (26ai): умова NOT EXISTS на даних таблиць."
+          }
+        }
+      }
+    },
     "Otwiera okno SQL z szablonem CREATE DOMAIN (23ai): typ, ograniczenie, wyświetlanie, adnotacje." : {
       "localizations" : {
         "en" : {
@@ -50205,6 +50345,62 @@
         }
       }
     },
+    "Porównaj z obiektami w innej bazie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with objects in another database…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Objekten in einer anderen Datenbank vergleichen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con objetos de otra base de datos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з об’єктами в іншій базі…"
+          }
+        }
+      }
+    },
+    "Porównaj z obiektem w innej bazie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with object in another database…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Objekt in einer anderen Datenbank vergleichen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con un objeto de otra base de datos…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з об’єктом в іншій базі…"
+          }
+        }
+      }
+    },
     "Porównaj z plikiem…" : {
       "localizations" : {
         "en" : {
@@ -50285,6 +50481,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit vorherigem Plan des Fensters vergleichen"
+          }
+        }
+      }
+    },
+    "Porównaj z połączeniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Verbindung vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з підключенням"
           }
         }
       }
@@ -50793,6 +51017,34 @@
         }
       }
     },
+    "Porównuje jednostki okna programu ze źródłem obiektów o tych nazwach w bazie innego połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the program window units with the source of objects with these names in another connection's database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht die Einheiten des Programmfensters mit dem Quelltext gleichnamiger Objekte in der Datenbank einer anderen Verbindung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara las unidades de la ventana de programa con el código de los objetos con esos nombres en la base de otra conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює одиниці вікна програми з кодом об’єктів із такими назвами в базі іншого підключення."
+          }
+        }
+      }
+    },
     "Porównuje jednostki okna programu ze źródłem tych obiektów w bazie (ALL_SOURCE)." : {
       "localizations" : {
         "en" : {
@@ -50929,6 +51181,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vergleicht die Quelle (oder DDL) eines Datenbankobjekts mit dem Text des aktiven Fensters."
+          }
+        }
+      }
+    },
+    "Porównuje źródło (albo DDL) obiektu z obiektem o tej samej nazwie w bazie innego połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compares the object's source (or DDL) with the object of the same name in another connection's database."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleicht Quelltext (oder DDL) des Objekts mit dem gleichnamigen Objekt in der Datenbank einer anderen Verbindung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compara el código (o DDL) del objeto con el objeto del mismo nombre en la base de otra conexión."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівнює код (або DDL) об’єкта з об’єктом із такою ж назвою в базі іншого підключення."
           }
         }
       }
@@ -60029,6 +60309,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schema im SQL"
+          }
+        }
+      }
+    },
+    "Schemat w tamtej bazie (domyślnie ten sam)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in that database (same by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in jener Datenbank (standardmäßig dasselbe)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema en esa base (por defecto, el mismo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схема в тій базі (типово та сама)"
+          }
+        }
+      }
+    },
+    "Schemat w tamtej bazie (domyślnie z nagłówków albo bieżący)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in that database (from headers or current by default)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema in jener Datenbank (standardmäßig aus Kopfzeilen oder aktuelles)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquema en esa base (por defecto, de las cabeceras o el actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Схема в тій базі (типово із заголовків або поточна)"
           }
         }
       }

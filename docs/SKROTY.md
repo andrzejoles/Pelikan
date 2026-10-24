@@ -54,6 +54,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Przywróć | `prog.revert` |  |  | Pełny | 0 | PD-PROG-009 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | 0 | PD-PROG-008 |
+| Porównaj › Porównaj z obiektami w innej bazie… | `prog.compareWithConnection` |  |  | Odczyt | 0 | PD-PROG-008 |
 | Nowy › Tabela… | `file.newTable` |  |  | Brak | 0 | PD-OED-001 |
 | Nowy › Sekwencja… | `file.newSequence` |  |  | Brak | 0 | PD-OED-008 |
 | Nowy › Synonim… | `file.newSynonym` |  |  | Brak | 0 | PD-OED-008 |
@@ -61,6 +62,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Użytkownik… | `file.newUser` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Rola… | `file.newRole` |  |  | Brak | 0 | PD-OED-009 |
 | Nowy › Domena… | `file.newDomain` |  |  | Brak | 0 | PD-OED-011 |
+| Nowy › Asercja… | `file.newAssertion` |  |  | Brak | 0 | PD-OED-011 |
 | Nowy › Widok… | `file.newView` |  |  | Brak | 0 | PD-OED-010 |
 | Zapisz test jako skrypt SQL*Plus | `test.saveAsSQLPlus` |  |  | Pełny | 0 | PD-TEST-005 |
 | Przeglądarka plików › Dodaj lokalizację… | `fb.addLocation` |  |  | Brak | 0 | PD-FB-001 |
@@ -381,6 +383,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Szablony › Zapisz zaznaczenie jako szablon… | `templates.save` |  |  | Pełny | 0 | PD-TPL-003 |
 | Szablony › Usuń szablon | `templates.delete` |  |  | Za zgodą | 0 | PD-TPL-003 |
 | Obiekt › Porównaj z aktywnym oknem | `ob.compare` |  |  | Odczyt | 0 | PD-OB-022 |
+| Obiekt › Porównaj z obiektem w innej bazie… | `ob.compareWithConnection` |  |  | Odczyt | 0 | PD-OB-022 |
 | Porównaj pliki… | `tools.compareFiles` |  |  | Brak | 0 | PD-DIFF-001 |
 | Porównaj teksty | `tools.compareTexts` |  |  | Odczyt | 0 | PD-DIFF-001 |
 | Obiekt › Testuj | `ob.test` |  |  | Pełny | 0 | PD-TEST-004 |

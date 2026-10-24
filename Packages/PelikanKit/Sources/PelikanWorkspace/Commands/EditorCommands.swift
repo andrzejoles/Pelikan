@@ -48,6 +48,13 @@ enum EditorCommands {
                 try await ctx.workspace.invoke("file.newFromTemplate", CommandArguments(["template": .string(TemplateLibrary.objectsFolder + "/" + L10n.tr("Domena"))]),
                                                invoker: ctx.invoker)
             },
+            Command(CommandDescriptor(id: "file.newAssertion", title: L10n.tr("Asercja…"), category: .file, submenu: L10n.tr("Nowy"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Otwiera okno SQL z szablonem CREATE ASSERTION (26ai): warunek NOT EXISTS na danych tabel."),
+                                      feature: "PD-OED-011")) { ctx in
+                try await ctx.workspace.invoke("file.newFromTemplate", CommandArguments(["template": .string(TemplateLibrary.objectsFolder + "/" + L10n.tr("Asercja"))]),
+                                               invoker: ctx.invoker)
+            },
             Command(CommandDescriptor(id: "file.newView", title: L10n.tr("Widok…"), category: .file, submenu: L10n.tr("Nowy"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno SQL z szablonem CREATE OR REPLACE VIEW."), feature: "PD-OED-010")) { ctx in
