@@ -405,7 +405,7 @@ public final class MetadataProvider {
 
     /// Źródło programu w podanej sesji (także sesji agenta).
     public nonisolated static func source(of o: DBObject, in s: any DatabaseSession) async throws -> String {
-        let (_, rows) = try await s.queryAll("select text from all_source where owner = :o and name = :n and type = :t order by line",
+        let (_, rows) = try await s.queryAll("select text, sys_context('userenv', 'current_schema') from all_source where owner = :o and name = :n and type = :t order by line",
                                              binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name)),
                                                      BindVariable(name: "t", value: .text(o.type.rawValue))], limit: 2_000_000)
         guard !rows.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak źródła \(o.type.rawValue) \(o.qualifiedName) (brak uprawnień albo obiekt zawinięty)")) }
@@ -417,8 +417,11 @@ public final class MetadataProvider {
                                                binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name))])
             return MLE.createModuleDDL(name: o.name, source: text, version: version ?? nil)
         }
-        // Pierwsza linia z ALL_SOURCE zaczyna się od typu ("PACKAGE emp_api AS") — dodajemy CREATE OR REPLACE.
-        return "CREATE OR REPLACE " + text
+        // Pierwsza linia z ALL_SOURCE zaczyna się od typu ("PACKAGE emp_api AS") — dodajemy CREATE OR REPLACE, a dla
+        // obiektu z innego schematu także właściciela (bez niego kompilacja utworzyłaby kopię w schemacie sesji).
+        let created = "CREATE OR REPLACE " + text
+        let current = rows.first.flatMap { $0.count > 1 ? $0[1].displayText : nil }
+        return current.map { $0 == o.owner } ?? true ? created : ProgramCompiler.withOwner(created, owner: o.owner)
     }
 
     /// DDL obiektu przez DBMS_METADATA (UG 23.2): zakończenie `;`/`/`, bez atrybutów składowania.
