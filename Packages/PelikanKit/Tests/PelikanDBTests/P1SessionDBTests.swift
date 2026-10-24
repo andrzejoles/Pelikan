@@ -38,4 +38,26 @@ struct P1SessionDBTests {
         #expect(seen == "1" && !doc.transactionOpen)
         ws.settings.autoCommitTestWindow = false
     }
+
+    @Test("BFile: wartość KATALOG:plik na wejściu i odczyt lokalizatora przypisanego w bloku (PD-TEST-002)")
+    func bfile() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        ws.ui = TestUI()
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.test, text: "begin\n  :nazwa := case when :wej is null then 'brak' else 'jest' end;\n  :wej := bfilename('NOWY_KAT', 'b.txt');\nend;")
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        TestRunner.synchronize(doc)
+        let i = try #require(doc.testVariables.firstIndex { $0.name == "wej" })
+        doc.testVariables[i].type = .bfile
+        doc.testVariables[i].value = "KAT:a.txt"
+        doc.testVariables[i].isNull = false
+        _ = try await TestRunner.execute(doc, in: ws)
+        #expect(doc.testVariables.first { $0.name == "nazwa" }?.value == "jest")
+        #expect(doc.testVariables[i].value == "NOWY_KAT:b.txt" && doc.testVariables[i].changed)
+        await ws.sessions.disconnectAll()
+    }
 }

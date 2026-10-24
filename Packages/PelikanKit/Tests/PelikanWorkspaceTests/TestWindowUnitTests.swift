@@ -14,6 +14,17 @@ struct TestWindowUnitTests {
         #expect(TestRunner.substitute(text, [vars[1]]) == text)
     }
 
+    @Test("BFile: blok obudowany zmienną lokalną w pierwszej linii, :nazwa zastąpiona, wiązania katalogu i pliku")
+    func bfileWrap() {
+        let v = TestVariable(name: "plik", type: .bfile, value: "KAT:a.txt", isNull: false)
+        let w = TestRunner.bfileWrap("begin\n  :plik := bfilename('X', 'b'); -- :plik\nend;", [v, TestVariable(name: "n", type: .integer)])
+        #expect(w.sql.hasPrefix("declare pelikan$bf1 bfile := case when :pelikan_bf1_d is null"))
+        #expect(w.sql.components(separatedBy: "\n")[0].hasSuffix("begin begin"))
+        #expect(w.sql.contains("pelikan$bf1 := bfilename('X', 'b'); -- :plik") && w.sql.contains("dbms_lob.filegetname(pelikan$bf1, :pelikan_bf1_d, :pelikan_bf1_f)"))
+        #expect(w.binds.map(\.value) == [.text("KAT"), .text("a.txt")])
+        #expect(TestRunner.bfileWrap("begin null; end;", [TestVariable(name: "x")]).sql == "begin null; end;")
+    }
+
     @Test("Plik .tst z obserwowanymi wyrażeniami; stary plik bez nich; obserwowane debugera to lista dokumentu")
     func watches() throws {
         let f = TestScriptFile(block: "begin null; end;", variables: [TestVariable(name: "a")], watches: ["v_total", "r.ename"])

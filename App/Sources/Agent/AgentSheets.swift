@@ -88,13 +88,6 @@ struct ApprovalView: View {
 }
 
 /// Wiersz macierzy uprawnień sesji: narzędzie, poziom domyślny i wybrany (tylko obniżenie).
-struct PermissionRow: Identifiable, Hashable {
-    let tool: String
-    let command: CommandID
-    let title: String
-    let base: AgentAccess
-    var chosen: AgentAccess
-    var id: String { tool }
 }
 
 /// Macierz uprawnień przy starcie sesji agenta (PROMPT §7.4): poziom każdego narzędzia można obniżyć dla tej sesji.
@@ -127,7 +120,7 @@ struct PermissionMatrixView: View {
             .frame(minHeight: 320)
             HStack {
                 Button(L10n.tr("Wszystko tylko do odczytu")) {
-                    for i in rows.indices { rows[i].chosen = min(rows[i].base, .read) }
+                    rows = PermissionMatrix.readOnly(rows)
                 }
                 Button(L10n.tr("Domyślne")) {
                     for i in rows.indices { rows[i].chosen = rows[i].base }
@@ -135,9 +128,7 @@ struct PermissionMatrixView: View {
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { onFinish(nil) }.keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Uruchom")) {
-                    var overrides: [CommandID: AgentAccess] = [:]
-                    for r in rows where r.chosen < r.base { overrides[r.command] = r.chosen }
-                    onFinish(overrides)
+                    onFinish(PermissionMatrix.overrides(rows))
                 }
                 .keyboardShortcut(.defaultAction)
             }

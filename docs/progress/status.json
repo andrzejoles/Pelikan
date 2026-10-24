@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-24T10:57:20+02:00",
+  "heartbeat": "2026-10-24T12:41:27+02:00",
   "stage": {
     "id": 2,
     "name": "Połączenia, SQL Window, Command Window"
@@ -53,6 +53,7 @@
     }
   ],
   "done": [
+    "Okno testu: typ BFile (PD-TEST-002); macierz uprawnień sesji agenta w pakiecie z testami (AI-PERM-001)",
     "Debuger: SELF i obiekty jako drzewo, warunki/komunikaty/logpointy punktów przerwania, znacznik niezastosowanego, blokada nazw z dwukropkiem zawieszających DBMS_DEBUG (PD-DBG-004, PD-DBG-007, D133); scalona gałąź danych: 13 wierszy ✅",
     "Aliasy połączeń z lokalnymi bazami testowymi z przedrostkiem dev_ (prośba właściciela); 179 testów na bazie zielonych",
     "Preferencje: wyszukiwarka ustawień z przejściem do karty, indeks z paneli sprawdzany w CI (PD-PREF-001, D126)",
@@ -91,8 +92,7 @@
     "Etap 4 / utPLSQL — instalacja i aktualizacja z oficjalnego wydania (suma kontrolna, okno poleceń, tylko dev/test, po potwierdzeniu; konto właściciela z losowym hasłem i zablokowane); COLUMN NEW_VALUE bez wierszy jak w SQL*Plus — test instalacji obok w osobnym schemacie",
     "Etap 4 / utPLSQL — eksport JUnit/Sonar/TeamCity/TAP i pokrycia Cobertura/Sonar/HTML, skrypt CLI bez hasła (sprawdzony w SQL*Plus), ostrzeżenie o pokryciu, szablony adnotacji, historia i porównanie przebiegów, debugowanie testu pod kursorem; naprawa wyścigu buforów reportera (ORA-00001) i konfliktu skrótu ⌥⌘U",
     "Szkic wydania v4.1.0 (Etap 3) — publikuje właściciel; PR #31 i #32 scalone (zamknięcie Etapu 3, utPLSQL)",
-    "Etap 4 / utPLSQL — eksplorator testów (get_suites_info, ostatni wynik, odświeżanie po kompilacji), generator szkieletu pakietu testowego (kompiluje się i uruchamia), podpowiedzi adnotacji --% i matcherów ut.expect, ostrzeżenia o nieznanych adnotacjach, przejście pakiet ↔ test — 2 testy (1 na bazie); weryfikacja bez sterowania interfejsem (D30)",
-    "PR #30 scalony (niejawne wyniki, SQL w sesji debugowanej)"
+    "Etap 4 / utPLSQL — eksplorator testów (get_suites_info, ostatni wynik, odświeżanie po kompilacji), generator szkieletu pakietu testowego (kompiluje się i uruchamia), podpowiedzi adnotacji --% i matcherów ut.expect, ostrzeżenia o nieznanych adnotacjach, przejście pakiet ↔ test — 2 testy (1 na bazie); weryfikacja bez sterowania interfejsem (D30)"
   ],
   "next": [
     "Po scaleniu #56: szkic wydania z main. Dalej: domykanie wierszy ⚠️ według priorytetów właściciela."

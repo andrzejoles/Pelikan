@@ -5,7 +5,7 @@ import PelikanSQL
 /// Typ zmiennej Test Window (UG 5.3).
 public enum TestVariableType: String, Sendable, Codable, Hashable, CaseIterable {
     case integer, float, string, date, timestamp, long, longRaw, cursor, clob, blob, plsqlString, char, boolean
-    case tempClob, tempBlob, substitution
+    case tempClob, tempBlob, substitution, bfile
 
     public var displayName: String {
         switch self {
@@ -25,6 +25,7 @@ public enum TestVariableType: String, Sendable, Codable, Hashable, CaseIterable 
         case .tempClob: "Temporary CLOB"
         case .tempBlob: "Temporary BLOB"
         case .substitution: "Substitution"
+        case .bfile: "BFile"
         }
     }
 
@@ -43,6 +44,7 @@ public enum TestVariableType: String, Sendable, Codable, Hashable, CaseIterable 
         case .blob, .tempBlob: (.blob, 0)
         case .boolean: (.boolean, 0)
         case .substitution: (.varchar2, 32767)
+        case .bfile: (.varchar2, 512)
         }
     }
 
@@ -54,6 +56,7 @@ public enum TestVariableType: String, Sendable, Codable, Hashable, CaseIterable 
         case "DATE": .date
         case let t where t.hasPrefix("TIMESTAMP"): .timestamp
         case "CLOB", "NCLOB": .clob
+        case "BFILE": .bfile
         case "BLOB": .blob
         case "REF CURSOR": .cursor
         case "PL/SQL BOOLEAN", "BOOLEAN": .boolean
@@ -169,11 +172,13 @@ public enum TestRunner {
         var sql = text
         if sql.hasSuffix("/") { sql = String(sql.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
         sql = substitute(sql, doc.testVariables)
+        let bfiles = bfileWrap(sql, doc.testVariables)
+        sql = bfiles.sql
         try await ws.guardModification([sql], connectionID: ws.effectiveConnection(of: doc))
-        let binds = try doc.testVariables.filter { $0.type != .substitution }.map { v -> BindVariable in
+        let binds = try doc.testVariables.filter { $0.type != .substitution && $0.type != .bfile }.map { v -> BindVariable in
             let (t, size) = v.type.bind
             return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try value(v), maxSize: size)
-        }
+        } + bfiles.binds
         let session = try await ws.session(for: doc)
         doc.isExecuting = true
         doc.errorRange = nil
@@ -219,7 +224,18 @@ public enum TestRunner {
         do {
             let r = try await session.execute(sql, binds: binds)
             await finishMeasurements()
-            for i in doc.testVariables.indices where doc.testVariables[i].type != .substitution {
+            for i in doc.testVariables.indices where doc.testVariables[i].type == .bfile {
+                let v = doc.testVariables[i]
+                guard let n = bfiles.names[v.name] else { continue }
+                let dir = (r.outBinds[n.dir] ?? r.outBinds[n.dir.uppercased()]).flatMap { $0.isNull ? nil : $0.displayText }
+                let file = (r.outBinds[n.file] ?? r.outBinds[n.file.uppercased()]).flatMap { $0.isNull ? nil : $0.displayText }
+                var nv = v
+                nv.isNull = dir == nil
+                nv.value = dir.map { "\($0):\(file ?? "")" } ?? ""
+                nv.changed = nv.value != v.value || nv.isNull != v.isNull
+                doc.testVariables[i] = nv
+            }
+            for i in doc.testVariables.indices where ![.substitution, .bfile].contains(doc.testVariables[i].type) {
                 let v = doc.testVariables[i]
                 let out = r.outBinds[v.name] ?? r.outBinds[v.name.uppercased()] ?? .null
                 var n = v
@@ -285,6 +301,41 @@ public enum TestRunner {
             pos = t.start + t.length
         }
         return out + ns.substring(from: pos)
+    }
+
+    /// Zmienne BFile (PD-TEST-002): BFILE nie da się wygodnie związać, więc blok dostaje zmienną lokalną
+    /// `bfilename(katalog, plik)` z wartości `KATALOG:plik` i na końcu `DBMS_LOB.FILEGETNAME` do zmiennych wiązanych.
+    /// Nagłówek w pierwszej linii — numery linii błędów bloku się nie zmieniają.
+    public static func bfileWrap(_ text: String, _ variables: [TestVariable]) -> (sql: String, binds: [BindVariable], names: [String: (dir: String, file: String)]) {
+        let files = variables.filter { $0.type == .bfile }
+        guard !files.isEmpty else { return (text, [], [:]) }
+        var locals: [String: String] = [:]
+        var binds: [BindVariable] = []
+        var names: [String: (dir: String, file: String)] = [:]
+        var head = "declare "
+        var tail = ""
+        for (i, v) in files.enumerated() {
+            let local = "pelikan$bf\(i + 1)", d = "pelikan_bf\(i + 1)_d", f = "pelikan_bf\(i + 1)_f"
+            locals[v.name.uppercased()] = local
+            names[v.name] = (d, f)
+            let parts = v.isNull ? [] : v.value.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+            binds.append(BindVariable(name: d, type: .varchar2, direction: .inputOutput, value: parts.count == 2 ? .text(parts[0]) : .null, maxSize: 128))
+            binds.append(BindVariable(name: f, type: .varchar2, direction: .inputOutput, value: parts.count == 2 ? .text(parts[1]) : .null, maxSize: 512))
+            head += "\(local) bfile := case when :\(d) is null then null else bfilename(:\(d), :\(f)) end; "
+            tail += "\n  if \(local) is null then :\(d) := null; :\(f) := null; else dbms_lob.filegetname(\(local), :\(d), :\(f)); end if;"
+        }
+        // :nazwa zmiennej BFile → zmienna lokalna (tokeny zmiennych wiązanych poza napisami i komentarzami).
+        let ns = text as NSString
+        var body = ""
+        var pos = 0
+        for t in Lexer(text).tokenize() where t.kind == .bindVariable {
+            let name = ns.substring(with: NSRange(location: t.start + 1, length: t.length - 1)).uppercased()
+            guard let local = locals[name] else { continue }
+            body += ns.substring(with: NSRange(location: pos, length: t.start - pos)) + local
+            pos = t.start + t.length
+        }
+        body += ns.substring(from: pos)
+        return (head + "begin " + body + tail + "\nend;", binds, names)
     }
 
     /// Ramki z komunikatu błędu: `ORA-06512: at "OWNER.UNIT", line n` oraz `at line n` (blok anonimowy).
