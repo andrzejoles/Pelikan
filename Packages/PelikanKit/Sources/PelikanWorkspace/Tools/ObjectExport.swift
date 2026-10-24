@@ -44,8 +44,25 @@ public enum ObjectExport {
         }
     }
 
-    /// DDL jednego obiektu z ustawieniami transformacji DBMS_METADATA według opcji.
-    static func ddl(_ o: DBObject, options: ObjectExportOptions, in s: any DatabaseSession) async throws -> String {
+    /// Typy bez uprawnień obiektowych (uprawnienia ma specyfikacja albo tabela).
+    static let ungrantable: Set<DBObjectType> = [.index, .trigger, .packageBody, .typeBody]
+
+    /// Obiekty schematu z uprawnieniami obiektowymi (DBA_TAB_PRIVS, bez dostępu — ALL_TAB_PRIVS); `name` — tylko ten
+    /// obiekt. GET_DEPENDENT_DDL('OBJECT_GRANT') kosztuje na dużej bazie ~1,8 s także dla obiektu bez uprawnień (D164),
+    /// więc pytamy o nie tylko obiekty z tej listy.
+    static func grantedObjects(owner: String, name: String? = nil, in s: any DatabaseSession) async -> Set<String>? {
+        var b = [BindVariable(name: "o", value: .text(owner))]
+        var cond = ""
+        if let name { b.append(BindVariable(name: "n", value: .text(name))); cond = " and table_name = :n" }
+        let rows = try? await DictionaryQuery.queryAll(["select distinct table_name from dba_tab_privs where owner = :o\(cond)",
+                                                        "select distinct table_name from all_tab_privs where table_schema = :o\(cond)"],
+                                                       binds: b, limit: 1_000_000, in: s).rows
+        return rows.map { Set($0.compactMap { $0.first?.displayText }) }
+    }
+
+    /// DDL jednego obiektu z ustawieniami transformacji DBMS_METADATA według opcji; `granted` — obiekty schematu
+    /// z uprawnieniami (eksport wielu obiektów), bez niej — sprawdzenie tego jednego obiektu.
+    static func ddl(_ o: DBObject, options: ObjectExportOptions, granted: Set<String>? = nil, in s: any DatabaseSession) async throws -> String {
         let metaType: String = switch o.type {
         case .packageBody: "PACKAGE_BODY"
         case .package: "PACKAGE_SPEC"
@@ -71,7 +88,13 @@ public enum ObjectExport {
         guard case .lob(let l)? = r.outBinds["ddl"], var text = l.text else { return "" }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         // Kod PL/SQL z DBMS_METADATA kończy się „/”, pozostałe „;” (SQLTERMINATOR).
-        if options.includePrivileges, ![.packageBody, .typeBody].contains(o.type) {
+        var hasGrants = false
+        if options.includePrivileges, !ungrantable.contains(o.type) {
+            // Nieznana lista (błąd słownika) — pytamy DBMS_METADATA jak dawniej.
+            let list = if let granted { granted } else { await grantedObjects(owner: o.owner, name: o.name, in: s) }
+            hasGrants = list?.contains(o.name) ?? true
+        }
+        if hasGrants {
             let r2 = try? await s.execute("""
                 begin :g := dbms_metadata.get_dependent_ddl('OBJECT_GRANT', :n, :o); exception when others then :g := null; end;
                 """, binds: [BindVariable(name: "g", type: .clob, direction: .output), BindVariable(name: "n", value: .text(o.name)), BindVariable(name: "o", value: .text(o.owner))])
@@ -86,9 +109,14 @@ public enum ObjectExport {
     public static func export(_ objects: [DBObject], options: ObjectExportOptions, in s: any DatabaseSession,
                               progress: (@MainActor (Int) -> Void)? = nil) async throws -> [ExportedFile] {
         let sorted = objects.sorted { (sortKey($0.type), $0.name) < (sortKey($1.type), $1.name) }
+        // Lista obiektów z uprawnieniami — raz na schemat zamiast pytania o każdy obiekt.
+        var granted: [String: Set<String>] = [:]
+        if options.includePrivileges, sorted.count > 1 {
+            for owner in Set(sorted.map(\.owner)) { granted[owner] = await grantedObjects(owner: owner, in: s) }
+        }
         var parts: [(DBObject, String)] = []
         for (i, o) in sorted.enumerated() {
-            parts.append((o, try await ddl(o, options: options, in: s)))
+            parts.append((o, try await ddl(o, options: options, granted: granted[o.owner], in: s)))
             await progress?(i + 1)
         }
         let header = "-- " + L10n.tr("Wygenerowane przez Pelikana") + " — " + ISO8601DateFormatter().string(from: Date()) + "\n"

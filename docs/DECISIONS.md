@@ -1294,3 +1294,20 @@ poprawione:
 - **L4:** plik śladu `PELIKAN_MCP_TRACE` powstaje z prawami 0600.
 
 Testy: link z `commandfile`, PL/SQL i CALL po DML agenta, nieznany klucz serwera na lokalnym sshd.
+### D164 · 2026-10-25 — Narzędzia na dużej bazie: wyszukiwanie, diagram ER, eksport DDL, dokumentacja schematu
+Druga próba tylko do odczytu na kopii dużej bazy właściciela (D151) objęła narzędzia, których pierwsza nie mierzyła.
+Przeglądarka sesji (178 sesji, 166 ms) i porównanie obiektów działały poprawnie. Cztery narzędzia były za wolne, bo
+każde zapytanie do słownika takiej bazy kosztuje sekundy niezależnie od liczby wierszy:
+- **Znajdź obiekty bazy** (schemat z 860 tys. linii PL/SQL): 31–85 s → 1,8–2,8 s. REGEXP_LIKE po ALL_SOURCE kosztuje
+  ~38 s, a INSTR ~1,3 s. Warunek `instr … and regexp_like …` nie pomagał, bo przy zmiennych wiązanych optymalizator
+  liczył najpierw REGEXP_LIKE. Kolejność wymusza CASE (gałęzie WHEN sprawdzane po kolei). Tekst dosłowny: najpierw
+  INSTR, potem REGEXP_LIKE dla całych słów; wyrażenie regularne — bez zmian. Definicje tabel: 58 → 16 s.
+- **Diagram ER**: 60 tabel 47 → 3,8 s, 378 tabel 263 → 4,7 s. Kolumny, klucze główne i obce idą paczkami po 500 tabel
+  (nowe metody źródła metadanych z domyślną implementacją dla atrap) zamiast dwóch zapytań na tabelę z podzapytaniem
+  na kolumnę.
+- **Eksport DDL** (a z nim porównanie obiektów): 1985 → 212 ms na obiekt. GET_DEPENDENT_DDL('OBJECT_GRANT') kosztował
+  ~1,8 s na obiekt, także bez uprawnień. Lista obiektów z uprawnieniami pochodzi teraz z DBA_TAB_PRIVS (bez dostępu —
+  ALL_TAB_PRIVS), raz na schemat, a indeksy, wyzwalacze i ciała nie są o uprawnienia pytane.
+- **Dokumentacja schematu** (1826 obiektów): ponad 20 min → 14,7 s. Komentarze, kolumny, ograniczenia, indeksy,
+  parametry programów i sekwencje pobierane są kilkoma zapytaniami na schemat zamiast czterech na tabelę.
+Porównanie próbki 150 obiektów ze sobą dało w sondzie 234 „tylko w celu”: to obiekty spoza próbki, nie błąd.
