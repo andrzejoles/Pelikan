@@ -1148,3 +1148,23 @@ gotowy deskryptor, więc jego adapter LDAP nie jest używany. Alias nieznalezion
 (nie oddajemy go klientowi, by nie wejść w adapter LDAP); tak samo nazwa hosta bez portu i usługi przy aktywnym LDAP.
 Nie obsługujemy wiązania portfelem (NAMES.LDAP_AUTHENTICATE_BIND), LDAPS ani NAMES.DEFAULT_DOMAIN; połączenie przez
 portfel SEPS (`/@alias`) przekazuje alias dosłownie. Na Linuksie (tylko testy CI) zostaje adapter klienta — bez próby.
+
+### D-ENV-4 · 2026-10-24 — Kerberos: KDC w kontenerze, na macOS blokada zamiast awarii
+`scripts/testdb.sh kdc-up` uruchamia KDC MIT (Alpine, realm PELIKAN.TEST, klucze losowe, główne hasło tylko w pliku
+stash w kontenerze), dodaje principal usługi `oracle/<nazwa hosta kontenera bazy>` (klient Oracle prosi o bilet dla
+nazwy hosta serwera, nie hosta z deskryptora — `oracle/localhost` nie wystarczał), kopiuje tablicę kluczy do kontenera
+bazy, dopisuje blok KERBEROS5 do sqlnet.ora serwera i tworzy użytkownika `DEV_KRB IDENTIFIED EXTERNALLY AS
+'dev_krb@PELIKAN.TEST'` (bez zmiany OS_AUTHENT_PREFIX i restartu). Bilety (TGT i bilety usługi) powstają przez
+`kinit -k` w KDC i trafiają do `.testdb/kerberos/ccache` — klient nie musi łączyć się z KDC. sqlplus w kontenerze bazy
+czyta sqlnet.ora serwera także jako klient, więc narzędzia skryptu używają wtedy `/opt/oracle/client-net` bez Kerberos.
+Wynik: `sqlplus` z Instant Client dla macOS loguje się jako DEV_KRB, ale ten sam klient w procesie Pelikana (i każdym
+procesie z AppKit) kończy się SIGABRT (ORA-24550) — także przy logowaniu hasłem, gdy sqlnet.ora włącza KERBEROS5.
+Przyczyna jak w D-ENV-3: `libclntsh.dylib` z płaską przestrzenią nazw i systemowy Kerberos.framework (ładowany przez
+AppKit) eksportujący te same funkcje `krb5_*`; potwierdzone `sqlplus` z `DYLD_INSERT_LIBRARIES` na Kerberos.framework.
+W procesie aplikacji nie da się tego obejść (framework jest załadowany przed `libclntsh`); wymagałoby to osobnego
+procesu pomocniczego bez AppKit dla sesji OCI. Do tego czasu Pelikan na macOS przed połączeniem sprawdza
+SQLNET.AUTHENTICATION_SERVICES (z IFILE) w katalogu Oracle Net i zgłasza czytelny błąd zamiast awarii aplikacji.
+Ta sama ścieżka Pelikana (ODPISession, SessionManager, `/` bez hasła) działa z Instant Client dla Linuksa:
+`scripts/testdb.sh kdc-linux` uruchamia test w kontenerze `swift:6.3-noble` w sieci bazy testowej (Basic Light
+arm64/x64, konfiguracja w `.linux-build/.testdb`, CI=1 dla hosta kontenera). Wiersz PD-CONN-014 zostaje ⚠️, bo
+aplikacja jest na macOS. Do CI nie dodajemy (konfiguracja Kerberos dotyczyłaby całego procesu testów bazy).

@@ -33,6 +33,24 @@ enum DirectoryLookup {
 #endif
     }
 
+    /// Kerberos w Instant Client dla macOS (PD-CONN-014, D-ENV-4): adapter KERBEROS5 `libclntsh` (płaska przestrzeń
+    /// nazw) miesza swoje funkcje `krb5_*` z systemowym Kerberos.framework, który każdy proces z AppKit ma załadowany —
+    /// proces kończy się SIGABRT (ORA-24550) przy pierwszym połączeniu, także hasłem, gdy sqlnet.ora włącza KERBEROS5.
+    /// Zamiast awarii aplikacji — czytelny błąd. Bez Kerberos.framework w procesie (np. narzędzia CLI) nic nie blokuje.
+    static func checkKerberos(directories: [String]) throws {
+#if os(macOS)
+        guard let services = DirectoryNaming.sqlnetParameter("SQLNET.AUTHENTICATION_SERVICES", directories: directories),
+              services.uppercased().contains("KERBEROS5"),
+              let handle = dlopen("/System/Library/Frameworks/Kerberos.framework/Kerberos", RTLD_LAZY | RTLD_NOLOAD) else { return }
+        dlclose(handle)
+        throw DatabaseError.unsupported("""
+            Uwierzytelnianie Kerberos (SQLNET.AUTHENTICATION_SERVICES=\(services) w sqlnet.ora) nie działa w Instant Client \
+            dla macOS w procesie aplikacji: biblioteka klienta Oracle koliduje z systemowym Kerberos.framework i proces \
+            zostałby przerwany. Usuń KERBEROS5 z sqlnet.ora, aby łączyć się hasłem lub portfelem.
+            """)
+#endif
+    }
+
 #if os(macOS)
     private typealias Initialize = @convention(c) (UnsafeMutablePointer<OpaquePointer?>, UnsafePointer<CChar>) -> Int32
     private typealias SetOption = @convention(c) (OpaquePointer?, Int32, UnsafeRawPointer?) -> Int32

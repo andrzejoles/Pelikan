@@ -12,6 +12,8 @@
 #         scripts/testdb.sh owm      instaluje Workspace Manager (WMSYS) i przestrzeń DEV_PELIKAN_WS (PD-CONN-009)
 #         scripts/testdb.sh ords-up  ORDS (tylko testy) w kontenerze z JRE, HTTP 127.0.0.1:8181 (SD-ORDS-001); ords-down
 #         scripts/testdb.sh ldap-up  OpenLDAP z aliasem dev_pelikan_ldap, ldap.ora i sqlnet.ora w .testdb/oracle-net-user (PD-CONN-013); ldap-down
+#         scripts/testdb.sh kdc-up   KDC MIT, Kerberos w bazie testowej, bilety w .testdb/kerberos (PD-CONN-014); kdc-down
+#         scripts/testdb.sh kdc-linux test Kerberos przez Instant Client dla Linuksa w kontenerze swift:6.3-noble
 #
 # Hasła: losowe przy pierwszym `up`, w .testdb/env (poza repozytorium, 0600). Port tylko na 127.0.0.1.
 # Testy łączą się WYŁĄCZNIE z tą bazą (PELIKAN_TESTDB_*); żadnych innych baz (docs/PROMPT.md §9, §13).
@@ -26,6 +28,11 @@ PORT="${PELIKAN_TESTDB_PORT:-1531}"
 UTPLSQL_VERSION="${UTPLSQL_VERSION:-v.3.2.3}"
 
 rand() { openssl rand -hex 10; }
+
+# sqlplus w kontenerze bazy. Po `kdc-up` sqlnet.ora serwera włącza Kerberos, który ten sam ORACLE_HOME czytałby też
+# jako klient — narzędzia skryptu używają wtedy osobnego katalogu klienta bez Kerberos.
+# shellcheck disable=SC2016
+SQLPLUS='[ -d /opt/oracle/client-net ] && export TNS_ADMIN=/opt/oracle/client-net; exec sqlplus -S -L /nolog'
 
 ensure_env() {
     mkdir -p "$STATE"
@@ -91,7 +98,7 @@ sql_as() {
       printf 'WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET FEEDBACK OFF\nSET SERVEROUTPUT ON\n'
       cat
       printf '\nEXIT\n'
-    } | docker exec -i "$NAME" sqlplus -S -L /nolog
+    } | docker exec -i "$NAME" bash -c "$SQLPLUS"
 }
 
 sql_sys() {
@@ -99,7 +106,7 @@ sql_sys() {
       printf 'WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET FEEDBACK OFF\nSET SERVEROUTPUT ON\n'
       cat
       printf '\nEXIT\n'
-    } | docker exec -i "$NAME" sqlplus -S -L /nolog
+    } | docker exec -i "$NAME" bash -c "$SQLPLUS"
 }
 
 # Tabele DBMS_TRACE (PD-OPT-007): tracetab.sql z ORACLE_HOME tworzy SYS.PLSQL_TRACE_RUNS/EVENTS — raz, tylko baza testowa.
@@ -143,7 +150,7 @@ install_utplsql() {
     # install_headless.sql: schemat UT3, publiczne synonimy i granty (dokumentacja utPLSQL „Install”).
     if ! { printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
            printf '@install_headless.sql UT3 "%s" USERS\nEXIT\n' "$utpw"
-         } | docker exec -i -w /tmp/utPLSQL/source "$NAME" sqlplus -S -L /nolog > "$log" 2>&1; then
+         } | docker exec -i -w /tmp/utPLSQL/source "$NAME" bash -c "$SQLPLUS" > "$log" 2>&1; then
         tail -30 "$log" >&2
         echo "Instalacja utPLSQL nie powiodła się (pełny log: $log)" >&2
         exit 1
@@ -348,7 +355,7 @@ install_owm() {
         echo "Instaluję Workspace Manager (owminst.plb)…" >&2
         { printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
           printf 'WHENEVER SQLERROR CONTINUE\nSET ECHO OFF\n@?/rdbms/admin/owminst.plb\nEXIT\n'
-        } | docker exec -i "$NAME" sqlplus -S -L /nolog > "$log" 2>&1 || true
+        } | docker exec -i "$NAME" bash -c "$SQLPLUS" > "$log" 2>&1 || true
         n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
         [ "${n:-0}" != "0" ] || { tail -30 "$log" >&2; echo "Instalacja Workspace Manager nie powiodła się (log: $log)" >&2; exit 1; }
     fi
@@ -424,6 +431,24 @@ ords_up() {
     echo "ORDS gotowy: http://127.0.0.1:${ORDS_PORT}/ords → ${NAME}/FREEPDB1" >&2
 }
 
+# Parametr w sqlnet.ora katalogu użytkownika (.testdb/oracle-net-user) — każde polecenie zarządza swoimi wierszami.
+net_set() {
+    local f="$STATE/oracle-net-user/sqlnet.ora"
+    mkdir -p "$STATE/oracle-net-user"
+    touch "$f"
+    grep -v -i "^$1=" "$f" > "$f.tmp" || true
+    printf '%s=%s\n' "$1" "$2" >> "$f.tmp"
+    mv "$f.tmp" "$f"
+}
+
+net_unset() {
+    local f="$STATE/oracle-net-user/sqlnet.ora"
+    [ -f "$f" ] || return 0
+    grep -v -i "^$1=" "$f" > "$f.tmp" || true
+    mv "$f.tmp" "$f"
+    [ -s "$f" ] || rm -f "$f"
+}
+
 LDAP_NAME="${PELIKAN_TESTDB_LDAP_CONTAINER:-pelikan-testdb-ldap}"
 LDAP_PORT="${PELIKAN_TESTDB_LDAP_PORT:-1389}"
 
@@ -462,17 +487,142 @@ LDIF
     printf 'DIRECTORY_SERVERS=(127.0.0.1:%s)\nDEFAULT_ADMIN_CONTEXT="dc=pelikan,dc=test"\nDIRECTORY_SERVER_TYPE=OID\n' "$LDAP_PORT" > "$net/ldap.ora"
     # TNSNAMES przed LDAP (portfel SEPS z tnsnames.ora), EZCONNECT na końcu — przy zatrzymanym LDAP odmowa połączenia
     # na 127.0.0.1 jest natychmiastowa.
-    printf 'NAMES.DIRECTORY_PATH=(TNSNAMES, LDAP, EZCONNECT)\n' > "$net/sqlnet.ora"
+    net_set NAMES.DIRECTORY_PATH "(TNSNAMES, LDAP, EZCONNECT)"
     echo "LDAP gotowy: ldap://127.0.0.1:${LDAP_PORT}, alias dev_pelikan_ldap → ${PELIKAN_TESTDB_HOST:-127.0.0.1}:${PELIKAN_TESTDB_PORT:-$PORT}" >&2
 }
 
 ldap_down() {
     docker rm -f "$LDAP_NAME" >/dev/null 2>&1 || true
-    rm -f "$STATE/oracle-net-user/ldap.ora" "$STATE/oracle-net-user/sqlnet.ora"
+    rm -f "$STATE/oracle-net-user/ldap.ora"
+    net_unset NAMES.DIRECTORY_PATH
     echo "Usunięto ${LDAP_NAME} i konfigurację LDAP klienta" >&2
 }
 
+KDC_NAME="${PELIKAN_TESTDB_KDC_CONTAINER:-pelikan-testdb-kdc}"
+KDC_PORT="${PELIKAN_TESTDB_KDC_PORT:-1088}"
+
+# Kerberos (PD-CONN-014): KDC MIT w kontenerze (scripts/testdb/kdc), realm PELIKAN.TEST. Serwer bazy: tablica kluczy
+# usługi oracle/localhost i sqlnet.ora z KERBEROS5; użytkownik DEV_KRB IDENTIFIED EXTERNALLY AS 'dev_krb@PELIKAN.TEST'.
+# Klient: pamięć podręczna biletów (TGT i bilet usługi z kinit -k w KDC, bez haseł) i krb5.conf w .testdb/kerberos,
+# sqlnet.ora klienta z parametrami Kerberos w .testdb/kerberos/net (użycie: kdc-linux; na macOS zob. D-ENV-4).
+kdc_up() {
+    load_env
+    local image=pelikan-test-kdc:1 k="$STATE/kerberos"
+    docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/kdc" >/dev/null
+    docker_net
+    if docker container inspect "$KDC_NAME" >/dev/null 2>&1; then
+        docker start "$KDC_NAME" >/dev/null
+    else
+        docker run -d --name "$KDC_NAME" --network "$NET" -p "127.0.0.1:${KDC_PORT}:88/tcp" -p "127.0.0.1:${KDC_PORT}:88/udp" "$image" >/dev/null
+    fi
+    for _ in $(seq 1 30); do
+        docker exec "$KDC_NAME" test -s /out/dev_krb.keytab 2>/dev/null && break
+        sleep 1
+    done
+    mkdir -p "$k"; chmod 700 "$k"
+    # Principal usługi bazy: klient Oracle prosi o bilet dla oracle/<nazwa hosta serwera bazy> (nazwa kontenera
+    # z odpowiedzi serwera, nie host z deskryptora) — principal dla tej nazwy i dla localhost, losowe klucze.
+    local dbhost
+    dbhost="$(docker exec "$NAME" cat /proc/sys/kernel/hostname)"
+    docker exec -e DBHOST="$dbhost" "$KDC_NAME" sh -c '
+        for h in localhost "$DBHOST"; do
+            kadmin.local -q "getprinc oracle/$h@PELIKAN.TEST" 2>/dev/null | grep -q "^Principal:" \
+                || kadmin.local -q "addprinc -randkey oracle/$h@PELIKAN.TEST" >/dev/null 2>&1
+        done
+        rm -f /out/oracle.keytab
+        kadmin.local -q "ktadd -norandkey -k /out/oracle.keytab oracle/localhost@PELIKAN.TEST oracle/$DBHOST@PELIKAN.TEST" >/dev/null
+        chmod 644 /out/oracle.keytab'
+    # Bilety użytkownika: TGT z tablicy kluczy i od razu bilety usługi bazy — klient nie musi kontaktować się z KDC.
+    docker exec -e DBHOST="$dbhost" "$KDC_NAME" sh -c 'rm -f /tmp/dev_krb.cc && kinit -k -t /out/dev_krb.keytab -c FILE:/tmp/dev_krb.cc dev_krb@PELIKAN.TEST && kvno -q -c FILE:/tmp/dev_krb.cc oracle/localhost@PELIKAN.TEST "oracle/$DBHOST@PELIKAN.TEST"'
+    docker cp "$KDC_NAME:/tmp/dev_krb.cc" "$k/ccache" >/dev/null
+    chmod 600 "$k/ccache"
+    sed "s/kdc = 127.0.0.1:88/kdc = 127.0.0.1:${KDC_PORT}/" "$ROOT/scripts/testdb/kdc/krb5.conf" > "$k/krb5.conf"
+    # Serwer bazy: tablica kluczy usługi i konfiguracja Kerberos (docker cp tworzy pliki jako root — chown).
+    docker cp "$KDC_NAME:/out/oracle.keytab" "$k/oracle.keytab" >/dev/null
+    docker exec -u root "$NAME" mkdir -p /opt/oracle/krb5
+    docker cp "$k/oracle.keytab" "$NAME:/opt/oracle/krb5/v5srvtab"
+    docker cp "$ROOT/scripts/testdb/kdc/krb5.conf" "$NAME:/opt/oracle/krb5/krb5.conf"
+    rm -f "$k/oracle.keytab"
+    docker exec -u root "$NAME" sh -c 'chown -R oracle /opt/oracle/krb5 && chmod 600 /opt/oracle/krb5/v5srvtab'
+    # Katalog klienta narzędzi skryptu (sqlplus w kontenerze) — sqlnet.ora serwera bez bloku Kerberos.
+    docker exec "$NAME" bash -c 'mkdir -p /opt/oracle/client-net && sed "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora > /opt/oracle/client-net/sqlnet.ora'
+    docker exec -i "$NAME" bash -c 'f=$ORACLE_HOME/network/admin/sqlnet.ora; sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" "$f"; cat >> "$f"' <<'ORA'
+# PELIKAN-KERBEROS (scripts/testdb.sh kdc-up)
+SQLNET.AUTHENTICATION_SERVICES=(BEQ, KERBEROS5)
+SQLNET.AUTHENTICATION_KERBEROS5_SERVICE=oracle
+SQLNET.KERBEROS5_KEYTAB=/opt/oracle/krb5/v5srvtab
+SQLNET.KERBEROS5_CONF=/opt/oracle/krb5/krb5.conf
+SQLNET.KERBEROS5_CONF_MIT=TRUE
+# PELIKAN-KERBEROS-END
+ORA
+    sql_sys <<SQL
+DECLARE
+  n PLS_INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO n FROM dba_users WHERE username = 'DEV_KRB';
+  IF n = 0 THEN EXECUTE IMMEDIATE q'[CREATE USER DEV_KRB IDENTIFIED EXTERNALLY AS 'dev_krb@PELIKAN.TEST']'; END IF;
+END;
+/
+GRANT CREATE SESSION TO DEV_KRB;
+SQL
+    # Konfiguracja klienta osobno w .testdb/kerberos/net: Instant Client dla macOS nie może jej używać w procesie
+    # z Kerberos.framework (D-ENV-4) — w katalogu użytkownika zablokowałaby wszystkie testy bazy na macOS.
+    mkdir -p "$k/net"
+    krb_client_sqlnet "$k" > "$k/net/sqlnet.ora"
+    grep -q '^PELIKAN_TESTDB_KERBEROS_USER=' "$ENVFILE" || echo "PELIKAN_TESTDB_KERBEROS_USER=DEV_KRB" >> "$ENVFILE"
+    echo "Kerberos gotowy: KDC 127.0.0.1:${KDC_PORT}, realm PELIKAN.TEST, użytkownik bazy DEV_KRB (bilety: $k/ccache)" >&2
+}
+
+krb_client_sqlnet() {
+    printf 'SQLNET.AUTHENTICATION_SERVICES=(KERBEROS5)\nSQLNET.AUTHENTICATION_KERBEROS5_SERVICE=oracle\n'
+    printf 'SQLNET.KERBEROS5_CONF=%s/krb5.conf\nSQLNET.KERBEROS5_CONF_MIT=TRUE\nSQLNET.KERBEROS5_CC_NAME=%s/ccache\n' "$1" "$1"
+}
+
+# Test Kerberos przez Instant Client dla Linuksa (ścieżka CI): pakiet w .linux-build, kontener swift:6.3-noble w sieci
+# Docker bazy testowej, Instant Client Basic Light w .testdb/instantclient-linux. Konfiguracja testów w
+# .linux-build/.testdb (poza repozytorium, 0600); baza pod nazwą kontenera, więc CI=1 (TestDatabase dopuszcza wtedy
+# host spoza 127.0.0.1). Bilety z kdc-up — klient nie kontaktuje się z KDC.
+kdc_linux() {
+    load_env
+    [ -s "$STATE/kerberos/ccache" ] || { echo "Najpierw: scripts/testdb.sh kdc-up" >&2; exit 1; }
+    local ic="$STATE/instantclient-linux" lb="$ROOT/.linux-build" arch
+    case "$(docker info --format '{{.Architecture}}' 2>/dev/null)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
+    if [ ! -f "$ic/libclntsh.so" ]; then
+        rm -rf "$ic" "$ic.tmp"; mkdir -p "$ic.tmp"
+        curl -fsSL -o "$ic.tmp/ic.zip" "https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linux-${arch}.zip"
+        unzip -q "$ic.tmp/ic.zip" -d "$ic.tmp"
+        mv "$ic.tmp"/instantclient_* "$ic"
+        rm -rf "$ic.tmp"
+    fi
+    mkdir -p "$lb"
+    rsync -a --delete --exclude .build --exclude .swiftpm --exclude .testdb "$ROOT/Packages/PelikanKit/" "$lb/"
+    local t="$lb/.testdb"
+    rm -rf "$t"; mkdir -p "$t/oracle-net-user" "$t/kerberos"; chmod 700 "$t"
+    cp "$STATE/kerberos/ccache" "$STATE/kerberos/krb5.conf" "$t/kerberos/"
+    krb_client_sqlnet /src/.testdb/kerberos > "$t/oracle-net-user/sqlnet.ora"
+    (umask 077
+     printf 'PELIKAN_TESTDB_HOST=%s\nPELIKAN_TESTDB_PORT=1521\nPELIKAN_TESTDB_SERVICE=%s\n' "$NAME" "${PELIKAN_TESTDB_SERVICE:-FREEPDB1}" > "$t/env"
+     printf 'PELIKAN_TESTDB_USER=%s\nPELIKAN_TESTDB_PASSWORD=%s\nPELIKAN_TESTDB_KERBEROS_USER=DEV_KRB\n' "$PELIKAN_TESTDB_USER" "$PELIKAN_TESTDB_PASSWORD" >> "$t/env")
+    docker run --rm --network "$NET" -v "$lb:/src" -v "$ic:/opt/oracle/instantclient:ro" -w /src \
+        -e CI=1 -e PELIKAN_OCI_LIB_DIR=/opt/oracle/instantclient -e LD_LIBRARY_PATH=/opt/oracle/instantclient \
+        swift:6.3-noble bash -c 'apt-get update -qq >/dev/null && apt-get install -y -qq libaio1t64 >/dev/null \
+            && a=$(ls /usr/lib/*-linux-gnu/libaio.so.1t64) && ln -sf "$a" "${a%t64}" \
+            && swift test --filter "KerberosTests|KerberosGuardTests" 2>&1 | grep -E "✔|✘|error:|passed|failed|recorded"'
+}
+
+kdc_down() {
+    docker rm -f "$KDC_NAME" >/dev/null 2>&1 || true
+    rm -rf "$STATE/kerberos"
+    if container_exists; then
+        docker exec "$NAME" bash -c 'sed -i "/^# PELIKAN-KERBEROS/,/^# PELIKAN-KERBEROS-END/d" $ORACLE_HOME/network/admin/sqlnet.ora && rm -rf /opt/oracle/client-net' || true
+    fi
+    echo "Usunięto ${KDC_NAME} i konfigurację Kerberos" >&2
+}
+
 case "${1:-}" in
+    kdc-up) kdc_up ;;
+    kdc-down) kdc_down ;;
+    kdc-linux) kdc_linux ;;
     ldap-up) ldap_up ;;
     ldap-down) ldap_down ;;
     ords-up) ords_up ;;
@@ -504,7 +654,8 @@ case "${1:-}" in
         esac
         ;;
     *)
-        echo "Użycie: $0 up | seed | wallet | reset | down | env | sql [SYSTEM|SYS|TEST|AGENT]" >&2
+        echo "Użycie: $0 up | seed | wallet | reset | down | env | sql [SYSTEM|SYS|TEST|AGENT] | ssh-up | ssh-down | owm" >&2
+        echo "        | ords-up | ords-down | ldap-up | ldap-down | kdc-up | kdc-down | kdc-linux" >&2
         exit 2
         ;;
 esac

@@ -55,6 +55,16 @@ public enum DirectoryNaming {
             .filter { !$0.isEmpty }
     }
 
+    /// Parametr profilu sqlnet.ora (z plikami IFILE) z pierwszego katalogu, w którym jest sqlnet.ora.
+    public static func sqlnetParameter(_ name: String, directories: [String]) -> String? {
+        for raw in directories where !raw.isEmpty {
+            let file = (raw as NSString).expandingTildeInPath + "/sqlnet.ora"
+            guard FileManager.default.fileExists(atPath: file) else { continue }
+            return TNSNames.load(file: file).last { $0.aliases.count == 1 && $0.aliases[0].caseInsensitiveCompare(name) == .orderedSame }?.descriptor
+        }
+        return nil
+    }
+
     /// `(host:port[:portSSL], host2:port)` → serwery.
     static func servers(_ value: String) -> [Server] {
         value.trimmingCharacters(in: CharacterSet(charactersIn: "() \t\"")).split(separator: ",").compactMap { item in

@@ -60,9 +60,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                                                                walletDirectory: target.walletDirectory, keepAlias: resolved.externalAuth)
         // Nazewnictwo katalogowe: alias rozwiązany przez Pelikana, nie adapter LDAP klienta (płaska przestrzeń nazw
         // libclntsh na macOS miesza go z LDAP.framework — D-ENV-3). Magazyn haseł potrzebuje dosłownego aliasu.
-        if !resolved.externalAuth,
-           let descriptor = try DirectoryLookup.resolve(resolved.connectString, directories: [target.configDirectory, configDirectory,
-                                                                                             ProcessInfo.processInfo.environment["TNS_ADMIN"]].compactMap { $0 }) {
+        let netDirectories = [target.configDirectory, configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"]].compactMap { $0 }
+        try DirectoryLookup.checkKerberos(directories: [configDirectory, ProcessInfo.processInfo.environment["TNS_ADMIN"],
+                                                        env.libraryDirectory.map { $0 + "/network/admin" }].compactMap { $0 })
+        if !resolved.externalAuth, let descriptor = try DirectoryLookup.resolve(resolved.connectString, directories: netDirectories) {
             resolved.connectString = descriptor
         }
         // Token (Entra ID / OAuth2): klient Oracle sam pobiera token; logowanie bez użytkownika i hasła (SD-AUTH-001).
