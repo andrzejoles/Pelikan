@@ -69,6 +69,21 @@ public enum ProgramCompiler {
 
     /// Typ i nazwa z nagłówka `CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] <typ> [BODY] [schemat.]nazwa`.
     static func header(_ sql: String) -> (DBObjectType, String?, String)? {
+        headerTokens(sql).map { ($0.type, $0.owner, $0.name) }
+    }
+
+    /// Nagłówek z właścicielem, gdy go nie ma (`CREATE OR REPLACE PACKAGE BODY WŁAŚCICIEL.nazwa`) — źródło obiektu z innego
+    /// schematu kompiluje się u właściciela, nie w schemacie sesji.
+    static func withOwner(_ sql: String, owner: String) -> String {
+        guard let h = headerTokens(sql), h.owner == nil else { return sql }
+        let simple = owner.range(of: "^[A-Z][A-Z0-9_$#]*$", options: .regularExpression) != nil
+        let prefix = (simple ? owner : "\"" + owner.replacingOccurrences(of: "\"", with: "\"\"") + "\"") + "."
+        let ns = NSMutableString(string: sql)
+        ns.insert(prefix, at: h.nameStart)
+        return ns as String
+    }
+
+    private static func headerTokens(_ sql: String) -> (type: DBObjectType, owner: String?, name: String, nameStart: Int)? {
         let tokens = Lexer(sql).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment].contains($0.kind) }
         let ns = sql as NSString
         let words = tokens.prefix(14).map { ns.substring(with: NSRange(location: $0.start, length: $0.length)) }
@@ -103,8 +118,8 @@ public enum ProgramCompiler {
         }
         guard i < words.count else { return nil }
         func clean(_ s: String) -> String { s.hasPrefix("\"") ? String(s.dropFirst().dropLast()) : s.uppercased() }
-        if i + 2 < words.count, words[i + 1] == "." { return (type, clean(words[i]), clean(words[i + 2])) }
-        return (type, nil, clean(words[i]))
+        if i + 2 < words.count, words[i + 1] == "." { return (type, clean(words[i]), clean(words[i + 2]), tokens[i + 2].start) }
+        return (type, nil, clean(words[i]), tokens[i].start)
     }
 
     /// Wynik kompilacji okna.

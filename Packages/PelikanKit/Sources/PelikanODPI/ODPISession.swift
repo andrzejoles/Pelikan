@@ -31,6 +31,25 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let lobLimit: Int
     }
 
+    /// Paczka pobierania hurtowego: przy opóźnieniu ~50 ms paczka 500 daje ~8 tys. wierszy/s, 5000 — 40–60 tys.
+    /// Najwyżej 10 000 wierszy i ~16 MB buforów (szeroki wiersz — mniejsza paczka), nigdy mniej niż bieżąca.
+    static func bulkFetchArraySize(rowBytes: Int, current: UInt32) -> UInt32 {
+        let byMemory = (16 << 20) / max(1, rowBytes)
+        return UInt32(max(Int(current), min(10_000, byMemory)))
+    }
+
+    /// Bajty bufora jednego wiersza po stronie klienta (wartość + opis `dpiData`); LOB i typy dynamiczne liczone
+    /// jako lokator — ich treść pobierana jest osobno.
+    private func clientRowBytes(_ stmt: OpaquePointer, columns: UInt32) -> Int {
+        var total = 0
+        for pos in 0..<columns {
+            var q = dpiQueryInfo()
+            guard dpiStmt_getQueryInfo(stmt, pos + 1, &q) == DPI_SUCCESS else { return Int.max / 2 }
+            total += max(Int(q.typeInfo.clientSizeInBytes), 24) + MemoryLayout<dpiData>.size
+        }
+        return total
+    }
+
     /// Możliwości sterownika Instant Client (pełne OCI).
     public static let capabilities: DriverCapabilities = [
         .breakExecution, .dbmsDebug, .dbmsDebugJDWP, .lobs, .objectTypes, .refCursors, .implicitResults,
@@ -267,6 +286,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
         var result = ExecutionResult(kind: kind, warning: warning)
         if stmtInfo.isQuery != 0 {
+            // Przed definicją zmiennych (describeColumns) — potem ODPI-C nie pozwala powiększyć paczki.
+            if options.bulk, options.fetchArraySize == nil {
+                let size = Self.bulkFetchArraySize(rowBytes: clientRowBytes(stmt, columns: numCols), current: currentFetchArraySize)
+                if size > currentFetchArraySize {
+                    try check(dpiStmt_setFetchArraySize(stmt, size))
+                    currentFetchArraySize = size
+                }
+            }
             let columns = try describeColumns(stmt, count: numCols)
             result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
             keepStmt = true

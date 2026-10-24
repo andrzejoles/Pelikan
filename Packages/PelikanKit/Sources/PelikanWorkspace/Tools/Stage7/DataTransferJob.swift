@@ -99,13 +99,13 @@ public enum DataTransferRunner {
         case .truncate: _ = try await target.execute("truncate table \(job.targetName)")
         case .delete: result.deleted = Int(try await target.execute("delete from \(job.targetName)").rowsAffected)
         }
-        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: 10_000_000))
+        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
         guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Źródło musi być zapytaniem SELECT")) }
         let columns = rs.columns.map(\.name)
         var n = 0
         while true {
             try Task.checkCancellation()
-            let batch = try await source.fetch(rs.id, maxRows: 500)
+            let batch = try await source.fetch(rs.id, maxRows: 5000)
             for row in batch.rows {
                 do {
                     _ = try await target.execute(insert(job, columns: columns, row: row))
