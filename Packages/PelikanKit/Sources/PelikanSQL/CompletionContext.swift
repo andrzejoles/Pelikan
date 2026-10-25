@@ -65,7 +65,10 @@ public struct CompletionContext: Sendable, Hashable {
         let inLiteral = all.contains { t in
             [.string, .lineComment, .blockComment, .quotedIdentifier].contains(t.kind) && t.start < offset
                 && (offset < t.start + t.length || (t.kind == .lineComment && offset == t.start + t.length)
-                    || (t.kind == .string && offset == t.start + t.length && !ns.substring(with: NSRange(location: t.start, length: t.length)).hasSuffix("'")))
+                    || (t.kind == .string && offset == t.start + t.length && !ns.substring(with: NSRange(location: t.start, length: t.length)).hasSuffix("'"))
+                    // Niezamknięty komentarz blokowy na końcu tekstu.
+                    || (t.kind == .blockComment && offset == t.start + t.length
+                        && (t.length < 4 || !ns.substring(with: NSRange(location: t.start, length: t.length)).hasSuffix("*/"))))
         }
         let toks: [Tok] = all.filter { ![.whitespace, .newline, .lineComment, .blockComment, .hint].contains($0.kind) }.map {
             let s = ns.substring(with: NSRange(location: $0.start, length: $0.length))
@@ -106,19 +109,25 @@ public struct CompletionContext: Sendable, Hashable {
         }
         let afterAt = a > 0 && ns.character(at: a - 1) == 0x40
 
-        // Granice instrukcji: od poprzedniego `;` / BEGIN / DECLARE do następnego `;`.
+        // Granice instrukcji: od poprzedniego `;` / `/` sam w linii / BEGIN / DECLARE do następnego `;` albo `/`
+        // (`/` w wyrażeniu to dzielenie).
+        func isLoneSlash(_ t: Tok) -> Bool {
+            guard t.kind == .slash else { return false }
+            let line = ns.lineRange(for: NSRange(location: t.start, length: 0))
+            return ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/"
+        }
         let idx = toks.lastIndex { $0.end <= a } ?? -1
         var startIdx = 0
         var i = idx
         while i >= 0 {
             let t = toks[i]
-            if t.kind == .semicolon || t.kind == .slash || ["BEGIN", "DECLARE"].contains(t.upper) { startIdx = i + 1; break }
+            if t.kind == .semicolon || isLoneSlash(t) || ["BEGIN", "DECLARE"].contains(t.upper) { startIdx = i + 1; break }
             i -= 1
         }
         var endIdx = toks.count
         i = max(idx + 1, 0)
         while i < toks.count {
-            if toks[i].kind == .semicolon || toks[i].kind == .slash { endIdx = i; break }
+            if toks[i].kind == .semicolon || isLoneSlash(toks[i]) { endIdx = i; break }
             i += 1
         }
         let stmt = startIdx < endIdx ? Array(toks[startIdx..<endIdx]) : []
@@ -151,11 +160,21 @@ public struct CompletionContext: Sendable, Hashable {
             for spec in outline where (spec.kind == .package || spec.kind == .type) && spec.name.uppercased() == unit.name.uppercased() { addScope(spec) }
         }
 
-        // Rekordy pętli FOR … IN obejmujących pozycję (pętla zaczęta przed kursorem, niezamknięta przed nim).
+        // Rekordy pętli FOR … IN obejmujących pozycję (pętla zaczęta przed kursorem, niezamknięta przed nim):
+        // stos pętli — LOOP otwiera (z rekordem poprzedzającego FOR … IN), END LOOP zamyka najbliższą.
         var loops: [String: String] = [:]
+        var pending: (name: String, source: String)?
+        var open: [(name: String, source: String)?] = []
         var j = 0
         while j < toks.count, toks[j].end <= a {
-            if toks[j].upper == "FOR", j + 2 < toks.count, toks[j + 1].isWord, toks[j + 2].upper == "IN" {
+            if toks[j].upper == "LOOP" {
+                if j > 0, toks[j - 1].upper == "END" {
+                    if !open.isEmpty { open.removeLast() }
+                } else {
+                    open.append(pending)
+                    pending = nil
+                }
+            } else if toks[j].upper == "FOR", j + 2 < toks.count, toks[j + 1].isWord, toks[j + 2].upper == "IN" {
                 let name = toks[j + 1].name
                 var k = j + 3
                 if k < toks.count, toks[k].upper == "REVERSE" { k += 1 }
@@ -168,15 +187,16 @@ public struct CompletionContext: Sendable, Hashable {
                         m += 1
                     }
                     if m < toks.count {
-                        loops[name] = ns.substring(with: NSRange(location: toks[k].end, length: toks[m].start - toks[k].end))
+                        pending = (name, ns.substring(with: NSRange(location: toks[k].end, length: toks[m].start - toks[k].end)))
                     }
                 } else if k < toks.count, toks[k].isWord, !(k + 1 < toks.count && toks[k + 1].text.hasPrefix("..")) {
                     // FOR r IN kursor[(…)] LOOP — zakres liczbowy (a..b) nie jest rekordem.
-                    loops[name] = toks[k].name
+                    pending = (name, toks[k].name)
                 }
             }
             j += 1
         }
+        for case let r? in open { loops[r.name] = r.source }
 
         // Tabela wyzwalacza: CREATE … TRIGGER x {BEFORE|AFTER|INSTEAD OF} … ON [owner.]tabela.
         var trigger: TableReference?

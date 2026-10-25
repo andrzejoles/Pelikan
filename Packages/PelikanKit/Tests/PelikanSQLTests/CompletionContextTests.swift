@@ -41,6 +41,31 @@ struct CompletionContextTests {
         #expect(ctx("select 'abc| ' from dual").inLiteralOrComment)
         #expect(ctx("select 1 -- e.|\nfrom dual").inLiteralOrComment)
         #expect(!ctx("select e.| from emp e").inLiteralOrComment)
+        #expect(ctx("select 1 from dual /* uwaga e.|").inLiteralOrComment)
+        #expect(ctx("begin null; end; /*|").inLiteralOrComment)
+        #expect(!ctx("select 1 from dual /* k */|").inLiteralOrComment)
+    }
+
+    @Test("Dzielenie `/` nie jest granicą instrukcji; `/` sam w linii jest")
+    func slashBoundary() {
+        let c = ctx("select e.| , e.sal / 100 from emp e")
+        #expect(c.tables == [TableReference(name: "EMP", alias: "E")])
+        let s = ctx("select 1 from dept d\n/\nselect e.| from emp e")
+        #expect(s.tables.map(\.name) == ["EMP"])
+    }
+
+    @Test("Rekordy zamkniętych pętli (END LOOP) poza podpowiedziami")
+    func closedLoops() {
+        let c = ctx("""
+            begin
+              for r in (select empno from emp) loop
+                null;
+              end loop;
+              for q in c loop
+                x := |
+            """)
+        #expect(c.loopRecords["R"] == nil)
+        #expect(c.loopRecords["Q"] == "C")
     }
 
     @Test("Deklaracje w zasięgu, typy rekordowe, rekordy pętli FOR")
