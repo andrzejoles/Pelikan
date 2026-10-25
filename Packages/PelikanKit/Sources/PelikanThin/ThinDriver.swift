@@ -84,7 +84,7 @@ public struct ThinDriver: DatabaseDriver {
             throw ThinSession.map(error)
         }
         let session = ThinSession(connection: conn, options: options)
-        try await session.loadInfo()
+        do { try await session.loadInfo() } catch { await session.close(); throw error }
         if !options.tags.module.isEmpty || options.tags.action != nil { try? await session.setTags(options.tags) }
         return session
     }
@@ -243,12 +243,14 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         case .clob, .nCLOB, .blob, .bFile:
             let lob = try cell.decode(LOB.self, context: .default)
             var data = Data()
+            var stopped = false
             let total = lob.estimatedSize
             for try await chunk in lob.readChunks(on: connection) {
                 data.append(contentsOf: chunk.readableBytesView)
-                if data.count >= lobLimit { break }
+                if data.count >= lobLimit { stopped = true; break }
             }
-            let truncated = data.count >= lobLimit && total > data.count
+            // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
+            let truncated = data.count > lobLimit || (stopped && total > data.count)
             switch t {
             case .clob, .nCLOB:
                 let text = Self.clobText(data.prefix(lobLimit))
@@ -351,7 +353,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         do {
             var so = StatementOptions()
             so.fetchLOBs = true                         // LOB jako lokator: odczyt do limitu, długość i znacznik obcięcia
-            so.arraySize = Int(self.options.fetchArraySize)
+            so.arraySize = Int(options.fetchArraySize ?? self.options.fetchArraySize)
             rows = try await connection.execute(stmt, options: so)
         } catch {
             throw Self.map(error)
@@ -373,6 +375,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         for (name, ref, type) in refs {
             result.outBinds[name] = (try? await outValue(ref, type: type, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)) ?? .null
         }
+        // OracleNIO nie ma trybu „commit on success” ani limitu czasu wywołania: COMMIT po udanym poleceniu; limit
+        // `callTimeoutMs` (zapytania agenta) na thin nie działa, tak jak przerwanie (D168).
+        if options.autoCommit, result.kind != .query { try await commit() }
         if result.kind == .ddl, Self.isCompilable(sql) {
             // Błędy kompilacji: OracleNIO nie przekazuje ostrzeżenia ORA-24344 — sprawdzamy USER_ERRORS dla obiektu.
             if let w = try? await compileWarning(sql) { result.warning = w }
@@ -472,14 +477,24 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     }
 
     public func setTags(_ tags: SessionTags) async throws {
-        _ = try await execute("begin dbms_application_info.set_module(:m, :a); end;",
-                              binds: [BindVariable(name: "m", value: .text(tags.module)),
-                                      BindVariable(name: "a", value: tags.action.map { .text($0) } ?? .null)],
-                              options: ExecuteOptions())
+        var plsql = "dbms_application_info.set_module(:m, :a);"
+        var binds = [BindVariable(name: "m", value: .text(tags.module)), BindVariable(name: "a", value: tags.action.map { .text($0) } ?? .null)]
+        if let info = tags.clientInfo {
+            plsql += " dbms_application_info.set_client_info(:ci);"
+            binds.append(BindVariable(name: "ci", value: .text(info)))
+        }
+        if let id = tags.clientIdentifier {
+            plsql += " dbms_session.set_identifier(:cid);"
+            binds.append(BindVariable(name: "cid", value: .text(id)))
+        }
+        _ = try await execute("begin \(plsql) end;", binds: binds, options: ExecuteOptions())
     }
 
     public func close() async {
         state.withLock { $0.cursors.removeAll() }
+        // Wylogowanie zatwierdza otwartą transakcję (OCISessionEnd/OracleNIO): jak w ODPISession — ROLLBACK przed
+        // zamknięciem, decyzję o COMMIT podejmuje wcześniej interfejs (D10).
+        try? await connection.rollback()
         try? await connection.close()
     }
 }
