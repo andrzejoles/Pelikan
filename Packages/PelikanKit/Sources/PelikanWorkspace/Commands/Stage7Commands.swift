@@ -5,8 +5,9 @@ import PelikanDB
 /// z obiektu, panel wartości, snippety (DB-GRID-001/002, SD-GEN-001, DB-PANEL-001, SC-SNIP-001).
 @MainActor
 enum Stage7Commands {
-    /// Wstawia tekst w miejscu kursora (zastępuje zaznaczenie) okna edytora.
-    static func insert(_ text: String, into doc: Document) {
+    /// Wstawia tekst w miejscu kursora (zastępuje zaznaczenie) okna edytora; okno tylko do odczytu — błąd (PD-FILE-003).
+    static func insert(_ text: String, into doc: Document) throws {
+        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
         let ns = doc.text as NSString
         let sel = min(doc.selectedRange.lowerBound, ns.length)..<min(doc.selectedRange.upperBound, ns.length)
         doc.text = ns.replacingCharacters(in: NSRange(location: sel.lowerBound, length: sel.count), with: text)
@@ -157,7 +158,7 @@ enum Stage7Commands {
                 }
                 if ctx.arguments.bool("returnOnly") == true { return CommandResult(value: .string(code)) }
                 if ctx.arguments.bool("newWindow") != true, let doc = editor(ws) {
-                    insert(code, into: doc)
+                    try insert(code, into: doc)
                 } else {
                     let doc = ws.newDocument(.sql, text: code)
                     doc.isModified = false
@@ -182,7 +183,7 @@ enum Stage7Commands {
                 guard let s = ctx.workspace.snippets.all.first(where: { $0.id == ctx.arguments.string("id") }) else {
                     throw CommandError.invalidArgument("id", ctx.arguments.string("id") ?? "")
                 }
-                insert(s.text, into: doc)
+                try insert(s.text, into: doc)
                 return .ok
             },
         ]

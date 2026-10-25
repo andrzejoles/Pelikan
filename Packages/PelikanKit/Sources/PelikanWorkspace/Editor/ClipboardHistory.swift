@@ -52,6 +52,7 @@ extension Workspace {
     /// Wstawia tekst w aktywnym edytorze w miejscu zaznaczenia.
     func insertInEditor(_ text: String) throws {
         guard let d = BuiltinCommands.editable(self) else { throw CommandError.notAvailable(L10n.tr("Brak okna z edytorem")) }
+        if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
         let len = (d.text as NSString).length
         let sel = min(d.selectedRange.lowerBound, len)..<min(d.selectedRange.upperBound, len)
         d.text = (d.text as NSString).replacingCharacters(in: NSRange(location: sel.lowerBound, length: sel.count), with: text)

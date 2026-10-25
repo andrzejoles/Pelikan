@@ -221,6 +221,16 @@ public enum BuiltinCommands {
         return d
     }
 
+    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu — błąd (PD-FILE-003); dla agenta (`run_command`)
+    /// także bez okna poleceń, jak w narzędziach edytora (PROMPT §7.3). Zmianę agenta zapisuje `recordAgentEdit`.
+    @MainActor
+    static func editTarget(_ ctx: CommandContext) throws -> Document? {
+        guard let doc = editable(ctx.workspace) else { return nil }
+        if ctx.invoker.isAgent { _ = try ctx.workspace.agentDocument(nil) }
+        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        return doc
+    }
+
     /// Komenda zmieniająca tekst edytora czystą funkcją (cofalne w edytorze — zmiana trafia przez model).
     @MainActor
     static func editCommand(_ id: String, _ title: String, pd: [String] = [], mac: [String]? = nil, summary: String, feature: String,
@@ -228,13 +238,14 @@ public enum BuiltinCommands {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: L10n.tr("Zaznaczenie"), pd: pd, mac: mac,
                                   agent: .full, effect: .modifiesEditor, summary: summary, feature: feature),
                 validate: { editable($0) != nil }) { ctx in
-            guard let doc = editable(ctx.workspace) else { return .ok }
-            if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+            guard let doc = try editTarget(ctx) else { return .ok }
+            let before = doc.text
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
             doc.text = e.text
             doc.selectedRange = e.selection
+            ctx.workspace.recordAgentEdit(ctx, doc, before: before)
             return .ok
         }
     }
@@ -293,6 +304,8 @@ public enum BuiltinCommands {
                     if case .int(let i) = v { return Int(i) }
                     return v.stringValue.flatMap(Int.init)
                 }
+                // Agent podaje linię — okno dialogowe aktywowałoby aplikację.
+                if line == nil, ctx.invoker.isAgent { throw CommandError.missingArgument("line") }
                 if line == nil {
                     let current = (doc.text as NSString).substring(to: min(doc.selectedRange.lowerBound, (doc.text as NSString).length))
                         .components(separatedBy: "\n").count
@@ -311,7 +324,8 @@ public enum BuiltinCommands {
                                       summary: L10n.tr("Formatuje całe źródło albo zaznaczone linie według reguł formatera; zmienia tylko odstępy, układ linii i wielkość liter."),
                                       feature: "PD-BEAU-002"),
                     validate: { editable($0) != nil }) { ctx in
-                guard let doc = editable(ctx.workspace) else { return .ok }
+                guard let doc = try editTarget(ctx) else { return .ok }
+                let before = doc.text
                 let options = ctx.workspace.settings.beautifier
                 let len = (doc.text as NSString).length
                 let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
@@ -325,6 +339,7 @@ public enum BuiltinCommands {
                     doc.text = f
                     doc.selectedRange = range
                 }
+                ctx.workspace.recordAgentEdit(ctx, doc, before: before)
                 return CommandResult(message: L10n.tr("Sformatowano"))
             },
             Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
