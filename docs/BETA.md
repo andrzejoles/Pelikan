@@ -1,9 +1,18 @@
 # Pelikan — wydanie beta
 
-Pierwsze wydanie do testów na prawdziwych bazach. Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Druga beta do testów na prawdziwych bazach (pierwsza: 7.9.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
+
+## Co nowego od 7.9.0
+
+- **Bezpieczeństwo** (przegląd całej aplikacji): agent AI jest przypięty do połączenia z okna zgody i nie zatwierdzi
+  cudzej transakcji poleceniem PL/SQL; linki do Pelikana przyjmują tylko znane parametry; nieznany klucz serwera SSH
+  wymaga potwierdzenia odcisku; błędy połączeń widziane przez agenta nie zawierają szczegółów serwera.
+- **Narzędzia na dużych bazach**: Znajdź obiekty w bazie, diagram ER, eksport DDL i dokumentacja schematu pytają
+  słownik zbiorczo — na bazie z dziesiątkami tysięcy obiektów działają w sekundach zamiast minut.
+- Menu Usługi macOS w języku interfejsu; pliki wykonywalne bez ścieżek z komputera, na którym je zbudowano.
 
 ## Zanim zaczniesz
 
