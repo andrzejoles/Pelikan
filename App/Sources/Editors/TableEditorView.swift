@@ -76,7 +76,7 @@ struct TableEditorView: View {
             Toggle(L10n.tr("Organizacja indeksowa (IOT)"), isOn: $definition.indexOrganized).disabled(original != nil || definition.temporary)
             TextField(L10n.tr("Komentarz"), text: $definition.comment, axis: .vertical).lineLimit(2...4)
             Toggle(L10n.tr("Archiwizacja wierszy (ROW ARCHIVAL)"), isOn: $definition.rowArchival).disabled(definition.temporary)
-            TextField(L10n.tr("Adnotacje tabeli (nazwa=wartość, …; 23ai)"), text: annotations($definition.annotations))
+            ListTextField(L10n.tr("Adnotacje tabeli (nazwa=wartość, …; 23ai)"), text: annotations($definition.annotations))
             Section(L10n.tr("Składowanie")) {
                 HStack {
                     TextField("PCTFREE", text: $definition.storage.pctFree)
@@ -97,7 +97,7 @@ struct TableEditorView: View {
             Section(L10n.tr("Organizacja")) {
                 TextField(L10n.tr("Klaster"), text: upper($definition.cluster)).disabled(original != nil && !definition.recreate)
                 if !definition.cluster.isEmpty {
-                    TextField(L10n.tr("Kolumny klastra"), text: list($definition.clusterColumns)).disabled(original != nil && !definition.recreate)
+                    ListTextField(L10n.tr("Kolumny klastra"), text: list($definition.clusterColumns)).disabled(original != nil && !definition.recreate)
                 }
                 TextField(L10n.tr("Tabela obiektowa — typ (OF …)"), text: upper($definition.objectType)).disabled(original != nil)
                 Toggle(L10n.tr("Tabela zewnętrzna (ORGANIZATION EXTERNAL)"), isOn: Binding(
@@ -108,7 +108,7 @@ struct TableEditorView: View {
                         ForEach(["ORACLE_LOADER", "ORACLE_DATAPUMP", "ORACLE_BIGDATA"], id: \.self) { Text($0).tag($0) }
                     }
                     TextField(L10n.tr("Katalog (DIRECTORY)"), text: upper(Binding(get: { definition.external?.directory ?? "" }, set: { definition.external?.directory = $0 })))
-                    TextField(L10n.tr("Pliki (po przecinku)"), text: list(Binding(get: { definition.external?.locations ?? [] }, set: { definition.external?.locations = $0 })))
+                    ListTextField(L10n.tr("Pliki (po przecinku)"), text: list(Binding(get: { definition.external?.locations ?? [] }, set: { definition.external?.locations = $0 })))
                     TextField(L10n.tr("Parametry dostępu"), text: Binding(get: { definition.external?.accessParameters ?? "" }, set: { definition.external?.accessParameters = $0 }),
                               axis: .vertical).lineLimit(2...6).font(.system(.body, design: .monospaced))
                     TextField("REJECT LIMIT", text: upper(Binding(get: { definition.external?.rejectLimit ?? "" }, set: { definition.external?.rejectLimit = $0 })))
@@ -116,7 +116,7 @@ struct TableEditorView: View {
             }
             .disabled(definition.temporary)
             if original != nil {
-                Section(L10n.tr("Recreate table")) {
+                Section(L10n.tr("Odtworzenie tabeli")) {
                     Toggle(L10n.tr("Zastosuj przez odtworzenie tabeli (kopia danych, DROP, CREATE, przeniesienie wierszy)"), isOn: $definition.recreate)
                     if definition.recreate {
                         Text(L10n.tr("Wyzwalacze, uprawnienia i klucze obce innych tabel są odtwarzane; tabela trafia do kosza (FLASHBACK TABLE … TO BEFORE DROP)."))
@@ -154,19 +154,19 @@ struct TableEditorView: View {
                     if let p = definition.partitioning {
                         ForEach(p.partitions.indices, id: \.self) { i in
                             HStack {
-                                TextField(L10n.tr("Nazwa"), text: Binding(get: { definition.partitioning?.partitions[i].name ?? "" },
-                                                                          set: { definition.partitioning?.partitions[i].name = $0.uppercased() }))
+                                TextField(L10n.tr("Nazwa"), text: partition(i, \.name, transform: { $0.uppercased() }))
                                     .frame(width: 180)
                                 if p.partitions[i].originalName != nil || p.method == .hash {
                                     Text(p.partitions[i].values).font(.system(.body, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
                                 } else {
                                     TextField(p.method == .range ? L10n.tr("VALUES LESS THAN") : L10n.tr("VALUES"),
-                                              text: Binding(get: { definition.partitioning?.partitions[i].values ?? "" },
-                                                            set: { definition.partitioning?.partitions[i].values = $0 }))
+                                              text: partition(i, \.values))
                                         .font(.system(.body, design: .monospaced))
                                 }
                                 Spacer()
-                                Button { definition.partitioning?.partitions.remove(at: i) } label: { Image(systemName: "minus.circle") }
+                                Button {
+                                    if definition.partitioning?.partitions.indices.contains(i) == true { definition.partitioning?.partitions.remove(at: i) }
+                                } label: { Image(systemName: "minus.circle") }
                                     .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń partycję"))
                             }
                         }
@@ -181,18 +181,18 @@ struct TableEditorView: View {
                         Picker(L10n.tr("Metoda"), selection: Binding(get: { definition.partitioning?.method ?? .range }, set: { definition.partitioning?.method = $0 })) {
                             ForEach(TableDefinition.Partitioning.Method.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                         }
-                        TextField(L10n.tr("Kolumny klucza"), text: Binding(get: { definition.partitioning?.columns.joined(separator: ", ") ?? "" },
+                        ListTextField(L10n.tr("Kolumny klucza"), text: Binding(get: { definition.partitioning?.columns.joined(separator: ", ") ?? "" },
                                                                            set: { definition.partitioning?.columns = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty } }))
                         if definition.partitioning?.method == .range {
                             TextField(L10n.tr("INTERVAL (np. NUMTOYMINTERVAL(1,'MONTH'))"), text: Binding(get: { definition.partitioning?.interval ?? "" }, set: { definition.partitioning?.interval = $0 }))
                         }
                         HStack {
-                            TextField(L10n.tr("Podpartycje HASH — kolumny"), text: Binding(get: { definition.partitioning?.subpartitionColumns.joined(separator: ", ") ?? "" },
+                            ListTextField(L10n.tr("Podpartycje HASH — kolumny"), text: Binding(get: { definition.partitioning?.subpartitionColumns.joined(separator: ", ") ?? "" },
                                 set: { definition.partitioning?.subpartitionColumns = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty } }))
                             Stepper(L10n.tr("Liczba: \(definition.partitioning?.subpartitionCount ?? 0)"),
                                     value: Binding(get: { definition.partitioning?.subpartitionCount ?? 0 }, set: { definition.partitioning?.subpartitionCount = $0 }), in: 0...64)
                         }
-                        TextField(L10n.tr("Partycje: nazwa: wartości (po jednej w linii)"), text: Binding(get: {
+                        ListTextField(L10n.tr("Partycje: nazwa: wartości (po jednej w linii)"), text: Binding(get: {
                             definition.partitioning?.partitions.map { $0.values.isEmpty ? $0.name : "\($0.name): \($0.values)" }.joined(separator: "\n") ?? ""
                         }, set: { text in
                             definition.partitioning?.partitions = text.split(separator: "\n").compactMap { line in
@@ -256,7 +256,7 @@ struct TableEditorView: View {
                 TableColumn(L10n.tr("Identity")) { $c in Toggle("", isOn: $c.identity).labelsHidden().disabled(c.originalName != nil) }.width(52)
                 TableColumn(L10n.tr("Niewidoczna")) { $c in Toggle("", isOn: $c.invisible).labelsHidden() }.width(70)
                 TableColumn(L10n.tr("Domena")) { $c in TextField("", text: upper($c.domain)) }.width(min: 80, ideal: 110)
-                TableColumn(L10n.tr("Adnotacje")) { $c in TextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
+                TableColumn(L10n.tr("Adnotacje")) { $c in ListTextField("", text: annotations($c.annotations)) }.width(min: 80, ideal: 120)
                 TableColumn(L10n.tr("Komentarz")) { $c in TextField("", text: $c.comment) }
             }
             listButtons(add: { definition.columns.append(TableDefinition.Column(name: "KOLUMNA\(definition.columns.count + 1)", type: "VARCHAR2(30 CHAR)")) },
@@ -275,9 +275,9 @@ struct TableEditorView: View {
                         Text(L10n.tr("Obcy")).tag(TableDefinition.Key.Kind.foreign)
                     }.labelsHidden()
                 }.width(100)
-                TableColumn(L10n.tr("Kolumny")) { $k in TextField("", text: list($k.columns)) }.width(min: 100, ideal: 140)
+                TableColumn(L10n.tr("Kolumny")) { $k in ListTextField("", text: list($k.columns)) }.width(min: 100, ideal: 140)
                 TableColumn(L10n.tr("Tabela wskazywana")) { $k in TextField("", text: upper($k.referencedTable)).disabled(k.kind != .foreign) }
-                TableColumn(L10n.tr("Kolumny wskazywane")) { $k in TextField("", text: list($k.referencedColumns)).disabled(k.kind != .foreign) }
+                TableColumn(L10n.tr("Kolumny wskazywane")) { $k in ListTextField("", text: list($k.referencedColumns)).disabled(k.kind != .foreign) }
                 TableColumn("ON DELETE") { $k in
                     Picker("", selection: $k.onDelete) { Text("—").tag(""); Text("CASCADE").tag("CASCADE"); Text("SET NULL").tag("SET NULL") }
                         .labelsHidden().disabled(k.kind != .foreign)
@@ -318,7 +318,7 @@ struct TableEditorView: View {
                         Text("Bitmap").tag(TableDefinition.Index.Kind.bitmap)
                     }.labelsHidden()
                 }.width(110)
-                TableColumn(L10n.tr("Kolumny / wyrażenia (DESC)")) { $x in TextField("", text: list($x.columns)) }
+                TableColumn(L10n.tr("Kolumny / wyrażenia (DESC)")) { $x in ListTextField("", text: list($x.columns)) }
                 TableColumn(L10n.tr("Przestrzeń tabel")) { $x in TextField("", text: upper($x.tablespace)) }.width(min: 90, ideal: 120)
                 TableColumn(L10n.tr("Kompresja")) { $x in
                     Picker("", selection: $x.compression) {
@@ -382,6 +382,18 @@ struct TableEditorView: View {
         Binding(get: { b.wrappedValue }, set: { b.wrappedValue = $0.uppercased() })
     }
 
+    /// Pole partycji istniejącej tabeli — po usunięciu wiersza SwiftUI może jeszcze odczytać stary indeks.
+    private func partition(_ i: Int, _ field: WritableKeyPath<TableDefinition.Partition, String>,
+                           transform: @escaping (String) -> String = { $0 }) -> Binding<String> {
+        Binding(get: {
+            guard let p = definition.partitioning, p.partitions.indices.contains(i) else { return "" }
+            return p.partitions[i][keyPath: field]
+        }, set: {
+            guard definition.partitioning?.partitions.indices.contains(i) == true else { return }
+            definition.partitioning?.partitions[i][keyPath: field] = transform($0)
+        })
+    }
+
     private func list(_ b: Binding<[String]>) -> Binding<String> {
         Binding(get: { b.wrappedValue.joined(separator: ", ") },
                 set: { b.wrappedValue = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } })
@@ -442,5 +454,32 @@ struct TableEditorView: View {
                 message = L10n.tr("Wczytano z bazy")
             } catch { message = error.localizedDescription }
         }
+    }
+}
+
+/// Pole listy (kolumny po przecinku, adnotacje, partycje w liniach): model aktualizowany przy każdym klawiszu, ale
+/// w trakcie edycji pole pokazuje surowy tekst — znormalizowany zjadałby separatory („ID,” → „ID”). Postać
+/// znormalizowana wraca po utracie fokusu i po Enter.
+private struct ListTextField: View {
+    let title: String
+    @Binding var text: String
+    var axis: Axis = .horizontal
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    init(_ title: String, text: Binding<String>, axis: Axis = .horizontal) {
+        self.title = title
+        self._text = text
+        self.axis = axis
+    }
+
+    var body: some View {
+        TextField(title, text: $draft, axis: axis)
+            .focused($focused)
+            .onAppear { draft = text }
+            .onChange(of: draft) { _, new in if focused { text = new } }
+            .onChange(of: text) { _, new in if !focused { draft = new } }
+            .onChange(of: focused) { _, now in if !now { draft = text } }
+            .onSubmit { draft = text }
     }
 }

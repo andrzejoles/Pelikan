@@ -20189,6 +20189,34 @@
         }
       }
     },
+    "HEAD zdalnej gałęzi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote branch HEAD"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEAD des Remote-Branches"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEAD de la rama remota"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HEAD віддаленої гілки"
+          }
+        }
+      }
+    },
     "HTML" : {
       "localizations" : {
         "en" : {
@@ -41945,6 +41973,34 @@
         }
       }
     },
+    "Odtworzenie tabeli" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recreate table"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle neu erstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recrear tabla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перестворення таблиці"
+          }
+        }
+      }
+    },
     "Odtworzyć tabelę %@?" : {
       "localizations" : {
         "en" : {
@@ -61065,34 +61121,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gesamt"
-          }
-        }
-      }
-    },
-    "Recreate table" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recreate table"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recreate table"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recreate table"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recreate table"
           }
         }
       }
@@ -104745,34 +104773,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datensatz %@: %@"
-          }
-        }
-      }
-    },
-    "remote" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "remote"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "remote"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "remoto"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remote"
           }
         }
       }
