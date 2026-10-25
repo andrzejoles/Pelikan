@@ -296,9 +296,13 @@ extension ResultGridModel {
             var binds = cols.enumerated().map { bind("v\($0)", $1, rows[r][$1]) }
             binds.append(BindVariable(name: "rid", type: .varchar2, direction: .output, maxSize: 4000))
             let values = cols.indices.map { ":v\($0)" }.joined(separator: ", ")
-            let sql = cols.isEmpty ? "INSERT INTO \(table) VALUES (DEFAULT) RETURNING ROWID INTO :rid"
+            // Wiersz bez wartości: DEFAULT dla każdej kolumny edytowalnej (samo `VALUES (DEFAULT)` daje ORA-00947 przy wielu kolumnach).
+            let defaults = t.editableColumns.sorted().compactMap { t.tableColumn[$0] }.map(ResultExporter.identifier)
+            let empty = defaults.isEmpty ? "VALUES (DEFAULT)"
+                : "(\(defaults.joined(separator: ", "))) VALUES (\(Array(repeating: "DEFAULT", count: defaults.count).joined(separator: ", ")))"
+            let sql = cols.isEmpty ? "INSERT INTO \(table) \(empty) RETURNING ROWID INTO :rid"
                 : "INSERT INTO \(table) (\(names)) VALUES (\(values)) RETURNING ROWID INTO :rid"
-            let preview = cols.isEmpty ? "INSERT INTO \(table) VALUES (DEFAULT);"
+            let preview = cols.isEmpty ? "INSERT INTO \(table) \(empty);"
                 : "INSERT INTO \(table) (\(names)) VALUES (\(cols.map { ResultExporter.literal(rows[r][$0]) }.joined(separator: ", ")));"
             out.append(PlannedStatement(dataRow: r, sql: sql, binds: binds, preview: preview, kind: .insert))
         }
@@ -319,6 +323,10 @@ extension ResultGridModel {
         for p in statements {
             do {
                 let result = try await session.execute(p.sql, binds: p.binds, options: ExecuteOptions())
+                // UPDATE/DELETE po ROWID bez skutku: wiersz zmieniony albo usunięty przez inną sesję.
+                if p.kind != .insert, result.rowsAffected != 1 {
+                    throw OracleError(code: 0, message: L10n.tr("Wiersz został zmieniony albo usunięty przez innego użytkownika"))
+                }
                 switch p.kind {
                 case .delete:
                     deletedRows.insert(p.dataRow)
@@ -384,11 +392,14 @@ extension ResultGridModel {
     // MARK: Konwersja i walidacja
 
     /// Tekst z komórki → wartość typu kolumny.
-    static func parse(_ text: String, column c: ColumnInfo, format: ValueFormat) throws -> OracleValue {
+    static func parse(_ text: String, column c: ColumnInfo, format: ValueFormat,
+                      decimal: String = NumberLayout.localeSeparators.decimal) throws -> OracleValue {
         if text.isEmpty { return .null }
         switch c.type {
         case .number, .binaryInteger, .binaryFloat, .binaryDouble:
-            let normalized = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+            // Przecinek jako separator dziesiętny tylko wg ustawień regionalnych (w en_US „1,000” to nie 1).
+            var normalized = text.trimmingCharacters(in: .whitespaces)
+            if decimal == "," { normalized = normalized.replacingOccurrences(of: ",", with: ".") }
             guard normalized.range(of: #"^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$"#, options: .regularExpression) != nil else {
                 throw GridEditError.invalidValue(column: c.name, reason: L10n.tr("oczekiwana liczba"))
             }

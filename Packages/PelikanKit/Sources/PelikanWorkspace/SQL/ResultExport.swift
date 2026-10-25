@@ -171,6 +171,11 @@ public enum ResultExporter {
         return "\"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 
+    /// Nazwa z `tableName(fromQuery:)` (bez cudzysłowów, `WŁAŚCICIEL.TABELA`) w składni SQL.
+    static func qualifiedIdentifier(_ name: String) -> String {
+        name.split(separator: ".").map { identifier(String($0)) }.joined(separator: ".")
+    }
+
     static func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "''") + "'" }
 
     /// Literał SQL wartości (do INSERT i listy wyrażeń).
@@ -229,7 +234,7 @@ public enum ResultExporter {
     static func insertable(_ c: ColumnInfo) -> Bool { ![.rowid, .urowid, .refCursor].contains(c.type) && c.name != "ROWID" }
 
     static func sqlInserts(_ data: ExportData) -> String {
-        let table = data.tableName.map { $0.split(separator: ".").map { identifier(String($0)) }.joined(separator: ".") } ?? "TABELA"
+        let table = data.tableName.map(qualifiedIdentifier) ?? "TABELA"
         let cols = data.columns.indices.filter { insertable(data.columns[$0]) }
         let list = cols.map { identifier(data.columns[$0].name) }.joined(separator: ", ")
         var s = ""

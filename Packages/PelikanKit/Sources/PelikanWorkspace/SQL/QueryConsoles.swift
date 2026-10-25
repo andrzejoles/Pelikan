@@ -20,8 +20,10 @@ public final class QueryConsoles {
     public func save(_ text: String, for connection: UUID) {
         memory[connection] = text
         guard let u = url(connection) else { return }
-        try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // Pełny tekst SQL — katalog i plik tylko dla właściciela (jak odzyskiwanie i stan okien).
+        try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         try? Data(text.utf8).write(to: u, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: u.path)
     }
 
     /// Zapis tekstu okna konsoli (inne okna — bez zmian).

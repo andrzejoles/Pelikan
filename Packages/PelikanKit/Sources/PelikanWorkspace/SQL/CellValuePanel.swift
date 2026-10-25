@@ -58,15 +58,10 @@ public struct CellValuePresentation: Sendable, Equatable {
         if isNull { return "NULL" }
         switch mode {
         case .json: return LargeDataModel.prettyJSON(text) ?? text
-        case .xml: return Self.prettyXML(text) ?? text
+        // XML bez parsera (żadnych encji zewnętrznych z niezaufanych danych) — ten sam formater co Large Data Editor.
+        case .xml: return LargeDataModel.prettyXML(text) ?? text
         case .hex: return LargeDataModel.hexDump(data ?? Data(text.utf8), limit: 64 * 1024)
         case .text, .html, .image: return text
         }
-    }
-
-    /// XML z wcięciami (XMLDocument; niepoprawny XML — nil).
-    public static func prettyXML(_ s: String) -> String? {
-        guard let doc = try? XMLDocument(xmlString: s, options: []) else { return nil }
-        return doc.xmlString(options: [.nodePrettyPrint])
     }
 }
