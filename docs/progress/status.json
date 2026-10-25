@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-25T00:21:51+02:00",
+  "heartbeat": "2026-10-25T07:10:36+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "Czekam na CI #50 (poprawka Observation dla Linuksa); lokalnie: Entra ID/OAuth2 i ORDS gotowe (do wypchnięcia po scaleniu), pełne testy bazy w toku; subagent — pipeline wdrożenia Pro*C i konsola",
+  "task": "Czekam na decyzję właściciela o publikacji 8.4.0 beta",
   "stages": [
     {
       "id": 0,
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Scalone #79 (wydajność narzędzi) i #80 (notatki bety); szkic Pelikan 8.4.0 beta gotowy — podpis, wersja i brak ścieżek domowych sprawdzone",
     "Druga próba na MT_RMSPROD: wyszukiwanie 31–85 s → 2–3 s, diagram ER 263 → 4,7 s, eksport DDL 2 → 0,2 s/obiekt, dokumentacja schematu >20 min → 15 s (D164)",
     "Przegląd bezpieczeństwa: 10 znalezisk (3 wysokie) poprawionych — przypięte połączenie agenta, link bez skryptów, PL/SQL nie zatwierdzi DML agenta, potwierdzanie kluczy SSH (D163)",
     "Próba opublikowanej bety: podpisy i aktualizacje OK; usunięte ścieżki budowania z binarek (strip, mapa prefiksów), nazwy usług macOS przetłumaczone (D162); test Stop 120/120 lokalnie",
@@ -96,13 +97,10 @@
     "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
     "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela",
     "Etap 8 zamknięty (D114): docs/STATUS.md z ograniczeniami i listą do potwierdzenia przez właściciela; PR #56 w CI, potem szkic wydania",
-    "Etap 8: przebieg zrzutów w tle (scripts/screenshots.sh, D113) — 11 scenariuszy, znalezione i poprawione 2 błędy (karty edytora tabeli, rozdziały instrukcji)",
-    "Etap 8 / audyt macierzy: scalone siatka i edytor (subagenty), Object Browser (filtry, foldery, preferencje), edytor tabeli 23ai, podpowiedzi kompilatora, HOST i krokowanie, DBMS_TRACE, tytuł okna, katalogi startowe; testy bazy 174/174"
+    "Etap 8: przebieg zrzutów w tle (scripts/screenshots.sh, D113) — 11 scenariuszy, znalezione i poprawione 2 błędy (karty edytora tabeli, rozdziały instrukcji)"
   ],
   "next": [
-    "Test Stop przez SSH sporadycznie zawiesza się na CI macOS — diagnostyka etapów gotowa, czekam na następne wystąpienie",
-    "Uwagi testerów bety 7.9.0 (GitHub Issues)",
-    "Szkic kolejnej bety z poprawkami bezpieczeństwa i wydajności — do decyzji właściciela"
+    "Publikacja szkicu 8.4.0 beta — decyzja właściciela"
   ],
   "blockers": [],
   "questions": [],
