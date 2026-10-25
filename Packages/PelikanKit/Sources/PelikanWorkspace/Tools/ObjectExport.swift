@@ -61,8 +61,9 @@ public enum ObjectExport {
     }
 
     /// DDL jednego obiektu z ustawieniami transformacji DBMS_METADATA według opcji; `granted` — obiekty schematu
-    /// z uprawnieniami (eksport wielu obiektów), bez niej — sprawdzenie tego jednego obiektu.
-    static func ddl(_ o: DBObject, options: ObjectExportOptions, granted: Set<String>? = nil, in s: any DatabaseSession) async throws -> String {
+    /// z uprawnieniami (eksport wielu obiektów; `.some(nil)` — listy nie udało się pobrać, każdy obiekt traktowany
+    /// jak mający uprawnienia, bez ponawiania zapytania), bez niej — sprawdzenie tego jednego obiektu.
+    static func ddl(_ o: DBObject, options: ObjectExportOptions, granted: Set<String>?? = nil, in s: any DatabaseSession) async throws -> String {
         let metaType: String = switch o.type {
         case .packageBody: "PACKAGE_BODY"
         case .package: "PACKAGE_SPEC"
@@ -110,9 +111,10 @@ public enum ObjectExport {
                               progress: (@MainActor (Int) -> Void)? = nil) async throws -> [ExportedFile] {
         let sorted = objects.sorted { (sortKey($0.type), $0.name) < (sortKey($1.type), $1.name) }
         // Lista obiektów z uprawnieniami — raz na schemat zamiast pytania o każdy obiekt.
-        var granted: [String: Set<String>] = [:]
+        var granted: [String: Set<String>?] = [:]
         if options.includePrivileges, sorted.count > 1 {
-            for owner in Set(sorted.map(\.owner)) { granted[owner] = await grantedObjects(owner: owner, in: s) }
+            // Także nieudane pobranie (nil) — zapamiętane, żeby każdy obiekt nie ponawiał zapytania.
+            for owner in Set(sorted.map(\.owner)) { granted.updateValue(await grantedObjects(owner: owner, in: s), forKey: owner) }
         }
         var parts: [(DBObject, String)] = []
         for (i, o) in sorted.enumerated() {
@@ -124,14 +126,33 @@ public enum ObjectExport {
             return [ExportedFile(name: "\(sorted.first?.owner.lowercased() ?? "obiekty").sql",
                                  content: header + parts.map { "\n-- \($0.0.type.rawValue) \($0.0.name)\n" + $0.1 }.joined(separator: "\n") + "\n")]
         }
+        return files(parts, options: options, header: header)
+    }
+
+    /// Pliki „plik na obiekt”: nazwa z bezpiecznych znaków (nazwa w cudzysłowie może mieć `/`, `..`); różne obiekty
+    /// o tej samej nazwie pliku (np. „Foo” i „FOO”, inny schemat) dostają przyrostek `_2`, `_3`…; specyfikacja i ciało
+    /// tego samego obiektu trafiają do wspólnego pliku `.pck`/`.typ`.
+    static func files(_ parts: [(DBObject, String)], options: ObjectExportOptions, header: String) -> [ExportedFile] {
         var files: [String: String] = [:]
         var names: [String] = []
+        var fileOf: [String: String] = [:]
         for (o, text) in parts {
             let together = options.specAndBodyTogether && [.package, .packageBody, .type, .typeBody].contains(o.type)
             let ext = together ? (o.type == .package || o.type == .packageBody ? "pck" : "typ")
                 : [.package, .type].contains(o.type) ? "spc" : [.packageBody, .typeBody].contains(o.type) ? "bdy" : ObjectCommands.fileExtension(o.type)
-            let name = "\(o.name.lowercased()).\(ext)"
-            if files[name] == nil { names.append(name); files[name] = header }
+            let id = "\(o.owner)\u{1F}\(o.name)\u{1F}\(ext)"
+            let name: String
+            if let known = fileOf[id] {
+                name = known
+            } else {
+                let base = String(o.name.lowercased().map { $0.isLetter || $0.isNumber || "_$#".contains($0) ? $0 : "_" })
+                var candidate = "\(base).\(ext)", n = 2
+                while files[candidate] != nil { candidate = "\(base)_\(n).\(ext)"; n += 1 }
+                name = candidate
+                fileOf[id] = name
+                names.append(name)
+                files[name] = header
+            }
             files[name, default: ""] += "\n" + text + "\n"
         }
         return names.map { ExportedFile(name: $0, content: files[$0] ?? "") }

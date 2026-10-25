@@ -116,7 +116,8 @@ enum Stage7ToolCommands {
                 }
                 if owner.isEmpty { owner = ctx.workspace.sessions.connectedSchema(conn) ?? "" }
                 let doc = try await ctx.workspace.openERDiagram(owner: owner, pattern: pattern.isEmpty ? "%" : pattern, connection: conn)
-                return CommandResult(message: L10n.tr("Tabel: \(doc.diagram.items.count), relacji: \(doc.diagram.links.count)"))
+                let summary = L10n.tr("Tabel: \(doc.diagram.items.count), relacji: \(doc.diagram.links.count)")
+                return CommandResult(message: doc.statusText.map { summary + " — " + $0 } ?? summary)
             },
             open("tools.dataTransfer", L10n.tr("Przenoszenie danych…"), .dataTransfer,
                  summary: L10n.tr("Przenoszenie danych z tabeli lub zapytania do tabeli w tym samym albo innym połączeniu z mapowaniem kolumn; zapis definicji."),

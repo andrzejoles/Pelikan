@@ -42,8 +42,16 @@ public enum L10n {
         }
     }
 
-    /// Tłumaczenie klucza, który już występuje w źródłach jako literał (np. indeks etykiet Preferencji).
-    public static func translated(key: String) -> String { tr(Key(stringLiteral: key)) }
+    /// Tłumaczenie klucza w postaci z katalogu (`%@`, `%%` — np. indeks etykiet Preferencji); miejsca wartości jako „…”.
+    public static func translated(format: String) -> String {
+        let bundle = selected.withLock { $0 } ?? .main
+        return template(bundle.localizedString(forKey: format, value: format, table: nil))
+    }
+
+    /// Klucz bez wartości: `%@` i `%n$@` → „…”, `%%` → `%`.
+    public static func template(_ format: String) -> String {
+        fill(format, Array(repeating: "…", count: format.components(separatedBy: "%").count))
+    }
 
     public static func tr(_ key: Key) -> String {
         let bundle = selected.withLock { $0 } ?? .main

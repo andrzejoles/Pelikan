@@ -98,7 +98,7 @@ public enum ToolCatalog {
                                    destructiveHint: [.modifiesDatabase, .transaction].contains(command.descriptor.effect))))
         }
         let available = registry.commands.filter {
-            !$0.isPlanned && AgentPolicy.effectiveAccess(command: $0.descriptor, session: session, settings: settings, viaRunCommand: true) > .none
+            AgentPolicy.effectiveAccess(command: $0.descriptor, session: session, settings: settings, viaRunCommand: true) > .none
         }
         if !available.isEmpty {
             let list = available.map { "\($0.id.rawValue) — \($0.descriptor.title)" }.joined(separator: "; ")

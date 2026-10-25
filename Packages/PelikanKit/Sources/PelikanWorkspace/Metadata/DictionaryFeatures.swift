@@ -40,11 +40,6 @@ public struct DictionaryFeatures: Sendable, Hashable {
 
     /// Foldery Object Browsera w kolejności wzorca.
     public var availableTypes: [DBObjectType] { DBObjectType.browserOrder.filter(supports) }
-
-    /// Kolumny dodane w 12c (EDITIONABLE, ORACLE_MAINTAINED, DEFAULT_COLLATION, CHAR_USED w nowych widokach…).
-    public var has12cColumns: Bool { major >= 12 }
-    /// Domeny i adnotacje kolumn (ALL_TAB_COLS.DOMAIN_NAME, ALL_ANNOTATIONS_USAGE).
-    public var hasDomainColumns: Bool { supports(.domain) }
 }
 
 /// Zapytania słownika z wariantami zapasowymi (PD-OB-026): następny wariant, gdy widok albo kolumna nie istnieje.

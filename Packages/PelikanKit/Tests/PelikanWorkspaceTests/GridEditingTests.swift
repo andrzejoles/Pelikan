@@ -36,7 +36,10 @@ struct GridEditingUnitTests {
     @MainActor
     func parseAndOverflow() throws {
         let num = ColumnInfo(name: "SAL", type: .number, typeName: "NUMBER(7,2)", precision: 7, scale: 2)
-        #expect(try ResultGridModel.parse("1234,5", column: num, format: .default) == .number("1234.5"))
+        #expect(try ResultGridModel.parse("1234,5", column: num, format: .default, decimal: ",") == .number("1234.5"))
+        // Separator dziesiętny kropka (en_US): „1,000” to nie 1 — błąd zamiast cichej zmiany wartości.
+        #expect(throws: GridEditError.self) { try ResultGridModel.parse("1,000", column: num, format: .default, decimal: ".") }
+        #expect(try ResultGridModel.parse("12.5", column: num, format: .default, decimal: ".") == .number("12.5"))
         #expect(try ResultGridModel.parse("", column: num, format: .default) == .null)
         #expect(throws: GridEditError.self) { try ResultGridModel.parse("12a", column: num, format: .default) }
         #expect(ResultGridModel.exceedsColumn(.number("123456"), num))
@@ -44,6 +47,25 @@ struct GridEditingUnitTests {
         let txt = ColumnInfo(name: "ENAME", type: .varchar2, typeName: "VARCHAR2(5)", size: 5)
         #expect(ResultGridModel.exceedsColumn(.text("żółwie"), txt))
         #expect(!ResultGridModel.exceedsColumn(.text("żółw"), txt))
+    }
+
+    @Test("Post: UPDATE/DELETE bez zmienionego wiersza — błąd; wstawienie bez wartości — DEFAULT dla każdej kolumny")
+    @MainActor
+    func postRowsAffected() async throws {
+        let columns = [ColumnInfo(name: "ID", type: .number, typeName: "NUMBER"), ColumnInfo(name: "NAME", type: .varchar2, typeName: "VARCHAR2(20)"),
+                       ColumnInfo(name: "ROWID", type: .rowid, typeName: "ROWID")]
+        let rows: [[OracleValue]] = [[.number("1"), .text("a"), .text("AAA1")]]
+        // Atrapa zwraca rowsAffected = 0 — jak po zmianie wiersza przez inną sesję.
+        let g = ResultGridModel(columns: columns, resultSet: ResultSetID(1), session: RowsSession(rows), sql: "select id, name, rowid from t", format: ValueFormat())
+        await g.fetchAll()
+        g.edit.target = EditTarget(owner: "U", table: "T", rowidColumn: 2, editableColumns: [0, 1], tableColumn: [0: "ID", 1: "NAME"])
+        g.edit.isEditing = true
+        try g.setText("b", row: 0, column: 1)
+        await #expect(throws: GridEditError.self) { try await g.postChanges() }
+        #expect(g.edit.changed[0] != nil)
+        g.revertRows([0])
+        _ = try g.insertRecord()
+        #expect(g.changesSQL() == "INSERT INTO U.T (ID, NAME) VALUES (DEFAULT, DEFAULT);")
     }
 
     @Test("Kolumna z komunikatu ORA-12899 / ORA-01400")

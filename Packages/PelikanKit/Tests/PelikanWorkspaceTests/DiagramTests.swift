@@ -176,5 +176,47 @@ struct DiagramTests {
         #expect(QueryModel.parse("select * from table(f(1)) t", resolve: resolve) == nil)
         #expect(QueryModel.parse("select a from emp union select b from dept", resolve: resolve) == nil)
         #expect(QueryModel.parse("select * from nieznana", resolve: resolve) == nil)
+        // Przecinek w literale nie dzieli listy pól.
+        let lit = QueryModel.parse("select 'a,b' x, e.ename from emp e", resolve: resolve)
+        #expect(lit?.fields.map(\.expression) == ["'a,b'", "ENAME"] && lit?.fields.first?.alias == "x")
+    }
+
+    @Test("Aktualizacja z bazy: kolumny i klucze obce wsadowo po schemacie, brakujące obiekty, bez zapytań na element")
+    func updateBatched() async throws {
+        let src = BatchOnlySchema()
+        var d = Diagram()
+        _ = d.addObjectsForLayout(owner: "SCOTT", names: ["EMP", "DEPT", "GONE"], type: "TABLE", columns: [:], showColumns: true)
+        _ = d.addObjectsForLayout(owner: "SCOTT", names: ["EMP_PKG"], type: "PACKAGE", columns: [:], showColumns: true)
+        let missing = try await DiagramEditor.update(&d, source: src)
+        #expect(missing == [try #require(d.item(owner: "SCOTT", name: "GONE")).title])
+        #expect(d.item(owner: "SCOTT", name: "EMP")?.columns.count == 2 && d.links.count == 1 && d.links.first?.label == "FK_EMP_DEPT")
+        // Ponowna aktualizacja nie dubluje linii.
+        _ = try await DiagramEditor.update(&d, source: src)
+        #expect(d.links.count == 1)
+    }
+}
+
+/// Źródło tylko z zapytaniami wsadowymi: wywołanie wersji „na tabelę” to błąd testu.
+struct BatchOnlySchema: SchemaMetadataSource {
+    func resolve(_ name: String) async throws -> DBObject? {
+        name.contains("EMP_PKG") ? DBObject(owner: "SCOTT", name: "EMP_PKG", type: .package) : nil
+    }
+    func columns(owner: String, name: String) async throws -> [SchemaColumn] {
+        Issue.record("columns(owner:name:) dla \(name)")
+        return []
+    }
+    func foreignKeys(owner: String, table: String) async throws -> [ForeignKey] {
+        Issue.record("foreignKeys(owner:table:) dla \(table)")
+        return []
+    }
+    func references(owner: String, name: String) async throws -> [DBObject] { [] }
+    func columns(owner: String, tables: [String]) async throws -> [String: [SchemaColumn]] {
+        let known: [String: [SchemaColumn]] = ["EMP": [SchemaColumn(name: "EMPNO", type: "NUMBER"), SchemaColumn(name: "DEPTNO", type: "NUMBER")],
+                                               "DEPT": [SchemaColumn(name: "DEPTNO", type: "NUMBER")]]
+        return Dictionary(uniqueKeysWithValues: tables.map { ($0, known[$0] ?? []) })
+    }
+    func foreignKeys(owner: String, childTables: [String]) async throws -> [ForeignKey] {
+        childTables.contains("EMP") ? [ForeignKey(name: "FK_EMP_DEPT", childOwner: "SCOTT", childTable: "EMP", childColumns: ["DEPTNO"],
+                                                   parentOwner: "SCOTT", parentTable: "DEPT", parentColumns: ["DEPTNO"])] : []
     }
 }

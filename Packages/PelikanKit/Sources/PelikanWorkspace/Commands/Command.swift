@@ -128,8 +128,6 @@ public struct CommandDescriptor: Sendable {
     public let summary: String
     /// Czy pokazywać w menu (pomocnicze tylko w palecie i dla agenta).
     public let inMenu: Bool
-    /// Etap, w którym komenda działa (wcześniej jest w menu wyszarzona) — 0 = gotowa.
-    public let stage: Int
     /// Identyfikator wiersza macierzy funkcji (docs/FEATURES.md).
     public let feature: String?
 
@@ -138,7 +136,7 @@ public struct CommandDescriptor: Sendable {
     public init(id: CommandID, title: String, category: CommandCategory, submenu: String? = nil,
                 pd: [String] = [], mac: [String]? = nil, parameters: [CommandParameter] = [],
                 agent: AgentAccess, effect: CommandEffect, summary: String, inMenu: Bool = true,
-                stage: Int = 0, feature: String? = nil) {
+                feature: String? = nil) {
         self.id = id
         self.title = title
         self.category = category
@@ -163,7 +161,6 @@ public struct CommandDescriptor: Sendable {
         self.effect = effect
         self.summary = summary
         self.inMenu = inMenu
-        self.stage = stage
         self.feature = feature
     }
 }
@@ -252,10 +249,8 @@ public struct Command: Sendable {
     public let descriptor: CommandDescriptor
     let run: CommandHandler
     let preview: PreviewHandler?
-    /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze, gdy etap gotowy.
+    /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze.
     let validate: ValidationHandler?
-    /// Komenda zapowiedziana na późniejszy etap.
-    public internal(set) var isPlanned = false
 
     public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, preview: PreviewHandler? = nil,
                 run: @escaping CommandHandler) {
@@ -263,15 +258,6 @@ public struct Command: Sendable {
         self.run = run
         self.preview = preview
         self.validate = validate
-    }
-
-    /// Komenda zapowiedziana (w menu wyszarzona do etapu `descriptor.stage`).
-    public static func planned(_ descriptor: CommandDescriptor) -> Command {
-        var c = Command(descriptor, validate: { _ in false }) { _ in
-            throw CommandError.notAvailable(L10n.tr("Funkcja w przygotowaniu (Etap \(descriptor.stage))"))
-        }
-        c.isPlanned = true
-        return c
     }
 
     public var id: CommandID { descriptor.id }

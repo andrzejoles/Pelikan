@@ -20,6 +20,8 @@ final class VariablesModel {
     }
 
     var fields: [Field]
+    /// Numer ostatniego przeładowania listy pola — spóźniona odpowiedź starszego zapytania nie nadpisuje nowszej.
+    @ObservationIgnored private var listGeneration: [Int: Int] = [:]
     private let workspace: Workspace
     private let document: PelikanWorkspace.Document
 
@@ -53,17 +55,24 @@ final class VariablesModel {
 
     func reloadList(_ i: Int) async {
         guard let q = fields[i].request.options.list else { return }
+        let generation = (listGeneration[i] ?? 0) + 1
+        listGeneration[i] = generation
         // Pusta wartość zmiennej, od której lista zależy (`:x` albo `&x`) → pusta lista (UG 12.3, PD-VAR-004).
         guard VariableLists.prepare(q, values: dependencyValues) != nil else {
             fields[i].items = []
+            fields[i].loading = false
             return
         }
         fields[i].loading = true
-        defer { fields[i].loading = false }
-        do {
-            fields[i].items = try await run(q, single: false)
+        let result: Result<[(value: String, label: String)], any Error>
+        do { result = .success(try await run(q, single: false)) } catch { result = .failure(error) }
+        guard listGeneration[i] == generation else { return }
+        fields[i].loading = false
+        switch result {
+        case .success(let items):
+            fields[i].items = items
             fields[i].error = nil
-        } catch {
+        case .failure(let error):
             fields[i].error = (error as? OracleError)?.message ?? error.localizedDescription
         }
     }
@@ -77,10 +86,6 @@ final class VariablesModel {
                 Task { await reloadList(i) }
             }
         }
-    }
-
-    private func value(forBind bind: String) -> String? {
-        fields.first { $0.request.options.bindName == bind.lowercased() }.map { $0.text }
     }
 
     /// Wartości zmiennych okna wg nazwy wiązanej (dla list zależnych).

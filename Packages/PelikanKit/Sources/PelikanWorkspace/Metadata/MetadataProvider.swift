@@ -145,7 +145,7 @@ public struct ObjectFilter: Sendable, Hashable {
         var parts: [String] = []
         if !p.names.isEmpty {
             let ors = p.names.enumerated().map { i, n -> String in
-                binds.append(BindVariable(name: "fn\(i)", value: .text(n.contains("%") || n.contains("_") ? n : n + "%")))
+                binds.append(BindVariable(name: "fn\(i)", value: .text(n.contains("%") ? n : n + "%")))
                 return "o.object_name like :fn\(i)"
             }
             parts.append("(" + ors.joined(separator: " or ") + ")")
@@ -197,6 +197,8 @@ public final class MetadataProvider {
         linkCache = nil
         features = nil
         generation += 1
+        // Słownik analizy nazw w czasie pisania (po DDL Object Browsera, edytorów obiektów, odświeżeniu).
+        workspace.resetNameResolutionCache(connectionID)
     }
 
     public func refresh(_ object: DBObject) {

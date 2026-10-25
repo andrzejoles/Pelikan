@@ -70,14 +70,11 @@ public final class AgentController: AgentInvocationGate {
     public private(set) var pending: [ApprovalRequest] = []
     public private(set) var sessions: [AgentSessionInfo] = []
     public private(set) var connectionEvents: [ConnectionEvent] = []
-    public private(set) var serverError: String?
     @ObservationIgnored private var server: AgentServer?
     @ObservationIgnored private let limiter = RateLimiter()
     @ObservationIgnored let log: AgentLog
     @ObservationIgnored private var mcpServers: [String: [Server]] = [:]
     @ObservationIgnored public let socketURL: URL
-    /// Wywoływane po zamknięciu sesji (ROLLBACK i zamknięcie sesji bazy agenta).
-    @ObservationIgnored public var onSessionClosed: ((String) -> Void)?
 
     public init(workspace: Workspace, socketURL: URL, logDirectory: URL) {
         self.workspace = workspace
@@ -105,12 +102,7 @@ public final class AgentController: AgentInvocationGate {
             onEvent: { [weak self] event in
                 Task { @MainActor in self?.record(event) }
             })
-        do {
-            try server.start()
-        } catch {
-            serverError = "\(error)"
-            throw error
-        }
+        try server.start()
         self.server = server
     }
 
@@ -139,7 +131,6 @@ public final class AgentController: AgentInvocationGate {
         // ROLLBACK niezatwierdzonych zmian agenta i zamknięcie jego sesji bazy (PROMPT §7.3 p.5).
         let ws = workspace
         Task { await ws.closeAgentDatabase(session: id) }
-        onSessionClosed?(id)
         log.write(session: session, ["event": "session_end"])
     }
 
@@ -173,8 +164,17 @@ public final class AgentController: AgentInvocationGate {
                 guard let self else { return CallTool.Result(content: [.text(text: "session_closed", annotations: nil, _meta: nil)], isError: true) }
                 return await self.callTool(params.name, arguments: params.arguments ?? [:], sessionID: sessionID)
             }
-            try? await server.start(transport: SocketTransport(fd: fd))
+            // Rozłączenie mostu: zamknięcie deskryptora i usunięcie serwera z sesji (bez tego zostawały do końca sesji).
+            let transport = SocketTransport(fd: fd, onClose: { [weak self] in
+                Task { @MainActor in self?.serverClosed(server, session: sessionID) }
+            })
+            try? await server.start(transport: transport)
         }
+    }
+
+    private func serverClosed(_ server: Server, session: String) {
+        mcpServers[session]?.removeAll { $0 === server }
+        Task { await server.stop() }
     }
 
     static let instructions = """
@@ -204,6 +204,11 @@ public final class AgentController: AgentInvocationGate {
         } else {
             return error("unknown_tool: \(name)")
         }
+        // Tylko parametry zadeklarowane przez komendę (schemat narzędzia: additionalProperties false) — argument spoza
+        // podglądu nie trafi do wykonania.
+        if let declared = workspace.registry.command(commandID)?.descriptor.parameters.map(\.name) {
+            for key in args.values.keys where !key.hasPrefix("__") && !declared.contains(key) { args.values[key] = nil }
+        }
 
         var activity = AgentActivity(sessionID: sessionID, tool: name, arguments: Self.summarize(args), started: started, status: .running)
         activities.append(activity)
@@ -215,13 +220,15 @@ public final class AgentController: AgentInvocationGate {
         do {
             let result = try await workspace.invoke(commandID, args, invoker: session.invoker)
             let text = result.value.map { $0.description } ?? result.message ?? "ok"
+            // Wynik z hasłem (np. echo polecenia CREATE USER … IDENTIFIED BY) nie trafia do panelu ani dziennika.
+            let shown = SQLExecutor.containsPassword(text) ? Self.redactedText : text
             activity.status = .succeeded
-            activity.result = String(text.prefix(300))
+            activity.result = String(shown.prefix(300))
             activity.duration = Date().timeIntervalSince(started)
             if let i = index() { activities[i] = activity }
             // Do dziennika trafia tylko początek wyniku (dane z bazy mogą być wrażliwe).
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments),
-                                         "decision": "allowed", "result": .string(String(text.prefix(500))), "ms": .int(Int64(activity.duration! * 1000))])
+                                         "decision": "allowed", "result": .string(String(shown.prefix(500))), "ms": .int(Int64(activity.duration! * 1000))])
             return CallTool.Result(content: [.text(text: text, annotations: nil, _meta: nil)], isError: false)
         } catch let denial as AgentDenial {
             activity.status = .denied(denial.code)
@@ -243,10 +250,21 @@ public final class AgentController: AgentInvocationGate {
         CallTool.Result(content: [.text(text: message, annotations: nil, _meta: nil)], isError: true)
     }
 
-    /// Argumenty do panelu i dziennika: bez kluczy wewnętrznych, skrócone.
+    static let redactedText = "«redacted»"
+
+    /// Argumenty do panelu i dziennika: bez kluczy wewnętrznych i bez tekstów z hasłem (SECURITY A17), skrócone.
     static func summarize(_ args: CommandArguments) -> String {
-        let visible = args.values.filter { !$0.key.hasPrefix("__") }
+        let visible = args.values.filter { !$0.key.hasPrefix("__") }.mapValues(redacted)
         return String(JSONValue.object(visible).description.prefix(500))
+    }
+
+    static func redacted(_ value: JSONValue) -> JSONValue {
+        switch value {
+        case .string(let s): SQLExecutor.containsPassword(s) ? .string(redactedText) : value
+        case .array(let a): .array(a.map(redacted))
+        case .object(let o): .object(o.mapValues(redacted))
+        default: value
+        }
     }
 
     // MARK: AgentInvocationGate
@@ -277,7 +295,9 @@ public final class AgentController: AgentInvocationGate {
         case .deny(let why):
             throw AgentDenial.permissionDenied(connection.map { "\(why) (połączenie \($0.agentAlias), środowisko \($0.environment.rawValue))" } ?? why)
         case .needsApproval:
-            let preview = try await workspace.preview(command.id, arguments, invoker: context.invoker)
+            // Zgoda dotyczy poleceń z podglądu — wykonanie dostaje je przypięte (`Workspace.agentStatementsKey`).
+            let (preview, pinned) = try await workspace.agentApprovalPreview(command.id, arguments, invoker: context.invoker)
+            arguments = pinned
             let request = ApprovalRequest(sessionID: sessionID, agentName: session.profile.name, command: command.id, title: d.title,
                                           preview: preview, arguments: arguments, connection: connection?.agentAlias)
             pending.append(request)

@@ -96,7 +96,7 @@ enum P1BrowserCommands {
             command("ob.duplicate", L10n.tr("Duplikuj…"),
                     params: objectParams + [CommandParameter("newName", .string, L10n.tr("Nazwa kopii")),
                                             CommandParameter("withData", .boolean, L10n.tr("Tabela: także wiersze (INSERT … SELECT)"))],
-                    agent: .approval, effect: .uiState,
+                    agent: .none, effect: .uiState,
                     summary: L10n.tr("Otwiera skrypt kopii obiektu pod nową nazwą (DDL albo źródło) w nowym oknie — do przejrzenia i wykonania."),
                     feature: "PD-OB-016",
                     validate: { ws in ws.selectedObject.map { !$0.type.isGlobal && ![.annotation, .packageBody, .typeBody].contains($0.type) } ?? false }) { ctx in
@@ -130,7 +130,7 @@ enum P1BrowserCommands {
                 let raw = ctx.arguments.string("action") ?? ctx.workspace.settings.browserDropAction.rawValue
                 guard let action = BrowserDropAction(rawValue: raw) else { throw CommandError.invalidArgument("action", raw) }
                 let text = try await dropText(action, o, m, ws: ctx.workspace)
-                if let doc = Stage7Commands.editor(ctx.workspace) { Stage7Commands.insert(text, into: doc) }
+                if let doc = Stage7Commands.editor(ctx.workspace) { try Stage7Commands.insert(text, into: doc) }
                 return CommandResult(value: .string(text))
             },
             command("ob.dropOnWorkspace", L10n.tr("Upuść obiekt na obszar okien"),

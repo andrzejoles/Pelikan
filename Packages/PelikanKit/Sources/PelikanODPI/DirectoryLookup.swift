@@ -126,7 +126,7 @@ enum DirectoryLookup {
             guard let first = values.pointee,
                   let bytes = first.load(fromByteOffset: MemoryLayout<UInt>.stride, as: UnsafeRawPointer?.self) else { return nil }
             let data = Data(bytes: bytes, count: Int(first.load(as: UInt.self)))
-            return String(decoding: data, as: UTF8.self).replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
+            return TNSNames.compact(String(decoding: data, as: UTF8.self))
         }
         throw OracleError(code: 12154, message: "ORA-12154: Katalog LDAP niedostępny (\(config.servers.map { "\($0.host):\($0.port)" }.joined(separator: ", "))): \(lastError ?? "brak połączenia")")
     }

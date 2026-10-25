@@ -104,12 +104,14 @@ public struct StartupOptions: Sendable, Equatable {
         }
     }
 
-    /// `u/hasło@baza` → `u@baza` (hasło odrzucone).
+    /// `u/hasło@baza` → `u@baza` (hasło odrzucone). Baza od ostatniego `@` (hasło może zawierać `@`), a `/` po nim
+    /// należy do bazy (EZConnect `host:port/usługa`) — jak CONNECT w Command Window.
     static func withoutPassword(_ s: String, warnings: inout [String]) -> String {
-        guard let slash = s.firstIndex(of: "/") else { return s }
-        let at = s[slash...].firstIndex(of: "@")
+        let at = s.lastIndex(of: "@")
+        let user = at.map { s[..<$0] } ?? s[...]
+        guard let slash = user.firstIndex(of: "/") else { return s }
         warnings.append(L10n.tr("Hasło w parametrach startowych jest ignorowane — Pelikan bierze je z Pęku kluczy albo pyta"))
-        return String(s[..<slash]) + (at.map { String(s[$0...]) } ?? "")
+        return String(user[..<slash]) + (at.map { String(s[$0...]) } ?? "")
     }
 
     /// Obiekt z `[TYP:]WŁAŚCICIEL.NAZWA` albo `TYP,WŁAŚCICIEL.NAZWA`.

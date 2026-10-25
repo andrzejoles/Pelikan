@@ -4,7 +4,7 @@ import PelikanDB
 /// Dalsze proste edytory (PD-OED-008/009/010): biblioteka, katalog, zadanie (DBMS_SCHEDULER), kolejka AQ z tabelą
 /// kolejki, profil, łącze bazy danych, widok.
 extension SimpleObjectEditor {
-    static func literal(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "''") + "'" }
+    static let literal = TableDDL.literal
 
     var extraFields: [EditorField] {
         switch kind {
@@ -53,6 +53,10 @@ extension SimpleObjectEditor {
 
     /// Powód, dla którego zmian nie da się zapisać (np. łącze bez hasła), albo nil.
     public var issue: String? {
+        // Oracle nie dopuszcza cudzysłowu w haśle — usunięcie go po cichu zmieniłoby hasło bez wiedzy użytkownika.
+        if kind == .user || kind == .databaseLink, value("password").contains("\"") {
+            return L10n.tr("Hasło nie może zawierać cudzysłowu (\")")
+        }
         if kind == .databaseLink, !isNew, value("password").isEmpty, ["user", "connect"].contains(where: { value($0) != old($0) }) {
             return L10n.tr("Zmiana użytkownika albo bazy łącza wymaga podania hasła")
         }
@@ -136,7 +140,7 @@ extension SimpleObjectEditor {
             guard issue == nil else { return [] }
             let pub = flag("public") ? "PUBLIC " : ""
             let pw = value("password")
-            let ident = pw.isEmpty ? "" : " IDENTIFIED BY " + (masked ? "********" : "\"" + pw.replacingOccurrences(of: "\"", with: "") + "\"")
+            let ident = pw.isEmpty ? "" : " IDENTIFIED BY " + (masked ? "********" : "\"" + pw + "\"")
             let connectTo = value("user").isEmpty ? "" : " CONNECT TO \(Self.q(value("user").uppercased()))\(ident)"
             let create = "CREATE \(pub)DATABASE LINK \(Self.q(name))\(connectTo) USING \(Self.literal(value("connect")))"
             if isNew { return [create] }

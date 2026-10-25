@@ -183,10 +183,12 @@ enum FileCommands {
                     feature: "PD-VCS-001", validate: { hasActiveFile($0) }) { ctx in
                 let u = try fileOrActive(ctx)
                 let repo = try await repository(for: u)
-                let head = try await Task.detached { try repo.headContent(of: u) }.value ?? ""
+                let head = try await Task.detached { try repo.headContent(of: u) }.value ?? Data()
+                // Obie strony dekodowane jak przy otwieraniu pliku (BOM, ISO-8859-2/Windows-1250, kodowanie projektu — D55).
+                let encoding = ctx.workspace.projectEncoding(for: u)
                 let current = ctx.workspace.documents.first { $0.fileURL?.standardizedFileURL == u }?.text
-                    ?? TextFileCodec.decode((try? Data(contentsOf: u)) ?? Data()).text
-                let headText = TextFileCodec.decode(Data(head.utf8)).text
+                    ?? TextFileCodec.decode((try? Data(contentsOf: u)) ?? Data(), preferred: encoding).text
+                let headText = TextFileCodec.decode(head, preferred: encoding).text
                 ctx.ui?.showDiff(left: headText, right: current, leftTitle: "HEAD: \(u.lastPathComponent)", rightTitle: u.lastPathComponent)
                 return CommandResult(value: .bool(headText != current))
             },

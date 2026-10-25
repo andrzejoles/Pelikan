@@ -14,7 +14,7 @@ enum PreferenceCommands {
         return [
             Command(CommandDescriptor(id: "prefs.export", title: L10n.tr("Eksportuj preferencje…"), category: .tools, submenu: L10n.tr("Preferencje"),
                                       parameters: [CommandParameter("file", .string, L10n.tr("Plik .json")), sectionsParam],
-                                      agent: .none, effect: .none,
+                                      agent: .none, effect: .external,
                                       summary: L10n.tr("Zapisuje obowiązujące preferencje (wybrane sekcje) do pliku; bez haseł i historii plików."),
                                       feature: "PD-PREF-003")) { ctx in
                 let url: URL

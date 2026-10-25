@@ -17,7 +17,9 @@ struct HTMLReportView: View {
                     let p = NSSavePanel()
                     p.allowedContentTypes = [.html]
                     p.nameFieldStringValue = title.replacingOccurrences(of: " ", with: "_") + ".html"
-                    if p.runModal() == .OK, let url = p.url { try? Data(html.utf8).write(to: url) }
+                    if p.runModal() == .OK, let url = p.url {
+                        do { try Data(html.utf8).write(to: url) } catch { NSAlert(error: error).runModal() }
+                    }
                 }
             }
             HTMLPreview(html: html)

@@ -2,16 +2,25 @@ import Foundation
 import PelikanDB
 import PelikanSQL
 
-/// Styl raportu z biblioteki stylów (UG 12.4): nazwa i arkusz CSS.
+/// Styl raportu z biblioteki stylów (UG 12.4): stały identyfikator (zapisywany w pliku .rep), nazwa w języku
+/// interfejsu i arkusz CSS.
 public struct ReportStyle: Sendable, Codable, Hashable, Identifiable {
+    public var key: String
     public var name: String
     public var css: String
-    public var id: String { name }
-    public init(name: String, css: String) { self.name = name; self.css = css }
+    /// Nazwa polska — tak zapisywały styl pliki .rep sprzed identyfikatorów.
+    var legacyName: String
+    public var id: String { key }
+    init(key: String, name: String, legacyName: String, css: String) { self.key = key; self.name = name; self.legacyName = legacyName; self.css = css }
+
+    /// Styl po identyfikatorze, nazwie w bieżącym języku albo nazwie polskiej (stare pliki).
+    public static func named(_ s: String) -> ReportStyle? {
+        library.first { $0.key == s } ?? library.first { $0.name == s || $0.legacyName == s }
+    }
 
     /// Wbudowane style Pelikana (własne arkusze, jasne i ciemne kolory systemu przeglądarki).
     public static let library: [ReportStyle] = [
-        ReportStyle(name: L10n.tr("Standardowy"), css: """
+        ReportStyle(key: "standard", name: L10n.tr("Standardowy"), legacyName: "Standardowy", css: """
             body { font: 12px -apple-system, "Helvetica Neue", sans-serif; color: #1d1d1f; margin: 16px; }
             h1 { font-size: 17px; margin: 0 0 4px; } .header { color: #6e6e73; margin-bottom: 10px; }
             table { border-collapse: collapse; } th, td { padding: 3px 8px; border-bottom: 1px solid #d2d2d7; vertical-align: top; }
@@ -21,7 +30,7 @@ public struct ReportStyle: Sendable, Codable, Hashable, Identifiable {
             @media (prefers-color-scheme: dark) { body { color: #f5f5f7; background: #1d1d1f; } th { background: #2c2c2e; }
               th, td { border-color: #3a3a3c; } tr.break td { background: #1c2a3d; } }
             """),
-        ReportStyle(name: L10n.tr("Zielony"), css: """
+        ReportStyle(key: "green", name: L10n.tr("Zielony"), legacyName: "Zielony", css: """
             body { font: 12px Georgia, serif; color: #12301e; margin: 18px; background: #f6fbf7; }
             h1 { font-size: 18px; color: #1b6b3a; } .header { color: #4c7a5c; margin-bottom: 10px; }
             table { border-collapse: collapse; } th, td { padding: 4px 9px; border: 1px solid #b9dcc5; }
@@ -29,7 +38,7 @@ public struct ReportStyle: Sendable, Codable, Hashable, Identifiable {
             tr.break td { background: #cfe8d7; font-weight: bold; } tr.sum td { font-weight: bold; } .null { color: #8aa896; }
             table.form td.label { font-weight: bold; } .record { margin-bottom: 14px; }
             """),
-        ReportStyle(name: L10n.tr("Kompaktowy"), css: """
+        ReportStyle(key: "compact", name: L10n.tr("Kompaktowy"), legacyName: "Kompaktowy", css: """
             body { font: 11px Menlo, monospace; margin: 8px; } h1 { font-size: 13px; margin: 0; } .header { margin-bottom: 6px; }
             table { border-collapse: collapse; } th, td { padding: 1px 6px; border-bottom: 1px dotted #999; }
             th { text-align: left; border-bottom: 1px solid #333; } tr.break td { font-weight: bold; padding-top: 6px; }
@@ -63,6 +72,7 @@ public struct ReportDefinition: Sendable, Codable, Hashable {
     public enum Layout: String, Sendable, Codable, CaseIterable { case table, form }
     public var title: String
     public var sql: String
+    /// Nazwa stylu w języku interfejsu (wybór w oknie); w pliku zapisywany jest stały identyfikator `ReportStyle.key`.
     public var styleName: String = ReportStyle.library[0].name
     /// Własny CSS dopisywany do stylu.
     public var extraCSS = ""
@@ -87,7 +97,7 @@ public struct ReportDefinition: Sendable, Codable, Hashable {
         columns.first { $0.column == column.uppercased() } ?? ReportColumnFormat(column: column)
     }
 
-    public var style: ReportStyle { ReportStyle.library.first { $0.name == styleName } ?? ReportStyle.library[0] }
+    public var style: ReportStyle { ReportStyle.named(styleName) ?? ReportStyle.library[0] }
 
     public func encoded() throws -> Data {
         let e = JSONEncoder()
@@ -103,10 +113,26 @@ public struct ReportDefinition: Sendable, Codable, Hashable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(title: try c.decodeIfPresent(String.self, forKey: .title) ?? "", sql: try c.decodeIfPresent(String.self, forKey: .sql) ?? "")
         func v<T: Decodable>(_ k: CodingKeys, _ cur: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? cur }
-        styleName = v(.styleName, styleName); extraCSS = v(.extraCSS, extraCSS); columns = v(.columns, columns)
+        styleName = v(.styleName, styleName)
+        if let st = ReportStyle.named(styleName) { styleName = st.name }
+        extraCSS = v(.extraCSS, extraCSS); columns = v(.columns, columns)
         layout = v(.layout, layout); pageBreakOnGroup = v(.pageBreakOnGroup, pageBreakOnGroup); header = v(.header, header)
         background = v(.background, background); connection = v(.connection, connection); locked = v(.locked, locked)
         maxRows = v(.maxRows, maxRows)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(title, forKey: .title); try c.encode(sql, forKey: .sql)
+        try c.encode(ReportStyle.named(styleName)?.key ?? styleName, forKey: .styleName)
+        try c.encode(extraCSS, forKey: .extraCSS); try c.encode(columns, forKey: .columns); try c.encode(layout, forKey: .layout)
+        try c.encode(pageBreakOnGroup, forKey: .pageBreakOnGroup); try c.encode(header, forKey: .header)
+        try c.encode(background, forKey: .background); try c.encode(connection, forKey: .connection)
+        try c.encode(locked, forKey: .locked); try c.encode(maxRows, forKey: .maxRows)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case title, sql, styleName, extraCSS, columns, layout, pageBreakOnGroup, header, background, connection, locked, maxRows
     }
 }
 
@@ -220,6 +246,8 @@ public enum ReportRenderer {
             css += "\nbody { background: \(def.background); }"
         }
         if def.pageBreakOnGroup { css += "\n.group { break-after: page; } .group:last-child { break-after: auto; }" }
+        // CSS z pliku .rep nie może zamknąć elementu <style> (np. `</style><script>`): `</` → `<\/`.
+        css = css.replacingOccurrences(of: "</", with: "<\\/")
         var body = "<h1>\(escape(def.title))</h1>\n"
         let head = header(def, values: values, generated: generated, locale: locale)
         if !head.isEmpty { body += "<div class=\"header\">\(escape(head))</div>\n" }
@@ -280,7 +308,10 @@ public enum ReportRenderer {
         }
         if single { body += sumRow(data.rows, label: L10n.tr("Razem")) + "</table>\n" }
         if data.truncated { body += "<p class=\"header\">" + escape(L10n.tr("Pokazano pierwsze \(data.rows.count) wierszy.")) + "</p>\n" }
-        return "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\"><title>\(escape(def.title))</title>\n<style>\n\(css)\n</style></head>\n<body>\n\(body)</body></html>\n"
+        // CSP: bez skryptów i zasobów zewnętrznych — tylko style z dokumentu i obrazy data:.
+        return "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">"
+            + "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">"
+            + "<title>\(escape(def.title))</title>\n<style>\n\(css)\n</style></head>\n<body>\n\(body)</body></html>\n"
     }
 }
 

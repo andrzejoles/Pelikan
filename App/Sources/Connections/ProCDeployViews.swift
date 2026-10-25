@@ -40,6 +40,12 @@ final class ProCDeployModel {
         return s
     }
 
+    /// Zamknięcie aplikacji: połączenia główne SSH (ControlPersist) nie zostają po niej na serwerach celów.
+    func disconnectAll() {
+        for s in sessions.values { s.disconnect() }
+        sessions = [:]
+    }
+
     /// Cele UAT w tym samym folderze co cel PROD (sprawdzenie, czy commit był już na UAT).
     func uatSiblings(of t: PelikanSSHTarget) -> [UUID] {
         store.targets.filter { $0.environment == .uat && $0.folderID == t.folderID && $0.id != t.id }.map(\.id)
@@ -243,7 +249,8 @@ struct DeployConsoleView: View {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.plainText]
         panel.nameFieldStringValue = "wdrozenie-\(p.id).log"
-        if panel.runModal() == .OK, let url = panel.url { try? Data(p.progress.logText.utf8).write(to: url, options: .atomic) }
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do { try Data(p.progress.logText.utf8).write(to: url, options: .atomic) } catch { model.workspace.ui?.showError(error.localizedDescription) }
     }
 }
 

@@ -189,24 +189,84 @@ public final class SSHSession: Sendable {
     /// Nazwa serwera w known_hosts (`[host]:port` dla portu innego niż 22).
     var knownHostsName: String { config.port.map { $0 == 22 ? config.host : "[\(config.host)]:\($0)" } ?? config.host }
 
-    /// Odciski kluczy serwera (SHA256, `ssh-keyscan` bez logowania), gdy serwera nie ma w known_hosts; `nil` — serwer
-    /// znany. Pusta lista — kluczy nie udało się odczytać (np. host z aliasu ~/.ssh/config). Pokazywane do potwierdzenia
-    /// przed `recordHostKey()` — zaufanie przy pierwszym kontakcie bez potwierdzenia oddałoby hasło podstawionemu serwerowi.
-    public func unknownHostFingerprints() throws -> [String]? {
+    /// Klucze nieznanego serwera (odczytane bez logowania) i ich odciski SHA256 do potwierdzenia.
+    public struct HostKeyScan: Sendable, Equatable {
+        /// Wiersze known_hosts (`nazwa typ klucz`) dokładnie z kluczami, których odciski zobaczył użytkownik.
+        public let entries: [String]
+        public let fingerprints: [String]
+    }
+
+    /// Klucze serwera, gdy nie ma go w known_hosts; `nil` — serwer znany. Puste — kluczy nie udało się odczytać.
+    /// Odciski pokazywane do potwierdzenia przed `trustHostKeys(_:)` — zaufanie przy pierwszym kontakcie bez
+    /// potwierdzenia oddałoby hasło podstawionemu serwerowi.
+    public func unknownHostKeys() throws -> HostKeyScan? {
         let known = try Spawn.run("/usr/bin/ssh-keygen", ["-F", knownHostsName, "-f", knownHostsPath].map { Array($0.utf8) },
                                   environment: environment, timeout: 10)
         if known.status == 0, !known.output.isEmpty { return nil }
-        var scan = ["-T", "10"]
-        if let port = config.port { scan += ["-p", String(port)] }
-        scan.append(config.host)
-        let keys = try Spawn.run("/usr/bin/ssh-keyscan", scan.map { Array($0.utf8) }, environment: environment, timeout: 20)
-        guard !keys.output.isEmpty else { return [] }
-        let fp = try Spawn.run("/usr/bin/ssh-keygen", [Array("-lf".utf8), Array("-".utf8)], environment: environment, stdin: .data(keys.output), timeout: 10)
-        return String(decoding: fp.output, as: UTF8.self).split(separator: "\n").map { String($0) }.filter { !$0.isEmpty }
+        let entries = try scanHostKeys()
+        guard !entries.isEmpty else { return HostKeyScan(entries: [], fingerprints: []) }
+        let input = Data((entries.joined(separator: "\n") + "\n").utf8)
+        let fp = try Spawn.run("/usr/bin/ssh-keygen", [Array("-lf".utf8), Array("-".utf8)], environment: environment, stdin: .data(input), timeout: 10)
+        let fingerprints = String(decoding: fp.output, as: UTF8.self).split(separator: "\n").map { String($0) }.filter { !$0.isEmpty }
+        return HostKeyScan(entries: entries, fingerprints: fingerprints)
     }
 
-    /// Zaufanie nowemu serwerowi (po potwierdzeniu odcisku w interfejsie albo dla serwera już znanego): zapisuje klucz
-    /// do known_hosts bez logowania. Znany serwer z innym kluczem — błąd.
+    /// Odciski kluczy nieznanego serwera (`unknownHostKeys()`); `nil` — serwer znany.
+    public func unknownHostFingerprints() throws -> [String]? { try unknownHostKeys()?.fingerprints }
+
+    /// Klucze serwera z połączenia z opcjami sesji (algorytmy starych serwerów jak AIX, plik konfiguracji, ProxyJump —
+    /// `ssh-keyscan` ich nie przyjmuje), zapisane przez `accept-new` do pliku tymczasowego bez logowania; known_hosts
+    /// użytkownika się nie zmienia, dopóki nie potwierdzi odcisku.
+    func scanHostKeys() throws -> [String] {
+        let file = runDirectory.appendingPathComponent("scan-\(UUID().uuidString.prefix(8))").path
+        defer { try? FileManager.default.removeItem(atPath: file) }
+        // Pierwsze wystąpienie opcji wygrywa — własne przed wspólnymi (bez połączenia głównego i bez known_hosts).
+        var args = ["-o", "StrictHostKeyChecking=accept-new", "-o", "PreferredAuthentications=none", "-o", "ControlPath=none",
+                    "-o", "UserKnownHostsFile=\(Self.pathValue(file))", "-o", "GlobalKnownHostsFile=/dev/null"] + commonOptions(master: false)
+        if let port = config.port { args += ["-p", String(port)] }
+        args += [destination, "exit"]
+        let r = try Spawn.run(Self.ssh, args.map { Array($0.utf8) }, environment: environment, timeout: 30)
+        if r.errorText.contains("Unable to negotiate") { throw Self.explain(r.errorText) }
+        return Self.knownHostsEntries((try? String(contentsOfFile: file, encoding: .utf8)) ?? "", name: knownHostsName)
+    }
+
+    /// Wiersze known_hosts (`typ klucz` pod nazwą, której szuka ssh), bez komentarzy i powtórzeń (ssh zapisuje klucz
+    /// także pod adresem IP).
+    static func knownHostsEntries(_ text: String, name: String) -> [String] {
+        var seen = Set<String>()
+        return text.split(whereSeparator: \.isNewline).compactMap { line -> String? in
+            let f = line.split(whereSeparator: \.isWhitespace)
+            guard !line.hasPrefix("#"), f.count >= 3, f[2].allSatisfy({ $0.isLetter || $0.isNumber || "+/=".contains($0) }) else { return nil }
+            let entry = "\(name) \(f[1]) \(f[2])"
+            return seen.insert(entry).inserted ? entry : nil
+        }
+    }
+
+    /// Zaufanie nowemu serwerowi po potwierdzeniu odcisków: dopisuje do known_hosts dokładnie potwierdzone klucze — bez
+    /// ponownego łączenia (drugie połączenie mógłby przechwycić inny serwer niż ten, którego klucz potwierdzono).
+    public func trustHostKeys(_ scan: HostKeyScan) throws {
+        guard !scan.entries.isEmpty else { return }
+        let dir = (knownHostsPath as NSString).deletingLastPathComponent
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        let data = Data((scan.entries.joined(separator: "\n") + "\n").utf8)
+        // Do odczytu i zapisu: sprawdzenie ostatniego bajtu przed dopisaniem (uchwyt tylko do zapisu daje EBADF).
+        if let h = FileHandle(forUpdatingAtPath: knownHostsPath) {
+            defer { try? h.close() }
+            let end = try h.seekToEnd()
+            // Plik bez końcowego znaku nowej linii — nowy wpis od nowej linii.
+            if end > 0 {
+                try h.seek(toOffset: end - 1)
+                if try h.read(upToCount: 1) != Data([0x0A]) { try h.write(contentsOf: Data([0x0A])) }
+            }
+            try h.write(contentsOf: data)
+        } else if !FileManager.default.createFile(atPath: knownHostsPath, contents: data, attributes: [.posixPermissions: 0o600]) {
+            throw SSHError.io(code: errno, detail: knownHostsPath)
+        }
+    }
+
+    /// Zaufanie przy pierwszym kontakcie bez porównania odcisku (serwer, którego kluczy `scanHostKeys` nie odczytał,
+    /// po wyraźnej decyzji użytkownika; serwery testowe): zapisuje klucz pokazany przy połączeniu do known_hosts bez
+    /// logowania. Znany serwer z innym kluczem — błąd.
     public func recordHostKey() throws {
         try? FileManager.default.createDirectory(atPath: (knownHostsPath as NSString).deletingLastPathComponent, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
@@ -251,13 +311,15 @@ public final class SSHSession: Sendable {
     }
 
     /// Polecenie strumieniowo (build): prolog środowiska, znacznik `@@PID <pid>` (Stop), wyjście na bieżąco.
+    /// `outputEncoding` — kodowanie wyjścia (konsola celu), gdy inne niż kodowanie nazw i poleceń.
     public func stream(_ command: String, environment remoteEnvironment: [(name: String, value: String)] = [], tty: Bool = false,
-                       stdin: SpawnInput = .null, timeout: TimeInterval? = nil, silenceTimeout: TimeInterval? = nil) throws -> RemoteProcess {
+                       stdin: SpawnInput = .null, timeout: TimeInterval? = nil, silenceTimeout: TimeInterval? = nil,
+                       outputEncoding: NameEncoding? = nil) throws -> RemoteProcess {
         try connect()
         let script = Self.pidMarkerCommand + (try Self.environmentProlog(remoteEnvironment)) + command
         let process = try Spawn.stream(Self.ssh, try commandArguments(script, tty: tty), environment: environment, stdin: stdin,
                                        timeout: timeout, silenceTimeout: silenceTimeout)
-        return RemoteProcess(process: process, session: self, encoding: config.encoding, tty: tty)
+        return RemoteProcess(process: process, session: self, encoding: outputEncoding ?? config.encoding, tty: tty)
     }
 
     /// Wypisuje identyfikator powłoki polecenia — lidera grupy procesów sesji na serwerze (`kill -TERM -<pid>`).

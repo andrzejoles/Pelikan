@@ -176,6 +176,7 @@ enum TemplateCommands {
         let target: Document
         let base: Int
         if !newWindow, let doc = BuiltinCommands.editable(ws) {
+            if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
             let ns = doc.text as NSString
             let r = doc.selectedRange.clamped(to: 0..<ns.length)
             doc.text = ns.replacingCharacters(in: NSRange(location: r.lowerBound, length: r.count), with: text)

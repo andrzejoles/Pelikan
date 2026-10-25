@@ -109,11 +109,15 @@ extension SQLPlusEngine {
         case "CONNECT":
             try await connect(args)
         case "DISCONNECT":
-            if let c = workspace.effectiveConnection(of: document) {
-                await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: c))
-            }
+            guard try await endTransactionBeforeLogoff() else { emit(L10n.tr("Anulowano"), .info); return .finished }
+            let c = windowConnection
             document.connectionID = nil
+            if let c {
+                await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: c))
+                releaseTemporary(c)
+            }
             document.transactionOpen = false
+            state.disconnected = true
             emit(L10n.tr("Rozłączono."))
         case "EXIT", "QUIT":
             return .exit
@@ -121,7 +125,7 @@ extension SQLPlusEngine {
             try bufferCommand(cmd, args, line: line, baseDirectory: baseDirectory)
         case "RUN":
             guard let b = state.buffer else { throw SQLPlusError(L10n.tr("SP2-0103: Bufor SQL jest pusty.")) }
-            emit(b, .echo)
+            emit(Self.maskPassword(b), .echo)
             return await executeSQL(b, original: b, isPLSQL: ScriptSplitter.split(b).first?.isPLSQL ?? false)
         case "CD":
             guard let path = args.first else { emit(currentDirectory.path); break }
@@ -132,23 +136,33 @@ extension SQLPlusEngine {
             }
             state.directory = url
         case "HOST", "!", "$":
+            // `!ls` / `$dir` bez spacji — polecenie od drugiego znaku (jak w SQL*Plus).
+            func after(_ s: String) -> String {
+                cmd == "HOST" ? Self.rest(s) : String(s.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst())
+            }
             // Instalator utPLSQL sprząta po sobie `! rm plik` / `$ del plik`: tylko w jego przebiegu i tylko pliki
             // z katalogu instalatora, usuwane bez powłoki. Każde inne polecenie systemu pozostaje niedostępne.
-            if let dir = state.installerDirectory, upper.count == 2, ["RM", "DEL"].contains(upper[0]),
-               !args[1].contains("/"), !args[1].contains("\\"), !args[1].hasPrefix(".") {
-                try? FileManager.default.removeItem(at: dir.appendingPathComponent(args[1]))
+            let hostArgs = Self.words(after(line))
+            if let dir = state.installerDirectory, hostArgs.count == 2, ["RM", "DEL"].contains(hostArgs[0].uppercased()),
+               !hostArgs[1].contains("/"), !hostArgs[1].contains("\\"), !hostArgs[1].hasPrefix(".") {
+                try? FileManager.default.removeItem(at: dir.appendingPathComponent(hostArgs[1]))
                 return .finished
             }
             // HOST (PD-CMDW-008): tylko użytkownik (agent nie ma dostępu do Command Window), zawsze po potwierdzeniu
             // z treścią polecenia — także w skryptach @plik; powłoka /bin/sh w katalogu CD, limit czasu, wyjście w oknie.
-            let command = Self.rest(text).trimmingCharacters(in: .whitespacesAndNewlines)
+            let command = after(text).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !command.isEmpty else { throw SQLPlusError(L10n.tr("SP2-0042: brak polecenia systemu po HOST")) }
             guard let ui = workspace.ui, await ui.ask(L10n.tr("Wykonać polecenie systemu?"), message: command,
                                                      buttons: [L10n.tr("Wykonaj"), L10n.tr("Anuluj")]) == 0 else {
                 emit(L10n.tr("Anulowano"), .info)
                 return .finished
             }
-            let r = try HostCommand.run(command, directory: state.directory ?? baseDirectory)
+            // Poza głównym aktorem (interfejs nie zamarza); Przerwij anuluje zadanie i kończy grupę procesów.
+            let directory = state.directory ?? baseDirectory
+            let task = Task.detached { try await HostCommand.run(command, directory: directory) }
+            hostTask = task
+            defer { hostTask = nil }
+            let r = try await task.value
             if !r.output.isEmpty { emit(r.output.trimmingCharacters(in: .newlines), .output) }
             if r.status != 0 { emit(L10n.tr("Kod wyjścia: \(r.status)"), .error) }
         case "TIMING":
@@ -232,13 +246,13 @@ extension SQLPlusEngine {
     func show(_ upper: [String], _ args: [String]) async throws {
         switch upper.first ?? "" {
         case "USER":
-            let s = try await workspace.session(for: document)
+            let s = try await windowSession()
             emit(L10n.tr("USER to „\(s.info.sessionUser)”"))
         case "REL", "RELE", "RELEA", "RELEAS", "RELEASE":
-            let s = try await workspace.session(for: document)
+            let s = try await windowSession()
             emit("Release \(s.info.server.description)")
         case "CON", "CONN", "CONNECTION":
-            if let c = workspace.effectiveConnection(of: document), let def = workspace.connections.connection(c) {
+            if let c = windowConnection, let def = workspace.connections.connection(c) {
                 emit(def.displayName)
             } else {
                 emit(L10n.tr("Brak połączenia"))
@@ -278,7 +292,7 @@ extension SQLPlusEngine {
             type = last.type; owner = last.owner; name = last.name
         }
         guard let objectName = name else { emit(L10n.tr("Brak błędów.")); return }
-        let session = try await workspace.session(for: document)
+        let session = try await windowSession()
         var sql = "select line, position, text from all_errors where name = :n and owner = nvl(:o, sys_context('USERENV', 'CURRENT_SCHEMA'))"
         var binds = [BindVariable(name: "n", value: .text(objectName)), BindVariable(name: "o", value: owner.map { .text($0) } ?? .null)]
         if let type { sql += " and type = :t"; binds.append(BindVariable(name: "t", value: .text(type))) }
@@ -445,7 +459,7 @@ extension SQLPlusEngine {
     // MARK: DESCRIBE
 
     func describe(_ raw: String) async throws {
-        let session = try await workspace.session(for: document)
+        let session = try await windowSession()
         let parts = raw.split(separator: ".").map { $0.hasPrefix("\"") ? String($0.dropFirst().dropLast()) : String($0).uppercased() }
         let owner: String? = parts.count >= 2 ? parts[0] : nil
         let name = parts.last ?? raw.uppercased()
@@ -457,7 +471,7 @@ extension SQLPlusEngine {
             where synonym_name = :n and owner in (nvl(:o, sys_context('USERENV', 'CURRENT_SCHEMA')), 'PUBLIC')
             order by decode(owner, 'PUBLIC', 2, 1) fetch first 1 row only
             """, binds: [BindVariable(name: "n", value: .text(name)), BindVariable(name: "o", value: owner.map { .text($0) } ?? .null)], limit: 1)
-        if let s = syn.first, owner == nil || owner != nil {
+        if let s = syn.first {
             let (_, own) = try await session.queryAll("select count(*) from all_objects where object_name = :n and owner = nvl(:o, sys_context('USERENV', 'CURRENT_SCHEMA'))",
                                                       binds: [BindVariable(name: "n", value: .text(name)), BindVariable(name: "o", value: owner.map { .text($0) } ?? .null)], limit: 1)
             if own.first?.first?.displayText == "0" { targetOwner = s[0].displayText; targetName = s[1].displayText ?? name }
@@ -472,7 +486,7 @@ extension SQLPlusEngine {
                 (r[0].format(.default), r[1].displayText == "N" ? "NOT NULL" : "", Self.typeText(r))
             }
             let w = max(4, rows.map(\.0.count).max() ?? 4)
-            emit(" " + "Nazwa".padding(toLength: w, withPad: " ", startingAt: 0) + "  Null?    Typ")
+            emit(" " + L10n.tr("Nazwa").padding(toLength: w, withPad: " ", startingAt: 0) + "  " + L10n.tr("Null?").padding(toLength: 8, withPad: " ", startingAt: 0) + " " + L10n.tr("Typ"))
             emit(" " + String(repeating: "-", count: w) + "  -------- " + String(repeating: "-", count: 28))
             for r in rows { emit(" " + r.0.padding(toLength: w, withPad: " ", startingAt: 0) + "  " + r.1.padding(toLength: 8, withPad: " ", startingAt: 0) + " " + r.2) }
             return
@@ -494,12 +508,13 @@ extension SQLPlusEngine {
                 let isFunction = argRows.contains { $0[1] == r[1] && $0[2] == r[2] && $0[6].displayText == "0" }
                 emit("")
                 emit((isFunction ? "FUNCTION " : "PROCEDURE ") + header + (isFunction ? " RETURNS " + (argRows.first { $0[1] == r[1] && $0[2] == r[2] && $0[6].displayText == "0" }?[4].format(.default) ?? "") : ""))
-                emit(" Argument                       Typ                      In/Out Domyślny?")
+                emit(" " + L10n.tr("Argument").padding(toLength: 30, withPad: " ", startingAt: 0) + " " + L10n.tr("Typ").padding(toLength: 24, withPad: " ", startingAt: 0)
+                     + " " + L10n.tr("In/Out").padding(toLength: 6, withPad: " ", startingAt: 0) + " " + L10n.tr("Domyślny?"))
                 emit(" ------------------------------ ------------------------ ------ ---------")
             }
             guard r[6].displayText != "0", !r[3].isNull else { continue }
             emit(" " + r[3].format(.default).padding(toLength: 30, withPad: " ", startingAt: 0) + " " + r[4].format(.default).padding(toLength: 24, withPad: " ", startingAt: 0)
-                 + " " + r[5].format(.default).padding(toLength: 6, withPad: " ", startingAt: 0) + " " + (r[7].displayText == "Y" ? "TAK" : ""))
+                 + " " + r[5].format(.default).padding(toLength: 6, withPad: " ", startingAt: 0) + " " + (r[7].displayText == "Y" ? L10n.tr("TAK") : ""))
         }
     }
 
@@ -540,6 +555,7 @@ extension SQLPlusEngine {
             $0.name.lowercased() == lower || $0.displayName.lowercased() == lower
                 || "\($0.target.user)@\($0.target.connectString)".lowercased() == lower
         }) {
+            guard try await endTransactionBeforeLogoff() else { emit(L10n.tr("Anulowano"), .info); return }
             try await switchConnection(def.id)
             return
         }
@@ -553,16 +569,49 @@ extension SQLPlusEngine {
         var target = ConnectionTarget(user: user, connectString: db)
         target.role = role
         let def = ConnectionDefinition(name: "\(user)@\(db)", target: target, savePassword: false)
+        guard try await endTransactionBeforeLogoff() else { emit(L10n.tr("Anulowano"), .info); return }
         workspace.connections.registerTemporary(def, password: password)
         try await switchConnection(def.id)
     }
 
+    /// Otwarta transakcja przed CONNECT/DISCONNECT: COMMIT albo ROLLBACK wg ustawienia, pytanie jak przy zamykaniu okna
+    /// (D10, SECURITY A18). false — anulowano. Bez interfejsu — ROLLBACK (jak przy zamknięciu sesji).
+    func endTransactionBeforeLogoff() async throws -> Bool {
+        guard document.transactionOpen, !state.disconnected else { return true }
+        let commit: Bool
+        switch workspace.settings.logoffWithOpenTransaction {
+        case .commit: commit = true
+        case .rollback: commit = false
+        case .ask:
+            guard let ui = workspace.ui else { commit = false; break }
+            let choice = await ui.ask(L10n.tr("Transakcja okna „\(document.title)” jest otwarta"),
+                                      message: L10n.tr("Zatwierdzić czy wycofać zmiany przed zmianą połączenia okna?"),
+                                      buttons: [L10n.tr("Zatwierdź"), L10n.tr("Wycofaj"), L10n.tr("Anuluj")])
+            guard let choice, choice < 2 else { return false }
+            commit = choice == 0
+        }
+        try await workspace.endTransactions(of: [document], commit: commit)
+        return true
+    }
+
+    /// Połączenie tymczasowe (CONNECT u/hasło@baza) po odejściu okna: usunięte razem z hasłem z pamięci, chyba że
+    /// używa go inne okno albo jest połączeniem głównym.
+    func releaseTemporary(_ id: UUID) {
+        guard !workspace.connections.connections.contains(where: { $0.id == id }), workspace.connections.connection(id) != nil,
+              workspace.sessions.mainConnectionID != id,
+              !workspace.documents.contains(where: { $0.connectionID == id }) else { return }
+        workspace.connections.removeTemporary(id)
+    }
+
     func switchConnection(_ id: UUID) async throws {
-        if let old = workspace.effectiveConnection(of: document) {
+        let old = windowConnection
+        if let old {
             await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: old))
         }
         document.connectionID = id
         document.transactionOpen = false
+        state.disconnected = false
+        if let old, old != id { releaseTemporary(old) }
         let s = try await workspace.session(for: document)
         emit(L10n.tr("Połączono jako \(s.info.sessionUser)."))
     }

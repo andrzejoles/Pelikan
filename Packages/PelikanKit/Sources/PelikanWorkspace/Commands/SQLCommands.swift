@@ -109,10 +109,13 @@ public enum SQLCommands {
                     validate: { ws in ws.activeDocument.map { $0.kind == .command && !$0.isExecuting } ?? false }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
                 guard let line = ctx.arguments.string("line") else { throw CommandError.missingArgument("line") }
-                if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line { doc.commandLineHistory.append(line) }
+                // Historia linii bez haseł (CONNECT u/hasło, IDENTIFIED BY) — jak historia SQL.
+                if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line, !SQLExecutor.containsPassword(line) {
+                    doc.commandLineHistory.append(line)
+                }
                 // Interfejs, który sam pokazał wpisane linie (wielowierszowe polecenie), przekazuje echo=false.
                 if ctx.arguments.values["echo"]?.boolValue != false {
-                    doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + line, .prompt))
+                    doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + SQLPlusEngine.maskPassword(line), .prompt))
                 }
                 return try await runCommandWindow(ctx, doc, line)
             },
@@ -132,14 +135,14 @@ public enum SQLCommands {
                                       submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+up"], agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia poprzednie wykonane polecenie okna."), feature: "PD-SQLW-007"),
                     validate: { !($0.activeDocument?.statementHistory.isEmpty ?? true) }) { ctx in
-                stepHistory(ctx.workspace, back: true)
+                try stepHistory(ctx.workspace, back: true)
                 return .ok
             },
             Command(CommandDescriptor(id: "sql.historyForward", title: L10n.tr("Następne polecenie okna"), category: .session,
                                       submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+down"], agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia następne polecenie z historii okna."), feature: "PD-SQLW-007"),
                     validate: { $0.activeDocument?.historyPosition != nil }) { ctx in
-                stepHistory(ctx.workspace, back: false)
+                try stepHistory(ctx.workspace, back: false)
                 return .ok
             },
             Command(CommandDescriptor(id: "sql.toggleSubstitution", title: L10n.tr("Podstawianie zmiennych"), category: .session,
@@ -167,8 +170,9 @@ public enum SQLCommands {
     }
 
     @MainActor
-    static func stepHistory(_ ws: Workspace, back: Bool) {
+    static func stepHistory(_ ws: Workspace, back: Bool) throws {
         guard let d = ws.activeDocument, !d.statementHistory.isEmpty else { return }
+        if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
         let last = d.statementHistory.count - 1
         var pos = d.historyPosition ?? (back ? last + 1 : last)
         pos += back ? -1 : 1

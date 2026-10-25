@@ -117,14 +117,15 @@ public enum UserTools {
         ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("PELIKAN_") }
     }
 
-    /// Proces bez powłoki: argumenty jako tablica po rozwinięciu zmiennych.
+    /// Proces bez powłoki: argumenty jako tablica po rozwinięciu zmiennych. Puste linie pola argumentów (np. końcowa)
+    /// nie są argumentami.
     public static func process(_ tool: UserTool, _ ctx: UserToolContext) throws -> Process {
         guard let exe = resolve(expand(tool.program, ctx)) else {
             throw CommandError.notAvailable(L10n.tr("Nie znaleziono programu „\(tool.program)”"))
         }
         let p = Process()
         p.executableURL = exe
-        p.arguments = tool.arguments.map { expand($0, ctx) }
+        p.arguments = tool.arguments.filter { !$0.isEmpty }.map { expand($0, ctx) }
         p.environment = environment()
         let dir = (expand(tool.workingDirectory, ctx) as NSString).expandingTildeInPath
         if !dir.isEmpty { p.currentDirectoryURL = URL(fileURLWithPath: dir) }
@@ -148,11 +149,21 @@ public enum UserTools {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     try p.run()
+                    // stderr czytany równolegle — pełny bufor potoku (64 KiB) przy czytaniu po kolei zawiesiłby proces.
+                    final class Buffer: @unchecked Sendable { var data = Data() }   // zapis w wątku czytającym, odczyt po grupie
+                    let e = Buffer()
+                    let group = DispatchGroup()
+                    let errHandle = err.fileHandleForReading
+                    group.enter()
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        e.data = errHandle.readDataToEndOfFile()
+                        group.leave()
+                    }
                     let o = out.fileHandleForReading.readDataToEndOfFile()
-                    let e = err.fileHandleForReading.readDataToEndOfFile()
+                    group.wait()
                     p.waitUntilExit()
                     c.resume(returning: RunResult(status: p.terminationStatus, output: String(decoding: o, as: UTF8.self),
-                                                  errors: String(decoding: e, as: UTF8.self)))
+                                                  errors: String(decoding: e.data, as: UTF8.self)))
                 } catch {
                     c.resume(throwing: error)
                 }

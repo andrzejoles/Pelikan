@@ -53,7 +53,7 @@ public enum Spawn {
     }
 
     static func launch(_ executable: String, _ args: [[UInt8]], environment: [String: String], stdin: SpawnInput,
-                       output: Output, newProcessGroup: Bool = false) throws -> Launched {
+                       output: Output) throws -> Launched {
         var outPipe: [Int32] = [-1, -1], errPipe: [Int32] = [-1, -1], inPipe: [Int32] = [-1, -1]
         func closeAll() { for fd in outPipe + errPipe + inPipe where fd >= 0 { close(fd) } }
         if case .capture = output {
@@ -83,10 +83,7 @@ public enum Spawn {
         defer { posix_spawnattr_destroy(&attr) }
         // Tylko 0–2 przechodzą do procesu potomnego (bez gniazd agenta i innych deskryptorów aplikacji).
         // Domyślne obsługi i pusta maska sygnałów (proces potomny dziedziczyłby blokady wątku).
-        var flags = POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK
-        if newProcessGroup { flags |= POSIX_SPAWN_SETPGROUP }
-        posix_spawnattr_setflags(&attr, Int16(flags))
-        if newProcessGroup { posix_spawnattr_setpgroup(&attr, 0) }
+        posix_spawnattr_setflags(&attr, Int16(POSIX_SPAWN_CLOEXEC_DEFAULT | POSIX_SPAWN_SETSIGDEF | POSIX_SPAWN_SETSIGMASK))
         var defaults = sigset_t()
         sigemptyset(&defaults)
         for sig in [SIGPIPE, SIGTERM, SIGINT, SIGHUP] { sigaddset(&defaults, sig) }
@@ -233,7 +230,8 @@ let readGraceAfterExit: TimeInterval = 3
 
 /// Stan procesu dzielony przez wątki odczytu, nadzoru i Stop.
 final class SpawnState: Sendable {
-    let value = Mutex<(lastActivity: Date, finished: Bool, reason: SSHError?)>((Date(), false, nil))
+    /// `reaped` — proces odebrany przez `waitpid` (jego pid może już należeć do innego procesu).
+    let value = Mutex<(lastActivity: Date, finished: Bool, reaped: Bool, reason: SSHError?)>((Date(), false, false, nil))
     /// Wysyłanie zdarzeń pod jedną blokadą (kolejność porcji w każdym potoku).
     let emit = Mutex(())
 }
@@ -272,7 +270,7 @@ public final class SpawnedProcess: Sendable {
             var exited = false
             while !exited {
                 let r = waitpid(pid, &status, WNOHANG)
-                if r == pid { exited = true; break }
+                if r == pid { shared.value.withLock { $0.reaped = true }; exited = true; break }
                 if r < 0, errno != EINTR { break }
                 let now = Date()
                 let (last, reason) = shared.value.withLock { ($0.lastActivity, $0.reason) }
@@ -280,7 +278,7 @@ public final class SpawnedProcess: Sendable {
                 let silent = silenceTimeout.map { now.timeIntervalSince(last) > $0 } ?? false
                 if reason == nil, total || silent {
                     shared.value.withLock { $0.reason = .timeout }
-                    SpawnedProcess.terminate(pid)
+                    SpawnedProcess.terminate(pid, shared)
                 }
                 usleep(20_000)
             }
@@ -301,11 +299,12 @@ public final class SpawnedProcess: Sendable {
         }
     }
 
-    /// SIGTERM, po 5 s SIGKILL (proces, który nie reaguje).
-    static func terminate(_ pid: pid_t) {
-        kill(pid, SIGTERM)
+    /// SIGTERM, po 5 s SIGKILL (proces, który nie reaguje) — tylko dopóki proces nie został odebrany przez `waitpid`
+    /// (potem jego pid może należeć do innego procesu).
+    static func terminate(_ pid: pid_t, _ shared: SpawnState) {
+        shared.value.withLock { if !$0.reaped { kill(pid, SIGTERM) } }
         DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
-            if kill(pid, 0) == 0 { kill(pid, SIGKILL) }
+            shared.value.withLock { if !$0.reaped { kill(pid, SIGKILL) } }
         }
     }
 
@@ -316,9 +315,7 @@ public final class SpawnedProcess: Sendable {
             s.reason = .cancelled
             return true
         }
-        if shouldKill { Self.terminate(pid) }
+        if shouldKill { Self.terminate(pid, shared) }
     }
-
-    public var isFinished: Bool { shared.value.withLock { $0.finished } }
 }
 #endif

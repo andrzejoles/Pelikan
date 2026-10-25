@@ -274,6 +274,16 @@ public final class LocalTaskScheduler {
         try? store.saveState(state)
     }
 
+    /// Połączenie zadania: po nazwie; pusta nazwa to „(główne)” z edytora zadań — połączenie główne, nie połączenie
+    /// okna aktywnego w chwili uruchomienia (zadanie cykliczne nie może trafiać na przypadkową bazę).
+    static func connection(_ d: LocalTaskDefinition, in ws: Workspace) throws -> UUID {
+        let name = d.connection.trimmingCharacters(in: .whitespaces)
+        guard let id = name.isEmpty ? ws.sessions.mainConnectionID : ws.connectionID(named: name) else {
+            throw CommandError.notAvailable(name.isEmpty ? L10n.tr("Brak połączenia głównego dla zadania") : L10n.tr("Nieznane połączenie „\(d.connection)”"))
+        }
+        return id
+    }
+
     static func execute(_ d: LocalTaskDefinition, in ws: Workspace, task: WorkspaceTask) async throws -> [String] {
         switch d.action {
         case .transfer(let name):
@@ -281,13 +291,14 @@ public final class LocalTaskScheduler {
             let r = try await ws.runDataTransfer(job) { n in task.message = L10n.tr("Wierszy: \(n)") }
             return [L10n.tr("Przeniesiono wierszy: \(r.inserted), błędy: \(r.errors.count)")] + r.errors.prefix(50)
         case .script(let file, let text, let commit):
-            guard let conn = ws.connectionID(named: d.connection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie „\(d.connection)”")) }
+            let conn = try connection(d, in: ws)
             let script = try file.map { try String(contentsOf: URL(fileURLWithPath: $0), encoding: .utf8) } ?? text
-            if commit { try await ws.guardModification(ScriptSplitter.split(script).map(\.text), connectionID: conn) }
+            // Strażnik zawsze: bez COMMIT DDL i tak zatwierdza się sam (połączenie tylko do odczytu, produkcja).
+            try await ws.guardModification(ScriptSplitter.split(script).map(\.text), connectionID: conn)
             let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("task-\(d.id.uuidString.prefix(8))")))
             return try await LocalTaskRunner.runScript(script, commit: commit, in: s)
         case .export(let query, let directory, let fileName, let format):
-            guard let conn = ws.connectionID(named: d.connection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie „\(d.connection)”")) }
+            let conn = try connection(d, in: ws)
             let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("task-\(d.id.uuidString.prefix(8))")))
             let url = try await LocalTaskRunner.runExport(query: query, directory: URL(fileURLWithPath: (directory as NSString).expandingTildeInPath),
                                                           fileName: fileName, format: format, in: s)

@@ -28,11 +28,11 @@ public enum RowSQLGenerator {
         }()
         let usesRowid = keyIdx.contains { isRowid(columns[$0]) }
         if kind != .insert, keyIdx.isEmpty { throw GenerationError.noKey }
-        func cond(_ row: [OracleValue], prefix: String = "") -> String {
+        func cond(_ row: [OracleValue]) -> String {
             keyIdx.map { i in
                 let name = usesRowid ? "ROWID" : id(columns[i].name)
-                if case .null = row[i] { return "\(prefix)\(name) IS NULL" }
-                return "\(prefix)\(name) = \(ResultExporter.literal(row[i]))"
+                if case .null = row[i] { return "\(name) IS NULL" }
+                return "\(name) = \(ResultExporter.literal(row[i]))"
             }.joined(separator: " AND ")
         }
         let nonKey = dataCols.filter { !keyIdx.contains($0) }

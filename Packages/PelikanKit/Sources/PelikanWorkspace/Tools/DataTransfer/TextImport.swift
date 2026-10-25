@@ -66,13 +66,11 @@ public struct ImportResult: Sendable, Equatable {
 
 /// Text Importer i Excel Importer (PD-TOOL-008, PD-TOOL-009): wspólne mapowanie i import do tabeli albo skryptu.
 public enum TextImport {
-    /// Tekst z danych: BOM UTF-8/UTF-16, poprawne UTF-8, potem Windows-1250 (polskie pliki z Excela) i Latin-1.
+    /// Tekst z danych: BOM UTF-8/UTF-16, poprawne UTF-8, potem Windows-1250/ISO-8859-2 (polskie pliki z Excela) —
+    /// reguły wspólne z plikami skryptów (`TextFileCodec`).
     public static func decode(_ data: Data) -> (text: String, encoding: String.Encoding) {
-        if data.starts(with: [0xEF, 0xBB, 0xBF]), let s = String(data: data.dropFirst(3), encoding: .utf8) { return (s, .utf8) }
-        if data.starts(with: [0xFF, 0xFE]) || data.starts(with: [0xFE, 0xFF]), let s = String(data: data, encoding: .utf16) { return (s, .utf16) }
-        if let s = String(data: data, encoding: .utf8) { return (s, .utf8) }
-        if let s = String(data: data, encoding: .windowsCP1250) { return (s, .windowsCP1250) }
-        return (String(decoding: data, as: UTF8.self), .isoLatin1)
+        let (text, format) = TextFileCodec.decode(data)
+        return (text, format.encoding)
     }
 
     /// Wykrycie formatu z pierwszych linii: separator o stałej, największej liczbie wystąpień poza cudzysłowami;
@@ -111,14 +109,16 @@ public enum TextImport {
 
     /// Nazwy pól i wiersze danych (pola w cudzysłowach mogą zawierać separator i nowe linie).
     public static func parse(_ text: String, _ f: TextFormat) -> (header: [String], rows: [[String]]) {
-        let delim = Character(f.delimiter.isEmpty ? "," : f.delimiter)
+        // Separator wieloznakowy (pole tekstowe kreatora) — liczy się pierwszy znak.
+        let delim = f.delimiter.first ?? ","
         let quote = f.quote.first
         var rows: [[String]] = []
         var field = ""
         var row: [String] = []
         var inQuotes = false
+        // „\r\n” to w Swifcie jeden znak (klaster grafemów) — osobny przypadek końca wiersza niżej.
         var chars = Array(text)
-        if chars.last != "\n" { chars.append("\n") }
+        if chars.last != "\n", chars.last != "\r\n", chars.last != "\r" { chars.append("\n") }
         var i = 0
         func endRow() {
             row.append(field)
@@ -145,7 +145,7 @@ public enum TextImport {
                 // CR LF albo samo CR — koniec wiersza.
                 if i + 1 < chars.count, chars[i + 1] == "\n" { i += 1 }
                 endRow()
-            } else if c == "\n" {
+            } else if c == "\n" || c == "\r\n" {
                 endRow()
             } else {
                 field.append(c)
@@ -164,11 +164,18 @@ public enum TextImport {
         return (header, rows)
     }
 
-    /// Nazwa zmiennej wiązanej pola (dla filtra `:NAZWA`): litery, cyfry, `_`, wielkie litery.
-    public static func bindName(_ header: String, index: Int) -> String {
+    /// Nazwa kolumny z nagłówka pola: litery, cyfry, `_`, wielkie litery (inaczej `POLEn`).
+    static func fieldName(_ header: String, index: Int) -> String {
         let s = header.uppercased().map { $0.isLetter || $0.isNumber || $0 == "_" ? String($0) : "_" }.joined()
         guard let f = s.first, f.isLetter, s.count <= 30 else { return "POLE\(index + 1)" }
         return s
+    }
+
+    /// Nazwa zmiennej wiązanej pola (dla filtra `:NAZWA`): jak nazwa kolumny, słowa zastrzeżone (DATE, LEVEL, SIZE…)
+    /// z przyrostkiem `_` — inaczej ORA-01745.
+    public static func bindName(_ header: String, index: Int) -> String {
+        let s = fieldName(header, index: index)
+        return Keywords.reserved.contains(s) ? s + "_" : s
     }
 
     /// Wartość pola przygotowana do wiązania: liczba z kropką dziesiętną bez spacji; data z liczby Excela
@@ -358,7 +365,7 @@ public enum TextImport {
         var maps: [FieldMapping] = []
         for (i, name) in fieldNames.enumerated() {
             let values = rows.map { $0.indices.contains(i) ? $0[i].trimmingCharacters(in: .whitespaces) : "" }.filter { !$0.isEmpty }
-            let col = bindName(name, index: i)
+            let col = fieldName(name, index: i)
             let numeric = !values.isEmpty && values.allSatisfy { Double($0.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: " ", with: "")) != nil }
             let dates = !values.isEmpty && values.allSatisfy { $0.range(of: #"^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$"#, options: .regularExpression) != nil }
             if dates {

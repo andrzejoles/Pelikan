@@ -283,7 +283,6 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         currentFetchArraySize = options.fetchArraySize ?? self.options.fetchArraySize
         if stmtInfo.isQuery != 0 { try check(dpiStmt_setFetchArraySize(stmt, currentFetchArraySize)) }
         var mode = dpiExecMode(DPI_MODE_EXEC_DEFAULT)
-        if options.describeOnly { mode |= dpiExecMode(DPI_MODE_EXEC_DESCRIBE_ONLY) }
         if options.autoCommit { mode |= dpiExecMode(DPI_MODE_EXEC_COMMIT_ON_SUCCESS) }
         var numCols: UInt32 = 0
         try check(dpiStmt_execute(stmt, mode, &numCols))
@@ -310,7 +309,19 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             if dpiStmt_getRowCount(stmt, &count) == DPI_SUCCESS, stmtInfo.isDML != 0 { result.rowsAffected = count }
         }
         for v in vars where v.bind.direction != .input {
-            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: v.data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
+            var data = v.data
+            if stmtInfo.isReturning != 0 {
+                // DML … RETURNING INTO: wartości są w danych zwróconych dla wiersza, nie w buforze zmiennej (wcześniej
+                // ROWID wstawionego wiersza wychodził NULL — przegląd kodu, D168).
+                var count: UInt32 = 0
+                var returned: UnsafeMutablePointer<dpiData>?
+                guard dpiVar_getReturnedData(v.handle, 0, &count, &returned) == DPI_SUCCESS, count > 0, let returned else {
+                    result.outBinds[v.bind.name] = .null
+                    continue
+                }
+                data = returned
+            }
+            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         if stmtInfo.isPLSQL != 0 {
             result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
@@ -414,7 +425,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         case .raw:
             return "RAW(\(t.dbSizeInBytes))"
         case .number:
-            if t.precision == 0 && t.scale == -127 { return "NUMBER" }
+            // FLOAT(p): skala -127 przy niezerowej precyzji binarnej (FLOAT = FLOAT(126)).
+            if t.scale == -127 { return t.precision == 0 ? "NUMBER" : "FLOAT(\(t.precision))" }
             if t.precision == 0 { return "NUMBER" }
             return t.scale == 0 ? "NUMBER(\(t.precision))" : "NUMBER(\(t.precision),\(t.scale))"
         case .object:

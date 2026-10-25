@@ -96,9 +96,6 @@ public final class ConnectionStore {
         if password.isEmpty { try secrets.deletePassword(for: Self.sshAccount(id)) } else { try secrets.setPassword(password, for: Self.sshAccount(id)) }
     }
 
-    public func hasSSHPassword(for id: UUID) -> Bool { (try? secrets.hasPassword(for: Self.sshAccount(id))) ?? false }
-
-    /// Hasło: z Pęku kluczy (savePassword) albo podane wcześniej w tej sesji. nil = trzeba zapytać.
     /// Czy jest hasło do użycia (w pamięci sesji albo zapisane w Pęku kluczy) — bez odczytu zapisanego sekretu.
     public func hasStoredPassword(for id: UUID) -> Bool {
         if sessionPasswords[id] != nil { return true }
@@ -109,6 +106,7 @@ public final class ConnectionStore {
     /// Hasło tylko z pamięci sesji (bez Pęku kluczy).
     public func sessionPassword(for id: UUID) -> String? { sessionPasswords[id] }
 
+    /// Hasło: z Pęku kluczy (savePassword) albo podane wcześniej w tej sesji. nil = trzeba zapytać.
     public func password(for id: UUID) -> String? {
         if let p = sessionPasswords[id] { return p }
         guard let def = connection(id), def.savePassword else { return nil }
@@ -170,13 +168,15 @@ public final class ConnectionStore {
     public func importDefinitions(_ data: Data) throws -> Int {
         let snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: data)
         var folderMap: [UUID: UUID] = [:]
+        let firstImported = folders.count
         for var f in snap.folders {
             let newID = folders.contains(where: { $0.id == f.id }) ? UUID() : f.id
             folderMap[f.id] = newID
             f.id = newID
             folders.append(f)
         }
-        for i in folders.indices { if let p = folders[i].parentID, let m = folderMap[p] { folders[i].parentID = m } }
+        // Tylko foldery z importu: istniejący folder o id kolidującym z importowanym zachowuje swoje podfoldery.
+        for i in firstImported..<folders.count { if let p = folders[i].parentID, let m = folderMap[p] { folders[i].parentID = m } }
         var count = 0
         for var c in snap.connections {
             if connections.contains(where: { $0.id == c.id }) { c.id = UUID() }

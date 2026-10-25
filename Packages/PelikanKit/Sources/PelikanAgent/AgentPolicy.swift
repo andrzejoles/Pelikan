@@ -31,7 +31,7 @@ public enum AgentPolicy {
         "file.new.sql", "file.new.program", "file.new.test",
         "edit.findNext", "edit.findPrevious", "edit.gotoLine", "edit.beautify", "edit.commentLine", "edit.duplicateLine",
         "edit.uppercase", "edit.lowercase", "edit.indent", "edit.outdent", "edit.removeTrailingSpaces",
-        "edit.navigateBack", "edit.navigateForward", "sql.historyBack", "sql.historyForward", "window.next", "window.previous",
+        "edit.navigateBack", "edit.navigateForward", "window.next", "window.previous",
     ]
 
     public static func isAgentCommand(_ id: CommandID) -> Bool { id.rawValue.hasPrefix("agent.") }

@@ -206,7 +206,7 @@ public final class FileBrowser {
         guard !FileManager.default.fileExists(atPath: target.path) else {
             throw CommandError.notAvailable(L10n.tr("Plik już istnieje: \(target.lastPathComponent)"))
         }
-        try Data().write(to: target)
+        try Data().write(to: target, options: .withoutOverwriting)       // plik powstały po sprawdzeniu nie jest nadpisywany
         return target
     }
 

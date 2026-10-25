@@ -143,17 +143,17 @@ enum EditorExtraCommands {
                 return CommandResult(value: .bool(doc.splitEditor))
             },
             command("view.zoomIn", L10n.tr("Powiększ czcionkę edytora"), .view, pd: ["ctrl+="], mac: ["cmd+="],
-                    summary: L10n.tr("Zwiększa rozmiar czcionki edytorów."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
+                    effect: .settings, summary: L10n.tr("Zwiększa rozmiar czcionki edytorów."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
                 ctx.workspace.settings.editorFontSize = EditorZoom.next(ctx.workspace.settings.editorFontSize, step: 1)
                 return CommandResult(value: .double(ctx.workspace.settings.editorFontSize))
             },
             command("view.zoomOut", L10n.tr("Pomniejsz czcionkę edytora"), .view, pd: ["ctrl+shift+-"], mac: ["cmd+-"],
-                    summary: L10n.tr("Zmniejsza rozmiar czcionki edytorów."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
+                    effect: .settings, summary: L10n.tr("Zmniejsza rozmiar czcionki edytorów."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
                 ctx.workspace.settings.editorFontSize = EditorZoom.next(ctx.workspace.settings.editorFontSize, step: -1)
                 return CommandResult(value: .double(ctx.workspace.settings.editorFontSize))
             },
             command("view.zoomReset", L10n.tr("Domyślny rozmiar czcionki edytora"), .view, pd: ["ctrl+0"], mac: ["cmd+0"],
-                    summary: L10n.tr("Przywraca domyślny rozmiar czcionki edytorów (13 pt)."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
+                    effect: .settings, summary: L10n.tr("Przywraca domyślny rozmiar czcionki edytorów (13 pt)."), feature: "PD-EDIT-021", validate: { _ in true }) { ctx in
                 ctx.workspace.settings.editorFontSize = EditorZoom.next(ctx.workspace.settings.editorFontSize, step: 0)
                 return .ok
             },

@@ -13,7 +13,8 @@ extension Workspace {
         let changing = statements.filter { s in
             let c = StatementClassifier.classify(s)
             switch c.category {
-            case .query: return c.locksRows
+            // WITH FUNCTION … SELECT: funkcja PL/SQL w zapytaniu może zmieniać dane (PRAGMA AUTONOMOUS_TRANSACTION).
+            case .query: return c.locksRows || ScriptSplitter.split(s).contains(where: \.isPLSQL)
             case .sessionControl, .transactionControl: return false
             default: return true
             }

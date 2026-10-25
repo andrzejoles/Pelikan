@@ -74,8 +74,11 @@ struct BrowserPane: View {
                         HStack {
                             TextField(L10n.tr("Nazwa"), text: $f.name)
                             Picker("", selection: Binding(get: { f.color ?? "blue" }, set: { f.color = $0 })) {
-                                ForEach(["blue", "green", "orange", "red", "purple", "gray"], id: \.self) { Text($0).tag($0) }
-                            }.labelsHidden().frame(width: 90)
+                                // Wartości jak w ObjectBrowserViewController.namedColor.
+                                ForEach([("blue", L10n.tr("Niebieski")), ("green", L10n.tr("Zielony")), ("yellow", L10n.tr("Żółty")),
+                                         ("orange", L10n.tr("Pomarańczowy")), ("red", L10n.tr("Czerwony")), ("purple", L10n.tr("Fioletowy")),
+                                         ("gray", L10n.tr("Szary"))], id: \.0) { Text($0.1).tag($0.0) }
+                            }.labelsHidden().frame(width: 120)
                             Button { customization.folders.removeAll { $0.id == f.id } } label: { Image(systemName: "minus.circle") }
                                 .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń folder"))
                         }

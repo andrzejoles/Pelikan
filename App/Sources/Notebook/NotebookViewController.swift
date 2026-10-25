@@ -40,7 +40,12 @@ struct NotebookView: View {
                 .fixedSize()
                 Spacer()
                 if running != nil { ProgressView().controlSize(.small) }
-                Button(L10n.tr("Eksport Markdown…")) { Task { try? await workspace.invoke("notebook.exportMarkdown") } }
+                Button(L10n.tr("Eksport Markdown…")) {
+                    Task {
+                        do { try await workspace.invoke("notebook.exportMarkdown") } catch CommandError.cancelledByUser {
+                        } catch { workspace.ui?.showError(error.localizedDescription) }
+                    }
+                }
             }
             .padding(8)
             Divider()

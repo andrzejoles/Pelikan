@@ -35,6 +35,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var agentUI: AgentUIController?
     private var menuToken: ObservationToken?
     private var appearanceToken: ObservationToken?
+    private var languageToken: ObservationToken?
+    /// Katalog Oracle Net zarządzany przez aplikację (D53) — także dla sterownika z katalogiem wskazanym później.
+    private var oracleNetDirectory: String?
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -47,10 +50,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore(service: keychainService))
         super.init()
         // Katalog Oracle Net zarządzany przez Pelikana: portfel magazynu haseł i IFILE do konfiguracji użytkownika (D53).
-        let oracleNet = try? OracleNet.prepareManagedDirectory(dir.appendingPathComponent("oracle-net", isDirectory: true),
-                                                               userDirectory: workspace.settings.oracleNetDirectory,
-                                                               walletDirectory: workspace.settings.walletDirectory)
-        workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory, configDirectory: oracleNet ?? nil))
+        do {
+            oracleNetDirectory = try OracleNet.prepareManagedDirectory(dir.appendingPathComponent("oracle-net", isDirectory: true),
+                                                                       userDirectory: workspace.settings.oracleNetDirectory,
+                                                                       walletDirectory: workspace.settings.walletDirectory)
+        } catch {
+            NSLog("Katalog Oracle Net niedostępny: %@", error.localizedDescription)
+        }
+        workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory, configDirectory: oracleNetDirectory))
         workspace.sessions.setDriver(ThinDriver())
     }
 
@@ -70,6 +77,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             }
         }
         RunLoop.main.add(stallTimer!, forMode: .common)
+    }
+
+    /// Język interfejsu przez standardowe nadpisanie `AppleLanguages` aplikacji (jak Ustawienia systemowe › Język ›
+    /// Aplikacje). „Jak system” usuwa tylko nadpisanie ustawione przez Pelikana — język wybrany dla aplikacji
+    /// w Ustawieniach systemowych zostaje.
+    static func applyLanguage(_ language: String?) {
+        let defaults = UserDefaults.standard
+        let applied = "PelikanAppliedLanguage"
+        let current = Bundle.main.bundleIdentifier.flatMap { defaults.persistentDomain(forName: $0)?["AppleLanguages"] } as? [String]
+        if let language {
+            if current != [language] { defaults.set([language], forKey: "AppleLanguages") }
+            if defaults.string(forKey: applied) != language { defaults.set(language, forKey: applied) }
+        } else if let previous = defaults.string(forKey: applied) {
+            if current == [previous] { defaults.removeObject(forKey: "AppleLanguages") }
+            defaults.removeObject(forKey: applied)
+        }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -92,6 +115,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             case .light: NSApp.appearance = NSAppearance(named: .aqua)
             case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
             }
+        }
+        // Język z Preferencji — także z importu i zestawów preferencji; działa od następnego uruchomienia.
+        languageToken = trackChanges { [weak self] in
+            guard let self else { return }
+            Self.applyLanguage(self.workspace.settings.language)
         }
         // Zmiana profilu albo własnych skrótów (Preferencje › Klawiatura) — menu z nowymi skrótami.
         menuToken = trackChanges { [weak self] in
@@ -192,48 +220,57 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        let open = workspace.documents.filter(\.transactionOpen)
         if workspace.settings.autosaveLayout, let l = mainWindow?.layout { workspace.worksets.saveLayout(l) }
         // Autozapis workseta: niezapisane okna przetrwają w worksecie — bez pytania o zapis (UG 15).
         let worksetSaved = workspace.settings.worksetAutosave && (try? workspace.saveCurrentWorkset()) != nil
         let modified = worksetSaved ? [] : workspace.documents.filter { $0.isModified && $0.consoleConnectionID == nil && ($0.fileURL != nil || (workspace.settings.confirmSaveNewWindows && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)) }
-        if !modified.isEmpty {
-            // Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj).
-            Task { @MainActor in
-                do {
-                    for d in modified {
-                        workspace.activate(d.id)
-                        try await workspace.invoke("file.close")
-                    }
-                    NSApp.reply(toApplicationShouldTerminate: true)
-                } catch {
-                    NSApp.reply(toApplicationShouldTerminate: false)
-                }
-            }
-            return .terminateLater
-        }
-        guard !open.isEmpty else { return .terminateNow }
+        if modified.isEmpty && !workspace.documents.contains(where: \.transactionOpen) { return .terminateNow }
         Task { @MainActor in
-            let answer = await ask(L10n.tr("Niezatwierdzone zmiany"),
-                                   message: L10n.tr("Okna z otwartą transakcją: \(open.map(\.fullTitle).joined(separator: ", ")). Co zrobić przed zamknięciem?"),
-                                   buttons: [L10n.tr("Zatwierdź (COMMIT)"), L10n.tr("Wycofaj (ROLLBACK)")])
-            guard let answer else { NSApp.reply(toApplicationShouldTerminate: false); return }
-            try? await workspace.endTransactions(of: open, commit: answer == 0)
-            await workspace.sessions.disconnectAll()
-            NSApp.reply(toApplicationShouldTerminate: true)
+            NSApp.reply(toApplicationShouldTerminate: await confirmTermination(closing: modified))
         }
         return .terminateLater
     }
 
+    /// Niezapisane okna: pytanie jak przy zamykaniu każdego okna (Zapisz / Nie zapisuj / Anuluj); potem otwarte transakcje
+    /// pozostałych okien. Nieudany COMMIT/ROLLBACK pokazuje błąd i anuluje zamknięcie aplikacji.
+    private func confirmTermination(closing modified: [PelikanWorkspace.Document]) async -> Bool {
+        do {
+            for d in modified where workspace.documents.contains(where: { $0.id == d.id }) {
+                workspace.activate(d.id)
+                try await workspace.invoke("file.close")
+            }
+        } catch CommandError.cancelledByUser {
+            return false
+        } catch {
+            showError(error.localizedDescription)
+            return false
+        }
+        let open = workspace.documents.filter(\.transactionOpen)
+        guard !open.isEmpty else { return true }
+        let answer = await ask(L10n.tr("Niezatwierdzone zmiany"),
+                               message: L10n.tr("Okna z otwartą transakcją: \(open.map(\.fullTitle).joined(separator: ", ")). Co zrobić przed zamknięciem?"),
+                               buttons: [L10n.tr("Zatwierdź (COMMIT)"), L10n.tr("Wycofaj (ROLLBACK)")])
+        guard let answer else { return false }
+        do {
+            try await workspace.endTransactions(of: open, commit: answer == 0)
+        } catch {
+            showError(error.localizedDescription)
+            return false
+        }
+        await workspace.sessions.disconnectAll()
+        return true
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
-    /// Procesy ssh tuneli kończą się razem z aplikacją.
+    /// Procesy ssh tuneli i połączenia główne celów Pro*C kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
         workspace.persistConsoles()
         // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
         workspace.recovery.end()
         agentUI?.stop()
         workspace.sessions.tunnels.closeAll()
+        procDeployModel?.disconnectAll()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
@@ -316,7 +353,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }()
 
     /// Wdrożenia Pro*C (konsola, historia) na celach z menedżera celów SSH.
-    private lazy var procDeploy = ProCDeployModel(store: sshTargets.store, workspace: workspace, runDirectory: sshTargets.runDirectory)
+    private var procDeployModel: ProCDeployModel?
+    private var procDeploy: ProCDeployModel {
+        if let procDeployModel { return procDeployModel }
+        let model = ProCDeployModel(store: sshTargets.store, workspace: workspace, runDirectory: sshTargets.runDirectory)
+        procDeployModel = model
+        return model
+    }
 
     func showProCDeploy(_ action: ProCDeployAction) {
         let model = procDeploy
@@ -415,6 +458,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 guard !finished else { return }
                 finished = true
                 if let sheet { window.endSheet(sheet) }
+                sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
                 cont.resume(returning: apply)
             }
             let w = NSWindow(contentViewController: NSHostingController(rootView: view))
@@ -894,6 +938,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         var sheet: NSWindow?
         let view = LogonView(workspace: workspace) { [weak self] in
             if let sheet { window.endSheet(sheet) }
+            sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
             self?.mainWindow?.documentArea.focusActiveDocument()
         }
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
@@ -922,6 +967,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 guard !finished else { return }
                 finished = true
                 if let sheet { window.endSheet(sheet) }
+                sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
                 self.mainWindow?.documentArea.focusActiveDocument()
                 cont.resume(returning: values)
             }
@@ -1015,7 +1061,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 panel.message = L10n.tr("Wybierz katalog z biblioteką libclntsh.dylib")
                 if panel.runModal() == .OK, let url = panel.url {
                     self.workspace.settings.instantClientDirectory = url.path
-                    self.workspace.sessions.setDriver(ODPIDriver(libraryDirectory: url.path))
+                    self.workspace.sessions.setDriver(ODPIDriver(libraryDirectory: url.path, configDirectory: self.oracleNetDirectory))
                     if case .failure(let e) = ODPIDriver(libraryDirectory: url.path).availability() { self.showError(e.localizedDescription) }
                 }
             case .alertSecondButtonReturn:
@@ -1035,6 +1081,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         var sheet: NSWindow?
         let view = RecallStatementView(workspace: workspace) { [weak self] in
             if let sheet { window.endSheet(sheet) }
+            sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
             self?.mainWindow?.documentArea.focusActiveDocument()
         }
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
@@ -1251,7 +1298,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         alert.messageText = title
         alert.informativeText = message
         for b in buttons { alert.addButton(withTitle: b) }
-        alert.addButton(withTitle: L10n.tr("Anuluj"))
+        // Wywołujący często sami podają „Anuluj” (wtedy zwracany jest jego indeks) — bez drugiego takiego przycisku.
+        let cancel = L10n.tr("Anuluj")
+        if !buttons.contains(cancel) { alert.addButton(withTitle: cancel) }
         let response = alert.runModal()
         let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
         return index < buttons.count ? index : nil

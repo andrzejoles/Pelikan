@@ -663,7 +663,9 @@ extension Workspace {
         if names, let c = effectiveConnection(of: doc), let s = sessions.existingSession(SessionKey(connectionID: c, purpose: .main)) {
             // Program z innego schematu (nagłówek z właścicielem): nazwy bez schematu — w schemacie właściciela.
             let schema = doc.kind == .program ? ProgramCompiler.units(in: text).first?.owner : nil
-            let key = NameSourceKey(connection: c, schema: schema)
+            // Klucz z tożsamością sesji: po ponownym połączeniu źródło ze starą (zamkniętą) sesją jest odrzucane.
+            let key = NameSourceKey(connection: c, schema: schema, session: ObjectIdentifier(s))
+            if nameSources[key] == nil { nameSources = nameSources.filter { $0.key.connection != c || $0.key.session == key.session } }
             let source = nameSources[key] ?? CachedNameSource(MetadataNameSource(session: s, defaultSchema: schema))
             nameSources[key] = source
             found += await NameResolver.unresolved(in: text, source: source)
@@ -675,14 +677,15 @@ extension Workspace {
         return found
     }
 
-    /// Czyści pamięć słownika analizy (po DDL, odświeżeniu metadanych).
+    /// Czyści pamięć słownika analizy (wołane przy odświeżeniu metadanych połączenia — także po DDL edytorów obiektów).
     public func resetNameResolutionCache(_ connection: UUID? = nil) {
         if let connection { nameSources = nameSources.filter { $0.key.connection != connection } } else { nameSources.removeAll() }
     }
 }
 
-/// Pamięć słownika analizy: połączenie i schemat domyślny (nil — bieżący schemat sesji).
+/// Pamięć słownika analizy: połączenie, schemat domyślny (nil — bieżący schemat sesji) i sesja główna.
 struct NameSourceKey: Hashable {
     var connection: UUID
     var schema: String?
+    var session: ObjectIdentifier
 }

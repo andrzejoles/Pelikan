@@ -126,6 +126,8 @@ public final class SSHTunnelManager {
     }
 
     private var running: [UUID: Running] = [:]
+    /// Otwierane tunele: równoległe otwarcia tego samego połączenia czekają na jeden proces ssh.
+    private var opening: [UUID: Task<Tunnel, any Error>] = [:]
     /// Dodatkowe opcje ssh (testy: własny plik known_hosts).
     public var extraOptions: [String] = []
     public var sshPath = "/usr/bin/ssh"
@@ -182,6 +184,20 @@ public final class SSHTunnelManager {
             r.users += 1
             return r.tunnel
         }
+        // Druga sesja tego połączenia otwierana w trakcie czekania na port nie uruchamia drugiego ssh (osierocony
+        // proces, rozjechany licznik użytkowników) — czeka na pierwszy.
+        if let pending = opening[def.id] {
+            let tunnel = try await pending.value
+            running[def.id]?.users += 1
+            return tunnel
+        }
+        let task = Task { try await start(for: def, tns: tns, secret: secret) }
+        opening[def.id] = task
+        defer { opening[def.id] = nil }
+        return try await task.value
+    }
+
+    private func start(for def: ConnectionDefinition, tns: [TNSEntry], secret: String?) async throws -> Tunnel {
         guard let t = def.sshTunnel else { throw DatabaseError.driverUnavailable(L10n.tr("Połączenie nie ma tunelu SSH")) }
         if t.usesPassword, (secret ?? "").isEmpty {
             throw DatabaseError.driverUnavailable(L10n.tr("Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia."))

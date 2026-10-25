@@ -66,7 +66,9 @@ struct PreferenceSetsPane: View {
                             } else {
                                 Image(systemName: "arrow.down.circle").foregroundStyle(.secondary).help(L10n.tr("Przesłonięta przez zestaw o wyższym pierwszeństwie"))
                             }
-                            Button(L10n.tr("Dziedzicz")) { try? workspace.inheritPreference(key, in: s.id) }
+                            Button(L10n.tr("Dziedzicz")) {
+                                do { try workspace.inheritPreference(key, in: s.id) } catch { message = error.localizedDescription }
+                            }
                                 .help(L10n.tr("Usuwa wartość z zestawu — obowiązuje wartość z zestawu niższego albo wbudowana"))
                         }
                     }
@@ -79,8 +81,9 @@ struct PreferenceSetsPane: View {
                     }))
                 }
                 HStack {
-                    Button(L10n.tr("Eksportuj…")) { run("prefs.export") }
-                    Button(L10n.tr("Importuj…")) { run("prefs.import") }
+                    // Bez zaznaczonych sekcji pusty argument oznaczałby „wszystkie”.
+                    Button(L10n.tr("Eksportuj…")) { run("prefs.export") }.disabled(chosenSections.isEmpty)
+                    Button(L10n.tr("Importuj…")) { run("prefs.import") }.disabled(chosenSections.isEmpty)
                     Spacer()
                     Text(message).font(.caption).foregroundStyle(.secondary)
                 }
@@ -128,8 +131,10 @@ struct PreferenceSetsPane: View {
 
     private func remove() {
         guard let s = selected else { return }
-        try? workspace.deletePreferenceSet(s.id)
-        selection = nil
+        do {
+            try workspace.deletePreferenceSet(s.id)
+            selection = nil
+        } catch { message = error.localizedDescription }
     }
 
     private func run(_ id: CommandID) {

@@ -129,6 +129,39 @@ struct DocumentFilesTests {
         #expect(ws.documents.isEmpty)
     }
 
+    @Test("Zamknięcie: zamknięte pytanie (brak odpowiedzi) = Anuluj; okno w trakcie wykonania nie zamyka się; debuger okna usuwany")
+    func closeSafety() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.test)
+        doc.text = "begin null; end;"
+        ui.answers = [nil]                        // okno dialogowe zamknięte bez wyboru
+        await #expect(throws: CommandError.cancelledByUser) { try await ws.invoke("file.close") }
+        #expect(ws.documents.count == 1)
+        doc.isExecuting = true
+        await #expect(throws: CommandError.self) { try await ws.invoke("file.close") }
+        #expect(ws.documents.count == 1 && ui.asked.count == 1)
+        doc.isExecuting = false
+        _ = ws.debugger(for: doc)
+        ui.answers = [1]
+        try await ws.invoke("file.close")
+        #expect(ws.documents.isEmpty && ws.debuggers[doc.id] == nil)
+    }
+
+    @Test("Uszkodzony diagram albo notatnik: błąd bez okna przypiętego do pliku; puste okno zostaje")
+    func corruptedJSONFiles() throws {
+        let ws = Workspace()
+        let empty = ws.newDocument(.diagram)
+        for name in ["zly.pdd", "zly.sqlnb", "zly.rep"] {
+            let url = dir.appendingPathComponent(name)
+            try Data("{\"format\":".utf8).write(to: url)
+            #expect(throws: (any Error).self) { try ws.openFile(url) }
+            #expect(!ws.documents.contains { $0.fileURL != nil })
+        }
+        #expect(ws.documents.map(\.id) == [empty.id])
+    }
+
     @Test("Otwórz ponownie tylko z listy ostatnich plików")
     func reopen() async throws {
         let ws = Workspace()

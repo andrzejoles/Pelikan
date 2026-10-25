@@ -120,6 +120,21 @@ struct P2EditorTests {
         #expect(ws.templates.template("Nowe/b") == nil && !ws.templates.folders.contains("Nowe"))
     }
 
+    @Test("Szablony: „..”, „.” i pusta nazwa folderu nie usuwają ani nie przenoszą całego katalogu szablonów")
+    func templateFolderTraversal() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("tpl-\(UUID().uuidString.prefix(6))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace(dataDirectory: dir)
+        _ = try await ws.invoke("templates.edit", CommandArguments(["folder": .string("Moje"), "name": .string("a"), "text": .string("[x]")]))
+        for bad in ["..", ".", "", " "] {
+            await #expect(throws: (any Error).self) { try await ws.invoke("templates.deleteFolder", CommandArguments(["folder": .string(bad)])) }
+            await #expect(throws: (any Error).self) {
+                try await ws.invoke("templates.renameFolder", CommandArguments(["folder": .string(bad), "name": .string("Nowe")]))
+            }
+        }
+        #expect(ws.templates.template("Moje/a")?.text == "[x]")
+    }
+
     @Test("Migawka odzyskiwania przed wykonaniem: tylko z opcją, najwyżej jedna na 5 s")
     func recoveryOnExecute() {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("rec-\(UUID().uuidString.prefix(6))")

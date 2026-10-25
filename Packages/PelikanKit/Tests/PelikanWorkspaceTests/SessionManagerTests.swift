@@ -214,7 +214,8 @@ struct ModificationGuardTests {
     func readOnly() throws {
         let (ws, ro, _, _) = try make()
         #expect(ws.modificationCheck(["select * from emp", "alter session set nls_language = 'POLISH'"], connectionID: ro.id) == .allowed)
-        for s in ["update emp set sal = 1", "drop table t", "begin p; end;", "select * from emp for update"] {
+        for s in ["update emp set sal = 1", "drop table t", "begin p; end;", "select * from emp for update",
+                  "with function f return number is pragma autonomous_transaction; begin delete t; commit; return 1; end;\nselect f from dual"] {
             if case .blocked = ws.modificationCheck([s], connectionID: ro.id) {} else { Issue.record("niezablokowane: \(s)") }
         }
     }
@@ -239,6 +240,55 @@ struct ModificationGuardTests {
         doc.connectionID = ro.id
         doc.text = "update emp set sal = 1"
         await #expect(throws: CommandError.self) { try await ws.invoke("sql.execute") }
+    }
+
+    @Test("Kompilacja próbna i opróżnianie kosza na połączeniu tylko do odczytu — zablokowane przed wysłaniem do bazy")
+    func adminCommandsBlocked() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(drivers: [.instantClient: driver])
+        let ui = FakeUI()
+        ws.ui = ui
+        let ro = ConnectionDefinition(name: "raport", target: ConnectionTarget(user: "u", connectString: "db"), readOnly: true)
+        try ws.connections.upsert(ro, password: "good")
+        let doc = ws.newDocument(.program, text: "create or replace procedure p is begin null; end;\n/\n")
+        doc.connectionID = ro.id
+        await #expect(throws: CommandError.self) { try await ws.invoke("prog.safeCompile") }
+        ws.sessions.setMainConnection(ro.id)
+        ui.answers = [0]                                       // „Usunąć trwale?” — Usuń
+        await #expect(throws: CommandError.self) { try await ws.invoke("ob.purgeRecycleBin") }
+        let executed = driver.sessions.withLock { $0.flatMap { $0.executed.withLock { $0 } } }
+        #expect(!executed.contains { $0.uppercased().contains("PURGE") || $0.uppercased().contains("PELIKAN$SAFE") })
+    }
+
+    @Test("Eksport bezpośredni: polecenie inne niż zapytanie odrzucone przed wykonaniem")
+    func exportQueryRejectsDML() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(drivers: [.instantClient: driver])
+        let def = ConnectionDefinition(name: "dev", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql, text: "update emp set sal = 1")
+        doc.selectedRange = 0..<0
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("sql.exportQuery", CommandArguments(["format": .string("csv"), "file": .string("clipboard")]))
+        }
+        #expect(!driver.sessions.withLock { $0.contains { $0.executed.withLock { $0.contains { $0.lowercased().hasPrefix("update") } } } })
+        #expect(!doc.transactionOpen)
+    }
+
+    @Test("Zamknięcie okien połączenia bez interfejsu: ROLLBACK otwartej transakcji i zamknięcie sesji okna")
+    func closeWindowsEndsSessions() async throws {
+        let ws = Workspace(drivers: [.instantClient: FakeDriver()])
+        let def = ConnectionDefinition(name: "dev", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        let session = try #require(try await ws.session(for: doc) as? FakeSession)
+        doc.transactionOpen = true
+        try await ws.invoke("connection.closeWindows", CommandArguments(["connection": .string(def.id.uuidString)]))
+        #expect(ws.documents.isEmpty && !doc.transactionOpen)
+        #expect(session.closedFlag.withLock { $0 })
     }
 
     @Test("Zmiana połączenia okna po nazwie; puste — połączenie główne; nieznane — błąd")
@@ -321,6 +371,27 @@ struct ConnectionCheckTests {
         #expect(ws.sessions.openSessionCount == 0)
         _ = try await ws.sessions.session(key)
         #expect(ws.sessions.openSessionCount == 1)
+    }
+
+    @Test("Analiza nazw: po ponownym połączeniu źródło słownika z nową sesją; odświeżenie metadanych czyści pamięć")
+    func nameSourceAfterReconnect() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"), savePassword: false)
+        try ws.connections.upsert(def, password: "good")
+        let key = SessionKey(connectionID: def.id, purpose: .main)
+        let s1 = try await ws.sessions.session(key)
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        doc.text = "select * from t;"
+        await ws.analyzeCode(doc)
+        #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s1)])
+        await ws.sessions.disconnect(def.id)
+        let s2 = try await ws.sessions.session(key)
+        await ws.analyzeCode(doc)
+        #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s2)])
+        ws.metadata(for: def.id)?.refresh()
+        #expect(ws.nameSources.isEmpty)
     }
 
     @Test("Ochrona zapisanych haseł: bez potwierdzenia właściciela hasło z Pęku kluczy nie jest użyte; po potwierdzeniu — raz na sesję aplikacji")

@@ -1348,3 +1348,51 @@ Stan na 2026-10-25 (porównanie z najnowszymi wydaniami w repozytoriach źródł
   z 2026-10-24 bez wydania — poczekają na wydanie albo dłuższą próbę.
 - xcodebuild dostaje jawny cel `platform=macOS,arch=arm64` (aplikacja jest tylko arm64) — bez ostrzeżenia
   o wielu pasujących celach.
+
+### D168 · 2026-10-25 — Dogłębny przegląd kodu całości (7 obszarów) i poprawki
+Przegląd tylko do odczytu całego kodu (ok. 67 tys. linii aplikacji i pakietu) w siedmiu obszarach, potem poprawki
+z weryfikacją każdego zgłoszenia. Ok. 130 zgłoszeń; prawie wszystkie potwierdzone i naprawione, z testami.
+Najważniejsze:
+- **Agent AI:** `agent.compile` wykonuje dokładnie polecenia z okna zgody (przypięte pod kluczem wewnętrznym, jak
+  połączenie w D163) — wcześniej agent mógł podmienić tekst okna w czasie oczekiwania na zgodę; komendy edycji agenta
+  nie działają w Oknie poleceń ani w oknie tylko do odczytu i trafiają do „Cofnij sesję agenta”; `sql.historyBack/Forward`
+  poza listą komend agenta; argumenty spoza schematu narzędzia usuwane; walidacja stanu menu obowiązuje przy
+  `run_command`; hasła w dzienniku i panelu agenta ukrywane; wywołania na sesji agenta szeregowane (równoległe
+  zapytanie nie wycofa zatwierdzonego DML).
+- **Transakcje:** sterownik thin robi ROLLBACK przed wylogowaniem (logoff Oracle zatwierdza transakcję), CONNECT /
+  DISCONNECT w Oknie poleceń pytają o COMMIT/ROLLBACK, zamknięcie aplikacji nie gubi nieudanego COMMIT, okno dialogowe
+  z dwoma „Anuluj” (zamknięcie okna bez zapisu) poprawione; zamknięcie okna w trakcie zwykłego wykonania jest odmawiane
+  z komunikatem (nie przerywa wykonania), w trakcie debugowania — zatrzymuje debuger.
+- **Strażnik zmian:** komendy obiektów (odświeżenie MV, uruchomienie zadania, kosz, ccflags, kompilacja próbna) i
+  zadania lokalne bez COMMIT przechodzą przez strażnika; `WITH FUNCTION` traktowane jak zmieniające.
+- **Dane:** porównanie i przenoszenie danych wiążą LOB/RAW zamiast literału (wcześniej BLOB > 2000 B zapisywał się
+  jako NULL); wartości nieprzenoszalne (obcięte, obiekty, BFILE) przerywają operację z błędem przed zmianą w bazie;
+  import CSV z CRLF, uszkodzony xlsx, separator wieloznakowy i słowa zastrzeżone w nagłówkach bez awarii.
+- **ODPI `RETURNING INTO`:** wartości DML … RETURNING czytane przez `dpiVar_getReturnedData` — wcześniej ROWID
+  wstawionego w siatce wiersza wychodził NULL, więc jego usunięcie albo odświeżenie przed ponownym zapytaniem nic nie
+  robiło w bazie. Wykryła to nowa kontrola liczby zmienionych wierszy przy zapisie siatki (UPDATE/DELETE po ROWID bez
+  skutku = wiersz zmieniony przez inną sesję).
+- **Edytory obiektów:** klucz obcy do innego schematu, kolumny identity (ALWAYS, licznik) przy Recreate, nazwy z małymi
+  literami, kolejność DROP w ALTER, cytowanie kolumn indeksów.
+- **SSH:** do known_hosts trafiają dokładnie klucze, których odciski potwierdził użytkownik (bez drugiego połączenia
+  accept-new). Klucze odczytuje `ssh` z opcjami sesji do pliku tymczasowego, bez logowania — `ssh-keyscan` nie przyjmuje
+  algorytmów starych serwerów (AIX: diffie-hellman-group14-sha1, ssh-rsa) i nie odczytałby ich klucza;
+  zerwane połączenie wdrożenia (kod 255) to błąd, nie Stop; dwa równoległe otwarcia tunelu nie uruchamiają dwóch ssh.
+- **Bezpieczeństwo pozostałe:** okno raportu i druk HTML bez JavaScriptu, z CSP i blokadą nawigacji (dodatkowy CSS
+  z cudzego pliku .rep nie wstrzyknie skryptu); hasła z CONNECT/IDENTIFIED BY poza historiami i maskowane w echu/SPOOL;
+  pliki historii, konsol i makr 0600; nazwy plików eksportu DDL bez `/` i `..`.
+- Martwy kod i pozostałości usunięte (m.in. mechanizm komend „zapowiedzianych”, `describeOnly`, nieużywane ustawienia
+  `allowMultipleConnections` i `autoCommitPostedRecords` — stare pliki ustawień nadal się wczytują); ustawienia bez
+  kontrolki dostały kontrolki w Preferencjach; wyszukiwarka Preferencji znajduje etykiety Stepper i z interpolacją.
+
+Świadomie bez zmian:
+- Komunikaty sterowników (PelikanDB/ODPI/Thin) po polsku bez L10n — warstwa sterownika nie zależy od katalogu tekstów;
+  do przeniesienia przy typowanych błędach sterownika.
+- Thin: limit czasu wywołania (`callTimeoutMs`) nie działa, tak jak przerwanie — OracleNIO tego nie udostępnia.
+- Tunel SSH bazy (`SSHTunnelManager`) nadal przez `Foundation.Process` (Workspace nie zależy od PelikanRemote, D61).
+- Nazwa aplikacji w tekstach interfejsu zostaje literałem; identyfikatory techniczne biorą ją z Brand.xcconfig.
+- Pusta nazwa połączenia zadania lokalnego = połączenie główne (wcześniej: aktywnego okna).
+- Styl raportu zapisywany stałym identyfikatorem; stare pliki z polską nazwą stylu wczytują się.
+- Przełączniki SET w Command Window bez osobnych komend rejestru; dwie metody druku HTML w UIServices; wspólna pętla
+  pobierania raportów — refaktoryzacja poza zakresem przeglądu. Entitlements Quick Look bez zmian (do sprawdzenia przy
+  notaryzacji).

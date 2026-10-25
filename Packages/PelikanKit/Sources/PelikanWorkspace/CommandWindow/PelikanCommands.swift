@@ -20,12 +20,12 @@ extension SQLPlusEngine {
             if args.isEmpty {
                 // EDIT bez argumentu: bufor SQL w nowym oknie SQL (jak SQL*Plus EDIT).
                 let d = workspace.newDocument(.sql, text: state.buffer ?? "")
-                d.connectionID = workspace.effectiveConnection(of: document)
+                d.connectionID = windowConnection
             } else {
                 try await invoke("ob.edit")
             }
         case "BROWSE":
-            guard let m = workspace.metadata(for: workspace.effectiveConnection(of: document)),
+            guard let m = workspace.metadata(for: windowConnection),
                   let o = try await m.find(try object()) else { throw SQLPlusError(L10n.tr("Nie znaleziono obiektu \(args.first ?? "")")) }
             workspace.selectedObject = o
             emit(L10n.tr("Zaznaczono w przeglądarce obiektów: \(o.type.rawValue) \(o.qualifiedName)"))
@@ -44,9 +44,9 @@ extension SQLPlusEngine {
             if let name = args.first {
                 try await describe(name)
             } else {
-                let conn = workspace.effectiveConnection(of: document).flatMap { workspace.connections.connection($0) }
+                let conn = windowConnection.flatMap { workspace.connections.connection($0) }
                 emit(L10n.tr("Połączenie: \(conn?.displayName ?? "—")"))
-                if let s = try? await workspace.session(for: document) {
+                if let s = try? await windowSession() {
                     let (_, rows) = try await s.queryAll("select user, sys_context('userenv','current_schema'), sys_context('userenv','db_name'), (select banner_full from v$version where rownum = 1) from dual", limit: 1)
                     if let r = rows.first {
                         emit(L10n.tr("Użytkownik: \(r[0].displayText ?? ""), schemat: \(r[1].displayText ?? ""), baza: \(r[2].displayText ?? "")"))
@@ -78,11 +78,12 @@ extension SQLPlusEngine {
             try await export(args)
         case "RUNTESTSET":
             // RUNTESTSET plik.pts — wynik każdego testu i podsumowanie (UG 8.5).
-            guard let file = args.first, let conn = workspace.effectiveConnection(of: document) else { throw SQLPlusError(L10n.tr("RUNTESTSET plik")) }
+            guard let file = args.first, let conn = windowConnection else { throw SQLPlusError(L10n.tr("RUNTESTSET plik")) }
             let set = try TestSet.decode(Data(contentsOf: resolve(file, baseDirectory: nil)))
             let results = await TestManager.run(set, connectionID: conn, in: workspace)
+            let ok = L10n.tr("OK"), failed = L10n.tr("BŁĄD"), width = max(ok.count, failed.count)
             for r in results {
-                emit("\(r.passed ? "OK  " : "BŁĄD") \(r.name) (\(String(format: "%.2f", r.seconds)) s)", r.passed ? .output : .error)
+                emit("\((r.passed ? ok : failed).padding(toLength: width, withPad: " ", startingAt: 0)) \(r.name) (\(String(format: "%.2f", r.seconds)) s)", r.passed ? .output : .error)
                 for f in r.failures { emit("     " + f, .error) }
             }
             emit(L10n.tr("Testy: \(results.count), udane: \(results.filter(\.passed).count), nieudane: \(results.filter { !$0.passed }.count)"))
@@ -115,7 +116,7 @@ extension SQLPlusEngine {
         }
         let kv = Self.keyValues(Array(args.dropFirst()))
         guard let file = kv["file"] else { throw SQLPlusError(L10n.tr("Brak parametru file=")) }
-        guard let s = try? await workspace.session(for: document) else { throw CommandError.notConnected }
+        guard let s = try? await windowSession() else { throw CommandError.notConnected }
         var owner = kv["owner"]?.uppercased() ?? ""
         if owner.isEmpty { owner = try await s.scalar("select sys_context('userenv','current_schema') from dual") ?? "" }
         let yes: (String, Bool) -> Bool = { k, d in kv[k].map { ["y", "yes", "true", "1", "t"].contains($0.lowercased()) } ?? d }

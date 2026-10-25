@@ -92,4 +92,19 @@ struct ConnectionStoreTests {
         #expect(try other.importDefinitions(data) == 1)
         #expect(other.password(for: other.connections[0].id) == nil)
     }
+
+    @Test("Import z kolizją id folderów nie przenosi istniejących podfolderów pod folder z importu")
+    func importKeepsExistingTree() throws {
+        let store = ConnectionStore(fileURL: nil, secrets: MemorySecretStore())
+        let parent = ConnectionFolder(name: "P")
+        let child = ConnectionFolder(name: "C", parentID: parent.id)
+        try store.upsert(folder: parent)
+        try store.upsert(folder: child)
+        _ = try store.importDefinitions(try store.exportDefinitions())
+        #expect(store.folders.count == 4)
+        #expect(store.folders.first { $0.id == child.id }?.parentID == parent.id)
+        let imported = store.folders.filter { $0.id != parent.id && $0.id != child.id }
+        let newParent = try #require(imported.first { $0.name == "P" })
+        #expect(imported.first { $0.name == "C" }?.parentID == newParent.id)
+    }
 }

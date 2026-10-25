@@ -113,7 +113,7 @@ public enum SQLExecutor {
     public static func containsPassword(_ sql: String) -> Bool {
         let u = sql.uppercased()
         return u.range(of: #"IDENTIFIED\s+BY"#, options: .regularExpression) != nil
-            || u.range(of: #"^\s*CONN(ECT)?\s"#, options: .regularExpression) != nil
+            || u.range(of: #"^\s*CONN(ECT)?\s+[^@\s]*/"#, options: .regularExpression) != nil   // u/hasło[@baza]; bez „/” — bez hasła
             || u.contains("PASSWORD")
     }
 
@@ -160,7 +160,8 @@ public enum SQLExecutor {
             do {
                 let r = try await session.execute(prepared.sql, binds: binds, options: executeOptions(ws))
                 ws.recordHistory(s.text)
-                doc.statementHistory.append(s.text)
+                // Historia poleceń okna bez haseł (CONNECT, IDENTIFIED BY) — jak historia SQL.
+                if !containsPassword(s.text) { doc.statementHistory.append(s.text) }
                 doc.historyPosition = nil
                 let range = s.start..<s.end
                 switch r.kind {
@@ -178,7 +179,8 @@ public enum SQLExecutor {
                     try await applyDirectives(s.text, tab: tab, grid: grid, doc: doc, ws: ws, values: values)
                     newTabs.append(tab)
                 default:
-                    changedData = changedData || r.kind != StatementKind.ddl
+                    // Także DDL: niejawny COMMIT zamyka transakcję — stan odczytywany z sesji.
+                    changedData = true
                     var msg: String
                     switch r.kind {
                     case .dml: msg = L10n.tr("Wierszy: \(r.rowsAffected)")
@@ -356,11 +358,7 @@ public enum SQLExecutor {
             if d == "page" { return 100 }
             if let n = Int(d), n > 0 { return n }
         }
-        switch settings.recordsPerPage {
-        case .automatic: return 100
-        case .fixed(let n): return max(1, n)
-        case .all: return 5_000_000
-        }
+        return settings.recordsPerPage.initialRows
     }
 
     /// Czas jak we wzorcu: sekundy z ułamkiem, powyżej 100 s jako hh:mm:ss (NF17).

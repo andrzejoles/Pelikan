@@ -327,9 +327,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         ])
         embedPane()
         scrollView.contentView.postsBoundsChangedNotifications = true
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.contentView, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.ruler.needsDisplay = true }
-        }
+        // Obserwator z selektorem — wyrejestrowany sam przy zwolnieniu widoku (blokowy zostawał w NotificationCenter).
+        NotificationCenter.default.addObserver(self, selector: #selector(contentBoundsDidChange(_:)),
+                                               name: NSView.boundsDidChangeNotification, object: scrollView.contentView)
+    }
+
+    @objc private func contentBoundsDidChange(_ note: Notification) {
+        ruler.needsDisplay = true
     }
 
     override func layout() {

@@ -8,6 +8,15 @@ import Testing
 struct SQLExecutorUnitTests {
     let script = "select 1 from dual;\nselect 2 from dual;\nupdate t set x = 1;"
 
+    @Test("Hasło w poleceniu: CONNECT u/… i IDENTIFIED BY tak, CONNECT bez hasła i EZConnect z „/” po „@” nie")
+    func passwordDetection() {
+        #expect(SQLExecutor.containsPassword("connect app/haslo@db"))
+        #expect(SQLExecutor.containsPassword("conn app/haslo"))
+        #expect(SQLExecutor.containsPassword("alter user app identified by haslo"))
+        #expect(!SQLExecutor.containsPassword("connect dev_agent_test"))
+        #expect(!SQLExecutor.containsPassword("connect app@host:1521/svc"))
+    }
+
     @Test("Zaznaczenie wykonuje tylko zaznaczony tekst (z przesunięciem pozycji)")
     func selection() {
         let s = SQLExecutor.statements(text: script, selection: 20..<38, scope: .standard, autoSelect: true)
@@ -41,6 +50,16 @@ struct SQLExecutorUnitTests {
         ws.recordHistory("create database link l connect to u identified by p using 'x'")
         ws.recordHistory("select 1 from dual")
         #expect(ws.history.map(\.text) == ["select 1 from dual"])
+    }
+
+    @Test("Plik historii poleceń tylko dla właściciela (0600)")
+    func historyPermissions() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("hist-\(UUID().uuidString.prefix(6))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace(dataDirectory: dir)
+        ws.recordHistory("select 1 from dual")
+        let attrs = try FileManager.default.attributesOfItem(atPath: dir.appendingPathComponent("history.json").path)
+        #expect((attrs[.posixPermissions] as? NSNumber)?.intValue == 0o600)
     }
 
     @Test("Czas wykonania: sekundy, powyżej 100 s jako hh:mm:ss")

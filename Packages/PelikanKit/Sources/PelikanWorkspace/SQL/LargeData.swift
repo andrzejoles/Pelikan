@@ -91,7 +91,7 @@ public final class LargeDataModel {
 
     /// Pełna treść LOB (siatka pobiera do limitu) — ponowne zapytanie po ROWID; bez ROWID zostaje obcięta.
     public func loadFull(limit: Int = 256 << 20) async throws {
-        guard truncated, let rid = grid.rowidColumn, let name = grid.edit.target?.qualifiedName ?? ResultExporter.tableName(fromQuery: grid.sql) else { return }
+        guard truncated, let rid = grid.rowidColumn, let name = grid.edit.target?.qualifiedName ?? ResultExporter.tableName(fromQuery: grid.sql).map(ResultExporter.qualifiedIdentifier) else { return }
         let col = grid.edit.target?.tableColumn[column] ?? grid.columns[column].name
         isLoading = true
         defer { isLoading = false }

@@ -14,6 +14,10 @@ final class FileTreeModel {
     var git: GitStatus?
     /// Pamięć podręczna katalogów (wypełniana podczas rysowania — bez obserwacji; zmiany sygnalizuje `generation`).
     @ObservationIgnored private var children: [String: [FileEntry]] = [:]
+    /// Data modyfikacji katalogu z chwili wczytania i otwarte/zmienione dokumenty — podstawa cyklicznego odświeżania.
+    @ObservationIgnored private var stamps: [String: Date] = [:]
+    @ObservationIgnored private var documentState: (open: Set<String>, modified: Set<String>) = ([], [])
+    @ObservationIgnored private var refreshing = false
     private(set) var generation = 0
 
     init(workspace: Workspace) {
@@ -23,26 +27,66 @@ final class FileTreeModel {
 
     var location: FileLocation? { workspace.fileBrowser.locations.first { $0.id == locationID } }
 
-    /// Wczytuje ponownie katalogi i stan Git (przycisk odświeżania, zmiana filtra, cykliczne odświeżanie).
+    /// Wczytuje ponownie katalogi i stan Git (przycisk odświeżania, zmiana filtra, lokalizacji, operacje na plikach).
     func reload() {
-        children = [:]
-        generation += 1
+        invalidate()
         guard let loc = location else { git = nil; return }
         let url = loc.url
         Task {
             let status = await Task.detached { GitRepository.discover(for: url).flatMap { try? $0.status() } }.value
+            guard status != self.git else { return }
             self.git = status
-            self.children = [:]
-            self.generation += 1
+            self.invalidate()
         }
+    }
+
+    /// Cykliczne odświeżanie: stan Git i daty modyfikacji wczytanych katalogów sprawdzane w tle; katalogi są
+    /// listowane ponownie tylko po zmianie (zmieniony katalog, a po zmianie Git albo dokumentów — całe drzewo).
+    func refresh() {
+        guard let loc = location, !refreshing else { return }
+        refreshing = true
+        let url = loc.url
+        let known = stamps
+        Task {
+            let (status, changed) = await Task.detached {
+                (GitRepository.discover(for: url).flatMap { try? $0.status() },
+                 known.filter { Self.modificationDate($0.key) != $0.value }.map(\.key))
+            }.value
+            self.refreshing = false
+            guard self.locationID == loc.id else { return }
+            let docs = self.currentDocuments()
+            if status != self.git || docs != self.documentState {
+                if status != self.git { self.git = status }
+                self.invalidate()
+            } else if !changed.isEmpty {
+                for path in changed { self.children[path] = nil; self.stamps[path] = nil }
+                self.generation += 1
+            }
+        }
+    }
+
+    private func invalidate() {
+        children = [:]
+        stamps = [:]
+        generation += 1
+    }
+
+    private func currentDocuments() -> (open: Set<String>, modified: Set<String>) {
+        (Set(workspace.documents.compactMap { $0.fileURL?.standardizedFileURL.path }),
+         Set(workspace.documents.filter(\.isModified).compactMap { $0.fileURL?.standardizedFileURL.path }))
+    }
+
+    nonisolated static func modificationDate(_ path: String) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
     }
 
     func entries(of directory: URL) -> [FileEntry] {
         if let c = children[directory.path] { return c }
-        let open = Set(workspace.documents.compactMap { $0.fileURL?.standardizedFileURL.path })
-        let modified = Set(workspace.documents.filter(\.isModified).compactMap { $0.fileURL?.standardizedFileURL.path })
+        let docs = currentDocuments()
+        documentState = docs
+        stamps[directory.path] = Self.modificationDate(directory.path)
         let list = FileBrowser.entries(in: directory, locationMask: location?.filter ?? "", filter: filter, showHidden: workspace.fileBrowser.showHidden,
-                                       git: git, openFiles: open, modifiedFiles: modified)
+                                       git: git, openFiles: docs.open, modifiedFiles: docs.modified)
         children[directory.path] = list
         return list
     }
@@ -119,7 +163,7 @@ struct FileBrowserPane: View {
         .padding(.bottom, 6)
         .onChange(of: model.locationID) { model.reload() }
         .onAppear { model.reload() }
-        .onReceive(timer) { _ in model.reload() }
+        .onReceive(timer) { _ in model.refresh() }
     }
 
     private var filterBar: some View {

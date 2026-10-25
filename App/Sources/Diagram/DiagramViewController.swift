@@ -509,7 +509,8 @@ enum DiagramOutput {
 
     static func print(_ doc: PelikanWorkspace.Document) {
         let (c, _) = offscreen(doc)
-        let info = NSPrintInfo.shared
+        // Kopia — paginacja diagramu nie może zmieniać wspólnych ustawień druku aplikacji.
+        let info = NSPrintInfo.shared.copy() as! NSPrintInfo
         info.horizontalPagination = .fit
         info.verticalPagination = .automatic
         NSPrintOperation(view: c, printInfo: info).run()

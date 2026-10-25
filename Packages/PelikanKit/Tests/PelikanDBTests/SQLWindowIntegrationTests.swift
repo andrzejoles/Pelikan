@@ -228,7 +228,8 @@ struct GridEditingIntegrationTests {
         let comm = g.columns.firstIndex { $0.name == "COMM" }!
         let sal = g.columns.firstIndex { $0.name == "SAL" }!
         #expect(t.editableColumns.isSuperset(of: [comm, sal]))
-        try g.setText("123,5", row: 0, column: comm)
+        // Separator dziesiętny z ustawień regionalnych (na CI Linux kropka, lokalnie zwykle przecinek — D168).
+        try g.setText("123\(NumberLayout.localeSeparators.decimal)5", row: 0, column: comm)
         #expect(g.cellState(row: 0, column: comm) == .modified)
         #expect(g.changesSQL().hasPrefix("UPDATE PELIKAN_TEST.EMP SET COMM = 123.5 WHERE ROWID = '"))
         try await ws.invoke("grid.post")

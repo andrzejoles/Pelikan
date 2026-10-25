@@ -66,6 +66,14 @@ public enum AgentChanges {
     /// (blok PL/SQL i CALL: COMMIT, DDL dynamiczne, transakcje autonomiczne, zadania). Bezpieczne: zapytanie, DML, sesja.
     static func mayCommit(_ c: StatementCategory) -> Bool { ![.query, .dml, .sessionControl].contains(c) }
 
+    /// Komendy agenta, które sprawdzają transakcję jego sesji bazy i ją kończą albo zmieniają (odczyt i plan wycofują
+    /// transakcję READ ONLY, podgląd też): wywoływane po kolei w sesji agenta — równoległe żądania MCP nie wycofają
+    /// zatwierdzonego DML ani nie podadzą nieaktualnej liczby wierszy (`Workspace.agentSerialized`).
+    static let serializedCommands: Set<CommandID> = [
+        "agent.query", "agent.explain", "agent.execute", "agent.executeScript", "agent.createTestPackage", "agent.compile",
+        "agent.commit", "agent.rollback", "agent.generateTest",
+    ]
+
     static func hasPendingTransaction(_ s: any DatabaseSession) async throws -> Bool {
         try await s.scalar("select dbms_transaction.local_transaction_id from dual") != nil
     }
@@ -175,6 +183,21 @@ public enum AgentChanges {
 
 extension Workspace {
     func agentPendingKey(_ session: String, _ connection: UUID) -> String { "\(session)|\(connection.uuidString)" }
+
+    /// Wykonuje `body` po zakończeniu poprzednich wywołań tej sesji agenta (kolejka FIFO; bez zagnieżdżania — komendy
+    /// z `AgentChanges.serializedCommands` nie wywołują się nawzajem, a zgoda użytkownika czeka poza kolejką).
+    func agentSerialized<T>(_ session: String, _ body: () async throws -> T) async throws -> T {
+        let previous = agentQueue[session]
+        let (done, finish) = AsyncStream<Void>.makeStream()
+        let mine = Task { for await _ in done {} }
+        agentQueue[session] = mine
+        defer {
+            finish.finish()
+            if agentQueue[session] == mine { agentQueue[session] = nil }
+        }
+        await previous?.value
+        return try await body()
+    }
 
     /// Wykonuje polecenia agenta w jego sesji: historia kodu przed DDL, odmowa DDL przy niezatwierdzonym DML, DML bez
     /// zatwierdzenia. Zwraca wynik każdego polecenia i stan transakcji.
@@ -328,7 +351,10 @@ enum AgentChangeCommands {
                         return try await AgentChanges.preview(try await compileStatements(ctx, s), connection: def, in: s)
                     }) { ctx in
                 let (def, s) = try await ctx.workspace.agentDatabase(ctx, action: "compile")
-                return CommandResult(value: try await ctx.workspace.runAgentStatements(ctx, try await compileStatements(ctx, s), def: def, s: s))
+                // Po zgodzie — dokładnie polecenia z podglądu (tekst okna mógł się zmienić w trakcie zgody).
+                var statements = ctx.arguments[Workspace.agentStatementsKey]?.arrayValue?.compactMap(\.stringValue)
+                if statements == nil { statements = try await compileStatements(ctx, s) }
+                return CommandResult(value: try await ctx.workspace.runAgentStatements(ctx, statements ?? [], def: def, s: s))
             },
             Command(CommandDescriptor(id: "agent.commit", title: L10n.tr("COMMIT zmian agenta"), category: .help,
                                       parameters: [connectionParam], agent: .approval, effect: .transaction,

@@ -79,4 +79,32 @@ struct TableEditorTests {
         for o in ["table pelikan_ed_t2 purge", "table pelikan_ed_ref purge"] { _ = try? await s.execute("drop \(o)") }
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Recreate table z kolumną identity ALWAYS: wiersze przeniesione, licznik od największej wartości, ALWAYS zachowane")
+    func recreateIdentity() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let m = try #require(ws.metadata())
+        let schema = try await m.currentSchema()
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try? await s.execute("drop table pelikan_ed_id purge")
+        _ = try await s.execute("create table pelikan_ed_id (id number generated always as identity (increment by 5), n varchar2(10))")
+        _ = try await s.execute("insert into pelikan_ed_id (n) select 'x' from dual connect by level <= 3")
+        _ = try await s.execute("commit")
+        let loaded = try await TableDDL.load(owner: schema, name: "PELIKAN_ED_ID", metadata: m)
+        #expect(loaded.columns[0].identityGeneration == "ALWAYS" && loaded.columns[0].identityIncrement == "5")
+        var changed = loaded
+        changed.columns.append(TableDefinition.Column(name: "D", type: "DATE"))
+        changed.recreate = true
+        let r = try await TableDDL.apply(from: loaded, to: changed, in: ws, connectionID: def.id)
+        #expect(r.error == nil, "\(r.failed ?? ""): \(r.error ?? "")")
+        _ = try await s.execute("insert into pelikan_ed_id (n) values ('nowy')")
+        #expect(try await s.scalar("select count(distinct id) from pelikan_ed_id") == "4")
+        #expect(try await s.scalar("select generation_type from user_tab_identity_cols where table_name = 'PELIKAN_ED_ID'") == "ALWAYS")
+        _ = try? await s.execute("drop table pelikan_ed_id purge")
+        await ws.sessions.disconnectAll()
+    }
 }

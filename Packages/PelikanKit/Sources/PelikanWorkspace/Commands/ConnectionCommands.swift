@@ -3,7 +3,7 @@ import PelikanDB
 
 /// Komendy połączeń (UG 3, 19, 20). Argument `connection` = UUID definicji; bez argumentu — połączenie główne.
 public enum ConnectionCommands {
-    static let connectionParam = CommandParameter("connection", .string, "Identyfikator połączenia (domyślnie połączenie główne)")
+    static let connectionParam = CommandParameter("connection", .string, L10n.tr("Identyfikator połączenia (domyślnie połączenie główne)"))
 
     @MainActor
     static func connectionID(_ ctx: CommandContext) throws -> UUID {
@@ -131,12 +131,18 @@ public enum ConnectionCommands {
                 let id = try connectionID(ctx)
                 let ws = ctx.workspace
                 var closed = 0
-                for d in ws.documents where ws.effectiveConnection(of: d) == id && d.connectionPinned {
+                for d in ws.documents where ws.effectiveConnection(of: d) == id && d.connectionPinned && !d.isExecuting {
                     if d.isModified || d.transactionOpen, let ui = ctx.ui {
                         guard await ui.ask(L10n.tr("Zamknąć okno „\(d.fullTitle)”?"), message: L10n.tr("Okno ma niezapisane zmiany albo otwartą transakcję."),
                                            buttons: [L10n.tr("Zamknij"), L10n.tr("Pomiń")]) == 0 else { continue }
-                        if d.transactionOpen { try? await ws.endTransactions(of: [d], commit: false) }
                     }
+                    // Transakcja okna wycofywana zawsze (także bez interfejsu); nieudany ROLLBACK — okno zostaje.
+                    if d.transactionOpen {
+                        do { try await ws.endTransactions(of: [d], commit: false) } catch { continue }
+                    }
+                    // Sesje okna (tryb Multi) i debugera kończą się razem z oknem.
+                    if ws.settings.sessionMode == .multi { await ws.sessions.close(ws.sessions.key(forDocument: d.id, connection: id)) }
+                    await ws.sessions.close(ws.sessions.debuggerKey(document: d.id, connection: id))
                     ws.close(d.id)
                     closed += 1
                 }
@@ -209,8 +215,8 @@ public enum ConnectionCommands {
                 return CommandResult(message: target.flatMap { ctx.workspace.connections.connection($0)?.displayName } ?? L10n.tr("Połączenie główne"))
             },
             Command(CommandDescriptor(id: "connection.newFolder", title: L10n.tr("Nowy folder…"), category: .session, submenu: L10n.tr("Połączenia"),
-                                      parameters: [CommandParameter("name", .string, required: true, "Nazwa folderu"),
-                                                   CommandParameter("parent", .string, "Folder nadrzędny")],
+                                      parameters: [CommandParameter("name", .string, required: true, L10n.tr("Nazwa folderu")),
+                                                   CommandParameter("parent", .string, L10n.tr("Folder nadrzędny"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Tworzy folder na liście połączeń."), inMenu: false, feature: "PD-CONN-003")) { ctx in
                 guard let name = ctx.arguments.string("name"), !name.isEmpty else { throw CommandError.missingArgument("name") }

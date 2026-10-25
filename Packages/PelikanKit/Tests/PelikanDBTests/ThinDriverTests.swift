@@ -19,6 +19,15 @@ struct OracleRawTests {
         #expect(OracleRaw.number([0xBF, 0x0B]) == "0.001")
     }
 
+    @Test("Obiekt kompilowany z CREATE: schemat, cudzysłowy, BODY, komentarze; inne polecenia — nil")
+    func compiledObject() {
+        #expect(ThinSession.compiledObject("create or replace package body hr.emp_api as begin null; end;")! == ("HR", "EMP_API", "PACKAGE BODY"))
+        #expect(ThinSession.compiledObject("CREATE EDITIONABLE FUNCTION \"MixedCase\" return number is begin return 1; end;")! == (nil, "MixedCase", "FUNCTION"))
+        #expect(ThinSession.compiledObject("-- opis\ncreate force view v_emp as select * from emp")! == (nil, "V_EMP", "VIEW"))
+        #expect(ThinSession.compiledObject("create table review_log (id number)") == nil)
+        #expect(ThinSession.compiledObject("alter package p compile") == nil)
+    }
+
     @Test("DATE i TIMESTAMP z ułamkiem sekund")
     func dates() {
         let d = OracleRaw.timestamp([120, 124, 10, 23, 14, 31, 60])

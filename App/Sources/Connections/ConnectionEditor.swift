@@ -144,17 +144,29 @@ struct ConnectionEditorView: View {
         panel.allowedContentTypes = [.zip]
         guard panel.runModal() == .OK, let zip = panel.url else { return }
         let target = zip.deletingPathExtension()
-        do {
-            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-            p.arguments = ["-x", "-k", zip.path, target.path]
-            try p.run()
-            p.waitUntilExit()
-            guard p.terminationStatus == 0 else { return }
-            draft.walletDirectory = target.path
-            if FileManager.default.fileExists(atPath: target.appendingPathComponent("tnsnames.ora").path) { draft.configDirectory = target.path }
-        } catch {}
+        let draft = draft
+        Task { @MainActor in
+            do {
+                // Rozpakowanie w tle — duże archiwum nie blokuje interfejsu.
+                let status = try await Task.detached {
+                    try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+                    let p = Process()
+                    p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+                    p.arguments = ["-x", "-k", zip.path, target.path]
+                    try p.run()
+                    p.waitUntilExit()
+                    return p.terminationStatus
+                }.value
+                guard status == 0 else {
+                    draft.testResult = L10n.tr("Nie udało się rozpakować portfela (ditto, kod \(status))")
+                    return
+                }
+                draft.walletDirectory = target.path
+                if FileManager.default.fileExists(atPath: target.appendingPathComponent("tnsnames.ora").path) { draft.configDirectory = target.path }
+            } catch {
+                draft.testResult = error.localizedDescription
+            }
+        }
     }
 
     var body: some View {
@@ -343,6 +355,13 @@ enum ConnectionEditorPresenter {
             configured: existing?.target.configDirectory,
             instantClientDirectory: workspace.settings.instantClientDirectory)).flatMap(\.aliases).sorted()
         var sheet: NSWindow?
+        // Zamknięcie zrywa cykl okno → widok → domknięcie → okno i nie zostawia haseł szkicu w pamięci.
+        func close() {
+            if let sheet { window?.endSheet(sheet) }
+            sheet = nil
+            draft.password = ""
+            draft.sshPassword = ""
+        }
         let view = ConnectionEditorView(
             draft: draft, folders: workspace.connections.folders, tnsAliases: tns,
             onTest: { test(draft, workspace: workspace) },
@@ -354,12 +373,12 @@ enum ConnectionEditorPresenter {
                     } else if !draft.sshEnabled || !draft.sshUsesPassword {
                         try? workspace.connections.setSSHPassword("", for: draft.definition.id)
                     }
-                    if let sheet { window?.endSheet(sheet) }
+                    close()
                 } catch {
                     draft.testResult = error.localizedDescription
                 }
             },
-            onCancel: { if let sheet { window?.endSheet(sheet) } })
+            onCancel: { close() })
         let host = NSHostingController(rootView: view)
         let w = NSWindow(contentViewController: host)
         w.title = existing == nil ? L10n.tr("Nowe połączenie") : L10n.tr("Połączenie")
@@ -370,7 +389,6 @@ enum ConnectionEditorPresenter {
     /// Test połączenia: łączy się wpisanymi danymi (bez zapisu), pokazuje wersję serwera i rozłącza.
     static func test(_ draft: ConnectionDraft, workspace: Workspace) {
         let def = draft.definition
-        let password = draft.password.isEmpty ? workspace.connections.password(for: def.id) : draft.password
         guard let driver = workspace.sessions.driver(for: def.driver) else {
             draft.testResult = L10n.tr("Sterownik niedostępny")
             return
@@ -383,6 +401,17 @@ enum ConnectionEditorPresenter {
                 draft.testResult = Self.message(e)
                 return
             }
+            // Hasło jak przy łączeniu (SessionManager, D56): zapisane w Pęku kluczy tylko po potwierdzeniu właściciela.
+            var password: String? = draft.password.isEmpty ? workspace.connections.sessionPassword(for: def.id) : draft.password
+            if password == nil, workspace.connections.hasStoredPassword(for: def.id) {
+                if workspace.settings.requireOwnerForSavedPasswords {
+                    guard await workspace.sessions.prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
+                        draft.testResult = L10n.tr("Anulowano")
+                        return
+                    }
+                }
+                password = workspace.connections.password(for: def.id)
+            }
             var target = def.target
             var tunnelOpened = false
             defer { if tunnelOpened { workspace.sessions.tunnels.release(def.id) } }
@@ -393,8 +422,9 @@ enum ConnectionEditorPresenter {
                     tunnelOpened = true
                     target.connectString = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) ?? target.connectString
                 }
+                let module = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
                 let s = try await driver.connect(target: target, credentials: Credentials(password: password),
-                                                 options: ConnectOptions(tags: SessionTags(module: "Pelikan", action: "test połączenia")))
+                                                 options: ConnectOptions(tags: SessionTags(module: module, action: "test połączenia")))
                 let banner = s.info.server.banner.split(separator: "\n").first.map(String.init) ?? s.info.server.description
                 draft.testResult = "✓ " + banner + " · " + s.info.sessionUser
                 await s.close()

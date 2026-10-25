@@ -1,4 +1,4 @@
-# Stan Pelikana — pierwsza beta 7.9.0 (2026-10-24)
+# Stan Pelikana — beta po przeglądzie kodu (2026-10-25)
 
 Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) ma **434** wiersze:
 
@@ -10,6 +10,9 @@ Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) m
 | pominięte decyzją | 6 |
 
 Żaden wiersz nie ma stanu „do zrobienia”. Co testować w becie i znane ograniczenia: [`docs/BETA.md`](BETA.md).
+
+Po trzech betach (7.9.0, 8.4.0, 8.7.0) cały kod przeszedł dogłębny przegląd (D168), zależności są aktualne (D167),
+a kompilacja i CI nie zgłaszają ostrzeżeń (D166).
 
 ## Jak sprawdzić
 

@@ -263,8 +263,6 @@ struct Formatter {
 
     func peek(_ o: Int = 1) -> Tok? { i + o < toks.count ? toks[i + o] : nil }
     var prev: Tok? { i > 0 ? toks[i - 1] : nil }
-    var parenDepth: Int { frames.filter { $0.kind == .paren }.count }
-    var innermostSQL: Frame? { frames.last(where: { $0.kind == .sql }) }
     var inSQLAtTop: Bool { frames.last?.kind == .sql }
 
     func indentColumns(_ level: Int) -> Int { level * options.indent }

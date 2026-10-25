@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-25T12:46:33+01:00",
+  "heartbeat": "2026-10-25T22:04:27+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Dogłębny przegląd kodu (7 obszarów, ok. 130 poprawek z testami, D168); zależności aktualne (D167, #85)",
     "Porządki: checkout@v7 w CI, kompilacja bez ostrzeżeń (aplikacja, pakiet, testy), 27 testów z faktycznym TestUI (D166)",
     "Opublikowano Pelikan 8.7.0 beta (diagram ER dużego schematu, definicje tabel); kanał aktualizacji wskazuje 8.7.0",
     "Scalono #82 (diagram ER dużego schematu, definicje tabel — D165)",
@@ -96,8 +97,7 @@
     "Debuger: SELF i obiekty jako drzewo, warunki/komunikaty/logpointy punktów przerwania, znacznik niezastosowanego, blokada nazw z dwukropkiem zawieszających DBMS_DEBUG (PD-DBG-004, PD-DBG-007, D133); scalona gałąź danych: 13 wierszy ✅",
     "Aliasy połączeń z lokalnymi bazami testowymi z przedrostkiem dev_ (prośba właściciela); 179 testów na bazie zielonych",
     "Preferencje: wyszukiwarka ustawień z przejściem do karty, indeks z paneli sprawdzany w CI (PD-PREF-001, D126)",
-    "Lista okien: menu Wykonaj/Połącz ponownie/Zmień nazwę/Nowe/Sortuj, krótkie nazwy; wskaźniki połączeń user@baza z kolorem na kartach, liście okien, pasku stanu i tle edytora (PD-UI-002, PD-CONN-005)",
-    "utPLSQL: okno opcji przebiegu z include/exclude, sortowanie wyników, porównanie oczekiwane/otrzymane, linie częściowo pokryte i procent na pasku stanu (UT-RUN-003, UT-RES-001/002, UT-COV-001/002)"
+    "Lista okien: menu Wykonaj/Połącz ponownie/Zmień nazwę/Nowe/Sortuj, krótkie nazwy; wskaźniki połączeń user@baza z kolorem na kartach, liście okien, pasku stanu i tle edytora (PD-UI-002, PD-CONN-005)"
   ],
   "next": [
     "Publikacja szkicu 8.4.0 beta — decyzja właściciela"

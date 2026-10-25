@@ -213,6 +213,8 @@ extension UtplsqlRunner {
     /// Skrypt SQL*Plus / SQLcl uruchamiający te same testy z reporterem JUnit (CI) — bez hasła: łączenie z wiersza
     /// poleceń (pytanie o hasło albo wallet).
     public static func cliScript(paths: [String], user: String, connectString: String) -> (sql: String, shell: String) {
+        // Wartość domyślna w apostrofach poza `${…}`: użytkownik Oracle z `$` (np. APP$OWN) nie jest rozwijany przez sh.
+        let defaultConnect = "'" + "\(user)@\(connectString)".replacingOccurrences(of: "'", with: "'\\''") + "'"
         let sql = """
             -- \(L10n.tr("Testy utPLSQL z wiersza poleceń (wygenerowane przez Pelikana)"))
             set serveroutput on size unlimited format truncated
@@ -226,7 +228,8 @@ extension UtplsqlRunner {
             #!/bin/sh
             # \(L10n.tr("Uruchamia testy utPLSQL; wynik JUnit w utplsql-junit.xml. Hasło: pytanie SQLcl/SQL*Plus albo wallet — nigdy w skrypcie."))
             set -e
-            CONNECT="${PELIKAN_UT_CONNECT:-\(user)@\(connectString)}"
+            DEFAULT_CONNECT=\(defaultConnect)
+            CONNECT="${PELIKAN_UT_CONNECT:-$DEFAULT_CONNECT}"
             if command -v sql >/dev/null 2>&1; then sql -S -L "$CONNECT" @utplsql-run.sql; else sqlplus -S -L "$CONNECT" @utplsql-run.sql; fi
             """
         return (sql, shell)

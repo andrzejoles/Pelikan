@@ -43,7 +43,7 @@ public enum ManagementPacks {
     /// Sprawdzenie przed funkcją pakietu; przy braku deklaracji pyta użytkownika i zapamiętuje odpowiedź w połączeniu.
     @MainActor
     public static func require(_ need: Need, connection id: UUID, session s: any DatabaseSession, in ws: Workspace, invoker: Invoker) async throws {
-        guard !invoker.isAgent else { throw AgentDenial.permissionDenied("funkcje Diagnostics/Tuning Pack są niedostępne dla agenta") }
+        guard !invoker.isAgent else { throw AgentDenial.permissionDenied(L10n.tr("funkcje Diagnostics/Tuning Pack są niedostępne dla agenta")) }
         guard var def = ws.connections.connection(id) else { throw CommandError.notConnected }
         let parameter = try? await s.scalar("select value from v$parameter where name = 'control_management_pack_access'")
         if let r = evaluate(parameter: parameter, declared: def.managementPacks, need: need) { return try r.get() }
@@ -99,8 +99,9 @@ public enum ManagementPacks {
     /// Raport ADDM dla przedziału migawek (zadanie doradcy tworzone i usuwane).
     public static func addmReport(_ s: any DatabaseSession, begin: String, end: String) async throws -> String {
         let task = "PELIKAN_ADDM_\(UUID().uuidString.prefix(8))"
-        _ = try await s.execute("begin dbms_addm.analyze_db(:t, :b, :e); end;", binds: [BindVariable(name: "t", value: .text(task)), num("b", begin), num("e", end)])
+        // Sprzątanie także po błędzie analizy (zadanie mogło już powstać).
         defer { Task { _ = try? await s.execute("begin dbms_addm.delete(:t); end;", binds: [BindVariable(name: "t", value: .text(task))]) } }
+        _ = try await s.execute("begin dbms_addm.analyze_db(:t, :b, :e); end;", binds: [BindVariable(name: "t", value: .text(task)), num("b", begin), num("e", end)])
         let r = try await s.execute("begin :r := dbms_addm.get_report(:t); end;", binds: [BindVariable(name: "r", type: .clob, direction: .output), BindVariable(name: "t", value: .text(task))],
                                     options: ExecuteOptions(lobLimit: 50_000_000))
         if case .lob(let l)? = r.outBinds["r"] { return l.text ?? "" }
@@ -128,13 +129,14 @@ public enum ManagementPacks {
     /// SQL Tuning Advisor dla tekstu polecenia: zadanie, wykonanie (limit czasu), raport tekstowy; zadanie usuwane.
     public static func tuningReport(_ s: any DatabaseSession, sql: String, timeLimitSeconds: Int = 60) async throws -> String {
         let task = "PELIKAN_TUNE_\(UUID().uuidString.prefix(8))"
+        // Sprzątanie także po błędzie wykonania (zadanie utworzone przez create_tuning_task).
+        defer { Task { _ = try? await s.execute("begin dbms_sqltune.drop_tuning_task(:t); end;", binds: [BindVariable(name: "t", value: .text(task))]) } }
         _ = try await s.execute("""
             declare t varchar2(128); begin
               t := dbms_sqltune.create_tuning_task(sql_text => :s, time_limit => :l, task_name => :t, description => 'Pelikan');
               dbms_sqltune.execute_tuning_task(task_name => :t);
             end;
             """, binds: [BindVariable(name: "s", type: .clob, value: .text(sql)), num("l", String(timeLimitSeconds)), BindVariable(name: "t", value: .text(task))])
-        defer { Task { _ = try? await s.execute("begin dbms_sqltune.drop_tuning_task(:t); end;", binds: [BindVariable(name: "t", value: .text(task))]) } }
         let r = try await s.execute("begin :r := dbms_sqltune.report_tuning_task(:t); end;",
                                     binds: [BindVariable(name: "r", type: .clob, direction: .output), BindVariable(name: "t", value: .text(task))],
                                     options: ExecuteOptions(lobLimit: 50_000_000))

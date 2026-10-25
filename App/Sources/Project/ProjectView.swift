@@ -145,7 +145,7 @@ struct ProjectView: View {
         guard var p = workspace.project, let url = workspace.projectURL else { return }
         change(&p)
         workspace.project = p
-        try? p.encoded().write(to: url, options: .atomic)
+        do { try p.encoded().write(to: url, options: .atomic) } catch { message = error.localizedDescription }
     }
 
     private func run(_ id: CommandID) {

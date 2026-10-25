@@ -230,11 +230,12 @@ public enum QueryByExample {
     }
 
     /// Literał dla typu kolumny; tekst bez cudzysłowów (dopisywane), liczby sprawdzane, daty przez TO_DATE.
-    static func literal(_ raw: String, column c: ColumnInfo) throws -> (sql: String, dateOnly: Bool) {
+    static func literal(_ raw: String, column c: ColumnInfo, decimal: String = NumberLayout.localeSeparators.decimal) throws -> (sql: String, dateOnly: Bool) {
         var v = raw.trimmingCharacters(in: .whitespaces)
         if v.count >= 2, v.hasPrefix("'"), v.hasSuffix("'") { v = String(v.dropFirst().dropLast()).replacingOccurrences(of: "''", with: "'") }
         if c.type.isNumeric {
-            let n = v.replacingOccurrences(of: ",", with: ".")
+            // Przecinek dziesiętny tylko wg ustawień regionalnych.
+            let n = decimal == "," ? v.replacingOccurrences(of: ",", with: ".") : v
             guard !n.isEmpty, Decimal(string: n, locale: ColumnTotals.posix) != nil, n.allSatisfy({ $0.isNumber || ".-+eE".contains($0) }) else {
                 throw Failure(column: c.name, expression: raw)
             }
@@ -242,6 +243,7 @@ public enum QueryByExample {
         }
         if c.type.isTemporal {
             let digits = v.filter { $0.isNumber }
+            v = v.replacingOccurrences(of: "'", with: "''")
             switch digits.count {
             case 8: return ("TO_DATE('\(v)', 'YYYY-MM-DD')", true)
             case 12: return ("TO_DATE('\(v)', 'YYYY-MM-DD HH24:MI')", false)
@@ -434,8 +436,8 @@ public enum GridDictionary {
         let name = (parts.last ?? raw)
         let owner: String
         if parts.count == 2 { owner = parts[0] } else { owner = try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? "" }
-        let quoted = raw.contains("\"")
-        return (quoted ? owner : owner.uppercased(), quoted ? name : name.uppercased())
+        // `tableName` zdejmuje cudzysłowy i podnosi tylko zwykłe nazwy — nazwy z małymi literami zostają bez zmian.
+        return (owner, name)
     }
 }
 

@@ -101,6 +101,62 @@ struct SQLPlusHostStepTests {
         #expect(!FileManager.default.fileExists(atPath: dir.appendingPathComponent("nie").path))
     }
 
+    @Test("HOST: `!polecenie` bez spacji; proces w tle nie blokuje końca; Przerwij kończy polecenie bez czekania na limit")
+    func hostAsync() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        ui.answers = [0, 0]
+        _ = await engine.run("!echo bez-spacji\n$echo dolar")
+        #expect(doc.console.map(\.text).contains("bez-spacji") && doc.console.map(\.text).contains("dolar"))
+        // Wnuk w tle trzyma potok — polecenie kończy się po zakończeniu powłoki.
+        let start = ContinuousClock.now
+        ui.answers = [0]
+        _ = await engine.run("host (sleep 20; echo pozno) & echo gotowe")
+        #expect(doc.console.map(\.text).contains("gotowe") && ContinuousClock.now - start < .seconds(10))
+        // Przerwij (cancel) w trakcie polecenia.
+        ui.answers = [0]
+        let run = Task { await engine.run("host sleep 30") }
+        while engine.hostTask == nil { try await Task.sleep(for: .milliseconds(20)) }
+        let cancelAt = ContinuousClock.now
+        engine.cancel()
+        _ = await run.value
+        #expect(ContinuousClock.now - cancelAt < .seconds(5))
+        #expect(doc.console.map(\.text).contains("Polecenie systemu przerwane"))
+    }
+
+    @Test("DISCONNECT: pytanie o otwartą transakcję (Anuluj zostawia połączenie), potem bez cichego przejścia na połączenie główne")
+    func disconnect() async {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        ws.settings.logoffWithOpenTransaction = .ask
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        doc.transactionOpen = true
+        ui.answers = [2]
+        _ = await engine.run("disconnect")
+        #expect(!engine.state.disconnected && doc.transactionOpen && ui.asked.contains { $0.hasPrefix("Transakcja okna") })
+        ui.answers = [1]
+        _ = await engine.run("disconnect")
+        #expect(engine.state.disconnected && !doc.transactionOpen)
+        _ = await engine.run("select 1 from dual;")
+        #expect(doc.console.last?.text == "SP2-0640: Brak połączenia.")
+    }
+
+    @Test("Hasło maskowane w echu i SPOOL (CONNECT, IDENTIFIED BY)")
+    func maskPassword() {
+        // Hasło składane w czasie testu (bez wzorca „użytkownik/hasło@baza” w źródle).
+        let secret = String(repeating: "x", count: 5)
+        let stars = String(repeating: "*", count: 8)
+        #expect(SQLPlusEngine.maskPassword("connect scott/" + secret + "@db1 as sysdba") == "connect scott/" + stars + "@db1 as sysdba")
+        #expect(SQLPlusEngine.maskPassword("CONN u/" + secret + "@x@host:1521/svc") == "CONN u/" + stars + "@host:1521/svc")
+        #expect(SQLPlusEngine.maskPassword("conn scott@db1") == "conn scott@db1")
+        #expect(SQLPlusEngine.maskPassword("alter user u identified by \"Tajne 1\" account unlock") == "alter user u identified by ******** account unlock")
+    }
+
     @Test("SET EXECPAUSE ON: pytanie przed poleceniem; Wykonaj resztę i Przerwij")
     func stepping() async {
         let ws = Workspace()
