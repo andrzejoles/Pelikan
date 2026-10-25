@@ -369,6 +369,11 @@ enum GridStage8Commands {
         guard let s = SQLExecutor.statements(text: doc.text, selection: doc.selectedRange, scope: .currentStatement, autoSelect: true).first else {
             throw CommandError.notAvailable(L10n.tr("Brak polecenia do wykonania"))
         }
+        // Tylko zapytanie: DML wykonany tutaj zostawiłby transakcję bez śladu w oknie (transactionOpen).
+        guard StatementClassifier.classify(s.text).category == .query else {
+            throw CommandError.notAvailable(L10n.tr("Eksport bezpośredni wymaga zapytania (SELECT)"))
+        }
+        if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
         try await ws.guardModification([s.text], connectionID: ws.effectiveConnection(of: doc))
         var values = doc.variableValues
         if doc.substitutionEnabled {

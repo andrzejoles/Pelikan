@@ -241,6 +241,55 @@ struct ModificationGuardTests {
         await #expect(throws: CommandError.self) { try await ws.invoke("sql.execute") }
     }
 
+    @Test("Kompilacja próbna i opróżnianie kosza na połączeniu tylko do odczytu — zablokowane przed wysłaniem do bazy")
+    func adminCommandsBlocked() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(drivers: [.instantClient: driver])
+        let ui = FakeUI()
+        ws.ui = ui
+        let ro = ConnectionDefinition(name: "raport", target: ConnectionTarget(user: "u", connectString: "db"), readOnly: true)
+        try ws.connections.upsert(ro, password: "good")
+        let doc = ws.newDocument(.program, text: "create or replace procedure p is begin null; end;\n/\n")
+        doc.connectionID = ro.id
+        await #expect(throws: CommandError.self) { try await ws.invoke("prog.safeCompile") }
+        ws.sessions.setMainConnection(ro.id)
+        ui.answers = [0]                                       // „Usunąć trwale?” — Usuń
+        await #expect(throws: CommandError.self) { try await ws.invoke("ob.purgeRecycleBin") }
+        let executed = driver.sessions.withLock { $0.flatMap { $0.executed.withLock { $0 } } }
+        #expect(!executed.contains { $0.uppercased().contains("PURGE") || $0.uppercased().contains("PELIKAN$SAFE") })
+    }
+
+    @Test("Eksport bezpośredni: polecenie inne niż zapytanie odrzucone przed wykonaniem")
+    func exportQueryRejectsDML() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(drivers: [.instantClient: driver])
+        let def = ConnectionDefinition(name: "dev", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.sql, text: "update emp set sal = 1")
+        doc.selectedRange = 0..<0
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("sql.exportQuery", CommandArguments(["format": .string("csv"), "file": .string("clipboard")]))
+        }
+        #expect(!driver.sessions.withLock { $0.contains { $0.executed.withLock { $0.contains { $0.lowercased().hasPrefix("update") } } } })
+        #expect(!doc.transactionOpen)
+    }
+
+    @Test("Zamknięcie okien połączenia bez interfejsu: ROLLBACK otwartej transakcji i zamknięcie sesji okna")
+    func closeWindowsEndsSessions() async throws {
+        let ws = Workspace(drivers: [.instantClient: FakeDriver()])
+        let def = ConnectionDefinition(name: "dev", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        doc.connectionPinned = true
+        let session = try #require(try await ws.session(for: doc) as? FakeSession)
+        doc.transactionOpen = true
+        try await ws.invoke("connection.closeWindows", CommandArguments(["connection": .string(def.id.uuidString)]))
+        #expect(ws.documents.isEmpty && !doc.transactionOpen)
+        #expect(session.closedFlag.withLock { $0 })
+    }
+
     @Test("Zmiana połączenia okna po nazwie; puste — połączenie główne; nieznane — błąd")
     func windowConnection() async throws {
         let (ws, ro, prod, _) = try make()

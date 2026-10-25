@@ -176,7 +176,6 @@ extension Workspace {
             // Okna planu, raportów, diagramów i notatników mają własne formaty (Etapy 6–7) — pomijane.
             guard [.sql, .program, .test, .command].contains(d.kind) else { return nil }
             let keepText = d.fileURL == nil || d.isModified
-            guard keepText || d.fileURL != nil else { return nil }
             return WorksetDocument(kind: d.kind, title: d.customTitle, filePath: d.fileURL?.path, text: keepText ? d.text : nil,
                                    modified: d.isModified, selectionStart: d.selectedRange.lowerBound, selectionEnd: d.selectedRange.upperBound,
                                    connectionID: d.connectionPinned ? d.connectionID : nil,

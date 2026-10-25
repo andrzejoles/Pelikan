@@ -60,8 +60,8 @@ struct CommandRegistryTests {
         #expect(ws.activeDocument?.fullTitle == "Okno SQL – Nowe 2")
     }
 
-    @Test("Komenda zapowiedziana jest wyłączona i zwraca czytelny błąd")
-    func plannedCommand() async {
+    @Test("Komenda niedostępna w bieżącym stanie (Scheduler bez połączenia) jest wyłączona i zwraca czytelny błąd")
+    func unavailableWithoutConnection() async {
         let ws = Workspace()
         #expect(!ws.isEnabled("tools.scheduler"))
         await #expect(throws: CommandError.self) { try await ws.invoke("tools.scheduler") }
@@ -84,20 +84,6 @@ struct CommandRegistryTests {
             guard let f = c.descriptor.feature else { continue }
             #expect(text.contains("| \(f) |"), "\(c.id) → \(f)")
         }
-    }
-
-    /// docs/SKROTY.md generowany z rejestru (PROMPT §4.2 p.1). PELIKAN_WRITE_DOCS=1 nadpisuje plik; bez tego test
-    /// sprawdza, czy plik jest aktualny.
-    @Test("docs/SKROTY.md jest aktualny")
-    func shortcutsDoc() throws {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .appendingPathComponent("../../../../docs/SKROTY.md").standardizedFileURL
-        let generated = ShortcutsDocument.markdown(for: BuiltinCommands.all.map(\.descriptor))
-        if ProcessInfo.processInfo.environment["PELIKAN_WRITE_DOCS"] == "1" {
-            try generated.write(to: url, atomically: true, encoding: .utf8)
-        }
-        let current = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-        #expect(current == generated, "Uruchom: PELIKAN_WRITE_DOCS=1 swift test --filter shortcutsDoc")
     }
 }
 

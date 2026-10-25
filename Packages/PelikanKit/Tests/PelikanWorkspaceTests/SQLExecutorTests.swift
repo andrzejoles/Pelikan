@@ -43,6 +43,16 @@ struct SQLExecutorUnitTests {
         #expect(ws.history.map(\.text) == ["select 1 from dual"])
     }
 
+    @Test("Plik historii poleceń tylko dla właściciela (0600)")
+    func historyPermissions() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("hist-\(UUID().uuidString.prefix(6))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace(dataDirectory: dir)
+        ws.recordHistory("select 1 from dual")
+        let attrs = try FileManager.default.attributesOfItem(atPath: dir.appendingPathComponent("history.json").path)
+        #expect((attrs[.posixPermissions] as? NSNumber)?.intValue == 0o600)
+    }
+
     @Test("Czas wykonania: sekundy, powyżej 100 s jako hh:mm:ss")
     func timeFormat() {
         #expect(SQLExecutor.format(.milliseconds(1234)) == "1.234 s")

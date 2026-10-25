@@ -147,11 +147,19 @@ struct GitRepositoryTests {
         #expect(try repo.status().state(of: f) == .unmodified && repo.status().branch == "main")
         try Data("select 2 from dual;\n".utf8).write(to: f)
         #expect(try repo.status().state(of: f) == .modified)
-        #expect(try repo.headContent(of: f) == "select 1 from dual;\n")
+        #expect(try repo.headContent(of: f) == Data("select 1 from dual;\n".utf8))
         #expect(try repo.headContent(of: try t.file("nowy.sql")) == nil)
         let log = try repo.log(file: f)
         #expect(log.count == 1 && log[0].subject == "Pierwszy skrypt — zażółć" && log[0].author == "Test")
         #expect(throws: (any Error).self) { try repo.commit(message: "  ") }
+        // Plik ISO-8859-2: treść z HEAD w bajtach, bez strat (dekodowanie jak pliku na dysku).
+        let latin2 = Data([0x2D, 0x2D, 0x20, 0xB6, 0x77, 0x69, 0xEA, 0x74, 0x79, 0x0A])   // „-- święty”
+        let l = try t.file("pl.sql")
+        try latin2.write(to: l)
+        try repo.add([l])
+        _ = try repo.commit(message: "latin2")
+        #expect(try repo.headContent(of: l) == latin2)
+        #expect(TextFileCodec.decode(try #require(try repo.headContent(of: l))).text == "-- święty\n")
     }
 
     @Test("Stan Git plików projektu: gałąź, zmieniony, nieśledzony, bez zmian; projekt poza repozytorium — nil")

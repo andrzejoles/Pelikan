@@ -16213,6 +16213,34 @@
         }
       }
     },
+    "Eksport bezpośredni wymaga zapytania (SELECT)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct export requires a query (SELECT)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Direktexport erfordert eine Abfrage (SELECT)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La exportación directa requiere una consulta (SELECT)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прямий експорт потребує запиту (SELECT)"
+          }
+        }
+      }
+    },
     "Eksport i import" : {
       "localizations" : {
         "en" : {
@@ -18729,34 +18757,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Funktion"
-          }
-        }
-      }
-    },
-    "Funkcja w przygotowaniu (Etap %@)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Feature in preparation (Stage %@)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Функція в розробці (Етап %@)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Función en preparación (Etapa %@)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Funktion in Vorbereitung (Etappe %@)"
           }
         }
       }
@@ -21501,6 +21501,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenster-ID aus get_state (standardmäßig aktives Fenster)"
+          }
+        }
+      }
+    },
+    "Identyfikator połączenia (domyślnie połączenie główne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection identifier (default: main connection)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungskennung (Standard: Hauptverbindung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador de la conexión (por defecto, la conexión principal)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор з’єднання (типово — головне з’єднання)"
           }
         }
       }
@@ -43341,6 +43369,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вікно «%@» лише для читання"
+          }
+        }
+      }
+    },
+    "Okno „%@” wykonuje polecenie — przerwij wykonanie przed zamknięciem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window “%@” is executing a statement — break the execution before closing."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster „%@“ führt eine Anweisung aus – brechen Sie die Ausführung vor dem Schließen ab."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana «%@» está ejecutando una sentencia: interrumpa la ejecución antes de cerrarla."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно «%@» виконує команду — перервіть виконання перед закриттям."
           }
         }
       }

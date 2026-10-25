@@ -178,6 +178,8 @@ public final class TemplateLibrary {
     public func renameFolder(_ old: String, to new: String) throws {
         guard let dir = directory else { throw CommandError.notAvailable(L10n.tr("Brak katalogu danych")) }
         let from = dir.appendingPathComponent(Self.safe(old), isDirectory: true), to = dir.appendingPathComponent(Self.safe(new), isDirectory: true)
+        // Pusta nazwa po oczyszczeniu („..”, „.”) wskazywałaby cały katalog szablonów.
+        guard !Self.safe(old).isEmpty else { throw CommandError.invalidArgument("folder", L10n.tr("pusta nazwa")) }
         guard !Self.safe(new).isEmpty else { throw CommandError.invalidArgument("name", L10n.tr("pusta nazwa")) }
         guard FileManager.default.fileExists(atPath: from.path) else {
             throw CommandError.invalidArgument("folder", L10n.tr("Folder „\(old)” nie ma szablonów użytkownika"))
@@ -191,6 +193,8 @@ public final class TemplateLibrary {
     /// Usuwa folder użytkownika z jego szablonami (szablony wbudowane w folderze o tej nazwie zostają).
     public func deleteFolder(_ name: String) throws {
         guard let dir = directory else { return }
+        // Pusta nazwa po oczyszczeniu („..”, „.”) wskazywałaby cały katalog szablonów.
+        guard !Self.safe(name).isEmpty else { throw CommandError.invalidArgument("folder", L10n.tr("pusta nazwa")) }
         let url = dir.appendingPathComponent(Self.safe(name), isDirectory: true)
         if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }

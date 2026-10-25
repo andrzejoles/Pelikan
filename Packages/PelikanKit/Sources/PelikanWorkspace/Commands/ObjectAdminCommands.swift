@@ -41,7 +41,8 @@ enum ObjectAdminCommands {
             command("ob.refreshMV", L10n.tr("Odśwież widok zmaterializowany"), params: objectParams, effect: .modifiesDatabase,
                     summary: L10n.tr("Odświeża widok zmaterializowany (DBMS_MVIEW.REFRESH, metoda z definicji)."), feature: "PD-OB-019",
                     validate: { $0.selectedObject?.type == .materializedView }) { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
+                try await ctx.workspace.guardModification(["begin dbms_mview.refresh(:n); end;"], connectionID: m.connectionID)
                 _ = try await mainSession(ctx).execute("begin dbms_mview.refresh(:n); end;",
                                                        binds: [BindVariable(name: "n", value: .text("\(o.owner).\(o.name)"))])
                 return CommandResult(message: L10n.tr("Odświeżono \(o.name)"))
@@ -60,8 +61,9 @@ enum ObjectAdminCommands {
             command("ob.runJob", L10n.tr("Uruchom zadanie"), params: objectParams, effect: .modifiesDatabase,
                     summary: L10n.tr("Uruchamia zadanie DBMS_JOB teraz (zadania Scheduler — w oknie DBMS Scheduler)."), feature: "PD-OB-019",
                     validate: { $0.selectedObject?.type == .job }) { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
                 guard o.name.allSatisfy(\.isNumber) else { throw CommandError.notAvailable(L10n.tr("To nie jest zadanie DBMS_JOB (numer zadania)")) }
+                try await ctx.workspace.guardModification(["begin dbms_job.run(:j); end;"], connectionID: m.connectionID)
                 _ = try await mainSession(ctx).execute("begin dbms_job.run(:j); end;", binds: [BindVariable(name: "j", type: .number, value: .text(o.name))])
                 return CommandResult(message: L10n.tr("Zadanie \(o.name) wykonane"))
             },
@@ -134,6 +136,7 @@ enum ObjectAdminCommands {
                 guard let item = try await ObjectAdmin.recycleBin(s).first(where: { $0.binName == name || $0.originalName.caseInsensitiveCompare(name) == .orderedSame }),
                       item.canRestore else { throw CommandError.notAvailable(L10n.tr("Nie ma w koszu obiektu „\(name)” do przywrócenia")) }
                 let sql = ObjectAdmin.restoreStatement(binName: item.binName, renameTo: ctx.arguments.string("renameTo"))
+                try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID)
                 _ = try await s.execute(sql)
                 ctx.workspace.metadata()?.refresh()
                 return CommandResult(message: sql)
@@ -154,22 +157,25 @@ enum ObjectAdminCommands {
                                        buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 let sql = ObjectAdmin.purgeStatement(item)
+                try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID)
                 _ = try await s.execute(sql)
                 return CommandResult(message: sql)
             },
             command("ob.ccflags", L10n.tr("Flagi kompilacji warunkowej…"),
                     params: objectParams + [CommandParameter("flags", .string, L10n.tr("PLSQL_CCFLAGS, np. debug:TRUE, level:2 (bez argumentu — odczyt)"))],
-                    agent: .read, effect: .modifiesDatabase,
+                    effect: .modifiesDatabase,
                     summary: L10n.tr("Pokazuje PLSQL_CCFLAGS jednostki albo ustawia nowe i rekompiluje ją (REUSE SETTINGS)."), feature: "PD-OB-020",
                     validate: { ws in ws.selectedObject.map(\.type.isProgram) ?? false }) { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
                 let s = try await mainSession(ctx)
                 let current = try await ObjectAdmin.ccflags(o, in: s)
                 var flags = ctx.arguments.string("flags")
                 if flags == nil, ctx.invoker == .user { flags = await ctx.ui?.askText(L10n.tr("Flagi kompilacji warunkowej"), message: "PLSQL_CCFLAGS", defaultValue: current) }
                 guard let flags, flags != current else { return CommandResult(value: .string(current)) }
                 guard ctx.invoker == .user else { throw AgentDenial.permissionDenied("zmiana flag kompilacji tylko przez użytkownika") }
-                _ = try await s.execute(try ObjectAdmin.ccflagsStatement(o, flags: flags))
+                let sql = try ObjectAdmin.ccflagsStatement(o, flags: flags)
+                try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
+                _ = try await s.execute(sql)
                 ctx.workspace.metadata()?.refresh()
                 return CommandResult(value: .string(try await ObjectAdmin.ccflags(o, in: s)))
             },
@@ -192,6 +198,8 @@ enum ObjectAdminCommands {
                 guard let doc = programDocument(ctx.workspace), let conn = ctx.workspace.effectiveConnection(of: doc) else { throw CommandError.notConnected }
                 let units = ProgramCompiler.units(in: doc.text)
                 guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
+                // Obiekty tymczasowe PELIKAN$SAFE_… to CREATE/DROP w bazie — strażnik jak przy zwykłej kompilacji.
+                try await ctx.workspace.guardModification(units.map(\.text), connectionID: conn)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: conn))
                 let messages = try await ObjectAdmin.safeCompile(units, in: s)
                 doc.compileMessages = messages

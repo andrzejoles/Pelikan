@@ -61,6 +61,21 @@ struct EncodingTests {
         #expect(String(data: try Data(contentsOf: file), encoding: .utf8) == nil)
     }
 
+    @Test("Szukanie w projekcie czyta pliki w kodowaniu projektu (ISO-8859-2) i bez CR z CRLF")
+    func projectFind() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-enc-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try latin2.write(to: dir.appendingPathComponent("b.pc"))
+        try Data([0x78, 0x0D, 0x0A, 0x2D, 0x2D, 0x20, 0xB6, 0x77, 0x69, 0xEA, 0x74, 0x79, 0x0D, 0x0A]).write(to: dir.appendingPathComponent("c.sql"))  // CRLF
+        var project = Project(name: "pc")
+        project.options.encoding = "ISO-8859-2"
+        project.items = [.file("b.pc"), .file("c.sql")]
+        let matches = try await ProjectEngine.find("ŚWIĘTY", in: project, projectURL: dir.appendingPathComponent("pc.prj"), ws: Workspace())
+        #expect(matches.map(\.text) == ["święty", "-- święty"])
+        #expect(matches.map(\.line) == [2, 2])
+    }
+
     func awaitInvoke(_ ws: Workspace, _ enc: String) throws {
         let doc = ws.activeDocument!
         doc.fileFormat.encoding = TextFileCodec.encoding(named: enc)!

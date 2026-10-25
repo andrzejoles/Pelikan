@@ -518,7 +518,10 @@ public final class Workspace {
         guard let dir = dataDirectory else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(history) {
-            try? data.write(to: dir.appendingPathComponent("history.json"), options: [.atomic])
+            // Tekst wykonanych poleceń może zawierać cokolwiek — tylko dla właściciela (jak worksety).
+            let url = dir.appendingPathComponent("history.json")
+            try? data.write(to: url, options: [.atomic])
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
         }
     }
 
@@ -644,6 +647,7 @@ public final class Workspace {
         documents.remove(at: i)
         sqlplusEngines[id] = nil
         diagnostics[id] = nil
+        debuggers[id] = nil
         if activeDocumentID == id {
             activeDocumentID = documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id
         }

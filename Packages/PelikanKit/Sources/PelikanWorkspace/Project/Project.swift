@@ -154,7 +154,8 @@ public enum ProjectEngine {
                     results.append(ProjectBuildResult(id: item.id, title: item.title, status: .skipped, messages: []))
                     continue
                 }
-                var text = try String(contentsOf: url, encoding: .utf8)
+                // Kodowanie projektu (D55), BOM i CRLF — jak przy otwieraniu pliku.
+                var text = TextFileCodec.decode(try Data(contentsOf: url), preferred: project.options.encoding.flatMap(TextFileCodec.encoding(named:))).text
                 if project.options.beautifyOnBuild, let f = try? Beautifier.format(text, options: ws.settings.beautifier) { text = f }
                 let units = ProgramCompiler.units(in: text)
                 statements = units.map(\.text)
@@ -207,7 +208,9 @@ public enum ProjectEngine {
         for item in project.items {
             switch item.kind {
             case .file:
-                if let url = url(of: item, projectURL: projectURL), let content = try? String(contentsOf: url, encoding: .utf8) { scan(content, item) }
+                if let url = url(of: item, projectURL: projectURL), let data = try? Data(contentsOf: url) {
+                    scan(TextFileCodec.decode(data, preferred: project.options.encoding.flatMap(TextFileCodec.encoding(named:))).text, item)
+                }
             case .object:
                 if let o = item.object?.dbObject, let m = ws.metadata(for: try connection(project, in: ws).id), let src = try? await m.source(of: o) { scan(src, item) }
             case .note:
