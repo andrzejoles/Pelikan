@@ -84,6 +84,55 @@ struct TextSearchTests {
         #expect(try p.replace(in: "x emp", selection: 2..<5)?.text == "x pracownik")
         #expect(try p.replace(in: "x emp", selection: 0..<1) == nil)
     }
+
+    @Test("Zamień: lookaround i kotwice oceniane jak przy Znajdź (poza granicami zaznaczenia)")
+    func replaceLookaround() throws {
+        var s = TextSearch(pattern: "(?<=x )emp")
+        s.regex = true
+        s.replacement = "dept"
+        #expect(try s.matches(in: "x emp") == [2..<5])
+        #expect(try s.replace(in: "x emp", selection: 2..<5)?.text == "x dept")
+        var a = TextSearch(pattern: "^emp")
+        a.regex = true
+        #expect(try a.replace(in: "x emp", selection: 2..<5) == nil)
+    }
+
+    @Test("Szukanie w kodzie: rodzaj tokenu dopasowania w długim tekście (wyszukiwanie binarne)")
+    func scopesManyTokens() throws {
+        let text = String(repeating: "x := 'emp'; -- emp\n", count: 200) + "emp;"
+        var s = TextSearch(pattern: "emp")
+        s.inComments = false
+        s.inStrings = false
+        #expect(try s.matches(in: text) == [(text as NSString).length - 4..<((text as NSString).length - 1)])
+        s.inCode = false
+        s.inStrings = true
+        #expect(try s.matches(in: text).count == 200)
+    }
+}
+
+@Suite("Funkcje zaznaczenia: poprawki przeglądu")
+struct TextEditingReviewTests {
+    @Test("Zmiana wielkości liter od środka literału nie odwraca literału i kodu")
+    func caseFromInsideLiteral() {
+        let t = "select 'Ala ma kota' from dual"
+        let from = (t as NSString).range(of: "ma").location
+        let e = TextEditing.changeCase(t, selection: from..<(t as NSString).length, upper: true)
+        #expect(e.text == "select 'Ala ma kota' FROM DUAL")
+        #expect(e.selection == from..<(t as NSString).length)
+    }
+
+    @Test("Cofnięcie wcięcia z jednostką Tab usuwa z linii wciętej spacjami najwyżej szerokość tabulatora")
+    func outdentSpacesWithTabUnit() {
+        #expect(TextEditing.indent("        x\n  y", selection: 0..<12, unit: "\t", outdent: true).text == "    x\ny")
+        #expect(TextEditing.indent("        x", selection: 0..<1, unit: "\t", tabWidth: 8, outdent: true).text == "x")
+    }
+
+    @Test("Licznik linii: kolejne pozycje jednym przejściem, pozycja wcześniejsza liczy od nowa")
+    func lineCounter() {
+        var c = LineCounter("a\nb\n\nc" as NSString)
+        #expect([0, 2, 4, 5, 99].map { c.line(at: $0) } == [1, 2, 3, 4, 4])
+        #expect(c.line(at: 1) == 1 && c.line(at: 2) == 2)
+    }
 }
 
 @MainActor

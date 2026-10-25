@@ -397,14 +397,15 @@ public enum EditorSearch {
                 append(query, in: d.text, options: options, document: d.id, file: nil, title: d.title, to: &hits)
             }
         case .directories(let dirs):
-            hits = searchFiles(query, in: dirs, options: options)
+            hits = searchFiles(query, in: dirs, options: options, encoding: ws.projectEncodingResolver())
         }
         return hits
     }
 
     /// Pliki skryptów w katalogach (rekurencyjnie) — bez stanu obszaru roboczego, więc także poza wątkiem głównym
-    /// (duże katalogi nie blokują interfejsu).
-    public static func searchFiles(_ query: String, in dirs: [URL], options: TextSearchOptions) -> [UsageHit] {
+    /// (duże katalogi nie blokują interfejsu). `encoding` — kodowanie projektu dla pliku (D55, `projectEncodingResolver`).
+    public static func searchFiles(_ query: String, in dirs: [URL], options: TextSearchOptions,
+                                   encoding: (URL) -> String.Encoding? = { _ in nil }) -> [UsageHit] {
         var hits: [UsageHit] = []
         let fm = FileManager.default
         var count = 0
@@ -415,7 +416,7 @@ public enum EditorSearch {
                 guard count <= 5000, hits.count < 5000 else { break }
                 if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 5_000_000 { continue }
                 guard let data = try? Data(contentsOf: url) else { continue }
-                append(query, in: TextFileCodec.decode(data).text, options: options, document: nil, file: url, title: url.lastPathComponent, to: &hits)
+                append(query, in: TextFileCodec.decode(data, preferred: encoding(url)).text, options: options, document: nil, file: url, title: url.lastPathComponent, to: &hits)
             }
         }
         return hits

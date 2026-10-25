@@ -70,7 +70,7 @@ enum DataGripCommands {
         var texts: [(RefactoringChange.Target, String, String)] = editorDocuments(ws).map { (.document($0.id), $0.fullTitle, $0.text) }
         let open = Set(ws.documents.compactMap { $0.fileURL?.standardizedFileURL })
         for f in projectFiles(ws) where !open.contains(f.standardizedFileURL) {
-            if let data = try? Data(contentsOf: f) { texts.append((.file(f), f.lastPathComponent, TextFileCodec.decode(data).text)) }
+            if let data = try? Data(contentsOf: f) { texts.append((.file(f), f.lastPathComponent, TextFileCodec.decode(data, preferred: ws.projectEncoding(for: f)).text)) }
         }
         var ddl: String?
         let changes: [RefactoringChange]
@@ -201,7 +201,8 @@ enum DataGripCommands {
                 if let m = ws.metadata(for: conn), let o = try await m.find(owner.map { "\($0).\(name)" } ?? name) {
                     hits += try await UsageFinder.inDatabase(owner: o.owner, name: o.name, column: column, session: try await m.session())
                 }
-                hits += UsageFinder.inTexts(name: name, owner: owner, column: column, documents: editorDocuments(ws), files: projectFiles(ws))
+                hits += await UsageFinder.inTexts(name: name, owner: owner, column: column, documents: editorDocuments(ws), files: projectFiles(ws),
+                                                  encoding: ws.projectEncodingResolver())
                 let title = column.map { "\(name).\($0)" } ?? (owner.map { "\($0).\(name)" } ?? name)
                 ctx.ui?.showUsages(title: title, hits: hits)
                 return CommandResult(message: L10n.tr("Użycia \(title): \(hits.count)"), value: .array(hits.map {

@@ -20,10 +20,14 @@ public final class SnippetLibrary: @unchecked Sendable {
     public let file: URL?
     private let lock = NSLock()
     private var user: [Snippet] = []
+    /// Błąd odczytu istniejącego pliku własnych snippetów — wtedy zapis jest zablokowany, żeby pierwsza zmiana nie
+    /// nadpisała pliku pustą listą.
+    public private(set) var loadError: String?
 
     public init(directory: URL?) {
         file = directory?.appendingPathComponent("snippets.json")
-        if let f = file, let data = try? Data(contentsOf: f), let s = try? JSONDecoder().decode([Snippet].self, from: data) { user = s }
+        guard let f = file, FileManager.default.fileExists(atPath: f.path) else { return }
+        do { user = try JSONDecoder().decode([Snippet].self, from: try Data(contentsOf: f)) } catch { loadError = error.localizedDescription }
     }
 
     public static let builtIn: [Snippet] = {
@@ -69,7 +73,13 @@ public final class SnippetLibrary: @unchecked Sendable {
 
     public var categories: [String] { Array(Set(all.map(\.category))).sorted() }
 
+    func checkWritable() throws {
+        guard let e = loadError, let f = file else { return }
+        throw CommandError.notAvailable(L10n.tr("Nie można odczytać pliku \(f.lastPathComponent) (\(e)) — popraw go albo usuń; zmiany nie zostały zapisane, żeby nie utracić własnych snippetów"))
+    }
+
     public func save(_ s: Snippet) throws {
+        try checkWritable()
         lock.lock()
         user.removeAll { $0.id == s.id }
         var copy = s
@@ -81,6 +91,7 @@ public final class SnippetLibrary: @unchecked Sendable {
     }
 
     public func remove(id: String) throws {
+        try checkWritable()
         lock.lock()
         user.removeAll { $0.id == id }
         let snapshot = user

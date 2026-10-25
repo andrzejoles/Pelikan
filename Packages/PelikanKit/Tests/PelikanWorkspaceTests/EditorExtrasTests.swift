@@ -279,6 +279,61 @@ struct RefactoringTests {
         let initialized = "declare\n  v number := 5;\nbegin\n  v := 1;\nend;\n"
         #expect(throws: RefactoringError.self) { try CodeRefactoring.replaceAssignmentWithInitialization(initialized, at: (initialized as NSString).range(of: "v := 1").location) }
     }
+
+    @Test("Przypisanie → inicjalizacja tylko bez zmiany znaczenia: pierwsza instrukcja, bez zmiennych lokalnych, EXCEPTION i późniejszych inicjalizacji")
+    func replaceAssignmentSafety() throws {
+        func refuses(_ src: String, _ at: String) -> Bool {
+            (try? CodeRefactoring.replaceAssignmentWithInitialization(src, at: (src as NSString).range(of: at).location)) == nil
+        }
+        #expect(refuses("declare\n  a number;\n  b number;\nbegin\n  a := 1;\n  b := a + 1;\nend;\n", "b := a"))
+        #expect(refuses("declare\n  b number;\n  a number := 1;\nbegin\n  b := a + 1;\nend;\n", "b := a"))
+        #expect(refuses("declare\n  v number;\nbegin\n  v := to_number('x');\nexception\n  when others then null;\nend;\n", "v :="))
+        #expect(refuses("declare\n  v number;\n  w number := f();\nbegin\n  v := g();\nend;\n", "v :="))
+        let ok = "create or replace procedure p(p_id number) is\n  v number;\n  c_max constant number := 10;\nbegin\n  v := p_id * 2;\n  null;\nend;\n"
+        let e = try CodeRefactoring.replaceAssignmentWithInitialization(ok, at: (ok as NSString).range(of: "v := p_id").location)
+        #expect(e.text == "create or replace procedure p(p_id number) is\n  v number := p_id * 2;\n  c_max constant number := 10;\nbegin\n  null;\nend;\n")
+    }
+
+    @Test("Stała lokalna w wyzwalaczu bez DECLARE, z DECLARE, w jednej linii i w bloku z etykietą; wyzwalacz złożony — odmowa")
+    func localConstantInTrigger() throws {
+        func extract(_ src: String, _ what: String) throws -> String {
+            let r = (src as NSString).range(of: what)
+            return try CodeRefactoring.extractLocalConstant(src, selection: r.location..<(r.location + r.length), name: "c_base").text
+        }
+        #expect(try extract("create or replace trigger trg before insert on emp for each row\nbegin\n  :new.sal := 100 * 2;\nend;\n", "100")
+                == "create or replace trigger trg before insert on emp for each row\nDECLARE\n  c_base CONSTANT NUMBER := 100;\nbegin\n  :new.sal := c_base * 2;\nend;\n")
+        #expect(try extract("create trigger trg before insert on emp for each row\ndeclare\n  v number;\nbegin\n  :new.sal := 100;\nend;\n", "100")
+                == "create trigger trg before insert on emp for each row\ndeclare\n  v number;\n  c_base CONSTANT NUMBER := 100;\nbegin\n  :new.sal := c_base;\nend;\n")
+        #expect(try extract("create trigger trg before insert on emp for each row begin :new.sal := 100; end;\n", "100")
+                == "create trigger trg before insert on emp for each row \nDECLARE\n  c_base CONSTANT NUMBER := 100;\nbegin :new.sal := c_base; end;\n")
+        #expect(try extract("<<main>> begin\n  dbms_output.put_line(42);\nend;\n", "42")
+                == "<<main>> \nDECLARE\n  c_base CONSTANT NUMBER := 42;\nbegin\n  dbms_output.put_line(c_base);\nend;\n")
+        let compound = "create trigger trg for insert on emp compound trigger\n  before each row is\n  begin\n    :new.sal := 100;\n  end before each row;\nend trg;\n"
+        #expect(throws: RefactoringError.self) { try extract(compound, "100") }
+    }
+
+    @Test("Wydzielenie procedury: IN OUT dla całej listy po INTO (SELECT, FETCH … BULK COLLECT INTO) i celu x(i) :=")
+    func extractProcedureInto() throws {
+        let src = """
+        create or replace procedure p is
+          a number;
+          b number;
+          t sys.odcinumberlist;
+          cursor c is select 1 from dual;
+        begin
+          select 1, 2 into a, b from dual;
+          open c;
+          fetch c bulk collect into t limit 10;
+          close c;
+        end;
+        """
+        let ns = src as NSString
+        let start = ns.range(of: "  select 1, 2").location
+        let e = try CodeRefactoring.extractProcedure(src, selection: start..<NSMaxRange(ns.range(of: "close c;")), name: "load")
+        #expect(e.text.contains("PROCEDURE load(a IN OUT number, b IN OUT number, t IN OUT sys.odcinumberlist) IS"), "\(e.text)")
+        let tokens = SQLToken.significant("x(i) := 1; y := x(i); r.f := 2;")
+        #expect(CodeRefactoring.assigned(in: tokens) == ["X", "Y", "R", "F"])
+    }
 }
 
 @MainActor
@@ -331,5 +386,20 @@ struct CodeAssistantOptionsTests {
         o.allPerLine = true
         let aligned = try #require(await CodeAssistant.complete(text: text, offset: offset, metadata: nil, options: o))
         #expect(aligned.items[0].insertText == "p_message => ,\n         p_level   => ")
+    }
+
+    @Test("Kwalifikator „(all)” z dwukropkiem (:new.), dopasowanie „zawiera” dla słów kluczowych, kursor z SELECT w nazwie")
+    func reviewFixes() async throws {
+        let ns = "begin x := :new. end;" as NSString
+        #expect(CodeAssistant.qualifier(before: ns.range(of: ":new.").upperBound, in: ns) == ":new.")
+        #expect(CodeAssistant.qualifier(before: 9, in: "select e. from t e" as NSString) == "e.")
+        var o = CompletionOptions()
+        o.match = .contains
+        let kw = try #require(await CodeAssistant.complete(text: "begin ull", offset: 9, metadata: nil, options: o))
+        #expect(kw.items.contains { $0.label == "NULL" && $0.kind == .keyword })
+        let text = "declare\n  cursor c_selected is select 1 as id, 'x' as name from dual;\nbegin\n  for r in c_selected loop\n    r.\n  end loop;\nend;"
+        let r = try #require(await CodeAssistant.complete(text: text, offset: NSMaxRange((text as NSString).range(of: "r.\n")) - 1, metadata: nil))
+        let labels = r.items.map { $0.label.uppercased() }
+        #expect(labels.contains("ID") && labels.contains("NAME"), "\(labels)")
     }
 }

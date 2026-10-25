@@ -202,10 +202,13 @@ extension Workspace {
     }
 
     /// Kodowanie z opcji otwartego projektu dla pliku w jego katalogu (albo nil).
-    func projectEncoding(for url: URL) -> String.Encoding? {
-        guard let p = project, let pu = projectURL, let name = p.options.encoding, let enc = TextFileCodec.encoding(named: name) else { return nil }
+    func projectEncoding(for url: URL) -> String.Encoding? { projectEncodingResolver()(url) }
+
+    /// Ta sama reguła jako funkcja bez stanu obszaru — do czytania plików poza wątkiem głównym (wyszukiwanie, użycia).
+    public func projectEncodingResolver() -> @Sendable (URL) -> String.Encoding? {
+        guard let enc = project?.options.preferredEncoding, let pu = projectURL else { return { _ in nil } }
         let base = pu.deletingLastPathComponent().standardizedFileURL.path + "/"
-        return url.standardizedFileURL.path.hasPrefix(base) ? enc : nil
+        return { $0.standardizedFileURL.path.hasPrefix(base) ? enc : nil }
     }
 
     /// Zapis dokumentu do pliku (w formacie, w jakim go otwarto; znaki spoza kodowania — UTF-8).

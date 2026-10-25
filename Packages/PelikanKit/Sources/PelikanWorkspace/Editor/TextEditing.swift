@@ -8,6 +8,31 @@ public struct TextEdit: Sendable, Equatable {
     public init(text: String, selection: Range<Int>) { self.text = text; self.selection = selection }
 }
 
+/// Numery linii dla kolejnych (rosnących) pozycji jednym przejściem po tekście — zamiast liczenia od początku tekstu
+/// dla każdej pozycji osobno.
+struct LineCounter {
+    let ns: NSString
+    private var position = 0
+    private var line = 1
+
+    init(_ ns: NSString) { self.ns = ns }
+
+    /// Linia (od 1) pozycji UTF-16; pozycja wcześniejsza niż poprzednia liczy od początku.
+    mutating func line(at offset: Int) -> Int {
+        let end = min(max(offset, 0), ns.length)
+        if end < position { position = 0; line = 1 }
+        guard position < end else { return line }
+        var buffer = [unichar](repeating: 0, count: min(4096, end - position))
+        while position < end {
+            let n = min(buffer.count, end - position)
+            ns.getCharacters(&buffer, range: NSRange(location: position, length: n))
+            for i in 0..<n where buffer[i] == 0x0A { line += 1 }
+            position += n
+        }
+        return line
+    }
+}
+
 /// Funkcje zaznaczenia edytora (UG 25.1, NF15): komentarz linii, wcięcia, wielkość liter bez literałów,
 /// usuwanie końcowych spacji, powielenie linii, przejście do linii. Czyste funkcje na tekście (bez AppKit).
 public enum TextEditing {
@@ -56,13 +81,15 @@ public enum TextEditing {
     }
 
     /// Wcięcie (Tab) i cofnięcie wcięcia (Shift+Tab) zaznaczonych linii.
-    public static func indent(_ text: String, selection: Range<Int>, unit: String = "  ", outdent: Bool = false) -> TextEdit {
-        apply(text, lines: lineRange(text as NSString, selection)) { ls in
+    public static func indent(_ text: String, selection: Range<Int>, unit: String = "  ", tabWidth: Int = 4, outdent: Bool = false) -> TextEdit {
+        // Linia wcięta spacjami traci najwyżej jedną jednostkę wcięcia (tabulator = tabWidth spacji).
+        let spaces = unit == "\t" ? tabWidth : max(1, unit.count)
+        return apply(text, lines: lineRange(text as NSString, selection)) { ls in
             ls.map { l in
                 if !outdent { return l.isEmpty ? l : unit + l }
                 if l.hasPrefix(unit) { return String(l.dropFirst(unit.count)) }
                 if l.hasPrefix("\t") { return String(l.dropFirst()) }
-                return String(l.drop { $0 == " " })
+                return String(l.dropFirst(min(spaces, l.prefix { $0 == " " }.count)))
             }
         }
     }
@@ -80,21 +107,21 @@ public enum TextEditing {
     public static func changeCase(_ text: String, selection: Range<Int>, upper: Bool) -> TextEdit {
         let ns = text as NSString
         let range = selection.isEmpty ? lineRange(ns, selection) : NSRange(location: selection.lowerBound, length: selection.count)
-        let part = ns.substring(with: range)
-        let tokens = Lexer(part).tokenize()
-        let pns = part as NSString
+        // Lekser na całym tekście: zaznaczenie zaczęte w środku literału nie odwraca literału i kodu.
+        let end = NSMaxRange(range)
         var out = ""
-        var pos = 0
-        for t in tokens {
-            if t.start > pos { out += pns.substring(with: NSRange(location: pos, length: t.start - pos)) }
-            let s = pns.substring(with: NSRange(location: t.start, length: t.length))
+        var pos = range.location
+        for t in Lexer(text).tokenize() where t.start + t.length > range.location && t.start < end {
+            let a = max(t.start, range.location), b = min(t.start + t.length, end)
+            if a > pos { out += ns.substring(with: NSRange(location: pos, length: a - pos)) }
+            let s = ns.substring(with: NSRange(location: a, length: b - a))
             switch t.kind {
             case .string, .quotedIdentifier: out += s
             default: out += upper ? s.uppercased() : s.lowercased()
             }
-            pos = t.start + t.length
+            pos = b
         }
-        if pos < pns.length { out += pns.substring(from: pos) }
+        if pos < end { out += ns.substring(with: NSRange(location: pos, length: end - pos)) }
         let newText = ns.replacingCharacters(in: range, with: out)
         return TextEdit(text: newText, selection: range.location..<(range.location + (out as NSString).length))
     }
@@ -199,8 +226,14 @@ public struct TextSearch: Sendable, Equatable {
     /// Czy dopasowanie leży w dozwolonym rodzaju tekstu (kod / komentarz / literał).
     func allowed(_ r: NSRange, kinds: [(NSRange, TokenKind)]) -> Bool {
         if inCode && inComments && inStrings { return true }
-        guard let k = kinds.first(where: { NSLocationInRange(r.location, $0.0) })?.1 else { return inCode }
-        switch k {
+        // Tokeny leksera są posortowane i rozłączne — wyszukiwanie binarne ostatniego zaczynającego się przed dopasowaniem.
+        var lo = 0, hi = kinds.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if kinds[mid].0.location <= r.location { lo = mid + 1 } else { hi = mid }
+        }
+        guard lo > 0, NSLocationInRange(r.location, kinds[lo - 1].0) else { return inCode }
+        switch kinds[lo - 1].1 {
         case .lineComment, .blockComment, .hint: return inComments
         case .string: return inStrings
         default: return inCode
@@ -264,7 +297,8 @@ public struct TextSearch: Sendable, Equatable {
     public func replace(in text: String, selection: Range<Int>) throws -> (text: String, range: Range<Int>)? {
         let ex = try expression()
         let r = NSRange(location: selection.lowerBound, length: selection.count)
-        guard let m = ex.firstMatch(in: text, range: r), m.range == r else { return nil }
+        // Granice przezroczyste i bez kotwic: lookaround i `^`/`$` oceniane jak przy „Znajdź” w całym tekście.
+        guard let m = ex.firstMatch(in: text, options: [.withTransparentBounds, .withoutAnchoringBounds], range: r), m.range == r else { return nil }
         let rep = replacementText(for: m, in: text, expression: ex)
         let newText = (text as NSString).replacingCharacters(in: r, with: rep)
         return (newText, selection.lowerBound..<(selection.lowerBound + (rep as NSString).length))

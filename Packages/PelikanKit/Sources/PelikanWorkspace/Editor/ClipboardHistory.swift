@@ -31,9 +31,6 @@ public struct ClipboardHistory: Sendable, Hashable {
         if entries.count > limit { entries.removeLast(entries.count - limit) }
     }
 
-    public mutating func remove(_ id: UUID) { entries.removeAll { $0.id == id } }
-    public mutating func clear() { entries.removeAll() }
-
     /// Filtr: wszystkie słowa (bez wielkości liter) muszą wystąpić w tekście.
     public func filtered(_ filter: String) -> [ClipboardEntry] {
         let words = filter.lowercased().split(whereSeparator: \.isWhitespace)
