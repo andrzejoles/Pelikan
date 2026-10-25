@@ -10,7 +10,7 @@ extension SQLPlusEngine {
             // DDL obiekt [plik] — DDL z DBMS_METADATA na ekran albo do pliku.
             guard let name = args.first else { throw SQLPlusError(L10n.tr("DDL obiekt [plik]")) }
             let o = try await resolveObject(name)
-            let s = try await workspace.session(for: document)
+            let s = try await windowSession()
             let ddl = try await MetadataProvider.ddl(of: o, in: s)
             if args.count > 1 {
                 let url = resolve(args[1], baseDirectory: baseDirectory)
@@ -84,7 +84,7 @@ extension SQLPlusEngine {
             // CTAS tabela nowa_tabela — polecenie CREATE TABLE … AS SELECT z listą kolumn do bufora i na ekran.
             guard args.count >= 2 else { throw SQLPlusError(L10n.tr("CTAS tabela nowa_tabela")) }
             let o = try await resolveObject(args[0])
-            let s = try await workspace.session(for: document)
+            let s = try await windowSession()
             let (_, rows) = try await s.queryAll("select column_name from all_tab_columns where owner = :o and table_name = :t order by column_id",
                                                  binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "t", value: .text(o.name))], limit: 2000)
             let cols = rows.compactMap { $0.first?.displayText }.map { "  " + ResultExporter.identifier($0) }.joined(separator: ",\n")
@@ -98,7 +98,7 @@ extension SQLPlusEngine {
     }
 
     func resolveObject(_ name: String) async throws -> DBObject {
-        guard let m = workspace.metadata(for: workspace.effectiveConnection(of: document)), let o = try await m.find(name) else {
+        guard let m = workspace.metadata(for: windowConnection), let o = try await m.find(name) else {
             throw SQLPlusError(L10n.tr("Nie znaleziono obiektu \(name)"))
         }
         return o
@@ -107,7 +107,7 @@ extension SQLPlusEngine {
     /// INFO+ — kolumny ze statystykami optymalizatora (liczba różnych wartości, NULL, histogram, ostatnia analiza).
     func infoPlus(_ name: String) async throws {
         let o = try await resolveObject(name)
-        let s = try await workspace.session(for: document)
+        let s = try await windowSession()
         emit(L10n.tr("\(o.type.rawValue) \(o.qualifiedName)"))
         let (cols, rows) = try await s.queryAll("""
             select c.column_name, c.data_type || case when c.data_type in ('VARCHAR2','CHAR','NVARCHAR2','RAW') then '(' || c.data_length || ')'
@@ -131,11 +131,11 @@ extension SQLPlusEngine {
         let format = TextImport.detect(text)
         let (header, rows) = TextImport.parse(text, format)
         guard !header.isEmpty else { throw SQLPlusError(L10n.tr("Plik nie ma nagłówka z nazwami kolumn")) }
-        let s = try await workspace.session(for: document)
+        let s = try await windowSession()
         let parts = table.split(separator: ".").map { String($0).uppercased() }
         let owner = parts.count == 2 ? parts[0] : (try await s.scalar("select sys_context('userenv','current_schema') from dual") ?? "")
         let name = parts.last ?? table.uppercased()
-        let conn = workspace.effectiveConnection(of: document)
+        let conn = windowConnection
         var mappings: [FieldMapping]
         if create {
             let ddl = TextImport.createTable(owner: owner, table: name, fieldNames: header, rows: rows)

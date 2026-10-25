@@ -3361,6 +3361,34 @@
         }
       }
     },
+    "Argument" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argument"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argument"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Argumento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аргумент"
+          }
+        }
+      }
+    },
     "Argumenty" : {
       "localizations" : {
         "en" : {
@@ -7893,6 +7921,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Build hat die Binärdatei %@ nicht erzeugt"
+          }
+        }
+      }
+    },
+    "BŁĄD" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FAIL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FEHLER"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ERROR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ПОМИЛКА"
           }
         }
       }
@@ -14589,6 +14645,34 @@
         }
       }
     },
+    "Domyślny?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Por defecto?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За замовч.?"
+          }
+        }
+      }
+    },
     "Dopasowanie" : {
       "localizations" : {
         "en" : {
@@ -20385,6 +20469,34 @@
         }
       }
     },
+    "Hasło nie może zawierać cudzysłowu (\")" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The password cannot contain a double quote (\")"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Passwort darf kein doppeltes Anführungszeichen (\") enthalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La contraseña no puede contener comillas dobles (\")"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль не може містити подвійні лапки (\")"
+          }
+        }
+      }
+    },
     "Hasło w parametrach startowych jest ignorowane — Pelikan bierze je z Pęku kluczy albo pyta" : {
       "localizations" : {
         "en" : {
@@ -22285,6 +22397,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Імпортувати…"
+          }
+        }
+      }
+    },
+    "In/Out" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In/Out"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In/Out"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In/Out"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In/Out"
           }
         }
       }
@@ -39173,6 +39313,34 @@
         }
       }
     },
+    "Null?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Null?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Null?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Nulo?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Null?"
+          }
+        }
+      }
+    },
     "Numer 0–9" : {
       "localizations" : {
         "en" : {
@@ -48273,6 +48441,34 @@
         }
       }
     },
+    "Plik %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File %@: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei %@: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo %@: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@: %@"
+          }
+        }
+      }
+    },
     "Plik (puste — wybór; „clipboard” — schowek)" : {
       "localizations" : {
         "en" : {
@@ -51853,6 +52049,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Системна команда перевищила ліміт %@ с і була перервана"
+          }
+        }
+      }
+    },
+    "Polecenie systemu przerwane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operating system command interrupted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betriebssystembefehl abgebrochen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comando del sistema interrumpido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команду системи перервано"
           }
         }
       }
@@ -63029,6 +63253,34 @@
         }
       }
     },
+    "SP2-0640: Brak połączenia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0640: Not connected."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0640: Nicht verbunden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0640: No conectado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SP2-0640: Немає з’єднання."
+          }
+        }
+      }
+    },
     "SQL" : {
       "localizations" : {
         "en" : {
@@ -68065,6 +68317,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Balken"
+          }
+        }
+      }
+    },
+    "TAK" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YES"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JA"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SÍ"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ТАК"
           }
         }
       }
@@ -79965,6 +80245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Рядок (від 1); порожньо — виділений"
+          }
+        }
+      }
+    },
+    "Wiersz został zmieniony albo usunięty przez innego użytkownika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The row was changed or deleted by another user"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zeile wurde von einem anderen Benutzer geändert oder gelöscht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro usuario ha modificado o eliminado la fila"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Рядок змінив або видалив інший користувач"
           }
         }
       }

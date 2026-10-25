@@ -206,7 +206,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
         let text = pending.joined(separator: "\n")
         // Echo wpisanej linii: pierwsza z promptem, kolejne z numerem (jak SQL*Plus).
         let prefix = pending.count == 1 ? engine.state.sqlPrompt : String(format: "%3d  ", pending.count)
-        document.console.append(ConsoleLine(prefix + line, .prompt))
+        document.console.append(ConsoleLine(prefix + SQLPlusEngine.maskPassword(line), .prompt))
         guard SQLPlusEngine.isComplete(text) else {
             renderConsole()
             return
