@@ -51,13 +51,7 @@ public enum DualityViews {
                  where c.owner = :o and c.table_name = :c and c.constraint_type = 'R' and p.table_name = :t and cc.position = 1
                 """, binds: [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "c", value: .text(child)), BindVariable(name: "t", value: .text(rootTable))])
             guard let fk else { continue }
-            let childPK = try await s.scalar("""
-                select cc.column_name from all_constraints c join all_cons_columns cc on cc.owner = c.owner and cc.constraint_name = c.constraint_name
-                 where c.owner = :o and c.table_name = :t and c.constraint_type = 'P' and cc.position = 1
-                """, binds: [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "t", value: .text(child))])
-            let cols = try await columns(child).filter { $0 != fk }.map { c in
-                c == childPK ? "'\(field(c))' : c.\(ResultExporter.identifier(c))" : "'\(field(c))' : c.\(ResultExporter.identifier(c))"
-            }
+            let cols = try await columns(child).filter { $0 != fk }.map { c in "'\(field(c))' : c.\(ResultExporter.identifier(c))" }
             lines.append("'\(field(child))' : [select json {\(cols.joined(separator: ", "))} from \(ResultExporter.identifier(owner)).\(ResultExporter.identifier(child)) c with insert update delete where c.\(ResultExporter.identifier(fk)) = r.\(ResultExporter.identifier(pk))]")
         }
         return """

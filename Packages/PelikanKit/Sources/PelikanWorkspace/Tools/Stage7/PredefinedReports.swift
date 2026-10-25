@@ -246,8 +246,8 @@ public enum PredefinedReports {
 extension Workspace {
     /// „Open in Worksheet”: zapytanie raportu w nowym oknie SQL (zmienne wiązane zostają — okno zapyta o wartości).
     @discardableResult
-    public func openReportInWorksheet(_ r: PredefinedReport, detail: Bool = false) -> Document {
-        let doc = newDocument(.sql, text: (detail ? r.detailSQL : nil) ?? r.sql)
+    public func openReportInWorksheet(_ r: PredefinedReport) -> Document {
+        let doc = newDocument(.sql, text: r.sql)
         doc.customTitle = r.title
         doc.isModified = false
         return doc

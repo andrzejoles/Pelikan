@@ -139,7 +139,8 @@ public struct DataGenerator {
                 while j < chars.count, chars[j] != ")" { j += 1 }
                 let inner = String(chars[(i + 1)..<min(j, chars.count)])
                 let r = inner.components(separatedBy: "..")
-                lo = Int(r[0].trimmingCharacters(in: .whitespaces)) ?? 1
+                // Liczba powtórzeń nieujemna (`a(-1)` — zero znaków zamiast błędu zakresu).
+                lo = max(0, Int(r[0].trimmingCharacters(in: .whitespaces)) ?? 1)
                 hi = r.count > 1 ? Int(r[1].trimmingCharacters(in: .whitespaces)) ?? lo : lo
                 i = j + 1
             }
@@ -366,7 +367,7 @@ public struct DataGenerator {
         if ["NUMBER", "FLOAT", "INTEGER", "BINARY_DOUBLE", "BINARY_FLOAT"].contains(t), Double(value) != nil { return value }
         if t == "DATE" || t.hasPrefix("TIMESTAMP") {
             let fmt = value.count > 10 ? "YYYY-MM-DD HH24:MI:SS" : "YYYY-MM-DD"
-            return "TO_DATE('\(value.prefix(19))', '\(fmt)')"
+            return "TO_DATE(\(ResultExporter.quote(String(value.prefix(19)))), '\(fmt)')"
         }
         return ResultExporter.quote(value)
     }

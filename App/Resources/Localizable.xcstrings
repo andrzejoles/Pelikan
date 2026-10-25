@@ -3501,6 +3501,34 @@
         }
       }
     },
+    "Arkusz jest za duży: %@ wierszy × %@ kolumn" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The sheet is too large: %@ rows × %@ columns"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Arbeitsblatt ist zu groß: %@ Zeilen × %@ Spalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La hoja es demasiado grande: %@ filas × %@ columnas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аркуш завеликий: %@ рядків × %@ стовпців"
+          }
+        }
+      }
+    },
     "Asercja" : {
       "localizations" : {
         "en" : {
@@ -6717,6 +6745,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine Hauptverbindung"
+          }
+        }
+      }
+    },
+    "Brak połączenia głównego dla zadania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No main connection for the task"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Hauptverbindung für die Aufgabe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay conexión principal para la tarea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає основного з’єднання для завдання"
           }
         }
       }
@@ -25785,6 +25841,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spalte %@: verschiedene Werte: %@"
+          }
+        }
+      }
+    },
+    "Kolumna %@: wartości typu %@ nie da się porównać ani przenieść" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column %@: values of type %@ cannot be compared or transferred"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte %@: Werte vom Typ %@ können weder verglichen noch übertragen werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columna %@: los valores de tipo %@ no se pueden comparar ni transferir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпець %@: значення типу %@ не можна ні порівняти, ні перенести"
+          }
+        }
+      }
+    },
+    "Kolumna %@: wartość %@ jest dłuższa niż limit odczytu — nie da się jej porównać ani przenieść" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column %@: the %@ value exceeds the fetch limit — it cannot be compared or transferred"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte %@: Der %@-Wert überschreitet das Leselimit — er kann weder verglichen noch übertragen werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columna %@: el valor %@ supera el límite de lectura — no se puede comparar ni transferir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпець %@: значення %@ перевищує ліміт читання — його не можна ні порівняти, ні перенести"
           }
         }
       }
@@ -50737,6 +50849,34 @@
         }
       }
     },
+    "Pokazano pierwsze %@ tabel — zawęź maskę nazw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Showing the first %@ tables — narrow the name mask"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die ersten %@ Tabellen werden angezeigt — Namensmaske eingrenzen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se muestran las primeras %@ tablas — acote la máscara de nombres"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показано перші %@ таблиць — звузьте маску імен"
+          }
+        }
+      }
+    },
     "Pokazano pierwsze %@ wierszy." : {
       "localizations" : {
         "en" : {
@@ -73077,6 +73217,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "USER ist „%@“"
+          }
+        }
+      }
+    },
+    "UWAGA: części wartości (duże LOB-y, obiekty) nie da się zapisać literałem — w skrypcie są jako NULL; wyrównaj je bezpośrednio na bazie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WARNING: some values (large LOBs, objects) cannot be written as literals — they appear as NULL in the script; synchronize them directly in the database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ACHTUNG: Einige Werte (große LOBs, Objekte) lassen sich nicht als Literal schreiben — im Skript stehen sie als NULL; gleichen Sie sie direkt in der Datenbank ab"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ATENCIÓN: algunos valores (LOB grandes, objetos) no se pueden escribir como literales — en el script aparecen como NULL; sincronícelos directamente en la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "УВАГА: частину значень (великі LOB, об’єкти) не можна записати літералом — у скрипті вони як NULL; вирівняйте їх безпосередньо в базі"
           }
         }
       }
@@ -101077,6 +101245,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "функція SQL"
+          }
+        }
+      }
+    },
+    "funkcje Diagnostics/Tuning Pack są niedostępne dla agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostics/Tuning Pack features are not available to the agent"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funktionen des Diagnostics/Tuning Pack sind für den Agenten nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "las funciones de Diagnostics/Tuning Pack no están disponibles para el agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "функції Diagnostics/Tuning Pack недоступні для агента"
           }
         }
       }

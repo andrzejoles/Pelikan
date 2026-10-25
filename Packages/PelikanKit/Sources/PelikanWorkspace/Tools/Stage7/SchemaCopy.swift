@@ -165,9 +165,10 @@ public enum SchemaCopy {
                 var ok = true
                 for st in statements(try await ddl(o, in: source)) {
                     do {
-                        _ = try await target.execute(st)
-                    } catch let e as OracleError where e.code == 24344 {
-                        report.errors.append("\(key): " + L10n.tr("utworzono z błędami kompilacji"))
+                        // ORA-24344 (kompilacja z błędami) sterowniki zgłaszają jako ostrzeżenie wyniku, nie wyjątek.
+                        if try await target.execute(st).warning?.code == 24344 {
+                            report.errors.append("\(key): " + L10n.tr("utworzono z błędami kompilacji"))
+                        }
                     } catch {
                         ok = false
                         report.errors.append("\(key): \(error.localizedDescription)")

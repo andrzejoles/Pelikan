@@ -168,6 +168,43 @@ struct DataTransferDBTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Przenoszenie danych i import formatu własnego: BLOB 5000 B i CLOB 40 000 znaków bez utraty (zmienne wiązane, nie NULL)")
+    func largeLOBs() async throws {
+        let src = try await TestDatabase.connect()
+        let dst = try await TestDatabase.connect()
+        defer { Task { for t in ["pelikan_lob_s", "pelikan_lob_t"] { _ = try? await src.execute("drop table \(t) purge") }; await src.close(); await dst.close() } }
+        for t in ["pelikan_lob_s", "pelikan_lob_t"] { _ = try? await src.execute("drop table \(t) purge") }
+        _ = try await src.execute("create table pelikan_lob_s (id number primary key, b blob, c clob)")
+        _ = try await src.execute("create table pelikan_lob_t (id number primary key, b blob, c clob)")
+        _ = try await src.execute("""
+            declare b blob; c clob; begin
+              dbms_lob.createtemporary(b, true); dbms_lob.createtemporary(c, true);
+              for i in 1..5 loop dbms_lob.writeappend(b, 1000, utl_raw.copies(hextoraw('AB'), 1000)); end loop;
+              for i in 1..10 loop dbms_lob.writeappend(c, 4000, rpad('x', 4000, 'y')); end loop;
+              insert into pelikan_lob_s values (1, b, c);
+              commit;
+            end;
+            """)
+        let same = """
+            select count(*) from pelikan_lob_s s join pelikan_lob_t t on t.id = s.id
+             where dbms_lob.compare(s.b, t.b) = 0 and dbms_lob.compare(s.c, t.c) = 0 and dbms_lob.getlength(t.b) = 5000
+            """
+        var job = DataTransferJob()
+        job.sourceOwner = schema; job.sourceTable = "PELIKAN_LOB_S"; job.targetOwner = schema; job.targetTable = "PELIKAN_LOB_T"
+        job.mappings = ["ID", "B", "C"].map { TransferColumnMapping(target: $0, source: $0) }
+        let r = try await DataTransferRunner.run(job, source: src, target: dst)
+        #expect(r.inserted == 1 && r.errors.isEmpty, "\(r.errors)")
+        #expect(try await src.scalar(same) == "1")
+        // Format własny: eksport tabeli źródłowej, import do docelowej (po TRUNCATE).
+        var file = try TableTransfer.unpackNative(try await TableTransfer.exportNative(["PELIKAN_LOB_S"], owner: schema, includeDDL: false, in: src))
+        file.tables[0].name = "PELIKAN_LOB_T"
+        var o = TableImportOptions()
+        o.truncate = true
+        let imp = try await TableTransfer.importNative(file, tables: ["PELIKAN_LOB_T"], intoOwner: schema, options: o, in: dst)
+        #expect(imp.inserted == 1 && imp.errors.isEmpty, "\(imp.errors)")
+        #expect(try await src.scalar(same) == "1")
+    }
+
     @Test("Porównanie danych z drugim schematem: wstawienia, zmiany, usunięcia; skrypt i bezpośrednia aktualizacja wyrównują dane")
     func compareData() async throws {
         let c = TestDatabase.config!

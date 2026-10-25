@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 
 /// Generowanie kodu z obiektu bazy (SD-GEN-001): SQL dla tabel i widoków, wywołanie programu, fragmenty Java JDBC
 /// i Python (python-oracledb) ze zmiennymi wiązanymi zamiast wartości. Łańcuch połączenia w kodzie: alias połączenia
@@ -34,11 +35,18 @@ public enum CodeGenerator {
 
     static func ident(_ n: String) -> String { ResultExporter.identifier(n) }
 
-    /// Nazwa zmiennej wiązanej / pola z nazwy kolumny (małe litery, znaki niedozwolone → `_`).
+    /// Nazwa zmiennej wiązanej / pola z nazwy kolumny (małe litery, znaki niedozwolone → `_`; słowa zastrzeżone
+    /// Oracle, np. `date`, `level`, z przyrostkiem `_` — jako zmienna wiązana dają ORA-01745).
     static func variable(_ n: String) -> String {
         let s = n.lowercased().map { $0.isLetter || $0.isNumber ? $0 : "_" }
-        let v = String(s)
-        return v.first?.isLetter == true ? v : "c_" + v
+        var v = String(s)
+        if v.first?.isLetter != true { v = "c_" + v }
+        return Keywords.reserved.contains(v.uppercased()) ? v + "_" : v
+    }
+
+    /// Treść literału tekstowego Java (identyfikatory w cudzysłowie, np. `"Nazwa"`).
+    static func java(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
     }
 
     static func camel(_ n: String) -> String {
@@ -82,19 +90,19 @@ public enum CodeGenerator {
         case .javaSelect:
             let sqlLit = "SELECT \(colList) FROM \(table) WHERE \(whereClause.replacingOccurrences(of: #":\w+"#, with: "?", options: .regularExpression))"
             var j = "// \(L10n.tr("Połączenie: alias")) \(connectionAlias) — \(L10n.tr("dane logowania z konfiguracji aplikacji, nie w kodzie"))\n"
-            j += "String sql = \"\(sqlLit)\";\n"
+            j += "String sql = \"\(java(sqlLit))\";\n"
             j += "try (PreparedStatement ps = connection.prepareStatement(sql)) {\n"
             for (i, w) in whereCols.enumerated() { j += "    ps.setObject(\(i + 1), \(camel(w)));\n" }
             j += "    try (ResultSet rs = ps.executeQuery()) {\n        while (rs.next()) {\n"
             for c in columns {
                 let (type, getter) = jdbcGetter(c.type)
-                j += "            \(type) \(camel(c.name)) = rs.\(getter)(\"\(c.name)\");\n"
+                j += "            \(type) \(camel(c.name)) = rs.\(getter)(\"\(java(c.name))\");\n"
             }
             j += "        }\n    }\n}\n"
             return j
         case .javaInsert:
             let qs = cols.map { _ in "?" }.joined(separator: ", ")
-            var j = "String sql = \"INSERT INTO \(table) (\(colList)) VALUES (\(qs))\";\n"
+            var j = "String sql = \"\(java("INSERT INTO \(table) (\(colList)) VALUES (\(qs))"))\";\n"
             j += "try (PreparedStatement ps = connection.prepareStatement(sql)) {\n"
             for (i, c) in cols.enumerated() { j += "    ps.setObject(\(i + 1), \(camel(c)));\n" }
             j += "    ps.executeUpdate();\n}\n"

@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 @Suite("Narzędzia danych bez bazy")
@@ -143,4 +144,185 @@ struct DataTransferOfflineTests {
         o.delete = false
         #expect(TableDataCompare.statements(diff, targetOwner: "X", options: o).count == 2)
     }
+
+    @Test("CSV: końce wierszy CRLF (jeden znak w Swifcie), CRLF w polu w cudzysłowie, separator wieloznakowy bez awarii")
+    func crlf() {
+        let text = "id,nazwa\r\n1,\"a\r\nb\"\r\n2,c\r\n"
+        let f = TextImport.detect(text)
+        #expect(f.delimiter == "," && f.header)
+        let (header, rows) = TextImport.parse(text, f)
+        #expect(header == ["id", "nazwa"] && rows == [["1", "a\r\nb"], ["2", "c"]])
+        var multi = TextFormat()
+        multi.header = false
+        multi.delimiter = ";;"
+        #expect(TextImport.parse("1;2\n3;4", multi).rows == [["1", "2"], ["3", "4"]])
+        // Niepoprawne UTF-8 bez BOM: kodowanie jednobajtowe, bez utraty znaków.
+        #expect(TextImport.decode(Data([0x41, 0xB1, 0x0A])).text == "Aą\n")
+    }
+
+    @Test("Nazwy zmiennych pól: słowa zastrzeżone z przyrostkiem (ORA-01745), kolumna nowej tabeli bez zmian")
+    func reservedBindNames() {
+        #expect(TextImport.bindName("date", index: 0) == "DATE_" && TextImport.bindName("Level", index: 1) == "LEVEL_")
+        #expect(TextImport.bindName("kwota", index: 2) == "KWOTA" && TextImport.bindName("1x", index: 3) == "POLE4")
+        let t = ImportTarget(owner: "S", table: "T", mappings: [FieldMapping(column: "D", field: 0), FieldMapping(column: "SIZE", field: 1)])
+        let sql = TextImport.rowStatement(t, fieldNames: ["date", "size"], keyColumns: [])
+        #expect(sql.contains("select :DATE_, :SIZE_ from dual"))
+        #expect(TextImport.createTable(owner: "S", table: "T", fieldNames: ["date"], rows: [["x"]]).mappings[0].column == "DATE")
+    }
+
+    #if canImport(Darwin)
+    @Test("Excel: uszkodzony katalog ZIP i komórka na końcu arkusza — błąd zamiast awarii; wiersz spoza arkusza pominięty")
+    func xlsxCorrupted() throws {
+        let wbXML = Data(#"<workbook xmlns:r="r"><sheets><sheet name="Dane" sheetId="1" r:id="rId1"/></sheets></workbook>"#.utf8)
+        let rels = Data(#"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#.utf8)
+        func book(_ sheet: String) -> Data {
+            Self.zip([("xl/workbook.xml", wbXML), ("xl/_rels/workbook.xml.rels", rels), ("xl/worksheets/sheet1.xml", Data(sheet.utf8))])
+        }
+        // Długość nazwy wpisu w katalogu centralnym poza końcem pliku.
+        var broken = book("<worksheet/>")
+        let central = try #require(broken.lastRange(of: Data([0x50, 0x4B, 0x01, 0x02])))
+        broken[central.lowerBound + 28] = 0xFF
+        broken[central.lowerBound + 29] = 0xFF
+        #expect(throws: ZipReader.Failure.self) { _ = try ZipReader(broken) }
+        let huge = try XlsxWorkbook(book(#"<worksheet><sheetData><row r="1"><c r="A1"><v>1</v></c><c r="XFD1048576"><v>2</v></c></row></sheetData></worksheet>"#))
+        #expect(throws: CommandError.self) { _ = try huge.rows(sheet: 0) }
+        let odd = try XlsxWorkbook(book(#"<worksheet><sheetData><row r="0"><c><v>x</v></c></row><row r="1"><c r="A0"><v>y</v></c><c r="B1"><v>2</v></c></row></sheetData></worksheet>"#))
+        #expect(try odd.rows(sheet: 0) == [["y", "2"]])     // wiersz r="0" pominięty, adres A0 — pozycja w wierszu
+        #expect(XlsxWorkbook.cellIndex("AAAAAAAAAAAAAAAA1") == nil && XlsxWorkbook.cellIndex("XFE1") == nil)
+    }
+    #endif
+
+    func blob(_ byte: UInt8, count: Int = 3000, truncated: Bool = false) -> OracleValue {
+        .lob(LOBValue(kind: .blob, bytes: Data(repeating: byte, count: count), length: UInt64(count), truncated: truncated))
+    }
+
+    @Test("Porównanie danych: BLOB-y ponad limit literału po treści, obcięty LOB i obiekt — błąd, nie „równe”")
+    func compareLOBs() throws {
+        let cols = ["ID", "B"]
+        let d = try TableDataCompare.diff(table: "T", columns: cols, keyColumns: ["ID"],
+                                          source: [[.number("1"), blob(1)], [.number("2"), blob(2)]],
+                                          target: [[.number("1"), blob(9)], [.number("2"), blob(2)]])
+        #expect(d.updates.count == 1 && d.updates.first?.first == .number("1") && d.inserts.isEmpty && d.deletes.isEmpty)
+        #expect(throws: CommandError.self) {
+            try TableDataCompare.diff(table: "T", columns: cols, keyColumns: ["ID"], source: [[.number("1"), blob(1, truncated: true)]],
+                                      target: [[.number("1"), blob(1, truncated: true)]])
+        }
+        #expect(throws: CommandError.self) {
+            try TableDataCompare.diff(table: "T", columns: cols, keyColumns: ["ID"], source: [[.number("1"), .object(typeName: "S.ADR_T", description: "x")]],
+                                      target: [[.number("1"), .object(typeName: "S.ADR_T", description: "x")]])
+        }
+    }
+
+    @Test("Wyrównanie na bazie: LOB-y i RAW jako zmienne wiązane, zawsze w schemacie celu; wartość nieprzenoszalna przerywa przed zmianami")
+    func applyBindsLOBs() async throws {
+        let diff = TableDataDiff(table: "T", columns: ["ID", "B", "R"], keyColumns: ["ID"], inserts: [[.number("3"), blob(7), .raw(Data([1, 2]))]],
+                                 updates: [[.number("2"), blob(8), .null]], deletes: [])
+        var o = DataCompareOptions()
+        o.ownerInScript = false
+        let s = RecordingSession()
+        let r = try await TableDataCompare.apply([diff], targetOwner: "X", options: o, in: s)
+        #expect(r.inserted == 1 && r.updated == 1 && r.errors.isEmpty)
+        let run = s.executed.withLock { $0 }
+        #expect(run.map(\.sql) == ["update X.T set B = :v0, R = NULL where ID = 2", "insert into X.T (ID, B, R) values (3, :v0, :v1)"])
+        if case .lob(let l) = run[1].binds[0].value { #expect(l.bytes?.count == 3000 && run[1].binds[0].type == .blob) } else { Issue.record("BLOB bez wiązania") }
+        #expect(run[1].binds[1].type == .raw)
+        // Skrypt: bez schematu (opcja), z ostrzeżeniem o wartościach bez literału.
+        let script = TableDataCompare.script([diff], targetOwner: "X", options: o)
+        #expect(script.contains("insert into T (ID, B, R)") && script.contains("UWAGA"))
+        let bad = TableDataDiff(table: "T", columns: ["ID", "B"], keyColumns: ["ID"], inserts: [[.number("1"), blob(1)], [.number("2"), blob(1, truncated: true)]],
+                                updates: [], deletes: [])
+        let s2 = RecordingSession()
+        await #expect(throws: CommandError.self) { _ = try await TableDataCompare.apply([bad], targetOwner: "X", options: o, in: s2) }
+        #expect(s2.executed.withLock { $0 }.isEmpty)
+    }
+
+    @Test("Przenoszenie danych: BLOB jako zmienna wiązana; LOB obcięty przerywa; kolumna obiektowa — błąd przed TRUNCATE")
+    func transferBindsLOBs() async throws {
+        var job = DataTransferJob()
+        job.sourceOwner = "S"; job.sourceTable = "SRC"; job.targetOwner = "T"; job.targetTable = "DST"
+        job.mappings = [TransferColumnMapping(target: "ID", source: "ID"), TransferColumnMapping(target: "B", source: "B")]
+        let cols = [ColumnInfo(name: "ID", type: .number, typeName: "NUMBER"), ColumnInfo(name: "B", type: .blob, typeName: "BLOB")]
+        let target = RecordingSession()
+        let r = try await DataTransferRunner.run(job, source: RecordingSession(columns: cols, rows: [[.number("1"), blob(5)]]), target: target)
+        let run = target.executed.withLock { $0 }
+        #expect(r.inserted == 1 && run.map(\.sql) == ["insert into T.DST (ID, B) values (1, :v0)"] && run.first?.binds.first?.type == .blob)
+        let target2 = RecordingSession()
+        await #expect(throws: CommandError.self) {
+            _ = try await DataTransferRunner.run(job, source: RecordingSession(columns: cols, rows: [[.number("1"), blob(5, truncated: true)]]), target: target2)
+        }
+        #expect(target2.executed.withLock { $0 }.isEmpty)
+        job.mode = .truncate
+        let target3 = RecordingSession()
+        let objCols = [cols[0], ColumnInfo(name: "B", type: .object, typeName: "S.ADR_T")]
+        await #expect(throws: CommandError.self) {
+            _ = try await DataTransferRunner.run(job, source: RecordingSession(columns: objCols, rows: []), target: target3)
+        }
+        #expect(target3.executed.withLock { $0 }.isEmpty)
+    }
+
+    @Test("Import formatu własnego: RAW, BLOB i CLOB wiązane bez tekstu szesnastkowego (limit 4000 B)")
+    func nativeBinds() {
+        let big = Data(repeating: 0xAB, count: 5000)
+        #expect(TableTransfer.valueExpression("BLOB", bind: "c0") == ":c0" && TableTransfer.valueExpression("DATE", bind: "c1").hasPrefix("TO_DATE("))
+        let b = TableTransfer.bindValue("BLOB", name: "c0", value: big.base64EncodedString())
+        if case .lob(let l) = b.value { #expect(b.type == .blob && l.bytes == big) } else { Issue.record("BLOB bez LOB-a") }
+        #expect(TableTransfer.bindValue("RAW", name: "c1", value: Data([1, 2]).base64EncodedString()).value == .raw(Data([1, 2])))
+        #expect(TableTransfer.bindValue("CLOB", name: "c2", value: "tekst").type == .clob)
+        #expect(TableTransfer.bindValue("NUMBER", name: "c3", value: "1.5").value == .number("1.5"))
+        #expect(TableTransfer.bindValue("VARCHAR2", name: "c4", value: nil).value == .null)
+    }
+
+    @Test("Eksport obiektów: bezpieczne nazwy plików, kolizje nazw rozróżnione, specyfikacja z ciałem w jednym pliku")
+    func objectExportFiles() {
+        var o = ObjectExportOptions()
+        o.layout = .filePerObject
+        let parts: [(DBObject, String)] = [(DBObject(owner: "S", name: "../Evil/x", type: .view), "v1"), (DBObject(owner: "S", name: "Foo", type: .view), "v2"),
+                                           (DBObject(owner: "S", name: "FOO", type: .view), "v3"), (DBObject(owner: "S", name: "PKG", type: .package), "spec"),
+                                           (DBObject(owner: "S", name: "PKG", type: .packageBody), "body")]
+        let files = ObjectExport.files(parts, options: o, header: "")
+        #expect(files.map { ($0.name as NSString).deletingPathExtension } == ["___evil_x", "foo", "foo_2", "pkg"])
+        #expect(files.allSatisfy { !$0.name.contains("/") } && Set(files.map(\.name)).count == 4)
+        #expect(files.first { $0.name.hasPrefix("pkg.") }.map { $0.content.contains("spec") && $0.content.contains("body") } == true)
+        #expect(files.first { $0.name.hasPrefix("foo_2.") }?.content.contains("v3") == true)
+    }
+
+    @Test("Eksport obiektów: nieudane pobranie listy uprawnień nie jest ponawiane dla każdego obiektu")
+    func objectExportGrantsOnce() async throws {
+        let s = OldDictionarySession(missing: ["tab_privs": 942])
+        let objects = (1...3).map { DBObject(owner: "S", name: "V\($0)", type: .view) }
+        _ = try await ObjectExport.export(objects, options: ObjectExportOptions(), in: s)
+        #expect(s.executed.withLock { $0 }.filter { $0.contains("tab_privs") }.count == 2)
+    }
+
+    @Test("Generator: liczba powtórzeń ujemna nie przerywa, apostrof w dacie podwojony")
+    func generatorEdgeCases() async throws {
+        #expect(DataGenerator.parsePattern("a(-1)").first?.min == 0)
+        var g = DataGenerator(seed: 1, session: nil)
+        let rows = try await g.generate([GeneratorTable(name: "T", minRecords: 1, maxRecords: 1, fields: [.init(name: "A", type: "VARCHAR2", definition: "[a(-1)]x")])])
+        #expect(rows["T"]?.first?["A"] == "x")
+        #expect(DataGenerator.literal("2024-01-01' x", type: "DATE") == "TO_DATE('2024-01-01'' x', 'YYYY-MM-DD HH24:MI:SS')")
+    }
+}
+
+/// Sesja zapisująca polecenia ze zmiennymi wiązanymi; zapytanie (select) zwraca `rows` o kolumnach `columns`.
+final class RecordingSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 19, minor: 0),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    let columns: [ColumnInfo]
+    let rows: [[OracleValue]]
+    let executed = Mutex<[(sql: String, binds: [BindVariable])]>([])
+    init(columns: [ColumnInfo] = [], rows: [[OracleValue]] = []) { self.columns = columns; self.rows = rows }
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        if sql.hasPrefix("select") { return ExecutionResult(kind: .query, resultSet: ResultSetDescriptor(id: ResultSetID(1), columns: columns)) }
+        executed.withLock { $0.append((sql, binds)) }
+        return ExecutionResult(kind: .dml, rowsAffected: 1)
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: rows, hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
 }

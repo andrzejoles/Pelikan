@@ -50,14 +50,29 @@ public enum DiagramEditor {
         }
     }
 
-    /// Update from DB: kolumny i nowe klucze obce; zwraca obiekty, których w bazie już nie ma.
+    /// Update from DB: kolumny i nowe klucze obce; zwraca obiekty, których w bazie już nie ma. Tabele i widoki
+    /// grupami po schemacie — kolumny i klucze obce zapytaniami wsadowymi (D164), nie kilkoma zapytaniami na element.
     public static func update(_ d: inout Diagram, source: any SchemaMetadataSource) async throws -> [String] {
         var columns: [String: [SchemaColumn]] = [:]
         var fks: [ForeignKey] = []
-        for it in d.items where it.kind == .object {
-            guard try await source.resolve("\"\(it.owner)\".\"\(it.name)\"") != nil else { continue }
-            columns[it.objectKey] = tableTypes.contains(it.type) ? try await source.columns(owner: it.owner, name: it.name) : []
-            if it.type == "TABLE" { fks += try await source.foreignKeys(owner: it.owner, table: it.name) }
+        let objects = d.items.filter { $0.kind == .object }
+        func exists(_ it: DiagramItem) async throws -> Bool { try await source.resolve("\"\(it.owner)\".\"\(it.name)\"") != nil }
+        for (owner, items) in Dictionary(grouping: objects.filter { tableTypes.contains($0.type) }, by: \.owner).sorted(by: { $0.key < $1.key }) {
+            let cols = try await source.columns(owner: owner, tables: Array(Set(items.map(\.name))).sorted())
+            for it in items {
+                let c = cols[it.name] ?? []
+                // Bez kolumn: obiektu nie ma albo to widok bez kolumn (np. FORCE z błędami) — rozstrzyga resolve.
+                if !c.isEmpty {
+                    columns[it.objectKey] = c
+                } else if try await exists(it) {
+                    columns[it.objectKey] = []
+                }
+            }
+            let tables = Set(items.filter { $0.type == "TABLE" && columns[$0.objectKey] != nil }.map(\.name)).sorted()
+            if !tables.isEmpty { fks += try await source.foreignKeys(owner: owner, childTables: tables) }
+        }
+        for it in objects where !tableTypes.contains(it.type) {
+            if try await exists(it) { columns[it.objectKey] = [] }
         }
         let missing = d.update(columns: columns)
         d.addForeignKeyLinks(fks)

@@ -148,11 +148,21 @@ public enum UserTools {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     try p.run()
+                    // stderr czytany równolegle — pełny bufor potoku (64 KiB) przy czytaniu po kolei zawiesiłby proces.
+                    final class Buffer: @unchecked Sendable { var data = Data() }   // zapis w wątku czytającym, odczyt po grupie
+                    let e = Buffer()
+                    let group = DispatchGroup()
+                    let errHandle = err.fileHandleForReading
+                    group.enter()
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        e.data = errHandle.readDataToEndOfFile()
+                        group.leave()
+                    }
                     let o = out.fileHandleForReading.readDataToEndOfFile()
-                    let e = err.fileHandleForReading.readDataToEndOfFile()
+                    group.wait()
                     p.waitUntilExit()
                     c.resume(returning: RunResult(status: p.terminationStatus, output: String(decoding: o, as: UTF8.self),
-                                                  errors: String(decoding: e, as: UTF8.self)))
+                                                  errors: String(decoding: e.data, as: UTF8.self)))
                 } catch {
                     c.resume(throwing: error)
                 }

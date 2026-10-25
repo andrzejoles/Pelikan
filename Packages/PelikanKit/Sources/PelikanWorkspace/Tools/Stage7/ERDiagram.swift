@@ -7,6 +7,8 @@ import PelikanSQL
 public enum ERDiagram {
     public static let columnGap = 80.0
     public static let rowGap = 32.0
+    /// Najwięcej tabel diagramu ze schematu (więcej — komunikat o obcięciu).
+    public static let maxTables = 2000
 
     /// Diagram z tabel (nazwy w schemacie `owner`) z liniami kluczy obcych między nimi.
     public static func build(owner: String, tables: [String], source: any SchemaMetadataSource, showColumns: Bool = true) async throws -> Diagram {
@@ -79,13 +81,19 @@ extension Workspace {
         let (_, rows) = try await s.queryAll("""
             select table_name from all_tables where owner = :o and table_name like :p escape '\\'
                and nested = 'NO' and table_name not like 'BIN$%' order by table_name
-            """, binds: [BindVariable(name: "o", value: .text(owner.uppercased())), BindVariable(name: "p", value: .text(pattern.uppercased()))], limit: 2000)
-        let tables = rows.compactMap { $0.first?.displayText }
+            """, binds: [BindVariable(name: "o", value: .text(owner.uppercased())), BindVariable(name: "p", value: .text(pattern.uppercased()))],
+            limit: ERDiagram.maxTables + 1)
+        let tables = Array(rows.compactMap { $0.first?.displayText }.prefix(ERDiagram.maxTables))
         guard !tables.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak tabel pasujących do „\(pattern)” w schemacie \(owner)")) }
+        // Diagram przed oknem — błąd słownika nie zostawia pustego okna.
+        let diagram = try await ERDiagram.build(owner: owner.uppercased(), tables: tables, source: SessionSchemaMetadata(session: s), showColumns: tables.count <= 60)
         let doc = newDocument(.diagram)
         doc.connectionID = conn
-        doc.diagram = try await ERDiagram.build(owner: owner.uppercased(), tables: tables, source: SessionSchemaMetadata(session: s), showColumns: tables.count <= 60)
+        doc.diagram = diagram
         doc.customTitle = L10n.tr("Diagram ER \(owner.uppercased())")
+        if rows.count > ERDiagram.maxTables {
+            doc.statusText = L10n.tr("Pokazano pierwsze \(ERDiagram.maxTables) tabel — zawęź maskę nazw")
+        }
         doc.isModified = true
         return doc
     }
