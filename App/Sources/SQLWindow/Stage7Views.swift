@@ -74,12 +74,25 @@ struct HTMLPreview: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
-        return WKWebView(frame: .zero, configuration: config)
+        let view = WKWebView(frame: .zero, configuration: config)
+        view.navigationDelegate = HTMLPreviewNavigation.shared
+        return view
     }
 
     func updateNSView(_ view: WKWebView, context: Context) {
-        let csp = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">"
-        view.loadHTMLString(csp + html, baseURL: nil)
+        view.loadHTMLString(LargeDataModel.htmlPreviewDocument(html), baseURL: nil)
+    }
+}
+
+/// Nawigacja podglądu niezaufanego HTML: tylko treść z `loadHTMLString` (about:blank). CSP nie obejmuje nawigacji —
+/// bez tego `<meta http-equiv="refresh">` albo kliknięty odnośnik przeniósłby widok na zdalną stronę.
+@MainActor
+final class HTMLPreviewNavigation: NSObject, WKNavigationDelegate {
+    static let shared = HTMLPreviewNavigation()
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+        let url = navigationAction.request.url
+        return url == nil || url?.absoluteString == "about:blank" ? .allow : .cancel
     }
 }
 
@@ -155,7 +168,12 @@ struct SnippetsView: View {
                 if let id = ids.first, let s = snippets.first(where: { $0.id == id }) {
                     Button(L10n.tr("Wstaw")) { insert(s) }
                     Button(L10n.tr("Edytuj…")) { editing = s }
-                    if !s.isBuiltIn { Button(L10n.tr("Usuń")) { try? workspace.snippets.remove(id: s.id); reload() } }
+                    if !s.isBuiltIn {
+                        Button(L10n.tr("Usuń")) {
+                            do { try workspace.snippets.remove(id: s.id) } catch { workspace.ui?.showError(error.localizedDescription) }
+                            reload()
+                        }
+                    }
                 }
             } primaryAction: { ids in
                 if let id = ids.first, let s = snippets.first(where: { $0.id == id }) { insert(s) }

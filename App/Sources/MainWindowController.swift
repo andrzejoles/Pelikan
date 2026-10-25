@@ -174,31 +174,6 @@ final class SidebarViewController: NSViewController {
     }
 }
 
-final class PlaceholderPaneController: NSViewController {
-    private let text: String
-    init(text: String) {
-        self.text = text
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    override func loadView() {
-        let label = NSTextField(labelWithString: text)
-        label.textColor = .secondaryLabelColor
-        label.alignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        let root = NSView()
-        root.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: root.centerYAnchor),
-        ])
-        view = root
-    }
-}
-
 // MARK: - Obszar dokumentów
 
 /// Pasek kart dokumentów (SDI wzorca) + widok aktywnego dokumentu + pasek stanu.

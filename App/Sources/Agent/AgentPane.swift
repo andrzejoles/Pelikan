@@ -167,9 +167,25 @@ final class AgentPane: NSView {
         sessions.contains { !$0.ended && $0.id != id }
     }
 
-    /// Kończy wszystkie działające sesje (zamknięcie aplikacji).
+    /// Kończy wszystkie działające sesje (zamknięcie aplikacji). Aplikacja kończy się przed opóźnionym SIGKILL
+    /// z `terminateSession`, więc tu czekamy na miejscu (najwyżej 1 s) i dobijamy grupy procesów, które jeszcze działają.
     func terminateAll() {
+        var alive = sessions.filter { !$0.ended }.map { $0.terminal.process.shellPid }.filter { $0 > 0 }
         for s in sessions where !s.ended { terminateSession(s.id) }
+        let deadline = Date().addingTimeInterval(1)
+        while !alive.isEmpty {
+            alive.removeAll { pid in
+                var status: Int32 = 0
+                _ = waitpid(pid, &status, WNOHANG)  // powłoka to proces potomny — bez tego zostaje zombie w grupie
+                return kill(-pid, 0) != 0
+            }
+            guard !alive.isEmpty, Date() < deadline else { break }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        for pid in alive {
+            kill(-pid, SIGKILL)
+            kill(pid, SIGKILL)
+        }
     }
 
     private func rebuildPicker() {
@@ -213,12 +229,6 @@ final class AgentPane: NSView {
         activityTable.reloadData()
         let pending = controller.pending.count
         pendingLabel.stringValue = pending > 0 ? L10n.tr("Czeka na zgodę: \(pending)") : ""
-    }
-
-    func focusTerminal() {
-        let i = picker.indexOfSelectedItem
-        guard i >= 0, i < sessions.count else { return }
-        window?.makeFirstResponder(sessions[i].terminal)
     }
 }
 
@@ -298,7 +308,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1100, height: 640), styleMask: [.titled, .closable, .resizable, .miniaturizable],
                               backing: .buffered, defer: false)
         window.title = L10n.tr("Dziennik agentów")
-        window.setFrameAutosaveName("Pelikan.agentLog")
+        window.setFrameAutosaveName((Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan") + ".agentLog")
         super.init(window: window)
         let fileColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("file"))
         fileColumn.title = L10n.tr("Plik")

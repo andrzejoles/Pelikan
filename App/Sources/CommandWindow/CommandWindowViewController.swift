@@ -12,7 +12,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
     private let content = NSView()
     private let consoleScroll = NSTextView.scrollableTextView()
     private var console: NSTextView { consoleScroll.documentView as! NSTextView }
-    private let input = HistoryTextField()
+    private let input = NSTextField()
     private let promptLabel = NSTextField(labelWithString: "SQL>")
     private let dialogPane = NSView()
     private var editor: CodeEditorView!
@@ -58,7 +58,6 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
         input.delegate = self
         input.target = self
         input.action = #selector(submitLine)
-        input.onHistory = { [weak self] delta in self?.moveHistory(delta) }
         input.setAccessibilityLabel(L10n.tr("Linia poleceń"))
         let inputRow = NSStackView(views: [promptLabel, input])
         inputRow.edgeInsets = NSEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
@@ -216,6 +215,8 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
     }
 
     private func execute(_ text: String) {
+        // Komenda działa na aktywnym oknie, a kolejka (type-ahead) rusza też wtedy, gdy aktywne jest inne okno.
+        workspace.activate(document.id)
         workspace.perform("cmd.executeLine", CommandArguments(["line": .string(text), "echo": .bool(false)]))
     }
 
@@ -236,17 +237,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
     }
 }
 
-/// Pole linii poleceń ze strzałkami w górę/dół (historia).
-final class HistoryTextField: NSTextField {
-    var onHistory: ((Int) -> Void)?
-
-    override func textShouldEndEditing(_ textObject: NSText) -> Bool { true }
-
-    override func performKeyEquivalent(with event: NSEvent) -> Bool { super.performKeyEquivalent(with: event) }
-
-    override func keyUp(with event: NSEvent) { super.keyUp(with: event) }
-}
-
+/// Linia poleceń: strzałki w górę/dół przewijają historię.
 extension CommandWindowViewController {
     func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
         switch selector {

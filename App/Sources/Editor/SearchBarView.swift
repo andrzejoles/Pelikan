@@ -12,6 +12,8 @@ struct SearchBarView: View {
     @State private var options = TextSearchOptions()
     @State private var hits: [UsageHit] = []
     @State private var searched = false
+    /// Numer wyszukiwania — spóźniony wynik wcześniejszego wyszukiwania w plikach nie zastępuje nowszego.
+    @State private var generation = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -51,9 +53,21 @@ struct SearchBarView: View {
         case 0: s = .currentEditor
         case 2:
             let dirs = directories.split(separator: ";").map { URL(fileURLWithPath: (String($0).trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath) }
-            s = .directories(dirs.isEmpty ? workspace.fileBrowser.locations.map { URL(fileURLWithPath: ($0.path as NSString).expandingTildeInPath) } : dirs)
+            let roots = dirs.isEmpty ? workspace.fileBrowser.locations.map { URL(fileURLWithPath: ($0.path as NSString).expandingTildeInPath) } : dirs
+            // Pliki czytane w tle — duże katalogi nie zawieszają interfejsu; wynik tylko dla ostatniego wyszukiwania.
+            let (q, o) = (query, options)
+            generation += 1
+            let current = generation
+            Task {
+                let found = await Task.detached { EditorSearch.searchFiles(q, in: roots, options: o) }.value
+                guard current == generation else { return }
+                hits = found
+                searched = true
+            }
+            return
         default: s = .allEditors
         }
+        generation += 1
         hits = EditorSearch.search(query, scope: s, options: options, in: workspace)
         searched = true
     }

@@ -131,8 +131,11 @@ final class SSHTargetManagerModel {
         let secret: String?
         do {
             if t.auth == .agent { secret = nil } else if !self.secret.isEmpty { secret = self.secret } else { secret = try await store.secret(for: t.id, in: workspace) }
-        } catch {
+        } catch CommandError.cancelledByUser {
             message = L10n.tr("Anulowano")
+            return
+        } catch {
+            message = error.localizedDescription  // np. błąd Pęku kluczy — nie „Anulowano”
             return
         }
         let run = runDirectory

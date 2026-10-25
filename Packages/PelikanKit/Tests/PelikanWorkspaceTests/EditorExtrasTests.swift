@@ -123,6 +123,10 @@ struct EditorExtrasTests {
         #expect(EditorSearch.search("emp", scope: .allEditors, options: TextSearchOptions(wholeWord: true), in: ws).count == 4)
         let files = EditorSearch.search("emp", scope: .directories([t.url.appendingPathComponent("src")]), options: TextSearchOptions(), in: ws)
         #expect(Set(files.compactMap { $0.fileURL?.lastPathComponent }) == ["p.pkb", "q.sql"])
+        // Ten sam wynik poza wątkiem głównym (okno Search Bar szuka w plikach w tle).
+        let dir = t.url.appendingPathComponent("src")
+        let detached = await Task.detached { EditorSearch.searchFiles("emp", in: [dir], options: TextSearchOptions()) }.value
+        #expect(detached == files)
         let r = try await ws.invoke("edit.searchBar", CommandArguments(["query": "emp", "scope": "current", "wholeWord": true]))
         #expect(r.message == "Trafień: 1")
         await #expect(throws: (any Error).self) {

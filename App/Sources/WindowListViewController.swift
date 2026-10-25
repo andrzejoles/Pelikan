@@ -30,6 +30,7 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         table.setAccessibilityLabel(L10n.tr("Lista okien"))
         let menu = NSMenu()
         menu.delegate = self
+        menu.autoenablesItems = false  // stan pozycji z `item(…, enabled:)` (np. Wykonaj w trakcie wykonania)
         table.menu = menu
         let scroll = NSScrollView()
         scroll.documentView = table

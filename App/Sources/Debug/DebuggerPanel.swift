@@ -125,8 +125,8 @@ struct DebuggerPanel: View {
 
     private func button(_ symbol: String, _ help: String, _ command: String, enabled: Bool? = nil) -> some View {
         Button {
-            // Komenda działa na oknie testu tego debugera (aktywuje je na czas startu).
-            if command == "debug.start" { workspace.activate(document.id) }
+            // Komendy debugera działają na aktywnym oknie testu — najpierw okno tego debugera.
+            workspace.activate(document.id)
             workspace.perform(CommandID(rawValue: command))
         } label: { Image(systemName: symbol) }
         .iconLabel(help)

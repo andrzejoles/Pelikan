@@ -213,9 +213,14 @@ struct TableEditorView: View {
                         Button(trg.enabled ? L10n.tr("Wyłącz") : L10n.tr("Włącz")) {
                             Task {
                                 do {
-                                    try await workspace.invoke(trg.enabled ? "ob.disable" : "ob.enable",
-                                                               CommandArguments(["object": .string("\(definition.owner).\(trg.name)"), "type": "TRIGGER"]))
+                                    // Na połączeniu edytora (jak Zastosuj), nie głównym; nazwa dokładna, bez wyszukiwania.
+                                    let sql = try ObjectAdmin.setEnabled(DBObject(owner: definition.owner, name: trg.name, type: .trigger), enabled: !trg.enabled)
+                                    try await workspace.guardModification([sql], connectionID: connectionID)
+                                    _ = try await workspace.sessions.session(workspace.sessions.compileKey(connection: connectionID)).execute(sql)
+                                    workspace.metadata(for: connectionID)?.refresh()
                                     refresh()
+                                } catch CommandError.cancelledByUser {
+                                    message = L10n.tr("Anulowano")
                                 } catch { message = error.localizedDescription }
                             }
                         }
