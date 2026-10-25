@@ -25901,6 +25901,34 @@
         }
       }
     },
+    "Kolumna %@: wartości LOB są większe niż limit przenoszenia (10 MB)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column %@: LOB values exceed the transfer limit (10 MB)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalte %@: LOB-Werte überschreiten das Übertragungslimit (10 MB)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Columna %@: los valores LOB superan el límite de transferencia (10 MB)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стовпець %@: значення LOB перевищують ліміт перенесення (10 МБ)"
+          }
+        }
+      }
+    },
     "Kolumna %@: wartości typu %@ nie da się porównać ani przenieść" : {
       "localizations" : {
         "en" : {
@@ -97801,6 +97829,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Änderung wirkt nach einem Neustart der App. Pelikan liefert Instant Client nicht mit (Oracle-Lizenz) — bitte von der Oracle-Website herunterladen."
+          }
+        }
+      }
+    },
+    "Zmiana flag kompilacji tylko przez użytkownika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the user can change compilation flags"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur der Benutzer kann Kompilierungsflags ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo el usuario puede cambiar los indicadores de compilación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінювати прапорці компіляції може лише користувач"
           }
         }
       }

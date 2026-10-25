@@ -211,9 +211,6 @@ public final class SSHSession: Sendable {
         return HostKeyScan(entries: entries, fingerprints: fingerprints)
     }
 
-    /// Odciski kluczy nieznanego serwera (`unknownHostKeys()`); `nil` — serwer znany.
-    public func unknownHostFingerprints() throws -> [String]? { try unknownHostKeys()?.fingerprints }
-
     /// Klucze serwera z połączenia z opcjami sesji (algorytmy starych serwerów jak AIX, plik konfiguracji, ProxyJump —
     /// `ssh-keyscan` ich nie przyjmuje), zapisane przez `accept-new` do pliku tymczasowego bez logowania; known_hosts
     /// użytkownika się nie zmienia, dopóki nie potwierdzi odcisku.

@@ -11,9 +11,34 @@ public enum HostCommand {
         private let lock = NSLock()
         private var data = Data()
         private var eof = false
+        private var stop = false
         func append(_ d: Data) { lock.withLock { if d.isEmpty { eof = true } else { data.append(d) } } }
         var finished: Bool { lock.withLock { eof } }
         var output: Data { lock.withLock { data } }
+        /// Koniec odczytu na żądanie (wnuk w tle trzyma potok); wątek kończy się przy najbliższym `poll`.
+        func requestStop() { lock.withLock { stop = true } }
+        var stopRequested: Bool { lock.withLock { stop } }
+    }
+
+    /// Odczyt potoku w osobnym wątku przez `poll`/`read`; uchwyt zamyka tylko ten wątek (zamknięcie z innego wątku
+    /// w trakcie odczytu to wyjątek NSFileHandle).
+    static func startReading(_ handle: FileHandle, into collector: Collector) {
+        Thread.detachNewThread {
+            let fd = handle.fileDescriptor
+            var buffer = [UInt8](repeating: 0, count: 65_536)
+            var pfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+            while !collector.stopRequested {
+                let r = poll(&pfd, 1, 50)
+                if r < 0 { if errno == EINTR { continue } else { break } }
+                if r == 0 { continue }
+                let n = read(fd, &buffer, buffer.count)
+                if n > 0 { collector.append(Data(buffer[0..<n])) }
+                else if n == 0 { break }
+                else if errno != EINTR && errno != EAGAIN { break }
+            }
+            collector.append(Data())
+            try? handle.close()
+        }
     }
 
     public static func run(_ command: String, directory: URL?, timeout: TimeInterval = 120) async throws -> Result {
@@ -29,17 +54,10 @@ public enum HostCommand {
         p.standardInput = FileHandle.nullDevice
         let collector = Collector()
         let handle = pipe.fileHandleForReading
-        handle.readabilityHandler = { h in
-            let d = h.availableData
-            collector.append(d)
-            if d.isEmpty { h.readabilityHandler = nil }
-        }
-        // Zamknięcie potoku: proces wnuk (np. `cmd &`) trzymający potok nie blokuje końca polecenia.
-        func closePipe() {
-            handle.readabilityHandler = nil
-            try? handle.close()
-        }
-        do { try p.run() } catch { closePipe(); throw error }
+        do { try p.run() } catch { try? handle.close(); throw error }
+        startReading(handle, into: collector)
+        // Koniec odczytu: proces wnuk (np. `cmd &`) trzymający potok nie blokuje końca polecenia.
+        func closePipe() { collector.requestStop() }
         // Process uruchamia polecenie we własnej grupie procesów (pgid = pid) — sygnał do grupy kończy też wnuki.
         let group = p.processIdentifier
         let deadline = ContinuousClock.now + .seconds(timeout)

@@ -49,6 +49,9 @@ public struct DataTransferJob: Sendable, Codable, Hashable {
 }
 
 public enum DataTransferRunner {
+    /// Limit odczytu wartości LOB przy przenoszeniu (bajty).
+    static let lobLimit = 10_000_000
+
     /// Mapowanie domyślne: kolumny celu do kolumn źródła o tej samej nazwie (bez rozróżniania wielkości liter).
     public static func defaultMappings(targetColumns: [String], sourceColumns: [String]) -> [TransferColumnMapping] {
         targetColumns.map { t in TransferColumnMapping(target: t, source: sourceColumns.first { $0.caseInsensitiveCompare(t) == .orderedSame }) }
@@ -106,13 +109,24 @@ public enum DataTransferRunner {
         try validate(job)
         var result = ImportResult()
         // Zapytanie źródła przed czyszczeniem celu: kolumny typów nieprzenoszalnych przerywają, zanim cokolwiek zmienimy.
-        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
+        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: Self.lobLimit, bulk: true))
         guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Źródło musi być zapytaniem SELECT")) }
         let columns = rs.columns.map(\.name)
         let mapped = Set(job.mappings.filter(\.isUsed).compactMap { $0.source?.uppercased() })
         if let bad = rs.columns.first(where: { [.object, .bfile, .refCursor].contains($0.type) && mapped.contains($0.name.uppercased()) }) {
             await source.closeResultSet(rs.id)
             throw CommandError.notAvailable(L10n.tr("Kolumna \(bad.name): wartości typu \(bad.typeName) nie da się porównać ani przenieść"))
+        }
+        // LOB ponad limit odczytu przerwałby przeniesienie w połowie — po TRUNCATE/DELETE i zatwierdzonych paczkach —
+        // więc długości sprawdzamy przed jakąkolwiek zmianą w celu (CLOB: znaki, zapas na 4 bajty na znak).
+        let lobs = rs.columns.filter { [.blob, .clob, .nclob].contains($0.type) && mapped.contains($0.name.uppercased()) }
+        if !lobs.isEmpty {
+            let exprs = lobs.map { "max(dbms_lob.getlength(\(ResultExporter.identifier($0.name))))" }.joined(separator: ", ")
+            let (_, rows) = try await source.queryAll("select \(exprs) from (\(job.sourceSQL))", limit: 1)
+            for (i, c) in lobs.enumerated() where (Int(rows.first?[i].displayText ?? "") ?? 0) > (c.type == .blob ? Self.lobLimit : Self.lobLimit / 4) {
+                await source.closeResultSet(rs.id)
+                throw CommandError.notAvailable(L10n.tr("Kolumna \(c.name): wartości LOB są większe niż limit przenoszenia (10 MB)"))
+            }
         }
         switch job.mode {
         case .append: break

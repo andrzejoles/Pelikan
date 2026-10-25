@@ -111,11 +111,11 @@ public final class SQLPlusEngine {
     }
 
     /// Połączenie okna; nil po DISCONNECT (do CONNECT).
-    var windowConnection: UUID? { state.disconnected ? nil : workspace.effectiveConnection(of: document) }
+    var windowConnection: UUID? { workspace.effectiveConnection(of: document) }
 
     /// Sesja okna; po DISCONNECT błąd zamiast wykonania na połączeniu głównym.
     func windowSession() async throws -> any DatabaseSession {
-        guard !state.disconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
+        guard !document.isDisconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
         return try await workspace.session(for: document)
     }
 
@@ -123,13 +123,14 @@ public final class SQLPlusEngine {
     nonisolated public static func maskPassword(_ text: String) -> String {
         var t = text
         let star = "********"
-        if let r = t.range(of: #"(?i)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression) {
+        if let r = t.range(of: #"(?im)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression) {
             // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa), jak w CONNECT.
             let wordEnd = t[r.upperBound...].firstIndex(where: \.isWhitespace) ?? t.endIndex
             let end = t[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
             if end > r.upperBound { t.replaceSubrange(r.upperBound..<end, with: star) }
         }
-        return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)("[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+        // IDENTIFIED BY hasło / "hasło" / VALUES 'skrót' (eksport DDL użytkownika).
+        return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)(values\s+'[^']*'|"[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
     }
 
     /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
@@ -259,7 +260,7 @@ public final class SQLPlusEngine {
     func executeSQL(_ sql: String, original: String, isPLSQL: Bool) async -> Outcome {
         let start = ContinuousClock.now
         do {
-            guard !state.disconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
+            guard !document.isDisconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
             try await workspace.guardModification([sql], connectionID: windowConnection)
             let session = try await windowSession()
             if state.serverOutput { try await SessionUtilities.enableOutput(session, bufferSize: workspace.settings.dbmsOutputBufferSize) }

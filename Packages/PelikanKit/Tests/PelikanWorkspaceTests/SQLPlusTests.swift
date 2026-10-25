@@ -138,10 +138,10 @@ struct SQLPlusHostStepTests {
         doc.transactionOpen = true
         ui.answers = [2]
         _ = await engine.run("disconnect")
-        #expect(!engine.state.disconnected && doc.transactionOpen && ui.asked.contains { $0.hasPrefix("Transakcja okna") })
+        #expect(!doc.isDisconnected && doc.transactionOpen && ui.asked.contains { $0.hasPrefix("Transakcja okna") })
         ui.answers = [1]
         _ = await engine.run("disconnect")
-        #expect(engine.state.disconnected && !doc.transactionOpen)
+        #expect(doc.isDisconnected && !doc.transactionOpen && ws.effectiveConnection(of: doc) == nil)
         _ = await engine.run("select 1 from dual;")
         #expect(doc.console.last?.text == "SP2-0640: Brak połączenia.")
     }

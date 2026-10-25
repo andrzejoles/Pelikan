@@ -9,7 +9,6 @@ final class ReportWindowViewController: NSViewController {
     private let workspace: Workspace
     private var editor: CodeEditorView!
     private let web = WKWebView.localHTML()
-    private let webGuard = LocalHTMLNavigationGuard()
     private let container = NSView()
     private var pages: [NSView] = []
     private var tokens: [ObservationToken] = []
@@ -28,7 +27,6 @@ final class ReportWindowViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        web.navigationDelegate = webGuard
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
         let locked = NSHostingView(rootView: LockedReportView())
         let editorPage = NSView()
@@ -78,28 +76,6 @@ final class ReportWindowViewController: NSViewController {
             self.web.loadHTMLString(html ?? "", baseURL: nil)
             if html != nil { self.selection.tab = 3 }
         })
-    }
-}
-
-extension WKWebView {
-    /// Widok HTML bez JavaScriptu (raport może pochodzić z cudzego pliku — treść jest niezaufana).
-    static func localHTML(frame: NSRect = .zero) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.defaultWebpagePreferences.allowsContentJavaScript = false
-        return WKWebView(frame: frame, configuration: config)
-    }
-}
-
-/// Przepuszcza tylko treść wczytaną przez `loadHTMLString(_:baseURL: nil)` (about:blank);
-/// odnośniki, przekierowania i odświeżenia do innych adresów są blokowane.
-@MainActor
-final class LocalHTMLNavigationGuard: NSObject, WKNavigationDelegate {
-    static func allows(_ action: WKNavigationAction) -> Bool {
-        action.request.url?.scheme == "about"
-    }
-
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-        Self.allows(navigationAction) ? .allow : .cancel
     }
 }
 

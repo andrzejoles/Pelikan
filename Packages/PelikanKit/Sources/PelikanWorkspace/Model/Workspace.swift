@@ -765,7 +765,7 @@ final class SettingsBox {
 extension Workspace {
     /// Połączenie okna: przypięte albo główne (UG 20.2).
     public func effectiveConnection(of doc: Document) -> UUID? {
-        doc.connectionID ?? sessions.mainConnectionID
+        doc.isDisconnected ? nil : doc.connectionID ?? sessions.mainConnectionID
     }
 
     /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).

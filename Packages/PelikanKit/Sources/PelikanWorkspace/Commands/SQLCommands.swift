@@ -103,11 +103,14 @@ public enum SQLCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "cmd.executeLine", title: L10n.tr("Wykonaj linię poleceń"), category: .session,
-                                      parameters: [CommandParameter("line", .string, required: true, L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL"))],
+                                      parameters: [CommandParameter("line", .string, required: true, L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL")),
+                                                   WindowListCommands.documentParam],
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Wykonuje linię z karty Dialog okna Command Window."), inMenu: false, feature: "PD-CMDW-001"),
                     validate: { ws in ws.activeDocument.map { $0.kind == .command && !$0.isExecuting } ?? false }) { ctx in
-                guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
+                // Okno wskazane jawnie (kolejka type-ahead okna, które nie jest aktywne) albo aktywne.
+                let doc = try WindowListCommands.document(ctx)
+                guard doc.kind == .command, !doc.isExecuting else { return .ok }
                 guard let line = ctx.arguments.string("line") else { throw CommandError.missingArgument("line") }
                 // Historia linii bez haseł (CONNECT u/hasło, IDENTIFIED BY) — jak historia SQL.
                 if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line, !SQLExecutor.containsPassword(line) {
