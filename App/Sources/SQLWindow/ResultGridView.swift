@@ -602,12 +602,10 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = id
         }
         menu.addItem(.separator())
-        for (title, id, exclude) in [(L10n.tr("Filtruj: tylko ta wartość"), "grid.filterByValue", false),
-                                     (L10n.tr("Filtruj: bez tej wartości"), "grid.filterByValue", true)] {
+        for (title, exclude) in [(L10n.tr("Filtruj: tylko ta wartość"), false), (L10n.tr("Filtruj: bez tej wartości"), true)] {
             let item = menu.addItem(withTitle: title, action: #selector(filterByValue(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = exclude
-            _ = id
         }
         for (title, id) in [(L10n.tr("Filtr wyrażeniem…"), "grid.filterExpression"), (L10n.tr("Wyczyść filtr"), "grid.clearFilter"),
                             (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel"),

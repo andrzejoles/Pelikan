@@ -13,11 +13,13 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     private let textView = NSTextView.scrollableTextView()
     private let imageView = NSImageView()
     private let pdfView = PDFView()
-    /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych.
+    /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych, bez nawigacji.
     private lazy var webView: WKWebView = {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = false
-        return WKWebView(frame: .zero, configuration: config)
+        let view = WKWebView(frame: .zero, configuration: config)
+        view.navigationDelegate = HTMLPreviewNavigation.shared
+        return view
     }()
     private let autoFormat = NSButton(checkboxWithTitle: "", target: nil, action: nil)
     private let info = NSTextField(labelWithString: "")
@@ -119,7 +121,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     /// Auto Format: przełącznik zapamiętany w preferencjach (komenda grid.largeDataAutoFormat).
     @objc private func toggleAutoFormat() {
         Task {
-            _ = try? await workspace.invoke("grid.largeDataAutoFormat")
+            do { try await workspace.invoke("grid.largeDataAutoFormat") } catch { workspace.ui?.showError(error.localizedDescription) }
             autoFormat.state = workspace.settings.largeDataAutoFormat ? .on : .off
             applyAutoFormat()
         }
@@ -237,7 +239,12 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         let panel = NSOpenPanel()
         panel.canChooseDirectories = false
         panel.beginSheetModal(for: w) { [weak self] r in
-            guard r == .OK, let url = panel.url, let self, let data = try? Data(contentsOf: url) else { return }
+            guard r == .OK, let url = panel.url, let self else { return }
+            let data: Data
+            do { data = try Data(contentsOf: url) } catch {
+                self.workspace.ui?.showError(error.localizedDescription)
+                return
+            }
             if self.model.isBinary {
                 self.model.setBytes(data)
             } else {

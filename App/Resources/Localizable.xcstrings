@@ -35841,6 +35841,34 @@
         }
       }
     },
+    "Nie udało się rozpakować portfela (ditto, kod %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not unpack the wallet (ditto, code %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wallet konnte nicht entpackt werden (ditto, Code %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo descomprimir el wallet (ditto, código %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося розпакувати гаманець (ditto, код %@)"
+          }
+        }
+      }
+    },
     "Nie udało się ustalić wersji utPLSQL do pobrania" : {
       "localizations" : {
         "en" : {

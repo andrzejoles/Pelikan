@@ -389,32 +389,44 @@ public enum EditorSearch {
     @MainActor
     public static func search(_ query: String, scope: TextSearchScope, options: TextSearchOptions, in ws: Workspace) -> [UsageHit] {
         var hits: [UsageHit] = []
-        func add(_ text: String, document: DocumentID?, file: URL?, title: String) {
-            for h in find(query, in: text, options: options) where hits.count < 5000 {
-                hits.append(UsageHit(kind: file == nil ? .document : .file, owner: nil, name: title, type: nil, line: h.line,
-                                     text: h.text.trimmingCharacters(in: .whitespaces), fileURL: file, document: document, title: title))
-            }
-        }
         switch scope {
         case .currentEditor:
-            if let d = ws.activeDocument { add(d.text, document: d.id, file: nil, title: d.title) }
+            if let d = ws.activeDocument { append(query, in: d.text, options: options, document: d.id, file: nil, title: d.title, to: &hits) }
         case .allEditors:
-            for d in ws.documents where [.sql, .program, .test, .command].contains(d.kind) { add(d.text, document: d.id, file: nil, title: d.title) }
+            for d in ws.documents where [.sql, .program, .test, .command].contains(d.kind) {
+                append(query, in: d.text, options: options, document: d.id, file: nil, title: d.title, to: &hits)
+            }
         case .directories(let dirs):
-            let fm = FileManager.default
-            var count = 0
-            for dir in dirs {
-                guard let e = fm.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) else { continue }
-                for case let url as URL in e where FileOpening.extensions.contains(url.pathExtension.lowercased()) || url.pathExtension.lowercased() == "txt" {
-                    count += 1
-                    guard count <= 5000, hits.count < 5000 else { break }
-                    if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 5_000_000 { continue }
-                    guard let data = try? Data(contentsOf: url) else { continue }
-                    add(TextFileCodec.decode(data).text, document: nil, file: url, title: url.lastPathComponent)
-                }
+            hits = searchFiles(query, in: dirs, options: options)
+        }
+        return hits
+    }
+
+    /// Pliki skryptów w katalogach (rekurencyjnie) — bez stanu obszaru roboczego, więc także poza wątkiem głównym
+    /// (duże katalogi nie blokują interfejsu).
+    public static func searchFiles(_ query: String, in dirs: [URL], options: TextSearchOptions) -> [UsageHit] {
+        var hits: [UsageHit] = []
+        let fm = FileManager.default
+        var count = 0
+        for dir in dirs {
+            guard let e = fm.enumerator(at: dir, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) else { continue }
+            for case let url as URL in e where FileOpening.extensions.contains(url.pathExtension.lowercased()) || url.pathExtension.lowercased() == "txt" {
+                count += 1
+                guard count <= 5000, hits.count < 5000 else { break }
+                if let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > 5_000_000 { continue }
+                guard let data = try? Data(contentsOf: url) else { continue }
+                append(query, in: TextFileCodec.decode(data).text, options: options, document: nil, file: url, title: url.lastPathComponent, to: &hits)
             }
         }
         return hits
+    }
+
+    private static func append(_ query: String, in text: String, options: TextSearchOptions, document: DocumentID?, file: URL?, title: String,
+                               to hits: inout [UsageHit]) {
+        for h in find(query, in: text, options: options) where hits.count < 5000 {
+            hits.append(UsageHit(kind: file == nil ? .document : .file, owner: nil, name: title, type: nil, line: h.line,
+                                 text: h.text.trimmingCharacters(in: .whitespaces), fileURL: file, document: document, title: title))
+        }
     }
 }
 

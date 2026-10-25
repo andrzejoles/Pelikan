@@ -17,9 +17,6 @@ final class AgentUIController: ApprovalPresenter {
     private var profilesToken: ObservationToken?
     private var registeredProfiles: [AgentProfile] = []
     private let runDirectory: URL
-    /// Dodatkowe kroki cofania sesji (np. przywracanie kodu obiektów z historii DDL — Etap 5.3); każdy zwraca opis
-    /// wykonanego cofnięcia do komunikatu.
-    var undoSteps: [(String) async -> String?] = []
 
     init?(workspace: Workspace) {
         guard let data = workspace.dataDirectory else { return nil }
@@ -42,7 +39,8 @@ final class AgentUIController: ApprovalPresenter {
         do {
             try controller.start()
         } catch {
-            NSLog("Pelikan: serwer agentów nie wystartował: \(error)")
+            // NSLog sam podaje nazwę procesu (z Brand.xcconfig).
+            NSLog("Serwer agentów nie wystartował: %@", String(describing: error))
         }
     }
 
@@ -231,6 +229,7 @@ final class AgentUIController: ApprovalPresenter {
                 guard !done else { return }
                 done = true
                 if let sheet { window.endSheet(sheet) }
+                sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
                 cont.resume(returning: result)
             }
             let w = NSWindow(contentViewController: NSHostingController(rootView: view))
@@ -283,7 +282,6 @@ final class AgentUIController: ApprovalPresenter {
             if r.rolledBack { messages.append(L10n.tr("Wycofano niezatwierdzone zmiany danych agenta.")) }
             if !r.conflicts.isEmpty { messages.append(L10n.tr("Pominięto (konflikty): \(r.conflicts.joined(separator: ", "))")) }
             messages += r.errors
-            for step in undoSteps { if let m = await step(id) { messages.append(m) } }
             let done = NSAlert()
             done.alertStyle = .informational
             done.messageText = L10n.tr("Sesja agenta cofnięta")
