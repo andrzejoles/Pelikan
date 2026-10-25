@@ -183,6 +183,7 @@ enum ObjectAdminCommands {
                     summary: L10n.tr("Wstawia źródło zaznaczonego obiektu w miejscu kursora w aktywnym oknie programu albo testu."), feature: "PD-OB-023",
                     validate: { ws in ws.selectedObject != nil && [.program, .test, .sql].contains(ws.activeDocument?.kind) }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, [.program, .test, .sql].contains(doc.kind) else { throw CommandError.notAvailable(L10n.tr("Brak okna edytora")) }
+                if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let source = o.type.isProgram ? try await m.source(of: o) + "\n/\n" : try await m.ddl(of: o)
                 let ns = doc.text as NSString
