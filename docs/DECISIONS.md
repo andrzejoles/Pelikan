@@ -1336,3 +1336,15 @@ Trzecia próba tylko do odczytu (D151) mierzyła osobno zapytania i obliczenia p
 - Testy przypisywały `ws.ui = TestUI()`, a `Workspace.ui` jest słabą referencją — obiekt znikał od razu i 27 testów
   działało bez UI. Teraz trzymają referencję; test filtrów Object Browsera sprawdza przy tym okno wyboru filtru.
 - Instalator buduje bez dSYM: po mapie prefiksów (D162) dsymutil nie znajdował modułów .pcm, a symbole i tak usuwa strip.
+
+### D167 · 2026-10-25 — Przegląd aktualności zależności i narzędzi
+Stan na 2026-10-25 (porównanie z najnowszymi wydaniami w repozytoriach źródłowych):
+- Podniesione: swift-crypto 4.5.2 → 5.0.3 (zakres `3.0.0..<6.0.0`, jak w OracleNIO; 5.0 wydane 2026-09-16),
+  swift-collections 1.7.4, SwiftTerm 1.99.1, Sparkle 2.10.1 (m.in. poprawka przedwczesnej instalacji aktualizacji ze
+  ścieżki w NFC), Swift w CI Linux 6.3 → 6.4.
+- Aktualne: ODPI-C 26.0.0, utPLSQL 3.2.3, swift-sdk MCP 0.12.1, SwiftNIO 2.104.0 i pozostałe zależności OracleNIO,
+  Instant Client 23.26.2 (najnowszy dla macOS arm64) i 23.26.4 w CI Linux, XcodeGen 2.46.0, `actions/checkout@v7`.
+- OracleNIO zostaje na commicie 7cda9e0 (po 1.0.0-rc.4, D20): na main są dwa późniejsze commity wydajnościowe
+  z 2026-10-24 bez wydania — poczekają na wydanie albo dłuższą próbę.
+- xcodebuild dostaje jawny cel `platform=macOS,arch=arm64` (aplikacja jest tylko arm64) — bez ostrzeżenia
+  o wielu pasujących celach.
