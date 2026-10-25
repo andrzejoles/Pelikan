@@ -188,6 +188,10 @@ public enum TextDiff {
 
     enum Op: Equatable { case equal(Int, Int), delete(Int), insert(Int) }
 
+    /// Największa liczba różnic (D) liczona algorytmem Myersa; powyżej — porównanie uproszczone (cały środek między
+    /// wspólnym początkiem i końcem jako zmieniony). Ścieżka zajmuje O(D²) pamięci, czas O((N+M)·D).
+    static let maxEditDistance = 2000
+
     /// Algorytm Myersa O((N+M)D) z odtworzeniem ścieżki.
     static func myers(_ a: [String], _ b: [String]) -> [Op] {
         let n = a.count, m = b.count
@@ -201,30 +205,32 @@ public enum TextDiff {
         let A = Array(a[pre..<(n - suf)]), B = Array(b[pre..<(m - suf)])
         let N = A.count, M = B.count
         var ops: [Op] = (0..<pre).map { .equal($0, $0) }
-        if N == 0 || M == 0 {
-            ops += (0..<N).map { .delete(pre + $0) } + (0..<M).map { .insert(pre + $0) }
-        } else {
-            let max = N + M
-            var v = [Int](repeating: 0, count: 2 * max + 2)
-            var trace: [[Int]] = []
-            outer: for d in 0...max {
-                trace.append(v)
+        // Ścieżka: dla każdego d tylko wycinek v[-d…d] (od indeksu d² w `trace`) — tyle potrzebuje odtworzenie.
+        let max = N + M
+        var v = [Int](repeating: 0, count: 2 * max + 2)
+        var trace: [Int] = []
+        var last: Int?
+        if N > 0, M > 0 {
+            outer: for d in 0...Swift.min(max, maxEditDistance) {
+                for k in -d...d { trace.append(v[k + max]) }
                 for k in stride(from: -d, through: d, by: 2) {
                     var x: Int
                     if k == -d || (k != d && v[k - 1 + max] < v[k + 1 + max]) { x = v[k + 1 + max] } else { x = v[k - 1 + max] + 1 }
                     var y = x - k
                     while x < N, y < M, A[x] == B[y] { x += 1; y += 1 }
                     v[k + max] = x
-                    if x >= N, y >= M { break outer }
+                    if x >= N, y >= M { last = d; break outer }
                 }
             }
+        }
+        if let last {
             var x = N, y = M
             var back: [Op] = []
-            for d in stride(from: trace.count - 1, through: 0, by: -1) {
-                let vd = trace[d]
+            for d in stride(from: last, through: 0, by: -1) {
+                func vd(_ k: Int) -> Int { trace[d * d + k + d] }
                 let k = x - y
-                let prevK = (k == -d || (k != d && vd[k - 1 + max] < vd[k + 1 + max])) ? k + 1 : k - 1
-                let prevX = d == 0 ? 0 : vd[prevK + max]
+                let prevK = (k == -d || (k != d && vd(k - 1) < vd(k + 1))) ? k + 1 : k - 1
+                let prevX = d == 0 ? 0 : vd(prevK)
                 let prevY = prevX - prevK
                 while x > prevX, y > prevY { back.append(.equal(pre + x - 1, pre + y - 1)); x -= 1; y -= 1 }
                 if d > 0 {
@@ -234,6 +240,9 @@ public enum TextDiff {
                 y = prevY
             }
             ops += back.reversed()
+        } else {
+            // Bez wspólnej części albo zbyt wiele różnic — środek usunięty i dodany (wiersze łączone w zmienione).
+            ops += (0..<N).map { .delete(pre + $0) } + (0..<M).map { .insert(pre + $0) }
         }
         ops += (0..<suf).map { .equal(n - suf + $0, m - suf + $0) }
         return ops

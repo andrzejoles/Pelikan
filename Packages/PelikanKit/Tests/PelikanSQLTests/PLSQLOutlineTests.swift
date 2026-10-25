@@ -87,6 +87,35 @@ struct PLSQLOutlineTests {
         #expect(broken.first?.name == "q")
     }
 
+    @Test("Wyzwalacz złożony (COMPOUND TRIGGER) i wyzwalacz CALL — zakres jednostki")
+    func compoundAndCallTriggers() {
+        let src = """
+            create or replace trigger t for update on emp compound trigger
+              g number;
+              before statement is
+              begin
+                g := 0;
+              end before statement;
+              after each row is
+              begin
+                g := g + 1;
+              end after each row;
+            end t;
+            /
+            create or replace trigger c before insert on emp for each row when (new.sal / 2 > 10) call log_proc
+            /
+            begin null; end;
+            """
+        let nodes = PLSQLOutline.parse(src)
+        #expect(nodes.map(\.kind) == [.trigger, .trigger, .block])
+        let ns = src as NSString
+        let t = nodes[0]
+        #expect(t.children.map(\.name) == ["g"])
+        #expect(ns.substring(with: NSRange(location: t.range.lowerBound, length: t.range.count)).hasSuffix("end t;"))
+        let c = nodes[1]
+        #expect(ns.substring(with: NSRange(location: c.range.lowerBound, length: c.range.count)).hasSuffix("call log_proc"))
+    }
+
     @Test("Zakresy zwijania: blok podprogramu, IF, LOOP, CASE")
     func folding() {
         let ranges = PLSQLOutline.foldingRanges(body)
