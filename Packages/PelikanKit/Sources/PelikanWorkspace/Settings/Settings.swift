@@ -67,7 +67,6 @@ public struct Settings: Sendable, Codable, Hashable {
     public var compilerHints = true
     public var namingConventions = NamingConventions()
     public var pinWindowConnectionsByDefault = false
-    public var allowMultipleConnections = true
     public var instantClientDirectory: String?
     /// Katalog Oracle Net użytkownika (tnsnames.ora, sqlnet.ora) i portfel magazynu haseł (Oracle Wallet) — trafiają
     /// do katalogu Oracle Net zarządzanego przez Pelikana; zmiana działa po ponownym uruchomieniu (D53).
@@ -91,7 +90,6 @@ public struct Settings: Sendable, Codable, Hashable {
     public var dbmsOutputBufferSize = 0
     // Window Types — SQL Window
     public var autoCommitSQL = false
-    public var autoCommitPostedRecords = false
     /// Test Window: AutoCommit after execute (PD-TEST-003).
     public var autoCommitTestWindow = false
     /// Wskaźniki połączeń `user@baza` i tło okna w kolorze połączenia (PD-CONN-005).
@@ -314,7 +312,6 @@ public struct Settings: Sendable, Codable, Hashable {
         compilerHints = v(.compilerHints, compilerHints)
         namingConventions = v(.namingConventions, namingConventions)
         pinWindowConnectionsByDefault = v(.pinWindowConnectionsByDefault, pinWindowConnectionsByDefault)
-        allowMultipleConnections = v(.allowMultipleConnections, allowMultipleConnections)
         instantClientDirectory = v(.instantClientDirectory, instantClientDirectory)
         oracleNetDirectory = v(.oracleNetDirectory, oracleNetDirectory)
         walletDirectory = v(.walletDirectory, walletDirectory)
@@ -337,7 +334,6 @@ public struct Settings: Sendable, Codable, Hashable {
         dbmsOutputClearBeforeExecute = v(.dbmsOutputClearBeforeExecute, dbmsOutputClearBeforeExecute)
         dbmsOutputBufferSize = v(.dbmsOutputBufferSize, dbmsOutputBufferSize)
         autoCommitSQL = v(.autoCommitSQL, autoCommitSQL)
-        autoCommitPostedRecords = v(.autoCommitPostedRecords, autoCommitPostedRecords)
         autoCommitTestWindow = v(.autoCommitTestWindow, autoCommitTestWindow)
         connectionIndicators = v(.connectionIndicators, connectionIndicators)
         colorWindowBackground = v(.colorWindowBackground, colorWindowBackground)

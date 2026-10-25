@@ -4,8 +4,6 @@ import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
-/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
-/// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
 /// Wybrana karta Preferencji — wspólna dla okna, żeby komendy mogły otwierać konkretną kartę (np. Zestawy).
 @MainActor
 @Observable
@@ -13,6 +11,8 @@ final class PreferencesNavigation {
     var pane = "GeneralPane"
 }
 
+/// Preferencje (UG 23): najważniejsze opcje wzorca w kartach; zapis natychmiastowy do settings.json (bez przycisku
+/// Zastosuj, jak w ustawieniach macOS). Wyszukiwarka przechodzi do karty z pasującym ustawieniem (PD-PREF-001).
 struct PreferencesView: View {
     let workspace: Workspace
     @Bindable var navigation: PreferencesNavigation
@@ -147,10 +147,9 @@ struct GeneralPane: View {
                 .pickerStyle(.segmented)
             }
             Section(L10n.tr("Język interfejsu")) {
+                // AppleLanguages ustawia AppDelegate.applyLanguage po każdej zmianie ustawienia (także z importu i zestawów).
                 Picker(L10n.tr("Język"), selection: Binding(get: { workspace.settings.language ?? "" }, set: { v in
                     workspace.settings.language = v.isEmpty ? nil : v
-                    // Standardowe nadpisanie języka aplikacji w macOS (jak Ustawienia systemowe › Język › Aplikacje).
-                    if v.isEmpty { UserDefaults.standard.removeObject(forKey: "AppleLanguages") } else { UserDefaults.standard.set([v], forKey: "AppleLanguages") }
                 })) {
                     Text(L10n.tr("Jak system")).tag("")
                     Text("Polski").tag("pl")
@@ -210,6 +209,12 @@ struct SQLWindowPane: View {
                 Picker(L10n.tr("Układ liczb"), selection: setting(workspace, \.gridNumberLayout)) {
                     ForEach(NumberLayout.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
+                Toggle(L10n.tr("Pobieraj LOB-y na żądanie (podgląd pierwszych 4000 bajtów)"), isOn: setting(workspace, \.fetchLOBsOnDemand))
+                Toggle(L10n.tr("Wyrównuj kolumny wg zapisanego szablonu zapytania"), isOn: setting(workspace, \.autoAlign))
+                Stepper(value: setting(workspace, \.notifyLongQuerySeconds), in: 0...3600, step: 5) {
+                    Text(workspace.settings.notifyLongQuerySeconds == 0 ? L10n.tr("Bez powiadomienia o końcu długiego wykonania")
+                         : L10n.tr("Powiadamiaj o końcu wykonania dłuższego niż \(workspace.settings.notifyLongQuerySeconds) s"))
+                }
                 Toggle(L10n.tr("Large Data Editor: Auto Format (JSON, XML)"), isOn: setting(workspace, \.largeDataAutoFormat))
             }
             Section(L10n.tr("Query By Example")) {
@@ -223,6 +228,10 @@ struct SQLWindowPane: View {
             Section(L10n.tr("DBMS_OUTPUT (UG 23.5)")) {
                 Toggle(L10n.tr("Włączone"), isOn: setting(workspace, \.dbmsOutputEnabled))
                 Toggle(L10n.tr("Czyść przed wykonaniem"), isOn: setting(workspace, \.dbmsOutputClearBeforeExecute))
+                Stepper(value: setting(workspace, \.dbmsOutputBufferSize), in: 0...1_000_000, step: 10_000) {
+                    Text(workspace.settings.dbmsOutputBufferSize == 0 ? L10n.tr("Rozmiar bufora: bez limitu")
+                         : L10n.tr("Rozmiar bufora: \(workspace.settings.dbmsOutputBufferSize) bajtów"))
+                }
             }
             Section(L10n.tr("Formaty dat (UG 23.17)")) {
                 TextField(L10n.tr("DATE"), text: setting(workspace, \.dateFormat)).font(.body.monospaced())

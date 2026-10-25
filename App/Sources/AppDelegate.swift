@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var agentUI: AgentUIController?
     private var menuToken: ObservationToken?
     private var appearanceToken: ObservationToken?
+    private var languageToken: ObservationToken?
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -72,6 +73,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         RunLoop.main.add(stallTimer!, forMode: .common)
     }
 
+    /// Język interfejsu przez standardowe nadpisanie `AppleLanguages` aplikacji (jak Ustawienia systemowe › Język ›
+    /// Aplikacje). „Jak system” usuwa tylko nadpisanie ustawione przez Pelikana — język wybrany dla aplikacji
+    /// w Ustawieniach systemowych zostaje.
+    static func applyLanguage(_ language: String?) {
+        let defaults = UserDefaults.standard
+        let applied = "PelikanAppliedLanguage"
+        let current = Bundle.main.bundleIdentifier.flatMap { defaults.persistentDomain(forName: $0)?["AppleLanguages"] } as? [String]
+        if let language {
+            if current != [language] { defaults.set([language], forKey: "AppleLanguages") }
+            if defaults.string(forKey: applied) != language { defaults.set(language, forKey: applied) }
+        } else if let previous = defaults.string(forKey: applied) {
+            if current == [previous] { defaults.removeObject(forKey: "AppleLanguages") }
+            defaults.removeObject(forKey: applied)
+        }
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         startStallLog()
         workspace.ui = self
@@ -92,6 +109,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             case .light: NSApp.appearance = NSAppearance(named: .aqua)
             case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
             }
+        }
+        // Język z Preferencji — także z importu i zestawów preferencji; działa od następnego uruchomienia.
+        languageToken = trackChanges { [weak self] in
+            guard let self else { return }
+            Self.applyLanguage(self.workspace.settings.language)
         }
         // Zmiana profilu albo własnych skrótów (Preferencje › Klawiatura) — menu z nowymi skrótami.
         menuToken = trackChanges { [weak self] in
