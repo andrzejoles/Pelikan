@@ -163,8 +163,9 @@ public enum TestRunner {
     }
 
     /// Wykonuje blok okna testowego w sesji okna. Zwraca czas wykonania; przy błędzie ustawia `doc.errorStack`.
+    /// `allowAutoCommit: false` — bez zatwierdzenia z opcji okna testu (Test Manager wycofuje zmiany testów).
     @discardableResult
-    public static func execute(_ doc: Document, in ws: Workspace) async throws -> Duration {
+    public static func execute(_ doc: Document, in ws: Workspace, allowAutoCommit: Bool = true) async throws -> Duration {
         synchronize(doc)
         let text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw CommandError.notAvailable(L10n.tr("Okno testu jest puste")) }
@@ -270,7 +271,7 @@ public enum TestRunner {
             }
             doc.statusText = L10n.tr("Wykonano w \(String(format: "%.3f", Double(r.elapsed.components.seconds) + Double(r.elapsed.components.attoseconds) / 1e18)) s")
             // AutoCommit after execute (PD-TEST-003): zatwierdzenie po udanym wykonaniu, jak w opcji okna testu wzorca.
-            if ws.settings.autoCommitTestWindow {
+            if allowAutoCommit && ws.settings.autoCommitTestWindow {
                 try await session.commit()
                 doc.transactionOpen = false
                 doc.statusText = (doc.statusText ?? "") + " · " + L10n.tr("zatwierdzono")

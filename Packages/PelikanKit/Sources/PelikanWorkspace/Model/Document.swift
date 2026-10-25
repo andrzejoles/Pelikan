@@ -92,6 +92,8 @@ public final class Document: Identifiable {
     /// Połączenie okna (nil = połączenie główne) i przypięcie (UG 20.2).
     public var connectionID: UUID?
     public var connectionPinned = false
+    /// Własny cel sesji dokumentu spoza listy okien (np. Test Manager) zamiast sesji wg trybu sesji.
+    public var sessionPurpose: SessionPurpose?
     /// Konsola zapytań połączenia (DG-CONS-001): tekst zachowywany automatycznie, bez pliku.
     public var consoleConnectionID: UUID?
 
