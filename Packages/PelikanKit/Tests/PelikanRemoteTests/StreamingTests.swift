@@ -141,6 +141,28 @@ struct SpawnStreamTests {
         let r = try Spawn.run("/bin/sh", [Array("-c".utf8), Array((prolog + "echo \"$X\"; sh -c 'echo $ORACLE_HOME'").utf8)], environment: [:])
         #expect(String(decoding: r.output, as: UTF8.self) == "a'b $HOME `id`\n/u01/app/oracle\n")
     }
+
+    @Test("Zaufanie kluczowi: do known_hosts trafiają dokładnie potwierdzone klucze z ssh-keyscan, bez łączenia")
+    func trustScannedHostKeys() throws {
+        let dir = URL(fileURLWithPath: "/private/tmp/plk-kh-\(UUID().uuidString.prefix(6))", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // Klucz tymczasowy (nie z ~/.ssh) — tylko jako poprawny wpis known_hosts.
+        let gen = try Spawn.run("/usr/bin/ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-f", dir.path + "/k"].map { Array($0.utf8) }, environment: [:])
+        #expect(gen.status == 0, "\(gen.errorText)")
+        let pub = try String(contentsOfFile: dir.path + "/k.pub", encoding: .utf8).split(separator: " ")
+        let name = "[127.0.0.1]:2222"
+        let keyscan = "# 127.0.0.1:2222 SSH-2.0-OpenSSH_9.9\n\(name) \(pub[0]) \(pub[1])\nzły wiersz\n\(name) ssh-rsa AAAA;rm\n"
+        let entries = SSHSession.knownHostsEntries(keyscan, name: name)
+        #expect(entries == ["\(name) \(pub[0]) \(pub[1])"])
+
+        let file = dir.path + "/known_hosts"
+        try "inny ssh-ed25519 AAAA".write(toFile: file, atomically: true, encoding: .utf8)
+        let session = try SSHSession(config: SSHSession.Config(host: "127.0.0.1", port: 2222, knownHostsFile: file), runDirectory: dir, secret: { nil })
+        try session.trustHostKeys(SSHSession.HostKeyScan(entries: entries, fingerprints: []))
+        #expect(try String(contentsOfFile: file, encoding: .utf8) == "inny ssh-ed25519 AAAA\n\(entries[0])\n")
+        #expect(try session.unknownHostKeys() == nil)
+    }
 }
 
 @Suite("Potok trzymany przez potomka (jak master ssh z ControlMaster)", .timeLimit(.minutes(1)))

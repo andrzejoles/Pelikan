@@ -85,8 +85,9 @@ public enum SSHTargetTester {
         } else {
             checks.append(SSHTestCheck(title: L10n.tr("Serwer SSH"), status: .warning, detail: L10n.tr("Nie odczytano wersji serwera")))
         }
+        // Klucz nowego serwera zapisuje wcześniej interfejs po potwierdzeniu odcisku (`trustHostKeys`) — nieznany
+        // serwer kończy się tu błędem logowania, bez zaufania po cichu.
         do {
-            try session.recordHostKey()
             try session.connect()
         } catch {
             checks.append(SSHTestCheck(title: L10n.tr("Logowanie"), status: .failed, detail: describe(error)))

@@ -46,8 +46,9 @@ public struct PelikanSSHTarget: Sendable, Codable, Hashable, Identifiable {
     public var keyFile: String = ""
     /// Stare algorytmy (AIX 6.1 i podobne serwery).
     public var legacyAlgorithms = false
-    /// Kodowanie nazw i poleceń oraz wyjścia konsoli.
+    /// Kodowanie nazw i poleceń.
     public var nameEncoding: NameEncoding = .utf8
+    /// Kodowanie wyjścia konsoli (build, wdrożenie).
     public var consoleEncoding: NameEncoding = .utf8
     public var kshPath = "/usr/bin/ksh"
     public var oracleHome = ""
