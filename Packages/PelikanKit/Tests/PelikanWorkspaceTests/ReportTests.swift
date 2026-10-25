@@ -63,6 +63,28 @@ struct ReportOfflineTests {
         #expect(try ReportDefinition.decode(Data("{\"title\":\"x\",\"sql\":\"y\"}".utf8)).styleName == ReportStyle.library[0].name)
     }
 
+    @Test("Dodatkowy CSS z pliku .rep nie zamyka <style>; nagłówek CSP bez skryptów")
+    func cssInjection() {
+        var def = ReportDefinition(title: "T", sql: "")
+        def.extraCSS = "td { color: red; } </style><script>alert(1)</script><style>"
+        let html = ReportRenderer.html(def, data: data)
+        #expect(!html.contains("</style><script>") && html.components(separatedBy: "</style>").count == 2)
+        #expect(html.contains("<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">"))
+    }
+
+    @Test("Styl raportu: w pliku stały identyfikator; stare pliki z polską nazwą stylu i identyfikator odczytywane")
+    func styleKey() throws {
+        var def = ReportDefinition(title: "T", sql: "")
+        def.styleName = ReportStyle.library[1].name
+        let json = String(decoding: try def.encoded(), as: UTF8.self)
+        #expect(json.contains("\"styleName\" : \"green\""))
+        #expect(try ReportDefinition.decode(def.encoded()) == def)
+        let old = try ReportDefinition.decode(Data("{\"title\":\"x\",\"sql\":\"y\",\"styleName\":\"Zielony\"}".utf8))
+        #expect(old.styleName == ReportStyle.library[1].name && old.style.key == "green")
+        #expect(try ReportDefinition.decode(Data("{\"styleName\":\"compact\"}".utf8)).style.key == "compact")
+        #expect(try ReportDefinition.decode(Data("{\"styleName\":\"nieznany\"}".utf8)).style.key == "standard")
+    }
+
     @MainActor
     @Test("Raporty standardowe: unikalne identyfikatory, zmienne w raportach z parametrami")
     func standard() {

@@ -44,6 +44,23 @@ struct ChartTests {
         #expect(ChartBuilder.build(d, columns: columns, rows: rows).categories == ["1", "2", "3", "4"])
     }
 
+    @MainActor
+    @Test("Auto-odświeżanie wykresu: zakres karty musi zawierać to samo polecenie (po edycji okna — błąd, bez wykonania)")
+    func reexecuteGuard() async throws {
+        let ws = Workspace(drivers: [:])
+        let doc = ws.newDocument(.sql, text: "select 1 from dual;\nselect 2 from dual;")
+        let st = SQLExecutor.statements(text: doc.text, selection: 0..<0, scope: .allStatements, autoSelect: false)[1]
+        let tab = ResultTab(title: "x", statementRange: st.start..<st.end)
+        tab.statementText = st.text
+        #expect(ws.statementUnchanged(tab, in: doc))
+        doc.text = "select 1 from dual;\ndelete from emp;  "
+        #expect(!ws.statementUnchanged(tab, in: doc))
+        await #expect(throws: CommandError.self) { _ = try await ws.reexecute(tab, in: doc) }
+        doc.text = "select 1 from dual;\nselect 2 from dual;"
+        tab.statementText = nil
+        #expect(!ws.statementUnchanged(tab, in: doc))
+    }
+
     @Test("Szablony w katalogu danych: zapis, zastąpienie po nazwie, usunięcie")
     func templates() throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-charts-\(UUID().uuidString.prefix(8))")
@@ -90,6 +107,12 @@ struct UserToolTests {
         #expect(p.executableURL?.path == "/bin/echo" && p.environment?.keys.contains { $0.hasPrefix("PELIKAN_") } == false)
         t.program = "brak-takiego-programu-pelikan"
         #expect(throws: CommandError.self) { _ = try UserTools.process(t, context()) }
+        // Ponad 64 KiB na stderr przed stdout — bez zakleszczenia (oba potoki czytane równolegle).
+        var noisy = UserTool(name: "Głośny")
+        noisy.program = "/bin/sh"
+        noisy.arguments = ["-c", "head -c 200000 /dev/zero | tr '\\000' x >&2; echo ok"]
+        let n = try await UserTools.run(noisy, context())
+        #expect(n.output == "ok\n" && n.errors.count == 200_000)
     }
 
     @Test("Komendy narzędzi: rejestracja, wyjście do nowego okna, narzędzie sesji otwiera okno SQL, usunięcie")

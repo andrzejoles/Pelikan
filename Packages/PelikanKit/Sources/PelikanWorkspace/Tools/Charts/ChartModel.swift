@@ -187,15 +187,22 @@ public enum ChartTemplateStore {
 
 extension Workspace {
     /// Ponowne wykonanie polecenia karty wyników okna (auto-odświeżanie wykresu) przez wykonanie okna SQL: zaznaczenie
-    /// polecenia, wykonanie, przywrócenie zaznaczenia; zwraca nową kartę wyniku (aktywną po wykonaniu).
+    /// polecenia, wykonanie, przywrócenie zaznaczenia; zwraca nową kartę wyniku (aktywną po wykonaniu). Tekst w zakresie
+    /// musi być nadal tym samym poleceniem — po edycji okna zakres wskazywałby inny fragment (także DML/DDL).
     public func reexecute(_ tab: ResultTab, in doc: Document) async throws -> ResultTab? {
         guard !doc.isExecuting else { return nil }
         let saved = doc.selectedRange
-        let len = (doc.text as NSString).length
-        guard tab.statementRange.upperBound <= len else { throw CommandError.notAvailable(L10n.tr("Polecenie wykresu zmieniło się w oknie")) }
+        guard statementUnchanged(tab, in: doc) else { throw CommandError.notAvailable(L10n.tr("Polecenie wykresu zmieniło się w oknie")) }
         doc.selectedRange = tab.statementRange
         defer { doc.selectedRange = saved }
         _ = try await SQLExecutor.execute(doc, scope: .standard, in: self)
         return doc.results.first { $0.id == doc.activeResultID } ?? doc.results.last
+    }
+
+    /// Zakres karty w bieżącym tekście okna obejmuje dokładnie to samo polecenie, które dało wynik.
+    func statementUnchanged(_ tab: ResultTab, in doc: Document) -> Bool {
+        guard tab.statementRange.upperBound <= (doc.text as NSString).length, let expected = tab.statementText else { return false }
+        return SQLExecutor.statements(text: doc.text, selection: tab.statementRange, scope: .standard,
+                                      autoSelect: settings.autoSelectStatement).map(\.text) == [expected]
     }
 }
