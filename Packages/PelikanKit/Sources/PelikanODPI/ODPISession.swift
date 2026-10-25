@@ -309,7 +309,19 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             if dpiStmt_getRowCount(stmt, &count) == DPI_SUCCESS, stmtInfo.isDML != 0 { result.rowsAffected = count }
         }
         for v in vars where v.bind.direction != .input {
-            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: v.data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
+            var data = v.data
+            if stmtInfo.isReturning != 0 {
+                // DML … RETURNING INTO: wartości są w danych zwróconych dla wiersza, nie w buforze zmiennej (wcześniej
+                // ROWID wstawionego wiersza wychodził NULL — przegląd kodu, D168).
+                var count: UInt32 = 0
+                var returned: UnsafeMutablePointer<dpiData>?
+                guard dpiVar_getReturnedData(v.handle, 0, &count, &returned) == DPI_SUCCESS, count > 0, let returned else {
+                    result.outBinds[v.bind.name] = .null
+                    continue
+                }
+                data = returned
+            }
+            result.outBinds[v.bind.name] = try value(native: v.nativeType, oracle: v.oracleType, data: data, typeName: v.bind.type.rawValue, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
         }
         if stmtInfo.isPLSQL != 0 {
             result.implicitResults = try implicitResults(stmt, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)

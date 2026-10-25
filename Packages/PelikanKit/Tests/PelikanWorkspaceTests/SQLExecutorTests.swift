@@ -8,6 +8,15 @@ import Testing
 struct SQLExecutorUnitTests {
     let script = "select 1 from dual;\nselect 2 from dual;\nupdate t set x = 1;"
 
+    @Test("Hasło w poleceniu: CONNECT u/… i IDENTIFIED BY tak, CONNECT bez hasła i EZConnect z „/” po „@” nie")
+    func passwordDetection() {
+        #expect(SQLExecutor.containsPassword("connect app/haslo@db"))
+        #expect(SQLExecutor.containsPassword("conn app/haslo"))
+        #expect(SQLExecutor.containsPassword("alter user app identified by haslo"))
+        #expect(!SQLExecutor.containsPassword("connect dev_agent_test"))
+        #expect(!SQLExecutor.containsPassword("connect app@host:1521/svc"))
+    }
+
     @Test("Zaznaczenie wykonuje tylko zaznaczony tekst (z przesunięciem pozycji)")
     func selection() {
         let s = SQLExecutor.statements(text: script, selection: 20..<38, scope: .standard, autoSelect: true)

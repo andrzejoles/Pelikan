@@ -1,11 +1,20 @@
 # Pelikan — wydanie beta
 
-Trzecia beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Czwarta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 8.4.0
+## Co nowego od 8.7.0
+
+- **Przegląd całego kodu** (ok. 130 poprawek, D168), m.in.: agent AI kompiluje dokładnie to, na co użytkownik wyraził zgodę;
+  sterownik thin nie zatwierdza po cichu transakcji przy rozłączeniu; CONNECT/DISCONNECT w Oknie poleceń pytają
+  o COMMIT/ROLLBACK; porównanie i przenoszenie danych przenoszą duże BLOB-y zamiast zapisywać NULL; edytor tabeli
+  zachowuje klucze obce do innych schematów i kolumny identity przy odtwarzaniu tabeli; import CSV z końcami linii
+  Windows; okno raportu bez JavaScriptu.
+- Aktualne zależności (Sparkle 2.10.1, SwiftTerm 1.99.1, swift-crypto 5) i kompilacja bez ostrzeżeń.
+
+## Co nowego w 8.7.0
 
 - **Diagram ER** z dużego schematu (tysiące tabel) buduje się w kilka sekund zamiast półtorej minuty.
 - **Znajdź obiekty w bazie** z przeszukiwaniem definicji tabel (kolumny, komentarze, warunki CHECK): około trzy razy

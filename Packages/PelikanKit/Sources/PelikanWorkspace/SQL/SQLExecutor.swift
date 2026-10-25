@@ -113,7 +113,7 @@ public enum SQLExecutor {
     public static func containsPassword(_ sql: String) -> Bool {
         let u = sql.uppercased()
         return u.range(of: #"IDENTIFIED\s+BY"#, options: .regularExpression) != nil
-            || u.range(of: #"^\s*CONN(ECT)?\s"#, options: .regularExpression) != nil
+            || u.range(of: #"^\s*CONN(ECT)?\s+[^@\s]*/"#, options: .regularExpression) != nil   // u/hasło[@baza]; bez „/” — bez hasła
             || u.contains("PASSWORD")
     }
 
