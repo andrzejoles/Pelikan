@@ -70,14 +70,25 @@ public enum DataTransferRunner {
 
     /// Polecenie INSERT dla wiersza (literały wartości; stałe jako wyrażenia SQL).
     public static func insert(_ job: DataTransferJob, columns: [String], row: [OracleValue]) -> String {
+        // Bez wiązania nic nie rzuca błędu — literały jak w eksporcie.
+        (try? statement(job, columns: columns, row: row, bind: false).sql) ?? ""
+    }
+
+    /// INSERT wiersza do wykonania: LOB-y i RAW jako zmienne wiązane (bez limitu literału); wartość nieprzenoszalna
+    /// (LOB obcięty przy odczycie, obiekt) — błąd zamiast NULL.
+    static func statement(_ job: DataTransferJob, columns: [String], row: [OracleValue], bind: Bool) throws -> (sql: String, binds: [BindVariable]) {
         let used = job.mappings.filter(\.isUsed)
-        let values = used.map { m -> String in
+        var bound = TransferValues()
+        var values: [String] = []
+        for m in used {
             if let src = m.source, let i = columns.firstIndex(where: { $0.caseInsensitiveCompare(src) == .orderedSame }), i < row.count {
-                return ResultExporter.literal(row[i])
+                values.append(bind ? try bound.sql(row[i], column: src) : ResultExporter.literal(row[i]))
+            } else {
+                values.append(m.constant.isEmpty ? "null" : m.constant)
             }
-            return m.constant.isEmpty ? "null" : m.constant
         }
-        return "insert into \(job.targetName) (\(used.map { ResultExporter.identifier($0.target) }.joined(separator: ", "))) values (\(values.joined(separator: ", ")))"
+        return ("insert into \(job.targetName) (\(used.map { ResultExporter.identifier($0.target) }.joined(separator: ", "))) values (\(values.joined(separator: ", ")))",
+                bound.binds)
     }
 
     /// Kontrola definicji przed wykonaniem.
@@ -94,21 +105,34 @@ public enum DataTransferRunner {
                            progress: (@MainActor (Int) -> Void)? = nil) async throws -> ImportResult {
         try validate(job)
         var result = ImportResult()
+        // Zapytanie źródła przed czyszczeniem celu: kolumny typów nieprzenoszalnych przerywają, zanim cokolwiek zmienimy.
+        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
+        guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Źródło musi być zapytaniem SELECT")) }
+        let columns = rs.columns.map(\.name)
+        let mapped = Set(job.mappings.filter(\.isUsed).compactMap { $0.source?.uppercased() })
+        if let bad = rs.columns.first(where: { [.object, .bfile, .refCursor].contains($0.type) && mapped.contains($0.name.uppercased()) }) {
+            await source.closeResultSet(rs.id)
+            throw CommandError.notAvailable(L10n.tr("Kolumna \(bad.name): wartości typu \(bad.typeName) nie da się porównać ani przenieść"))
+        }
         switch job.mode {
         case .append: break
         case .truncate: _ = try await target.execute("truncate table \(job.targetName)")
         case .delete: result.deleted = Int(try await target.execute("delete from \(job.targetName)").rowsAffected)
         }
-        let r = try await source.execute(job.sourceSQL, binds: [], options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
-        guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Źródło musi być zapytaniem SELECT")) }
-        let columns = rs.columns.map(\.name)
         var n = 0
         while true {
             try Task.checkCancellation()
             let batch = try await source.fetch(rs.id, maxRows: 5000)
             for row in batch.rows {
+                // Wartość nieprzenoszalna (np. LOB ponad limit odczytu) przerywa całe przeniesienie — bez cichego NULL.
+                let st: (sql: String, binds: [BindVariable])
+                do { st = try statement(job, columns: columns, row: row, bind: true) } catch {
+                    await source.closeResultSet(rs.id)
+                    try await target.rollback()
+                    throw error
+                }
                 do {
-                    _ = try await target.execute(insert(job, columns: columns, row: row))
+                    _ = try await target.execute(st.sql, binds: st.binds)
                     result.inserted += 1
                 } catch {
                     result.errors.append(L10n.tr("Wiersz \(n + 1): \(error.localizedDescription)"))

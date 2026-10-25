@@ -89,7 +89,7 @@ public enum ImportWizard {
             s.fixedStarts = guessFixedStarts(text)
         }
         let base = ((fileName as NSString).lastPathComponent as NSString).deletingPathExtension
-        s.table = TextImport.bindName(base, index: 0)
+        s.table = TextImport.fieldName(base, index: 0)
         return s
     }
 
@@ -158,9 +158,8 @@ public enum ImportWizard {
                                progress: (@MainActor (Int) -> Void)? = nil) async throws -> ImportResult {
         guard !state.table.isEmpty, !state.owner.isEmpty else { throw CommandError.notAvailable(L10n.tr("Wskaż schemat i tabelę docelową")) }
         if state.createTable { _ = try await s.execute(createTableSQL(state, data: data)) }
-        let r = try await TextImport.run(data.rows, fieldNames: data.fieldNames, target: state.target, in: s, progress: progress)
-        try await s.commit()
-        return r
+        // COMMIT co n wierszy i na końcu wykonuje TextImport.run.
+        return try await TextImport.run(data.rows, fieldNames: data.fieldNames, target: state.target, in: s, progress: progress)
     }
 }
 

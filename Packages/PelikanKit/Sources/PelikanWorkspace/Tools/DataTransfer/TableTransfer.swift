@@ -77,10 +77,12 @@ public enum TableTransfer {
         }
         var done: [String] = []
         var remaining = tables.sorted()
+        var doneSet = Set<String>()
         while !remaining.isEmpty {
-            let ready = remaining.filter { (parents[$0] ?? []).isSubset(of: Set(done)) }
+            let ready = remaining.filter { (parents[$0] ?? []).isSubset(of: doneSet) }
             let next = ready.isEmpty ? [remaining[0]] : ready
             done += next
+            doneSet.formUnion(next)
             remaining.removeAll { next.contains($0) }
         }
         return done
@@ -264,9 +266,29 @@ public enum TableTransfer {
         let t = type.uppercased()
         if t == "DATE" { return "TO_DATE(SUBSTR(:\(bind), 1, 19), 'YYYY-MM-DD HH24:MI:SS')" }
         if t.hasPrefix("TIMESTAMP") { return "TO_TIMESTAMP(:\(bind), 'YYYY-MM-DD HH24:MI:SS.FF9')" }
-        if t == "RAW" { return "HEXTORAW(:\(bind))" }
-        if t == "BLOB" || t == "LONG RAW" { return "TO_BLOB(HEXTORAW(:\(bind)))" }
+        // RAW, BLOB i CLOB wiązane bezpośrednio (bindValue) — bez limitu VARCHAR2 4000 B dla tekstu szesnastkowego.
         return ":\(bind)"
+    }
+
+    /// Zmienna wiązana wartości z formatu własnego: RAW/BLOB z base64 jako dane binarne, CLOB/NCLOB jako LOB, liczby
+    /// jako NUMBER, reszta jako tekst.
+    static func bindValue(_ type: String, name: String, value v: String?) -> BindVariable {
+        guard let v else { return BindVariable(name: name, value: .null) }
+        let t = type.uppercased()
+        switch t {
+        case "RAW", "BLOB", "LONG RAW":
+            let d = Data(base64Encoded: v) ?? Data()
+            if t != "BLOB" { return BindVariable(name: name, type: .raw, value: .raw(d), maxSize: UInt32(max(1, d.count))) }
+            return BindVariable(name: name, type: .blob, value: .lob(LOBValue(kind: .blob, bytes: d, length: UInt64(d.count), truncated: false)))
+        case "CLOB", "NCLOB":
+            return BindVariable(name: name, type: t == "CLOB" ? .clob : .nclob,
+                                value: .lob(LOBValue(kind: t == "CLOB" ? .clob : .nclob, text: v, length: UInt64(v.count), truncated: false)))
+        case "NUMBER", "FLOAT":
+            return BindVariable(name: name, type: .number, value: .number(v))
+        default:
+            if t.hasPrefix("BINARY_") { return BindVariable(name: name, type: .number, value: .number(v)) }
+            return BindVariable(name: name, value: .text(v), maxSize: UInt32(max(32767, v.utf8.count)))
+        }
     }
 
     /// Import wskazanych tabel z formatu własnego (tabele w zapisanej kolejności — nadrzędne pierwsze).
@@ -302,13 +324,7 @@ public enum TableTransfer {
                 + zip(t.columns, binds).map { valueExpression($0.type, bind: $1) }.joined(separator: ", ") + ")"
             for (i, row) in t.rows.enumerated() {
                 let values: [BindVariable] = zip(t.columns, binds).enumerated().map { j, pair in
-                    let (col, name) = pair
-                    let raw = j < row.count ? row[j] : nil
-                    guard var v = raw else { return BindVariable(name: name, value: .null) }
-                    let type = col.type.uppercased()
-                    if type == "RAW" || type == "BLOB" || type == "LONG RAW" { v = Data(base64Encoded: v)?.hexUpper ?? "" }
-                    if type == "NUMBER" || type == "FLOAT" || type.hasPrefix("BINARY_") { return BindVariable(name: name, type: .number, value: .number(v)) }
-                    return BindVariable(name: name, value: .text(v), maxSize: UInt32(max(32767, v.utf8.count)))
+                    bindValue(pair.0.type, name: pair.1, value: j < row.count ? row[j] : nil)
                 }
                 do {
                     _ = try await s.execute(sql, binds: values)
@@ -355,6 +371,14 @@ public enum DataPump {
 
     static func lit(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "''") + "'" }
 
+    /// Błąd w bloku po OPEN: zatrzymanie zadania z usunięciem tabeli głównej (bez tego zadanie i jego tabela główna
+    /// zostają w schemacie); potem błąd dalej.
+    static let cleanup = """
+        exception when others then
+              if h is not null then begin dbms_datapump.stop_job(h, immediate => 1, keep_master => 0, delay => 0); exception when others then null; end; end if;
+              raise;
+        """
+
     static func nameList(_ names: [String]) -> String {
         names.map { "''" + $0.replacingOccurrences(of: "'", with: "") + "''" }.joined(separator: ",")
     }
@@ -375,6 +399,7 @@ public enum DataPump {
               dbms_datapump.start_job(h);
               dbms_datapump.wait_for_job(h, st);
               :st := st;
+            \(cleanup)
             end;
             """
         return try await run(block, log: log, directory: directory, in: s)
@@ -402,6 +427,7 @@ public enum DataPump {
               dbms_datapump.start_job(h);
               dbms_datapump.wait_for_job(h, st);
               :st := st;
+            \(cleanup)
             end;
             """
         return try await run(block, log: log, directory: directory, in: s)

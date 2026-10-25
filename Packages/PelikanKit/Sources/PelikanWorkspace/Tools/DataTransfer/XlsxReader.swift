@@ -43,6 +43,8 @@ public struct ZipReader {
             let method = UInt16(u16(p + 10))
             let csize = u32(p + 20), size = u32(p + 24)
             let nlen = u16(p + 28), elen = u16(p + 30), clen = u16(p + 32)
+            // Uszkodzony katalog centralny: długości pól poza końcem pliku.
+            guard p + 46 + nlen + elen + clen <= bytes.count else { throw Failure.notZip }
             let offset = u32(p + 42)
             let name = String(decoding: bytes[(p + 46)..<(p + 46 + nlen)], as: UTF8.self)
             map[name] = Entry(name: name, method: method, compressedSize: csize, size: size, localOffset: offset)
@@ -97,6 +99,9 @@ public struct XlsxWorkbook {
         }
     }
 
+    /// Limit komórek prostokąta arkusza (komórka np. w XFD1048576 oznaczałaby miliardy pustych pól).
+    static let maxCells = 20_000_000
+
     /// Wiersze arkusza (indeks od 0): kolumny według adresów komórek, puste uzupełnione "".
     public func rows(sheet: Int) throws -> [[String]] {
         guard sheets.indices.contains(sheet) else { return [] }
@@ -106,19 +111,26 @@ public struct XlsxWorkbook {
         _ = p.parse()
         guard let maxRow = d.cells.keys.map(\.row).max() else { return [] }
         let maxCol = d.cells.keys.map(\.col).max() ?? 0
+        guard (maxRow + 1) * (maxCol + 1) <= Self.maxCells else {
+            throw CommandError.notAvailable(L10n.tr("Arkusz jest za duży: \(maxRow + 1) wierszy × \(maxCol + 1) kolumn"))
+        }
         var out = Array(repeating: Array(repeating: "", count: maxCol + 1), count: maxRow + 1)
         for (k, v) in d.cells { out[k.row][k.col] = v }
         return out
     }
 
-    /// Indeks kolumny z adresu komórki („AB12” → wiersz 11, kolumna 27).
+    /// Indeks kolumny z adresu komórki („AB12” → wiersz 11, kolumna 27); adresy spoza arkusza Excela (kolumna po XFD,
+    /// wiersz 0 albo po 1048576) — nil.
     static func cellIndex(_ ref: String) -> (row: Int, col: Int)? {
         var col = 0
         var digits = ""
         for ch in ref.uppercased() {
-            if let a = ch.asciiValue, a >= 65, a <= 90, digits.isEmpty { col = col * 26 + Int(a - 64) } else if ch.isNumber { digits.append(ch) }
+            if let a = ch.asciiValue, a >= 65, a <= 90, digits.isEmpty {
+                col = col * 26 + Int(a - 64)
+                if col > 16_384 { return nil }
+            } else if ch.isNumber { digits.append(ch) }
         }
-        guard col > 0, let r = Int(digits) else { return nil }
+        guard col > 0, digits.count <= 7, let r = Int(digits), r >= 1, r <= 1_048_576 else { return nil }
         return (r - 1, col - 1)
     }
 
@@ -196,10 +208,12 @@ public struct XlsxWorkbook {
         func parser(_ p: XMLParser, didStartElement n: String, namespaceURI: String?, qualifiedName: String?, attributes a: [String: String] = [:]) {
             switch n {
             case "row":
-                currentRow = (a["r"].flatMap(Int.init) ?? currentRow + 2) - 1
+                currentRow = max(0, min(a["r"].flatMap(Int.init) ?? currentRow + 2, 1_048_577)) - 1
                 nextCol = 0
             case "c":
                 ref = a["r"].flatMap(XlsxWorkbook.cellIndex) ?? (currentRow, nextCol)
+                // Wiersz spoza arkusza (r="0", ujemny, za duży) — komórka pominięta.
+                if let r = ref, r.row < 0 || r.row >= 1_048_576 || r.col >= 16_384 { ref = nil }
                 type = a["t"] ?? "n"
                 text = ""
             case "v", "t": capture = true

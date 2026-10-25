@@ -89,6 +89,11 @@ struct Stage7Tests {
                 && java.contains("java.sql.Timestamp hiredate = rs.getTimestamp(\"HIREDATE\");") && java.contains("ps.setObject(1, empno);"))
         let py = CodeGenerator.generate(.pythonInsert, object: o, columns: cols)
         #expect(py.contains("cur.execute(sql, {\"empno\": empno, \"ename\": ename, \"hiredate\": hiredate})"))
+        // Słowa zastrzeżone jako zmienne wiązane (ORA-01745) z przyrostkiem; identyfikator w cudzysłowie w literale Java.
+        let odd = [CodeGenerator.Column(name: "DATE", type: "DATE", isKey: true), CodeGenerator.Column(name: "Level", type: "NUMBER")]
+        #expect(CodeGenerator.generate(.insert, object: o, columns: odd).contains("VALUES (:date_, :level_)"))
+        let quoted = CodeGenerator.generate(.javaInsert, object: DBObject(owner: "SCOTT", name: "Emp", type: .table), columns: odd)
+        #expect(quoted.contains("String sql = \"INSERT INTO SCOTT.\\\"Emp\\\" (\\\"DATE\\\", \\\"Level\\\") VALUES (?, ?)\";"))
     }
 
     @Test("SQLFORMAT: parsowanie i formaty csv, json, xml, html, insert, loader, delimited, fixed, ansiconsole")
