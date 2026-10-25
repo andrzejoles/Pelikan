@@ -203,7 +203,11 @@ public enum TestRunner {
             profileID = try await Profiler.start(kind, session: session, comment: profileComment)
         }
         if let level = doc.traceLevel { try await PLSQLTrace.start(level, in: session) }
+        // Raz: błąd po udanym wykonaniu (pobranie kursora, COMMIT) nie liczy statystyk podwójnie i nie nadpisuje raportu.
+        var measured = false
         func finishMeasurements() async {
+            guard !measured else { return }
+            measured = true
             if doc.traceLevel != nil, let r = try? await PLSQLTrace.stop(in: session) {
                 doc.traceRun = r.run
                 doc.traceEvents = r.events

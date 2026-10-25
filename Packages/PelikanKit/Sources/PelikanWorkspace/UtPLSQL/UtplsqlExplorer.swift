@@ -115,8 +115,9 @@ public enum UtplsqlExplorer {
             isTestPackage = n != "0"
         }
         if isTestPackage {
-            // Pakiet testowy → pierwszy pakiet, od którego zależy (poza utPLSQL).
-            sql = "select referenced_name from all_dependencies where owner = :o and name = :n and referenced_type = 'PACKAGE' and referenced_owner = :o and referenced_name not like 'UT%' and rownum = 1"
+            // Pakiet testowy → pierwszy pakiet, od którego zależy (poza utPLSQL zainstalowanym w tym schemacie: UT, UT_*;
+            // pakiety użytkownika UTILS, UTIL_PKG zostają).
+            sql = "select referenced_name from all_dependencies where owner = :o and name = :n and referenced_type = 'PACKAGE' and referenced_owner = :o and referenced_name <> 'UT' and referenced_name not like 'UT\\_%' escape '\\' and rownum = 1"
         } else {
             sql = "select name from all_dependencies where referenced_owner = :o and referenced_name = :n and owner = :o and type = 'PACKAGE BODY' and name like 'TEST%' and rownum = 1"
         }
