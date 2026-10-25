@@ -250,7 +250,8 @@ enum AgentDatabaseCommands {
                 let sql = try AgentQueryRules.validate(ctx.arguments.string("sql") ?? "", masked: masked)
                 let s = try await ws.agentDatabaseSession(ctx, def, action: "run_query")
                 let limits = ws.settings.agent
-                let maxRows = min(Int(ctx.arguments.int("maxRows") ?? Int64(limits.queryMaxRows)), limits.queryMaxRows)
+                // Ujemny limit dałby pobieranie po 0 wierszy (hasMore bez końca) — najmniej 0.
+                let maxRows = max(0, min(Int(ctx.arguments.int("maxRows") ?? Int64(limits.queryMaxRows)), limits.queryMaxRows))
                 // Otwarta transakcja agenta (niezatwierdzone DML) nie może zostać wycofana przez odczyt — wtedy zapytanie
                 // idzie w niej (nadal tylko SELECT), w przeciwnym razie w osobnej transakcji READ ONLY.
                 let pending = try await s.scalar("select dbms_transaction.local_transaction_id from dual") != nil

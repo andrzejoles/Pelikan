@@ -87,6 +87,8 @@ struct AgentSecurityTests {
                        "ob.drop ", "ob.test ", "utplsql.cliScript ", "edit.gotoDeclaration ", "file.close "] {
             #expect(!runCommand.contains(hidden), "\(hidden)")
         }
+        // Okno SQL — stan menu pozwala, odmawia bramka.
+        _ = env.workspace.newDocument(.sql, text: "select 1 from dual")
         let (text, isError) = try await client.call("run_command", ["command": "sql.execute"])
         #expect(isError && text.contains("permission_denied"))
     }
@@ -218,6 +220,29 @@ struct AgentSecurityTests {
 @MainActor
 @Suite("Kanał agentów: jednostki")
 struct AgentUnitTests {
+    @Test("run_command: argumenty spoza schematu usuwane, stan menu sprawdzany, historia okna niedostępna; hasła poza panelem i dziennikiem")
+    func argumentsFilteredAndRedacted() async throws {
+        let ws = Workspace()
+        let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
+        let approver = MockApprover()
+        controller.approvals = approver
+        let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
+        let noWindow = await controller.callTool("run_command", arguments: ["command": "edit.lowercase"], sessionID: session.id)
+        #expect(noWindow.isError == true && approver.requests.isEmpty)
+        let doc = ws.newDocument(.sql, text: "SELECT 1")
+        doc.selectedRange = 0..<8
+        let r = await controller.callTool("run_command", arguments: ["command": "edit.lowercase", "arguments": ["extra": "x"]], sessionID: session.id)
+        #expect(r.isError == false && doc.text == "select 1")
+        #expect(approver.requests.count == 1 && approver.requests[0].arguments["extra"] == nil)
+        doc.statementHistory = ["alter user u identified by x"]
+        let history = await controller.callTool("run_command", arguments: ["command": "sql.historyBack"], sessionID: session.id)
+        #expect(history.isError == true && doc.text == "select 1")
+        let s = AgentController.summarize(CommandArguments(["sql": "create user x identified by Tajne1", "list": ["alter user y identified by Tajne2"], "n": 1]))
+        #expect(!s.contains("Tajne") && s.contains(AgentController.redactedText) && s.contains("\"n\""))
+    }
+
     @Test("Porównanie stałoczasowe, base64url, tokeny 256 bit i unikalne")
     func tokens() {
         let a: [UInt8] = Array(0..<32)
