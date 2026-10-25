@@ -30,10 +30,10 @@ packages:
   # Terminal panelu agenta (MIT; jak w Bifoldzie).
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
-    exactVersion: 1.99.0
+    exactVersion: 1.99.1
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    exactVersion: 2.10.0
+    exactVersion: 2.10.1
 targets:
   Pelikan:
     type: application

@@ -20,7 +20,7 @@ scripts/set-version.sh
 # domowym budującego. Ustawienia z wiersza poleceń obejmują też cele pakietów SPM. Dla Swifta bez mapy
 # (-file-prefix-map psuje jawne moduły Xcode), a kod Swift ścieżek nie zostawia — pilnuje tego sprawdzenie niżej.
 # Bez dSYM: po mapie prefiksów dsymutil nie znajduje modułów .pcm (dziesiątki ostrzeżeń), a symbole i tak usuwa strip.
-xcodebuild -project Pelikan.xcodeproj -scheme Pelikan -configuration Release -derivedDataPath build/DerivedData.noindex \
+xcodebuild -project Pelikan.xcodeproj -scheme Pelikan -destination 'platform=macOS,arch=arm64' -configuration Release -derivedDataPath build/DerivedData.noindex \
     -skipPackagePluginValidation -skipMacroValidation \
     OTHER_CFLAGS="\$(inherited) -ffile-prefix-map=$ROOT=." DEBUG_INFORMATION_FORMAT=dwarf \
     build -quiet

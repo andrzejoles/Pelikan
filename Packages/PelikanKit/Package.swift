@@ -25,7 +25,7 @@ let package = Package(
         // Sterownik „thin” w czystym Swifcie (Apache 2.0) — commit z main po 1.0.0-rc.4 (poprawka dla Swift 6.4, D20).
         .package(url: "https://github.com/lovetodream/oracle-nio.git", revision: "7cda9e0c416a0cb21acf070ba70ce4ff575121b0"),
         // SHA-256 pobranych wydań utPLSQL na Linuksie (na macOS CryptoKit); już w grafie zależności przez OracleNIO.
-        .package(url: "https://github.com/apple/swift-crypto.git", "3.0.0"..<"5.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "3.0.0"..<"6.0.0"),
         // Serwer MCP agentów (oficjalne SDK, jak w Bifoldzie — D33); tylko macOS.
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.1"),
     ],

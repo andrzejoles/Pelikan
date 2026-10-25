@@ -11,11 +11,11 @@ generate:
 
 build:
 	./scripts/set-version.sh
-	xcodebuild -project Pelikan.xcodeproj -scheme $(SCHEME) -configuration Debug -derivedDataPath $(DERIVED) -skipPackagePluginValidation -skipMacroValidation build -quiet
+	xcodebuild -project Pelikan.xcodeproj -scheme $(SCHEME) -destination 'platform=macOS,arch=arm64' -configuration Debug -derivedDataPath $(DERIVED) -skipPackagePluginValidation -skipMacroValidation build -quiet
 
 release:
 	./scripts/set-version.sh
-	xcodebuild -project Pelikan.xcodeproj -scheme $(SCHEME) -configuration Release -derivedDataPath $(DERIVED) -skipPackagePluginValidation -skipMacroValidation build -quiet
+	xcodebuild -project Pelikan.xcodeproj -scheme $(SCHEME) -destination 'platform=macOS,arch=arm64' -configuration Release -derivedDataPath $(DERIVED) -skipPackagePluginValidation -skipMacroValidation build -quiet
 
 run: build
 	open $(APP)
@@ -35,7 +35,7 @@ test-release:
 	cd $(PKG) && PELIKAN_PERF_STRICT=1 swift test -c release -Xswiftc -enable-testing --filter PerformanceTests
 
 test-ui:
-	xcodebuild -project Pelikan.xcodeproj -scheme PelikanUITests -derivedDataPath $(DERIVED) test -quiet
+	xcodebuild -project Pelikan.xcodeproj -scheme PelikanUITests -destination 'platform=macOS,arch=arm64' -derivedDataPath $(DERIVED) test -quiet
 
 # Lokalna baza testowa (Oracle Free 26ai w kontenerze) ze schematami i utPLSQL.
 testdb:

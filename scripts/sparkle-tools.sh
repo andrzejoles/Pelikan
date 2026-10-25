@@ -9,7 +9,7 @@ TOOL="${1:?Podaj narzędzie: generate_keys, sign_update albo generate_appcast}"
 shift
 BIN="$ROOT/build/DerivedData.noindex/SourcePackages/artifacts/sparkle/Sparkle/bin"
 if [ ! -x "$BIN/$TOOL" ]; then
-    xcodebuild -project "$ROOT/Pelikan.xcodeproj" -scheme Pelikan -derivedDataPath "$ROOT/build/DerivedData.noindex" \
+    xcodebuild -project "$ROOT/Pelikan.xcodeproj" -scheme Pelikan -destination 'platform=macOS,arch=arm64' -derivedDataPath "$ROOT/build/DerivedData.noindex" \
         -resolvePackageDependencies -skipPackagePluginValidation >/dev/null
 fi
 case "$TOOL" in
