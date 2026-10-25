@@ -27,4 +27,11 @@ struct PairMatcherTests {
         #expect(at(s.replacingOccurrences(of: "end loop", with: "end lo|op")) == ["loop", "end loop"])
         #expect(at("sel|ect 1 from dual").isEmpty)
     }
+
+    @Test("END nazwa zawierająca „end” (send_mail, vendor): para od słowa END")
+    func endInName() {
+        #expect(at("beg|in\n  null;\nend send_mail;") == ["begin", "end send_mail"])
+        #expect(at("beg|in\n  null;\nEND vendor;") == ["begin", "END vendor"])
+        #expect(at("begin\n  null;\nen|d append_row;") == ["begin", "end append_row"])
+    }
 }
