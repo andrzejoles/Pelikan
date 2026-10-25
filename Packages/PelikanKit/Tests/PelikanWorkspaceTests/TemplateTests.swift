@@ -141,4 +141,10 @@ struct UtplsqlTemplateTests {
         #expect(ut.allSatisfy { TemplateEngine.parse($0.text).contains { $0.variable != nil } })
         #expect(ut.first?.text.contains("--%suite(") == true)
     }
+
+    @Test("Szablon bulk collect + forall: po FORALL instrukcja DML (null; się nie kompiluje)")
+    func forall() throws {
+        let t = try #require(TemplateLibrary.builtIn.first { $0.name == "bulk collect + forall" })
+        #expect(t.text.range(of: #"forall[^\n]*\n\s*\[#\]insert into"#, options: .regularExpression) != nil)
+    }
 }
