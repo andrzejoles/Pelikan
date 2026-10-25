@@ -16,7 +16,7 @@ public final class ExternalLargeDataEdit {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let name = model.columnName.lowercased().filter { $0.isLetter || $0.isNumber || $0 == "_" }
         let file = dir.appendingPathComponent("\(name.isEmpty ? "wartosc" : name).\(model.format.fileExtension)")
-        FileManager.default.createFile(atPath: file.path, contents: model.fileData, attributes: [.posixPermissions: 0o600])
+        _ = FileManager.default.createFile(atPath: file.path, contents: model.fileData, attributes: [.posixPermissions: 0o600])
         url = file
         lastModified = modificationDate(file)
         return file

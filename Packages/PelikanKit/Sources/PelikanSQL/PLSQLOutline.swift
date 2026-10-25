@@ -89,7 +89,8 @@ public enum PLSQLOutline {
             let k = t[i]
             guard k.kind == .keyword || k.kind == .identifier else { i += 1; continue }
             switch k.upper {
-            case "BEGIN", "LOOP", "CASE", "IF" where !(i > 0 && t[i - 1].upper == "END"):
+            case "BEGIN", "LOOP", "CASE", "IF":
+                if k.upper == "IF", i > 0, t[i - 1].upper == "END" { break }
                 if k.upper == "LOOP", i > 0, t[i - 1].upper == "END" { break }
                 if k.upper == "CASE", i > 0, t[i - 1].upper == "END" { break }
                 stack.append((k.upper, k.start))

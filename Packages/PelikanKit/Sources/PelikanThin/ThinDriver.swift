@@ -293,13 +293,13 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                 if let num = OracleNumber(n), String(num.doubleValue) == n || Double(n).map({ $0 == $0.rounded() && abs($0) < 1e15 }) == true {
                     b.append(num, context: .default, bindName: name)
                 } else {
-                    try b.append(n, context: .default, bindName: name)     // pełna precyzja jako tekst (konwersja po stronie serwera)
+                    b.append(n, context: .default, bindName: name)     // pełna precyzja jako tekst (konwersja po stronie serwera)
                 }
             case .double(let d): b.append(d, context: .default, bindName: name)
             case .boolean(let x): b.append(x, context: .default, bindName: name)
             case .raw(let d): b.append(ByteBuffer(bytes: d), context: .default, bindName: name)
             case .lob(let l):
-                if let text = l.text { try b.append(text, context: .default, bindName: name) }
+                if let text = l.text { b.append(text, context: .default, bindName: name) }
                 else { b.append(ByteBuffer(bytes: l.bytes ?? Data()), context: .default, bindName: name) }
             case .timestamp(let ts, _):
                 var cal = Calendar(identifier: .gregorian)
@@ -308,7 +308,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                                                          minute: Int(ts.minute), second: Int(ts.second), nanosecond: Int(ts.fsecond))) ?? Date()
                 b.append(date, context: .default, bindName: name)
             default:
-                try b.append(v.value.format(.default), context: .default, bindName: name)
+                b.append(v.value.format(.default), context: .default, bindName: name)
             }
         }
         return (b, refs)

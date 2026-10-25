@@ -59,7 +59,8 @@ struct TableEditorStage8DBTests {
     func roundTrip() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)

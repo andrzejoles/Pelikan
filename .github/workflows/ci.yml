@@ -13,11 +13,13 @@ concurrency:
 jobs:
   macos:
     name: macOS — budowanie i testy jednostkowe
-    runs-on: macos-latest
+    # macOS 27 + Xcode 27 (obraz w wersji próbnej): cel wdrożenia 27.0 i ten sam Swift co lokalnie — macos-latest ma
+    # Xcode 26 i ostrzega o nieobsługiwanym celu (D166).
+    runs-on: xcode-27
     # Zawieszony test nie może blokować runnera godzinami.
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # wersja liczona z historii scalonych PR (scripts/version.sh)
       - name: Środowisko
@@ -52,7 +54,7 @@ jobs:
     env:
       PELIKAN_OCI_LIB_DIR: /opt/oracle/instantclient
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Swift 6.3 (swiftly — oficjalny instalator swift.org; setup-swift@v2 nie zna 6.3)

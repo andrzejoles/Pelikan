@@ -11,7 +11,8 @@ struct Stage7ToolsDBTests {
     func workspace(dataDirectory: URL? = nil) throws -> (Workspace, UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(dataDirectory: dataDirectory, drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)

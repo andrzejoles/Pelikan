@@ -19,9 +19,10 @@ scripts/set-version.sh
 # Mapa prefiksów: kod C zależności (np. BoringSSL w __FILE__) wpisuje do binarki ścieżki budowania — z katalogiem
 # domowym budującego. Ustawienia z wiersza poleceń obejmują też cele pakietów SPM. Dla Swifta bez mapy
 # (-file-prefix-map psuje jawne moduły Xcode), a kod Swift ścieżek nie zostawia — pilnuje tego sprawdzenie niżej.
+# Bez dSYM: po mapie prefiksów dsymutil nie znajduje modułów .pcm (dziesiątki ostrzeżeń), a symbole i tak usuwa strip.
 xcodebuild -project Pelikan.xcodeproj -scheme Pelikan -configuration Release -derivedDataPath build/DerivedData.noindex \
     -skipPackagePluginValidation -skipMacroValidation \
-    OTHER_CFLAGS="\$(inherited) -ffile-prefix-map=$ROOT=." \
+    OTHER_CFLAGS="\$(inherited) -ffile-prefix-map=$ROOT=." DEBUG_INFORMATION_FORMAT=dwarf \
     build -quiet
 SRC="build/DerivedData.noindex/Build/Products/Release/$APP_NAME.app"
 [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$SRC/Contents/Info.plist")" = "$VERSION" ] \

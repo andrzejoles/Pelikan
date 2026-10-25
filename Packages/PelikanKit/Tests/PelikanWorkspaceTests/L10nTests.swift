@@ -11,7 +11,7 @@ struct L10nTests {
         #expect(k.format == "Tabela %@: %@ kolumn, 50 %% wypełnienia" && k.arguments == ["EMP", "3"])
         let plain: L10n.Key = "Filtr nazw obiektów z %"
         #expect(plain.format == "Filtr nazw obiektów z %%" && plain.arguments.isEmpty)
-        let nested: L10n.Key = "Wymaga \(n > 1 ? "Tuning Pack" : "Diagnostics Pack")"
+        let nested: L10n.Key = "Wymaga \(name.count > 1 ? "Tuning Pack" : "Diagnostics Pack")"
         #expect(nested.format == "Wymaga %@" && nested.arguments == ["Tuning Pack"])
     }
 

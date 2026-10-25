@@ -285,7 +285,7 @@ enum ProjectCommands {
             Command(CommandDescriptor(id: "project.addActiveFile", title: L10n.tr("Dodaj plik okna do projektu"), category: .project,
                                       agent: .none, effect: .external, summary: L10n.tr("Dodaje plik aktywnego okna do projektu."), feature: "PD-PROJ-001"),
                     validate: { $0.project != nil && $0.activeDocument?.fileURL != nil }) { ctx in
-                guard var (p, url) = try? current(ctx.workspace), let f = ctx.workspace.activeDocument?.fileURL else { return .ok }
+                guard case (var p, let url)? = try? current(ctx.workspace), let f = ctx.workspace.activeDocument?.fileURL else { return .ok }
                 let rel = ProjectEngine.relativePath(f, projectURL: url)
                 if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
                 ctx.workspace.project = p
@@ -312,7 +312,7 @@ enum ProjectCommands {
             Command(CommandDescriptor(id: "project.saveDesktop", title: L10n.tr("Zapisz pulpit projektu"), category: .project,
                                       agent: .none, effect: .external, summary: L10n.tr("Zapamiętuje w projekcie otwarte okna z plikami."), feature: "PD-PROJ-003"),
                     validate: hasProject) { ctx in
-                guard var (p, url) = try? current(ctx.workspace) else { return .ok }
+                guard case (var p, let url)? = try? current(ctx.workspace) else { return .ok }
                 ProjectEngine.captureDesktop(&p, projectURL: url, ws: ctx.workspace)
                 ctx.workspace.project = p
                 try save(ctx.workspace)
@@ -337,7 +337,7 @@ enum ProjectCommands {
     }
 
     static func build(_ ctx: CommandContext, make: Bool) async throws -> CommandResult {
-        guard var (p, url) = try? current(ctx.workspace) else { return .ok }
+        guard case (var p, let url)? = try? current(ctx.workspace) else { return .ok }
         let results = try await ProjectEngine.build(&p, projectURL: url, make: make, in: ctx.workspace)
         ctx.workspace.project = p
         ctx.workspace.projectBuildResults = results

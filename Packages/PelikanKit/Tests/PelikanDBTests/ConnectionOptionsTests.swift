@@ -14,7 +14,8 @@ struct ConnectionOptionsTests {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
         let ws = Workspace(dataDirectory: dir, drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         var target = ConnectionTarget(user: c.user, connectString: c.connectString)
         target.edition = "ORA$BASE"
         let def = ConnectionDefinition(name: "dev_edycja", target: target)
@@ -39,7 +40,8 @@ struct ConnectionOptionsTests {
         // Bez `scripts/testdb.sh owm` baza testowa nie ma WMSYS — test nie ma czego sprawdzić.
         guard installed else { return }
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let target = ConnectionTarget(user: c.user, connectString: c.connectString)
         let wm = ConnectionDefinition(name: "dev_wm", target: target, workspaceManager: "DEV_PELIKAN_WS")
         let plain = ConnectionDefinition(name: "dev_live", target: target)
@@ -62,7 +64,8 @@ struct ConnectionOptionsTests {
         #expect(SessionManager.nlsStatement([:]) == nil)
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         ws.settings.sessionNLS = ["NLS_DATE_FORMAT": "DD.MM.YYYY", "NLS_NUMERIC_CHARACTERS": ", "]
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
@@ -84,7 +87,8 @@ struct ConnectionOptionsTests {
     func statistics() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         let doc = ws.newDocument(.sql, text: "select count(*) from all_objects")

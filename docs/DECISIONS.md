@@ -1326,3 +1326,13 @@ Trzecia próba tylko do odczytu (D151) mierzyła osobno zapytania i obliczenia p
   przed odfiltrowaniem; przy domyślnym limicie 10 000 trafień rzadko ma to znaczenie.
 - Właściciel opublikował drugą betę **8.4.0** (poprawki D162–D164) i polecił usunąć stare tagi v1.9.0–v7.7.0. Zostały
   tagi opublikowanych wydań: v7.9.0 i v8.4.0.
+
+### D166 · 2026-10-25 — Bez ostrzeżeń kompilatora i CI
+- CI: `actions/checkout@v7` (Node 24) zamiast v4 — GitHub wycofuje Node 20. Zadanie macOS na obrazie `xcode-27`
+  (macOS 27, Xcode 27, wersja próbna) zamiast `macos-latest` z Xcode 26, który nie obsługuje celu macOS 27.
+- Kompilacja aplikacji, pakietu i testów na macOS i Linuksie bez ostrzeżeń: `any NSDraggingInfo`, `Range(NSRange)` zamiast
+  `toRange()`, zbędne `try`/`public`/`nonisolated(unsafe)`, `_ =` dla wyników `createFile`/`parse()` (na Linuksie bez
+  `@discardableResult`), usunięty nieosiągalny kontroler dokumentu „inny niż SQL” (wszystkie rodzaje mają własne okna).
+- Testy przypisywały `ws.ui = TestUI()`, a `Workspace.ui` jest słabą referencją — obiekt znikał od razu i 27 testów
+  działało bez UI. Teraz trzymają referencję; test filtrów Object Browsera sprawdza przy tym okno wyboru filtru.
+- Instalator buduje bez dSYM: po mapie prefiksów (D162) dsymutil nie znajdował modułów .pcm, a symbole i tak usuwa strip.

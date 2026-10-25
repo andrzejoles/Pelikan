@@ -222,7 +222,7 @@ final class FileDropView: NSView {
         registerForDraggedTypes([.fileURL, ObjectBrowserViewController.objectPasteboardType])
     }
 
-    private func object(_ info: NSDraggingInfo) -> [String]? {
+    private func object(_ info: any NSDraggingInfo) -> [String]? {
         guard let raw = info.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType) else { return nil }
         let parts = raw.components(separatedBy: "\u{1}")
         return parts.count == 3 ? parts : nil
@@ -231,13 +231,13 @@ final class FileDropView: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    private func urls(_ info: NSDraggingInfo) -> [URL] {
+    private func urls(_ info: any NSDraggingInfo) -> [URL] {
         (info.draggingPasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL]) ?? []
     }
 
-    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { urls(sender).isEmpty && object(sender) == nil ? [] : .copy }
+    override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation { urls(sender).isEmpty && object(sender) == nil ? [] : .copy }
 
-    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+    override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
         if let o = object(sender) {
             onObjectDrop?(o)
             return true
@@ -270,7 +270,6 @@ final class DocumentAreaViewController: NSViewController {
             ?? (vc as? DiagramViewController)?.preferredFirstResponder
             ?? (vc as? ExplainPlanViewController)?.preferredFirstResponder
             ?? (vc as? ReportWindowViewController)?.preferredFirstResponder
-            ?? (vc as? DocumentViewController)?.preferredFirstResponder
         view.window?.makeFirstResponder(responder)
     }
 
@@ -409,7 +408,6 @@ final class DocumentAreaViewController: NSViewController {
                 case .explainPlan: ExplainPlanViewController(document: doc, workspace: workspace)
                 case .report: ReportWindowViewController(document: doc, workspace: workspace)
                 case .notebook: NotebookViewController(document: doc, workspace: workspace)
-                default: DocumentViewController(document: doc, workspace: workspace)
                 }
                 addChild(c)
                 controllers[doc.id] = c
@@ -589,29 +587,4 @@ final class DocumentTabButton: NSView {
     override func mouseDown(with event: NSEvent) { onSelect() }
     override func otherMouseUp(with event: NSEvent) { if event.buttonNumber == 2 { onClose() } }
     @objc private func closeTapped() { onClose() }
-}
-
-// MARK: - Dokument (okna inne niż SQL — edytor kodu; pełne okna w kolejnych etapach)
-
-/// Widok dokumentu innego niż SQL Window: edytor kodu powiązany z `Document`.
-final class DocumentViewController: NSViewController {
-    private let document: Document
-    private let workspace: Workspace
-    private var editor: CodeEditorView!
-
-    var preferredFirstResponder: NSView { editor.textView }
-
-    init(document: Document, workspace: Workspace) {
-        self.document = document
-        self.workspace = workspace
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    override func loadView() {
-        editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
-        view = editor
-    }
 }

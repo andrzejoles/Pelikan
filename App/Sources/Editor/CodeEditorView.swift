@@ -1055,7 +1055,7 @@ final class CodeTextView: NSTextView {
     }
 
     /// Upuszczone pliki skryptów otwierają się w oknach (zamiast wstawiania ścieżki do tekstu).
-    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+    override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
         // Szablon z okna szablonów: wstawienie w miejscu upuszczenia (formularz zmiennych, PD-TPL-002).
         if let data = sender.draggingPasteboard.data(forType: TemplatePane.pasteboardType), let ws = (NSApp.delegate as? AppDelegate)?.workspace {
             let id = String(decoding: data, as: UTF8.self)

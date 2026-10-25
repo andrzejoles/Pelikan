@@ -136,15 +136,9 @@ public enum TNSNames {
 }
 
 public extension TNSNames {
-    /// Connect string dla połączenia z własnym katalogiem konfiguracji (tnsnames.ora, wallet): alias z tego katalogu
-    /// rozwijany do deskryptora; przy TCPS bez wskazanego wallet dopisywany `MY_WALLET_DIRECTORY` = katalog połączenia.
-    /// Bez katalogu konfiguracji — bez zmian (klient czyta TNS_ADMIN / domyślne miejsca).
-    /// `walletDirectory` — portfel TLS połączenia (pierwszeństwo przed katalogiem konfiguracji); przy EZConnect
-    /// `tcps://…` dopisywany parametr `wallet_location` (Instant Client 21+). `keepAlias` — alias przekazywany bez
-    /// rozwinięcia (magazyn haseł szuka poświadczenia po dokładnym tekście aliasu, D53).
     /// Dopisuje parametry uwierzytelniania tokenem: w deskryptorze do sekcji SECURITY (tworzonej, gdy jej brak),
     /// w EZConnect jako parametry `?klucz=wartość`. Alias trzeba wcześniej rozwinąć (nil — nie da się dopisać).
-    public static func applyTokenAuth(_ connect: String, parameters: [(String, String)]) -> String? {
+    static func applyTokenAuth(_ connect: String, parameters: [(String, String)]) -> String? {
         let s = connect.trimmingCharacters(in: .whitespaces)
         guard !parameters.isEmpty else { return s }
         if s.hasPrefix("(") {
@@ -163,6 +157,12 @@ public extension TNSNames {
         return s + (s.contains("?") ? "&" : "?") + parameters.map { "\($0.0.lowercased())=\($0.1)" }.joined(separator: "&")
     }
 
+    /// Connect string dla połączenia z własnym katalogiem konfiguracji (tnsnames.ora, wallet): alias z tego katalogu
+    /// rozwijany do deskryptora; przy TCPS bez wskazanego wallet dopisywany `MY_WALLET_DIRECTORY` = katalog połączenia.
+    /// Bez katalogu konfiguracji — bez zmian (klient czyta TNS_ADMIN / domyślne miejsca).
+    /// `walletDirectory` — portfel TLS połączenia (pierwszeństwo przed katalogiem konfiguracji); przy EZConnect
+    /// `tcps://…` dopisywany parametr `wallet_location` (Instant Client 21+). `keepAlias` — alias przekazywany bez
+    /// rozwinięcia (magazyn haseł szuka poświadczenia po dokładnym tekście aliasu, D53).
     static func resolveForConnection(_ connect: String, configDirectory: String?, walletDirectory: String? = nil, keepAlias: Bool = false) -> String {
         let walletDir = (walletDirectory ?? configDirectory).map { ($0 as NSString).expandingTildeInPath }.flatMap { $0.isEmpty ? nil : $0 }
         var s = connect.trimmingCharacters(in: .whitespaces)

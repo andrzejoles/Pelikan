@@ -168,7 +168,7 @@ struct GridStage8DBTests {
         #expect(grid.rowCount == 2 && ui.variableAsks == 1)
         let q = try await ws.invoke("grid.queryByExample", CommandArguments(["criteria": .object(["TXT": .string("DW%")])]))
         #expect(tab.grid?.rowCount == 1 && tab.grid?.text(row: 0, column: 1) == "dwa")
-        #expect((q.value?.stringValue ?? "").contains("UPPER(x.TXT) LIKE UPPER('DW%')"))
+        #expect(q.value?.stringValue?.contains("UPPER(x.TXT) LIKE UPPER('DW%')") == true)
         await #expect(throws: (any Error).self) { try await ws.invoke("grid.queryByExample", CommandArguments(["criteria": .object(["N": .string("abc")])])) }
         try await ws.invoke("grid.clearQueryByExample")
         #expect(tab.grid?.rowCount == 2)

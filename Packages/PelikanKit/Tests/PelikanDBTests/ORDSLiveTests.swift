@@ -49,7 +49,8 @@ struct ORDSLiveTests {
         guard let (code, _) = try? await Self.get(base + "/"), code > 0 else { return }
 
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_ords", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
