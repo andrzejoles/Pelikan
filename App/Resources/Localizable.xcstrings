@@ -67957,6 +67957,34 @@
         }
       }
     },
+    "Słownik schematu…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema dictionary…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schemawörterbuch…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diccionario del esquema…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Словник схеми…"
+          }
+        }
+      }
+    },
     "Słowo (domyślnie pod kursorem)" : {
       "localizations" : {
         "en" : {

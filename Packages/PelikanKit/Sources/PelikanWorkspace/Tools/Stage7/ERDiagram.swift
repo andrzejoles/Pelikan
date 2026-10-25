@@ -11,14 +11,12 @@ public enum ERDiagram {
     /// Diagram z tabel (nazwy w schemacie `owner`) z liniami kluczy obcych między nimi.
     public static func build(owner: String, tables: [String], source: any SchemaMetadataSource, showColumns: Bool = true) async throws -> Diagram {
         var d = Diagram()
-        var fks: [ForeignKey] = []
+        let columns = try await source.columns(owner: owner, tables: tables)
         for t in tables {
-            let cols = try await source.columns(owner: owner, name: t)
-            let id = d.addObject(owner: owner, name: t, type: "TABLE", columns: cols, at: DiagramPoint(16, 16))
+            let id = d.addObject(owner: owner, name: t, type: "TABLE", columns: columns[t] ?? [], at: DiagramPoint(16, 16))
             if !showColumns { d.setShowColumns(false, for: [id]) }
-            fks += try await source.foreignKeys(owner: owner, table: t)
         }
-        d.addForeignKeyLinks(fks)
+        d.addForeignKeyLinks(try await source.foreignKeys(owner: owner, childTables: tables))
         layout(&d)
         return d
     }

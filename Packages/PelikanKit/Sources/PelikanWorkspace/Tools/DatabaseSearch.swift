@@ -78,6 +78,17 @@ public enum DatabaseSearch {
         return p
     }
 
+    /// Warunek dopasowania kolumny: dla tekstu dosłownego najpierw `INSTR` (na dużej bazie ~30× szybsze niż samo
+    /// REGEXP_LIKE po ALL_SOURCE — D164), potem REGEXP_LIKE dla całych słów i dokładności; wyrażenie regularne — samo
+    /// REGEXP_LIKE. Kolejność wymusza CASE (gałęzie WHEN są sprawdzane po kolei): przy zmiennych wiązanych optymalizator
+    /// liczy `instr … and regexp_like …` od REGEXP_LIKE. Binds `:p`, `:f` i (dla tekstu dosłownego) `:t`.
+    nonisolated static func match(_ column: String, _ c: DatabaseSearchCriteria) -> String {
+        let regexp = "regexp_like(\(column), :p, :f)"
+        guard !c.regularExpression else { return regexp }
+        let instr = c.caseSensitive ? "instr(\(column), :t)" : "instr(upper(\(column)), upper(:t))"
+        return "case when nvl(\(instr), 0) = 0 then 0 when \(regexp) then 1 else 0 end = 1"
+    }
+
     public static func search(_ c: DatabaseSearchCriteria, metadata m: MetadataProvider, limit: Int = 10_000) async throws -> [DatabaseSearchHit] {
         let text = c.text.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty else { return [] }
@@ -85,6 +96,7 @@ public enum DatabaseSearch {
         let owners = c.owners.isEmpty ? [s.info.currentSchema] : c.owners
         let flags = c.caseSensitive ? "c" : "i"
         var binds = [BindVariable(name: "p", value: .text(pattern(c))), BindVariable(name: "f", value: .text(flags))]
+        if !c.regularExpression { binds.append(BindVariable(name: "t", value: .text(text))) }
         let ownerList = owners.enumerated().map { i, o -> String in
             binds.append(BindVariable(name: "o\(i)", value: .text(o)))
             return ":o\(i)"
@@ -101,7 +113,7 @@ public enum DatabaseSearch {
             let typeList = src.map { "'\($0.rawValue)'" }.joined(separator: ", ")
             let (_, rows) = try await s.queryAll("""
                 select owner, name, type, line, text from all_source
-                where owner in (\(ownerList)) and type in (\(typeList))\(nameCond) and regexp_like(text, :p, :f)
+                where owner in (\(ownerList)) and type in (\(typeList))\(nameCond) and \(match("text", c))
                 order by owner, name, type, line
                 """, binds: binds, limit: limit)
             hits += rows.compactMap { r in
@@ -114,7 +126,7 @@ public enum DatabaseSearch {
         if wanted.contains(.view), hits.count < limit {
             let (_, rows) = try await s.queryAll("""
                 select owner, view_name, text_vc from all_views
-                where owner in (\(ownerList))\(nameCond.replacingOccurrences(of: "name", with: "view_name")) and regexp_like(text_vc, :p, :f)
+                where owner in (\(ownerList))\(nameCond.replacingOccurrences(of: "name", with: "view_name")) and \(match("text_vc", c))
                 order by owner, view_name
                 """, binds: binds, limit: limit - hits.count)
             hits += rows.map { r in
@@ -123,12 +135,12 @@ public enum DatabaseSearch {
             }
         }
         if wanted.contains(.table), c.searchTableDefinitions || c.types.contains(.table), hits.count < limit {
-            hits += try await tableDefinitionHits(ownerList: ownerList, nameCond: nameCond, binds: binds, in: s, limit: limit - hits.count)
+            hits += try await tableDefinitionHits(ownerList: ownerList, nameCond: nameCond, binds: binds, criteria: c, in: s, limit: limit - hits.count)
         }
         if c.searchNames, hits.count < limit {
             let (_, rows) = try await s.queryAll("""
                 select owner, object_name, object_type, status from all_objects
-                where owner in (\(ownerList))\(nameCond.replacingOccurrences(of: "name", with: "object_name")) and regexp_like(object_name, :p, :f)
+                where owner in (\(ownerList))\(nameCond.replacingOccurrences(of: "name", with: "object_name")) and \(match("object_name", c))
                   and object_name not like 'BIN$%' and subobject_name is null
                 order by owner, object_name
                 """, binds: binds, limit: limit - hits.count)
@@ -143,27 +155,27 @@ public enum DatabaseSearch {
 
     /// Trafienia w definicjach tabel: nazwy i komentarze kolumn, komentarze tabel, warunki CHECK (SEARCH_CONDITION_VC
     /// od 12.2 — na starszych serwerach bez warunków).
-    nonisolated static func tableDefinitionHits(ownerList: String, nameCond: String, binds: [BindVariable], in s: any DatabaseSession,
-                                                limit: Int) async throws -> [DatabaseSearchHit] {
+    nonisolated static func tableDefinitionHits(ownerList: String, nameCond: String, binds: [BindVariable], criteria c: DatabaseSearchCriteria,
+                                                in s: any DatabaseSession, limit: Int) async throws -> [DatabaseSearchHit] {
         let tableCond = nameCond.replacingOccurrences(of: "name", with: "table_name")
         var sql = """
             select owner, table_name, 'COLUMN ' || column_name, column_id from all_tab_columns
-             where owner in (\(ownerList))\(tableCond) and regexp_like(column_name, :p, :f)
+             where owner in (\(ownerList))\(tableCond) and \(match("column_name", c))
                and (owner, table_name) in (select owner, table_name from all_tables)
             union all
             select owner, table_name, 'COMMENT ' || column_name || ': ' || comments, 0 from all_col_comments
-             where owner in (\(ownerList))\(tableCond) and comments is not null and regexp_like(comments, :p, :f)
+             where owner in (\(ownerList))\(tableCond) and comments is not null and \(match("comments", c))
                and (owner, table_name) in (select owner, table_name from all_tables)
             union all
             select owner, table_name, 'COMMENT: ' || comments, 0 from all_tab_comments
-             where owner in (\(ownerList))\(tableCond) and table_type = 'TABLE' and comments is not null and regexp_like(comments, :p, :f)
+             where owner in (\(ownerList))\(tableCond) and table_type = 'TABLE' and comments is not null and \(match("comments", c))
             """
         let checks = """
 
             union all
             select owner, table_name, 'CHECK ' || constraint_name || ': ' || search_condition_vc, 0 from all_constraints
              where owner in (\(ownerList))\(tableCond) and constraint_type = 'C' and constraint_name not like 'SYS\\_C%' escape '\\'
-               and regexp_like(search_condition_vc, :p, :f)
+               and \(match("search_condition_vc", c))
             """
         sql += "%CHECKS%\n order by 1, 2, 4"
         let (_, rows) = try await DictionaryQuery.queryAll([sql.replacingOccurrences(of: "%CHECKS%", with: checks),

@@ -40,10 +40,31 @@ public protocol SchemaMetadataSource: Sendable {
     func references(owner: String, name: String) async throws -> [DBObject]
     /// Obiekt wskazywany przez synonim (prywatny albo PUBLIC); nil — nie synonim albo cel niedostępny.
     func synonymTarget(owner: String, name: String) async throws -> DBObject?
+    /// Kolumny wielu tabel naraz (diagram ER całego schematu) — klucz: nazwa tabeli.
+    func columns(owner: String, tables: [String]) async throws -> [String: [SchemaColumn]]
+    /// Klucze obce, w których podrzędna jest jedna z tabel (linie diagramu między jego tabelami).
+    func foreignKeys(owner: String, childTables: [String]) async throws -> [ForeignKey]
 }
 
 extension SchemaMetadataSource {
     public func synonymTarget(owner: String, name: String) async throws -> DBObject? { nil }
+
+    public func columns(owner: String, tables: [String]) async throws -> [String: [SchemaColumn]] {
+        var out: [String: [SchemaColumn]] = [:]
+        for t in tables { out[t] = try await columns(owner: owner, name: t) }
+        return out
+    }
+
+    public func foreignKeys(owner: String, childTables: [String]) async throws -> [ForeignKey] {
+        let set = Set(childTables)
+        var out: [ForeignKey] = [], seen = Set<String>()
+        for t in childTables {
+            for fk in try await foreignKeys(owner: owner, table: t) where fk.childOwner == owner && set.contains(fk.childTable) {
+                if seen.insert("\(fk.childOwner).\(fk.name)").inserted { out.append(fk) }
+            }
+        }
+        return out
+    }
 
     /// Tabela dla Query Buildera (PD-QB-001): nazwa użyta w SQL (synonim zostaje synonimem; synonim PUBLIC — bez
     /// schematu) i obiekt, z którego brane są kolumny (cel synonimu, także łańcuch synonimów).
@@ -127,6 +148,65 @@ public struct SessionSchemaMetadata: SchemaMetadataSource {
                        parentOwner: r[3].displayText ?? "", parentTable: r[4].displayText ?? "",
                        parentColumns: (r[6].displayText ?? "").split(separator: ",").map(String.init))
         }
+    }
+
+    /// Paczki nazw tabel dla list IN (słownik dużej bazy: jedno zapytanie na paczkę zamiast kilku na tabelę — D164).
+    static let batchSize = 500
+
+    func inList(_ names: ArraySlice<String>, _ binds: inout [BindVariable]) -> String {
+        names.enumerated().map { i, n in binds.append(bind("t\(i)", n)); return ":t\(i)" }.joined(separator: ", ")
+    }
+
+    public func columns(owner: String, tables: [String]) async throws -> [String: [SchemaColumn]] {
+        var out: [String: [SchemaColumn]] = [:]
+        for start in stride(from: 0, to: tables.count, by: Self.batchSize) {
+            let chunk = tables[start..<min(start + Self.batchSize, tables.count)]
+            var b = [bind("o", owner)]
+            let list = inList(chunk, &b)
+            let (_, pk) = try await session.queryAll("""
+                select cc.table_name, cc.column_name from all_constraints k
+                  join all_cons_columns cc on cc.owner = k.owner and cc.constraint_name = k.constraint_name
+                 where k.owner = :o and k.constraint_type = 'P' and k.table_name in (\(list))
+                """, binds: b, limit: 1_000_000)
+            let keys = Set(pk.map { "\($0[0].displayText ?? "").\($0[1].displayText ?? "")" })
+            let (_, rows) = try await session.queryAll("""
+                select c.table_name, c.column_name,
+                       c.data_type || case when c.data_type in ('VARCHAR2', 'CHAR', 'NVARCHAR2', 'RAW') then '(' || c.char_length || ')'
+                                           when c.data_type = 'NUMBER' and c.data_precision is not null then '(' || c.data_precision || nvl2(nullif(c.data_scale, 0), ',' || c.data_scale, '') || ')' end,
+                       c.nullable
+                  from all_tab_columns c where c.owner = :o and c.table_name in (\(list)) order by c.table_name, c.column_id
+                """, binds: b, limit: 10_000_000)
+            for r in rows {
+                let t = r[0].displayText ?? "", n = r[1].displayText ?? ""
+                out[t, default: []].append(SchemaColumn(name: n, type: r[2].displayText ?? "", nullable: r[3].displayText == "Y", primaryKey: keys.contains("\(t).\(n)")))
+            }
+        }
+        for t in tables where out[t] == nil { out[t] = [] }
+        return out
+    }
+
+    public func foreignKeys(owner: String, childTables: [String]) async throws -> [ForeignKey] {
+        var out: [ForeignKey] = []
+        for start in stride(from: 0, to: childTables.count, by: Self.batchSize) {
+            let chunk = childTables[start..<min(start + Self.batchSize, childTables.count)]
+            var b = [bind("o", owner)]
+            let list = inList(chunk, &b)
+            let (_, rows) = try await session.queryAll("""
+                select c.constraint_name, c.owner, c.table_name, p.owner, p.table_name,
+                       (select listagg(column_name, ',') within group (order by position) from all_cons_columns where owner = c.owner and constraint_name = c.constraint_name),
+                       (select listagg(column_name, ',') within group (order by position) from all_cons_columns where owner = p.owner and constraint_name = p.constraint_name)
+                  from all_constraints c join all_constraints p on p.owner = c.r_owner and p.constraint_name = c.r_constraint_name
+                 where c.constraint_type = 'R' and c.owner = :o and c.table_name in (\(list))
+                 order by c.table_name, c.constraint_name
+                """, binds: b, limit: 1_000_000)
+            out += rows.map { r in
+                ForeignKey(name: r[0].displayText ?? "", childOwner: r[1].displayText ?? "", childTable: r[2].displayText ?? "",
+                           childColumns: (r[5].displayText ?? "").split(separator: ",").map(String.init),
+                           parentOwner: r[3].displayText ?? "", parentTable: r[4].displayText ?? "",
+                           parentColumns: (r[6].displayText ?? "").split(separator: ",").map(String.init))
+            }
+        }
+        return out
     }
 
     public func references(owner: String, name: String) async throws -> [DBObject] {

@@ -30,6 +30,17 @@ struct ObjectExportTests {
         let files = try await ObjectExport.export(pick, options: o, in: s)
         #expect(files.map(\.name).sorted() == ["dept.sql", "emp_api.bdy", "emp_api.spc"])
         #expect(files.first { $0.name == "dept.sql" }?.content.contains("\"\(schema)\".\"DEPT\"") == true)
+        // Uprawnienia tylko przy obiektach, które je mają (lista z TAB_PRIVS zamiast GET_DEPENDENT_DDL dla każdego — D164).
+        _ = try await s.execute("grant select on dept to public")
+        let withGrant: [ExportedFile]
+        do { withGrant = try await ObjectExport.export(pick, options: o, in: s) } catch {
+            _ = try? await s.execute("revoke select on dept from public")
+            throw error
+        }
+        _ = try await s.execute("revoke select on dept from public")
+        #expect(withGrant.first { $0.name == "dept.sql" }?.content.uppercased().contains("GRANT SELECT ON") == true)
+        #expect(withGrant.first { $0.name == "emp_api.spc" }?.content.uppercased().contains("GRANT ") == false)
+        #expect(await ObjectExport.grantedObjects(owner: schema, name: "EMP_API", in: s)?.isEmpty == true)
     }
 
     @Test("Porównanie schematów: tylko w źródle, różne, tylko w celu; skrypt wyrównujący wyrównuje kod")

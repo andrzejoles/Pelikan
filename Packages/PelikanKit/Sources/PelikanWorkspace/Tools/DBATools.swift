@@ -333,51 +333,62 @@ public enum SchemaDoc {
             + esc(ISO8601DateFormatter().string(from: Date())) + "</p>"
         var byType: [String: [String]] = [:]
         for r in objs { byType[r[1].displayText ?? "", default: []].append(r[0].displayText ?? "") }
+        // Słownik całego schematu kilkoma zapytaniami zamiast kilku zapytań na obiekt — na dużej bazie każde zapytanie
+        // do ALL_CONSTRAINTS czy ALL_TAB_COLUMNS kosztuje sekundy niezależnie od liczby wierszy (D164).
+        await progress?(L10n.tr("Słownik schematu…"))
+        func grouped(_ sql: String) async throws -> [String: [[String]]] {
+            let (_, rows) = try await s.queryAll(sql, binds: [o], limit: 10_000_000)
+            var out: [String: [[String]]] = [:]
+            for r in rows { out[r[0].displayText ?? "", default: []].append(r.dropFirst().map { $0.displayText ?? "" }) }
+            return out
+        }
+        let comments = try await grouped("select table_name, comments from all_tab_comments where owner = :o and comments is not null")
+        let columns = try await grouped("""
+            select c.table_name, c.column_name, c.data_type || case when c.data_type in ('VARCHAR2','NVARCHAR2','CHAR','NCHAR','RAW') then '(' || c.data_length || ')'
+                    when c.data_type = 'NUMBER' and c.data_precision is not null then '(' || c.data_precision || nvl2(c.data_scale, ',' || c.data_scale, '') || ')' end,
+                   c.nullable, m.comments
+              from all_tab_columns c left join all_col_comments m on m.owner = c.owner and m.table_name = c.table_name and m.column_name = c.column_name
+             where c.owner = :o order by c.table_name, c.column_id
+            """)
+        let constraints = byType["TABLE"] == nil && byType["MATERIALIZED VIEW"] == nil ? [:] : try await grouped("""
+            select c.table_name, c.constraint_name, decode(c.constraint_type, 'P', 'PRIMARY KEY', 'U', 'UNIQUE', 'R', 'FOREIGN KEY', 'C', 'CHECK', c.constraint_type),
+                   (select listagg(column_name, ', ') within group (order by position) from all_cons_columns k where k.owner = c.owner and k.constraint_name = c.constraint_name),
+                   nvl2(c.r_constraint_name, (select r.table_name from all_constraints r where r.owner = c.r_owner and r.constraint_name = c.r_constraint_name), '')
+              from all_constraints c where c.owner = :o and c.constraint_type in ('P','U','R','C') and c.constraint_name not like 'SYS_C%'
+             order by c.table_name, 3, 2
+            """)
+        let indexes = byType["TABLE"] == nil && byType["MATERIALIZED VIEW"] == nil ? [:] : try await grouped("""
+            select i.table_name, i.index_name, i.uniqueness, (select listagg(column_name, ', ') within group (order by column_position) from all_ind_columns k where k.index_owner = i.owner and k.index_name = i.index_name)
+              from all_indexes i where i.table_owner = :o order by i.table_name, 2
+            """)
+        let programs = Set(["PACKAGE", "PROCEDURE", "FUNCTION", "TYPE"]).isDisjoint(with: byType.keys) ? [:] : try await grouped("""
+            select nvl(package_name, object_name), nvl2(package_name, object_name, ''), overload, nvl(argument_name, '(wynik)'), in_out, nvl(type_name, data_type)
+              from all_arguments where owner = :o and data_level = 0
+             order by nvl(package_name, object_name), object_name, overload, position
+            """)
+        let sequences = byType["SEQUENCE"] == nil ? [:] : try await grouped("""
+            select sequence_name, min_value, max_value, increment_by, cycle_flag, cache_size from all_sequences where sequence_owner = :o
+            """)
         for type in byType.keys.sorted() {
             index += "<h2>\(esc(type)) (\(byType[type]!.count))</h2><ul>"
             for name in byType[type]! {
                 if Task.isCancelled { throw CancellationError() }
                 await progress?("\(type) \(name)")
-                let b = [o, BindVariable(name: "n", value: .text(name))]
                 var body = "<p><a href=\"index.html\">" + esc(L10n.tr("Spis")) + "</a></p><h1>\(esc(type)) \(esc(owner)).\(esc(name))</h1>"
                 switch type {
                 case "TABLE", "VIEW", "MATERIALIZED VIEW":
-                    let comment = try await s.scalar("select comments from all_tab_comments where owner = :o and table_name = :n", binds: b)
-                    if let c = comment, !c.isEmpty { body += "<p>\(esc(c))</p>" }
-                    let (_, cols) = try await s.queryAll("""
-                        select c.column_name, c.data_type || case when c.data_type in ('VARCHAR2','NVARCHAR2','CHAR','NCHAR','RAW') then '(' || c.data_length || ')'
-                                when c.data_type = 'NUMBER' and c.data_precision is not null then '(' || c.data_precision || nvl2(c.data_scale, ',' || c.data_scale, '') || ')' end,
-                               c.nullable, m.comments
-                          from all_tab_columns c left join all_col_comments m on m.owner = c.owner and m.table_name = c.table_name and m.column_name = c.column_name
-                         where c.owner = :o and c.table_name = :n order by c.column_id
-                        """, binds: b, limit: 2000)
-                    body += "<h2>" + esc(L10n.tr("Kolumny")) + "</h2>" + table([L10n.tr("Kolumna"), L10n.tr("Typ"), "Null", L10n.tr("Komentarz")],
-                                                                           cols.map { $0.map { $0.displayText ?? "" } })
+                    if let c = comments[name]?.first?.first, !c.isEmpty { body += "<p>\(esc(c))</p>" }
+                    body += "<h2>" + esc(L10n.tr("Kolumny")) + "</h2>" + table([L10n.tr("Kolumna"), L10n.tr("Typ"), "Null", L10n.tr("Komentarz")], columns[name] ?? [])
                     if type != "VIEW" {
-                        let (_, cons) = try await s.queryAll("""
-                            select c.constraint_name, decode(c.constraint_type, 'P', 'PRIMARY KEY', 'U', 'UNIQUE', 'R', 'FOREIGN KEY', 'C', 'CHECK', c.constraint_type),
-                                   (select listagg(column_name, ', ') within group (order by position) from all_cons_columns k where k.owner = c.owner and k.constraint_name = c.constraint_name),
-                                   nvl2(c.r_constraint_name, (select r.table_name from all_constraints r where r.owner = c.r_owner and r.constraint_name = c.r_constraint_name), '')
-                              from all_constraints c where c.owner = :o and c.table_name = :n and c.constraint_type in ('P','U','R','C') and c.constraint_name not like 'SYS_C%' order by 2, 1
-                            """, binds: b, limit: 500)
                         body += "<h2>" + esc(L10n.tr("Ograniczenia")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Typ"), L10n.tr("Kolumny"), L10n.tr("Tabela nadrzędna")],
-                                                                                   cons.map { $0.map { $0.displayText ?? "" } })
-                        let (_, idx) = try await s.queryAll("""
-                            select i.index_name, i.uniqueness, (select listagg(column_name, ', ') within group (order by column_position) from all_ind_columns k where k.index_owner = i.owner and k.index_name = i.index_name)
-                              from all_indexes i where i.table_owner = :o and i.table_name = :n order by 1
-                            """, binds: b, limit: 500)
-                        body += "<h2>" + esc(L10n.tr("Indeksy")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Unikalność"), L10n.tr("Kolumny")], idx.map { $0.map { $0.displayText ?? "" } })
+                                                                                   constraints[name] ?? [])
+                        body += "<h2>" + esc(L10n.tr("Indeksy")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Unikalność"), L10n.tr("Kolumny")], indexes[name] ?? [])
                     } else if let text = try? await MetadataProvider.ddl(of: DBObject(owner: owner, name: name, type: .view), in: s) {
                         body += "<h2>" + esc(L10n.tr("Definicja")) + "</h2><pre>\(esc(text))</pre>"
                     }
                 case "PACKAGE", "PROCEDURE", "FUNCTION", "TYPE":
-                    let (_, args) = try await s.queryAll("""
-                        select nvl2(package_name, object_name, ''), overload, nvl(argument_name, '(wynik)'), in_out, nvl(type_name, data_type)
-                          from all_arguments where owner = :o and data_level = 0 and (package_name = :n or package_name is null and object_name = :n)
-                         order by object_name, overload, position
-                        """, binds: b, limit: 5000)
                     body += "<h2>" + esc(L10n.tr("Parametry")) + "</h2>" + table([L10n.tr("Podprogram"), L10n.tr("Przeciążenie"), L10n.tr("Parametr"), L10n.tr("Kierunek"), L10n.tr("Typ")],
-                                                                             args.map { $0.map { $0.displayText ?? "" } })
+                                                                             programs[name] ?? [])
                     if includeSource, let src = try? await MetadataProvider.source(of: DBObject(owner: owner, name: name, type: DBObjectType(rawValue: type) ?? .package), in: s) {
                         var all = src
                         if type == "PACKAGE" || type == "TYPE",
@@ -387,8 +398,7 @@ public enum SchemaDoc {
                         body += "<h2>" + esc(L10n.tr("Źródło")) + "</h2><pre>\(esc(all))</pre>"
                     }
                 case "SEQUENCE":
-                    let (_, sq) = try await s.queryAll("select min_value, max_value, increment_by, cycle_flag, cache_size from all_sequences where sequence_owner = :o and sequence_name = :n", binds: b, limit: 1)
-                    body += table(["MIN", "MAX", L10n.tr("Krok"), L10n.tr("Cykl"), "Cache"], sq.map { $0.map { $0.displayText ?? "" } })
+                    body += table(["MIN", "MAX", L10n.tr("Krok"), L10n.tr("Cykl"), "Cache"], sequences[name] ?? [])
                 default:
                     if includeSource, let src = try? await MetadataProvider.source(of: DBObject(owner: owner, name: name, type: DBObjectType(rawValue: type) ?? .trigger), in: s) {
                         body += "<pre>\(esc(src))</pre>"

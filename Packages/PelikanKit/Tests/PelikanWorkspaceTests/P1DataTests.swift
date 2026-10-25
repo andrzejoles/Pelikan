@@ -368,6 +368,13 @@ struct P1DataTests {
         let old = try JSONDecoder().decode(DatabaseSearchCriteria.self, from: Data(#"{"text":"emp","wholeWords":true}"#.utf8))
         #expect(old.text == "emp" && old.wholeWords && old.searchNames && !old.searchTableDefinitions)
         #expect(DatabaseSearch.selectableTypes.contains(.mleModule) && DatabaseSearch.selectableTypes.contains(.table))
+        // Tekst dosłowny: najpierw INSTR (szybkie), potem REGEXP_LIKE; wyrażenie regularne — samo REGEXP_LIKE (D164).
+        var c = DatabaseSearchCriteria(text: "commit")
+        #expect(DatabaseSearch.match("text", c) == "case when nvl(instr(upper(text), upper(:t)), 0) = 0 then 0 when regexp_like(text, :p, :f) then 1 else 0 end = 1")
+        c.caseSensitive = true
+        #expect(DatabaseSearch.match("text", c) == "case when nvl(instr(text, :t), 0) = 0 then 0 when regexp_like(text, :p, :f) then 1 else 0 end = 1")
+        c.regularExpression = true
+        #expect(DatabaseSearch.match("text", c) == "regexp_like(text, :p, :f)")
 
         let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: FakeDriver()])
         try await ws.invoke("tools.saveObjectSearch", CommandArguments(["saveAs": "pensje", "text": "sal", "regex": true, "owner": "hr, scott",
