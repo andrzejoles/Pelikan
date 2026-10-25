@@ -91,7 +91,12 @@ public final class Document: Identifiable {
     public var transactionOpen = false
     /// Połączenie okna (nil = połączenie główne) i przypięcie (UG 20.2).
     public var connectionID: UUID?
+    /// Po DISCONNECT w Command Window: okno bez połączenia do następnego CONNECT — także dla COMMIT/F10, paska stanu
+    /// i innych komend (bez cichego przejścia na połączenie główne).
+    public var isDisconnected = false
     public var connectionPinned = false
+    /// Własny cel sesji dokumentu spoza listy okien (np. Test Manager) zamiast sesji wg trybu sesji.
+    public var sessionPurpose: SessionPurpose?
     /// Konsola zapytań połączenia (DG-CONS-001): tekst zachowywany automatycznie, bez pliku.
     public var consoleConnectionID: UUID?
 

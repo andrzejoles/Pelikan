@@ -39,8 +39,6 @@ public struct SQLPlusState: Sendable {
     /// Historia poleceń SQL okna z czasami (HISTORY, SQLcl) i aliasy (ALIAS nazwa=polecenie).
     public var history: [(sql: String, milliseconds: Int)] = []
     public var aliases: [String: String] = [:]
-    /// Po DISCONNECT: okno bez połączenia do następnego CONNECT (bez cichego przejścia na połączenie główne).
-    public var disconnected = false
 
     /// Zmienne podstawiania (DEFINE, &&, ACCEPT, COLUMN NEW_VALUE, parametry &1…).
     public var defines: [String: String] = [:]

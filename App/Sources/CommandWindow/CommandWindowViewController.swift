@@ -215,9 +215,8 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
     }
 
     private func execute(_ text: String) {
-        // Komenda działa na aktywnym oknie, a kolejka (type-ahead) rusza też wtedy, gdy aktywne jest inne okno.
-        workspace.activate(document.id)
-        workspace.perform("cmd.executeLine", CommandArguments(["line": .string(text), "echo": .bool(false)]))
+        // Okno wskazane jawnie: kolejka (type-ahead) rusza też wtedy, gdy aktywne jest inne okno — bez przełączania kart.
+        workspace.perform("cmd.executeLine", CommandArguments(["line": .string(text), "echo": .bool(false), "document": .string(document.id.description)]))
     }
 
     private func moveHistory(_ delta: Int) {

@@ -293,7 +293,7 @@ struct EditorPane: View {
                     Text(L10n.tr("Pierwsza wielka")).tag(CompletionCase.initCap)
                     Text(L10n.tr("Oryginalna")).tag(CompletionCase.original)
                 }
-                Stepper(value: setting(workspace, \.codeAssistantMinChars), in: 0...5) {
+                Stepper(value: setting(workspace, \.codeAssistantMinChars), in: 1...5) {
                     Text(L10n.tr("Minimum znaków dla obiektów i słów kluczowych: \(workspace.settings.codeAssistantMinChars)"))
                 }
                 Toggle(L10n.tr("Funkcje standardowe SQL"), isOn: setting(workspace, \.codeAssistantStandardFunctions))

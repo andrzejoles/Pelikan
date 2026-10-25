@@ -76,6 +76,31 @@ struct EncodingTests {
         #expect(matches.map(\.line) == [2, 2])
     }
 
+    @Test("Refaktoryzacja, użycia i szukanie w katalogach czytają pliki w kodowaniu projektu (ISO-8859-2), a nie zgadniętym CP1250")
+    func projectEncodingInRefactoringAndSearch() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-enc-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let ws = Workspace()
+        ws.project = Project(name: "pc")
+        ws.project?.options.encoding = "ISO-8859-2"
+        ws.projectURL = dir.appendingPathComponent("pc.prj")
+        // „żółw” ma te same bajty w ISO-8859-2 i CP1250, więc bez kodowania projektu plik zgadywany jest jako CP1250.
+        let file = dir.appendingPathComponent("a.sql")
+        let before = "-- żółw\nselect 1 from emp;\n"
+        try before.data(using: .isoLatin2)!.write(to: file)
+        #expect(TextFileCodec.decode(try Data(contentsOf: file)).format.encoding == .windowsCP1250)
+        let after = "-- żółw ą\nselect 1 from emp;\n"
+        #expect(try ws.apply(RefactoringPlan(title: "t", changes: [RefactoringChange(target: .file(file), title: "a.sql", before: before, after: after, occurrences: 1)], ddl: nil)) == 1)
+        #expect(try Data(contentsOf: file) == after.data(using: .isoLatin2)!)
+        // 0xA9: „Š” w ISO-8859-2, „©” w CP1250.
+        let skoda = dir.appendingPathComponent("b.sql")
+        try Data([0x2D, 0x2D, 0x20, 0xA9, 0x6B, 0x6F, 0x64, 0x61, 0x0A, 0x65, 0x6D, 0x70, 0x3B, 0x20, 0x2D, 0x2D, 0x20, 0xA9, 0x0A]).write(to: skoda)
+        #expect(EditorSearch.search("Škoda", scope: .directories([dir]), options: TextSearchOptions(), in: ws).map(\.text) == ["-- Škoda"])
+        let hits = await UsageFinder.inTexts(name: "EMP", documents: [], files: [skoda], encoding: ws.projectEncodingResolver())
+        #expect(hits.map(\.text) == ["emp; -- Š"])
+    }
+
     func awaitInvoke(_ ws: Workspace, _ enc: String) throws {
         let doc = ws.activeDocument!
         doc.fileFormat.encoding = TextFileCodec.encoding(named: enc)!

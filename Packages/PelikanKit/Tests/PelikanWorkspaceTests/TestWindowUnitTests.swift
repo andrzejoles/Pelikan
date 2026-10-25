@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 @MainActor
@@ -54,4 +55,46 @@ struct TestWindowUnitTests {
         let loaded = try ws.openFile(url)
         #expect(loaded.testWatches == ["i"] && loaded.testVariables.map(\.name) == ["a"])
     }
+
+    @Test("Błąd COMMIT po udanym wykonaniu: statystyki sesji policzone raz (PD-TEST-003)")
+    func statisticsOnceOnCommitError() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: StatsDriver()])
+        ws.settings.autoCommitTestWindow = true
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let doc = ws.newDocument(.test, text: "begin null; end;")
+        doc.connectionID = def.id
+        await #expect(throws: OracleError.self) { try await TestRunner.execute(doc, in: ws) }
+        #expect(doc.statisticTotals["session logical reads"] == 10)
+    }
+}
+
+/// Atrapa sesji: V$MYSTAT rośnie o 10 przy każdym odczycie, COMMIT kończy się błędem.
+private final class StatsSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    let reads = Mutex(0)
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        guard sql.contains("v$mystat") else { return ExecutionResult(kind: .other) }
+        return ExecutionResult(kind: .query, resultSet: ResultSetDescriptor(id: ResultSetID(1), columns: [
+            ColumnInfo(name: "NAME", type: .varchar2, typeName: "VARCHAR2(64)"), ColumnInfo(name: "VALUE", type: .number, typeName: "NUMBER")]))
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
+        let n = reads.withLock { $0 += 10; return $0 }
+        return RowBatch(rows: [[.text("session logical reads"), .number(String(n))]], hasMore: false)
+    }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws { throw OracleError(code: 2091, message: "ORA-02091: transaction rolled back") }
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+private final class StatsDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { StatsSession() }
 }

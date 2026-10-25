@@ -240,7 +240,10 @@ struct AgentUnitTests {
         let history = await controller.callTool("run_command", arguments: ["command": "sql.historyBack"], sessionID: session.id)
         #expect(history.isError == true && doc.text == "select 1")
         let s = AgentController.summarize(CommandArguments(["sql": "create user x identified by Tajne1", "list": ["alter user y identified by Tajne2"], "n": 1]))
-        #expect(!s.contains("Tajne") && s.contains(AgentController.redactedText) && s.contains("\"n\""))
+        #expect(!s.contains("Tajne") && s.contains("identified by ********") && s.contains("\"n\""))
+        // Samo słowo PASSWORD (kolumna, parametr) nie ukrywa całego tekstu — dziennik zachowuje ślad.
+        let plain = AgentController.summarize(CommandArguments(["sql": "select password_versions from dba_users"]))
+        #expect(plain.contains("password_versions"))
     }
 
     @Test("Porównanie stałoczasowe, base64url, tokeny 256 bit i unikalne")

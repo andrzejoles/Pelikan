@@ -158,9 +158,87 @@ struct BeautifierTests {
     @Test("Bezpieczeństwo: zmiana tokenu wykryta; literały, identyfikatory w cudzysłowie i komentarze bez zmian")
     func safety() throws {
         #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "select a from t", formatted: "select b from t") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "x := 'a\nb';", formatted: "x := 'a\n  b';") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "/* a\nb */ null;", formatted: "/* a\n  b */ null;") }
         let s = "select 'MiXeD  text', \"Quoted Name\" /* Ko  ment */ from dual -- uwaga  na  spacje"
         let out = try Beautifier.format(s)
         #expect(out.contains("'MiXeD  text'") && out.contains("\"Quoted Name\"") && out.contains("/* Ko  ment */") && out.contains("-- uwaga  na  spacje"))
+    }
+
+    @Test("Zaznaczenie: wcięcie bazowe nie wchodzi do wieloliniowego literału ani komentarza")
+    func selectionMultilineLiteral() throws {
+        let text = "begin\n  x := 'line1\nline2';\n  y := q'[a\nb]'; /* k1\nk2 */\nend;\n"
+        let start = (text as NSString).range(of: "x :=").location
+        let end = (text as NSString).range(of: "*/").location + 2
+        let (out, _) = try Beautifier.format(text, range: start..<end)
+        #expect(out.contains("'line1\nline2'"))
+        #expect(out.contains("q'[a\nb]'"))
+        #expect(out.contains("/* k1\nk2 */"))
+    }
+
+    @Test("Ukośnik: dzielenie na początku linii nie jest terminatorem SQL*Plus")
+    func slashDivision() throws {
+        let out = try Beautifier.format("begin\nx := a\n/ b;\nend;\n/\n")
+        #expect(out == "BEGIN\n  x := a / b;\nEND;\n/\n")
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "begin\nx := a\n/ b;\nend;", formatted: "begin\nx := a\n/\nb;\nend;") }
+    }
+
+    @Test("Polecenia SQL*Plus kopiowane bez zmian (bez sklejania linii i zmiany wielkości liter)")
+    func sqlplusCommands() throws {
+        let src = "set serveroutput on\nprompt Start Don't\ndefine x = 1\n@skrypt.sql\nselect a,b from t;\nexec p(1, -\n  2)\nbegin null; end;\n/\nexit\n"
+        let out = try Beautifier.format(src)
+        #expect(out == "set serveroutput on\nprompt Start Don't\ndefine x = 1\n@skrypt.sql\nSELECT a,\n       b\nFROM   t;\nexec p(1, -\n  2)\nBEGIN\n  NULL;\nEND;\n/\nexit\n")
+        #expect(try Beautifier.format(out) == out)
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "set serveroutput on\nprompt Start", formatted: "SET serveroutput ON prompt START") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "prompt a\n'x\ny'", formatted: "prompt a\n'x\n  y'") }
+    }
+
+    @Test("MLE MODULE i JAVA SOURCE: kod JavaScript/Java bez zmian")
+    func foreignSource() throws {
+        let mle = "create or replace mle module m language javascript as\nexport function f(a) { return a+1; }\n/\nselect 1 from dual;\n"
+        #expect(try Beautifier.format(mle) == "create or replace mle module m language javascript as\nexport function f(a) { return a+1; }\n/\nSELECT 1\nFROM   dual;\n")
+        let java = "create or replace and compile java source named \"Hello\" as\npublic class Hello { public static String hi() { return \"x\"; } }\n/\n"
+        #expect(try Beautifier.format(java) == java)
+        let inline = "create function f(a number) return number as mle language javascript {{ return a+1; }};\n/\n"
+        let out = try Beautifier.format(inline)
+        #expect(out.contains("{{ return a+1; }};"))
+    }
+
+    @Test("CASE jako wyrażenie w instrukcji PL/SQL nie zamyka otaczającego bloku")
+    func caseExpression() throws {
+        let out = try Beautifier.format("begin\nif a then\nx := case when b then 1 else 2 end;\ny := 1;\nend if;\nz := 3;\nend;")
+        #expect(out == "BEGIN\n  IF a THEN\n    x := CASE WHEN b THEN 1 ELSE 2 END;\n    y := 1;\n  END IF;\n  z := 3;\nEND;")
+    }
+
+    @Test("Wyzwalacz z REFERENCING … AS: AS nie otwiera sekcji deklaracji")
+    func triggerReferencing() throws {
+        let out = try Beautifier.format("create or replace trigger t before insert on emp referencing new as n for each row\nbegin\n:n.sal := 0;\nend;\n/\n")
+        #expect(out == "CREATE OR REPLACE TRIGGER t BEFORE INSERT ON emp REFERENCING new AS n FOR EACH ROW\nBEGIN\n  :n.sal := 0;\nEND;\n/\n")
+    }
+
+    @Test("TYPE BODY: kolejne metody MEMBER z tym samym wcięciem")
+    func typeBodyMembers() throws {
+        let out = try Beautifier.format("create or replace type body t as\nmember function a return number is begin return 1; end;\nmember function b return number is begin return 2; end;\nend;\n/\n")
+        #expect(out == """
+            CREATE OR REPLACE TYPE BODY t AS
+              MEMBER FUNCTION a RETURN NUMBER IS
+              BEGIN
+                RETURN 1;
+              END;
+              MEMBER FUNCTION b RETURN NUMBER IS
+              BEGIN
+                RETURN 2;
+              END;
+            END;
+            /
+
+            """)
+    }
+
+    @Test("NoFormat Start w linii z kodem: kod nie jest powielany")
+    func noFormatSameLine() throws {
+        let out = try Beautifier.format("begin\nx := 1; -- NoFormat Start\n  y   :=  2 ;\n-- NoFormat End\nend;")
+        #expect(out == "BEGIN\n  x := 1; -- NoFormat Start\n  y   :=  2 ;\n-- NoFormat End\nEND;")
     }
 
     @Test("Wydajność: pakiet 50 000 linii")

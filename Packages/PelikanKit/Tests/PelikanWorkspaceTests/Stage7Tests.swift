@@ -137,6 +137,28 @@ struct Stage7Tests {
         #expect(SnippetLibrary(directory: dir).all.contains { $0.id == "Moje/Licznik" } == false)
     }
 
+    @Test("Snippety: uszkodzony plik własnych nie zostaje nadpisany przy zapisie ani usunięciu")
+    func snippetsCorruptFile() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-snip-\(UUID().uuidString.prefix(6))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appendingPathComponent("snippets.json")
+        let broken = Data(#"[{"category": "Moje", "name": "A", "text": "x"},"#.utf8)
+        try broken.write(to: file)
+        let lib = SnippetLibrary(directory: dir)
+        #expect(lib.loadError != nil && lib.all.count == SnippetLibrary.builtIn.count)
+        #expect(throws: CommandError.self) { try lib.save(Snippet(category: "Moje", name: "B", text: "y")) }
+        #expect(throws: CommandError.self) { try lib.remove(id: "Moje/A") }
+        #expect(try Data(contentsOf: file) == broken)
+    }
+
+    @Test("Filtr siatki: LIKE z % i _ obejmuje znak nowej linii, koniec wzorca — koniec wartości")
+    func gridFilterLikeNewline() {
+        #expect(GridFilter.like("pierwsza\ndruga", "pierwsza%"))
+        #expect(GridFilter.like("a\nb", "a_b"))
+        #expect(!GridFilter.like("abc\n", "abc"))
+    }
+
     @Test("Panel wartości: JSON, XML z wcięciami, obraz z BLOB, hex, NULL")
     func valuePanel() {
         let c = ColumnInfo(name: "DOC", type: .clob, typeName: "CLOB")

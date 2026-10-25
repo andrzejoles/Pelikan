@@ -765,13 +765,13 @@ final class SettingsBox {
 extension Workspace {
     /// Połączenie okna: przypięte albo główne (UG 20.2).
     public func effectiveConnection(of doc: Document) -> UUID? {
-        doc.connectionID ?? sessions.mainConnectionID
+        doc.isDisconnected ? nil : doc.connectionID ?? sessions.mainConnectionID
     }
 
     /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).
     public func session(for doc: Document) async throws -> any DatabaseSession {
         guard let c = effectiveConnection(of: doc) else { throw CommandError.notConnected }
-        let key = sessions.key(forDocument: doc.id, connection: c)
+        let key = doc.sessionPurpose.map { SessionKey(connectionID: c, purpose: $0) } ?? sessions.key(forDocument: doc.id, connection: c)
         sessions.touch(key)
         return try await sessions.session(key)
     }

@@ -60,7 +60,7 @@ public enum UserManual {
     public static func page(_ chapter: Chapter) -> String {
         """
         <!doctype html><html><head><meta charset="utf-8">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
+        \(LocalHTML.contentSecurityPolicy)
         <style>
         :root { color-scheme: light dark; }
         body { font: 13px -apple-system, sans-serif; line-height: 1.5; margin: 18px 24px; max-width: 760px; }

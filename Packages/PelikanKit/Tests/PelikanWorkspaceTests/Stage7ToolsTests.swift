@@ -246,11 +246,19 @@ struct Stage7ToolsTests {
         #expect(sch.definitions.isEmpty)
         // Pusta nazwa połączenia to „(główne)” — nie połączenie okna aktywnego w chwili uruchomienia.
         let ws = Workspace(drivers: [:])
-        let doc = ws.newDocument(.sql)
-        doc.connectionID = UUID()
         var main = d
         main.connection = ""
         #expect(throws: CommandError.self) { _ = try LocalTaskScheduler.connection(main, in: ws) }
+        let mainDef = ConnectionDefinition(name: "dev_glowne", target: ConnectionTarget(user: "u", connectString: "c"))
+        let other = ConnectionDefinition(name: "dev_inne", target: ConnectionTarget(user: "u", connectString: "c2"))
+        try ws.connections.upsert(mainDef, password: nil)
+        try ws.connections.upsert(other, password: nil)
+        ws.sessions.setMainConnection(mainDef.id)
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = other.id
+        #expect(try LocalTaskScheduler.connection(main, in: ws) == mainDef.id)
+        main.connection = "dev_inne"
+        #expect(try LocalTaskScheduler.connection(main, in: ws) == other.id)
         main.connection = "nieznane"
         #expect(throws: CommandError.self) { _ = try LocalTaskScheduler.connection(main, in: ws) }
     }

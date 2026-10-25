@@ -263,16 +263,20 @@ public final class SessionManager {
         for attempt in 0..<3 {
             do {
                 let s = try await driver.connect(target: target, credentials: credentials, options: ConnectOptions(tags: tags))
+                // Wygasłe hasło jest już zmienione na serwerze — nowe zapamiętane przed inicjalizacją (inaczej po jej
+                // błędzie następne logowanie kończyłoby się ORA-01017).
+                if let np = credentials.newPassword {
+                    // Nowe zastępuje stare, jeśli stare było zapisane albo użytkownik chciał.
+                    if def.savePassword || rememberOnSuccess { try? store.rememberPassword(np, for: def.id) }
+                    sessionPasswords[def.id] = np
+                }
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
                 do { try await initialize(s, def) } catch { await s.close(); throw error }
                 connected = true
-                if let np = credentials.newPassword {
-                    // Wygasłe hasło zmienione — nowe zastępuje stare, jeśli stare było zapisane albo użytkownik chciał.
-                    if def.savePassword || rememberOnSuccess { try? store.rememberPassword(np, for: def.id) }
-                } else if rememberOnSuccess, let p = password {
-                    try? store.rememberPassword(p, for: def.id)
+                if credentials.newPassword == nil, let p = password {
+                    if rememberOnSuccess { try? store.rememberPassword(p, for: def.id) }
+                    sessionPasswords[def.id] = p
                 }
-                if let p = credentials.newPassword ?? password { sessionPasswords[def.id] = p }
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
                 guard let np = await prompter?.askNewPassword(for: def, message: e.message) else { throw CommandError.cancelledByUser }

@@ -71,28 +71,10 @@ struct CellValuePanelView: View {
 struct HTMLPreview: NSViewRepresentable {
     let html: String
 
-    func makeNSView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        config.defaultWebpagePreferences.allowsContentJavaScript = false
-        let view = WKWebView(frame: .zero, configuration: config)
-        view.navigationDelegate = HTMLPreviewNavigation.shared
-        return view
-    }
+    func makeNSView(context: Context) -> WKWebView { WKWebView.localHTML() }
 
     func updateNSView(_ view: WKWebView, context: Context) {
         view.loadHTMLString(LargeDataModel.htmlPreviewDocument(html), baseURL: nil)
-    }
-}
-
-/// Nawigacja podglądu niezaufanego HTML: tylko treść z `loadHTMLString` (about:blank). CSP nie obejmuje nawigacji —
-/// bez tego `<meta http-equiv="refresh">` albo kliknięty odnośnik przeniósłby widok na zdalną stronę.
-@MainActor
-final class HTMLPreviewNavigation: NSObject, WKNavigationDelegate {
-    static let shared = HTMLPreviewNavigation()
-
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
-        let url = navigationAction.request.url
-        return url == nil || url?.absoluteString == "about:blank" ? .allow : .cancel
     }
 }
 

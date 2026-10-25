@@ -221,7 +221,7 @@ public final class AgentController: AgentInvocationGate {
             let result = try await workspace.invoke(commandID, args, invoker: session.invoker)
             let text = result.value.map { $0.description } ?? result.message ?? "ok"
             // Wynik z hasłem (np. echo polecenia CREATE USER … IDENTIFIED BY) nie trafia do panelu ani dziennika.
-            let shown = SQLExecutor.containsPassword(text) ? Self.redactedText : text
+            let shown = SQLPlusEngine.maskPassword(text)
             activity.status = .succeeded
             activity.result = String(shown.prefix(300))
             activity.duration = Date().timeIntervalSince(started)
@@ -250,9 +250,7 @@ public final class AgentController: AgentInvocationGate {
         CallTool.Result(content: [.text(text: message, annotations: nil, _meta: nil)], isError: true)
     }
 
-    static let redactedText = "«redacted»"
-
-    /// Argumenty do panelu i dziennika: bez kluczy wewnętrznych i bez tekstów z hasłem (SECURITY A17), skrócone.
+    /// Argumenty do panelu i dziennika: bez kluczy wewnętrznych, z hasłami zamaskowanymi (SECURITY A17), skrócone.
     static func summarize(_ args: CommandArguments) -> String {
         let visible = args.values.filter { !$0.key.hasPrefix("__") }.mapValues(redacted)
         return String(JSONValue.object(visible).description.prefix(500))
@@ -260,7 +258,7 @@ public final class AgentController: AgentInvocationGate {
 
     static func redacted(_ value: JSONValue) -> JSONValue {
         switch value {
-        case .string(let s): SQLExecutor.containsPassword(s) ? .string(redactedText) : value
+        case .string(let s): .string(SQLPlusEngine.maskPassword(s))
         case .array(let a): .array(a.map(redacted))
         case .object(let o): .object(o.mapValues(redacted))
         default: value

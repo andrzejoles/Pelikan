@@ -1396,3 +1396,35 @@ Najważniejsze:
 - Przełączniki SET w Command Window bez osobnych komend rejestru; dwie metody druku HTML w UIServices; wspólna pętla
   pobierania raportów — refaktoryzacja poza zakresem przeglądu. Entitlements Quick Look bez zmian (do sprawdzenia przy
   notaryzacji).
+
+### D169 · 2026-10-26 — Drugie przejście przeglądu kodu
+Drugie przejście objęło pliki, które w pierwszym (D168) przejrzano tylko pobieżnie, oraz sam kod poprawek z D168.
+Zależności sprawdzone ponownie — bez zmian względem D167. Ok. 60 zgłoszeń, wszystkie potwierdzone i naprawione, z testami:
+- **Formater (D24):** cztery przypadki, w których zmieniał działanie kodu — wcięcie doklejane wewnątrz wielolinijkowego
+  literału przy formatowaniu zaznaczenia, `/` dzielenia brany za terminator, sklejanie poleceń SQL*Plus (SET, PROMPT,
+  DEFINE) z następnymi liniami, zmiana wielkości liter w kodzie MLE (JavaScript) i JAVA SOURCE. Weryfikacja wyniku
+  porównuje teraz także granice poleceń skryptu i dokładny tekst poleceń SQL*Plus; przy niezgodności formater odmawia.
+  Do tego CASE w wyrażeniu, REFERENCING … AS w wyzwalaczu, kolejne metody TYPE BODY, COMPOUND TRIGGER w konspekcie.
+- **Refaktoryzacje:** odmawiają zamiast zmieniać znaczenie (przypisanie → inicjalizacja tylko dla pierwszej instrukcji
+  bez zależności); zmiana nazwy zmiennej lokalnej tylko w zakresie jej deklaracji; IN OUT dla całej listy INTO; stała
+  lokalna w wyzwalaczu bez DECLARE; kodowanie plików projektu (D55) w refaktoryzacji i wyszukiwaniu.
+- **Test Manager** w trybie jednej/dwóch sesji wycofywał i zamykał sesję główną (zmiany innych okien przepadały) — każdy
+  test ma teraz własną sesję; AutoCommit okna testu nie zatwierdza testów Test Managera.
+- **Debuger:** sprzątanie (DEBUG_OFF) po każdym błędzie startu i kroku; Stop w trakcie wykonania; przywrócenie
+  `plsql_optimize_level` po debugowaniu (wcześniej obiekty kompilowane później w tej sesji dostawały poziom 1); dane
+  ze stanu programu w kawałkach bezpiecznych bajtowo (polskie znaki); wartości zmiennych według typu.
+- **Regresje z D168:** przenoszenie danych sprawdza rozmiar LOB przed TRUNCATE/DELETE (inaczej tabela mogła zostać pusta);
+  dziennik agenta maskuje tylko hasło zamiast ukrywać cały tekst ze słowem PASSWORD; odczyt potoku HOST w osobnym
+  wątku (zamknięcie uchwytu w trakcie odczytu groziło awarią); stan „rozłączone” okna Command Window w dokumencie (COMMIT/F10
+  i pasek stanu nie traktują go jak połączonego z głównym); kolejka poleceń Command Window bez przełączania kart.
+- **Spójność:** jeden widok HTML bez JavaScriptu i nawigacji w aplikacji, jeden nagłówek CSP w pakiecie, maskowanie
+  `IDENTIFIED BY VALUES '…'`, usunięte martwe gałęzie ORA-24344.
+- **Budowanie:** wersje pakietów aplikacji (Sparkle, SwiftTerm i ich zależności) przypięte w
+  `Pelikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`. Bez tego pliku xcodebuild dopisywał je do
+  `Packages/PelikanKit/Package.resolved` przy każdym budowaniu (zmiana w drzewie roboczym, wersje bez przypięcia w repo).
+
+Korekta D168: identyfikatory techniczne w domenie ustawień aplikacji (autozapis okien `Pelikan.*`, `PelikanMainWindow`,
+`PelikanAppliedLanguage`) zostają literałami — zmiana kasowałaby zapamiętane położenia okien użytkowników; z Brand.xcconfig
+bierze nazwę moduł sesji i okno dziennika agentów.
+Rozmiar elementu `SYS.DBMS_DEBUG_VC2COLL` potwierdzony na bazie testowej: 1000 bajtów — dawne kawałki po 4000 znaków
+w debugerze nie mieściły się nawet przy samym ASCII.

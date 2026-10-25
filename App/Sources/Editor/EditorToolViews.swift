@@ -115,6 +115,7 @@ struct TodoItemsView: View {
     let workspace: Workspace
     @State private var showClosed = false
     @State private var selection: String?
+    @State private var cache = Cache()
 
     struct Row: Identifiable {
         let document: PelikanWorkspace.Document
@@ -122,8 +123,23 @@ struct TodoItemsView: View {
         var id: String { "\(document.id.raw.uuidString):\(item.id)" }
     }
 
+    /// Zadania okna liczone ponownie tylko po zmianie jego tekstu — widok przelicza się przy zmianie dowolnego okna.
+    @MainActor final class Cache {
+        private var entries: [DocumentID: (text: String, items: [TodoItem])] = [:]
+
+        func items(_ d: PelikanWorkspace.Document) -> [TodoItem] {
+            if let e = entries[d.id], e.text == d.text { return e.items }
+            let items = TodoItems.parse(d.text)
+            entries[d.id] = (d.text, items)
+            return items
+        }
+
+        func keep(_ ids: Set<DocumentID>) { entries = entries.filter { ids.contains($0.key) } }
+    }
+
     private var rows: [Row] {
-        workspace.documents.flatMap { d in TodoItems.parse(d.text).map { Row(document: d, item: $0) } }
+        cache.keep(Set(workspace.documents.map(\.id)))
+        return workspace.documents.flatMap { d in cache.items(d).map { Row(document: d, item: $0) } }
             .filter { showClosed || !$0.item.closed }
             .sorted { ($0.item.priority ?? Int.max, $0.document.title, $0.item.line) < ($1.item.priority ?? Int.max, $1.document.title, $1.item.line) }
     }

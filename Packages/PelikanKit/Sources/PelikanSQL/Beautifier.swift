@@ -58,10 +58,14 @@ public enum BeautifierError: Error, Equatable {
 /// i identyfikatorów; nigdy nie zmienia tokenów — wynik jest porównywany ze źródłem przed zwróceniem.
 public enum Beautifier {
     public static func format(_ text: String, options: BeautifierOptions = BeautifierOptions()) throws -> String {
-        var f = Formatter(source: text as NSString, options: options)
-        let out = f.run()
+        let out = unchecked(text, options: options)
         try verify(original: text, formatted: out)
         return out
+    }
+
+    static func unchecked(_ text: String, options: BeautifierOptions) -> String {
+        var f = Formatter(source: text as NSString, options: options)
+        return f.run()
     }
 
     /// Formatowanie fragmentu (zaznaczenia): całe linie, wcięcie pierwszej linii zachowane jako bazowe.
@@ -70,33 +74,77 @@ public enum Beautifier {
         let lines = ns.lineRange(for: NSRange(location: range.lowerBound, length: max(0, range.count - (range.count > 0 && range.upperBound <= ns.length && range.upperBound > 0 && ns.character(at: range.upperBound - 1) == 0x0A ? 1 : 0))))
         let fragment = ns.substring(with: lines)
         let base = String(fragment.prefix { $0 == " " || $0 == "\t" })
-        var formatted = try format(fragment, options: options)
-        formatted = formatted.split(separator: "\n", omittingEmptySubsequences: false)
-            .map { $0.isEmpty ? "" : base + $0 }.joined(separator: "\n")
+        var formatted = indented(unchecked(fragment, options: options), base: base)
         if fragment.hasSuffix("\n"), !formatted.hasSuffix("\n") { formatted += "\n" }
         if !fragment.hasSuffix("\n"), formatted.hasSuffix("\n") { formatted.removeLast() }
+        // Sprawdzenie po doklejeniu wcięcia — wynik trafia do dokumentu dokładnie w tej postaci.
+        try verify(original: fragment, formatted: formatted)
         let result = ns.replacingCharacters(in: lines, with: formatted)
         return (result, lines.location..<(lines.location + (formatted as NSString).length))
     }
 
-    /// Porównanie tokenów (bez białych znaków; słowa bez cudzysłowu bez rozróżniania wielkości liter).
+    /// Wcięcie bazowe zaznaczenia doklejane do linii wyniku — bez linii zaczynających się wewnątrz wieloliniowego
+    /// literału, identyfikatora w cudzysłowie albo komentarza (to byłaby zmiana danych, nie układu).
+    static func indented(_ text: String, base: String) -> String {
+        guard !base.isEmpty else { return text }
+        let ns = text as NSString
+        var inside = Set<Int>()
+        for t in Lexer(text).tokenize() where [.string, .quotedIdentifier, .blockComment, .hint].contains(t.kind) {
+            for p in t.start..<t.end where ns.character(at: p) == 0x0A { inside.insert(p + 1) }
+        }
+        var out: [String] = []
+        var pos = 0
+        for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
+            out.append(line.isEmpty || inside.contains(pos) ? String(line) : base + line)
+            pos += line.utf16.count + 1
+        }
+        return out.joined(separator: "\n")
+    }
+
+    /// Porównanie tokenów (bez białych znaków; słowa bez cudzysłowu bez rozróżniania wielkości liter), podziału na
+    /// polecenia skryptu (`;`, `/` sam w linii) i poleceń SQL*Plus — te porównywane jako cały tekst linii.
     public static func verify(original: String, formatted: String) throws {
-        func sig(_ s: String) -> [String] {
-            let ns = s as NSString
-            return Lexer(s).tokenize().compactMap { t -> String? in
-                if t.kind == .whitespace || t.kind == .newline { return nil }
-                let x = ns.substring(with: NSRange(location: t.start, length: t.length))
+        let a = signature(original), b = signature(formatted)
+        guard a != b else { return }
+        let i = (0..<min(a.count, b.count)).first { a[$0] != b[$0] } ?? min(a.count, b.count)
+        func shown(_ x: String) -> String { String(x.drop { $0 != ":" }.dropFirst().prefix(30)) }
+        var what = i < a.count ? shown(a[i]) : "EOF"
+        if what.isEmpty, i < b.count { what = shown(b[i]) }
+        throw BeautifierError.unsafe(what)
+    }
+
+    /// Sygnatura tekstu dla `verify`: polecenia wg ScriptSplitter w trybie Command Window (granice poleceń zależą
+    /// od układu linii — `/` sam w linii kończy blok, polecenie SQL*Plus kończy koniec linii), w każdym tokeny bez
+    /// białych znaków; polecenie SQL*Plus jako cały tekst (wielkość liter i podział linii mają w nim znaczenie).
+    static func signature(_ s: String) -> [String] {
+        let text = Array(s.utf16)
+        var out: [String] = []
+        func lex(_ from: Int, _ to: Int) {
+            guard from < to else { return }
+            let lexer = Lexer(utf16: Array(text[from..<to]))
+            for t in lexer.tokenize() where t.kind != .whitespace && t.kind != .newline {
+                let x = lexer.string(t)
                 switch t.kind {
-                case .identifier, .keyword: return "w:" + x.uppercased()
-                case .lineComment: return "c:" + x.trimmingCharacters(in: .whitespaces)
-                default: return "\(t.kind.rawValue):" + x
+                case .identifier, .keyword: out.append("w:" + x.uppercased())
+                case .lineComment: out.append("c:" + x.trimmingCharacters(in: .whitespaces))
+                default: out.append("\(t.kind.rawValue):" + x)
                 }
             }
         }
-        let a = sig(original), b = sig(formatted)
-        guard a != b else { return }
-        let i = (0..<min(a.count, b.count)).first { a[$0] != b[$0] } ?? min(a.count, b.count)
-        throw BeautifierError.unsafe(i < a.count ? String(a[i].drop { $0 != ":" }.dropFirst().prefix(30)) : "EOF")
+        var pos = 0
+        for st in ScriptSplitter.split(s, mode: .commandWindow) where st.start >= pos {
+            lex(pos, st.start)
+            if st.sqlplusCommand != nil {
+                out.append("sqlplus:" + String(st.text.reversed().drop { $0 == " " || $0 == "\t" }.reversed()))
+            } else {
+                lex(st.start, st.end)
+            }
+            lex(st.end, st.fullEnd)
+            out.append("|:")
+            pos = st.fullEnd
+        }
+        lex(pos, text.count)
+        return out
     }
 }
 
@@ -112,7 +160,7 @@ struct Formatter {
         var isWord: Bool { kind == .identifier || kind == .keyword }
     }
 
-    enum FrameKind { case unit, declare, block, exception, ifStmt, loop, caseStmt, sql, paren }
+    enum FrameKind { case unit, declare, block, exception, ifStmt, loop, caseStmt, caseExpr, sql, paren }
     struct Frame {
         var kind: FrameKind
         /// Poziom wcięcia linii BEGIN/END/ELSE (jednostki wcięcia).
@@ -142,24 +190,69 @@ struct Formatter {
     /// Nagłówek jednostki/podprogramu: IS/AS otwiera deklaracje (poziom).
     var headerLevel: Int?
     var headerKind = ""
+    /// Rodzaj jednostki CREATE (TYPE dla TYPE BODY — metody MEMBER/STATIC… jak podprogramy).
+    var unitKind = ""
     var statementStart = true
+    /// Polecenia skryptu (tryb Command Window) — polecenia SQL*Plus i kod Java/JavaScript kopiowane bez zmian.
+    let statements: [ScriptStatement]
+    /// Początek polecenia SQL*Plus → koniec (UTF-16).
+    let sqlplusEnds: [Int: Int]
+    /// Indeks tokenu `{` otwierającego kod JavaScript w MLE LANGUAGE JAVASCRIPT {{ … }} (kopiowany bez zmian).
+    var rawFrom: Int?
 
     init(source: NSString, options: BeautifierOptions) {
         self.source = source
         self.options = options
+        statements = ScriptSplitter.split(source as String, mode: .commandWindow)
+        var ends: [Int: Int] = [:]
+        for st in statements where st.sqlplusCommand != nil { ends[st.start] = st.end }
+        sqlplusEnds = ends
+        toks = Self.tokens(source, from: 0)
+    }
+
+    /// Tokeny bez białych znaków od pozycji `from` (leksowane od stanu początkowego).
+    static func tokens(_ source: NSString, from: Int) -> [Tok] {
         var nl = 0
         var t: [Tok] = []
-        for k in Lexer(source as String).tokenize() {
+        Lexer(source as String).scan(range: from..<source.length, state: .normal) { k in
             switch k.kind {
-            case .whitespace: continue
-            case .newline: nl += 1; continue
+            case .whitespace: break
+            case .newline: nl += 1
             default:
                 let s = source.substring(with: NSRange(location: k.start, length: k.length))
                 t.append(Tok(kind: k.kind, start: k.start, end: k.start + k.length, text: s, upper: s.uppercased(), newlines: nl))
                 nl = 0
             }
         }
-        toks = t
+        return t
+    }
+
+    /// Koniec polecenia skryptu zawierającego pozycję (bez terminatora) albo koniec tekstu.
+    func statementEnd(containing pos: Int) -> Int {
+        statements.first { $0.start <= pos && pos < $0.end }?.end ?? source.length
+    }
+
+    /// Fragment źródła kopiowany bez zmian (polecenie SQL*Plus, kod Java/JavaScript): od początku linii, jeśli
+    /// przed nim są tylko odstępy, w osobnych liniach (albo w bieżącej — `sameLine`); dalej tokeny od `end`,
+    /// leksowane od nowa, gdy token źródła przechodzi przez granicę (np. apostrof w PROMPT).
+    mutating func copyRaw(from start: Int, to end: Int, sameLine: Bool = false) {
+        var from = start
+        if !sameLine {
+            let lineStart = source.lineRange(for: NSRange(location: start, length: 0)).location
+            let prefix = source.substring(with: NSRange(location: lineStart, length: start - lineStart))
+            if prefix.allSatisfy({ $0 == " " || $0 == "\t" }) { from = lineStart }
+            if options.keepBlankLines, toks[i].newlines >= 2 { blankLine() }
+        }
+        var raw = source.substring(with: NSRange(location: from, length: max(0, end - from))).components(separatedBy: "\n")
+        if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: true) }
+        flush()
+        lines.append(contentsOf: raw)
+        pendingBreak = indentColumns(level)
+        statementStart = true
+        var j = i
+        while j < toks.count, toks[j].start < end { j += 1 }
+        if j > 0, toks[j - 1].end > end { toks = Array(toks[..<j]) + Self.tokens(source, from: end) }
+        i = j - 1
     }
 
     // MARK: Emisja
@@ -278,16 +371,39 @@ struct Formatter {
         let t = toks[i]
         defer { i += 1 }
 
+        // Polecenia SQL*Plus (kończy je koniec linii, tekst bywa dowolny, np. PROMPT): kopiowane bez zmian.
+        if let end = sqlplusEnds[t.start] {
+            copyRaw(from: t.start, to: end)
+            return
+        }
+        // Kod Java (CREATE JAVA SOURCE) i JavaScript (CREATE MLE MODULE, MLE LANGUAGE JAVASCRIPT {{ … }}) — bez zmian.
+        if statementStart, t.upper == "CREATE", t.isWord {
+            var j = i + 1
+            while j < toks.count, ["OR", "REPLACE", "AND", "RESOLVE", "COMPILE", "FORCE", "NOFORCE", "EDITIONABLE", "NONEDITIONABLE"].contains(toks[j].upper) { j += 1 }
+            if j < toks.count, ["JAVA", "MLE"].contains(toks[j].upper) {
+                copyRaw(from: t.start, to: statementEnd(containing: t.start))
+                return
+            }
+        }
+        if i == rawFrom {
+            rawFrom = nil
+            copyRaw(from: t.start, to: statementEnd(containing: t.start), sameLine: true)
+            return
+        }
+
         // Regiony bez formatowania: kopiowane bez zmian.
         if t.kind == .lineComment, t.upper.replacingOccurrences(of: " ", with: "").hasPrefix("--NOFORMATSTART") {
+            // Komentarz za kodem w tej samej linii: kod już jest w wyniku — kopia od komentarza, w bieżącej linii.
+            let sameLine = t.newlines == 0 && !(lines.isEmpty && cur.isEmpty)
             if options.keepBlankLines, t.newlines >= 2 { blankLine() }
-            flush()
             var j = i
             while j < toks.count, !(toks[j].kind == .lineComment && toks[j].upper.replacingOccurrences(of: " ", with: "").hasPrefix("--NOFORMATEND")) { j += 1 }
             let end = j < toks.count ? toks[j].end : source.length
-            let lineStart = source.lineRange(for: NSRange(location: t.start, length: 0)).location
-            let raw = source.substring(with: NSRange(location: lineStart, length: end - lineStart))
-            lines.append(contentsOf: raw.components(separatedBy: "\n"))
+            let from = sameLine ? t.start : source.lineRange(for: NSRange(location: t.start, length: 0)).location
+            var raw = source.substring(with: NSRange(location: from, length: end - from)).components(separatedBy: "\n")
+            if sameLine { cur += (cur.isEmpty ? "" : " ") + raw.removeFirst() }
+            flush()
+            lines.append(contentsOf: raw)
             i = j
             pendingBreak = indentColumns(level)
             statementStart = true
@@ -317,16 +433,16 @@ struct Formatter {
             return
         }
 
-        if t.kind == .slash, cur.isEmpty || t.newlines > 0 {
-            // Koniec jednostki w skrypcie: „/” w osobnej linii.
+        if t.kind == .slash, t.newlines > 0 || lines.isEmpty && cur.isEmpty, peek().map({ $0.newlines > 0 }) ?? true {
+            // Koniec jednostki w skrypcie: „/” sam w linii (w środku wyrażenia to dzielenie).
             lineBreak(0)
             cur = "/"
             flush()
             frames.removeAll()
             headerLevel = nil
+            unitKind = ""
             statementStart = true
             pendingBreak = 0
-            if let n = peek(), n.newlines >= 2 || true { _ = n }
             return
         }
 
@@ -467,7 +583,7 @@ struct Formatter {
             }
         case .paren where f.wrap:
             breakForList(f.column)
-        case .unit, .declare, .block, .exception, .ifStmt, .loop, .caseStmt, .paren:
+        case .unit, .declare, .block, .exception, .ifStmt, .loop, .caseStmt, .caseExpr, .paren:
             if column > options.rightMargin { pendingBreak = continuationColumn() }
         }
     }
@@ -548,14 +664,16 @@ struct Formatter {
                 beginStatementLine(t)
                 headerLevel = level
                 headerKind = toks[j].upper == "TYPE" && j + 1 < toks.count && toks[j + 1].upper != "BODY" ? "TYPESPEC" : toks[j].upper
+                unitKind = headerKind
                 statementStart = false
                 put(cased(t), space: false)
                 return true
             }
+            unitKind = ""
             return false
         }
         // Podprogram w sekcji deklaracji.
-        if statementStart, ["PROCEDURE", "FUNCTION"].contains(w) || (["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"].contains(w) && headerKind == "TYPE") {
+        if statementStart, ["PROCEDURE", "FUNCTION"].contains(w) || (["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"].contains(w) && unitKind == "TYPE") {
             beginStatementLine(t)
             headerLevel = level
             headerKind = w
@@ -563,10 +681,17 @@ struct Formatter {
             put(cased(t), space: false)
             return true
         }
-        if let h = headerLevel, ["IS", "AS"].contains(w) {
+        // W nagłówku wyzwalacza AS należy do REFERENCING … AS (ciało zaczyna DECLARE/BEGIN/COMPOUND).
+        if let h = headerLevel, headerKind != "TRIGGER", ["IS", "AS"].contains(w) {
             // Typ obiektowy / kolekcja / LANGUAGE / EXTERNAL — bez sekcji deklaracji (zwykła instrukcja do „;”).
             if headerKind == "TYPESPEC" || ["LANGUAGE", "EXTERNAL", "MLE"].contains(peek()?.upper ?? "") {
                 headerLevel = nil
+                // MLE LANGUAGE JAVASCRIPT {{ kod }} — kod od „{{” do końca jednostki bez zmian.
+                if peek()?.upper == "MLE" {
+                    var k = i + 1
+                    while k < toks.count, toks[k].isWord { k += 1 }
+                    if k + 1 < toks.count, toks[k].text == "{", toks[k + 1].text == "{" { rawFrom = k }
+                }
                 return false
             }
             put(cased(t), space: true)
@@ -619,6 +744,11 @@ struct Formatter {
             pendingBreak = indentColumns(f.level + 1)
             return true
         case "END":
+            if let f = frames.last, f.kind == .caseExpr {
+                frames.removeLast()
+                put(cased(t), space: needsSpace(prev, t))
+                return true
+            }
             let next = peek()?.upper ?? ""
             if ["IF", "LOOP", "CASE"].contains(next) {
                 if let idx = frames.lastIndex(where: { $0.kind == (next == "IF" ? .ifStmt : next == "LOOP" ? .loop : .caseStmt) }) {
@@ -684,6 +814,11 @@ struct Formatter {
             frames.append(Frame(kind: .caseStmt, level: level))
             put(cased(t), space: false)
             statementStart = false
+            return true
+        case "CASE":
+            // Wyrażenie CASE w instrukcji (x := CASE … END): w linii, ale z ramką — jego END nie zamyka bloku.
+            frames.append(Frame(kind: .caseExpr, level: level))
+            put(cased(t), space: needsSpace(prev, t))
             return true
         case "LOOP":
             if prevUpper == "END" { return false }

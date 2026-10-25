@@ -145,7 +145,8 @@ public struct GridFilter: Sendable, Hashable {
     }
 
     nonisolated static func like(_ s: String, _ pattern: String) -> Bool {
-        let re = "^" + NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + "$"
+        // (?s): `%` i `_` obejmują też znak nowej linii; \z — dokładnie koniec tekstu (jak LIKE w Oracle).
+        let re = "(?s)^" + NSRegularExpression.escapedPattern(for: pattern).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + #"\z"#
         return s.range(of: re, options: [.regularExpression, .caseInsensitive]) != nil
     }
 

@@ -173,9 +173,34 @@ public enum PLSQLOutline {
             case .procedure, .function:
                 return parseSubprogram(kind: kind, name: n, nameOffset: off, start: start)
             case .trigger:
-                // Do bloku wyzwalacza: DECLARE / BEGIN / COMPOUND.
-                while let k = peek(), !["DECLARE", "BEGIN"].contains(k.upper) { i += 1 }
+                // Do bloku wyzwalacza: DECLARE / BEGIN / COMPOUND TRIGGER / CALL — bez wyjścia poza polecenie
+                // (`;`, `/`; nawiasy warunku WHEN mogą zawierać dzielenie).
+                var depth = 0
+                while let k = peek() {
+                    if k.kind == .leftParen { depth += 1 } else if k.kind == .rightParen { depth -= 1 }
+                    else if depth <= 0, ["DECLARE", "BEGIN", "COMPOUND", "CALL"].contains(k.upper) || k.kind == .semicolon || k.kind == .slash { break }
+                    i += 1
+                }
                 var node = OutlineNode(kind: .trigger, name: n, range: start..<length, nameOffset: off)
+                if isWord(0, "COMPOUND") {
+                    i += isWord(1, "TRIGGER") ? 2 : 1
+                    let body = parseCompoundBody()
+                    node.children = body.children
+                    node.range = start..<body.end
+                    return node
+                }
+                if !isWord(0, "DECLARE"), !isWord(0, "BEGIN") {
+                    // CALL procedura — do końca polecenia.
+                    depth = 0
+                    while let k = peek() {
+                        if k.kind == .leftParen { depth += 1 } else if k.kind == .rightParen { depth -= 1 }
+                        else if depth <= 0, k.kind == .semicolon || k.kind == .slash { break }
+                        i += 1
+                    }
+                    node.range = start..<(peek()?.kind == .semicolon ? t[i].end : t[i - 1].end)
+                    if peek()?.kind == .semicolon { i += 1 }
+                    return node
+                }
                 let body = parseBlockBody(allowDeclare: true)
                 node.children = body.children
                 node.range = start..<body.end
@@ -285,13 +310,15 @@ public enum PLSQLOutline {
             return node
         }
 
-        /// Deklaracje: zmienne, stałe, kursory, typy, wyjątki, podprogramy — do BEGIN (albo END dla specyfikacji).
-        mutating func parseDeclarations(untilEnd: Bool) -> [OutlineNode] {
+        /// Deklaracje: zmienne, stałe, kursory, typy, wyjątki, podprogramy — do BEGIN (albo END dla specyfikacji;
+        /// w wyzwalaczu złożonym także do punktu czasowego BEFORE/AFTER/INSTEAD OF).
+        mutating func parseDeclarations(untilEnd: Bool, timingPoints: Bool = false) -> [OutlineNode] {
             var out: [OutlineNode] = []
             while let k = peek() {
                 if k.upper == "BEGIN" { break }
                 if k.upper == "END" { break }
                 if k.kind == .slash { break }
+                if timingPoints, ["BEFORE", "AFTER", "INSTEAD"].contains(k.upper) { break }
                 switch k.upper {
                 case "PROCEDURE", "FUNCTION":
                     let start = k.start
@@ -392,6 +419,40 @@ public enum PLSQLOutline {
                     continue
                 }
                 i += 1
+            }
+            return (children, length)
+        }
+
+        /// Ciało wyzwalacza złożonego: deklaracje wspólne, punkty czasowe `BEFORE STATEMENT IS BEGIN … END BEFORE
+        /// STATEMENT;`, na końcu END [nazwa];
+        mutating func parseCompoundBody() -> (children: [OutlineNode], end: Int) {
+            var children: [OutlineNode] = []
+            while let k = peek() {
+                if ["BEFORE", "AFTER", "INSTEAD"].contains(k.upper) {
+                    while let s = peek(), s.upper != "BEGIN", s.upper != "END", s.kind != .semicolon, s.kind != .slash { i += 1 }
+                    guard isWord(0, "BEGIN") else {
+                        if peek()?.kind == .semicolon { i += 1 }
+                        continue
+                    }
+                    children += parseBlockBody(allowDeclare: false).children
+                    // END punkt_czasowy; — słowa punktu po END.
+                    if t[i - 1].kind != .semicolon {
+                        while let s = peek(), s.kind != .semicolon, s.kind != .slash { i += 1 }
+                        if peek()?.kind == .semicolon { i += 1 }
+                    }
+                    continue
+                }
+                if k.upper == "END" {
+                    i += 1
+                    if let n = peek(), n.kind == .identifier || n.kind == .quotedIdentifier { i += 1 }
+                    var end = t[i - 1].end
+                    if let s = peek(), s.kind == .semicolon { end = s.end; i += 1 }
+                    return (children, end)
+                }
+                if k.kind == .slash { return (children, i > 0 ? t[i - 1].end : k.start) }
+                let before = i
+                children += parseDeclarations(untilEnd: true, timingPoints: true)
+                if i == before { i += 1 }
             }
             return (children, length)
         }

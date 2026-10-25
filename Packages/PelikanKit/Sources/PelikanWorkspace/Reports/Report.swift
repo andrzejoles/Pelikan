@@ -310,7 +310,7 @@ public enum ReportRenderer {
         if data.truncated { body += "<p class=\"header\">" + escape(L10n.tr("Pokazano pierwsze \(data.rows.count) wierszy.")) + "</p>\n" }
         // CSP: bez skryptów i zasobów zewnętrznych — tylko style z dokumentu i obrazy data:.
         return "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">"
-            + "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">"
+            + LocalHTML.contentSecurityPolicy
             + "<title>\(escape(def.title))</title>\n<style>\n\(css)\n</style></head>\n<body>\n\(body)</body></html>\n"
     }
 }

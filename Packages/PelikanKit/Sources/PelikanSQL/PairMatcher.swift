@@ -125,11 +125,20 @@ public enum PairMatcher {
         return out
     }
 
-    /// Zakres „END …” na końcu zakresu (END, END IF, END LOOP, END CASE, END nazwa).
+    /// Zakres „END …” na końcu zakresu (END, END IF, END LOOP, END CASE, END nazwa) — słowo END z granicami
+    /// słowa (nie fragment nazwy po nim, np. send_mail, vendor).
     static func endWord(_ r: Range<Int>, in ns: NSString) -> Range<Int> {
-        let tail = ns.substring(with: NSRange(location: r.lowerBound, length: r.count))
-        guard let endRange = tail.range(of: "end", options: [.caseInsensitive, .backwards]) else { return r.upperBound..<r.upperBound }
-        let start = r.lowerBound + (tail[..<endRange.lowerBound] as Substring).utf16.count
-        return start..<r.upperBound
+        func isIdentPart(_ p: Int) -> Bool {
+            guard p >= r.lowerBound, p < r.upperBound, let s = Unicode.Scalar(ns.character(at: p)) else { return false }
+            return CharacterSet.alphanumerics.contains(s) || s == "_" || s == "$" || s == "#"
+        }
+        var search = NSRange(location: r.lowerBound, length: r.count)
+        while search.length > 0 {
+            let f = ns.range(of: "end", options: [.caseInsensitive, .backwards], range: search)
+            guard f.location != NSNotFound else { break }
+            if !isIdentPart(f.location - 1), !isIdentPart(f.location + f.length) { return f.location..<r.upperBound }
+            search.length = f.location - search.location
+        }
+        return r.upperBound..<r.upperBound
     }
 }

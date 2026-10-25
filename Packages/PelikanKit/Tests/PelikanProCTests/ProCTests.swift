@@ -173,6 +173,9 @@ struct BuildMessageParserTests {
         #expect(m[0].file == "report.c" && m[0].line == 120 && m[0].column == 15 && m[0].text == "Undeclared identifier v_cnt.")
         #expect(m[1].line == 120 && m[1].column == 27 && m[1].text.hasSuffix("bad."))
         #expect(m[2].line == 7 && m[2].column == 10 && m[2].code == "1506-296")
+        // Opcje między -c a plikiem; znacznik bez kropek (błąd w kolumnie 1).
+        let o = BuildMessageParser.parse("xlc -c -q64 -O2 src/orders.c -o orders.o\n   12 | x = 1;\n        a\na - 1506-045 (S) Undeclared identifier x.")
+        #expect(o.count == 1 && o[0].file == "src/orders.c" && o[0].line == 12 && o[0].column == 1)
     }
 
     @Test("Ścieżka serwera → ścieżka względna projektu (względna wobec katalogu make, bezwzględna, poza repozytorium)")

@@ -211,6 +211,7 @@ public enum ConnectionCommands {
                     await ctx.workspace.sessions.close(ctx.workspace.sessions.key(forDocument: doc.id, connection: old))
                 }
                 doc.connectionID = target
+                doc.isDisconnected = false
                 doc.results.removeAll()
                 return CommandResult(message: target.flatMap { ctx.workspace.connections.connection($0)?.displayName } ?? L10n.tr("Połączenie główne"))
             },

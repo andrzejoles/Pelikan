@@ -79,8 +79,10 @@ public enum ChartBuilder {
     public static func number(_ v: OracleValue) -> Double? {
         if case .null = v { return nil }
         guard let t = v.displayText?.trimmingCharacters(in: .whitespaces), !t.isEmpty else { return nil }
-        if let d = Double(t) { return d }
-        return Double(t.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: "."))
+        // Tylko zapis dziesiętny: Double() przyjmuje też „inf”, „nan” i „0x10”.
+        guard t.allSatisfy({ "0123456789+-.,eE ".contains($0) }) else { return nil }
+        let d = Double(t) ?? Double(t.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: ",", with: "."))
+        return d.flatMap { $0.isFinite ? $0 : nil }
     }
 
     public static func label(_ v: OracleValue, format: ValueFormat) -> String {

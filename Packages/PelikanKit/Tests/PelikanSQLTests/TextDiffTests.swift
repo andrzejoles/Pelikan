@@ -44,6 +44,24 @@ struct TextDiffTests {
         }
     }
 
+    @Test("Wiele różnic: ograniczona pamięć ścieżki, powyżej progu porównanie uproszczone")
+    func manyDifferences() {
+        // 1000 różnic (poniżej progu): dokładny wynik; 6000 (powyżej): środek jako zmieniony, także wspólna linia „m”.
+        let a = (0..<1500).map { $0.isMultiple(of: 3) ? "x\($0)" : "w\($0)" }
+        let b = (0..<1500).map { $0.isMultiple(of: 3) ? "y\($0)" : "w\($0)" }
+        let r = TextDiff.rows(a.joined(separator: "\n"), b.joined(separator: "\n"))
+        #expect(r.filter { $0.kind == .changed }.count == 500 && r.filter { $0.kind == .same }.count == 1000)
+        var c = (0..<3000).map { "lewa \($0)" }, d = (0..<3000).map { "prawa \($0)" }
+        c[1500] = "m"
+        d[1500] = "m"
+        let clock = ContinuousClock()
+        var big: [DiffRow] = []
+        let t = clock.measure { big = TextDiff.rows("p\n" + c.joined(separator: "\n") + "\nk", "p\n" + d.joined(separator: "\n") + "\nk") }
+        #expect(big.count == 3002 && big.filter { $0.kind == .changed }.count == 3000)
+        #expect(big.filter { $0.left != nil }.map(\.leftText) == ["p"] + c + ["k"])
+        #expect(t < .seconds(10), "\(t)")
+    }
+
     @Test("Wydajność: 50 000 linii z rozproszonymi zmianami")
     func performance() {
         let a = (0..<50_000).map { "linia \($0)" }

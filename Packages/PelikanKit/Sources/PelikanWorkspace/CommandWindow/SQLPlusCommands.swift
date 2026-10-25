@@ -117,7 +117,7 @@ extension SQLPlusEngine {
                 releaseTemporary(c)
             }
             document.transactionOpen = false
-            state.disconnected = true
+            document.isDisconnected = true
             emit(L10n.tr("Rozłączono."))
         case "EXIT", "QUIT":
             return .exit
@@ -577,7 +577,7 @@ extension SQLPlusEngine {
     /// Otwarta transakcja przed CONNECT/DISCONNECT: COMMIT albo ROLLBACK wg ustawienia, pytanie jak przy zamykaniu okna
     /// (D10, SECURITY A18). false — anulowano. Bez interfejsu — ROLLBACK (jak przy zamknięciu sesji).
     func endTransactionBeforeLogoff() async throws -> Bool {
-        guard document.transactionOpen, !state.disconnected else { return true }
+        guard document.transactionOpen, !document.isDisconnected else { return true }
         let commit: Bool
         switch workspace.settings.logoffWithOpenTransaction {
         case .commit: commit = true
@@ -610,7 +610,7 @@ extension SQLPlusEngine {
         }
         document.connectionID = id
         document.transactionOpen = false
-        state.disconnected = false
+        document.isDisconnected = false
         if let old, old != id { releaseTemporary(old) }
         let s = try await workspace.session(for: document)
         emit(L10n.tr("Połączono jako \(s.info.sessionUser)."))

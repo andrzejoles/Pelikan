@@ -55,11 +55,11 @@ struct SearchBarView: View {
             let dirs = directories.split(separator: ";").map { URL(fileURLWithPath: (String($0).trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath) }
             let roots = dirs.isEmpty ? workspace.fileBrowser.locations.map { URL(fileURLWithPath: ($0.path as NSString).expandingTildeInPath) } : dirs
             // Pliki czytane w tle — duże katalogi nie zawieszają interfejsu; wynik tylko dla ostatniego wyszukiwania.
-            let (q, o) = (query, options)
+            let (q, o, enc) = (query, options, workspace.projectEncodingResolver())
             generation += 1
             let current = generation
             Task {
-                let found = await Task.detached { EditorSearch.searchFiles(q, in: roots, options: o) }.value
+                let found = await Task.detached { EditorSearch.searchFiles(q, in: roots, options: o, encoding: enc) }.value
                 guard current == generation else { return }
                 hits = found
                 searched = true

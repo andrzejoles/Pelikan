@@ -37,7 +37,7 @@ public struct CompletionOptions: Sendable, Hashable {
     public init() {}
 
     public init(_ s: Settings) {
-        match = s.codeAssistantMatch; letterCase = s.codeAssistantCase; minimumCharacters = max(0, s.codeAssistantMinChars)
+        match = s.codeAssistantMatch; letterCase = s.codeAssistantCase; minimumCharacters = max(1, s.codeAssistantMinChars)
         standardFunctions = s.codeAssistantStandardFunctions; allPerLine = s.codeAssistantAllPerLine; commaFirst = s.codeAssistantCommaFirst
     }
 }
@@ -80,14 +80,21 @@ public enum CodeAssistant {
         if !c.qualifier.isEmpty, c.prefix.isEmpty, columns.count >= 2 {
             let ns = text as NSString
             let dot = c.replaceRange.lowerBound
-            var q = dot - 1
-            while q > 0, let s = UnicodeScalar(ns.character(at: q - 1)), CharacterSet.alphanumerics.contains(s) || "_$#.\"".unicodeScalars.contains(s) { q -= 1 }
-            let qualifierText = ns.substring(with: NSRange(location: q, length: dot - q))
+            let qualifierText = qualifier(before: dot, in: ns)
+            let q = dot - (qualifierText as NSString).length
             let lineStart = ns.lineRange(for: NSRange(location: q, length: 0)).location
             let indent = String(ns.substring(with: NSRange(location: lineStart, length: q - lineStart)).map { $0 == "\t" ? "\t" : " " })
             filtered.insert(allItem(columns.map(\.insertText), qualifier: qualifierText, indent: indent, options: options), at: 0)
         }
         return CompletionResult(replaceRange: c.replaceRange, prefix: c.prefix, items: filtered)
+    }
+
+    /// Kwalifikator z kropką przed pozycją `dot` (np. `e.`, `scott.emp.`, `:new.`) — powtarzany przed kolejnymi
+    /// elementami „(all)”.
+    static func qualifier(before dot: Int, in ns: NSString) -> String {
+        var q = dot - 1
+        while q > 0, let s = UnicodeScalar(ns.character(at: q - 1)), CharacterSet.alphanumerics.contains(s) || "_$#.\":".unicodeScalars.contains(s) { q -= 1 }
+        return ns.substring(with: NSRange(location: q, length: dot - q))
     }
 
     /// Pozycja „(all)”: pierwszy element bez kwalifikatora (już wpisany), kolejne z nim; w jednej linii albo po
@@ -329,7 +336,7 @@ public enum CodeAssistant {
             let name = q[0]
             // 1. Alias albo nazwa tabeli w instrukcji.
             if let t = c.tables.first(where: { $0.matches(name) }) {
-                if let sub = t.subquery { return selectItems(sub, context: c) }
+                if let sub = t.subquery { return selectItems(sub) }
                 return await columnItems(owner: t.owner, name: t.name, metadata: m)
             }
             // 2. Rekord pętli FOR.
@@ -376,16 +383,17 @@ public enum CodeAssistant {
     }
 
     /// Kolumny z listy SELECT podzapytania (alias albo nazwa kolumny).
-    static func selectItems(_ query: String, context: CompletionContext) -> [CompletionItem] {
+    static func selectItems(_ query: String) -> [CompletionItem] {
         SelectListParser.items(query).compactMap { ($0.alias ?? $0.column).map { CompletionItem(label: $0, kind: .field) } }
     }
 
     /// Pola rekordu z kursora (nazwa) albo zapytania.
     static func recordSource(_ src: String, context c: CompletionContext, metadata m: MetadataProvider?) async -> [CompletionItem] {
-        if src.uppercased().contains("SELECT") { return await queryFields(src, metadata: m) }
+        // Najpierw nazwa kursora (np. C_SELECTED — zawiera „SELECT”, a nie jest zapytaniem).
         if let cur = c.declarations.first(where: { $0.kind == .cursor && $0.name.uppercased() == src }) {
             return await cursorFields(cur, context: c, metadata: m)
         }
+        if src.uppercased().contains("SELECT") { return await queryFields(src, metadata: m) }
         return []
     }
 
@@ -548,20 +556,26 @@ public enum CodeAssistant {
             }
         }
         guard c.prefix.count >= max(minimumPrefix, options.minimumCharacters) else { return out }
+        let p = c.prefix.uppercased()
+        // Dopasowanie z preferencji (PD-CA-007): „zawiera” obejmuje też obiekty, synonimy i słowa kluczowe; nazwy
+        // zaczynające się od prefiksu pierwsze (limit nie wycina ich na rzecz dopasowań w środku).
+        func matching<T>(_ list: [T], limit: Int, name: @escaping (T) -> String) -> [T] {
+            let starts = Array(list.lazy.filter { name($0).hasPrefix(p) }.prefix(limit))
+            guard options.match == .contains, starts.count < limit else { return starts }
+            return starts + list.lazy.filter { !name($0).hasPrefix(p) && name($0).contains(p) }.prefix(limit - starts.count)
+        }
         if let m, let schema = try? await m.currentSchema(), let names = try? await m.objectNames(owner: schema) {
-            let p = c.prefix.uppercased()
-            out += names.lazy.filter { $0.name.hasPrefix(p) }.prefix(300).map {
+            out += matching(names, limit: 300) { $0.name }.map {
                 CompletionItem(label: $0.name, kind: kind(ofObjectType: $0.type), detail: $0.type.lowercased())
             }
             // Obiekty dostępne przez synonimy publiczne (PD-CA-003) — po obiektach własnego schematu.
             if schema != "PUBLIC", let pub = try? await m.objectNames(owner: "PUBLIC") {
-                out += pub.lazy.filter { $0.name.hasPrefix(p) }.prefix(200).map {
+                out += matching(pub, limit: 200) { $0.name }.map {
                     CompletionItem(label: $0.name, kind: .synonym, detail: L10n.tr("synonim publiczny"))
                 }
             }
         }
-        let p = c.prefix.uppercased()
-        out += Keywords.reserved.union(Keywords.plsql).union(Keywords.sql).filter { $0.hasPrefix(p) }.sorted().map { CompletionItem(label: $0, kind: .keyword) }
+        out += matching(Keywords.reserved.union(Keywords.plsql).union(Keywords.sql).sorted(), limit: .max) { $0 }.map { CompletionItem(label: $0, kind: .keyword) }
         // Funkcje standardowe SQL (PD-CA-007).
         if options.standardFunctions {
             out += OracleDocs.sqlFunctions.filter { options.match == .contains ? $0.contains(p) : $0.hasPrefix(p) }.sorted()

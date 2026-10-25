@@ -172,7 +172,8 @@ enum ObjectAdminCommands {
                 var flags = ctx.arguments.string("flags")
                 if flags == nil, ctx.invoker == .user { flags = await ctx.ui?.askText(L10n.tr("Flagi kompilacji warunkowej"), message: "PLSQL_CCFLAGS", defaultValue: current) }
                 guard let flags, flags != current else { return CommandResult(value: .string(current)) }
-                guard ctx.invoker == .user else { throw AgentDenial.permissionDenied("zmiana flag kompilacji tylko przez użytkownika") }
+                // Agent nie ma tej komendy (poziom Brak); sprawdzenie zostaje jako druga linia obrony.
+                guard ctx.invoker == .user else { throw AgentDenial.permissionDenied(L10n.tr("Zmiana flag kompilacji tylko przez użytkownika")) }
                 let sql = try ObjectAdmin.ccflagsStatement(o, flags: flags)
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await s.execute(sql)

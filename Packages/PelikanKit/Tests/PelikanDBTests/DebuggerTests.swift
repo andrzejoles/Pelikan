@@ -176,3 +176,59 @@ struct DebuggerExtrasTests {
         await ws.sessions.disconnectAll()
     }
 }
+
+@MainActor
+@Suite("Debuger: długie polskie linie, Stop w trakcie kroku, PLSQL_OPTIMIZE_LEVEL", .enabled(if: TestDatabase.isAvailable), .serialized, .timeLimit(.minutes(1)))
+struct DebuggerStopTests {
+    @Test("DBMS_OUTPUT i wynik zapytania dłuższe niż element DBMS_DEBUG_VC2COLL; Stop przy punkcie przerwania w trakcie Run; sesja okna wolna")
+    func stopWhileRunning() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
+        try ws.connections.upsert(def, password: c.password)
+        ws.sessions.setMainConnection(def.id)
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        // Rozmiar elementu kolekcji (diagnostyka założenia w DebuggerEngine: najgorszy przypadek VARCHAR2(1000) BYTE).
+        let elem = try? await s.scalar("select length || ' ' || char_used from all_coll_types where owner = 'SYS' and type_name = 'DBMS_DEBUG_VC2COLL'")
+        print("DBMS_DEBUG_VC2COLL element:", (elem ?? nil) ?? "?")
+        _ = try await s.execute("""
+            create or replace procedure pelikan_dbg_s is
+              n number := 0;
+            begin
+              for i in 1 .. 200000 loop n := n + 1; end loop;
+              dbms_output.put_line(rpad('ż', 600, 'ż'));
+              n := n + 1;
+            end;
+            """)
+        _ = try await s.execute("alter procedure pelikan_dbg_s compile debug")
+        let schema = try await ws.metadata()!.currentSchema()
+        ws.breakpoints = [Breakpoint(owner: schema, unit: "PELIKAN_DBG_S", type: .procedure, line: 6)]
+        let doc = ws.newDocument(.test, text: "begin\n  pelikan_dbg_s;\nend;")
+        let d = ws.debugger(for: doc)
+
+        try await d.start()
+        try await d.step(.run)
+        #expect(d.state == .paused && d.location?.line == 6)
+        #expect(doc.output.contains(String(repeating: "ż", count: 600)))
+        #expect(try await d.executeInTarget("select rpad('ą', 1500, 'ą') x from dual") == [String(repeating: "ą", count: 1500)])
+        try await d.step(.run)
+        #expect(d.state == .finished)
+
+        // Stop w trakcie Run: program zatrzyma się na punkcie przerwania, Stop go przerywa (bez czekania na limit DBMS_DEBUG).
+        try await d.start()
+        let run = Task { try await d.step(.run) }
+        for _ in 0..<1000 where d.state != .running { await Task.yield() }
+        await d.stop()
+        _ = try? await run.value
+        #expect(d.state == .finished)
+        // Sesja okna nie jest w trybie debugowania i ma przywrócony poziom optymalizacji.
+        let target = try await ws.session(for: doc)
+        _ = try await target.execute("begin null; end;")
+        if let level = (try? await target.scalar("select value from v$parameter where name = 'plsql_optimize_level'")) ?? nil {
+            #expect(level != "1")
+        }
+        ws.breakpoints = []
+        _ = try? await s.execute("drop procedure pelikan_dbg_s")
+        await ws.sessions.disconnectAll()
+    }
+}

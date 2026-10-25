@@ -14,13 +14,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     private let imageView = NSImageView()
     private let pdfView = PDFView()
     /// Podgląd HTML (PD-LDE-001): bez JavaScriptu, CSP bez zasobów zewnętrznych, bez nawigacji.
-    private lazy var webView: WKWebView = {
-        let config = WKWebViewConfiguration()
-        config.defaultWebpagePreferences.allowsContentJavaScript = false
-        let view = WKWebView(frame: .zero, configuration: config)
-        view.navigationDelegate = HTMLPreviewNavigation.shared
-        return view
-    }()
+    private lazy var webView = WKWebView.localHTML()
     private let autoFormat = NSButton(checkboxWithTitle: "", target: nil, action: nil)
     private let info = NSTextField(labelWithString: "")
     private let applyButton = NSButton()

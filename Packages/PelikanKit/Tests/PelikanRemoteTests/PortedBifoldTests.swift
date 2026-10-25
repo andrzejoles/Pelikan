@@ -145,7 +145,7 @@ struct PortedServerTests {
         }
         // Do known_hosts trafiają dokładnie potwierdzone klucze — bez drugiego połączenia z accept-new.
         try session.trustHostKeys(scan)
-        #expect(try session.unknownHostFingerprints() == nil)
+        #expect(try session.unknownHostKeys() == nil)
         try session.connect()
         #expect(session.isConnected)
     }

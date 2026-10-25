@@ -202,7 +202,7 @@ public final class LargeDataModel {
 
     /// Dokument podglądu HTML (PD-LDE-001): bez skryptów i zasobów zewnętrznych (CSP), obrazy tylko `data:`.
     nonisolated public static func htmlPreviewDocument(_ s: String) -> String {
-        "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">" + s
+        LocalHTML.contentSecurityPolicy + s
     }
 
     /// Szesnastkowy podgląd (offset, bajty, ASCII), ograniczony do `limit` bajtów.

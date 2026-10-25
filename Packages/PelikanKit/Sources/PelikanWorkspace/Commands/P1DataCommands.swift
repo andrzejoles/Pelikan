@@ -85,7 +85,8 @@ enum P1DataCommands {
                 }
                 guard let from = try column("fromColumn") else { throw CommandError.missingArgument("fromColumn") }
                 let to = try column("toColumn") ?? from
-                guard let r1 = ctx.arguments.int("fromRow"), let r2 = ctx.arguments.int("toRow"),
+                // Pusta siatka: zakres 1...0 zatrzymałby aplikację.
+                guard let r1 = ctx.arguments.int("fromRow"), let r2 = ctx.arguments.int("toRow"), grid.rowCount > 0,
                       (1...grid.rowCount).contains(Int(r1)), (1...grid.rowCount).contains(Int(r2)) else {
                     throw CommandError.invalidArgument("fromRow", "1…\(grid.rowCount)")
                 }
