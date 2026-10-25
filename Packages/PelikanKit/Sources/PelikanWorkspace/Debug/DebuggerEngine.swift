@@ -155,21 +155,36 @@ public final class DebuggerEngine {
         }
         let initResult = try await target.execute("begin :id := dbms_debug.initialize; dbms_debug.debug_on; end;",
                                                   binds: [BindVariable(name: "id", direction: .output, maxSize: 100)])
-        guard let id = initResult.outBinds["id"]?.displayText ?? initResult.outBinds["ID"]?.displayText else {
-            throw CommandError.notAvailable(L10n.tr("DBMS_DEBUG nie zwrócił identyfikatora sesji"))
+        // Od DEBUG_ON błąd startu nie może zostawić sesji okna w trybie debugowania (każde kolejne wywołanie PL/SQL
+        // czekałoby na debuger): z dołączoną sesją nadzorującą — sprzątanie jak przy Stop, bez niej — zamknięcie sesji.
+        var attached = false
+        let info: RuntimeInfo
+        do {
+            guard let id = initResult.outBinds["id"]?.displayText ?? initResult.outBinds["ID"]?.displayText else {
+                throw CommandError.notAvailable(L10n.tr("DBMS_DEBUG nie zwrócił identyfikatora sesji"))
+            }
+            Self.trace("initialize -> \(id)")
+            _ = try await debug.execute("begin dbms_debug.attach_session(:id); end;", binds: [BindVariable(name: "id", value: .text(id))])
+            attached = true
+            Self.trace("attached")
+            bindsUsed = binds
+            document.isExecuting = true
+            document.errorStack = []
+            execution = Task.detached { try await target.execute(sql, binds: binds) }
+            state = .running
+            // Pierwsze zdarzenie: start interpretera; punkty przerwania; potem pierwsza linia.
+            info = try await runtimeCall("dbms_debug.synchronize(ri, dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            if !info.terminated { try await applyBreakpoints(block: false) }
+        } catch {
+            if attached {
+                await cleanUp()
+            } else {
+                await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: conn))
+            }
+            state = .finished
+            throw error
         }
-        Self.trace("initialize -> \(id)")
-        _ = try await debug.execute("begin dbms_debug.attach_session(:id); end;", binds: [BindVariable(name: "id", value: .text(id))])
-        Self.trace("attached")
-        bindsUsed = binds
-        document.isExecuting = true
-        document.errorStack = []
-        execution = Task.detached { try await target.execute(sql, binds: binds) }
-        state = .running
-        // Pierwsze zdarzenie: start interpretera; punkty przerwania; potem pierwsza linia.
-        let info = try await runtimeCall("dbms_debug.synchronize(ri, dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
         if info.terminated { return try await finish() }
-        try await applyBreakpoints(block: false)
         // Punkty przerwania na kodach błędów (ORA-n, PD-DBG-008).
         for code in workspace.errorBreakpoints {
             _ = try? await debug.execute("begin :st := dbms_debug.set_oer_breakpoint(:c); end;",

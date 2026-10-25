@@ -130,7 +130,7 @@ enum P1BrowserCommands {
                 let raw = ctx.arguments.string("action") ?? ctx.workspace.settings.browserDropAction.rawValue
                 guard let action = BrowserDropAction(rawValue: raw) else { throw CommandError.invalidArgument("action", raw) }
                 let text = try await dropText(action, o, m, ws: ctx.workspace)
-                if let doc = Stage7Commands.editor(ctx.workspace) { Stage7Commands.insert(text, into: doc) }
+                if let doc = Stage7Commands.editor(ctx.workspace) { try Stage7Commands.insert(text, into: doc) }
                 return CommandResult(value: .string(text))
             },
             command("ob.dropOnWorkspace", L10n.tr("Upuść obiekt na obszar okien"),

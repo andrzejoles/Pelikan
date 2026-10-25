@@ -19,9 +19,8 @@ public final class AgentServer: @unchecked Sendable {
     let onAccept: @Sendable (Int32, AgentSession) -> Void
     let onEvent: @Sendable (ConnectionEvent) -> Void
     private let state = Mutex<(fd: Int32, running: Bool)>((-1, false))
-    /// Wyłącza sprawdzanie przodków (tylko testy jednostkowe uwierzytelniania).
-    var verifyAncestry = true
-    public var helloTimeout: Double = 5
+    /// Limit czasu na ramkę hello (s).
+    static let helloTimeout: Double = 5
 
     public init(
         socketURL: URL, registry: SessionRegistry,
@@ -138,7 +137,7 @@ public final class AgentServer: @unchecked Sendable {
             return
         }
         // 2. Ramka hello z tokenem w ograniczonym czasie.
-        Wire.setReadTimeout(fd, seconds: helloTimeout)
+        Wire.setReadTimeout(fd, seconds: Self.helloTimeout)
         guard let data = try? Wire.readFrame(from: fd), data.count < 4096,
               let hello = try? JSONDecoder().decode(Wire.Hello.self, from: data), hello.type == "hello"
         else {
@@ -151,11 +150,9 @@ public final class AgentServer: @unchecked Sendable {
             return
         }
         // 4. Proces po drugiej stronie musi być potomkiem procesu CLI tej sesji.
-        if verifyAncestry {
-            guard let cli = session.cliPID, ProcessTree.ancestry(of: peer.pid).contains(cli) else {
-                reject(fd, "not_descendant", pid: peer.pid)
-                return
-            }
+        guard let cli = session.cliPID, ProcessTree.ancestry(of: peer.pid).contains(cli) else {
+            reject(fd, "not_descendant", pid: peer.pid)
+            return
         }
         Wire.setReadTimeout(fd, seconds: 0)
         guard let welcome = try? JSONEncoder().encode(Wire.Reply.welcome), (try? Wire.writeFrame(welcome, to: fd)) != nil else {

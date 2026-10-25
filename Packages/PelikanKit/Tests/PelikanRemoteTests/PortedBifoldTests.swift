@@ -135,14 +135,16 @@ struct PortedServerTests {
         let sshd = try TestSSHD()
         let (session, run) = try sshd.session()
         defer { session.disconnect(); try? FileManager.default.removeItem(at: run) }
-        #expect(try session.unknownHostFingerprints() != nil)
+        let scan = try #require(try session.unknownHostKeys())
+        #expect(!scan.entries.isEmpty && scan.fingerprints.count == scan.entries.count && scan.fingerprints.allSatisfy { $0.contains("SHA256:") })
         do {
             try session.connect()
             Issue.record("połączenie z nieznanym serwerem nie powinno się udać")
         } catch let e as SSHError {
             if case .hostKeyUnknown = e {} else { Issue.record("oczekiwano hostKeyUnknown, jest \(e)") }
         }
-        try session.recordHostKey()
+        // Do known_hosts trafiają dokładnie potwierdzone klucze — bez drugiego połączenia z accept-new.
+        try session.trustHostKeys(scan)
         #expect(try session.unknownHostFingerprints() == nil)
         try session.connect()
         #expect(session.isConnected)

@@ -115,6 +115,13 @@ struct DeployScriptTests {
         s.feed("@@STEP build\nmake\n")
         s.finish(exitCode: 255, stopped: true)
         #expect(s.outcome == .stopped && s.steps.last?.status == .stopped)
+
+        // Kod 255 bez Stop: ssh zerwał połączenie — błąd, nie zatrzymanie przez użytkownika.
+        var lost = DeployProgress()
+        lost.feed("@@STEP build\nmake\n")
+        lost.finish(exitCode: 255)
+        #expect(lost.outcome == .failed && lost.steps.last?.status == .failed)
+        #expect(DeployOutcome.from(exitCode: 143) == .stopped)
     }
 
     @Test("Historia z serwera i lokalna (zapis, log, ostatnie udane, commit na UAT)")

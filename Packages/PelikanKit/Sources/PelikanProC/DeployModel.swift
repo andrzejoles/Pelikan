@@ -69,7 +69,8 @@ public enum DeployOutcome: String, Sendable, Codable, Hashable {
         case DeployScripts.Exit.wrongBranch: .wrongBranch
         case DeployScripts.Exit.noFastForward: .noFastForward
         case DeployScripts.Exit.buildFailed: .buildFailed
-        case 129...255: .stopped
+        // 128+n — skrypt zabity sygnałem; 255 — ssh: zerwane połączenie (błąd, nie zatrzymanie).
+        case 129...254: .stopped
         default: .failed
         }
     }
@@ -88,7 +89,6 @@ public struct DeployProgress: Sendable {
     public private(set) var installed: [String] = []
     public private(set) var missing: [String] = []
     public private(set) var serverBranch: String?
-    public private(set) var finishedMarker = false
     public private(set) var exitCode: Int32?
 
     var pendingOut = ""
@@ -209,7 +209,7 @@ public struct DeployProgress: Sendable {
             serverBranch = arg.replacingOccurrences(of: "refs/heads/", with: "")
             append(.error, L10n.tr("Working copy na gałęzi „\(serverBranch ?? "")”"))
         case "@@NO_FF": append(.error, L10n.tr("Brak fast-forward: historia na serwerze rozeszła się z remote — Pelikan nie robi merge"))
-        case "@@DONE": finishedMarker = true
+        case "@@DONE": break                                    // znacznik końca skryptu — poza konsolą
         default: return false
         }
         return true

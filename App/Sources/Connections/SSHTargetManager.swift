@@ -140,15 +140,18 @@ final class SSHTargetManagerModel {
         }
         let run = runDirectory
         // Nowy serwer: odcisk klucza do potwierdzenia, zanim Pelikan zapisze go w known_hosts i wyśle hasło.
-        let scanned: Result<[String]?, any Error> = await Task.detached {
-            do { return .success(try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: run, secret: { nil }).unknownHostFingerprints()) }
+        let scanned: Result<SSHSession.HostKeyScan?, any Error> = await Task.detached {
+            do { return .success(try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: run, secret: { nil }).unknownHostKeys()) }
             catch { return .failure(error) }
         }.value
         if case .failure(let e) = scanned {
             message = SSHTargetTester.describe(e)
             return
         }
-        if case .success(let fingerprints?) = scanned {
+        // Klucze potwierdzone przez użytkownika — trafiają do known_hosts dokładnie te (bez ponownego łączenia).
+        var confirmed: SSHSession.HostKeyScan?
+        if case .success(let scan?) = scanned {
+            let fingerprints = scan.fingerprints
             let alert = NSAlert()
             alert.messageText = L10n.tr("Zaufać kluczowi serwera \(t.host)?")
             alert.informativeText = fingerprints.isEmpty
@@ -160,11 +163,16 @@ final class SSHTargetManagerModel {
                 message = L10n.tr("Nie zaufano kluczowi serwera")
                 return
             }
+            confirmed = scan
         }
-        let result: Result<[SSHTestCheck], any Error> = await Task.detached {
+        let result: Result<[SSHTestCheck], any Error> = await Task.detached { [confirmed] in
             do {
                 let s = try SSHSession(config: SSHTargetTester.sessionConfig(t), runDirectory: run, secret: { secret })
                 defer { s.disconnect() }
+                if let confirmed {
+                    // Kluczy nie odczytano (np. alias z ~/.ssh/config) — zaufanie przy pierwszym połączeniu, na wyraźną decyzję.
+                    if confirmed.entries.isEmpty { try s.recordHostKey() } else { try s.trustHostKeys(confirmed) }
+                }
                 return .success(SSHTargetTester.run(t, session: s))
             } catch { return .failure(error) }
         }.value

@@ -155,7 +155,7 @@ public final class DeployPipeline: Identifiable {
         var exitCode: Int32 = -1
         var failure: String?
         do {
-            let p = try session.stream(command, environment: t.remoteEnvironment, tty: true)
+            let p = try session.stream(command, environment: t.remoteEnvironment, tty: true, outputEncoding: t.consoleEncoding)
             process = p
             for try await e in p.events {
                 switch e {
@@ -169,8 +169,9 @@ public final class DeployPipeline: Identifiable {
         }
         process = nil
         finish(code: exitCode, stopped: stopRequested, error: failure)
-        // Po Stop albo zerwaniu — zawsze zdjęcie własnej blokady (skrypt zabity KILL nie wykona pułapki).
-        await cleanUp(releaseLock: stopRequested || failure != nil)
+        // Po Stop albo zerwaniu (błąd strumienia, kod 255 ssh) — zawsze zdjęcie własnej blokady (skrypt zabity KILL
+        // nie wykona pułapki).
+        await cleanUp(releaseLock: stopRequested || failure != nil || exitCode == 255)
     }
 
     func finish(code: Int32, stopped: Bool, error: String?) {

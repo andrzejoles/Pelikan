@@ -426,6 +426,8 @@ public final class Workspace {
     public internal(set) var agentCodeChanges: [AgentCodeChange] = []
     /// Liczba wierszy zmienionych przez niezatwierdzone DML agenta (sesja|połączenie) — podgląd zgody na COMMIT.
     public internal(set) var agentPendingRows: [String: UInt64] = [:]
+    /// Ostatnie wywołanie w kolejce sesji bazy agenta (`agentSerialized`).
+    @ObservationIgnored var agentQueue: [String: Task<Void, Never>] = [:]
     /// Ostrzeżenie o pokryciu kodu pokazane w tej sesji aplikacji.
     public var coverageWarningShown = false
     /// Zmienia się po kompilacji jednostek (eksplorator testów przeładowuje drzewo).
@@ -694,8 +696,10 @@ public final class Workspace {
     public func invoke(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> CommandResult {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
         // Stan menu obowiązuje wszystkich wywołujących (także agenta): komenda wyłączona nie wykonuje się. Komenda
-        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel.
-        if !command.isPlanned, arguments.values.isEmpty, let validate = command.validate, !validate(self) {
+        // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel. Klucze
+        // wewnętrzne („__…”, np. znacznik run_command) nie są argumentami — nie wyłączają sprawdzenia.
+        let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") }
+        if !command.isPlanned, !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
         var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
@@ -706,7 +710,11 @@ public final class Workspace {
                 guard let gate = agentGate else { throw AgentDenial.sessionClosed }
                 context = CommandContext(workspace: self, invoker: invoker, arguments: try await gate.authorize(command, context: context))
             }
-            let result = try await command.run(context)
+            let result = if let s = invoker.agentSessionID, AgentChanges.serializedCommands.contains(id) {
+                try await agentSerialized(s) { try await command.run(context) }
+            } else {
+                try await command.run(context)
+            }
             notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))
             return result
         } catch {
@@ -719,7 +727,10 @@ public final class Workspace {
     public func preview(_ id: CommandID, _ arguments: CommandArguments = .empty, invoker: Invoker = .user) async throws -> EffectPreview {
         guard let command = registry.command(id) else { throw CommandError.unknownCommand(id) }
         let context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
-        if let preview = command.preview { return try await preview(context) }
+        if let preview = command.preview {
+            if let s = invoker.agentSessionID, AgentChanges.serializedCommands.contains(id) { return try await agentSerialized(s) { try await preview(context) } }
+            return try await preview(context)
+        }
         return EffectPreview(summary: command.descriptor.summary)
     }
 

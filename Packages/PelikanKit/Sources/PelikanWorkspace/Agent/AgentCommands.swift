@@ -16,6 +16,19 @@ extension Workspace {
     /// zgoda, podgląd i wykonanie dotyczą tego samego połączenia, nawet gdy w trakcie zgody zmieni się aktywne okno.
     public static let agentConnectionKey = "__connectionID"
 
+    /// Klucz wewnętrzny z poleceniami z podglądu, na które zgodził się użytkownik (ustawia bramka; agent go nie poda):
+    /// komenda czytająca polecenia z okna (agent.compile) wykonuje dokładnie je, nawet gdy w trakcie zgody zmieni się
+    /// tekst okna albo aktywne okno (np. replace_range czy navigate_to agenta).
+    public static let agentStatementsKey = "__statements"
+
+    /// Podgląd do okna zgody i argumenty do wykonania po zgodzie — z przypiętymi poleceniami podglądu.
+    public func agentApprovalPreview(_ id: CommandID, _ arguments: CommandArguments, invoker: Invoker) async throws -> (EffectPreview, CommandArguments) {
+        let preview = try await self.preview(id, arguments, invoker: invoker)
+        var pinned = arguments
+        pinned[Self.agentStatementsKey] = .array(preview.statements.map { .string($0) })
+        return (preview, pinned)
+    }
+
     /// Połączenie narzędzia agenta: przypięte przez bramkę albo z aliasu w argumencie `connection`.
     public func agentConnection(_ arguments: CommandArguments) throws -> ConnectionDefinition {
         if let raw = arguments.string(Self.agentConnectionKey) {

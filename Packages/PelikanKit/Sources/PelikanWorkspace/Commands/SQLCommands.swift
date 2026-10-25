@@ -132,14 +132,14 @@ public enum SQLCommands {
                                       submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+up"], agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia poprzednie wykonane polecenie okna."), feature: "PD-SQLW-007"),
                     validate: { !($0.activeDocument?.statementHistory.isEmpty ?? true) }) { ctx in
-                stepHistory(ctx.workspace, back: true)
+                try stepHistory(ctx.workspace, back: true)
                 return .ok
             },
             Command(CommandDescriptor(id: "sql.historyForward", title: L10n.tr("Następne polecenie okna"), category: .session,
                                       submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+down"], agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia następne polecenie z historii okna."), feature: "PD-SQLW-007"),
                     validate: { $0.activeDocument?.historyPosition != nil }) { ctx in
-                stepHistory(ctx.workspace, back: false)
+                try stepHistory(ctx.workspace, back: false)
                 return .ok
             },
             Command(CommandDescriptor(id: "sql.toggleSubstitution", title: L10n.tr("Podstawianie zmiennych"), category: .session,
@@ -167,8 +167,9 @@ public enum SQLCommands {
     }
 
     @MainActor
-    static func stepHistory(_ ws: Workspace, back: Bool) {
+    static func stepHistory(_ ws: Workspace, back: Bool) throws {
         guard let d = ws.activeDocument, !d.statementHistory.isEmpty else { return }
+        if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
         let last = d.statementHistory.count - 1
         var pos = d.historyPosition ?? (back ? last + 1 : last)
         pos += back ? -1 : 1
