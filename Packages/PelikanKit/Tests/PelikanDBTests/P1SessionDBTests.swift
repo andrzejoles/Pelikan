@@ -11,7 +11,8 @@ struct P1SessionDBTests {
     func substitutionAutoCommit() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
@@ -43,7 +44,8 @@ struct P1SessionDBTests {
     func bfile() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
@@ -65,7 +67,8 @@ struct P1SessionDBTests {
     func compareWithConnection() async throws {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let a = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         let b = ConnectionDefinition(name: "dev_test_2", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(a, password: c.password)

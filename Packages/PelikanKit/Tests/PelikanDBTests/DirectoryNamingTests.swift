@@ -20,7 +20,8 @@ struct DirectoryNamingTests {
         #expect(!tns.lowercased().contains("dev_pelikan_ldap"))
 
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_pelikan_ldap", target: ConnectionTarget(user: c.user, connectString: "dev_pelikan_ldap"))
         try ws.connections.upsert(def, password: c.password)
         let s = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))

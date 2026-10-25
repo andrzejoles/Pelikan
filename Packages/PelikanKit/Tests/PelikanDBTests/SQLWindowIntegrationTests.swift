@@ -297,7 +297,7 @@ struct GridEditingIntegrationTests {
         let tab = ws.activeDocument!.results.first!
         #expect(tab.selectedRows == [2])
         #expect(tab.focusedColumn == 0)
-        try? await ws.invoke("session.rollback")
+        _ = try? await ws.invoke("session.rollback")
         await ws.sessions.disconnectAll()
     }
 }

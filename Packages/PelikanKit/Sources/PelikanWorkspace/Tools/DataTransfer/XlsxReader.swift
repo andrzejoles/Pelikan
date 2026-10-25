@@ -103,7 +103,7 @@ public struct XlsxWorkbook {
         let d = SheetParser(shared: sharedStrings)
         let p = XMLParser(data: try zip.read(sheets[sheet].path))
         p.delegate = d
-        p.parse()
+        _ = p.parse()
         guard let maxRow = d.cells.keys.map(\.row).max() else { return [] }
         let maxCol = d.cells.keys.map(\.col).max() ?? 0
         var out = Array(repeating: Array(repeating: "", count: maxCol + 1), count: maxRow + 1)
@@ -148,7 +148,7 @@ public struct XlsxWorkbook {
         let d = D()
         let p = XMLParser(data: data)
         p.delegate = d
-        p.parse()
+        _ = p.parse()
         return d.items
     }
 
@@ -162,7 +162,7 @@ public struct XlsxWorkbook {
         let d = D()
         let p = XMLParser(data: data)
         p.delegate = d
-        p.parse()
+        _ = p.parse()
         return d.map
     }
 
@@ -176,7 +176,7 @@ public struct XlsxWorkbook {
         let d = D()
         let p = XMLParser(data: data)
         p.delegate = d
-        p.parse()
+        _ = p.parse()
         return d.sheets
     }
 

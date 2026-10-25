@@ -24,7 +24,8 @@ struct KerberosTests {
         await s.close()
 
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         var def = ConnectionDefinition(name: "dev_kerberos", target: t)
         def.savePassword = false
         try ws.connections.upsert(def, password: nil)

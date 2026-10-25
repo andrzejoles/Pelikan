@@ -113,7 +113,8 @@ struct EditorExternalToolsTests {
         let ws = Workspace(dataDirectory: t.url)
         let log = LaunchLog()
         ws.launchProgram = { exe, args in log.calls.append((exe.path, args)) }
-        ws.ui = ExternalToolsUI()
+        let ui = ExternalToolsUI()
+        ws.ui = ui
         ws.settings.externalDiff = tool
         let lf = try t.file("l.txt", "x\n"), rf = try t.file("r.txt", "y\n")
         try await ws.invoke("tools.compareFiles", CommandArguments(["left": .string(lf.path), "right": .string(rf.path)]))

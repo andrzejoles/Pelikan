@@ -150,7 +150,7 @@ public final class RecoveryStore: @unchecked Sendable {
         let crashed = FileManager.default.fileExists(atPath: marker.path)
         let previous = crashed ? (try? Data(contentsOf: snap)).flatMap { try? JSONDecoder().decode(Workset.self, from: $0) } : nil
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        FileManager.default.createFile(atPath: marker.path, contents: Data(String(ProcessInfo.processInfo.processIdentifier).utf8),
+        _ = FileManager.default.createFile(atPath: marker.path, contents: Data(String(ProcessInfo.processInfo.processIdentifier).utf8),
                                        attributes: [.posixPermissions: 0o600])
         if !crashed { try? FileManager.default.removeItem(at: snap) }
         return previous.flatMap { $0.documents.isEmpty ? nil : $0 }
@@ -160,7 +160,7 @@ public final class RecoveryStore: @unchecked Sendable {
     public func save(_ w: Workset) {
         guard let snap = snapshotURL else { return }
         guard !w.documents.isEmpty, let data = try? JSONEncoder().encode(w) else { try? FileManager.default.removeItem(at: snap); return }
-        FileManager.default.createFile(atPath: snap.path, contents: data, attributes: [.posixPermissions: 0o600])
+        _ = FileManager.default.createFile(atPath: snap.path, contents: data, attributes: [.posixPermissions: 0o600])
     }
 
     /// Czyste zamknięcie: bez znacznika i migawki.
@@ -221,7 +221,7 @@ extension Workspace {
             guard let data = TextFileCodec.encode(doc.text, format: doc.fileFormat) ?? doc.text.data(using: .utf8) else {
                 throw CommandError.notAvailable(L10n.tr("Nie można zapisać tekstu okna"))
             }
-            FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o600])
+            _ = FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o600])
             edit = ExternalDocumentEdit(url: url, modified: Self.modificationDate(url), temporary: true)
         }
         externalEdits[doc.id] = edit
@@ -400,7 +400,7 @@ extension Workspace {
         func file(_ title: String, _ text: String, _ side: String) -> URL {
             let safe = title.filter { $0.isLetter || $0.isNumber || $0 == "_" || $0 == "-" || $0 == "." }.prefix(40)
             let u = dir.appendingPathComponent("\(UUID().uuidString.prefix(8))-\(side)-\(safe.isEmpty ? "tekst" : String(safe)).txt")
-            FileManager.default.createFile(atPath: u.path, contents: Data(text.utf8), attributes: [.posixPermissions: 0o600])
+            _ = FileManager.default.createFile(atPath: u.path, contents: Data(text.utf8), attributes: [.posixPermissions: 0o600])
             return u
         }
         let l = file(leftTitle, left, "1"), r = file(rightTitle, right, "2")

@@ -48,7 +48,8 @@ struct BrowserCustomizationDBTests {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: dir) }
         let ws = Workspace(dataDirectory: dir, drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
@@ -60,8 +61,11 @@ struct BrowserCustomizationDBTests {
         _ = try await ws.invoke("ob.applyFilter", CommandArguments(["name": "e-tabele"]))
         let tables = try await m.objects(.table, owner: owner, filter: ObjectFilter("E", named: ws.browserFilter))
         #expect(!tables.isEmpty && tables.allSatisfy { $0.name.hasPrefix("E") } && tables.map(\.name) == tables.map(\.name).sorted(by: >))
+        // Bez nazwy komenda pyta o filtr; ostatni przycisk to „Bez filtra”.
+        ui.askAnswer = 1
         _ = try await ws.invoke("ob.applyFilter")
-        #expect(ws.browserFilter == nil)
+        ui.askAnswer = 0
+        #expect(ws.browserFilter == nil && ui.asked.contains("Filtr nazwany"))
         ws.selectedObject = DBObject(owner: owner, name: "EMP", type: .table)
         _ = try await ws.invoke("ob.addToFolder", CommandArguments(["folder": "Kadry"]))
         var folder = try #require(ws.browserCustomization.folders.first { $0.name == "Kadry" })

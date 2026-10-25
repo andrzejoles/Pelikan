@@ -380,7 +380,7 @@ public final class SQLPlusEngine {
             guard let slot = state.binds[n] else { emit(L10n.tr("SP2-0552: Zmienna wiązana „\(n)” nie jest zadeklarowana."), .error); continue }
             var f = TextResultFormatter(columns: [ColumnInfo(name: n, type: slot.type == .refCursor ? .varchar2 : slot.type, typeName: slot.type.rawValue)],
                                         state: state, format: workspace.settings.valueFormat)
-            if case .cursor(let id) = slot.value, let session = try? workspace.sessions.existingSession(workspace.sessions.key(forDocument: document.id, connection: workspace.effectiveConnection(of: document)!)) {
+            if case .cursor(let id) = slot.value, let session = workspace.sessions.existingSession(workspace.sessions.key(forDocument: document.id, connection: workspace.effectiveConnection(of: document)!)) {
                 Task { [weak self] in
                     // REF CURSOR: opis kolumn z wyniku zagnieżdżonego nie jest dostępny bez ponownego opisu — pobierz wiersze.
                     let batch = try? await session.fetch(id, maxRows: 10_000)

@@ -316,7 +316,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             table.reloadData()
         } else if edit.isEditing {
             // Stan komórek (zmienione, wstawione, usunięte) — przerysowanie widocznych wierszy.
-            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+            table.reloadData(forRowIndexes: IndexSet(integersIn: Range(table.rows(in: scroll.contentView.bounds)) ?? 0..<0),
                              columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
         }
         // Zaznaczenie ustawione komendą (blok komórek, cała kolumna) — PD-GRID-007.
@@ -326,7 +326,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             if let rows = tab.selectedRows, Set(rows) != Set(table.selectedRowIndexes) {
                 table.selectRowIndexes(IndexSet(rows.filter { $0 < table.numberOfRows }), byExtendingSelection: false)
             }
-            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+            table.reloadData(forRowIndexes: IndexSet(integersIn: Range(table.rows(in: scroll.contentView.bounds)) ?? 0..<0),
                              columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
         }
         if let r = tab.revealRow {
@@ -503,7 +503,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         tab.selectedRows = rows.isEmpty ? nil : rows
         if rows.isEmpty { tab.selectedColumns = nil }
         if tab.selectedColumns != nil {
-            table.reloadData(forRowIndexes: IndexSet(integersIn: table.rows(in: scroll.contentView.bounds).toRange() ?? 0..<0),
+            table.reloadData(forRowIndexes: IndexSet(integersIn: Range(table.rows(in: scroll.contentView.bounds)) ?? 0..<0),
                              columnIndexes: IndexSet(integersIn: 0..<table.numberOfColumns))
         }
         if !record.isHidden { showRecord() }

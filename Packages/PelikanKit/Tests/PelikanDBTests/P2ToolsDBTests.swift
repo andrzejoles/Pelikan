@@ -77,7 +77,8 @@ struct P2ToolsDBTests {
     @Test("Wiele obiektów: rekompilacja z listą nieprawidłowych, DDL w jednym oknie, usunięcie po jednym potwierdzeniu (PD-OB-011)")
     func multiObjects() async throws {
         let (ws, def) = try workspace()
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
         let schema = try await ws.metadata()!.currentSchema()
         _ = try await s.execute("create or replace procedure pelikan_p2_m1 is begin null; end;")

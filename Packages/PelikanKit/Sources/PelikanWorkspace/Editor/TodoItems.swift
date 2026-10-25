@@ -18,7 +18,7 @@ public struct TodoItem: Sendable, Hashable, Identifiable {
 }
 
 public enum TodoItems {
-    nonisolated(unsafe) static let regex = try! NSRegularExpression(
+    static let regex = try! NSRegularExpression(
         pattern: #"\b(TODO|DONE)\b(?:\s*\(([^)]*)\))?((?:\s*(?:![0-9]+|#[\p{L}\p{N}_-]+))*)\s*:?\s*(.*)"#, options: [.caseInsensitive])
 
     /// Zadania w komentarzach tekstu (literały i kod pomijane — lekser).

@@ -25,9 +25,9 @@ struct OracleNetTests {
         _ = try OracleNet.prepareManagedDirectory(tmp.appendingPathComponent("net"), userDirectory: user.path, walletDirectory: wallet.path)
         #expect(try FileManager.default.destinationOfSymbolicLink(atPath: dir + "/ldap.ora") == user.path + "/ldap.ora")
         #expect(OracleNet.walletStatus(wallet.path) == .missing)
-        FileManager.default.createFile(atPath: wallet.appendingPathComponent("ewallet.p12").path, contents: Data())
+        _ = FileManager.default.createFile(atPath: wallet.appendingPathComponent("ewallet.p12").path, contents: Data())
         #expect(OracleNet.walletStatus(wallet.path) == .passwordOnly)
-        FileManager.default.createFile(atPath: wallet.appendingPathComponent("cwallet.sso").path, contents: Data())
+        _ = FileManager.default.createFile(atPath: wallet.appendingPathComponent("cwallet.sso").path, contents: Data())
         #expect(OracleNet.walletStatus(wallet.path) == .autoLogin)
     }
 

@@ -154,7 +154,8 @@ struct GridStage8Tests {
     @Test("Czcionka siatki, sumy kolumn zapamiętane w oknie, filtr kolumn i wyrównanie z komend")
     func gridCommands() async throws {
         let ws = Workspace()
-        ws.ui = GridUI()
+        let ui = GridUI()
+        ws.ui = ui
         let doc = ws.newDocument(.sql, text: "select * from emp")
         let g = await grid()
         let tab = ResultTab(title: "t", statementRange: 0..<17, grid: g)
