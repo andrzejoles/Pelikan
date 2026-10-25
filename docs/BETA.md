@@ -1,11 +1,17 @@
 # Pelikan — wydanie beta
 
-Druga beta do testów na prawdziwych bazach (pierwsza: 7.9.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Trzecia beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 7.9.0
+## Co nowego od 8.4.0
+
+- **Diagram ER** z dużego schematu (tysiące tabel) buduje się w kilka sekund zamiast półtorej minuty.
+- **Znajdź obiekty w bazie** z przeszukiwaniem definicji tabel (kolumny, komentarze, warunki CHECK): około trzy razy
+  szybciej na dużej bazie.
+
+## Co nowego w 8.4.0 (względem 7.9.0)
 
 - **Bezpieczeństwo** (przegląd całej aplikacji): agent AI jest przypięty do połączenia z okna zgody i nie zatwierdzi
   cudzej transakcji poleceniem PL/SQL; linki do Pelikana przyjmują tylko znane parametry; nieznany klucz serwera SSH
