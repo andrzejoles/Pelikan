@@ -189,25 +189,21 @@ public final class SSHSession: Sendable {
     /// Nazwa serwera w known_hosts (`[host]:port` dla portu innego niż 22).
     var knownHostsName: String { config.port.map { $0 == 22 ? config.host : "[\(config.host)]:\($0)" } ?? config.host }
 
-    /// Klucze nieznanego serwera odczytane `ssh-keyscan` (bez logowania) i ich odciski SHA256 do potwierdzenia.
+    /// Klucze nieznanego serwera (odczytane bez logowania) i ich odciski SHA256 do potwierdzenia.
     public struct HostKeyScan: Sendable, Equatable {
         /// Wiersze known_hosts (`nazwa typ klucz`) dokładnie z kluczami, których odciski zobaczył użytkownik.
         public let entries: [String]
         public let fingerprints: [String]
     }
 
-    /// Klucze serwera, gdy nie ma go w known_hosts; `nil` — serwer znany. Puste — kluczy nie udało się odczytać (np. host
-    /// z aliasu ~/.ssh/config). Odciski pokazywane do potwierdzenia przed `trustHostKeys(_:)` — zaufanie przy pierwszym
-    /// kontakcie bez potwierdzenia oddałoby hasło podstawionemu serwerowi.
+    /// Klucze serwera, gdy nie ma go w known_hosts; `nil` — serwer znany. Puste — kluczy nie udało się odczytać.
+    /// Odciski pokazywane do potwierdzenia przed `trustHostKeys(_:)` — zaufanie przy pierwszym kontakcie bez
+    /// potwierdzenia oddałoby hasło podstawionemu serwerowi.
     public func unknownHostKeys() throws -> HostKeyScan? {
         let known = try Spawn.run("/usr/bin/ssh-keygen", ["-F", knownHostsName, "-f", knownHostsPath].map { Array($0.utf8) },
                                   environment: environment, timeout: 10)
         if known.status == 0, !known.output.isEmpty { return nil }
-        var scan = ["-T", "10"]
-        if let port = config.port { scan += ["-p", String(port)] }
-        scan.append(config.host)
-        let keys = try Spawn.run("/usr/bin/ssh-keyscan", scan.map { Array($0.utf8) }, environment: environment, timeout: 20)
-        let entries = Self.knownHostsEntries(String(decoding: keys.output, as: UTF8.self), name: knownHostsName)
+        let entries = try scanHostKeys()
         guard !entries.isEmpty else { return HostKeyScan(entries: [], fingerprints: []) }
         let input = Data((entries.joined(separator: "\n") + "\n").utf8)
         let fp = try Spawn.run("/usr/bin/ssh-keygen", [Array("-lf".utf8), Array("-".utf8)], environment: environment, stdin: .data(input), timeout: 10)
@@ -218,12 +214,31 @@ public final class SSHSession: Sendable {
     /// Odciski kluczy nieznanego serwera (`unknownHostKeys()`); `nil` — serwer znany.
     public func unknownHostFingerprints() throws -> [String]? { try unknownHostKeys()?.fingerprints }
 
-    /// Wiersze known_hosts z wyjścia `ssh-keyscan`: bez komentarzy, `typ klucz` pod nazwą, której szuka ssh.
-    static func knownHostsEntries(_ keyscan: String, name: String) -> [String] {
-        keyscan.split(whereSeparator: \.isNewline).compactMap { line -> String? in
+    /// Klucze serwera z połączenia z opcjami sesji (algorytmy starych serwerów jak AIX, plik konfiguracji, ProxyJump —
+    /// `ssh-keyscan` ich nie przyjmuje), zapisane przez `accept-new` do pliku tymczasowego bez logowania; known_hosts
+    /// użytkownika się nie zmienia, dopóki nie potwierdzi odcisku.
+    func scanHostKeys() throws -> [String] {
+        let file = runDirectory.appendingPathComponent("scan-\(UUID().uuidString.prefix(8))").path
+        defer { try? FileManager.default.removeItem(atPath: file) }
+        // Pierwsze wystąpienie opcji wygrywa — własne przed wspólnymi (bez połączenia głównego i bez known_hosts).
+        var args = ["-o", "StrictHostKeyChecking=accept-new", "-o", "PreferredAuthentications=none", "-o", "ControlPath=none",
+                    "-o", "UserKnownHostsFile=\(Self.pathValue(file))", "-o", "GlobalKnownHostsFile=/dev/null"] + commonOptions(master: false)
+        if let port = config.port { args += ["-p", String(port)] }
+        args += [destination, "exit"]
+        let r = try Spawn.run(Self.ssh, args.map { Array($0.utf8) }, environment: environment, timeout: 30)
+        if r.errorText.contains("Unable to negotiate") { throw Self.explain(r.errorText) }
+        return Self.knownHostsEntries((try? String(contentsOfFile: file, encoding: .utf8)) ?? "", name: knownHostsName)
+    }
+
+    /// Wiersze known_hosts (`typ klucz` pod nazwą, której szuka ssh), bez komentarzy i powtórzeń (ssh zapisuje klucz
+    /// także pod adresem IP).
+    static func knownHostsEntries(_ text: String, name: String) -> [String] {
+        var seen = Set<String>()
+        return text.split(whereSeparator: \.isNewline).compactMap { line -> String? in
             let f = line.split(whereSeparator: \.isWhitespace)
             guard !line.hasPrefix("#"), f.count >= 3, f[2].allSatisfy({ $0.isLetter || $0.isNumber || "+/=".contains($0) }) else { return nil }
-            return "\(name) \(f[1]) \(f[2])"
+            let entry = "\(name) \(f[1]) \(f[2])"
+            return seen.insert(entry).inserted ? entry : nil
         }
     }
 
@@ -234,7 +249,8 @@ public final class SSHSession: Sendable {
         let dir = (knownHostsPath as NSString).deletingLastPathComponent
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let data = Data((scan.entries.joined(separator: "\n") + "\n").utf8)
-        if let h = FileHandle(forWritingAtPath: knownHostsPath) {
+        // Do odczytu i zapisu: sprawdzenie ostatniego bajtu przed dopisaniem (uchwyt tylko do zapisu daje EBADF).
+        if let h = FileHandle(forUpdatingAtPath: knownHostsPath) {
             defer { try? h.close() }
             let end = try h.seekToEnd()
             // Plik bez końcowego znaku nowej linii — nowy wpis od nowej linii.
@@ -248,7 +264,7 @@ public final class SSHSession: Sendable {
         }
     }
 
-    /// Zaufanie przy pierwszym kontakcie bez porównania odcisku (serwer, którego kluczy `ssh-keyscan` nie odczytał,
+    /// Zaufanie przy pierwszym kontakcie bez porównania odcisku (serwer, którego kluczy `scanHostKeys` nie odczytał,
     /// po wyraźnej decyzji użytkownika; serwery testowe): zapisuje klucz pokazany przy połączeniu do known_hosts bez
     /// logowania. Znany serwer z innym kluczem — błąd.
     public func recordHostKey() throws {

@@ -1374,7 +1374,9 @@ Najważniejsze:
   skutku = wiersz zmieniony przez inną sesję).
 - **Edytory obiektów:** klucz obcy do innego schematu, kolumny identity (ALWAYS, licznik) przy Recreate, nazwy z małymi
   literami, kolejność DROP w ALTER, cytowanie kolumn indeksów.
-- **SSH:** do known_hosts trafiają dokładnie potwierdzone klucze z ssh-keyscan (bez drugiego połączenia accept-new);
+- **SSH:** do known_hosts trafiają dokładnie klucze, których odciski potwierdził użytkownik (bez drugiego połączenia
+  accept-new). Klucze odczytuje `ssh` z opcjami sesji do pliku tymczasowego, bez logowania — `ssh-keyscan` nie przyjmuje
+  algorytmów starych serwerów (AIX: diffie-hellman-group14-sha1, ssh-rsa) i nie odczytałby ich klucza;
   zerwane połączenie wdrożenia (kod 255) to błąd, nie Stop; dwa równoległe otwarcia tunelu nie uruchamiają dwóch ssh.
 - **Bezpieczeństwo pozostałe:** okno raportu i druk HTML bez JavaScriptu, z CSP i blokadą nawigacji (dodatkowy CSS
   z cudzego pliku .rep nie wstrzyknie skryptu); hasła z CONNECT/IDENTIFIED BY poza historiami i maskowane w echu/SPOOL;

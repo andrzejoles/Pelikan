@@ -142,7 +142,7 @@ struct SpawnStreamTests {
         #expect(String(decoding: r.output, as: UTF8.self) == "a'b $HOME `id`\n/u01/app/oracle\n")
     }
 
-    @Test("Zaufanie kluczowi: do known_hosts trafiają dokładnie potwierdzone klucze z ssh-keyscan, bez łączenia")
+    @Test("Zaufanie kluczowi: do known_hosts trafiają dokładnie potwierdzone klucze (bez komentarzy i powtórzeń), bez łączenia")
     func trustScannedHostKeys() throws {
         let dir = URL(fileURLWithPath: "/private/tmp/plk-kh-\(UUID().uuidString.prefix(6))", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
@@ -152,7 +152,7 @@ struct SpawnStreamTests {
         #expect(gen.status == 0, "\(gen.errorText)")
         let pub = try String(contentsOfFile: dir.path + "/k.pub", encoding: .utf8).split(separator: " ")
         let name = "[127.0.0.1]:2222"
-        let keyscan = "# 127.0.0.1:2222 SSH-2.0-OpenSSH_9.9\n\(name) \(pub[0]) \(pub[1])\nzły wiersz\n\(name) ssh-rsa AAAA;rm\n"
+        let keyscan = "# 127.0.0.1:2222 SSH-2.0-OpenSSH_9.9\n\(name) \(pub[0]) \(pub[1])\nzły wiersz\n\(name) ssh-rsa AAAA;rm\n127.0.0.1 \(pub[0]) \(pub[1])\n"
         let entries = SSHSession.knownHostsEntries(keyscan, name: name)
         #expect(entries == ["\(name) \(pub[0]) \(pub[1])"])
 
