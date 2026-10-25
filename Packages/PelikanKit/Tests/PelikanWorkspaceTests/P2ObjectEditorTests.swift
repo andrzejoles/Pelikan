@@ -16,6 +16,9 @@ struct P2ObjectEditorTests {
         prof.values["limits"] = "FAILED_LOGIN_ATTEMPTS:3"
         #expect(prof.statements() == ["ALTER PROFILE P1 LIMIT FAILED_LOGIN_ATTEMPTS 3 SESSIONS_PER_USER DEFAULT"])
         var link = SimpleObjectEditor(kind: .databaseLink, owner: "HR", values: ["name": "ZDALNA", "user": "SCOTT", "password": "ta\"jne", "connect": "db2/svc"])
+        // Cudzysłów w haśle — błąd walidacji zamiast cichej zmiany hasła.
+        #expect(link.statements().isEmpty && link.issue != nil)
+        link.values["password"] = "tajne"
         #expect(link.statements(masked: true) == ["CREATE DATABASE LINK ZDALNA CONNECT TO SCOTT IDENTIFIED BY ******** USING 'db2/svc'"])
         #expect(link.statements() == ["CREATE DATABASE LINK ZDALNA CONNECT TO SCOTT IDENTIFIED BY \"tajne\" USING 'db2/svc'"])
         link.original = ["name": "ZDALNA", "user": "SCOTT", "connect": "db2/svc", "public": "N"]
@@ -53,5 +56,29 @@ struct P2ObjectEditorTests {
                                       original: ["name": "R1", "objectPrivileges": "SELECT ON HR.EMP, UPDATE ON HR.DEPT"])
         #expect(role.statements() == ["GRANT EXECUTE ON HR.PKG TO R1", "REVOKE UPDATE ON HR.DEPT FROM R1"])
         #expect(SimpleObjectEditor.objectGrant("BEZ ON") == nil)
+    }
+
+    @Test("Nazwa z małymi literami z bazy bez zmian (brak RENAME/DROP przy zapisie); usunięty limit — QUOTA 0; hasło z cudzysłowem")
+    func lowercaseNamesQuotas() {
+        var seq = SimpleObjectEditor(kind: .sequence, owner: "HR", values: ["name": "MySeq", "increment": "1"], original: ["name": "MySeq", "increment": "1"])
+        seq.values["increment"] = "5"
+        #expect(seq.statements() == ["ALTER SEQUENCE HR.\"MySeq\" INCREMENT BY 5"])
+        seq.values["name"] = "NOWA"
+        #expect(seq.statements().first == "RENAME \"MySeq\" TO NOWA")
+        var syn = SimpleObjectEditor(kind: .synonym, owner: "HR", values: ["name": "MySyn", "targetOwner": "HR", "target": "MyTab", "public": "N"],
+                                     original: ["name": "MySyn", "targetOwner": "HR", "target": "MyTab", "public": "N"])
+        #expect(syn.statements().isEmpty)
+        syn.values["dblink"] = "DB2"
+        #expect(syn.statements() == ["CREATE OR REPLACE SYNONYM HR.\"MySyn\" FOR HR.\"MyTab\"@DB2"])
+        var view = SimpleObjectEditor(kind: .view, owner: "HR", values: ["name": "MyView", "query": "select 1 a from dual", "comments": ""],
+                                      original: ["name": "MyView", "query": "select 1 a from dual", "comments": ""])
+        view.values["query"] = "select 2 a from dual"
+        #expect(view.statements() == ["CREATE OR REPLACE VIEW HR.\"MyView\" AS\nselect 2 a from dual"])
+        var user = SimpleObjectEditor(kind: .user, owner: "", values: ["name": "U1", "quotas": "USERS:UNLIMITED, DATA:10M", "locked": "N"],
+                                      original: ["name": "U1", "quotas": "USERS:UNLIMITED, DATA:10M", "locked": "N"])
+        user.values["quotas"] = "USERS:UNLIMITED"
+        #expect(user.statements() == ["ALTER USER U1 QUOTA 0 ON DATA"])
+        user.values["password"] = "a\"b"
+        #expect(user.statements().isEmpty && user.issue != nil)
     }
 }

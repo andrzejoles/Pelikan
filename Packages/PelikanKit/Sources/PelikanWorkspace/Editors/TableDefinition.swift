@@ -17,6 +17,10 @@ public struct TableDefinition: Sendable, Hashable {
         /// Wyrażenie kolumny wirtualnej (GENERATED ALWAYS AS (…)); puste — zwykła kolumna.
         public var virtualExpression = ""
         public var identity = false
+        /// Sposób generowania kolumny identity: `ALWAYS`, `BY DEFAULT`, `BY DEFAULT ON NULL` (ze słownika — ALL_TAB_IDENTITY_COLS).
+        public var identityGeneration = "BY DEFAULT ON NULL"
+        /// Krok sekwencji identity (INCREMENT BY); puste — domyślny (1).
+        public var identityIncrement = ""
         public var comment = ""
         /// Domena SQL kolumny (23ai, `WŁAŚCICIEL.NAZWA`) i adnotacje (PD-OED-003).
         public var domain = ""
@@ -191,12 +195,9 @@ public struct TableDefinition: Sendable, Hashable {
 /// Wczytanie definicji ze słownika i generowanie DDL (CREATE dla nowej tabeli, ALTER — różnica dla istniejącej).
 public enum TableDDL {
     /// Identyfikator w DDL: bez cudzysłowu, gdy to zwykła nazwa wielkimi literami.
-    public static func q(_ name: String) -> String {
-        let plain = name.range(of: #"^[A-Z][A-Z0-9_$#]*$"#, options: .regularExpression) != nil && !Keywords.reserved.contains(name)
-        return plain ? name : "\"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\""
-    }
+    public static func q(_ name: String) -> String { ResultExporter.identifier(name) }
 
-    static func literal(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "''") + "'" }
+    static func literal(_ s: String) -> String { ResultExporter.quote(s) }
 
     static func qualified(_ d: TableDefinition, _ name: String? = nil) -> String { q(d.owner) + "." + q(name ?? d.name) }
 
@@ -273,13 +274,24 @@ public enum TableDDL {
             c.invisible = r[13].displayText == "YES"
             return c
         }
+        // Kolumna identity: ALWAYS / BY DEFAULT [ON NULL] i krok — do odtworzenia przy Recreate table.
+        if d.columns.contains(where: \.identity), let (_, ids) = try? await s.queryAll("""
+            select column_name, generation_type, identity_options from all_tab_identity_cols where owner = :o and table_name = :n
+            """, binds: b, limit: 10) {
+            for r in ids {
+                guard let i = d.columns.firstIndex(where: { $0.name == r[0].displayText }) else { continue }
+                d.columns[i].identityGeneration = identityGeneration(r[1].displayText ?? "", onNull: d.columns[i].defaultOnNull)
+                d.columns[i].identityIncrement = identityIncrement(r[2].displayText ?? "")
+            }
+        }
         let (_, cons) = try await s.queryAll("""
             select c.constraint_name, c.constraint_type, c.search_condition_vc, c.status, c.delete_rule, c.generated,
                    (select listagg(cc.column_name, ',') within group (order by cc.position) from all_cons_columns cc
                      where cc.owner = c.owner and cc.constraint_name = c.constraint_name),
                    r.table_name,
                    (select listagg(rc.column_name, ',') within group (order by rc.position) from all_cons_columns rc
-                     where rc.owner = c.r_owner and rc.constraint_name = c.r_constraint_name)
+                     where rc.owner = c.r_owner and rc.constraint_name = c.r_constraint_name),
+                   r.owner
             from all_constraints c left join all_constraints r on r.owner = c.r_owner and r.constraint_name = c.r_constraint_name
             where c.owner = :o and c.table_name = :n and c.constraint_type in ('P', 'U', 'R', 'C')
             order by decode(c.constraint_type, 'P', 1, 'U', 2, 'R', 3, 4), c.constraint_name
@@ -301,7 +313,9 @@ public enum TableDDL {
                 k.originalName = cname
                 k.enabled = r[3].displayText == "ENABLED"
                 if kind == .foreign {
-                    k.referencedTable = r[7].displayText ?? ""
+                    // Tabela w innym schemacie — nazwa kwalifikowana (inaczej DDL wskazałby schemat edytowanej tabeli).
+                    let rTable = r[7].displayText ?? "", rOwner = r[9].displayText ?? owner
+                    k.referencedTable = rOwner == owner && !rTable.contains(".") ? rTable : q(rOwner) + "." + q(rTable)
                     k.referencedColumns = (r[8].displayText ?? "").split(separator: ",").map(String.init)
                     let rule = r[4].displayText ?? ""
                     k.onDelete = rule == "NO ACTION" ? "" : rule
@@ -322,7 +336,10 @@ public enum TableDDL {
             order by i.index_name
             """, binds: b, limit: 10_000)
         for r in idx {
-            var columns = (r[5].displayText ?? "").components(separatedBy: "|")
+            // Nazwy kolumn w składni DDL (małe litery, słowa zastrzeżone — w cudzysłowie); wyrażenia podstawiane niżej bez zmian.
+            var columns = (r[5].displayText ?? "").components(separatedBy: "|").map { c in
+                c.isEmpty ? c : c.hasSuffix(" DESC") ? q(String(c.dropLast(5))) + " DESC" : q(c)
+            }
             // Indeksy funkcyjne i malejące: wyrażenia (LONG) z ALL_IND_EXPRESSIONS — osobne zapytanie, podstawienie po pozycji.
             if (r[2].displayText ?? "").contains("FUNCTION-BASED") {
                 let (_, ex) = try await s.queryAll("""
@@ -453,6 +470,18 @@ public enum TableDDL {
         return (cols, key)
     }
 
+    /// Sposób generowania identity ze słownika (GENERATION_TYPE i DEFAULT_ON_NULL).
+    static func identityGeneration(_ type: String, onNull: Bool) -> String {
+        type == "ALWAYS" ? "ALWAYS" : onNull ? "BY DEFAULT ON NULL" : "BY DEFAULT"
+    }
+
+    /// Krok sekwencji z IDENTITY_OPTIONS (`START WITH: 1, INCREMENT BY: 10, …`); "" — domyślny (1).
+    static func identityIncrement(_ options: String) -> String {
+        guard let r = options.range(of: #"INCREMENT BY: *-?[0-9]+"#, options: .regularExpression) else { return "" }
+        let n = options[r].split(separator: ":").last.map { $0.trimmingCharacters(in: .whitespaces) } ?? ""
+        return n == "1" ? "" : n
+    }
+
     /// Typ kolumny w składni DDL ze słownika.
     static func typeText(_ r: [OracleValue]) -> String {
         let t = r[1].displayText ?? ""
@@ -487,6 +516,26 @@ public enum TableDDL {
             out.append("ALTER TABLE \(table) RENAME TO \(q(new.name))")
         }
         let t = qualified(new)
+        // Więzy i indeksy usunięte albo zmienione (usunięcie i utworzenie) — przed usunięciem kolumn: kolumna usuwana
+        // razem z więzem wielokolumnowym dawałaby ORA-12991.
+        let sameKey: (TableDefinition.Key, TableDefinition.Key) -> Bool = {
+            $0.kind == $1.kind && $0.columns == $1.columns && $0.referencedTable == $1.referencedTable && $0.referencedColumns == $1.referencedColumns && $0.onDelete == $1.onDelete
+        }
+        let sameIndex: (TableDefinition.Index, TableDefinition.Index) -> Bool = {
+            $0.kind == $1.kind && $0.columns == $1.columns && $0.tablespace == $1.tablespace && $0.compression == $1.compression
+                && $0.reverse == $1.reverse && $0.local == $1.local && $0.pctFree == $1.pctFree
+        }
+        func dropped<T>(_ o: [T], _ n: [T], name: (T) -> String, orig: (T) -> String?, same: (T, T) -> Bool) -> [String] {
+            o.filter { x in
+                guard let now = n.first(where: { orig($0) == name(x) }) else { return true }
+                return !same(x, now)
+            }.map(name)
+        }
+        for k in dropped(old.keys, new.keys, name: \.name, orig: \.originalName, same: sameKey) { out.append("ALTER TABLE \(t) DROP CONSTRAINT \(q(k))") }
+        for c in dropped(old.checks, new.checks, name: \.name, orig: \.originalName, same: { $0.condition == $1.condition }) {
+            out.append("ALTER TABLE \(t) DROP CONSTRAINT \(q(c))")
+        }
+        for x in dropped(old.indexes, new.indexes, name: \.name, orig: \.originalName, same: sameIndex) { out.append("DROP INDEX \(q(new.owner)).\(q(x))") }
         // Kolumny: usunięte, zmienione nazwy, zmienione definicje, dodane.
         let kept = Set(new.columns.compactMap(\.originalName))
         for c in old.columns where !kept.contains(c.name) { out.append("ALTER TABLE \(t) DROP COLUMN \(q(c.name))") }
@@ -532,36 +581,22 @@ public enum TableDDL {
             out.append("REVOKE \(g.privilege.uppercased()) ON \(t) FROM \(q(g.grantee))")
         }
         for g in new.grants where oldGrants[g.id] == nil || oldGrants[g.id]?.grantable != g.grantable { out.append(grantStatement(g, table: t)) }
-        // Więzy i indeksy: zmienione definicje — usunięcie i utworzenie; tylko nazwa — RENAME; stan — ENABLE/DISABLE.
+        // Więzy i indeksy: zmienione definicje — utworzenie (usunięte wyżej); tylko nazwa — RENAME; stan — ENABLE/DISABLE.
         func constraintsDiff<T>(_ o: [T], _ n: [T], name: (T) -> String, orig: (T) -> String?, same: (T, T) -> Bool, enabled: (T) -> Bool,
                                 add: (T) -> String) {
-            let keepNames = Set(n.compactMap(orig))
-            for x in o where !keepNames.contains(name(x)) { out.append("ALTER TABLE \(t) DROP CONSTRAINT \(q(name(x)))") }
             for x in n {
-                guard let on = orig(x), let before = o.first(where: { name($0) == on }) else { out.append(add(x)); continue }
-                if !same(before, x) {
-                    out.append("ALTER TABLE \(t) DROP CONSTRAINT \(q(on))")
-                    out.append(add(x))
-                    continue
-                }
+                guard let on = orig(x), let before = o.first(where: { name($0) == on }), same(before, x) else { out.append(add(x)); continue }
                 if on != name(x) { out.append("ALTER TABLE \(t) RENAME CONSTRAINT \(q(on)) TO \(q(name(x)))") }
                 if enabled(before) != enabled(x) { out.append("ALTER TABLE \(t) \(enabled(x) ? "ENABLE" : "DISABLE") CONSTRAINT \(q(name(x)))") }
             }
         }
-        constraintsDiff(old.keys, new.keys, name: \.name, orig: \.originalName,
-                        same: { $0.kind == $1.kind && $0.columns == $1.columns && $0.referencedTable == $1.referencedTable && $0.referencedColumns == $1.referencedColumns && $0.onDelete == $1.onDelete },
+        constraintsDiff(old.keys, new.keys, name: \.name, orig: \.originalName, same: sameKey,
                         enabled: \.enabled, add: { "ALTER TABLE \(t) ADD " + keyClause($0, owner: new.owner) })
         constraintsDiff(old.checks, new.checks, name: \.name, orig: \.originalName, same: { $0.condition == $1.condition }, enabled: \.enabled,
                         add: { "ALTER TABLE \(t) ADD " + checkClause($0) })
-        let keepIdx = Set(new.indexes.compactMap(\.originalName))
-        for x in old.indexes where !keepIdx.contains(x.name) { out.append("DROP INDEX \(q(new.owner)).\(q(x.name))") }
         for x in new.indexes {
-            guard let on = x.originalName, let before = old.indexes.first(where: { $0.name == on }) else { out.append(createIndex(x, table: new)); continue }
-            if before.kind != x.kind || before.columns != x.columns || before.tablespace != x.tablespace || before.compression != x.compression
-                || before.reverse != x.reverse || before.local != x.local || before.pctFree != x.pctFree {
-                out.append("DROP INDEX \(q(new.owner)).\(q(on))")
-                out.append(createIndex(x, table: new))
-                continue
+            guard let on = x.originalName, let before = old.indexes.first(where: { $0.name == on }), sameIndex(before, x) else {
+                out.append(createIndex(x, table: new)); continue
             }
             if on != x.name { out.append("ALTER INDEX \(q(new.owner)).\(q(on)) RENAME TO \(q(x.name))") }
             if before.invisible != x.invisible { out.append("ALTER INDEX \(q(new.owner)).\(q(x.name)) \(x.invisible ? "INVISIBLE" : "VISIBLE")") }
@@ -683,7 +718,7 @@ public enum TableDDL {
         if !c.virtualExpression.isEmpty {
             s += " GENERATED ALWAYS AS (\(c.virtualExpression)) VIRTUAL"
         } else if c.identity {
-            s += " GENERATED BY DEFAULT ON NULL AS IDENTITY"
+            s += " GENERATED \(c.identityGeneration) AS IDENTITY" + (c.identityIncrement.isEmpty ? "" : " (INCREMENT BY \(c.identityIncrement))")
         } else if !c.defaultValue.isEmpty {
             s += " DEFAULT\(c.defaultOnNull ? " ON NULL" : "") \(c.defaultValue)"
         }
@@ -774,18 +809,29 @@ public enum TableDDL {
         let backup = q(old.owner) + "." + q(backupName)
         let oldTable = qualified(old)
         var out = ["CREATE TABLE \(backup) AS SELECT * FROM \(oldTable)", "DROP TABLE \(oldTable) CASCADE CONSTRAINTS"]
+        // Kolumny przenoszone: istniejące wcześniej (wg nazwy pierwotnej), bez wirtualnych.
+        func copied(_ c: TableDefinition.Column) -> Bool {
+            guard let orig = c.originalName, c.virtualExpression.isEmpty else { return false }
+            return old.columns.contains(where: { $0.name == orig && $0.virtualExpression.isEmpty })
+        }
+        let pairs: [(String, String)] = new.columns.filter(copied).map { (q($0.name), q($0.originalName ?? $0.name)) }
+        let copyData = !pairs.isEmpty && new.external == nil
         var created = new
         created.recreate = false
-        out += create(created)
-        // Kolumny przenoszone: istniejące wcześniej (wg nazwy pierwotnej), bez wirtualnych.
-        let pairs: [(String, String)] = new.columns.compactMap { c in
-            guard let orig = c.originalName, c.virtualExpression.isEmpty, old.columns.contains(where: { $0.name == orig && $0.virtualExpression.isEmpty })
-            else { return nil }
-            return (q(c.name), q(orig))
+        // Identity ALWAYS nie przyjmuje wartości w INSERT (ORA-32795) — na czas kopiowania BY DEFAULT.
+        let identities = copyData ? new.columns.filter { $0.identity && copied($0) } : []
+        for i in created.columns.indices where created.columns[i].identityGeneration == "ALWAYS" && identities.contains(where: { $0.id == created.columns[i].id }) {
+            created.columns[i].identityGeneration = "BY DEFAULT"
         }
-        if !pairs.isEmpty, new.external == nil {
+        out += create(created)
+        if copyData {
             out.append("INSERT INTO \(qualified(new)) (" + pairs.map(\.0).joined(separator: ", ") + ") SELECT "
                        + pairs.map(\.1).joined(separator: ", ") + " FROM \(backup)")
+        }
+        // Licznik identity od największej przeniesionej wartości (inaczej kolejne wstawienia dają ORA-00001).
+        for c in identities {
+            out.append("ALTER TABLE \(qualified(new)) MODIFY (\(q(c.name)) GENERATED \(c.identityGeneration) AS IDENTITY (START WITH LIMIT VALUE"
+                       + (c.identityIncrement.isEmpty ? "" : " INCREMENT BY \(c.identityIncrement)") + "))")
         }
         out += new.triggerDDL
         out += new.referencingForeignKeys

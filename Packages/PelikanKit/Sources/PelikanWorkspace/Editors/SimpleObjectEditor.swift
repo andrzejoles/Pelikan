@@ -41,6 +41,10 @@ public struct SimpleObjectEditor: Sendable, Hashable {
     public func value(_ k: String) -> String { values[k] ?? "" }
     func old(_ k: String) -> String { original?[k] ?? "" }
     func flag(_ k: String) -> Bool { value(k) == "Y" }
+    /// Nazwa obiektu: wczytana z bazy bez zmian (także z małymi literami), wpisana — wielkimi literami.
+    func ident(_ k: String) -> String { !isNew && value(k) == old(k) ? value(k) : value(k).uppercased() }
+    /// Nazwa obiektu w DDL i do ponownego wczytania po zapisie.
+    public var objectName: String { ident("name") }
 
     public var title: String {
         switch kind {
@@ -115,8 +119,8 @@ public struct SimpleObjectEditor: Sendable, Hashable {
 
     /// Polecenia DDL; `masked` — hasło zastąpione gwiazdkami (podgląd w edytorze).
     public func statements(masked: Bool = false) -> [String] {
-        let name = value("name").uppercased()
-        guard !name.isEmpty else { return [] }
+        let name = objectName
+        guard !name.isEmpty, issue == nil else { return [] }
         let qn = Self.q(owner) + "." + Self.q(name)
         var out: [String] = []
         switch kind {
@@ -143,7 +147,7 @@ public struct SimpleObjectEditor: Sendable, Hashable {
             }
         case .synonym:
             let pub = flag("public")
-            let target = (value("targetOwner").isEmpty ? "" : Self.q(value("targetOwner").uppercased()) + ".") + Self.q(value("target").uppercased())
+            let target = (value("targetOwner").isEmpty ? "" : Self.q(ident("targetOwner")) + ".") + Self.q(ident("target"))
             let link = value("dblink").isEmpty ? "" : "@" + value("dblink")
             let changed = isNew || ["name", "targetOwner", "target", "dblink"].contains { value($0) != old($0) }
             if changed {
@@ -167,7 +171,7 @@ public struct SimpleObjectEditor: Sendable, Hashable {
             let u = Self.q(name)
             var opts: [String] = []
             let pw = value("password")
-            if !pw.isEmpty { opts.append("IDENTIFIED BY " + (masked ? "********" : "\"" + pw.replacingOccurrences(of: "\"", with: "") + "\"")) }
+            if !pw.isEmpty { opts.append("IDENTIFIED BY " + (masked ? "********" : "\"" + pw + "\"")) }
             for (k, kw) in [("defaultTablespace", "DEFAULT TABLESPACE"), ("temporaryTablespace", "TEMPORARY TABLESPACE"), ("profile", "PROFILE")] {
                 let v = value(k).uppercased()
                 if !v.isEmpty, v != old(k).uppercased() { opts.append("\(kw) \(Self.q(v))") }
@@ -176,6 +180,9 @@ public struct SimpleObjectEditor: Sendable, Hashable {
                 let p = q.split(separator: ":").map(String.init)
                 if p.count == 2 { opts.append("QUOTA \(p[1] == "UNLIMITED" ? "UNLIMITED" : p[1]) ON \(Self.q(p[0]))") }
             }
+            // Limit usunięty z listy — QUOTA 0 (odebranie miejsca w przestrzeni).
+            func spaces(_ s: String) -> Set<String> { Set(Self.list(s).compactMap { $0.split(separator: ":").first.map(String.init) }) }
+            for ts in spaces(old("quotas")).subtracting(spaces(value("quotas"))).sorted() { opts.append("QUOTA 0 ON \(Self.q(ts))") }
             if isNew || value("locked") != old("locked") { opts.append(flag("locked") ? "ACCOUNT LOCK" : "ACCOUNT UNLOCK") }
             if flag("expire"), isNew || old("expire") != "Y" { opts.append("PASSWORD EXPIRE") }
             if isNew {
