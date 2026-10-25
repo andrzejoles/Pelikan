@@ -100,10 +100,14 @@ public final class LocalHistory {
         cache[key] = item
         revision += 1
         guard let u = url(key) else { return }
-        try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
+        // Pełny tekst okien — katalog i plik tylko dla właściciela.
+        try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let enc = JSONEncoder()
         enc.dateEncodingStrategy = .iso8601
-        if let data = try? enc.encode(item) { try? data.write(to: u, options: .atomic) }
+        if let data = try? enc.encode(item) {
+            try? data.write(to: u, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: u.path)
+        }
     }
 
 

@@ -181,6 +181,22 @@ struct DataGripModelTests {
         #expect(ws.localHistory.entries(LocalHistory.key(file: file)).first?.text.contains("EMP") == true)
     }
 
+    @Test("Refaktoryzacja w pliku ISO-8859-2: kodowanie zachowane; znak spoza kodowania blokuje całą zmianę (D55)")
+    func renameKeepsEncoding() throws {
+        let ws = Workspace()
+        let file = tempDir().appendingPathComponent("l2.sql")
+        let before = "-- zażółć gęślą jaźń\nselect 1 from emp;\n"
+        try before.data(using: .isoLatin2)!.write(to: file)
+        func change(_ after: String) -> RefactoringChange {
+            RefactoringChange(target: .file(file), title: "l2.sql", before: before, after: after, occurrences: 1)
+        }
+        #expect(throws: CommandError.self) { try ws.apply(RefactoringPlan(title: "t", changes: [change("-- zażółć gęślą jaźń €\nselect 1 from emp;\n")], ddl: nil)) }
+        #expect(try Data(contentsOf: file) == before.data(using: .isoLatin2)!)
+        #expect(try ws.apply(RefactoringPlan(title: "t", changes: [change("-- zażółć gęślą jaźń\nselect 1 from pracownicy_ą;\n")], ddl: nil)) == 1)
+        let data = try Data(contentsOf: file)
+        #expect(String(data: data, encoding: .utf8) == nil && String(data: data, encoding: .isoLatin2) == "-- zażółć gęślą jaźń\nselect 1 from pracownicy_ą;\n")
+    }
+
     @Test("Historia lokalna: zapis na dysk, pomijanie duplikatów, limit, przywrócenie z zapamiętaniem bieżącego tekstu")
     func localHistory() throws {
         let dir = tempDir()

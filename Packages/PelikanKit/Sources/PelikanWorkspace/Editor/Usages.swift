@@ -226,6 +226,17 @@ extension Workspace {
     /// Zastosowanie planu refaktoryzacji: teksty okien (z historią lokalną) i pliki; okno z DDL bez wykonania.
     @discardableResult
     public func apply(_ plan: RefactoringPlan) throws -> Int {
+        // Plik nie zmienia po cichu kodowania (D55): znak spoza kodowania któregokolwiek pliku blokuje całą zmianę,
+        // zanim cokolwiek zostanie zmienione.
+        for c in plan.changes {
+            guard case .file(let url) = c.target, let data = try? Data(contentsOf: url) else { continue }
+            let (text, format) = TextFileCodec.decode(data)
+            guard text == c.before, TextFileCodec.encode(c.after, format: format) == nil else { continue }
+            let bad = TextFileCodec.firstUnencodable(c.after, encoding: format.encoding)
+            let error = TextFileError.unencodable(line: bad?.line ?? 0, column: bad?.column ?? 0, character: bad.map { String($0.character) } ?? "?",
+                                                  encoding: format.displayName.components(separatedBy: " ").first ?? "")
+            throw CommandError.notAvailable(L10n.tr("Plik \(url.lastPathComponent): \(error.localizedDescription)"))
+        }
         var n = 0
         for c in plan.changes {
             switch c.target {
@@ -236,13 +247,10 @@ extension Workspace {
                 n += 1
             case .file(let url):
                 guard let data = try? Data(contentsOf: url) else { continue }
-                var (text, format) = TextFileCodec.decode(data)
-                guard text == c.before else { continue }
+                let (text, format) = TextFileCodec.decode(data)
+                guard text == c.before, let encoded = TextFileCodec.encode(c.after, format: format) else { continue }
                 localHistory.record(key: LocalHistory.key(file: url), title: url.lastPathComponent, text: text, label: L10n.tr("przed: \(plan.title)"))
-                text = c.after
-                // Znaki spoza kodowania pliku — zapis w UTF-8 (jak zapis okna).
-                if TextFileCodec.encode(text, format: format) == nil { format.encoding = .utf8; format.hasBOM = false }
-                try TextFileCodec.encode(text, format: format)?.write(to: url, options: .atomic)
+                try encoded.write(to: url, options: .atomic)
                 n += 1
             }
         }

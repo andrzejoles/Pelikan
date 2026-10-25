@@ -83,6 +83,10 @@ struct GridStage8Tests {
         #expect(try QueryByExample.predicate(column: e, expression: "O'Neil", options: QBEOptions(caseInsensitive: false)) == #"x.ENAME = 'O''Neil'"#)
         #expect(throws: QueryByExample.Failure.self) { try QueryByExample.predicate(column: n, expression: "abc") }
         #expect(throws: QueryByExample.Failure.self) { try QueryByExample.predicate(column: n, expression: "1; drop table emp") }
+        // Apostrof w dacie podwojony; przecinek dziesiętny tylko przy takim separatorze regionalnym.
+        #expect(try QueryByExample.literal("2024-01'-01", column: d).sql == "TO_DATE('2024-01''-01', 'YYYY-MM-DD')")
+        #expect(try QueryByExample.literal("1,5", column: n, decimal: ",").sql == "1.5")
+        #expect(throws: QueryByExample.Failure.self) { try QueryByExample.literal("1,000", column: n, decimal: ".") }
         let sql = try QueryByExample.apply(sql: "select * from emp;", criteria: [(n, ">1000"), (e, "  ")])
         #expect(sql == "select * from (\nselect * from emp\n) x\n where x.SAL > 1000")
         #expect(try QueryByExample.apply(sql: "select 1 from dual", criteria: []) == "select 1 from dual")

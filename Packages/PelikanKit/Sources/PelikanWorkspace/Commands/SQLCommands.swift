@@ -109,10 +109,13 @@ public enum SQLCommands {
                     validate: { ws in ws.activeDocument.map { $0.kind == .command && !$0.isExecuting } ?? false }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
                 guard let line = ctx.arguments.string("line") else { throw CommandError.missingArgument("line") }
-                if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line { doc.commandLineHistory.append(line) }
+                // Historia linii bez haseł (CONNECT u/hasło, IDENTIFIED BY) — jak historia SQL.
+                if !line.trimmingCharacters(in: .whitespaces).isEmpty, doc.commandLineHistory.last != line, !SQLExecutor.containsPassword(line) {
+                    doc.commandLineHistory.append(line)
+                }
                 // Interfejs, który sam pokazał wpisane linie (wielowierszowe polecenie), przekazuje echo=false.
                 if ctx.arguments.values["echo"]?.boolValue != false {
-                    doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + line, .prompt))
+                    doc.console.append(ConsoleLine(ctx.workspace.sqlplusEngine(for: doc).state.sqlPrompt + SQLPlusEngine.maskPassword(line), .prompt))
                 }
                 return try await runCommandWindow(ctx, doc, line)
             },

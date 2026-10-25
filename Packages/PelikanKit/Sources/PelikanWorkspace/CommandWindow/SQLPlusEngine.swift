@@ -73,6 +73,8 @@ public final class SQLPlusEngine {
     @ObservationIgnored var cancelled = false
     /// Wstrzymanie przed następnym poleceniem (komenda Wstrzymaj wykonanie, PD-CMDW-003).
     @ObservationIgnored public var pauseRequested = false
+    /// Trwające polecenie systemu (HOST) — anulowane przez Przerwij.
+    @ObservationIgnored var hostTask: Task<HostCommand.Result, any Error>?
 
     public enum Outcome: Sendable, Equatable { case finished, stopped, exit }
 
@@ -103,7 +105,32 @@ public final class SQLPlusEngine {
         }
     }
 
-    public func cancel() { cancelled = true }
+    public func cancel() {
+        cancelled = true
+        hostTask?.cancel()
+    }
+
+    /// Połączenie okna; nil po DISCONNECT (do CONNECT).
+    var windowConnection: UUID? { state.disconnected ? nil : workspace.effectiveConnection(of: document) }
+
+    /// Sesja okna; po DISCONNECT błąd zamiast wykonania na połączeniu głównym.
+    func windowSession() async throws -> any DatabaseSession {
+        guard !state.disconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
+        return try await workspace.session(for: document)
+    }
+
+    /// Tekst polecenia do echa, SPOOL i konsoli bez hasła: `CONNECT u/hasło@baza`, `IDENTIFIED BY hasło`.
+    nonisolated public static func maskPassword(_ text: String) -> String {
+        var t = text
+        let star = "********"
+        if let r = t.range(of: #"(?i)^(\s*conn(ect)?\s+[^\s/]*/)"#, options: .regularExpression) {
+            // Hasło: od `/` do ostatniego `@` w słowie (albo do końca słowa), jak w CONNECT.
+            let wordEnd = t[r.upperBound...].firstIndex(where: \.isWhitespace) ?? t.endIndex
+            let end = t[r.upperBound..<wordEnd].lastIndex(of: "@") ?? wordEnd
+            if end > r.upperBound { t.replaceSubrange(r.upperBound..<end, with: star) }
+        }
+        return t.replacingOccurrences(of: #"(?i)(identified\s+by\s+)("[^"]*"|\S+)"#, with: "$1" + star, options: .regularExpression)
+    }
 
     /// Czy tekst z linii poleceń (karta Dialog) to całe polecenie: SQL*Plus — od razu, SQL — po „;”,
     /// PL/SQL — po linii „/” (albo „.” kończącej bez wykonania), jak w SQL*Plus.
@@ -155,7 +182,7 @@ public final class SQLPlusEngine {
         if let cmd = s.sqlplusCommand {
             // REMARK bez podstawiania; reszta poleceń SQL*Plus z podstawianiem.
             if cmd == "REMARK" { return .finished }
-            if state.echo, depth > 0 || cmd != "PROMPT" { emit(state.sqlPrompt + raw, .echo) }
+            if state.echo, depth > 0 || cmd != "PROMPT" { emit(state.sqlPrompt + Self.maskPassword(raw), .echo) }
             guard let text = await substitute(raw) else { return .stopped }
             do {
                 return try await sqlplus(cmd, text, baseDirectory: baseDirectory)
@@ -181,7 +208,7 @@ public final class SQLPlusEngine {
             guard o == .finished, !remainder.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return o }
             return await run(remainder, baseDirectory: baseDirectory)
         }
-        if state.echo { emit(state.sqlPrompt + raw, .echo) }
+        if state.echo { emit(state.sqlPrompt + Self.maskPassword(raw), .echo) }
         guard let text = await substitute(s.text) else { return .stopped }
         state.buffer = text
         return await executeSQL(text, original: s.text, isPLSQL: s.isPLSQL)
@@ -212,14 +239,14 @@ public final class SQLPlusEngine {
         }
         let out = SQLPlusSubstitution.substitute(text, state: state, values: values)
         if state.verify, out != text, depth == 0 || state.echo {
-            emit(L10n.tr("stara: ") + text.replacingOccurrences(of: "\n", with: " "), .info)
-            emit(L10n.tr("nowa: ") + out.replacingOccurrences(of: "\n", with: " "), .info)
+            emit(L10n.tr("stara: ") + Self.maskPassword(text).replacingOccurrences(of: "\n", with: " "), .info)
+            emit(L10n.tr("nowa: ") + Self.maskPassword(out).replacingOccurrences(of: "\n", with: " "), .info)
         }
         return out
     }
 
     func exitOnError() async -> Outcome {
-        if case .exit(let commit) = state.whenever, let session = try? await workspace.session(for: document) {
+        if case .exit(let commit) = state.whenever, let session = try? await windowSession() {
             if commit { try? await session.commit() } else { try? await session.rollback() }
             document.transactionOpen = false
         }
@@ -232,8 +259,9 @@ public final class SQLPlusEngine {
     func executeSQL(_ sql: String, original: String, isPLSQL: Bool) async -> Outcome {
         let start = ContinuousClock.now
         do {
-            try await workspace.guardModification([sql], connectionID: workspace.effectiveConnection(of: document))
-            let session = try await workspace.session(for: document)
+            guard !state.disconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
+            try await workspace.guardModification([sql], connectionID: windowConnection)
+            let session = try await windowSession()
             if state.serverOutput { try await SessionUtilities.enableOutput(session, bufferSize: workspace.settings.dbmsOutputBufferSize) }
             let names = Variables.distinct(Variables.find(in: sql, syntax: .sqlplus)).filter { $0.kind == .bind }.map(\.name)
             var binds: [BindVariable] = []
@@ -259,6 +287,8 @@ public final class SQLPlusEngine {
                     emit(Self.ddlMessage(sql))
                 }
                 rememberCompiled(sql)
+                // DDL zatwierdza transakcję (niejawny COMMIT).
+                document.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? document.transactionOpen
             case .plsql:
                 if r.warning?.code == 24344 { emit(L10n.tr("Ostrzeżenie: blok PL/SQL z błędami kompilacji."), .error) }
                 if state.feedback > 0 { emit(L10n.tr("Procedura PL/SQL została zakończona pomyślnie.")) }
@@ -279,8 +309,11 @@ public final class SQLPlusEngine {
             if state.timing { emit(L10n.tr("Czas: ") + Self.elapsed(ContinuousClock.now - start), .info) }
             workspace.recordHistory(original)
             let d = ContinuousClock.now - start
-            state.history.append((original.trimmingCharacters(in: .whitespacesAndNewlines), Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)))
-            if state.history.count > 500 { state.history.removeFirst(state.history.count - 500) }
+            // HISTORY bez haseł (IDENTIFIED BY) — jak historia SQL.
+            if !SQLExecutor.containsPassword(original) {
+                state.history.append((original.trimmingCharacters(in: .whitespacesAndNewlines), Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)))
+                if state.history.count > 500 { state.history.removeFirst(state.history.count - 500) }
+            }
             return .finished
         } catch let e as OracleError {
             emit(e.message, .error)
@@ -344,7 +377,7 @@ public final class SQLPlusEngine {
         var formatter = TextResultFormatter(columns: rs.columns, state: state, format: workspace.settings.valueFormat)
         var custom = state.sqlFormat.map {
             SQLFormatter(format: $0, columns: rs.columns, valueFormat: workspace.settings.valueFormat,
-                         table: ResultExporter.tableName(fromQuery: sql) ?? "TABELA")
+                         table: ResultExporter.tableName(fromQuery: sql).map(ResultExporter.qualifiedIdentifier) ?? "TABELA")
         }
         if let c = custom { let h = c.header(); if !h.isEmpty { emit(h.joined(separator: "\n")) } }
         defer { if let c = custom { let f = c.footer(); if !f.isEmpty { emit(f.joined(separator: "\n")) } } }
@@ -380,7 +413,8 @@ public final class SQLPlusEngine {
             guard let slot = state.binds[n] else { emit(L10n.tr("SP2-0552: Zmienna wiązana „\(n)” nie jest zadeklarowana."), .error); continue }
             var f = TextResultFormatter(columns: [ColumnInfo(name: n, type: slot.type == .refCursor ? .varchar2 : slot.type, typeName: slot.type.rawValue)],
                                         state: state, format: workspace.settings.valueFormat)
-            if case .cursor(let id) = slot.value, let session = workspace.sessions.existingSession(workspace.sessions.key(forDocument: document.id, connection: workspace.effectiveConnection(of: document)!)) {
+            if case .cursor(let id) = slot.value, let c = windowConnection,
+               let session = workspace.sessions.existingSession(workspace.sessions.key(forDocument: document.id, connection: c)) {
                 Task { [weak self] in
                     // REF CURSOR: opis kolumn z wyniku zagnieżdżonego nie jest dostępny bez ponownego opisu — pobierz wiersze.
                     let batch = try? await session.fetch(id, maxRows: 10_000)

@@ -55,7 +55,6 @@ public final class ResultGridModel {
 
     /// Sortowanie lokalne (UG 7.2): klucze w kolejności ważności; pusta lista — kolejność z bazy.
     public private(set) var sortKeys: [SortKey] = []
-    @ObservationIgnored public var sortCaseSensitive = false
     /// Permutacja: wiersz widoku → wiersz danych (nil bez sortowania).
     @ObservationIgnored var order: [Int]?
 
@@ -94,7 +93,6 @@ public final class ResultGridModel {
         guard !sortKeys.isEmpty || filter != nil else { order = nil; return }
         let keys = sortKeys
         let cols = columns
-        let cs = sortCaseSensitive
         let data = rows
         let fmt = format
         let visible = filter.map { f in data.indices.filter { f.matches(data[$0], columns: cols, format: fmt) } } ?? Array(data.indices)
@@ -102,7 +100,7 @@ public final class ResultGridModel {
         // Sortowanie stabilne: przy równych kluczach kolejność z bazy.
         order = visible.sorted { a, b in
             for k in keys {
-                let c = Self.compare(data[a][k.column], data[b][k.column], type: cols[k.column].type, caseSensitive: cs)
+                let c = Self.compare(data[a][k.column], data[b][k.column], type: cols[k.column].type, caseSensitive: false)
                 if c != .orderedSame { return k.ascending ? c == .orderedAscending : c == .orderedDescending }
             }
             return a < b
@@ -110,7 +108,7 @@ public final class ResultGridModel {
     }
 
     /// Porównanie wartości: liczby numerycznie, daty chronologicznie, tekst bez rozróżniania wielkości liter
-    /// (opcja „Sort case sensitive”), NULL na końcu przy rosnącym.
+    /// (chyba że `caseSensitive`), NULL na końcu przy rosnącym.
     nonisolated static func compare(_ x: OracleValue, _ y: OracleValue, type: OracleType, caseSensitive: Bool) -> ComparisonResult {
         switch (x, y) {
         case (.null, .null): return .orderedSame
@@ -239,9 +237,8 @@ public final class ResultTab: Identifiable {
     public var totals: [Int: [ColumnAggregate]] = [:]
     /// Kolor naprzemiennych wierszy z dyrektywy `AltRowColor=` (PD-SQLW-011), np. `#F0F0FF` albo nazwa.
     public var altRowColor: String?
-    /// Kryteria Query By Example (PD-SQLW-022): kolumna → wyrażenie; zapytanie bazowe przed QBE.
+    /// Kryteria Query By Example (PD-SQLW-022): kolumna → wyrażenie.
     public var qbeCriteria: [Int: String] = [:]
-    public var baseSQL: String?
     /// Tekst polecenia wyniku (przed podstawieniem zmiennych) — odświeżanie karty (PD-SQLW-006).
     public var statementText: String?
     /// Informacje słownika o kolumnach tabeli wyniku (PD-GRID-022), wczytywane przy pierwszym użyciu.

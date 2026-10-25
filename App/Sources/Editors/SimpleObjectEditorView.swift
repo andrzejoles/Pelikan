@@ -91,7 +91,7 @@ struct SimpleObjectEditorView: View {
                 } else {
                     message = L10n.tr("Zastosowano poleceń: \(r.executed.count)")
                     if let m = workspace.metadata(for: connectionID) {
-                        editor = try await SimpleObjectEditor.load(editor.kind, owner: editor.owner, name: editor.value("name").uppercased(), metadata: m)
+                        editor = try await SimpleObjectEditor.load(editor.kind, owner: editor.owner, name: editor.objectName, metadata: m)
                     }
                 }
             } catch CommandError.cancelledByUser {
