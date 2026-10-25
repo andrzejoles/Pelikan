@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-25T08:51:33+01:00",
+  "heartbeat": "2026-10-25T08:52:08+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "Czekam na uwagi testerów bety 8.4.0",
+  "task": "PR #82 — diagram ER i definicje tabel (D165), czekam na CI",
   "stages": [
     {
       "id": 0,
@@ -61,7 +61,7 @@
     "Diagram ER 2000 tabel 98 → 6,6 s, wyszukiwanie w definicjach tabel 16 → 4,9 s (D165); usunięte stare tagi v1.9.0–v7.7.0",
     "Opublikowano Pelikan 8.4.0 beta (Latest, kanał aktualizacji Sparkle wskazuje 8.4.0); scalono #81",
     "Scalone #79 (wydajność narzędzi) i #80 (notatki bety); szkic Pelikan 8.4.0 beta gotowy — podpis, wersja i brak ścieżek domowych sprawdzone",
-    "Druga próba na MT_RMSPROD: wyszukiwanie 31–85 s → 2–3 s, diagram ER 263 → 4,7 s, eksport DDL 2 → 0,2 s/obiekt, dokumentacja schematu >20 min → 15 s (D164)",
+    "Druga próba na kopii dużej bazy: wyszukiwanie 31–85 s → 2–3 s, diagram ER 263 → 4,7 s, eksport DDL 2 → 0,2 s/obiekt, dokumentacja schematu >20 min → 15 s (D164)",
     "Przegląd bezpieczeństwa: 10 znalezisk (3 wysokie) poprawionych — przypięte połączenie agenta, link bez skryptów, PL/SQL nie zatwierdzi DML agenta, potwierdzanie kluczy SSH (D163)",
     "Próba opublikowanej bety: podpisy i aktualizacje OK; usunięte ścieżki budowania z binarek (strip, mapa prefiksów), nazwy usług macOS przetłumaczone (D162); test Stop 120/120 lokalnie",
     "Kerberos na macOS odłożony decyzją właściciela (D161)",
