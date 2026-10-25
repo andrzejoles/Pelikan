@@ -11,10 +11,6 @@ public enum SessionUtilities {
         }
     }
 
-    public static func disableOutput(_ s: any DatabaseSession) async throws {
-        _ = try await s.execute("BEGIN DBMS_OUTPUT.DISABLE; END;")
-    }
-
     /// Odczytuje cały bufor DBMS_OUTPUT jednym wywołaniem (linie sklejone w CLOB po stronie serwera).
     public static func readOutput(_ s: any DatabaseSession) async throws -> [String] {
         let r = try await s.execute("""
@@ -40,8 +36,8 @@ public enum SessionUtilities {
         guard case .number(let n)? = r.outBinds["cnt"], let count = Int(n), count > 0 else { return [] }
         var text = ""
         if case .lob(let l)? = r.outBinds["buf"] { text = l.text ?? "" }
-        let lines = text.components(separatedBy: "\n")
-        return Array(lines.prefix(count))
+        // Bez ucinania do liczby linii: PUT_LINE z osadzonym LF to jedna linia bufora, a dwie linie tekstu.
+        return text.components(separatedBy: "\n")
     }
 
     /// Czy sesja ma otwartą transakcję (DBMS_TRANSACTION.LOCAL_TRANSACTION_ID nie jest NULL).

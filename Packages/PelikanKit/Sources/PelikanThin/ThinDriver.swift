@@ -378,22 +378,57 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         // OracleNIO nie ma trybu „commit on success” ani limitu czasu wywołania: COMMIT po udanym poleceniu; limit
         // `callTimeoutMs` (zapytania agenta) na thin nie działa, tak jak przerwanie (D168).
         if options.autoCommit, result.kind != .query { try await commit() }
-        if result.kind == .ddl, Self.isCompilable(sql) {
-            // Błędy kompilacji: OracleNIO nie przekazuje ostrzeżenia ORA-24344 — sprawdzamy USER_ERRORS dla obiektu.
-            if let w = try? await compileWarning(sql) { result.warning = w }
+        if result.kind == .ddl, let object = Self.compiledObject(sql) {
+            // Błędy kompilacji: OracleNIO nie przekazuje ostrzeżenia ORA-24344 — sprawdzamy ALL_ERRORS dla obiektu.
+            if let w = try? await compileWarning(object) { result.warning = w }
         }
         result.elapsed = ContinuousClock.now - start
         return result
     }
 
-    static func isCompilable(_ sql: String) -> Bool {
-        let u = sql.uppercased()
-        return u.hasPrefix("CREATE") && ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER", "TYPE", "VIEW"].contains { u.contains($0) }
+    /// Obiekt kompilowany poleceniem `CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE|FORCE…] typ [BODY] [schemat.]nazwa`
+    /// (typ jak w ALL_ERRORS); nil dla innych poleceń.
+    static func compiledObject(_ sql: String) -> (owner: String?, name: String, type: String)? {
+        var words: [String] = []
+        var i = sql.startIndex
+        while i < sql.endIndex, words.count < 12 {
+            let c = sql[i]
+            if c.isWhitespace { i = sql.index(after: i); continue }
+            if c == "-", sql[i...].hasPrefix("--") { i = sql[i...].firstIndex(of: "\n") ?? sql.endIndex; continue }
+            if c == "/", sql[i...].hasPrefix("/*") { i = sql[i...].range(of: "*/")?.upperBound ?? sql.endIndex; continue }
+            if c == "." { words.append("."); i = sql.index(after: i); continue }
+            if c == "\"" {
+                let start = sql.index(after: i)
+                guard let end = sql[start...].firstIndex(of: "\"") else { return nil }
+                words.append("\"" + sql[start..<end]); i = sql.index(after: end); continue
+            }
+            guard c.isLetter || c.isNumber || c == "_" || c == "$" || c == "#" else { break }
+            let start = i
+            while i < sql.endIndex, sql[i].isLetter || sql[i].isNumber || "_$#".contains(sql[i]) { i = sql.index(after: i) }
+            words.append(sql[start..<i].uppercased())
+        }
+        guard words.first == "CREATE" else { return nil }
+        var k = 1
+        if k + 1 < words.count, words[k] == "OR", words[k + 1] == "REPLACE" { k += 2 }
+        while k < words.count, ["EDITIONABLE", "NONEDITIONABLE", "EDITIONING", "FORCE", "NOFORCE"].contains(words[k]) { k += 1 }
+        guard k < words.count else { return nil }
+        var type = words[k]
+        guard ["PROCEDURE", "FUNCTION", "PACKAGE", "TRIGGER", "TYPE", "VIEW"].contains(type) else { return nil }
+        k += 1
+        if k < words.count, words[k] == "BODY", type == "PACKAGE" || type == "TYPE" { type += " BODY"; k += 1 }
+        func ident(_ w: String) -> String { w.hasPrefix("\"") ? String(w.dropFirst()) : w }
+        guard k < words.count else { return nil }
+        if k + 2 < words.count, words[k + 1] == "." { return (ident(words[k]), ident(words[k + 2]), type) }
+        return (nil, ident(words[k]), type)
     }
 
-    func compileWarning(_ sql: String) async throws -> OracleError? {
-        let (_, rows) = try await queryAll("select count(*) from user_errors where attribute = 'ERROR' and (name, type) in (select object_name, object_type from user_objects where last_ddl_time > sysdate - 1/1440)")
-        guard rows.first?.first?.displayText.flatMap(Int.init) ?? 0 > 0 else { return nil }
+    func compileWarning(_ object: (owner: String?, name: String, type: String)) async throws -> OracleError? {
+        let count = try await scalar("""
+            select count(*) from all_errors where attribute = 'ERROR'
+               and owner = nvl(:o, sys_context('userenv', 'current_schema')) and name = :n and type = :t
+            """, binds: [BindVariable(name: "o", value: object.owner.map { .text($0) } ?? .null),
+                         BindVariable(name: "n", value: .text(object.name)), BindVariable(name: "t", value: .text(object.type))])
+        guard count.flatMap(Int.init) ?? 0 > 0 else { return nil }
         return OracleError(code: 24344, message: "ORA-24344: success with compilation error", isWarning: true)
     }
 

@@ -33,9 +33,23 @@ enum MultiObjectCommands {
             .joined(separator: ", ")
     }
 
-    nonisolated static func dropStatement(_ o: DBObject) -> String {
-        "DROP \(o.type == .packageBody ? "PACKAGE BODY" : o.type == .typeBody ? "TYPE BODY" : o.type.rawValue) \(o.qualifiedName)"
-            + (o.type == .table ? " CASCADE CONSTRAINTS" : "")
+    /// DROP obiektu (Usuń obiekt i Usuń zaznaczone): synonim i łącze publiczne bez schematu, łącze bazy z nazwą
+    /// z kropkami bez cudzysłowów, katalog bez schematu; zadań i kolejek nie usuwa DROP (DBMS_SCHEDULER, DBMS_AQADM).
+    nonisolated static func dropStatement(_ o: DBObject, cascadeConstraints: Bool = true) throws -> String {
+        switch o.type {
+        case .job, .queue:
+            throw CommandError.notAvailable(L10n.tr("Zadania i kolejki usuwa się przez DBMS_SCHEDULER i DBMS_AQADM, nie przez DROP"))
+        case .synonym where o.owner == "PUBLIC":
+            return "DROP PUBLIC SYNONYM \(ResultExporter.identifier(o.name))"
+        case .databaseLink:
+            return o.owner == "PUBLIC" ? "DROP PUBLIC DATABASE LINK \(o.name)" : "DROP DATABASE LINK \(o.name)"
+        case .directory:
+            return "DROP DIRECTORY \(ResultExporter.identifier(o.name))"
+        case .table:
+            return "DROP TABLE \(o.qualifiedName)" + (cascadeConstraints ? " CASCADE CONSTRAINTS" : "")
+        default:
+            return "DROP \(o.type.rawValue) \(o.qualifiedName)"
+        }
     }
 
     @MainActor static var hasSelection: ValidationHandler { { $0.selectedObjects.count > 1 || $0.selectedObject != nil } }
@@ -96,7 +110,7 @@ enum MultiObjectCommands {
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx).filter { ![.user, .role, .profile].contains($0.type) }
                 guard let m = ctx.workspace.metadata(), !objs.isEmpty else { throw CommandError.notConnected }
-                let sql = objs.map(dropStatement)
+                let sql = try objs.map { try dropStatement($0) }
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 if ctx.invoker == .user, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Usunąć \(objs.count) obiektów?"), message: objs.map(\.qualifiedName).joined(separator: "\n"),

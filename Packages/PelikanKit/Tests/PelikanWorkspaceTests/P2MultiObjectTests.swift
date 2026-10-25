@@ -10,8 +10,13 @@ struct P2MultiObjectTests {
     func names() async throws {
         let objs = [DBObject(owner: "HR", name: "EMP", type: .table), DBObject(owner: "SCOTT", name: "PKG", type: .packageBody)]
         #expect(MultiObjectCommands.commaSeparated(objs, currentSchema: "HR") == "emp, scott.pkg")
-        #expect(MultiObjectCommands.dropStatement(objs[0]) == "DROP TABLE HR.EMP CASCADE CONSTRAINTS")
-        #expect(MultiObjectCommands.dropStatement(objs[1]) == "DROP PACKAGE BODY SCOTT.PKG")
+        #expect(try MultiObjectCommands.dropStatement(objs[0]) == "DROP TABLE HR.EMP CASCADE CONSTRAINTS")
+        #expect(try MultiObjectCommands.dropStatement(objs[0], cascadeConstraints: false) == "DROP TABLE HR.EMP")
+        #expect(try MultiObjectCommands.dropStatement(objs[1]) == "DROP PACKAGE BODY SCOTT.PKG")
+        #expect(try MultiObjectCommands.dropStatement(DBObject(owner: "PUBLIC", name: "DUAL2", type: .synonym)) == "DROP PUBLIC SYNONYM DUAL2")
+        #expect(try MultiObjectCommands.dropStatement(DBObject(owner: "HR", name: "REMOTE.WORLD", type: .databaseLink)) == "DROP DATABASE LINK REMOTE.WORLD")
+        #expect(try MultiObjectCommands.dropStatement(DBObject(owner: "SYS", name: "DATA_DIR", type: .directory)) == "DROP DIRECTORY DATA_DIR")
+        #expect(throws: (any Error).self) { try MultiObjectCommands.dropStatement(DBObject(owner: "HR", name: "J", type: .job)) }
         let ws = Workspace()
         ws.selectedObjects = objs
         ws.selectedObject = objs[0]

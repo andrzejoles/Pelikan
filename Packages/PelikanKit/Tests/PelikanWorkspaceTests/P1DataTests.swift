@@ -162,7 +162,6 @@ struct P1DataTests {
         // Bez sprawdzenia widoków: asercje z numeru wydania.
         #expect(!DictionaryFeatures(major: 23, minor: 4).supports(.assertion))
         #expect(DictionaryFeatures(major: 23, minor: 26).supports(.assertion))
-        #expect(!DictionaryFeatures(major: 11).has12cColumns)
         // Kolejność folderów jak we wzorcu (adnotacje i asercje po domenach).
         let order = v26.availableTypes
         #expect(order.firstIndex(of: .domain)! < order.firstIndex(of: .annotation)! && order.firstIndex(of: .annotation)! < order.firstIndex(of: .assertion)!)

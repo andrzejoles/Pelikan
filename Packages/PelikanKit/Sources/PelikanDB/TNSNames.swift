@@ -98,7 +98,7 @@ public enum TNSNames {
                     i += 1
                 }
                 guard closed else { break }
-                let desc = String(chars[s..<i]).replacingOccurrences(of: #"\s+"#, with: "", options: .regularExpression)
+                let desc = Self.compact(String(chars[s..<i]))
                 if !names.isEmpty { entries.append(TNSEntry(aliases: names, descriptor: desc, file: file)) }
             } else {
                 // Wartość prosta (np. IFILE = /ścieżka) — do końca linii.
@@ -132,6 +132,21 @@ public enum TNSNames {
         if let s = entry.serviceName { return "\(prefix)\(host):\(port)/\(s)" }
         if let sid = entry.sid { return "\(prefix)\(host):\(port)/\(sid)" }   // EZConnect nie rozróżnia SID; thin dostaje SID osobno
         return nil
+    }
+}
+
+extension TNSNames {
+    /// Deskryptor bez białych znaków poza wartościami w cudzysłowie — `SSL_SERVER_CERT_DN="CN=…,O=Oracle Corporation"`
+    /// czy katalog portfela ze spacją muszą dojść do klienta bez zmian.
+    public static func compact(_ descriptor: String) -> String {
+        var out = ""
+        var quoted = false
+        for c in descriptor {
+            if c == "\"" { quoted.toggle() }
+            if !quoted, c.isWhitespace { continue }
+            out.append(c)
+        }
+        return out
     }
 }
 

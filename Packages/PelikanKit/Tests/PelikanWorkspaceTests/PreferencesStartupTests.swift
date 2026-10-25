@@ -82,6 +82,11 @@ struct PreferencesStartupTests {
         #expect(o.readOnly == ["prod*", "uat%"] && o.files == ["plik.sql"] && o.commandFile == "~/s.sql" && o.project == "p.prj")
         #expect(o.warnings.contains { $0.contains("Hasło") } && o.warnings.contains { $0.contains("edit-object") })
         #expect(!String(describing: o).contains("tajne"))
+        // EZConnect z „/” po „@” to nie hasło; hasło z „@” nie przecieka do nazwy połączenia (przegląd kodu, D168).
+        let ez = StartupOptions.parse(["userid=scott@host:1521/orcl"])
+        #expect(ez.connection == "scott@host:1521/orcl" && ez.warnings.isEmpty)
+        let at = StartupOptions.parse(["userid=u/p@ss@db"])
+        #expect(at.connection == "u@db" && !String(describing: at).contains("ss@"))
         #expect(StartupOptions.object("PACKAGE:APP.PKG") == ("PACKAGE", "APP.PKG") && StartupOptions.object("app.emp") == (nil, "app.emp"))
         #expect(StartupOptions.object("TABLE,APP.EMP") == ("TABLE", "APP.EMP"))
         let u = StartupOptions.parse(url: URL(string: "pelikan://open?connection=Dev&edit=APP.PKG&file=/tmp/a.sql&password=x")!, scheme: "pelikan")

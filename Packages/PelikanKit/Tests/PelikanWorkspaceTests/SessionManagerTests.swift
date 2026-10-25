@@ -214,7 +214,8 @@ struct ModificationGuardTests {
     func readOnly() throws {
         let (ws, ro, _, _) = try make()
         #expect(ws.modificationCheck(["select * from emp", "alter session set nls_language = 'POLISH'"], connectionID: ro.id) == .allowed)
-        for s in ["update emp set sal = 1", "drop table t", "begin p; end;", "select * from emp for update"] {
+        for s in ["update emp set sal = 1", "drop table t", "begin p; end;", "select * from emp for update",
+                  "with function f return number is pragma autonomous_transaction; begin delete t; commit; return 1; end;\nselect f from dual"] {
             if case .blocked = ws.modificationCheck([s], connectionID: ro.id) {} else { Issue.record("niezablokowane: \(s)") }
         }
     }

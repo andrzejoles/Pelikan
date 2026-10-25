@@ -99,7 +99,6 @@ public struct DriverCapabilities: OptionSet, Sendable, Hashable {
 
     public static let breakExecution = DriverCapabilities(rawValue: 1 << 0)
     public static let dbmsDebug = DriverCapabilities(rawValue: 1 << 1)
-    public static let dbmsDebugJDWP = DriverCapabilities(rawValue: 1 << 2)
     public static let lobs = DriverCapabilities(rawValue: 1 << 3)
     public static let objectTypes = DriverCapabilities(rawValue: 1 << 4)
     public static let refCursors = DriverCapabilities(rawValue: 1 << 5)
@@ -217,8 +216,6 @@ public struct RowBatch: Sendable {
 }
 
 public struct ExecuteOptions: Sendable {
-    /// Wykonanie w trybie „describe only” (tylko kolumny, bez danych) — Query Builder, Code Assistant.
-    public var describeOnly: Bool
     /// Wykonanie z natychmiastowym COMMIT (sterownik), domyślnie false — PL/SQL Developer nie ma auto-commita.
     public var autoCommit: Bool
     /// Limit czasu wywołania (ms), 0 = bez limitu (przerwanie ręczne przez `breakExecution`).
@@ -233,9 +230,9 @@ public struct ExecuteOptions: Sendable {
     /// połączenia — każda paczka to jedna podróż sieciowa. Nie dla siatki (duża paczka opóźnia pierwsze wiersze).
     public var bulk: Bool
 
-    public init(describeOnly: Bool = false, autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil, fetchArraySize: UInt32? = nil,
+    public init(autoCommit: Bool = false, callTimeoutMs: UInt32 = 0, lobLimit: Int? = nil, fetchArraySize: UInt32? = nil,
                 bulk: Bool = false) {
-        self.describeOnly = describeOnly; self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs; self.lobLimit = lobLimit
+        self.autoCommit = autoCommit; self.callTimeoutMs = callTimeoutMs; self.lobLimit = lobLimit
         self.fetchArraySize = fetchArraySize; self.bulk = bulk
     }
 }
@@ -284,7 +281,11 @@ public extension DatabaseSession {
         guard let rs = r.resultSet else { return ([], []) }
         var rows: [[OracleValue]] = []
         while rows.count < limit {
-            let batch = try await fetch(rs.id, maxRows: min(5000, limit - rows.count))
+            let batch: RowBatch
+            do { batch = try await fetch(rs.id, maxRows: min(5000, limit - rows.count)) } catch {
+                await closeResultSet(rs.id)
+                throw error
+            }
             rows += batch.rows
             if !batch.hasMore { return (rs.columns, rows) }
         }

@@ -62,8 +62,9 @@ public enum StatementClassifier {
         switch first {
         case "SELECT", "(": return .query
         case "WITH":
-            // WITH … SELECT; WITH FUNCTION … SELECT (12c) — zapytanie z funkcją PL/SQL.
-            return second == "FUNCTION" || second == "PROCEDURE" ? .query : .query
+            // WITH … SELECT; WITH FUNCTION … SELECT (12c) — zapytanie z funkcją PL/SQL (strażnik zmian traktuje je
+            // jak zmieniające, bo funkcja może mieć PRAGMA AUTONOMOUS_TRANSACTION).
+            return .query
         case "INSERT", "UPDATE", "DELETE", "MERGE", "UPSERT": return .dml
         case "LOCK": return .dml
         case "EXPLAIN": return .dml        // zapisuje do PLAN_TABLE

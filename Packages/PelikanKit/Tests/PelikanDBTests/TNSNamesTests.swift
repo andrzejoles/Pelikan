@@ -29,6 +29,9 @@ struct TNSNamesTests {
         #expect(e[0].port == 1521)
         #expect(e[0].serviceName == "devpdb")
         #expect(e[3].sid == "ORCL")
+        // Spacje w wartościach w cudzysłowie zostają (DN certyfikatu, katalog portfela) — przegląd kodu, D168.
+        let dn = TNSNames.parse(#"TLS = (DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h)(PORT = 2484)) (SECURITY = (SSL_SERVER_CERT_DN = "CN=db, O=Oracle Corporation, L=Redwood City")))"#)
+        #expect(dn.first?.descriptor == #"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=h)(PORT=2484))(SECURITY=(SSL_SERVER_CERT_DN="CN=db, O=Oracle Corporation, L=Redwood City")))"#)
     }
 
     @Test("Rozwinięcie do EZConnect dla sterownika thin (proste wpisy), złożone — nil")
