@@ -54,4 +54,24 @@ struct UtplsqlResultsTests {
         #expect(UtplsqlRunner.coverageOptions(include: [], exclude: ["a", "b"]) == ", a_exclude_objects => ut_varchar2_list('A', 'B')")
         #expect(UtplsqlRunner.coverageOptions(include: [], exclude: []).isEmpty)
     }
+
+    @Test("Skrypt CLI: użytkownik z $ i apostrofem nie jest rozwijany przez sh; PELIKAN_UT_CONNECT nadpisuje")
+    func cliScriptQuoting() throws {
+        let shell = UtplsqlRunner.cliScript(paths: ["APP$OWN"], user: "APP$OWN", connectString: "db:1521/o'k").shell
+        // Tylko przypisania z prologu (bez uruchamiania sqlplus).
+        let prolog = shell.split(separator: "\n").filter { $0.contains("CONNECT=") }.joined(separator: "\n")
+        func connect(_ env: [String: String]) throws -> String {
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/bin/sh")
+            p.arguments = ["-c", prolog + "\nprintf %s \"$CONNECT\""]
+            p.environment = env
+            let out = Pipe()
+            p.standardOutput = out
+            try p.run()
+            p.waitUntilExit()
+            return String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+        }
+        #expect(try connect(["OWN": "x"]) == "APP$OWN@db:1521/o'k")
+        #expect(try connect(["PELIKAN_UT_CONNECT": "u@d"]) == "u@d")
+    }
 }
