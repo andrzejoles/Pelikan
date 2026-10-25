@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-25T07:10:36+01:00",
+  "heartbeat": "2026-10-25T08:51:33+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "Czekam na decyzję właściciela o publikacji 8.4.0 beta",
+  "task": "Czekam na uwagi testerów bety 8.4.0",
   "stages": [
     {
       "id": 0,
@@ -58,6 +58,8 @@
     }
   ],
   "done": [
+    "Diagram ER 2000 tabel 98 → 6,6 s, wyszukiwanie w definicjach tabel 16 → 4,9 s (D165); usunięte stare tagi v1.9.0–v7.7.0",
+    "Opublikowano Pelikan 8.4.0 beta (Latest, kanał aktualizacji Sparkle wskazuje 8.4.0); scalono #81",
     "Scalone #79 (wydajność narzędzi) i #80 (notatki bety); szkic Pelikan 8.4.0 beta gotowy — podpis, wersja i brak ścieżek domowych sprawdzone",
     "Druga próba na MT_RMSPROD: wyszukiwanie 31–85 s → 2–3 s, diagram ER 263 → 4,7 s, eksport DDL 2 → 0,2 s/obiekt, dokumentacja schematu >20 min → 15 s (D164)",
     "Przegląd bezpieczeństwa: 10 znalezisk (3 wysokie) poprawionych — przypięte połączenie agenta, link bez skryptów, PL/SQL nie zatwierdzi DML agenta, potwierdzanie kluczy SSH (D163)",
@@ -95,9 +97,7 @@
     "utPLSQL: okno opcji przebiegu z include/exclude, sortowanie wyników, porównanie oczekiwane/otrzymane, linie częściowo pokryte i procent na pasku stanu (UT-RUN-003, UT-RES-001/002, UT-COV-001/002)",
     "PD-TEST-003/005: AutoCommit po wykonaniu okna testu, obserwowane wyrażenia w pliku .tst; PD-TEST-002: typ Substitution",
     "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
-    "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela",
-    "Etap 8 zamknięty (D114): docs/STATUS.md z ograniczeniami i listą do potwierdzenia przez właściciela; PR #56 w CI, potem szkic wydania",
-    "Etap 8: przebieg zrzutów w tle (scripts/screenshots.sh, D113) — 11 scenariuszy, znalezione i poprawione 2 błędy (karty edytora tabeli, rozdziały instrukcji)"
+    "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela"
   ],
   "next": [
     "Publikacja szkicu 8.4.0 beta — decyzja właściciela"

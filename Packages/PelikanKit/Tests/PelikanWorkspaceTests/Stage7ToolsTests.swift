@@ -151,6 +151,29 @@ struct Stage7ToolsTests {
         #expect(try #require(d.item(owner: "S", name: "DEPT")).frame.x < (try #require(d.item(owner: "S", name: "EMP")).frame.x))
     }
 
+    @Test("Diagram ER dużego schematu: 2000 tabel bez szukania wolnego miejsca dla każdej, układ bez nakładania (D165)",
+          .timeLimit(.minutes(1)))
+    func erDiagramLarge() async throws {
+        let col = [SchemaColumn(name: "ID", type: "NUMBER", primaryKey: true)]
+        let names = (0..<2000).map { String(format: "T%04d", $0) }
+        let fks = (1..<200).map { i in
+            ForeignKey(name: "FK\(i)", childOwner: "S", childTable: names[i], childColumns: ["ID"], parentOwner: "S", parentTable: names[i - 1], parentColumns: ["ID"])
+        }
+        let src = ERFakeSchema(tables: Dictionary(uniqueKeysWithValues: names.map { ($0, col) }), fks: fks)
+        let d = try await ERDiagram.build(owner: "S", tables: names + ["T0000"], source: src, showColumns: false)
+        #expect(d.items.count == 2000 && d.links.count == 199)
+        #expect(d.items.allSatisfy { !$0.showColumns && $0.columns.count == 1 && $0.frame.height == 32 })
+        // Bez nakładania: ramki posortowane po x, potem po y — sąsiednie w kolumnie się nie przecinają, kolumny się nie zachodzą.
+        let byColumn = Dictionary(grouping: d.items.map(\.frame), by: \.x)
+        for (_, frames) in byColumn {
+            let f = frames.sorted { $0.y < $1.y }
+            for i in f.indices.dropFirst() { #expect(!f[i - 1].intersects(f[i])) }
+        }
+        let xs = byColumn.keys.sorted()
+        for i in xs.indices.dropFirst() { #expect(xs[i] - xs[i - 1] >= 200) }
+        #expect(ERDiagram.levels(d)[try #require(d.item(owner: "S", name: "T0199")).id] == 199)
+    }
+
     @Test("Przenoszenie danych: mapowanie po nazwach, INSERT z literałami i stałą, kontrola definicji")
     func transfer() throws {
         var job = DataTransferJob()

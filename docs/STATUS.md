@@ -29,7 +29,7 @@ Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) m
 ## Próba na dużej bazie
 
 Pelikan przeszedł próbę tylko do odczytu na kopii dużej bazy produkcyjnej właściciela: Oracle 19c, dziesiątki tysięcy
-obiektów, setki tysięcy linii PL/SQL, łącze z opóźnieniem około 50 ms (D151, D152, D164).
+obiektów, setki tysięcy linii PL/SQL, łącze z opóźnieniem około 50 ms (D151, D152, D164, D165).
 
 | Obszar | Wynik |
 |---|---|
@@ -38,7 +38,8 @@ obiektów, setki tysięcy linii PL/SQL, łącze z opóźnieniem około 50 ms (D1
 | Analiza nazw — czas | pakiet z 13,5 tys. linii: 34 s → 1,8 s |
 | Analiza nazw — fałszywe alarmy na poprawnym kodzie | 478 → 1 |
 | Znajdź obiekty bazy (860 tys. linii) | 31–85 s → 2–3 s |
-| Diagram ER (378 tabel) | 263 s → 4,7 s |
+| Diagram ER (378 / 2000 tabel) | 263 s → 4,4 s / 98 s → 6,6 s |
+| Znajdź obiekty — definicje tabel | 58 s → 4,9 s |
 | Eksport DDL / porównanie obiektów | 2 s → 0,2 s na obiekt |
 | Dokumentacja schematu (1826 obiektów) | ponad 20 min → 15 s |
 

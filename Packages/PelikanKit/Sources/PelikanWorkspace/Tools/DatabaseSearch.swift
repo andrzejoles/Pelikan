@@ -161,11 +161,9 @@ public enum DatabaseSearch {
         var sql = """
             select owner, table_name, 'COLUMN ' || column_name, column_id from all_tab_columns
              where owner in (\(ownerList))\(tableCond) and \(match("column_name", c))
-               and (owner, table_name) in (select owner, table_name from all_tables)
             union all
             select owner, table_name, 'COMMENT ' || column_name || ': ' || comments, 0 from all_col_comments
              where owner in (\(ownerList))\(tableCond) and comments is not null and \(match("comments", c))
-               and (owner, table_name) in (select owner, table_name from all_tables)
             union all
             select owner, table_name, 'COMMENT: ' || comments, 0 from all_tab_comments
              where owner in (\(ownerList))\(tableCond) and table_type = 'TABLE' and comments is not null and \(match("comments", c))
@@ -181,7 +179,14 @@ public enum DatabaseSearch {
         let (_, rows) = try await DictionaryQuery.queryAll([sql.replacingOccurrences(of: "%CHECKS%", with: checks),
                                                             sql.replacingOccurrences(of: "%CHECKS%", with: "")],
                                                            binds: binds, limit: limit, in: s)
-        return rows.map { r in
+        guard !rows.isEmpty else { return [] }
+        // Kolumny i komentarze widoków odpadają tutaj, jednym zapytaniem o tabele schematów — półzłączenie z ALL_TABLES
+        // w gałęziach kosztowało na dużej bazie ~5 s na gałąź przy 0,4 s bez niego (D165).
+        let ownerBinds = binds.filter { $0.name.hasPrefix("o") && Int($0.name.dropFirst()) != nil }
+        let (_, tables) = try await s.queryAll("select owner, table_name from all_tables where owner in (\(ownerList))\(tableCond)",
+                                               binds: ownerBinds + binds.filter { $0.name == "nf" }, limit: 10_000_000)
+        let isTable = Set(tables.map { "\($0[0].displayText ?? "").\($0[1].displayText ?? "")" })
+        return rows.filter { isTable.contains("\($0[0].displayText ?? "").\($0[1].displayText ?? "")") }.map { r in
             DatabaseSearchHit(object: DBObject(owner: r[0].displayText ?? "", name: r[1].displayText ?? "", type: .table, status: "VALID"),
                               line: 0, text: (r[2].displayText ?? "").replacingOccurrences(of: "\n", with: " "))
         }

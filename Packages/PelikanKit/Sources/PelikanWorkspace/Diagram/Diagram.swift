@@ -118,6 +118,27 @@ public struct Diagram: Sendable, Codable, Hashable {
         return it.id
     }
 
+    /// Wiele obiektów jednego schematu naraz, bez szukania wolnego miejsca: wszystkie stają w rogu, a miejsce nadaje im
+    /// potem układ (ERDiagram.layout). freeFrame dla każdego z osobna rośnie z kwadratem liczby elementów — przy 2000
+    /// tabel to półtorej minuty (D165).
+    @discardableResult
+    public mutating func addObjectsForLayout(owner: String, names: [String], type: String, columns: [String: [SchemaColumn]],
+                                             showColumns: Bool) -> [UUID] {
+        var known: [String: UUID] = [:]
+        for it in items where it.kind == .object { known[it.objectKey] = known[it.objectKey] ?? it.id }
+        return names.map { n in
+            let key = "\(owner).\(n)"
+            if let id = known[key] { return id }
+            let cols = columns[n] ?? []
+            let (w, h) = Self.objectSize(columns: cols.count, showColumns: showColumns)
+            var it = DiagramItem(kind: .object, frame: DiagramRect(x: Self.grid * 2, y: Self.grid * 2, width: w, height: h))
+            it.owner = owner; it.name = n; it.type = type; it.columns = cols; it.showColumns = showColumns
+            items.append(it)
+            known[key] = it.id
+            return it.id
+        }
+    }
+
     @discardableResult
     public mutating func addNote(_ text: String, at point: DiagramPoint? = nil) -> UUID {
         var it = DiagramItem(kind: .note, frame: freeFrame(width: 160, height: 64, near: point))
