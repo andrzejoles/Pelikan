@@ -40,7 +40,8 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
   `openssl rand`. `docker cp` tworzy pliki jako root — `chown` przed użyciem przez oracle.
 - `DBMS_SESSION.SLEEP` nie reaguje na Break do końca uśpienia (tak samo w SQL*Plus) — testy przerwania na długim zapytaniu.
 - Komunikaty SourceKit „No such module”/„Cannot find type” w edytorze to nieaktualny indeks — liczy się `swift build`.
-- Runner CI macOS to macOS 26.6 / Swift 6.3 (stan 2026-10-22) — pakiet ma cel macOS 27, testy SPM przechodzą.
+- Runner CI macOS to obraz `xcode-27` (macOS 27, Xcode 27 — wersja próbna GitHuba, D166); przy kłopotach z kolejką
+  wrócić do `macos-latest` (Xcode 26: ostrzeżenia o celu macOS 27, testy przechodzą). CI Linux: Swift 6.3.
 - Testy na bazie dzielą schemat testowy — uruchamiać szeregowo (`swift test --no-parallel --filter PelikanDBTests`, tak robi
   `make test` i CI); równoległe zestawy kolidują (np. kompilacja niepoprawnych obiektów).
 - Debuger: po `DBMS_DEBUG.DEBUG_ON` każde wywołanie PL/SQL w sesji docelowej czeka na debuger — DBMS_OUTPUT włączać

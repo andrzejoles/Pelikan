@@ -1328,7 +1328,8 @@ Trzecia próba tylko do odczytu (D151) mierzyła osobno zapytania i obliczenia p
   tagi opublikowanych wydań: v7.9.0 i v8.4.0.
 
 ### D166 · 2026-10-25 — Bez ostrzeżeń kompilatora i CI
-- CI: `actions/checkout@v7` (Node 24) zamiast v4 — GitHub wycofuje Node 20.
+- CI: `actions/checkout@v7` (Node 24) zamiast v4 — GitHub wycofuje Node 20. Zadanie macOS na obrazie `xcode-27`
+  (macOS 27, Xcode 27, wersja próbna) zamiast `macos-latest` z Xcode 26, który nie obsługuje celu macOS 27.
 - Kompilacja aplikacji, pakietu i testów na macOS i Linuksie bez ostrzeżeń: `any NSDraggingInfo`, `Range(NSRange)` zamiast
   `toRange()`, zbędne `try`/`public`/`nonisolated(unsafe)`, `_ =` dla wyników `createFile`/`parse()` (na Linuksie bez
   `@discardableResult`), usunięty nieosiągalny kontroler dokumentu „inny niż SQL” (wszystkie rodzaje mają własne okna).
