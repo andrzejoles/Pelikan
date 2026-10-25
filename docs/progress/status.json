@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-25T08:52:08+01:00",
+  "heartbeat": "2026-10-25T09:10:32+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "PR #82 — diagram ER i definicje tabel (D165), czekam na CI",
+  "task": "Czekam na uwagi testerów bety 8.4.0; obserwacja zawieszenia testu SSH Stop w CI",
   "stages": [
     {
       "id": 0,
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Scalono #82 (diagram ER dużego schematu, definicje tabel — D165)",
     "Diagram ER 2000 tabel 98 → 6,6 s, wyszukiwanie w definicjach tabel 16 → 4,9 s (D165); usunięte stare tagi v1.9.0–v7.7.0",
     "Opublikowano Pelikan 8.4.0 beta (Latest, kanał aktualizacji Sparkle wskazuje 8.4.0); scalono #81",
     "Scalone #79 (wydajność narzędzi) i #80 (notatki bety); szkic Pelikan 8.4.0 beta gotowy — podpis, wersja i brak ścieżek domowych sprawdzone",
@@ -96,8 +97,7 @@
     "Lista okien: menu Wykonaj/Połącz ponownie/Zmień nazwę/Nowe/Sortuj, krótkie nazwy; wskaźniki połączeń user@baza z kolorem na kartach, liście okien, pasku stanu i tle edytora (PD-UI-002, PD-CONN-005)",
     "utPLSQL: okno opcji przebiegu z include/exclude, sortowanie wyników, porównanie oczekiwane/otrzymane, linie częściowo pokryte i procent na pasku stanu (UT-RUN-003, UT-RES-001/002, UT-COV-001/002)",
     "PD-TEST-003/005: AutoCommit po wykonaniu okna testu, obserwowane wyrażenia w pliku .tst; PD-TEST-002: typ Substitution",
-    "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)",
-    "Szkic wydania v6.1.0 (Etap 8) gotowy — do publikacji przez właściciela"
+    "PD-CMDW-004: Command Window — edycja bufora (LIST/APPEND/CHANGE/DEL/INPUT), GET/SAVE/STORE SET, BREAK i COMPUTE; poprawka samotnego / (D115)"
   ],
   "next": [
     "Publikacja szkicu 8.4.0 beta — decyzja właściciela"
