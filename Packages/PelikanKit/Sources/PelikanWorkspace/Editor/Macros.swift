@@ -72,8 +72,11 @@ public struct MacroLibrary: Sendable, Codable, Hashable {
 
     public func save(to dir: URL?) {
         guard let dir, let url = Self.url(dir) else { return }
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        if let data = try? JSONEncoder.pelikan.encode(self) { try? data.write(to: url, options: [.atomic]) }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        if let data = try? JSONEncoder.pelikan.encode(self) {
+            try? data.write(to: url, options: [.atomic])
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
     }
 }
 

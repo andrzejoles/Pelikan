@@ -323,6 +323,27 @@ struct ConnectionCheckTests {
         #expect(ws.sessions.openSessionCount == 1)
     }
 
+    @Test("Analiza nazw: po ponownym połączeniu źródło słownika z nową sesją; odświeżenie metadanych czyści pamięć")
+    func nameSourceAfterReconnect() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
+        let def = ConnectionDefinition(name: "t", target: ConnectionTarget(user: "u", connectString: "h/s"), savePassword: false)
+        try ws.connections.upsert(def, password: "good")
+        let key = SessionKey(connectionID: def.id, purpose: .main)
+        let s1 = try await ws.sessions.session(key)
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = def.id
+        doc.text = "select * from t;"
+        await ws.analyzeCode(doc)
+        #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s1)])
+        await ws.sessions.disconnect(def.id)
+        let s2 = try await ws.sessions.session(key)
+        await ws.analyzeCode(doc)
+        #expect(ws.nameSources.keys.map(\.session) == [ObjectIdentifier(s2)])
+        ws.metadata(for: def.id)?.refresh()
+        #expect(ws.nameSources.isEmpty)
+    }
+
     @Test("Ochrona zapisanych haseł: bez potwierdzenia właściciela hasło z Pęku kluczy nie jest użyte; po potwierdzeniu — raz na sesję aplikacji")
     func ownerAuthentication() async throws {
         let driver = FakeDriver()

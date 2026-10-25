@@ -197,6 +197,8 @@ public final class MetadataProvider {
         linkCache = nil
         features = nil
         generation += 1
+        // Słownik analizy nazw w czasie pisania (po DDL Object Browsera, edytorów obiektów, odświeżeniu).
+        workspace.resetNameResolutionCache(connectionID)
     }
 
     public func refresh(_ object: DBObject) {
