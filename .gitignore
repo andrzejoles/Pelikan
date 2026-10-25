@@ -34,3 +34,5 @@ __pycache__/
 .DS_Store
 .claude/worktrees/
 .linux-build/
+# Stan Xcode dla pakietów (nie wersje — te są w xcshareddata/swiftpm/Package.resolved)
+Pelikan.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/configuration/
