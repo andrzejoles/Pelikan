@@ -24,11 +24,12 @@ public enum SchedulerObjectKind: String, Sendable, CaseIterable, Codable {
     var query: String {
         switch self {
         case .windows: "select 'SYS', window_name, enabled, nvl(repeat_interval, schedule_name), comments from all_scheduler_windows"
-        case .windowGroups: "select 'SYS', window_group_name, enabled, number_of_windows || ' okien', comments from all_scheduler_window_groups"
+        // Opis liczby w języku interfejsu jako literał SQL (forma „Okna: n” bez odmiany liczebnika).
+        case .windowGroups: "select 'SYS', window_group_name, enabled, \(ResultExporter.quote(L10n.tr("Okna") + ": ")) || number_of_windows, comments from all_scheduler_window_groups"
         case .jobClasses: "select 'SYS', job_class_name, resource_consumer_group, logging_level, comments from all_scheduler_job_classes"
         case .schedules: "select owner, schedule_name, schedule_type, nvl(repeat_interval, to_char(start_date)), comments from all_scheduler_schedules"
         case .programs: "select owner, program_name, enabled, program_type || ': ' || substr(program_action, 1, 200), comments from all_scheduler_programs"
-        case .chains: "select owner, chain_name, enabled, number_of_steps || ' kroków', comments from all_scheduler_chains"
+        case .chains: "select owner, chain_name, enabled, \(ResultExporter.quote(L10n.tr("Kroki") + ": ")) || number_of_steps, comments from all_scheduler_chains"
         case .jobs: "select owner, job_name, state, nvl(repeat_interval, schedule_name), comments from all_scheduler_jobs"
         case .fileWatchers: "select owner, file_watcher_name, enabled, directory_path || '/' || file_name, comments from all_scheduler_file_watchers"
         // Poświadczenia: tylko nazwa i użytkownik (bez hasła — słownik go i tak nie pokazuje).

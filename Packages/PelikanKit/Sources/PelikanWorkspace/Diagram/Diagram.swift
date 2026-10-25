@@ -162,10 +162,14 @@ public struct Diagram: Sendable, Codable, Hashable {
 
     /// Linie kluczy obcych między obiektami, które są na diagramie (bez powtórzeń).
     public mutating func addForeignKeyLinks(_ fks: [ForeignKey]) {
+        // Słowniki zamiast wyszukiwania liniowego na każdy klucz (diagram całego schematu: tysiące tabel i kluczy).
+        var objects: [String: UUID] = [:]
+        for it in items where it.kind == .object && objects["\(it.owner)\u{1F}\(it.name)"] == nil { objects["\(it.owner)\u{1F}\(it.name)"] = it.id }
+        var existing = Set(links.filter { $0.kind == .foreignKey }.map { "\($0.from)\u{1F}\($0.label)" })
         for fk in fks {
-            guard let c = item(owner: fk.childOwner, name: fk.childTable), let p = item(owner: fk.parentOwner, name: fk.parentTable) else { continue }
-            if links.contains(where: { $0.kind == .foreignKey && $0.label == fk.name && $0.from == c.id }) { continue }
-            var l = DiagramLink(kind: .foreignKey, from: c.id, to: p.id)
+            guard let c = objects["\(fk.childOwner)\u{1F}\(fk.childTable)"], let p = objects["\(fk.parentOwner)\u{1F}\(fk.parentTable)"] else { continue }
+            guard existing.insert("\(c)\u{1F}\(fk.name)").inserted else { continue }
+            var l = DiagramLink(kind: .foreignKey, from: c, to: p)
             l.label = fk.name
             l.startEnd = .crowFoot
             l.endEnd = .none

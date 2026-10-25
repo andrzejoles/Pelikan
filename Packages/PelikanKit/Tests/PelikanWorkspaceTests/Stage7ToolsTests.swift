@@ -221,6 +221,15 @@ struct Stage7ToolsTests {
         #expect(LocalTaskScheduler(directory: dir).definitions == [d])
         try sch.remove(d.id)
         #expect(sch.definitions.isEmpty)
+        // Pusta nazwa połączenia to „(główne)” — nie połączenie okna aktywnego w chwili uruchomienia.
+        let ws = Workspace(drivers: [:])
+        let doc = ws.newDocument(.sql)
+        doc.connectionID = UUID()
+        var main = d
+        main.connection = ""
+        #expect(throws: CommandError.self) { _ = try LocalTaskScheduler.connection(main, in: ws) }
+        main.connection = "nieznane"
+        #expect(throws: CommandError.self) { _ = try LocalTaskScheduler.connection(main, in: ws) }
     }
 
     @Test("Komendy narzędzi etapu 7 w rejestrze: identyfikatory wierszy macierzy, agent — Brak")
