@@ -203,7 +203,7 @@ extension TemplateLibrary {
                     fetch c bulk collect into l_tab limit [Rozmiar paczki=1000];
                     exit when l_tab.count = 0;
                     forall i in 1 .. l_tab.count
-                      [#]null;
+                      [#]insert into [Tabela docelowa] values l_tab(i);
                   end loop;
                   close c;
                 end;

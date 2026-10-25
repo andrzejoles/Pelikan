@@ -98,6 +98,11 @@ struct P1DataTests {
         await #expect(throws: CommandError.self) {
             try await ws.invoke("grid.selectBlock", CommandArguments(["fromRow": 1, "toRow": 9, "fromColumn": "ID"]))
         }
+        // Pusta siatka — błąd argumentu zamiast zatrzymania aplikacji.
+        let (empty, _, _) = await workspaceWithGrid([])
+        await #expect(throws: CommandError.self) {
+            try await empty.invoke("grid.selectBlock", CommandArguments(["fromRow": 1, "toRow": 1, "fromColumn": "ID"]))
+        }
     }
 
     @Test("Rekord z komentarzami kolumn ze słownika karty (PD-GRID-010)")

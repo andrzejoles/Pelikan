@@ -44,6 +44,13 @@ struct ChartTests {
         #expect(ChartBuilder.build(d, columns: columns, rows: rows).categories == ["1", "2", "3", "4"])
     }
 
+    @Test("Liczba z komórki: tylko zapis dziesiętny (bez inf, nan, 0x10)")
+    func number() {
+        #expect(ChartBuilder.number(.text("1 234,5")) == 1234.5 && ChartBuilder.number(.number("-2e3")) == -2000)
+        #expect(ChartBuilder.number(.text("inf")) == nil && ChartBuilder.number(.text("nan")) == nil && ChartBuilder.number(.text("0x10")) == nil)
+        #expect(ChartBuilder.number(.text("Inf")) == nil)
+    }
+
     @MainActor
     @Test("Auto-odświeżanie wykresu: zakres karty musi zawierać to samo polecenie (po edycji okna — błąd, bez wykonania)")
     func reexecuteGuard() async throws {

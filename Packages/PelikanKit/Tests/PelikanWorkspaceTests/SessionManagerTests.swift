@@ -16,8 +16,10 @@ final class FakeSession: DatabaseSession, @unchecked Sendable {
     }
     func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
     func closeResultSet(_ resultSet: ResultSetID) async {}
-    func commit() async throws {}
-    func rollback() async throws {}
+    /// Kolejne COMMIT i ROLLBACK sesji.
+    let transactions = Mutex<[String]>([])
+    func commit() async throws { transactions.withLock { $0.append("commit") } }
+    func rollback() async throws { transactions.withLock { $0.append("rollback") } }
     func breakExecution() {}
     func ping() async throws {}
     func setTags(_ tags: SessionTags) async throws {}

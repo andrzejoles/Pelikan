@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 @testable import PelikanWorkspace
 import Testing
 
@@ -59,6 +60,30 @@ struct TestManagerOfflineTests {
         #expect(TestExpectation(.inList, "1, 2,3").matches("2") && !TestExpectation(.inList, "1,2").matches("3"))
         #expect(TestExpectation(.isNull).matches(nil) && TestExpectation(.isNotNull).matches("x"))
         #expect(TestManager.resolve("&A-&AB", globals: ["A": "1", "AB": "2"]) == "1-2")
+        // Wielolinijkowe DBMS_OUTPUT: `%` obejmuje znaki nowej linii.
+        #expect(TestExpectation(.like, "a%c").matches("a\nb\nc") && TestExpectation(.like, "a_c").matches("a\nc"))
+        #expect(!TestExpectation(.like, "A%").matches("abc"))
+    }
+
+    @Test("Tryb jednej sesji: test w osobnej sesji, wycofany i zamknięty; sesja główna nietknięta, bez AutoCommit")
+    @MainActor func ownSession() async throws {
+        let driver = FakeDriver()
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: driver])
+        ws.settings.sessionMode = .single
+        ws.settings.autoCommitTestWindow = true
+        let def = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        let main = try #require(try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)) as? FakeSession)
+        let r = await TestManager.run(TestCase(name: "t", block: "begin null; end;"), globals: [:], connectionID: def.id, in: ws)
+        #expect(r.passed)
+        #expect(!main.closedFlag.withLock { $0 } && main.transactions.withLock { $0 }.isEmpty)
+        #expect(!main.executed.withLock { $0 }.contains("begin null; end;"))
+        let sessions = driver.sessions.withLock { $0 }
+        #expect(sessions.count == 2)
+        let own = try #require(sessions.last)
+        #expect(own.executed.withLock { $0 }.contains("begin null; end;"))
+        #expect(own.transactions.withLock { $0 } == ["rollback"] && own.closedFlag.withLock { $0 })
+        #expect(ws.sessions.openSessionCount == 1)
     }
 }
 

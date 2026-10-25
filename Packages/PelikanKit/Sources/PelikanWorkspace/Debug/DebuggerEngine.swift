@@ -107,6 +107,10 @@ public final class DebuggerEngine {
     @ObservationIgnored var hitCounts: [UUID: Int] = [:]
     @ObservationIgnored var bpNumbers: [Int: UUID] = [:]
     @ObservationIgnored var sourceCache: [String: String] = [:]
+    /// Stop w trakcie kroku: pętla zdarzeń zatrzymuje się przy najbliższym zdarzeniu, a program przerywa `stop()`.
+    @ObservationIgnored var stopRequested = false
+    /// PLSQL_OPTIMIZE_LEVEL sesji okna sprzed startu — przywracany w `cleanUp()`.
+    @ObservationIgnored var previousOptimizeLevel: Int?
 
     /// Śledzenie wywołań DBMS_DEBUG do pliku (PELIKAN_DEBUG_TRACE=ścieżka) — diagnostyka, bez danych użytkownika poza nazwami jednostek.
     nonisolated static func trace(_ s: String) {
@@ -147,14 +151,24 @@ public final class DebuggerEngine {
         message = nil
         // Informacja debugowania dla bloku testu (PLSQL_OPTIMIZE_LEVEL 1 zachowuje wszystkie linie i zmienne).
         Self.trace("start")
+        // Poprzednia wartość wraca po debugowaniu (w trybie single ta sama sesja kompiluje obiekty). V$PARAMETER pokazuje
+        // wartość sesji; bez uprawnień do widoku — wartość domyślna 2.
+        let level = (try? await target.scalar("select value from v$parameter where name = 'plsql_optimize_level'")) ?? nil
+        previousOptimizeLevel = level.flatMap { Int($0) } ?? 2
         _ = try? await target.execute("alter session set plsql_optimize_level = 1")
         // DBMS_OUTPUT przed DEBUG_ON — potem każde wywołanie PL/SQL w tej sesji czeka na debuger.
         if document.outputEnabled && workspace.settings.dbmsOutputEnabled {
             if workspace.settings.dbmsOutputClearBeforeExecute { document.output = [] }
             try? await SessionUtilities.enableOutput(target, bufferSize: workspace.settings.dbmsOutputBufferSize)
         }
-        let initResult = try await target.execute("begin :id := dbms_debug.initialize; dbms_debug.debug_on; end;",
+        let initResult: ExecutionResult
+        do {
+            initResult = try await target.execute("begin :id := dbms_debug.initialize; dbms_debug.debug_on; end;",
                                                   binds: [BindVariable(name: "id", direction: .output, maxSize: 100)])
+        } catch {
+            await restoreOptimizeLevel()
+            throw error
+        }
         // Od DEBUG_ON błąd startu nie może zostawić sesji okna w trybie debugowania (każde kolejne wywołanie PL/SQL
         // czekałoby na debuger): z dołączoną sesją nadzorującą — sprzątanie jak przy Stop, bez niej — zamknięcie sesji.
         var attached = false
@@ -184,14 +198,14 @@ public final class DebuggerEngine {
             state = .finished
             throw error
         }
-        if info.terminated { return try await finish() }
+        if info.terminated { return await finish() }
         // Punkty przerwania na kodach błędów (ORA-n, PD-DBG-008).
         for code in workspace.errorBreakpoints {
             _ = try? await debug.execute("begin :st := dbms_debug.set_oer_breakpoint(:c); end;",
                                          binds: [BindVariable(name: "st", type: .number, direction: .output),
                                                  BindVariable(name: "c", type: .number, value: .number(String(code)))])
         }
-        try await continueExecution(breakflags: "dbms_debug.break_any_call")
+        try await continueOrAbandon(breakflags: "dbms_debug.break_any_call")
     }
 
     /// Krok albo uruchomienie do punktu przerwania / wyjątku / końca (UG 5.10).
@@ -204,8 +218,8 @@ public final class DebuggerEngine {
             let exc = s == .runToException ? " + dbms_debug.break_exception" : ""
             while state == .paused {
                 let inBlock = location?.isTestBlock == true
-                try await continueExecution(breakflags: (inBlock ? "dbms_debug.break_next_line" : "dbms_debug.break_any_return") + exc)
-                guard state == .paused, let l = location else { return }
+                try await continueOrAbandon(breakflags: (inBlock ? "dbms_debug.break_next_line" : "dbms_debug.break_any_return") + exc)
+                guard state == .paused, !stopRequested, let l = location else { return }
                 if lastReason == 3 || lastReason == 11 || lastReason == 26 { return }                  // punkt przerwania jednostki / wyjątek
                 if l.isTestBlock, blockLines.contains(l.line) {
                     let bp = workspace.breakpoints.first { $0.enabled && $0.document == document.id.raw && $0.line == l.line }
@@ -222,12 +236,36 @@ public final class DebuggerEngine {
         case .run: "0"
         case .runToException: "dbms_debug.break_exception"
         }
-        try await continueExecution(breakflags: flags)
+        try await continueOrAbandon(breakflags: flags)
+    }
+
+    /// Krok z obsługą błędu sesji nadzorującej: sesja okna nie może zostać w trybie debugowania (każde kolejne wywołanie
+    /// PL/SQL czekałoby na debuger) — sprzątanie jak przy końcu programu i stan „zakończony”.
+    func continueOrAbandon(breakflags: String) async throws {
+        do {
+            try await continueExecution(breakflags: breakflags)
+        } catch {
+            await cleanUp()
+            location = nil
+            stack = []
+            variables = []
+            state = .finished
+            throw error
+        }
     }
 
     /// Przerywa program (abort) i kończy sesję debugowania.
     public func stop() async {
         guard state == .paused || state == .running else { return }
+        // Krok w toku: program zatrzymany na punkcie przerwania czekałby na debuger, a Stop na program — pętla zdarzeń
+        // zatrzymuje się przy najbliższym zdarzeniu (bez odczytu zmiennych) i dopiero wtedy przerwanie.
+        if state == .running {
+            stopRequested = true
+            defer { stopRequested = false }
+            while state == .running { try? await Task.sleep(for: .milliseconds(20)) }
+            // Program zakończył się sam (finish() już posprzątał).
+            guard state == .paused else { return }
+        }
         // Program może przechwycić przerwanie (np. ut.run uruchamia dalsze testy) — przerwanie aż do zakończenia.
         if state == .paused {
             for _ in 0..<200 {
@@ -295,7 +333,13 @@ public final class DebuggerEngine {
             lastReason = info.reason
             Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner).\(info.name)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
             // reason_exit (15) / reason_knl_exit (25) / zakończony program.
-            if info.terminated || info.reason == 15 || info.reason == 25 { return try await finish() }
+            if info.terminated || info.reason == 15 || info.reason == 25 { return await finish() }
+            // Stop w trakcie kroku — program czeka na debuger, przerwie go stop().
+            if stopRequested {
+                location = nil
+                state = .paused
+                return
+            }
             // Punkt przerwania z licznikiem przejść: kontynuacja do osiągnięcia liczby (UG 5.10 „Pass Count”).
             if info.breakpoint > 0, let id = bpNumbers[info.breakpoint],
                let bp = workspace.breakpoints.first(where: { $0.id == id }), bp.passCount > 0 {
@@ -337,8 +381,12 @@ public final class DebuggerEngine {
         guard document.outputEnabled, workspace.settings.dbmsOutputEnabled, let debug else { return }
         Self.trace("output: read while paused")
         defer { Self.trace("output: done") }
-        let block = "declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); l varchar2(32767); st integer; " +
-            "begin loop dbms_output.get_line(l, st); exit when st <> 0; pp.extend; pp(pp.count) := l; end loop; :1 := pp; end;"
+        // Elementy SYS.DBMS_DEBUG_VC2COLL mają limit w bajtach (zakładamy najgorszy przypadek VARCHAR2(1000) BYTE):
+        // linia dzielona na kawałki po 249 znaków (≤ 4 bajty na znak), koniec linii — chr(10) w ostatnim kawałku.
+        let block = "declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); l varchar2(32767); st integer; i pls_integer; " +
+            "begin loop dbms_output.get_line(l, st); exit when st <> 0; i := 1; " +
+            "loop pp.extend; pp(pp.count) := substr(l, i, 249); i := i + 249; exit when i > nvl(length(l), 0); end loop; " +
+            "pp(pp.count) := pp(pp.count) || chr(10); end loop; :1 := pp; end;"
         let r = try? await debug.execute("""
             declare
               coll sys.dbms_debug_vc2coll;
@@ -348,7 +396,7 @@ public final class DebuggerEngine {
               dbms_debug.execute(:b, -1, 1, coll, errm);
               if coll is not null and coll.count > 0 then
                 for i in coll.first .. coll.last loop
-                  if length(s) < 30000 or s is null then s := s || coll(i) || chr(10); end if;
+                  if nvl(lengthb(s), 0) <= 31000 then s := s || coll(i); end if;
                 end loop;
               end if;
               :s := s;
@@ -367,12 +415,13 @@ public final class DebuggerEngine {
         let isQuery = trimmed.lowercased().hasPrefix("select") || trimmed.lowercased().hasPrefix("with")
         // Średnik końcowy tylko z zapytania (blok PL/SQL musi go zachować).
         if isQuery { trimmed = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "; \n")) }
-        // Zapytanie: wiersze jako JSON (DBMS_SQL jest zablokowany w DBMS_DEBUG.EXECUTE — ORA-29471), w kawałkach po 4000 znaków.
+        // Zapytanie: wiersze jako JSON (DBMS_SQL jest zablokowany w DBMS_DEBUG.EXECUTE — ORA-29471), w kawałkach po 250 znaków
+        // (elementy SYS.DBMS_DEBUG_VC2COLL mają limit w bajtach — najgorszy przypadek VARCHAR2(1000) BYTE, ≤ 4 bajty na znak).
         let what = isQuery ? """
             declare pp sys.dbms_debug_vc2coll := sys.dbms_debug_vc2coll(); j clob;
             begin select json_arrayagg(json_object(*) returning clob) into j from (\(trimmed) fetch first 100 rows only);
               if j is not null then
-                for i in 0 .. ceil(dbms_lob.getlength(j) / 4000) - 1 loop pp.extend; pp(pp.count) := dbms_lob.substr(j, 4000, i * 4000 + 1); end loop;
+                for i in 0 .. ceil(dbms_lob.getlength(j) / 250) - 1 loop pp.extend; pp(pp.count) := dbms_lob.substr(j, 250, i * 250 + 1); end loop;
               end if;
               :1 := pp; end;
             """ : trimmed
@@ -385,7 +434,7 @@ public final class DebuggerEngine {
               dbms_debug.execute(:w, -1, :b, coll, errm);
               if coll is not null and coll.count > 0 then
                 for i in coll.first .. coll.last loop
-                  if length(s) < 30000 or s is null then s := s || coll(i) || chr(10); end if;
+                  if nvl(lengthb(s), 0) <= 31000 then s := s || coll(i) || chr(10); end if;
                 end loop;
               end if;
               :s := s;
@@ -419,16 +468,26 @@ public final class DebuggerEngine {
                     switch json[i] {
                     case "n": s.append("\n")
                     case "t": s.append("\t")
+                    case "r": s.append("\r")
+                    case "b": s.append("\u{8}")
+                    case "f": s.append("\u{C}")
                     case "u":
                         let hex = json[json.index(after: i)...].prefix(4)
-                        if let v = UInt32(hex, radix: 16), let u = Unicode.Scalar(v) { s.unicodeScalars.append(u) }
                         i = json.index(i, offsetBy: 4, limitedBy: json.endIndex) ?? json.endIndex
+                        guard var v = UInt32(hex, radix: 16) else { break }
+                        // Para surogatów (znaki spoza BMP, np. emoji): \uD83D\uDE00.
+                        if (0xD800...0xDBFF).contains(v), i < json.endIndex, json[json.index(after: i)...].hasPrefix("\\u"),
+                           let low = UInt32(json[json.index(after: i)...].dropFirst(2).prefix(4), radix: 16), (0xDC00...0xDFFF).contains(low) {
+                            v = 0x10000 + ((v - 0xD800) << 10) + (low - 0xDC00)
+                            i = json.index(i, offsetBy: 6, limitedBy: json.endIndex) ?? json.endIndex
+                        }
+                        if let u = Unicode.Scalar(v) { s.unicodeScalars.append(u) }
                     default: s.append(json[i])
                     }
                 } else {
                     s.append(json[i])
                 }
-                i = json.index(after: i)
+                if i < json.endIndex { i = json.index(after: i) }
             }
             return s
         }
@@ -450,7 +509,7 @@ public final class DebuggerEngine {
                     continue
                 }
             }
-            i = json.index(after: i)
+            if i < json.endIndex { i = json.index(after: i) }
         }
         return rows
     }
@@ -485,12 +544,11 @@ public final class DebuggerEngine {
     /// Zmiana wartości zmiennej skalarnej w bieżącej ramce (SET_VALUE, „Set Variable”, UG 5.10).
     public func setValue(_ path: String, to value: String) async throws {
         guard state == .paused, let debug else { return }
-        let literal: String
-        if value.uppercased() == "NULL" || Double(value.replacingOccurrences(of: ",", with: ".")) != nil || ["TRUE", "FALSE"].contains(value.uppercased()) {
-            literal = value.replacingOccurrences(of: ",", with: ".")
-        } else {
-            literal = "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
+        func find(_ vs: [DebugVariable]) -> DebugVariable? {
+            for v in vs { if v.path == path { return v }; if let c = find(v.children ?? []) { return c } }
+            return nil
         }
+        let literal = Self.literal(value, type: find(variables + watchValues)?.type ?? "")
         let r = try await debug.execute("begin :st := dbms_debug.set_value(:f, :a); end;", binds: [
             BindVariable(name: "st", type: .number, direction: .output),
             BindVariable(name: "f", type: .number, value: .number(String(selectedFrame))),
@@ -502,8 +560,37 @@ public final class DebuggerEngine {
         await loadWatches()
     }
 
+    /// Typy liczbowe PL/SQL (pierwsze słowo deklaracji) — wartość bez apostrofów.
+    nonisolated static let numericTypes: Set<String> = ["NUMBER", "INTEGER", "INT", "PLS_INTEGER", "BINARY_INTEGER", "SIMPLE_INTEGER",
+        "BINARY_FLOAT", "BINARY_DOUBLE", "FLOAT", "DECIMAL", "DEC", "NUMERIC", "REAL", "SMALLINT", "DOUBLE", "NATURAL", "NATURALN",
+        "POSITIVE", "POSITIVEN", "SIGNTYPE"]
+
+    /// Liczba dziesiętna w zapisie SQL (bez inf/nan/zapisu szesnastkowego); `leadingZeros: false` — bez zer wiodących (`007`).
+    nonisolated static func isPlainNumber(_ s: String, leadingZeros: Bool = true) -> Bool {
+        guard s.range(of: #"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$"#, options: .regularExpression) != nil else { return false }
+        return leadingZeros || s.range(of: #"^[+-]?0\d"#, options: .regularExpression) == nil
+    }
+
+    /// Literał PL/SQL dla SET_VALUE wg typu deklaracji zmiennej: liczba (przecinek dziesiętny → kropka) tylko dla typów
+    /// liczbowych, TRUE/FALSE dla BOOLEAN, napisy w apostrofach. Typ nieznany (`%TYPE`, pole) — liczba bez zer wiodących.
+    nonisolated static func literal(_ value: String, type: String) -> String {
+        let v = value.trimmingCharacters(in: .whitespaces)
+        if v.uppercased() == "NULL" { return "NULL" }
+        let base = type.uppercased().split(whereSeparator: { $0 == "(" || $0 == " " }).first.map(String.init) ?? ""
+        let known = !base.isEmpty && !base.contains("%") && !base.contains(".")
+        let number = v.replacingOccurrences(of: ",", with: ".")
+        if known {
+            if numericTypes.contains(base), isPlainNumber(number) { return number }
+            if base == "BOOLEAN", ["TRUE", "FALSE"].contains(v.uppercased()) { return v.uppercased() }
+        } else {
+            if isPlainNumber(number, leadingZeros: false) { return number }
+            if ["TRUE", "FALSE"].contains(v.uppercased()) { return v.uppercased() }
+        }
+        return "'" + value.replacingOccurrences(of: "'", with: "''") + "'"
+    }
+
     /// Koniec programu: wynik wykonania (zmienne OUT jak w Test Window) albo błąd ze stosem.
-    func finish() async throws {
+    func finish() async {
         state = .finished
         location = nil
         stack = []
@@ -526,6 +613,9 @@ public final class DebuggerEngine {
         } catch let e as OracleError {
             document.errorStack = TestRunner.errorStack(e.message)
             message = e.message.components(separatedBy: "\n").first
+        } catch {
+            // Inne błędy (zamknięta sesja, anulowanie) — też sprzątanie, inaczej sesja okna zostaje w trybie debugowania.
+            message = error.localizedDescription
         }
         await cleanUp()
         if document.outputEnabled && workspace.settings.dbmsOutputEnabled, let t = target, let lines = try? await SessionUtilities.readOutput(t) {
@@ -549,8 +639,16 @@ public final class DebuggerEngine {
             _ = try? await off.value
             _ = try? await debug.execute("begin dbms_debug.detach_session; end;")
         }
+        await restoreOptimizeLevel()
         execution = nil
         document.isExecuting = false
+    }
+
+    /// PLSQL_OPTIMIZE_LEVEL sesji okna sprzed startu (po DEBUG_OFF — inaczej czekałby na debuger).
+    func restoreOptimizeLevel() async {
+        guard let level = previousOptimizeLevel else { return }
+        previousOptimizeLevel = nil
+        _ = try? await target?.execute("alter session set plsql_optimize_level = \(level)")
     }
 
     // MARK: Stos i zmienne
@@ -602,8 +700,7 @@ public final class DebuggerEngine {
         // Ramka dla GET_VALUE: 0 — bieżąca; numeracja od najnowszej.
         let frameNo = selectedFrame
         var out: [DebugVariable] = []
-        for d in ctx.declarations where [.variable, .constant, .parameter, .cursor].contains(d.kind) {
-            if d.kind == .cursor { continue }
+        for d in ctx.declarations where [.variable, .constant, .parameter].contains(d.kind) {
             out.append(await variable(d.name, path: d.name, type: d.detail, frame: frameNo, context: ctx))
         }
         // Zmienne globalne pakietu: prywatne (ciało) i publiczne (specyfikacja) — GET_VALUE z uchwytem pakietu (UG 5.10).
@@ -719,7 +816,7 @@ public final class DebuggerEngine {
         ])
         let st = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
         let v = r?.outBinds["v"] ?? r?.outBinds["V"]
-        Self.trace("get_value \(path) frame=\(frame) status=\(st) value=\(v.map { "\($0)" } ?? "-") binds=\(r?.outBinds.keys.sorted() ?? [])")
+        Self.trace("get_value \(path) frame=\(frame) status=\(st)")
         return (st, v.flatMap { $0.isNull ? nil : $0.displayText })
     }
 
@@ -735,7 +832,7 @@ public final class DebuggerEngine {
               st := dbms_debug.get_indexes(:n, :f, h, ix);
               if ix.count > 0 then
                 for i in ix.first .. ix.last loop
-                  if ix.exists(i) and length(s) < 30000 or s is null then s := s || ix(i) || ','; end if;
+                  if ix.exists(i) and (length(s) < 30000 or s is null) then s := s || ix(i) || ','; end if;
                 end loop;
               end if;
               :s := s;
@@ -753,7 +850,8 @@ public final class DebuggerEngine {
         let up = type.uppercased().trimmingCharacters(in: .whitespaces)
         if let decl = ctx.typeDeclarations[up] { return CodeAssistant.recordFields(decl).map(\.name) }
         // Typ obiektowy schematu (zmienna obiektu, SELF w metodzie): atrybuty z ALL_TYPE_ATTRS.
-        if !up.isEmpty, !up.contains("%"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)),
+        // Rekord pętli FOR (typ „record”) nie ma typu w słowniku.
+        if !up.isEmpty, up != "RECORD", !up.contains("%"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)),
            let s = try? await m.session() {
             let parts = up.split(separator: ".").map(String.init)
             let owner = parts.count > 1 ? parts[0] : nil
@@ -820,7 +918,7 @@ public final class DebuggerEngine {
             let (st, v) = await getValue(name, frame: 0)
             if st == 0 || st == 32 {
                 sql += ns.substring(with: NSRange(location: pos, length: start - pos))
-                if st == 32 || v == nil { sql += "NULL" } else if let v, Double(v) != nil { sql += v } else { sql += "'" + (v ?? "").replacingOccurrences(of: "'", with: "''") + "'" }
+                if st == 32 || v == nil { sql += "NULL" } else if let v, Self.isPlainNumber(v, leadingZeros: false) { sql += v } else { sql += "'" + (v ?? "").replacingOccurrences(of: "'", with: "''") + "'" }
                 pos = stop
             }
             i = end + 1

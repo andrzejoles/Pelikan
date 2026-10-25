@@ -9,7 +9,8 @@ public struct TestExpectation: Sendable, Codable, Hashable {
     public var value: String
     public init(_ op: Operator, _ value: String = "") { self.op = op; self.value = value }
 
-    /// Czy wartość spełnia oczekiwanie (LIKE z `%` i `_`, bez wielkości liter jak w Oracle — tu z rozróżnianiem).
+    /// Czy wartość spełnia oczekiwanie (LIKE z `%` i `_`, z rozróżnianiem wielkości liter jak w Oracle; `%` i `_` obejmują
+    /// też znaki nowej linii — wielolinijkowe DBMS_OUTPUT).
     public func matches(_ actual: String?) -> Bool {
         switch op {
         case .isNull: return actual == nil || actual == ""
@@ -17,7 +18,7 @@ public struct TestExpectation: Sendable, Codable, Hashable {
         case .equals: return actual == value
         case .inList: return value.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.contains(actual ?? "")
         case .like:
-            let pattern = "^" + NSRegularExpression.escapedPattern(for: value).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + "$"
+            let pattern = "(?s)^" + NSRegularExpression.escapedPattern(for: value).replacingOccurrences(of: "%", with: ".*").replacingOccurrences(of: "_", with: ".") + "$"
             return (actual ?? "").range(of: pattern, options: [.regularExpression]) != nil
         }
     }
@@ -109,19 +110,19 @@ public enum TestManager {
             let value = v.input.map { resolve($0, globals: globals) }
             return TestVariable(name: v.name, type: v.type, value: value ?? "", isNull: value == nil)
         }
-        let key = ws.sessions.key(forDocument: doc.id, connection: connectionID)
-        defer {
-            let s = ws.sessions.existingSession(key)
-            Task { try? await s?.rollback(); await ws.sessions.close(key) }
-        }
+        // Osobna sesja także w trybie dual/single — sesja główna (transakcje okien) zostaje nietknięta.
+        let key = SessionKey(connectionID: connectionID, purpose: .tool("tests-\(doc.id.description.prefix(8))"))
+        doc.sessionPurpose = key.purpose
         var failures: [String] = []
         let started = Date()
         do {
-            _ = try await TestRunner.execute(doc, in: ws)
+            _ = try await TestRunner.execute(doc, in: ws, allowAutoCommit: false)
         } catch {
             failures.append(L10n.tr("Błąd: \(error.localizedDescription)"))
         }
         let seconds = Date().timeIntervalSince(started)
+        try? await ws.sessions.existingSession(key)?.rollback()
+        await ws.sessions.close(key)
         if failures.isEmpty {
             for v in c.variables {
                 guard let exp = v.expected else { continue }

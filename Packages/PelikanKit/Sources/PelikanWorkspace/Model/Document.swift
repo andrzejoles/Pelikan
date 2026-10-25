@@ -95,6 +95,8 @@ public final class Document: Identifiable {
     /// i innych komend (bez cichego przejścia na połączenie główne).
     public var isDisconnected = false
     public var connectionPinned = false
+    /// Własny cel sesji dokumentu spoza listy okien (np. Test Manager) zamiast sesji wg trybu sesji.
+    public var sessionPurpose: SessionPurpose?
     /// Konsola zapytań połączenia (DG-CONS-001): tekst zachowywany automatycznie, bez pliku.
     public var consoleConnectionID: UUID?
 

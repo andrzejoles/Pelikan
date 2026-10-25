@@ -488,7 +488,7 @@ struct GitDeployStatusView: View {
                     Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced))
                 }
                 TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced)) }
-                TableColumn(L10n.tr("remote")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced)) }
+                TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced)) }
             }
             if let message { Text(message).font(.caption).foregroundStyle(.red) }
         }

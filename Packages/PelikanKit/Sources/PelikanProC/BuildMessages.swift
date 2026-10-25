@@ -45,8 +45,10 @@ public enum BuildMessageParser {
     /// `Semantic error at line 12, column 5, file prog.pc:` / `Syntax error at line …` / `Error at line 12, column 5 in file prog.pc`
     static let pccLocation = try! NSRegularExpression(
         pattern: #"^(?:Semantic error|Syntax error|Error|Warning) at line (\d+), column (\d+),? (?:in )?file (.+?):?\s*$"#)
-    /// Polecenie kompilacji w wyjściu `make` (plik bieżący dla `-qsrcmsg` bez nazwy pliku w komunikacie).
-    static let compileCommand = try! NSRegularExpression(pattern: #"(?:^|\s)(?:xlc|xlc_r|cc|cc_r|xlC|xlC_r)\b.*\s-c\s+(\S+\.(?:c|C|cpp))\b"#)
+    /// Polecenie kompilacji w wyjściu `make` (plik bieżący dla `-qsrcmsg` bez nazwy pliku w komunikacie) — plik źródłowy
+    /// to ostatni `*.c`/`*.C`/`*.cpp` w linii, także gdy po `-c` są inne opcje (`xlc -c -q64 -O2 foo.c`).
+    static let compileCommand = try! NSRegularExpression(pattern: #"(?:^|\s)(?:xlc|xlc_r|cc|cc_r|xlC|xlC_r)\b.*\s-c(?:\s|$)"#)
+    static let sourceFile = try! NSRegularExpression(pattern: #"(?:^|\s)(\S+\.(?:c|C|cpp))(?=\s|$)"#)
 
     static func groups(_ re: NSRegularExpression, _ s: String) -> [String?]? {
         let ns = s as NSString
@@ -84,7 +86,10 @@ public enum BuildMessageParser {
         let lines = output.replacingOccurrences(of: "\r", with: "").components(separatedBy: "\n")
         for (i, raw) in lines.enumerated() {
             let line = raw
-            if let g = groups(compileCommand, line), let f = g[0] { currentFile = f }
+            if groups(compileCommand, line) != nil,
+               let m = sourceFile.matches(in: line, range: NSRange(location: 0, length: (line as NSString).length)).last {
+                currentFile = (line as NSString).substring(with: m.range(at: 1))
+            }
             if let g = groups(xlcLine, line) {
                 out.append(BuildMessage(tool: .xlc, file: g[0], line: g[1].flatMap { Int($0) }, column: g[2].flatMap { Int($0) },
                                         severity: xlcSeverity(g[4] ?? "S"), code: g[3] ?? "", text: g[5] ?? "", outputLine: i + 1))
@@ -96,9 +101,10 @@ public enum BuildMessageParser {
                 markerColumns = [:]
                 continue
             }
-            // Znacznik kolumn pod linią źródła: kropki i litery; kolumna = pozycja litery względem `|` linii źródła.
+            // Znacznik kolumn pod linią źródła: kropki i litery (bez kropek — tylko tuż pod linią źródła, np. błąd w kolumnie 1);
+            // kolumna = pozycja litery względem `|` linii źródła.
             if srcLine != nil, line.trimmingCharacters(in: .whitespaces).first.map({ $0 == "." || $0.isLetter }) == true,
-               line.contains("."),
+               line.contains(".") || (i > 0 && groups(xlcSourceLine, lines[i - 1]) != nil),
                line.allSatisfy({ $0 == " " || $0 == "." || $0.isLowercase }), line.contains(where: { $0.isLowercase }) {
                 let prev = i > 0 ? lines[i - 1] : ""
                 let bar = prev.firstIndex(of: "|").map { prev.distance(from: prev.startIndex, to: $0) } ?? 0
