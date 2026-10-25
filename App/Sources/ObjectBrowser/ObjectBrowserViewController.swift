@@ -14,6 +14,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     private var tokens: [ObservationToken] = []
     private var lastConnection: UUID?
     private var lastGeneration = -1
+    private var lastRecent: [DBObject] = []
     private var owner: String?          // nil — wszyscy użytkownicy
     private var ownerMode = 0           // 0 bieżący, 1 wszyscy, 2 wybrany
 
@@ -119,7 +120,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     private func modelChanged() {
         let conn = workspace.sessions.mainConnectionID
         let generation = workspace.metadata()?.generation ?? 0
-        _ = workspace.metadata()?.recent.count
+        let recent = workspace.metadata()?.recent ?? []
+        defer { lastRecent = recent }
         if conn != lastConnection {
             lastConnection = conn
             owner = nil
@@ -129,6 +131,11 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         } else if generation != lastGeneration {
             lastGeneration = generation
             Task { await reloadAll(users: false) }
+        } else if recent != lastRecent, let node = roots.first(where: { if case .recent = $0.kind { true } else { false } }),
+                  node.children != nil {
+            // Folder „Ostatnie” już wczytany — `touch` nie zmienia generacji, więc lista odświeżana tutaj.
+            node.children = recent.map { Node(.object($0)) }
+            outline.reloadItem(node, reloadChildren: true)
         }
     }
 
@@ -539,7 +546,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 }
 
 /// Okno informacji o obiekcie (Opis, Właściwości): tabela, kopiowanie zaznaczenia, niemodalne.
-final class ObjectInfoWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate {
+final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
     private let rows: [[String]]
     private let table = NSTableView()
     private static var open: [ObjectInfoWindowController] = []
@@ -572,9 +579,11 @@ final class ObjectInfoWindowController: NSWindowController, NSTableViewDataSourc
         scroll.hasVerticalScroller = true
         w.contentView = scroll
         w.center()
-        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: w, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { Self.open.removeAll { $0 === self } }
-        }
+        w.delegate = self
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        Self.open.removeAll { $0 === self }
     }
 
     @available(*, unavailable)

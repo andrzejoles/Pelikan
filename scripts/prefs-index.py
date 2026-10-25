@@ -2,17 +2,28 @@
 """Indeks wyszukiwarki Preferencji (PD-PREF-001) z etykiet paneli w App/Sources/Preferences.
 
 Uruchomienie bez argumentów zapisuje App/Sources/Preferences/PreferenceIndex.swift; `--check` kończy się błędem,
-gdy plik jest nieaktualny (CI). Etykiety: Section, Toggle, Picker, TextField, Stepper, Button, ColorPicker z
-`L10n.tr("…")` bez interpolacji, w strukturach `…Pane: View` wymienionych w PreferencesView.
+gdy plik jest nieaktualny (CI). Etykiety: Section, Toggle, Picker, TextField, Stepper, ColorPicker z `L10n.tr("…")`,
+etykiety `Text(L10n.tr("…"))` (także obie gałęzie `warunek ? … : …`) w domknięciu Stepper/Toggle oraz pola TextField z etykietą z listy `ForEach([…])`
+(np. katalogi startowe, NLS) — w strukturach `…Pane: View` wymienionych w PreferencesView. Przyciski są pomijane
+(to czynności, nie ustawienia). Etykieta w indeksie to klucz L10n (interpolacja `\\(…)` → `%@`, `%` → `%%`);
+wyszukiwarka pokazuje `%@` jako „…”.
 """
 import pathlib
 import re
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from l10n import ParseError, parse_key, skip_interpolation, strip_comments  # noqa: E402
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DIR = ROOT / "App/Sources/Preferences"
 OUT = DIR / "PreferenceIndex.swift"
-CONTROL = re.compile(r'\b(Section|Toggle|Picker|TextField|Stepper|Button|ColorPicker)\(\s*L10n\.tr\("((?:[^"\\]|\\.)*)"\)')
+# Literał klucza zaczyna się na końcu dopasowania (cudzysłów otwierający).
+STRING = r'"(?:[^"\\\n]|\\.)*"'
+CONTROL = re.compile(r'\b(?:Section|Toggle|Picker|TextField|Stepper|ColorPicker)\(\s*L10n\.tr\(\s*(?=")')
+CLOSURE_LABEL = re.compile(r'\b(?:Stepper|Toggle)\((?:[^{}"\n]|' + STRING + r')*?\)\s*\{\s*Text\(')
+TR = re.compile(r'L10n\.tr\(\s*(?=")')
+LABEL_LIST = re.compile(r'\bForEach\(\[((?:[^\]"]|' + STRING + r')*)\][^{]*\{\s*(?:\w+\s*,\s*)?(\w+)\s+in\s+TextField\(\s*(\w+)\s*,')
 
 
 def panes():
@@ -29,16 +40,49 @@ def panes():
     return order, sources
 
 
+def labels(src):
+    """Klucze etykiet ustawień w kolejności występowania w źródle panelu."""
+    found = []
+    starts = [m.end() for m in CONTROL.finditer(src)]
+    for m in CLOSURE_LABEL.finditer(src):
+        try:
+            end = skip_interpolation(src, m.end())
+        except ParseError:
+            continue
+        starts += [m.end() + t.end() for t in TR.finditer(src[m.end():end])]
+    for i in starts:
+        try:
+            found.append((i, parse_key(src, i)[0]))
+        except ParseError:
+            pass
+    for m in LABEL_LIST.finditer(src):
+        if m.group(2) != m.group(3):
+            continue
+        items = m.group(1)
+        calls = [c.end() for c in TR.finditer(items)]
+        starts = calls or [c.start() for c in re.finditer(STRING, items)]
+        for i in starts:
+            try:
+                found.append((m.start(1) + i, parse_key(items, i)[0]))
+            except ParseError:
+                pass
+    return [key for _, key in sorted(found)]
+
+
+def swift_literal(text):
+    return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
 def generate():
     order, sources = panes()
     lines = []
     for pane in order:
         seen = set()
-        for _, label in CONTROL.findall(sources.get(pane, "")):
-            if "\\(" in label or label in seen:
+        for label in labels(strip_comments(sources.get(pane, ""))):
+            if not label.strip() or label in seen:
                 continue
             seen.add(label)
-            lines.append(f'        ("{pane}", "{label}"),')
+            lines.append(f'        ("{pane}", "{swift_literal(label)}"),')
     return (
         "// Wygenerowane przez scripts/prefs-index.py — nie edytować ręcznie.\n\n"
         "/// Etykiety ustawień według panelu dla wyszukiwarki Preferencji (PD-PREF-001); teksty to klucze L10n.\n"

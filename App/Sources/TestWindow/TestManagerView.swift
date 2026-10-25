@@ -124,7 +124,9 @@ struct TestManagerView: View {
     private func open() {
         let p = NSOpenPanel()
         p.allowedContentTypes = [UTType(filenameExtension: "pts") ?? .json]
-        guard p.runModal() == .OK, let url = p.url, let data = try? Data(contentsOf: url), let s = try? TestSet.decode(data) else { return }
+        guard p.runModal() == .OK, let url = p.url else { return }
+        let s: TestSet
+        do { s = try TestSet.decode(Data(contentsOf: url)) } catch { workspace.ui?.showError(error.localizedDescription); return }
         testSet = s
         file = url
         results = [:]
@@ -135,8 +137,8 @@ struct TestManagerView: View {
         applyGlobals()
         let p = NSSavePanel()
         p.nameFieldStringValue = file?.lastPathComponent ?? "\(testSet.name).pts"
-        guard p.runModal() == .OK, let url = p.url, let data = try? testSet.encoded() else { return }
-        try? data.write(to: url)
+        guard p.runModal() == .OK, let url = p.url else { return }
+        do { try testSet.encoded().write(to: url) } catch { workspace.ui?.showError(error.localizedDescription); return }
         file = url
     }
 }

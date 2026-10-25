@@ -4453,6 +4453,34 @@
         }
       }
     },
+    "Bez powiadomienia o końcu długiego wykonania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No notification when a long execution finishes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Benachrichtigung am Ende langer Ausführungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin aviso al terminar una ejecución larga"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без сповіщення про завершення довгого виконання"
+          }
+        }
+      }
+    },
     "Bez rozróżniania wielkości liter" : {
       "localizations" : {
         "en" : {
@@ -17917,6 +17945,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Іменовані фільтри"
+          }
+        }
+      }
+    },
+    "Fioletowy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purple"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Violett"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Morado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фіолетовий"
           }
         }
       }
@@ -35813,6 +35869,34 @@
         }
       }
     },
+    "Nie można zapisać pliku %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot save file %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei %@ kann nicht gespeichert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede guardar el archivo %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається зберегти файл %@"
+          }
+        }
+      }
+    },
     "Nie można zapisać tekstu okna" : {
       "localizations" : {
         "en" : {
@@ -49617,6 +49701,34 @@
         }
       }
     },
+    "Pobieraj LOB-y na żądanie (podgląd pierwszych 4000 bajtów)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetch LOBs on demand (preview of the first 4000 bytes)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LOBs bei Bedarf abrufen (Vorschau der ersten 4000 Bytes)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtener LOB bajo demanda (vista previa de los primeros 4000 bytes)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажувати LOB на вимогу (перегляд перших 4000 байтів)"
+          }
+        }
+      }
+    },
     "Pobieraj dalej" : {
       "localizations" : {
         "en" : {
@@ -54569,6 +54681,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Підтвердження фіксації або відкату транзакції"
+          }
+        }
+      }
+    },
+    "Powiadamiaj o końcu wykonania dłuższego niż %@ s" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notify when an execution longer than %@ s finishes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benachrichtigen, wenn eine Ausführung länger als %@ s endet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avisar al terminar una ejecución de más de %@ s"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сповіщати про завершення виконання, довшого за %@ с"
           }
         }
       }
@@ -61573,6 +61713,62 @@
         }
       }
     },
+    "Rozmiar bufora: %@ bajtów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffer size: %@ bytes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puffergröße: %@ Bytes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del búfer: %@ bytes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір буфера: %@ байтів"
+          }
+        }
+      }
+    },
+    "Rozmiar bufora: bez limitu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffer size: unlimited"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puffergröße: unbegrenzt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del búfer: sin límite"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір буфера: без обмеження"
+          }
+        }
+      }
+    },
     "Rozmiar kodu PL/SQL" : {
       "localizations" : {
         "en" : {
@@ -67673,6 +67869,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Die Schätzung des Optimizers weicht um mehr als das Zehnfache ab — Statistiken prüfen"
+          }
+        }
+      }
+    },
+    "Szary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gray"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grau"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gris"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сірий"
           }
         }
       }
@@ -86773,6 +86997,34 @@
         }
       }
     },
+    "Wyrównuj kolumny wg zapisanego szablonu zapytania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Align columns using the query's saved template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spalten nach der gespeicherten Vorlage der Abfrage ausrichten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alinear columnas según la plantilla guardada de la consulta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирівнювати стовпці за збереженим шаблоном запиту"
+          }
+        }
+      }
+    },
     "Wyróżnia zaznaczony fragment tłem w wybranym kolorze." : {
       "localizations" : {
         "en" : {
@@ -89541,6 +89793,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Scheduler-Jobs"
+          }
+        }
+      }
+    },
+    "Zadania i kolejki usuwa się przez DBMS_SCHEDULER i DBMS_AQADM, nie przez DROP" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs and queues are removed with DBMS_SCHEDULER and DBMS_AQADM, not with DROP"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jobs und Queues werden mit DBMS_SCHEDULER und DBMS_AQADM entfernt, nicht mit DROP"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los trabajos y las colas se eliminan con DBMS_SCHEDULER y DBMS_AQADM, no con DROP"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завдання та черги видаляються через DBMS_SCHEDULER і DBMS_AQADM, а не через DROP"
           }
         }
       }
@@ -108441,6 +108721,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Жоден із вибраних об’єктів не можна скомпілювати"
+          }
+        }
+      }
+    },
+    "Żółty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yellow"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelb"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amarillo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жовтий"
           }
         }
       }

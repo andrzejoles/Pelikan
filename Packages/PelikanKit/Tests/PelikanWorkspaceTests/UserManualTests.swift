@@ -81,9 +81,9 @@ struct UserManualTests {
     @MainActor @Test("Rozdział skrótów z rejestru i keymapy; komenda pomocy")
     func shortcuts() async throws {
         let ws = Workspace()
-        let ch = UserManual.shortcutsChapter(commands: ws.registry.commands.filter { !$0.isPlanned }.map(\.descriptor), chords: { ws.keymap.chords(for: $0) })
+        let ch = UserManual.shortcutsChapter(commands: ws.registry.commands.map(\.descriptor), chords: { ws.keymap.chords(for: $0) })
         #expect(ch.html.contains("<h2>") && ch.html.contains(ws.keymap.chords(for: "sql.execute").first!.displayString))
-        #expect(ws.registry.commands.contains { $0.descriptor.id == "help.manual" && !$0.isPlanned })
+        #expect(ws.registry.commands.contains { $0.descriptor.id == "help.manual" })
     }
 
     @Test("Instrukcja w repozytorium: tłumaczenia mają komplet rozdziałów polskich; obrazki istnieją i są używane")

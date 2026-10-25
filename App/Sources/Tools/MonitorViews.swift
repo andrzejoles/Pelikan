@@ -99,6 +99,8 @@ struct LoadTesterView: View {
         }
         .padding(10)
         .frame(minWidth: 900, minHeight: 520)
+        // Zamknięcie okna kończy test — inaczej wątki działałyby dalej na sesjach bez możliwości zatrzymania.
+        .onDisappear { tester?.stop() }
     }
 
     @ViewBuilder private var results: some View {
@@ -130,7 +132,14 @@ struct LoadTesterView: View {
         guard let conn = workspace.sessions.mainConnectionID else { return }
         Task {
             // Kroki mogą zmieniać dane — strażnik zmian jak dla okna SQL (prod potwierdza, tylko do odczytu blokuje).
-            do { try await workspace.guardModification(test.steps.map(\.sql), connectionID: conn) } catch { return }
+            do {
+                try await workspace.guardModification(test.steps.map(\.sql), connectionID: conn)
+            } catch CommandError.cancelledByUser {
+                return
+            } catch {
+                workspace.ui?.showError(error.localizedDescription)
+                return
+            }
             let t = LoadTester(test, connectionID: conn, in: workspace)
             tester = t
             t.start()
@@ -142,7 +151,7 @@ struct LoadTesterView: View {
         let p = NSSavePanel()
         p.nameFieldStringValue = "test-obciazenia.csv"
         guard p.runModal() == .OK, let url = p.url else { return }
-        try? Data(t.csv().utf8).write(to: url)
+        do { try Data(t.csv().utf8).write(to: url) } catch { workspace.ui?.showError(error.localizedDescription) }
     }
 }
 

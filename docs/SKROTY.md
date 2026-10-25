@@ -215,8 +215,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wykonaj linię poleceń | `cmd.executeLine` |  |  | Brak | PD-CMDW-001 |
 | Zatwierdź (COMMIT) | `session.commit` | F10 †, ⌥⌘↩ | ⌥⌘↩, F10 | Brak | PD-SQLW-014 |
 | Wycofaj (ROLLBACK) | `session.rollback` | ⇧F10 †, ⌥⌘⌫ | ⌥⌘⌫, ⇧F10 | Brak | PD-SQLW-014 |
-| Historia okna › Poprzednie polecenie okna | `sql.historyBack` | ⌥⌘↑ | ⌥⌘↑ | Za zgodą | PD-SQLW-007 |
-| Historia okna › Następne polecenie okna | `sql.historyForward` | ⌥⌘↓ | ⌥⌘↓ | Za zgodą | PD-SQLW-007 |
+| Historia okna › Poprzednie polecenie okna | `sql.historyBack` | ⌥⌘↑ | ⌥⌘↑ | Brak | PD-SQLW-007 |
+| Historia okna › Następne polecenie okna | `sql.historyForward` | ⌥⌘↓ | ⌥⌘↓ | Brak | PD-SQLW-007 |
 | Podstawianie zmiennych | `sql.toggleSubstitution` |  |  | Brak | PD-VAR-005 |
 | Wynik › Następna strona | `grid.nextPage` | ⌘⇟ | ⌘⇟ | Brak | PD-SQLW-004 |
 | Wynik › Ostatnia strona (pobierz wszystkie) | `grid.lastPage` | ⇧⌘⇟ | ⇧⌘⇟ | Brak | PD-SQLW-004 |

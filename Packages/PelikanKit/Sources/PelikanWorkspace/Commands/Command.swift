@@ -251,8 +251,6 @@ public struct Command: Sendable {
     let preview: PreviewHandler?
     /// Czy komenda jest teraz dostępna (stan menu); nil = zawsze.
     let validate: ValidationHandler?
-    /// Komenda zapowiedziana na późniejszy etap.
-    public internal(set) var isPlanned = false
 
     public init(_ descriptor: CommandDescriptor, validate: ValidationHandler? = nil, preview: PreviewHandler? = nil,
                 run: @escaping CommandHandler) {

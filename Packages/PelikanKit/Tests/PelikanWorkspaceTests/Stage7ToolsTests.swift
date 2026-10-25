@@ -298,3 +298,13 @@ final class GateDriver: DatabaseDriver, @unchecked Sendable {
     func availability() -> Result<Void, DatabaseError> { .success(()) }
     func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { GateSession() }
 }
+
+@Suite("Harmonogram (PD-SCHED-001): polecenia bez bazy")
+struct SchedulerSQLTests {
+    @Test("Uruchomienie i zatrzymanie zadania: nazwa jako literał z podwojonym apostrofem")
+    func runAndStop() {
+        #expect(Scheduler.runSQL(owner: "APP", name: "JOB") == "begin dbms_scheduler.run_job('APP.JOB', use_current_session => false); end;")
+        #expect(Scheduler.runSQL(owner: "APP", name: "X');drop table t;--").contains("'APP.X'');drop table t;--'"))
+        #expect(Scheduler.stopSQL(owner: "APP", name: "O'K", force: true).contains("'APP.O''K'"))
+    }
+}

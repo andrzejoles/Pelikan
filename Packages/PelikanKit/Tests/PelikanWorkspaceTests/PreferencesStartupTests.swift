@@ -151,4 +151,13 @@ struct PreferenceOptionalKeysTests {
         let merged = PreferenceSets.merge([PreferenceSet(name: "", kind: .personalUser, values: PreferenceSets.difference(s, from: Settings()))])
         #expect(merged.externalEditor == "Visual Studio Code" && merged.language == "en")
     }
+
+    @Test("Stare ustawienia i zestawy z usuniętymi polami (allowMultipleConnections, autoCommitPostedRecords) wczytują się")
+    func removedFieldsIgnored() throws {
+        let json = #"{"allowMultipleConnections": false, "autoCommitPostedRecords": true, "tabSize": 7}"#
+        #expect(try JSONDecoder.pelikan.decode(Settings.self, from: Data(json.utf8)).tabSize == 7)
+        let old = PreferenceSet(name: "", kind: .personalUser, values: ["autoCommitPostedRecords": .bool(true), "tabSize": .int(5)])
+        #expect(PreferenceSets.merge([old]).tabSize == 5)
+        #expect(PreferenceSets.values(of: Settings())["allowMultipleConnections"] == nil)
+    }
 }

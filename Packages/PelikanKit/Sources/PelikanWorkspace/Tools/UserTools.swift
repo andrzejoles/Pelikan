@@ -117,14 +117,15 @@ public enum UserTools {
         ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("PELIKAN_") }
     }
 
-    /// Proces bez powłoki: argumenty jako tablica po rozwinięciu zmiennych.
+    /// Proces bez powłoki: argumenty jako tablica po rozwinięciu zmiennych. Puste linie pola argumentów (np. końcowa)
+    /// nie są argumentami.
     public static func process(_ tool: UserTool, _ ctx: UserToolContext) throws -> Process {
         guard let exe = resolve(expand(tool.program, ctx)) else {
             throw CommandError.notAvailable(L10n.tr("Nie znaleziono programu „\(tool.program)”"))
         }
         let p = Process()
         p.executableURL = exe
-        p.arguments = tool.arguments.map { expand($0, ctx) }
+        p.arguments = tool.arguments.filter { !$0.isEmpty }.map { expand($0, ctx) }
         p.environment = environment()
         let dir = (expand(tool.workingDirectory, ctx) as NSString).expandingTildeInPath
         if !dir.isEmpty { p.currentDirectoryURL = URL(fileURLWithPath: dir) }

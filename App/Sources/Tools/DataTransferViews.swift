@@ -37,12 +37,14 @@ enum DataTransferUI {
 
     static func schema(_ ws: Workspace) -> String { ws.sessions.connectedSchema(DataTransferCommands.connection(ws)) ?? "" }
 
-    static func save(_ data: Data, name: String, types: [UTType]) -> URL? {
+    /// Zapis przez panel; nil — anulowano, błąd zapisu jest zgłaszany.
+    static func save(_ data: Data, name: String, types: [UTType]) throws -> URL? {
         let p = NSSavePanel()
         p.nameFieldStringValue = name
         p.allowedContentTypes = types
         guard p.runModal() == .OK, let url = p.url else { return nil }
-        do { try data.write(to: url); return url } catch { return nil }
+        try data.write(to: url)
+        return url
     }
 
     static func open(types: [UTType]) -> URL? {
@@ -150,10 +152,10 @@ struct ExportTablesView: View {
             switch method {
             case .sql:
                 let text = try await TableTransfer.sqlInserts(Array(selected), owner: o, options: options, in: s) { t in message = L10n.tr("Eksport \(t)…") }
-                if let url = DataTransferUI.save(Data(text.utf8), name: "\(o.lowercased()).sql", types: [.plainText]) { message = L10n.tr("Zapisano \(url.lastPathComponent)") }
+                message = try DataTransferUI.save(Data(text.utf8), name: "\(o.lowercased()).sql", types: [.plainText]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
             case .native:
                 let data = try await TableTransfer.exportNative(Array(selected), owner: o, whereClause: options.whereClause, in: s) { t in message = L10n.tr("Eksport \(t)…") }
-                if let url = DataTransferUI.save(data, name: "\(o.lowercased()).pdt", types: [.data]) { message = L10n.tr("Zapisano \(url.lastPathComponent)") }
+                message = try DataTransferUI.save(data, name: "\(o.lowercased()).pdt", types: [.data]).map { L10n.tr("Zapisano \($0.lastPathComponent)") } ?? ""
             case .dataPump:
                 message = L10n.tr("Data Pump — eksport w toku…")
                 let r = try await DataPump.export(schema: o, tables: selected.isEmpty ? nil : Array(selected), dumpFile: dumpFile, in: s)

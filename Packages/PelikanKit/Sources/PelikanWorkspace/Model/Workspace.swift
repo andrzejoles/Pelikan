@@ -699,7 +699,7 @@ public final class Workspace {
         // wywołana z argumentami (np. obiekt wskazany nazwą zamiast zaznaczenia) sama sprawdza swój cel. Klucze
         // wewnętrzne („__…”, np. znacznik run_command) nie są argumentami — nie wyłączają sprawdzenia.
         let explicit = arguments.values.keys.contains { !$0.hasPrefix("__") }
-        if !command.isPlanned, !explicit, let validate = command.validate, !validate(self) {
+        if !explicit, let validate = command.validate, !validate(self) {
             throw CommandError.notAvailable(L10n.tr("„\(command.descriptor.title)” jest teraz niedostępne"))
         }
         var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)

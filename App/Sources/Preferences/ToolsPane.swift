@@ -12,16 +12,15 @@ struct ToolsPane: View {
     var body: some View {
         Form {
             Section(L10n.tr("Szukaj w sieci")) {
-                ForEach(workspace.settings.webSearches.indices, id: \.self) { i in
+                // Wiersze wg identyfikatora (nie indeksu) — usunięcie wiersza nie unieważnia wiązań pozostałych.
+                ForEach(workspace.settings.webSearches) { s in
                     // Pola bez etykiet formularza (etykieta w każdym wierszu ucinała nazwę) — opis w podpowiedzi pola.
                     HStack {
-                        TextField(L10n.tr("Nazwa"), text: Binding(get: { workspace.settings.webSearches[i].name },
-                                                                 set: { workspace.settings.webSearches[i].name = $0 }), prompt: Text(L10n.tr("Nazwa")))
+                        TextField(L10n.tr("Nazwa"), text: field(\.webSearches, s.id, \.name), prompt: Text(L10n.tr("Nazwa")))
                             .labelsHidden().textFieldStyle(.roundedBorder).frame(width: 200)
-                        TextField(L10n.tr("Adres z %s"), text: Binding(get: { workspace.settings.webSearches[i].url },
-                                                                      set: { workspace.settings.webSearches[i].url = $0 }), prompt: Text(L10n.tr("Adres z %s")))
+                        TextField(L10n.tr("Adres z %s"), text: field(\.webSearches, s.id, \.url), prompt: Text(L10n.tr("Adres z %s")))
                             .labelsHidden().textFieldStyle(.roundedBorder)
-                        Button { workspace.settings.webSearches.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                        Button { workspace.settings.webSearches.removeAll { $0.id == s.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń wyszukiwanie"))
                     }
                 }
@@ -54,13 +53,11 @@ struct ToolsPane: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Dokumenty (Narzędzia › Dokumenty)")) {
-                ForEach(workspace.settings.userDocuments.indices, id: \.self) { i in
+                ForEach(workspace.settings.userDocuments) { d in
                     HStack {
-                        TextField(L10n.tr("Tytuł"), text: Binding(get: { workspace.settings.userDocuments[i].title },
-                                                                 set: { workspace.settings.userDocuments[i].title = $0 })).frame(width: 160)
-                        TextField(L10n.tr("Plik albo adres http(s)"), text: Binding(get: { workspace.settings.userDocuments[i].location },
-                                                                                  set: { workspace.settings.userDocuments[i].location = $0 }))
-                        Button { workspace.settings.userDocuments.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                        TextField(L10n.tr("Tytuł"), text: field(\.userDocuments, d.id, \.title)).frame(width: 160)
+                        TextField(L10n.tr("Plik albo adres http(s)"), text: field(\.userDocuments, d.id, \.location))
+                        Button { workspace.settings.userDocuments.removeAll { $0.id == d.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń dokument"))
                     }
                 }
@@ -96,6 +93,15 @@ struct ToolsPane: View {
         .formStyle(.grouped)
         .onAppear { diffArguments = ExternalDiffTool.join(workspace.settings.externalDiff?.arguments ?? ["%1", "%2"]) }
         .onDisappear { applyDiffArguments() }
+    }
+
+    /// Pole tekstowe elementu listy ustawień wskazanego identyfikatorem.
+    private func field<E: Identifiable>(_ list: WritableKeyPath<PelikanWorkspace.Settings, [E]>, _ id: E.ID,
+                                        _ key: WritableKeyPath<E, String>) -> Binding<String> {
+        Binding(get: { workspace.settings[keyPath: list].first { $0.id == id }?[keyPath: key] ?? "" },
+                set: { v in
+                    if let i = workspace.settings[keyPath: list].firstIndex(where: { $0.id == id }) { workspace.settings[keyPath: list][i][keyPath: key] = v }
+                })
     }
 
     private func applyDiffArguments() {

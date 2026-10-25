@@ -225,7 +225,10 @@ struct GraphView: View {
         if pdf {
             r.render { size, draw in
                 var box = CGRect(origin: .zero, size: size)
-                guard let ctx = CGContext(url as CFURL, mediaBox: &box, nil) else { return }
+                guard let ctx = CGContext(url as CFURL, mediaBox: &box, nil) else {
+                    workspace.ui?.showError(L10n.tr("Nie można zapisać pliku \(url.lastPathComponent)"))
+                    return
+                }
                 ctx.beginPDFPage(nil)
                 draw(ctx)
                 ctx.endPDFPage()
@@ -233,7 +236,7 @@ struct GraphView: View {
             }
         } else if let image = r.nsImage, let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
                   let png = rep.representation(using: .png, properties: [:]) {
-            try? png.write(to: url)
+            do { try png.write(to: url) } catch { workspace.ui?.showError(error.localizedDescription) }
         }
     }
 

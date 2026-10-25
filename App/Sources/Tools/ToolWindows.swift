@@ -8,6 +8,7 @@ import SwiftUI
 final class ToolWindowController: NSWindowController, NSWindowDelegate {
     private static var open: [String: ToolWindowController] = [:]
     private let key: String
+    private static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-"]
 
     static func show<V: View>(key: String, title: String, size: NSSize, @ViewBuilder content: () -> V) {
         if let c = open[key] { c.showWindow(nil); c.window?.makeKeyAndOrderFront(nil); return }
@@ -29,7 +30,8 @@ final class ToolWindowController: NSWindowController, NSWindowDelegate {
         w.title = title
         w.contentView = NSHostingView(rootView: view)
         w.center()
-        if !key.hasPrefix("diff-"), !key.hasPrefix("table-") { w.setFrameAutosaveName("Pelikan.\(key)") }
+        // Okna z kluczem jednorazowym (UUID, id dokumentu) bez zapamiętanej ramki — każde zostawiałoby wpis w UserDefaults.
+        if !Self.transientPrefixes.contains(where: key.hasPrefix) { w.setFrameAutosaveName("Pelikan.\(key)") }
         super.init(window: w)
         w.delegate = self
     }

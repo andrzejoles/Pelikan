@@ -31,7 +31,7 @@ struct UserManualView: View {
             // Rozdział bez tłumaczenia — wersja polska (katalog źródłowy instrukcji).
             list = UserManual.chapters(in: dir, fallback: root.appendingPathComponent("pl", isDirectory: true))
         }
-        list.append(UserManual.shortcutsChapter(commands: workspace.registry.commands.filter { !$0.isPlanned }.map(\.descriptor),
+        list.append(UserManual.shortcutsChapter(commands: workspace.registry.commands.map(\.descriptor),
                                                 chords: { workspace.keymap.chords(for: $0) }))
         chapters = list
         selection = selection ?? list.first?.id
