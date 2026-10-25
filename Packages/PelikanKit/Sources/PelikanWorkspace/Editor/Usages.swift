@@ -29,9 +29,10 @@ public enum UsageFinder {
         let tokens = SQLToken.significant(text)
         let ns = text as NSString
         var lines = Set<Int>()
+        var counter = LineCounter(ns)
         for (i, tk) in tokens.enumerated() where tk.isWord && tk.name == up {
             if let o, i >= 2, tokens[i - 1].kind == .dot, tokens[i - 2].name != o { continue }
-            lines.insert(ns.substring(to: tk.start).reduce(1) { $1 == "\n" ? $0 + 1 : $0 })
+            lines.insert(counter.line(at: tk.start))
         }
         let all = text.components(separatedBy: "\n")
         return lines.sorted().map { ($0, $0 - 1 < all.count ? all[$0 - 1].trimmingCharacters(in: .whitespaces) : "") }
@@ -42,33 +43,43 @@ public enum UsageFinder {
         let t = SQLToken.significant(text), tab = table.uppercased(), col = column.uppercased()
         let ns = text as NSString
         var lines = Set<Int>()
+        var counter = LineCounter(ns)
         for st in NameResolver.statements(t) where NameResolver.relations(t, st).contains(where: { $0.name == tab }) {
             for tk in t[st] where tk.isWord && tk.name == col {
-                lines.insert(ns.substring(to: tk.start).reduce(1) { $1 == "\n" ? $0 + 1 : $0 })
+                lines.insert(counter.line(at: tk.start))
             }
         }
         let all = text.components(separatedBy: "\n")
         return lines.sorted().map { ($0, $0 - 1 < all.count ? all[$0 - 1].trimmingCharacters(in: .whitespaces) : "") }
     }
 
-    /// Użycia w otwartych oknach i plikach (bez bazy).
+    static func find(_ text: String, name: String, owner: String?, column: String?) -> [(line: Int, text: String)] {
+        column.map { columnLines(in: text, table: name, column: $0) } ?? lines(in: text, name: name, owner: owner)
+    }
+
+    /// Użycia w otwartych oknach i plikach (bez bazy); pliki czytane poza wątkiem głównym, w kodowaniu projektu (D55).
     @MainActor
-    public static func inTexts(name: String, owner: String? = nil, column: String? = nil, documents: [Document], files: [URL]) -> [UsageHit] {
-        func find(_ text: String) -> [(line: Int, text: String)] {
-            column.map { columnLines(in: text, table: name, column: $0) } ?? lines(in: text, name: name, owner: owner)
-        }
+    public static func inTexts(name: String, owner: String? = nil, column: String? = nil, documents: [Document], files: [URL],
+                               encoding: @escaping @Sendable (URL) -> String.Encoding? = { _ in nil }) async -> [UsageHit] {
         var out: [UsageHit] = []
         var seen = Set<URL>()
         for d in documents {
             if let u = d.fileURL { seen.insert(u.standardizedFileURL) }
-            for (line, text) in find(d.text) {
+            for (line, text) in find(d.text, name: name, owner: owner, column: column) {
                 out.append(UsageHit(kind: .document, line: line, text: text, fileURL: d.fileURL, document: d.id, title: d.fullTitle))
             }
         }
-        for f in files where !seen.contains(f.standardizedFileURL) {
+        let rest = files.filter { !seen.contains($0.standardizedFileURL) }
+        out += await Task.detached { inFiles(name: name, owner: owner, column: column, files: rest, encoding: encoding) }.value
+        return out
+    }
+
+    static func inFiles(name: String, owner: String?, column: String?, files: [URL], encoding: (URL) -> String.Encoding?) -> [UsageHit] {
+        var out: [UsageHit] = []
+        for f in files {
             guard let data = try? Data(contentsOf: f) else { continue }
-            let text = TextFileCodec.decode(data).text
-            for (line, t) in find(text) {
+            let text = TextFileCodec.decode(data, preferred: encoding(f)).text
+            for (line, t) in find(text, name: name, owner: owner, column: column) {
                 out.append(UsageHit(kind: .file, line: line, text: t, fileURL: f, title: f.lastPathComponent))
             }
         }
@@ -104,11 +115,14 @@ public enum UsageFinder {
                                 line: Int(r[3].displayText ?? "") ?? 0, text: text.trimmingCharacters(in: .whitespaces),
                                 title: "\(r[0].displayText ?? "").\(r[1].displayText ?? "")"))
         }
-        // PL/Scope (gdy kod skompilowano z PLSCOPE_SETTINGS='IDENTIFIERS:ALL'): odwołania do nazwy obiektu albo kolumny.
+        // PL/Scope (gdy kod skompilowano z PLSCOPE_SETTINGS='IDENTIFIERS:ALL'): odwołania do nazwy obiektu albo kolumny
+        // w obiektach zależnych od niego (nie każdy identyfikator o tej nazwie w bazie).
         if let (_, ids) = try? await s.queryAll("""
-            select owner, object_name, object_type, line, usage from all_identifiers
-             where name = :k and usage in ('REFERENCE', 'CALL', 'ASSIGNMENT') and rownum <= 2000
-            """, binds: [BindVariable(name: "k", value: .text(needle))], limit: 2000) {
+            select i.owner, i.object_name, i.object_type, i.line, i.usage from all_identifiers i
+              join (select distinct owner, name, type from all_dependencies where referenced_owner = :o and referenced_name = :n) d
+                on i.owner = d.owner and i.object_name = d.name and i.object_type = d.type
+             where i.name = :k and i.usage in ('REFERENCE', 'CALL', 'ASSIGNMENT') and rownum <= 2000
+            """, binds: b + [BindVariable(name: "k", value: .text(needle))], limit: 2000) {
             for r in ids {
                 let hit = UsageHit(kind: .plscope, owner: r[0].displayText, name: r[1].displayText, type: r[2].displayText,
                                    line: Int(r[3].displayText ?? "") ?? 0, text: r[4].displayText ?? "",
@@ -176,14 +190,32 @@ public enum Refactoring {
             throw CommandError.notAvailable(L10n.tr("\(tk.text) nie jest zmienną ani parametrem w tym miejscu"))
         }
         let scope = PLSQLOutline.path(at: decl.nameOffset, in: outline).last?.range ?? 0..<(text as NSString).length
-        let up = tk.name
-        return replace(text, newName: newName) { t, i in
+        let up = tk.name, newUp = newName.uppercased()
+        // Deklaracja widoczna w pozycji tylko w zakresach ją obejmujących (bez szukania w całym tekście).
+        func visible(_ name: String, at offset: Int) -> OutlineNode? {
+            for s in PLSQLOutline.path(at: offset, in: outline).reversed() {
+                if let d = s.children.first(where: { $0.name.uppercased() == name }) { return d }
+            }
+            return nil
+        }
+        func renamed(_ t: [SQLToken], _ i: Int) -> Bool {
             let x = t[i]
             guard x.isWord, x.name == up, scope.contains(x.start) else { return false }
             if i > 0, t[i - 1].kind == .dot { return false }
             if i + 1 < t.count, t[i + 1].text == "=>" { return false }
-            return true
+            // Zagnieżdżony blok z własną deklaracją o tej nazwie — to inna zmienna.
+            return visible(up, at: x.start)?.nameOffset == decl.nameOffset
         }
+        // Nowa nazwa nie może przesłonić ani zostać przesłonięta: deklaracja o tej nazwie widoczna w którymkolwiek
+        // miejscu zmiany albo ta nazwa użyta już w zakresie (np. kolumna albo zmienna zewnętrzna) zmieniłaby znaczenie.
+        if newUp != up {
+            let tokens = SQLToken.significant(text)
+            let clash = tokens.indices.contains { i in renamed(tokens, i) && visible(newUp, at: tokens[i].start) != nil }
+                || tokens.indices.contains { i in tokens[i].isWord && tokens[i].name == newUp && scope.contains(tokens[i].start)
+                    && !(i > 0 && tokens[i - 1].kind == .dot) && !(i + 1 < tokens.count && tokens[i + 1].text == "=>") }
+            if clash { throw CommandError.notAvailable(L10n.tr("Nazwa \(newName) jest już używana w tym zakresie — zmiana nazwy zmieniłaby znaczenie kodu")) }
+        }
+        return replace(text, newName: newName, where: renamed)
     }
 
     /// Zmiana nazwy obiektu w tekstach (okna i pliki): `NAZWA` i `WŁAŚCICIEL.NAZWA`, bez innych kwalifikowanych nazw.
@@ -230,7 +262,7 @@ extension Workspace {
         // zanim cokolwiek zostanie zmienione.
         for c in plan.changes {
             guard case .file(let url) = c.target, let data = try? Data(contentsOf: url) else { continue }
-            let (text, format) = TextFileCodec.decode(data)
+            let (text, format) = TextFileCodec.decode(data, preferred: projectEncoding(for: url))
             guard text == c.before, TextFileCodec.encode(c.after, format: format) == nil else { continue }
             let bad = TextFileCodec.firstUnencodable(c.after, encoding: format.encoding)
             let error = TextFileError.unencodable(line: bad?.line ?? 0, column: bad?.column ?? 0, character: bad.map { String($0.character) } ?? "?",
@@ -247,7 +279,7 @@ extension Workspace {
                 n += 1
             case .file(let url):
                 guard let data = try? Data(contentsOf: url) else { continue }
-                let (text, format) = TextFileCodec.decode(data)
+                let (text, format) = TextFileCodec.decode(data, preferred: projectEncoding(for: url))
                 guard text == c.before, let encoded = TextFileCodec.encode(c.after, format: format) else { continue }
                 localHistory.record(key: LocalHistory.key(file: url), title: url.lastPathComponent, text: text, label: L10n.tr("przed: \(plan.title)"))
                 try encoded.write(to: url, options: .atomic)

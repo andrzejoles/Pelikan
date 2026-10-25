@@ -26,9 +26,11 @@ public enum CodeRefactoring {
     static func bodyBegin(of c: OutlineNode, tokens: [SQLToken]) -> (begin: SQLToken, hasDeclare: Bool)? {
         let nested = c.children.filter { $0.isContainer }.map(\.range)
         let own = tokens.filter { t in c.range.contains(t.start) && !nested.contains { $0.contains(t.start) } }
-        guard let begin = own.first(where: { $0.upper == "BEGIN" }) else { return nil }
-        let first = own.first
-        return (begin, !(c.kind == .block && first?.upper == "BEGIN"))
+        guard let bi = own.firstIndex(where: { $0.upper == "BEGIN" }) else { return nil }
+        // Wyzwalacz złożony (COMPOUND TRIGGER): BEGIN należy do sekcji punktu czasowego — bez refaktoryzacji.
+        if c.kind == .trigger, own[..<bi].contains(where: { $0.upper == "COMPOUND" }) { return nil }
+        // Podprogram ma sekcję deklaracji zawsze (po IS/AS); blok i wyzwalacz — tylko ze słowem DECLARE.
+        return (own[bi], [.procedure, .function].contains(c.kind) || own[..<bi].contains { $0.upper == "DECLARE" })
     }
 
     static func lineStart(_ offset: Int, _ ns: NSString) -> Int { ns.lineRange(for: NSRange(location: offset, length: 0)).location }
@@ -72,9 +74,15 @@ public enum CodeRefactoring {
         guard let body = bodyBegin(of: c, tokens: tokens), body.begin.start <= selection.lowerBound else {
             throw RefactoringError(L10n.tr("Zaznaczenie musi być w ciele podprogramu albo bloku (po BEGIN)"))
         }
-        let at = lineStart(body.begin.start, ns)
+        var at = lineStart(body.begin.start, ns)
         let ind = indent(atLineOf: body.begin.start, ns)
-        let block = (body.hasDeclare ? "" : ind + "DECLARE\n") + ind + "  " + declaration + "\n"
+        var block = (body.hasDeclare ? "" : ind + "DECLARE\n") + ind + "  " + declaration + "\n"
+        // BEGIN poprzedzony w linii innym tekstem (`is begin`, `<<etykieta>> begin`, wyzwalacz w jednej linii) —
+        // deklaracja w osobnych liniach tuż przed BEGIN.
+        if !ns.substring(with: NSRange(location: at, length: body.begin.start - at)).trimmingCharacters(in: .whitespaces).isEmpty {
+            at = body.begin.start
+            block = "\n" + block + ind
+        }
         let m = NSMutableString(string: text)
         m.replaceCharacters(in: NSRange(location: selection.lowerBound, length: selection.count), with: replacement)
         m.insert(block, at: at)
@@ -123,6 +131,38 @@ public enum CodeRefactoring {
         return words.joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: ";")).trimmingCharacters(in: .whitespaces)
     }
 
+    /// Nazwy przypisywane w instrukcjach: cel `:=` (także `x(i) :=` i `r.pole :=`) i każda nazwa listy po INTO
+    /// (SELECT/FETCH/BULK COLLECT/RETURNING/EXECUTE IMMEDIATE … INTO a, b) aż do FROM, USING, LIMIT albo średnika;
+    /// INSERT/MERGE INTO wskazuje tabelę. Nadmiar jest bezpieczny (IN OUT zamiast IN), brak — nie (PLS-00363).
+    static func assigned(in tokens: [SQLToken]) -> Set<String> {
+        var out = Set<String>()
+        for (j, t) in tokens.enumerated() where t.isWord {
+            if t.upper == "INTO", !(j > 0 && ["INSERT", "MERGE"].contains(tokens[j - 1].upper)) {
+                var k = j + 1
+                while k < tokens.count, tokens[k].text != ";", !["FROM", "USING", "LIMIT"].contains(tokens[k].upper) {
+                    if tokens[k].isWord { out.insert(tokens[k].name) }
+                    k += 1
+                }
+                continue
+            }
+            // Cel przypisania: nazwa, potem dowolnie `.pole` i `(indeks)`, a za nimi `:=`.
+            var k = j + 1
+            while k < tokens.count {
+                if tokens[k].kind == .dot, k + 1 < tokens.count, tokens[k + 1].isWord { k += 2; continue }
+                guard tokens[k].kind == .leftParen else { break }
+                var depth = 0
+                while k < tokens.count {
+                    if tokens[k].kind == .leftParen { depth += 1 }
+                    if tokens[k].kind == .rightParen { depth -= 1 }
+                    k += 1
+                    if depth == 0 { break }
+                }
+            }
+            if k < tokens.count, tokens[k].text == ":=" { out.insert(t.name) }
+        }
+        return out
+    }
+
     /// Wydziela zaznaczone instrukcje (całe linie) do procedury lokalnej; zmienne, stałe i parametry jednostki użyte w
     /// zaznaczeniu stają się parametrami (IN; przypisywane — IN OUT).
     public static func extractProcedure(_ text: String, selection: Range<Int>, name: String) throws -> TextEdit {
@@ -138,11 +178,10 @@ public enum CodeRefactoring {
         let declared = c.children.filter { [.variable, .constant, .parameter].contains($0.kind) }
         let tokens = SQLToken.significant(text).filter { $0.start >= lines.location && $0.start < NSMaxRange(lines) }
         var params: [(name: String, mode: String, type: String)] = []
+        let assignedNames = assigned(in: tokens)
         for t in tokens where t.isWord {
             guard let d = declared.first(where: { $0.name.uppercased() == t.name }), !params.contains(where: { $0.name.uppercased() == t.name }) else { continue }
-            let assigned = tokens.enumerated().contains { j, x in
-                x.name == t.name && (j + 1 < tokens.count && tokens[j + 1].text == ":=" || (j > 0 && tokens[j - 1].upper == "INTO"))
-            }
+            let assigned = assignedNames.contains(t.name)
             let isOutParam = d.kind == .parameter && d.detail.uppercased().contains("OUT")
             let mode = d.kind == .constant ? "IN" : (assigned || isOutParam ? "IN OUT" : "IN")
             params.append((d.name, mode, plainType(d.detail)))
@@ -179,19 +218,36 @@ public enum CodeRefactoring {
         guard let e = tokens[s...].firstIndex(where: { $0.text == ";" }), e > s + 2, tokens[s].isWord, tokens[s + 1].text == ":=" else {
             throw RefactoringError(L10n.tr("Ustaw kursor na przypisaniu „zmienna := wyrażenie;”"))
         }
-        // Tylko instrukcja na najwyższym poziomie ciała (nie w IF/LOOP/CASE/bloku).
-        var depth = 0
-        var k = tokens.firstIndex(where: { $0.start == b.begin.start })! + 1
-        while k < s {
-            let u = tokens[k].upper
-            if ["IF", "LOOP", "CASE", "BEGIN"].contains(u) && !(k > 0 && tokens[k - 1].upper == "END") { depth += 1 }
-            if u == "END" { depth -= 1 }
-            k += 1
+        // Inicjalizacja wykonuje się wcześniej niż ciało — przeniesienie bez zmiany znaczenia tylko dla pierwszej
+        // instrukcji ciała (więc nie w IF/LOOP/CASE/bloku i bez wcześniejszych przypisań).
+        guard s == tokens.firstIndex(where: { $0.start == b.begin.start })! + 1 else {
+            throw RefactoringError(L10n.tr("Tylko pierwsza instrukcja ciała może stać się inicjalizacją — przeniesienie innej zmieniłoby kolejność wykonania"))
         }
-        guard depth == 0 else { throw RefactoringError(L10n.tr("Przypisanie jest wewnątrz instrukcji złożonej")) }
         let name = tokens[s].name
         guard let d = c.children.first(where: { $0.kind == .variable && $0.name.uppercased() == name }) else {
             throw RefactoringError(L10n.tr("Zmienna \(tokens[s].text) nie jest zadeklarowana w tej jednostce"))
+        }
+        // Wyrażenie obliczane w sekcji deklaracji: bez deklaracji tej jednostki (poza parametrami) — mogą nie mieć
+        // jeszcze wartości albo być zadeklarowane później.
+        let locals = Set(c.children.filter { $0.kind != .parameter }.map { $0.name.uppercased() })
+        if let used = tokens[(s + 2)..<e].first(where: { $0.isWord && locals.contains($0.name) }) {
+            throw RefactoringError(L10n.tr("Wyrażenie używa deklaracji tej jednostki (\(used.text)) — inicjalizacja mogłaby zmienić znaczenie"))
+        }
+        // Wyjątek z sekcji deklaracji omija obsługę EXCEPTION tej jednostki.
+        let nested = c.children.filter(\.isContainer).map(\.range)
+        if tokens.contains(where: { t in t.upper == "EXCEPTION" && t.start > b.begin.start && c.range.contains(t.start) && !nested.contains { $0.contains(t.start) } }) {
+            throw RefactoringError(L10n.tr("Jednostka ma sekcję EXCEPTION — wyjątek z inicjalizacji nie zostałby w niej obsłużony"))
+        }
+        // Późniejsze deklaracje z wartością początkową inną niż literał obliczałyby się po wyrażeniu, a nie przed nim.
+        for x in c.children where [.variable, .constant].contains(x.kind) && x.range.lowerBound > d.range.lowerBound {
+            let decl = tokens.filter { x.range.contains($0.start) }
+            guard let a = decl.firstIndex(where: { $0.text == ":=" || $0.upper == "DEFAULT" }) else { continue }
+            let value = decl[(a + 1)...].filter { $0.text != ";" }
+            let literal = value.count == 1 && ([.number, .string].contains(value[0].kind) || ["NULL", "TRUE", "FALSE"].contains(value[0].upper))
+                || value.count == 2 && value[0].text == "-" && value[1].kind == .number
+            if !literal {
+                throw RefactoringError(L10n.tr("Późniejsza deklaracja \(x.name) ma wartość początkową — zmieniłaby się kolejność obliczania"))
+            }
         }
         let declText = ns.substring(with: NSRange(location: d.range.lowerBound, length: min(d.range.count + 1, ns.length - d.range.lowerBound)))
         guard declText.range(of: ":=") == nil, declText.range(of: " DEFAULT ", options: .caseInsensitive) == nil,

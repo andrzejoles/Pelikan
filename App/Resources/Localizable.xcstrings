@@ -23773,6 +23773,34 @@
         }
       }
     },
+    "Jednostka ma sekcję EXCEPTION — wyjątek z inicjalizacji nie zostałby w niej obsłużony" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The unit has an EXCEPTION section — an exception raised by the initialization would not be handled there"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Einheit hat einen EXCEPTION-Abschnitt — eine Ausnahme aus der Initialisierung würde dort nicht behandelt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La unidad tiene una sección EXCEPTION — una excepción de la inicialización no se gestionaría allí"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одиниця має розділ EXCEPTION — виняток з ініціалізації не було б у ньому оброблено"
+          }
+        }
+      }
+    },
     "Jednostka: nazwa albo „nazwa body” (domyślnie jednostka pod kursorem)" : {
       "localizations" : {
         "en" : {
@@ -34217,6 +34245,34 @@
         }
       }
     },
+    "Nazwa %@ jest już używana w tym zakresie — zmiana nazwy zmieniłaby znaczenie kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The name %@ is already used in this scope — renaming would change the meaning of the code"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Name %@ wird in diesem Bereich bereits verwendet — die Umbenennung würde die Bedeutung des Codes ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El nombre %@ ya se usa en este ámbito — el cambio de nombre alteraría el significado del código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва %@ уже використовується в цій області — перейменування змінило б зміст коду"
+          }
+        }
+      }
+    },
     "Nazwa albo wzorzec z %% i _" : {
       "localizations" : {
         "en" : {
@@ -35697,6 +35753,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bild kann nicht gelesen werden"
+          }
+        }
+      }
+    },
+    "Nie można odczytać pliku %@ (%@) — popraw go albo usuń; zmiany nie zostały zapisane, żeby nie utracić własnych snippetów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot read file %@ (%@) — fix or delete it; changes were not saved so that your own snippets are not lost"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei %@ kann nicht gelesen werden (%@) — korrigieren oder löschen Sie sie; die Änderungen wurden nicht gespeichert, damit Ihre eigenen Snippets nicht verloren gehen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se puede leer el archivo %@ (%@) — corríjalo o elimínelo; los cambios no se guardaron para no perder sus propios fragmentos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдається прочитати файл %@ (%@) — виправте або видаліть його; зміни не збережено, щоб не втратити власні фрагменти"
           }
         }
       }
@@ -58913,34 +58997,6 @@
         }
       }
     },
-    "Przypisanie jest wewnątrz instrukcji złożonej" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The assignment is inside a compound statement"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Zuweisung steht in einer zusammengesetzten Anweisung"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La asignación está dentro de una sentencia compuesta"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Присвоєння всередині складеної інструкції"
-          }
-        }
-      }
-    },
     "Przypnij połączenie okna" : {
       "localizations" : {
         "en" : {
@@ -60141,6 +60197,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Python: Abfrage"
+          }
+        }
+      }
+    },
+    "Późniejsza deklaracja %@ ma wartość początkową — zmieniłaby się kolejność obliczania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The later declaration %@ has an initial value — the order of evaluation would change"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die spätere Deklaration %@ hat einen Anfangswert — die Auswertungsreihenfolge würde sich ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La declaración posterior %@ tiene un valor inicial — cambiaría el orden de evaluación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пізніше оголошення %@ має початкове значення — змінився б порядок обчислення"
           }
         }
       }
@@ -72629,6 +72713,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Лише обов’язкові (NOT NULL)"
+          }
+        }
+      }
+    },
+    "Tylko pierwsza instrukcja ciała może stać się inicjalizacją — przeniesienie innej zmieniłoby kolejność wykonania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only the first statement of the body can become an initialization — moving another one would change the order of execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nur die erste Anweisung des Rumpfs kann zur Initialisierung werden — das Verschieben einer anderen würde die Ausführungsreihenfolge ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo la primera instrucción del cuerpo puede convertirse en inicialización — mover otra cambiaría el orden de ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лише перша інструкція тіла може стати ініціалізацією — перенесення іншої змінило б порядок виконання"
           }
         }
       }
@@ -86937,6 +87049,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Regulärer Ausdruck (REGEXP_LIKE-Syntax)"
+          }
+        }
+      }
+    },
+    "Wyrażenie używa deklaracji tej jednostki (%@) — inicjalizacja mogłaby zmienić znaczenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The expression uses a declaration of this unit (%@) — the initialization could change the meaning"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Ausdruck verwendet eine Deklaration dieser Einheit (%@) — die Initialisierung könnte die Bedeutung ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La expresión usa una declaración de esta unidad (%@) — la inicialización podría cambiar el significado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вираз використовує оголошення цієї одиниці (%@) — ініціалізація могла б змінити зміст"
           }
         }
       }

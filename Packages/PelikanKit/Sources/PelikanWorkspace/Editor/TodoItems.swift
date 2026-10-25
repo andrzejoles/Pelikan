@@ -25,6 +25,7 @@ public enum TodoItems {
     public static func parse(_ text: String) -> [TodoItem] {
         let ns = text as NSString
         var items: [TodoItem] = []
+        var counter = LineCounter(ns)
         for t in Lexer(text).tokenize() where t.kind == .lineComment || t.kind == .blockComment {
             let comment = ns.substring(with: NSRange(location: t.start, length: t.length))
             // Komentarz blokowy może mieć zadanie w każdej linii.
@@ -46,7 +47,7 @@ public enum TodoItems {
                 var body = group(4) ?? ""
                 if t.kind == .blockComment, body.hasSuffix("*/") { body = String(body.dropLast(2)).trimmingCharacters(in: .whitespaces) }
                 let start = t.start + offset + m.range(at: 1).location
-                let line = ns.substring(to: start).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
+                let line = counter.line(at: start)
                 items.append(TodoItem(line: line, keywordRange: start..<(start + 4), text: body, owner: group(2),
                                       priority: attrs.first { $0.hasPrefix("!") }.flatMap { Int($0.dropFirst()) },
                                       category: attrs.first { $0.hasPrefix("#") }.map { String($0.dropFirst()) },

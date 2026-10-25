@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 /// Atrapa słownika: EMP(EMPNO, ENAME, DEPTNO, SAL), DEPT(DEPTNO, DNAME); pakiet EMP_API, schemat SCOTT.
@@ -156,6 +157,34 @@ struct DataGripModelTests {
         #expect(throws: CommandError.self) { try Refactoring.renameLocal(in: src, at: at, to: "1zła") }
     }
 
+    @Test("Zmiana nazwy zmiennej: zagnieżdżony blok z własną deklaracją bez zmian; nazwa już użyta w zakresie — odmowa")
+    func renameLocalScopes() throws {
+        let src = "declare\n  v number := 1;\nbegin\n  v := v + 1;\n  declare\n    v number := 5;\n  begin\n    dbms_output.put_line(v);\n  end;\n  dbms_output.put_line(v);\nend;\n"
+        let (out, n) = try Refactoring.renameLocal(in: src, at: (src as NSString).range(of: "v := v").location, to: "x")
+        #expect(out == "declare\n  x number := 1;\nbegin\n  x := x + 1;\n  declare\n    v number := 5;\n  begin\n    dbms_output.put_line(v);\n  end;\n  dbms_output.put_line(x);\nend;\n")
+        #expect(n == 4)
+        // Wewnętrzna deklaracja `w` przechwyciłaby odwołanie do zewnętrznej `v`.
+        let captured = "declare\n  v number;\nbegin\n  declare\n    w number;\n  begin\n    w := v;\n  end;\nend;\n"
+        #expect(throws: CommandError.self) { try Refactoring.renameLocal(in: captured, at: (captured as NSString).range(of: "v number").location, to: "w") }
+        // Kolumna `ename` w zapytaniu stałaby się zmienną.
+        let column = "declare\n  v varchar2(30);\nbegin\n  select ename into v from emp where ename = 'X';\nend;\n"
+        #expect(throws: CommandError.self) { try Refactoring.renameLocal(in: column, at: (column as NSString).range(of: "v varchar2").location, to: "ename") }
+    }
+
+    @Test("Użycia: PL/Scope tylko w obiektach zależnych; pliki projektu czytane w tle")
+    func usagesQueries() async throws {
+        let s = SQLCaptureSession()
+        _ = try await UsageFinder.inDatabase(owner: "scott", name: "emp", session: s)
+        let plscope = try #require(s.queries.withLock { $0 }.first { $0.sql.contains("all_identifiers") })
+        #expect(plscope.sql.contains("all_dependencies") && plscope.sql.contains("referenced_owner = :o"))
+        #expect(Set(plscope.binds.map(\.name)) == ["o", "n", "k"])
+        let dir = tempDir()
+        let file = dir.appendingPathComponent("a.sql")
+        try "select 1\nfrom emp;\n".write(to: file, atomically: true, encoding: .utf8)
+        let hits = await UsageFinder.inTexts(name: "EMP", documents: [], files: [file])
+        #expect(hits.map(\.line) == [2] && hits.first?.kind == .file)
+    }
+
     @Test("Zmiana nazwy obiektu w oknach i plikach z podglądem; zastosowanie zapisuje historię; DDL bez wykonania")
     func renameObject() throws {
         let ws = Workspace()
@@ -275,4 +304,23 @@ struct DataGripModelTests {
         g.revertRows([1, 4, new])
         #expect(g.pendingSummary.isEmpty && g.rowCount == 5 && g.text(row: 1, column: 1) == "n2")
     }
+}
+
+/// Sesja zapisująca wszystkie polecenia (także zapytania) ze zmiennymi wiązanymi; zapytania bez wierszy.
+final class SQLCaptureSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 19, minor: 0),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    let queries = Mutex<[(sql: String, binds: [BindVariable])]>([])
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        queries.withLock { $0.append((sql, binds)) }
+        return ExecutionResult(kind: .query, resultSet: ResultSetDescriptor(id: ResultSetID(1), columns: []))
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
 }

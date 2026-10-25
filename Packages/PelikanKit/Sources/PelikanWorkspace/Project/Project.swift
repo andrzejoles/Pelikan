@@ -42,6 +42,9 @@ public struct ProjectOptions: Sendable, Codable, Hashable {
     /// Kodowanie plików projektu bez BOM (np. „ISO-8859-2” dla źródeł Pro*C); nil — wykrywanie przy otwarciu.
     public var encoding: String?
     public init() {}
+
+    /// Kodowanie z `encoding` (nil — brak albo nieznana nazwa).
+    public var preferredEncoding: String.Encoding? { encoding.flatMap(TextFileCodec.encoding(named:)) }
 }
 
 /// Okno pulpitu projektu (plik względny i rodzaj okna).
@@ -155,7 +158,7 @@ public enum ProjectEngine {
                     continue
                 }
                 // Kodowanie projektu (D55), BOM i CRLF — jak przy otwieraniu pliku.
-                var text = TextFileCodec.decode(try Data(contentsOf: url), preferred: project.options.encoding.flatMap(TextFileCodec.encoding(named:))).text
+                var text = TextFileCodec.decode(try Data(contentsOf: url), preferred: project.options.preferredEncoding).text
                 if project.options.beautifyOnBuild, let f = try? Beautifier.format(text, options: ws.settings.beautifier) { text = f }
                 let units = ProgramCompiler.units(in: text)
                 statements = units.map(\.text)
@@ -209,7 +212,7 @@ public enum ProjectEngine {
             switch item.kind {
             case .file:
                 if let url = url(of: item, projectURL: projectURL), let data = try? Data(contentsOf: url) {
-                    scan(TextFileCodec.decode(data, preferred: project.options.encoding.flatMap(TextFileCodec.encoding(named:))).text, item)
+                    scan(TextFileCodec.decode(data, preferred: project.options.preferredEncoding).text, item)
                 }
             case .object:
                 if let o = item.object?.dbObject, let m = ws.metadata(for: try connection(project, in: ws).id), let src = try? await m.source(of: o) { scan(src, item) }
