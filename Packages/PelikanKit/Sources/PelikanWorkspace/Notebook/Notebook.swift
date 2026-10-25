@@ -83,7 +83,11 @@ extension NotebookResult {
 @MainActor
 public enum NotebookRunner {
     public static func run(cell index: Int, in doc: Document, ws: Workspace) async {
-        guard doc.notebook.cells.indices.contains(index), doc.notebook.cells[index].kind == .sql else { return }
+        // Jedno wykonanie naraz w sesji okna; wynik trafia do komórki po identyfikatorze (komórki mogą się przestawić).
+        guard !doc.isExecuting, doc.notebook.cells.indices.contains(index), doc.notebook.cells[index].kind == .sql else { return }
+        let cellID = doc.notebook.cells[index].id
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
         let started = ContinuousClock.now
         var result = NotebookResult()
         let statements = ScriptSplitter.split(doc.notebook.cells[index].text, mode: .commandWindow).filter { $0.sqlplusCommand == nil }
@@ -129,17 +133,18 @@ public enum NotebookRunner {
         let d = ContinuousClock.now - started
         result.milliseconds = Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)
         result.finished = Date()
-        if doc.notebook.cells.indices.contains(index) {
-            doc.notebook.cells[index].result = result
+        if let i = doc.notebook.cells.firstIndex(where: { $0.id == cellID }) {
+            doc.notebook.cells[i].result = result
             doc.isModified = true
         }
     }
 
     /// Run All: komórki SQL po kolei; `stopOnError` — zatrzymanie na pierwszym błędzie.
     public static func runAll(_ doc: Document, ws: Workspace, stopOnError: Bool = true) async {
-        for i in doc.notebook.cells.indices where doc.notebook.cells[i].kind == .sql {
+        for id in doc.notebook.cells.filter({ $0.kind == .sql }).map(\.id) {
+            guard let i = doc.notebook.cells.firstIndex(where: { $0.id == id }) else { continue }
             await run(cell: i, in: doc, ws: ws)
-            if stopOnError, doc.notebook.cells[i].result?.error != nil { break }
+            if stopOnError, doc.notebook.cells.first(where: { $0.id == id })?.result?.error != nil { break }
         }
     }
 

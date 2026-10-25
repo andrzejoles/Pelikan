@@ -215,7 +215,7 @@ enum DataGripCommands {
                                       parameters: [CommandParameter("newName", .string, L10n.tr("Nowa nazwa")),
                                                    CommandParameter("name", .string, L10n.tr("Obiekt albo ALIAS.KOLUMNA (domyślnie nazwa pod kursorem)")),
                                                    CommandParameter("column", .string, L10n.tr("Kolumna tabeli"))],
-                                      agent: .approval, effect: .modifiesEditor,
+                                      agent: .approval, effect: .external,
                                       summary: L10n.tr("Zmienia nazwę zmiennej lub parametru w jej zakresie albo obiektu lub kolumny w oknach i plikach projektu; podgląd różnic przed zastosowaniem, DDL zmiany w bazie trafia do nowego okna bez wykonania."),
                                       feature: "DG-REF-001"),
                     validate: hasEditor,

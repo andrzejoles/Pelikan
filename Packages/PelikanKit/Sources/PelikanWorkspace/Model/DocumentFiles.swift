@@ -58,6 +58,16 @@ public enum TextFileCodec {
         return (text, f)
     }
 
+    /// Odczyt z kodowaniem ustawionym (np. w projekcie, D55): plik bez BOM czytany w nim, gdy się w nim dekoduje.
+    public static func decode(_ data: Data, preferred enc: String.Encoding?) -> (text: String, format: TextFileFormat) {
+        var (text, format) = decode(data)
+        if let enc, !format.hasBOM, enc != format.encoding, let s = String(data: data, encoding: enc) {
+            format.encoding = enc
+            text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
+        }
+        return (text, format)
+    }
+
     /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8 (reguła wspólna z podglądem Quick Look: `CodeHTML`).
     public static func guessSingleByte(_ data: Data) -> String.Encoding? {
         CodeHTML.singleByteGuess(data)
@@ -148,32 +158,32 @@ extension Workspace {
             return open
         }
         let data = try Data(contentsOf: std)
-        var (text, format) = TextFileCodec.decode(data)
         // Plik projektu bez BOM: kodowanie ustawione w projekcie (np. ISO-8859-2 dla źródeł Pro*C z AIX), żeby nie
         // przekodował się po cichu przy pierwszej edycji (D55).
-        if let enc = projectEncoding(for: std), !format.hasBOM, enc != format.encoding, let s = String(data: data, encoding: enc) {
-            format.encoding = enc
-            text = format.lineEnding == .lf ? s : s.replacingOccurrences(of: format.lineEnding.rawValue, with: "\n")
-        }
+        let (text, format) = TextFileCodec.decode(data, preferred: projectEncoding(for: std))
+        let docKind = kind ?? documentKind(for: std)
+        // Pliki JSON dekodowane przed utworzeniem okna: uszkodzony albo nowszy plik nie zostawia pustego okna, które
+        // ⌘S zapisałoby na oryginale.
+        let report = try docKind == .report ? ReportDefinition.decode(data) : nil          // PD-REP-004
+        let diagram = try docKind == .diagram ? Diagram.decode(data) : nil                 // PD-DIAG-003
+        let notebook = try docKind == .notebook ? Notebook.decode(data) : nil              // SD-NB-001
         // Puste, niezmienione okno SQL zastępujemy otwieranym plikiem (jak przy starcie aplikacji).
-        if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == (kind ?? documentKind(for: std)) {
+        if let active = activeDocument, active.fileURL == nil, !active.isModified, active.text.isEmpty, active.kind == docKind {
             close(active.id)
         }
-        let docKind = kind ?? documentKind(for: std)
         let doc: Document
-        if docKind == .report {
-            // Raport Pelikana: definicja JSON z zapytaniem (PD-REP-004).
-            let def = try ReportDefinition.decode(data)
-            doc = newDocument(.report, text: def.sql, fileURL: std)
-            doc.report = def
-        } else if docKind == .diagram {
-            // Diagram Pelikana: JSON (PD-DIAG-003).
+        if let report {
+            // Raport Pelikana: definicja JSON z zapytaniem.
+            doc = newDocument(.report, text: report.sql, fileURL: std)
+            doc.report = report
+        } else if let diagram {
+            // Diagram Pelikana: JSON.
             doc = newDocument(.diagram, fileURL: std)
-            doc.diagram = try Diagram.decode(data)
-        } else if docKind == .notebook {
-            // Notatnik SQL Pelikana: JSON z komórkami i wynikami (SD-NB-001).
+            doc.diagram = diagram
+        } else if let notebook {
+            // Notatnik SQL Pelikana: JSON z komórkami i wynikami.
             doc = newDocument(.notebook, fileURL: std)
-            doc.notebook = try Notebook.decode(data)
+            doc.notebook = notebook
         } else if docKind == .test {
             // .tst Pelikana: blok i zmienne (UG 5.4).
             let f = TestScriptFile.decode(text)

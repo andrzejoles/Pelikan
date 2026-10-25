@@ -2,6 +2,7 @@ import Foundation
 import PelikanDB
 import PelikanSQL
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 /// Źródło metadanych w pamięci (diagram ER bez bazy).
@@ -38,6 +39,28 @@ struct Stage7ToolsTests {
         #expect(chart.categories == ["A", "B", "C"] && chart.points.map(\.value) == [10, 2.5])
         #expect(throws: (any Error).self) { try Notebook.decode(Data(#"{"format":"x","version":1,"cells":[],"maxRows":1}"#.utf8)) }
         #expect(DocumentKind.forFile(URL(fileURLWithPath: "/x/a.sqlnb")) == .notebook)
+    }
+
+    @Test("Notatnik: wynik trafia do wykonywanej komórki mimo przestawienia komórek w trakcie; drugie wykonanie naraz pominięte")
+    func notebookRunTracksCell() async throws {
+        let ws = Workspace(drivers: [.instantClient: GateDriver()])
+        let def = ConnectionDefinition(name: "nb", target: ConnectionTarget(user: "u", connectString: "db"))
+        try ws.connections.upsert(def, password: "good")
+        ws.sessions.setMainConnection(def.id)
+        let doc = ws.newDocument(.notebook)
+        doc.notebook.cells = [NotebookCell(kind: .sql, text: "select 'gate' from dual"), NotebookCell(kind: .sql, text: "select 2 from dual")]
+        let first = doc.notebook.cells[0].id
+        let task = Task { await NotebookRunner.run(cell: 0, in: doc, ws: ws) }
+        for _ in 0..<1000 where !GateSession.waiting.withLock({ $0 }) { await Task.yield() }
+        #expect(doc.isExecuting)
+        await NotebookRunner.run(cell: 1, in: doc, ws: ws)                 // w trakcie — pominięte
+        #expect(doc.notebook.cells[1].result == nil)
+        doc.notebook.cells.swapAt(0, 1)
+        GateSession.open.withLock { $0 = true }
+        await task.value
+        #expect(!doc.isExecuting)
+        #expect(doc.notebook.cells.first { $0.id == first }?.result != nil)
+        #expect(doc.notebook.cells.first { $0.id != first }?.result == nil)
     }
 
     @Test("Raporty predefiniowane: unikalne identyfikatory, kategorie, zmienne zadeklarowane, wiązania szczegółów z kolumn")
@@ -235,4 +258,34 @@ struct Stage7ToolsTests {
             #expect(c?.descriptor.agentAccess == AgentAccess.none, "\(id)")
         }
     }
+}
+
+/// Sesja, której polecenie z „gate” czeka na otwarcie bramki (wykonanie „w trakcie” bez bazy).
+final class GateSession: DatabaseSession, @unchecked Sendable {
+    static let waiting = Mutex(false)
+    static let open = Mutex(false)
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        if sql.contains("gate") {
+            Self.waiting.withLock { $0 = true }
+            while !Self.open.withLock({ $0 }) { await Task.yield() }
+        }
+        return ExecutionResult(kind: .other)
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+final class GateDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { GateSession() }
 }

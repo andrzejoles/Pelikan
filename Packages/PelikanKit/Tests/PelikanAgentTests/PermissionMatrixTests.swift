@@ -39,5 +39,27 @@ struct PermissionMatrixTests {
         let d = try #require(ws.registry.command(row.command)?.descriptor)
         #expect(AgentPolicy.effectiveAccess(command: d, session: session, settings: AgentSettings()) == .read)
     }
+
+    /// docs/SKROTY.md generowany z rejestru (PROMPT §4.2 p.1) z efektywnym poziomem agenta (D33). PELIKAN_WRITE_DOCS=1
+    /// nadpisuje plik; bez tego test sprawdza, czy plik jest aktualny.
+    @Test("docs/SKROTY.md jest aktualny")
+    func shortcutsDoc() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../../../docs/SKROTY.md").standardizedFileURL
+        let (session, _) = SessionRegistry().create(profile: AgentProfile.builtIn[0], directory: "")
+        let generated = ShortcutsDocument.markdown(for: BuiltinCommands.all.map(\.descriptor)) { d in
+            AgentPolicy.effectiveAccess(command: d, session: session, settings: AgentSettings(), viaRunCommand: !AgentPolicy.isAgentCommand(d.id))
+        }
+        if ProcessInfo.processInfo.environment["PELIKAN_WRITE_DOCS"] == "1" {
+            try generated.write(to: url, atomically: true, encoding: .utf8)
+        }
+        let current = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        #expect(current == generated, "Uruchom: PELIKAN_WRITE_DOCS=1 swift test --filter shortcutsDoc")
+        // Komendy, które mogą zatwierdzić transakcję albo otworzyć Okno poleceń, nie są dla agenta.
+        for id in ["file.close", "file.closeWindow", "test.saveAsSQLPlus", "ob.test", "ob.ccflags", "ob.duplicate"] {
+            let row = generated.split(separator: "\n").first { $0.contains("| `\(id)` |") }
+            #expect(row?.contains("| Brak |") == true, "\(id)")
+        }
+    }
 }
 #endif

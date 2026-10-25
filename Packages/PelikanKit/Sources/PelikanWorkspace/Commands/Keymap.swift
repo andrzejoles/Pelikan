@@ -10,7 +10,8 @@ public struct KeyModifiers: OptionSet, Hashable, Sendable, Codable {
     public static let shift = KeyModifiers(rawValue: 1 << 3)
 }
 
-/// Kombinacja klawiszy, np. `shift+f8`, `ctrl+e`, `cmd+shift+p`, `ctrl+k 1` (sekwencja dwuklawiszowa — zakładki).
+/// Kombinacja klawiszy, np. `shift+f8`, `ctrl+e`, `cmd+shift+p` — jedno naciśnięcie (sekwencje dwuklawiszowe zakładek
+/// `Ctrl+K n` / `Ctrl+Q n` obsługuje edytor w aplikacji, nie mapa klawiszy).
 /// Klawisz: pojedynczy znak (małe litery) albo nazwa (`f1`…`f20`, `tab`, `enter`, `space`, `backspace`, `delete`,
 /// `escape`, `up`, `down`, `left`, `right`, `home`, `end`, `pageup`, `pagedown`, `insert`).
 public struct KeyChord: Hashable, Sendable, Codable, CustomStringConvertible {

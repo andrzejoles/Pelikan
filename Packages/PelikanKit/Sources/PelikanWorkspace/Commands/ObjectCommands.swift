@@ -176,7 +176,8 @@ public enum ObjectCommands {
                 }
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
-                _ = try? await s.execute(sql)
+                // Błąd kompilacji (ORA-24344) pokazuje status; brak uprawnień, blokada (ORA-04021) itp. — zgłaszane.
+                do { _ = try await s.execute(sql) } catch let e as OracleError where e.code == 24344 {}
                 m.refresh(o)
                 let status = try await s.scalar("select status from all_objects where owner = :o and object_name = :n and object_type = :t",
                                                 binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "n", value: .text(o.name)),
@@ -197,7 +198,9 @@ public enum ObjectCommands {
                 guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Ten obiekt nie jest jednostką PL/SQL")) }
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
-                for q in sql { _ = try? await s.execute(q) }
+                // Jednostka: błąd inny niż kompilacji (ORA-24344) zgłaszany; ciało pakietu/typu — może nie istnieć.
+                do { _ = try await s.execute(sql[0]) } catch let e as OracleError where e.code == 24344 {}
+                for q in sql.dropFirst() { _ = try? await s.execute(q) }
                 m.refresh(o)
                 return CommandResult(message: L10n.tr("Dodano informację debugowania: \(o.qualifiedName)"))
             },

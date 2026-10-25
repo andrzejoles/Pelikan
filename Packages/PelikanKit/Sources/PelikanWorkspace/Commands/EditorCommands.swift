@@ -89,7 +89,7 @@ enum EditorCommands {
                                           CommandParameter("member", .string, L10n.tr("Podprogram pakietu")),
                                           CommandParameter("overload", .integer, L10n.tr("Numer przeciążenia")),
                                       ],
-                                      agent: .full, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno testu z wywołaniem procedury lub funkcji (notacja nazwana) i zmiennymi parametrów."),
                                       feature: "PD-TEST-004"),
                     validate: { ws in ws.selectedObject.map { [.procedure, .function].contains($0.type) } ?? false }) { ctx in
@@ -224,7 +224,7 @@ enum EditorCommands {
                                      ?? L10n.tr("Profiler wyłączony"))
             },
             Command(CommandDescriptor(id: "test.saveAsSQLPlus", title: L10n.tr("Zapisz test jako skrypt SQL*Plus"), category: .file,
-                                      agent: .full, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno poleceń ze skryptem SQL*Plus odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)."),
                                       feature: "PD-TEST-005"),
                     validate: { $0.activeDocument?.kind == .test }) { ctx in

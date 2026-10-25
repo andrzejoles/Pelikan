@@ -2,11 +2,11 @@ import Foundation
 import PelikanSQL
 
 /// Komendy wbudowane. Skróty profilu PL/SQL Developer: potwierdzone w UG 17 / na forum producenta albo oznaczone
-/// „do weryfikacji” w docs/research/keys.md. Komendy zapowiedziane (`.planned`) są w menu wyszarzone do swojego etapu.
+/// „do weryfikacji” w docs/research/keys.md.
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + tools + reports + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
     }
 
     /// Połączenie aktywnego okna, inaczej główne — dla zmiany hasła.
@@ -30,7 +30,7 @@ public enum BuiltinCommands {
     /// Zamknięcie grupy okien względem bieżącego (menu karty — PD-UI-004).
     @MainActor
     static func closeMany(_ id: String, _ title: String, _ summary: String, _ which: @escaping @Sendable (Int, Int) -> Bool) -> Command {
-        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .file, agent: .none, effect: .uiState,
+        Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .file, agent: .none, effect: .transaction,
                                   summary: summary, feature: "PD-UI-004"),
                 validate: { ws in
                     guard let a = ws.documents.firstIndex(where: { $0.id == ws.activeDocumentID }) else { return false }
@@ -78,16 +78,24 @@ public enum BuiltinCommands {
     /// false — użytkownik anulował.
     @MainActor
     static func closeDocument(_ doc: Document, in ws: Workspace) async throws -> Bool {
+        // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
+        // zwykłe wykonanie trzeba najpierw przerwać.
+        let debugger = ws.debuggers[doc.id]
+        if doc.isExecuting, debugger.map({ [.running, .paused].contains($0.state) }) != true {
+            throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” wykonuje polecenie — przerwij wykonanie przed zamknięciem."))
+        }
         let needsSave = doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
         if needsSave {
             let choice = await ws.ui?.ask(L10n.tr("Zapisać zmiany w „\(doc.title)”?"), message: L10n.tr("Niezapisane zmiany zostaną utracone."),
-                                          buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 1
+                                          buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 2
             switch choice {
             case 0: guard try await saveDocument(doc, in: ws, askForName: doc.fileURL == nil) else { return false }
             case 1: break
             default: return false
             }
         }
+        // Przed końcem transakcji — sesja docelowa debugera jest zajęta wstrzymanym programem.
+        if let debugger, [.running, .paused].contains(debugger.state) { await debugger.stop() }
         if doc.transactionOpen {
             var commit: Bool
             switch ws.settings.logoffWithOpenTransaction {
@@ -101,9 +109,10 @@ public enum BuiltinCommands {
             }
             try await ws.endTransactions(of: [doc], commit: commit)
         }
-        // Sesja okna (tryb Multi) kończy się razem z oknem.
-        if let c = ws.effectiveConnection(of: doc), ws.settings.sessionMode == .multi {
-            await ws.sessions.close(ws.sessions.key(forDocument: doc.id, connection: c))
+        // Sesja okna (tryb Multi) i sesja nadzorująca debugera kończą się razem z oknem.
+        if let c = ws.effectiveConnection(of: doc) {
+            if ws.settings.sessionMode == .multi { await ws.sessions.close(ws.sessions.key(forDocument: doc.id, connection: c)) }
+            if debugger != nil { await ws.sessions.close(ws.sessions.debuggerKey(document: doc.id, connection: c)) }
         }
         ws.close(doc.id)
         return true
@@ -170,7 +179,7 @@ public enum BuiltinCommands {
                 return CommandResult(message: L10n.tr("Kodowanie \(name)"))
             },
             Command(CommandDescriptor(id: "file.close", title: L10n.tr("Zamknij okno"), category: .file, mac: ["cmd+w"],
-                                      agent: .full, effect: .uiState, summary: L10n.tr("Zamyka bieżące okno."), feature: "PD-UI-004"),
+                                      agent: .none, effect: .transaction, summary: L10n.tr("Zamyka bieżące okno."), feature: "PD-UI-004"),
                     validate: { $0.activeDocument != nil }) { ctx in
                 guard let doc = ctx.workspace.activeDocument else { return .ok }
                 guard try await closeDocument(doc, in: ctx.workspace) else { throw CommandError.cancelledByUser }
@@ -178,7 +187,7 @@ public enum BuiltinCommands {
             },
             Command(CommandDescriptor(id: "file.closeWindow", title: L10n.tr("Zamknij wskazane okno"), category: .file,
                                       parameters: [CommandParameter("document", .string, required: true, L10n.tr("Identyfikator okna"))],
-                                      agent: .full, effect: .uiState, summary: L10n.tr("Zamyka okno o podanym identyfikatorze (z pytaniami o zapis i transakcję)."),
+                                      agent: .none, effect: .transaction, summary: L10n.tr("Zamyka okno o podanym identyfikatorze (z pytaniami o zapis i transakcję)."),
                                       inMenu: false, feature: "PD-UI-004")) { ctx in
                 guard let s = ctx.arguments.string("document"), let d = ctx.workspace.documents.first(where: { $0.id.description == s }) else {
                     throw CommandError.invalidArgument("document", L10n.tr("nieznane okno"))
@@ -190,7 +199,7 @@ public enum BuiltinCommands {
             closeMany("file.closeLeft", L10n.tr("Zamknij okna z lewej"), L10n.tr("Zamyka okna na lewo od bieżącego.")) { i, a in i < a },
             closeMany("file.closeRight", L10n.tr("Zamknij okna z prawej"), L10n.tr("Zamyka okna na prawo od bieżącego.")) { i, a in i > a },
             Command(CommandDescriptor(id: "file.closeAll", title: L10n.tr("Zamknij wszystkie okna"), category: .file,
-                                      mac: ["cmd+alt+w"], agent: .none, effect: .uiState,
+                                      mac: ["cmd+alt+w"], agent: .none, effect: .transaction,
                                       summary: L10n.tr("Zamyka wszystkie okna."), feature: "PD-UI-004"),
                     validate: { !$0.documents.isEmpty }) { ctx in
                 for d in ctx.workspace.documents {
@@ -536,23 +545,6 @@ public enum BuiltinCommands {
     // MARK: Debugowanie (skróty do weryfikacji — docs/research/keys.md)
 
     @MainActor static var debug: [Command] { DebugCommands.all }
-
-    // MARK: Narzędzia
-
-    @MainActor static var tools: [Command] {
-        let t: [(String, String, [String], Int, String, AgentAccess)] = [
-        ]
-        return t.map { id, title, pd, stage, feature, agent in
-            .planned(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .tools, pd: pd, mac: pd.isEmpty ? [] : nil,
-                                       agent: agent, effect: agent == .approval ? .modifiesDatabase : .none,
-                                       summary: title, stage: stage, feature: feature))
-        }
-    }
-
-    @MainActor static var reports: [Command] {
-        [
-        ]
-    }
 
     // MARK: Widok
 

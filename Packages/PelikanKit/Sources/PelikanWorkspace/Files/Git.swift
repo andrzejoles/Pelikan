@@ -1,4 +1,5 @@
 import Foundation
+import Synchronization
 
 /// Stan pliku w repozytorium Git (PD-VCS-001).
 public enum GitFileState: String, Sendable, Codable, Hashable, CaseIterable {
@@ -131,6 +132,11 @@ public struct GitRepository: Sendable, Hashable {
     /// Wykonuje git z katalogu `directory`; wyjście standardowe albo błąd z treścią stderr.
     @discardableResult
     static func run(_ args: [String], in directory: URL, input: String? = nil) throws -> String {
+        String(decoding: try runData(args, in: directory, input: input), as: UTF8.self)
+    }
+
+    /// Jak `run`, ale wyjście w bajtach (treść plików w ich kodowaniu, np. ISO-8859-2).
+    static func runData(_ args: [String], in directory: URL, input: String? = nil) throws -> Data {
         guard FileManager.default.isExecutableFile(atPath: executable.path) else { throw Failure.notInstalled }
         let p = Process()
         p.executableURL = executable
@@ -148,13 +154,19 @@ public struct GitRepository: Sendable, Hashable {
         try p.run()
         if let input { inp.fileHandleForWriting.write(Data(input.utf8)) }
         try? inp.fileHandleForWriting.close()
+        // stderr czytany równolegle — pełny bufor potoku stderr zatrzymałby gita przed końcem stdout.
+        let errHandle = err.fileHandleForReading, errData = Mutex(Data()), group = DispatchGroup()
+        DispatchQueue.global().async(group: group) {
+            let d = errHandle.readDataToEndOfFile()
+            errData.withLock { $0 = d }
+        }
         let data = out.fileHandleForReading.readDataToEndOfFile()
-        let errData = err.fileHandleForReading.readDataToEndOfFile()
+        group.wait()
         p.waitUntilExit()
         guard p.terminationStatus == 0 else {
-            throw Failure.failed(String(decoding: errData, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
+            throw Failure.failed(String(decoding: errData.withLock { $0 }, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
         }
-        return String(decoding: data, as: UTF8.self)
+        return data
     }
 
     /// Repozytorium zawierające plik albo katalog (nil — poza repozytorium albo brak gita).
@@ -182,11 +194,11 @@ public struct GitRepository: Sendable, Hashable {
         GitStatus.parse(try Self.run(["status", "--porcelain=v2", "--branch", "-z", "--untracked-files=normal"], in: root), root: root)
     }
 
-    /// Treść pliku w HEAD (nil — plik nowy, nieobecny w HEAD).
-    public func headContent(of url: URL) throws -> String? {
+    /// Treść pliku w HEAD w bajtach — dekodowanie jak pliku na dysku (`TextFileCodec`); nil — plik nowy, nieobecny w HEAD.
+    public func headContent(of url: URL) throws -> Data? {
         guard let rel = Self.relativePath(of: url, root: root) else { throw Failure.failed(L10n.tr("Plik spoza repozytorium")) }
         do {
-            return try Self.run(["show", "HEAD:\(rel)"], in: root)
+            return try Self.runData(["show", "HEAD:\(rel)"], in: root)
         } catch Failure.failed {
             return nil
         }
