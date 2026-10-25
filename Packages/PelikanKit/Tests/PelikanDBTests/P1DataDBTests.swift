@@ -283,9 +283,11 @@ struct P1DataDBTests {
 
     @Test("Find Database Objects: definicje tabel (kolumny, komentarze, CHECK) i typ TABLE (PD-TOOL-001)")
     func searchTableDefinitions() async throws {
-        try await run(["drop table pelikan_p1_find purge",
+        try await run(["drop view pelikan_p1_find_v", "drop table pelikan_p1_find purge",
                        "create table pelikan_p1_find (zzq_amount number constraint pelikan_p1_find_ck check (zzq_amount > 0), note varchar2(10))",
-                       "comment on column pelikan_p1_find.note is 'opis zzq'", "comment on table pelikan_p1_find is 'tabela zzq'"])
+                       "comment on column pelikan_p1_find.note is 'opis zzq'", "comment on table pelikan_p1_find is 'tabela zzq'",
+                       "create or replace view pelikan_p1_find_v (zzq_v) as select note from pelikan_p1_find",
+                       "comment on column pelikan_p1_find_v.zzq_v is 'widok zzq'"])
         let (ws, _) = try workspace()
         let m = try #require(ws.metadata())
         var c = DatabaseSearchCriteria(text: "zzq")
@@ -296,10 +298,15 @@ struct P1DataDBTests {
         let texts = Set(hits.filter { $0.object.name == "PELIKAN_P1_FIND" }.map(\.text))
         #expect(texts.contains("COLUMN ZZQ_AMOUNT") && texts.contains("COMMENT NOTE: opis zzq") && texts.contains("COMMENT: tabela zzq"))
         #expect(texts.contains { $0.hasPrefix("CHECK PELIKAN_P1_FIND_CK") })
+        // Kolumny i komentarze widoku to nie definicja tabeli (filtr po ALL_TABLES zamiast półzłączenia — D165).
+        #expect(!hits.contains { $0.object.name == "PELIKAN_P1_FIND_V" })
+        c.nameFilter = "pelikan_p1_find_v"
+        #expect(try await DatabaseSearch.search(c, metadata: m).isEmpty)
+        c.nameFilter = ""
         let r = try await ws.invoke("tools.findObjects", CommandArguments(["text": "zzq", "types": "TABLE", "names": .bool(false)]))
         guard case .array(let list)? = r.value else { Issue.record("brak wyników"); return }
         #expect(list.count == hits.count)
         await ws.sessions.disconnectAll()
-        try await run(["drop table pelikan_p1_find purge"])
+        try await run(["drop view pelikan_p1_find_v", "drop table pelikan_p1_find purge"])
     }
 }

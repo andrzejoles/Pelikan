@@ -1311,3 +1311,18 @@ każde zapytanie do słownika takiej bazy kosztuje sekundy niezależnie od liczb
 - **Dokumentacja schematu** (1826 obiektów): ponad 20 min → 14,7 s. Komentarze, kolumny, ograniczenia, indeksy,
   parametry programów i sekwencje pobierane są kilkoma zapytaniami na schemat zamiast czterech na tabelę.
 Porównanie próbki 150 obiektów ze sobą dało w sondzie 234 „tylko w celu”: to obiekty spoza próbki, nie błąd.
+
+### D165 · 2026-10-25 — Diagram ER dużego schematu, definicje tabel w wyszukiwaniu; beta 8.4.0, stare tagi usunięte
+Trzecia próba tylko do odczytu (D151) mierzyła osobno zapytania i obliczenia po stronie klienta:
+- **Diagram ER, 2000 tabel**: 98 → 6,6 s. Zapytania zajmowały 7 s, resztę zabierało `Diagram.addObject`. Dla każdej
+  tabeli szukał wolnego miejsca, sprawdzając wszystkie wcześniejsze — koszt rósł z kwadratem liczby tabel, a układ
+  warstwowy i tak przestawiał potem wszystko. Diagram ze schematu dodaje teraz obiekty naraz bez szukania miejsca
+  (`addObjectsForLayout`), a układ znajduje elementy przez słownik zamiast przeszukiwania listy. Pojedyncze dodawanie
+  (przeciąganie z przeglądarki obiektów) dalej szuka wolnego miejsca.
+- **Znajdź obiekty — definicje tabel**: 16 → 4,9 s (przed D164: 58 s). Półzłączenie
+  `(owner, table_name) in (select … from all_tables)` w gałęziach kolumn i komentarzy kosztowało ~5 s na gałąź przy
+  0,4 s bez niego. Kolumny i komentarze widoków odpadają teraz po stronie klienta, po jednym zapytaniu o tabele
+  przeszukiwanych schematów, wykonywanym tylko wtedy, gdy są trafienia. Wiersze widoków liczą się do limitu trafień
+  przed odfiltrowaniem; przy domyślnym limicie 10 000 trafień rzadko ma to znaczenie.
+- Właściciel opublikował drugą betę **8.4.0** (poprawki D162–D164) i polecił usunąć stare tagi v1.9.0–v7.7.0. Zostały
+  tagi opublikowanych wydań: v7.9.0 i v8.4.0.

@@ -12,10 +12,7 @@ public enum ERDiagram {
     public static func build(owner: String, tables: [String], source: any SchemaMetadataSource, showColumns: Bool = true) async throws -> Diagram {
         var d = Diagram()
         let columns = try await source.columns(owner: owner, tables: tables)
-        for t in tables {
-            let id = d.addObject(owner: owner, name: t, type: "TABLE", columns: columns[t] ?? [], at: DiagramPoint(16, 16))
-            if !showColumns { d.setShowColumns(false, for: [id]) }
-        }
+        d.addObjectsForLayout(owner: owner, names: tables, type: "TABLE", columns: columns, showColumns: showColumns)
         d.addForeignKeyLinks(try await source.foreignKeys(owner: owner, childTables: tables))
         layout(&d)
         return d
@@ -47,6 +44,7 @@ public enum ERDiagram {
         let totalHeight = objects.map { $0.frame.height + rowGap }.reduce(0, +)
         // Wysokość kolumny ~ proporcje 4:3 obrazu przy liczbie poziomów.
         let target = max(600, (totalHeight * 240 * 3 / 4).squareRoot())
+        let index = Dictionary(d.items.indices.map { (d.items[$0].id, $0) }, uniquingKeysWith: { a, _ in a })
         var x = Diagram.grid * 2
         for lv in 0...maxLevel {
             let column = objects.filter { (level[$0.id] ?? 0) == lv }.sorted { $0.name < $1.name }
@@ -59,7 +57,7 @@ public enum ERDiagram {
                     y = Diagram.grid * 2
                     widest = 0
                 }
-                if let i = d.items.firstIndex(where: { $0.id == it.id }) {
+                if let i = index[it.id] {
                     d.items[i].frame.x = Diagram.snap(x)
                     d.items[i].frame.y = Diagram.snap(y)
                 }
