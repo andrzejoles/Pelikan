@@ -264,7 +264,9 @@ struct CartView: View {
         .onChange(of: cart) { persist() }
     }
 
-    private func persist() { try? workspace.saveCart(cart) }
+    private func persist() {
+        do { try workspace.saveCart(cart) } catch { message = error.localizedDescription }
+    }
 
     private func add() async {
         do {

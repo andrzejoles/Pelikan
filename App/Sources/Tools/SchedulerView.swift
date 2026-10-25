@@ -67,7 +67,7 @@ struct SchedulerView: View {
                 Button(L10n.tr("Nowe zadanie…")) { editing = JobEditing(job: SchedulerJob(name: "NOWE_ZADANIE", action: "begin\n  null;\nend;"), isNew: true) }
                 Button(L10n.tr("Edytuj…")) { edit() }.disabled(selected?.kind != .jobs)
                 Button(L10n.tr("Uruchom")) {
-                    if let o = selected { run("begin dbms_scheduler.run_job('\(o.owner).\(o.name)', use_current_session => false); end;") }
+                    if let o = selected { run(Scheduler.runSQL(owner: o.owner, name: o.name)) }
                 }.disabled(selected?.kind != .jobs)
                 Button(L10n.tr("Usuń")) { drop() }.disabled(selected == nil)
                 Spacer()

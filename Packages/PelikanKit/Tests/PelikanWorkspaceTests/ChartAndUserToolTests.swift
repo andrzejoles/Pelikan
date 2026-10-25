@@ -88,6 +88,8 @@ struct UserToolTests {
         #expect(r.status == 0 && r.output == "SCOTT.EMP_API $(whoami); select 1\n")
         let p = try UserTools.process(t, context())
         #expect(p.executableURL?.path == "/bin/echo" && p.environment?.keys.contains { $0.hasPrefix("PELIKAN_") } == false)
+        t.arguments = ["-n", "", "#object", ""]     // pole „każdy w osobnej linii” z pustą i końcową linią
+        #expect(try UserTools.process(t, context()).arguments == ["-n", "SCOTT.EMP_API"])
         t.program = "brak-takiego-programu-pelikan"
         #expect(throws: CommandError.self) { _ = try UserTools.process(t, context()) }
     }

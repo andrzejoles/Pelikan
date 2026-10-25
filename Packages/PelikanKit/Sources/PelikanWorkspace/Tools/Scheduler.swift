@@ -255,6 +255,11 @@ public enum Scheduler {
     public nonisolated static func stopSQL(owner: String, name: String, force: Bool) -> String {
         "begin dbms_scheduler.stop_job(\(literal("\(owner).\(name)")), force => \(force ? "true" : "false")); end;"
     }
+
+    /// Uruchomienie zadania w osobnej sesji (nazwa jako literał z podwojonymi apostrofami).
+    public nonisolated static func runSQL(owner: String, name: String) -> String {
+        "begin dbms_scheduler.run_job(\(literal("\(owner).\(name)")), use_current_session => false); end;"
+    }
 }
 
 /// Komendy schedulera.

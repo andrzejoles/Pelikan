@@ -88,6 +88,8 @@ struct TestPanel: View {
             }
         }
         .onChange(of: document.errorStack) { if !document.errorStack.isEmpty { tab = 2 } }
+        // Przy panelu, nie przy karcie Wyniki — ta jest w hierarchii dopiero po jej wybraniu.
+        .onChange(of: document.testResults) { if !document.testResults.isEmpty { tab = 5 } }
         .sheet(item: $cursorShown) { v in CursorResultView(variable: v) }
     }
 
@@ -270,7 +272,6 @@ struct TestPanel: View {
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .padding(8)
         }
-        .onChange(of: document.testResults) { if !document.testResults.isEmpty { tab = 5 } }
     }
 
     /// Ślad DBMS_TRACE (PD-OPT-007): zdarzenia przebiegu; poziom włączany komendą Debugowanie › Ślad DBMS_TRACE.

@@ -90,7 +90,7 @@
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Pelikan Test Script</string>
+			<string>$(PELIKAN_APP_NAME) Test Script</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -247,7 +247,7 @@
 			<key>UTTypeIdentifier</key>
 			<string>$(PELIKAN_BUNDLE_ID).test</string>
 			<key>UTTypeDescription</key>
-			<string>Pelikan Test Script</string>
+			<string>$(PELIKAN_APP_NAME) Test Script</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.plain-text</string>
