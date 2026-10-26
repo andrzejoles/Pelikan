@@ -36,6 +36,8 @@
 	<string>$(PELIKAN_COPYRIGHT)</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 	<key>NSSupportsAutomaticTermination</key>
 	<false/>
 	<key>PelikanAppName</key>
