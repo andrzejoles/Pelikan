@@ -254,7 +254,7 @@ struct WorksetTests {
         let attrs = try FileManager.default.attributesOfItem(atPath: t.url.appendingPathComponent("Worksets/Domyślny.json").path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
         try FileManager.default.removeItem(at: f)
-        let missing = ws.applyWorkset(try #require(try ws.worksets.load(WorksetStore.defaultName)))
+        let missing = try await ws.applyWorkset(try #require(try ws.worksets.load(WorksetStore.defaultName)))
         #expect(missing.count == 1 && ws.documents.isEmpty)
         let layout = WindowLayout(frame: "{{10, 20}, {1200, 800}}", sidebarWidth: 260, sidebarPane: 4, agentPaneVisible: true)
         ws.worksets.saveLayout(layout)

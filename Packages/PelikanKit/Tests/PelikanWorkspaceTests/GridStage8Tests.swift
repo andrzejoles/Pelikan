@@ -193,7 +193,7 @@ struct GridStage8Tests {
     }
 
     @Test("Workset zapamiętuje wartości zmiennych okna (tekst, lista, NULL)")
-    func worksetVariables() throws {
+    func worksetVariables() async throws {
         let t = try TempDirectory()
         let ws = Workspace(dataDirectory: t.url)
         let doc = ws.newDocument(.sql, text: "select :a, &b from dual")
@@ -201,7 +201,7 @@ struct GridStage8Tests {
         let snap = ws.worksetSnapshot()
         let data = try JSONEncoder().encode(snap)
         let back = try JSONDecoder().decode(Workset.self, from: data)
-        ws.applyWorkset(back)
+        try await ws.applyWorkset(back)
         let restored = try #require(ws.documents.first)
         #expect(restored.variableValues == ["a": .text("1"), "b": .list(["x", "y"]), "c": .null])
     }

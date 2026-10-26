@@ -9,7 +9,7 @@ import Testing
 @Suite("Przywracanie okien")
 struct SessionRestoreTests {
     @Test("wszystkie rodzaje okien wracają z treścią; bez pliku — nadal bez pliku i ze zmianą; aktywne okno zachowane")
-    func roundTrip() throws {
+    func roundTrip() async throws {
         let t = try TempDirectory()
         let file = t.url.appendingPathComponent("zapisany.sql")
         try "select 1 from dual;\n".write(to: file, atomically: true, encoding: .utf8)
@@ -36,7 +36,7 @@ struct SessionRestoreTests {
 
         let back = Workspace(dataDirectory: t.url)
         let loaded = try #require(try back.worksets.load(back.worksets.current))
-        #expect(back.applyWorkset(loaded).isEmpty)
+        #expect(try await back.applyWorkset(loaded).isEmpty)
         let docs = back.documents
         #expect(docs.map(\.kind) == [.sql, .program, .test, .explainPlan, .diagram, .notebook, .report, .sql])
         #expect(docs[0].text == sql.text && docs[0].fileURL == nil && docs[0].isModified && docs[0].selectedRange == 7..<8)
@@ -51,7 +51,7 @@ struct SessionRestoreTests {
     }
 
     @Test("konsola połączenia wraca jako konsola (tekst z magazynu konsol), nie jako zwykłe okno")
-    func console() throws {
+    func console() async throws {
         let t = try TempDirectory()
         let ws = Workspace(dataDirectory: t.url)
         let def = ConnectionDefinition(name: "dev_konsola", target: ConnectionTarget(user: "u", connectString: "dev"))
@@ -62,7 +62,7 @@ struct SessionRestoreTests {
         ws.persistConsoles()
         try ws.saveCurrentWorkset()
         let back = Workspace(dataDirectory: t.url)
-        back.applyWorkset(try #require(try back.worksets.load(back.worksets.current)))
+        try await back.applyWorkset(try #require(try back.worksets.load(back.worksets.current)))
         #expect(back.documents.count == 1)
         #expect(back.documents.first?.consoleConnectionID == def.id && back.documents.first?.text == "select 1 from dual")
     }

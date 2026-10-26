@@ -23,6 +23,26 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var testWatches: [String]?
     /// Konsola połączenia (tekst konsoli trzyma `QueryConsoles`).
     public var consoleConnectionID: UUID?
+    /// Format pliku okna z niezapisanymi zmianami (D55, R6-04): kodowanie (`String.Encoding.rawValue`), BOM i zakończenia
+    /// wierszy. Starsze worksety ich nie mają — format czytany wtedy z pliku na dysku.
+    public var encoding: UInt?
+    public var bom: Bool?
+    public var lineEnding: String?
+
+    /// Format zapisany w worksecie (nil — starszy workset).
+    var fileFormat: TextFileFormat? {
+        guard let encoding else { return nil }
+        var f = TextFileFormat()
+        f.encoding = String.Encoding(rawValue: encoding)
+        f.hasBOM = bom ?? false
+        f.lineEnding = lineEnding.flatMap(TextFileFormat.LineEnding.init(rawValue:)) ?? .lf
+        return f
+    }
+
+    /// Puste okno edytora bez pliku (np. okno SQL otwarte przy starcie) — nie warto go dopisywać do cudzego workseta.
+    var isBlank: Bool {
+        filePath == nil && consoleConnectionID == nil && !modified && (text ?? "").isEmpty && [.sql, .program, .command].contains(kind)
+    }
 }
 
 /// Wartość zmiennej okna w worksecie: tekst albo lista; brak obu — NULL.
@@ -95,6 +115,11 @@ public final class WorksetStore {
     @ObservationIgnored let layoutURL: URL?
     public private(set) var current: String
     public private(set) var names: [String] = []
+    /// Zapisany workset, którego okien nie otwarto w tej sesji (start z `noloaddesktop` albo `workset=…`, R3-01): jego
+    /// okna są dopisywane przy każdym zapisie workseta o tej nazwie, żeby autozapis ich nie nadpisał.
+    public private(set) var unopened: Workset?
+    /// Worksety, których nieczytelnego pliku nie udało się przenieść do kopii — zapis w ich miejsce zablokowany.
+    @ObservationIgnored var damaged: Set<String> = []
     /// Zmienia się po zapisie albo usunięciu workseta (lista w menu).
     public private(set) var generation = 0
 
@@ -111,13 +136,14 @@ public final class WorksetStore {
 
     func reloadNames() {
         guard let directory, let files = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else { names = []; return }
-        names = files.filter { $0.hasSuffix(".json") && $0 != "state.json" }.map { String($0.dropLast(5)) }.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        names = files.filter { $0.hasSuffix(".json") && $0.lowercased() != "state.json" }.map { String($0.dropLast(5)) }.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
     /// Nazwa pliku workseta bez separatorów ścieżki.
     nonisolated static func fileName(_ name: String) throws -> String {
         let n = name.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty, !n.contains("/"), !n.hasPrefix("."), n != "state" else {
+        // `State.json` to na APFS bez rozróżniania wielkości liter ten sam plik co `state.json` (R6-18).
+        guard !n.isEmpty, !n.contains("/"), !n.hasPrefix("."), n.lowercased() != "state" else {
             throw CommandError.invalidArgument("name", L10n.tr("nieprawidłowa nazwa workseta"))
         }
         return n + ".json"
@@ -131,26 +157,65 @@ public final class WorksetStore {
 
     public func save(_ w: Workset) throws {
         guard let directory else { return }
+        let file = try Self.fileName(w.name)
+        guard !damaged.contains(file) else { throw CommandError.notAvailable(L10n.tr("Plik „\(file)” jest uszkodzony albo pochodzi z nowszej wersji aplikacji — zmiany nie będą w nim zapisywane.")) }
         let enc = JSONEncoder()
         enc.outputFormatting = [.prettyPrinted, .sortedKeys]
         enc.dateEncodingStrategy = .iso8601
-        try write(try enc.encode(w), to: directory.appendingPathComponent(try Self.fileName(w.name)))
+        try write(try enc.encode(merged(w)), to: directory.appendingPathComponent(file))
         reloadNames()
         generation += 1
     }
 
+    /// Workset z dopisanymi oknami nieotwartymi w tej sesji (`unopened`): bez pustych okien bieżących i bez plików już
+    /// otwartych.
+    func merged(_ w: Workset) -> Workset {
+        guard let u = unopened, u.name == w.name else { return w }
+        var m = w
+        m.documents = []
+        m.activeIndex = nil
+        for (i, d) in w.documents.enumerated() where !d.isBlank {
+            if i == w.activeIndex { m.activeIndex = m.documents.count }
+            m.documents.append(d)
+        }
+        let paths = Set(m.documents.compactMap(\.filePath))
+        m.documents += u.documents.filter { $0.filePath.map { !paths.contains($0) } ?? true }
+        return m
+    }
+
+    /// Zapamiętuje zapisany workset, którego okien nie otwarto przy starcie (R3-01).
+    public func keepUnopened(_ w: Workset) {
+        unopened = w.documents.isEmpty ? nil : w
+    }
+
+    /// Okna workseta zostały otwarte — dopisywanie przy zapisie niepotrzebne.
+    func clearUnopened(_ name: String) {
+        if unopened?.name == name { unopened = nil }
+    }
+
+    /// Zapisany workset; nil — nie ma. Nieczytelny plik (uszkodzony albo z nowszej wersji) jest przenoszony do kopii
+    /// `.bad-…` i zgłaszany błędem — autozapis nie nadpisze go oknami bieżącej sesji (R6-11).
     public func load(_ name: String) throws -> Workset? {
         guard let directory else { return nil }
-        let url = directory.appendingPathComponent(try Self.fileName(name))
+        let file = try Self.fileName(name)
+        let url = directory.appendingPathComponent(file)
         guard let data = try? Data(contentsOf: url) else { return nil }
         let dec = JSONDecoder()
         dec.dateDecodingStrategy = .iso8601
-        return try dec.decode(Workset.self, from: data)
+        do {
+            return try dec.decode(Workset.self, from: data)
+        } catch {
+            let (message, preserved) = DamagedFile.preserve(url)
+            if !preserved { damaged.insert(file) }
+            reloadNames()
+            throw CommandError.notAvailable(message)
+        }
     }
 
     public func delete(_ name: String) throws {
         guard let directory else { return }
         try? FileManager.default.removeItem(at: directory.appendingPathComponent(try Self.fileName(name)))
+        clearUnopened(name)
         if current == name { setCurrent(Self.defaultName) }
         reloadNames()
         generation += 1
@@ -193,6 +258,11 @@ extension Workspace {
                 if d.kind == .notebook { e.notebook = d.notebook }
                 if d.kind == .report { e.report = d.report }
                 if d.kind == .test, !d.testWatches.isEmpty { e.testWatches = d.testWatches }
+                if d.fileURL != nil {
+                    e.encoding = d.fileFormat.encoding.rawValue
+                    e.bom = d.fileFormat.hasBOM
+                    e.lineEnding = d.fileFormat.lineEnding.rawValue
+                }
             }
             if let c = d.consoleConnectionID {
                 e.consoleConnectionID = c
@@ -205,27 +275,59 @@ extension Workspace {
     }
 
     /// Zastępuje okna oknami workseta (bieżące okna trzeba wcześniej zapisać do ich workseta). Plik, którego już nie
-    /// ma, a okno nie miało tekstu — pomijany; zwraca listę pominiętych ścieżek.
+    /// ma, a okno nie miało tekstu — pomijany; zwraca listę pominiętych ścieżek. Anulowanie pytania o transakcję albo
+    /// okno w trakcie wykonania przerywa zmianę (błąd).
     @discardableResult
-    public func applyWorkset(_ w: Workset) -> [String] {
-        for d in documents { close(d.id) }
+    public func applyWorkset(_ w: Workset) async throws -> [String] {
+        try await closeDocumentsForWorkset()
+        worksets.clearUnopened(w.name)
         return appendWorksetDocuments(w)
+    }
+
+    /// Zamyka wszystkie okna tą samą drogą co zamykanie okna (R6-01): odmowa przy wykonaniu, zatrzymanie debugera,
+    /// pytanie o otwartą transakcję, zamknięcie sesji okna i debugera — bez pytania o zapis (treść okien jest już
+    /// w zapisanym worksecie). Anulowanie przerywa zmianę workseta; okna zamknięte do tej chwili wracają z migawki.
+    func closeDocumentsForWorkset() async throws {
+        let docs = documents
+        let entries = worksetSnapshot().documents
+        // Najpierw okna, które mogą odmówić albo zapytać — wcześniej nic nie jest zamykane bez potrzeby.
+        let asks = { (d: Document) in d.transactionOpen || self.debuggers[d.id] != nil }
+        let order = docs.indices.filter { docs[$0].isExecuting }
+            + docs.indices.filter { !docs[$0].isExecuting && asks(docs[$0]) }
+            + docs.indices.filter { !docs[$0].isExecuting && !asks(docs[$0]) }
+        var closed: [WorksetDocument] = []
+        do {
+            for i in order {
+                guard try await BuiltinCommands.closeDocument(docs[i], in: self, askToSave: false) else { throw CommandError.cancelledByUser }
+                closed.append(entries[i])
+            }
+        } catch {
+            if !closed.isEmpty { appendWorksetDocuments(Workset(name: worksets.current, documents: closed)) }
+            throw error
+        }
     }
 
     /// Otwiera okna workseta obok bieżących (odzyskiwanie po awarii); zwraca pominięte ścieżki.
     @discardableResult
     public func appendWorksetDocuments(_ w: Workset) -> [String] {
         var missing: [String] = []
-        var opened: [Document] = []
-        for e in w.documents {
+        // Indeks wpisu → otwarte okno: pominięte wpisy nie przesuwają okna aktywnego (R6-14).
+        var opened: [Int: Document] = [:]
+        for (i, e) in w.documents.enumerated() {
             let url = e.filePath.map { URL(fileURLWithPath: $0) }
             let doc: Document
             if let c = e.consoleConnectionID {
                 guard connections.connection(c) != nil else { continue }
-                opened.append(openConsole(connection: c))
+                opened[i] = openConsole(connection: c)
                 continue
             } else if let text = e.text {
                 doc = newDocument(e.kind, text: text, fileURL: url)
+                // Kodowanie, BOM i zakończenia wierszy pliku (D55): z workseta, w starszych worksetach — z pliku na dysku.
+                if let url {
+                    doc.fileFormat = e.fileFormat
+                        ?? (try? Data(contentsOf: url)).map { TextFileCodec.decode($0, preferred: projectEncoding(for: url)).format }
+                        ?? TextFileFormat()
+                }
                 if let v = e.testVariables { doc.testVariables = v }
                 if let w = e.testWatches { doc.testWatches = w }
                 if let x = e.diagram { doc.diagram = x }
@@ -246,9 +348,9 @@ extension Workspace {
             }
             let len = (doc.text as NSString).length
             doc.selectedRange = min(e.selectionStart, len)..<min(max(e.selectionEnd, e.selectionStart), len)
-            opened.append(doc)
+            opened[i] = doc
         }
-        if let i = w.activeIndex, i < opened.count { activate(opened[i].id) }
+        if let i = w.activeIndex, let d = opened[i] { activate(d.id) }
         return missing
     }
 
@@ -257,14 +359,15 @@ extension Workspace {
         try worksets.save(worksetSnapshot())
     }
 
-    /// Przełącza na workset: bieżący zapisany, okna zastąpione oknami wskazanego (nowy — pusty).
+    /// Przełącza na workset: bieżący zapisany, okna zastąpione oknami wskazanego (nowy — pusty). Anulowane pytanie
+    /// o transakcję albo okno w trakcie wykonania — bez zmiany workseta (błąd).
     @discardableResult
-    public func switchWorkset(to name: String) throws -> [String] {
+    public func switchWorkset(to name: String) async throws -> [String] {
         _ = try WorksetStore.fileName(name)
         try saveCurrentWorkset()
         let target = try worksets.load(name) ?? Workset(name: name)
+        let missing = try await applyWorkset(target)
         worksets.setCurrent(name)
-        let missing = applyWorkset(target)
         try worksets.save(worksetSnapshot())
         return missing
     }

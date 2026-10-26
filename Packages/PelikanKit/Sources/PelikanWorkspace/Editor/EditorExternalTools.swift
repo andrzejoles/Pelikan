@@ -262,10 +262,13 @@ extension Workspace {
         try? FileBackup.backup(url)
     }
 
-    /// Migawka do odzyskiwania: okna z niezapisanymi zmianami (z plikiem albo bez, z niepustym tekstem).
+    /// Migawka do odzyskiwania: okna z niezapisanymi zmianami (z plikiem albo bez, z niepustym tekstem albo z modelem
+    /// diagramu lub notatnika — ich tekst jest pusty, R3-15).
     public func recoverySnapshot() -> Workset {
         var w = worksetSnapshot(name: "recovery")
-        w.documents = w.documents.filter { $0.modified && !($0.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        w.documents = w.documents.filter {
+            $0.modified && (!($0.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || $0.diagram != nil || $0.notebook != nil)
+        }
         w.activeIndex = nil
         return w
     }
@@ -377,10 +380,11 @@ enum EditorExternalCommands {
                                       feature: "PD-FILE-001"),
                     validate: { $0.pendingRecovery != nil }) { ctx in
                 guard let w = ctx.workspace.pendingRecovery else { return .ok }
-                let missing = ctx.workspace.appendWorksetDocuments(w)
+                let before = ctx.workspace.documents.count
+                ctx.workspace.appendWorksetDocuments(w)
                 ctx.workspace.pendingRecovery = nil
                 ctx.workspace.recovery.discardPrevious()
-                return CommandResult(message: L10n.tr("Odzyskano okien: \(w.documents.count - missing.count)"))
+                return CommandResult(message: L10n.tr("Odzyskano okien: \(ctx.workspace.documents.count - before)"))
             },
         ]
     }
