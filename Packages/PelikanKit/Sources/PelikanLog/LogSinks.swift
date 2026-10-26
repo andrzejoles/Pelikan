@@ -47,10 +47,21 @@ public final class FileLogSink: LogSink {
         return "\(timestamp(e.date)) \(e.level.label) \(category)  \(text)\n"
     }
 
-    static let timeStyle = Date.ISO8601FormatStyle(dateSeparator: .dash, dateTimeSeparator: .space, timeSeparator: .colon,
-                                                   timeZoneSeparator: .omitted, includingFractionalSeconds: true, timeZone: .current)
-
-    static func timestamp(_ date: Date) -> String { date.formatted(timeStyle) }
+    /// `2026-10-26 10:15:00.123+0100` — strefa zawsze liczbowo (ISO8601FormatStyle w UTC pisze „Z”).
+    static func timestamp(_ date: Date) -> String {
+        let zone = TimeZone.current
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let c = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second, .nanosecond], from: date)
+        let offset = zone.secondsFromGMT(for: date)
+        let sign = offset < 0 ? "-" : "+"
+        func pad(_ v: Int?, _ width: Int) -> String {
+            let s = String(v ?? 0)
+            return String(repeating: "0", count: max(0, width - s.count)) + s
+        }
+        return "\(pad(c.year, 4))-\(pad(c.month, 2))-\(pad(c.day, 2)) \(pad(c.hour, 2)):\(pad(c.minute, 2)):\(pad(c.second, 2))."
+            + pad((c.nanosecond ?? 0) / 1_000_000, 3) + sign + pad(abs(offset) / 3600, 2) + pad(abs(offset) % 3600 / 60, 2)
+    }
 
     private func append(_ line: String) {
         let data = Data(line.utf8)
