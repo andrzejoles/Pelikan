@@ -191,6 +191,7 @@ enum PreferenceIndex {
         ("BrowserPane", "Zachowanie"),
         ("BrowserPane", "Ostatnie obiekty: %@"),
         ("BrowserPane", "Potwierdzaj rekompilację"),
+        ("BrowserPane", "Filtr nazw bez %%"),
         ("BrowserPane", "Dwuklik: %@"),
         ("BrowserPane", "Przeciąganie (UG 23.11)"),
         ("BrowserPane", "Upuszczenie w edytorze"),
