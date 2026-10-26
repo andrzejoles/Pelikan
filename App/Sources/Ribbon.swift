@@ -33,7 +33,8 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        let root = NSView(frame: NSRect(x: 0, y: 0, width: 1200, height: Self.stripHeight + Self.contentHeight))
+        let root = SolidBackgroundView(material: .titlebar)
+        root.frame = NSRect(x: 0, y: 0, width: 1200, height: Self.stripHeight + Self.contentHeight)
         root.setAccessibilityElement(true)
         root.setAccessibilityRole(.toolbar)
         root.setAccessibilityLabel(L10n.tr("Wstążka"))

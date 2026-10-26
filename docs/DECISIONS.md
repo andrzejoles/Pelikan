@@ -1588,3 +1588,15 @@ styl (cienka, zwykła, średnio gruba, półgruba, gruba) i wielkość:
 Krój zapisany w ustawieniach, którego nie ma w systemie (np. ustawienia przeniesione z innego Maca), zostaje w wyborze
 z dopiskiem „niezainstalowana” i zastępuje go czcionka systemowa. Skrypt zrzutów ma krok `debug.settings` (ustawienia
 z argumentów) — zrzut z krojem Avenir Next 14 pt potwierdza zmianę wstążki, kart, list, paska stanu i Preferencji.
+
+### D179 · 2026-10-26 — Lewa kolumna i wstążka bez efektu przezroczystości
+
+Właściciel: czcionki w drzewie obiektów są „nierówne, poszarpane”, ładne, gdy aplikacja jest nieaktywna, a koszmarne
+po aktywacji. Przyczyna: lewa kolumna (pasek boczny) i wstążka (akcesorium paska tytułu) leżały na półprzezroczystym
+tle `NSVisualEffectView`; w aktywnym oknie tekst na nim jest rysowany trybem vibrancy (mieszanie z tłem bez zwykłego
+wygładzania), co na monitorach bez Retina daje kanciaste, nierówne litery. W nieaktywnym oknie tło staje się jednolite i
+tekst wygląda dobrze. Sprawdzone zrzutem okna przeniesionego na monitor 1× (krok skryptu `debug.moveToScreen`): z
+wymuszonym efektem litery kanciaste, bez — gładkie. Teraz lewa kolumna i wstążka mają własne tło
+(`SolidBackgroundView` — efekt w stałym stanie „nieaktywnym”, materiał paska bocznego i paska tytułu, jasny i ciemny
+tryb bez zmian w kolorach), więc tekst jest zawsze rysowany zwykłym trybem. Antyaliasing i skalowanie były poprawne:
+drzewo używa czcionki systemowej bez przekształceń.
