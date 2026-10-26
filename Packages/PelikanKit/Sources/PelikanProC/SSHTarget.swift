@@ -166,6 +166,9 @@ public final class SSHTargetStore {
     @ObservationIgnored let secrets: any SecretStore
     /// Sekrety podane bez zapamiętania — tylko w pamięci do zamknięcia aplikacji.
     @ObservationIgnored private var sessionSecrets: [UUID: String] = [:]
+    /// Komunikat o nieczytelnym pliku celów (przeniesiony do kopii `.bad-…`, R8-08) — aplikacja go pokazuje.
+    @ObservationIgnored public private(set) var loadProblem: String?
+    @ObservationIgnored private var saveBlocked = false
 
     /// Nazwa pliku celów w katalogu danych.
     public static let fileName = "ssh-targets.json"
@@ -177,10 +180,16 @@ public final class SSHTargetStore {
     public init(fileURL: URL?, secrets: any SecretStore) {
         self.fileURL = fileURL
         self.secrets = secrets
-        if let url = fileURL, let data = try? Data(contentsOf: url), let f = try? JSONDecoder().decode(SSHTargetsFile.self, from: data),
-           f.format == "pelikan-ssh-targets" {
-            folders = f.folders
-            targets = f.targets
+        if let url = fileURL, let data = try? Data(contentsOf: url) {
+            if let f = try? JSONDecoder().decode(SSHTargetsFile.self, from: data), f.format == "pelikan-ssh-targets" {
+                folders = f.folders
+                targets = f.targets
+            } else {
+                // Uszkodzony albo nowszy plik: zachowany obok, zanim pierwszy zapis nadpisze go pustą listą.
+                let (message, preserved) = DamagedFile.preserve(url)
+                loadProblem = message
+                saveBlocked = !preserved
+            }
         }
     }
 
@@ -193,6 +202,7 @@ public final class SSHTargetStore {
 
     public func save() throws {
         guard let url = fileURL else { return }
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let e = JSONEncoder()
         e.outputFormatting = [.prettyPrinted, .sortedKeys]

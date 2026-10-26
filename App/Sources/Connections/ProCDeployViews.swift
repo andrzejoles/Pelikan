@@ -21,6 +21,7 @@ final class ProCDeployModel {
         self.workspace = workspace
         self.runDirectory = runDirectory
         history = DeployHistoryStore(directory: workspace.dataDirectory?.appendingPathComponent("proc-deploys", isDirectory: true))
+        if let problem = history.loadProblem { Task { @MainActor in workspace.ui?.showError(problem) } }
     }
 
     /// Katalog lokalnego repo projektu (katalog otwartego projektu Pelikana).
