@@ -1,11 +1,27 @@
 # Pelikan — wydanie beta
 
-Piąta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Szósta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 9.0.0
+## Co nowego od 9.2.0
+
+- **Wstążka** pod paskiem narzędzi: karty Start, Edycja, Obiekty, Debugowanie i testy, Narzędzia, Raporty, Widok i karty
+  kontekstowe aktywnego okna (Program, Wynik, Diagram, Raport, Notatnik, Plan, Okno poleceń). Każda komenda z menu jest
+  na wstążce; pole **Szukaj czynności…** znajduje komendy bez polskich znaków i po angielskich nazwach z PL/SQL
+  Developera (D171).
+- **Formater**: 20 nowych opcji — wyrównanie deklaracji, parametrów, `=>`, `:=`, aliasów, UPDATE … SET i komentarzy;
+  klauzule do lewej, do prawej albo w osobnej linii; AND/OR, JOIN … ON, THEN, CASE; odstępy; wielkość liter typów,
+  funkcji i pakietów. W Preferencjach przykład każdej opcji („Teraz” / „Po zmianie”) i podświetlenie zmienionych linii
+  podglądu (D174).
+- **Dziennik aplikacji** (`~/Library/Logs/Pelikan`) bez haseł, treści SQL i danych; poziom i nazwy w Preferencjach ›
+  Ogólne, eksport do zgłoszenia (D170).
+- **Zgłaszanie problemów** na GitHubie: przycisk w komunikatach błędów, pytanie po nieoczekiwanym zamknięciu, Pomoc ›
+  Zgłoś problem… — z podglądem treści; wysyłasz ze swojego konta (D173).
+- **Logo** — własna ikona aplikacji (D172).
+
+## Co nowego w 9.2.0
 
 - **Drugie przejście przeglądu kodu** (ok. 60 poprawek, D169), m.in.: formater nie zmienia już znaczenia kodu
   (wielolinijkowe teksty, dzielenie `/`, polecenia SET/PROMPT, kod MLE i Java) i odmawia, gdy wynik nie zgadza się
