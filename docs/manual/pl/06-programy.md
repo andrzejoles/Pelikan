@@ -100,6 +100,15 @@ specjalna). Formater może działać automatycznie po otwarciu źródła z bazy,
 między komentarzami `-- NoFormat Start` i `-- NoFormat End` zostaje bez zmian. Formatowanie nigdy nie zmienia
 znaczenia kodu.
 
+Karta **Preferencje › Formater** ma grupy **Układ**, **Listy i przecinki**, **Klauzule SQL i warunki** (słowa klauzul do
+lewej, do prawej albo w osobnej linii; AND/OR na początku albo końcu linii; warunek JOIN … ON; THEN w nowej linii;
+wieloliniowe CASE), **Wyrównanie w kolumnach** (deklaracje, parametry z trybem i typem, parametry nazwane `=>`,
+przypisania `:=`, aliasy w SELECT i FROM, `=` w UPDATE … SET, komentarze na końcu linii), **Odstępy** i **Wielkość
+liter** — osobno dla słów kluczowych, identyfikatorów, typów danych, funkcji wbudowanych i pakietów Oracle. Po prawej
+jest podgląd: przykładowy pakiet, na którym widać każdą opcję, z podświetlonymi liniami zmienionymi ostatnią zmianą, a
+nad nim przykład opcji wskazanej kursorem albo ostatnio zmienionej — **Teraz** i **Po zmianie tej opcji**. Region bez
+formatowania można też oznaczyć komentarzami `-- @formatter:off` i `-- @formatter:on`.
+
 ### Szablony, snippety i makra
 
 - **Szablony** (karta **Szablony** w lewej kolumnie albo **Widok › Okno szablonów**) wstawiają gotowe fragmenty:

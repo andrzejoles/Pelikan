@@ -1507,3 +1507,32 @@ pozwalałby każdemu pisać w imieniu właściciela).
 - Okno z ostrzeżeniem, że zgłoszenie jest publiczne, przełącznikami części i podglądem dokładnej treści; treść zawsze
   w schowku. Adres dłuższy niż ok. 7500 znaków: dziennik skracany od najstarszych wpisów, komunikat o wklejeniu
   pełnej treści ze schowka.
+
+### D174 · 2026-10-26 — Precyzyjne ustawienia formatera z podglądem każdej opcji
+
+Właściciel: precyzyjne ustawianie formatowania to kluczowe ułatwienie; podgląd ma pokazywać zmianę każdej opcji, a opcje
+mają objąć to, co mają formatery (szczególnie wyrównanie i wielkość liter). Do dotychczasowych reguł doszło 20
+(z ustawieniami domyślnymi wynik bez zmian — stare testy przechodzą bez modyfikacji):
+- **Klauzule i łamanie linii:** słowa klauzul do lewej z elementami w kolumnie (jak dotąd), do prawej („rzeka”: słowa
+  kończą się w kolumnie SELECT) albo w osobnej linii z elementami wciętymi; AND/OR na początku albo końcu linii; warunek
+  JOIN … ON w nowej linii albo w linii JOIN; THEN w nowej linii; wyrażenie CASE w jednej linii albo WHEN/ELSE/END w
+  osobnych liniach (w SQL i PL/SQL; AND w warunku CASE nie łamie już linii WHERE).
+- **Wyrównanie w kolumnach** — osobny przebieg po gotowych liniach (`BeautifierAligner`), który dodaje wyłącznie
+  spacje przed wybranymi tokenami: deklaracje (typ, `:=`/DEFAULT), parametry (tryb, typ, DEFAULT; także z przecinkiem na
+  początku linii), parametry nazwane `=>`, kolejne przypisania `:=`, aliasy w SELECT i FROM, `=` w UPDATE … SET,
+  komentarze na końcu kolejnych linii. Pomija linie skopiowane bez zmian (SQL*Plus, Java/JavaScript, regiony bez
+  formatowania) i linie z wieloliniowym literałem lub komentarzem.
+- **Odstępy:** wokół operatorów (bez spacji tylko tam, gdzie tokeny się nie skleją — `a- -1`, nie `a--1`; `:=` i `=>`
+  zawsze ze spacjami), po przecinku, wewnątrz nawiasów. **Puste linie:** najwięcej n z rzędu, pusta linia przed
+  podprogramem.
+- **Wielkość liter grup słów:** typy danych (domyślnie jak słowa kluczowe), funkcje wbudowane przed „(” i pakiety
+  dostarczane z bazą przed „.” (domyślnie jak identyfikatory). Listy w `SQLWords`. Literały, identyfikatory w
+  cudzysłowie i komentarze — nigdy.
+- Znaczniki regionu bez formatowania także `-- @formatter:off/on` (SQL Developer, Trivadis).
+- **Preferencje › Formater:** grupy opcji; po prawej przykład opcji wskazanej kursorem albo ostatnio zmienionej
+  („Teraz” / „Po zmianie tej opcji”, `BeautifierExamples`) i podgląd pakietu z podświetleniem linii zmienionych ostatnią
+  zmianą. Test pilnuje, że **każda** opcja zmienia swój przykład i kod podglądu (przy ustawieniach domyślnych i przy
+  „ciężkich”), a każda właściwość `BeautifierOptions` poza formatowaniem automatycznym ma przykład.
+- Bezpieczeństwo bez zmian: `Beautifier.verify` porównuje tokeny; test formatuje korpus przy każdej opcji osobno, przy
+  narastającej kombinacji wszystkich i sprawdza idempotencję. Wydajność z wszystkimi wyrównaniami: pakiet 50 000 linii
+  w ok. 3 s w kompilacji testowej (tokeny linii w pamięci podręcznej).

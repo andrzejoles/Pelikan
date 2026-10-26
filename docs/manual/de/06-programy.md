@@ -106,6 +106,16 @@ Bezeichnern, Sonderschreibweisen). Der Formatierer kann automatisch nach dem Öf
 dem Kompilieren und vor dem Speichern laufen. Ein Abschnitt zwischen den Kommentaren `-- NoFormat Start` und `--
 NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des Codes.
 
+Die Registerkarte **Einstellungen › Formatierer** hat die Gruppen **Layout**, **Listen und Kommas**, **SQL-Klauseln und
+Bedingungen** (Klauselwörter links, rechts oder in eigener Zeile; AND/OR am Zeilenanfang oder -ende; die Bedingung JOIN
+… ON; THEN in neuer Zeile; mehrzeiliges CASE), **Spaltenausrichtung** (Deklarationen, Parameter mit Modus und Typ,
+benannte Parameter `=>`, Zuweisungen `:=`, Aliasse in SELECT und FROM, `=` in UPDATE … SET, Kommentare am Zeilenende),
+**Abstände** und **Groß-/Kleinschreibung** — getrennt für Schlüsselwörter, Bezeichner, Datentypen, integrierte
+Funktionen und Oracle-Pakete. Rechts ist eine Vorschau: ein Beispielpaket, an dem jede Option sichtbar ist, mit
+hervorgehobenen Zeilen der letzten Änderung, darüber ein Beispiel der Option unter dem Zeiger oder der zuletzt
+geänderten — **Jetzt** und **Nach Änderung dieser Option**. Ein Bereich ohne Formatierung lässt sich auch mit den
+Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren.
+
 ### Vorlagen, Snippets und Makros
 
 - **Templates** (Tab **Templates** in der linken Spalte oder **Ansicht › Vorlagenfenster**) fügen fertige Fragmente ein:

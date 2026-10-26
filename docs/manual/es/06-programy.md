@@ -108,6 +108,16 @@ identificadores, grafía especial). El formateador puede actuar automáticamente
 datos, antes de compilar y antes de guardar. Un fragmento entre los comentarios `-- NoFormat Start` y `-- NoFormat End`
 se mantiene sin cambios. El formato nunca cambia el significado del código.
 
+La pestaña **Preferencias › Formateador** tiene los grupos **Disposición**, **Listas y comas**, **Cláusulas SQL y condiciones**
+(palabras de cláusula a la izquierda, a la derecha o en su propia línea; AND/OR al principio o al final de la línea; la
+condición JOIN … ON; THEN en una línea nueva; CASE en varias líneas), **Alineación en columnas** (declaraciones,
+parámetros con modo y tipo, parámetros con nombre `=>`, asignaciones `:=`, alias en SELECT y FROM, `=` en UPDATE … SET,
+comentarios al final de línea), **Espaciado** y **Mayúsculas/minúsculas**, por separado para palabras clave,
+identificadores, tipos de datos, funciones integradas y paquetes de Oracle. A la derecha hay una vista previa: un paquete
+de ejemplo en el que se ve cada opción, con las líneas modificadas por el último cambio resaltadas, y encima un ejemplo
+de la opción señalada o de la última cambiada: **Ahora** y **Tras cambiar esta opción**. Una región sin formato también
+se puede marcar con los comentarios `-- @formatter:off` y `-- @formatter:on`.
+
 ### Plantillas, fragmentos y macros
 
 - Las **Templates** (pestaña **Templates** de la columna izquierda o **Vista › Ventana de plantillas**) insertan
