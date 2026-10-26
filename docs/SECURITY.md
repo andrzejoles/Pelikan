@@ -94,6 +94,10 @@
   typowych zapisach i zamienia katalog domowy na `~` także w wartościach jawnych. Jawne nazwy (Preferencje) są
   opcjonalne i domyślnie wyłączone. Test szczelności: łączenie z błędnym i dobrym hasłem, `IDENTIFIED BY` i literał
   w SQL — w żadnym wpisie (także diagnostycznym z jawnymi nazwami) nie ma hasła, treści SQL ani wartości.
+- Zgłaszanie problemów (PL-INFRA-013, D173): Pelikan nie wysyła niczego sam — otwiera stronę nowego zgłoszenia
+  na GitHubie z treścią do przejrzenia, użytkownik wysyła ją ze swojego konta; bez tokenów w aplikacji. Treść (opis,
+  komunikat, opis awarii bez ścieżek, środowisko, ostatnie wpisy dziennika z ukrytymi nazwami) przechodzi przez
+  `LogRedactor`; okno ostrzega, że zgłoszenia są publiczne.
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność

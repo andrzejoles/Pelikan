@@ -660,6 +660,13 @@ public enum BuiltinCommands {
                 ctx.ui?.openInApplication(sink.currentFile, application: "com.apple.Console")
                 return .ok
             },
+            Command(CommandDescriptor(id: "help.reportProblem", title: L10n.tr("Zgłoś problem…"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Przygotowuje zgłoszenie błędu na GitHubie: opis, środowisko i ostatnie wpisy dziennika z podglądem; wysyłasz je ze swojego konta."),
+                                      feature: "PL-INFRA-013")) { ctx in
+                ctx.ui?.showProblemReport(ctx.workspace.problemReport(.manual))
+                return .ok
+            },
             Command(CommandDescriptor(id: "help.exportLog", title: L10n.tr("Eksportuj dziennik…"), category: .help,
                                       parameters: [CommandParameter("path", .string, L10n.tr("Plik docelowy"))],
                                       agent: .none, effect: .external,

@@ -125,6 +125,13 @@ Błędy i propozycje zgłaszaj na stronie projektu:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Nie dołączaj haseł, nazw
 serwerów ani danych z baz produkcyjnych — wystarczy opis kroków i komunikat błędu.
 
+Najprościej zgłosisz problem z aplikacji: **Pomoc › Zgłoś problem…** (także na wstążce: **Widok › Pomoc**), przycisk
+**Zgłoś problem…** w komunikacie błędu albo pytanie po nieoczekiwanym zamknięciu Pelikana (z opisem awarii z raportu
+macOS: wyjątek i stos — bez ścieżek). W oknie zgłoszenia wpisz tytuł i opis, wybierz, czy dołączyć opis środowiska i
+ostatnie wpisy dziennika, i sprawdź podgląd. **Otwórz zgłoszenie na GitHubie** otwiera stronę nowego zgłoszenia z
+wypełnioną treścią (kopia jest w schowku) — wysyłasz je ze swojego konta GitHub, Pelikan niczego nie wysyła sam.
+Zgłoszenia są publiczne: treść przechodzi przez filtr haseł i ścieżki domowej, a dziennik domyślnie ukrywa nazwy.
+
 Do zgłoszenia dołącz dziennik: **Pomoc › Eksportuj dziennik…** zapisuje go z opisem środowiska (wersja, system,
 sterowniki) do pliku tekstowego. Przed wysłaniem przejrzyj plik, zwłaszcza gdy włączone były jawne nazwy.
 

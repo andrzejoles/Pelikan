@@ -132,6 +132,14 @@ Informa de errores y propuestas en la página del proyecto:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). No incluyas contraseñas, nombres
 de servidores ni datos de bases de datos de producción: basta con describir los pasos y el mensaje de error.
 
+Lo más sencillo es informar desde la aplicación: **Ayuda › Informar de un problema…** (también en la cinta: **Vista ›
+Ayuda**), el botón **Informar de un problema…** de un mensaje de error o la pregunta tras un cierre inesperado de
+Pelikan (con la descripción del fallo del informe de macOS: excepción y pila, sin rutas). En la ventana del informe
+escriba un título y una descripción, elija si incluir el entorno y las últimas entradas del registro y revise la vista
+previa. **Abrir incidencia en GitHub** abre la página de una nueva incidencia con el texto rellenado (hay una copia en el
+portapapeles); la envía desde su propia cuenta de GitHub, Pelikan no envía nada por sí mismo. Las incidencias son
+públicas: el texto pasa por el filtro de contraseñas y de la ruta personal, y el registro oculta los nombres por defecto.
+
 Adjunta el registro al informe: **Ayuda › Exportar registro…** lo guarda junto con una descripción del entorno
 (versión, sistema, controladores) en un archivo de texto. Revisa el archivo antes de enviarlo, sobre todo si se
 mostraban los nombres.

@@ -124,6 +124,14 @@ Report bugs and suggestions on the project page:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Do not include passwords, server
 names or data from production databases — a description of the steps and the error message are enough.
 
+The easiest way is to report from the app: **Help › Report a problem…** (also on the ribbon: **View › Help**), the
+**Report a problem…** button in an error message, or the question after Pelikan quit unexpectedly (with a crash
+description from the macOS report: exception and stack — no paths). In the report window enter a title and a
+description, choose whether to include the environment and recent log entries, and check the preview. **Open issue on
+GitHub** opens the new issue page with the text filled in (a copy is in the clipboard) — you submit it from your own
+GitHub account; Pelikan never sends anything by itself. Issues are public: the text passes through the password and
+home-path filter, and the log hides names by default.
+
 Attach the log to your report: **Help › Export Log…** saves it together with an environment summary (version,
 system, drivers) to a text file. Review the file before sending it, especially if names were shown.
 

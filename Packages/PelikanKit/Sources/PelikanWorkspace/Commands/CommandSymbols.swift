@@ -76,7 +76,7 @@ public enum CommandSymbols {
         "window.next": "chevron.right.square", "window.rename": "character.cursor.ibeam", "view.saveLayout": "rectangle.3.group",
         "view.restoreLayout": "rectangle.3.group.fill", "view.autosaveLayout": "arrow.triangle.2.circlepath", "view.ribbon": "menubar.rectangle", "view.ribbonCollapse": "rectangle.compress.vertical",
         "view.customizeToolbar": "slider.horizontal.3", "help.manual": "book.closed", "help.context": "questionmark.circle",
-        "help.oracleManuals": "books.vertical", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "view.ribbonSearch": "magnifyingglass.circle",
+        "help.oracleManuals": "books.vertical", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "help.reportProblem": "exclamationmark.bubble", "view.ribbonSearch": "magnifyingglass.circle",
         // Wynik
         "sql.refreshResult": "arrow.clockwise", "sql.autoRefresh": "timer", "grid.nextPage": "arrow.down.doc", "grid.lastPage": "arrow.down.to.line",
         "sql.toggleEditor": "rectangle.tophalf.inset.filled", "grid.edit": "pencil", "grid.insertRecord": "plus.rectangle",

@@ -137,6 +137,14 @@ Fehler und Vorschläge melden Sie auf der Projektseite:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Fügen Sie keine Passwörter,
 Servernamen oder Daten aus Produktionsdatenbanken bei — eine Beschreibung der Schritte und die Fehlermeldung genügen.
 
+Am einfachsten melden Sie aus der App: **Hilfe › Problem melden…** (auch im Menüband: **Ansicht › Hilfe**), die
+Schaltfläche **Problem melden…** in einer Fehlermeldung oder die Frage nach einem unerwarteten Beenden von Pelikan (mit
+Absturzbeschreibung aus dem macOS-Bericht: Ausnahme und Stack — ohne Pfade). Geben Sie im Meldungsfenster Titel und
+Beschreibung ein, wählen Sie, ob Umgebung und letzte Protokolleinträge beigefügt werden, und prüfen Sie die Vorschau.
+**Meldung auf GitHub öffnen** öffnet die Seite einer neuen Meldung mit ausgefülltem Text (eine Kopie liegt in der
+Zwischenablage) — Sie senden sie von Ihrem eigenen GitHub-Konto; Pelikan sendet nichts selbst. Meldungen sind
+öffentlich: Der Text durchläuft den Filter für Passwörter und Home-Pfad, und das Protokoll verbirgt Namen standardmäßig.
+
 Fügen Sie der Meldung das Protokoll bei: **Hilfe › Protokoll exportieren…** speichert es zusammen mit einer
 Beschreibung der Umgebung (Version, System, Treiber) in eine Textdatei. Prüfen Sie die Datei vor dem Senden,
 besonders wenn Namen angezeigt wurden.

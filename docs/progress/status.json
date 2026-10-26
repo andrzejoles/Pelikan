@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-26T11:12:10+01:00",
+  "heartbeat": "2026-10-26T11:29:45+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Zgłaszanie problemów na GitHubie z aplikacji (PL-INFRA-013, D173)",
     "Dziennik aplikacji z prywatnością wpisów (PL-INFRA-011, D170)",
     "Logo aplikacji: ikona pelikana we wszystkich rozmiarach (PL-INFRA-012, D172)",
     "Wstążka z kartami kontekstowymi i polem „Szukaj czynności” (PD-UI-012, D171)",
@@ -96,8 +97,7 @@
     "Zrzuty w tle nowych edytorów P2 (widok, kolejka, użytkownik, punkty przerwania); poprawione wyrównanie pola zapytania w edytorze widoku",
     "Scalone #59; P2: 23 wiersze subagentów (edytor, kompilator, szablony, siatka, kolory; debuger, profilery, HTP, wiele obiektów, edytory obiektów, Query Builder) — 202/202 na bazie",
     "P2: test łącza, DBMS_JOB.RUN i start/stop kolejek AQ (PD-OB-019); partycje istniejącej tabeli i podpartycje (PD-OED-006)",
-    "P2: porównanie z obiektami w innej bazie, asercje 26ai (szablon, DDL, Drop), podświetlanie JavaScriptu w modułach MLE (PD-PROG-008, PD-OB-022, PD-OED-011, PD-PROG-014)",
-    "Tunel SSH z hasłem z Pęku kluczy przez askpass z jednorazowej kolejki (DB-SSH-001, D134); testowy sshd z użytkownikiem hasłowym"
+    "P2: porównanie z obiektami w innej bazie, asercje 26ai (szablon, DDL, Drop), podświetlanie JavaScriptu w modułach MLE (PD-PROG-008, PD-OB-022, PD-OED-011, PD-PROG-014)"
   ],
   "next": [
     "Logo aplikacji (ikona)"

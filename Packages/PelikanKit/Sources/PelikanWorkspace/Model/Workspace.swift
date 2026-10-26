@@ -69,6 +69,8 @@ public protocol UIServices: AnyObject {
     func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool)
     /// Dostosowanie paska narzędzi okna głównego (PD-UI-006) i karta zestawów preferencji (PD-PREF-002).
     func customizeToolbar()
+    /// Okno zgłoszenia problemu (PL-INFRA-013).
+    func showProblemReport(_ report: ProblemReport)
     /// Pole „Szukaj czynności” na wstążce (PD-UI-012).
     func focusRibbonSearch()
     func showPreferenceSets()
@@ -196,6 +198,7 @@ extension UIServices {
     public func showTestExplorer() {}
     public func showTestManager() {}
     public func customizeToolbar() {}
+    public func showProblemReport(_ report: ProblemReport) {}
     public func focusRibbonSearch() {}
     public func showPreferenceSets() {}
     public func showHTMLReport(title: String, html: String) {}

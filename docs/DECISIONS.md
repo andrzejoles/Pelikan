@@ -1489,3 +1489,21 @@ obok walec bazy danych (narzędzie do baz). Kształt i margines według siatki i
 Rysunek jest kodem (`scripts/icon/make-icon.swift`, CoreGraphics) — generuje PNG 16–1024 px do
 `App/Resources/Assets.xcassets/AppIcon.appiconset`; zmiana logo = zmiana skryptu i ponowne uruchomienie. Ten sam obraz
 (256 px) w `docs/logo.png` dla README.
+
+### D173 · 2026-10-26 — Zgłaszanie problemów na GitHubie
+
+Właściciel: gdy wyskoczy błąd, pytanie, czy wysłać zgłoszenie, które trafia na GitHuba. Zgłoszenie to nowe Issue w
+repozytorium z `PELIKAN_REPOSITORY` (Brand.xcconfig → Info.plist `PelikanRepository`). Pelikan **niczego nie wysyła
+sam**: otwiera stronę `…/issues/new` z wypełnionym tytułem i treścią, a użytkownik wysyła ją ze swojego konta GitHub —
+bez tokenów, serwera pośredniczącego i zbierania danych w tle (repozytorium jest publiczne, a token w aplikacji
+pozwalałby każdemu pisać w imieniu właściciela).
+- Wejścia: Pomoc › Zgłoś problem… (i wstążka), przycisk „Zgłoś problem…” w każdym komunikacie błędu, pytanie po
+  nieoczekiwanym zamknięciu (znacznik `.running` w katalogu danych usuwany przy czystym zamknięciu; „Nie pytaj
+  więcej” jak inne pytania). Bez pytań w przebiegu zrzutów (`PELIKAN_UI_SCRIPT`).
+- Treść: opis użytkownika, komunikat błędu albo opis awarii z najnowszego raportu macOS (`DiagnosticReports/<nazwa>-….ips`
+  nie starszego niż start poprzedniej sesji: wyjątek, sygnał, przyczyna, stos wątku z awarią — tylko nazwy modułów
+  i symboli, bez ścieżek), opis środowiska (jak w eksporcie dziennika) i 80 ostatnich wpisów dziennika (nazwy ukryte,
+  chyba że użytkownik je włączył). Całość przez `LogRedactor` (hasła, ścieżka domowa).
+- Okno z ostrzeżeniem, że zgłoszenie jest publiczne, przełącznikami części i podglądem dokładnej treści; treść zawsze
+  w schowku. Adres dłuższy niż ok. 7500 znaków: dziennik skracany od najstarszych wpisów, komunikat o wklejeniu
+  pełnej treści ze schowka.
