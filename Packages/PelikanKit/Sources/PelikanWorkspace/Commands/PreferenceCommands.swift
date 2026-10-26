@@ -53,6 +53,28 @@ enum PreferenceCommands {
                 ctx.ui?.customizeToolbar()
                 return .ok
             },
+            Command(CommandDescriptor(id: "view.ribbon", title: L10n.tr("Wstążka"), category: .view,
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Pokazuje lub ukrywa wstążkę z kartami czynności pod paskiem narzędzi."),
+                                      feature: "PD-UI-012")) { ctx in
+                ctx.workspace.settings.showRibbon.toggle()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "view.ribbonCollapse", title: L10n.tr("Zwiń wstążkę"), category: .view,
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zwija wstążkę do samych kart albo ją rozwija (także dwuklik karty)."),
+                                      feature: "PD-UI-012")) { ctx in
+                ctx.workspace.settings.ribbonCollapsed.toggle()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "view.ribbonSearch", title: L10n.tr("Szukaj czynności…"), category: .view,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pole wyszukiwania czynności na wstążce: nazwa, słowo kluczowe albo angielska nazwa funkcji; Enter wykonuje."),
+                                      feature: "PD-UI-012")) { ctx in
+                if !ctx.workspace.settings.showRibbon { ctx.workspace.settings.showRibbon = true }
+                ctx.ui?.focusRibbonSearch()
+                return .ok
+            },
             Command(CommandDescriptor(id: "view.addToQuickAccess", title: L10n.tr("Dodaj do paska szybkiego dostępu"), category: .view,
                                       parameters: [CommandParameter("command", .string, required: true, L10n.tr("Identyfikator komendy"))],
                                       agent: .none, effect: .settings,

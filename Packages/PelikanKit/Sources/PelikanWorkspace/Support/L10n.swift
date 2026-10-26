@@ -90,6 +90,16 @@ public enum L10n {
         return out
     }
 
+    /// Polski tekst (klucz bez wartości) w podanym języku — np. angielska nazwa komendy w wyszukiwarce czynności;
+    /// nil, gdy aplikacja nie ma tego języka albo tłumaczenia.
+    public static func translation(of text: String, language: String) -> String? {
+        guard let path = Bundle.main.path(forResource: language, ofType: "lproj"), let bundle = Bundle(path: path) else { return nil }
+        let key = text.replacingOccurrences(of: "%", with: "%%")
+        let missing = "\u{1}"
+        let t = bundle.localizedString(forKey: key, value: missing, table: nil)
+        return t == missing || t == key ? nil : template(t)
+    }
+
     /// Katalog `.lproj` języka wybranego w ustawieniach (`nil` = język systemu przez `Bundle.main`).
     public static func use(_ bundle: Bundle?) {
         selected.withLock { $0 = bundle }

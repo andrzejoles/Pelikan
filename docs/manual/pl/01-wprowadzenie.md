@@ -89,6 +89,24 @@ Pelikan ma jedno okno główne:
 
 Tytuł okna pokazuje połączenie główne i aktywny zestaw roboczy (workset), a podtytuł — bieżące okno.
 
+## Wstążka i „Szukaj czynności”
+
+Pod paskiem narzędzi jest **wstążka** — każda czynność jednym kliknięciem, bez szukania w menu i bez pamiętania skrótów.
+Karty stałe to **Start** (nowe okna, pliki, wykonanie, COMMIT i ROLLBACK, połączenie, wyszukiwanie), **Edycja**,
+**Obiekty**, **Debugowanie i testy**, **Narzędzia**, **Raporty** i **Widok**. Przy oknie programu, wyniku zapytania,
+diagramu, raportu, notatnika, planu albo poleceń pojawia się kolorowa **karta kontekstowa** (np. **Program** z
+kompilacją, jednostkami, porównaniem ze źródłem w bazie i testami). Wstążka pamięta, którą kartę wybrałeś przy oknie
+danego rodzaju — po przełączeniu okna wraca do niej sama.
+
+Częste czynności mają duże przyciski, pozostałe — małe; rzadsze są w listach rozwijanych grup (oznaczonych ▾). Podpowiedź
+przycisku pokazuje opis i skrót, więc skrótów uczysz się przy okazji. Prawy klik na przycisku dodaje komendę do paska
+szybkiego dostępu. Dwuklik karty albo strzałka po prawej zwija wstążkę do samych kart; **Widok › Wstążka** ją ukrywa
+(także w **Preferencje › Ogólne › Wstążka**).
+
+Pole **Szukaj czynności…** po prawej stronie kart znajduje każdą komendę — wpisz kilka liter: „plan”, „eksport tabel”,
+„zrodlo” (bez polskich znaków) albo angielską nazwę znaną z PL/SQL Developera, np. „beautifier”, „compile invalid”.
+Wyniki pokazują, gdzie komenda leży na wstążce, skrót i to, czy jest teraz dostępna; Enter albo kliknięcie ją wykonuje.
+
 ## Paleta komend
 
 Każda czynność Pelikana jest komendą: ma pozycję w menu, opcjonalny skrót i opis skutków. **Paleta komend** (**Widok ›

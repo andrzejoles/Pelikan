@@ -146,6 +146,13 @@ struct GeneralPane: View {
                 }
                 .pickerStyle(.segmented)
             }
+            Section(L10n.tr("Wstążka")) {
+                Toggle(L10n.tr("Pokaż wstążkę z kartami czynności"), isOn: setting(workspace, \.showRibbon))
+                Toggle(L10n.tr("Zwiń wstążkę do samych kart"), isOn: setting(workspace, \.ribbonCollapsed))
+                    .disabled(!workspace.settings.showRibbon)
+                Text(L10n.tr("Karty kontekstowe (Program, Wynik, Diagram…) pojawiają się przy oknie danego rodzaju. Pole „Szukaj czynności” znajduje każdą komendę po nazwie, także bez polskich znaków i po angielskiej nazwie z PL/SQL Developera."))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Język interfejsu")) {
                 // AppleLanguages ustawia AppDelegate.applyLanguage po każdej zmianie ustawienia (także z importu i zestawów).
                 Picker(L10n.tr("Język"), selection: Binding(get: { workspace.settings.language ?? "" }, set: { v in

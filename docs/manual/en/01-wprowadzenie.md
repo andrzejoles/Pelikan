@@ -90,6 +90,24 @@ Pelikan has one main window:
 
 The window title shows the main connection and the active workset, and the subtitle shows the current window.
 
+## Ribbon and “Search actions”
+
+Below the toolbar is the **ribbon** — every action in one click, without searching menus or remembering shortcuts. The
+standard tabs are **Start** (new windows, files, execution, COMMIT and ROLLBACK, connection, search), **Edit**,
+**Objects**, **Debug and test**, **Tools**, **Reports** and **View**. With a program, query result, diagram, report,
+notebook, plan or command window a coloured **contextual tab** appears (e.g. **Program** with compilation, units,
+comparison with the source in the database and tests). The ribbon remembers which tab you chose for each kind of window
+and returns to it when you switch windows.
+
+Frequent actions have large buttons, others small ones; rarer ones are in the groups' drop-down lists (marked ▾). A
+button's tooltip shows its description and shortcut, so you learn shortcuts along the way. Right-click a button to add
+the command to the quick access group. Double-click a tab or use the arrow on the right to collapse the ribbon to its
+tabs; **View › Ribbon** hides it (also in **Preferences › General › Ribbon**).
+
+The **Search actions…** field to the right of the tabs finds any command — type a few letters: “plan”, “export tables”,
+a word without Polish diacritics, or an English name known from PL/SQL Developer, e.g. “beautifier”, “compile invalid”.
+Results show where the command is on the ribbon, its shortcut and whether it is available now; Return or a click runs it.
+
 ## Command palette
 
 Every action in Pelikan is a command: it has a menu item, an optional shortcut and a description of its effects. The
