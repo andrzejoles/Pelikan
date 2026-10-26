@@ -25,7 +25,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: window)
         window.delegate = self
 
-        let sidebar = NSSplitViewItem(sidebarWithViewController: sidebarController)
+        // Zwykły panel zamiast paska bocznego (D180): pasek boczny macOS 26+ leży w „płynnym szkle” (NSGlassEffectView),
+        // przez które tekst całego panelu był na monitorach bez Retina rysowany kanciasto w aktywnym oknie.
+        let sidebar = NSSplitViewItem(viewController: sidebarController)
+        sidebar.holdingPriority = .defaultLow + 10
         sidebar.minimumThickness = 220
         sidebar.maximumThickness = 420
         sidebar.canCollapse = true
