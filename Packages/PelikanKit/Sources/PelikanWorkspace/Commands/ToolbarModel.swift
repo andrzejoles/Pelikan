@@ -27,21 +27,8 @@ public enum ToolbarModel {
 
     /// Symbol SF dla komendy (znane komendy; inne — wspólny symbol).
     public static func symbol(for id: String) -> String {
-        symbols[id] ?? "command"
+        CommandSymbols.symbol(for: id) ?? "command"
     }
-
-    static let symbols: [String: String] = [
-        "file.new.sql": "doc.badge.plus", "file.new.program": "curlybraces", "file.new.test": "testtube.2", "file.new.command": "terminal",
-        "file.new.explainPlan": "chart.bar.doc.horizontal", "file.new.report": "doc.richtext", "file.open": "folder", "file.save": "square.and.arrow.down",
-        "file.saveAs": "square.and.arrow.down.on.square", "file.print": "printer", "sql.execute": "play.fill", "sql.break": "stop.fill",
-        "sql.historyBack": "chevron.backward", "sql.historyForward": "chevron.forward", "session.commit": "checkmark.circle",
-        "session.rollback": "arrow.uturn.backward.circle", "session.logon": "person.badge.key", "edit.find": "magnifyingglass",
-        "edit.beautify": "text.alignleft", "edit.commentLine": "text.bubble", "tools.explainPlan": "list.bullet.indent",
-        "tools.findObjects": "doc.text.magnifyingglass", "tools.sessions": "person.2", "debug.start": "ladybug",
-        "debug.stepInto": "arrow.down.to.line", "debug.stepOver": "arrow.turn.down.right", "debug.stepOut": "arrow.up.to.line",
-        "debug.stop": "stop.circle", "debug.toggleBreakpoint": "smallcircle.filled.circle", "view.commandPalette": "command.square",
-        "view.objectBrowser": "sidebar.left", "view.snippets": "text.badge.plus",
-    ]
 
     /// Lista szybkiego dostępu po dodaniu komendy (bez powtórzeń, tylko komendy z rejestru, limit 20).
     @MainActor

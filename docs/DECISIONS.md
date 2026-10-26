@@ -1428,3 +1428,25 @@ Korekta D168: identyfikatory techniczne w domenie ustawień aplikacji (autozapis
 bierze nazwę moduł sesji i okno dziennika agentów.
 Rozmiar elementu `SYS.DBMS_DEBUG_VC2COLL` potwierdzony na bazie testowej: 1000 bajtów — dawne kawałki po 4000 znaków
 w debugerze nie mieściły się nawet przy samym ASCII.
+
+### D171 · 2026-10-26 — Wstążka i „Szukaj czynności” zamiast szukania w menu
+
+Właściciel: setki funkcji dostępne tylko z menu i skrótów to „ergonomiczna porażka” — ma być szybko, bez dodatkowych
+kliknięć i bez klawiszologii. Dotychczasowe zastąpienie wstążek wzorca menu macOS (PD-UI-005) zostaje, a nad dokumentami
+dochodzi **wstążka** (PD-UI-012) jako akcesorium paska tytułu okna głównego:
+- karty stałe Start, Edycja, Obiekty, Debugowanie i testy, Narzędzia, Raporty, Widok; karty kontekstowe (Wynik, Program,
+  Okno poleceń, Plan, Diagram, Raport, Notatnik) widoczne tylko przy oknie swojego rodzaju, w kolorze znacznika okna;
+- wybór karty zapamiętany dla każdego rodzaju okna; pierwszy raz: program → Program, test → Debugowanie i testy,
+  plan/diagram/raport/notatnik → ich karta, SQL i okno poleceń → Start (najczęstsze: wykonanie, COMMIT/ROLLBACK);
+- częste czynności — duże przyciski, pozostałe małe po trzy w kolumnie, rzadsze w listach rozwijanych grup; listy mogą
+  mieć wzorzec `prefiks.*` (formaty kopiowania, raporty z menu — także dodane przez użytkownika);
+- **każda komenda z menu jest na wstążce** — test pokrycia z jawną listą wyjątków (karta okna, ostatnie pliki,
+  przeciąganie obiektu, komendy pomocnicze okien); nowa komenda bez miejsca na wstążce czerwieni test;
+- pole **Szukaj czynności…** zawsze widoczne obok kart (klik i pisanie, bez skrótu): dopasowanie bez wielkości liter i
+  polskich znaków, po początkach słów, słowach kluczowych (synonimy, nazwy funkcji wzorca po angielsku) i angielskich
+  tytułach z katalogu tłumaczeń; wyniki pokazują miejsce na wstążce, skrót i dostępność; ta sama wyszukiwarka w palecie
+  komend (⇧⌘P);
+- podpowiedź przycisku: opis i skrót (nauka skrótów przy okazji); prawy klik — pasek szybkiego dostępu;
+- zwijanie do samych kart (dwuklik karty, strzałka, komenda) i ukrywanie — Widok › Wstążka, Preferencje › Ogólne;
+- układ wstążki jest w kodzie (`RibbonModel`), bez edytora; dostosowanie zostaje dla paska narzędzi i szybkiego dostępu.
+Ikony z symboli SF (bez grafik wzorca); test sprawdza, że każdy symbol istnieje w systemie.

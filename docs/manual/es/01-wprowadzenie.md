@@ -96,6 +96,26 @@ Pelikan tiene una única ventana principal:
 El título de la ventana muestra la conexión principal y el conjunto de trabajo (workset) activo, y el subtítulo, la
 ventana actual.
 
+## Cinta y «Buscar acciones»
+
+Bajo la barra de herramientas está la **cinta**: cada acción con un clic, sin buscar en menús ni recordar atajos. Las
+pestañas fijas son **Iniciar** (ventanas nuevas, archivos, ejecución, COMMIT y ROLLBACK, conexión, búsqueda),
+**Edición**, **Objetos**, **Depuración y pruebas**, **Herramientas**, **Informes** y **Vista**. Con una ventana de
+programa, resultado, diagrama, informe, cuaderno, plan o comandos aparece una **pestaña contextual** de color (p. ej.
+**Programa** con compilación, unidades, comparación con el origen en la base de datos y pruebas). La cinta recuerda qué
+pestaña eligió para cada tipo de ventana y vuelve a ella al cambiar de ventana.
+
+Las acciones frecuentes tienen botones grandes y las demás pequeños; las menos usadas están en las listas desplegables
+de los grupos (marcadas con ▾). La descripción emergente de un botón muestra su descripción y atajo, así aprende los
+atajos sobre la marcha. Clic derecho en un botón añade el comando al acceso rápido. Doble clic en una pestaña o la
+flecha de la derecha contrae la cinta a sus pestañas; **Vista › Cinta** la oculta (también en **Preferencias › General ›
+Cinta**).
+
+El campo **Buscar acciones…** a la derecha de las pestañas encuentra cualquier comando: escriba unas letras, «plan»,
+«eksport tabel», una palabra sin diacríticos polacos o un nombre en inglés conocido de PL/SQL Developer, p. ej.
+«beautifier», «compile invalid». Los resultados muestran dónde está el comando en la cinta, su atajo y si está
+disponible ahora; Intro o un clic lo ejecuta.
+
 ## Paleta de comandos
 
 Cada acción de Pelikan es un comando: tiene una entrada de menú, un atajo opcional y una descripción de sus efectos. La

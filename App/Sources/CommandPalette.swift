@@ -56,11 +56,10 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     }
 
     private func filter() {
-        let q = search.stringValue.lowercased().split(separator: " ")
-        items = workspace.registry.descriptors.filter { d in
-            let hay = "\(d.title) \(d.id.rawValue) \(d.category.displayName) \(d.submenu ?? "")".lowercased()
-            return q.allSatisfy { hay.contains($0) }
-        }
+        // Kolejność i dopasowanie jak w „Szukaj czynności” na wstążce (bez polskich znaków, słowa kluczowe, PD-UI-012).
+        let all = workspace.registry.descriptors
+        items = search.stringValue.trimmingCharacters(in: .whitespaces).isEmpty ? all
+            : CommandSearch.search(search.stringValue, in: all, limit: all.count).map(\.descriptor)
         table.reloadData()
         if !items.isEmpty { table.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false) }
     }

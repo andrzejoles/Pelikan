@@ -191,6 +191,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         mainWindow?.toolbarController?.customize()
     }
 
+    func focusRibbonSearch() {
+        mainWindow?.window?.makeKeyAndOrderFront(nil)
+        mainWindow?.ribbon.focusSearch()
+    }
+
     func showPreferenceSets() {
         PreferencesWindowController.show(workspace: workspace, pane: "PreferenceSetsPane")
     }
