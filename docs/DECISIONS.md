@@ -1428,3 +1428,12 @@ Korekta D168: identyfikatory techniczne w domenie ustawień aplikacji (autozapis
 bierze nazwę moduł sesji i okno dziennika agentów.
 Rozmiar elementu `SYS.DBMS_DEBUG_VC2COLL` potwierdzony na bazie testowej: 1000 bajtów — dawne kawałki po 4000 znaków
 w debugerze nie mieściły się nawet przy samym ASCII.
+
+### D172 · 2026-10-26 — Logo aplikacji
+
+Właściciel poprosił o graficzne logo. Pelikan nie miał ikony (systemowa ikona ogólna). Własny rysunek, bez grafik
+wzorca i znaków towarowych Oracle: biały pelikan z żółtym dziobem i pomarańczowym workiem na niebieskim tle z falami,
+obok walec bazy danych (narzędzie do baz). Kształt i margines według siatki ikon macOS (824 pt w polu 1024, cień).
+Rysunek jest kodem (`scripts/icon/make-icon.swift`, CoreGraphics) — generuje PNG 16–1024 px do
+`App/Resources/Assets.xcassets/AppIcon.appiconset`; zmiana logo = zmiana skryptu i ponowne uruchomienie. Ten sam obraz
+(256 px) w `docs/logo.png` dla README.

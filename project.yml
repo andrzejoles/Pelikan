@@ -49,6 +49,8 @@ targets:
     settings:
       base:
         INFOPLIST_FILE: App/Info.plist
+        # Ikona aplikacji (PL-INFRA-012): katalog generowany przez scripts/icon/make-icon.swift.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_ENTITLEMENTS: Config/Pelikan.entitlements
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"

@@ -1,3 +1,5 @@
+<img src="docs/logo.png" alt="Logo Pelikana" width="128" align="right">
+
 # Pelikan
 
 Natywne IDE dla baz Oracle (SQL, PL/SQL) na macOS z Apple Silicon. Układ i sposób pracy wzorowane na klasycznych IDE
