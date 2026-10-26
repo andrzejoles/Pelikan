@@ -23,10 +23,10 @@ struct PreferenceSetsPane: View {
                     ForEach(sets) { s in
                         HStack {
                             Text(s.name)
-                            Text(s.kind.displayName + (s.pattern.map { " · \($0)" } ?? "")).font(.caption).foregroundStyle(.secondary)
+                            Text(s.kind.displayName + (s.pattern.map { " · \($0)" } ?? "")).font(.uiSecondary).foregroundStyle(.secondary)
                             Spacer()
                             if workspace.activePreferenceSets.contains(where: { $0.id == s.id }) {
-                                Text(L10n.tr("obowiązuje")).font(.caption).foregroundStyle(.green)
+                                Text(L10n.tr("obowiązuje")).font(.uiSecondary).foregroundStyle(.green)
                             }
                         }
                         .tag(s.id)
@@ -48,7 +48,7 @@ struct PreferenceSetsPane: View {
                     Button(L10n.tr("Usuń")) { remove() }.disabled(selected == nil || selected?.kind == .personalUser)
                 }
                 Text(L10n.tr("Pierwszeństwo: osobisty połączenia, osobisty, domyślny połączenia, domyślny dla wszystkich połączeń."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             if let s = selected {
                 Section(L10n.tr("Wartości zestawu „\(s.name)”")) {
@@ -58,7 +58,7 @@ struct PreferenceSetsPane: View {
                     ForEach(s.values.keys.sorted(), id: \.self) { key in
                         HStack {
                             Text(key).font(.system(.body, design: .monospaced))
-                            Text(PreferenceSets.section(of: key)).font(.caption).foregroundStyle(.secondary)
+                            Text(PreferenceSets.section(of: key)).font(.uiSecondary).foregroundStyle(.secondary)
                             Spacer()
                             Text(s.values[key]?.summary ?? "").lineLimit(1)
                             if workspace.preferenceSource(of: key)?.id == s.id {
@@ -85,10 +85,10 @@ struct PreferenceSetsPane: View {
                     Button(L10n.tr("Eksportuj…")) { run("prefs.export") }.disabled(chosenSections.isEmpty)
                     Button(L10n.tr("Importuj…")) { run("prefs.import") }.disabled(chosenSections.isEmpty)
                     Spacer()
-                    Text(message).font(.caption).foregroundStyle(.secondary)
+                    Text(message).font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 Text(L10n.tr("Plik nie zawiera haseł (są w Pęku kluczy) ani historii plików; import trafia do zestawu wybranego wyżej."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Pasek szybkiego dostępu")) {
                 ForEach(workspace.settings.quickAccessCommands, id: \.self) { id in

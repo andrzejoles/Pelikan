@@ -146,7 +146,7 @@ final class SidebarViewController: NSViewController {
         selector.selectedSegment = 0
         selector.segmentDistribution = .fillEqually
         selector.controlSize = .small
-        selector.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        selector.font = InterfaceFonts.shared.small
         selector.translatesAutoresizingMaskIntoConstraints = false
         container.translatesAutoresizingMaskIntoConstraints = false
         root.addSubview(selector)
@@ -162,6 +162,7 @@ final class SidebarViewController: NSViewController {
         ])
         view = root
         show(pane: 0)
+        trackChanges { [weak self] in self?.selector.font = InterfaceFonts.shared.small }
     }
 
     @objc private func selectPane(_ sender: NSSegmentedControl) { show(pane: sender.selectedSegment) }
@@ -283,13 +284,13 @@ final class DocumentAreaViewController: NSViewController {
         tabScroll.drawsBackground = false
         tabBar.translatesAutoresizingMaskIntoConstraints = false
 
-        statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        statusLabel.font = InterfaceFonts.shared.small
         statusLabel.textColor = .secondaryLabelColor
         statusLabel.lineBreakMode = .byTruncatingTail
         let status = NSView()
         status.addSubview(statusLabel)
         connectionButton.isBordered = false
-        connectionButton.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
+        connectionButton.font = InterfaceFonts.shared.small
         connectionButton.contentTintColor = .labelColor
         connectionButton.target = self
         connectionButton.action = #selector(chooseConnection(_:))
@@ -299,7 +300,7 @@ final class DocumentAreaViewController: NSViewController {
         connectionButton.setContentCompressionResistancePriority(.required, for: .horizontal)
         statusLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         status.addSubview(connectionButton)
-        gitLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        gitLabel.font = InterfaceFonts.shared.small
         gitLabel.textColor = .secondaryLabelColor
         gitLabel.translatesAutoresizingMaskIntoConstraints = false
         gitLabel.setContentHuggingPriority(.required, for: .horizontal)
@@ -347,6 +348,10 @@ final class DocumentAreaViewController: NSViewController {
     }
 
     private func refresh() {
+        // Czcionka interfejsu z Preferencji (D178) — odczyt w śledzonym odświeżeniu: zmiana od razu przebudowuje karty.
+        let fonts = InterfaceFonts.shared
+        for l in [statusLabel, gitLabel] { l.font = fonts.small }
+        connectionButton.font = fonts.small
         let docs = workspace.documents
         let active = workspace.activeDocumentID
         // Karty.
@@ -516,10 +521,11 @@ final class DocumentTabButton: NSView {
         layer?.cornerRadius = 6
         layer?.backgroundColor = isActive ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor : NSColor.clear.cgColor
         let marker = NSTextField(labelWithString: document.kind.shortName)
-        marker.font = .monospacedSystemFont(ofSize: 10, weight: .bold)
+        marker.font = .monospacedSystemFont(ofSize: 12, weight: .bold)
         marker.textColor = Self.color(for: document.kind)
         let title = NSTextField(labelWithString: (document.isModified ? "● " : "") + document.title)
-        title.font = .systemFont(ofSize: 12, weight: isActive ? .semibold : .regular)
+        let fonts = InterfaceFonts.shared
+        title.font = AppFonts.font(family: fonts.family, size: max(9, fonts.size - 1), weight: isActive ? .semibold : fonts.weight)
         title.lineBreakMode = .byTruncatingMiddle
         let close = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: L10n.tr("Zamknij"))!,
                              target: nil, action: nil)

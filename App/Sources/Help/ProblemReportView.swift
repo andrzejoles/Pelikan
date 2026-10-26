@@ -18,25 +18,25 @@ struct ProblemReportView: View {
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 Text(L10n.tr("Zgłoszenie trafi do publicznego repozytorium na GitHubie i będzie widoczne dla wszystkich. Nie wpisuj haseł, nazw baz, adresów serwerów ani danych. Przed wysłaniem zobaczysz je jeszcze na stronie GitHuba."))
-                    .font(.callout)
+                    .font(.ui)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(8)
             .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
 
             TextField(L10n.tr("Tytuł"), text: $report.title)
-            Text(L10n.tr("Co się stało? Co robiłeś i czego się spodziewałeś?")).font(.headline)
+            Text(L10n.tr("Co się stało? Co robiłeś i czego się spodziewałeś?")).font(.uiHeadline)
             TextEditor(text: $report.details)
-                .font(.body)
+                .font(.ui)
                 .frame(minHeight: 90)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
             Toggle(L10n.tr("Dołącz opis środowiska (wersja, system, sterowniki — bez nazw połączeń)"), isOn: $report.includeEnvironment)
             Toggle(L10n.tr("Dołącz ostatnie wpisy dziennika (\(report.logTail.count))"), isOn: $report.includeLog)
                 .disabled(report.logTail.isEmpty)
-            Text(L10n.tr("Podgląd treści")).font(.headline)
+            Text(L10n.tr("Podgląd treści")).font(.uiHeadline)
             ScrollView {
                 Text(report.body())
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(6)
@@ -46,7 +46,7 @@ struct ProblemReportView: View {
             HStack {
                 Button(L10n.tr("Eksportuj pełny dziennik…")) { workspace.perform("help.exportLog") }
                 Spacer()
-                if !message.isEmpty { Text(message).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                if !message.isEmpty { Text(message).font(.uiSecondary).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                 Button(L10n.tr("Anuluj"), action: close).keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Kopiuj treść")) {
                     copy()

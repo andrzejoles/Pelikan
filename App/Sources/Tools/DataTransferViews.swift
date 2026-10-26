@@ -24,7 +24,7 @@ struct TablePicker: View {
                 Toggle(t, isOn: Binding(get: { selected.contains(t) }, set: { if $0 { selected.insert(t) } else { selected.remove(t) } }))
                     .toggleStyle(.checkbox)
             }
-            Text(L10n.tr("Zaznaczone: \(selected.count) z \(tables.count)")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.tr("Zaznaczone: \(selected.count) z \(tables.count)")).font(.uiSecondary).foregroundStyle(.secondary)
         }
     }
 
@@ -116,17 +116,17 @@ struct ExportTablesView: View {
                         TextField(L10n.tr("WHERE (dla wszystkich tabel)"), text: $options.whereClause)
                     case .native:
                         TextField(L10n.tr("WHERE (dla wszystkich tabel)"), text: $options.whereClause)
-                        Text(L10n.tr("Opcje tworzenia i czyszczenia tabel wybiera się przy imporcie.")).font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.tr("Opcje tworzenia i czyszczenia tabel wybiera się przy imporcie.")).font(.uiSecondary).foregroundStyle(.secondary)
                     case .dataPump:
                         TextField(L10n.tr("Plik zrzutu w DATA_PUMP_DIR"), text: $dumpFile)
-                        Text(L10n.tr("Bez zaznaczonych tabel — cały schemat. Plik powstaje na serwerze bazy.")).font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.tr("Bez zaznaczonych tabel — cały schemat. Plik powstaje na serwerze bazy.")).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 .formStyle(.grouped)
                 .frame(minWidth: 300, maxHeight: .infinity, alignment: .top)
             }
             HStack {
-                ScrollView { Text(message).font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 90)
+                ScrollView { Text(message).font(.subheadline.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 90)
                 Button(L10n.tr("Eksportuj…")) { Task { await export() } }.disabled(busy || (selected.isEmpty && method != .dataPump))
             }
         }
@@ -224,7 +224,7 @@ struct ImportTablesView: View {
                 }
                 Button(L10n.tr("Importuj")) { Task { await importDump() } }.disabled(busy || dumpFile.isEmpty)
             }
-            ScrollView { Text(message).font(.caption.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            ScrollView { Text(message).font(.subheadline.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 520)
@@ -324,7 +324,7 @@ struct ImporterView: View {
             }
             if target != nil { mappingEditor }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary).lineLimit(4).textSelection(.enabled)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(4).textSelection(.enabled)
                 Spacer()
                 Button(L10n.tr("Do skryptu")) { if let t = target { DataTransferUI.sqlWindow(workspace, TextImport.script(rows, fieldNames: header, target: t)) } }
                     .disabled(target == nil)
@@ -392,7 +392,7 @@ struct ImporterView: View {
             }
             TextField(L10n.tr("Filtr SQL, np. :KWOTA > 0"), text: binding.filter).textFieldStyle(.roundedBorder)
             Text(L10n.tr("Pola w filtrze: \(header.indices.map { ":" + TextImport.bindName(header[$0], index: $0) }.joined(separator: ", "))"))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
         }
     }
 
@@ -539,7 +539,7 @@ struct DataGeneratorView: View {
                 .frame(minHeight: 120)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary).lineLimit(4).textSelection(.enabled)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(4).textSelection(.enabled)
                 Spacer()
                 Button(L10n.tr("Próbny przebieg")) { Task { await run(.preview) } }.disabled(tables.isEmpty || busy)
                 Button(L10n.tr("Jako SQL")) { Task { await run(.script) } }.disabled(tables.isEmpty || busy)
@@ -640,7 +640,7 @@ struct CompareTableDataView: View {
                 .frame(minWidth: 380)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary).lineLimit(5).textSelection(.enabled)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(5).textSelection(.enabled)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { Task { await compare() } }.disabled(selected.isEmpty || targetID == nil || targetOwner.isEmpty || busy)
                 Button(L10n.tr("Skrypt")) { DataTransferUI.sqlWindow(workspace, TableDataCompare.script(diffs, targetOwner: targetOwner.uppercased(), options: options), connection: targetID) }

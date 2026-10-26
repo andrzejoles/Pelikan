@@ -28,11 +28,11 @@ struct ObjectPicker: View {
             }
             List(visible, id: \.self) { o in
                 Toggle(isOn: Binding(get: { selected.contains(o) }, set: { if $0 { selected.insert(o) } else { selected.remove(o) } })) {
-                    HStack { Text(o.name); Spacer(); Text(o.type.rawValue).foregroundStyle(.secondary).font(.caption) }
+                    HStack { Text(o.name); Spacer(); Text(o.type.rawValue).foregroundStyle(.secondary).font(.uiSecondary) }
                 }
                 .toggleStyle(.checkbox)
             }
-            Text(L10n.tr("Zaznaczone: \(selected.count) z \(objects.count)")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.tr("Zaznaczone: \(selected.count) z \(objects.count)")).font(.uiSecondary).foregroundStyle(.secondary)
         }
     }
 }
@@ -65,7 +65,7 @@ struct ExportObjectsView: View {
                 Toggle(L10n.tr("Nazwa schematu w DDL"), isOn: $options.includeOwner)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Eksportuj…")) { Task { await export() } }.disabled(selected.isEmpty || busy)
             }
@@ -142,7 +142,7 @@ struct CompareObjectsView: View {
                         Toggle(L10n.tr("Składowanie"), isOn: $options.includeStorage)
                         Toggle(L10n.tr("Usuń nadmiarowe"), isOn: $options.dropExtra)
                     }
-                    .toggleStyle(.checkbox).font(.caption)
+                    .toggleStyle(.checkbox).font(.uiSecondary)
                     Table(diffs, selection: $diffSelection) {
                         TableColumn(L10n.tr("Obiekt")) { d in Text(d.name) }
                         TableColumn(L10n.tr("Typ")) { d in Text(d.type.rawValue) }.width(110)
@@ -155,7 +155,7 @@ struct CompareObjectsView: View {
                 .frame(minWidth: 380)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { Task { await compare() } }.disabled(selected.isEmpty || targetID == nil || targetOwner.isEmpty || busy)
                 Button(L10n.tr("Pokaż różnice")) { if let d = diffs.first(where: { $0.id == diffSelection }) { show(d) } }.disabled(diffSelection == nil)

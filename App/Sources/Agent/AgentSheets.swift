@@ -17,28 +17,28 @@ struct ApprovalView: View {
             HStack(alignment: .top, spacing: 10) {
                 Image(systemName: "exclamationmark.shield").font(.system(size: 28)).foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("\(request.agentName) chce wykonać: \(request.title)")).font(.headline)
+                    Text(L10n.tr("\(request.agentName) chce wykonać: \(request.title)")).font(.uiHeadline)
                     if let c = request.connection {
-                        Text(L10n.tr("Połączenie: \(c)")).font(.callout).foregroundStyle(.secondary)
+                        Text(L10n.tr("Połączenie: \(c)")).font(.ui).foregroundStyle(.secondary)
                     }
-                    Text(preview.summary).font(.callout).fixedSize(horizontal: false, vertical: true)
+                    Text(preview.summary).font(.ui).fixedSize(horizontal: false, vertical: true)
                 }
             }
             if preview.irreversible {
                 Label(L10n.tr("Tej zmiany nie da się cofnąć (COMMIT albo DDL na tabeli) — „Cofnij sesję agenta” jej nie przywróci."),
                       systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red).font(.callout.bold())
+                    .foregroundStyle(.red).font(.uiHeadline)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     if !preview.statements.isEmpty {
                         section(L10n.tr("Polecenia")) {
-                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         }
                     }
                     if !preview.affectedObjects.isEmpty {
                         section(L10n.tr("Obiekty, na które wpływa")) {
-                            Text(preview.affectedObjects.joined(separator: ", ")).font(.callout).textSelection(.enabled)
+                            Text(preview.affectedObjects.joined(separator: ", ")).font(.ui).textSelection(.enabled)
                         }
                     }
                     if let rows = preview.estimatedRows {
@@ -48,14 +48,14 @@ struct ApprovalView: View {
                         section(L10n.tr("Plan wykonania")) {
                             // Wiersze DBMS_XPLAN są szersze niż okno — przewijanie w poziomie zamiast zawijania.
                             ScrollView(.horizontal) {
-                                Text(plan).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled).fixedSize()
+                                Text(plan).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize()
                             }
                         }
                     }
                     let args = request.arguments.values.filter { !$0.key.hasPrefix("__") }
                     if !args.isEmpty {
                         section(L10n.tr("Argumenty")) {
-                            Text(JSONValue.object(args).description).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled)
+                            Text(JSONValue.object(args).description).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         }
                     }
                 }
@@ -71,7 +71,7 @@ struct ApprovalView: View {
             }
         }
         .padding(16)
-        .frame(width: 640)
+        .frame(minWidth: 640, idealWidth: 640, maxWidth: .infinity)
         .task {
             try? await Task.sleep(for: .milliseconds(800))
             armed = true
@@ -81,7 +81,7 @@ struct ApprovalView: View {
     @ViewBuilder
     private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.caption.bold()).foregroundStyle(.secondary)
+            Text(title).font(.uiSecondary.bold()).foregroundStyle(.secondary)
             content()
                 .padding(6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,15 +98,15 @@ struct PermissionMatrixView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L10n.tr("Uprawnienia sesji: \(profileName)")).font(.headline)
+            Text(L10n.tr("Uprawnienia sesji: \(profileName)")).font(.uiHeadline)
             Text(L10n.tr("Poziom narzędzia można tylko obniżyć. Poziom połączenia (np. produkcja — Odczyt) nadal obowiązuje."))
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.ui).foregroundStyle(.secondary)
             List {
                 ForEach($rows) { $row in
                     HStack {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(row.tool).font(.system(size: 12, design: .monospaced))
-                            Text(row.title).font(.caption).foregroundStyle(.secondary)
+                            Text(row.title).font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Picker("", selection: $row.chosen) {
@@ -134,6 +134,6 @@ struct PermissionMatrixView: View {
             }
         }
         .padding(16)
-        .frame(width: 560, height: 520)
+        .windowSize(width: 560, height: 520)
     }
 }

@@ -15,7 +15,7 @@ struct QueryByExampleView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.tr("Kryteria: wartość, wzorzec z %, > < >= <= <>, in (…), between … and …, null, not null"))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
             ScrollView {
                 Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 4) {
                     ForEach(columns, id: \.self) { name in
@@ -27,7 +27,7 @@ struct QueryByExampleView: View {
                     }
                 }
             }
-            if !message.isEmpty { Text(message).font(.caption).foregroundStyle(.red) }
+            if !message.isEmpty { Text(message).font(.uiSecondary).foregroundStyle(.red) }
             HStack {
                 Button(L10n.tr("Wyczyść")) { criteria = [:] }
                 Spacer()
@@ -77,7 +77,7 @@ struct ColumnFilterView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L10n.tr("Fragmenty nazw kolumn (po przecinku albo w liniach — można wkleić listę)")).font(.caption)
+            Text(L10n.tr("Fragmenty nazw kolumn (po przecinku albo w liniach — można wkleić listę)")).font(.uiSecondary)
             TextEditor(text: $names).font(.system(size: 12, design: .monospaced)).frame(minHeight: 70)
             if !workspace.settings.columnFilterHistory.isEmpty {
                 Menu(L10n.tr("Historia")) {
@@ -95,7 +95,7 @@ struct ColumnFilterView: View {
                 Toggle("UK", isOn: Binding(get: { keys.contains(.unique) }, set: { if $0 { keys.insert(.unique) } else { keys.remove(.unique) } }))
                 Toggle("FK", isOn: Binding(get: { keys.contains(.foreign) }, set: { if $0 { keys.insert(.foreign) } else { keys.remove(.foreign) } }))
             }
-            if !message.isEmpty { Text(message).font(.caption).foregroundStyle(.red) }
+            if !message.isEmpty { Text(message).font(.uiSecondary).foregroundStyle(.red) }
             HStack {
                 Button(L10n.tr("Pokaż wszystkie kolumny")) { workspace.perform("grid.clearColumnFilter"); close() }
                 Spacer()

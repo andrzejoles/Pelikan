@@ -38,7 +38,7 @@ struct QueryBuilderView: View {
                 preview.frame(minHeight: 120)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Kopiuj SQL")) {
                     NSPasteboard.general.clearContents()
@@ -119,7 +119,7 @@ struct QueryBuilderView: View {
     private var fields: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(L10n.tr("Pola")).font(.headline)
+                Text(L10n.tr("Pola")).font(.uiHeadline)
                 Spacer()
                 Button(L10n.tr("Dodaj wyrażenie")) { model.fields.append(QBField(table: nil, expression: "count(*)")) }
             }
@@ -138,18 +138,18 @@ struct QueryBuilderView: View {
                             Text(L10n.tr("malejąco")).tag(QBField.Sort.descending)
                         }
                         .labelsHidden().frame(width: 120)
-                        Toggle("GROUP BY", isOn: $f.groupBy).toggleStyle(.checkbox).font(.caption)
+                        Toggle("GROUP BY", isOn: $f.groupBy).toggleStyle(.checkbox).font(.uiSecondary)
                     }
                 }
                 .onDelete { model.fields.remove(atOffsets: $0) }
                 .onMove { model.fields.move(fromOffsets: $0, toOffset: $1) }
             }
             if !model.joins.isEmpty {
-                Text(L10n.tr("Złączenia")).font(.headline)
+                Text(L10n.tr("Złączenia")).font(.uiHeadline)
                 ForEach($model.joins) { $j in
                     HStack {
                         Text("\(model.table(j.left)?.alias ?? "?") ↔ \(model.table(j.right)?.alias ?? "?") (\(j.leftColumns.joined(separator: ", ").lowercased()))")
-                            .font(.caption)
+                            .font(.uiSecondary)
                         Picker("", selection: $j.kind) { ForEach(QBJoin.Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
                             .labelsHidden().frame(width: 130)
                         Button { model.joins.removeAll { $0.id == j.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
@@ -169,7 +169,7 @@ struct QueryBuilderView: View {
             Toggle(L10n.tr("Złączenia w FROM (ANSI)"), isOn: $model.format.ansiJoins)
             Toggle(L10n.tr("Nazwa schematu przed tabelą"), isOn: $model.format.qualifyWithOwner)
         }
-        .font(.callout)
+        .font(.ui)
     }
 
     private var preview: some View {

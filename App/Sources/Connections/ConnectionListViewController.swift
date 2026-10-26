@@ -83,6 +83,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
     }
 
     @objc func reloadTree() {
+        outline.rowHeight = AppFonts.rowHeight(for: InterfaceFonts.shared.bold)
         let store = workspace.connections
         // Odczyty rejestrują śledzenie zmian (lista, sesje, okna, połączenie główne).
         _ = (store.connections, store.folders, workspace.sessions.mainConnectionID, workspace.sessions.openSessionCount,
@@ -170,7 +171,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             if c.environment != .other { title += "  ·  \(c.environment.shortName)" }
             text.stringValue = title
             let isMain = workspace.sessions.mainConnectionID == c.id
-            text.font = .systemFont(ofSize: NSFont.systemFontSize, weight: isMain ? .bold : .regular)
+            text.font = isMain ? InterfaceFonts.shared.bold : InterfaceFonts.shared.body
             cell.toolTip = c.connectionString
             cell.setAccessibilityLabel((isMain ? L10n.tr("Połączenie główne: ") : "") + c.displayName)
         case .window(let d):

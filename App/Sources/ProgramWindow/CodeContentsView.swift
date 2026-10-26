@@ -151,7 +151,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(n.kind), accessibilityDescription: nil) ?? NSImage())
         icon.contentTintColor = Self.tint(n.kind)
         let label = NSTextField(labelWithString: Self.title(n))
-        label.font = .systemFont(ofSize: 11)
+        label.font = InterfaceFonts.shared.small
         label.lineBreakMode = .byTruncatingTail
         label.toolTip = Self.title(n)
         for v in [icon, label] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false; cell.addSubview(v) }

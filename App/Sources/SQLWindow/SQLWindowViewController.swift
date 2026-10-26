@@ -229,7 +229,8 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         b.bezelStyle = .accessoryBarAction
         b.setButtonType(.pushOnPushOff)
         b.state = selected ? .on : .off
-        b.font = .systemFont(ofSize: 11, weight: selected ? .semibold : .regular)
+        let fonts = InterfaceFonts.shared
+        b.font = AppFonts.font(family: fonts.family, size: max(9, fonts.size - 2), weight: selected ? .semibold : fonts.weight)
         if isError {
             // Karta z błędem: czerwony tytuł z ikoną (UG 7.1 — wynik z błędem wyróżniony).
             b.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: L10n.tr("Błąd"))

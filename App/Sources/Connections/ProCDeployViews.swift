@@ -150,24 +150,24 @@ struct DeployStartView: View {
                 Button(L10n.tr("Odśwież podsumowanie")) { Task { await load() } }.disabled(target == nil || loading)
             }
             Text(model.repository.map { L10n.tr("Lokalne repo: \($0.path)") } ?? L10n.tr("Brak otwartego projektu — bez lokalnego repo"))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
             if loading { ProgressView().controlSize(.small) }
             if let s = summary {
                 GroupBox(L10n.tr("Podsumowanie")) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L10n.tr("Na serwerze: \(s.serverHead.map { String($0.prefix(12)) } ?? "?")  →  remote: \(s.remoteHead.map { String($0.prefix(12)) } ?? "?")"))
                             .font(.system(size: 12, design: .monospaced))
-                        if s.isUpToDate { Text(L10n.tr("Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki")).font(.caption) }
+                        if s.isUpToDate { Text(L10n.tr("Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki")).font(.uiSecondary) }
                         ScrollView {
                             Text((s.commits + (s.diffStat.isEmpty ? [] : ["", s.diffStat])).joined(separator: "\n"))
-                                .font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                                .font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(minHeight: 120)
-                        ForEach(s.warnings, id: \.self) { w in Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.caption) }
+                        ForEach(s.warnings, id: \.self) { w in Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
                     }
                 }
             }
-            if let message { Text(message).foregroundStyle(.red).font(.caption) }
+            if let message { Text(message).foregroundStyle(.red).font(.uiSecondary) }
             Spacer()
             HStack {
                 Spacer()
@@ -239,7 +239,7 @@ struct DeployConsoleView: View {
             } else {
                 Text(L10n.tr("Brak wdrożeń w tej sesji")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            if let lockMessage { Text(lockMessage).font(.caption) }
+            if let lockMessage { Text(lockMessage).font(.uiSecondary) }
         }
         .padding(10)
         .frame(minWidth: 820, minHeight: 460)
@@ -267,7 +267,7 @@ struct DeployRunView: View {
                     Image(systemName: icon(s.status)).foregroundStyle(color(s.status))
                     Text(s.title)
                     Spacer()
-                    if let d = s.duration { Text(String(format: "%.1f s", d)).font(.caption).monospacedDigit().foregroundStyle(.secondary) }
+                    if let d = s.duration { Text(String(format: "%.1f s", d)).font(.uiSecondary).monospacedDigit().foregroundStyle(.secondary) }
                 }
             }
             .frame(minWidth: 220, maxWidth: 300)
@@ -308,9 +308,9 @@ struct DeployRunView: View {
         case .step:
             Text(line.text).font(.system(size: 12, weight: .bold)).padding(.top, 6).padding(.bottom, 2)
         case .info:
-            Text(line.text).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
+            Text(line.text).font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary)
         case .output, .error:
-            let text = Text(line.text).font(.system(size: 11, design: .monospaced))
+            let text = Text(line.text).font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(message.map { $0.isError ? Color.red : Color.orange } ?? (line.kind == .error ? .red : .primary))
             if let message {
                 text.underline().onTapGesture { model.open(message, target: pipeline.target) }
@@ -365,7 +365,7 @@ struct RollbackView: View {
                     ForEach(backups.filter { $0.binary == binary }) { b in Text("\(b.timestamp) · \(b.commit)\(b.compression == .none ? "" : " · \(b.compression.rawValue)")").tag(b.fileName) }
                 }
             }
-            if let message { Text(message).font(.caption).foregroundStyle(.red) }
+            if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
             Spacer()
             HStack {
                 Button(L10n.tr("Odśwież kopie")) { Task { await load() } }
@@ -422,12 +422,12 @@ struct DeployHistoryView: View {
                     TableColumn(L10n.tr("Rodzaj")) { r in Text(r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie")) }.width(90)
                     TableColumn(L10n.tr("Kto"), value: \.owner)
                     TableColumn(L10n.tr("Commit przed → po")) { r in
-                        Text("\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")").font(.system(size: 11, design: .monospaced))
+                        Text("\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")").font(.system(size: 12, design: .monospaced))
                     }
                     TableColumn(L10n.tr("Wynik")) { r in Text(r.outcome?.title ?? "—").foregroundStyle(r.outcome == .success ? .green : .red) }
                 }
                 ScrollView {
-                    Text(selection.flatMap { model.history.log($0) } ?? "").font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                    Text(selection.flatMap { model.history.log($0) } ?? "").font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 120)
@@ -439,13 +439,13 @@ struct DeployHistoryView: View {
                     }
                     .frame(maxWidth: 360)
                     Button(L10n.tr("Pobierz")) { Task { await loadServer() } }.disabled(serverTarget == nil)
-                    if let message { Text(message).font(.caption).foregroundStyle(.red) }
+                    if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
                 }
                 Table(server) {
                     TableColumn(L10n.tr("Czas"), value: \.timestamp).width(130)
                     TableColumn(L10n.tr("Rodzaj"), value: \.kind).width(80)
                     TableColumn(L10n.tr("Kto"), value: \.owner)
-                    TableColumn(L10n.tr("Przed → po")) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.system(size: 11, design: .monospaced)) }
+                    TableColumn(L10n.tr("Przed → po")) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.system(size: 12, design: .monospaced)) }
                     TableColumn(L10n.tr("Wynik")) { e in Text(e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)").foregroundStyle(e.succeeded ? .green : .red) }
                 }
             }
@@ -473,24 +473,24 @@ struct GitDeployStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(model.repository?.path ?? L10n.tr("Brak otwartego projektu")).font(.caption).foregroundStyle(.secondary)
+                Text(model.repository?.path ?? L10n.tr("Brak otwartego projektu")).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("git fetch i odśwież")) { Task { await load(fetch: true) } }.disabled(model.repository == nil)
                 Button(L10n.tr("Commity na serwerach")) { Task { await loadServers() } }
             }
             if let s = local {
                 Text(L10n.tr("Gałąź: \(s.branch) · niezatwierdzone: \(s.uncommitted.count) · niewypchnięte: \(s.ahead.map(String.init) ?? "?") · do pobrania: \(s.behind.map(String.init) ?? "?")"))
-                ForEach(s.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.caption) }
+                ForEach(s.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
             }
             Table(model.store.targets) {
                 TableColumn(L10n.tr("Cel")) { t in Text("\(t.name) · \(t.environment.rawValue)").foregroundStyle(t.environment.color) }
                 TableColumn(L10n.tr("Ostatnie wdrożenie (historia)")) { t in
-                    Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced))
+                    Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced))
                 }
-                TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced)) }
-                TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 11, design: .monospaced)) }
+                TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
+                TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
             }
-            if let message { Text(message).font(.caption).foregroundStyle(.red) }
+            if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 360)

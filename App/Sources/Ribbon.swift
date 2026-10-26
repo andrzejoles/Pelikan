@@ -6,7 +6,7 @@ import PelikanWorkspace
 @MainActor
 final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDelegate {
     static let stripHeight: CGFloat = 30
-    static let contentHeight: CGFloat = 94
+    static let contentHeight: CGFloat = 104
 
     private let workspace: Workspace
     private let tabStack = NSStackView()
@@ -65,9 +65,10 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         document.addSubview(groupStack)
         scroll.documentView = document
         scroll.drawsBackground = false
-        scroll.hasHorizontalScroller = true
-        scroll.autohidesScrollers = true
-        scroll.scrollerStyle = .overlay
+        // Bez paska przewijania: przy pokazywanych paskach (Ustawienia systemowe) zasłaniałby podpisy grup; szeroką
+        // kartę przewija gest albo kółko z Shift.
+        scroll.hasHorizontalScroller = false
+        scroll.hasVerticalScroller = false
         scroll.verticalScrollElasticity = .none
         scroll.translatesAutoresizingMaskIntoConstraints = false
 
@@ -111,6 +112,14 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             self.applyVisibility(shown: self.workspace.settings.showRibbon, collapsed: self.workspace.settings.ribbonCollapsed)
         })
         tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+        // Czcionka interfejsu z Preferencji (D178): przebudowa kart i grup.
+        tokens.append(trackChanges { [weak self] in
+            let f = InterfaceFonts.shared
+            _ = (f.family, f.size, f.weight)
+            guard let self, !self.visibleTabs.isEmpty else { return }
+            self.rebuildTabs()
+            self.rebuildGroups()
+        })
     }
 
     override func viewDidAppear() {
@@ -197,7 +206,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             }
         }
         let title = NSTextField(labelWithString: group.title)
-        title.font = .systemFont(ofSize: 10)
+        title.font = InterfaceFonts.shared.small
         title.textColor = .secondaryLabelColor
         title.alignment = .center
         let stack = NSStackView(views: [items, title])
@@ -206,8 +215,9 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         stack.spacing = 2
         stack.edgeInsets = NSEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.heightAnchor.constraint(equalToConstant: Self.contentHeight - 6).isActive = true
-        items.setContentHuggingPriority(.defaultLow, for: .vertical)
+        // Rząd przycisków o stałej wysokości (duży przycisk) — podpisy wszystkich grup w jednej linii.
+        items.translatesAutoresizingMaskIntoConstraints = false
+        items.heightAnchor.constraint(equalToConstant: RibbonButton.largeHeight).isActive = true
         stack.setAccessibilityElement(true)
         stack.setAccessibilityRole(.group)
         stack.setAccessibilityLabel(group.title)
@@ -380,7 +390,8 @@ final class RibbonTabButton: NSView {
         super.init(frame: .zero)
         wantsLayer = true
         layer?.cornerRadius = 6
-        label.font = .systemFont(ofSize: 12, weight: selected ? .semibold : .regular)
+        let fonts = InterfaceFonts.shared
+        label.font = AppFonts.font(family: fonts.family, size: fonts.size, weight: selected ? .semibold : fonts.weight)
         label.textColor = color ?? (selected ? .labelColor : .secondaryLabelColor)
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
@@ -419,6 +430,7 @@ final class RibbonTabButton: NSView {
 /// kursorem, lista rozwijana oznaczona strzałką.
 final class RibbonButton: NSControl {
     enum Style { case large, small }
+    static let largeHeight: CGFloat = 76
 
     var commandID: CommandID?
     var onPress: ((RibbonButton) -> Void)?
@@ -440,7 +452,7 @@ final class RibbonButton: NSControl {
         imageView.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
         imageView.contentTintColor = .labelColor
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 11)
+        label.font = InterfaceFonts.shared.label
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)
         addSubview(label)
@@ -449,11 +461,11 @@ final class RibbonButton: NSControl {
             label.alignment = .center
             label.maximumNumberOfLines = 2
             label.lineBreakMode = .byWordWrapping
-            label.preferredMaxLayoutWidth = 78
+            label.preferredMaxLayoutWidth = 84
             NSLayoutConstraint.activate([
                 widthAnchor.constraint(greaterThanOrEqualToConstant: 50),
-                widthAnchor.constraint(lessThanOrEqualToConstant: 86),
-                heightAnchor.constraint(equalToConstant: 72),
+                widthAnchor.constraint(lessThanOrEqualToConstant: 92),
+                heightAnchor.constraint(equalToConstant: Self.largeHeight),
                 imageView.topAnchor.constraint(equalTo: topAnchor, constant: 5),
                 imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
                 imageView.heightAnchor.constraint(equalToConstant: 28),
@@ -632,7 +644,7 @@ final class RibbonSearchResults: NSObject, NSTableViewDataSource, NSTableViewDel
             place = L10n.tr("Menu \(d.category.displayName)") + (d.submenu.map { " › " + $0 } ?? "")
         }
         let detail = NSTextField(labelWithString: enabled ? place : place + " · " + L10n.tr("teraz niedostępne"))
-        detail.font = .systemFont(ofSize: 10)
+        detail.font = InterfaceFonts.shared.small
         detail.textColor = .secondaryLabelColor
         detail.lineBreakMode = .byTruncatingTail
         let texts = NSStackView(views: [title, detail])

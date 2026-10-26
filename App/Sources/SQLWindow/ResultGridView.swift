@@ -30,6 +30,12 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     static let nullColor = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.30, green: 0.28, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.98, blue: 0.80, alpha: 1) }
     private var font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     private var lastFontSize: Double = 0
+    private var lastFontKey = ""
+    /// Czcionka siatki z Preferencji (D178): krój (pusty — systemowa o stałej szerokości), grubość, wielkość.
+    static func gridFont(_ s: PelikanWorkspace.Settings) -> NSFont {
+        AppFonts.font(family: s.gridFontName, size: s.gridFontSize, weight: s.gridFontWeight, monospaced: true)
+    }
+    static func fontKey(_ s: PelikanWorkspace.Settings) -> String { s.gridFontName + "|" + s.gridFontWeight.rawValue }
     private var lastRowLines = 1
     private var lastColors = AreaColors()
     private var lastHidden: Set<Int> = []
@@ -70,8 +76,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         table.target = self
         table.action = #selector(cellClicked)
         table.doubleAction = #selector(cellDoubleClicked)
-        font = NSFont.monospacedSystemFont(ofSize: workspace.settings.gridFontSize, weight: .regular)
+        font = Self.gridFont(workspace.settings)
         lastFontSize = workspace.settings.gridFontSize
+        lastFontKey = Self.fontKey(workspace.settings)
         table.rowHeight = CGFloat(lastFontSize) + 8
         if tab.altRowColor != nil { table.usesAlternatingRowBackgroundColors = false }
         let rowNo = NSTableColumn(identifier: .init("#"))
@@ -189,7 +196,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             record.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         // Panel wartości bieżącej komórki po prawej (DB-PANEL-001), widoczny przełącznikiem z menu Widok.
-        let panel = NSHostingView(rootView: CellValuePanelView(tab: tab, grid: grid))
+        let panel = NSHostingView(rootView: CellValuePanelView(tab: tab, grid: grid).interfaceFont())
         panel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(panel)
         let trailing = scroll.trailingAnchor.constraint(equalTo: panel.leadingAnchor)
@@ -249,10 +256,12 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             table.reloadData()
         }
         let size = workspace.settings.gridFontSize
-        if size != lastFontSize || tab.rowLines != lastRowLines {
+        let key = Self.fontKey(workspace.settings)
+        if size != lastFontSize || tab.rowLines != lastRowLines || key != lastFontKey {
             lastFontSize = size
             lastRowLines = tab.rowLines
-            font = NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+            lastFontKey = key
+            font = Self.gridFont(workspace.settings)
             // Wysokość wiersza w liniach tekstu (PD-GRID-012).
             table.rowHeight = (CGFloat(size) + 4) * CGFloat(max(1, tab.rowLines)) + 4
             table.reloadData()

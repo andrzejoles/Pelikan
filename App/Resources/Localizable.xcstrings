@@ -253,6 +253,34 @@
         }
       }
     },
+    "%@ (niezainstalowana)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (not installed)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (nicht installiert)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (no instalada)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (не встановлено)"
+          }
+        }
+      }
+    },
     "%@ (oczekiwana %@)" : {
       "localizations" : {
         "en" : {
@@ -9549,6 +9577,34 @@
         }
       }
     },
+    "Cienka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leicht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fina"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тонкий"
+          }
+        }
+      }
+    },
     "Claude Code (--mcp-config)" : {
       "localizations" : {
         "en" : {
@@ -10469,6 +10525,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schrift (UG 23.12)"
+          }
+        }
+      }
+    },
+    "Czcionka interfejsu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interface font"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oberflächenschrift"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fuente de la interfaz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шрифт інтерфейсу"
           }
         }
       }
@@ -18397,6 +18481,34 @@
         }
       }
     },
+    "Etykiety, listy, wstążka, karty okien, pasek stanu, okna narzędzi i Preferencji. Tekst pomocniczy jest o 2 pt mniejszy; menu i tytuły okien rysuje macOS." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Labels, lists, ribbon, window tabs, status bar, tool windows and Preferences. Secondary text is 2 pt smaller; menus and window titles are drawn by macOS."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschriftungen, Listen, Menüband, Fensterregisterkarten, Statusleiste, Werkzeugfenster und Einstellungen. Hilfstext ist 2 pt kleiner; Menüs und Fenstertitel zeichnet macOS."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiquetas, listas, cinta, pestañas de ventanas, barra de estado, ventanas de herramientas y Preferencias. El texto secundario es 2 pt más pequeño; los menús y títulos de ventana los dibuja macOS."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мітки, списки, стрічка, вкладки вікон, рядок стану, вікна інструментів і Параметри. Допоміжний текст на 2 pt менший; меню й заголовки вікон малює macOS."
+          }
+        }
+      }
+    },
     "Excel (xlsx)" : {
       "localizations" : {
         "en" : {
@@ -21361,6 +21473,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grok (GROK_CONFIG)"
+          }
+        }
+      }
+    },
+    "Gruba" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bold"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fett"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Negrita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жирний"
           }
         }
       }
@@ -24889,6 +25029,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Як ідентифікатори"
+          }
+        }
+      }
+    },
+    "Jak interfejs" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like interface"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie Oberfläche"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como la interfaz"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як інтерфейс"
           }
         }
       }
@@ -31665,6 +31833,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Критерії: значення, шаблон із %%, > < >= <= <>, in (…), between … and …, null, not null"
+          }
+        }
+      }
+    },
+    "Krój" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Typeface"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schriftart"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de letra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гарнітура"
           }
         }
       }
@@ -43597,30 +43793,30 @@
         }
       }
     },
-    "Object Browser: systemowa" : {
+    "Object Browser: jak interfejs" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object Browser: system"
+            "value" : "Object Browser: like interface"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object Browser: System"
+            "value" : "Object Browser: wie Oberfläche"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object Browser: del sistema"
+            "value" : "Object Browser: como la interfaz"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object Browser: системний"
+            "value" : "Object Browser: як інтерфейс"
           }
         }
       }
@@ -62637,6 +62833,34 @@
         }
       }
     },
+    "Przykład: Okno SQL — SELECT * FROM emp; Połączono z dev_baza_testowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Example: SQL Window — SELECT * FROM emp; Connected to dev_baza_testowa"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beispiel: SQL-Fenster — SELECT * FROM emp; Verbunden mit dev_baza_testowa"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejemplo: Ventana SQL — SELECT * FROM emp; Conectado a dev_baza_testowa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приклад: Вікно SQL — SELECT * FROM emp; Підключено до dev_baza_testowa"
+          }
+        }
+      }
+    },
     "Przypina albo odpina bieżącą kartę wyniku — przypięta nie znika przy kolejnym wykonaniu (także Shift+klik karty)." : {
       "localizations" : {
         "en" : {
@@ -63977,6 +64201,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Python: Abfrage"
+          }
+        }
+      }
+    },
+    "Półgruba" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Semibold"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Halbfett"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seminegrita"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напівжирний"
           }
         }
       }
@@ -71845,6 +72097,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Synonym …"
+          }
+        }
+      }
+    },
+    "Systemowa (SF Pro)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System (SF Pro)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System (SF Pro)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del sistema (SF Pro)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системний (SF Pro)"
+          }
+        }
+      }
+    },
+    "Systemowa o stałej szerokości" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System monospaced"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System, feste Breite"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Del sistema, monoespaciada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системний моноширинний"
           }
         }
       }
@@ -85481,6 +85789,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Schreibweise der Schlüsselwörter"
+          }
+        }
+      }
+    },
+    "Wielkość: %@ pt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Size: %@ pt"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Größe: %@ pt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño: %@ pt"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розмір: %@ pt"
           }
         }
       }
@@ -106149,6 +106485,34 @@
         }
       }
     },
+    "Zwykła" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regular"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Normal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звичайний"
+          }
+        }
+      }
+    },
     "Zwykły" : {
       "localizations" : {
         "en" : {
@@ -114629,6 +114993,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durchschnitt"
+          }
+        }
+      }
+    },
+    "Średnio gruba" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medium"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mittel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Середній"
           }
         }
       }

@@ -52,7 +52,7 @@ struct DiffViewer: View {
             Button { jump(-1) } label: { Image(systemName: "chevron.up") }.iconLabel(L10n.tr("Poprzednia różnica")).disabled(changes.isEmpty)
             Button { jump(1) } label: { Image(systemName: "chevron.down") }.iconLabel(L10n.tr("Następna różnica")).disabled(changes.isEmpty)
             Text(changes.isEmpty ? L10n.tr("Brak różnic") : L10n.tr("Różnica \(max(current, 0) + 1) z \(changes.count)"))
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.ui).foregroundStyle(.secondary)
             Spacer()
             Toggle(L10n.tr("Ignoruj wielkość liter"), isOn: $options.ignoreCase)
             Toggle(L10n.tr("Ignoruj białe znaki"), isOn: $options.ignoreWhitespace)
@@ -75,7 +75,7 @@ struct DiffViewer: View {
     }
 
     private func header(_ t: String) -> some View {
-        Text(t).font(.callout.bold()).lineLimit(1).truncationMode(.middle).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 8)
+        Text(t).font(.uiHeadline).lineLimit(1).truncationMode(.middle).frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 8)
     }
 
     private var content: some View {
@@ -140,9 +140,9 @@ struct DiffRowView: View {
     private func cell(number: Int?, text: String, change: Range<Int>?, side: Side) -> some View {
         HStack(spacing: 6) {
             Text(number.map(String.init) ?? "")
-                .font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
+                .font(.system(size: 12, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
             Text(attributed(text, change: change, side: side))
-                .font(.system(size: 11, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.system(size: 12, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 1)
         .background(background(side: side, present: number != nil))

@@ -28,14 +28,14 @@ struct ToolsPane: View {
                     Button(L10n.tr("Dodaj wyszukiwanie")) { workspace.settings.webSearches.append(WebSearch(name: L10n.tr("Nowe"), url: "https://")) }
                     Button(L10n.tr("Przywróć domyślne")) { workspace.settings.webSearches = WebSearch.defaults }
                 }
-                Text(L10n.tr("%s zastępuje zaznaczony tekst albo słowo pod kursorem; dozwolone tylko adresy http i https.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("%s zastępuje zaznaczony tekst albo słowo pod kursorem; dozwolone tylko adresy http i https.")).font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Edytor zewnętrzny")) {
                 TextField(L10n.tr("Aplikacja (nazwa albo ścieżka .app; puste — program skojarzony z plikiem)"),
                           text: Binding(get: { workspace.settings.externalEditor ?? "" }, set: { workspace.settings.externalEditor = $0.isEmpty ? nil : $0 }),
                           prompt: Text("Visual Studio Code"))
                 Text(L10n.tr("Po powrocie do Pelikana zmiany pliku są wczytywane do okna. Okno bez pliku trafia do pliku tymczasowego w katalogu danych."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Zewnętrzna przeglądarka różnic")) {
                 TextField(L10n.tr("Program (puste — wbudowana przeglądarka)"),
@@ -50,7 +50,7 @@ struct ToolsPane: View {
                     .onSubmit { applyDiffArguments() }
                     .disabled(workspace.settings.externalDiff == nil)
                 Text(L10n.tr("%1 i %2 — pliki lewy i prawy, %3 i %4 — ich tytuły. Program jest uruchamiany bez powłoki; argumenty rozdziela spacja, cudzysłów grupuje."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Dokumenty (Narzędzia › Dokumenty)")) {
                 ForEach(workspace.settings.userDocuments) { d in

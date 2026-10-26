@@ -66,11 +66,11 @@ final class AgentPane: NSView {
         let end = NSButton(title: L10n.tr("Zakończ"), target: self, action: #selector(end))
         let log = NSButton(title: L10n.tr("Dziennik"), target: self, action: #selector(showLog))
         for b in [undo, end, log] { b.controlSize = .small; b.bezelStyle = .accessoryBarAction; b.refusesFirstResponder = true }
-        warningLabel.font = .systemFont(ofSize: 10.5)
+        warningLabel.font = InterfaceFonts.shared.small
         warningLabel.textColor = .systemOrange
         warningLabel.maximumNumberOfLines = 3
         warningLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        pendingLabel.font = .systemFont(ofSize: 11, weight: .semibold)
+        pendingLabel.font = AppFonts.font(family: InterfaceFonts.shared.family, size: max(9, InterfaceFonts.shared.size - 2), weight: .semibold)
         pendingLabel.textColor = .systemOrange
         let icon = NSImageView(image: NSImage(systemSymbolName: "cpu", accessibilityDescription: L10n.tr("Agent AI"))!)
         let header = NSStackView(views: [icon, picker, NSView(), pendingLabel, undo, end, log])
@@ -259,7 +259,7 @@ extension AgentPane: NSTableViewDataSource, NSTableViewDelegate {
             }
         }
         let field = NSTextField(labelWithString: text)
-        field.font = .systemFont(ofSize: 11)
+        field.font = InterfaceFonts.shared.small
         field.textColor = color
         field.lineBreakMode = .byTruncatingTail
         field.toolTip = text
@@ -336,7 +336,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         middle.documentView = entries
         middle.hasVerticalScroller = true
         raw.isEditable = false
-        raw.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        raw.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         raw.autoresizingMask = [.width]
         let bottom = NSScrollView()
         bottom.documentView = raw
@@ -380,7 +380,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
             }
         }
         let field = NSTextField(labelWithString: text)
-        field.font = .systemFont(ofSize: 11)
+        field.font = InterfaceFonts.shared.small
         field.lineBreakMode = .byTruncatingTail
         field.toolTip = text
         return field

@@ -34,7 +34,7 @@ struct LogonView: View {
                         .frame(width: 9, height: 9)
                     VStack(alignment: .leading) {
                         Text(c.displayName)
-                        Text(c.connectionString + "  ·  " + c.environment.displayName).font(.caption).foregroundStyle(.secondary)
+                        Text(c.connectionString + "  ·  " + c.environment.displayName).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 .tag(c.id)
@@ -46,7 +46,7 @@ struct LogonView: View {
                 // Fokus po tym, jak arkusz stanie się oknem kluczowym.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { searchFocused = true }
             }
-            if let error { Text(error).foregroundStyle(.red).font(.callout).textSelection(.enabled) }
+            if let error { Text(error).foregroundStyle(.red).font(.ui).textSelection(.enabled) }
             if workspace.connections.connections.isEmpty {
                 Text(L10n.tr("Brak zdefiniowanych połączeń — utwórz pierwsze.")).foregroundStyle(.secondary)
             }
@@ -59,7 +59,7 @@ struct LogonView: View {
             }
         }
         .padding(20)
-        .frame(width: 520, height: 420)
+        .windowSize(width: 520, height: 420)
     }
 
     private func edit(_ id: UUID?) {

@@ -39,7 +39,7 @@ struct SchedulerView: View {
                 case 1: runsTab
                 default: runningTab
                 }
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
             .padding(10)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -84,7 +84,7 @@ struct SchedulerView: View {
                 .frame(minHeight: 180)
                 ScrollView {
                     Text(sql.isEmpty ? L10n.tr("View SQL — zaznacz obiekt") : sql)
-                        .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                        .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(4)
                 }
                 .frame(minHeight: 100)
@@ -215,7 +215,7 @@ struct JobEditor: View {
             Form {
                 TextField(L10n.tr("Nazwa"), text: $job.name).disabled(!isNew)
                 Picker(L10n.tr("Typ"), selection: $job.type) { ForEach(SchedulerJob.JobType.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
-                TextField(L10n.tr("Akcja"), text: $job.action, axis: .vertical).font(.system(size: 11, design: .monospaced)).lineLimit(3...8)
+                TextField(L10n.tr("Akcja"), text: $job.action, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(3...8)
                 Toggle(L10n.tr("Harmonogram nazwany"), isOn: $named)
                 if named {
                     TextField(L10n.tr("Harmonogram"), text: Binding(get: { job.scheduleName ?? "" }, set: { job.scheduleName = $0 }))
@@ -230,10 +230,10 @@ struct JobEditor: View {
                 TextField(L10n.tr("Komentarz"), text: $job.comments)
                 TextField(L10n.tr("Powiadomienia e-mail (adresy po przecinku)"), text: $recipients)
             }
-            Text(L10n.tr("SQL")).font(.caption.bold())
+            Text(L10n.tr("SQL")).font(.uiSecondary.bold())
             ScrollView {
                 Text(isNew ? Scheduler.createSQL(result) : Scheduler.alterSQL(from: original, to: result))
-                    .font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(height: 120)
             HStack {
@@ -243,7 +243,7 @@ struct JobEditor: View {
             }
         }
         .padding(14)
-        .frame(width: 620)
+        .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity)
         .onAppear {
             job = original
             named = original.scheduleName != nil

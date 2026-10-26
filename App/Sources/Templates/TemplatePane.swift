@@ -105,5 +105,5 @@ final class TemplatePaneController: NSViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    override func loadView() { view = NSHostingView(rootView: TemplatePane(workspace: workspace)) }
+    override func loadView() { view = NSHostingView(rootView: TemplatePane(workspace: workspace).interfaceFont()) }
 }

@@ -92,7 +92,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
                                          NSView(), button(L10n.tr("Zamknij"), #selector(closeWindow)), applyButton])
         for v in [top, content, bottom] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false }
         info.textColor = .secondaryLabelColor
-        info.font = .systemFont(ofSize: 11)
+        info.font = InterfaceFonts.shared.small
         let root = NSView()
         for v in [top, content, bottom] { root.addSubview(v) }
         NSLayoutConstraint.activate([

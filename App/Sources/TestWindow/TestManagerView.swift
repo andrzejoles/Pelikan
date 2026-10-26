@@ -48,11 +48,11 @@ struct TestManagerView: View {
                 editor.frame(minWidth: 460)
             }
             HStack {
-                Text(L10n.tr("Zmienne globalne (NAZWA=wartość, po przecinku; w wejściu: &NAZWA)")).font(.caption)
+                Text(L10n.tr("Zmienne globalne (NAZWA=wartość, po przecinku; w wejściu: &NAZWA)")).font(.uiSecondary)
                 TextField("", text: $globalsText).textFieldStyle(.roundedBorder).onSubmit { applyGlobals() }
             }
             if !results.isEmpty {
-                Text(L10n.tr("Udane: \(results.values.filter(\.passed).count) z \(results.count)")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Udane: \(results.values.filter(\.passed).count) z \(results.count)")).font(.uiSecondary).foregroundStyle(.secondary)
             }
         }
         .padding(10)
@@ -86,7 +86,7 @@ struct TestManagerView: View {
                     Section(L10n.tr("Wynik")) {
                         Text(r.passed ? L10n.tr("Udany (\(String(format: "%.2f", r.seconds)) s)") : r.failures.joined(separator: "\n"))
                             .foregroundStyle(r.passed ? .green : .red).textSelection(.enabled)
-                        if !r.output.isEmpty { Text(r.output.joined(separator: "\n")).font(.caption.monospaced()) }
+                        if !r.output.isEmpty { Text(r.output.joined(separator: "\n")).font(.subheadline.monospaced()) }
                     }
                 }
             }

@@ -12,7 +12,7 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     init(workspace: Workspace) {
         self.workspace = workspace
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 560, height: 360),
-                        styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel], backing: .buffered, defer: true)
+                        styleMask: [.titled, .resizable, .fullSizeContentView, .nonactivatingPanel], backing: .buffered, defer: true)
         super.init()
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true

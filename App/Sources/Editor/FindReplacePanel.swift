@@ -89,7 +89,7 @@ struct FindReplaceView: View {
                 Toggle(L10n.tr("literałach"), isOn: $model.search.inStrings)
             }
             HStack {
-                if let m = model.message { Text(m).font(.caption).foregroundStyle(.secondary) }
+                if let m = model.message { Text(m).font(.uiSecondary).foregroundStyle(.secondary) }
                 Spacer()
                 Button(L10n.tr("Poprzednie")) { model.find(backwards: true) }
                 Button(L10n.tr("Zamień")) { model.replace() }
@@ -98,7 +98,7 @@ struct FindReplaceView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 600, height: 330)
+        .windowSize(width: 600, height: 330)
     }
 }
 
@@ -119,20 +119,20 @@ struct RecallStatementView: View {
             List(entries, id: \.0, selection: $selection) { item in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.1.text.replacingOccurrences(of: "\n", with: " ")).font(.body.monospaced()).lineLimit(2)
-                    Text("\(item.1.date.formatted(date: .abbreviated, time: .shortened))  ·  \(item.1.user)").font(.caption).foregroundStyle(.secondary)
+                    Text("\(item.1.date.formatted(date: .abbreviated, time: .shortened))  ·  \(item.1.user)").font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 .contextMenu { Button(L10n.tr("Wstaw")) { insert([item.0]) } }
             }
             .onKeyPress(.return) { insert(Array(selection)); return .handled }
             HStack {
-                Text(L10n.tr("Wpisów: \(entries.count)")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Wpisów: \(entries.count)")).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Zamknij"), action: onClose).keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Wstaw")) { insert(Array(selection)) }.keyboardShortcut(.defaultAction).disabled(selection.isEmpty)
             }
         }
         .padding(14)
-        .frame(width: 640, height: 460)
+        .windowSize(width: 640, height: 460)
     }
 
     /// Wiele zaznaczonych poleceń — rozdzielone pustą linią, każde zakończone średnikiem (jak „wiele naraz” we wzorcu).

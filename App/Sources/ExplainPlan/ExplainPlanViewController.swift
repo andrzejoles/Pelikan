@@ -26,7 +26,7 @@ final class ExplainPlanViewController: NSViewController {
         split.isVertical = false
         split.dividerStyle = .thin
         split.addArrangedSubview(editor)
-        split.addArrangedSubview(NSHostingView(rootView: PlanPanel(document: document, workspace: workspace)))
+        split.addArrangedSubview(NSHostingView(rootView: PlanPanel(document: document, workspace: workspace).interfaceFont()))
         view = split
     }
 
@@ -93,14 +93,14 @@ struct PlanPanel: View {
                 .fixedSize()
                 .disabled(document.plan == nil)
             }
-            if let e = document.planError { Text(e).foregroundStyle(.red).font(.callout).textSelection(.enabled) }
+            if let e = document.planError { Text(e).foregroundStyle(.red).font(.ui).textSelection(.enabled) }
             if mode == 1, let plan = document.plan {
                 PlanDiagramView(roots: plan.roots, selection: $selection)
             } else if mode == 2, let plan = document.plan {
                 FlameGraphView(roots: plan.roots, selection: $selection)
             } else if mode == 3, let plan = document.plan {
                 ScrollView([.horizontal, .vertical]) {
-                    Text(plan.text).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).padding(4)
+                    Text(plan.text).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).padding(4)
                 }
             } else {
                 Table(document.plan?.roots ?? [], children: \.children, selection: $selection) {
@@ -117,8 +117,8 @@ struct PlanPanel: View {
                 }
                 if let line = document.plan?.lines.first(where: { $0.id == selection }), !(line.accessPredicates.isEmpty && line.filterPredicates.isEmpty) {
                     VStack(alignment: .leading, spacing: 2) {
-                        if !line.accessPredicates.isEmpty { Text(L10n.tr("Dostęp: \(line.accessPredicates)")).font(.caption.monospaced()).textSelection(.enabled) }
-                        if !line.filterPredicates.isEmpty { Text(L10n.tr("Filtr: \(line.filterPredicates)")).font(.caption.monospaced()).textSelection(.enabled) }
+                        if !line.accessPredicates.isEmpty { Text(L10n.tr("Dostęp: \(line.accessPredicates)")).font(.subheadline.monospaced()).textSelection(.enabled) }
+                        if !line.filterPredicates.isEmpty { Text(L10n.tr("Filtr: \(line.filterPredicates)")).font(.subheadline.monospaced()).textSelection(.enabled) }
                     }
                 }
             }

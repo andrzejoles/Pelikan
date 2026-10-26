@@ -8,9 +8,9 @@ Oberfläche) und springt zum passenden Tab.
 
 | Tab | Was Sie festlegen |
 |---|---|
-| Allgemein | Sitzungsmodus (Multi, Dual, Single), Verhalten beim Abmelden mit offener Transaktion, Verbindungsprüfung, Anheften der Verbindung neuer Fenster, Verbindungsfarben und Regeln `benutzer@datenbank`, Erscheinungsbild (wie System, hell, dunkel), Sprache der Oberfläche, Startverzeichnisse und zusätzliche Dateiendungen, Nachfrage zum Speichern neuer Fenster |
+| Allgemein | Sitzungsmodus (Multi, Dual, Single), Verhalten beim Abmelden mit offener Transaktion, Verbindungsprüfung, Anheften der Verbindung neuer Fenster, Verbindungsfarben und Regeln `benutzer@datenbank`, Erscheinungsbild (wie System, hell, dunkel), Oberflächenschrift (Schriftart, Stil, Größe), Sprache der Oberfläche, Startverzeichnisse und zusätzliche Dateiendungen, Nachfrage zum Speichern neuer Fenster |
 | SQL Window | AutoSelect, AutoCommit, Bestätigung von COMMIT und ROLLBACK, AutoCommit im Test Window, Zeilen pro Seite, Zahlendarstellung, Auto Format im Large Data Editor, Statistiken, DBMS_OUTPUT (aktiviert, Leeren vor der Ausführung), Formate für DATE und TIMESTAMP |
-| Editor | Schrift (auch Ligaturen) und Farben, Codevorschlag (automatisch nach einem Punkt, Abgleich, Schreibweise, Standardfunktionen, Darstellung von „(alle)“), AutoReplace, Merken des Fensterzustands, Schreibweise von Schlüsselwörtern, Hervorhebungen, Zeilenstatus, Umbruch, Sonderzeichen, Einrückungen und Tabulatoren |
+| Editor | Schriften von Editor, Ergebnisraster und Object Browser (Schriftart, Stil, Größe; Ligaturen) und Farben, Codevorschlag (automatisch nach einem Punkt, Abgleich, Schreibweise, Standardfunktionen, Darstellung von „(alle)“), AutoReplace, Merken des Fensterzustands, Schreibweise von Schlüsselwörtern, Hervorhebungen, Zeilenstatus, Umbruch, Sonderzeichen, Einrückungen und Tabulatoren |
 | Formatierer | PL/SQL-Formatierungsregeln und automatische Formatierung (nach dem Öffnen aus der Datenbank, vor dem Kompilieren, vor dem Speichern) |
 | Tastatur | Kurzbefehlprofil und eigene Kurzbefehle für Befehle |
 | Oracle | Instant Client, NLS-Einstellungen der Sitzung, Schließen inaktiver Sitzungen, Version der Oracle-Dokumentation für F1, Touch ID für gespeicherte Passwörter, Oracle Net und Oracle Wallet, Compiler, Debugger, Compiler-Hinweise und Namenskonventionen, DBA_-Views |

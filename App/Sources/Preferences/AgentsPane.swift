@@ -36,7 +36,7 @@ struct AgentsPane: View {
                 Text(L10n.tr("Agenci (CLI)"))
             } footer: {
                 Text(L10n.tr("Polecenie szukane jest w PATH powłoki logowania. „Konfiguracja MCP jak” wybiera sposób przekazania serwera MCP Pelikana tylko dla jednej sesji."))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Bezpieczeństwo")) {
                 Toggle(L10n.tr("Tryb ścisły — CLI bez własnej powłoki i edycji plików, tylko narzędzia Pelikana (gdzie CLI na to pozwala)"),

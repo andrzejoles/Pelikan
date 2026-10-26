@@ -44,7 +44,7 @@ struct DBAPanelView: View {
                 case nil:
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
             .padding(10)
         }
@@ -117,9 +117,9 @@ struct InstanceViewerView: View {
             HStack {
                 if let s = snap {
                     VStack(alignment: .leading) {
-                        Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.headline)
-                        Text(s.version ?? "").font(.caption).foregroundStyle(.secondary)
-                        Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.caption)
+                        Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
+                        Text(s.version ?? "").font(.uiSecondary).foregroundStyle(.secondary)
+                        Text(L10n.tr("Czas pracy: \(uptime(s.uptime)) · sesje: \(s.sessionsTotal.map(String.init) ?? "—"), aktywne: \(s.sessionsActive.map(String.init) ?? "—")")).font(.uiSecondary)
                     }
                 }
                 Spacer()
@@ -130,26 +130,26 @@ struct InstanceViewerView: View {
             if let s = snap {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading) {
-                        Text(L10n.tr("Oczekiwania (s/s, bez Idle)")).font(.caption.bold())
+                        Text(L10n.tr("Oczekiwania (s/s, bez Idle)")).font(.uiSecondary.bold())
                         Chart(s.waitClasses) { w in BarMark(x: .value("s", w.rate ?? 0), y: .value(L10n.tr("Klasa"), w.name)) }
                             .frame(height: 180)
                     }
                     VStack(alignment: .leading) {
-                        Text(L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? "")).font(.caption.bold())
+                        Text(L10n.tr("SGA (MB)") + (s.pgaAllocatedMB.map { " · PGA \($0) MB" } ?? "")).font(.uiSecondary.bold())
                         Chart(s.sga.prefix(8).map { SGAItem(name: $0.0, mb: $0.1) }) { p in BarMark(x: .value("MB", p.mb), y: .value(L10n.tr("Pula"), p.name)) }
                             .frame(height: 180)
                     }
                 }
-                Text(L10n.tr("Najdroższe SQL (czas)")).font(.caption.bold())
+                Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
                 Table(s.topSQL) {
-                    TableColumn("SQL_ID") { t in Text(t.sqlID).font(.caption.monospaced()) }.width(110)
+                    TableColumn("SQL_ID") { t in Text(t.sqlID).font(.subheadline.monospaced()) }.width(110)
                     TableColumn(L10n.tr("Wykonania")) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
                     TableColumn(L10n.tr("Czas s")) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
                     TableColumn("CPU s") { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)
                     TableColumn(L10n.tr("Bufory")) { t in Text("\(t.bufferGets)").monospacedDigit() }.width(90)
                     TableColumn("SQL") { t in Text(t.text).lineLimit(1) }
                 }
-                ForEach(s.unavailable, id: \.self) { Text($0).font(.caption).foregroundStyle(.orange) }
+                ForEach(s.unavailable, id: \.self) { Text($0).font(.uiSecondary).foregroundStyle(.orange) }
             } else if let error {
                 Text(error).foregroundStyle(.red)
             } else {
@@ -196,7 +196,7 @@ struct TaskMonitorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(L10n.tr("Zadania: \(workspace.tasks.tasks.count), w toku: \(workspace.tasks.tasks.filter(\.isRunning).count)")).font(.caption)
+                Text(L10n.tr("Zadania: \(workspace.tasks.tasks.count), w toku: \(workspace.tasks.tasks.filter(\.isRunning).count)")).font(.uiSecondary)
                 Spacer()
                 Button(L10n.tr("Usuń zakończone")) { workspace.tasks.clearFinished() }
             }
@@ -206,7 +206,7 @@ struct TaskMonitorView: View {
                 TableColumn(L10n.tr("Stan")) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
                 TableColumn(L10n.tr("Czas")) { t in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }.width(70)
                 TableColumn(L10n.tr("Postęp")) { t in
-                    if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.caption).lineLimit(1) }
+                    if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
                 TableColumn("") { t in
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
@@ -256,15 +256,15 @@ struct SchemaDocView: View {
             TextField(L10n.tr("Schemat (puste — bieżący)"), text: $owner).textFieldStyle(.roundedBorder)
             Toggle(L10n.tr("Dołącz kod źródłowy programów"), isOn: $includeSource).toggleStyle(.checkbox)
             Text(L10n.tr("Tabele z kolumnami i komentarzami, ograniczenia, indeksy, widoki, programy z parametrami, sekwencje — strony HTML w wybranym katalogu."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
             HStack {
-                Text(message).font(.caption)
+                Text(message).font(.uiSecondary)
                 Spacer()
                 Button(L10n.tr("Generuj…")) { generate() }.disabled(running)
             }
         }
         .padding(14)
-        .frame(width: 520)
+        .frame(minWidth: 520, idealWidth: 520, maxWidth: .infinity)
     }
 
     private func generate() {

@@ -16,7 +16,7 @@ struct LinkedQueriesView: View {
             List(links, selection: $selection) { l in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(l.title)
-                    Text("\(l.constraint): " + l.columns.map { "\($0.0) → \($0.1)" }.joined(separator: ", ")).font(.caption).foregroundStyle(.secondary)
+                    Text("\(l.constraint): " + l.columns.map { "\($0.0) → \($0.1)" }.joined(separator: ", ")).font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 .tag(l.id)
             }
@@ -55,7 +55,7 @@ struct CompareRecordsView: View {
                     }
                 }
             }
-            Text(L10n.tr("Różne kolumny: \(comparison.filter { !$0.identical }.count) z \(comparison.count)")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.tr("Różne kolumny: \(comparison.filter { !$0.identical }.count) z \(comparison.count)")).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 560, minHeight: 360)
@@ -79,7 +79,7 @@ struct CompareResultsView: View {
                 if let d = diff {
                     Text(d.identical ? L10n.tr("Wyniki identyczne")
                          : L10n.tr("Różne komórki: \(d.cells.count); wiersze tylko po lewej: \(d.rowsOnlyLeft), po prawej: \(d.rowsOnlyRight)"))
-                        .font(.caption)
+                        .font(.uiSecondary)
                 }
             }
             .toggleStyle(.checkbox)
@@ -98,7 +98,7 @@ struct CompareResultsView: View {
         let columns = grid?.columns.map(\.name) ?? []
         let rows = (0..<(grid?.rowCount ?? 0)).map { r in DetailRow(id: r, values: columns.indices.map { grid!.text(row: grid!.dataRow(r), column: $0) }) }
         return VStack(alignment: .leading, spacing: 2) {
-            Text(tab.title).font(.caption.bold())
+            Text(tab.title).font(.uiSecondary.bold())
             Table(rows) {
                 TableColumnForEach(columns.indices.map { $0 }, id: \.self) { i in
                     TableColumn(columns[i]) { (r: DetailRow) in
@@ -124,15 +124,15 @@ struct ColumnToFilesView: View {
         VStack(alignment: .leading, spacing: 8) {
             Picker(L10n.tr("Kolumna"), selection: $column) { ForEach(columns.indices, id: \.self) { Text(columns[$0]).tag($0) } }
             TextField(L10n.tr("Nazwa pliku (np. [ID]_[NAZWA].txt, [#] — numer wiersza)"), text: $template).textFieldStyle(.roundedBorder)
-            Text(L10n.tr("Zaznaczone wiersze albo wszystkie pobrane; LOB-y w pobranej długości.")).font(.caption).foregroundStyle(.secondary)
+            Text(L10n.tr("Zaznaczone wiersze albo wszystkie pobrane; LOB-y w pobranej długości.")).font(.uiSecondary).foregroundStyle(.secondary)
             HStack {
-                Text(message).font(.caption)
+                Text(message).font(.uiSecondary)
                 Spacer()
                 Button(L10n.tr("Zapisz pliki…")) { save() }.disabled(columns.isEmpty || template.isEmpty)
             }
         }
         .padding(12)
-        .frame(width: 520)
+        .frame(minWidth: 520, idealWidth: 520, maxWidth: .infinity)
     }
 
     private func save() {

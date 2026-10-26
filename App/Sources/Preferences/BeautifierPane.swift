@@ -34,10 +34,10 @@ struct BeautifierPane: View {
             .frame(width: 390)
             VStack(alignment: .leading, spacing: 8) {
                 example
-                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.uiSecondary).foregroundStyle(.secondary)
                 ScrollView([.vertical, .horizontal]) {
                     Text(highlighted)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 12, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(8)
@@ -150,7 +150,7 @@ struct BeautifierPane: View {
                 Toggle(L10n.tr("Komentarze na końcu kolejnych linii"), isOn: setting(workspace, \.beautifier.alignTrailingComments))
             }
             Text(L10n.tr("Wyrównanie dotyczy elementów w osobnych liniach — przy parametrach i liście SELECT włącz „Element w linii”."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
         }
     }
 
@@ -193,7 +193,7 @@ struct BeautifierPane: View {
                     .onSubmit(saveSpecialCase)
             }
             Text(L10n.tr("Literały, identyfikatory w cudzysłowie i komentarze nigdy nie są zmieniane."))
-                .font(.caption).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
         }
     }
 
@@ -202,7 +202,7 @@ struct BeautifierPane: View {
     @ViewBuilder private var example: some View {
         if let e = BeautifierExamples.example(focused) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.tr("Przykład opcji — wskaż albo zmień opcję po lewej")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Przykład opcji — wskaż albo zmień opcję po lewej")).font(.uiSecondary).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 8) {
                     exampleColumn(L10n.tr("Teraz"), format(e.snippet, options))
                     exampleColumn(L10n.tr("Po zmianie tej opcji"), format(e.snippet, e.variant(options)))
@@ -214,10 +214,10 @@ struct BeautifierPane: View {
 
     private func exampleColumn(_ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption.bold())
+            Text(title).font(.uiSecondary.bold())
             ScrollView([.vertical, .horizontal]) {
                 Text(text)
-                    .font(.system(size: 10.5, design: .monospaced))
+                    .font(.system(size: 12, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .padding(6)
             }

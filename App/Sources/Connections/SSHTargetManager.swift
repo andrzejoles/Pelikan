@@ -240,7 +240,7 @@ struct SSHTargetManagerView: View {
                         Text(node.title)
                         if let env = node.environment {
                             Spacer()
-                            Text(env.rawValue).font(.caption2.bold()).foregroundStyle(.white)
+                            Text(env.rawValue).font(.uiSecondary.bold()).foregroundStyle(.white)
                                 .padding(.horizontal, 5).background(env.color, in: RoundedRectangle(cornerRadius: 3))
                         }
                     }
@@ -374,7 +374,7 @@ struct SSHTargetEditor: View {
                     TextField("LIBPATH", text: draft.libPath)
                     TextField("PATH", text: draft.path)
                     VStack(alignment: .leading) {
-                        Text(L10n.tr("Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)")).font(.caption)
+                        Text(L10n.tr("Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)")).font(.uiSecondary)
                         TextEditor(text: extraEnvironment).font(.system(.body, design: .monospaced)).frame(height: 54)
                     }
                 }

@@ -1557,3 +1557,34 @@ zmiany, więc ⌘S pyta o nazwę, a zamknięcie okna — o zapis. Przełącznik 
 (wcześniej tylko **Plik › Workset › Autozapis workseta**). Zamknięcie pojedynczego okna nadal pyta o zapis jak dotąd.
 Sprawdzone na aplikacji w tle: okna otwarte skryptem, zakończenie zwykłym „Zakończ” (`NSRunningApplication.terminate`),
 ponowne uruchomienie — te same cztery okna, z tekstem i tym samym aktywnym.
+
+### D177 · 2026-10-26 — Czytelne czcionki i okna o zmiennym rozmiarze
+
+Właściciel: czcionki interfejsu wyglądają źle, a okna bez zmiany rozmiaru (np. Preferencje) są kłopotliwe.
+- **Czcionki:** interfejs używał wielu bardzo małych rozmiarów — `caption`/`caption2`/`footnote` (10 pt, ok. 170 miejsc),
+  9–10,5 pt w AppKit i 10–11 pt w podglądach kodu — w różnych kombinacjach. Teraz najmniejszy tekst ma 11 pt
+  (`subheadline`, `smallSystemFontSize`), kod w podglądach i wynikach 12 pt (jak siatka), wstążka: podpisy 12 pt, karty
+  13 pt, podpisy grup 11 pt; edytor bez zmian (SF Mono 13, ustawienie użytkownika).
+- **Wstążka:** rząd przycisków ma stałą wysokość — podpisy grup w jednej linii; bez paska przewijania, który przy
+  ustawieniu macOS „pokazuj paski przewijania: zawsze” zasłaniał podpisy grup (szeroką kartę przewija gest albo kółko).
+- **Okna:** Preferencje dostały zmianę rozmiaru, minimalizację i zapamiętaną ramkę; okna i arkusze SwiftUI ze stałym
+  rozmiarem (logowanie, edytor połączenia, Znajdź i zamień, sesje, arkusze agenta, scheduler, DBA, narzędzia siatki)
+  mają rozmiar minimalny i początkowy zamiast stałego (`windowSize(width:height:)`); panel Znajdź i zamień i paleta komend
+  też dają się powiększać. Wyjątek: lista podpowiedzi edytora (dopasowana do treści).
+
+### D178 · 2026-10-26 — Konfigurowalne czcionki interfejsu, edytora, siatki i Object Browsera
+
+Właściciel: konfiguracja wielkości czcionek elementów interfejsu i samej czcionki (krój, styl) jest pożądana. W
+Preferencjach osobno dla czterech obszarów: krój (rodziny zainstalowane w systemie; edytor — o stałej szerokości),
+styl (cienka, zwykła, średnio gruba, półgruba, gruba) i wielkość:
+- **interfejs** (Ogólne › Czcionka interfejsu; domyślnie SF Pro 13 pt): etykiety, listy połączeń i okien, wstążka,
+  karty okien, pasek stanu, okna narzędzi, arkusze i Preferencje. Tekst pomocniczy jest o 2 pt mniejszy, podpisy wstążki
+  i kart — o 1 pt. W SwiftUI domyślna czcionka korzeni okien i style `.ui`, `.uiSecondary`, `.uiHeadline` w miejsce
+  `.subheadline`/`.headline`; w AppKit `InterfaceFonts` (obserwowany — zmiana odświeża widoki na żywo, także wysokość
+  wierszy list). Menu i tytuły okien rysuje macOS — tych czcionek aplikacja nie zmienia;
+- **edytor** (dotąd krój z krótkiej listy i wielkość) — dowolny krój o stałej szerokości i styl;
+- **siatka wyników** (dotąd tylko wielkość) — krój (domyślnie systemowa o stałej szerokości) i styl;
+- **Object Browser** (dotąd tylko wielkość) — krój i styl; bez własnych — jak interfejs (o 1 pt mniejsza).
+Krój zapisany w ustawieniach, którego nie ma w systemie (np. ustawienia przeniesione z innego Maca), zostaje w wyborze
+z dopiskiem „niezainstalowana” i zastępuje go czcionka systemowa. Skrypt zrzutów ma krok `debug.settings` (ustawienia
+z argumentów) — zrzut z krojem Avenir Next 14 pt potwierdza zmianę wstążki, kart, list, paska stanu i Preferencji.
