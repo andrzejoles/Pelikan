@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-26T14:37:06+01:00",
+  "heartbeat": "2026-10-26T15:37:14+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Ciało pakietu/typu otwiera się ze specyfikacją, wcięcia drzewek, widoczne znaczniki zwijania (D181)",
     "Lewy panel bez Liquid Glass — gładkie czcionki całego panelu w aktywnym oknie (D180)",
     "Lewa kolumna i wstążka bez przezroczystości — gładkie czcionki w aktywnym oknie na monitorach 1× (D179)",
     "Czytelne czcionki, konfigurowalne kroje i okna o zmiennym rozmiarze (D177, D178)",
@@ -96,8 +97,7 @@
     "Koszyk wdrożenia: pakiet i typ dodawane razem z ciałem (skrypt miał samą specyfikację) — wykryte zrzutem; zrzuty QBE, Użyć, raportów predefiniowanych, zapytań standardowych",
     "Scalone #62 (edytor po ustawieniu kursora z modelu; ograniczony odczyt potoków ssh — zawieszenia Stop); szkic wydania v6.7.0 do publikacji przez właściciela",
     "Scalone #60 (P2) i #61 (zrzuty: podkreślenia analizy kodu, panel agenta); #62 w CI (odświeżanie edytora po ustawieniu kursora z modelu)",
-    "Przebieg zrzutów: podkreślenia analizy kodu były niewidoczne (TextKit 2) — naprawione (D146); nagłówek panelu agenta pod paskiem narzędzi — naprawiony",
-    "Przebieg zrzutów: naprawione układy okien planu i raportu; okna dialogowe pomijane w trybie skryptu (bez aktywacji aplikacji)"
+    "Przebieg zrzutów: podkreślenia analizy kodu były niewidoczne (TextKit 2) — naprawione (D146); nagłówek panelu agenta pod paskiem narzędzi — naprawiony"
   ],
   "next": [
     "Logo aplikacji (ikona)"

@@ -328,7 +328,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             ruler.topAnchor.constraint(equalTo: pane.topAnchor),
             ruler.leadingAnchor.constraint(equalTo: pane.leadingAnchor),
             ruler.bottomAnchor.constraint(equalTo: pane.bottomAnchor),
-            ruler.widthAnchor.constraint(equalToConstant: 44),
+            ruler.widthAnchor.constraint(equalToConstant: 50),
             scrollView.topAnchor.constraint(equalTo: pane.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: ruler.trailingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: pane.trailingAnchor),
@@ -1242,7 +1242,7 @@ final class LineNumberRulerView: NSView {
     override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         guard let hit = drawnLines.first(where: { p.y >= $0.minY && p.y < $0.maxY }) else { return super.mouseDown(with: event) }
-        if p.x < 14, foldState?(hit.line) != nil { onFoldClick?(hit.line); return }
+        if p.x < 16, foldState?(hit.line) != nil { onFoldClick?(hit.line); return }
         if let onBreakpointClick { onBreakpointClick(hit.line); return }
         super.mouseDown(with: event)
     }
@@ -1289,7 +1289,7 @@ final class LineNumberRulerView: NSView {
                 // Zakładka: numer w zaokrąglonym znaczniku przy lewej krawędzi (obok znacznika zwijania).
                 let badge = NSAttributedString(string: "\(n)", attributes: [.font: NSFont.boldSystemFont(ofSize: max(8, font.pointSize - 2)), .foregroundColor: NSColor.white])
                 let h = min(height, lineHeight) - 2
-                let box = NSRect(x: 13, y: y + 1, width: max(10, badge.size().width + 4), height: h)
+                let box = NSRect(x: 16, y: y + 1, width: max(10, badge.size().width + 4), height: h)
                 NSColor.systemBlue.setFill()
                 NSBezierPath(roundedRect: box, xRadius: 3, yRadius: 3).fill()
                 badge.draw(at: NSPoint(x: box.midX - badge.size().width / 2, y: box.midY - badge.size().height / 2))
@@ -1305,8 +1305,16 @@ final class LineNumberRulerView: NSView {
             }
             drawnLines.append((line, y, y + height))
             if let folded = foldState?(line) {
-                let marker = NSAttributedString(string: folded ? "▸" : "▾", attributes: [.font: font, .foregroundColor: folded ? NSColor.controlAccentColor : NSColor.tertiaryLabelColor])
-                marker.draw(at: NSPoint(x: 3, y: y + (min(height, lineHeight) - marker.size().height) / 2))
+                // Znacznik zwijania: symbol strzałki wielkości tekstu linii (zwinięty — kolor akcentu), dobrze widoczny.
+                let side = min(12, max(9, min(height, lineHeight) - 3))
+                let color: NSColor = folded ? .controlAccentColor : .secondaryLabelColor
+                let config = NSImage.SymbolConfiguration(pointSize: side, weight: .bold).applying(.init(paletteColors: [color]))
+                if let image = NSImage(systemSymbolName: folded ? "chevron.right" : "chevron.down", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(config) {
+                    let size = image.size
+                    image.draw(in: NSRect(x: 2 + (12 - size.width) / 2, y: y + (min(height, lineHeight) - size.height) / 2, width: size.width, height: size.height),
+                               from: .zero, operation: .sourceOver, fraction: 1, respectFlipped: true, hints: nil)
+                }
             }
         }
         drawnLines.removeAll(keepingCapacity: true)

@@ -1609,3 +1609,17 @@ zachowaniu `.sidebar` leży w macOS 26+ w `NSGlassEffectView` (Liquid Glass), kt
 tło z D179 było wewnątrz szkła i nie pomagało. Lewy panel jest teraz zwykłym elementem podziału okna (bez szkła;
 priorytet utrzymania szerokości jak pasek boczny, zwijanie bez zmian); tekst jest rysowany zwykłym trybem. Skutek
 uboczny: wstążka biegnie przez całą szerokość okna, a lewy panel zaczyna się pod nią — układ jak w PL/SQL Developerze.
+
+### D181 · 2026-10-26 — Ciało pakietu/typu razem ze specyfikacją, wcięcia drzewek, widoczny znacznik zwijania
+
+Uwagi właściciela:
+- **Pakiety i typy w jednym oknie:** pakiet otwierany z folderu „Pakiety” miał już specyfikację i ciało na dwóch
+  kartach okna programu, ale ciało otwierane z „Ciał pakietów” albo „Ciał typów” otwierało się samo. Teraz Edytuj na
+  ciele otwiera parę (jedno okno, karta ciała aktywna — kursor na początku drugiej jednostki, także po automatycznym
+  formatowaniu). Ciało jest dołączane tylko, gdy istnieje: typ bez metod, kolekcja i pakiet bez ciała mają jedną kartę
+  (test na bazie: typ `AS OBJECT` bez ciała — jedna jednostka).
+- **Wcięcia drzewek:** zawartość kodu, przeglądarka obiektów i lista połączeń miały styl listy paska bocznego macOS,
+  który prawie nie wcina dzieci (ok. 10 pt). Teraz styl zwykły z wcięciem 16 pt na poziom.
+- **Znacznik zwijania kodu:** znak „▸/▾” małą czcionką numerów i bladym kolorem był niemal niewidoczny. Teraz symbol
+  strzałki (do 12 pt, pogrubiony, kolor tekstu pomocniczego; zwinięty — kolor akcentu), margines szerszy o 6 pt, obszar
+  kliknięcia 16 pt.

@@ -1,1 +1,1 @@
-[{"command": "debug.moveToScreen", "args": {"screen": 2}, "delay": 1}, {"command": "view.objectBrowser", "delay": 4}]
+[{"command": "view.objectBrowser", "delay": 4}]
