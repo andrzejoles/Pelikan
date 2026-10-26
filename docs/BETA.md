@@ -1,11 +1,22 @@
 # Pelikan — wydanie beta
 
-Szósta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Siódma beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0, 9.7.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 9.2.0
+## Co nowego od 9.7.0
+
+- **Okna wracają po ponownym uruchomieniu** — wszystkie rodzaje (także plan, diagram, notatnik, raport i konsole); okno
+  bez pliku wraca z tekstem jako okno bez pliku, oznaczone jako niezapisane. Włącznik: Preferencje › Ogólne › Pliki (D176).
+- **Czytelniejsze czcionki** — nic poniżej 11 pt, kod w podglądach 12 pt, większe podpisy wstążki; pasek przewijania
+  wstążki nie zasłania już podpisów grup (D177).
+- **Okna o zmiennym rozmiarze** — Preferencje, logowanie, edytor połączenia, Znajdź i zamień, arkusze i paleta komend
+  (D177).
+- **Filtr nazw** w przeglądarce obiektów szuka fragmentu nazwy (`emp` → `%EMP%`); `EMP%` — początek nazwy; dawne
+  zachowanie w Preferencjach › Object Browser (D175).
+
+## Co nowego w 9.7.0
 
 - **Wstążka** pod paskiem narzędzi: karty Start, Edycja, Obiekty, Debugowanie i testy, Narzędzia, Raporty, Widok i karty
   kontekstowe aktywnego okna (Program, Wynik, Diagram, Raport, Notatnik, Plan, Okno poleceń). Każda komenda z menu jest
