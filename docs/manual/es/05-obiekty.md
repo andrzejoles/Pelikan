@@ -12,7 +12,9 @@ datos y tus privilegios lo permiten.
 
 - **Selección de usuario** sobre el árbol: *Usuario actual*, *Todos los usuarios* o un esquema concreto (Pelikan
   recuerda la elección para la conexión).
-- **Filtro** bajo la selección de usuario: un fragmento del nombre con `%`, varios patrones separados por comas,
+- **Filtro** bajo la selección de usuario: parte del nombre (en cualquier posición: `emp` encuentra `EMP` y
+  `T_EMP_HIST`), un patrón con `%` (p. ej. `EMP%`: solo el principio del nombre; el comportamiento sin `%` se cambia en
+  **Preferencias › Object Browser**), varios patrones separados por comas,
   `status=invalid` (solo objetos no válidos) o `source=texto` (objetos cuyo código fuente contiene el texto).
 - Al expandir un objeto se ven sus elementos: columnas con tipos, restricciones, índices, disparadores, particiones,
   subprogramas, atributos y también las dependencias (**Depende de**, **Usado por**).

@@ -32,6 +32,10 @@ struct BrowserPane: View {
             Section(L10n.tr("Zachowanie")) {
                 Stepper(L10n.tr("Ostatnie obiekty: \(workspace.settings.browserRecentLimit)"), value: $workspace.settings.browserRecentLimit, in: 5...100, step: 5)
                 Toggle(L10n.tr("Potwierdzaj rekompilację"), isOn: $workspace.settings.confirmRecompile)
+                Picker(L10n.tr("Filtr nazw bez %"), selection: $workspace.settings.browserFilterContains) {
+                    Text(L10n.tr("Zawiera tekst (%nazwa%)")).tag(true)
+                    Text(L10n.tr("Zaczyna się od tekstu (nazwa%)")).tag(false)
+                }
                 ForEach([DBObjectType.table, .view, .package, .procedure, .function], id: \.self) { t in
                     Picker(L10n.tr("Dwuklik: \(t.folderName)"), selection: Binding(get: { workspace.browserDoubleClickCommand(for: t).rawValue },
                                                                                   set: { workspace.settings.browserDoubleClick[t.rawValue] = $0 })) {
