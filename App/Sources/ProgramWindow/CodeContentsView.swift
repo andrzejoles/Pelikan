@@ -35,7 +35,9 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         outline.outlineTableColumn = c
         outline.headerView = nil
         outline.rowSizeStyle = .small
-        outline.style = .sourceList
+        // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
+        outline.style = .plain
+        outline.indentationPerLevel = 16
         outline.dataSource = self
         outline.delegate = self
         outline.target = self

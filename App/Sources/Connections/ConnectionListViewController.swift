@@ -35,7 +35,9 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         outline.addTableColumn(column)
         outline.outlineTableColumn = column
         outline.headerView = nil
-        outline.style = .sourceList
+        // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
+        outline.style = .plain
+        outline.indentationPerLevel = 16
         outline.rowHeight = 22
         outline.dataSource = self
         outline.delegate = self

@@ -108,6 +108,23 @@ struct ObjectCommandTests {
         let prog = try #require(ws.activeDocument)
         #expect(prog.kind == .program && prog.title == "emp_api.pck")
         #expect(prog.text.components(separatedBy: "CREATE OR REPLACE").count == 3)       // specyfikacja i ciało
+        #expect(prog.selectedRange.lowerBound == 0)
+        // Ciało wskazane w przeglądarce: ta sama para jednostek w jednym oknie, kursor na ciele (D181).
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("emp_api"), "type": .string("PACKAGE BODY")]))
+        let body = try #require(ws.activeDocument)
+        #expect(body.kind == .program && body.title == "emp_api.pck")
+        #expect(body.text.components(separatedBy: "CREATE OR REPLACE").count == 3)
+        let caret = (body.text as NSString).substring(from: body.selectedRange.lowerBound)
+        #expect(caret.hasPrefix("CREATE OR REPLACE PACKAGE BODY"))
+        // Typ bez ciała (bez metod): jedna jednostka, bez pustej karty ciała.
+        let m = try #require(ws.metadata())
+        let s = try await m.session()
+        _ = try await s.execute("create or replace type pelikan_bez_ciala_t as object (a number)")
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("pelikan_bez_ciala_t"), "type": .string("TYPE")]))
+        let type = try #require(ws.activeDocument)
+        #expect(type.text.components(separatedBy: "CREATE OR REPLACE").count == 2)
+        #expect(ProgramCompiler.units(in: type.text).count == 1)
+        _ = try await s.execute("drop type pelikan_bez_ciala_t")
         await ws.sessions.disconnectAll()
     }
 

@@ -127,11 +127,15 @@ public enum ObjectCommands {
                                       parameters: objectParams, agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera program w oknie programu; tabelę, sekwencję, synonim, indeks, użytkownika i rolę w edytorze; pozostałe obiekty jako DDL."), feature: "PD-OB-014"),
                     validate: hasSelection) { ctx in
-                let (o, m) = try await target(ctx)
-                m.touch(o)
+                let (picked, m) = try await target(ctx)
+                m.touch(picked)
+                // Ciało pakietu/typu otwierane razem ze specyfikacją — jedno okno, karta ciała aktywna.
+                let openBody = picked.type == .packageBody || picked.type == .typeBody
+                let o = openBody ? DBObject(owner: picked.owner, name: picked.name, type: picked.type == .packageBody ? .package : .type) : picked
                 if o.type.isProgram {
                     // Specyfikacja i ciało pakietu/typu w jednym oknie (karty jednostek — Program Window).
                     var text = try await m.source(of: o) + "\n/\n"
+                    // Ciało jest dołączane tylko, gdy istnieje — typ bez metod, kolekcja i pakiet bez ciała mają jedną kartę.
                     if o.type == .package || o.type == .type {
                         let bodyType: DBObjectType = o.type == .package ? .packageBody : .typeBody
                         if let body = try? await m.source(of: DBObject(owner: o.owner, name: o.name, type: bodyType)) { text += "\n" + body + "\n/\n" }
@@ -142,7 +146,15 @@ public enum ObjectCommands {
                     let doc = ctx.workspace.newDocument(.program, text: text)
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
-                    doc.selectedRange = 0..<0
+                    // Ciało wskazane w przeglądarce: kursor na początku drugiej jednostki (karta ciała); po formatowaniu
+                    // granicą nadal jest „/” sam w linii.
+                    var caret = 0
+                    if openBody, let r = doc.text.range(of: "\n/\n") {
+                        caret = doc.text.utf16.distance(from: doc.text.startIndex, to: r.upperBound)
+                        while caret < (doc.text as NSString).length, (doc.text as NSString).character(at: caret) == 0x0A { caret += 1 }
+                        if caret >= (doc.text as NSString).length { caret = 0 }
+                    }
+                    doc.selectedRange = caret..<caret
                     // Znaczniki czasu (PD-PROG-011): późniejsza zmiana obiektu w bazie przez kogoś innego jest wykrywana.
                     var objects = [o]
                     if o.type == .package { objects.append(DBObject(owner: o.owner, name: o.name, type: .packageBody)) }
