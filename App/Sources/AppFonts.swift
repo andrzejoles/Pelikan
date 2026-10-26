@@ -138,3 +138,18 @@ struct FontWeightPicker: View {
         }
     }
 }
+
+/// Tło bez efektu przezroczystości (D179): `NSVisualEffectView` w stanie stałym „nieaktywnym”. Tekst wewnątrz nie jest
+/// rysowany trybem vibrancy (mieszanie z tłem bez pełnego wygładzania — na monitorach bez Retina litery wychodziły
+/// poszarpane, gdy okno było aktywne); wygląda jak w nieaktywnym oknie, w obu trybach jasnym i ciemnym.
+final class SolidBackgroundView: NSVisualEffectView {
+    init(material: NSVisualEffectView.Material) {
+        super.init(frame: .zero)
+        self.material = material
+        blendingMode = .withinWindow
+        state = .inactive
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+}

@@ -140,7 +140,7 @@ final class SidebarViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        let root = NSView()
+        let root = SolidBackgroundView(material: .sidebar)
         selector.target = self
         selector.action = #selector(selectPane(_:))
         selector.selectedSegment = 0
