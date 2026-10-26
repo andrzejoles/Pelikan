@@ -1600,3 +1600,12 @@ wymuszonym efektem litery kanciaste, bez — gładkie. Teraz lewa kolumna i wst�
 (`SolidBackgroundView` — efekt w stałym stanie „nieaktywnym”, materiał paska bocznego i paska tytułu, jasny i ciemny
 tryb bez zmian w kolorach), więc tekst jest zawsze rysowany zwykłym trybem. Antyaliasing i skalowanie były poprawne:
 drzewo używa czcionki systemowej bez przekształceń.
+
+### D180 · 2026-10-26 — Lewy panel jako zwykły panel okna, bez „płynnego szkła”
+
+Po D179 wstążka była poprawna, ale cały lewy panel nadal miał w aktywnym oknie poszarpane litery na monitorach bez
+Retina. Hierarchia widoków (zrzut przodków etykiety w działającej aplikacji): pasek boczny `NSSplitViewItem` w
+zachowaniu `.sidebar` leży w macOS 26+ w `NSGlassEffectView` (Liquid Glass), który przetwarza całą zawartość panelu —
+tło z D179 było wewnątrz szkła i nie pomagało. Lewy panel jest teraz zwykłym elementem podziału okna (bez szkła;
+priorytet utrzymania szerokości jak pasek boczny, zwijanie bez zmian); tekst jest rysowany zwykłym trybem. Skutek
+uboczny: wstążka biegnie przez całą szerokość okna, a lewy panel zaczyna się pod nią — układ jak w PL/SQL Developerze.
