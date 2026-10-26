@@ -505,6 +505,34 @@
         }
       }
     },
+    "%@ został nieoczekiwanie zamknięty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ quit unexpectedly"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ wurde unerwartet beendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ se cerró inesperadamente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ неочікувано завершився"
+          }
+        }
+      }
+    },
     "%@ — brak prawa zapisu" : {
       "localizations" : {
         "en" : {
@@ -949,6 +977,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "(keine Debug-Informationen)"
+          }
+        }
+      }
+    },
+    "(brak opisu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(no description)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(keine Beschreibung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(sin descripción)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(без опису)"
           }
         }
       }
@@ -1457,6 +1513,34 @@
         }
       }
     },
+    "(skrócone do %@ ostatnich wpisów — pełna treść w schowku)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(shortened to the last %@ entries — full text in the clipboard)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(auf die letzten %@ Einträge gekürzt — vollständiger Text in der Zwischenablage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(acortado a las últimas %@ entradas; el texto completo está en el portapapeles)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(скорочено до останніх %@ записів — повний текст у буфері обміну)"
+          }
+        }
+      }
+    },
     "(stała / pomiń)" : {
       "localizations" : {
         "en" : {
@@ -1481,6 +1565,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "(Konstante / überspringen)"
+          }
+        }
+      }
+    },
+    "(treść skrócona — pełna treść w schowku)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(text shortened — full text in the clipboard)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Text gekürzt — vollständiger Text in der Zwischenablage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(texto acortado; el texto completo está en el portapapeles)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(текст скорочено — повний текст у буфері обміну)"
           }
         }
       }
@@ -3445,6 +3557,34 @@
         }
       }
     },
+    "Aplikacja została zamknięta nieoczekiwanie (bez raportu awarii macOS)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The application quit unexpectedly (no macOS crash report)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App wurde unerwartet beendet (kein macOS-Absturzbericht)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La aplicación se cerró inesperadamente (sin informe de fallo de macOS)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосунок неочікувано завершився (без звіту про збій macOS)."
+          }
+        }
+      }
+    },
     "Archiwizacja wierszy (ROW ARCHIVAL)" : {
       "localizations" : {
         "en" : {
@@ -4309,6 +4449,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Workset automatisch speichern"
+          }
+        }
+      }
+    },
+    "Awaria" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crash"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fallo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збій"
+          }
+        }
+      }
+    },
+    "Awaria: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crash: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Absturz: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fallo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збій: %@"
           }
         }
       }
@@ -9349,6 +9545,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Кожні %@ с"
+          }
+        }
+      }
+    },
+    "Co się stało" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What happened"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was ist passiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué ocurrió"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що сталося"
+          }
+        }
+      }
+    },
+    "Co się stało? Co robiłeś i czego się spodziewałeś?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What happened? What were you doing and what did you expect?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was ist passiert? Was haben Sie getan und was haben Sie erwartet?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué ocurrió? ¿Qué estaba haciendo y qué esperaba?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Що сталося? Що ви робили й чого очікували?"
           }
         }
       }
@@ -15429,6 +15681,62 @@
         }
       }
     },
+    "Dołącz opis środowiska (wersja, system, sterowniki — bez nazw połączeń)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include environment (version, system, drivers — no connection names)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umgebung beifügen (Version, System, Treiber — ohne Verbindungsnamen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir el entorno (versión, sistema, controladores; sin nombres de conexiones)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати опис середовища (версія, система, драйвери — без назв з’єднань)"
+          }
+        }
+      }
+    },
+    "Dołącz ostatnie wpisy dziennika (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Include recent log entries (%@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Protokolleinträge beifügen (%@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluir las últimas entradas del registro (%@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати останні записи журналу (%@)"
+          }
+        }
+      }
+    },
     "Dołącza cele SSH i foldery z pliku JSON (nowe identyfikatory; hasła trzeba podać ponownie)." : {
       "localizations" : {
         "en" : {
@@ -17609,6 +17917,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notizbuch als Markdown exportieren …"
+          }
+        }
+      }
+    },
+    "Eksportuj pełny dziennik…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export full log…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vollständiges Protokoll exportieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar el registro completo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати повний журнал…"
           }
         }
       }
@@ -28617,6 +28953,34 @@
         }
       }
     },
+    "Komunikat błędu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error message"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlermeldung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje de error"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомлення про помилку"
+          }
+        }
+      }
+    },
     "Komunikat połączenia" : {
       "localizations" : {
         "en" : {
@@ -29789,6 +30153,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Копіювати схему"
+          }
+        }
+      }
+    },
+    "Kopiuj treść" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar texto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати текст"
           }
         }
       }
@@ -38161,6 +38553,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "COMPUTE не визначено."
+          }
+        }
+      }
+    },
+    "Nie zgłaszaj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don’t report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht melden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No informar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не повідомляти"
           }
         }
       }
@@ -46593,6 +47013,34 @@
         }
       }
     },
+    "Ostatnie wpisy dziennika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent log entries"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Protokolleinträge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Últimas entradas del registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Останні записи журналу"
+          }
+        }
+      }
+    },
     "Ostatnio" : {
       "localizations" : {
         "en" : {
@@ -48885,6 +49333,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкрити з з'єднанням…"
+          }
+        }
+      }
+    },
+    "Otwórz zgłoszenie na GitHubie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open issue on GitHub"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldung auf GitHub öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir incidencia en GitHub"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити звернення на GitHub"
           }
         }
       }
@@ -52385,6 +52861,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Räumliche Vorschau: %@"
+          }
+        }
+      }
+    },
+    "Podgląd treści" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content preview"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inhaltsvorschau"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa del contenido"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд"
           }
         }
       }
@@ -61349,6 +61853,62 @@
         }
       }
     },
+    "Przyczyna: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reason: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ursache: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Causa: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Причина: %@"
+          }
+        }
+      }
+    },
+    "Przygotowuje zgłoszenie błędu na GitHubie: opis, środowisko i ostatnie wpisy dziennika z podglądem; wysyłasz je ze swojego konta." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepares a bug report on GitHub: description, environment and recent log entries with a preview; you submit it from your own account."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereitet eine Fehlermeldung auf GitHub vor: Beschreibung, Umgebung und letzte Protokolleinträge mit Vorschau; Sie senden sie von Ihrem eigenen Konto."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepara un informe de error en GitHub: descripción, entorno y últimas entradas del registro con vista previa; lo envía desde su propia cuenta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готує звернення про помилку на GitHub: опис, середовище й останні записи журналу з попереднім переглядом; ви надсилаєте його зі свого облікового запису."
+          }
+        }
+      }
+    },
     "Przypina albo odpina bieżącą kartę wyniku — przypięta nie znika przy kolejnym wykonaniu (także Shift+klik karty)." : {
       "localizations" : {
         "en" : {
@@ -68153,6 +68713,34 @@
         }
       }
     },
+    "Skopiowano do schowka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied to the clipboard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In die Zwischenablage kopiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiado al portapapeles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопійовано в буфер обміну"
+          }
+        }
+      }
+    },
     "Skopiowano wierszy: %@" : {
       "localizations" : {
         "en" : {
@@ -69969,6 +70557,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aufrufstack"
+          }
+        }
+      }
+    },
+    "Stos wątku z awarią:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crashed thread stack:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stack des abgestürzten Threads:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pila del hilo con el fallo:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стек потоку зі збоєм:"
           }
         }
       }
@@ -74813,6 +75429,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inhalt"
+          }
+        }
+      }
+    },
+    "Treść była za długa dla adresu — pełna jest w schowku: na stronie zgłoszenia zaznacz opis i wklej (⌘V)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The text was too long for the address — the full text is in the clipboard: on the issue page select the description and paste (⌘V)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Text war für die Adresse zu lang — der vollständige Text ist in der Zwischenablage: Markieren Sie auf der Meldungsseite die Beschreibung und fügen Sie ein (⌘V)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto era demasiado largo para la dirección; el texto completo está en el portapapeles: en la página de la incidencia seleccione la descripción y pegue (⌘V)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст задовгий для адреси — повний текст у буфері обміну: на сторінці звернення виділіть опис і вставте (⌘V)."
           }
         }
       }
@@ -87917,6 +88561,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herausspringen (⌃T)"
+          }
+        }
+      }
+    },
+    "Wyjątek: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exception: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausnahme: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Excepción: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виняток: %@"
           }
         }
       }
@@ -101641,6 +102313,174 @@
         }
       }
     },
+    "Zgłosić problem autorowi? Przed wysłaniem zobaczysz całą treść zgłoszenia i możesz ją zmienić." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report the problem to the author? Before sending you will see the whole report and can change it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem dem Autor melden? Vor dem Senden sehen Sie die gesamte Meldung und können sie ändern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Informar del problema al autor? Antes de enviarlo verá todo el informe y podrá cambiarlo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити авторові про проблему? Перед надсиланням ви побачите весь текст звернення й зможете його змінити."
+          }
+        }
+      }
+    },
+    "Zgłoszenie problemu po nieoczekiwanym zamknięciu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem report after an unexpected quit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problemmeldung nach unerwartetem Beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe de problema tras un cierre inesperado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звернення про проблему після неочікуваного завершення"
+          }
+        }
+      }
+    },
+    "Zgłoszenie przygotowane w aplikacji (Pomoc › Zgłoś problem)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report prepared in the app (Help › Report a problem)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meldung in der App erstellt (Hilfe › Problem melden)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informe preparado en la aplicación (Ayuda › Informar de un problema)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звернення підготовлено в застосунку (Довідка › Повідомити про проблему)."
+          }
+        }
+      }
+    },
+    "Zgłoszenie trafi do publicznego repozytorium na GitHubie i będzie widoczne dla wszystkich. Nie wpisuj haseł, nazw baz, adresów serwerów ani danych. Przed wysłaniem zobaczysz je jeszcze na stronie GitHuba." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The report goes to a public repository on GitHub and will be visible to everyone. Do not enter passwords, database names, server addresses or data. You will see it once more on the GitHub page before sending."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Meldung landet in einem öffentlichen Repository auf GitHub und ist für alle sichtbar. Geben Sie keine Passwörter, Datenbanknamen, Serveradressen oder Daten ein. Vor dem Senden sehen Sie sie noch einmal auf der GitHub-Seite."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El informe irá a un repositorio público de GitHub y será visible para todos. No escriba contraseñas, nombres de bases de datos, direcciones de servidores ni datos. Antes de enviarlo lo verá de nuevo en la página de GitHub."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звернення потрапить до публічного репозиторію на GitHub і буде видиме всім. Не вводьте паролі, назви баз, адреси серверів чи дані. Перед надсиланням ви ще побачите його на сторінці GitHub."
+          }
+        }
+      }
+    },
+    "Zgłoś problem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a problem"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem melden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un problema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити про проблему"
+          }
+        }
+      }
+    },
+    "Zgłoś problem…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a problem…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Problem melden…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un problema…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повідомити про проблему…"
+          }
+        }
+      }
+    },
     "Zielony" : {
       "localizations" : {
         "en" : {
@@ -106985,6 +107825,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabelle %@.%@ nicht gefunden"
+          }
+        }
+      }
+    },
+    "nieoczekiwane zamknięcie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unexpected quit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unerwartetes Beenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cierre inesperado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "неочікуване завершення"
           }
         }
       }

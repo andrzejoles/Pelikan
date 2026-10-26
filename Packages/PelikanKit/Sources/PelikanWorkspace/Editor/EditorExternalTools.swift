@@ -104,6 +104,7 @@ public enum SuppressibleDialog: String, Sendable, CaseIterable {
     case moveToTrash = "confirm.moveToTrash"
     case revertWorkset = "confirm.revertWorkset"
     case restoreRecovery = "confirm.restoreRecovery"
+    case reportCrash = "ask.reportCrash"
 
     public var title: String {
         switch self {
@@ -111,6 +112,7 @@ public enum SuppressibleDialog: String, Sendable, CaseIterable {
         case .moveToTrash: L10n.tr("Przeniesienie pliku do Kosza")
         case .revertWorkset: L10n.tr("Przywrócenie zapisanego workseta")
         case .restoreRecovery: L10n.tr("Odzyskanie okien po nieoczekiwanym zamknięciu")
+        case .reportCrash: L10n.tr("Zgłoszenie problemu po nieoczekiwanym zamknięciu")
         }
     }
 }

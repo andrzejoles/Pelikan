@@ -1480,3 +1480,21 @@ dochodzi **wstążka** (PD-UI-012) jako akcesorium paska tytułu okna głównego
 - zwijanie do samych kart (dwuklik karty, strzałka, komenda) i ukrywanie — Widok › Wstążka, Preferencje › Ogólne;
 - układ wstążki jest w kodzie (`RibbonModel`), bez edytora; dostosowanie zostaje dla paska narzędzi i szybkiego dostępu.
 Ikony z symboli SF (bez grafik wzorca); test sprawdza, że każdy symbol istnieje w systemie.
+
+### D173 · 2026-10-26 — Zgłaszanie problemów na GitHubie
+
+Właściciel: gdy wyskoczy błąd, pytanie, czy wysłać zgłoszenie, które trafia na GitHuba. Zgłoszenie to nowe Issue w
+repozytorium z `PELIKAN_REPOSITORY` (Brand.xcconfig → Info.plist `PelikanRepository`). Pelikan **niczego nie wysyła
+sam**: otwiera stronę `…/issues/new` z wypełnionym tytułem i treścią, a użytkownik wysyła ją ze swojego konta GitHub —
+bez tokenów, serwera pośredniczącego i zbierania danych w tle (repozytorium jest publiczne, a token w aplikacji
+pozwalałby każdemu pisać w imieniu właściciela).
+- Wejścia: Pomoc › Zgłoś problem… (i wstążka), przycisk „Zgłoś problem…” w każdym komunikacie błędu, pytanie po
+  nieoczekiwanym zamknięciu (znacznik `.running` w katalogu danych usuwany przy czystym zamknięciu; „Nie pytaj
+  więcej” jak inne pytania). Bez pytań w przebiegu zrzutów (`PELIKAN_UI_SCRIPT`).
+- Treść: opis użytkownika, komunikat błędu albo opis awarii z najnowszego raportu macOS (`DiagnosticReports/<nazwa>-….ips`
+  nie starszego niż start poprzedniej sesji: wyjątek, sygnał, przyczyna, stos wątku z awarią — tylko nazwy modułów
+  i symboli, bez ścieżek), opis środowiska (jak w eksporcie dziennika) i 80 ostatnich wpisów dziennika (nazwy ukryte,
+  chyba że użytkownik je włączył). Całość przez `LogRedactor` (hasła, ścieżka domowa).
+- Okno z ostrzeżeniem, że zgłoszenie jest publiczne, przełącznikami części i podglądem dokładnej treści; treść zawsze
+  w schowku. Adres dłuższy niż ok. 7500 znaków: dziennik skracany od najstarszych wpisów, komunikat o wklejeniu
+  pełnej treści ze schowka.

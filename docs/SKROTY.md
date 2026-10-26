@@ -581,5 +581,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Instrukcja Pelikana | `help.manual` | ⇧⌘/ | ⇧⌘/ | Brak | PL-INFRA-010 |
 | Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | PD-DOC-001 |
 | Dziennik aplikacji | `help.log` |  |  | Brak | PL-INFRA-011 |
+| Zgłoś problem… | `help.reportProblem` |  |  | Brak | PL-INFRA-013 |
 | Eksportuj dziennik… | `help.exportLog` |  |  | Brak | PL-INFRA-011 |
 

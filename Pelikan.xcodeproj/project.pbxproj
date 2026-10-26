@@ -76,6 +76,7 @@
 		B31E9AE8546184D3A8287258 /* PackViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8470950500EBAD985D34E42 /* PackViews.swift */; };
 		B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBD5C968035AA1DE7B85E8A9 /* BreakpointsView.swift */; };
 		B6BD34E33D6E1D4419DB45F2 /* PreviewProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */; };
+		BE5BF3E04ABB0999E4667B5C /* ProblemReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8A37D91D0CC74B7EDDA969F /* ProblemReportView.swift */; };
 		C252BEC5D799ACD07E9F8B83 /* PelikanBridgeKit in Frameworks */ = {isa = PBXBuildFile; productRef = C7D733FBCA938D7C14616CD7 /* PelikanBridgeKit */; };
 		C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF32F55F976564F7AA608BF /* SSHTargetManager.swift */; };
 		CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */; };
@@ -213,6 +214,7 @@
 		A0C740FF51F71A99748439E9 /* ObjectToolsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectToolsViews.swift; sourceTree = "<group>"; };
 		A5038ED2FB68FC68A88C5209 /* Oracle23Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Oracle23Views.swift; sourceTree = "<group>"; };
 		A7048E3E041B381E86A22B88 /* CompletionPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionPopup.swift; sourceTree = "<group>"; };
+		A8A37D91D0CC74B7EDDA969F /* ProblemReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemReportView.swift; sourceTree = "<group>"; };
 		AB21607B1D88320079CA9E62 /* Manual */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Manual; path = docs/manual; sourceTree = SOURCE_ROOT; };
 		AB3554C8E9BEC253635C7FDF /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
 		AFB74D2818143B7B6569D353 /* ProCDeployViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProCDeployViews.swift; sourceTree = "<group>"; };
@@ -381,6 +383,7 @@
 		5694E390076FE23B8716CFC4 /* Help */ = {
 			isa = PBXGroup;
 			children = (
+				A8A37D91D0CC74B7EDDA969F /* ProblemReportView.swift */,
 				97CFD9436D608824542990F4 /* UserManualView.swift */,
 			);
 			path = Help;
@@ -859,6 +862,7 @@
 				16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */,
 				0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */,
 				022DEED31A8996A834AEAFA9 /* ProCDeployViews.swift in Sources */,
+				BE5BF3E04ABB0999E4667B5C /* ProblemReportView.swift in Sources */,
 				F2AB525DE6F44C79CA380B6C /* ProgramWindowViewController.swift in Sources */,
 				01E050840A2E7D66AB4414D8 /* ProjectView.swift in Sources */,
 				2EB5FD0C0DF6A41A2C700B17 /* Prompts.swift in Sources */,

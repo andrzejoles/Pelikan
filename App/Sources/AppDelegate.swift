@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var mainWindow: MainWindowController?
     private var menuBuilder: MenuBuilder?
     private var palette: CommandPalette?
+    /// Znacznik pracy aplikacji — wykrywanie nieoczekiwanego zamknięcia (PL-INFRA-013).
+    private lazy var crashMonitor = workspace.dataDirectory.map(CrashMonitor.init(dataDirectory:))
     private let prompts = ConnectionPrompts()
     private var connectionCheck: Timer?
     /// Okresowy zapis konsol połączeń (DG-CONS-001) i migawki okien do odzyskiwania (PD-FILE-001).
@@ -172,6 +174,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         }
         // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”.
         if Self.uiScriptURL == nil { startRecovery() }
+        let crashedSince = crashMonitor?.begin()
+        if Self.uiScriptURL == nil, let crashedSince { offerCrashReport(since: crashedSince) }
         // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
         if Self.uiScriptURL == nil { NSApp.activate() }
         startConnectionCheck()
@@ -286,6 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         Log.app.info("Zamknięcie aplikacji")
         defer { Log.fileSink?.flush() }
         workspace.persistConsoles()
+        crashMonitor?.end()
         // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
         workspace.recovery.end()
         agentUI?.stop()
@@ -317,6 +322,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             }
         }
         scheduleRecoverySave()
+    }
+
+    /// Po nieoczekiwanym zamknięciu: pytanie o zgłoszenie problemu z opisem awarii z raportu macOS (D173).
+    private func offerCrashReport(since: Date) {
+        Log.app.notice("Poprzednia sesja nie została zamknięta poprawnie")
+        let name = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
+        Task { @MainActor in
+            let answer = await workspace.askSuppressible(.reportCrash, title: L10n.tr("\(name) został nieoczekiwanie zamknięty"),
+                                                         message: L10n.tr("Zgłosić problem autorowi? Przed wysłaniem zobaczysz całą treść zgłoszenia i możesz ją zmienić."),
+                                                         buttons: [L10n.tr("Zgłoś problem…"), L10n.tr("Nie zgłaszaj")])
+            guard answer == 0 else { return }
+            let reports = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Logs/DiagnosticReports", isDirectory: true)
+            showProblemReport(workspace.problemReport(.crash(CrashMonitor.latestReport(appName: name, since: since, in: reports))))
+        }
     }
 
     private func scheduleRecoverySave() {
@@ -917,10 +937,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         alert.alertStyle = .warning
         alert.messageText = L10n.tr("Nie udało się wykonać polecenia")
         alert.informativeText = message
+        alert.addButton(withTitle: L10n.tr("OK"))
+        alert.addButton(withTitle: L10n.tr("Zgłoś problem…"))
+        let handle: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .alertSecondButtonReturn, let self else { return }
+            self.showProblemReport(self.workspace.problemReport(.error(message)))
+        }
         if let window = mainWindow?.window {
-            alert.beginSheetModal(for: window)
+            alert.beginSheetModal(for: window, completionHandler: handle)
         } else {
-            alert.runModal()
+            handle(alert.runModal())
+        }
+    }
+
+    func showProblemReport(_ report: ProblemReport) {
+        let key = "problemReport"
+        ToolWindowController.close(key: key)
+        let repository = Bundle.main.object(forInfoDictionaryKey: "PelikanRepository") as? String ?? ""
+        ToolWindowController.show(key: key, title: L10n.tr("Zgłoś problem"), size: NSSize(width: 720, height: 680)) {
+            ProblemReportView(workspace: workspace, repository: repository, report: report) { ToolWindowController.close(key: key) }
         }
     }
 
