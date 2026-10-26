@@ -91,6 +91,7 @@
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
+		EBB91D4E331A89078F54F583 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CD6A006B64ECCA95F14C9E9 /* Assets.xcassets */; };
 		ED1A5FBBBA6072361C0B0A94 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */; };
 		EDDF2B30C34EE7482B2EC5FC /* PreferenceIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8877900ED39A5D37A825941 /* PreferenceIndex.swift */; };
 		EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C283921294ECF4112EB71BEE /* CodeContentsView.swift */; };
@@ -164,6 +165,7 @@
 		285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicesProvider.swift; sourceTree = "<group>"; };
 		29353BC88EDA99528B1F86C8 /* Brand.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Brand.xcconfig; sourceTree = "<group>"; };
 		2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandWindowViewController.swift; sourceTree = "<group>"; };
+		2CD6A006B64ECCA95F14C9E9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowListViewController.swift; sourceTree = "<group>"; };
 		30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FindReplacePanel.swift; sourceTree = "<group>"; };
 		31283604CBB6B024351A4FFF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
@@ -587,6 +589,7 @@
 		E26C4A5524EC80F8E8BE39B3 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2CD6A006B64ECCA95F14C9E9 /* Assets.xcassets */,
 				AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */,
 			);
 			path = Resources;
@@ -764,6 +767,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EBB91D4E331A89078F54F583 /* Assets.xcassets in Resources */,
 				1DA6A7CA8DD7AE5545CFDB1A /* Localizable.xcstrings in Resources */,
 				0FE528D62537CDE69983BA9D /* Manual in Resources */,
 			);

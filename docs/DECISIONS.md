@@ -1450,3 +1450,12 @@ dochodzi **wstążka** (PD-UI-012) jako akcesorium paska tytułu okna głównego
 - zwijanie do samych kart (dwuklik karty, strzałka, komenda) i ukrywanie — Widok › Wstążka, Preferencje › Ogólne;
 - układ wstążki jest w kodzie (`RibbonModel`), bez edytora; dostosowanie zostaje dla paska narzędzi i szybkiego dostępu.
 Ikony z symboli SF (bez grafik wzorca); test sprawdza, że każdy symbol istnieje w systemie.
+
+### D172 · 2026-10-26 — Logo aplikacji
+
+Właściciel poprosił o graficzne logo. Pelikan nie miał ikony (systemowa ikona ogólna). Własny rysunek, bez grafik
+wzorca i znaków towarowych Oracle: biały pelikan z żółtym dziobem i pomarańczowym workiem na niebieskim tle z falami,
+obok walec bazy danych (narzędzie do baz). Kształt i margines według siatki ikon macOS (824 pt w polu 1024, cień).
+Rysunek jest kodem (`scripts/icon/make-icon.swift`, CoreGraphics) — generuje PNG 16–1024 px do
+`App/Resources/Assets.xcassets/AppIcon.appiconset`; zmiana logo = zmiana skryptu i ponowne uruchomienie. Ten sam obraz
+(256 px) w `docs/logo.png` dla README.
