@@ -7,9 +7,9 @@ settings** field at the top finds a setting by name (in the interface language) 
 
 | Tab | What you set |
 |---|---|
-| General | session mode (Multi, Dual, Single), behavior on logoff with an open transaction, connection checking, pinning the connection of new windows, connection colors and `user@database` rules, appearance (system, light, dark), interface language, startup directories and additional file extensions, asking to save new windows |
+| General | session mode (Multi, Dual, Single), behavior on logoff with an open transaction, connection checking, pinning the connection of new windows, connection colors and `user@database` rules, appearance (system, light, dark), interface font (typeface, style, size), interface language, startup directories and additional file extensions, asking to save new windows |
 | SQL Window | AutoSelect, AutoCommit, confirming COMMIT and ROLLBACK, Test Window AutoCommit, rows per page, number layout, Auto Format in the Large Data Editor, statistics, DBMS_OUTPUT (enabled, clearing before execution), DATE and TIMESTAMP formats |
-| Editor | font (also ligatures) and colors, code completion (automatically after a dot, matching, case, standard functions, “(all)” layout), AutoReplace, remembering window state, keyword case, highlights, line status, wrapping, special characters, indentation and tabs |
+| Editor | fonts of the editor, result grid and Object Browser (typeface, style, size; ligatures) and colors, code completion (automatically after a dot, matching, case, standard functions, “(all)” layout), AutoReplace, remembering window state, keyword case, highlights, line status, wrapping, special characters, indentation and tabs |
 | Formatter | PL/SQL formatting rules and automatic formatting (after opening from the database, before compilation, before saving) |
 | Keyboard | shortcut profile and custom command shortcuts |
 | Oracle | Instant Client, session NLS settings, closing idle sessions, Oracle documentation version for F1, Touch ID for saved passwords, Oracle Net and Oracle Wallet, compiler, debugger, compiler hints and naming conventions, DBA_ views |

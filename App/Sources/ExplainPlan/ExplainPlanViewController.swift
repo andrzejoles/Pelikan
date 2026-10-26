@@ -26,7 +26,7 @@ final class ExplainPlanViewController: NSViewController {
         split.isVertical = false
         split.dividerStyle = .thin
         split.addArrangedSubview(editor)
-        split.addArrangedSubview(NSHostingView(rootView: PlanPanel(document: document, workspace: workspace)))
+        split.addArrangedSubview(NSHostingView(rootView: PlanPanel(document: document, workspace: workspace).interfaceFont()))
         view = split
     }
 
@@ -93,7 +93,7 @@ struct PlanPanel: View {
                 .fixedSize()
                 .disabled(document.plan == nil)
             }
-            if let e = document.planError { Text(e).foregroundStyle(.red).font(.callout).textSelection(.enabled) }
+            if let e = document.planError { Text(e).foregroundStyle(.red).font(.ui).textSelection(.enabled) }
             if mode == 1, let plan = document.plan {
                 PlanDiagramView(roots: plan.roots, selection: $selection)
             } else if mode == 2, let plan = document.plan {

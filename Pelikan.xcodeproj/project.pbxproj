@@ -12,6 +12,7 @@
 		022DEED31A8996A834AEAFA9 /* ProCDeployViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB74D2818143B7B6569D353 /* ProCDeployViews.swift */; };
 		0351CB70B14B8DFC81E59AAB /* ExplainPlanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B9BE0858EF43D67A624D49 /* ExplainPlanViewController.swift */; };
 		03CB6BD82CCC13B71756BCA5 /* DiagramViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90A244677BB2A02F711F72B0 /* DiagramViewController.swift */; };
+		064A09DA1B1C3B723FE75336 /* AppFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F92ED91422BB2BB0A701B9B /* AppFonts.swift */; };
 		069857AAFD5F6C2F08821D4E /* AgentPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */; };
 		0968C67BB157B77053000FE7 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		0DC9633E1F841E50896109DC /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31283604CBB6B024351A4FFF /* PreferencesView.swift */; };
@@ -186,6 +187,7 @@
 		565A13529D730F54DE0A35B8 /* NotebookViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookViewController.swift; sourceTree = "<group>"; };
 		570D3064D5201AF56E748711 /* PlanVisualViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanVisualViews.swift; sourceTree = "<group>"; };
 		578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LargeDataEditor.swift; sourceTree = "<group>"; };
+		5F92ED91422BB2BB0A701B9B /* AppFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFonts.swift; sourceTree = "<group>"; };
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
@@ -466,6 +468,7 @@
 				5C5E85F85E1129E104F58BD8 /* UtPLSQL */,
 				AB3554C8E9BEC253635C7FDF /* Accessibility.swift */,
 				6D7056F4E355029FE5D90B7C /* AppDelegate.swift */,
+				5F92ED91422BB2BB0A701B9B /* AppFonts.swift */,
 				D7D6615E89A14B21F573B88A /* AppLogging.swift */,
 				CC6FC37BFD9E5AD397E92462 /* CommandPalette.swift */,
 				8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */,
@@ -823,6 +826,7 @@
 				DD90C5023ABF02A6EAE06E42 /* AgentUIController.swift in Sources */,
 				EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */,
 				D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */,
+				064A09DA1B1C3B723FE75336 /* AppFonts.swift in Sources */,
 				63D1215F56AA8BD1DE0A8E08 /* AppLogging.swift in Sources */,
 				8F908AC02360DC88EC441597 /* BeautifierPane.swift in Sources */,
 				B5689A7918B70D262B106C62 /* BreakpointsView.swift in Sources */,

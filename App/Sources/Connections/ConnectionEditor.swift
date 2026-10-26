@@ -215,16 +215,16 @@ struct ConnectionEditorView: View {
                             TextField(L10n.tr("Identyfikator aplikacji klienta"), text: $draft.tokenClient)
                             TextField(L10n.tr("URI aplikacji bazy"), text: $draft.tokenAppURI)
                             Text(L10n.tr("Instant Client 23 otwiera przeglądarkę do logowania w Entra ID i sam przekazuje token bazie; Pelikan nie widzi ani nie zapisuje tokenu. Wymaga połączenia TCPS (portfel TLS w polu poniżej albo w konfiguracji)."))
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         if draft.authMode == .oauthFile {
                             TextField(L10n.tr("Plik albo katalog tokenu"), text: $draft.tokenLocation)
                             Text(L10n.tr("Token zapisany wcześniej narzędziem zewnętrznym (np. Azure CLI) — klient Oracle czyta go przy łączeniu."))
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         if draft.authMode == .wallet {
                             Text(L10n.tr("Logowanie /@baza poświadczeniem z portfela wskazanego w Preferencjach › Oracle (Oracle Wallet). Pole „Baza” musi być dokładnie aliasem albo connect stringiem zapisanym w portfelu; alias musi być w konfiguracji Oracle Net z Preferencji."))
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         Picker(L10n.tr("Sterownik"), selection: $draft.driver) {
                             Text(L10n.tr("Instant Client (zalecany)")).tag(DriverKind.instantClient)
@@ -232,7 +232,7 @@ struct ConnectionEditorView: View {
                         }
                         if draft.driver == .thin {
                             Text(L10n.tr("Thin nie obsługuje: TCPS/wallet, uwierzytelniania zewnętrznego, zmiany wygasłego hasła i przerwania wykonania (Przerwij). Do nich przełącz na Instant Client."))
-                                .font(.subheadline).foregroundStyle(.secondary)
+                                .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -250,9 +250,9 @@ struct ConnectionEditorView: View {
                         }
                         if !draft.walletDirectory.isEmpty {
                             switch OracleNet.walletStatus(draft.walletDirectory) {
-                            case .autoLogin: Text(L10n.tr("Portfel z automatycznym logowaniem (cwallet.sso)")).font(.subheadline).foregroundStyle(.green)
-                            case .passwordOnly: Text(L10n.tr("Tylko ewallet.p12 — potrzebny portfel z automatycznym logowaniem (cwallet.sso)")).font(.subheadline).foregroundStyle(.orange)
-                            case .missing: Text(L10n.tr("W katalogu nie ma portfela")).font(.subheadline).foregroundStyle(.red)
+                            case .autoLogin: Text(L10n.tr("Portfel z automatycznym logowaniem (cwallet.sso)")).font(.uiSecondary).foregroundStyle(.green)
+                            case .passwordOnly: Text(L10n.tr("Tylko ewallet.p12 — potrzebny portfel z automatycznym logowaniem (cwallet.sso)")).font(.uiSecondary).foregroundStyle(.orange)
+                            case .missing: Text(L10n.tr("W katalogu nie ma portfela")).font(.uiSecondary).foregroundStyle(.red)
                             }
                         }
                         TextField(L10n.tr("Edition (EBR)"), text: $draft.edition)
@@ -301,7 +301,7 @@ struct ConnectionEditorView: View {
                             .disabled(!draft.sshEnabled || !draft.sshUsesPassword)
                     } footer: {
                         Text(L10n.tr("Tunel używa systemowego ssh: ~/.ssh/config, agenta SSH (klucze w Pęku kluczy: ssh-add --apple-use-keychain) i znanych hostów. Host i port bazy w polu „Baza” podaj tak, jak widzi je serwer SSH. Hasło SSH jest tylko w Pęku kluczy i trafia do ssh przez jednorazową kolejkę, nigdy przez argumenty, środowisko ani pliki."))
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 .formStyle(.grouped)
@@ -317,7 +317,7 @@ struct ConnectionEditorView: View {
                         TextField(L10n.tr("Kolumny maskowane dla agenta"), text: $draft.maskedColumns, prompt: Text("PESEL, EMAIL"))
                     } footer: {
                         Text(L10n.tr("Na połączeniach produkcyjnych agent domyślnie tylko czyta. Użytkownik agenta łączy się przez proxy (główny[agent]) — wymaga ALTER USER agent GRANT CONNECT THROUGH główny; bez drugiego hasła. Kolumny maskowane: nazwy kolumn albo SCHEMAT.TABELA.KOLUMNA, rozdzielone przecinkami. Funkcje wywoływane w zapytaniach mogą mieć skutki uboczne — twardą granicą są uprawnienia użytkownika bazy."))
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 .formStyle(.grouped)
@@ -329,7 +329,7 @@ struct ConnectionEditorView: View {
                 Button(L10n.tr("Testuj"), action: onTest).disabled(!draft.isValid || draft.testing)
                 if draft.testing { ProgressView().controlSize(.small) }
                 if let r = draft.testResult {
-                    Text(r).font(.callout).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
+                    Text(r).font(.ui).foregroundStyle(.secondary).lineLimit(2).textSelection(.enabled)
                 }
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel, action: onCancel).keyboardShortcut(.cancelAction)
@@ -379,7 +379,7 @@ enum ConnectionEditorPresenter {
                 }
             },
             onCancel: { close() })
-        let host = NSHostingController(rootView: view)
+        let host = NSHostingController(rootView: view.interfaceFont())
         let w = NSWindow(contentViewController: host)
         w.title = existing == nil ? L10n.tr("Nowe połączenie") : L10n.tr("Połączenie")
         sheet = w

@@ -34,7 +34,7 @@ struct UtplsqlResultsView: View {
 
     private var changes: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L10n.tr("Zmiany względem poprzedniego przebiegu")).font(.headline)
+            Text(L10n.tr("Zmiany względem poprzedniego przebiegu")).font(.uiHeadline)
             let diff = previous.map { run.compare(with: $0) } ?? []
             if diff.isEmpty { Text(L10n.tr("Bez zmian stanów testów.")).foregroundStyle(.secondary) }
             List(diff, id: \.path) { d in
@@ -55,7 +55,7 @@ struct UtplsqlResultsView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 12) {
-                Text(run.paths.joined(separator: ", ")).font(.headline).lineLimit(1)
+                Text(run.paths.joined(separator: ", ")).font(.uiHeadline).lineLimit(1)
                 Spacer()
                 if !run.finished {
                     Button(L10n.tr("Przerwij")) { workspace.perform("utplsql.cancel") }
@@ -74,7 +74,7 @@ struct UtplsqlResultsView: View {
                 }
             }
             if let f = run.failure {
-                Text(f).foregroundStyle(.red).font(.callout)
+                Text(f).foregroundStyle(.red).font(.ui)
             }
             ProgressView(value: Double(run.finishedTests), total: Double(max(run.totalTests, 1)))
             HStack(spacing: 14) {
@@ -85,19 +85,19 @@ struct UtplsqlResultsView: View {
                 counter(L10n.tr("Wyłączone"), "\(tests(.disabled))", .secondary)
                 if let t = run.executionTime { counter(L10n.tr("Czas"), String(format: "%.3f s", t), .secondary) }
                 Spacer()
-                if let c = run.currentTest { Text(c).font(.subheadline).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
+                if let c = run.currentTest { Text(c).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
             }
             HStack(spacing: 10) {
-                Text(L10n.tr("Pokaż:")).font(.subheadline)
+                Text(L10n.tr("Pokaż:")).font(.uiSecondary)
                 ForEach([UtStatus.success, .failure, .error, .disabled], id: \.self) { s in
                     Toggle(s.displayName, isOn: Binding(get: { shown.contains(s) }, set: { if $0 { shown.insert(s) } else { shown.remove(s) } }))
-                        .toggleStyle(.checkbox).font(.subheadline)
+                        .toggleStyle(.checkbox).font(.uiSecondary)
                 }
                 Spacer()
                 Picker(L10n.tr("Sortuj:"), selection: $sortOrder) {
                     ForEach(UtSortOrder.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
-                .font(.subheadline)
+                .font(.uiSecondary)
                 .fixedSize()
             }
         }
@@ -107,7 +107,7 @@ struct UtplsqlResultsView: View {
 
     private func counter(_ title: String, _ value: String, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title).font(.subheadline).foregroundStyle(.secondary)
+            Text(title).font(.uiSecondary).foregroundStyle(.secondary)
             Text(value).font(.system(.body, design: .rounded).bold()).foregroundStyle(color)
         }
     }
@@ -143,7 +143,7 @@ struct UtplsqlResultsView: View {
         let a = c.actual.components(separatedBy: "\n"), e = c.expected.components(separatedBy: "\n")
         func column(_ title: String, _ lines: [String], _ other: [String]) -> some View {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.bold()).foregroundStyle(.secondary)
+                Text(title).font(.uiSecondary.bold()).foregroundStyle(.secondary)
                 ForEach(Array(lines.enumerated()), id: \.offset) { i, l in
                     Text(l).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -164,7 +164,7 @@ struct UtplsqlResultsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
                 if let n = selected {
-                    Text(n.title).font(.headline)
+                    Text(n.title).font(.uiHeadline)
                     Text(n.id).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
                     Text(n.status.displayName).foregroundStyle(color(n.status))
                     if !n.disabledReason.isEmpty { Text(L10n.tr("Wyłączony: \(n.disabledReason)")).foregroundStyle(.secondary) }
@@ -179,15 +179,15 @@ struct UtplsqlResultsView: View {
                         .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
                     }
                     if !n.errorStack.isEmpty {
-                        Text(L10n.tr("Stos błędu")).font(.subheadline.bold())
+                        Text(L10n.tr("Stos błędu")).font(.uiSecondary.bold())
                         stackText(n.errorStack, node: n)
                     }
                     if !n.serverOutput.isEmpty {
-                        Text("DBMS_OUTPUT").font(.subheadline.bold())
+                        Text("DBMS_OUTPUT").font(.uiSecondary.bold())
                         Text(n.serverOutput).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                     }
                     if !n.warnings.isEmpty {
-                        Text(L10n.tr("Ostrzeżenia")).font(.subheadline.bold())
+                        Text(L10n.tr("Ostrzeżenia")).font(.uiSecondary.bold())
                         Text(n.warnings).font(.system(size: 12, design: .monospaced))
                     }
                 } else {
@@ -264,7 +264,7 @@ struct UtNodeRow: View {
             Image(systemName: Self.icon(node.status)).foregroundStyle(Self.color(node.status))
             Text(node.title).lineLimit(1)
             Spacer()
-            if let t = node.executionTime { Text(String(format: "%.3f s", t)).font(.subheadline).foregroundStyle(.secondary) }
+            if let t = node.executionTime { Text(String(format: "%.3f s", t)).font(.uiSecondary).foregroundStyle(.secondary) }
         }
         .tag(node.id)
         .contextMenu {

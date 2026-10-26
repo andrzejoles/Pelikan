@@ -36,7 +36,7 @@ struct SearchBarView: View {
                 TextField(L10n.tr("Katalogi rozdzielone ; (puste — lokalizacje File Browsera)"), text: $directories).textFieldStyle(.roundedBorder)
             }
             if searched {
-                Text(L10n.tr("Trafień: \(hits.count)")).font(.subheadline).foregroundStyle(.secondary)
+                Text(L10n.tr("Trafień: \(hits.count)")).font(.uiSecondary).foregroundStyle(.secondary)
                 UsagesView(workspace: workspace, title: query, hits: hits)
             } else {
                 Spacer()

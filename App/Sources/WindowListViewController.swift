@@ -41,6 +41,7 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
     }
 
     private func reload() {
+        table.rowHeight = AppFonts.rowHeight(for: InterfaceFonts.shared.body)
         documents = workspace.windowListDocuments
         // Odczyt właściwości rejestruje śledzenie zmian tytułu, stanu i połączenia.
         _ = documents.map { ($0.title, $0.isModified, $0.transactionOpen, $0.connectionID, workspace.indicatorColor(for: $0)) }
@@ -85,6 +86,7 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
             title.append(NSAttributedString(string: "● ", attributes: [.foregroundColor: NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 1)]))
         }
         title.append(NSAttributedString(string: workspace.windowListTitle(doc), attributes: [.foregroundColor: NSColor.labelColor]))
+        title.addAttribute(.font, value: InterfaceFonts.shared.body, range: NSRange(location: 0, length: title.length))
         cell.textField?.attributedStringValue = title
         return cell
     }

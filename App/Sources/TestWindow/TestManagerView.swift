@@ -48,11 +48,11 @@ struct TestManagerView: View {
                 editor.frame(minWidth: 460)
             }
             HStack {
-                Text(L10n.tr("Zmienne globalne (NAZWA=wartość, po przecinku; w wejściu: &NAZWA)")).font(.subheadline)
+                Text(L10n.tr("Zmienne globalne (NAZWA=wartość, po przecinku; w wejściu: &NAZWA)")).font(.uiSecondary)
                 TextField("", text: $globalsText).textFieldStyle(.roundedBorder).onSubmit { applyGlobals() }
             }
             if !results.isEmpty {
-                Text(L10n.tr("Udane: \(results.values.filter(\.passed).count) z \(results.count)")).font(.subheadline).foregroundStyle(.secondary)
+                Text(L10n.tr("Udane: \(results.values.filter(\.passed).count) z \(results.count)")).font(.uiSecondary).foregroundStyle(.secondary)
             }
         }
         .padding(10)

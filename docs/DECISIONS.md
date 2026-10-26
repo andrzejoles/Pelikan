@@ -1550,3 +1550,20 @@ Właściciel: czcionki interfejsu wyglądają źle, a okna bez zmiany rozmiaru (
   rozmiarem (logowanie, edytor połączenia, Znajdź i zamień, sesje, arkusze agenta, scheduler, DBA, narzędzia siatki)
   mają rozmiar minimalny i początkowy zamiast stałego (`windowSize(width:height:)`); panel Znajdź i zamień i paleta komend
   też dają się powiększać. Wyjątek: lista podpowiedzi edytora (dopasowana do treści).
+
+### D178 · 2026-10-26 — Konfigurowalne czcionki interfejsu, edytora, siatki i Object Browsera
+
+Właściciel: konfiguracja wielkości czcionek elementów interfejsu i samej czcionki (krój, styl) jest pożądana. W
+Preferencjach osobno dla czterech obszarów: krój (rodziny zainstalowane w systemie; edytor — o stałej szerokości),
+styl (cienka, zwykła, średnio gruba, półgruba, gruba) i wielkość:
+- **interfejs** (Ogólne › Czcionka interfejsu; domyślnie SF Pro 13 pt): etykiety, listy połączeń i okien, wstążka,
+  karty okien, pasek stanu, okna narzędzi, arkusze i Preferencje. Tekst pomocniczy jest o 2 pt mniejszy, podpisy wstążki
+  i kart — o 1 pt. W SwiftUI domyślna czcionka korzeni okien i style `.ui`, `.uiSecondary`, `.uiHeadline` w miejsce
+  `.subheadline`/`.headline`; w AppKit `InterfaceFonts` (obserwowany — zmiana odświeża widoki na żywo, także wysokość
+  wierszy list). Menu i tytuły okien rysuje macOS — tych czcionek aplikacja nie zmienia;
+- **edytor** (dotąd krój z krótkiej listy i wielkość) — dowolny krój o stałej szerokości i styl;
+- **siatka wyników** (dotąd tylko wielkość) — krój (domyślnie systemowa o stałej szerokości) i styl;
+- **Object Browser** (dotąd tylko wielkość) — krój i styl; bez własnych — jak interfejs (o 1 pt mniejsza).
+Krój zapisany w ustawieniach, którego nie ma w systemie (np. ustawienia przeniesione z innego Maca), zostaje w wyborze
+z dopiskiem „niezainstalowana” i zastępuje go czcionka systemowa. Skrypt zrzutów ma krok `debug.settings` (ustawienia
+z argumentów) — zrzut z krojem Avenir Next 14 pt potwierdza zmianę wstążki, kart, list, paska stanu i Preferencji.

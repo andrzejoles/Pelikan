@@ -146,7 +146,7 @@ struct VariablesView: View {
             .formStyle(.grouped)
             HStack {
                 if showLegend {
-                    Text(L10n.tr("& tekst w SQL · : zmienna wiązana · $P{} / $X{} JasperReports")).font(.subheadline).foregroundStyle(.secondary)
+                    Text(L10n.tr("& tekst w SQL · : zmienna wiązana · $P{} / $X{} JasperReports")).font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { onDone(nil) }.keyboardShortcut(.cancelAction)
@@ -200,8 +200,8 @@ struct VariablesView: View {
                 TextField(label, text: f.text).disabled(o.readOnly)
                     .onSubmit { if model.canSubmit { onDone(model.values) } }   // Enter wykonuje (jak w PL/SQL Developer)
             }
-            if let hint = o.hint { Text(hint).font(.subheadline).foregroundStyle(.secondary) }
-            if let e = f.wrappedValue.error { Text(e).font(.subheadline).foregroundStyle(.red) }
+            if let hint = o.hint { Text(hint).font(.uiSecondary).foregroundStyle(.secondary) }
+            if let e = f.wrappedValue.error { Text(e).font(.uiSecondary).foregroundStyle(.red) }
         }
         .onChange(of: f.wrappedValue.text) { _, _ in model.valueChanged(o.name) }
     }

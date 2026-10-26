@@ -25,10 +25,10 @@ struct ProjectView: View {
             }
             if let p = workspace.project {
                 HStack {
-                    Text(p.name).font(.headline)
+                    Text(p.name).font(.uiHeadline)
                     if let g = git, let branch = g.branch {
                         Label(branch + (g.ahead > 0 ? " ↑\(g.ahead)" : "") + (g.behind > 0 ? " ↓\(g.behind)" : ""), systemImage: "arrow.triangle.branch")
-                            .font(.subheadline).foregroundStyle(.secondary)
+                            .font(.uiSecondary).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button { refreshGit() } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież stan Git"))
@@ -78,7 +78,7 @@ struct ProjectView: View {
             } else {
                 Text(L10n.tr("Brak otwartego projektu")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            Text(message).font(.subheadline).foregroundStyle(.secondary)
+            Text(message).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 560, minHeight: 520)
@@ -116,7 +116,7 @@ struct ProjectView: View {
             TextField(L10n.tr("grupa"), text: Binding(get: { item.group ?? "" }, set: { v in
                 mutate { p in if let i = p.items.firstIndex(where: { $0.id == item.id }) { p.items[i].group = v.isEmpty ? nil : v } }
             }))
-            .frame(width: 110).font(.subheadline)
+            .frame(width: 110).font(.uiSecondary)
         }
     }
 
@@ -130,7 +130,7 @@ struct ProjectView: View {
             Toggle(L10n.tr("Zatrzymaj po pierwszym błędzie"), isOn: Binding(get: { p.options.haltOnFirstError }, set: { v in mutate { $0.options.haltOnFirstError = v } }))
             Toggle(L10n.tr("Formatuj przy budowaniu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { v in mutate { $0.options.beautifyOnBuild = v } }))
         }
-        .toggleStyle(.checkbox).font(.subheadline)
+        .toggleStyle(.checkbox).font(.uiSecondary)
     }
 
     private func statusText(_ s: ProjectBuildResult.Status) -> String {

@@ -50,7 +50,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
             self.view.window?.makeFirstResponder(self.editor.textView)
         }
-        hierarchyLabel.font = .systemFont(ofSize: 11)
+        hierarchyLabel.font = InterfaceFonts.shared.small
         hierarchyLabel.textColor = .secondaryLabelColor
         hierarchyLabel.lineBreakMode = .byTruncatingHead
         hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -188,7 +188,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         for unit in u {
             let b = ClosureButton(title: unit.tabTitle) { [weak self] in self?.select(unit.id) }
             b.bezelStyle = .accessoryBarAction
-            b.font = .systemFont(ofSize: 11)
+            b.font = InterfaceFonts.shared.small
             b.toolTip = "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)"
             // Menu karty: usunięcie jednostki z okna (PD-PROG-001).
             let menu = NSMenu()
@@ -202,7 +202,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         // „+” — nowa jednostka z szablonu jednostek programów (PD-PROG-001).
         let add = ClosureButton(title: "+") { [weak self] in self?.showAddUnitMenu() }
         add.bezelStyle = .accessoryBarAction
-        add.font = .systemFont(ofSize: 11)
+        add.font = InterfaceFonts.shared.small
         add.setAccessibilityLabel(L10n.tr("Dodaj jednostkę"))
         add.toolTip = L10n.tr("Dodaj jednostkę")
         addButton = add
@@ -284,7 +284,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let m = shownMessages[row]
         let tf = NSTextField(labelWithString: "")
-        tf.font = .systemFont(ofSize: 11)
+        tf.font = InterfaceFonts.shared.small
         tf.lineBreakMode = .byTruncatingTail
         switch tableColumn?.identifier.rawValue {
         case "sev":

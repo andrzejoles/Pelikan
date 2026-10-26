@@ -150,24 +150,24 @@ struct DeployStartView: View {
                 Button(L10n.tr("Odśwież podsumowanie")) { Task { await load() } }.disabled(target == nil || loading)
             }
             Text(model.repository.map { L10n.tr("Lokalne repo: \($0.path)") } ?? L10n.tr("Brak otwartego projektu — bez lokalnego repo"))
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
             if loading { ProgressView().controlSize(.small) }
             if let s = summary {
                 GroupBox(L10n.tr("Podsumowanie")) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L10n.tr("Na serwerze: \(s.serverHead.map { String($0.prefix(12)) } ?? "?")  →  remote: \(s.remoteHead.map { String($0.prefix(12)) } ?? "?")"))
                             .font(.system(size: 12, design: .monospaced))
-                        if s.isUpToDate { Text(L10n.tr("Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki")).font(.subheadline) }
+                        if s.isUpToDate { Text(L10n.tr("Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki")).font(.uiSecondary) }
                         ScrollView {
                             Text((s.commits + (s.diffStat.isEmpty ? [] : ["", s.diffStat])).joined(separator: "\n"))
                                 .font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(minHeight: 120)
-                        ForEach(s.warnings, id: \.self) { w in Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.subheadline) }
+                        ForEach(s.warnings, id: \.self) { w in Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
                     }
                 }
             }
-            if let message { Text(message).foregroundStyle(.red).font(.subheadline) }
+            if let message { Text(message).foregroundStyle(.red).font(.uiSecondary) }
             Spacer()
             HStack {
                 Spacer()
@@ -239,7 +239,7 @@ struct DeployConsoleView: View {
             } else {
                 Text(L10n.tr("Brak wdrożeń w tej sesji")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            if let lockMessage { Text(lockMessage).font(.subheadline) }
+            if let lockMessage { Text(lockMessage).font(.uiSecondary) }
         }
         .padding(10)
         .frame(minWidth: 820, minHeight: 460)
@@ -267,7 +267,7 @@ struct DeployRunView: View {
                     Image(systemName: icon(s.status)).foregroundStyle(color(s.status))
                     Text(s.title)
                     Spacer()
-                    if let d = s.duration { Text(String(format: "%.1f s", d)).font(.subheadline).monospacedDigit().foregroundStyle(.secondary) }
+                    if let d = s.duration { Text(String(format: "%.1f s", d)).font(.uiSecondary).monospacedDigit().foregroundStyle(.secondary) }
                 }
             }
             .frame(minWidth: 220, maxWidth: 300)
@@ -365,7 +365,7 @@ struct RollbackView: View {
                     ForEach(backups.filter { $0.binary == binary }) { b in Text("\(b.timestamp) · \(b.commit)\(b.compression == .none ? "" : " · \(b.compression.rawValue)")").tag(b.fileName) }
                 }
             }
-            if let message { Text(message).font(.subheadline).foregroundStyle(.red) }
+            if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
             Spacer()
             HStack {
                 Button(L10n.tr("Odśwież kopie")) { Task { await load() } }
@@ -439,7 +439,7 @@ struct DeployHistoryView: View {
                     }
                     .frame(maxWidth: 360)
                     Button(L10n.tr("Pobierz")) { Task { await loadServer() } }.disabled(serverTarget == nil)
-                    if let message { Text(message).font(.subheadline).foregroundStyle(.red) }
+                    if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
                 }
                 Table(server) {
                     TableColumn(L10n.tr("Czas"), value: \.timestamp).width(130)
@@ -473,14 +473,14 @@ struct GitDeployStatusView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(model.repository?.path ?? L10n.tr("Brak otwartego projektu")).font(.subheadline).foregroundStyle(.secondary)
+                Text(model.repository?.path ?? L10n.tr("Brak otwartego projektu")).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("git fetch i odśwież")) { Task { await load(fetch: true) } }.disabled(model.repository == nil)
                 Button(L10n.tr("Commity na serwerach")) { Task { await loadServers() } }
             }
             if let s = local {
                 Text(L10n.tr("Gałąź: \(s.branch) · niezatwierdzone: \(s.uncommitted.count) · niewypchnięte: \(s.ahead.map(String.init) ?? "?") · do pobrania: \(s.behind.map(String.init) ?? "?")"))
-                ForEach(s.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.subheadline) }
+                ForEach(s.warnings, id: \.self) { Label($0, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
             }
             Table(model.store.targets) {
                 TableColumn(L10n.tr("Cel")) { t in Text("\(t.name) · \(t.environment.rawValue)").foregroundStyle(t.environment.color) }
@@ -490,7 +490,7 @@ struct GitDeployStatusView: View {
                 TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
                 TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
             }
-            if let message { Text(message).font(.subheadline).foregroundStyle(.red) }
+            if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 360)

@@ -151,12 +151,12 @@ struct FileBrowserPane: View {
                 .overlay(alignment: .bottomLeading) {
                     if let g = model.git {
                         Label(g.branch ?? L10n.tr("(odłączony HEAD)"), systemImage: "arrow.triangle.branch")
-                            .font(.subheadline).foregroundStyle(.secondary).padding(6)
+                            .font(.uiSecondary).foregroundStyle(.secondary).padding(6)
                     }
                 }
             } else {
                 Spacer()
-                Text(L10n.tr("Dodaj katalog jako lokalizację (+)")).foregroundStyle(.secondary).font(.callout)
+                Text(L10n.tr("Dodaj katalog jako lokalizację (+)")).foregroundStyle(.secondary).font(.ui)
                 Spacer()
             }
         }
@@ -205,7 +205,7 @@ struct FileBrowserPane: View {
                 Button(L10n.tr("Wyczyść filtr")) { model.filter = FileFilter(); nameFilter = "" }
             }
         }
-        .font(.callout)
+        .font(.ui)
         .padding(.horizontal, 8)
         .onChange(of: model.filter) { model.reload() }
     }
@@ -333,5 +333,5 @@ final class FileBrowserPaneController: NSViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    override func loadView() { view = NSHostingView(rootView: FileBrowserPane(workspace: workspace)) }
+    override func loadView() { view = NSHostingView(rootView: FileBrowserPane(workspace: workspace).interfaceFont()) }
 }

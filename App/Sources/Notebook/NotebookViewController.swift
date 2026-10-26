@@ -20,7 +20,7 @@ final class NotebookViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError() }
 
     override func loadView() {
-        view = NSHostingView(rootView: NotebookView(document: document, workspace: workspace))
+        view = NSHostingView(rootView: NotebookView(document: document, workspace: workspace).interfaceFont())
     }
 }
 
@@ -110,7 +110,7 @@ struct NotebookCellView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Text(cell.wrappedValue.kind == .sql ? "SQL" : "Markdown").font(.subheadline.bold()).foregroundStyle(.secondary)
+                Text(cell.wrappedValue.kind == .sql ? "SQL" : "Markdown").font(.uiSecondary.bold()).foregroundStyle(.secondary)
                 Spacer()
                 if cell.wrappedValue.kind == .sql {
                     Button { run() } label: { Image(systemName: "play.fill") }.iconLabel(L10n.tr("Wykonaj komórkę")).disabled(running)
@@ -149,12 +149,12 @@ struct NotebookCellView: View {
                 SimpleChartView(data: r.chartData(c), kind: c.kind).frame(height: 220)
             }
             SimpleGridView(columns: r.columns, rows: r.rows.map { $0.map { $0 ?? "" } }).frame(maxHeight: 260)
-            if r.truncated { Text(L10n.tr("Wynik obcięty do \(r.rows.count) wierszy")).font(.subheadline).foregroundStyle(.orange) }
+            if r.truncated { Text(L10n.tr("Wynik obcięty do \(r.rows.count) wierszy")).font(.uiSecondary).foregroundStyle(.orange) }
         }
         ForEach(Array((r.messages + r.output).enumerated()), id: \.offset) { _, line in
             Text(line).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
         }
-        Text(L10n.tr("Czas: \(String(format: "%.3f", Double(r.milliseconds) / 1000)) s")).font(.subheadline).foregroundStyle(.secondary)
+        Text(L10n.tr("Czas: \(String(format: "%.3f", Double(r.milliseconds) / 1000)) s")).font(.uiSecondary).foregroundStyle(.secondary)
     }
 
     private func toggleChart() {
@@ -171,7 +171,7 @@ struct SimpleGridView: View {
     var body: some View {
         ScrollView([.horizontal, .vertical]) {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 2) {
-                GridRow { ForEach(Array(columns.enumerated()), id: \.offset) { _, c in Text(c).font(.subheadline.bold()) } }
+                GridRow { ForEach(Array(columns.enumerated()), id: \.offset) { _, c in Text(c).font(.uiSecondary.bold()) } }
                 Divider()
                 ForEach(Array(rows.prefix(1000).enumerated()), id: \.offset) { _, r in
                     GridRow { ForEach(Array(r.enumerated()), id: \.offset) { _, v in Text(v).font(.system(size: 12, design: .monospaced)).lineLimit(1) } }

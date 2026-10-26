@@ -232,7 +232,7 @@ final class AgentUIController: ApprovalPresenter {
                 sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
                 cont.resume(returning: result)
             }
-            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
             sheet = w
             window.beginSheet(w)
         }

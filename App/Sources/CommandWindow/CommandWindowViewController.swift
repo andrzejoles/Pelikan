@@ -82,7 +82,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
             let b = ClosureButton(title: title) { [weak self] in self?.toggle(key) }
             b.bezelStyle = .accessoryBarAction
             b.setButtonType(.pushOnPushOff)
-            b.font = .systemFont(ofSize: 11)
+            b.font = InterfaceFonts.shared.small
             b.toolTip = L10n.tr("SET \(key) ON/OFF")
             optionButtons[key] = b
             optionsBar.addArrangedSubview(b)

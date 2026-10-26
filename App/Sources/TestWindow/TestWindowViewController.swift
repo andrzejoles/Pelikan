@@ -24,7 +24,7 @@ final class TestWindowViewController: NSViewController {
 
     override func loadView() {
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
-        let bottom = NSHostingView(rootView: TestPanel(document: document, workspace: workspace))
+        let bottom = NSHostingView(rootView: TestPanel(document: document, workspace: workspace).interfaceFont())
         split.isVertical = false
         split.dividerStyle = .thin
         split.addArrangedSubview(editor)
@@ -134,7 +134,7 @@ struct TestPanel: View {
                 Toggle(L10n.tr("Zbieraj HTP przy wykonaniu"), isOn: $document.htpEnabled).toggleStyle(.checkbox)
                 Spacer()
             }
-            .font(.subheadline)
+            .font(.uiSecondary)
             .padding(.horizontal, 6)
             ScrollView {
                 Text(showHTP ? (document.htpOutput ?? (document.htpEnabled ? L10n.tr("(pusta strona HTP)") : L10n.tr("Włącz zbieranie HTP i wykonaj blok."))) : document.output.joined(separator: "\n"))
@@ -202,7 +202,7 @@ struct TestPanel: View {
                 if document.profilerReport?.kind == .hierarchical { Toggle(L10n.tr("Drzewo wywołań"), isOn: $showCallTree).toggleStyle(.checkbox) }
                 Spacer()
             }
-            .font(.subheadline)
+            .font(.uiSecondary)
             .padding(.horizontal, 6)
             if let r = document.profilerReport {
                 if r.kind == .lines {
@@ -260,7 +260,7 @@ struct TestPanel: View {
                     Text(L10n.tr("Brak wyników — blok może zwracać zapytania przez DBMS_SQL.RETURN_RESULT.")).foregroundStyle(.secondary)
                 }
                 ForEach(Array(document.testResults.enumerated()), id: \.offset) { i, r in
-                    Text(L10n.tr("Wynik \(i + 1)")).font(.subheadline.bold())
+                    Text(L10n.tr("Wynik \(i + 1)")).font(.uiSecondary.bold())
                     Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 3) {
                         GridRow { ForEach(r.columns, id: \.self) { Text($0).bold() } }
                         ForEach(Array(r.rows.enumerated()), id: \.offset) { _, row in
@@ -279,8 +279,8 @@ struct TestPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(document.traceLevel == nil ? L10n.tr("Ślad wyłączony") : L10n.tr("Poziom śladu: \(document.traceLevel!.rawValue)"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-                if let run = document.traceRun { Text(L10n.tr("Przebieg \(run)")).font(.subheadline).foregroundStyle(.secondary) }
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+                if let run = document.traceRun { Text(L10n.tr("Przebieg \(run)")).font(.uiSecondary).foregroundStyle(.secondary) }
                 Spacer()
                 Button(document.traceLevel == nil ? L10n.tr("Włącz ślad") : L10n.tr("Wyłącz ślad")) {
                     workspace.perform("test.trace", CommandArguments(document.traceLevel == nil ? [:] : ["levels": "off"]))
@@ -340,7 +340,7 @@ struct CursorResultView: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text(":\(variable.name)").font(.headline)
+            Text(":\(variable.name)").font(.uiHeadline)
             ScrollView([.horizontal, .vertical]) {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                     GridRow { ForEach(variable.cursorColumns, id: \.self) { Text($0).bold() } }

@@ -11,7 +11,7 @@ struct HTMLReportView: View {
     var body: some View {
         VStack(spacing: 6) {
             HStack {
-                Text(title).font(.headline)
+                Text(title).font(.uiHeadline)
                 Spacer()
                 Button(L10n.tr("Zapisz HTML…")) {
                     let p = NSSavePanel()
@@ -42,7 +42,7 @@ struct SQLMonitorView: View {
                 Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Raport")) { open(selection) }.disabled(selection == nil)
                 Spacer()
-                Text(message).font(.subheadline).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
             Table(data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }, selection: $selection) {
                 TableColumnForEach(data.columns.indices.map { $0 }, id: \.self) { i in

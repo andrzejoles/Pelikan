@@ -39,7 +39,7 @@ struct SchedulerView: View {
                 case 1: runsTab
                 default: runningTab
                 }
-                Text(message).font(.subheadline).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
             .padding(10)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -230,7 +230,7 @@ struct JobEditor: View {
                 TextField(L10n.tr("Komentarz"), text: $job.comments)
                 TextField(L10n.tr("Powiadomienia e-mail (adresy po przecinku)"), text: $recipients)
             }
-            Text(L10n.tr("SQL")).font(.subheadline.bold())
+            Text(L10n.tr("SQL")).font(.uiSecondary.bold())
             ScrollView {
                 Text(isNew ? Scheduler.createSQL(result) : Scheduler.alterSQL(from: original, to: result))
                     .font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)

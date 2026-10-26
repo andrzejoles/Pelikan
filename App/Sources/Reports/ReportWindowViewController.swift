@@ -28,7 +28,7 @@ final class ReportWindowViewController: NSViewController {
 
     override func loadView() {
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
-        let locked = NSHostingView(rootView: LockedReportView())
+        let locked = NSHostingView(rootView: LockedReportView().interfaceFont())
         let editorPage = NSView()
         for v in [editor!, locked] as [NSView] {
             v.translatesAutoresizingMaskIntoConstraints = false
@@ -36,9 +36,9 @@ final class ReportWindowViewController: NSViewController {
             NSLayoutConstraint.activate([v.leadingAnchor.constraint(equalTo: editorPage.leadingAnchor), v.trailingAnchor.constraint(equalTo: editorPage.trailingAnchor),
                                          v.topAnchor.constraint(equalTo: editorPage.topAnchor), v.bottomAnchor.constraint(equalTo: editorPage.bottomAnchor)])
         }
-        pages = [editorPage, NSHostingView(rootView: ReportLayoutView(document: document)),
-                 NSHostingView(rootView: ReportOptionsView(document: document, workspace: workspace)), web]
-        let bar = NSHostingView(rootView: ReportToolbar(document: document, workspace: workspace, selection: selection))
+        pages = [editorPage, NSHostingView(rootView: ReportLayoutView(document: document).interfaceFont()),
+                 NSHostingView(rootView: ReportOptionsView(document: document, workspace: workspace).interfaceFont()), web]
+        let bar = NSHostingView(rootView: ReportToolbar(document: document, workspace: workspace, selection: selection).interfaceFont())
         // Pasek u góry, strony wypełniają resztę (w pionowym NSStackView kontener bez wysokości własnej się zapadał, D145).
         let stack = NSView()
         for v in [bar, container] as [NSView] {
@@ -115,7 +115,7 @@ struct ReportToolbar: View {
             Button { workspace.perform("report.execute") } label: { Label(L10n.tr("Wykonaj"), systemImage: "play.fill") }
                 .disabled(document.isExecuting)
             Spacer()
-            if let e = document.reportError { Text(e).foregroundStyle(.red).font(.subheadline).lineLimit(1) }
+            if let e = document.reportError { Text(e).foregroundStyle(.red).font(.uiSecondary).lineLimit(1) }
             Button { workspace.perform("report.print") } label: { Image(systemName: "printer") }.iconLabel(L10n.tr("Drukuj raport…")).disabled(document.reportHTML == nil)
             Button { workspace.perform("report.saveHTML") } label: { Image(systemName: "square.and.arrow.down") }.iconLabel(L10n.tr("Zapisz raport jako HTML…")).disabled(document.reportHTML == nil)
             Menu(L10n.tr("Eksport")) {

@@ -27,12 +27,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var analyzedText: String?
     private var diagnostics: [EditorDiagnostic] = []
     var onCaretChange: ((String) -> Void)?
+    /// Krój i grubość czcionki, z którymi zbudowano `font` (zmiana w Preferencjach — przebudowa).
+    private var fontKey = ""
 
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
         let ws0 = (NSApp.delegate as? AppDelegate)?.workspace
         ligatures = ws0?.settings.editorLigatures ?? true
-        font = Self.makeFont(name: ws0?.settings.editorFontName ?? "SF Mono", size: fontSize, ligatures: ligatures)
+        font = Self.makeFont(name: ws0?.settings.editorFontName ?? "SF Mono", size: fontSize, weight: ws0?.settings.editorFontWeight ?? .regular,
+                             ligatures: ligatures)
+        fontKey = ws0.map { $0.settings.editorFontName + "|" + $0.settings.editorFontWeight.rawValue } ?? ""
         textView = CodeTextView(usingTextLayoutManager: true)
         ruler = LineNumberRulerView(textView: textView, highlighter: highlighter)
         isSecondary = secondary
@@ -101,7 +105,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             let size = CGFloat(ws.settings.editorFontSize), lig = ws.settings.editorLigatures
-            if size != self.font.pointSize || lig != self.ligatures { self.ligatures = lig; self.setFontSize(size) }
+            let key = ws.settings.editorFontName + "|" + ws.settings.editorFontWeight.rawValue
+            if size != self.font.pointSize || lig != self.ligatures || key != self.fontKey {
+                self.ligatures = lig
+                self.fontKey = key
+                self.setFontSize(size)
+            }
         })
         // Znaczniki kolorów (PD-EDIT-012) i zakładki na marginesie (PD-EDIT-011).
         tokens.append(trackChanges { [weak self] in
@@ -696,8 +705,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     func setFontSize(_ size: CGFloat) {
-        let name = (NSApp.delegate as? AppDelegate)?.workspace.settings.editorFontName ?? font.familyName ?? "SF Mono"
-        font = Self.makeFont(name: name, size: size, ligatures: ligatures)
+        let settings = (NSApp.delegate as? AppDelegate)?.workspace.settings
+        font = Self.makeFont(name: settings?.editorFontName ?? font.familyName ?? "SF Mono", size: size, weight: settings?.editorFontWeight ?? .regular,
+                             ligatures: ligatures)
         textView.font = font
         textView.typingAttributes[.font] = font
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
@@ -705,8 +715,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     /// Czcionka edytora; bez ligatur — wyłączone ligatury typowe i kontekstowe alternatywy (PD-EDIT-021).
-    static func makeFont(name: String, size: CGFloat, ligatures: Bool) -> NSFont {
-        let base = NSFont(name: name, size: size) ?? .monospacedSystemFont(ofSize: size, weight: .regular)
+    static func makeFont(name: String, size: CGFloat, weight: FontWeightChoice = .regular, ligatures: Bool) -> NSFont {
+        // „SF Mono” to systemowa czcionka o stałej szerokości (bez osobnej instalacji); inne kroje — z grubością (D178).
+        let base = AppFonts.font(family: name == "SF Mono" ? "" : name, size: Double(size), weight: weight, monospaced: true)
         guard !ligatures else { return base }
         let off: [[NSFontDescriptor.FeatureKey: Int]] = [
             [.typeIdentifier: kLigaturesType, .selectorIdentifier: kCommonLigaturesOffSelector],

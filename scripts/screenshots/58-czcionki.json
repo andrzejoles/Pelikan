@@ -1,0 +1,3 @@
+[{"command": "debug.settings", "args": {"uiFontName": "Avenir Next", "uiFontSize": 14, "uiFontWeight": "medium", "gridFontName": "Menlo", "editorFontName": "Menlo"}, "delay": 2},
+ {"command": "file.new.sql", "delay": 1},
+ {"command": "debug.preferences", "args": {"pane": "GeneralPane"}, "delay": 3}]

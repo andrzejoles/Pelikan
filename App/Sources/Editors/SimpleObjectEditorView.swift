@@ -19,7 +19,7 @@ struct SimpleObjectEditorView: View {
                 .formStyle(.grouped)
                 .frame(minWidth: 380)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("SQL").font(.callout.bold()).padding(.horizontal, 8).padding(.top, 8)
+                    Text("SQL").font(.uiHeadline).padding(.horizontal, 8).padding(.top, 8)
                     ScrollView {
                         Text(preview).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
@@ -32,7 +32,7 @@ struct SimpleObjectEditorView: View {
             Divider()
             HStack {
                 if running { ProgressView().controlSize(.small) }
-                Text(editor.issue ?? message).font(.callout).foregroundStyle(editor.issue == nil ? Color.secondary : Color.orange).lineLimit(2)
+                Text(editor.issue ?? message).font(.ui).foregroundStyle(editor.issue == nil ? Color.secondary : Color.orange).lineLimit(2)
                 Spacer()
                 Button(L10n.tr("Odśwież")) { refresh() }.disabled(editor.isNew || running)
                 Button(L10n.tr("Zastosuj")) { apply() }.keyboardShortcut(.defaultAction).disabled(editor.statements().isEmpty || running)

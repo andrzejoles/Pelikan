@@ -32,7 +32,7 @@ struct EventMonitorView: View {
                 TableColumn(L10n.tr("Nazwa")) { e in Text(e.name) }.width(160)
                 TableColumn(L10n.tr("Treść")) { e in Text(e.message).textSelection(.enabled) }
             }
-            Text(monitor?.error ?? message).font(.subheadline).foregroundStyle(monitor?.error == nil ? Color.secondary : Color.red)
+            Text(monitor?.error ?? message).font(.uiSecondary).foregroundStyle(monitor?.error == nil ? Color.secondary : Color.red)
         }
         .padding(10)
         .frame(minWidth: 620, minHeight: 360)
@@ -81,7 +81,7 @@ struct LoadTesterView: View {
                     List(selection: $selection) {
                         ForEach($test.steps) { $s in
                             VStack(alignment: .leading) {
-                                TextField(L10n.tr("Nazwa"), text: $s.name).font(.headline)
+                                TextField(L10n.tr("Nazwa"), text: $s.name).font(.uiHeadline)
                                 TextField("SQL", text: $s.sql, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(1...5)
                             }
                             .tag(s.id)
@@ -91,7 +91,7 @@ struct LoadTesterView: View {
                         Button(L10n.tr("Dodaj krok")) { test.steps.append(LoadStep(name: L10n.tr("Krok \(test.steps.count + 1)"), sql: "")) }
                         Button(L10n.tr("Usuń")) { test.steps.removeAll { $0.id == selection } }.disabled(selection == nil)
                     }
-                    Text(L10n.tr("Zmienne :thread i :iteration są wiązane automatycznie.")).font(.subheadline).foregroundStyle(.secondary)
+                    Text(L10n.tr("Zmienne :thread i :iteration są wiązane automatycznie.")).font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 .frame(minWidth: 320)
                 results.frame(minWidth: 420)
@@ -106,7 +106,7 @@ struct LoadTesterView: View {
     @ViewBuilder private var results: some View {
         if let t = tester {
             VStack(alignment: .leading, spacing: 6) {
-                Text(L10n.tr("Iteracje: \(t.completedIterations) z \(test.threads * test.iterations)")).font(.subheadline)
+                Text(L10n.tr("Iteracje: \(t.completedIterations) z \(test.threads * test.iterations)")).font(.uiSecondary)
                 Table(t.stats) {
                     TableColumn(L10n.tr("Krok")) { s in Text(s.name) }
                     TableColumn(L10n.tr("Wykonania")) { s in Text("\(s.count)").monospacedDigit() }.width(80)
@@ -121,7 +121,7 @@ struct LoadTesterView: View {
                     LineMark(x: .value("s", p.second), y: .value(L10n.tr("Wykonania/s"), p.count))
                 }
                 .frame(height: 100)
-                if let e = t.stats.compactMap(\.lastError).first { Text(e).font(.subheadline).foregroundStyle(.red).lineLimit(2) }
+                if let e = t.stats.compactMap(\.lastError).first { Text(e).font(.uiSecondary).foregroundStyle(.red).lineLimit(2) }
             }
         } else {
             Text(L10n.tr("Wyniki pojawią się po starcie")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -75,7 +75,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         scroll.drawsBackground = false
 
         userPopup.controlSize = .small
-        userPopup.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        userPopup.font = InterfaceFonts.shared.small
         userPopup.target = self
         userPopup.action = #selector(userChanged)
         filterField.controlSize = .small
@@ -87,7 +87,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                                target: self, action: #selector(refreshAll))
         refresh.isBordered = false
         refresh.toolTip = L10n.tr("Odśwież Object Browser")
-        status.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        status.font = InterfaceFonts.shared.small
         status.textColor = .secondaryLabelColor
         let root = NSView()
         for v in [userPopup, refresh, filterField, scroll, status] as [NSView] {
@@ -115,6 +115,20 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         userPopup.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         view = root
         tokens.append(trackChanges { [weak self] in self?.modelChanged() })
+        // Czcionka Object Browsera albo interfejsu z Preferencji (D178): wysokość wierszy i ponowne narysowanie drzewa.
+        tokens.append(trackChanges { [weak self] in
+            guard let self else { return }
+            let font = self.browserFont
+            self.outline.rowHeight = AppFonts.rowHeight(for: font)
+            self.outline.reloadData()
+        })
+    }
+
+    /// Czcionka drzewa: własna z Preferencji › Edytor albo czcionka interfejsu o 1 pt mniejsza.
+    var browserFont: NSFont {
+        let s = workspace.settings, ui = InterfaceFonts.shared
+        return AppFonts.font(family: s.browserFontName.isEmpty ? ui.family : s.browserFontName,
+                             size: s.browserFontSize > 0 ? s.browserFontSize : max(9, ui.size - 1), weight: s.browserFontWeight)
     }
 
     private func modelChanged() {
@@ -312,8 +326,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             outline.enclosingScrollView?.drawsBackground = background != nil
         }
         cell.textField?.textColor = textColor
-        let size = workspace.settings.browserFontSize
-        cell.textField?.font = .systemFont(ofSize: size > 0 ? size : NSFont.smallSystemFontSize + 1)
+        cell.textField?.font = browserFont
         cell.imageView?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         cell.imageView?.contentTintColor = color
         return cell

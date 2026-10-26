@@ -112,6 +112,14 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             self.applyVisibility(shown: self.workspace.settings.showRibbon, collapsed: self.workspace.settings.ribbonCollapsed)
         })
         tokens.append(trackChanges { [weak self] in self?.refreshEnabled() })
+        // Czcionka interfejsu z Preferencji (D178): przebudowa kart i grup.
+        tokens.append(trackChanges { [weak self] in
+            let f = InterfaceFonts.shared
+            _ = (f.family, f.size, f.weight)
+            guard let self, !self.visibleTabs.isEmpty else { return }
+            self.rebuildTabs()
+            self.rebuildGroups()
+        })
     }
 
     override func viewDidAppear() {
@@ -198,7 +206,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
             }
         }
         let title = NSTextField(labelWithString: group.title)
-        title.font = .systemFont(ofSize: 11)
+        title.font = InterfaceFonts.shared.small
         title.textColor = .secondaryLabelColor
         title.alignment = .center
         let stack = NSStackView(views: [items, title])
@@ -382,7 +390,8 @@ final class RibbonTabButton: NSView {
         super.init(frame: .zero)
         wantsLayer = true
         layer?.cornerRadius = 6
-        label.font = .systemFont(ofSize: 13, weight: selected ? .semibold : .regular)
+        let fonts = InterfaceFonts.shared
+        label.font = AppFonts.font(family: fonts.family, size: fonts.size, weight: selected ? .semibold : fonts.weight)
         label.textColor = color ?? (selected ? .labelColor : .secondaryLabelColor)
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(label)
@@ -443,7 +452,7 @@ final class RibbonButton: NSControl {
         imageView.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
         imageView.contentTintColor = .labelColor
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        label.font = .systemFont(ofSize: 12)
+        label.font = InterfaceFonts.shared.label
         label.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)
         addSubview(label)
@@ -635,7 +644,7 @@ final class RibbonSearchResults: NSObject, NSTableViewDataSource, NSTableViewDel
             place = L10n.tr("Menu \(d.category.displayName)") + (d.submenu.map { " › " + $0 } ?? "")
         }
         let detail = NSTextField(labelWithString: enabled ? place : place + " · " + L10n.tr("teraz niedostępne"))
-        detail.font = .systemFont(ofSize: 11)
+        detail.font = InterfaceFonts.shared.small
         detail.textColor = .secondaryLabelColor
         detail.lineBreakMode = .byTruncatingTail
         let texts = NSStackView(views: [title, detail])

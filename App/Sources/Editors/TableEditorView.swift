@@ -52,7 +52,7 @@ struct TableEditorView: View {
             Divider()
             HStack {
                 if running { ProgressView().controlSize(.small) }
-                Text(message).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+                Text(message).font(.ui).foregroundStyle(.secondary).lineLimit(2)
                 Spacer()
                 Button(L10n.tr("Odśwież")) { refresh() }.disabled(original == nil || running)
                 Button(L10n.tr("Zastosuj")) { apply() }.keyboardShortcut(.defaultAction).disabled(ddl.isEmpty || running)
@@ -120,7 +120,7 @@ struct TableEditorView: View {
                     Toggle(L10n.tr("Zastosuj przez odtworzenie tabeli (kopia danych, DROP, CREATE, przeniesienie wierszy)"), isOn: $definition.recreate)
                     if definition.recreate {
                         Text(L10n.tr("Wyzwalacze, uprawnienia i klucze obce innych tabel są odtwarzane; tabela trafia do kosza (FLASHBACK TABLE … TO BEFORE DROP)."))
-                            .font(.callout).foregroundStyle(.secondary)
+                            .font(.ui).foregroundStyle(.secondary)
                     }
                 }
             }

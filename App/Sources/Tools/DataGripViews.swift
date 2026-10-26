@@ -34,7 +34,7 @@ struct UsagesView: View {
                 if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
             }
             Text(summary ?? (hits.isEmpty ? L10n.tr("Brak użyć \(title)") : L10n.tr("Użycia \(title): \(hits.count)")))
-                .foregroundStyle(.secondary).font(.callout)
+                .foregroundStyle(.secondary).font(.ui)
         }
         .padding(12)
         .frame(minWidth: 620, minHeight: 320)
@@ -67,12 +67,12 @@ struct RefactoringPreviewView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(plan.title).font(.headline)
+            Text(plan.title).font(.uiHeadline)
             HSplitView {
                 List(plan.changes, selection: $selection) { c in
                     VStack(alignment: .leading) {
                         Text(c.title)
-                        Text(L10n.tr("zmian: \(c.occurrences)")).font(.subheadline).foregroundStyle(.secondary)
+                        Text(L10n.tr("zmian: \(c.occurrences)")).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 .frame(minWidth: 180, idealWidth: 220)
@@ -87,7 +87,7 @@ struct RefactoringPreviewView: View {
                 .frame(minWidth: 420)
             }
             if let ddl = plan.ddl {
-                Text(L10n.tr("DDL zmiany w bazie (nowe okno SQL, bez wykonania):")).font(.callout)
+                Text(L10n.tr("DDL zmiany w bazie (nowe okno SQL, bez wykonania):")).font(.ui)
                 Text(ddl).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
             }
             HStack {
@@ -143,7 +143,7 @@ struct LocalHistoryView: View {
             // Najnowsza wersja wybrana od razu — podgląd zamiast pustego panelu.
             .onAppear { if selection == nil { selection = list.first?.id } }
             HStack {
-                Text(L10n.tr("Wersji: \(list.count)")).foregroundStyle(.secondary).font(.callout)
+                Text(L10n.tr("Wersji: \(list.count)")).foregroundStyle(.secondary).font(.ui)
                 Spacer()
                 Button(L10n.tr("Porównaj z bieżącym")) { if let s = selection { run("file.localHistoryCompare", s) } }.disabled(selection == nil)
                 Button(L10n.tr("Przywróć")) { if let s = selection { run("file.localHistoryRestore", s) } }.disabled(selection == nil)
@@ -182,7 +182,7 @@ struct ProblemsView: View {
                 document.selectedRange = d.range
             }
             HStack {
-                Text(L10n.tr("Problemów: \(list.count)")).foregroundStyle(.secondary).font(.callout)
+                Text(L10n.tr("Problemów: \(list.count)")).foregroundStyle(.secondary).font(.ui)
                 Spacer()
                 Button(L10n.tr("Analizuj ponownie")) { Task { await workspace.analyzeCode(document) } }
             }

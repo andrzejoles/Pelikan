@@ -129,7 +129,7 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         label.lineBreakMode = .byTruncatingTail
         let detail = NSTextField(labelWithString: item.detail)
-        detail.font = .systemFont(ofSize: 11)
+        detail.font = InterfaceFonts.shared.small
         detail.textColor = .secondaryLabelColor
         detail.lineBreakMode = .byTruncatingTail
         detail.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

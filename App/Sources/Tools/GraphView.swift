@@ -32,12 +32,12 @@ struct GraphView: View {
         HSplitView {
             settings.frame(minWidth: 260, idealWidth: 280, maxWidth: 340)
             VStack(alignment: .leading, spacing: 6) {
-                if !definition.title.isEmpty { Text(definition.title).font(.headline) }
+                if !definition.title.isEmpty { Text(definition.title).font(.uiHeadline) }
                 chart.frame(minWidth: 420, minHeight: 320)
                 HStack {
                     Text(message.isEmpty ? L10n.tr("Wierszy: \(source.rows.count), kategorii: \(data.categories.count)") : message)
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    if data.skipped > 0 { Text(L10n.tr("pominięto wartości nieliczbowe: \(data.skipped)")).font(.subheadline).foregroundStyle(.orange) }
+                        .font(.uiSecondary).foregroundStyle(.secondary)
+                    if data.skipped > 0 { Text(L10n.tr("pominięto wartości nieliczbowe: \(data.skipped)")).font(.uiSecondary).foregroundStyle(.orange) }
                     Spacer()
                     Button(L10n.tr("Odśwież")) { Task { await refresh() } }
                     Menu(L10n.tr("Eksport")) {
@@ -139,31 +139,31 @@ struct GraphView: View {
                 if definition.stacked {
                     BarMark(x: .value(L10n.tr("Kategoria"), p.category), y: .value(L10n.tr("Wartość"), p.value))
                         .foregroundStyle(by: .value(L10n.tr("Seria"), p.series))
-                        .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.subheadline) } }
+                        .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.uiSecondary) } }
                 } else {
                     BarMark(x: .value(L10n.tr("Kategoria"), p.category), y: .value(L10n.tr("Wartość"), p.value))
                         .foregroundStyle(by: .value(L10n.tr("Seria"), p.series))
                         .position(by: .value(L10n.tr("Seria"), p.series))
-                        .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.subheadline) } }
+                        .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.uiSecondary) } }
                 }
             case .line:
                 LineMark(x: .value(L10n.tr("Kategoria"), p.category), y: .value(L10n.tr("Wartość"), p.value))
                     .foregroundStyle(by: .value(L10n.tr("Seria"), p.series))
                     .symbol(by: .value(L10n.tr("Seria"), p.series))
-                    .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.subheadline) } }
+                    .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.uiSecondary) } }
             case .area:
                 AreaMark(x: .value(L10n.tr("Kategoria"), p.category), y: .value(L10n.tr("Wartość"), p.value))
                     .foregroundStyle(by: .value(L10n.tr("Seria"), p.series))
             case .point:
                 PointMark(x: .value(L10n.tr("Kategoria"), p.category), y: .value(L10n.tr("Wartość"), p.value))
                     .foregroundStyle(by: .value(L10n.tr("Seria"), p.series))
-                    .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.subheadline) } }
+                    .annotation(position: .top) { if definition.showValues { Text(Self.format(p.value)).font(.uiSecondary) } }
             case .pie:
                 // Wykres kołowy: pierwsza seria, wycinek na kategorię.
                 if p.series == d.series.first {
                     SectorMark(angle: .value(L10n.tr("Wartość"), max(0, p.value)), innerRadius: .ratio(0.4))
                         .foregroundStyle(by: .value(L10n.tr("Kategoria"), p.category))
-                        .annotation(position: .overlay) { if definition.showValues { Text(Self.format(p.value)).font(.subheadline) } }
+                        .annotation(position: .overlay) { if definition.showValues { Text(Self.format(p.value)).font(.uiSecondary) } }
                 }
             }
         }
@@ -254,7 +254,7 @@ struct ToolOutputView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(L10n.tr("Kod wyjścia: \(status)")).font(.subheadline).foregroundStyle(status == 0 ? Color.secondary : Color.red)
+            Text(L10n.tr("Kod wyjścia: \(status)")).font(.uiSecondary).foregroundStyle(status == 0 ? Color.secondary : Color.red)
             ScrollView {
                 Text(text.isEmpty ? L10n.tr("(brak wyjścia)") : text).font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(4)
@@ -295,7 +295,7 @@ struct UserToolsView: View {
             }
             Divider()
             HStack {
-                Text(L10n.tr("Zmienne: ") + UserToolContext.variables.map(\.0).joined(separator: " ")).font(.subheadline).foregroundStyle(.secondary)
+                Text(L10n.tr("Zmienne: ") + UserToolContext.variables.map(\.0).joined(separator: " ")).font(.uiSecondary).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Zapisz")) { workspace.updateUserTools(tools) }.keyboardShortcut(.defaultAction)
             }
@@ -324,7 +324,7 @@ struct UserToolsView: View {
                     Text(L10n.tr("Nowe okno")).tag(UserTool.Output.newWindow)
                 }
                 Text(L10n.tr("Program uruchamiany bez powłoki; argumenty nie są cytowane ani interpretowane. Do programu nie trafiają hasła ani dane połączenia — tylko alias."))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.uiSecondary).foregroundStyle(.secondary)
             } else {
                 TextField(L10n.tr("Blok SQL"), text: t.sql, axis: .vertical).font(.system(.body, design: .monospaced)).lineLimit(4...12)
                 Toggle(L10n.tr("Wykonaj od razu"), isOn: t.executeImmediately)

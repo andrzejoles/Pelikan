@@ -132,6 +132,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             guard let self else { return }
             AppLogging.apply(self.workspace.settings)
         }
+        // Czcionka interfejsu z Preferencji (D178) — przed zbudowaniem okien, potem na żywo.
+        trackChanges { [weak self] in
+            guard let self else { return }
+            InterfaceFonts.shared.apply(self.workspace.settings)
+        }
         languageToken = trackChanges { [weak self] in
             guard let self else { return }
             Self.applyLanguage(self.workspace.settings.language)
@@ -501,7 +506,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
                 cont.resume(returning: apply)
             }
-            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
             sheet = w
             window.beginSheet(w)
         }
@@ -881,7 +886,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         scroll.hasVerticalScroller = true
         scroll.borderType = .bezelBorder
         let hint = NSTextField(wrappingLabelWithString: L10n.tr("Zmienne: [Nazwa], [Nazwa=domyślna], lista [Nazwa=*a,b,c]; kursor: [#]; nawias dosłownie: [[; wbudowane: $OSUSER $DBUSER $DATE $TIME."))
-        hint.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        hint.font = InterfaceFonts.shared.small
         hint.textColor = .secondaryLabelColor
         let row = NSStackView(views: [folder, name])
         let stack = NSStackView(views: [row, scroll, hint])
@@ -997,7 +1002,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
             self?.mainWindow?.documentArea.focusActiveDocument()
         }
-        let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+        let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
         sheet = w
         window.beginSheet(w)
     }
@@ -1027,7 +1032,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 self.mainWindow?.documentArea.focusActiveDocument()
                 cont.resume(returning: values)
             }
-            let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+            let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
             sheet = w
             window.beginSheet(w)
         }
@@ -1083,7 +1088,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var findPanel: NSPanel?
     func showFindReplace() {
         if findPanel == nil {
-            let p = NSPanel(contentViewController: NSHostingController(rootView: FindReplaceView(model: FindReplaceModel(workspace: workspace))))
+            let p = NSPanel(contentViewController: NSHostingController(rootView: FindReplaceView(model: FindReplaceModel(workspace: workspace)).interfaceFont()))
             p.title = L10n.tr("Znajdź i zamień")
             p.styleMask = [.titled, .closable, .resizable, .utilityWindow, .nonactivatingPanel]
             p.isFloatingPanel = true
@@ -1141,7 +1146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
             self?.mainWindow?.documentArea.focusActiveDocument()
         }
-        let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+        let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
         sheet = w
         window.beginSheet(w)
     }
@@ -1223,6 +1228,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 if s.command == "debug.beautifierVariant", case .string(let id)? = s.args?["option"], let e = BeautifierExamples.example(id) {
                     workspace.settings.beautifier = e.variant(workspace.settings.beautifier)
                     log("ok debug.beautifierVariant \(id)")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Ustawienia z argumentów (klucz → wartość JSON), np. czcionka interfejsu do zrzutu (D178).
+                if s.command == "debug.settings", let values = s.args,
+                   var dict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(workspace.settings))) as? [String: Any] {
+                    for (k, v) in values { dict[k] = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(v), options: .fragmentsAllowed)) ?? NSNull() }
+                    if let data = try? JSONSerialization.data(withJSONObject: dict),
+                       let updated = try? JSONDecoder().decode(PelikanWorkspace.Settings.self, from: data) {
+                        workspace.settings = updated
+                    }
+                    log("ok debug.settings \(values.keys.sorted().joined(separator: ","))")
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }

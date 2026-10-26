@@ -118,14 +118,14 @@ public enum PreferenceSets {
     /// Sekcje preferencji jak karty okna Preferencji; pola spoza listy — „Inne”.
     public static let sections: [(name: String, keys: [String])] = [
         (L10n.tr("Ogólne"), ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
-                             "appearance", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
+                             "appearance", "uiFontName", "uiFontSize", "uiFontWeight", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
                              "quickAccessCommands", "showRibbon", "ribbonCollapsed", "logLevel", "logIncludeNames"]),
         (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
-                                 "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",
+                                 "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
-        (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
+        (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
                              "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeAssistantAutomatic", "codeAssistantDelay",
                              "codeAssistantMatch", "codeAssistantCase", "codeAssistantMinChars", "codeAssistantStandardFunctions",
                              "codeAssistantAllPerLine", "codeAssistantCommaFirst", "autoReplace", "identifierLengthWarning", "editorLigatures",

@@ -13,7 +13,7 @@ struct BrowserPane: View {
     var body: some View {
         Form {
             Section(L10n.tr("Foldery")) {
-                Text(L10n.tr("Zaznaczone foldery w podanej kolejności; nic nie zaznaczone — wszystkie.")).font(.subheadline).foregroundStyle(.secondary)
+                Text(L10n.tr("Zaznaczone foldery w podanej kolejności; nic nie zaznaczone — wszystkie.")).font(.uiSecondary).foregroundStyle(.secondary)
                 ForEach(ordered, id: \.self) { t in
                     HStack {
                         Toggle(t.folderName, isOn: Binding(get: { workspace.settings.browserFolders.contains(t.rawValue) }, set: { on in
@@ -90,7 +90,7 @@ struct BrowserPane: View {
                                 ForEach(customization.folders.filter { $0.id != f.id }) { Text($0.name).tag(UUID?.some($0.id)) }
                             }
                         }
-                        Text(L10n.tr("Obiekty z listy: \(f.objects.count) (Dodaj do folderu w menu obiektu)")).font(.subheadline).foregroundStyle(.secondary)
+                        Text(L10n.tr("Obiekty z listy: \(f.objects.count) (Dodaj do folderu w menu obiektu)")).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                 }
                 Button(L10n.tr("Dodaj folder")) { customization.folders.append(BrowserFolder(name: L10n.tr("Nowy folder"))) }
@@ -99,7 +99,7 @@ struct BrowserPane: View {
                 Button(L10n.tr("Zapisz filtry i foldery")) {
                     do { try workspace.saveBrowserCustomization(customization); message = L10n.tr("Zapisano") } catch { message = error.localizedDescription }
                 }
-                Text(message).font(.subheadline).foregroundStyle(.secondary)
+                Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

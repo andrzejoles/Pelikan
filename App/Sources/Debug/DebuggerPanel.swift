@@ -13,14 +13,14 @@ struct DebuggerPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             toolbar
-            Text(status).font(.callout).foregroundStyle(.secondary).lineLimit(2)
+            Text(status).font(.ui).foregroundStyle(.secondary).lineLimit(2)
             HSplitView {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("Stos wywołań")).font(.subheadline.bold())
+                    Text(L10n.tr("Stos wywołań")).font(.uiSecondary.bold())
                     List(Array(debugger.stack.enumerated()), id: \.offset) { i, f in
                         Button { Task { await debugger.selectFrame(i) } } label: {
                             HStack {
-                                Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.subheadline)
+                                Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.uiSecondary)
                                 Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.system(.body, design: .monospaced))
                                 Spacer()
                                 Text("\(f.line)").foregroundStyle(.secondary)
@@ -31,9 +31,9 @@ struct DebuggerPanel: View {
                 }
                 .frame(minWidth: 200)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("Zmienne")).font(.subheadline.bold())
+                    Text(L10n.tr("Zmienne")).font(.uiSecondary.bold())
                     List(debugger.variables, children: \.children) { v in variableRow(v) }
-                    Text(L10n.tr("Obserwowane")).font(.subheadline.bold())
+                    Text(L10n.tr("Obserwowane")).font(.uiSecondary.bold())
                     List(debugger.watchValues, children: \.children) { v in
                         variableRow(v).contextMenu {
                             Button(L10n.tr("Usuń z obserwowanych")) { debugger.removeWatch(v.path) }

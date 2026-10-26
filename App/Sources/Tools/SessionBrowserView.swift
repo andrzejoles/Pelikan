@@ -57,7 +57,7 @@ struct SessionBrowserView: View {
                 }
                 .frame(minHeight: 120)
             }
-            Text(message).font(.subheadline).foregroundStyle(.secondary)
+            Text(message).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 900, minHeight: 520)
@@ -166,7 +166,7 @@ struct SessionQueriesEditor: View {
             List {
                 ForEach(items) { $item in
                     VStack(alignment: .leading, spacing: 2) {
-                        TextField(L10n.tr("Nazwa"), text: $item.name).font(.headline)
+                        TextField(L10n.tr("Nazwa"), text: $item.name).font(.uiHeadline)
                         TextField("SQL", text: $item.sql, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(1...4)
                     }
                 }

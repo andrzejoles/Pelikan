@@ -28,7 +28,7 @@ final class ToolWindowController: NSWindowController, NSWindowDelegate {
         let w = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .resizable, .miniaturizable],
                          backing: .buffered, defer: false)
         w.title = title
-        w.contentView = NSHostingView(rootView: view)
+        w.contentView = NSHostingView(rootView: view.interfaceFont())
         w.center()
         // Okna z kluczem jednorazowym (UUID, id dokumentu) bez zapamiętanej ramki — każde zostawiałoby wpis w UserDefaults.
         if !Self.transientPrefixes.contains(where: key.hasPrefix) { w.setFrameAutosaveName("Pelikan.\(key)") }
@@ -157,7 +157,7 @@ struct FindObjectsView: View {
     private var footer: some View {
         HStack {
             if running { ProgressView().controlSize(.small) }
-            Text(message).foregroundStyle(.secondary).font(.callout)
+            Text(message).foregroundStyle(.secondary).font(.ui)
             Spacer()
             Button(L10n.tr("Eksportuj CSV…")) { exportResults() }.disabled(hits.isEmpty)
             Button(L10n.tr("Kopiuj wyniki")) { copyResults() }.disabled(hits.isEmpty)
@@ -229,7 +229,7 @@ struct CompileInvalidView: View {
             objectsTable
             HStack {
                 if running { ProgressView(value: progress).frame(width: 160) }
-                Text(message).foregroundStyle(.secondary).font(.callout)
+                Text(message).foregroundStyle(.secondary).font(.ui)
             }
         }
         .padding(12)

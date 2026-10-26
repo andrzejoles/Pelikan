@@ -34,6 +34,11 @@ public enum RecordsPerPage: Sendable, Codable, Hashable {
 }
 
 /// Wielkość liter słów kluczowych w edytorze.
+/// Grubość (styl) czcionki w Preferencjach (D178).
+public enum FontWeightChoice: String, Sendable, Codable, Hashable, CaseIterable {
+    case light, regular, medium, semibold, bold
+}
+
 public enum KeywordCase: String, Sendable, Codable, Hashable, CaseIterable { case unchanged, upper, lower, initCap }
 
 /// Wygląd aplikacji: jak system, jasny albo ciemny.
@@ -105,6 +110,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var fetchLOBsOnDemand = true
     /// Czcionka siatki wyników w punktach (PD-GRID-025).
     public var gridFontSize: Double = 12
+    /// Krój i grubość siatki wyników (D178); pusty — systemowa o stałej szerokości.
+    public var gridFontName = ""
+    public var gridFontWeight: FontWeightChoice = .regular
     /// Własne kolory tekstu i tła edytora, siatki i Object Browsera (PD-PREF-005); nil — kolory motywu systemu.
     public var editorColors = AreaColors()
     public var gridColors = AreaColors()
@@ -132,8 +140,17 @@ public struct Settings: Sendable, Codable, Hashable {
     // UI — Editor
     public var editorFontName = "SF Mono"
     public var editorFontSize: Double = 13
+    public var editorFontWeight: FontWeightChoice = .regular
     /// Czcionka Object Browsera (PD-PREF-005); 0 — systemowa. Czcionka siatki: `gridFontSize` (PD-GRID-025).
     public var browserFontSize: Double = 0
+    /// Krój i grubość Object Browsera (D178); pusty — jak interfejs.
+    public var browserFontName = ""
+    public var browserFontWeight: FontWeightChoice = .regular
+    /// Czcionka interfejsu (D178): etykiety, listy, wstążka, karty, pasek stanu, okna narzędzi i Preferencji; pusty krój —
+    /// systemowa (SF Pro). Tekst pomocniczy jest o 2 pt mniejszy.
+    public var uiFontName = ""
+    public var uiFontSize: Double = 13
+    public var uiFontWeight: FontWeightChoice = .regular
     /// Katalogi startowe okien wyboru pliku (PD-PREF-006): sql, program, test, report, macro, template, project, workset.
     public var startDirectories: [String: String] = [:]
     /// Dodatkowe rozszerzenia plików otwieranych jako okno programu albo testu (PD-PREF-006).
@@ -352,6 +369,8 @@ public struct Settings: Sendable, Codable, Hashable {
         autoSelectStatement = v(.autoSelectStatement, autoSelectStatement)
         recordsPerPage = v(.recordsPerPage, recordsPerPage)
         gridFontSize = v(.gridFontSize, gridFontSize)
+        gridFontName = v(.gridFontName, gridFontName)
+        gridFontWeight = v(.gridFontWeight, gridFontWeight)
         editorColors = v(.editorColors, editorColors)
         gridColors = v(.gridColors, gridColors)
         browserColors = v(.browserColors, browserColors)
@@ -371,7 +390,13 @@ public struct Settings: Sendable, Codable, Hashable {
         timestampFormat = v(.timestampFormat, timestampFormat)
         editorFontName = v(.editorFontName, editorFontName)
         editorFontSize = v(.editorFontSize, editorFontSize)
+        editorFontWeight = v(.editorFontWeight, editorFontWeight)
         browserFontSize = v(.browserFontSize, browserFontSize)
+        browserFontName = v(.browserFontName, browserFontName)
+        browserFontWeight = v(.browserFontWeight, browserFontWeight)
+        uiFontName = v(.uiFontName, uiFontName)
+        uiFontSize = v(.uiFontSize, uiFontSize)
+        uiFontWeight = v(.uiFontWeight, uiFontWeight)
         startDirectories = v(.startDirectories, startDirectories)
         programExtensions = v(.programExtensions, programExtensions)
         testExtensions = v(.testExtensions, testExtensions)

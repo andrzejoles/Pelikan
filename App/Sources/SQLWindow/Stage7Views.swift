@@ -19,15 +19,15 @@ struct CellValuePanelView: View {
         VStack(alignment: .leading, spacing: 4) {
             if let p = presentation {
                 HStack {
-                    Text(p.column).font(.subheadline.bold()).lineLimit(1)
-                    Text(p.typeName).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                    Text(p.column).font(.uiSecondary.bold()).lineLimit(1)
+                    Text(p.typeName).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(1)
                     Spacer()
                     Picker("", selection: Binding(get: { mode.flatMap { p.modes.contains($0) ? $0 : nil } ?? p.detected }, set: { mode = $0 })) {
                         ForEach(p.modes, id: \.self) { Text(label($0)).tag($0) }
                     }
                     .labelsHidden().fixedSize()
                 }
-                if p.truncated { Text(L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")).font(.subheadline).foregroundStyle(.orange) }
+                if p.truncated { Text(L10n.tr("Wartość obcięta do pobranej długości — pełna w Large Data Editor")).font(.uiSecondary).foregroundStyle(.orange) }
                 content(p, mode.flatMap { p.modes.contains($0) ? $0 : nil } ?? p.detected)
             } else {
                 Text(L10n.tr("Zaznacz komórkę")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -89,7 +89,7 @@ struct GroupCountsView: View {
     var body: some View {
         let name = tab.grid?.columns[column].name ?? ""
         VStack(alignment: .leading, spacing: 6) {
-            Text(L10n.tr("Kolumna \(name): różnych wartości \(counts.count)")).font(.subheadline)
+            Text(L10n.tr("Kolumna \(name): różnych wartości \(counts.count)")).font(.uiSecondary)
             Table(counts, selection: $selection) {
                 TableColumn(L10n.tr("Wartość")) { g in Text(g.value).foregroundStyle(g.isNull ? .secondary : .primary) }
                 TableColumn(L10n.tr("Liczba")) { g in Text("\(g.count)").monospacedDigit() }.width(70)
@@ -97,7 +97,7 @@ struct GroupCountsView: View {
             .contextMenu(forSelectionType: GroupCount.ID.self) { _ in } primaryAction: { ids in
                 if let id = ids.first, let g = counts.first(where: { $0.id == id }) { apply(g) }
             }
-            Text(L10n.tr("Dwuklik — pokaż w siatce tylko wiersze z tą wartością.")).font(.subheadline).foregroundStyle(.secondary)
+            Text(L10n.tr("Dwuklik — pokaż w siatce tylko wiersze z tą wartością.")).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 360, minHeight: 300)
@@ -161,7 +161,7 @@ struct SnippetsView: View {
                 if let id = ids.first, let s = snippets.first(where: { $0.id == id }) { insert(s) }
             }
             Text(message.isEmpty ? L10n.tr("Dwuklik wstawia w miejscu kursora; fragment można też przeciągnąć do edytora.") : message)
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 380, minHeight: 420)
