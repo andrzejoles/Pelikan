@@ -32,13 +32,20 @@ extension Workspace {
     /// Połączenie narzędzia agenta: przypięte przez bramkę albo z aliasu w argumencie `connection`.
     public func agentConnection(_ arguments: CommandArguments) throws -> ConnectionDefinition {
         if let raw = arguments.string(Self.agentConnectionKey) {
-            guard let id = UUID(uuidString: raw), let def = connections.connection(id), def.agent.visibleToAgent else { throw CommandError.notConnected }
+            guard let id = UUID(uuidString: raw), let def = agentVisibleConnection(id) else { throw CommandError.notConnected }
             return def
         }
         return try agentConnection(alias: arguments.string("connection"))
     }
 
+    /// Połączenie z listy połączeń widoczne dla agenta. Połączenia tymczasowe (CONNECT u/hasło@baza [AS SYSDBA]
+    /// w Oknie poleceń) są poza zasięgiem agenta: nie ma ich na liście połączeń, a ich nazwa zawiera deskryptor bazy.
+    func agentVisibleConnection(_ id: UUID) -> ConnectionDefinition? {
+        connections.connections.first { $0.id == id && $0.agent.visibleToAgent }
+    }
+
     /// Połączenie widoczne dla agenta pod aliasem (PROMPT §7.3 p.1); bez aliasu — połączenie aktywnego okna albo główne.
+    /// Okno poleceń się nie liczy (jest poza zasięgiem agenta) — wtedy połączenie główne.
     public func agentConnection(alias: String?) throws -> ConnectionDefinition {
         if let alias, !alias.isEmpty {
             guard let def = connections.connections.first(where: { $0.agentAlias.caseInsensitiveCompare(alias) == .orderedSame && $0.agent.visibleToAgent }) else {
@@ -46,8 +53,8 @@ extension Workspace {
             }
             return def
         }
-        let id = activeDocument.flatMap { effectiveConnection(of: $0) } ?? sessions.mainConnectionID
-        guard let id, let def = connections.connection(id), def.agent.visibleToAgent else { throw CommandError.notConnected }
+        let id = activeDocument.flatMap { $0.kind == .command ? nil : effectiveConnection(of: $0) } ?? sessions.mainConnectionID
+        guard let id, let def = agentVisibleConnection(id) else { throw CommandError.notConnected }
         return def
     }
 
@@ -150,7 +157,7 @@ enum AgentCommands {
                                       inMenu: false, feature: "AI-TOOL-001")) { ctx in
                 let ws = ctx.workspace
                 let windows: [JSONValue] = ws.documents.map { d in
-                    let alias = ws.effectiveConnection(of: d).flatMap { ws.connections.connection($0) }.flatMap { $0.agent.visibleToAgent ? $0.agentAlias : nil }
+                    let alias = ws.effectiveConnection(of: d).flatMap { ws.agentVisibleConnection($0)?.agentAlias }
                     return .object([
                         "window": .string(Workspace.agentWindowID(d)),
                         "kind": .string(d.kind.rawValue),
@@ -160,7 +167,7 @@ enum AgentCommands {
                         "active": .bool(ws.activeDocumentID == d.id),
                     ])
                 }
-                let main = ws.sessions.mainConnectionID.flatMap { ws.connections.connection($0) }.flatMap { $0.agent.visibleToAgent ? $0.agentAlias : nil }
+                let main = ws.sessions.mainConnectionID.flatMap { ws.agentVisibleConnection($0)?.agentAlias }
                 return CommandResult(value: untrusted(.object(["windows": .array(windows), "mainConnection": main.map { .string($0) } ?? .null])))
             },
             Command(CommandDescriptor(id: "agent.editor", title: L10n.tr("Treść edytora (agent)"), category: .help,
