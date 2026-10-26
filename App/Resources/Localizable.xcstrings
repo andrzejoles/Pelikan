@@ -63029,6 +63029,34 @@
         }
       }
     },
+    "Przywracaj okna po ponownym uruchomieniu (także niezapisane)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore windows after relaunch (also unsaved)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster nach Neustart wiederherstellen (auch nicht gespeicherte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar ventanas al reiniciar (también sin guardar)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлювати вікна після перезапуску (також незбережені)"
+          }
+        }
+      }
+    },
     "Przywrócenie zapisanego workseta" : {
       "localizations" : {
         "en" : {

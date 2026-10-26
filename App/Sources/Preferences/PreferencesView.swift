@@ -180,6 +180,7 @@ struct GeneralPane: View {
                     set: { workspace.settings.testExtensions = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty } }))
             }
             Section(L10n.tr("Pliki")) {
+                Toggle(L10n.tr("Przywracaj okna po ponownym uruchomieniu (także niezapisane)"), isOn: setting(workspace, \.worksetAutosave))
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
             }
             Section(L10n.tr("Dziennik aplikacji")) {

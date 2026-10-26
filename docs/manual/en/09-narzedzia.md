@@ -153,6 +153,11 @@ from the last 30 days.
 - A **workset** remembers the open windows — also with unsaved changes and variable values — and restores them at the
   next launch (**File › Workset**: new, open, save, restore, close, compare, autosave). You save the main window layout
   with **View › Save window layout**.
+- When you quit with **workset autosave** on (the default; **Preferences › General › Files › Restore windows after
+  relaunch** or **File › Workset › Autosave workset**) Pelikan does not ask about saving — all open windows (SQL,
+  program, test, command, plan, diagram, notebook, report and connection consoles) come back on the next launch in the
+  same order and with the same active window. A window without a file comes back with its text as a window without a
+  file, marked as unsaved.
 - The **File Browser** (the **Files** tab) shows selected directories (locations with a filter and a color) with a menu:
   open as, rename, new file or directory, move to Trash, show in Finder. The filter works on name, state, Git state,
   size and date.
