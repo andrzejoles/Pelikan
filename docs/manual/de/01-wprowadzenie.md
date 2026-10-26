@@ -95,6 +95,26 @@ Pelikan hat ein Hauptfenster:
 
 Der Fenstertitel zeigt die Hauptverbindung und das aktive Workset, der Untertitel das aktuelle Fenster.
 
+## Menüband und „Aktionen suchen“
+
+Unter der Symbolleiste liegt das **Menüband** — jede Aktion mit einem Klick, ohne Suchen in Menüs und ohne Tastenkürzel
+zu merken. Die festen Registerkarten sind **Start** (neue Fenster, Dateien, Ausführung, COMMIT und ROLLBACK, Verbindung,
+Suche), **Bearbeiten**, **Objekte**, **Debuggen und Testen**, **Werkzeuge**, **Berichte** und **Ansicht**. Bei einem
+Programm-, Ergebnis-, Diagramm-, Berichts-, Notizbuch-, Plan- oder Befehlsfenster erscheint eine farbige
+**Kontextregisterkarte** (z. B. **Programm** mit Kompilierung, Einheiten, Vergleich mit der Quelle in der Datenbank und
+Tests). Das Menüband merkt sich die gewählte Registerkarte je Fensterart und kehrt beim Fensterwechsel dorthin zurück.
+
+Häufige Aktionen haben große Schaltflächen, andere kleine; seltenere stehen in den Auswahllisten der Gruppen (mit ▾).
+Der Tooltip einer Schaltfläche zeigt Beschreibung und Tastenkürzel, so lernen Sie die Kürzel nebenbei. Rechtsklick auf
+eine Schaltfläche fügt den Befehl zum Schnellzugriff hinzu. Doppelklick auf eine Registerkarte oder der Pfeil rechts
+reduziert das Menüband auf die Registerkarten; **Ansicht › Menüband** blendet es aus (auch unter **Einstellungen ›
+Allgemein › Menüband**).
+
+Das Feld **Aktionen suchen…** rechts neben den Registerkarten findet jeden Befehl — tippen Sie ein paar Buchstaben:
+„plan“, „export tabel“, ein Wort ohne polnische Sonderzeichen oder einen englischen Namen aus PL/SQL Developer, z. B.
+„beautifier“, „compile invalid“. Die Treffer zeigen, wo der Befehl im Menüband liegt, sein Tastenkürzel und ob er gerade
+verfügbar ist; Eingabe oder ein Klick führt ihn aus.
+
 ## Befehlspalette
 
 Jede Aktion in Pelikan ist ein Befehl: Er hat einen Menüeintrag, ein optionales Tastenkürzel und eine Beschreibung

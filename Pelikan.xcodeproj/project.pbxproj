@@ -19,6 +19,7 @@
 		0FE528D62537CDE69983BA9D /* Manual in Resources */ = {isa = PBXBuildFile; fileRef = AB21607B1D88320079CA9E62 /* Manual */; };
 		1184C786CD59098DDC76580C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 17B2E96D730996376F52B97F /* Sparkle */; };
 		16AAE826A71D9329061526D4 /* PreferenceSetsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81B425CCDE53DC54B6B0C37F /* PreferenceSetsPane.swift */; };
+		172FB63958AF94B331B43375 /* Ribbon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8985D14B4D443131FC094B58 /* Ribbon.swift */; };
 		177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACFCEF61F27F77596C54BC7 /* VariablesView.swift */; };
 		1A230A5F9DA16FD1C2DB9F3D /* MenuBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */; };
 		1B39EA2E3A0F87B9D7204E8C /* PelikanThin in Frameworks */ = {isa = PBXBuildFile; productRef = 20A0AADF6109FF559605C47E /* PelikanThin */; };
@@ -197,6 +198,7 @@
 		83C71AA70C203B35CEAB5D51 /* SchedulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SchedulerView.swift; sourceTree = "<group>"; };
 		8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditorView.swift; sourceTree = "<group>"; };
 		85EAEC90BFF3F92924007B12 /* PreviewProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewProvider.swift; sourceTree = "<group>"; };
+		8985D14B4D443131FC094B58 /* Ribbon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Ribbon.swift; sourceTree = "<group>"; };
 		8CCD8DCD02E96AFEB6162242 /* LocalHTMLView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHTMLView.swift; sourceTree = "<group>"; };
 		8E0F314ECD39EFED06EC70F9 /* AgentPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentPane.swift; sourceTree = "<group>"; };
 		8E6E52538571C1727BD5E642 /* TableEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableEditorView.swift; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 				0FA4BA06F9B83BAE8D577595 /* MainWindowController.swift */,
 				9E07358637BCA0D6ADB0D1D4 /* MenuBuilder.swift */,
 				26AA9CEDE79921F45A0500AB /* Observe.swift */,
+				8985D14B4D443131FC094B58 /* Ribbon.swift */,
 				285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */,
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
@@ -855,6 +858,7 @@
 				CB733FF45773E3D2D2AFF315 /* QueryBuilderView.swift in Sources */,
 				76955536F96C855C6F680CD5 /* ReportWindowViewController.swift in Sources */,
 				FD6FE28C3715D4D64F4D08BD /* ResultGridView.swift in Sources */,
+				172FB63958AF94B331B43375 /* Ribbon.swift in Sources */,
 				AB1D018F143CC4E155BE1F0E /* SQLWindowViewController.swift in Sources */,
 				C37D703661685D5BF714A4E8 /* SSHTargetManager.swift in Sources */,
 				5BC47E904B87D845583801BB /* SchedulerView.swift in Sources */,

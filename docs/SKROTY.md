@@ -508,6 +508,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Pomniejsz czcionkę edytora | `view.zoomOut` | ⌃⇧- †, ⌘- | ⌘- | Brak | PD-EDIT-021 |
 | Domyślny rozmiar czcionki edytora | `view.zoomReset` | ⌃0 †, ⌘0 | ⌘0 | Brak | PD-EDIT-021 |
 | Dostosuj pasek narzędzi… | `view.customizeToolbar` |  |  | Brak | PD-UI-006 |
+| Wstążka | `view.ribbon` |  |  | Brak | PD-UI-012 |
+| Zwiń wstążkę | `view.ribbonCollapse` |  |  | Brak | PD-UI-012 |
+| Szukaj czynności… | `view.ribbonSearch` |  |  | Brak | PD-UI-012 |
 | Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | PD-UI-006 |
 | Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | PD-UI-006 |
 | Podgląd przestrzenny | `grid.spatialPreview` |  |  | Brak | SD-DATA-001 |
