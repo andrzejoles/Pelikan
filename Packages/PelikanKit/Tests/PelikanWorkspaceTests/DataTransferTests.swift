@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 @testable import PelikanWorkspace
 import Synchronization
 import Testing
@@ -258,6 +259,31 @@ struct DataTransferOfflineTests {
             _ = try await DataTransferRunner.run(job, source: RecordingSession(columns: objCols, rows: []), target: target3)
         }
         #expect(target3.executed.withLock { $0 }.isEmpty)
+    }
+
+    @Test("R7-04, R7-18: raport, źródło przeniesienia i eksport zadania lokalnego odmawiają przed wykonaniem czegokolwiek poza zapytaniem")
+    func queryOnlyBeforeExecution() async throws {
+        let bad = ["delete from emp", "begin execute immediate 'drop table emp'; end;", "grant dba to scott",
+                   "select * from emp for update", "with function f return number is begin return 1; end;\nselect f from dual",
+                   "select 1 from dual; delete from emp"]
+        for sql in bad {
+            #expect(!StatementClassifier.isPlainQuery(sql), "\(sql)")
+            let s = RecordingSession()
+            await #expect(throws: CommandError.self) { _ = try await ReportRunner.data(sql, binds: [], maxRows: 10, format: ValueFormat(), in: s) }
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-r718-\(UUID().uuidString)")
+            await #expect(throws: CommandError.self) {
+                _ = try await LocalTaskRunner.runExport(query: sql, directory: dir, fileName: "x", format: .csv, in: s)
+            }
+            var job = DataTransferJob()
+            job.sourceQuery = sql; job.targetOwner = "T"; job.targetTable = "DST"
+            job.mappings = [TransferColumnMapping(target: "ID", source: "ID")]
+            let target = RecordingSession()
+            await #expect(throws: CommandError.self) { _ = try await DataTransferRunner.run(job, source: s, target: target) }
+            #expect(s.executed.withLock { $0 }.isEmpty && target.executed.withLock { $0 }.isEmpty, "\(sql)")
+            #expect(!FileManager.default.fileExists(atPath: dir.path))
+        }
+        #expect(StatementClassifier.isPlainQuery("with a as (select 1 x from dual) select x from a;"))
+        #expect(StatementClassifier.isPlainQuery("  select * from emp where ename = 'FOR UPDATE'"))
     }
 
     @Test("Import formatu własnego: RAW, BLOB i CLOB wiązane bez tekstu szesnastkowego (limit 4000 B)")
