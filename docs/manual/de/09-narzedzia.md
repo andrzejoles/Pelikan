@@ -164,6 +164,11 @@ Beschreibung hinzu. Der Verlauf speichert bis zu 50 Versionen der letzten 30 Tag
   stellt sie beim nächsten Start wieder her (**Datei › Workset**: neu, öffnen, speichern, wiederherstellen, schließen,
   vergleichen, automatisch speichern). Das Layout des Hauptfensters speichern Sie mit **Ansicht › Fensterlayout
   speichern**.
+- Beim Beenden mit aktivem **Autospeichern des Worksets** (Standard; **Einstellungen › Allgemein › Dateien › Fenster nach
+  Neustart wiederherstellen** oder **Datei › Workset › Workset automatisch speichern**) fragt Pelikan nicht nach dem
+  Speichern — alle offenen Fenster (SQL, Programm, Test, Befehle, Plan, Diagramm, Notizbuch, Bericht und
+  Verbindungskonsolen) kehren beim nächsten Start in derselben Reihenfolge und mit demselben aktiven Fenster zurück. Ein
+  Fenster ohne Datei kehrt mit seinem Text als Fenster ohne Datei zurück, als nicht gespeichert markiert.
 - Der **File Browser** (Tab **Dateien**) zeigt ausgewählte Verzeichnisse (Orte mit Filter und Farbe) mit einem Menü:
   öffnen als, umbenennen, neue Datei oder neues Verzeichnis, in den Papierkorb legen, im Finder zeigen. Der Filter
   arbeitet nach Name, Status, Git-Status, Größe und Datum.

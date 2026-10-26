@@ -164,6 +164,11 @@ una descripción. El historial guarda hasta 50 versiones de los últimos 30 día
   variables, y las restaura en el siguiente inicio (**Archivo › Workset**: nuevo, abrir, guardar, restaurar, cerrar,
   comparar, guardado automático). La disposición de la ventana principal se guarda con **Vista › Guardar disposición de
   la ventana**.
+- Al salir con el **guardado automático del workset** activado (predeterminado; **Preferencias › General › Archivos ›
+  Restaurar ventanas al reiniciar** o **Archivo › Workset › Guardar automáticamente el workset**) Pelikan no pregunta si
+  guardar: todas las ventanas abiertas (SQL, programa, prueba, comandos, plan, diagrama, cuaderno, informe y consolas de
+  conexión) vuelven en el siguiente inicio en el mismo orden y con la misma ventana activa. Una ventana sin archivo
+  vuelve con su texto como ventana sin archivo, marcada como no guardada.
 - El **Explorador de archivos** (pestaña **Archivos**) muestra los directorios elegidos (ubicaciones con filtro y color)
   con un menú: abrir como, cambiar nombre, archivo o directorio nuevo, mover a la Papelera, mostrar en el Finder. El
   filtro funciona por nombre, estado, estado de Git, tamaño y fecha.

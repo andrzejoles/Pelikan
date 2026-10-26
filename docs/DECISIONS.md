@@ -1543,3 +1543,17 @@ Właściciel woli `%nazwa%` zamiast `nazwa%`. Tekst filtra bez `%` szuka teraz w
 wzorzec z `%` działa jak wpisany (`EMP%` — tylko początek). Dawne zachowanie (dopisywanie `%` na końcu) zostaje jako
 **Preferencje › Object Browser › Filtr nazw bez %** (`browserFilterContains`, domyślnie „zawiera”). LIKE z `%` na początku
 nie korzysta z indeksu słownika; zapytanie i tak jest zawężone do właściciela i typu obiektu.
+
+### D176 · 2026-10-26 — Okna przywracane po ponownym uruchomieniu, także niezapisane i bez pliku
+
+Właściciel: okna z tekstem bez pliku mają po zamknięciu i ponownym otwarciu aplikacji wrócić w stanie sprzed
+zamknięcia (nadal bez pliku), a aplikacja ma się otwierać z tymi samymi oknami. Mechanizm już był — autozapis workseta
+przy zakończeniu aplikacji (domyślnie włączony, UG 15) zapisuje okna z niezapisanym tekstem bez pytania o zapis i
+przywraca je przy starcie — ale pomijał okna planu, diagramu, notatnika i raportu, a konsole połączeń wracały jako
+zwykłe okna SQL. Teraz workset zapisuje wszystkie rodzaje okien (diagram, notatnik i raport — model JSON, gdy okno nie
+ma pliku albo ma zmiany; plan — zapytanie; okno testu — także obserwowane wyrażenia), konsola wraca jako konsola
+(tekst z magazynu konsol), a aktywne okno jest liczone ze wszystkich. Okno bez pliku wraca bez pliku i z oznaczeniem
+zmiany, więc ⌘S pyta o nazwę, a zamknięcie okna — o zapis. Przełącznik doszedł do **Preferencje › Ogólne › Pliki**
+(wcześniej tylko **Plik › Workset › Autozapis workseta**). Zamknięcie pojedynczego okna nadal pyta o zapis jak dotąd.
+Sprawdzone na aplikacji w tle: okna otwarte skryptem, zakończenie zwykłym „Zakończ” (`NSRunningApplication.terminate`),
+ponowne uruchomienie — te same cztery okna, z tekstem i tym samym aktywnym.

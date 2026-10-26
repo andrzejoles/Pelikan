@@ -16,6 +16,13 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var testVariables: [TestVariable]?
     /// Wartości zmiennych `&`/`:` zapamiętane w oknie (PD-VAR-008, jak `.pfi` wzorca).
     public var variables: [String: WorksetVariable]?
+    /// Treść okien diagramu, notatnika i raportu bez pliku albo ze zmianami (D176).
+    public var diagram: Diagram?
+    public var notebook: Notebook?
+    public var report: ReportDefinition?
+    public var testWatches: [String]?
+    /// Konsola połączenia (tekst konsoli trzyma `QueryConsoles`).
+    public var consoleConnectionID: UUID?
 }
 
 /// Wartość zmiennej okna w worksecie: tekst albo lista; brak obu — NULL.
@@ -172,17 +179,28 @@ public final class WorksetStore {
 extension Workspace {
     /// Stan okien jako workset (bieżąca nazwa).
     public func worksetSnapshot(name: String? = nil) -> Workset {
-        let docs: [WorksetDocument] = documents.compactMap { d in
-            // Okna planu, raportów, diagramów i notatników mają własne formaty (Etapy 6–7) — pomijane.
-            guard [.sql, .program, .test, .command].contains(d.kind) else { return nil }
+        // Wszystkie rodzaje okien (D176): okno bez pliku albo ze zmianami — z treścią (tekst, diagram, notatnik,
+        // raport); okno z niezmienionym plikiem — sam plik, czytany ponownie przy otwarciu.
+        let docs: [WorksetDocument] = documents.map { d in
             let keepText = d.fileURL == nil || d.isModified
-            return WorksetDocument(kind: d.kind, title: d.customTitle, filePath: d.fileURL?.path, text: keepText ? d.text : nil,
-                                   modified: d.isModified, selectionStart: d.selectedRange.lowerBound, selectionEnd: d.selectedRange.upperBound,
-                                   connectionID: d.connectionPinned ? d.connectionID : nil,
-                                   testVariables: d.kind == .test && keepText ? d.testVariables : nil,
-                                   variables: d.variableValues.isEmpty ? nil : d.variableValues.mapValues(WorksetVariable.init))
+            var e = WorksetDocument(kind: d.kind, title: d.customTitle, filePath: d.fileURL?.path, text: keepText ? d.text : nil,
+                                    modified: d.isModified, selectionStart: d.selectedRange.lowerBound, selectionEnd: d.selectedRange.upperBound,
+                                    connectionID: d.connectionPinned ? d.connectionID : nil,
+                                    testVariables: d.kind == .test && keepText ? d.testVariables : nil,
+                                    variables: d.variableValues.isEmpty ? nil : d.variableValues.mapValues(WorksetVariable.init))
+            if keepText {
+                if d.kind == .diagram { e.diagram = d.diagram }
+                if d.kind == .notebook { e.notebook = d.notebook }
+                if d.kind == .report { e.report = d.report }
+                if d.kind == .test, !d.testWatches.isEmpty { e.testWatches = d.testWatches }
+            }
+            if let c = d.consoleConnectionID {
+                e.consoleConnectionID = c
+                e.text = nil
+            }
+            return e
         }
-        let active = documents.filter { [.sql, .program, .test, .command].contains($0.kind) }.firstIndex { $0.id == activeDocumentID }
+        let active = documents.firstIndex { $0.id == activeDocumentID }
         return Workset(name: name ?? worksets.current, documents: docs, activeIndex: active)
     }
 
@@ -202,9 +220,17 @@ extension Workspace {
         for e in w.documents {
             let url = e.filePath.map { URL(fileURLWithPath: $0) }
             let doc: Document
-            if let text = e.text {
+            if let c = e.consoleConnectionID {
+                guard connections.connection(c) != nil else { continue }
+                opened.append(openConsole(connection: c))
+                continue
+            } else if let text = e.text {
                 doc = newDocument(e.kind, text: text, fileURL: url)
                 if let v = e.testVariables { doc.testVariables = v }
+                if let w = e.testWatches { doc.testWatches = w }
+                if let x = e.diagram { doc.diagram = x }
+                if let x = e.notebook { doc.notebook = x }
+                if let x = e.report { doc.report = x }
                 doc.isModified = e.modified
             } else if let url, FileManager.default.fileExists(atPath: url.path), let d = try? openFile(url, as: e.kind) {
                 doc = d

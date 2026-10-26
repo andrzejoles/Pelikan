@@ -26,6 +26,7 @@ enum PreferenceIndex {
         ("GeneralPane", "Dodatkowe rozszerzenia programów"),
         ("GeneralPane", "Dodatkowe rozszerzenia testów"),
         ("GeneralPane", "Pliki"),
+        ("GeneralPane", "Przywracaj okna po ponownym uruchomieniu (także niezapisane)"),
         ("GeneralPane", "Pytaj o zapis zmian przy zamykaniu nowych okien"),
         ("GeneralPane", "Dziennik aplikacji"),
         ("GeneralPane", "Zapisuj w dzienniku"),
