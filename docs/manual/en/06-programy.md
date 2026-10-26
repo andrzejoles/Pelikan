@@ -104,6 +104,15 @@ can run automatically after opening a source from the database, before compilati
 the `-- NoFormat Start` and `-- NoFormat End` comments stays unchanged. Formatting never changes the meaning of the
 code.
 
+The **Preferences › Formatter** tab has the groups **Layout**, **Lists and commas**, **SQL clauses and conditions**
+(clause keywords left, right or on their own line; AND/OR at line start or end; the JOIN … ON condition; THEN on a new
+line; multi-line CASE), **Column alignment** (declarations, parameters with mode and type, named arguments `=>`,
+assignments `:=`, aliases in SELECT and FROM, `=` in UPDATE … SET, trailing comments), **Spacing** and **Letter case** —
+separately for keywords, identifiers, data types, built-in functions and Oracle packages. On the right there is a
+preview: a sample package that shows every option, with the lines changed by the last change highlighted, and above it
+an example of the option under the pointer or the one changed last — **Now** and **After changing this option**. A
+region without formatting can also be marked with the `-- @formatter:off` and `-- @formatter:on` comments.
+
 ### Templates, snippets and macros
 
 - **Templates** (the **Templates** tab in the left column or **View › Template Window**) insert ready-made fragments:

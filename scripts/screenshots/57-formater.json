@@ -1,0 +1,1 @@
+[{"command": "debug.preferences", "args": {"pane": "BeautifierPane"}, "delay": 2}, {"command": "debug.beautifierVariant", "args": {"option": "alignDeclarations"}, "delay": 2}]

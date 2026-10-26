@@ -5,9 +5,9 @@ import PelikanLog
 import PelikanODPI
 import PelikanProC
 import PelikanRemote
+import PelikanSQL
 import PelikanThin
 import Sparkle
-import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
 import WebKit
@@ -1216,6 +1216,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 if s.command == "debug.openFile", case .string(let path)? = s.args?["path"] {
                     do { _ = try workspace.openFile(URL(fileURLWithPath: path)); log("ok debug.openFile") }
                     catch { log("debug.openFile: \(error.localizedDescription)") }
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
+                // Zmiana opcji formatera na inną wartość (przykład z BeautifierExamples) — podgląd zmian w Preferencjach.
+                if s.command == "debug.beautifierVariant", case .string(let id)? = s.args?["option"], let e = BeautifierExamples.example(id) {
+                    workspace.settings.beautifier = e.variant(workspace.settings.beautifier)
+                    log("ok debug.beautifierVariant \(id)")
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }

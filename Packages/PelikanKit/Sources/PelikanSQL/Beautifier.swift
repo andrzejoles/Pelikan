@@ -9,6 +9,13 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         /// Elementy w jednej linii, zawijane przy prawym marginesie.
         case fit
     }
+    /// Układ klauzul SQL (FROM, WHERE…): słowa do lewej z elementami w kolumnie, słowa do prawej („rzeka”: słowa
+    /// kończą się w kolumnie SELECT) albo słowo w osobnej linii i elementy wcięte pod nim.
+    public enum ClauseLayout: String, Sendable, Codable, Hashable, CaseIterable { case leftAligned, rightAligned, ownLine }
+    /// AND/OR warunków na początku nowej linii albo na końcu poprzedniej.
+    public enum OperatorPosition: String, Sendable, Codable, Hashable, CaseIterable { case lineStart, lineEnd }
+    /// Wyrażenie CASE w jednej linii albo WHEN/ELSE/END w osobnych liniach.
+    public enum CaseLayout: String, Sendable, Codable, Hashable, CaseIterable { case inline, multiline }
 
     public var indent = 2
     public var useTabs = false
@@ -25,6 +32,48 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
     public var insertLists: ListLayout = .fit
     /// Zachowanie pojedynczych pustych linii między instrukcjami (więcej pustych linii — jedna).
     public var keepBlankLines = true
+    /// Najwięcej pustych linii z rzędu zachowanych ze źródła (przy `keepBlankLines`).
+    public var maxBlankLines = 1
+    /// Pusta linia przed każdym podprogramem w pakiecie i sekcji deklaracji.
+    public var blankLineBetweenSubprograms = false
+
+    // Klauzule i łamanie linii
+    public var clauseLayout: ClauseLayout = .leftAligned
+    public var andOrPosition: OperatorPosition = .lineStart
+    /// JOIN … ON: warunek złączenia w nowej linii (wcięty) albo w linii JOIN.
+    public var joinConditionOnNewLine = true
+    /// IF/ELSIF … THEN: THEN w osobnej linii.
+    public var thenOnNewLine = false
+    public var caseLayout: CaseLayout = .inline
+
+    // Odstępy
+    /// Spacje wokół operatorów (=, <>, +, ||…); `:=` i `=>` zawsze ze spacjami.
+    public var spaceAroundOperators = true
+    public var spaceAfterComma = true
+    /// Spacja po „(” i przed „)”.
+    public var spaceInsideParentheses = false
+
+    // Wyrównanie (UG 29.2 i formatery SQL Developer, Toad, Trivadis)
+    /// Deklaracje zmiennych i stałych: typy i `:=`/DEFAULT w kolumnach.
+    public var alignDeclarations = false
+    /// Parametry podprogramów w osobnych liniach: tryb (IN/OUT), typ i DEFAULT w kolumnach.
+    public var alignParameters = false
+    /// Parametry nazwane wywołań w osobnych liniach: `=>` w kolumnie.
+    public var alignNamedArguments = false
+    /// Kolejne przypisania: `:=` w kolumnie.
+    public var alignAssignments = false
+    /// Aliasy kolumn i tabel w listach SELECT i FROM w osobnych liniach.
+    public var alignAliases = false
+    /// UPDATE … SET w osobnych liniach: `=` w kolumnie.
+    public var alignSetValues = false
+    /// Komentarze na końcu kolejnych linii w jednej kolumnie.
+    public var alignTrailingComments = false
+
+    // Wielkość liter grup słów (nil — jak słowa kluczowe dla typów, jak identyfikatory dla funkcji i pakietów)
+    public var dataTypeCase: WordCase?
+    public var functionCase: WordCase?
+    public var packageCase: WordCase?
+
     /// Wyrazy o zadanej pisowni (Special Case, np. `DBMS_Output`), niezależnie od reguł wielkości liter.
     public var specialCase: [String] = []
     /// Automatyczne formatowanie (UG 29.4): po wczytaniu z bazy, przed kompilacją, przed zapisem.
@@ -45,6 +94,17 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         beforeSave = v(.beforeSave, beforeSave)
         parameterDeclarations = v(.parameterDeclarations, parameterDeclarations); callParameters = v(.callParameters, callParameters)
         insertLists = v(.insertLists, insertLists)
+        maxBlankLines = v(.maxBlankLines, maxBlankLines); blankLineBetweenSubprograms = v(.blankLineBetweenSubprograms, blankLineBetweenSubprograms)
+        clauseLayout = v(.clauseLayout, clauseLayout); andOrPosition = v(.andOrPosition, andOrPosition)
+        joinConditionOnNewLine = v(.joinConditionOnNewLine, joinConditionOnNewLine); thenOnNewLine = v(.thenOnNewLine, thenOnNewLine)
+        caseLayout = v(.caseLayout, caseLayout)
+        spaceAroundOperators = v(.spaceAroundOperators, spaceAroundOperators); spaceAfterComma = v(.spaceAfterComma, spaceAfterComma)
+        spaceInsideParentheses = v(.spaceInsideParentheses, spaceInsideParentheses)
+        alignDeclarations = v(.alignDeclarations, alignDeclarations); alignParameters = v(.alignParameters, alignParameters)
+        alignNamedArguments = v(.alignNamedArguments, alignNamedArguments); alignAssignments = v(.alignAssignments, alignAssignments)
+        alignAliases = v(.alignAliases, alignAliases); alignSetValues = v(.alignSetValues, alignSetValues)
+        alignTrailingComments = v(.alignTrailingComments, alignTrailingComments)
+        dataTypeCase = v(.dataTypeCase, dataTypeCase); functionCase = v(.functionCase, functionCase); packageCase = v(.packageCase, packageCase)
     }
 }
 
@@ -197,6 +257,8 @@ struct Formatter {
     let statements: [ScriptStatement]
     /// Początek polecenia SQL*Plus → koniec (UTF-16).
     let sqlplusEnds: [Int: Int]
+    /// Linie wyniku skopiowane bez zmian (SQL*Plus, Java/JavaScript, regiony bez formatowania) — bez wyrównywania.
+    var rawLines = Set<Int>()
     /// Indeks tokenu `{` otwierającego kod JavaScript w MLE LANGUAGE JAVASCRIPT {{ … }} (kopiowany bez zmian).
     var rawFrom: Int?
 
@@ -241,11 +303,12 @@ struct Formatter {
             let lineStart = source.lineRange(for: NSRange(location: start, length: 0)).location
             let prefix = source.substring(with: NSRange(location: lineStart, length: start - lineStart))
             if prefix.allSatisfy({ $0 == " " || $0 == "\t" }) { from = lineStart }
-            if options.keepBlankLines, toks[i].newlines >= 2 { blankLine() }
+            sourceBlankLines(toks[i])
         }
         var raw = source.substring(with: NSRange(location: from, length: max(0, end - from))).components(separatedBy: "\n")
-        if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: true) }
+        if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: true); rawLines.insert(lines.count) }
         flush()
+        rawLines.formUnion(lines.count..<(lines.count + raw.count))
         lines.append(contentsOf: raw)
         pendingBreak = indentColumns(level)
         statementStart = true
@@ -253,6 +316,13 @@ struct Formatter {
         while j < toks.count, toks[j].start < end { j += 1 }
         if j > 0, toks[j - 1].end > end { toks = Array(toks[..<j]) + Self.tokens(source, from: end) }
         i = j - 1
+    }
+
+    /// Znaczniki regionu bez formatowania: `-- NoFormat Start/End` (PL/SQL Developer) i `-- @formatter:off/on`.
+    static func isFormatMarker(_ t: Tok, start: Bool) -> Bool {
+        guard t.kind == .lineComment else { return false }
+        let m = t.upper.replacingOccurrences(of: " ", with: "")
+        return start ? m.hasPrefix("--NOFORMATSTART") || m.hasPrefix("--@FORMATTER:OFF") : m.hasPrefix("--NOFORMATEND") || m.hasPrefix("--@FORMATTER:ON")
     }
 
     // MARK: Emisja
@@ -291,6 +361,16 @@ struct Formatter {
         if let last = lines.last, !last.isEmpty { lines.append("") }
     }
 
+    /// Puste linie ze źródła przed tokenem: najwyżej `maxBlankLines` z rzędu.
+    mutating func sourceBlankLines(_ t: Tok) {
+        guard options.keepBlankLines, t.newlines >= 2 else { return }
+        flush()
+        guard !lines.isEmpty else { return }
+        let wanted = min(t.newlines - 1, max(1, options.maxBlankLines))
+        let have = lines.reversed().prefix { $0.isEmpty }.count
+        if have < wanted { lines.append(contentsOf: Array(repeating: "", count: wanted - have)) }
+    }
+
     mutating func put(_ s: String, space: Bool) {
         if let p = pendingBreak {
             lineBreak(p)
@@ -303,7 +383,36 @@ struct Formatter {
     func cased(_ t: Tok) -> String {
         guard t.isWord else { return t.text }
         if let special = options.specialCase.first(where: { $0.uppercased() == t.upper }) { return special }
-        let rule = t.kind == .keyword ? options.keywordCase : options.identifierCase
+        return Self.apply(rule(for: t), to: t)
+    }
+
+    /// Reguła wielkości liter słowa: funkcja wbudowana (przed „(”), pakiet z bazą (przed „.”), typ danych, słowo
+    /// kluczowe, identyfikator.
+    func rule(for t: Tok) -> BeautifierOptions.WordCase {
+        let base = t.kind == .keyword ? options.keywordCase : options.identifierCase
+        let next = token(after: t)
+        if let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
+        if let c = options.packageCase, next?.kind == .dot, SQLWords.isPackage(t.upper) { return c }
+        if SQLWords.dataTypes.contains(t.upper), next?.kind != .dot, next?.kind != .leftParen || Self.sizedTypes.contains(t.upper) {
+            return options.dataTypeCase ?? options.keywordCase
+        }
+        return base
+    }
+
+    static let sizedTypes: Set<String> = ["NUMBER", "VARCHAR2", "VARCHAR", "CHAR", "NCHAR", "NVARCHAR2", "RAW", "TIMESTAMP", "FLOAT",
+                                          "DECIMAL", "NUMERIC", "VECTOR", "INTERVAL", "UROWID"]
+
+    /// Następny token po `t` (wyszukiwanie binarne — tokeny są uporządkowane).
+    func token(after t: Tok) -> Tok? {
+        var lo = 0, hi = toks.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if toks[mid].start < t.end { lo = mid + 1 } else { hi = mid }
+        }
+        return lo < toks.count ? toks[lo] : nil
+    }
+
+    static func apply(_ rule: BeautifierOptions.WordCase, to t: Tok) -> String {
         switch rule {
         case .unchanged: return t.text
         case .upper: return t.upper
@@ -325,8 +434,10 @@ struct Formatter {
 
     func needsSpace(_ prev: Tok?, _ t: Tok) -> Bool {
         guard let p = prev else { return false }
-        if [.comma, .semicolon, .rightParen, .dot].contains(t.kind) { return false }
-        if p.kind == .leftParen || p.kind == .dot { return false }
+        if t.kind == .rightParen { return options.spaceInsideParentheses && p.kind != .leftParen }
+        if [.comma, .semicolon, .dot].contains(t.kind) { return false }
+        if p.kind == .leftParen { return options.spaceInsideParentheses }
+        if p.kind == .dot { return false }
         if t.text == "%" || p.text == "%" || t.text == "@" || p.text == "@" { return false }
         if t.text == ".." || p.text == ".." { return false }
         if t.kind == .leftParen {
@@ -338,7 +449,24 @@ struct Formatter {
         if let pp = prevPrev(), ["-", "+"].contains(p.text), [.operator, .leftParen, .comma].contains(pp.kind) || (pp.kind == .keyword && Self.spacedBeforeParen.contains(pp.upper)) {
             return false
         }
+        if p.kind == .comma { return options.spaceAfterComma }
+        if !options.spaceAroundOperators, Self.isPlainOperator(t) || Self.isPlainOperator(p),
+           p.kind != .keyword, t.kind != .keyword, Self.joinable(p, t) {
+            return false
+        }
         return true
+    }
+
+    /// Operator, wokół którego opcja „spacje wokół operatorów” działa (`:=` i `=>` zawsze ze spacjami).
+    static func isPlainOperator(_ t: Tok) -> Bool {
+        (t.kind == .operator || t.kind == .slash) && t.text != ":=" && t.text != "=>"
+    }
+
+    /// Dwa tokeny bez spacji między nimi dają te same tokeny (nie `--`, `/*`, `=>`, `<=`…).
+    static func joinable(_ a: Tok, _ b: Tok) -> Bool {
+        let lexer = Lexer(a.text + b.text)
+        let parts = lexer.tokenize().filter { $0.kind != .whitespace && $0.kind != .newline }.map(lexer.string)
+        return parts == [a.text, b.text]
     }
 
     func prevPrev() -> Tok? { i >= 2 ? toks[i - 2] : nil }
@@ -351,6 +479,7 @@ struct Formatter {
         }
         flush()
         while lines.last == "" { lines.removeLast() }
+        lines = BeautifierAligner(lines: lines, raw: rawLines, options: options).aligned()
         return lines.joined(separator: "\n") + ((source as String).hasSuffix("\n") ? "\n" : "")
     }
 
@@ -363,7 +492,7 @@ struct Formatter {
     /// Początek instrukcji w bloku: nowa linia na bieżącym poziomie (z pustą linią, jeśli była w źródle).
     mutating func beginStatementLine(_ t: Tok) {
         let col = pendingBreak ?? indentColumns(level)
-        if options.keepBlankLines, t.newlines >= 2, !lines.isEmpty || !cur.isEmpty { blankLine() }
+        if !lines.isEmpty || !cur.isEmpty { sourceBlankLines(t) }
         lineBreak(col)
     }
 
@@ -392,17 +521,19 @@ struct Formatter {
         }
 
         // Regiony bez formatowania: kopiowane bez zmian.
-        if t.kind == .lineComment, t.upper.replacingOccurrences(of: " ", with: "").hasPrefix("--NOFORMATSTART") {
+        if Self.isFormatMarker(t, start: true) {
             // Komentarz za kodem w tej samej linii: kod już jest w wyniku — kopia od komentarza, w bieżącej linii.
             let sameLine = t.newlines == 0 && !(lines.isEmpty && cur.isEmpty)
-            if options.keepBlankLines, t.newlines >= 2 { blankLine() }
+            sourceBlankLines(t)
             var j = i
-            while j < toks.count, !(toks[j].kind == .lineComment && toks[j].upper.replacingOccurrences(of: " ", with: "").hasPrefix("--NOFORMATEND")) { j += 1 }
+            while j < toks.count, !Self.isFormatMarker(toks[j], start: false) { j += 1 }
             let end = j < toks.count ? toks[j].end : source.length
             let from = sameLine ? t.start : source.lineRange(for: NSRange(location: t.start, length: 0)).location
             var raw = source.substring(with: NSRange(location: from, length: end - from)).components(separatedBy: "\n")
             if sameLine { cur += (cur.isEmpty ? "" : " ") + raw.removeFirst() }
+            if sameLine { rawLines.insert(lines.count) }
             flush()
+            rawLines.formUnion(lines.count..<(lines.count + raw.count))
             lines.append(contentsOf: raw)
             i = j
             pendingBreak = indentColumns(level)
@@ -414,7 +545,7 @@ struct Formatter {
         if t.kind == .lineComment || t.kind == .blockComment {
             let text = t.kind == .lineComment ? t.text.trimmingCharacters(in: .whitespaces) : t.text
             if t.newlines > 0 || cur.isEmpty && pendingBreak != nil {
-                if options.keepBlankLines, t.newlines >= 2 { blankLine() }
+                sourceBlankLines(t)
                 let col = pendingBreak ?? (statementStart ? indentColumns(level) : curIndentColumns)
                 lineBreak(col)
                 pendingBreak = nil
@@ -477,6 +608,12 @@ struct Formatter {
             alignAfterKeyword()
             return
         }
+        if w == "CASE" {
+            if statementStart { beginStatementLine(t); statementStart = false }
+            openCase(t)
+            return
+        }
+        if let f = frames.last, f.kind == .caseExpr, caseBranch(t, w, f) { return }
         if inSQLAtTop, let f = frames.last, sqlClause(t, w, f) { return }
         if t.kind == .comma {
             comma()
@@ -494,6 +631,15 @@ struct Formatter {
         guard let f = frames.last, f.kind == .sql else { return }
         // INSERT INTO / MERGE INTO — bez wyrównania przed INTO.
         if peek()?.upper == "INTO", ["INSERT", "MERGE"].contains(toks[i].upper) { return }
+        if options.clauseLayout == .ownLine {
+            // Słowo klauzuli w osobnej linii, elementy wcięte pod nim.
+            let col = f.column + options.indent
+            frames[frames.count - 1].itemColumn = col
+            let next = peek()
+            if next?.kind == .semicolon || next?.kind == .rightParen || next == nil || next?.kind == .lineComment { return }
+            pendingBreak = col
+            return
+        }
         let target = f.column + 7
         frames[frames.count - 1].itemColumn = max(target, column + 1)
         let next = peek()
@@ -504,12 +650,22 @@ struct Formatter {
     func continuationColumn() -> Int {
         if let f = frames.last {
             switch f.kind {
-            case .sql: return max(f.column + 7, f.itemColumn)
+            case .sql: return listColumn(f)
             case .paren: return f.wrap || f.subquery ? f.column : curIndentColumns + options.indent
             default: break
             }
         }
         return indentColumns(level) + options.indent
+    }
+
+    /// Kolumna elementów listy klauzuli (kolejne elementy po przecinku, warunki).
+    func listColumn(_ f: Frame) -> Int {
+        options.clauseLayout == .ownLine ? f.itemColumn : max(f.column + 7, f.itemColumn)
+    }
+
+    /// Kolumna słowa klauzuli: do lewej w kolumnie instrukcji, do prawej — kończy się w kolumnie końca SELECT.
+    func clauseColumn(_ f: Frame, _ keyword: String) -> Int {
+        options.clauseLayout == .rightAligned ? f.column + max(0, 6 - keyword.count) : f.column
     }
 
     static let clauseStarts: [[String]] = [
@@ -526,7 +682,7 @@ struct Formatter {
         if w == "BETWEEN" { betweenPending = true }
         // Główne zapytanie po definicjach WITH: SELECT w nowej linii w kolumnie instrukcji.
         if w == "SELECT", prev?.kind == .rightParen || prev?.kind == .comma && f.clause == "WITH" {
-            lineBreak(f.column)
+            lineBreak(clauseColumn(f, w))
             put(cased(t), space: false)
             frames[frames.count - 1].clause = "SELECT"
             alignAfterKeyword()
@@ -535,15 +691,29 @@ struct Formatter {
         if ["AND", "OR"].contains(w) {
             if w == "AND", betweenPending { betweenPending = false; return false }
             guard ["WHERE", "HAVING", "ON", "WHEN", "START", "CONNECT"].contains(f.clause) || f.clause.hasSuffix("JOIN") else { return false }
-            lineBreak(f.column)
+            if options.andOrPosition == .lineEnd {
+                put(cased(t), space: true)
+                pendingBreak = listColumn(f)
+                return true
+            }
+            if options.clauseLayout == .ownLine {
+                lineBreak(f.column + options.indent)
+                put(cased(t), space: false)
+                return true
+            }
+            lineBreak(clauseColumn(f, w))
             put(cased(t), space: false)
             alignAfterKeyword()
             return true
         }
         if w == "ON", f.clause.hasSuffix("JOIN") {
-            lineBreak(f.column + options.indent)
-            put(cased(t), space: false)
             frames[frames.count - 1].clause = "ON"
+            guard options.joinConditionOnNewLine else {
+                put(cased(t), space: true)
+                return true
+            }
+            lineBreak(options.clauseLayout == .rightAligned ? clauseColumn(f, w) : f.column + options.indent)
+            put(cased(t), space: false)
             return true
         }
         // INTO po INSERT/MERGE zostaje w linii instrukcji.
@@ -558,9 +728,9 @@ struct Formatter {
             var ok = true
             for (k, x) in words.enumerated() where peek(k)?.upper != x { ok = false; break }
             guard ok else { continue }
-            lineBreak(f.column)
             var text = cased(t)
             for k in 1..<words.count { text += " " + cased(toks[i + k]) }
+            lineBreak(clauseColumn(f, text))
             put(text, space: false)
             i += words.count - 1
             frames[frames.count - 1].clause = words.contains("JOIN") ? "JOIN" : (w == "WHEN" ? "WHEN" : w == "INTO" && words.count == 1 ? "INTO" : words.last!)
@@ -571,6 +741,34 @@ struct Formatter {
         return false
     }
 
+    /// Wyrażenie CASE: ramka z kolumną słowa CASE (WHEN/ELSE/END w osobnych liniach przy układzie wieloliniowym).
+    mutating func openCase(_ t: Tok) {
+        let text = cased(t)
+        put(text, space: needsSpace(prev, t))
+        frames.append(Frame(kind: .caseExpr, level: level, column: column - text.count))
+    }
+
+    mutating func caseBranch(_ t: Tok, _ w: String, _ f: Frame) -> Bool {
+        switch w {
+        case "END":
+            frames.removeLast()
+            if options.caseLayout == .multiline {
+                lineBreak(f.column)
+                put(cased(t), space: false)
+            } else {
+                put(cased(t), space: needsSpace(prev, t))
+            }
+            return true
+        case "WHEN", "ELSE":
+            guard options.caseLayout == .multiline else { return false }
+            lineBreak(f.column + options.indent)
+            put(cased(t), space: false)
+            return true
+        default:
+            return false
+        }
+    }
+
     mutating func comma() {
         put(",", space: false)
         guard let f = frames.last else { return }
@@ -579,7 +777,7 @@ struct Formatter {
             let listClauses: Set<String> = ["SELECT", "FROM", "BY", "SET", "INTO", "RETURNING", "VALUES", "WITH"]
             guard listClauses.contains(f.clause) else { return }
             if options.listLayout == .onePerLine || column > options.rightMargin {
-                breakForList(max(f.column + 7, f.itemColumn))
+                breakForList(listColumn(f))
             }
         case .paren where f.wrap:
             breakForList(f.column)
@@ -628,14 +826,15 @@ struct Formatter {
             }
             wrap = hasComma && (layout == .onePerLine || column + length > options.rightMargin)
         }
-        frames.append(Frame(kind: .paren, level: level, column: column, clause: "", wrap: wrap, subquery: sub))
+        let inner = options.spaceInsideParentheses && next?.kind != .rightParen ? 1 : 0
+        frames.append(Frame(kind: .paren, level: level, column: column + inner, clause: "", wrap: wrap, subquery: sub))
     }
 
     mutating func closeParen(_ t: Tok) {
         // Zamknięcie instrukcji SQL podzapytania i samego nawiasu.
         while let f = frames.last, f.kind == .sql { frames.removeLast() }
         if let f = frames.last, f.kind == .paren { frames.removeLast() }
-        put(")", space: false)
+        put(")", space: needsSpace(prev, t))
     }
 
     mutating func endStatement() {
@@ -674,6 +873,14 @@ struct Formatter {
         }
         // Podprogram w sekcji deklaracji.
         if statementStart, ["PROCEDURE", "FUNCTION"].contains(w) || (["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"].contains(w) && unitKind == "TYPE") {
+            if options.blankLineBetweenSubprograms, frames.last?.kind == .declare {
+                flush()
+                if let last = lines.last?.trimmingCharacters(in: .whitespaces).uppercased(), !last.isEmpty,
+                   !(last == "IS" || last == "AS" || last.hasSuffix(" IS") || last.hasSuffix(" AS") || last == "DECLARE"),
+                   !last.hasPrefix("--"), !last.hasSuffix("*/") {
+                    lines.append("")
+                }
+            }
             beginStatementLine(t)
             headerLevel = level
             headerKind = w
@@ -725,7 +932,7 @@ struct Formatter {
         case "BEGIN":
             if let f = frames.last, f.kind == .declare {
                 frames[frames.count - 1].kind = .block
-                if options.keepBlankLines, t.newlines >= 2 { blankLine() }
+                sourceBlankLines(t)
                 lineBreak(indentColumns(f.level))
             } else {
                 beginStatementLine(t)
@@ -744,11 +951,7 @@ struct Formatter {
             pendingBreak = indentColumns(f.level + 1)
             return true
         case "END":
-            if let f = frames.last, f.kind == .caseExpr {
-                frames.removeLast()
-                put(cased(t), space: needsSpace(prev, t))
-                return true
-            }
+            if let f = frames.last, f.kind == .caseExpr { return caseBranch(t, w, f) }
             let next = peek()?.upper ?? ""
             if ["IF", "LOOP", "CASE"].contains(next) {
                 if let idx = frames.lastIndex(where: { $0.kind == (next == "IF" ? .ifStmt : next == "LOOP" ? .loop : .caseStmt) }) {
@@ -795,7 +998,12 @@ struct Formatter {
             return false
         case "THEN":
             if let f = frames.last, [.ifStmt, .caseStmt, .exception].contains(f.kind) {
-                put(cased(t), space: true)
+                if options.thenOnNewLine, f.kind == .ifStmt {
+                    lineBreak(indentColumns(f.level))
+                    put(cased(t), space: false)
+                } else {
+                    put(cased(t), space: true)
+                }
                 statementStart = true
                 pendingBreak = indentColumns(f.kind == .ifStmt ? f.level + 1 : f.level + 2)
                 return true
@@ -816,9 +1024,8 @@ struct Formatter {
             statementStart = false
             return true
         case "CASE":
-            // Wyrażenie CASE w instrukcji (x := CASE … END): w linii, ale z ramką — jego END nie zamyka bloku.
-            frames.append(Frame(kind: .caseExpr, level: level))
-            put(cased(t), space: needsSpace(prev, t))
+            // Wyrażenie CASE w instrukcji (x := CASE … END): z ramką — jego END nie zamyka bloku.
+            openCase(t)
             return true
         case "LOOP":
             if prevUpper == "END" { return false }

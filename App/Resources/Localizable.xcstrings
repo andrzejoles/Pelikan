@@ -1849,6 +1849,34 @@
         }
       }
     },
+    "AND / OR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AND / OR"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AND / OR"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AND / OR"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AND / OR"
+          }
+        }
+      }
+    },
     "Administracja" : {
       "localizations" : {
         "en" : {
@@ -3049,6 +3077,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbindungsalias aus list_connections (standardmäßig Verbindung des aktiven Fensters oder Hauptverbindung)"
+          }
+        }
+      }
+    },
+    "Aliasy w SELECT i FROM" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aliases in SELECT and FROM"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aliasse in SELECT und FROM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alias en SELECT y FROM"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Псевдоніми в SELECT і FROM"
           }
         }
       }
@@ -12181,6 +12237,34 @@
         }
       }
     },
+    "Deklaracje: typy i := / DEFAULT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declarations: types and := / DEFAULT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deklarationen: Typen und := / DEFAULT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declaraciones: tipos y := / DEFAULT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оголошення: типи та := / DEFAULT"
+          }
+        }
+      }
+    },
     "Deweloperskie" : {
       "localizations" : {
         "en" : {
@@ -12629,6 +12713,34 @@
         }
       }
     },
+    "Do lewej, elementy w kolumnie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left, items in a column"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links, Elemente in einer Spalte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A la izquierda, elementos en columna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ліворуч, елементи в стовпці"
+          }
+        }
+      }
+    },
     "Do marginesu" : {
       "localizations" : {
         "en" : {
@@ -12709,6 +12821,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Праворуч"
+          }
+        }
+      }
+    },
+    "Do prawej (rzeka)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right (river)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechts (Fluss)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A la derecha (río)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Праворуч («річка»)"
           }
         }
       }
@@ -20189,6 +20329,34 @@
         }
       }
     },
+    "Funkcje wbudowane (NVL, TO_CHAR…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built-in functions (NVL, TO_CHAR…)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Integrierte Funktionen (NVL, TO_CHAR…)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Funciones integradas (NVL, TO_CHAR…)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вбудовані функції (NVL, TO_CHAR…)"
+          }
+        }
+      }
+    },
     "Gałąź" : {
       "localizations" : {
         "en" : {
@@ -22653,6 +22821,34 @@
         }
       }
     },
+    "IF … THEN: THEN w nowej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF … THEN: THEN on a new line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF … THEN: THEN in neuer Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF … THEN: THEN en una línea nueva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IF … THEN: THEN у новому рядку"
+          }
+        }
+      }
+    },
     "INFO+ obiekt" : {
       "localizations" : {
         "en" : {
@@ -24613,6 +24809,62 @@
         }
       }
     },
+    "JOIN … ON: warunek w nowej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JOIN … ON: condition on a new line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JOIN … ON: Bedingung in neuer Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JOIN … ON: condición en una línea nueva"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JOIN … ON: умова в новому рядку"
+          }
+        }
+      }
+    },
+    "Jak identyfikatory" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like identifiers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie Bezeichner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como los identificadores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як ідентифікатори"
+          }
+        }
+      }
+    },
     "Jak serwer" : {
       "localizations" : {
         "en" : {
@@ -24665,6 +24917,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wie System"
+          }
+        }
+      }
+    },
+    "Jak słowa kluczowe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Like keywords"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie Schlüsselwörter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como las palabras clave"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як ключові слова"
           }
         }
       }
@@ -26293,6 +26573,34 @@
         }
       }
     },
+    "Klauzule SQL i warunki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL clauses and conditions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Klauseln und Bedingungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cláusulas SQL y condiciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Речення SQL та умови"
+          }
+        }
+      }
+    },
     "Klawiatura" : {
       "localizations" : {
         "en" : {
@@ -26989,6 +27297,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Постановка в чергу (типово так)"
+          }
+        }
+      }
+    },
+    "Kolejne przypisania: :=" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consecutive assignments: :="
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufeinanderfolgende Zuweisungen: :="
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asignaciones consecutivas: :="
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Послідовні присвоєння: :="
           }
         }
       }
@@ -28277,6 +28613,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilenkommentar"
+          }
+        }
+      }
+    },
+    "Komentarze na końcu kolejnych linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trailing comments on consecutive lines"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommentare am Ende aufeinanderfolgender Zeilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comentarios al final de líneas consecutivas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коментарі в кінці послідовних рядків"
           }
         }
       }
@@ -33321,6 +33685,34 @@
         }
       }
     },
+    "Listy i przecinki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists and commas"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen und Kommas"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listas y comas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Списки й коми"
+          }
+        }
+      }
+    },
     "Literał PL/SQL albo tekst; NULL — wartość pusta." : {
       "localizations" : {
         "en" : {
@@ -33345,6 +33737,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "PL/SQL-Literal oder Text; NULL — leerer Wert."
+          }
+        }
+      }
+    },
+    "Literały, identyfikatory w cudzysłowie i komentarze nigdy nie są zmieniane." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Literals, quoted identifiers and comments are never changed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Literale, Bezeichner in Anführungszeichen und Kommentare werden nie geändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los literales, los identificadores entre comillas y los comentarios nunca se modifican."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Літерали, ідентифікатори в лапках і коментарі ніколи не змінюються."
           }
         }
       }
@@ -34917,6 +35337,62 @@
         }
       }
     },
+    "Na końcu linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At line end"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Zeilenende"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al final de la línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У кінці рядка"
+          }
+        }
+      }
+    },
+    "Na początku linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At line start"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Am Zeilenanfang"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al principio de la línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На початку рядка"
+          }
+        }
+      }
+    },
     "Na połączeniach produkcyjnych agent domyślnie tylko czyta. Użytkownik agenta łączy się przez proxy (główny[agent]) — wymaga ALTER USER agent GRANT CONNECT THROUGH główny; bez drugiego hasła. Kolumny maskowane: nazwy kolumn albo SCHEMAT.TABELA.KOLUMNA, rozdzielone przecinkami. Funkcje wywoływane w zapytaniach mogą mieć skutki uboczne — twardą granicą są uprawnienia użytkownika bazy." : {
       "localizations" : {
         "en" : {
@@ -35445,6 +35921,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Teuerstes SQL (Zeit)"
+          }
+        }
+      }
+    },
+    "Najwięcej pustych linii z rzędu: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum consecutive blank lines: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höchstens aufeinanderfolgende Leerzeilen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máximo de líneas vacías seguidas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найбільше порожніх рядків поспіль: %@"
           }
         }
       }
@@ -43989,6 +44493,34 @@
         }
       }
     },
+    "Odstępy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spacing"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abstände"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espaciado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробіли"
+          }
+        }
+      }
+    },
     "Odtwarza makro „%@” z biblioteki (%@ kroków)." : {
       "localizations" : {
         "en" : {
@@ -49841,6 +50373,34 @@
         }
       }
     },
+    "Pakiety Oracle (DBMS_…, UTL_…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle packages (DBMS_…, UTL_…)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Pakete (DBMS_…, UTL_…)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paquetes de Oracle (DBMS_…, UTL_…)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакети Oracle (DBMS_…, UTL_…)"
+          }
+        }
+      }
+    },
     "Pakiety zarządzania są wyłączone w bazie (CONTROL_MANAGEMENT_PACK_ACCESS = NONE)" : {
       "localizations" : {
         "en" : {
@@ -50261,6 +50821,34 @@
         }
       }
     },
+    "Parametry nazwane: =>" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Named arguments: =>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benannte Parameter: =>"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros con nombre: =>"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Іменовані параметри: =>"
+          }
+        }
+      }
+    },
     "Parametry składowania" : {
       "localizations" : {
         "en" : {
@@ -50313,6 +50901,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Параметри викликів"
+          }
+        }
+      }
+    },
+    "Parametry: tryb (IN/OUT), typ, DEFAULT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parameters: mode (IN/OUT), type, DEFAULT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parameter: Modus (IN/OUT), Typ, DEFAULT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parámetros: modo (IN/OUT), tipo, DEFAULT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметри: режим (IN/OUT), тип, DEFAULT"
           }
         }
       }
@@ -52053,6 +52669,34 @@
         }
       }
     },
+    "Po zmianie tej opcji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After changing this option"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Änderung dieser Option"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tras cambiar esta opción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Після зміни цієї опції"
+          }
+        }
+      }
+    },
     "Pobiera kolejną stronę wierszy wyniku." : {
       "localizations" : {
         "en" : {
@@ -52889,6 +53533,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Попередній перегляд"
+          }
+        }
+      }
+    },
+    "Podgląd — linie zmienione ostatnią zmianą są podświetlone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preview — lines changed by the last change are highlighted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorschau — durch die letzte Änderung geänderte Zeilen sind hervorgehoben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa: las líneas modificadas por el último cambio están resaltadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд — рядки, змінені останньою зміною, підсвічено"
           }
         }
       }
@@ -61909,6 +62581,34 @@
         }
       }
     },
+    "Przykład opcji — wskaż albo zmień opcję po lewej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Option example — point at or change an option on the left"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beispiel der Option — zeigen Sie links auf eine Option oder ändern Sie sie"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejemplo de la opción: señale o cambie una opción a la izquierda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приклад опції — наведіть на опцію ліворуч або змініть її"
+          }
+        }
+      }
+    },
     "Przypina albo odpina bieżącą kartę wyniku — przypięta nie znika przy kolejnym wykonaniu (także Shift+klik karty)." : {
       "localizations" : {
         "en" : {
@@ -62913,6 +63613,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Haltepunkte …"
+          }
+        }
+      }
+    },
+    "Pusta linia przed każdym podprogramem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blank line before each subprogram"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerzeile vor jedem Unterprogramm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea vacía antes de cada subprograma"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожній рядок перед кожною підпрограмою"
           }
         }
       }
@@ -69581,6 +70309,90 @@
         }
       }
     },
+    "Spacja po przecinku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Space after comma"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerzeichen nach Komma"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacio tras la coma"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробіл після коми"
+          }
+        }
+      }
+    },
+    "Spacje wewnątrz nawiasów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaces inside parentheses"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerzeichen innerhalb von Klammern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacios dentro de los paréntesis"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробіли всередині дужок"
+          }
+        }
+      }
+    },
+    "Spacje wokół operatorów (=, <>, +, ||…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaces around operators (=, <>, +, ||…)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerzeichen um Operatoren (=, <>, +, ||…)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espacios alrededor de los operadores (=, <>, +, ||…)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пробіли навколо операторів (=, <>, +, ||…)"
+          }
+        }
+      }
+    },
     "Specyfikacja i ciało pakietu testowego utPLSQL (z --%%suite)" : {
       "localizations" : {
         "en" : {
@@ -71989,6 +72801,34 @@
         }
       }
     },
+    "Słowa klauzul (FROM, WHERE…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clause keywords (FROM, WHERE…)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klauselwörter (FROM, WHERE…)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Palabras de cláusula (FROM, WHERE…)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Слова речень (FROM, WHERE…)"
+          }
+        }
+      }
+    },
     "Słowa kluczowe" : {
       "localizations" : {
         "en" : {
@@ -73973,6 +74813,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dieses Objekt ist keine PL/SQL-Einheit"
+          }
+        }
+      }
+    },
+    "Teraz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jetzt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зараз"
           }
         }
       }
@@ -76749,6 +77617,34 @@
         }
       }
     },
+    "Typy danych (NUMBER, VARCHAR2…)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data types (NUMBER, VARCHAR2…)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datentypen (NUMBER, VARCHAR2…)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipos de datos (NUMBER, VARCHAR2…)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типи даних (NUMBER, VARCHAR2…)"
+          }
+        }
+      }
+    },
     "Typy obiektów (puste — wszystkie)" : {
       "localizations" : {
         "en" : {
@@ -77025,6 +77921,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тло редактора в кольорі підключення"
+          }
+        }
+      }
+    },
+    "UPDATE … SET: =" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UPDATE … SET: ="
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UPDATE … SET: ="
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UPDATE … SET: ="
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UPDATE … SET: ="
           }
         }
       }
@@ -82125,6 +83049,34 @@
         }
       }
     },
+    "W jednej linii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On one line"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In einer Zeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En una línea"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В одному рядку"
+          }
+        }
+      }
+    },
     "W katalogu nie ma portfela" : {
       "localizations" : {
         "en" : {
@@ -82265,6 +83217,34 @@
         }
       }
     },
+    "W osobnej linii, elementy wcięte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On its own line, items indented"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In eigener Zeile, Elemente eingerückt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En su propia línea, elementos sangrados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В окремому рядку, елементи з відступом"
+          }
+        }
+      }
+    },
     "W repozytorium AWR są mniej niż dwie migawki tej bazy" : {
       "localizations" : {
         "en" : {
@@ -82317,6 +83297,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In dieser Datenbank gibt es keine Oracle REST Data Services (ORDS)"
+          }
+        }
+      }
+    },
+    "WHEN, ELSE, END w osobnych liniach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHEN, ELSE, END on separate lines"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHEN, ELSE, END in eigenen Zeilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHEN, ELSE, END en líneas separadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHEN, ELSE, END в окремих рядках"
           }
         }
       }
@@ -91001,6 +92009,34 @@
         }
       }
     },
+    "Wyrażenie CASE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CASE expression"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CASE-Ausdruck"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expresión CASE"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вираз CASE"
+          }
+        }
+      }
+    },
     "Wyrażenie do obserwowania (np. v, r.pole, t(3))" : {
       "localizations" : {
         "en" : {
@@ -91197,6 +92233,34 @@
         }
       }
     },
+    "Wyrównanie dotyczy elementów w osobnych liniach — przy parametrach i liście SELECT włącz „Element w linii”." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alignment applies to items on separate lines — for parameters and the SELECT list choose “Element in line”."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Ausrichtung gilt für Elemente in eigenen Zeilen — wählen Sie für Parameter und die SELECT-Liste „Element in der Zeile“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La alineación se aplica a elementos en líneas separadas: para parámetros y la lista SELECT elija «Elemento en la línea»."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирівнювання стосується елементів в окремих рядках — для параметрів і списку SELECT виберіть «Елемент у рядку»."
+          }
+        }
+      }
+    },
     "Wyrównanie i format liczb w siatce: do prawej, do lewej, z separatorem regionalnym, z separatorem tysięcy." : {
       "localizations" : {
         "en" : {
@@ -91221,6 +92285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вирівнювання й формат чисел у сітці: праворуч, ліворуч, з регіональним роздільником, з роздільником тисяч."
+          }
+        }
+      }
+    },
+    "Wyrównanie w kolumnach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Column alignment"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spaltenausrichtung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alineación en columnas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вирівнювання в стовпцях"
           }
         }
       }
