@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-26T08:24:46+01:00",
+  "heartbeat": "2026-10-26T10:55:27+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "Dziennik aplikacji (D170, PL-INFRA-011): moduł, wpisy, Preferencje, eksport, testy",
+  "task": "Notatki bety 9.2.0 i szkic wydania",
   "stages": [
     {
       "id": 0,
@@ -58,7 +58,8 @@
     }
   ],
   "done": [
-    "Opublikowano 9.2.0 beta (D169) i zainstalowano w /Applications",
+    "Dziennik aplikacji z prywatnością wpisów (PL-INFRA-011, D170)",
+    "Wstążka z kartami kontekstowymi i polem „Szukaj czynności” (PD-UI-012, D171)",
     "Scalono #87 — drugie przejście przeglądu kodu (D169)",
     "Drugie przejście przeglądu kodu (ok. 60 poprawek, D169): formater, refaktoryzacje, Test Manager, debuger, regresje z D168; wersje pakietów aplikacji przypięte",
     "Dogłębny przegląd kodu (7 obszarów, ok. 130 poprawek z testami, D168); zależności aktualne (D167, #85)",
@@ -96,11 +97,10 @@
     "P2: test łącza, DBMS_JOB.RUN i start/stop kolejek AQ (PD-OB-019); partycje istniejącej tabeli i podpartycje (PD-OED-006)",
     "P2: porównanie z obiektami w innej bazie, asercje 26ai (szablon, DDL, Drop), podświetlanie JavaScriptu w modułach MLE (PD-PROG-008, PD-OB-022, PD-OED-011, PD-PROG-014)",
     "Tunel SSH z hasłem z Pęku kluczy przez askpass z jednorazowej kolejki (DB-SSH-001, D134); testowy sshd z użytkownikiem hasłowym",
-    "Okno testu: typ BFile (PD-TEST-002); macierz uprawnień sesji agenta w pakiecie z testami (AI-PERM-001)",
-    "Debuger: SELF i obiekty jako drzewo, warunki/komunikaty/logpointy punktów przerwania, znacznik niezastosowanego, blokada nazw z dwukropkiem zawieszających DBMS_DEBUG (PD-DBG-004, PD-DBG-007, D133); scalona gałąź danych: 13 wierszy ✅"
+    "Okno testu: typ BFile (PD-TEST-002); macierz uprawnień sesji agenta w pakiecie z testami (AI-PERM-001)"
   ],
   "next": [
-    "Sporadyczne zawieszenie testu SSH (stdin przez połączenie multipleksowane) tylko na CI macOS — obserwacja"
+    "Logo aplikacji (ikona)"
   ],
   "blockers": [],
   "questions": [],

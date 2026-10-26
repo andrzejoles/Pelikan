@@ -223,6 +223,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var userDocuments: [UserDocument] = []
     /// Quick Access Toolbar: komendy w grupie szybkiego dostępu paska okna głównego (PD-UI-006).
     public var quickAccessCommands: [String] = []
+    /// Wstążka pod paskiem narzędzi (PD-UI-012): widoczna i zwinięta do samych kart.
+    public var showRibbon = true
+    public var ribbonCollapsed = false
     // Pliki
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
@@ -333,6 +336,8 @@ public struct Settings: Sendable, Codable, Hashable {
         suppressedDialogs = v(.suppressedDialogs, suppressedDialogs)
         userDocuments = v(.userDocuments, userDocuments)
         quickAccessCommands = v(.quickAccessCommands, quickAccessCommands)
+        showRibbon = v(.showRibbon, showRibbon)
+        ribbonCollapsed = v(.ribbonCollapsed, ribbonCollapsed)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)

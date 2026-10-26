@@ -1737,6 +1737,34 @@
         }
       }
     },
+    "Administracja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Administration"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Administration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Administración"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Адміністрування"
+          }
+        }
+      }
+    },
     "Adnotacja %@: użycie w schemacie %@" : {
       "localizations" : {
         "en" : {
@@ -2913,6 +2941,34 @@
         }
       }
     },
+    "Analiza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysis"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Análisis"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналіз"
+          }
+        }
+      }
+    },
     "Analiza ADDM dwóch ostatnich migawek AWR; wymaga Diagnostics Pack." : {
       "localizations" : {
         "en" : {
@@ -3077,6 +3133,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Codeanalyse aktiviert"
+          }
+        }
+      }
+    },
+    "Analiza w czasie pisania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyze as you type"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyse beim Tippen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizar al escribir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналіз під час введення"
+          }
+        }
+      }
+    },
+    "Analizuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyze"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analysieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analizar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аналізувати"
           }
         }
       }
@@ -4033,6 +4145,34 @@
         }
       }
     },
+    "Autoodświeżanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto refresh"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch aktualisieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualización automática"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автооновлення"
+          }
+        }
+      }
+    },
     "Autor" : {
       "localizations" : {
         "en" : {
@@ -4705,6 +4845,34 @@
         }
       }
     },
+    "Bezpieczeństwo i sesje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Security and sessions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sicherheit und Sitzungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguridad y sesiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Безпека й сеанси"
+          }
+        }
+      }
+    },
     "Biblioteka" : {
       "localizations" : {
         "en" : {
@@ -5317,6 +5485,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Testblock"
+          }
+        }
+      }
+    },
+    "Blok w oknie testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block in Test Window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block im Testfenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bloque en ventana de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Блок у вікні тесту"
           }
         }
       }
@@ -8541,6 +8737,34 @@
         }
       }
     },
+    "COMMIT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        }
+      }
+    },
     "COMMIT co %@" : {
       "localizations" : {
         "en" : {
@@ -11089,6 +11313,34 @@
         }
       }
     },
+    "Debuger" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depurador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагоджувач"
+          }
+        }
+      }
+    },
     "Debuger (UG 23.4)" : {
       "localizations" : {
         "en" : {
@@ -11257,6 +11509,34 @@
         }
       }
     },
+    "Debugowanie i testy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug and test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debuggen und Testen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depuración y pruebas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагодження й тести"
+          }
+        }
+      }
+    },
     "Debugowanie po wykonaniu: %@" : {
       "localizations" : {
         "en" : {
@@ -11281,6 +11561,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Debuggen nach Ausführung: %@"
+          }
+        }
+      }
+    },
+    "Debuguj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debuggen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depurar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налагодити"
           }
         }
       }
@@ -11729,6 +12037,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diagramm"
+          }
+        }
+      }
+    },
+    "Diagram ER" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ER diagram"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ER-Diagramm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagrama ER"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ER-діаграма"
           }
         }
       }
@@ -12349,6 +12685,34 @@
         }
       }
     },
+    "Dodaj do menu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to menu"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zum Menü hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir al menú"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати до меню"
+          }
+        }
+      }
+    },
     "Dodaj do paska szybkiego dostępu" : {
       "localizations" : {
         "en" : {
@@ -12821,6 +13185,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notiz hinzufügen"
+          }
+        }
+      }
+    },
+    "Dodaj obiekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add object"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt hinzufügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir objeto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Додати об’єкт"
           }
         }
       }
@@ -14141,6 +14533,34 @@
         }
       }
     },
+    "Dokumentacja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dokumentation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Документація"
+          }
+        }
+      }
+    },
     "Dokumentacja Oracle" : {
       "localizations" : {
         "en" : {
@@ -14701,6 +15121,34 @@
         }
       }
     },
+    "Domyślny rozmiar" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default size"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardgröße"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño predeterminado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Типовий розмір"
+          }
+        }
+      }
+    },
     "Domyślny rozmiar czcionki edytora" : {
       "localizations" : {
         "en" : {
@@ -14837,6 +15285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Додає визначення з'єднань із файлу JSON (паролі потрібно ввести під час першого з'єднання)."
+          }
+        }
+      }
+    },
+    "Dostosuj pasek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Customize toolbar"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolleiste anpassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Personalizar barra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Налаштувати панель"
           }
         }
       }
@@ -15033,6 +15509,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Другий workset (типово — поточні вікна)"
+          }
+        }
+      }
+    },
+    "Drukuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Print"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drucken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imprimir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Друкувати"
           }
         }
       }
@@ -15877,6 +16381,34 @@
         }
       }
     },
+    "Edycja danych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data editing"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenbearbeitung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edición de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагування даних"
+          }
+        }
+      }
+    },
     "Edycja wyłączona" : {
       "localizations" : {
         "en" : {
@@ -16521,6 +17053,34 @@
         }
       }
     },
+    "Eksport obiektów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт об’єктів"
+          }
+        }
+      }
+    },
     "Eksport obiektów użytkownika" : {
       "localizations" : {
         "en" : {
@@ -16801,6 +17361,34 @@
         }
       }
     },
+    "Eksportuj Markdown" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Markdown"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markdown exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar Markdown"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт у Markdown"
+          }
+        }
+      }
+    },
     "Eksportuj cele SSH…" : {
       "localizations" : {
         "en" : {
@@ -16825,6 +17413,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SSH-Ziele exportieren …"
+          }
+        }
+      }
+    },
+    "Eksportuj dane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export data"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати дані"
           }
         }
       }
@@ -17217,6 +17833,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Element in der Zeile"
+          }
+        }
+      }
+    },
+    "Elementy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elements"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elemente"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elementos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Елементи"
           }
         }
       }
@@ -18649,6 +19293,34 @@
         }
       }
     },
+    "Formatowanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatting"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматування"
+          }
+        }
+      }
+    },
     "Formatowanie przerwane: wynik zmieniałby kod (przy „%@”). Tekst pozostaje bez zmian." : {
       "localizations" : {
         "en" : {
@@ -18757,6 +19429,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Automatisch formatieren"
+          }
+        }
+      }
+    },
+    "Formatuj kod" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format code"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code formatieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatear código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматувати код"
           }
         }
       }
@@ -19517,6 +20217,34 @@
         }
       }
     },
+    "Generuj test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test generieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generar prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згенерувати тест"
+          }
+        }
+      }
+    },
     "Generuje DDL widoku dualności do nowego okna SQL (nie wykonuje go)." : {
       "localizations" : {
         "en" : {
@@ -19653,6 +20381,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Generieren …"
+          }
+        }
+      }
+    },
+    "Git" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git"
           }
         }
       }
@@ -20129,6 +20885,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gruppierung"
+          }
+        }
+      }
+    },
+    "Grupuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrupar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Групувати"
           }
         }
       }
@@ -21169,6 +21953,34 @@
         }
       }
     },
+    "Historia poleceń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statement history"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anweisungsverlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de sentencias"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія команд"
+          }
+        }
+      }
+    },
     "Historia poleceń…" : {
       "localizations" : {
         "en" : {
@@ -21389,6 +22201,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verlauf vom Server"
+          }
+        }
+      }
+    },
+    "Historia śladów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace history"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trace-Verlauf"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de trazas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія трасувань"
           }
         }
       }
@@ -22849,6 +23689,34 @@
         }
       }
     },
+    "Inne okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weitere Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otras ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інші вікна"
+          }
+        }
+      }
+    },
     "Inspekcje kodu (nieużywane zmienne i parametry, kod nieosiągalny, UPDATE/DELETE bez WHERE, niejawne konwersje) i nieznane tabele, kolumny, aliasy wg słownika połączenia; lista problemów." : {
       "localizations" : {
         "en" : {
@@ -23577,6 +24445,34 @@
         }
       }
     },
+    "Jako obraz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "As image"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Bild"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Como imagen"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як зображення"
+          }
+        }
+      }
+    },
     "Jasny" : {
       "localizations" : {
         "en" : {
@@ -23969,6 +24865,34 @@
         }
       }
     },
+    "Jednostki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Units"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidades"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одиниці"
+          }
+        }
+      }
+    },
     "Jednostki programów" : {
       "localizations" : {
         "en" : {
@@ -24109,6 +25033,34 @@
         }
       }
     },
+    "Karta kontekstowa: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contextual tab: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontextregisterkarte: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestaña contextual: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контекстна вкладка: %@"
+          }
+        }
+      }
+    },
     "Karta nie pochodzi z zapytania" : {
       "localizations" : {
         "en" : {
@@ -24133,6 +25085,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ця вкладка не є результатом запиту"
+          }
+        }
+      }
+    },
+    "Karty kontekstowe (Program, Wynik, Diagram…) pojawiają się przy oknie danego rodzaju. Pole „Szukaj czynności” znajduje każdą komendę po nazwie, także bez polskich znaków i po angielskiej nazwie z PL/SQL Developera." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contextual tabs (Program, Result, Diagram…) appear with a window of that kind. The “Search actions” field finds any command by name, also without diacritics and by its English PL/SQL Developer name."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontextregisterkarten (Programm, Ergebnis, Diagramm…) erscheinen beim Fenster dieser Art. Das Feld „Aktionen suchen“ findet jeden Befehl nach Namen, auch ohne diakritische Zeichen und nach dem englischen Namen aus PL/SQL Developer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las pestañas contextuales (Programa, Resultado, Diagrama…) aparecen con una ventana de ese tipo. El campo «Buscar acciones» encuentra cualquier comando por su nombre, también sin diacríticos y por su nombre en inglés de PL/SQL Developer."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контекстні вкладки (Програма, Результат, Діаграма…) з’являються разом із вікном відповідного типу. Поле «Пошук дій» знаходить будь-яку команду за назвою, також без діакритики та за англійською назвою з PL/SQL Developer."
+          }
+        }
+      }
+    },
+    "Karty wyników" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result tabs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ergebnisregisterkarten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestañas de resultados"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладки результатів"
           }
         }
       }
@@ -25197,6 +26205,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiederherzustellender Objektcode (vom Agenten erstellte Objekte werden gelöscht): %@"
+          }
+        }
+      }
+    },
+    "Kod w innym języku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code in other language"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code in anderer Sprache"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código en otro lenguaje"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код іншою мовою"
           }
         }
       }
@@ -26937,6 +27973,34 @@
         }
       }
     },
+    "Kompilacja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompilierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компіляція"
+          }
+        }
+      }
+    },
     "Kompilacja próbna" : {
       "localizations" : {
         "en" : {
@@ -27077,6 +28141,34 @@
         }
       }
     },
+    "Kompiluj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compile"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kompilieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компілювати"
+          }
+        }
+      }
+    },
     "Kompiluj (agent)" : {
       "localizations" : {
         "en" : {
@@ -27101,6 +28193,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kompilieren (Agent)"
+          }
+        }
+      }
+    },
+    "Kompiluj niepoprawne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compile invalid"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige kompilieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilar inválidos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Компілювати недійсні"
           }
         }
       }
@@ -28365,6 +29485,34 @@
         }
       }
     },
+    "Kopiuj i eksport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy and export"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieren und Exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar y exportar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювання й експорт"
+          }
+        }
+      }
+    },
     "Kopiuj jako" : {
       "localizations" : {
         "en" : {
@@ -28613,6 +29761,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bild kopieren"
+          }
+        }
+      }
+    },
+    "Kopiuj schemat" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy schema"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schema kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar esquema"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати схему"
           }
         }
       }
@@ -29373,6 +30549,34 @@
         }
       }
     },
+    "Kreator importu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import wizard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import-Assistent"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asistente de importación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Майстер імпорту"
+          }
+        }
+      }
+    },
     "Kreator importu danych" : {
       "localizations" : {
         "en" : {
@@ -29929,6 +31133,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Курсори"
+          }
+        }
+      }
+    },
+    "Kursory i makra" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursors and macros"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursor und Makros"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cursores y macros"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсори й макроси"
           }
         }
       }
@@ -31053,6 +32285,34 @@
         }
       }
     },
+    "Lista" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список"
+          }
+        }
+      }
+    },
     "Lista kolumn" : {
       "localizations" : {
         "en" : {
@@ -31921,6 +33181,34 @@
         }
       }
     },
+    "MLE i REST" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE and REST"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE und REST"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE y REST"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MLE і REST"
+          }
+        }
+      }
+    },
     "Make" : {
       "localizations" : {
         "en" : {
@@ -32533,6 +33821,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menü"
+          }
+        }
+      }
+    },
+    "Menu %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ menu"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menü %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menú %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меню %@"
           }
         }
       }
@@ -35641,6 +36957,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нічого не знайдено"
+          }
+        }
+      }
+    },
+    "Nic nie znaleziono — spróbuj innego słowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found — try another word"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nichts gefunden — versuchen Sie ein anderes Wort"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró nada: pruebe otra palabra"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нічого не знайдено — спробуйте інше слово"
           }
         }
       }
@@ -39341,6 +40685,34 @@
         }
       }
     },
+    "Nowy obiekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New object"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Objekt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo objeto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий об’єкт"
+          }
+        }
+      }
+    },
     "Nowy obiekt: %@" : {
       "localizations" : {
         "en" : {
@@ -39481,6 +40853,34 @@
         }
       }
     },
+    "Nowy raport" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New report"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Bericht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo informe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий звіт"
+          }
+        }
+      }
+    },
     "Nowy snippet" : {
       "localizations" : {
         "en" : {
@@ -39617,6 +41017,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neuer Text dieser Zeilen"
+          }
+        }
+      }
+    },
+    "Nowy test" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New test"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neuer Test"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новий тест"
           }
         }
       }
@@ -42477,6 +43905,34 @@
         }
       }
     },
+    "Odzyskaj okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recover windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperar ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити вікна"
+          }
+        }
+      }
+    },
     "Odzyskaj okna…" : {
       "localizations" : {
         "en" : {
@@ -44461,6 +45917,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oracle"
+          }
+        }
+      }
+    },
+    "Oracle 23ai" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle 23ai"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle 23ai"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle 23ai"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle 23ai"
           }
         }
       }
@@ -47069,6 +48553,34 @@
         }
       }
     },
+    "Otwórz przebieg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open run"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lauf öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити запуск"
+          }
+        }
+      }
+    },
     "Otwórz przebieg profilera…" : {
       "localizations" : {
         "en" : {
@@ -47825,6 +49337,34 @@
         }
       }
     },
+    "Pakiety Oracle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle packages"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oracle-Pakete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paquetes de Oracle"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакети Oracle"
+          }
+        }
+      }
+    },
     "Pakiety zarządzania są wyłączone w bazie (CONTROL_MANAGEMENT_PACK_ACCESS = NONE)" : {
       "localizations" : {
         "en" : {
@@ -47961,6 +49501,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wertebereich"
+          }
+        }
+      }
+    },
+    "Panele" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panels"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereiche"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paneles"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панелі"
           }
         }
       }
@@ -50149,6 +51717,34 @@
         }
       }
     },
+    "Pobieranie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримання"
+          }
+        }
+      }
+    },
     "Pobieranie kolejnych wierszy zwiększy zużycie pamięci (limit w Preferencjach › SQL Window)." : {
       "localizations" : {
         "en" : {
@@ -50229,6 +51825,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrufen"
+          }
+        }
+      }
+    },
+    "Pobierz wszystkie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetch all"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle abrufen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperar todo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отримати все"
           }
         }
       }
@@ -51829,6 +53453,34 @@
         }
       }
     },
+    "Pokazuje lub ukrywa wstążkę z kartami czynności pod paskiem narzędzi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides the ribbon with action tabs below the toolbar."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blendet das Menüband mit Aktionsregisterkarten unter der Symbolleiste ein oder aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta la cinta con pestañas de acciones bajo la barra de herramientas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує стрічку з вкладками дій під панеллю інструментів."
+          }
+        }
+      }
+    },
     "Pokazuje menedżer celów SSH zdalnego builda Pro*C: drzewo z folderami, dodawanie, edycja, duplikowanie i usuwanie celów, środowisko UAT/PROD." : {
       "localizations" : {
         "en" : {
@@ -52221,6 +53873,34 @@
         }
       }
     },
+    "Pokaż wstążkę z kartami czynności" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the ribbon with action tabs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband mit Aktionsregisterkarten anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar la cinta con pestañas de acciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати стрічку з вкладками дій"
+          }
+        }
+      }
+    },
     "Pokaż wszystkie" : {
       "localizations" : {
         "en" : {
@@ -52497,6 +54177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Felder im Filter: %@"
+          }
+        }
+      }
+    },
+    "Pole wyszukiwania czynności na wstążce: nazwa, słowo kluczowe albo angielska nazwa funkcji; Enter wykonuje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Action search field on the ribbon: name, keyword or English feature name; Return runs it."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktionssuchfeld im Menüband: Name, Stichwort oder englischer Funktionsname; Eingabe führt aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Campo de búsqueda de acciones en la cinta: nombre, palabra clave o nombre en inglés de la función; Intro la ejecuta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поле пошуку дій на стрічці: назва, ключове слово або англійська назва функції; Enter виконує."
           }
         }
       }
@@ -53173,6 +54881,34 @@
         }
       }
     },
+    "Pomniejsz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom out"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verkleinern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reducir"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зменшити"
+          }
+        }
+      }
+    },
     "Pomniejsz czcionkę edytora" : {
       "localizations" : {
         "en" : {
@@ -53257,6 +54993,34 @@
         }
       }
     },
+    "Pomoc kontekstowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Context help"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontexthilfe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayuda contextual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контекстна довідка"
+          }
+        }
+      }
+    },
     "Pomoc kontekstowa (dokumentacja Oracle)" : {
       "localizations" : {
         "en" : {
@@ -53337,6 +55101,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiederholen"
+          }
+        }
+      }
+    },
+    "Ponów nieudane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rerun failed"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehlgeschlagene wiederholen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repetir fallidas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторити невдалі"
           }
         }
       }
@@ -53649,6 +55441,34 @@
         }
       }
     },
+    "Poprzednie polecenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous statement"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Anweisung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentencia anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня команда"
+          }
+        }
+      }
+    },
     "Poprzednie polecenie okna" : {
       "localizations" : {
         "en" : {
@@ -53817,6 +55637,34 @@
         }
       }
     },
+    "Porównaj dane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare data"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daten vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти дані"
+          }
+        }
+      }
+    },
     "Porównaj dane tabel…" : {
       "localizations" : {
         "en" : {
@@ -53841,6 +55689,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabellendaten vergleichen …"
+          }
+        }
+      }
+    },
+    "Porównaj obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти об’єкти"
           }
         }
       }
@@ -54181,6 +56057,34 @@
         }
       }
     },
+    "Porównaj z poprzednim" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compare with previous"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit vorherigem vergleichen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparar con el anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняти з попереднім"
+          }
+        }
+      }
+    },
     "Porównaj z poprzednim planem" : {
       "localizations" : {
         "en" : {
@@ -54345,6 +56249,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mit Quelle in der Datenbank vergleichen"
+          }
+        }
+      }
+    },
+    "Porównanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparison"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vergleich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порівняння"
           }
         }
       }
@@ -55245,6 +57177,34 @@
         }
       }
     },
+    "Powiązane tabele" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Related tables"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verknüpfte Tabellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tablas relacionadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пов’язані таблиці"
+          }
+        }
+      }
+    },
     "Powiększ" : {
       "localizations" : {
         "en" : {
@@ -55325,6 +57285,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збільшує шрифт таблиці результатів."
+          }
+        }
+      }
+    },
+    "Powiększenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoom"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Масштаб"
           }
         }
       }
@@ -56281,6 +58269,34 @@
         }
       }
     },
+    "Połączenie okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterverbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexión de la ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З’єднання вікна"
+          }
+        }
+      }
+    },
     "Połączenie okna albo główne" : {
       "localizations" : {
         "en" : {
@@ -57065,6 +59081,34 @@
         }
       }
     },
+    "Profiler i ślad" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiler and trace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Profiler und Trace"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfilador y traza"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профайлер і трасування"
+          }
+        }
+      }
+    },
     "Profiler liniowy włączony" : {
       "localizations" : {
         "en" : {
@@ -57173,6 +59217,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Профіль…"
+          }
+        }
+      }
+    },
+    "Program" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Program"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programm"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Програма"
           }
         }
       }
@@ -57341,6 +59413,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Projekt"
+          }
+        }
+      }
+    },
+    "Projekt i workset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project and workset"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt und Workset"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proyecto y workset"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проєкт і workset"
           }
         }
       }
@@ -57733,6 +59833,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vorher → nachher"
+          }
+        }
+      }
+    },
+    "Przeglądarka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explorador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Браузер"
           }
         }
       }
@@ -60873,6 +63001,34 @@
         }
       }
     },
+    "ROLLBACK" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        }
+      }
+    },
     "ROLLBACK po iteracji" : {
       "localizations" : {
         "en" : {
@@ -61457,6 +63613,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichte in Kategorien (Data Dictionary, Objekte, PL/SQL, Sicherheit, Speicher): Raster, Diagramm oder DBMS_OUTPUT, Variablen, Zeilendetails, Öffnen im SQL Window, Export."
+          }
+        }
+      }
+    },
+    "Raporty z menu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reports from menu"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichte aus dem Menü"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informes del menú"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звіти з меню"
           }
         }
       }
@@ -62465,6 +64649,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Block ausklappen"
+          }
+        }
+      }
+    },
+    "Rozwiń wstążkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand ribbon"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband erweitern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expandir la cinta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгорнути стрічку"
           }
         }
       }
@@ -65493,6 +67705,34 @@
         }
       }
     },
+    "Sesje i baza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessions and database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sitzungen und Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones y base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеанси й база"
+          }
+        }
+      }
+    },
     "Sesje użytkowników" : {
       "localizations" : {
         "en" : {
@@ -66473,6 +68713,34 @@
         }
       }
     },
+    "Skrót: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shortcut: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tastenkürzel: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atajo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скорочення: %@"
+          }
+        }
+      }
+    },
     "Skróty" : {
       "localizations" : {
         "en" : {
@@ -66917,6 +69185,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nach Updates suchen …"
+          }
+        }
+      }
+    },
+    "Sprawdź zmiany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen prüfen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comprobar cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перевірити зміни"
           }
         }
       }
@@ -67929,6 +70225,34 @@
         }
       }
     },
+    "Sumy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Totals"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Summen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Totales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підсумки"
+          }
+        }
+      }
+    },
     "Sumy kolumny…" : {
       "localizations" : {
         "en" : {
@@ -68489,6 +70813,34 @@
         }
       }
     },
+    "Szukaj czynności…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search actions…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktionen suchen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar acciones…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук дій…"
+          }
+        }
+      }
+    },
     "Szukaj komendy" : {
       "localizations" : {
         "en" : {
@@ -68737,6 +71089,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Im Code suchen"
+          }
+        }
+      }
+    },
+    "Szukaj w plikach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search in files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Dateien suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar en archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шукати у файлах"
           }
         }
       }
@@ -70869,6 +73249,34 @@
         }
       }
     },
+    "Teksty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texts"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тексти"
+          }
+        }
+      }
+    },
     "Ten Mac nie ma skonfigurowanego Touch ID ani hasła logowania do potwierdzania." : {
       "localizations" : {
         "en" : {
@@ -71177,6 +73585,34 @@
         }
       }
     },
+    "Test pod kursorem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test at cursor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test am Cursor"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba en el cursor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест під курсором"
+          }
+        }
+      }
+    },
     "Test standardowy" : {
       "localizations" : {
         "en" : {
@@ -71229,6 +73665,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Стандартний тест…"
+          }
+        }
+      }
+    },
+    "Test ⇄ pakiet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test ⇄ package"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test ⇄ Paket"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prueba ⇄ paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тест ⇄ пакет"
           }
         }
       }
@@ -71453,6 +73917,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tests %@"
+          }
+        }
+      }
+    },
+    "Testy i debuger" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests and debugger"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tests und Debugger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pruebas y depurador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тести й налагоджувач"
           }
         }
       }
@@ -71989,6 +74481,34 @@
         }
       }
     },
+    "To-Do" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To-Do"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To-Do"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tareas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завдання"
+          }
+        }
+      }
+    },
     "Token OAuth2 z pliku" : {
       "localizations" : {
         "en" : {
@@ -72125,6 +74645,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Збігів: %@"
+          }
+        }
+      }
+    },
+    "Transakcja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaction"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transaktion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transacción"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Транзакція"
           }
         }
       }
@@ -75293,6 +77841,34 @@
         }
       }
     },
+    "Uruchom w oknie testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run in Test Window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Testfenster ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar en ventana de prueba"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити у вікні тесту"
+          }
+        }
+      }
+    },
     "Uruchom z pokryciem" : {
       "localizations" : {
         "en" : {
@@ -75373,6 +77949,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lokalen Job ausführen"
+          }
+        }
+      }
+    },
+    "Uruchom zestaw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run suite"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suite ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar conjunto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустити набір"
           }
         }
       }
@@ -79969,6 +82573,34 @@
         }
       }
     },
+    "Wczytaj z bazy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Load from database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Datenbank laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargar de la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити з бази"
+          }
+        }
+      }
+    },
     "Wczytaj z pliku…" : {
       "localizations" : {
         "en" : {
@@ -80413,6 +83045,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "За видом"
+          }
+        }
+      }
+    },
+    "Według wartości" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By value"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Wert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por valor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За значенням"
           }
         }
       }
@@ -81649,6 +84309,34 @@
         }
       }
     },
+    "Wklej z historii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste from history"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus Verlauf einfügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pegar del historial"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставити з історії"
+          }
+        }
+      }
+    },
     "Wklej z historii schowka" : {
       "localizations" : {
         "en" : {
@@ -82097,6 +84785,34 @@
         }
       }
     },
+    "Wpisz, co chcesz zrobić — np. „plan”, „eksport”, „compile”; Enter wykonuje pierwszą pozycję" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type what you want to do — e.g. “plan”, “export”, “compile”; Return runs the first item"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geben Sie ein, was Sie tun möchten — z. B. „Plan“, „Export“, „compile“; Eingabe führt den ersten Eintrag aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escriba lo que quiere hacer, p. ej. «plan», «exportar», «compile»; Intro ejecuta el primer elemento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введіть, що хочете зробити — напр. «план», «експорт», «compile»; Enter виконує перший пункт"
+          }
+        }
+      }
+    },
     "Wpisów: %@" : {
       "localizations" : {
         "en" : {
@@ -82485,6 +85201,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Snippet einfügen"
+          }
+        }
+      }
+    },
+    "Wstaw szablon" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage einfügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insertar plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставити шаблон"
           }
         }
       }
@@ -82881,6 +85625,34 @@
         }
       }
     },
+    "Wstawianie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insert"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einfügen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Insertar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вставлення"
+          }
+        }
+      }
+    },
     "Wstawianie włączone" : {
       "localizations" : {
         "en" : {
@@ -83105,6 +85877,62 @@
         }
       }
     },
+    "Wstążka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ribbon"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стрічка"
+          }
+        }
+      }
+    },
+    "Wstążka › %@ › %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ribbon › %@ › %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband › %@ › %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cinta › %@ › %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Стрічка › %@ › %@"
+          }
+        }
+      }
+    },
     "Wszystkie" : {
       "localizations" : {
         "en" : {
@@ -83241,6 +86069,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показуються всі запитання."
+          }
+        }
+      }
+    },
+    "Wszystkie raporty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All reports"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Berichte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los informes"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі звіти"
+          }
+        }
+      }
+    },
+    "Wszystkie testy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tests"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Tests"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todas las pruebas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі тести"
           }
         }
       }
@@ -84617,6 +87501,34 @@
         }
       }
     },
+    "Wydajność" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leistung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendimiento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продуктивність"
+          }
+        }
+      }
+    },
     "Wydajność (pakiety Oracle)" : {
       "localizations" : {
         "en" : {
@@ -84641,6 +87553,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Performance (Oracle-Packs)"
+          }
+        }
+      }
+    },
+    "Wydziel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extract"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extrahieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extraer"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виділити"
           }
         }
       }
@@ -84837,6 +87777,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Generiert von Pelikan"
+          }
+        }
+      }
+    },
+    "Wygląd" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Darstellung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aspecto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вигляд"
           }
         }
       }
@@ -85289,6 +88257,34 @@
         }
       }
     },
+    "Wykonaj odwrotnie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execute inverted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Umgekehrt ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar a la inversa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати навпаки"
+          }
+        }
+      }
+    },
     "Wykonaj okno" : {
       "localizations" : {
         "en" : {
@@ -85597,6 +88593,34 @@
         }
       }
     },
+    "Wykonaj wszystko" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run all"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle ausführen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecutar todo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконати все"
+          }
+        }
+      }
+    },
     "Wykonaj zapisane przeniesienie danych" : {
       "localizations" : {
         "en" : {
@@ -85677,6 +88701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ausführungen/s"
+          }
+        }
+      }
+    },
+    "Wykonanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausführung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ejecución"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконання"
           }
         }
       }
@@ -86713,6 +89765,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abmelden mit offener Transaktion"
+          }
+        }
+      }
+    },
+    "Wyloguj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log off"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abmelden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar sesión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вийти"
           }
         }
       }
@@ -87889,6 +90969,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aufrufe"
+          }
+        }
+      }
+    },
+    "Wyznacz plan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Explain plan"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan ermitteln"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calcular plan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обчислити план"
           }
         }
       }
@@ -89433,6 +92541,34 @@
         }
       }
     },
+    "Z inną bazą" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With other database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit anderer Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con otra base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З іншою базою"
+          }
+        }
+      }
+    },
     "Z pakietu otwiera jego pakiet testowy (test_nazwa albo zależność), z pakietu testowego — testowany pakiet." : {
       "localizations" : {
         "en" : {
@@ -89457,6 +92593,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Öffnet aus einem Paket dessen Testpaket (test_name oder Abhängigkeit), aus einem Testpaket das getestete Paket."
+          }
+        }
+      }
+    },
+    "Z plikiem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Datei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З файлом"
           }
         }
       }
@@ -94081,6 +97245,34 @@
         }
       }
     },
+    "Zapisz HTML" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save HTML"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HTML speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar HTML"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти HTML"
+          }
+        }
+      }
+    },
     "Zapisz HTML…" : {
       "localizations" : {
         "en" : {
@@ -94217,6 +97409,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зберегти фільтри й теки"
+          }
+        }
+      }
+    },
+    "Zapisz jako SQL*Plus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as SQL*Plus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als SQL*Plus speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como SQL*Plus"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як SQL*Plus"
+          }
+        }
+      }
+    },
+    "Zapisz jako standardowy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save as standard"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Standard speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar como estándar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти як стандартний"
           }
         }
       }
@@ -94413,6 +97661,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Makro in Bibliothek speichern …"
+          }
+        }
+      }
+    },
+    "Zapisz plan" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save plan"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan speichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar plan"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти план"
           }
         }
       }
@@ -96293,6 +99569,34 @@
         }
       }
     },
+    "Zatwierdź (Post)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Post"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übernehmen (Post)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmar (Post)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Застосувати (Post)"
+          }
+        }
+      }
+    },
     "Zatwierdź (git commit)…" : {
       "localizations" : {
         "en" : {
@@ -97749,6 +101053,34 @@
         }
       }
     },
+    "Zdalny Pro*C" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Pro*C"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Pro*C"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro*C remoto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Віддалений Pro*C"
+          }
+        }
+      }
+    },
     "Zdalny build Pro*C" : {
       "localizations" : {
         "en" : {
@@ -97997,6 +101329,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sperre dieses Deployments aufgehoben"
+          }
+        }
+      }
+    },
+    "Ze źródłem w bazie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With source in database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Quelle in der Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con el origen en la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З джерелом у базі"
           }
         }
       }
@@ -100045,6 +103405,34 @@
         }
       }
     },
+    "Znaczniki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markers"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markierungen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcadores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначки"
+          }
+        }
+      }
+    },
     "Znaczniki kolorów" : {
       "localizations" : {
         "en" : {
@@ -100153,6 +103541,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Weitersuchen"
+          }
+        }
+      }
+    },
+    "Znajdź obiekty" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find objects"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte suchen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar objetos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайти об’єкти"
           }
         }
       }
@@ -100325,6 +103741,34 @@
         }
       }
     },
+    "Znalezione czynności" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions found"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gefundene Aktionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acciones encontradas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знайдені дії"
+          }
+        }
+      }
+    },
     "Znaleziono: %@" : {
       "localizations" : {
         "en" : {
@@ -100381,6 +103825,34 @@
         }
       }
     },
+    "Zwija wstążkę do samych kart albo ją rozwija (także dwuklik karty)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapses the ribbon to tabs only or expands it (also by double-clicking a tab)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reduziert das Menüband auf die Registerkarten oder erweitert es (auch per Doppelklick auf eine Registerkarte)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrae la cinta a solo las pestañas o la expande (también con doble clic en una pestaña)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згортає стрічку до самих вкладок або розгортає її (також подвійним клацанням вкладки)."
+          }
+        }
+      }
+    },
     "Zwija wszystkie bloki podprogramów i struktur sterujących." : {
       "localizations" : {
         "en" : {
@@ -100405,6 +103877,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klappt alle Blöcke von Unterprogrammen und Kontrollstrukturen ein."
+          }
+        }
+      }
+    },
+    "Zwijanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folding"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faltung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plegado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згортання"
           }
         }
       }
@@ -100489,6 +103989,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Block einklappen"
+          }
+        }
+      }
+    },
+    "Zwiń wstążkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse ribbon"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband reduzieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer la cinta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згорнути стрічку"
+          }
+        }
+      }
+    },
+    "Zwiń wstążkę do kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse ribbon to tabs"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband auf Registerkarten reduzieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer la cinta a pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згорнути стрічку до вкладок"
+          }
+        }
+      }
+    },
+    "Zwiń wstążkę do samych kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse the ribbon to tabs only"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menüband nur auf Registerkarten reduzieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer la cinta solo a pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згорнути стрічку лише до вкладок"
           }
         }
       }
@@ -106065,6 +109649,34 @@
         }
       }
     },
+    "teraz niedostępne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not available now"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "derzeit nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no disponible ahora"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "зараз недоступно"
+          }
+        }
+      }
+    },
     "tylko do odczytu" : {
       "localizations" : {
         "en" : {
@@ -106369,6 +109981,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "видаляє елементи з кінця"
+          }
+        }
+      }
+    },
+    "utPLSQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "utPLSQL"
           }
         }
       }
@@ -108781,6 +112421,34 @@
         }
       }
     },
+    "Ślad DBMS_TRACE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE trace"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DBMS_TRACE-Trace"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Traza DBMS_TRACE"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Трасування DBMS_TRACE"
+          }
+        }
+      }
+    },
     "Ślad DBMS_TRACE przy wykonaniu" : {
       "localizations" : {
         "en" : {
@@ -109197,6 +112865,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Programmquelle (Agent)"
+          }
+        }
+      }
+    },
+    "Źródło w bazie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source in database"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelle in der Datenbank"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Origen en la base de datos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Джерело в базі"
           }
         }
       }

@@ -9,6 +9,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private let split = NSSplitViewController()
     private(set) lazy var sidebarController = SidebarViewController(workspace: workspace)
     private(set) var toolbarController: MainToolbarController?
+    private(set) lazy var ribbon = RibbonController(workspace: workspace)
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -46,6 +47,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         toolbar.displayMode = .iconOnly
         toolbarController = MainToolbarController(workspace: workspace, toolbar: toolbar)
         window.toolbar = toolbar
+        window.addTitlebarAccessoryViewController(ribbon)
         trackChanges { [weak self] in
             guard let self else { return }
             // Tytuł z połączeniem i worksetem, podtytuł z oknem i jego połączeniem (PD-UI-009).
