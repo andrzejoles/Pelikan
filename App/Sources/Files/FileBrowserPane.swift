@@ -151,7 +151,7 @@ struct FileBrowserPane: View {
                 .overlay(alignment: .bottomLeading) {
                     if let g = model.git {
                         Label(g.branch ?? L10n.tr("(odłączony HEAD)"), systemImage: "arrow.triangle.branch")
-                            .font(.caption).foregroundStyle(.secondary).padding(6)
+                            .font(.subheadline).foregroundStyle(.secondary).padding(6)
                     }
                 }
             } else {
@@ -295,7 +295,7 @@ struct FileTreeLevel: View {
                     Text(e.name).lineLimit(1)
                     Spacer()
                     if let g = e.git, !g.badge.isEmpty {
-                        Text(g.badge).font(.caption.monospaced().bold()).foregroundStyle(color(g)).help(g.displayName)
+                        Text(g.badge).font(.subheadline.monospaced().bold()).foregroundStyle(color(g)).help(g.displayName)
                     }
                 }
                 .tag(e.url.path)

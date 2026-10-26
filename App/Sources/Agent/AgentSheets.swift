@@ -33,7 +33,7 @@ struct ApprovalView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if !preview.statements.isEmpty {
                         section(L10n.tr("Polecenia")) {
-                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         }
                     }
                     if !preview.affectedObjects.isEmpty {
@@ -48,14 +48,14 @@ struct ApprovalView: View {
                         section(L10n.tr("Plan wykonania")) {
                             // Wiersze DBMS_XPLAN są szersze niż okno — przewijanie w poziomie zamiast zawijania.
                             ScrollView(.horizontal) {
-                                Text(plan).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled).fixedSize()
+                                Text(plan).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize()
                             }
                         }
                     }
                     let args = request.arguments.values.filter { !$0.key.hasPrefix("__") }
                     if !args.isEmpty {
                         section(L10n.tr("Argumenty")) {
-                            Text(JSONValue.object(args).description).font(.system(size: 10.5, design: .monospaced)).textSelection(.enabled)
+                            Text(JSONValue.object(args).description).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         }
                     }
                 }
@@ -71,7 +71,7 @@ struct ApprovalView: View {
             }
         }
         .padding(16)
-        .frame(width: 640)
+        .frame(minWidth: 640, idealWidth: 640, maxWidth: .infinity)
         .task {
             try? await Task.sleep(for: .milliseconds(800))
             armed = true
@@ -81,7 +81,7 @@ struct ApprovalView: View {
     @ViewBuilder
     private func section<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(title).font(.caption.bold()).foregroundStyle(.secondary)
+            Text(title).font(.subheadline.bold()).foregroundStyle(.secondary)
             content()
                 .padding(6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,7 +106,7 @@ struct PermissionMatrixView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(row.tool).font(.system(size: 12, design: .monospaced))
-                            Text(row.title).font(.caption).foregroundStyle(.secondary)
+                            Text(row.title).font(.subheadline).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Picker("", selection: $row.chosen) {
@@ -134,6 +134,6 @@ struct PermissionMatrixView: View {
             }
         }
         .padding(16)
-        .frame(width: 560, height: 520)
+        .windowSize(width: 560, height: 520)
     }
 }

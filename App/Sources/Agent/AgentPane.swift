@@ -66,7 +66,7 @@ final class AgentPane: NSView {
         let end = NSButton(title: L10n.tr("Zakończ"), target: self, action: #selector(end))
         let log = NSButton(title: L10n.tr("Dziennik"), target: self, action: #selector(showLog))
         for b in [undo, end, log] { b.controlSize = .small; b.bezelStyle = .accessoryBarAction; b.refusesFirstResponder = true }
-        warningLabel.font = .systemFont(ofSize: 10.5)
+        warningLabel.font = .systemFont(ofSize: 11)
         warningLabel.textColor = .systemOrange
         warningLabel.maximumNumberOfLines = 3
         warningLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -336,7 +336,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         middle.documentView = entries
         middle.hasVerticalScroller = true
         raw.isEditable = false
-        raw.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        raw.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         raw.autoresizingMask = [.width]
         let bottom = NSScrollView()
         bottom.documentView = raw

@@ -35,13 +35,13 @@ struct PlanDiagramView: View {
                 ForEach(nodes) { n in
                     VStack(alignment: .leading, spacing: 1) {
                         HStack {
-                            Text("\(n.line.executionOrder)").font(.caption2.monospacedDigit()).foregroundStyle(.white)
+                            Text("\(n.line.executionOrder)").font(.subheadline.monospacedDigit()).foregroundStyle(.white)
                                 .padding(.horizontal, 4).background(Capsule().fill(Color.accentColor))
                             Text(n.line.title).font(.callout.bold()).lineLimit(1)
                         }
-                        Text(n.line.object).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(n.line.object).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                         Text(L10n.tr("koszt \(n.line.cost.map(String.init) ?? "—") · wiersze \(n.line.cardinality.map(String.init) ?? "—")"))
-                            .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                            .font(.subheadline.monospacedDigit()).foregroundStyle(.secondary)
                     }
                     .padding(4)
                     .frame(width: boxWidth, height: boxHeight, alignment: .leading)
@@ -70,7 +70,7 @@ struct FlameGraphView: View {
                 .foregroundStyle(by: .value(L10n.tr("Operacja"), b.title.components(separatedBy: " ").first ?? ""))
                 .opacity(selection == nil || selection == b.id ? 1 : 0.45)
                 .annotation(position: .overlay) {
-                    if b.width > 0.08 { Text(b.title).font(.caption2).lineLimit(1).foregroundStyle(.white) }
+                    if b.width > 0.08 { Text(b.title).font(.subheadline).lineLimit(1).foregroundStyle(.white) }
                 }
         }
         .chartXScale(domain: 0...1)
@@ -89,7 +89,7 @@ struct FlameGraphView: View {
         .frame(minHeight: CGFloat(depth) * 26)
         .padding(6)
         if let b = bars.first(where: { $0.id == selection }) {
-            Text(L10n.tr("\(b.title) — koszt \(b.cost.map(String.init) ?? "—"), udział \(String(format: "%.1f", b.width * 100)) %")).font(.caption)
+            Text(L10n.tr("\(b.title) — koszt \(b.cost.map(String.init) ?? "—"), udział \(String(format: "%.1f", b.width * 100)) %")).font(.subheadline)
         }
     }
 }
@@ -102,8 +102,8 @@ struct AutotraceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(sql).font(.system(size: 11, design: .monospaced)).lineLimit(3).textSelection(.enabled)
-            Text(L10n.tr("SQL_ID \(result.sqlID) · wierszy \(result.rowsFetched) · \(String(format: "%.3f", result.elapsedSeconds)) s")).font(.caption).foregroundStyle(.secondary)
+            Text(sql).font(.system(size: 12, design: .monospaced)).lineLimit(3).textSelection(.enabled)
+            Text(L10n.tr("SQL_ID \(result.sqlID) · wierszy \(result.rowsFetched) · \(String(format: "%.3f", result.elapsedSeconds)) s")).font(.subheadline).foregroundStyle(.secondary)
             Picker("", selection: $tab) {
                 Text(L10n.tr("Plan rzeczywisty")).tag(0)
                 Text(L10n.tr("Statystyki")).tag(1)
@@ -113,7 +113,7 @@ struct AutotraceView: View {
             switch tab {
             case 0:
                 Table(result.lines) {
-                    TableColumn(L10n.tr("Operacja")) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.system(size: 11, design: .monospaced)) }
+                    TableColumn(L10n.tr("Operacja")) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.system(size: 12, design: .monospaced)) }
                         .width(min: 220, ideal: 300)
                     TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }
                     TableColumn("Starts") { l in Text(l.starts.map(String.init) ?? "").monospacedDigit() }.width(55)
@@ -133,7 +133,7 @@ struct AutotraceView: View {
                 }
             default:
                 ScrollView([.horizontal, .vertical]) {
-                    Text(result.planText).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).padding(4)
+                    Text(result.planText).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).padding(4)
                 }
             }
         }
@@ -158,9 +158,9 @@ struct PlanComparisonView: View {
             }
             Table(comparison.rows.filter { !onlyDifferent || $0.status != .same }) {
                 TableColumn("") { r in Image(systemName: icon(r.status)).foregroundStyle(color(r.status)) }.width(24)
-                TableColumn(leftTitle) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 11, design: .monospaced)) }
-                TableColumn(rightTitle) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 11, design: .monospaced)) }
-                TableColumn(L10n.tr("Różnice")) { r in Text(r.differences.joined(separator: ", ")).font(.caption) }
+                TableColumn(leftTitle) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 12, design: .monospaced)) }
+                TableColumn(rightTitle) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 12, design: .monospaced)) }
+                TableColumn(L10n.tr("Różnice")) { r in Text(r.differences.joined(separator: ", ")).font(.subheadline) }
             }
         }
         .padding(10)

@@ -126,10 +126,10 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(item.kind), accessibilityDescription: item.kind.rawValue) ?? NSImage())
         icon.contentTintColor = Self.tint(item.kind)
         let label = NSTextField(labelWithString: item.insertText)
-        label.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         label.lineBreakMode = .byTruncatingTail
         let detail = NSTextField(labelWithString: item.detail)
-        detail.font = .systemFont(ofSize: 10)
+        detail.font = .systemFont(ofSize: 11)
         detail.textColor = .secondaryLabelColor
         detail.lineBreakMode = .byTruncatingTail
         detail.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)

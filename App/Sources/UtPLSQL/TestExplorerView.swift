@@ -29,7 +29,7 @@ struct TestExplorerView: View {
             } primaryAction: { ids in
                 if let id = ids.first, let i = find(id) { open(i) }
             }
-            Text(message).font(.caption).foregroundStyle(.secondary)
+            Text(message).font(.subheadline).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 380, minHeight: 360)
@@ -98,7 +98,7 @@ struct ExplorerRow: View {
             Image(systemName: item.kind == .test ? (status.map(UtNodeRow.icon) ?? "circle") : item.kind == .logicalSuite ? "folder" : "shippingbox")
                 .foregroundStyle(status.map(UtNodeRow.color) ?? .secondary)
             Text(item.title).lineLimit(1).foregroundStyle(item.disabled ? .secondary : .primary)
-            if item.disabled { Text(L10n.tr("wyłączony")).font(.caption).foregroundStyle(.secondary) }
+            if item.disabled { Text(L10n.tr("wyłączony")).font(.subheadline).foregroundStyle(.secondary) }
         }
         .tag(item.id)
         .help(item.path)

@@ -24,7 +24,7 @@ struct DualityViewsView: View {
                 List(views, selection: $selection) { v in
                     VStack(alignment: .leading, spacing: 1) {
                         Text(v.name)
-                        Text(L10n.tr("tabela główna \(v.rootTable)")).font(.caption).foregroundStyle(.secondary)
+                        Text(L10n.tr("tabela główna \(v.rootTable)")).font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
                 GroupBox(L10n.tr("Nowy widok")) {
@@ -44,10 +44,10 @@ struct DualityViewsView: View {
                     Button(L10n.tr("Dokumenty")) { Task { await documents() } }.disabled(selection == nil)
                     Button(L10n.tr("Struktura")) { Task { await guide() } }.disabled(selection == nil)
                     Spacer()
-                    Text(message).font(.caption).foregroundStyle(.secondary)
+                    Text(message).font(.subheadline).foregroundStyle(.secondary)
                 }
                 ScrollView([.vertical, .horizontal]) {
-                    Text(detail).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
+                    Text(detail).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
                 }
             }
             .frame(minWidth: 420)
@@ -114,7 +114,7 @@ struct MLEModulesView: View {
                     workspace.newDocument(.sql, text: "create or replace mle env NOWE_SRODOWISKO" + (imports.isEmpty ? "" : " imports (\(imports))") + ";\n")
                 }
                 Spacer()
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
             }
             Table(modules, selection: $selection) {
                 TableColumn(L10n.tr("Moduł"), value: \.name)
@@ -122,7 +122,7 @@ struct MLEModulesView: View {
                 TableColumn(L10n.tr("Wersja"), value: \.version).width(80)
             }
             .contextMenu(forSelectionType: MLE.Module.ID.self) { _ in } primaryAction: { _ in Task { await openSource() } }
-            Text(L10n.tr("Środowiska: \(environments.isEmpty ? "—" : environments.joined(separator: ", "))")).font(.caption)
+            Text(L10n.tr("Środowiska: \(environments.isEmpty ? "—" : environments.joined(separator: ", "))")).font(.subheadline)
         }
         .padding(10)
         .frame(minWidth: 620, minHeight: 380)
@@ -132,7 +132,7 @@ struct MLEModulesView: View {
                 Text(L10n.tr("Debugowanie po wykonaniu: \(modules.first { $0.id == selection }?.name ?? "")")).font(.headline)
                 TextField(L10n.tr("Linie punktów (po przecinku)"), text: $debugLines)
                 TextField(L10n.tr("Obserwowane zmienne (puste — wszystkie lokalne)"), text: $debugWatch)
-                Text(L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")).font(.caption)
+                Text(L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")).font(.subheadline)
                 TextEditor(text: $debugCall).font(.system(size: 12, design: .monospaced)).frame(minHeight: 90)
                 HStack {
                     Spacer()
@@ -202,7 +202,7 @@ struct SpatialPreviewView: View {
             .frame(minHeight: 260)
             .background(Color(nsColor: .textBackgroundColor))
             ScrollView {
-                Text(wkt.joined(separator: "\n")).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(wkt.joined(separator: "\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(minHeight: 80)
         }

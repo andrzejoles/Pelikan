@@ -115,7 +115,7 @@ struct ReportToolbar: View {
             Button { workspace.perform("report.execute") } label: { Label(L10n.tr("Wykonaj"), systemImage: "play.fill") }
                 .disabled(document.isExecuting)
             Spacer()
-            if let e = document.reportError { Text(e).foregroundStyle(.red).font(.caption).lineLimit(1) }
+            if let e = document.reportError { Text(e).foregroundStyle(.red).font(.subheadline).lineLimit(1) }
             Button { workspace.perform("report.print") } label: { Image(systemName: "printer") }.iconLabel(L10n.tr("Drukuj raport…")).disabled(document.reportHTML == nil)
             Button { workspace.perform("report.saveHTML") } label: { Image(systemName: "square.and.arrow.down") }.iconLabel(L10n.tr("Zapisz raport jako HTML…")).disabled(document.reportHTML == nil)
             Menu(L10n.tr("Eksport")) {
@@ -166,7 +166,7 @@ struct ReportLayoutView: View {
                     TextField(L10n.tr("Nagłówek (#title, #date, #user, #connection, #zmienna)"), text: $document.report.header)
                     Toggle(L10n.tr("Nowa strona po każdej grupie"), isOn: $document.report.pageBreakOnGroup)
                     TextField(L10n.tr("Tło (kolor CSS)"), text: $document.report.background)
-                    TextField(L10n.tr("Dodatkowy CSS"), text: $document.report.extraCSS, axis: .vertical).font(.system(size: 11, design: .monospaced)).lineLimit(2...6)
+                    TextField(L10n.tr("Dodatkowy CSS"), text: $document.report.extraCSS, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(2...6)
                 }
                 Section(L10n.tr("Kolumny (po wykonaniu raportu)")) {
                     if columnNames.isEmpty { Text(L10n.tr("Wykonaj raport, żeby ustawić formaty kolumn.")).foregroundStyle(.secondary) }

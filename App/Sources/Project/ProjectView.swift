@@ -28,7 +28,7 @@ struct ProjectView: View {
                     Text(p.name).font(.headline)
                     if let g = git, let branch = g.branch {
                         Label(branch + (g.ahead > 0 ? " ↑\(g.ahead)" : "") + (g.behind > 0 ? " ↓\(g.behind)" : ""), systemImage: "arrow.triangle.branch")
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button { refreshGit() } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież stan Git"))
@@ -61,7 +61,7 @@ struct ProjectView: View {
                 }
                 if !matches.isEmpty {
                     List(matches) { m in
-                        Text("\(m.title):\(m.line)  \(m.text)").font(.system(size: 11, design: .monospaced)).lineLimit(1)
+                        Text("\(m.title):\(m.line)  \(m.text)").font(.system(size: 12, design: .monospaced)).lineLimit(1)
                             .onTapGesture(count: 2) { open(m.item, line: m.line) }
                     }
                     .frame(height: 120)
@@ -70,7 +70,7 @@ struct ProjectView: View {
                     List(workspace.projectBuildResults) { r in
                         VStack(alignment: .leading) {
                             Text("\(statusText(r.status)) — \(r.title)").foregroundStyle(r.status == .failed ? .red : r.status == .skipped ? .secondary : .primary)
-                            ForEach(r.messages, id: \.self) { Text($0).font(.caption.monospaced()) }
+                            ForEach(r.messages, id: \.self) { Text($0).font(.subheadline.monospaced()) }
                         }
                     }
                     .frame(height: 140)
@@ -78,7 +78,7 @@ struct ProjectView: View {
             } else {
                 Text(L10n.tr("Brak otwartego projektu")).foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            Text(message).font(.caption).foregroundStyle(.secondary)
+            Text(message).font(.subheadline).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 560, minHeight: 520)
@@ -110,13 +110,13 @@ struct ProjectView: View {
                 Text(item.title)
             }
             if let s = git?.items[item.id], !s.badge.isEmpty {
-                Text(s.badge).font(.caption.monospaced().bold()).foregroundStyle(gitColor(s)).help(s.displayName)
+                Text(s.badge).font(.subheadline.monospaced().bold()).foregroundStyle(gitColor(s)).help(s.displayName)
             }
             Spacer()
             TextField(L10n.tr("grupa"), text: Binding(get: { item.group ?? "" }, set: { v in
                 mutate { p in if let i = p.items.firstIndex(where: { $0.id == item.id }) { p.items[i].group = v.isEmpty ? nil : v } }
             }))
-            .frame(width: 110).font(.caption)
+            .frame(width: 110).font(.subheadline)
         }
     }
 
@@ -130,7 +130,7 @@ struct ProjectView: View {
             Toggle(L10n.tr("Zatrzymaj po pierwszym błędzie"), isOn: Binding(get: { p.options.haltOnFirstError }, set: { v in mutate { $0.options.haltOnFirstError = v } }))
             Toggle(L10n.tr("Formatuj przy budowaniu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { v in mutate { $0.options.beautifyOnBuild = v } }))
         }
-        .toggleStyle(.checkbox).font(.caption)
+        .toggleStyle(.checkbox).font(.subheadline)
     }
 
     private func statusText(_ s: ProjectBuildResult.Status) -> String {

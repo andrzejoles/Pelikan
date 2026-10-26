@@ -39,7 +39,7 @@ struct UtplsqlResultsView: View {
             if diff.isEmpty { Text(L10n.tr("Bez zmian stanów testów.")).foregroundStyle(.secondary) }
             List(diff, id: \.path) { d in
                 HStack {
-                    Text(d.path).font(.system(size: 11, design: .monospaced)).lineLimit(1).truncationMode(.head)
+                    Text(d.path).font(.system(size: 12, design: .monospaced)).lineLimit(1).truncationMode(.head)
                     Spacer()
                     Text(d.before?.displayName ?? L10n.tr("nowy")).foregroundStyle(.secondary)
                     Image(systemName: "arrow.right")
@@ -85,19 +85,19 @@ struct UtplsqlResultsView: View {
                 counter(L10n.tr("Wyłączone"), "\(tests(.disabled))", .secondary)
                 if let t = run.executionTime { counter(L10n.tr("Czas"), String(format: "%.3f s", t), .secondary) }
                 Spacer()
-                if let c = run.currentTest { Text(c).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
+                if let c = run.currentTest { Text(c).font(.subheadline).foregroundStyle(.secondary).lineLimit(1).truncationMode(.head) }
             }
             HStack(spacing: 10) {
-                Text(L10n.tr("Pokaż:")).font(.caption)
+                Text(L10n.tr("Pokaż:")).font(.subheadline)
                 ForEach([UtStatus.success, .failure, .error, .disabled], id: \.self) { s in
                     Toggle(s.displayName, isOn: Binding(get: { shown.contains(s) }, set: { if $0 { shown.insert(s) } else { shown.remove(s) } }))
-                        .toggleStyle(.checkbox).font(.caption)
+                        .toggleStyle(.checkbox).font(.subheadline)
                 }
                 Spacer()
                 Picker(L10n.tr("Sortuj:"), selection: $sortOrder) {
                     ForEach(UtSortOrder.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
-                .font(.caption)
+                .font(.subheadline)
                 .fixedSize()
             }
         }
@@ -107,7 +107,7 @@ struct UtplsqlResultsView: View {
 
     private func counter(_ title: String, _ value: String, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title).font(.caption2).foregroundStyle(.secondary)
+            Text(title).font(.subheadline).foregroundStyle(.secondary)
             Text(value).font(.system(.body, design: .rounded).bold()).foregroundStyle(color)
         }
     }
@@ -143,9 +143,9 @@ struct UtplsqlResultsView: View {
         let a = c.actual.components(separatedBy: "\n"), e = c.expected.components(separatedBy: "\n")
         func column(_ title: String, _ lines: [String], _ other: [String]) -> some View {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.caption2.bold()).foregroundStyle(.secondary)
+                Text(title).font(.subheadline.bold()).foregroundStyle(.secondary)
                 ForEach(Array(lines.enumerated()), id: \.offset) { i, l in
-                    Text(l).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                    Text(l).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(i < other.count && other[i] == l ? Color.clear : Color.red.opacity(0.12))
                 }
@@ -165,13 +165,13 @@ struct UtplsqlResultsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let n = selected {
                     Text(n.title).font(.headline)
-                    Text(n.id).font(.caption.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(n.id).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
                     Text(n.status.displayName).foregroundStyle(color(n.status))
                     if !n.disabledReason.isEmpty { Text(L10n.tr("Wyłączony: \(n.disabledReason)")).foregroundStyle(.secondary) }
                     ForEach(Array(n.expectations.enumerated()), id: \.offset) { _, e in
                         VStack(alignment: .leading, spacing: 4) {
                             if !e.description.isEmpty { Text(e.description).bold() }
-                            Text(e.message).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                            Text(e.message).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                             if let c = e.comparison { comparison(c) }
                             if !e.caller.isEmpty { stackText(e.caller, node: n) }
                         }
@@ -179,20 +179,20 @@ struct UtplsqlResultsView: View {
                         .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
                     }
                     if !n.errorStack.isEmpty {
-                        Text(L10n.tr("Stos błędu")).font(.caption.bold())
+                        Text(L10n.tr("Stos błędu")).font(.subheadline.bold())
                         stackText(n.errorStack, node: n)
                     }
                     if !n.serverOutput.isEmpty {
-                        Text("DBMS_OUTPUT").font(.caption.bold())
-                        Text(n.serverOutput).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                        Text("DBMS_OUTPUT").font(.subheadline.bold())
+                        Text(n.serverOutput).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                     }
                     if !n.warnings.isEmpty {
-                        Text(L10n.tr("Ostrzeżenia")).font(.caption.bold())
-                        Text(n.warnings).font(.system(size: 11, design: .monospaced))
+                        Text(L10n.tr("Ostrzeżenia")).font(.subheadline.bold())
+                        Text(n.warnings).font(.system(size: 12, design: .monospaced))
                     }
                 } else {
                     Text(L10n.tr("Wybierz test, żeby zobaczyć szczegóły.")).foregroundStyle(.secondary)
-                    if !run.errorStack.isEmpty { Text(run.errorStack).font(.system(size: 11, design: .monospaced)) }
+                    if !run.errorStack.isEmpty { Text(run.errorStack).font(.system(size: 12, design: .monospaced)) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -205,9 +205,9 @@ struct UtplsqlResultsView: View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { _, line in
                 if let frame = TestRunner.errorStack("ORA-06512: at " + line.replacingOccurrences(of: "ORA-06512: at ", with: "")).first, !frame.unit.isEmpty {
-                    Button(line) { openFrame(frame) }.buttonStyle(.link).font(.system(size: 11, design: .monospaced))
+                    Button(line) { openFrame(frame) }.buttonStyle(.link).font(.system(size: 12, design: .monospaced))
                 } else {
-                    Text(line).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                    Text(line).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                 }
             }
         }
@@ -264,7 +264,7 @@ struct UtNodeRow: View {
             Image(systemName: Self.icon(node.status)).foregroundStyle(Self.color(node.status))
             Text(node.title).lineLimit(1)
             Spacer()
-            if let t = node.executionTime { Text(String(format: "%.3f s", t)).font(.caption).foregroundStyle(.secondary) }
+            if let t = node.executionTime { Text(String(format: "%.3f s", t)).font(.subheadline).foregroundStyle(.secondary) }
         }
         .tag(node.id)
         .contextMenu {

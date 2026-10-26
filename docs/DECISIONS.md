@@ -1536,3 +1536,17 @@ mają objąć to, co mają formatery (szczególnie wyrównanie i wielkość lite
 - Bezpieczeństwo bez zmian: `Beautifier.verify` porównuje tokeny; test formatuje korpus przy każdej opcji osobno, przy
   narastającej kombinacji wszystkich i sprawdza idempotencję. Wydajność z wszystkimi wyrównaniami: pakiet 50 000 linii
   w ok. 3 s w kompilacji testowej (tokeny linii w pamięci podręcznej).
+
+### D177 · 2026-10-26 — Czytelne czcionki i okna o zmiennym rozmiarze
+
+Właściciel: czcionki interfejsu wyglądają źle, a okna bez zmiany rozmiaru (np. Preferencje) są kłopotliwe.
+- **Czcionki:** interfejs używał wielu bardzo małych rozmiarów — `caption`/`caption2`/`footnote` (10 pt, ok. 170 miejsc),
+  9–10,5 pt w AppKit i 10–11 pt w podglądach kodu — w różnych kombinacjach. Teraz najmniejszy tekst ma 11 pt
+  (`subheadline`, `smallSystemFontSize`), kod w podglądach i wynikach 12 pt (jak siatka), wstążka: podpisy 12 pt, karty
+  13 pt, podpisy grup 11 pt; edytor bez zmian (SF Mono 13, ustawienie użytkownika).
+- **Wstążka:** rząd przycisków ma stałą wysokość — podpisy grup w jednej linii; bez paska przewijania, który przy
+  ustawieniu macOS „pokazuj paski przewijania: zawsze” zasłaniał podpisy grup (szeroką kartę przewija gest albo kółko).
+- **Okna:** Preferencje dostały zmianę rozmiaru, minimalizację i zapamiętaną ramkę; okna i arkusze SwiftUI ze stałym
+  rozmiarem (logowanie, edytor połączenia, Znajdź i zamień, sesje, arkusze agenta, scheduler, DBA, narzędzia siatki)
+  mają rozmiar minimalny i początkowy zamiast stałego (`windowSize(width:height:)`); panel Znajdź i zamień i paleta komend
+  też dają się powiększać. Wyjątek: lista podpowiedzi edytora (dopasowana do treści).

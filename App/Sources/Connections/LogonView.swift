@@ -34,7 +34,7 @@ struct LogonView: View {
                         .frame(width: 9, height: 9)
                     VStack(alignment: .leading) {
                         Text(c.displayName)
-                        Text(c.connectionString + "  ·  " + c.environment.displayName).font(.caption).foregroundStyle(.secondary)
+                        Text(c.connectionString + "  ·  " + c.environment.displayName).font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
                 .tag(c.id)
@@ -59,7 +59,7 @@ struct LogonView: View {
             }
         }
         .padding(20)
-        .frame(width: 520, height: 420)
+        .windowSize(width: 520, height: 420)
     }
 
     private func edit(_ id: UUID?) {

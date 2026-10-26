@@ -38,7 +38,7 @@ struct QueryBuilderView: View {
                 preview.frame(minHeight: 120)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Kopiuj SQL")) {
                     NSPasteboard.general.clearContents()
@@ -138,7 +138,7 @@ struct QueryBuilderView: View {
                             Text(L10n.tr("malejąco")).tag(QBField.Sort.descending)
                         }
                         .labelsHidden().frame(width: 120)
-                        Toggle("GROUP BY", isOn: $f.groupBy).toggleStyle(.checkbox).font(.caption)
+                        Toggle("GROUP BY", isOn: $f.groupBy).toggleStyle(.checkbox).font(.subheadline)
                     }
                 }
                 .onDelete { model.fields.remove(atOffsets: $0) }
@@ -149,7 +149,7 @@ struct QueryBuilderView: View {
                 ForEach($model.joins) { $j in
                     HStack {
                         Text("\(model.table(j.left)?.alias ?? "?") ↔ \(model.table(j.right)?.alias ?? "?") (\(j.leftColumns.joined(separator: ", ").lowercased()))")
-                            .font(.caption)
+                            .font(.subheadline)
                         Picker("", selection: $j.kind) { ForEach(QBJoin.Kind.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
                             .labelsHidden().frame(width: 130)
                         Button { model.joins.removeAll { $0.id == j.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)

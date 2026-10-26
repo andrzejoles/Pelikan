@@ -234,11 +234,11 @@ final class DiagramCanvas: NSView {
         var y = r.minY + 26
         for c in it.columns {
             let name = (c.primaryKey ? "🔑 " : "") + c.name.lowercased()
-            (name as NSString).draw(at: NSPoint(x: r.minX + 6, y: y), withAttributes: [.font: NSFont.systemFont(ofSize: 10.5), .foregroundColor: NSColor.labelColor])
+            (name as NSString).draw(at: NSPoint(x: r.minX + 6, y: y), withAttributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.labelColor])
             let t = c.type.lowercased() + (c.nullable ? "" : " ●")
-            let size = (t as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 10)])
+            let size = (t as NSString).size(withAttributes: [.font: NSFont.systemFont(ofSize: 11)])
             (t as NSString).draw(at: NSPoint(x: r.maxX - size.width - 6, y: y + 1),
-                                 withAttributes: [.font: NSFont.systemFont(ofSize: 10), .foregroundColor: NSColor.secondaryLabelColor])
+                                 withAttributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor])
             y += 16
         }
     }
@@ -283,7 +283,7 @@ final class DiagramCanvas: NSView {
         if !l.label.isEmpty {
             let mid = NSPoint(x: (pts[0].x + pts[pts.count - 1].x) / 2, y: (pts[0].y + pts[pts.count - 1].y) / 2)
             (l.label.lowercased() as NSString).draw(at: NSPoint(x: mid.x + 4, y: mid.y - 12),
-                                                   withAttributes: [.font: NSFont.systemFont(ofSize: 9), .foregroundColor: NSColor.tertiaryLabelColor])
+                                                   withAttributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.tertiaryLabelColor])
         }
     }
 

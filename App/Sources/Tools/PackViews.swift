@@ -42,7 +42,7 @@ struct SQLMonitorView: View {
                 Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Raport")) { open(selection) }.disabled(selection == nil)
                 Spacer()
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
             }
             Table(data.rows.indices.map { DetailRow(id: $0, values: data.rows[$0]) }, selection: $selection) {
                 TableColumnForEach(data.columns.indices.map { $0 }, id: \.self) { i in

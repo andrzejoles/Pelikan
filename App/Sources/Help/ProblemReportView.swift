@@ -36,7 +36,7 @@ struct ProblemReportView: View {
             Text(L10n.tr("Podgląd treści")).font(.headline)
             ScrollView {
                 Text(report.body())
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.system(size: 12, design: .monospaced))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(6)
@@ -46,7 +46,7 @@ struct ProblemReportView: View {
             HStack {
                 Button(L10n.tr("Eksportuj pełny dziennik…")) { workspace.perform("help.exportLog") }
                 Spacer()
-                if !message.isEmpty { Text(message).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
+                if !message.isEmpty { Text(message).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true) }
                 Button(L10n.tr("Anuluj"), action: close).keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Kopiuj treść")) {
                     copy()

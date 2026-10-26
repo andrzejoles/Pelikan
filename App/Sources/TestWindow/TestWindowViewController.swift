@@ -134,11 +134,11 @@ struct TestPanel: View {
                 Toggle(L10n.tr("Zbieraj HTP przy wykonaniu"), isOn: $document.htpEnabled).toggleStyle(.checkbox)
                 Spacer()
             }
-            .font(.caption)
+            .font(.subheadline)
             .padding(.horizontal, 6)
             ScrollView {
                 Text(showHTP ? (document.htpOutput ?? (document.htpEnabled ? L10n.tr("(pusta strona HTP)") : L10n.tr("Włącz zbieranie HTP i wykonaj blok."))) : document.output.joined(separator: "\n"))
-                    .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                    .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
             }
         }
@@ -202,7 +202,7 @@ struct TestPanel: View {
                 if document.profilerReport?.kind == .hierarchical { Toggle(L10n.tr("Drzewo wywołań"), isOn: $showCallTree).toggleStyle(.checkbox) }
                 Spacer()
             }
-            .font(.caption)
+            .font(.subheadline)
             .padding(.horizontal, 6)
             if let r = document.profilerReport {
                 if r.kind == .lines {
@@ -214,7 +214,7 @@ struct TestPanel: View {
                         TableColumn(L10n.tr("Wykonań")) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
                         TableColumn(L10n.tr("Czas [\(unit.symbol)]")) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
                         TableColumn("%") { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
-                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.system(size: 11, design: .monospaced)).lineLimit(1) }
+                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.system(size: 12, design: .monospaced)).lineLimit(1) }
                     }
                 } else if showCallTree {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
@@ -260,11 +260,11 @@ struct TestPanel: View {
                     Text(L10n.tr("Brak wyników — blok może zwracać zapytania przez DBMS_SQL.RETURN_RESULT.")).foregroundStyle(.secondary)
                 }
                 ForEach(Array(document.testResults.enumerated()), id: \.offset) { i, r in
-                    Text(L10n.tr("Wynik \(i + 1)")).font(.caption.bold())
+                    Text(L10n.tr("Wynik \(i + 1)")).font(.subheadline.bold())
                     Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 3) {
                         GridRow { ForEach(r.columns, id: \.self) { Text($0).bold() } }
                         ForEach(Array(r.rows.enumerated()), id: \.offset) { _, row in
-                            GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 11, design: .monospaced)) } }
+                            GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 12, design: .monospaced)) } }
                         }
                     }
                 }
@@ -279,8 +279,8 @@ struct TestPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(document.traceLevel == nil ? L10n.tr("Ślad wyłączony") : L10n.tr("Poziom śladu: \(document.traceLevel!.rawValue)"))
-                    .font(.caption).foregroundStyle(.secondary)
-                if let run = document.traceRun { Text(L10n.tr("Przebieg \(run)")).font(.caption).foregroundStyle(.secondary) }
+                    .font(.subheadline).foregroundStyle(.secondary)
+                if let run = document.traceRun { Text(L10n.tr("Przebieg \(run)")).font(.subheadline).foregroundStyle(.secondary) }
                 Spacer()
                 Button(document.traceLevel == nil ? L10n.tr("Włącz ślad") : L10n.tr("Wyłącz ślad")) {
                     workspace.perform("test.trace", CommandArguments(document.traceLevel == nil ? [:] : ["levels": "off"]))
@@ -345,7 +345,7 @@ struct CursorResultView: View {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                     GridRow { ForEach(variable.cursorColumns, id: \.self) { Text($0).bold() } }
                     ForEach(Array(variable.cursorRows.enumerated()), id: \.offset) { _, row in
-                        GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 11, design: .monospaced)) } }
+                        GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 12, design: .monospaced)) } }
                     }
                 }
                 .padding(6)

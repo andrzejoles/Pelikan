@@ -40,7 +40,7 @@ struct MacroLibraryView: View {
                     workspace.updateMacros(lib)
                 }.disabled(selected == nil)
                 Spacer()
-                Text(L10n.tr("Skrót zajęty przez inną komendę jest pomijany.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Skrót zajęty przez inną komendę jest pomijany.")).font(.subheadline).foregroundStyle(.secondary)
             }
         }
         .padding(10)
@@ -78,7 +78,7 @@ struct ClipboardHistoryView: View {
                 List(entries, selection: $selection) { e in
                     VStack(alignment: .leading, spacing: 1) {
                         Text(e.title).lineLimit(1).font(.system(size: 12, design: .monospaced))
-                        Text(e.date.formatted(date: .omitted, time: .standard)).font(.caption2).foregroundStyle(.secondary)
+                        Text(e.date.formatted(date: .omitted, time: .standard)).font(.subheadline).foregroundStyle(.secondary)
                     }
                     .tag(e.id)
                 }
@@ -88,7 +88,7 @@ struct ClipboardHistoryView: View {
                 .frame(minHeight: 160)
                 ScrollView {
                     Text(entries.first { $0.id == selection }?.text ?? "")
-                        .font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                        .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading).padding(6)
                 }
                 .frame(minHeight: 100)
@@ -96,7 +96,7 @@ struct ClipboardHistoryView: View {
             HStack {
                 Button(L10n.tr("Wklej")) { if let id = selection { paste(id, in: entries) } }.disabled(selection == nil)
                 Spacer()
-                Text(L10n.tr("Historia tylko w pamięci — znika po zamknięciu Pelikana.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Historia tylko w pamięci — znika po zamknięciu Pelikana.")).font(.subheadline).foregroundStyle(.secondary)
             }
         }
         .padding(10)
@@ -150,7 +150,7 @@ struct TodoItemsView: View {
             HStack {
                 Toggle(L10n.tr("Pokaż zamknięte"), isOn: $showClosed).toggleStyle(.checkbox)
                 Spacer()
-                Text(L10n.tr("Składnia: -- TODO(właściciel) !priorytet #kategoria: tekst")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Składnia: -- TODO(właściciel) !priorytet #kategoria: tekst")).font(.subheadline).foregroundStyle(.secondary)
             }
             Table(rows, selection: $selection) {
                 TableColumn("") { r in Image(systemName: r.item.closed ? "checkmark.circle.fill" : "circle").foregroundStyle(r.item.closed ? .green : .secondary) }.width(22)

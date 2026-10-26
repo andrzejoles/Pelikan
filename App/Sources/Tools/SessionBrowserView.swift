@@ -57,7 +57,7 @@ struct SessionBrowserView: View {
                 }
                 .frame(minHeight: 120)
             }
-            Text(message).font(.caption).foregroundStyle(.secondary)
+            Text(message).font(.subheadline).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 900, minHeight: 520)
@@ -82,7 +82,7 @@ struct SessionBrowserView: View {
     @ViewBuilder private var detailView: some View {
         if let d = detail {
             if let text = d.text {
-                ScrollView { Text(text).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                ScrollView { Text(text).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
             } else {
                 Table(d.rows.indices.map { DetailRow(id: $0, values: d.rows[$0]) }) {
                     TableColumnForEach(d.columns.indices.map { $0 }, id: \.self) { i in
@@ -167,7 +167,7 @@ struct SessionQueriesEditor: View {
                 ForEach(items) { $item in
                     VStack(alignment: .leading, spacing: 2) {
                         TextField(L10n.tr("Nazwa"), text: $item.name).font(.headline)
-                        TextField("SQL", text: $item.sql, axis: .vertical).font(.system(size: 11, design: .monospaced)).lineLimit(1...4)
+                        TextField("SQL", text: $item.sql, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(1...4)
                     }
                 }
                 .onDelete { items.wrappedValue.remove(atOffsets: $0) }
@@ -184,7 +184,7 @@ struct SessionQueriesEditor: View {
             }
         }
         .padding(14)
-        .frame(width: 720, height: 460)
+        .windowSize(width: 720, height: 460)
         .onAppear { queries = workspace.settings.sessionQueries }
     }
 }

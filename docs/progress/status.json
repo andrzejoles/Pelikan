@@ -1,5 +1,5 @@
 {
-  "heartbeat": "2026-10-26T12:18:06+01:00",
+  "heartbeat": "2026-10-26T13:14:38+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
@@ -58,6 +58,7 @@
     }
   ],
   "done": [
+    "Czytelne czcionki (min. 11 pt) i okna o zmiennym rozmiarze, w tym Preferencje (D177)",
     "Formater: 20 nowych opcji (wyrównania, klauzule, odstępy, wielkość liter grup słów) z podglądem każdej opcji (PD-BEAU-001, D174)",
     "Zgłaszanie problemów na GitHubie z aplikacji (PL-INFRA-013, D173)",
     "Dziennik aplikacji z prywatnością wpisów (PL-INFRA-011, D170)",
@@ -96,8 +97,7 @@
     "Przebieg zrzutów: naprawione układy okien DBMS Scheduler, Panel DBA, Narzędzia użytkownika (treść pod tytułem, stopka na liście) — D145",
     "Diagram: edycja punktów łamania myszą (PD-DIAG-002); naprawiony układ okna diagramu — płótno zapadało się do zera (błąd od Etapu 6, znaleziony zrzutem w tle)",
     "Zrzuty w tle nowych edytorów P2 (widok, kolejka, użytkownik, punkty przerwania); poprawione wyrównanie pola zapytania w edytorze widoku",
-    "Scalone #59; P2: 23 wiersze subagentów (edytor, kompilator, szablony, siatka, kolory; debuger, profilery, HTP, wiele obiektów, edytory obiektów, Query Builder) — 202/202 na bazie",
-    "P2: test łącza, DBMS_JOB.RUN i start/stop kolejek AQ (PD-OB-019); partycje istniejącej tabeli i podpartycje (PD-OED-006)"
+    "Scalone #59; P2: 23 wiersze subagentów (edytor, kompilator, szablony, siatka, kolory; debuger, profilery, HTP, wiele obiektów, edytory obiektów, Query Builder) — 202/202 na bazie"
   ],
   "next": [
     "Logo aplikacji (ikona)"

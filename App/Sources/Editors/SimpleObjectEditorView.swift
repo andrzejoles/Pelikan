@@ -21,7 +21,7 @@ struct SimpleObjectEditorView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("SQL").font(.callout.bold()).padding(.horizontal, 8).padding(.top, 8)
                     ScrollView {
-                        Text(preview).font(.system(size: 11, design: .monospaced)).textSelection(.enabled)
+                        Text(preview).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
                     }
                     .background(Color(nsColor: .textBackgroundColor))

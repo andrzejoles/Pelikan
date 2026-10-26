@@ -6,3 +6,11 @@ extension View {
         help(text).accessibilityLabel(text)
     }
 }
+
+extension View {
+    /// Rozmiar startowy okna albo arkusza z SwiftUI, które da się powiększać (D177): podany rozmiar jest minimalnym
+    /// i początkowym, bez górnej granicy.
+    func windowSize(width: CGFloat, height: CGFloat) -> some View {
+        frame(minWidth: width, idealWidth: width, maxWidth: .infinity, minHeight: height, idealHeight: height, maxHeight: .infinity)
+    }
+}

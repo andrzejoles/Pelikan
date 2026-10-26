@@ -16,11 +16,11 @@ struct DebuggerPanel: View {
             Text(status).font(.callout).foregroundStyle(.secondary).lineLimit(2)
             HSplitView {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("Stos wywołań")).font(.caption.bold())
+                    Text(L10n.tr("Stos wywołań")).font(.subheadline.bold())
                     List(Array(debugger.stack.enumerated()), id: \.offset) { i, f in
                         Button { Task { await debugger.selectFrame(i) } } label: {
                             HStack {
-                                Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.caption2)
+                                Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.subheadline)
                                 Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.system(.body, design: .monospaced))
                                 Spacer()
                                 Text("\(f.line)").foregroundStyle(.secondary)
@@ -31,9 +31,9 @@ struct DebuggerPanel: View {
                 }
                 .frame(minWidth: 200)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.tr("Zmienne")).font(.caption.bold())
+                    Text(L10n.tr("Zmienne")).font(.subheadline.bold())
                     List(debugger.variables, children: \.children) { v in variableRow(v) }
-                    Text(L10n.tr("Obserwowane")).font(.caption.bold())
+                    Text(L10n.tr("Obserwowane")).font(.subheadline.bold())
                     List(debugger.watchValues, children: \.children) { v in
                         variableRow(v).contextMenu {
                             Button(L10n.tr("Usuń z obserwowanych")) { debugger.removeWatch(v.path) }

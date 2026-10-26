@@ -516,7 +516,7 @@ final class DocumentTabButton: NSView {
         layer?.cornerRadius = 6
         layer?.backgroundColor = isActive ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor : NSColor.clear.cgColor
         let marker = NSTextField(labelWithString: document.kind.shortName)
-        marker.font = .monospacedSystemFont(ofSize: 10, weight: .bold)
+        marker.font = .monospacedSystemFont(ofSize: 12, weight: .bold)
         marker.textColor = Self.color(for: document.kind)
         let title = NSTextField(labelWithString: (document.isModified ? "● " : "") + document.title)
         title.font = .systemFont(ofSize: 12, weight: isActive ? .semibold : .regular)

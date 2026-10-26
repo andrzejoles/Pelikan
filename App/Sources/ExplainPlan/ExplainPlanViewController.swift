@@ -100,7 +100,7 @@ struct PlanPanel: View {
                 FlameGraphView(roots: plan.roots, selection: $selection)
             } else if mode == 3, let plan = document.plan {
                 ScrollView([.horizontal, .vertical]) {
-                    Text(plan.text).font(.system(size: 11, design: .monospaced)).textSelection(.enabled).padding(4)
+                    Text(plan.text).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).padding(4)
                 }
             } else {
                 Table(document.plan?.roots ?? [], children: \.children, selection: $selection) {
@@ -117,8 +117,8 @@ struct PlanPanel: View {
                 }
                 if let line = document.plan?.lines.first(where: { $0.id == selection }), !(line.accessPredicates.isEmpty && line.filterPredicates.isEmpty) {
                     VStack(alignment: .leading, spacing: 2) {
-                        if !line.accessPredicates.isEmpty { Text(L10n.tr("Dostęp: \(line.accessPredicates)")).font(.caption.monospaced()).textSelection(.enabled) }
-                        if !line.filterPredicates.isEmpty { Text(L10n.tr("Filtr: \(line.filterPredicates)")).font(.caption.monospaced()).textSelection(.enabled) }
+                        if !line.accessPredicates.isEmpty { Text(L10n.tr("Dostęp: \(line.accessPredicates)")).font(.subheadline.monospaced()).textSelection(.enabled) }
+                        if !line.filterPredicates.isEmpty { Text(L10n.tr("Filtr: \(line.filterPredicates)")).font(.subheadline.monospaced()).textSelection(.enabled) }
                     }
                 }
             }

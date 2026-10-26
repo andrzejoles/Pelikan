@@ -44,7 +44,7 @@ struct ObjectTypesPicker: View {
                 Toggle(t, isOn: Binding(get: { types.contains(t) }, set: { if $0 { types.insert(t) } else { types.remove(t) } })).toggleStyle(.checkbox)
             }
         }
-        .font(.caption)
+        .font(.subheadline)
     }
 }
 
@@ -103,7 +103,7 @@ struct PredefinedReportsView: View {
                     Text(L10n.tr("Wybierz raport z listy")).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
             }
             .padding(10)
             .frame(minWidth: 600)
@@ -184,7 +184,7 @@ struct DatabaseDiffView: View {
                 TableColumn(L10n.tr("Różnica")) { d in Text(d.status == .onlySource ? L10n.tr("tylko w źródle") : d.status == .onlyTarget ? L10n.tr("tylko w celu") : L10n.tr("różny")) }.width(130)
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { Task { await compare() } }.disabled(busy || targetID == nil || targetOwner.isEmpty)
                 Button(L10n.tr("Pokaż różnice")) {
@@ -253,7 +253,7 @@ struct CartView: View {
                 Button(L10n.tr("Dodaj")) { Task { await add() } }.disabled(objectName.isEmpty)
                 Button(L10n.tr("Usuń")) { cart.remove(selection); persist() }.disabled(selection.isEmpty)
                 Spacer()
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
                 Button(L10n.tr("Zapisz jako…")) { Task { await saveAs() } }
                 Button(L10n.tr("Otwórz…")) { Task { await openFile() } }
                 Button(L10n.tr("Skrypt wdrożenia")) { Task { await script() } }.disabled(cart.items.isEmpty)
@@ -322,9 +322,9 @@ struct SchemaCopyView: View {
                 TextField(L10n.tr("Warunek WHERE danych"), text: $options.whereClause).disabled(!options.copyData)
                 Toggle(L10n.tr("Zastąp istniejące obiekty (DROP)"), isOn: $options.replaceExisting).toggleStyle(.checkbox)
             }
-            Text(L10n.tr("Typy obiektów (puste — wszystkie)")).font(.caption)
+            Text(L10n.tr("Typy obiektów (puste — wszystkie)")).font(.subheadline)
             ObjectTypesPicker(types: $options.types)
-            List(log, id: \.self) { Text($0).font(.system(.caption, design: .monospaced)) }
+            List(log, id: \.self) { Text($0).font(.system(size: 12, design: .monospaced)) }
             HStack {
                 Spacer()
                 if busy { ProgressView().controlSize(.small) }
@@ -433,7 +433,7 @@ struct ImportWizardView: View {
                 Text(L10n.tr("Podgląd")).font(.headline)
                 if let s = source {
                     SimpleGridView(columns: s.fieldNames, rows: Array(s.rows.prefix(50))).frame(minHeight: 160)
-                    Text(L10n.tr("Wierszy: \(s.rows.count), kodowanie: \(s.encoding)")).font(.caption).foregroundStyle(.secondary)
+                    Text(L10n.tr("Wierszy: \(s.rows.count), kodowanie: \(s.encoding)")).font(.subheadline).foregroundStyle(.secondary)
                 }
                 HStack {
                     Text(L10n.tr("Mapowanie")).font(.headline)
@@ -460,7 +460,7 @@ struct ImportWizardView: View {
                     }
                 }
                 HStack {
-                    Text(message).font(.caption).foregroundStyle(.secondary)
+                    Text(message).font(.subheadline).foregroundStyle(.secondary)
                     Spacer()
                     if busy { ProgressView().controlSize(.small) }
                     Button(L10n.tr("Importuj")) { Task { await runImport() } }.disabled(busy || source == nil || state.mappings.isEmpty)
@@ -575,7 +575,7 @@ struct DataTransferJobView: View {
                 }
             }
             HStack {
-                Text(message).font(.caption).foregroundStyle(.secondary)
+                Text(message).font(.subheadline).foregroundStyle(.secondary)
                 Spacer()
                 TextField(L10n.tr("Nazwa definicji"), text: $name).frame(width: 180)
                 Button(L10n.tr("Zapisz")) {
@@ -664,13 +664,13 @@ struct LocalTasksView: View {
                 actionEditor
                 scheduleEditor
                 HStack {
-                    Text(message).font(.caption).foregroundStyle(.secondary)
+                    Text(message).font(.subheadline).foregroundStyle(.secondary)
                     Spacer()
                     Button(L10n.tr("Zapisz zadanie")) {
                         do { try scheduler.upsert(draft); selection = draft.id; message = L10n.tr("Zapisano") } catch { message = error.localizedDescription }
                     }.disabled(draft.name.isEmpty)
                 }
-                Text(L10n.tr("Zadania działają, gdy Pelikan jest uruchomiony. Definicje zawierają tylko nazwę połączenia — hasło pochodzi z Pęku kluczy.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Zadania działają, gdy Pelikan jest uruchomiony. Definicje zawierają tylko nazwę połączenia — hasło pochodzi z Pęku kluczy.")).font(.subheadline).foregroundStyle(.secondary)
             }
             .formStyle(.grouped)
             .frame(minWidth: 420)

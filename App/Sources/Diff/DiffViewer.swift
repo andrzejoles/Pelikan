@@ -140,9 +140,9 @@ struct DiffRowView: View {
     private func cell(number: Int?, text: String, change: Range<Int>?, side: Side) -> some View {
         HStack(spacing: 6) {
             Text(number.map(String.init) ?? "")
-                .font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
+                .font(.system(size: 12, design: .monospaced)).foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
             Text(attributed(text, change: change, side: side))
-                .font(.system(size: 11, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.system(size: 12, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 1)
         .background(background(side: side, present: number != nil))

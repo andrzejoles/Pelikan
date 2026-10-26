@@ -1085,7 +1085,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if findPanel == nil {
             let p = NSPanel(contentViewController: NSHostingController(rootView: FindReplaceView(model: FindReplaceModel(workspace: workspace))))
             p.title = L10n.tr("Znajdź i zamień")
-            p.styleMask = [.titled, .closable, .utilityWindow, .nonactivatingPanel]
+            p.styleMask = [.titled, .closable, .resizable, .utilityWindow, .nonactivatingPanel]
             p.isFloatingPanel = true
             p.hidesOnDeactivate = true
             if let f = mainWindow?.window?.frame { p.setFrameTopLeftPoint(NSPoint(x: f.maxX - 600, y: f.maxY - 80)) }

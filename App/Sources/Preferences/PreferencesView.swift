@@ -81,7 +81,7 @@ struct PreferencesView: View {
                 .padding(.top, 8)
             }
         }
-        .frame(width: 860, height: 600)
+        .windowSize(width: 860, height: 600)
     }
 
     private func tab(_ id: String) -> some View {
@@ -119,7 +119,7 @@ struct GeneralPane: View {
             Section(L10n.tr("Wskaźniki połączeń")) {
                 Toggle(L10n.tr("Tło edytora w kolorze połączenia"), isOn: setting(workspace, \.colorWindowBackground))
                 Text(L10n.tr("Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
                 ForEach(workspace.settings.connectionIndicators.indices, id: \.self) { i in
                     HStack {
                         TextField(L10n.tr("Wzorzec, np. sys@*"), text: Binding(get: { workspace.settings.connectionIndicators[i].pattern },
@@ -152,7 +152,7 @@ struct GeneralPane: View {
                 Toggle(L10n.tr("Zwiń wstążkę do samych kart"), isOn: setting(workspace, \.ribbonCollapsed))
                     .disabled(!workspace.settings.showRibbon)
                 Text(L10n.tr("Karty kontekstowe (Program, Wynik, Diagram…) pojawiają się przy oknie danego rodzaju. Pole „Szukaj czynności” znajduje każdą komendę po nazwie, także bez polskich znaków i po angielskiej nazwie z PL/SQL Developera."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Język interfejsu")) {
                 // AppleLanguages ustawia AppDelegate.applyLanguage po każdej zmianie ustawienia (także z importu i zestawów).
@@ -166,7 +166,7 @@ struct GeneralPane: View {
                     Text("Español").tag("es")
                     Text("Українська").tag("uk")
                 }
-                Text(L10n.tr("Zmiana działa po ponownym uruchomieniu Pelikana.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Zmiana działa po ponownym uruchomieniu Pelikana.")).font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Katalogi startowe i rozszerzenia")) {
                 ForEach([("sql", L10n.tr("Skrypty SQL")), ("program", L10n.tr("Programy")), ("test", L10n.tr("Testy")), ("report", L10n.tr("Raporty"))], id: \.0) { key, label in
@@ -190,7 +190,7 @@ struct GeneralPane: View {
                 }
                 Toggle(L10n.tr("Nazwy połączeń, obiektów i ścieżki plików jawnie"), isOn: setting(workspace, \.logIncludeNames))
                 Text(L10n.tr("Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Gdy nazwy nie są jawne, połączenia i serwery są oznaczone skrótem."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
                 HStack {
                     Button(L10n.tr("Pokaż dziennik")) { workspace.perform("help.log") }
                     Button(L10n.tr("Eksportuj dziennik…")) { workspace.perform("help.exportLog") }
@@ -297,7 +297,7 @@ struct EditorPane: View {
                 colorRow(L10n.tr("Siatka wyników"), \.gridColors)
                 colorRow(L10n.tr("Object Browser"), \.browserColors)
                 Text(L10n.tr("Bez własnego koloru obowiązują kolory motywu systemu (tryb jasny i ciemny). Własny kolor działa w obu trybach."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Code Assistant")) {
                 Toggle(L10n.tr("Automatycznie po kropce"), isOn: setting(workspace, \.codeAssistantAutomatic))
@@ -422,7 +422,7 @@ struct OraclePane: View {
                     }
                 }
                 Text(L10n.tr("Zmiana działa po ponownym uruchomieniu aplikacji. Pelikan nie dołącza Instant Client (licencja Oracle) — pobierz go ze strony Oracle."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Ustawienia NLS sesji")) {
                 ForEach(["NLS_DATE_FORMAT", "NLS_TIMESTAMP_FORMAT", "NLS_NUMERIC_CHARACTERS", "NLS_LANGUAGE", "NLS_TERRITORY", "NLS_SORT", "NLS_COMP"], id: \.self) { name in
@@ -430,7 +430,7 @@ struct OraclePane: View {
                                                   set: { v in workspace.settings.sessionNLS[name] = v.isEmpty ? nil : v }),
                               prompt: Text(L10n.tr("ustawienie serwera")))
                 }
-                Text(L10n.tr("Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji.")).font(.caption).foregroundStyle(.secondary)
+                Text(L10n.tr("Wartości ustawiane poleceniem ALTER SESSION w każdej nowej sesji.")).font(.subheadline).foregroundStyle(.secondary)
                 Stepper(value: setting(workspace, \.closeIdleSessionsMinutes), in: 0...1440, step: 15) {
                     Text(workspace.settings.closeIdleSessionsMinutes == 0 ? L10n.tr("Nie zamykaj bezczynnych sesji okien")
                          : L10n.tr("Zamykaj sesje okien bezczynne ponad \(workspace.settings.closeIdleSessionsMinutes) min (bez otwartej transakcji)"))
@@ -445,9 +445,9 @@ struct OraclePane: View {
                 Toggle(L10n.tr("Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła"), isOn: setting(workspace, \.requireOwnerForSavedPasswords))
                     .disabled(!Self.ownerAuthenticationAvailable && !workspace.settings.requireOwnerForSavedPasswords)
                 Text(L10n.tr("Hasła są w Pęku kluczy (pęk logowania, bez synchronizacji z iCloud). Po włączeniu Pelikan pyta o potwierdzenie raz na połączenie w trakcie działania aplikacji — także gdy połączenia użyje agent. Hasła podane bez „Zapamiętaj” zostają tylko w pamięci."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
                 if !Self.ownerAuthenticationAvailable {
-                    Text(L10n.tr("Ten Mac nie ma skonfigurowanego Touch ID ani hasła logowania do potwierdzania.")).font(.caption).foregroundStyle(.orange)
+                    Text(L10n.tr("Ten Mac nie ma skonfigurowanego Touch ID ani hasła logowania do potwierdzania.")).font(.subheadline).foregroundStyle(.orange)
                 }
             }
             Section(L10n.tr("Oracle Net i Oracle Wallet")) {
@@ -462,7 +462,7 @@ struct OraclePane: View {
                     }
                 }
                 Text(L10n.tr("Połączenia w trybie „Oracle Wallet” logują się poświadczeniami z portfela (/@alias) — alias albo connect string połączenia musi odpowiadać wpisowi w portfelu. Hasła z portfela nie trafiają do Pelikana. Portfel TLS (mTLS, np. Autonomous Database) ustawia się w połączeniu. Zmiana działa po ponownym uruchomieniu aplikacji."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Kompilator (UG 23.3)")) {
                 TextField(L10n.tr("Ostrzeżenia PLSQL_WARNINGS"), text: setting(workspace, \.plsqlWarnings), prompt: Text("ENABLE:ALL"))
@@ -478,7 +478,7 @@ struct OraclePane: View {
                 TextField(L10n.tr("PL/Scope PLSCOPE_SETTINGS"), text: setting(workspace, \.compiler.plscope), prompt: Text("IDENTIFIERS:ALL"))
                 TextField(L10n.tr("Flagi kompilacji warunkowej PLSQL_CCFLAGS"), text: setting(workspace, \.compiler.ccflags), prompt: Text("debug:TRUE"))
                 Text(L10n.tr("Puste pole albo „Jak serwer” — parametr sesji kompilacji nie jest zmieniany. Wartości z apostrofem albo średnikiem są pomijane."))
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Section(L10n.tr("Debuger (UG 23.4)")) {
                 Toggle(L10n.tr("Dodawaj informację debugowania przy kompilacji okna programu"), isOn: setting(workspace, \.debugInfoOnCompile))
@@ -522,7 +522,7 @@ struct OraclePane: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                Text(workspace.settings[keyPath: key] ?? placeholder).font(.caption)
+                Text(workspace.settings[keyPath: key] ?? placeholder).font(.subheadline)
                     .foregroundStyle(workspace.settings[keyPath: key] == nil ? .secondary : .primary).lineLimit(1).truncationMode(.middle)
             }
             Spacer()
@@ -599,7 +599,7 @@ struct KeyboardPane: View {
                 Spacer()
                 Button(L10n.tr("Przywróć wszystkie domyślne")) { workspace.resetShortcuts() }
             }
-            if let message { Text(message).font(.caption).foregroundStyle(.orange) }
+            if let message { Text(message).font(.subheadline).foregroundStyle(.orange) }
         }
         .padding(16)
         .onDisappear { stopRecording() }
@@ -651,9 +651,10 @@ final class PreferencesWindowController: NSWindowController {
     init(workspace: Workspace) {
         let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace, navigation: navigation)))
         w.title = L10n.tr("Preferencje")
-        w.styleMask = [.titled, .closable]
+        w.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         super.init(window: w)
         w.center()
+        w.setFrameAutosaveName("Pelikan.Preferences")
     }
 
     @available(*, unavailable)
