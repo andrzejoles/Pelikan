@@ -1,4 +1,5 @@
 import Foundation
+import PelikanLog
 import Observation
 import PelikanDB
 import PelikanSQL
@@ -704,6 +705,7 @@ public final class Workspace {
         }
         var context = CommandContext(workspace: self, invoker: invoker, arguments: arguments)
         let started = Date()
+        let clock = ContinuousClock.now
         do {
             if invoker.isAgent {
                 // Agent bez bramki uprawnień (serwer agentów nie działa) nie wykonuje niczego.
@@ -716,9 +718,16 @@ public final class Workspace {
                 try await command.run(context)
             }
             notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))
+            Log.command.debug("Komenda \(id.rawValue, privacy: .public)\(invoker.isAgent ? " (agent)" : "", privacy: .public): \(ms: clock)")
             return result
         } catch {
             notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .failure(error.localizedDescription)))
+            // Rezygnacja użytkownika to nie błąd; odmowa agenta trafia też do dziennika agentów.
+            if case CommandError.cancelledByUser = error {
+                Log.command.debug("Komenda \(id.rawValue, privacy: .public) anulowana")
+            } else {
+                Log.command.notice("Komenda \(id.rawValue, privacy: .public)\(invoker.isAgent ? " (agent)" : "", privacy: .public) nie powiodła się po \(ms: clock): \(error)")
+            }
             throw error
         }
     }

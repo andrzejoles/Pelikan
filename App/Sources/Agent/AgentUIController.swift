@@ -1,6 +1,7 @@
 import AppKit
 import PelikanAgent
 import PelikanBridgeKit
+import PelikanLog
 import PelikanWorkspace
 import SwiftTerm
 import SwiftUI
@@ -39,8 +40,7 @@ final class AgentUIController: ApprovalPresenter {
         do {
             try controller.start()
         } catch {
-            // NSLog sam podaje nazwę procesu (z Brand.xcconfig).
-            NSLog("Serwer agentów nie wystartował: %@", String(describing: error))
+            Log.agent.error("Serwer agentów nie wystartował: \(error)")
         }
     }
 

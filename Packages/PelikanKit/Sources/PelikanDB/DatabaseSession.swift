@@ -1,4 +1,5 @@
 import Foundation
+import PelikanLog
 
 /// Rola przy logowaniu (CONNECT … AS SYSDBA itd.).
 public enum ConnectRole: String, Sendable, Codable, Hashable, CaseIterable {
@@ -338,6 +339,14 @@ extension OracleError {
     /// Stan pakietów sesji wyczyszczony po rekompilacji (ORA-04068/04061/04065) albo klasa Java zmieniona (ORA-29549) —
     /// ponowne wykonanie zwykle się udaje (PD-TEST-007).
     public var isDiscardedPackageState: Bool { [4068, 4061, 4065, 29549].contains(code) || message.contains("ORA-04068") || message.contains("ORA-29549") }
+}
+
+/// W dzienniku jawny jest tylko kod (ORA-00942, DPI-1047); komunikat może zawierać nazwy obiektów (D170).
+extension OracleError: LogDescribableError {
+    public var logPublicDescription: String {
+        code != 0 ? String(format: "ORA-%05d", code) : driverCode ?? "OracleError"
+    }
+    public var logPrivateDescription: String? { message }
 }
 
 public enum DatabaseError: Error, LocalizedError, Sendable, Equatable {

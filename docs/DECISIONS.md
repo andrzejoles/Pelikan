@@ -1428,3 +1428,33 @@ Korekta D168: identyfikatory techniczne w domenie ustawień aplikacji (autozapis
 bierze nazwę moduł sesji i okno dziennika agentów.
 Rozmiar elementu `SYS.DBMS_DEBUG_VC2COLL` potwierdzony na bazie testowej: 1000 bajtów — dawne kawałki po 4000 znaków
 w debugerze nie mieściły się nawet przy samym ASCII.
+
+### D170 · 2026-10-26 — Dziennik aplikacji
+Właściciel poprosił o „sensowny log dla aplikacji”. Wcześniej były tylko trzy wywołania `NSLog`.
+- **Moduł `PelikanLog`** bez zależności (działa też na Linuksie): `Log.<obszar>` (app, connection, sql, command, agent,
+  ssh, proc, update, tools, debugger, tests, keychain) z poziomami debug/info/notice/error/fault. Treść wpisu to
+  `LogMessage` z interpolacją jak `os.Logger`: tekst domyślnie prywatny, liczby i wartości logiczne jawne, inne typy
+  wymagają `privacy:`; `\(error)` daje jawny kod (ORA-00942, `CommandError.notAvailable`, domena i kod NSError)
+  i prywatny komunikat. Treść jest budowana tylko, gdy poziom jest włączony.
+- **Ujścia:** plik `~/Library/Logs/<nazwa>/<nazwa>.log` (katalog 0700, pliki 0600, rotacja 5 × 2 MB, zapis na osobnej
+  kolejce) i dziennik systemowy macOS (podsystem = bundle id). Bez konfiguracji (biblioteka, testy) wpisy nigdzie nie
+  trafiają; testy dodają własne ujście diagnostyczne (`MemoryLogSink(everything: true)`) zamiast zmieniać globalne
+  ustawienia, więc mogą działać równolegle.
+- **Prywatność:** nigdy hasła, treść poleceń SQL, wartości zmiennych ani dane z bazy — wpisy SQL mają tylko rodzaj
+  polecenia, czas i liczbę wierszy. Nazwy połączeń, serwerów i katalogów domyślnie jako skrót HMAC-SHA256 z losowym
+  kluczem instalacji (`PelikanLogKey` w domenie ustawień aplikacji) — ta sama nazwa ma ten sam skrót, ale skrótu nie da
+  się odwrócić słownikiem nazw. `LogRedactor` maskuje hasła w typowych zapisach i katalog domowy także w wartościach
+  jawnych (druga linia obrony). Jawne nazwy — opcja w Preferencjach, domyślnie wyłączona.
+- **Ustawienia:** Preferencje › Ogólne › Dziennik aplikacji — *Ostrzeżenia i błędy* / *Zdarzenia (zalecane)* /
+  *Szczegóły — diagnostyka* i jawne nazwy. **Pomoc › Dziennik aplikacji** otwiera plik w Konsoli; **Pomoc › Eksportuj
+  dziennik…** zapisuje pliki z opisem środowiska (wersja, system, sterowniki, liczba połączeń — bez nazw). Obie komendy
+  bez dostępu agenta.
+- **Co trafia do dziennika:** start (wersja, system, język) i zamknięcie; łączenie (czas, sterownik, rodzaj sesji,
+  kod błędu, ponowne pytanie o hasło, wygasłe hasło), rozłączenie, utrata połączenia, zamykanie bezczynnych sesji;
+  komendy (debug: każda; notice: zakończone błędem); okno SQL i okno poleceń (debug: każde polecenie; info: podsumowanie
+  i błędy); zadania w tle (start, wynik, czas); debuger (start, koniec, przerwanie; ślad DBMS_DEBUG na poziomie
+  Szczegóły zamiast dawnego pliku `PELIKAN_DEBUG_TRACE`); Test Manager i utPLSQL (podsumowania, instalator); tunele SSH
+  i połączenia SSH Pro*C; wdrożenia Pro*C; serwer i sesje agentów, wywołania narzędzi, odmowy i zgody (szczegóły zostają
+  w osobnym dzienniku agentów JSONL); Pęk kluczy (zapis, błędy z kodem OSStatus); aktualizacje Sparkle; komunikaty
+  błędów pokazane użytkownikowi; `PELIKAN_STALL_LOG` przez dziennik zamiast `NSLog`.
+- Wpisy po polsku (język źródłowy projektu), bez tłumaczeń — to tekst techniczny, nie interfejs.

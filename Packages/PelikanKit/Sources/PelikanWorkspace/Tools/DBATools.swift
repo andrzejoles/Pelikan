@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Wynik sekcji panelu DBA: wiersze albo komunikat o braku uprawnień (zamiast błędu).
@@ -266,7 +267,9 @@ public final class WorkspaceTaskCenter {
         let t = WorkspaceTask(title: title, kind: kind)
         tasks.insert(t, at: 0)
         if tasks.count > 200 { tasks.removeLast(tasks.count - 200) }
+        Log.tools.info("Zadanie \(kind, privacy: .public) rozpoczęte: \(title)")
         t.task = Task { @MainActor in
+            let clock = ContinuousClock.now
             do {
                 try await operation(t)
                 if t.status == .running { t.status = Task.isCancelled ? .cancelled : .succeeded }
@@ -274,8 +277,15 @@ public final class WorkspaceTaskCenter {
                 t.status = .cancelled
             } catch {
                 if t.status == .running { t.status = .failed(error.localizedDescription) }
+                Log.tools.notice("Zadanie \(kind, privacy: .public) zakończone błędem po \(ms: clock): \(error)")
             }
             if t.finished == nil { t.finished = Date() }
+            switch t.status {
+            case .succeeded: Log.tools.info("Zadanie \(kind, privacy: .public) zakończone w \(ms: clock)")
+            case .cancelled: Log.tools.info("Zadanie \(kind, privacy: .public) anulowane po \(ms: clock)")
+            case .failed(let m) where m.isEmpty == false: Log.tools.debug("Zadanie \(kind, privacy: .public): \(m)")
+            default: break
+            }
         }
         return t
     }

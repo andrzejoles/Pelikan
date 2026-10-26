@@ -79,6 +79,18 @@ Przy następnym uruchomieniu Pelikan zaproponuje odzyskanie niezapisanych okien 
 okna…**), jeśli w **Preferencje › Narzędzia** jest włączone zachowywanie niezapisanych okien. Zmiany plików znajdziesz
 też w historii lokalnej (**Plik › Historia lokalna**).
 
+### Dziennik aplikacji
+
+Pelikan zapisuje dziennik zdarzeń: start, połączenia i ich błędy (kod ORA-), zakończenie poleceń (rodzaj, czas, liczba
+wierszy), zadania w tle, debuger, testy, tunele SSH, agentów AI i aktualizacje. **Pomoc › Dziennik aplikacji**
+otwiera go w Konsoli macOS; plik leży w `~/Library/Logs/Pelikan`, a te same wpisy trafiają do dziennika systemowego
+(podsystem Pelikana w Konsoli). Pliki mają najwyżej 2 MB, Pelikan trzyma pięć ostatnich.
+
+Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Nazwy połączeń, serwerów, obiektów i ścieżki
+plików są domyślnie ukryte albo zastąpione skrótem (te same nazwy mają ten sam skrót). W **Preferencje › Ogólne ›
+Dziennik aplikacji** wybierzesz zakres wpisów (*Ostrzeżenia i błędy*, *Zdarzenia*, *Szczegóły — diagnostyka*) i
+możesz włączyć jawne nazwy — przydaje się, gdy szukasz przyczyny problemu na własnym komputerze.
+
 ## Znane ograniczenia
 
 Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zostały sprawdzone w prawdziwym środowisku:
@@ -112,6 +124,9 @@ Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zost
 Błędy i propozycje zgłaszaj na stronie projektu:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Nie dołączaj haseł, nazw
 serwerów ani danych z baz produkcyjnych — wystarczy opis kroków i komunikat błędu.
+
+Do zgłoszenia dołącz dziennik: **Pomoc › Eksportuj dziennik…** zapisuje go z opisem środowiska (wersja, system,
+sterowniki) do pliku tekstowego. Przed wysłaniem przejrzyj plik, zwłaszcza gdy włączone były jawne nazwy.
 
 ## Słownik
 

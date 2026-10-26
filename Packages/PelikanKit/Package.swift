@@ -10,6 +10,7 @@ let package = Package(
     defaultLocalization: "pl",
     platforms: [.macOS("27.0")],
     products: [
+        .library(name: "PelikanLog", targets: ["PelikanLog"]),
         .library(name: "PelikanSQL", targets: ["PelikanSQL"]),
         .library(name: "PelikanDB", targets: ["PelikanDB"]),
         .library(name: "PelikanODPI", targets: ["PelikanODPI"]),
@@ -30,10 +31,12 @@ let package = Package(
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.1"),
     ],
     targets: [
+        // Dziennik aplikacji (D170): poziomy, widoczność wartości, plik z rotacją, dziennik systemowy — bez zależności.
+        .target(name: "PelikanLog", swiftSettings: strict),
         // Lekser, dzielenie skryptów, klasyfikacja poleceń, zmienne podstawiania — czysty Swift (także Linux).
         .target(name: "PelikanSQL", swiftSettings: strict),
         // Protokoły warstwy bazy (DatabaseSession, wartości, metadane) — bez AppKit, bez sterownika.
-        .target(name: "PelikanDB", dependencies: ["PelikanSQL"], swiftSettings: strict),
+        .target(name: "PelikanDB", dependencies: ["PelikanSQL", "PelikanLog"], swiftSettings: strict),
         // ODPI-C (oracle/odpi v26.0.0, UPL/Apache 2.0) — Instant Client ładowany dynamicznie (dlopen).
         .target(
             name: "CODPI",
@@ -46,25 +49,26 @@ let package = Package(
         // Sterownik „thin”: OracleNIO (bez Instant Client).
         .target(name: "PelikanThin", dependencies: ["PelikanDB", .product(name: "OracleNIO", package: "oracle-nio")], swiftSettings: strict),
         // Model stanu aplikacji i rejestr komend — bez AppKit.
-        .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL",
+        .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL", "PelikanLog",
                                                          .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))],
                 swiftSettings: strict),
 
         // Kanał agentów AI (PROMPT §7): most stdio ↔ gniazdo Unix, serwer MCP, polityka uprawnień — tylko macOS.
         .target(name: "PelikanBridgeKit", swiftSettings: strict),
         .executableTarget(name: "pelikan-mcp", dependencies: ["PelikanBridgeKit"], swiftSettings: strict),
-        .target(name: "PelikanAgent", dependencies: ["PelikanWorkspace", "PelikanBridgeKit",
+        .target(name: "PelikanAgent", dependencies: ["PelikanWorkspace", "PelikanBridgeKit", "PelikanLog",
                                                      .product(name: "MCP", package: "swift-sdk", condition: .when(platforms: [.macOS]))],
                 swiftSettings: strict),
 
         // Zdalny build Pro*C (Etap P): ssh/scp przez posix_spawn, warstwa przejęta z Bifolda — tylko macOS.
-        .target(name: "PelikanRemote", swiftSettings: strict),
+        .target(name: "PelikanRemote", dependencies: ["PelikanLog"], swiftSettings: strict),
         // Pro*C: cele SSH (bez sekretów w plikach), test połączenia, parsery błędów proc/xlc.
-        .target(name: "PelikanProC", dependencies: ["PelikanWorkspace", "PelikanRemote"], swiftSettings: strict),
+        .target(name: "PelikanProC", dependencies: ["PelikanWorkspace", "PelikanRemote", "PelikanLog"], swiftSettings: strict),
 
+        .testTarget(name: "PelikanLogTests", dependencies: ["PelikanLog"], swiftSettings: strict),
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
         .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
-        .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace"], swiftSettings: strict),
+        .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace", "PelikanLog"], swiftSettings: strict),
         .testTarget(name: "PelikanAgentTests", dependencies: ["PelikanAgent", "pelikan-mcp"], swiftSettings: strict),
         .testTarget(name: "PelikanRemoteTests", dependencies: ["PelikanRemote"], swiftSettings: strict),
         .testTarget(name: "PelikanProCTests", dependencies: ["PelikanProC", "PelikanRemote"], swiftSettings: strict),

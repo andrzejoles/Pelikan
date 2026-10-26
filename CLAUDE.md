@@ -24,6 +24,9 @@ decyzje, zanim cokolwiek zmienisz.**
 - Teksty interfejsu po polsku (klucz = polskie zdanie) przez `L10n.tr("…")` (literał; `\(…)` → `%@`), tłumaczenia en/de/es/uk
   w String Catalog. Po dodaniu tekstów: `scripts/l10n.py extract` i przetłumacz nowe teksty (CI: `scripts/l10n.py check --strict` — komplet en/de/es/uk); `export`/`import`.
 - Funkcja zrobiona = test (✅) lub zrzut ekranu (👁) i aktualizacja stanu wiersza w `docs/FEATURES.md`.
+- Dziennik aplikacji (D170): `Log.<obszar>.info("… \(wartość)")` z `PelikanLog`; tekst w interpolacji jest prywatny
+  (nazwy połączeń, serwerów, katalogów — `privacy: .hash`; stałe techniczne — `.public`). Nigdy haseł, treści SQL,
+  wartości zmiennych ani danych z bazy. Testy wpisów: `Log.addSink(MemoryLogSink(everything: true))`, bez `Log.configure`.
 
 ## Polecenia
 ```sh

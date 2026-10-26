@@ -1,8 +1,9 @@
 // Pochodzi z BiFold (Remote/SSH.swift @ a1ee643), dalej rozwijany w Pelikanie.
 #if canImport(Darwin)
+import Foundation
 import CryptoKit
 import Darwin
-import Foundation
+import PelikanLog
 import Synchronization
 
 /// Połączenie SSH przez systemowe `ssh`/`scp` z jednym połączeniem głównym (ControlMaster) na serwer.
@@ -120,7 +121,14 @@ public final class SSHSession: Sendable {
     public func connect() throws {
         try startLock.withLock { _ in
             if isConnected { return }
-            try startMaster()
+            let clock = ContinuousClock.now
+            do {
+                try startMaster()
+                Log.ssh.info("SSH: połączenie główne z \(config.host, privacy: .hash) w \(ms: clock)\(config.legacyAlgorithms ? " (starsze algorytmy)" : "", privacy: .public)")
+            } catch {
+                Log.ssh.notice("SSH: brak połączenia z \(config.host, privacy: .hash) po \(ms: clock): \(error)")
+                throw error
+            }
         }
     }
 
@@ -280,6 +288,7 @@ public final class SSHSession: Sendable {
     }
 
     public func disconnect() {
+        Log.ssh.debug("SSH: zamknięcie połączenia głównego z \(config.host, privacy: .hash)")
         let args = (commonOptions(master: false) + ["-O", "exit", destination]).map { Array($0.utf8) }
         _ = try? Spawn.run(Self.ssh, args, environment: environment, timeout: 10)
     }

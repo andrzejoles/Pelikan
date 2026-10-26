@@ -81,6 +81,20 @@ En el siguiente inicio, Pelikan propondrá recuperar las ventanas sin guardar (t
 ventanas…**), si en **Preferencias › Herramientas** está activada la conservación de las ventanas sin guardar. Los
 cambios de los archivos también están en el historial local (**Archivo › Historial local**).
 
+### Registro de la aplicación
+
+Pelikan mantiene un registro de eventos: inicio, conexiones y sus errores (código ORA-), sentencias completadas (tipo,
+tiempo, número de filas), tareas en segundo plano, el depurador, las pruebas, los túneles SSH, los agentes de IA y las
+actualizaciones. **Ayuda › Registro de la aplicación** lo abre en la Consola de macOS; el archivo está en
+`~/Library/Logs/Pelikan` y las mismas entradas van al registro del sistema (subsistema de Pelikan en la Consola). Los
+archivos ocupan como máximo 2 MB y Pelikan conserva los cinco últimos.
+
+El registro nunca contiene contraseñas, texto de sentencias SQL ni datos de la base de datos. Los nombres de
+conexiones, servidores y objetos y las rutas de archivos están ocultos o sustituidos por un hash de forma
+predeterminada (el mismo nombre tiene siempre el mismo hash). En **Preferencias › General › Registro de la
+aplicación** eliges cuánto se registra (*Advertencias y errores*, *Eventos*, *Detalles — diagnóstico*) y puedes
+mostrar los nombres, algo útil para buscar la causa de un problema en tu propio equipo.
+
 ## Limitaciones conocidas
 
 Las siguientes funciones se comportan de forma distinta que en el programa de referencia, están incompletas o no se han
@@ -117,6 +131,10 @@ comprobado en un entorno real:
 Informa de errores y propuestas en la página del proyecto:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). No incluyas contraseñas, nombres
 de servidores ni datos de bases de datos de producción: basta con describir los pasos y el mensaje de error.
+
+Adjunta el registro al informe: **Ayuda › Exportar registro…** lo guarda junto con una descripción del entorno
+(versión, sistema, controladores) en un archivo de texto. Revisa el archivo antes de enviarlo, sobre todo si se
+mostraban los nombres.
 
 ## Glosario
 

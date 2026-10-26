@@ -1,6 +1,7 @@
 import AppKit
 import LocalAuthentication
 import PelikanDB
+import PelikanLog
 import PelikanWorkspace
 import SwiftUI
 
@@ -173,6 +174,20 @@ struct GeneralPane: View {
             }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
+            }
+            Section(L10n.tr("Dziennik aplikacji")) {
+                Picker(L10n.tr("Zapisuj w dzienniku"), selection: setting(workspace, \.logLevel)) {
+                    Text(L10n.tr("Ostrzeżenia i błędy")).tag(LogLevel.notice)
+                    Text(L10n.tr("Zdarzenia (zalecane)")).tag(LogLevel.info)
+                    Text(L10n.tr("Szczegóły — diagnostyka")).tag(LogLevel.debug)
+                }
+                Toggle(L10n.tr("Nazwy połączeń, obiektów i ścieżki plików jawnie"), isOn: setting(workspace, \.logIncludeNames))
+                Text(L10n.tr("Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Gdy nazwy nie są jawne, połączenia i serwery są oznaczone skrótem."))
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button(L10n.tr("Pokaż dziennik")) { workspace.perform("help.log") }
+                    Button(L10n.tr("Eksportuj dziennik…")) { workspace.perform("help.exportLog") }
+                }
             }
         }
         .formStyle(.grouped)

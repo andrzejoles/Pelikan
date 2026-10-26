@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Do czego służy sesja (UG 20: osobne sesje okien, kompilacji; agent — własna sesja, PROMPT §7.3 p.2).
@@ -19,6 +20,21 @@ public enum SessionPurpose: Hashable, Sendable {
     case utplsql(String)
     /// Sesje narzędzi bez transakcji użytkownika (np. `plan` — Explain Plan wstawia wiersze do PLAN_TABLE).
     case tool(String)
+}
+
+extension SessionPurpose {
+    /// Rodzaj sesji w dzienniku (bez identyfikatorów okien i agentów).
+    var logLabel: String {
+        switch self {
+        case .main: "główna"
+        case .document: "okna"
+        case .compile: "kompilacji"
+        case .agent: "agenta"
+        case .debugger: "debugera"
+        case .utplsql(let s): "utPLSQL \(s)"
+        case .tool(let s): "narzędzia \(s.prefix { $0 != "-" })"
+        }
+    }
 }
 
 public struct SessionKey: Hashable, Sendable {
@@ -107,6 +123,7 @@ public final class SessionManager {
                 closed += 1
             }
         }
+        if closed > 0 { Log.connection.info("Zamknięto \(closed) bezczynnych sesji okien (po \(minutes) min)") }
         return closed
     }
     @ObservationIgnored private var connecting: [SessionKey: Task<any DatabaseSession, any Error>] = [:]
@@ -214,7 +231,27 @@ public final class SessionManager {
         return s
     }
 
+    /// Otwarcie sesji z wpisem w dzienniku (PL-INFRA-011): nazwa połączenia jako skrót, sterownik, rodzaj sesji, czas;
+    /// przy błędzie kod ORA- jawny, komunikat prywatny.
     private func open(_ key: SessionKey) async throws -> any DatabaseSession {
+        let started = ContinuousClock.now
+        let def = store.connection(key.connectionID)
+        let name = def?.displayName ?? "?"
+        let driver = def?.driver.rawValue ?? "?"
+        do {
+            let s = try await openSession(key)
+            Log.connection.info("Połączono \(name, privacy: .hash) w \(ms: started) (sterownik \(driver, privacy: .public), klient \(s.info.clientVersion, privacy: .public), serwer \(s.info.server.description, privacy: .public), sesja \(key.purpose.logLabel, privacy: .public))")
+            return s
+        } catch CommandError.cancelledByUser {
+            Log.connection.info("Łączenie z \(name, privacy: .hash) przerwane przez użytkownika")
+            throw CommandError.cancelledByUser
+        } catch {
+            Log.connection.notice("Nie połączono \(name, privacy: .hash) (sterownik \(driver, privacy: .public), sesja \(key.purpose.logLabel, privacy: .public)) po \(ms: started): \(error)")
+            throw error
+        }
+    }
+
+    private func openSession(_ key: SessionKey) async throws -> any DatabaseSession {
         guard let def = store.connection(key.connectionID) else { throw CommandError.notConnected }
         guard let driver = drivers[def.driver] else {
             throw DatabaseError.driverUnavailable(L10n.tr("Sterownik \(def.driver.rawValue) jest niedostępny"))
@@ -279,10 +316,12 @@ public final class SessionManager {
                 }
                 return s
             } catch let e as OracleError where e.isPasswordExpired && attempt < 2 {
+                Log.connection.notice("Hasło wygasło (\(e as any Error)) — prośba o nowe hasło")
                 guard let np = await prompter?.askNewPassword(for: def, message: e.message) else { throw CommandError.cancelledByUser }
                 credentials = Credentials(password: password, newPassword: np)
             } catch let e as OracleError where e.code == 1017 && attempt < 2 && !def.target.usesExternalCredentials {
                 // ORA-01017: błędne hasło — pytamy ponownie (zapisane hasło jest nieaktualne).
+                Log.connection.notice("Odmowa logowania (ORA-01017) — ponowne pytanie o hasło")
                 sessionPasswords[def.id] = nil
                 guard let answer = await prompter?.askPassword(for: def, reason: e.message) else { throw CommandError.cancelledByUser }
                 password = answer.password
@@ -326,12 +365,14 @@ public final class SessionManager {
         sqlTraceEnabled.remove(key)
         lastActivity[key] = nil
         guard let s = sessions.removeValue(forKey: key) else { return }
+        Log.connection.debug("Zamknięto sesję \(key.purpose.logLabel, privacy: .public) połączenia \(store.connection(key.connectionID)?.displayName, privacy: .hash)")
         await s.close()
         if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
     }
 
     /// Rozłącza wszystkie sesje połączenia (UG 19.1 Disconnect).
     public func disconnect(_ connectionID: UUID) async {
+        Log.connection.info("Rozłączono \(store.connection(connectionID)?.displayName, privacy: .hash)")
         for key in sessions.keys where key.connectionID == connectionID {
             await close(key)
         }
@@ -357,6 +398,7 @@ public final class SessionManager {
     @discardableResult
     public func dropLost(_ key: SessionKey) -> Bool {
         guard sessions.removeValue(forKey: key) != nil else { return false }
+        Log.connection.notice("Utracono połączenie \(store.connection(key.connectionID)?.displayName, privacy: .hash) (sesja \(key.purpose.logLabel, privacy: .public))")
         if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
         return true
     }

@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Co wykonać w SQL Window (UG 7.1, 23.20; D12).
@@ -157,8 +158,11 @@ public enum SQLExecutor {
         for s in stmts {
             let prepared = doc.substitutionEnabled ? Variables.prepare(s.text, values: values) : Variables.Prepared(sql: s.text, binds: [])
             let binds = bindVariables(prepared)
+            let statementStart = ContinuousClock.now
             do {
                 let r = try await session.execute(prepared.sql, binds: binds, options: executeOptions(ws))
+                // Dziennik (D170): rodzaj polecenia, czas i liczba wierszy — nigdy treść polecenia ani wartości.
+                Log.sql.debug("Polecenie \(r.kind.rawValue, privacy: .public): \(ms: statementStart), wierszy zmienionych \(r.rowsAffected)")
                 ws.recordHistory(s.text)
                 // Historia poleceń okna bez haseł (CONNECT, IDENTIFIED BY) — jak historia SQL.
                 if !containsPassword(s.text) { doc.statementHistory.append(s.text) }
@@ -199,6 +203,7 @@ public enum SQLExecutor {
                     newTabs.append(tab)
                 }
             } catch let e as OracleError {
+                Log.sql.info("Polecenie zakończone błędem po \(ms: statementStart): \(e as any Error)")
                 // Pozycja błędu tylko dla błędów w tekście polecenia (nie przy przerwaniu ani utracie połączenia).
                 if !e.isCancelled, !e.isConnectionLost {
                     let local = SessionUtilities.utf16Offset(ofUTF8Offset: Int(e.offset), in: prepared.sql)
@@ -224,6 +229,7 @@ public enum SQLExecutor {
             doc.recordStatistics(Profiler.difference(before, after))
         }
         let elapsed = ContinuousClock.now - start
+        Log.sql.info("Okno SQL: poleceń \(stmts.count), czas \(ms: start)\(ok ? "" : ", przerwane błędem", privacy: .public)")
         if ok {
             // Liczbę wierszy aktywnej siatki pokazuje `Document.resultSummary` (zmienia się przy dociąganiu).
             doc.statusText = [newTabs.first?.message, L10n.tr("Czas: \(format(elapsed))")].compactMap { $0 }.joined(separator: "   ·   ")

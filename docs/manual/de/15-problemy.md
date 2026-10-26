@@ -86,6 +86,20 @@ Beim nächsten Start bietet Pelikan an, nicht gespeicherte Fenster wiederherzust
 wiederherstellen …**), sofern unter **Einstellungen › Werkzeuge** das Aufbewahren nicht gespeicherter Fenster aktiviert
 ist. Dateiänderungen finden Sie auch im lokalen Verlauf (**Datei › Lokaler Verlauf**).
 
+### Anwendungsprotokoll
+
+Pelikan führt ein Ereignisprotokoll: Start, Verbindungen und ihre Fehler (ORA-Code), abgeschlossene Anweisungen (Art,
+Dauer, Zeilenzahl), Hintergrundaufgaben, Debugger, Tests, SSH-Tunnel, KI-Agenten und Updates. **Hilfe ›
+Anwendungsprotokoll** öffnet es in der macOS-Konsole; die Datei liegt in `~/Library/Logs/Pelikan`, und dieselben
+Einträge gehen in das Systemprotokoll (Subsystem von Pelikan in der Konsole). Dateien sind höchstens 2 MB groß,
+Pelikan behält die letzten fünf.
+
+Das Protokoll enthält nie Passwörter, SQL-Anweisungstexte oder Daten aus der Datenbank. Namen von Verbindungen,
+Servern und Objekten sowie Dateipfade sind standardmäßig ausgeblendet oder durch einen Hash ersetzt (derselbe Name hat
+immer denselben Hash). Unter **Einstellungen › Allgemein › Anwendungsprotokoll** wählen Sie den Umfang (*Warnungen und
+Fehler*, *Ereignisse*, *Details — Diagnose*) und können Namen anzeigen lassen — hilfreich bei der Fehlersuche auf dem
+eigenen Rechner.
+
 ## Bekannte Einschränkungen
 
 Die folgenden Funktionen arbeiten anders als im Vorbild, sind unvollständig oder wurden nicht in einer echten Umgebung
@@ -122,6 +136,10 @@ geprüft:
 Fehler und Vorschläge melden Sie auf der Projektseite:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Fügen Sie keine Passwörter,
 Servernamen oder Daten aus Produktionsdatenbanken bei — eine Beschreibung der Schritte und die Fehlermeldung genügen.
+
+Fügen Sie der Meldung das Protokoll bei: **Hilfe › Protokoll exportieren…** speichert es zusammen mit einer
+Beschreibung der Umgebung (Version, System, Treiber) in eine Textdatei. Prüfen Sie die Datei vor dem Senden,
+besonders wenn Namen angezeigt wurden.
 
 ## Glossar
 

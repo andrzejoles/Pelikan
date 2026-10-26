@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Oczekiwana wartość zmiennej po wykonaniu testu (UG 24.16): równa, LIKE, IN (lista po przecinku), NULL, NOT NULL.
@@ -94,11 +95,13 @@ public enum TestManager {
 
     public static func run(_ set: TestSet, connectionID: UUID, in ws: Workspace, progress: ((TestCaseResult) -> Void)? = nil) async -> [TestCaseResult] {
         var results: [TestCaseResult] = []
+        let clock = ContinuousClock.now
         for c in set.cases {
             let r = await run(c, globals: set.globals, connectionID: connectionID, in: ws)
             results.append(r)
             progress?(r)
         }
+        Log.tests.info("Test Manager: \(results.filter(\.passed).count) z \(results.count) testów zaliczonych w \(ms: clock)")
         return results
     }
 

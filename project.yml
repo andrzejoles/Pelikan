@@ -71,6 +71,8 @@ targets:
       - package: PelikanKit
         product: PelikanWorkspace
       - package: PelikanKit
+        product: PelikanLog
+      - package: PelikanKit
         product: PelikanSQL
       - package: PelikanKit
         product: PelikanDB

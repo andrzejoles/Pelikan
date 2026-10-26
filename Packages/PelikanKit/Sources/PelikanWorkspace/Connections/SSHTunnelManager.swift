@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 import Synchronization
 #if canImport(Darwin)
 import Darwin
@@ -194,7 +195,15 @@ public final class SSHTunnelManager {
         let task = Task { try await start(for: def, tns: tns, secret: secret) }
         opening[def.id] = task
         defer { opening[def.id] = nil }
-        return try await task.value
+        let clock = ContinuousClock.now
+        do {
+            let tunnel = try await task.value
+            Log.ssh.info("Tunel SSH połączenia \(def.displayName, privacy: .hash) otwarty w \(ms: clock) (\(def.sshTunnel?.usesPassword == true ? "hasło" : "klucz/agent", privacy: .public))")
+            return tunnel
+        } catch {
+            Log.ssh.notice("Tunel SSH połączenia \(def.displayName, privacy: .hash) nie powstał po \(ms: clock): \(error)")
+            throw error
+        }
     }
 
     private func start(for def: ConnectionDefinition, tns: [TNSEntry], secret: String?) async throws -> Tunnel {
@@ -253,6 +262,7 @@ public final class SSHTunnelManager {
         if r.users <= 0 {
             r.process.terminate()
             running[id] = nil
+            Log.ssh.debug("Tunel SSH zamknięty")
         }
     }
 

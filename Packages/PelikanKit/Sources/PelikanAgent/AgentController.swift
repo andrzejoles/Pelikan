@@ -2,6 +2,7 @@
 import Foundation
 import MCP
 import Observation
+import PelikanLog
 import PelikanWorkspace
 
 /// Prośba o zatwierdzenie operacji agenta (poziom „Za zgodą”).
@@ -104,9 +105,11 @@ public final class AgentController: AgentInvocationGate {
             })
         try server.start()
         self.server = server
+        Log.agent.info("Serwer agentów uruchomiony")
     }
 
     public func stop() {
+        if server != nil { Log.agent.info("Serwer agentów zatrzymany") }
         server?.stop()
         server = nil
         for s in registry.all { closeSession(s.id) }
@@ -116,6 +119,7 @@ public final class AgentController: AgentInvocationGate {
     public func createSession(profile: AgentProfile, directory: String, accessOverrides: [CommandID: AgentAccess] = [:]) -> (AgentSession, String) {
         let (session, token) = registry.create(profile: profile, directory: directory, accessOverrides: accessOverrides)
         sessions.append(AgentSessionInfo(id: session.id, profile: profile, directory: directory, created: session.created, connected: false))
+        Log.agent.info("Sesja agenta \(profile.name) rozpoczęta (katalog \(directory, privacy: .hash), wyjątki uprawnień: \(accessOverrides.count))")
         log.write(session: session, ["event": "session_start", "directory": .string(directory),
                                      "overrides": .object(Dictionary(uniqueKeysWithValues: accessOverrides.map { ($0.key.rawValue, .string($0.value.displayName)) }))])
         return (session, token)
@@ -132,6 +136,7 @@ public final class AgentController: AgentInvocationGate {
         let ws = workspace
         Task { await ws.closeAgentDatabase(session: id) }
         log.write(session: session, ["event": "session_end"])
+        Log.agent.info("Sesja agenta zakończona")
     }
 
     private func record(_ event: ConnectionEvent) {
@@ -141,7 +146,9 @@ public final class AgentController: AgentInvocationGate {
         case let .accepted(id, pid):
             if let i = sessions.firstIndex(where: { $0.id == id }) { sessions[i].connected = true }
             log.writeGlobal(["event": "connection_accepted", "session": .string(id), "pid": .int(Int64(pid))])
+            Log.agent.info("Agent połączony z gniazdem (proces \(pid))")
         case let .rejected(reason, pid):
+            Log.agent.notice("Odrzucono połączenie z gniazdem agentów: \(reason, privacy: .public)")
             log.writeGlobal(["event": "connection_rejected", "reason": .string(reason), "pid": pid.map { .int(Int64($0)) } ?? .null])
         }
     }
@@ -229,12 +236,14 @@ public final class AgentController: AgentInvocationGate {
             // Do dziennika trafia tylko początek wyniku (dane z bazy mogą być wrażliwe).
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments),
                                          "decision": "allowed", "result": .string(String(shown.prefix(500))), "ms": .int(Int64(activity.duration! * 1000))])
+            Log.agent.info("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): wykonane w \(Int(activity.duration! * 1000)) ms")
             return CallTool.Result(content: [.text(text: text, annotations: nil, _meta: nil)], isError: false)
         } catch let denial as AgentDenial {
             activity.status = .denied(denial.code)
             activity.duration = Date().timeIntervalSince(started)
             if let i = index() { activities[i] = activity }
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments), "decision": .string(denial.code)])
+            Log.agent.notice("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): odmowa \(denial.code, privacy: .public)")
             return error(denial.localizedDescription)
         } catch {
             activity.status = .failed(error.localizedDescription)
@@ -242,6 +251,7 @@ public final class AgentController: AgentInvocationGate {
             if let i = index() { activities[i] = activity }
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments),
                                          "decision": "allowed", "error": .string(error.localizedDescription)])
+            Log.agent.info("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): błąd \(error)")
             return self.error(error.localizedDescription)
         }
     }
@@ -306,6 +316,7 @@ public final class AgentController: AgentInvocationGate {
             guard let approvals else { throw AgentDenial.rejectedByUser }
             let approved = await approvals.requestApproval(request)
             log.write(session: session, ["approval": .string(command.id.rawValue), "approved": .bool(approved), "preview": .string(String(preview.summary.prefix(500)))])
+            Log.agent.info("Zgoda na \(command.id.rawValue, privacy: .public): \(approved)")
             if let i = activities.lastIndex(where: { $0.sessionID == sessionID && $0.status == .waitingForApproval }) {
                 activities[i].status = .running
             }

@@ -86,6 +86,15 @@
   - cele SSH Pro\*C: `StrictHostKeyChecking=yes`, a klucz nowego serwera trafia do known_hosts dopiero po potwierdzeniu
     odcisku w teście celu.
 
+- Dziennik aplikacji (PL-INFRA-011, D170): `PelikanLog` — plik `~/Library/Logs/<nazwa>` (katalog 0700, pliki 0600,
+  rotacja 5 × 2 MB) i dziennik systemowy macOS. Wpisy budowane z wartości oznaczonych widocznością: tekst domyślnie
+  prywatny (`<private>`), nazwy połączeń, serwerów i katalogów jako skrót HMAC-SHA256 z losowym kluczem instalacji
+  (6 znaków — nie da się go odwrócić słownikiem nazw bez klucza), błędy Oracle jako sam kod. Treść poleceń SQL, wartości
+  zmiennych i dane z bazy nie są przekazywane do dziennika w ogóle; filtr `LogRedactor` dodatkowo maskuje hasła w
+  typowych zapisach i zamienia katalog domowy na `~` także w wartościach jawnych. Jawne nazwy (Preferencje) są
+  opcjonalne i domyślnie wyłączone. Test szczelności: łączenie z błędnym i dobrym hasłem, `IDENTIFIED BY` i literał
+  w SQL — w żadnym wpisie (także diagnostycznym z jawnymi nazwami) nie ma hasła, treści SQL ani wartości.
+
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność
 uwierzytelnienia (UID → PID i drzewo → ramka `hello` z tokenem w 5 s, porównanie stałoczasowe), ramki 4 B długości +
