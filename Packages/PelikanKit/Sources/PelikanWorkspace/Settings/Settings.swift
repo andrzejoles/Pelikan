@@ -1,6 +1,7 @@
 import Foundation
 import PelikanSQL
 import PelikanDB
+import PelikanLog
 
 /// Tryb sesji (UG 20.3).
 public enum SessionMode: String, Sendable, Codable, CaseIterable {
@@ -235,6 +236,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var autosaveLayout = true
     // Agenci AI (PROMPT §7)
     public var agent = AgentSettings()
+    /// Dziennik aplikacji (PL-INFRA-011, D170): najniższy zapisywany poziom i jawne nazwy połączeń, obiektów i ścieżek
+    /// (domyślnie ukryte albo skrót). Hasła, treść poleceń SQL i dane z bazy nie trafiają do dziennika nigdy.
+    public var logLevel: LogLevel = .info
+    public var logIncludeNames = false
     /// Zapytania standardowe tabel i widoków (UG 7.14).
     public var standardQueries = StandardQuery.standard
     /// Zapytania przeglądarki sesji (Define Session Queries).
@@ -375,6 +380,8 @@ public struct Settings: Sendable, Codable, Hashable {
         shortcutProfile = v(.shortcutProfile, shortcutProfile)
         keyOverrides = v(.keyOverrides, keyOverrides)
         agent = v(.agent, agent)
+        logLevel = v(.logLevel, logLevel)
+        logIncludeNames = v(.logIncludeNames, logIncludeNames)
         standardQueries = v(.standardQueries, standardQueries)
         sessionQueries = v(.sessionQueries, sessionQueries)
         schedulerReports = v(.schedulerReports, schedulerReports)

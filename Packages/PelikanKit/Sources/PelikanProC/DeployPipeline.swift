@@ -1,6 +1,7 @@
 #if canImport(Darwin)
 import Foundation
 import Observation
+import PelikanLog
 import PelikanRemote
 import PelikanWorkspace
 
@@ -120,6 +121,7 @@ public final class DeployPipeline: Identifiable {
     /// Uruchomienie (wywołujący wcześniej pokazał podsumowanie i — dla PROD — uzyskał `ProductionConfirmation`).
     public func run() async {
         guard !running else { return }
+        Log.proc.info("Pro*C: start \(record.kind.rawValue, privacy: .public) na cel \(target.name, privacy: .hash) (\(target.environment.rawValue, privacy: .public))")
         running = true
         defer { running = false }
         progress.info(L10n.tr("Cel: \(target.name) (\(target.environment.rawValue)), \(target.user)@\(target.host), working copy \(target.effectiveWorkingCopy)"))
@@ -186,6 +188,7 @@ public final class DeployPipeline: Identifiable {
         record.detail = error ?? record.outcome?.title
         progress.info(record.outcome?.title ?? "")
         try? history?.save(record, log: progress.logText)
+        Log.proc.info("Pro*C: \(record.kind.rawValue, privacy: .public) na cel \(target.name, privacy: .hash) (\(target.environment.rawValue, privacy: .public)) — \(record.outcome.map { String(describing: $0) } ?? "?", privacy: .public), kod \(code), krok z błędem \(record.failedStep, privacy: .public)")
     }
 
     func cleanUp(releaseLock: Bool) async {

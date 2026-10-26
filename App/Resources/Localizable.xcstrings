@@ -16157,6 +16157,90 @@
         }
       }
     },
+    "Dziennik aplikacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Application Log"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anwendungsprotokoll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registro de la aplicación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал програми"
+          }
+        }
+      }
+    },
+    "Dziennik aplikacji nie jest zapisywany do pliku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The application log is not being written to a file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Anwendungsprotokoll wird nicht in eine Datei geschrieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro de la aplicación no se está guardando en un archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал програми не записується у файл"
+          }
+        }
+      }
+    },
+    "Dziennik nigdy nie zawiera haseł, treści poleceń SQL ani danych z bazy. Gdy nazwy nie są jawne, połączenia i serwery są oznaczone skrótem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The log never contains passwords, SQL statement text or database data. When names are not shown, connections and servers are identified by a hash."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Protokoll enthält nie Passwörter, SQL-Anweisungstexte oder Daten aus der Datenbank. Werden Namen nicht angezeigt, sind Verbindungen und Server durch einen Hash gekennzeichnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El registro nunca contiene contraseñas, texto de sentencias SQL ni datos de la base de datos. Si los nombres no se muestran, las conexiones y los servidores se identifican con un hash."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Журнал ніколи не містить паролів, тексту SQL-команд чи даних із бази. Якщо назви не показуються, з'єднання та сервери позначаються хешем."
+          }
+        }
+      }
+    },
     "Dzień tygodnia (ISO)" : {
       "localizations" : {
         "en" : {
@@ -17441,6 +17525,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Diagramm als Bild exportieren …"
+          }
+        }
+      }
+    },
+    "Eksportuj dziennik…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Log…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokoll exportieren…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar registro…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати журнал…"
           }
         }
       }
@@ -36793,6 +36905,34 @@
         }
       }
     },
+    "Nazwy połączeń, obiektów i ścieżki plików jawnie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show connection names, object names and file paths"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungs- und Objektnamen sowie Dateipfade anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar nombres de conexiones y objetos, y rutas de archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показувати назви з'єднань, об'єктів і шляхи до файлів"
+          }
+        }
+      }
+    },
     "Nic nie znaleziono" : {
       "localizations" : {
         "en" : {
@@ -46621,6 +46761,34 @@
         }
       }
     },
+    "Ostrzeżenia i błędy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnings and errors"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warnungen und Fehler"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advertencias y errores"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередження та помилки"
+          }
+        }
+      }
+    },
     "Ostrzeżenie" : {
       "localizations" : {
         "en" : {
@@ -46981,6 +47149,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкриває документацію Oracle для слова під курсором: помилка ORA-/PLS-, пакет, подання словника, оператор чи функція SQL і PL/SQL; інакше — пошук."
+          }
+        }
+      }
+    },
+    "Otwiera dziennik aplikacji w Konsoli macOS (bez haseł, treści poleceń SQL i danych z bazy)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the application log in macOS Console (no passwords, SQL statement text or database data)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet das Anwendungsprotokoll in der macOS-Konsole (ohne Passwörter, SQL-Anweisungstexte und Daten aus der Datenbank)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre el registro de la aplicación en la Consola de macOS (sin contraseñas, texto de sentencias SQL ni datos de la base de datos)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває журнал програми в «Консолі» macOS (без паролів, тексту SQL-команд і даних із бази)."
           }
         }
       }
@@ -50737,6 +50933,34 @@
         }
       }
     },
+    "Plik docelowy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Target file"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zieldatei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de destino"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цільовий файл"
+          }
+        }
+      }
+    },
     "Plik już istnieje: %@" : {
       "localizations" : {
         "en" : {
@@ -53449,6 +53673,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daten anzeigen"
+          }
+        }
+      }
+    },
+    "Pokaż dziennik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Log"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokoll anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar registro"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати журнал"
           }
         }
       }
@@ -70417,6 +70669,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Details (:sid, /* concatenate */)"
+          }
+        }
+      }
+    },
+    "Szczegóły — diagnostyka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details — diagnostics"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details — Diagnose"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detalles — diagnóstico"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробиці — діагностика"
           }
         }
       }
@@ -96125,6 +96405,34 @@
         }
       }
     },
+    "Zapisuj w dzienniku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log level"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Protokollieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записувати в журнал"
+          }
+        }
+      }
+    },
     "Zapisuje bieżące okna (z niezapisanymi zmianami) do bieżącego workseta." : {
       "localizations" : {
         "en" : {
@@ -96289,6 +96597,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Speichert das Diagramm als PNG oder PDF."
+          }
+        }
+      }
+    },
+    "Zapisuje dziennik aplikacji z opisem środowiska do pliku tekstowego — do zgłoszenia błędu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves the application log with an environment summary to a text file — for bug reports."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert das Anwendungsprotokoll mit einer Beschreibung der Umgebung in eine Textdatei — für Fehlermeldungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda el registro de la aplicación con una descripción del entorno en un archivo de texto, para informar de errores."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає журнал програми з описом середовища в текстовий файл — для повідомлення про помилку."
           }
         }
       }
@@ -100769,6 +101105,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pro*C-Remote-Build"
+          }
+        }
+      }
+    },
+    "Zdarzenia (zalecane)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Events (recommended)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ereignisse (empfohlen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eventos (recomendado)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Події (рекомендовано)"
           }
         }
       }

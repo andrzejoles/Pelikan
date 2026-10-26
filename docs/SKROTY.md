@@ -580,4 +580,6 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Pomoc kontekstowa (dokumentacja Oracle) | `help.context` | F1 | F1 | Brak | PD-EDIT-026 |
 | Instrukcja Pelikana | `help.manual` | ⇧⌘/ | ⇧⌘/ | Brak | PL-INFRA-010 |
 | Dokumentacja Oracle… | `help.oracleManuals` |  |  | Brak | PD-DOC-001 |
+| Dziennik aplikacji | `help.log` |  |  | Brak | PL-INFRA-011 |
+| Eksportuj dziennik… | `help.exportLog` |  |  | Brak | PL-INFRA-011 |
 

@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Podstawianie zmiennych SQL*Plus (`&x`, `&&x`, `&1`, znak DEFINE, CONCAT, ESCAPE) — UG 8.3.
@@ -309,6 +310,7 @@ public final class SQLPlusEngine {
             if state.autoPrint, !names.isEmpty { printBinds(names.map { $0.uppercased() }) }
             if state.timing { emit(L10n.tr("Czas: ") + Self.elapsed(ContinuousClock.now - start), .info) }
             workspace.recordHistory(original)
+            Log.sql.debug("Okno poleceń: \(r.kind.rawValue, privacy: .public) w \(ms: start)")
             let d = ContinuousClock.now - start
             // HISTORY bez haseł (IDENTIFIED BY) — jak historia SQL.
             if !SQLExecutor.containsPassword(original) {
@@ -317,6 +319,7 @@ public final class SQLPlusEngine {
             }
             return .finished
         } catch let e as OracleError {
+            Log.sql.info("Okno poleceń: błąd \(e as any Error)")
             emit(e.message, .error)
             if e.isConnectionLost { emit(L10n.tr("Połączenie utracone — kolejne polecenie połączy się ponownie."), .info) }
             return state.whenever == .continue ? .finished : await exitOnError()

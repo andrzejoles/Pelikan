@@ -1,4 +1,5 @@
 import Foundation
+import PelikanLog
 import Synchronization
 #if canImport(Security)
 import Security
@@ -49,7 +50,7 @@ public final class KeychainSecretStore: SecretStore {
         var out: CFTypeRef?
         let status = SecItemCopyMatching(q as CFDictionary, &out)
         if status == errSecItemNotFound { return false }
-        guard status == errSecSuccess else { throw SecretStoreError.keychain(status) }
+        guard status == errSecSuccess else { throw failure("sprawdzenie", status) }
         return true
     }
 
@@ -66,7 +67,7 @@ public final class KeychainSecretStore: SecretStore {
         var out: CFTypeRef?
         let status = SecItemCopyMatching(q as CFDictionary, &out)
         if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess, let data = out as? Data else { throw SecretStoreError.keychain(status) }
+        guard status == errSecSuccess, let data = out as? Data else { throw failure("odczyt", status) }
         return String(data: data, encoding: .utf8)
     }
 
@@ -77,12 +78,20 @@ public final class KeychainSecretStore: SecretStore {
         q[kSecAttrLabel as String] = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? service
         q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
         let status = SecItemAdd(q as CFDictionary, nil)
-        guard status == errSecSuccess else { throw SecretStoreError.keychain(status) }
+        guard status == errSecSuccess else { throw failure("zapis", status) }
+        Log.keychain.info("Zapisano hasło w Pęku kluczy")
     }
 
     public func deletePassword(for account: String) throws {
         let status = SecItemDelete(baseQuery(account) as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw SecretStoreError.keychain(status) }
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw failure("usunięcie", status) }
+        if status == errSecSuccess { Log.keychain.debug("Usunięto hasło z Pęku kluczy") }
+    }
+
+    /// Błąd Pęku kluczy w dzienniku: czynność i kod OSStatus (bez konta i treści).
+    private func failure(_ operation: String, _ status: OSStatus) -> SecretStoreError {
+        Log.keychain.error("Pęk kluczy: \(operation, privacy: .public) nie powiodło się (OSStatus \(status))")
+        return .keychain(status)
     }
 }
 #endif

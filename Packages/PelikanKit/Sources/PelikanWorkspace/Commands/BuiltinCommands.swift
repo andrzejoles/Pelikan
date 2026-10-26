@@ -1,4 +1,5 @@
 import Foundation
+import PelikanLog
 import PelikanSQL
 
 /// Komendy wbudowane. Skróty profilu PL/SQL Developer: potwierdzone w UG 17 / na forum producenta albo oznaczone
@@ -649,6 +650,31 @@ public enum BuiltinCommands {
                 guard let url = c.url else { throw CommandError.invalidArgument("query", q) }
                 ctx.ui?.openURL(url)
                 return CommandResult(value: .string(url.absoluteString))
+            },
+            Command(CommandDescriptor(id: "help.log", title: L10n.tr("Dziennik aplikacji"), category: .help,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Otwiera dziennik aplikacji w Konsoli macOS (bez haseł, treści poleceń SQL i danych z bazy)."),
+                                      feature: "PL-INFRA-011")) { ctx in
+                guard let sink = Log.fileSink else { throw CommandError.notAvailable(L10n.tr("Dziennik aplikacji nie jest zapisywany do pliku")) }
+                sink.flush()
+                ctx.ui?.openInApplication(sink.currentFile, application: "com.apple.Console")
+                return .ok
+            },
+            Command(CommandDescriptor(id: "help.exportLog", title: L10n.tr("Eksportuj dziennik…"), category: .help,
+                                      parameters: [CommandParameter("path", .string, L10n.tr("Plik docelowy"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje dziennik aplikacji z opisem środowiska do pliku tekstowego — do zgłoszenia błędu."),
+                                      feature: "PL-INFRA-011")) { ctx in
+                let text = ctx.workspace.logExport()
+                let name = "Pelikan-dziennik-" + Date().formatted(.iso8601.year().month().day())
+                if let path = ctx.arguments.string("path") {
+                    try Data(text.utf8).write(to: URL(fileURLWithPath: (path as NSString).expandingTildeInPath), options: .atomic)
+                    return CommandResult(value: .string(path))
+                }
+                guard await ctx.ui?.saveFile(suggestedName: name, fileExtension: "txt", data: Data(text.utf8)) == true else {
+                    throw CommandError.cancelledByUser
+                }
+                return .ok
             },
         ]
     }

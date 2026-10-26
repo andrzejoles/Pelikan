@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import PelikanDB
+import PelikanLog
 import PelikanSQL
 
 /// Miejsce w programie: jednostka (bez nazwy — blok testu) i linia.
@@ -112,13 +113,9 @@ public final class DebuggerEngine {
     /// PLSQL_OPTIMIZE_LEVEL sesji okna sprzed startu — przywracany w `cleanUp()`.
     @ObservationIgnored var previousOptimizeLevel: Int?
 
-    /// Śledzenie wywołań DBMS_DEBUG do pliku (PELIKAN_DEBUG_TRACE=ścieżka) — diagnostyka, bez danych użytkownika poza nazwami jednostek.
+    /// Śledzenie wywołań DBMS_DEBUG w dzienniku aplikacji (poziom Szczegóły; nazwy jednostek — jak wartości prywatne).
     nonisolated static func trace(_ s: String) {
-        guard let path = ProcessInfo.processInfo.environment["PELIKAN_DEBUG_TRACE"], !path.isEmpty,
-              let h = FileHandle(forWritingAtPath: path) ?? (FileManager.default.createFile(atPath: path, contents: nil) ? FileHandle(forWritingAtPath: path) : nil) else { return }
-        h.seekToEndOfFile()
-        h.write(Data("[debuger] \(s)\n".utf8))
-        try? h.close()
+        Log.debugger.debug("\(s)")
     }
 
     init(workspace: Workspace, document: Document) {
@@ -151,6 +148,7 @@ public final class DebuggerEngine {
         message = nil
         // Informacja debugowania dla bloku testu (PLSQL_OPTIMIZE_LEVEL 1 zachowuje wszystkie linie i zmienne).
         Self.trace("start")
+        Log.debugger.info("Debuger: start sesji debugowania")
         // Poprzednia wartość wraca po debugowaniu (w trybie single ta sama sesja kompiluje obiekty). V$PARAMETER pokazuje
         // wartość sesji; bez uprawnień do widoku — wartość domyślna 2.
         let level = (try? await target.scalar("select value from v$parameter where name = 'plsql_optimize_level'")) ?? nil
@@ -257,6 +255,7 @@ public final class DebuggerEngine {
     /// Przerywa program (abort) i kończy sesję debugowania.
     public func stop() async {
         guard state == .paused || state == .running else { return }
+        Log.debugger.info("Debuger: przerwanie przez użytkownika")
         // Krok w toku: program zatrzymany na punkcie przerwania czekałby na debuger, a Stop na program — pętla zdarzeń
         // zatrzymuje się przy najbliższym zdarzeniu (bez odczytu zmiennych) i dopiero wtedy przerwanie.
         if state == .running {
@@ -610,7 +609,9 @@ public final class DebuggerEngine {
                 document.testVariables[i] = n
             }
             message = L10n.tr("Zakończono")
+            Log.debugger.info("Debuger: program zakończony")
         } catch let e as OracleError {
+            Log.debugger.info("Debuger: program zakończony błędem \(e as any Error)")
             document.errorStack = TestRunner.errorStack(e.message)
             message = e.message.components(separatedBy: "\n").first
         } catch {

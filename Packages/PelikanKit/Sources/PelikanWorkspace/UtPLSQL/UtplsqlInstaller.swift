@@ -8,6 +8,7 @@ import Crypto
 import FoundationNetworking
 #endif
 import PelikanDB
+import PelikanLog
 
 /// Instalacja i aktualizacja utPLSQL z oficjalnego wydania (UT-INS-002): archiwum i suma SHA-256 z wydań projektu
 /// na GitHubie, skrypty instalatora wykonywane silnikiem Command Window. Tylko połączenia deweloperskie i testowe,
@@ -87,10 +88,14 @@ public enum UtplsqlInstaller {
             for log in ["install.log", "uninstall.log", "params.sql.tmp"] { try? FileManager.default.removeItem(at: source.appendingPathComponent(log)) }
         }
         let before = engine.document.console.count
-        for step in steps {
+        for (i, step) in steps.enumerated() {
             let outcome = await engine.run(step, baseDirectory: source)
-            if outcome == .stopped || engine.document.console.dropFirst(before).contains(where: { $0.kind == .error }) { return false }
+            if outcome == .stopped || engine.document.console.dropFirst(before).contains(where: { $0.kind == .error }) {
+                Log.tests.notice("utPLSQL: instalator przerwany na kroku \(i + 1) z \(steps.count)")
+                return false
+            }
         }
+        Log.tests.info("utPLSQL: instalator zakończony (\(steps.count) kroków)")
         return true
     }
 

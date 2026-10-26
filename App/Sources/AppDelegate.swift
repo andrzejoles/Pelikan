@@ -1,6 +1,7 @@
 import AppKit
 import PelikanAgent
 import PelikanDB
+import PelikanLog
 import PelikanODPI
 import PelikanProC
 import PelikanRemote
@@ -24,10 +25,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var recoverySave: Timer?
     private var keyMonitor: Any?
     /// Aktualizacje Sparkle (kanał releases/latest/download/appcast.xml, podpis EdDSA). W kompilacji Debug wyłączone.
+    /// Delegat Sparkle tylko do dziennika (Sparkle trzyma delegata słabo).
+    private static let updaterLog = UpdaterLogDelegate()
     #if DEBUG
-    let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil)
+    let updater = SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: AppDelegate.updaterLog, userDriverDelegate: nil)
     #else
-    let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+    let updater = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: AppDelegate.updaterLog, userDriverDelegate: nil)
     #endif
     /// Usługi macOS (MAC-SVC-001).
     private var services: ServicesProvider?
@@ -36,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var menuToken: ObservationToken?
     private var appearanceToken: ObservationToken?
     private var languageToken: ObservationToken?
+    private var logToken: ObservationToken?
     /// Katalog Oracle Net zarządzany przez aplikację (D53) — także dla sterownika z katalogiem wskazanym później.
     private var oracleNetDirectory: String?
 
@@ -43,11 +47,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
         let env = ProcessInfo.processInfo.environment
         let name = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
-        let dir = env["PELIKAN_DATA_DIR"].map { URL(fileURLWithPath: $0) }
+        let dataOverride = env["PELIKAN_DATA_DIR"].map { URL(fileURLWithPath: $0) }
+        let dir = dataOverride
             ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
+        // Dziennik przed wszystkim innym — także błędy przygotowania katalogów i sterowników (PL-INFRA-011).
+        AppLogging.start(appName: name, dataDirectoryOverride: dataOverride)
         // Usługa w Pęku kluczy z bundle id (nazwa marki tylko w Config/Brand.xcconfig).
         let keychainService = (Bundle.main.bundleIdentifier ?? name) + ".connection"
         workspace = Workspace(dataDirectory: dir, secrets: KeychainSecretStore(service: keychainService))
+        AppLogging.apply(workspace.settings)
+        AppLogging.logStartup()
         super.init()
         // Katalog Oracle Net zarządzany przez Pelikana: portfel magazynu haseł i IFILE do konfiguracji użytkownika (D53).
         do {
@@ -55,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                                                                        userDirectory: workspace.settings.oracleNetDirectory,
                                                                        walletDirectory: workspace.settings.walletDirectory)
         } catch {
-            NSLog("Katalog Oracle Net niedostępny: %@", error.localizedDescription)
+            Log.connection.error("Katalog Oracle Net niedostępny: \(error)")
         }
         workspace.sessions.setDriver(ODPIDriver(libraryDirectory: workspace.settings.instantClientDirectory, configDirectory: oracleNetDirectory))
         workspace.sessions.setDriver(ThinDriver())
@@ -72,7 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 let gap = Date().timeIntervalSince(self.lastTick)
-                if gap > 0.1 { NSLog("PELIKAN_STALL %.0f ms", gap * 1000) }
+                if gap > 0.1 { Log.app.notice("PELIKAN_STALL \(Int(gap * 1000)) ms") }
                 self.lastTick = Date()
             }
         }
@@ -117,6 +126,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
             }
         }
         // Język z Preferencji — także z importu i zestawów preferencji; działa od następnego uruchomienia.
+        logToken = trackChanges { [weak self] in
+            guard let self else { return }
+            AppLogging.apply(self.workspace.settings)
+        }
         languageToken = trackChanges { [weak self] in
             guard let self else { return }
             Self.applyLanguage(self.workspace.settings.language)
@@ -270,6 +283,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Procesy ssh tuneli i połączenia główne celów Pro*C kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
+        Log.app.info("Zamknięcie aplikacji")
+        defer { Log.fileSink?.flush() }
         workspace.persistConsoles()
         // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
         workspace.recovery.end()
@@ -896,6 +911,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showError(_ message: String) {
+        Log.app.notice("Komunikat błędu dla użytkownika: \(message)")
         if Self.scriptSkipsDialog(message) { return }
         let alert = NSAlert()
         alert.alertStyle = .warning
@@ -1049,6 +1065,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Ekran pomocy przy braku Instant Client (PD-CONN-029): pobranie od Oracle, wskazanie katalogu, sterownik thin.
     func showClientMissingHelp(_ message: String) {
+        Log.connection.notice("Brak Oracle Instant Client — okno pomocy")
         let alert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = L10n.tr("Brak Oracle Instant Client")

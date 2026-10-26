@@ -77,6 +77,18 @@ At the next launch Pelikan offers to recover unsaved windows (also later: **File
 unsaved windows is enabled in **Preferences › Tools**. You will also find file changes in the local history (**File ›
 Local history**).
 
+### Application log
+
+Pelikan keeps an event log: startup, connections and their errors (ORA- code), completed statements (kind, time,
+row count), background tasks, the debugger, tests, SSH tunnels, AI agents and updates. **Help › Application Log**
+opens it in macOS Console; the file is in `~/Library/Logs/Pelikan`, and the same entries go to the system log
+(Pelikan's subsystem in Console). Files are at most 2 MB, and Pelikan keeps the last five.
+
+The log never contains passwords, SQL statement text or database data. Connection, server and object names and file
+paths are hidden or replaced by a hash by default (the same name always has the same hash). In **Preferences ›
+General › Application Log** you choose how much is logged (*Warnings and errors*, *Events*, *Details — diagnostics*)
+and can show names — useful when tracking down a problem on your own computer.
+
 ## Known limitations
 
 The following features work differently than in the reference product, are incomplete, or have not been verified in a
@@ -111,6 +123,9 @@ real environment:
 Report bugs and suggestions on the project page:
 [github.com/andrzejoles/Pelikan/issues](https://github.com/andrzejoles/Pelikan/issues). Do not include passwords, server
 names or data from production databases — a description of the steps and the error message are enough.
+
+Attach the log to your report: **Help › Export Log…** saves it together with an environment summary (version,
+system, drivers) to a text file. Review the file before sending it, especially if names were shown.
 
 ## Glossary
 

@@ -422,7 +422,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Pomoc"), [
                 .small("help.manual"), .small("help.context", label: L10n.tr("Pomoc kontekstowa")), .small("help.oracleManuals"),
-                .small("view.commandPalette"), .small("view.ribbonSearch"),
+                .small("view.commandPalette"), .small("view.ribbonSearch"), .small("help.log"), .small("help.exportLog"),
             ]),
         ])
     }

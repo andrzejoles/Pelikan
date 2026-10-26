@@ -4,6 +4,7 @@ import FoundationXML
 #endif
 import Observation
 import PelikanDB
+import PelikanLog
 
 /// Stan elementu wyników utPLSQL.
 public enum UtStatus: String, Sendable, Codable, Hashable, CaseIterable {
@@ -203,7 +204,12 @@ public final class UtplsqlRun: Identifiable {
     }
 
     func markFinished(error: String? = nil) {
-        if let error { failure = error }
+        if let error {
+            failure = error
+            Log.tests.notice("utPLSQL: przebieg nie wystartował albo przerwany: \(error)")
+        } else {
+            Log.tests.info("utPLSQL: \(counter.success) zaliczonych, \(counter.failure) niezaliczonych, \(counter.error) błędów, \(counter.disabled) wyłączonych")
+        }
         finished = true
         currentTest = nil
     }
