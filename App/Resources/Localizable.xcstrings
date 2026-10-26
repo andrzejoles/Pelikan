@@ -18789,6 +18789,34 @@
         }
       }
     },
+    "Filtr nazw bez %%" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name filter without %%"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namensfilter ohne %%"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de nombre sin %%"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр назв без %%"
+          }
+        }
+      }
+    },
     "Filtr nazw obiektów z %%" : {
       "localizations" : {
         "en" : {
@@ -19041,30 +19069,30 @@
         }
       }
     },
-    "Filtr: nazwa%%, status=invalid, source=tekst" : {
+    "Filtr: część nazwy, NAZWA%%, status=invalid, source=tekst" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter: name%%, status=invalid, source=text"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Фільтр: назва%%, status=invalid, source=текст"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filtro: nombre%%, status=invalid, source=texto"
+            "value" : "Filter: part of name, NAME%%, status=invalid, source=text"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Filter: name%%, status=invalid, source=text"
+            "value" : "Filter: Namensteil, NAME%%, status=invalid, source=Text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro: parte del nombre, NOMBRE%%, status=invalid, source=texto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр: частина назви, НАЗВА%%, status=invalid, source=текст"
           }
         }
       }
@@ -63253,6 +63281,34 @@
         }
       }
     },
+    "Przywracaj okna po ponownym uruchomieniu (także niezapisane)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore windows after relaunch (also unsaved)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster nach Neustart wiederherstellen (auch nicht gespeicherte)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar ventanas al reiniciar (también sin guardar)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлювати вікна після перезапуску (також незбережені)"
+          }
+        }
+      }
+    },
     "Przywrócenie zapisanego workseta" : {
       "localizations" : {
         "en" : {
@@ -95369,6 +95425,34 @@
         }
       }
     },
+    "Zaczyna się od tekstu (nazwa%%)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starts with the text (name%%)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beginnt mit dem Text (name%%)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empieza por el texto (nombre%%)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Починається з тексту (назва%%)"
+          }
+        }
+      }
+    },
     "Zadania" : {
       "localizations" : {
         "en" : {
@@ -101917,6 +102001,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Містить"
+          }
+        }
+      }
+    },
+    "Zawiera tekst (%%nazwa%%)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contains the text (%%name%%)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enthält den Text (%%name%%)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contiene el texto (%%nombre%%)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Містить текст (%%назва%%)"
           }
         }
       }

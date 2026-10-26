@@ -11,6 +11,8 @@ mogą się zmieniać, a nieznane błędy — zdarzać.
   bez pliku wraca z tekstem jako okno bez pliku, oznaczone jako niezapisane. Włącznik: Preferencje › Ogólne › Pliki (D176).
 - **Czytelniejsze czcionki** — nic poniżej 11 pt, kod w podglądach 12 pt, większe podpisy wstążki; pasek przewijania
   wstążki nie zasłania już podpisów grup (D177).
+- **Własne czcionki** — krój, styl i wielkość osobno dla interfejsu (Preferencje › Ogólne › Czcionka interfejsu),
+  edytora, siatki wyników i Object Browsera (Preferencje › Edytor); zmiana działa od razu (D178).
 - **Okna o zmiennym rozmiarze** — Preferencje, logowanie, edytor połączenia, Znajdź i zamień, arkusze i paleta komend
   (D177).
 - **Filtr nazw** w przeglądarce obiektów szuka fragmentu nazwy (`emp` → `%EMP%`); `EMP%` — początek nazwy; dawne

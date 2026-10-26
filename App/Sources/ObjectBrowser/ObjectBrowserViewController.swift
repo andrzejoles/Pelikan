@@ -79,7 +79,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         userPopup.target = self
         userPopup.action = #selector(userChanged)
         filterField.controlSize = .small
-        filterField.placeholderString = L10n.tr("Filtr: nazwa%, status=invalid, source=tekst")
+        filterField.placeholderString = L10n.tr("Filtr: część nazwy, NAZWA%, status=invalid, source=tekst")
         filterField.target = self
         filterField.action = #selector(filterChanged)
         filterField.sendsWholeSearchString = true
@@ -195,7 +195,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     private func load(_ node: Node) {
         guard node.children == nil, !node.loading, let m = workspace.metadata() else { return }
         node.loading = true
-        let filter = ObjectFilter(filterField.stringValue, named: workspace.browserFilter)
+        let filter = ObjectFilter(filterField.stringValue, named: workspace.browserFilter, contains: workspace.settings.browserFilterContains)
         let owner = self.owner
         Task {
             defer { node.loading = false }

@@ -11,7 +11,8 @@ się tylko wtedy, gdy wersja bazy i Twoje uprawnienia na to pozwalają.
 
 - **Wybór użytkownika** nad drzewem: *Bieżący użytkownik*, *Wszyscy użytkownicy* albo konkretny schemat (Pelikan
   pamięta wybór dla połączenia).
-- **Filtr** pod wyborem użytkownika: fragment nazwy z `%`, kilka wzorców po przecinku, `status=invalid` (tylko
+- **Filtr** pod wyborem użytkownika: część nazwy (szukana w dowolnym miejscu nazwy — `emp` znajdzie `EMP` i `T_EMP_HIST`),
+  wzorzec z `%` (np. `EMP%` — tylko początek nazwy; zachowanie bez `%` zmienisz w **Preferencje › Object Browser**), kilka wzorców po przecinku, `status=invalid` (tylko
   niepoprawne obiekty) albo `source=tekst` (obiekty, których źródło zawiera tekst).
 - Rozwinięcie obiektu pokazuje jego elementy: kolumny z typami, więzy, indeksy, wyzwalacze, partycje, podprogramy,
   atrybuty, a także zależności (**Zależy od**, **Używany przez**).

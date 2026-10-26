@@ -12,7 +12,9 @@ zulassen.
 
 - **Benutzerauswahl** über dem Baum: *Aktueller Benutzer*, *Alle Benutzer* oder ein bestimmtes Schema (Pelikan merkt
   sich die Auswahl pro Verbindung).
-- **Filter** unter der Benutzerauswahl: ein Namensteil mit `%`, mehrere Muster durch Komma getrennt, `status=invalid`
+- **Filter** unter der Benutzerauswahl: ein Namensteil (an beliebiger Stelle — `emp` findet `EMP` und `T_EMP_HIST`),
+  ein Muster mit `%` (z. B. `EMP%` — nur der Namensanfang; das Verhalten ohne `%` ändern Sie unter **Einstellungen ›
+  Object Browser**), mehrere Muster durch Komma getrennt, `status=invalid`
   (nur ungültige Objekte) oder `source=text` (Objekte, deren Quelltext den Text enthält).
 - Das Aufklappen eines Objekts zeigt seine Elemente: Spalten mit Typen, Constraints, Indizes, Trigger, Partitionen,
   Unterprogramme, Attribute sowie Abhängigkeiten (**Hängt ab von**, **Verwendet von**).

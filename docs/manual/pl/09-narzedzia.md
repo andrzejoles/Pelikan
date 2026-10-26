@@ -155,6 +155,11 @@ okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia sta
 - **Workset** (zestaw roboczy) zapamiętuje otwarte okna — także z niezapisanymi zmianami i wartościami zmiennych — i
   przywraca je przy następnym uruchomieniu (**Plik › Workset**: nowy, otwórz, zapisz, przywróć, zamknij, porównaj,
   autozapis). Układ okna głównego zapisujesz w **Widok › Zapisz układ okna**.
+- Przy zamykaniu aplikacji z włączonym **autozapisem workseta** (domyślnie; **Preferencje › Ogólne › Pliki › Przywracaj okna po ponownym uruchomieniu** albo **Plik › Workset ›
+  Autozapis workseta**) Pelikan nie pyta o
+  zapis — wszystkie otwarte okna (SQL, programu, testu, poleceń, planu, diagramu, notatnika, raportu i konsole połączeń)
+  wracają przy następnym uruchomieniu w tym samym układzie i z tym samym aktywnym oknem. Okno bez pliku wraca z tekstem
+  jako okno bez pliku, z oznaczeniem niezapisanej zmiany.
 - **Przeglądarka plików** (karta **Pliki**) pokazuje wybrane katalogi (lokalizacje z filtrem i kolorem) z menu: otwórz
   jako, zmień nazwę, nowy plik lub katalog, przenieś do Kosza, pokaż w Finderze. Filtr działa po nazwie, stanie,
   stanie Git, rozmiarze i dacie.

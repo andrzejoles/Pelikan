@@ -62,6 +62,8 @@ public struct Settings: Sendable, Codable, Hashable {
     /// ostatnio używanych, akcja dwukliku według typu (edit, queryData, describe, ddl), potwierdzanie rekompilacji.
     public var browserFolders: [String] = []
     public var browserRecentLimit = 20
+    /// Filtr nazw przeglądarki obiektów bez `%`: fragment nazwy (`%tekst%`) albo początek (`tekst%`).
+    public var browserFilterContains = true
     public var browserDoubleClick: [String: String] = [:]
     /// Przeciąganie obiektu (PD-OB-010, UG 23.11): tekst po upuszczeniu w edytorze i akcja na obszarze okien.
     public var browserDropAction: BrowserDropAction = .name
@@ -329,6 +331,7 @@ public struct Settings: Sendable, Codable, Hashable {
         compileReadOnlyFiles = v(.compileReadOnlyFiles, compileReadOnlyFiles)
         browserFolders = v(.browserFolders, browserFolders)
         browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
+        browserFilterContains = v(.browserFilterContains, browserFilterContains)
         browserDoubleClick = v(.browserDoubleClick, browserDoubleClick)
         browserDropAction = v(.browserDropAction, browserDropAction)
         browserWorkspaceDrop = v(.browserWorkspaceDrop, browserWorkspaceDrop)

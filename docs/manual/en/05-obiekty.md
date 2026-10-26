@@ -11,7 +11,9 @@ links**, **Queues**, **Jobs (Scheduler)**, **Users**, **Roles**, **Profiles**, *
 
 - **User selection** above the tree: *Current user*, *All users* or a specific schema (Pelikan remembers the choice for
   the connection).
-- **Filter** below the user selection: a name fragment with `%`, several comma-separated patterns, `status=invalid`
+- **Filter** below the user selection: part of a name (matched anywhere in the name — `emp` finds `EMP` and
+  `T_EMP_HIST`), a pattern with `%` (e.g. `EMP%` — only the start of the name; change the behaviour without `%` in
+  **Preferences › Object Browser**), several comma-separated patterns, `status=invalid`
   (only invalid objects) or `source=text` (objects whose source contains the text).
 - Expanding an object shows its elements: columns with types, constraints, indexes, triggers, partitions, subprograms,
   attributes, and also dependencies (**Depends on**, **Used by**).
