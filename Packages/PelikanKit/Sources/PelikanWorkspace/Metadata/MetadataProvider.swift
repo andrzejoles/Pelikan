@@ -113,8 +113,19 @@ public struct ObjectFilter: Sendable, Hashable {
     /// Filtr nazwany (PD-OB-007): warunek WHERE i ORDER BY na widoku obiektów (alias `o`), `:browser_user` — bieżący
     /// użytkownik przeglądarki, `&browser_filter` — tekst z pola filtra.
     public var named: BrowserFilter?
+    /// Wzorzec bez `%`: nazwa zawiera tekst (`%tekst%`) albo się od niego zaczyna (`tekst%`). Wzorzec z `%` — bez zmian.
+    public var contains = true
 
-    public init(_ text: String = "", named: BrowserFilter? = nil) { self.text = text; self.named = named }
+    public init(_ text: String = "", named: BrowserFilter? = nil, contains: Bool = true) {
+        self.text = text
+        self.named = named
+        self.contains = contains
+    }
+
+    /// Wzorzec LIKE nazwy z tekstu filtra (wielkie litery).
+    func namePattern(_ n: String) -> String {
+        n.contains("%") ? n : contains ? "%" + n + "%" : n + "%"
+    }
 
     struct Parsed {
         var names: [String] = []
@@ -145,7 +156,7 @@ public struct ObjectFilter: Sendable, Hashable {
         var parts: [String] = []
         if !p.names.isEmpty {
             let ors = p.names.enumerated().map { i, n -> String in
-                binds.append(BindVariable(name: "fn\(i)", value: .text(n.contains("%") ? n : n + "%")))
+                binds.append(BindVariable(name: "fn\(i)", value: .text(namePattern(n))))
                 return "o.object_name like :fn\(i)"
             }
             parts.append("(" + ors.joined(separator: " or ") + ")")

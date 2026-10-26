@@ -26,7 +26,11 @@ struct MetadataTests {
         #expect(Set(tables.map(\.name)).isSuperset(of: ["DEPT", "EMP", "DOCS", "BIG_ROWS"]))
         let bodies = try await m.objects(.packageBody, owner: schema)
         #expect(bodies.first { $0.name == "BROKEN_PKG" }?.isValid == false)
-        #expect(try await m.objects(.table, owner: schema, filter: ObjectFilter("DE%, emp")).map(\.name).sorted() == ["DEPT", "EMP", "EMP_AUDIT"])
+        #expect(try await m.objects(.table, owner: schema, filter: ObjectFilter("DE%, emp", contains: false)).map(\.name).sorted() == ["DEPT", "EMP", "EMP_AUDIT"])
+        // Domyślnie fragment nazwy (%tekst%); jawny % — wzorzec bez zmian.
+        let contains = try await m.objects(.table, owner: schema, filter: ObjectFilter("mp_aud")).map(\.name)
+        #expect(contains == ["EMP_AUDIT"])
+        #expect(try await m.objects(.table, owner: schema, filter: ObjectFilter("mp_aud%")).isEmpty)
         // Schemat testowy jest wspólny: inny test może mieć chwilowo niepoprawne ciało — liczy się filtr, nie lista.
         let invalid = try await m.objects(.packageBody, owner: schema, filter: ObjectFilter("status=invalid"))
         #expect(invalid.map(\.name).contains("BROKEN_PKG") && invalid.allSatisfy { !$0.isValid } && !invalid.map(\.name).contains("EMP_API"))

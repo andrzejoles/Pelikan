@@ -1537,6 +1537,13 @@ mają objąć to, co mają formatery (szczególnie wyrównanie i wielkość lite
   narastającej kombinacji wszystkich i sprawdza idempotencję. Wydajność z wszystkimi wyrównaniami: pakiet 50 000 linii
   w ok. 3 s w kompilacji testowej (tokeny linii w pamięci podręcznej).
 
+### D175 · 2026-10-26 — Filtr nazw przeglądarki obiektów: fragment nazwy
+
+Właściciel woli `%nazwa%` zamiast `nazwa%`. Tekst filtra bez `%` szuka teraz w dowolnym miejscu nazwy (`emp` → `%EMP%`);
+wzorzec z `%` działa jak wpisany (`EMP%` — tylko początek). Dawne zachowanie (dopisywanie `%` na końcu) zostaje jako
+**Preferencje › Object Browser › Filtr nazw bez %** (`browserFilterContains`, domyślnie „zawiera”). LIKE z `%` na początku
+nie korzysta z indeksu słownika; zapytanie i tak jest zawężone do właściciela i typu obiektu.
+
 ### D176 · 2026-10-26 — Okna przywracane po ponownym uruchomieniu, także niezapisane i bez pliku
 
 Właściciel: okna z tekstem bez pliku mają po zamknięciu i ponownym otwarciu aplikacji wrócić w stanie sprzed
