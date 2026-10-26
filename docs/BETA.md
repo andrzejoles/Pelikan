@@ -1,11 +1,21 @@
 # Pelikan — wydanie beta
 
-Czwarta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Piąta beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 8.7.0
+## Co nowego od 9.0.0
+
+- **Drugie przejście przeglądu kodu** (ok. 60 poprawek, D169), m.in.: formater nie zmienia już znaczenia kodu
+  (wielolinijkowe teksty, dzielenie `/`, polecenia SET/PROMPT, kod MLE i Java) i odmawia, gdy wynik nie zgadza się
+  z oryginałem; Test Manager uruchamia testy we własnej sesji i nie wycofuje zmian innych okien; debuger po błędzie
+  wyłącza tryb debugowania i przywraca poziom optymalizacji kompilacji; refaktoryzacje odmawiają, gdy zmieniłyby
+  znaczenie kodu; przenoszenie danych w trybie TRUNCATE sprawdza rozmiar LOB-ów przed jakąkolwiek zmianą; dziennik
+  agenta maskuje tylko samo hasło.
+- Wersje zależności przypięte w projekcie aplikacji — budowanie nie zmienia plików w repozytorium.
+
+## Co nowego w 9.0.0
 
 - **Przegląd całego kodu** (ok. 130 poprawek, D168), m.in.: agent AI kompiluje dokładnie to, na co użytkownik wyraził zgodę;
   sterownik thin nie zatwierdza po cichu transakcji przy rozłączeniu; CONNECT/DISCONNECT w Oknie poleceń pytają
