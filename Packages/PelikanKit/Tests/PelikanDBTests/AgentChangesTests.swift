@@ -115,5 +115,53 @@ struct AgentChangesTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("R7-13: cofnięcie DROP PACKAGE przywraca specyfikację przed ciałem (ciało VALID)")
+    func undoDropPackageOrder() async throws {
+        let (ws, def, agent) = try workspace()
+        let user = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        _ = try await user.execute("create or replace package pelikan_agent_dp as function f return number; end;")
+        _ = try await user.execute("create or replace package body pelikan_agent_dp as function f return number is begin return 7; end; end;")
+        _ = try await ws.invoke("agent.execute", CommandArguments(["sql": "drop package pelikan_agent_dp"]), invoker: agent)
+        let report = await ws.undoAgentSession(agent.agentSessionID!)
+        #expect(report.objectsRestored == 2 && report.errors.isEmpty && report.conflicts.isEmpty, "\(report)")
+        #expect(try await user.scalar("select status from all_objects where owner = user and object_name = 'PELIKAN_AGENT_DP' and object_type = 'PACKAGE BODY'") == "VALID")
+        #expect(try await user.scalar("select pelikan_agent_dp.f from dual") == "7")
+        _ = try? await user.execute("drop package pelikan_agent_dp")
+        await ws.closeAgentDatabase(session: agent.agentSessionID!)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("R7-11: zgoda na COMMIT po DML w bloku PL/SQL — liczba wierszy nieznana zamiast 0")
+    func commitPreviewAfterBlock() async throws {
+        let (ws, _, agent) = try workspace()
+        _ = try await ws.invoke("agent.execute", CommandArguments(["sql": "begin update dept set dname = dname where deptno = 10; end;"]), invoker: agent)
+        let preview = try await ws.preview("agent.commit", invoker: agent)
+        #expect(preview.estimatedRows == nil && preview.irreversible && !preview.summary.contains("— 0"), "\(preview.summary)")
+        try await ws.invoke("agent.rollback", invoker: agent)
+        let after = try await ws.preview("agent.commit", invoker: agent)
+        #expect(after.estimatedRows == 0)
+        await ws.closeAgentDatabase(session: agent.agentSessionID!)
+        await ws.sessions.disconnectAll()
+    }
+
+    @Test("R7-12: agent.generateTest po zgodzie wykonuje przypięte polecenia z podglądu")
+    func generateTestUsesPinnedStatements() async throws {
+        let (ws, def, agent) = try workspace()
+        let spec = "create or replace package test_pelikan_agent_pin as\n  --%suite\n  --%test\n  procedure t;\nend;"
+        let body = "create or replace package body test_pelikan_agent_pin as\n  procedure t is begin null; end;\nend;"
+        // Pakiet „testowany” nie istnieje — ponowne czytanie specyfikacji z bazy skończyłoby się błędem.
+        let g = try await ws.invoke("agent.generateTest", CommandArguments(["package": "pelikan_agent_missing",
+                                                                            Workspace.agentStatementsKey: .array([.string(spec), .string(body)])]), invoker: agent).value
+        #expect(g?["window"] != nil)
+        #expect(ws.documents.contains { $0.text.contains("test_pelikan_agent_pin") })
+        let user = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        #expect(try await user.scalar("select count(*) from all_objects where owner = user and object_name = 'TEST_PELIKAN_AGENT_PIN'") == "2")
+        let report = await ws.undoAgentSession(agent.agentSessionID!)
+        #expect(report.errors.isEmpty, "\(report)")
+        #expect(try await user.scalar("select count(*) from all_objects where owner = user and object_name = 'TEST_PELIKAN_AGENT_PIN'") == "0")
+        await ws.closeAgentDatabase(session: agent.agentSessionID!)
+        await ws.sessions.disconnectAll()
+    }
+
     func c(_ ws: Workspace) -> String { TestDatabase.config!.user.uppercased() }
 }

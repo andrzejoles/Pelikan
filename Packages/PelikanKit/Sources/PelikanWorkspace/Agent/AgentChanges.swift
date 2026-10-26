@@ -25,9 +25,10 @@ public struct AgentUndoReport: Sendable, Equatable {
 /// Zmiany w bazie wykonywane przez agenta (PROMPT §7.3 p.5–6): podgląd przed zgodą, DML niezatwierdzone do osobnej
 /// zgody na COMMIT, DDL odmawiane przy otwartej transakcji (DDL zatwierdza ją niejawnie), historia kodu obiektów.
 public enum AgentChanges {
-    /// Obiekt kodu tworzony, zmieniany albo usuwany poleceniem DDL (nil — polecenie nie dotyczy kodu).
+    /// Obiekt kodu tworzony, zmieniany albo usuwany poleceniem DDL (nil — polecenie nie dotyczy kodu). Modyfikatory
+    /// w dowolnej kolejności: DBMS_METADATA (więc i `get_ddl` agenta) daje `CREATE OR REPLACE FORCE EDITIONABLE VIEW`.
     static func codeTarget(_ sql: String, defaultOwner: String) -> (object: DBObject, drop: Bool)? {
-        let pattern = #"^\s*(CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:NON)?EDITIONABLE\s+)?(?:(?:NO\s+)?FORCE\s+)?|DROP\s+)(PACKAGE\s+BODY|TYPE\s+BODY|PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE|VIEW)\s+(?:IF\s+(?:NOT\s+)?EXISTS\s+)?((?:"[^"]+"|[A-Za-z][\w$#]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z][\w$#]*))?)"#
+        let pattern = #"^\s*(CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:(?:NON)?EDITIONABLE|EDITIONING|(?:NO\s+)?FORCE)\s+)*|DROP\s+)(PACKAGE\s+BODY|TYPE\s+BODY|PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE|VIEW)\s+(?:IF\s+(?:NOT\s+)?EXISTS\s+)?((?:"[^"]+"|[A-Za-z][\w$#]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z][\w$#]*))?)"#
         guard let re = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]),
               let m = re.firstMatch(in: sql, range: NSRange(location: 0, length: (sql as NSString).length)) else { return nil }
         let ns = sql as NSString
@@ -273,8 +274,18 @@ extension Workspace {
         // Pierwszy stan obiektu sprzed sesji i ostatni stan po niej (kilka zmian tego samego obiektu).
         let changes = agentCodeChanges.filter { $0.session == session }
         var seen = Set<DBObject>()
+        var latest: [AgentCodeChange] = []
         for change in changes.reversed() where !seen.contains(change.object) {
             seen.insert(change.object)
+            latest.append(change)
+        }
+        // Przywracane ciała (pakietu, typu) po wszystkich specyfikacjach: po DROP PACKAGE odwrotna kolejność dawałaby
+        // CREATE BODY bez specyfikacji (PLS-00304). Usuwanie utworzonych zostaje w odwrotnej kolejności.
+        let restoredBodyLast = { (c: AgentCodeChange) in
+            [.packageBody, .typeBody].contains(c.object.type) && changes.first { $0.object == c.object }?.before != nil
+        }
+        latest = latest.filter { !restoredBodyLast($0) } + latest.filter(restoredBodyLast)
+        for change in latest {
             let first = changes.first { $0.object == change.object }!
             do {
                 let s = try await sessions.session(sessions.compileKey(connection: change.connectionID))
@@ -361,8 +372,16 @@ enum AgentChangeCommands {
                                       summary: L10n.tr("Zatwierdza niezatwierdzone zmiany agenta na połączeniu (po zgodzie z liczbą zmienionych wierszy) — nieodwracalne."),
                                       inMenu: false, feature: "AI-SEC-007"),
                     preview: { ctx in
-                        let def = try ctx.workspace.agentConnection(ctx.arguments)
-                        let rows = ctx.invoker.agentSessionID.flatMap { ctx.workspace.agentPendingRows[ctx.workspace.agentPendingKey($0, def.id)] } ?? 0
+                        let ws = ctx.workspace
+                        let def = try ws.agentConnection(ctx.arguments)
+                        let rows = ctx.invoker.agentSessionID.flatMap { ws.agentPendingRows[ws.agentPendingKey($0, def.id)] } ?? 0
+                        // Licznik obejmuje tylko DML wykonane wprost; zmiany z bloku PL/SQL go nie zwiększają.
+                        if rows == 0, let id = ctx.invoker.agentSessionID,
+                           let s = ws.sessions.existingSession(SessionKey(connectionID: def.id, purpose: .agent(id))),
+                           try await AgentChanges.hasPendingTransaction(s) {
+                            return EffectPreview(summary: L10n.tr("COMMIT zmian agenta na połączeniu „\(def.agentAlias)”: liczba zmienionych wierszy nieznana (zmiany z bloku PL/SQL). Po zatwierdzeniu zmian danych nie da się cofnąć."),
+                                                 statements: ["COMMIT"], irreversible: true)
+                        }
                         return EffectPreview(summary: L10n.tr("COMMIT zmian agenta na połączeniu „\(def.agentAlias)”: zmienione wiersze — \(rows). Po zatwierdzeniu zmian danych nie da się cofnąć."),
                                              statements: ["COMMIT"], estimatedRows: Int64(rows), irreversible: true)
                     }) { ctx in
@@ -413,7 +432,9 @@ enum AgentChangeCommands {
                         return try await AgentChanges.preview(try await skeletonStatements(ctx, s).statements, connection: def, in: s)
                     }) { ctx in
                 let (def, s) = try await ctx.workspace.agentDatabase(ctx, action: "generate_test_skeleton")
-                let (text, statements) = try await skeletonStatements(ctx, s)
+                // Po zgodzie — dokładnie polecenia z podglądu (specyfikacja pakietu mogła się zmienić w trakcie zgody).
+                let pinned = ctx.arguments[Workspace.agentStatementsKey]?.arrayValue?.compactMap(\.stringValue)
+                let (text, statements) = if let pinned { (pinned.map { $0 + "\n/\n" }.joined(separator: "\n"), pinned) } else { try await skeletonStatements(ctx, s) }
                 let result = try await ctx.workspace.runAgentStatements(ctx, statements, def: def, s: s)
                 let doc = ctx.workspace.newDocument(.program, text: text)
                 doc.connectionID = def.id
