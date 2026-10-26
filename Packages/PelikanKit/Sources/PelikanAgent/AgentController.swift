@@ -119,7 +119,7 @@ public final class AgentController: AgentInvocationGate {
     public func createSession(profile: AgentProfile, directory: String, accessOverrides: [CommandID: AgentAccess] = [:]) -> (AgentSession, String) {
         let (session, token) = registry.create(profile: profile, directory: directory, accessOverrides: accessOverrides)
         sessions.append(AgentSessionInfo(id: session.id, profile: profile, directory: directory, created: session.created, connected: false))
-        Log.agent.info("Sesja agenta \(profile.name) rozpoczęta (katalog \(directory, privacy: .hash), wyjątki uprawnień: \(accessOverrides.count))")
+        Log.agent.info("Sesja agenta \(profile.name, privacy: .hash) rozpoczęta (katalog \(directory, privacy: .hash), wyjątki uprawnień: \(accessOverrides.count))")
         log.write(session: session, ["event": "session_start", "directory": .string(directory),
                                      "overrides": .object(Dictionary(uniqueKeysWithValues: accessOverrides.map { ($0.key.rawValue, .string($0.value.displayName)) }))])
         return (session, token)
@@ -217,6 +217,9 @@ public final class AgentController: AgentInvocationGate {
             for key in args.values.keys where !key.hasPrefix("__") && !declared.contains(key) { args.values[key] = nil }
         }
 
+        // Do dziennika aplikacji jawnie tylko identyfikator z rejestru — tekst od agenta (nieznana komenda) może
+        // zawierać SQL albo dane (D170).
+        let loggedID = workspace.registry.command(commandID) != nil ? commandID.rawValue : "<nieznana>"
         var activity = AgentActivity(sessionID: sessionID, tool: name, arguments: Self.summarize(args), started: started, status: .running)
         activities.append(activity)
         if activities.count > 500 { activities.removeFirst(activities.count - 500) }
@@ -236,14 +239,14 @@ public final class AgentController: AgentInvocationGate {
             // Do dziennika trafia tylko początek wyniku (dane z bazy mogą być wrażliwe).
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments),
                                          "decision": "allowed", "result": .string(String(shown.prefix(500))), "ms": .int(Int64(activity.duration! * 1000))])
-            Log.agent.info("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): wykonane w \(Int(activity.duration! * 1000)) ms")
+            Log.agent.info("Narzędzie \(name, privacy: .public) (\(loggedID, privacy: .public)): wykonane w \(Int(activity.duration! * 1000)) ms")
             return CallTool.Result(content: [.text(text: text, annotations: nil, _meta: nil)], isError: false)
         } catch let denial as AgentDenial {
             activity.status = .denied(denial.code)
             activity.duration = Date().timeIntervalSince(started)
             if let i = index() { activities[i] = activity }
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments), "decision": .string(denial.code)])
-            Log.agent.notice("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): odmowa \(denial.code, privacy: .public)")
+            Log.agent.notice("Narzędzie \(name, privacy: .public) (\(loggedID, privacy: .public)): odmowa \(denial.code, privacy: .public)")
             return error(denial.localizedDescription)
         } catch {
             activity.status = .failed(error.localizedDescription)
@@ -251,7 +254,7 @@ public final class AgentController: AgentInvocationGate {
             if let i = index() { activities[i] = activity }
             log.write(session: session, ["tool": .string(name), "command": .string(commandID.rawValue), "arguments": .string(activity.arguments),
                                          "decision": "allowed", "error": .string(error.localizedDescription)])
-            Log.agent.info("Narzędzie \(name, privacy: .public) (\(commandID.rawValue, privacy: .public)): błąd \(error)")
+            Log.agent.info("Narzędzie \(name, privacy: .public) (\(loggedID, privacy: .public)): błąd \(error)")
             return self.error(error.localizedDescription)
         }
     }

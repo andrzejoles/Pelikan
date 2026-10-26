@@ -3,6 +3,7 @@ import Darwin
 import Foundation
 import PelikanBridgeKit
 import PelikanDB
+import PelikanLog
 import Testing
 @testable import PelikanAgent
 @testable import PelikanWorkspace
@@ -252,7 +253,8 @@ struct AgentUnitTests {
         let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: dir) }
         let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
-        controller.approvals = MockApprover()
+        let approver = MockApprover()
+        controller.approvals = approver
         let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
         var target = ConnectionTarget(user: "sys", connectString: "//prod-host.example:1521/svc")
         target.role = .sysdba
@@ -311,6 +313,25 @@ struct AgentUnitTests {
         let r = await controller.callTool("get_coverage", arguments: ["object": "emp"], sessionID: session.id)
         let text = r.content.map { "\($0)" }.joined()
         #expect(r.isError == false && text.contains("untrusted_content") && text.contains("S.EMP") && !text.contains("XEMP"))
+    }
+
+    @Test("R8-10: identyfikator nieznanej komendy od agenta nie trafia jawnie do dziennika aplikacji")
+    func unknownCommandIDNotLogged() async {
+        // Zwykłe ujście (poziom domyślny, nazwy ukryte): komunikat błędu z tekstem agenta jest prywatny.
+        let sink = MemoryLogSink()
+        let sinkID = Log.addSink(sink)
+        defer { Log.removeSink(sinkID) }
+        let ws = Workspace()
+        let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
+        let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
+        let secret = "select_karta_\(UUID().uuidString.prefix(8))"
+        let r = await controller.callTool("run_command", arguments: ["command": .string(secret)], sessionID: session.id)
+        #expect(r.isError == true)
+        #expect(!sink.text.contains(secret) && sink.text.contains("<nieznana>"), "\(sink.text)")
+        _ = await controller.callTool("get_state", arguments: [:], sessionID: session.id)
+        #expect(sink.text.contains("agent.state"))
     }
 
     @Test("Porównanie stałoczasowe, base64url, tokeny 256 bit i unikalne")
