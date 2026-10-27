@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 @testable import PelikanWorkspace
 import Testing
 
@@ -119,6 +120,19 @@ struct ProblemReportTests {
         #expect(CrashMonitor.latestReport(appName: "Pelikan", since: started, in: reports) == nil)
         try Self.ips.write(to: reports.appendingPathComponent("Pelikan-2026-10-26-101500.ips"), atomically: true, encoding: .utf8)
         #expect(CrashMonitor.latestReport(appName: "Pelikan", since: started, in: reports)?.exceptionType == "EXC_BREAKPOINT")
+    }
+
+    @Test("znacznik pracy: nieudany zapis zostawia ślad w dzienniku")
+    func monitorMarkerNotWritten() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-crash-\(UUID().uuidString)")
+        try Data().write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let sink = MemoryLogSink(everything: true)
+        let id = Log.addSink(sink)
+        defer { Log.removeSink(id) }
+        // Katalog danych jest zwykłym plikiem — znacznika nie da się utworzyć.
+        #expect(CrashMonitor(dataDirectory: file).begin() == nil)
+        #expect(sink.all.contains { $0.level == .error && $0.category == "app" && $0.text.hasPrefix("Znacznik pracy aplikacji nie zapisany") })
     }
 
     @Test("komenda Zgłoś problem: tylko dla użytkownika, z opisem środowiska bez nazw połączeń")

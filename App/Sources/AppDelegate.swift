@@ -1259,15 +1259,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
-                // Okno główne na wskazanym ekranie (zrzut na monitorze bez Retina — rysowanie tekstu w skali 1×).
-                if s.command == "debug.moveToScreen", case .int(let i)? = s.args?["screen"], NSScreen.screens.indices.contains(Int(i)),
-                   let w = mainWindow?.window {
-                    let f = NSScreen.screens[Int(i)].visibleFrame
-                    w.setFrame(NSRect(x: f.minX + 40, y: f.maxY - 860, width: 1300, height: 820), display: true)
-                    log("ok debug.moveToScreen \(i) skala \(w.backingScaleFactor)")
-                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
-                    continue
-                }
                 // Okno preferencji na wskazanym panelu (np. "BrowserPane").
                 if s.command == "debug.preferences" {
                     let pane = s.args?["pane"].flatMap { if case .string(let v) = $0 { v } else { nil } }

@@ -4,6 +4,8 @@ set -u
 cd "$(dirname "$0")/../Packages/PelikanKit" || exit 1
 limit=${PELIKAN_SSH_TEST_LIMIT:-180}
 status=0
+# Tylko procesy testów tego pakietu (lokalnie mogą działać testy innych projektów i drzew roboczych — ich nie ruszamy).
+helper="swiftpm-testing-helper --test-bundle-path $PWD/\.build/"
 # Wszystkie zestawy z celów testowych SSH (krok testów jednostkowych je pomija) — nowy zestaw nie wypadnie z CI.
 suites=$(grep -hoE '^(final class|struct) [A-Za-z0-9_]+Tests\b' Tests/PelikanRemoteTests/*.swift Tests/PelikanProCTests/*.swift | awk '{print $NF}' | sort -u)
 [ -n "$suites" ] || { echo "::error::brak zestawów testów SSH"; exit 1; }
@@ -25,7 +27,11 @@ for suite in $suites; do
       comm -23 "$log.s" "$log.f"
       echo "--- procesy ssh/sshd ---"; ps -Ao pid,ppid,pgid,etime,command | grep -E "ssh|swiftpm|xctest|sleep 300" | grep -v grep | cut -c1-200
       for f in "${TMPDIR:-/tmp}"/pelikan-sshd-*/sshd.log; do [ -f "$f" ] && { echo "--- $f"; tail -20 "$f"; }; done
-      pkill -f swiftpm-testing-helper || true
+      # Stos zawieszonego procesu testów (wskazuje miejsce blokady, np. synchroniczne czekanie w deinit).
+      for pid in $(pgrep -f "$helper"); do
+        echo "--- sample $pid ---"; sample "$pid" 2 2>/dev/null | sed -n '/Call graph:/,/Total number in stack/p' | head -80
+      done
+      pkill -f "$helper" || true
     else
       echo "::error::$suite zakończony kodem $rc"
     fi

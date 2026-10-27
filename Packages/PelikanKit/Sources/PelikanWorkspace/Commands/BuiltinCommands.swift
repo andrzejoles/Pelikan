@@ -742,7 +742,7 @@ public enum BuiltinCommands {
                                       summary: L10n.tr("Zapisuje dziennik aplikacji z opisem środowiska do pliku tekstowego — do zgłoszenia błędu."),
                                       feature: "PL-INFRA-011")) { ctx in
                 let text = ctx.workspace.logExport()
-                let name = "Pelikan-dziennik-" + Date().formatted(.iso8601.year().month().day())
+                let name = AppBrand.name + "-dziennik-" + Date().formatted(.iso8601.year().month().day())
                 if let path = ctx.arguments.string("path") {
                     try Data(text.utf8).write(to: URL(fileURLWithPath: (path as NSString).expandingTildeInPath), options: .atomic)
                     return CommandResult(value: .string(path))

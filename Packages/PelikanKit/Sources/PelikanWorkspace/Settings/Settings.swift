@@ -33,12 +33,12 @@ public enum RecordsPerPage: Sendable, Codable, Hashable {
     case all
 }
 
-/// Wielkość liter słów kluczowych w edytorze.
 /// Grubość (styl) czcionki w Preferencjach (D178).
 public enum FontWeightChoice: String, Sendable, Codable, Hashable, CaseIterable {
     case light, regular, medium, semibold, bold
 }
 
+/// Wielkość liter słów kluczowych w edytorze.
 public enum KeywordCase: String, Sendable, Codable, Hashable, CaseIterable { case unchanged, upper, lower, initCap }
 
 /// Wygląd aplikacji: jak system, jasny albo ciemny.
@@ -143,7 +143,7 @@ public struct Settings: Sendable, Codable, Hashable {
     public var editorFontName = "SF Mono"
     public var editorFontSize: Double = 13
     public var editorFontWeight: FontWeightChoice = .regular
-    /// Czcionka Object Browsera (PD-PREF-005); 0 — systemowa. Czcionka siatki: `gridFontSize` (PD-GRID-025).
+    /// Czcionka Object Browsera (PD-PREF-005); 0 — jak interfejs, o 1 pt mniejsza (D178). Czcionka siatki: `gridFontSize` (PD-GRID-025).
     public var browserFontSize: Double = 0
     /// Krój i grubość Object Browsera (D178); pusty — jak interfejs.
     public var browserFontName = ""

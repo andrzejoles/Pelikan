@@ -217,7 +217,7 @@ Każdy etap: lista zadań w `docs/PLAN.md`, kryteria odbioru, testy, zrzuty ekra
 - **Rodzaje testów:** jednostkowe (lekser, parser, dzielenie skryptów, klasyfikacja poleceń, formatowanie, Beautifier, zmienne podstawiania, polityka uprawnień agenta, generator szkieletów testów), integracyjne z bazą (metadane, kompilacja, siatka, debuger, utPLSQL, transakcje, przerwanie, utrata połączenia), bezpieczeństwa (most MCP, tokeny, drzewo procesów, brak haseł w logach i odpowiedziach agenta), interfejsu (XCUITest, zrzuty ekranu każdego okna do raportu), wydajności w konfiguracji Release (siatka, edytor, otwieranie dużego pakietu, Object Browser ze 100 000 obiektów), E2E z prawdziwymi CLI agentów (opcjonalne, uruchamiane lokalnie, jak `AgentE2ETests` w Bifoldzie).
 - **Oba sterowniki w testach:** testy integracyjne warstwy bazy są sparametryzowane sterownikiem i przechodzą na obu (poza funkcjami, których thin nie obsługuje; te mają test sprawdzający czytelny komunikat zamiast awarii). W CI na Linuksie Instant Client dla Linuksa.
 - **Korpus PL/SQL:** przykłady z dokumentacji Oracle, testy gramatyki `grammars-v4` i własne przypadki brzegowe; parser nie może się wywrócić na żadnym pliku (fuzzing).
-- `make test`, `make test-integration`, `make test-release`, `make test-ui`. Przed każdym PR uruchamiasz wszystkie, które da się uruchomić lokalnie.
+- `make test`, `make test-integration`, `make test-release` (interfejs — zrzuty w tle `scripts/screenshots.sh`, D113). Przed każdym PR uruchamiasz wszystkie, które da się uruchomić lokalnie.
 
 ---
 

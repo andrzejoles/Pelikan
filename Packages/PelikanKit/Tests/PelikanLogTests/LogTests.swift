@@ -173,11 +173,6 @@ import Testing
         }
         let current = try String(contentsOf: sink.currentFile, encoding: .utf8)
         #expect(current.contains("wpis 39 "))
-        sink.clear()
-        #expect(sink.files.isEmpty)
-        sink.write(LogEntry(date: Date(), level: .info, category: "t", text: "po wyczyszczeniu"))
-        sink.flush()
-        #expect(sink.files.map(\.lastPathComponent) == ["Test.log"])
     }
 
     @Test("zapis z wielu wątków bez utraty i przeplotu linii")

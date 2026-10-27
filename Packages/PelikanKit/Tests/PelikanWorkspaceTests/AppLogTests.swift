@@ -93,7 +93,8 @@ struct AppLogTests {
         let ws = Workspace(secrets: MemorySecretStore(), drivers: [.instantClient: LogLeakDriver()])
         try ws.connections.upsert(ConnectionDefinition(name: "dev_log_kadry", target: ConnectionTarget(user: "kadry", connectString: "kadry-db.example:1521/KADRY")))
         let text = ws.logExport()
-        #expect(text.hasPrefix("Pelikan — dziennik aplikacji (eksport "))
+        #expect(AppBrand.name == "Pelikan")   // poza pakietem aplikacji — bez PelikanAppName w Info.plist
+        #expect(text.hasPrefix(AppBrand.name + " — dziennik aplikacji (eksport "))
         #expect(text.contains("Połączenia: 1, tryb sesji: multi"))
         #expect(text.contains("Sterowniki: instantClient: dostępny, thin: brak"))
         #expect(!text.contains("kadry"))

@@ -12,6 +12,9 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   **File › Program Window › Add Unit…** adds a unit from a template (procedure, function, package, type, trigger, Java
   source, MLE module) with a form for names and parameters. **Remove Unit** removes the tab from the text (the object in
   the database stays).
+- **Edit** on a package or type — also on its body from the “Package bodies” and “Type bodies” folders — opens the
+  specification and the body in one window on two tabs (opened from the body: the body tab is active). An object
+  without a body has a single tab.
 - **F8** (⌘↩) compiles all units one by one and stops at the first one with an error. Compilation takes place in a
   separate session in the background, so it does not block SQL Windows.
 - Compiler errors and warnings appear below the editor. A click moves to the line, a double-click opens the error
@@ -82,6 +85,8 @@ thousands of lines.
 | Add cursor above / below | ⌃⇧↑ / ⌃⇧↓ | Edit › Multiple Cursors |
 | Increase / decrease font size | ⌘= / ⌘− | View |
 
+- **Code folding**: the arrow in the margin next to the line numbers folds and unfolds a block (a folded block has an
+  accent-coloured arrow, and “⋯” in the text shows the folded code in a tooltip).
 - **Multiple cursors**: ⌥+click adds a cursor, Esc leaves one. **Column selection**: drag with ⌥ — typing, Backspace and
   pasting work in all lines at once.
 - **Find and replace** supports regular expressions (with `$1`), whole words, case sensitivity, case preservation, and

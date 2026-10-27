@@ -69,8 +69,6 @@ public struct Logger: Sendable {
     public func notice(_ message: @autoclosure () -> LogMessage) { Log.emit(.notice, category, message) }
     public func error(_ message: @autoclosure () -> LogMessage) { Log.emit(.error, category, message) }
     public func fault(_ message: @autoclosure () -> LogMessage) { Log.emit(.fault, category, message) }
-
-    public func isEnabled(_ level: LogLevel) -> Bool { Log.isEnabled(level) }
 }
 
 /// Dziennik aplikacji (PL-INFRA-011, D170). Bez konfiguracji wpisy nigdzie nie trafiają (biblioteka, testy, Linux).

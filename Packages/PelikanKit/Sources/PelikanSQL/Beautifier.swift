@@ -356,11 +356,6 @@ struct Formatter {
         pendingBreak = nil
     }
 
-    mutating func blankLine() {
-        flush()
-        if let last = lines.last, !last.isEmpty { lines.append("") }
-    }
-
     /// Puste linie ze źródła przed tokenem: najwyżej `maxBlankLines` z rzędu.
     mutating func sourceBlankLines(_ t: Tok) {
         guard options.keepBlankLines, t.newlines >= 2 else { return }
@@ -691,7 +686,9 @@ struct Formatter {
         if ["AND", "OR"].contains(w) {
             if w == "AND", betweenPending { betweenPending = false; return false }
             guard ["WHERE", "HAVING", "ON", "WHEN", "START", "CONNECT"].contains(f.clause) || f.clause.hasSuffix("JOIN") else { return false }
-            if options.andOrPosition == .lineEnd {
+            // Na końcu linii — chyba że linię zamknął już komentarz (`-- …`): wtedy AND/OR nie zostaje sam w linii,
+            // tylko jak przy układzie „na początku linii”.
+            if options.andOrPosition == .lineEnd, prev?.kind != .lineComment {
                 put(cased(t), space: true)
                 pendingBreak = listColumn(f)
                 return true

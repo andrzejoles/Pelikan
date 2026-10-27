@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanODPI
 @testable import PelikanWorkspace
 import Testing
 

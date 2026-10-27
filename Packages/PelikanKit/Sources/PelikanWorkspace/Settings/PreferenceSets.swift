@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Zestaw preferencji (UG 23.35, PD-PREF-002): częściowe wartości preferencji (klucz = nazwa pola `Settings`,
 /// wartość = JSON) dla wszystkich połączeń albo dla połączeń pasujących do wzorca.

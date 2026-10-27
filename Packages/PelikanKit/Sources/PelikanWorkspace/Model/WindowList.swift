@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Reguła wskaźnika połączenia (Connection Indicators, PD-CONN-005): wzorzec `user@baza` (`*`, `?`) i kolor.
 /// `id` tylko do wierszy Preferencji (wiązanie po identyfikatorze, nie indeksie) — nie trafia do pliku ani do porównań.

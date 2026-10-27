@@ -1,5 +1,6 @@
 import AppKit
 import LocalAuthentication
+import PelikanDB
 import PelikanWorkspace
 
 /// Pytania menedżera sesji: hasło (z „Zapamiętaj”) i nowe hasło po ORA-28001.

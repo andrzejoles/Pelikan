@@ -176,7 +176,10 @@ public struct CrashMonitor: Sendable {
     public func begin(now: Date = Date()) -> Date? {
         let previous = (try? FileManager.default.attributesOfItem(atPath: marker.path)[.modificationDate]) as? Date
         try? FileManager.default.createDirectory(at: marker.deletingLastPathComponent(), withIntermediateDirectories: true)
-        FileManager.default.createFile(atPath: marker.path, contents: Data(), attributes: [.modificationDate: now])
+        if !FileManager.default.createFile(atPath: marker.path, contents: Data(), attributes: [.modificationDate: now]) {
+            // Bez znacznika następny start nie wykryje niepoprawnego zamknięcia — przynajmniej ślad w dzienniku.
+            Log.app.error("Znacznik pracy aplikacji nie zapisany — wykrywanie nieoczekiwanego zamknięcia wyłączone")
+        }
         return previous
     }
 

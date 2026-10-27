@@ -177,8 +177,11 @@ final class AgentUIController: ApprovalPresenter {
             p.standardOutput = out
             p.standardError = FileHandle.nullDevice
             guard (try? p.run()) != nil else { return nil }
+            // Wyjście przed czekaniem na koniec procesu (pełny potok — 64 KiB — zatrzymałby oba); readToEnd zamiast
+            // readDataToEndOfFile — błąd odczytu bez wyjątku ObjC.
+            let data = (try? out.fileHandleForReading.readToEnd()) ?? Data()
             p.waitUntilExit()
-            let path = String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            let path = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
             return p.terminationStatus == 0 && path.hasPrefix("/") ? path : nil
         }.value
     }
@@ -194,8 +197,9 @@ final class AgentUIController: ApprovalPresenter {
             p.standardOutput = out
             p.standardError = out
             guard (try? p.run()) != nil else { return "" }
+            let data = (try? out.fileHandleForReading.readToEnd()) ?? Data()   // przed czekaniem — jak wyżej
             p.waitUntilExit()
-            return String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            return String(decoding: data, as: UTF8.self)
         }.value
         if list.contains(bridge) { return }
         let answer = await workspace.ui?.ask(
