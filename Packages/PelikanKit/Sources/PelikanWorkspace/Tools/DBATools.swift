@@ -108,9 +108,10 @@ public enum DBAPanel {
         return "alter system set \(n.lowercased()) = \(literal) scope = \(scope.lowercased())"
     }
 
+    /// Użytkownik wpisany albo z listy w postaci SQL: zwykła nazwa — wielkimi literami, w cudzysłowie — bez zmiany.
     public static func lockUserSQL(_ user: String, lock: Bool) throws -> String {
-        guard let u = identifier(user) else { throw CommandError.invalidArgument("user", user) }
-        return "alter user \(u) account \(lock ? "lock" : "unlock")"
+        guard let u = ObjectRename.normalizedName(user) else { throw CommandError.invalidArgument("user", user) }
+        return "alter user \(ResultExporter.identifier(u)) account \(lock ? "lock" : "unlock")"
     }
 
     /// Wykonanie zmiany przez strażnika zmian (tylko do odczytu — blokada, prod — potwierdzenie).

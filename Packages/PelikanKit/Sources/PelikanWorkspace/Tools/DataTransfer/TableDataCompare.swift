@@ -82,8 +82,9 @@ public enum TableDataCompare {
     /// Klucz wiersza (tekst literałów kolumn klucza) — porównywanie bez względu na sesję i NLS.
     static func key(_ row: [OracleValue], _ idx: [Int]) -> String { idx.map { ResultExporter.literal(row[$0]) }.joined(separator: "\u{1F}") }
 
-    static func rows(_ table: String, owner: String, columns: [String], in s: any DatabaseSession) async throws -> [[OracleValue]] {
-        let r = try await s.execute("select \(columns.map(q).joined(separator: ", ")) from \(q(owner)).\(q(table))", binds: [],
+    static func rows(_ table: String, owner: String, columns: [TableTransfer.TableColumn], in s: any DatabaseSession) async throws -> [[OracleValue]] {
+        // TIMESTAMP WITH LOCAL TIME ZONE w UTC — sesje źródła i celu mogą mieć różne strefy.
+        let r = try await s.execute("select \(columns.map(\.selectExpression).joined(separator: ", ")) from \(q(owner)).\(q(table))", binds: [],
                                     options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
         guard let rs = r.resultSet else { return [] }
         var out: [[OracleValue]] = []
@@ -106,11 +107,12 @@ public enum TableDataCompare {
         let targetStored = try await stored(targetOwner, target)
         let targetCols = Set(targetStored.map(\.name))
         guard !targetCols.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak tabeli \(targetOwner).\(table) w celu")) }
-        let columns = try await stored(sourceOwner, source).map(\.name).filter { targetCols.contains($0) }
+        let common = try await stored(sourceOwner, source).filter { targetCols.contains($0.name) }
+        let columns = common.map(\.name)
         let idx = keys.compactMap { columns.firstIndex(of: $0) }
         guard idx.count == keys.count else { throw CommandError.notAvailable(L10n.tr("Kolumny klucza \(table) różnią się w celu")) }
-        let src = try await rows(table, owner: sourceOwner, columns: columns, in: source)
-        let dst = try await rows(table, owner: targetOwner, columns: columns, in: target)
+        let src = try await rows(table, owner: sourceOwner, columns: common, in: source)
+        let dst = try await rows(table, owner: targetOwner, columns: common, in: target)
         var d = try diff(table: table, columns: columns, keyColumns: keys, source: src, target: dst)
         d.identityAlways = targetStored.filter { $0.identityAlways && columns.contains($0.name) }.map(\.name)
         return d

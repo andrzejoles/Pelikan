@@ -261,6 +261,13 @@ struct Stage7ToolsTests {
         #expect(try LocalTaskScheduler.connection(main, in: ws) == other.id)
         main.connection = "nieznane"
         #expect(throws: CommandError.self) { _ = try LocalTaskScheduler.connection(main, in: ws) }
+        // WS1-11: przeniesienie w zadaniu z pustym połączeniem — połączenie główne, nie okna aktywnego.
+        var job = DataTransferJob()
+        job.targetConnection = "dev_inne"
+        #expect(try ws.dataTransferConnections(job, emptyIsMain: true) == (mainDef.id, other.id))
+        #expect(try ws.dataTransferConnections(job, emptyIsMain: false) == (other.id, other.id))
+        job.sourceConnection = "nieznane"
+        #expect(throws: CommandError.self) { _ = try ws.dataTransferConnections(job, emptyIsMain: true) }
     }
 
     @Test("Komendy narzędzi etapu 7 w rejestrze: identyfikatory wierszy macierzy, agent — Brak")
@@ -309,10 +316,17 @@ final class GateDriver: DatabaseDriver, @unchecked Sendable {
 
 @Suite("Harmonogram (PD-SCHED-001): polecenia bez bazy")
 struct SchedulerSQLTests {
-    @Test("Uruchomienie i zatrzymanie zadania: nazwa jako literał z podwojonym apostrofem")
+    @Test("Uruchomienie i zatrzymanie zadania: nazwa jako literał z podwojonym apostrofem; nazwy spoza wielkich liter w cudzysłowie (WS1-13)")
     func runAndStop() {
         #expect(Scheduler.runSQL(owner: "APP", name: "JOB") == "begin dbms_scheduler.run_job('APP.JOB', use_current_session => false); end;")
-        #expect(Scheduler.runSQL(owner: "APP", name: "X');drop table t;--").contains("'APP.X'');drop table t;--'"))
-        #expect(Scheduler.stopSQL(owner: "APP", name: "O'K", force: true).contains("'APP.O''K'"))
+        #expect(Scheduler.runSQL(owner: "APP", name: "X');drop table t;--").contains("'APP.\"X'');drop table t;--\"'"))
+        #expect(Scheduler.stopSQL(owner: "APP", name: "O'K", force: true).contains("'APP.\"O''K\"'"))
+        #expect(Scheduler.runSQL(owner: "App", name: "MixedJob").contains("run_job('\"App\".\"MixedJob\"'"))
+        #expect(Scheduler.dropSQL(.jobs, owner: "SYS", name: "MixedJob", force: false).contains("drop_job('\"MixedJob\"'"))
+        var old = SchedulerJob(name: "MixedJob", action: "null;")
+        old.owner = "APP"
+        var new = old
+        new.comments = "x"
+        #expect(Scheduler.alterSQL(from: old, to: new).contains("set_attribute('APP.\"MixedJob\"', 'comments'"))
     }
 }

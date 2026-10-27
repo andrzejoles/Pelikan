@@ -166,9 +166,18 @@ public enum ResultExporter {
     // MARK: SQL
 
     /// Identyfikator w SQL: zwykły (wielkie litery, bez znaków specjalnych) albo w cudzysłowie.
-    static func identifier(_ name: String) -> String {
+    public static func identifier(_ name: String) -> String {
         if name.range(of: #"^[A-Z][A-Z0-9_$#]*$"#, options: .regularExpression) != nil, !Keywords.reserved.contains(name) { return name }
         return "\"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+    }
+
+    /// Nazwa wpisana przez użytkownika (pole Schemat/Tabela, argument komendy) w postaci słownika: w cudzysłowie —
+    /// bez zmiany wielkości liter, zwykła — wielkimi literami (D182). Nazw już ze słownika nie przepuszczać: `Mixed`
+    /// z ALL_TABLES to inna tabela niż `MIXED`.
+    public static func dictionaryName(_ typed: String) -> String {
+        let s = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.count >= 2, s.hasPrefix("\""), s.hasSuffix("\"") { return String(s.dropFirst().dropLast()).replacingOccurrences(of: "\"\"", with: "\"") }
+        return s.uppercased()
     }
 
     /// Identyfikator wstawiany w tekst (kopiowanie nazw, przeciąganie z Object Browsera): zwykły małymi literami,
