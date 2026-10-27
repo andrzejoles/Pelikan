@@ -118,8 +118,7 @@ geprüft:
 - **Command Window**: Die Befehle `COPY` und `SET ENVVAR` werden nicht unterstützt.
 - Der **Event Monitor** liest kein DBMS_OUTPUT anderer Sitzungen (Oracle stellt das nicht bereit).
 - Die **Werkzeuge in der linken Spalte** sind Tabs eines Bereichs (Verbindungen, Objekte, Fenster, Templates, Dateien);
-  sie lassen sich nicht frei andocken oder automatisch ausblenden. To-Do-Aufgaben, das Projekt, der
-  Zwischenablageverlauf und andere Werkzeuge öffnen sich in eigenen Fenstern. Dokumente sind Tabs eines Hauptfensters,
+  sie lassen sich nicht frei andocken oder automatisch ausblenden. Dokumente sind Tabs eines Hauptfensters,
   keine nativen macOS-Tabs.
 - **Quick Look** für SQL-Dateien (Vorschau im Finder) funktioniert möglicherweise nicht — macOS kann eine mit einem
   selbst signierten Zertifikat signierte Erweiterung ablehnen.

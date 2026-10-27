@@ -8,9 +8,12 @@ und vor KI-Agenten.
 - Datenbankpasswörter, SSH-Passwörter (Tunnel und Pro*C-Ziele) und Passwörter von SSH-Schlüsseln werden **ausschließlich
   im macOS-Schlüsselbund** gespeichert — im Anmeldeschlüsselbund, ohne iCloud-Synchronisierung, nur bei entsperrtem Mac
   verfügbar.
-- Passwörter gelangen **nie** in die Dateien von Pelikan (Verbindungsdefinitionen, Einstellungen, Worksets, Exporte), in
+- Passwörter gelangen **nie** in die Dateien von Pelikan (Verbindungsdefinitionen, Einstellungen, Worksets), in
   Protokolle, den Befehlsverlauf, Prozessargumente oder Umgebungsvariablen. Befehle mit Passwörtern (`CONNECT`, `ALTER
   USER … IDENTIFIED BY`, `CREATE DATABASE LINK`) werden nicht im Befehlsverlauf gespeichert.
+- Einzige Ausnahme, nur auf Ihren ausdrücklichen Wunsch: **Verbindungen mit Passwörtern exportieren …** schreibt die
+  Passwörter in eine Datei (mit einer Passphrase verschlüsselt oder als Klartext), nach Bestätigung mit Touch ID oder
+  dem Mac-Passwort — siehe **Verbindungen**, „Export und Import von Definitionen“. Der KI-Agent hat diesen Befehl nicht.
 - Ein nicht im Schlüsselbund gesichertes Passwort wird nur bis zum Beenden der Anwendung im Speicher gehalten.
 - Die Option **Vor Verwendung eines gespeicherten Passworts Touch ID oder Mac-Passwort verlangen** (**Einstellungen ›
   Oracle › Verbindungspasswörter**) verlangt während der Laufzeit der Anwendung einmal pro Verbindung eine Bestätigung —

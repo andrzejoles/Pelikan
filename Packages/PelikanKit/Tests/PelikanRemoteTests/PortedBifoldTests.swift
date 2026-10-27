@@ -150,6 +150,28 @@ struct PortedServerTests {
         #expect(session.isConnected)
     }
 
+    /// Cel jako alias z pliku konfiguracji ssh: klucz zapisany pod nazwą, której szuka ssh (`[HostName]:Port`), w pliku
+    /// z UserKnownHostsFile — potem połączenie z StrictHostKeyChecking=yes przechodzi (MOD-05).
+    @Test("Alias z konfiguracji ssh (HostName, Port, UserKnownHostsFile): potwierdzony klucz pod nazwą, której szuka ssh")
+    func hostAliasFromConfig() throws {
+        let sshd = try TestSSHD()
+        let knownHosts = sshd.dir.url.path + "/alias known_hosts"
+        try Data("Host pelikan-alias\n  HostName 127.0.0.1\n  Port \(sshd.port)\n  UserKnownHostsFile \"\(knownHosts)\"\n".utf8)
+            .write(to: URL(fileURLWithPath: sshd.clientConfig))
+        let run = try SocketDirectory.make(preferred: URL(fileURLWithPath: "/tmp/plk-\(UUID().uuidString.prefix(6))"))
+        let config = SSHSession.Config(host: "pelikan-alias", user: NSUserName(), keyFile: sshd.clientKey, legacyAlgorithms: true,
+                                       configFile: sshd.clientConfig)
+        let session = try SSHSession(config: config, runDirectory: run, secret: { TestSSHD.passphrase })
+        defer { session.disconnect(); try? FileManager.default.removeItem(at: run) }
+        #expect(session.knownHostsPath == knownHosts)
+        let scan = try #require(try session.unknownHostKeys())
+        #expect(!scan.entries.isEmpty && scan.entries.allSatisfy { $0.hasPrefix("[127.0.0.1]:\(sshd.port) ") })
+        try session.trustHostKeys(scan)
+        #expect(try session.unknownHostKeys() == nil)
+        try session.connect()
+        #expect(session.isConnected)
+    }
+
     @Test("Bez trybu zgodności stary serwer odrzuca negocjację")
     func modernClientWithoutLegacyModeFails() throws {
         let sshd = try TestSSHD()

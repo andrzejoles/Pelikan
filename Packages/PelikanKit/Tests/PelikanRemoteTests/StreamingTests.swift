@@ -83,6 +83,8 @@ struct SpawnStreamTests {
         #expect(ev.last == .exit(0))
         #expect(throws: SSHError.timeout) { try Spawn.run("/bin/sleep", [Array("5".utf8)], environment: [:], timeout: 0.3) }
         #expect(try Spawn.run("/bin/sleep", [Array("0.2".utf8)], environment: [:], timeout: nil).status == 0)
+        // Kod wyjścia ≠ 0 dochodzi do wywołującego (MOD-11: błąd waitpid nie może dać fałszywego sukcesu).
+        #expect(try Spawn.run("/bin/sh", [Array("-c".utf8), Array("exit 7".utf8)], environment: [:]).status == 7)
         // Anulowanie strumienia.
         let s = try Spawn.stream("/bin/sleep", [Array("5".utf8)], environment: [:])
         s.cancel()
@@ -142,6 +144,18 @@ struct SpawnStreamTests {
         #expect(throws: SSHError.self) { try SSHSession.environmentProlog([("A;rm", "x")]) }
         let r = try Spawn.run("/bin/sh", [Array("-c".utf8), Array((prolog + "echo \"$X\"; sh -c 'echo $ORACLE_HOME'").utf8)], environment: [:])
         #expect(String(decoding: r.output, as: UTF8.self) == "a'b $HOME `id`\n/u01/app/oracle\n")
+    }
+
+    @Test("ssh -G: HostName, Port, HostKeyAlias, pierwszy UserKnownHostsFile (także ze spacją); nazwa wpisu known_hosts")
+    func resolvedHost() throws {
+        let text = "user pelikan\nhostname 10.1.2.3\nport 2222\nuserknownhostsfile /a b/known_hosts /u/x/.ssh/known_hosts2\n"
+        let r = try #require(SSHSession.parseResolvedHost(text))
+        #expect(r == SSHSession.ResolvedHost(hostname: "10.1.2.3", port: 2222, knownHostsFile: "/a b/known_hosts"))
+        #expect(SSHSession.knownHostsName(r) == "[10.1.2.3]:2222")
+        let aliased = try #require(SSHSession.parseResolvedHost("hostname h\nport 22\nhostkeyalias prod-aix\nuserknownhostsfile none\n"))
+        #expect(aliased.knownHostsFile == nil && SSHSession.knownHostsName(aliased) == "prod-aix")
+        #expect(SSHSession.knownHostsName(SSHSession.ResolvedHost(hostname: "h", port: 22)) == "h")
+        #expect(SSHSession.parseResolvedHost("") == nil)
     }
 
     @Test("Zaufanie kluczowi: do known_hosts trafiają dokładnie potwierdzone klucze (bez komentarzy i powtórzeń), bez łączenia")
