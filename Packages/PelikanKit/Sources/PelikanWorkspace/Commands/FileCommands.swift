@@ -247,16 +247,16 @@ enum FileCommands {
             command("workset.new", L10n.tr("Nowy workset…"), submenu: sub, params: [nameParam], effect: .uiState,
                     summary: L10n.tr("Zapisuje bieżące okna do bieżącego workseta i zaczyna nowy, pusty workset."), feature: "PD-WSET-001") { ctx in
                 let name = try await worksetName(ctx, title: L10n.tr("Nowy workset"))
-                guard !ctx.workspace.worksets.names.contains(name) else { throw CommandError.notAvailable(L10n.tr("Workset „\(name)” już istnieje")) }
-                try ctx.workspace.switchWorkset(to: name)
+                guard ctx.workspace.worksets.existingName(name) == nil else { throw CommandError.notAvailable(L10n.tr("Workset „\(name)” już istnieje")) }
+                try await ctx.workspace.switchWorkset(to: name)
                 return CommandResult(message: name)
             },
             command("workset.open", L10n.tr("Otwórz workset…"), submenu: sub, params: [nameParam], effect: .uiState,
                     summary: L10n.tr("Zapisuje bieżące okna do bieżącego workseta i otwiera okna wskazanego (także niezapisane zmiany)."), feature: "PD-WSET-001") { ctx in
                 let name = try await worksetName(ctx, title: L10n.tr("Otwórz workset"))
-                guard ctx.workspace.worksets.names.contains(name) else { throw CommandError.notAvailable(L10n.tr("Nie ma workseta „\(name)”")) }
-                let missing = try ctx.workspace.switchWorkset(to: name)
-                return CommandResult(message: missingMessage(missing) ?? name)
+                guard let existing = ctx.workspace.worksets.existingName(name) else { throw CommandError.notAvailable(L10n.tr("Nie ma workseta „\(name)”")) }
+                let missing = try await ctx.workspace.switchWorkset(to: existing)
+                return CommandResult(message: missingMessage(missing) ?? existing)
             },
             command("workset.save", L10n.tr("Zapisz workset"), submenu: sub, effect: .settings,
                     summary: L10n.tr("Zapisuje bieżące okna (z niezapisanymi zmianami) do bieżącego workseta."), feature: "PD-WSET-001") { ctx in
@@ -272,12 +272,12 @@ enum FileCommands {
                                                    message: L10n.tr("Zmiany okien od ostatniego zapisu workseta zostaną utracone."),
                                                    buttons: [L10n.tr("Przywróć")]) == 0 else { throw CommandError.cancelledByUser }
                 }
-                return CommandResult(message: missingMessage(ws.applyWorkset(saved)) ?? saved.name)
+                return CommandResult(message: missingMessage(try await ws.applyWorkset(saved)) ?? saved.name)
             },
             command("workset.close", L10n.tr("Zamknij workset"), submenu: sub, effect: .uiState,
                     summary: L10n.tr("Zapisuje i zamyka bieżący workset; przechodzi do workseta domyślnego."), feature: "PD-WSET-001",
                     validate: { $0.worksets.current != WorksetStore.defaultName }) { ctx in
-                let missing = try ctx.workspace.switchWorkset(to: WorksetStore.defaultName)
+                let missing = try await ctx.workspace.switchWorkset(to: WorksetStore.defaultName)
                 return CommandResult(message: missingMessage(missing) ?? WorksetStore.defaultName)
             },
             command("workset.compare", L10n.tr("Porównaj worksety…"), submenu: sub,

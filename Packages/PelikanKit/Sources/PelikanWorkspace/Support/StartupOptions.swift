@@ -144,7 +144,7 @@ extension Workspace {
         if let p = o.project { await step(L10n.tr("Projekt")) { try await invoke("project.open", CommandArguments(["file": .string(p)])) } }
         if let w = o.workset {
             await step(L10n.tr("Workset")) {
-                if worksets.names.contains(w) { try await invoke("workset.open", CommandArguments(["name": .string(w)])) }
+                if worksets.existingName(w) != nil { try await invoke("workset.open", CommandArguments(["name": .string(w)])) }
                 else { try await invoke("workset.new", CommandArguments(["name": .string(w)])) }
             }
         }

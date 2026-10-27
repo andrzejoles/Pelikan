@@ -76,16 +76,16 @@ public enum BuiltinCommands {
     }
 
     /// Zamknięcie okna (UG 23.20, PD-SQLW-024): pytanie o zapis zmian i o otwartą transakcję, zamknięcie sesji okna.
-    /// false — użytkownik anulował.
+    /// false — użytkownik anulował. `askToSave: false` — zmiana workseta: tekst okna jest już w zapisanym worksecie (R6-01).
     @MainActor
-    static func closeDocument(_ doc: Document, in ws: Workspace) async throws -> Bool {
+    static func closeDocument(_ doc: Document, in ws: Workspace, askToSave: Bool = true) async throws -> Bool {
         // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
         // zwykłe wykonanie trzeba najpierw przerwać.
         let debugger = ws.debuggers[doc.id]
         if doc.isExecuting, debugger.map({ [.running, .paused].contains($0.state) }) != true {
             throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” wykonuje polecenie — przerwij wykonanie przed zamknięciem."))
         }
-        let needsSave = doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+        let needsSave = askToSave && doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
         if needsSave {
             let choice = await ws.ui?.ask(L10n.tr("Zapisać zmiany w „\(doc.title)”?"), message: L10n.tr("Niezapisane zmiany zostaną utracone."),
                                           buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 2

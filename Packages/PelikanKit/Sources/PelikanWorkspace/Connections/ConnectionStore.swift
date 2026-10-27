@@ -15,6 +15,10 @@ public final class ConnectionStore {
     @ObservationIgnored private var temporary: [UUID: ConnectionDefinition] = [:]
     @ObservationIgnored private let secrets: any SecretStore
     @ObservationIgnored private let fileURL: URL?
+    /// Komunikat o nieczytelnym pliku przy odczycie (plik przeniesiony do kopii `.bad-…`, R6-11) — aplikacja go pokazuje.
+    @ObservationIgnored public private(set) var loadProblem: String?
+    /// Kopia nieczytelnego pliku się nie udała — zapis zablokowany, żeby nie nadpisać oryginału.
+    @ObservationIgnored private var saveBlocked = false
 
     private struct Snapshot: Codable {
         var version = 1
@@ -26,15 +30,22 @@ public final class ConnectionStore {
     public init(fileURL: URL?, secrets: any SecretStore) {
         self.fileURL = fileURL
         self.secrets = secrets
-        if let fileURL, let data = try? Data(contentsOf: fileURL),
-           let snap = try? JSONDecoder.pelikan.decode(Snapshot.self, from: data) {
-            folders = snap.folders
-            connections = snap.connections
+        if let fileURL, let data = try? Data(contentsOf: fileURL) {
+            if let snap = try? JSONDecoder.pelikan.decode(Snapshot.self, from: data) {
+                folders = snap.folders
+                connections = snap.connections
+            } else {
+                // Uszkodzony albo nowszy plik: zachowany obok, zanim pierwszy zapis nadpisze go pustą listą.
+                let (message, preserved) = DamagedFile.preserve(fileURL)
+                loadProblem = message
+                saveBlocked = !preserved
+            }
         }
     }
 
     public func save() throws {
         guard let fileURL else { return }
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections))
         try data.write(to: fileURL, options: [.atomic])

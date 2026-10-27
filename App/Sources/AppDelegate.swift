@@ -44,6 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var logToken: ObservationToken?
     /// Katalog Oracle Net zarządzany przez aplikację (D53) — także dla sterownika z katalogiem wskazanym później.
     private var oracleNetDirectory: String?
+    /// Pliki i adresy otwierane przed końcem startu (Finder, `open`) — otwierane po przywróceniu workseta (R4-02).
+    private var launchURLs: [URL]? = []
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -167,11 +169,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         NSUpdateDynamicServices()
         // Parametry startowe (PD-CLI-001), np. `open -a Pelikan --args connection=Dev editobject=APP.PKG`.
         let startup = StartupOptions.parse(Array(ProcessInfo.processInfo.arguments.dropFirst()))
-        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10).
-        if workspace.settings.worksetAutosave, !startup.noLoadDesktop, startup.workset == nil, workspace.documents.isEmpty,
-           let saved = try? workspace.worksets.load(workspace.worksets.current), !saved.documents.isEmpty {
-            workspace.applyWorkset(saved)
+        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10). Pominięty (`noloaddesktop`, `workset=…`)
+        // zostaje w zapisanym worksecie — autozapis dopisuje jego okna zamiast je nadpisać (R3-01).
+        var problems = [workspace.connections.loadProblem].compactMap(\.self)
+        if workspace.settings.worksetAutosave {
+            do {
+                if let saved = try workspace.worksets.load(workspace.worksets.current) {
+                    if !startup.noLoadDesktop, startup.workset == nil { workspace.appendWorksetDocuments(saved) }
+                    else { workspace.worksets.keepUnopened(saved) }
+                }
+            } catch {
+                problems.append(error.localizedDescription)
+            }
         }
+        // Pliki z Findera, które uruchomiły aplikację — obok okien workseta (R4-02).
+        let pending = launchURLs ?? []
+        launchURLs = nil
+        if !pending.isEmpty { application(NSApp, open: pending) }
         if workspace.settings.autosaveLayout, let layout = workspace.worksets.loadLayout() { window.apply(layout) }
         // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
         if workspace.documents.isEmpty {
@@ -184,6 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
         if Self.uiScriptURL == nil { NSApp.activate() }
         startConnectionCheck()
+        if !problems.isEmpty { showError(problems.joined(separator: "\n")) }
         if let script = Self.uiScriptURL {
             runUIScript(script)
             return
@@ -224,6 +239,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
     func application(_ application: NSApplication, open urls: [URL]) {
+        // Przed końcem startu (AppKit dostarcza pliki przed `applicationDidFinishLaunching`) — po przywróceniu workseta.
+        if launchURLs != nil {
+            launchURLs?.append(contentsOf: urls)
+            return
+        }
         let scheme = Bundle.main.object(forInfoDictionaryKey: "PelikanURLScheme") as? String ?? ""
         var files: [URL] = []
         for url in urls {
@@ -392,6 +412,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let dir = workspace.dataDirectory
         let store = SSHTargetStore(fileURL: dir?.appendingPathComponent(SSHTargetStore.fileName),
                                    secrets: KeychainSecretStore(service: SSHTargetStore.keychainService(bundleIdentifier: bundle)))
+        if let problem = store.loadProblem { Task { @MainActor in self.showError(problem) } }
         let preferred = (dir ?? FileManager.default.temporaryDirectory).appendingPathComponent("run", isDirectory: true)
         let run = (try? SocketDirectory.make(preferred: preferred)) ?? FileManager.default.temporaryDirectory
         return SSHTargetManagerModel(store: store, workspace: workspace, runDirectory: run)
