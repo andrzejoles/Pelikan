@@ -97,7 +97,13 @@ struct DebuggerPanel: View {
 
     private var status: String {
         switch debugger.state {
-        case .idle: L10n.tr("Gotowy — Start (F9) uruchamia skrypt okna testu z debugerem")
+        case .idle:
+            // Skrót z bieżącej mapy klawiszy (profil, własne skróty), nie zaszyty w tekście.
+            if let chord = workspace.keymap.chords(for: "debug.start").first {
+                L10n.tr("Gotowy — \(chord.displayString) uruchamia skrypt okna testu z debugerem")
+            } else {
+                L10n.tr("Gotowy — „\(help("debug.start"))” uruchamia skrypt okna testu z debugerem")
+            }
         case .running: L10n.tr("Wykonywanie…")
         case .paused:
             debugger.location.map { $0.isTestBlock ? L10n.tr("Zatrzymano: blok testu, linia \($0.line)") : L10n.tr("Zatrzymano: \($0.owner).\($0.name), linia \($0.line)") } ?? ""

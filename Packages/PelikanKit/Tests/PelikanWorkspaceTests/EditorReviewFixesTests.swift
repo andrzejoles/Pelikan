@@ -111,6 +111,26 @@ struct EditorReviewFixesTests {
         #expect(doc.text.hasPrefix("-- DONE"))
     }
 
+    @Test("Komendy edycji (komentarz linii, formatowanie, To-Do, snippet) odmawiają w oknie tylko do odczytu i w trakcie wykonania")
+    func editCommandsRefuseLockedWindow() async throws {
+        let ws = Workspace()
+        let original = "select 1 from dual"
+        let doc = ws.newDocument(.sql, text: original)
+        for (readOnly, executing) in [(true, false), (false, true)] {
+            doc.isReadOnly = readOnly
+            doc.isExecuting = executing
+            for id: CommandID in ["edit.commentLine", "edit.beautify", "edit.uppercase", "edit.todoInsert"] {
+                await #expect(throws: CommandError.self, "\(id.rawValue)") { try await ws.invoke(id) }
+            }
+            #expect(throws: CommandError.self) { try Stage7Commands.insert("x", into: doc) }
+            #expect(doc.text == original)
+        }
+        doc.isReadOnly = false
+        doc.isExecuting = false
+        try await ws.invoke("edit.commentLine")
+        #expect(doc.text.hasPrefix("--"))
+    }
+
     @Test("Filtr kolumn i Pokaż wszystkie kolumny na karcie wskazanej argumentem tab, nie na aktywnej")
     func columnFilterOnTab() async throws {
         let ws = Workspace()

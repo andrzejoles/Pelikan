@@ -195,7 +195,7 @@ enum EditorExtraCommands {
             command("edit.replaceAssignmentWithInitialization", L10n.tr("Zamień przypisanie na inicjalizację"), submenu: refactor, agent: .full, effect: .modifiesEditor,
                     summary: L10n.tr("Przenosi przypisanie „zmienna := wyrażenie;” z początku ciała do deklaracji zmiennej."), feature: "PD-CA-014") { ctx in
                 guard let doc = editor(ctx.workspace) else { return .ok }
-                if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+                try BuiltinCommands.checkWritable(doc)
                 do {
                     let e = try CodeRefactoring.replaceAssignmentWithInitialization(doc.text, at: doc.selectedRange.lowerBound)
                     doc.text = e.text
@@ -251,7 +251,7 @@ enum EditorExtraCommands {
         return command(id, title, submenu: L10n.tr("Refaktoryzacja"), params: params, agent: .full, effect: .modifiesEditor, summary: summary, feature: "PD-CA-014",
                        validate: { editor($0).map { !$0.selectedRange.isEmpty } ?? false }) { ctx in
             guard let doc = editor(ctx.workspace) else { return .ok }
-            if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+            try BuiltinCommands.checkWritable(doc)
             var name = ctx.arguments.string("name")
             if name == nil, let ui = ctx.ui { name = await ui.askText(title, message: L10n.tr("Nazwa"), defaultValue: "") }
             guard let name, !name.isEmpty else { throw CommandError.cancelledByUser }

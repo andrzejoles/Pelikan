@@ -231,13 +231,21 @@ public enum BuiltinCommands {
         return d
     }
 
-    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu — błąd (PD-FILE-003); dla agenta (`run_command`)
+    /// Tekst okna może zmienić komenda: tylko do odczytu (PD-FILE-003) i okno w trakcie wykonania (edytor jest wtedy
+    /// nieedytowalny, jak we wzorcu) — błąd.
+    @MainActor
+    static func checkWritable(_ doc: Document) throws {
+        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
+    }
+
+    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu i w trakcie wykonania — błąd (`checkWritable`); dla agenta (`run_command`)
     /// także bez okna poleceń, jak w narzędziach edytora (PROMPT §7.3). Zmianę agenta zapisuje `recordAgentEdit`.
     @MainActor
     static func editTarget(_ ctx: CommandContext) throws -> Document? {
         guard let doc = editable(ctx.workspace) else { return nil }
         if ctx.invoker.isAgent { _ = try ctx.workspace.agentDocument(nil) }
-        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(doc)
         return doc
     }
 
@@ -286,11 +294,10 @@ public enum BuiltinCommands {
     }
 
     /// Okno i wyszukiwanie dla Zamień / Zamień wszystko (PD-EDIT-008): argumenty nadpisują ostatnie wyszukiwanie, które
-    /// zostaje zapamiętane (F3). Okno tylko do odczytu i okno w trakcie wykonania — błąd, jak w innych komendach edycji (R4-06).
+    /// zostaje zapamiętane (F3). Okno tylko do odczytu i okno w trakcie wykonania — błąd (`editTarget`, R4-06).
     @MainActor
     static func replaceTarget(_ ctx: CommandContext) throws -> (Document, TextSearch)? {
         guard let doc = try editTarget(ctx) else { return nil }
-        if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
         var search = ctx.workspace.lastSearch ?? TextSearch(pattern: "")
         if let p = ctx.arguments.string("pattern") { search.pattern = p }
         if let r = ctx.arguments.string("replacement") { search.replacement = r }

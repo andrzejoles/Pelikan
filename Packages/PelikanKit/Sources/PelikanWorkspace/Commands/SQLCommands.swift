@@ -175,7 +175,7 @@ public enum SQLCommands {
     @MainActor
     static func stepHistory(_ ws: Workspace, back: Bool) throws {
         guard let d = ws.activeDocument, !d.statementHistory.isEmpty else { return }
-        if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(d)
         let last = d.statementHistory.count - 1
         var pos = d.historyPosition ?? (back ? last + 1 : last)
         pos += back ? -1 : 1

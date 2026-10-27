@@ -7,7 +7,7 @@ import PelikanDB
 enum Stage7Commands {
     /// Wstawia tekst w miejscu kursora (zastępuje zaznaczenie) okna edytora; okno tylko do odczytu — błąd (PD-FILE-003).
     static func insert(_ text: String, into doc: Document) throws {
-        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(doc)
         let ns = doc.text as NSString
         let sel = min(doc.selectedRange.lowerBound, ns.length)..<min(doc.selectedRange.upperBound, ns.length)
         doc.text = ns.replacingCharacters(in: NSRange(location: sel.lowerBound, length: sel.count), with: text)
