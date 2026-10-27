@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Parametry startowe (UG 37.4, PD-CLI-001): `klucz=wartość` jak we wzorcu, `--klucz[=wartość]`, ścieżki plików
 /// i URL `pelikan://open?…`. Hasła w argumentach nie są obsługiwane (PROMPT §4.2 p.6) — `userid=u/hasło@baza` jest

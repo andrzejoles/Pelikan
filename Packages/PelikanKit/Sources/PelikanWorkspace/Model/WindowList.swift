@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Reguła wskaźnika połączenia (Connection Indicators, PD-CONN-005): wzorzec `user@baza` (`*`, `?`) i kolor.
 public struct ConnectionIndicator: Sendable, Codable, Hashable {

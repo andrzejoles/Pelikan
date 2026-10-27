@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanODPI
 import Testing
 
 @Suite("DML RETURNING INTO na bazie testowej", .enabled(if: TestDatabase.isAvailable), .serialized)

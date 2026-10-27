@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 @Suite("Explain Plan bez bazy")

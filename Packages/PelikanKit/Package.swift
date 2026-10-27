@@ -1,8 +1,14 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.3
+// (6.3 — minimum przypiętego OracleNIO; CI Linux i Xcode 27 mają 6.4.)
 import PackageDescription
 
+// Nadchodzące cechy Swift 7 (także w project.yml). NonisolatedNonsendingByDefault — świadomie jeszcze nie: funkcje
+// `nonisolated async` wywołane z aplikacji (MainActor) wykonywałyby się na głównym wątku.
 let strict: [SwiftSetting] = [
     .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("InferIsolatedConformances"),
+    .enableUpcomingFeature("ImmutableWeakCaptures"),
+    .enableUpcomingFeature("MemberImportVisibility"),
 ]
 
 let package = Package(

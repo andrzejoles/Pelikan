@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 
 /// Rodzaj wykresu (UG 13, PD-GRAPH-001).
 public enum ChartKind: String, Sendable, Codable, CaseIterable {

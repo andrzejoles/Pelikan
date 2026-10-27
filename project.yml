@@ -1,6 +1,8 @@
 # Definicja projektu Xcode (XcodeGen). Po zmianie: `make generate`.
 name: Pelikan
 options:
+  # Wersja Xcode projektu (LastUpgradeCheck) — bez „Update to recommended settings”, które nadpisałby XcodeGen.
+  xcodeVersion: "27.0"
   deploymentTarget:
     macOS: "27.0"
   developmentLanguage: pl
@@ -19,8 +21,12 @@ settings:
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
     ENABLE_HARDENED_RUNTIME: NO
-    SWIFT_STRICT_CONCURRENCY: complete
+    # Tryb Swift 6 = pełne sprawdzanie współbieżności. Nadchodzące cechy Swift 7 jak w pakiecie (Package.swift);
+    # NonisolatedNonsendingByDefault — świadomie jeszcze nie (zmienia miejsce wykonania funkcji async).
     SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: YES
+    SWIFT_UPCOMING_FEATURE_INFER_ISOLATED_CONFORMANCES: YES
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    OTHER_SWIFT_FLAGS: "$(inherited) -enable-upcoming-feature ImmutableWeakCaptures"
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     SWIFT_EMIT_LOC_STRINGS: YES
     DEAD_CODE_STRIPPING: YES
@@ -129,7 +135,6 @@ targets:
     settings:
       base:
         PRODUCT_NAME: pelikan-mcp
-        SWIFT_STRICT_CONCURRENCY: complete
     dependencies:
       - package: PelikanKit
         product: PelikanBridgeKit

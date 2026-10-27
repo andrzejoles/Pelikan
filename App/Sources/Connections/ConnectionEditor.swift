@@ -2,6 +2,7 @@ import AppKit
 import PelikanDB
 import PelikanWorkspace
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Szkic definicji połączenia edytowany w oknie (UG 19.2). Hasło trzymane tylko w pamięci do zapisu.
 @MainActor

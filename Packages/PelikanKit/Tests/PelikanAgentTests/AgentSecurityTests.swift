@@ -1,6 +1,7 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
+import MCP
 import PelikanBridgeKit
 import PelikanDB
 import Testing

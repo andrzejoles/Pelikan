@@ -1,4 +1,5 @@
 import AppKit
+import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 

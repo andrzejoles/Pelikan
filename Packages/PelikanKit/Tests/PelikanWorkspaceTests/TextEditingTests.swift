@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 

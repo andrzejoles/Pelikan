@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 import PelikanSQL
 
 /// Szablony kodu (UG 31, PD-TPL-001…003) i nowy program z szablonu (PD-PROG-002).
