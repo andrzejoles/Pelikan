@@ -89,6 +89,14 @@ struct SSHTargetTests {
         #expect(other.targets.allSatisfy { $0.id != t.id } && other.folders.count == 1)
         #expect(other.targets.allSatisfy { $0.folderID == other.folders[0].id })
         #expect(throws: (any Error).self) { try other.importData(Data("{\"format\":\"x\",\"version\":1,\"folders\":[],\"targets\":[]}".utf8)) }
+        // Cel z cudzego pliku z opcją gita w polu remote — import odrzucony w całości (R8-09).
+        var bad = t
+        bad.remote = "--upload-pack=x"
+        let badFile = SSHTargetStore(fileURL: nil, secrets: MemorySecretStore())
+        try badFile.upsert(bad, secret: nil)
+        let before = other.targets.count
+        #expect(throws: (any Error).self) { try other.importData(try badFile.exportData()) }
+        #expect(other.targets.count == before)
 
         try store.remove(folder: folder.id)
         #expect(store.target(t.id)?.folderID == nil)

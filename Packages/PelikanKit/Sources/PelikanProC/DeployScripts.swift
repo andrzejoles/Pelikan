@@ -78,6 +78,7 @@ public enum DeployScriptError: Error, Equatable, LocalizedError {
     case invalidBinaryName(String)
     case invalidIdentifier(String)
     case invalidPath(String)
+    case invalidGitName(String)
     case emptyBuildCommand
 
     public var errorDescription: String? {
@@ -85,6 +86,7 @@ public enum DeployScriptError: Error, Equatable, LocalizedError {
         case .invalidBinaryName(let n): L10n.tr("Niedozwolona nazwa binarki „\(n)” (dozwolone litery, cyfry, kropka, podkreślenie, minus, plus)")
         case .invalidIdentifier(let n): L10n.tr("Niedozwolony identyfikator wdrożenia „\(n)”")
         case .invalidPath(let p): L10n.tr("Ścieżka na serwerze musi być bezwzględna: „\(p)”")
+        case .invalidGitName(let n): L10n.tr("Nieprawidłowa nazwa remote albo gałęzi gita: \(n)")
         case .emptyBuildCommand: L10n.tr("Komenda builda jest pusta")
         }
     }
@@ -110,6 +112,7 @@ public enum DeployScripts {
     static func validate(_ t: PelikanSSHTarget, _ plan: DeployPlan) throws {
         guard plan.id.range(of: #"^[A-Za-z0-9-]+$"#, options: .regularExpression) != nil else { throw DeployScriptError.invalidIdentifier(plan.id) }
         for b in t.effectiveBinaries { try validateBinary(b) }
+        for n in [t.remote, t.branch] where !PelikanSSHTarget.isSafeGitName(n) { throw DeployScriptError.invalidGitName(n) }
         for p in [t.baseDirectory, t.backupDirectory, t.effectiveWorkingCopy] where !p.hasPrefix("/") { throw DeployScriptError.invalidPath(p) }
         if !plan.outputDirectory.isEmpty, !plan.outputDirectory.hasPrefix("/") { throw DeployScriptError.invalidPath(plan.outputDirectory) }
     }
@@ -230,7 +233,7 @@ public enum DeployScripts {
         step pull
         BEFORE=`git rev-parse HEAD` || fail pull \(Exit.headFailed)
         echo "@@HEAD_BEFORE $BEFORE"
-        git fetch "$REMOTE" || fail pull \(Exit.fetchFailed)
+        git fetch -- "$REMOTE" || fail pull \(Exit.fetchFailed)
         if git pull --ff-only "$REMOTE" "$BRANCH"; then
           :
         else

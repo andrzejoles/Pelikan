@@ -113,6 +113,20 @@ public struct PelikanSSHTarget: Sendable, Codable, Hashable, Identifiable {
         }
         if auth == .keyFile, keyFile.isEmpty { e.append(L10n.tr("Wskaż plik klucza")) }
         if !(1...65535).contains(port) { e.append(L10n.tr("Port spoza zakresu 1–65535")) }
+        return e + gitNameErrors
+    }
+
+    /// Nazwa remote albo gałęzi przekazywana do gita: litery, cyfry, `._/-`, bez wiodącego `-` — cel z cudzego pliku
+    /// z `remote = "--upload-pack=…"` zamieniałby argument w opcję gita (R8-09).
+    public static func isSafeGitName(_ s: String) -> Bool {
+        !s.isEmpty && !s.hasPrefix("-") && s.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "._/-".contains($0)) }
+    }
+
+    /// Błędy nazw remote i gałęzi (walidacja celu i import).
+    public var gitNameErrors: [String] {
+        var e: [String] = []
+        if !Self.isSafeGitName(remote) { e.append(L10n.tr("Nieprawidłowa nazwa remote gita (dozwolone litery, cyfry, . _ / -)")) }
+        if !Self.isSafeGitName(branch) { e.append(L10n.tr("Nieprawidłowa nazwa gałęzi gita (dozwolone litery, cyfry, . _ / -)")) }
         return e
     }
 
@@ -278,6 +292,9 @@ public final class SSHTargetStore {
     public func importData(_ data: Data) throws -> Int {
         let f = try JSONDecoder().decode(SSHTargetsFile.self, from: data)
         guard f.format == "pelikan-ssh-targets" else { throw CommandError.notAvailable(L10n.tr("To nie jest plik celów SSH Pelikana")) }
+        if let bad = f.targets.first(where: { !$0.gitNameErrors.isEmpty }) {
+            throw CommandError.notAvailable("\(bad.name): " + bad.gitNameErrors.joined(separator: "\n"))
+        }
         var folderMap: [UUID: UUID] = [:]
         var added: [SSHTargetFolder] = []
         for var folder in f.folders {
