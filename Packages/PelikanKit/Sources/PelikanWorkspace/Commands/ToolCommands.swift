@@ -140,7 +140,7 @@ extension Workspace {
         try await invoke("ob.edit", CommandArguments(args))
         guard line > 0, let doc = activeDocument, doc.kind == .program else { return }
         let unit = ProgramCompiler.units(in: doc.text).first { $0.type == o.type } ?? ProgramCompiler.units(in: doc.text).first
-        let offset = ProgramCompiler.offset(line: (unit?.line ?? 0) + line, column: 1, in: doc.text)
+        let offset = ProgramCompiler.offset(line: (unit?.sourceLine ?? 0) + line, column: 1, in: doc.text)
         doc.selectedRange = offset..<offset
     }
 }

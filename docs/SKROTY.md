@@ -337,6 +337,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wykonaj do wyjątku | `debug.runToException` |  |  | Brak | PD-DBG-001 |
 | Wykonaj do kursora | `debug.runToCursor` |  |  | Brak | PD-DBG-001 |
 | Zatrzymaj debugowanie | `debug.stop` | ⇧F9 † | ⇧F9 | Brak | PD-DBG-001 |
+| Wykonaj SQL w sesji debugowanej… | `debug.executeInTarget` |  |  | Brak | PD-DBG-009 |
 | Punkty przerwania… | `debug.breakpoints` |  |  | Brak | PD-DBG-008 |
 | Punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | PD-DBG-007 |
 

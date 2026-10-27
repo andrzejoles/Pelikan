@@ -53,19 +53,6 @@ struct DebuggerPanel: View {
         .frame(minWidth: 560, minHeight: 320)
     }
 
-    /// SQL / PL/SQL w sesji debugowanej (DBMS_DEBUG.EXECUTE) — wynik w karcie Wyjście okna testu.
-    private func executeInTarget() {
-        Task {
-            guard let sql = await workspace.ui?.askText(L10n.tr("Wykonaj w sesji debugowanej"), message: L10n.tr("Zapytanie (pierwsze 100 wierszy) albo blok PL/SQL."),
-                                                        defaultValue: ""), !sql.isEmpty else { return }
-            do {
-                let lines = try await debugger.executeInTarget(sql)
-                document.output.append("SQL> " + sql)
-                document.output.append(contentsOf: lines)
-            } catch { workspace.ui?.showError(error.localizedDescription) }
-        }
-    }
-
     private func addWatch() {
         let w = newWatch
         newWatch = ""
@@ -131,8 +118,8 @@ struct DebuggerPanel: View {
             button("exclamationmark.triangle", "debug.runToException")
             Divider().frame(height: 18)
             button("stop.fill", "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
-            Button { executeInTarget() } label: { Image(systemName: "terminal") }
-                .iconLabel(L10n.tr("Wykonaj SQL w sesji debugowanej…")).disabled(debugger.state != .paused)
+            // SQL / PL/SQL w sesji debugowanej (DBMS_DEBUG.EXECUTE) — komenda rejestru ze strażnikiem zmian (APP2-06).
+            button("terminal", "debug.executeInTarget")
             Spacer()
             if debugger.state == .running { ProgressView().controlSize(.small) }
         }

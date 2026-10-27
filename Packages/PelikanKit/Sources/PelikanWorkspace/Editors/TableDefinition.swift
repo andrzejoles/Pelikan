@@ -73,9 +73,12 @@ public struct TableDefinition: Sendable, Hashable {
         public init(name: String, values: String = "", originalName: String? = nil) { self.name = name; self.values = values; self.originalName = originalName }
     }
 
-    public struct Trigger: Sendable, Hashable {
+    public struct Trigger: Sendable, Hashable, Identifiable {
+        /// Właściciel wyzwalacza — może być inny niż tabeli (np. schemat audytu, APP2-14).
+        public var owner: String
         public var name: String
         public var enabled: Bool
+        public var id: String { owner + "." + name }
     }
 
     public struct Key: Sendable, Hashable, Identifiable {
@@ -206,6 +209,46 @@ public enum TableDDL {
     // MARK: Wczytanie
 
     @MainActor
+    /// Kolumny tabeli — warianty dla wersji słownika (WS2-03): DATA_DEFAULT (LONG — DATA_DEFAULT_VC jest dopiero w 23ai
+    /// i bywa obcięty), 12c+ z DEFAULT ON NULL, identity i kolumnami niewidocznymi (USER_GENERATED), 11g bez nich.
+    /// Komentarz podzapytaniem skalarnym, nie złączeniem — kolumna LONG w złączeniu ANSI bywa odrzucana (ORA-00997).
+    static let columnQueries = [
+        """
+        select c.column_name, c.data_type, c.char_length, c.char_used, c.data_precision, c.data_scale, c.data_length, c.nullable,
+               c.data_default, c.default_on_null, c.identity_column, c.virtual_column,
+               (select cc.comments from all_col_comments cc where cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name),
+               c.hidden_column
+        from all_tab_cols c
+        where c.owner = :o and c.table_name = :n and (c.hidden_column = 'NO' or c.user_generated = 'YES')
+        order by c.column_id nulls last, c.internal_column_id
+        """,
+        """
+        select c.column_name, c.data_type, c.char_length, c.char_used, c.data_precision, c.data_scale, c.data_length, c.nullable,
+               c.data_default, 'NO', 'NO', c.virtual_column,
+               (select cc.comments from all_col_comments cc where cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name),
+               c.hidden_column
+        from all_tab_cols c
+        where c.owner = :o and c.table_name = :n and c.hidden_column = 'NO'
+        order by c.column_id nulls last, c.internal_column_id
+        """,
+    ]
+
+    /// Więzy tabeli: warunek CHECK z SEARCH_CONDITION (LONG — jest w 11g–26ai; SEARCH_CONDITION_VC od 12c i obcina do
+    /// 4000 znaków), złączenie w składni Oracle (LONG w złączeniu ANSI, WS2-03).
+    static let constraintQuery = """
+        select c.constraint_name, c.constraint_type, c.search_condition, c.status, c.delete_rule, c.generated,
+               (select listagg(cc.column_name, ',') within group (order by cc.position) from all_cons_columns cc
+                 where cc.owner = c.owner and cc.constraint_name = c.constraint_name),
+               r.table_name,
+               (select listagg(rc.column_name, ',') within group (order by rc.position) from all_cons_columns rc
+                 where rc.owner = c.r_owner and rc.constraint_name = c.r_constraint_name),
+               r.owner
+        from all_constraints c, all_constraints r
+        where c.owner = :o and c.table_name = :n and c.constraint_type in ('P', 'U', 'R', 'C')
+          and r.owner (+) = c.r_owner and r.constraint_name (+) = c.r_constraint_name
+        order by decode(c.constraint_type, 'P', 1, 'U', 2, 'R', 3, 4), c.constraint_name
+        """
+
     public static func load(owner: String, name: String, metadata m: MetadataProvider) async throws -> TableDefinition {
         let s = try await m.session()
         let b = [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "n", value: .text(name))]
@@ -257,13 +300,7 @@ public enum TableDDL {
             x.locations = loc.compactMap { $0.first?.displayText }
             d.external = x
         }
-        let (_, cols) = try await s.queryAll("""
-            select c.column_name, c.data_type, c.char_length, c.char_used, c.data_precision, c.data_scale, c.data_length, c.nullable,
-                   c.data_default_vc, c.default_on_null, c.identity_column, c.virtual_column, cc.comments, c.hidden_column
-            from all_tab_cols c left join all_col_comments cc on cc.owner = c.owner and cc.table_name = c.table_name and cc.column_name = c.column_name
-            where c.owner = :o and c.table_name = :n and (c.hidden_column = 'NO' or c.user_generated = 'YES')
-            order by c.column_id nulls last, c.internal_column_id
-            """, binds: b, limit: 10_000)
+        let (_, cols) = try await DictionaryQuery.queryAll(columnQueries, binds: b, limit: 10_000, in: s)
         d.columns = cols.map { r in
             var c = TableDefinition.Column(name: r[0].displayText ?? "", type: typeText(r), nullable: r[7].displayText != "N")
             c.originalName = c.name
@@ -286,18 +323,7 @@ public enum TableDDL {
                 d.columns[i].identityIncrement = identityIncrement(r[2].displayText ?? "")
             }
         }
-        let (_, cons) = try await s.queryAll("""
-            select c.constraint_name, c.constraint_type, c.search_condition_vc, c.status, c.delete_rule, c.generated,
-                   (select listagg(cc.column_name, ',') within group (order by cc.position) from all_cons_columns cc
-                     where cc.owner = c.owner and cc.constraint_name = c.constraint_name),
-                   r.table_name,
-                   (select listagg(rc.column_name, ',') within group (order by rc.position) from all_cons_columns rc
-                     where rc.owner = c.r_owner and rc.constraint_name = c.r_constraint_name),
-                   r.owner
-            from all_constraints c left join all_constraints r on r.owner = c.r_owner and r.constraint_name = c.r_constraint_name
-            where c.owner = :o and c.table_name = :n and c.constraint_type in ('P', 'U', 'R', 'C')
-            order by decode(c.constraint_type, 'P', 1, 'U', 2, 'R', 3, 4), c.constraint_name
-            """, binds: b, limit: 10_000)
+        let (_, cons) = try await s.queryAll(constraintQuery, binds: b, limit: 10_000)
         for r in cons {
             let cname = r[0].displayText ?? ""
             let type = r[1].displayText ?? ""
@@ -372,9 +398,10 @@ public enum TableDDL {
             select grantee, privilege, grantable from all_tab_privs where table_schema = :o and table_name = :n order by grantee, privilege
             """, binds: b, limit: 10_000)) ?? ([], [])
         d.grants = grants.map { TableDefinition.Grant(grantee: $0[0].displayText ?? "", privilege: $0[1].displayText ?? "", grantable: $0[2].displayText == "YES") }
-        let (_, trg) = (try? await s.queryAll("select trigger_name, status from all_triggers where table_owner = :o and table_name = :n order by 1",
-                                               binds: b, limit: 10_000)) ?? ([], [])
-        d.triggers = trg.map { TableDefinition.Trigger(name: $0[0].displayText ?? "", enabled: $0[1].displayText == "ENABLED") }
+        let (_, trg) = (try? await s.queryAll("""
+            select owner, trigger_name, status from all_triggers where table_owner = :o and table_name = :n order by decode(owner, :o, 0, 1), 1, 2
+            """, binds: b, limit: 10_000)) ?? ([], [])
+        d.triggers = trg.map { TableDefinition.Trigger(owner: $0[0].displayText ?? owner, name: $0[1].displayText ?? "", enabled: $0[2].displayText == "ENABLED") }
         if let p = try? await s.scalar("""
             select partitioning_type || nvl2(subpartitioning_type, ' / ' || subpartitioning_type, '') || ', ' || partition_count
               from all_part_tables where owner = :o and table_name = :n
@@ -437,11 +464,11 @@ public enum TableDDL {
     public static func triggerDDL(_ d: TableDefinition, metadata m: MetadataProvider) async throws -> [String] {
         var out: [String] = []
         for trg in d.triggers {
-            var text = try await m.ddl(of: DBObject(owner: d.owner, name: trg.name, type: .trigger))
+            var text = try await m.ddl(of: DBObject(owner: trg.owner, name: trg.name, type: .trigger))
             // DBMS_METADATA kończy wyzwalacz `/` i dodaje ALTER TRIGGER … ENABLE — jedno polecenie PL/SQL na wyzwalacz.
             if let r = text.range(of: #"\n\s*/\s*(\n|$)"#, options: .regularExpression) { text = String(text[..<r.lowerBound]) }
             out.append(text.trimmingCharacters(in: .whitespacesAndNewlines))
-            if !trg.enabled { out.append("ALTER TRIGGER \(q(d.owner)).\(q(trg.name)) DISABLE") }
+            if !trg.enabled { out.append("ALTER TRIGGER \(q(trg.owner)).\(q(trg.name)) DISABLE") }
         }
         return out
     }

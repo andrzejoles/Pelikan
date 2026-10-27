@@ -394,9 +394,9 @@ extension Workspace {
                 return String(k[..<space]) == u.type.rawValue && k[k.index(after: space)...].hasSuffix(".\(u.name.uppercased())")
             }
             guard let lines = cov[key] ?? match?.value else { continue }
-            covered.formUnion(lines.covered.map { u.line + $0 })
-            uncovered.formUnion(lines.uncovered.map { u.line + $0 })
-            partial.formUnion(lines.partial.map { u.line + $0 })
+            covered.formUnion(lines.covered.map { u.sourceLine + $0 })
+            uncovered.formUnion(lines.uncovered.map { u.sourceLine + $0 })
+            partial.formUnion(lines.partial.map { u.sourceLine + $0 })
             if let k = cov[key] != nil ? key : match?.key, let space = k.lastIndex(of: " "), let dot = k[space...].firstIndex(of: ".") {
                 owners.insert(String(k[k.index(after: space)..<dot]))
             }
