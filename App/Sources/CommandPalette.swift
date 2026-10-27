@@ -8,6 +8,8 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     private let search = NSSearchField()
     private let table = NSTableView()
     private var items: [CommandDescriptor] = []
+    /// Nazwy komend w innym języku — jak w „Szukaj czynności” (liczone raz).
+    private lazy var alternates = CommandSearch.alternateTitles(workspace.registry.descriptors)
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -31,7 +33,7 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
         }
         table.headerView = nil
         table.setAccessibilityLabel(L10n.tr("Komendy"))
-        table.rowHeight = 24
+        table.rowSizeStyle = .custom
         table.dataSource = self
         table.delegate = self
         table.target = self
@@ -56,12 +58,17 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     }
 
     private func filter() {
-        // Kolejność i dopasowanie jak w „Szukaj czynności” na wstążce (bez polskich znaków, słowa kluczowe, PD-UI-012).
-        let all = workspace.registry.descriptors
+        // Kandydaci, kolejność i dopasowanie jak w „Szukaj czynności” na wstążce (bez komend pomocniczych i agenta, bez
+        // polskich znaków, słowa kluczowe, angielskie nazwy — PD-UI-012, R4-12).
+        let all = CommandSearch.userCommands(workspace.registry.descriptors)
         items = search.stringValue.trimmingCharacters(in: .whitespaces).isEmpty ? all
-            : CommandSearch.search(search.stringValue, in: all, limit: all.count).map(\.descriptor)
+            : CommandSearch.search(search.stringValue, in: all, limit: all.count) { [alternates] in alternates[$0.id] ?? [] }.map(\.descriptor)
+        table.rowHeight = AppFonts.rowHeight(for: InterfaceFonts.shared.body)
         table.reloadData()
-        if !items.isEmpty { table.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false) }
+        if let first = CommandSearch.firstAvailable(items, isEnabled: { workspace.isEnabled($0) }) {
+            table.selectRowIndexes(IndexSet(integer: first), byExtendingSelection: false)
+            table.scrollRowToVisible(first)
+        }
     }
 
     func controlTextDidChange(_ obj: Notification) { filter() }
@@ -86,6 +93,8 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
     @objc private func runSelected() {
         let row = table.selectedRow
         guard row >= 0, row < items.count else { return }
+        // Niedostępnej teraz komendy nie wykonuje (jak „Szukaj czynności”).
+        guard workspace.isEnabled(items[row].id) else { NSSound.beep(); return }
         panel.orderOut(nil)
         workspace.perform(items[row].id)
     }
@@ -102,6 +111,7 @@ final class CommandPalette: NSObject, NSTableViewDataSource, NSTableViewDelegate
         default: text = d.submenu.map { "\($0) › \(d.title)" } ?? d.title
         }
         let label = NSTextField(labelWithString: text)
+        label.font = tableColumn?.identifier.rawValue == "title" ? InterfaceFonts.shared.body : InterfaceFonts.shared.small
         label.textColor = enabled ? (tableColumn?.identifier.rawValue == "title" ? .labelColor : .secondaryLabelColor) : .tertiaryLabelColor
         label.lineBreakMode = .byTruncatingTail
         return label
