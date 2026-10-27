@@ -66,10 +66,14 @@
   plików ani dziennika; błąd logowania pokazuje komunikat `ssh` bez sekretu (D134).
 - Eksport połączeń z hasłami (D186, wyjątek od „hasła tylko w Pęku kluczy” na wyraźne życzenie właściciela — hasło
   sprzed lat może nie być zapisane nigdzie indziej): tylko użytkownik (agent nie ma komendy), zawsze po
-  uwierzytelnieniu właściciela Maca (Touch ID albo hasło, LocalAuthentication), plik 0600. Hasła zaszyfrowane frazą
-  (AES-256-GCM, klucz z PBKDF2-HMAC-SHA256, 600 000 iteracji, losowa sól) albo — po osobnym ostrzeżeniu — jawnym
-  tekstem. Fraza tylko z okna z polem bez podglądu, nigdy z argumentów, dziennika ani historii. Import zapisuje hasła
-  w Pęku kluczy i usuwa plik z hasłami; zła fraza nie importuje niczego i zostawia plik. Dziennik: tylko liczby.
+  uwierzytelnieniu właściciela Maca (Touch ID albo hasło, LocalAuthentication), plik 0600 od chwili utworzenia (dysk
+  bez praw POSIX — exFAT, udział sieciowy: plik z hasłami jawnymi jest usuwany, zaszyfrowany zostaje z ostrzeżeniem).
+  Hasła zaszyfrowane frazą (AES-256-GCM, klucz z PBKDF2-HMAC-SHA256, 600 000 iteracji, losowa sól; definicje połączeń
+  uwierzytelnione jako dane dodatkowe — zmiana hosta albo tunelu po eksporcie odrzuca import; z pliku najwyżej
+  2 000 000 iteracji, liczone poza wątkiem głównym) albo — po osobnym ostrzeżeniu — jawnym tekstem. Fraza tylko z okna
+  z polem bez podglądu, nigdy z argumentów, dziennika ani historii. Import zapisuje hasła w Pęku kluczy i usuwa plik
+  z hasłami; zła fraza nie importuje niczego i zostawia plik, a błąd Pęku kluczy wycofuje cały import. Dziennik: tylko
+  liczby.
 - Nazewnictwo katalogowe (LDAP, PD-CONN-013): na macOS Pelikan sam pyta katalog o deskryptor aliasu — wiązanie
   anonimowe LDAPv3 bez poświadczeń, tylko odczyt atrybutu `orclNetDescString`, limit czasu 5 s na połączenie i 10 s na
   zapytanie. Wiązanie uwierzytelnione portfelem (`NAMES.LDAP_AUTHENTICATE_BIND`) i LDAPS nie są obsługiwane; Pelikan

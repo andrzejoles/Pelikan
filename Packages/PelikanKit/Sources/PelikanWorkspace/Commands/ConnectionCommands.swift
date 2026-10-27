@@ -50,7 +50,7 @@ public enum ConnectionCommands {
             Command(CommandDescriptor(id: "connection.import", title: L10n.tr("Importuj definicje połączeń…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Dopisuje definicje połączeń z pliku JSON (hasła trzeba podać przy pierwszym połączeniu)."),
+                                      summary: L10n.tr("Dopisuje definicje połączeń z pliku JSON. Plik eksportu z hasłami: hasła trafiają do Pęku kluczy, a plik jest usuwany po imporcie; bez haseł — trzeba je podać przy pierwszym połączeniu."),
                                       feature: "PD-CONN-010")) { ctx in
                 var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
                 if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
@@ -66,7 +66,11 @@ public enum ConnectionCommands {
                                                              message: L10n.tr("Hasła w pliku są zaszyfrowane. Podaj frazę użytą przy eksporcie."), confirm: false)
                         guard passphrase != nil else { throw CommandError.cancelledByUser }
                     }
-                    secrets = try ConnectionTransfer.open(envelope, passphrase: passphrase)
+                    // PBKDF2 (setki tysięcy iteracji) poza wątkiem głównym — interfejs nie zamiera.
+                    let phrase = passphrase
+                    secrets = try await Task.detached(priority: .userInitiated) {
+                        try ConnectionTransfer.open(envelope, passphrase: phrase, definitions: data)
+                    }.value
                 }
                 // Tunel SSH i skrypt inicjalizacji działają przy każdym połączeniu — import tylko ze świadomą zgodą.
                 let running = try ConnectionStore.definitionsRunningCode(in: data)
@@ -300,22 +304,41 @@ public enum ConnectionCommands {
         }
         var passphrase: String?
         if mode == .encrypted {
-            passphrase = await ui.askSecret(L10n.tr("Fraza szyfrująca"),
-                                            message: L10n.tr("Co najmniej \(ConnectionTransfer.minimumPassphraseLength) znaków. Bez frazy haseł z pliku nie da się odzyskać."),
-                                            confirm: true)
-            guard passphrase != nil else { throw CommandError.cancelledByUser }
+            // Za krótka (także pusta) fraza — ponowne pytanie od razu, bez ponownego uwierzytelnienia i wyboru pliku.
+            var note = L10n.tr("Co najmniej \(ConnectionTransfer.minimumPassphraseLength) znaków. Bez frazy haseł z pliku nie da się odzyskać.")
+            while passphrase == nil {
+                guard let p = await ui.askSecret(L10n.tr("Fraza szyfrująca"), message: note, confirm: true) else { throw CommandError.cancelledByUser }
+                if p.count >= ConnectionTransfer.minimumPassphraseLength { passphrase = p } else { note = ConnectionTransfer.TransferError.weakPassphrase.errorDescription ?? note }
+            }
         }
         var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
         if url == nil { url = await ui.chooseSaveURL(suggestedName: L10n.tr("Pelikan-połączenia-z-hasłami"), fileExtension: "json") }
         guard let url else { throw CommandError.cancelledByUser }
-        let secrets = ctx.workspace.connections.secretsForExport()
-        let envelope = try ConnectionTransfer.envelope(secrets, mode: mode, passphrase: passphrase)
-        let data = try ctx.workspace.connections.exportDefinitions(secrets: envelope)
-        try data.write(to: url, options: .atomic)
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
-        Log.connection.info("Eksport połączeń z hasłami (\(mode.rawValue, privacy: .public)): \(secrets.count, privacy: .public) z hasłami")
-        return CommandResult(message: L10n.tr("Zapisano \(ctx.workspace.connections.connections.count) połączeń, z hasłami: \(secrets.count)"),
-                             value: .string(url.path))
+        // Hasło bazy także z bieżących sesji (podane przy logowaniu bez zapamiętania, zmienione w sesji).
+        let sessions = ctx.workspace.sessions
+        let secrets = ctx.workspace.connections.secretsForExport(password: { sessions.enteredPassword(for: $0) })
+        // Definicje z jednej chwili: te same są w pliku i w danych uwierzytelnionych szyfrowaniem (PBKDF2 poza wątkiem
+        // głównym, a w tym czasie np. połączenie może zmienić „ostatnio używane”).
+        let definitions = try ctx.workspace.connections.exportDefinitions()
+        let phrase = passphrase
+        let envelope = try await Task.detached(priority: .userInitiated) {
+            try ConnectionTransfer.envelope(secrets, mode: mode, passphrase: phrase, definitions: definitions)
+        }.value
+        let data = try ConnectionStore.addingSecrets(envelope, to: definitions)
+        // Plik 0600 od chwili utworzenia; dysk bez praw POSIX (exFAT, udział sieciowy) — hasła jawne nie zostają w pliku
+        // czytelnym dla wszystkich, zaszyfrowane — z ostrzeżeniem.
+        let restricted = try PrivateFile.write(data, to: url)
+        Log.connection.info("Eksport połączeń z hasłami (\(mode.rawValue, privacy: .public)): \(secrets.count, privacy: .public) z hasłami, prawa 0600: \(restricted, privacy: .public)")
+        let count = ctx.workspace.connections.connections.count
+        if !restricted {
+            if mode == .plain {
+                try? FileManager.default.removeItem(at: url)
+                throw CommandError.notAvailable(L10n.tr("Na tym dysku nie można ograniczyć dostępu do pliku (prawa 0600) — plik z jawnymi hasłami usunięto. Zapisz go na dysku Maca."))
+            }
+            return CommandResult(message: L10n.tr("Zapisano \(count) połączeń, z hasłami: \(secrets.count). Uwaga: ten dysk nie przechowuje praw pliku — plik może odczytać każdy (hasła są zaszyfrowane frazą)."),
+                                 value: .string(url.path))
+        }
+        return CommandResult(message: L10n.tr("Zapisano \(count) połączeń, z hasłami: \(secrets.count)"), value: .string(url.path))
     }
 
     /// Rozłączenie z pytaniem o otwarte transakcje okien tego połączenia (D10).

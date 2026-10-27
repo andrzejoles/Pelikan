@@ -172,10 +172,18 @@ public final class ConnectionStore {
 
     public func subfolders(of parentID: UUID?) -> [ConnectionFolder] { folders.filter { $0.parentID == parentID } }
 
-    // MARK: Eksport / import (bez haseł)
+    // MARK: Eksport / import (hasła tylko w pliku eksportu z hasłami, D186)
 
     public func exportDefinitions(secrets: ConnectionTransfer.Envelope? = nil) throws -> Data {
         try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections, secrets: secrets))
+    }
+
+    /// Plik eksportu z sekcją haseł dla definicji wyeksportowanych wcześniej (`exportDefinitions()`) — te same definicje,
+    /// które uwierzytelnia szyfrowanie, choć lista mogła się w międzyczasie zmienić.
+    static func addingSecrets(_ secrets: ConnectionTransfer.Envelope, to definitions: Data) throws -> Data {
+        var snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: definitions)
+        snap.secrets = secrets
+        return try JSONEncoder.pelikan.encode(snap)
     }
 
     /// Definicje z pliku importu, które coś uruchamiają przy połączeniu (tunel SSH — proces `ssh`, skrypt
@@ -186,13 +194,15 @@ public final class ConnectionStore {
             .map(\.displayName)
     }
 
-    /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie. Tunel z hostem albo
-    /// użytkownikiem wyglądającym jak opcja `ssh` odrzuca cały plik.
+    /// Import dopisuje definicje (nowe id przy konflikcie); bez haseł z pliku trzeba je podać przy pierwszym połączeniu.
+    /// Tunel z hostem albo użytkownikiem wyglądającym jak opcja `ssh` odrzuca cały plik.
     /// - Parameter secrets: hasła z pliku (identyfikatory z pliku) — zapisywane w Pęku kluczy; definicja z hasłem bazy
-    ///   dostaje „zapisz hasło” (D186).
+    ///   dostaje „zapisz hasło” (D186). Błąd zapisu hasła albo pliku wycofuje cały import (zapisane hasła i dopisane
+    ///   definicje) — ponowny import nie tworzy duplikatów.
     public func importDefinitions(_ data: Data, secrets: [String: ConnectionSecrets] = [:]) throws -> Int {
         let snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: data)
         for c in snap.connections { try c.sshTunnel?.validate() }
+        let before = (folders, connections)
         var folderMap: [UUID: UUID] = [:]
         let firstImported = folders.count
         for var f in snap.folders {
@@ -217,10 +227,23 @@ public final class ConnectionStore {
             connections.append(c)
             count += 1
         }
-        try save()
-        for (id, s) in stored {
-            if let p = s.password { try self.secrets.setPassword(p, for: id.uuidString) }
-            if let p = s.sshPassword { try setSSHPassword(p, for: id) }
+        var written: [String] = []
+        do {
+            for (id, s) in stored {
+                if let p = s.password {
+                    written.append(id.uuidString)
+                    try self.secrets.setPassword(p, for: id.uuidString)
+                }
+                if let p = s.sshPassword {
+                    written.append(Self.sshAccount(id))
+                    try setSSHPassword(p, for: id)
+                }
+            }
+            try save()
+        } catch {
+            for account in written { try? self.secrets.deletePassword(for: account) }
+            (folders, connections) = before
+            throw error
         }
         return count
     }

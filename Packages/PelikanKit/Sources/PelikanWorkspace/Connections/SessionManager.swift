@@ -220,6 +220,10 @@ public final class SessionManager {
         return true
     }
 
+    /// Hasło bazy podane w tym uruchomieniu (logowanie bez zapamiętania, zmiana albo wygaśnięcie hasła) — eksport
+    /// z hasłami (D186); nil — brak.
+    public func enteredPassword(for id: UUID) -> String? { sessionPasswords[id] }
+
     /// Klucze otwartych sesji o danym przeznaczeniu (np. wszystkie sesje jednej sesji agenta).
     public func keys(purpose: SessionPurpose) -> [SessionKey] { sessions.keys.filter { $0.purpose == purpose } }
 
