@@ -16,6 +16,8 @@ public struct UsageHit: Sendable, Hashable, Identifiable {
     public var document: DocumentID?
     /// Tytuł do listy (obiekt, plik albo okno).
     public var title: String
+    /// Połączenie, w którym znaleziono użycie w bazie (otwarcie obiektu z tej bazy, nie z aktywnego okna).
+    public var connection: UUID? = nil
     public var id: String { "\(kind.rawValue):\(title):\(line):\(text.prefix(40))" }
 }
 

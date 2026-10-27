@@ -7,7 +7,8 @@ EdDSA w Pęku kluczy, szkic wydania na GitHubie na koniec każdego etapu (publik
 
 Numer wersji nie jest nigdzie zapisany ręcznie (`scripts/version.sh`, test: `scripts/version-test.sh`, D184).
 Od 1.0.0 (scalenie PR #102) numer jest semantyczny i liczony z tytułów scalonych PR: `feat…` → środkowa cyfra
-(ostatnia od 0), `typ!:` albo „BREAKING CHANGE” → główna (tylko na wyraźne słowo właściciela), pozostałe → ostatnia.
+(ostatnia od 0), `typ!:` albo tytuł od `BREAKING CHANGE:` → główna (tylko na wyraźne słowo właściciela), pozostałe →
+ostatnia.
 Bety sprzed 1.0.0 miały regułę `1 + PR/10 . PR mod 10 . commity od ostatniego scalonego PR` (7.9.0–10.5.0). Numer
 kompilacji (`CFBundleVersion`) = liczba wszystkich commitów — rośnie z każdym wydaniem (także przy przejściu z 10.5.0
 na 1.0.0), a po nim porównuje wersje Sparkle; instalator `.pkg` nie sprawdza wersji aplikacji (`BundleIsVersionChecked`

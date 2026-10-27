@@ -123,26 +123,26 @@ public enum SQLCommands {
                 return try await runCommandWindow(ctx, doc, line)
             },
             Command(CommandDescriptor(id: "session.commit", title: L10n.tr("Zatwierdź (COMMIT)"), category: .session, pd: ["f10"],
-                                      mac: ["cmd+alt+enter"], agent: .approval, effect: .transaction,
+                                      mac: ["cmd+alt+enter"], agent: .none, effect: .transaction,
                                       summary: L10n.tr("Zatwierdza transakcję sesji okna."), feature: "PD-SQLW-014"),
                     validate: { $0.activeDocument?.transactionOpen ?? false }) { ctx in
                 try await endTransaction(ctx, commit: true)
             },
             Command(CommandDescriptor(id: "session.rollback", title: L10n.tr("Wycofaj (ROLLBACK)"), category: .session, pd: ["shift+f10"],
-                                      mac: ["cmd+alt+backspace"], agent: .approval, effect: .transaction,
+                                      mac: ["cmd+alt+backspace"], agent: .none, effect: .transaction,
                                       summary: L10n.tr("Wycofuje transakcję sesji okna."), feature: "PD-SQLW-014"),
                     validate: { $0.activeDocument?.transactionOpen ?? false }) { ctx in
                 try await endTransaction(ctx, commit: false)
             },
             Command(CommandDescriptor(id: "sql.historyBack", title: L10n.tr("Poprzednie polecenie okna"), category: .session,
-                                      submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+up"], agent: .full, effect: .modifiesEditor,
+                                      submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+up"], agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia poprzednie wykonane polecenie okna."), feature: "PD-SQLW-007"),
                     validate: { !($0.activeDocument?.statementHistory.isEmpty ?? true) }) { ctx in
                 try stepHistory(ctx.workspace, back: true)
                 return .ok
             },
             Command(CommandDescriptor(id: "sql.historyForward", title: L10n.tr("Następne polecenie okna"), category: .session,
-                                      submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+down"], agent: .full, effect: .modifiesEditor,
+                                      submenu: L10n.tr("Historia okna"), mac: ["cmd+alt+down"], agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia następne polecenie z historii okna."), feature: "PD-SQLW-007"),
                     validate: { $0.activeDocument?.historyPosition != nil }) { ctx in
                 try stepHistory(ctx.workspace, back: false)

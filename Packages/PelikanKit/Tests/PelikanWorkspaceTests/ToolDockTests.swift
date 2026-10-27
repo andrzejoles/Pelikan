@@ -51,6 +51,11 @@ struct ToolDockTests {
         #expect(ToolDockSettings.kind(of: "html-x") == "html")
         #expect(ToolDockSettings.kind(of: "sessions") == "sessions")
         #expect(ToolDockSettings.kind(of: "tableau") == "tableau")
+        // Jedna lista przedrostków: okno narzędzia rozpoznaje klucz jednorazowy po `kind(of:) != key` (bez autozapisu ramki).
+        for key in ["graph-1", "spatial-2", "objectInfo-APP.T", "largeData-3"] {
+            #expect(ToolDockSettings.kind(of: key) != key)
+        }
+        #expect(ToolDockSettings.transientPrefixes.allSatisfy { ToolDockSettings.kind(of: $0 + "x") == String($0.dropLast()) })
     }
 
     @Test("domyślnie panel po prawej, zgoda agenta w osobnym oknie; wybór użytkownika ma pierwszeństwo")

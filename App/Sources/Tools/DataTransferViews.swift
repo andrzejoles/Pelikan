@@ -149,7 +149,7 @@ struct ExportTablesView: View {
 
     private func load() async {
         do {
-            tables = try await TableTransfer.tables(owner: owner.uppercased(), in: try await DataTransferUI.session(workspace, connection))
+            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection))
             selected = []
             message = L10n.tr("Tabele: \(tables.count)")
         } catch { message = error.localizedDescription }
@@ -160,7 +160,7 @@ struct ExportTablesView: View {
         defer { busy = false }
         do {
             let s = try await DataTransferUI.session(workspace, connection)
-            let o = owner.uppercased()
+            let o = ResultExporter.dictionaryName(owner)
             switch method {
             case .sql:
                 let text = try await TableTransfer.sqlInserts(Array(selected), owner: o, options: options, in: s) { t in message = L10n.tr("Eksport \(t)…") }
@@ -277,7 +277,7 @@ struct ImportTablesView: View {
         defer { busy = false }
         do {
             try await DataTransferUI.guardChanges(workspace, connection: connection)
-            let r = try await TableTransfer.importNative(file, tables: selected, intoOwner: owner.uppercased(), options: options,
+            let r = try await TableTransfer.importNative(file, tables: selected, intoOwner: ResultExporter.dictionaryName(owner), options: options,
                                                          in: try await DataTransferUI.session(workspace, connection)) { t in message = L10n.tr("Import \(t)…") }
             message = DataTransferUI.summary(r)
         } catch { message = error.localizedDescription }
@@ -348,7 +348,7 @@ struct ImporterView: View {
             HStack {
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(4).textSelection(.enabled)
                 Spacer()
-                Button(L10n.tr("Do skryptu")) { if let t = target { DataTransferUI.sqlWindow(workspace, TextImport.script(rows, fieldNames: header, target: t), connection: connection) } }
+                Button(L10n.tr("Do skryptu")) { if let t = importTarget { DataTransferUI.sqlWindow(workspace, TextImport.script(rows, fieldNames: header, target: t), connection: connection) } }
                     .disabled(target == nil)
                 Button(L10n.tr("Importuj")) { Task { await runImport() } }.disabled(target == nil || busy)
             }
@@ -489,21 +489,30 @@ struct ImporterView: View {
 
     private func loadMapping() async {
         do {
-            let maps = try await TextImport.defaultMappings(owner: owner, table: table, fieldNames: header, in: try await DataTransferUI.session(workspace, connection))
+            let o = ResultExporter.dictionaryName(owner), t = ResultExporter.dictionaryName(table)
+            let maps = try await TextImport.defaultMappings(owner: o, table: t, fieldNames: header, in: try await DataTransferUI.session(workspace, connection))
             guard !maps.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(table)"); return }
-            target = ImportTarget(owner: owner.uppercased(), table: table.uppercased(), mappings: maps)
+            target = ImportTarget(owner: o, table: t, mappings: maps)
         } catch { message = error.localizedDescription }
     }
 
     private func createTable() {
-        let (sql, maps) = TextImport.createTable(owner: owner.uppercased(), table: table.uppercased(), fieldNames: header, rows: Array(rows.prefix(1000)))
+        let o = ResultExporter.dictionaryName(owner), t = ResultExporter.dictionaryName(table)
+        let (sql, maps) = TextImport.createTable(owner: o, table: t, fieldNames: header, rows: Array(rows.prefix(1000)))
         DataTransferUI.sqlWindow(workspace, sql + ";", connection: connection)
-        target = ImportTarget(owner: owner.uppercased(), table: table.uppercased(), mappings: maps)
+        target = ImportTarget(owner: o, table: t, mappings: maps)
         message = L10n.tr("Wykonaj CREATE TABLE w oknie SQL, potem Importuj.")
     }
 
+    /// Cel importu z bieżącym źródłem: numery seryjne dat Excela tylko z arkusza xlsx (nie z tekstu ani ze schowka).
+    private var importTarget: ImportTarget? {
+        guard var t = target else { return nil }
+        t.excelSerialDates = workbook != nil
+        return t
+    }
+
     private func runImport() async {
-        guard let t = target else { return }
+        guard let t = importTarget else { return }
         busy = true
         defer { busy = false }
         do {
@@ -607,7 +616,8 @@ struct DataGeneratorView: View {
 
     private func add() async {
         do {
-            let t = try await DataGenerator.defaultTable(owner: owner, table: newTable, in: try await DataTransferUI.session(workspace, connection))
+            let t = try await DataGenerator.defaultTable(owner: ResultExporter.dictionaryName(owner), table: ResultExporter.dictionaryName(newTable),
+                                                         in: try await DataTransferUI.session(workspace, connection))
             guard !t.fields.isEmpty else { message = L10n.tr("Brak tabeli \(owner).\(newTable)"); return }
             tables.removeAll { $0.name == t.name }
             tables.append(t)
@@ -630,10 +640,10 @@ struct DataGeneratorView: View {
                 preview = data[current ?? ""] ?? []
                 message = L10n.tr("Podgląd: \(preview.count) rekordów")
             case .script:
-                DataTransferUI.sqlWindow(workspace, DataGenerator.script(data, tables: tables, owner: owner.uppercased(), commitEvery: commitEvery), connection: connection)
+                DataTransferUI.sqlWindow(workspace, DataGenerator.script(data, tables: tables, owner: ResultExporter.dictionaryName(owner), commitEvery: commitEvery), connection: connection)
             case .database:
                 try await DataTransferUI.guardChanges(workspace, connection: connection)
-                let r = try await DataGenerator.insert(data, tables: tables, owner: owner.uppercased(), commitEvery: commitEvery, in: s)
+                let r = try await DataGenerator.insert(data, tables: tables, owner: ResultExporter.dictionaryName(owner), commitEvery: commitEvery, in: s)
                 message = DataTransferUI.summary(r)
             }
         } catch { message = error.localizedDescription }
@@ -697,7 +707,7 @@ struct CompareTableDataView: View {
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary).lineLimit(5).textSelection(.enabled)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { Task { await compare() } }.disabled(selected.isEmpty || targetID == nil || targetOwner.isEmpty || busy)
-                Button(L10n.tr("Skrypt")) { DataTransferUI.sqlWindow(workspace, TableDataCompare.script(diffs, targetOwner: targetOwner.uppercased(), options: options), connection: targetID) }
+                Button(L10n.tr("Skrypt")) { DataTransferUI.sqlWindow(workspace, TableDataCompare.script(diffs, targetOwner: ResultExporter.dictionaryName(targetOwner), options: options), connection: targetID) }
                     .disabled(diffs.isEmpty)
                 Button(L10n.tr("Aktualizuj cel")) { Task { await apply() } }.disabled(diffs.isEmpty || busy)
             }
@@ -718,7 +728,7 @@ struct CompareTableDataView: View {
 
     private func load() async {
         do {
-            tables = try await TableTransfer.tables(owner: owner.uppercased(), in: try await DataTransferUI.session(workspace, connection))
+            tables = try await TableTransfer.tables(owner: ResultExporter.dictionaryName(owner), in: try await DataTransferUI.session(workspace, connection))
             selected = []
         } catch { message = error.localizedDescription }
     }
@@ -737,7 +747,7 @@ struct CompareTableDataView: View {
             var errors: [String] = []
             for name in selected.sorted() {
                 message = L10n.tr("Porównanie \(name)…")
-                do { out.append(try await TableDataCompare.compare(table: name, sourceOwner: owner.uppercased(), source: s, targetOwner: targetOwner.uppercased(), target: t)) } catch {
+                do { out.append(try await TableDataCompare.compare(table: name, sourceOwner: ResultExporter.dictionaryName(owner), source: s, targetOwner: ResultExporter.dictionaryName(targetOwner), target: t)) } catch {
                     errors.append("\(name): \(error.localizedDescription)")
                 }
             }
@@ -751,10 +761,10 @@ struct CompareTableDataView: View {
         defer { busy = false }
         do {
             try await DataTransferUI.guardChanges(workspace, connection: targetID)
-            guard await workspace.ui?.ask(L10n.tr("Zaktualizować dane w \(targetOwner.uppercased())?"),
+            guard await workspace.ui?.ask(L10n.tr("Zaktualizować dane w \(ResultExporter.dictionaryName(targetOwner))?"),
                                           message: L10n.tr("Polecenia wyrównujące zostaną wykonane i zatwierdzone w schemacie docelowym."),
                                           buttons: [L10n.tr("Aktualizuj"), L10n.tr("Anuluj")]) == 0 else { return }
-            let r = try await TableDataCompare.apply(diffs, targetOwner: targetOwner.uppercased(), options: options, in: try await target())
+            let r = try await TableDataCompare.apply(diffs, targetOwner: ResultExporter.dictionaryName(targetOwner), options: options, in: try await target())
             message = DataTransferUI.summary(r)
             diffs = []
         } catch { message = error.localizedDescription }

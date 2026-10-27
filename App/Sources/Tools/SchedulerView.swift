@@ -241,7 +241,7 @@ struct SchedulerReportsEditor: View {
                                 .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń"))
                         }
                         TextField(L10n.tr("Warunek"), text: $d.condition, prompt: Text("status <> 'SUCCEEDED'"))
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.code)
                         Text(L10n.tr("Kolory wierszy")).font(.uiSecondary).foregroundStyle(.secondary)
                         ForEach($d.rules) { $r in
                             HStack {

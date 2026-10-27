@@ -20,6 +20,10 @@ public final class ResultGridModel {
     @ObservationIgnored let session: any DatabaseSession
     /// Edycja danych (UG 7.6) — stan w GridEditing.swift.
     public internal(set) var edit = GridEditState()
+    /// Edytor komórki otwarty w interfejsie: wpisana wartość trafi do modelu dopiero po jego zamknięciu
+    /// (`UIServices.commitPendingEdits`), więc Zatwierdź, Kopiuj SQL i Anuluj zmiany są już dostępne (APP2-04).
+    /// Osobno od `edit` — zmiana nie przeładowuje komórek siatki (to zamknęłoby edytor).
+    public var cellEditorOpen = false
     @ObservationIgnored public var format: ValueFormat
     /// Limit rozmiaru wyniku w pamięci (PD-SQLW-026): po przekroczeniu dalsze pobieranie dopiero po potwierdzeniu.
     @ObservationIgnored public var sizeLimitBytes = 0

@@ -164,7 +164,7 @@ func png(size: Int) -> Data {
 
 let args = CommandLine.arguments
 guard args.count >= 2 else {
-    FileHandle.standardError.write(Data("Użycie: make-icon.swift KATALOG.appiconset [podgląd.png]\n".utf8))
+    try? FileHandle.standardError.write(contentsOf: Data("Użycie: make-icon.swift KATALOG.appiconset [podgląd.png]\n".utf8))
     exit(1)
 }
 let dir = URL(fileURLWithPath: args[1])

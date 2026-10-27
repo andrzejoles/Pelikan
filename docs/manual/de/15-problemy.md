@@ -106,7 +106,9 @@ Die folgenden Funktionen arbeiten anders als im Vorbild, sind unvollständig ode
 geprüft:
 
 - Der **Thin-Treiber** unterstützt kein TCPS und keine Wallets, keine externe Authentifizierung, kein Ändern eines
-  abgelaufenen Passworts und kein Unterbrechen der Ausführung.
+  abgelaufenen Passworts und kein Unterbrechen der Ausführung. CLOB und DBMS_OUTPUT liest er bis 65 535 Zeichen
+  (längere mit Kürzungshinweis), und eine Abfrage mit einer Spalte INTERVAL YEAR TO MONTH oder BFILE beendet die App
+  (Fehler der Bibliothek OracleNIO) — für solche Daten den Instant-Client-Treiber verwenden.
 - **Kerberos** unter macOS: Wenn `sqlnet.ora` KERBEROS5 aktiviert, endet die Verbindung mit einer verständlichen
   Fehlermeldung (der Adapter des Instant Client kollidiert in der App mit dem Kerberos des Systems); unter Linux
   funktioniert die Anmeldung mit Ticket. **Microsoft Entra ID** und **TCPS-Verbindungen** sind nach der
@@ -118,8 +120,7 @@ geprüft:
 - **Command Window**: Die Befehle `COPY` und `SET ENVVAR` werden nicht unterstützt.
 - Der **Event Monitor** liest kein DBMS_OUTPUT anderer Sitzungen (Oracle stellt das nicht bereit).
 - Die **Werkzeuge in der linken Spalte** sind Tabs eines Bereichs (Verbindungen, Objekte, Fenster, Templates, Dateien);
-  sie lassen sich nicht frei andocken oder automatisch ausblenden. To-Do-Aufgaben, das Projekt, der
-  Zwischenablageverlauf und andere Werkzeuge öffnen sich in eigenen Fenstern. Dokumente sind Tabs eines Hauptfensters,
+  sie lassen sich nicht frei andocken oder automatisch ausblenden. Dokumente sind Tabs eines Hauptfensters,
   keine nativen macOS-Tabs.
 - **Quick Look** für SQL-Dateien (Vorschau im Finder) funktioniert möglicherweise nicht — macOS kann eine mit einem
   selbst signierten Zertifikat signierte Erweiterung ablehnen.

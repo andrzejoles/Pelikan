@@ -168,4 +168,22 @@ struct CodeFoldingTests {
         #expect(CodeFolding.shift([start], from: text, to: text + "\n/") == [start])
         #expect(CodeFolding.shift([start], from: text, to: text.replacingOccurrences(of: "if a", with: "IF a")).isEmpty)
     }
+
+    @Test("Obszary przesuwane razem z kluczami zwinięć — zwinięcie poniżej miejsca pisania nie rozwija się (APP2-12)")
+    func shiftRegions() {
+        let r = CodeFolding.regions(text)
+        let inner = r[1]
+        // Linia dopisana na początku: oba obszary przesunięte o 5 znaków (numery linii przelicza dopiero analiza w tle).
+        let edited = "-- k\n" + text
+        let moved = CodeFolding.shift(r, edited: 0..<5, delta: 5)
+        #expect(moved == CodeFolding.regions(edited).map { var x = $0; x.startLine -= 1; x.endLine -= 1; return x })
+        // Ukryte zakresy po przesunięciu takie jak przeliczone dla nowego tekstu.
+        let folded = CodeFolding.shift([inner.start], from: text, to: edited)
+        #expect(CodeFolding.hiddenRanges(moved, folded: folded) == CodeFolding.hiddenRanges(CodeFolding.regions(edited), folded: folded))
+        // Edycja wewnątrz ukrytego zakresu wydłuża go; za nim — bez zmian; na początku struktury — obszar znika.
+        let x = (text as NSString).range(of: "x := 1").location
+        #expect(CodeFolding.shift([inner], edited: x..<(x + 2), delta: 2).first?.hidden == inner.hidden.lowerBound..<(inner.hidden.upperBound + 2))
+        #expect(CodeFolding.shift([inner], edited: inner.hidden.upperBound..<(inner.hidden.upperBound + 1), delta: 1).first?.hidden == inner.hidden)
+        #expect(CodeFolding.shift([inner], edited: inner.start..<(inner.start + 2), delta: 0).isEmpty)
+    }
 }

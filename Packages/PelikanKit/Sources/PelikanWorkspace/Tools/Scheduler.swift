@@ -77,6 +77,15 @@ public struct SchedulerJob: Sendable, Hashable, Codable {
 public enum Scheduler {
     nonisolated static func literal(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "''") + "'" }
 
+    /// Literał nazwy istniejącego obiektu (właściciel i nazwa ze słownika): DBMS_SCHEDULER podnosi litery nazw bez
+    /// cudzysłowu, więc nazwy spoza `^[A-Z][A-Z0-9_$#]*$` w cudzysłowie (`"OWNER"."MixedJob"`, inaczej ORA-27476).
+    nonisolated static func nameLiteral(owner: String?, name: String) -> String {
+        func part(_ s: String) -> String {
+            s.range(of: #"^[A-Z][A-Z0-9_$#]*$"#, options: .regularExpression) != nil ? s : "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        return literal((owner.map { part($0) + "." } ?? "") + part(name))
+    }
+
     nonisolated static func timestamp(_ d: Date) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
@@ -118,15 +127,15 @@ public enum Scheduler {
         return sql + "end;"
     }
 
-    nonisolated static func emailSQL(_ j: SchedulerJob) -> String {
+    nonisolated static func emailSQL(_ j: SchedulerJob, name: String? = nil) -> String {
         guard !j.emailRecipients.isEmpty else { return "" }
-        return "  dbms_scheduler.add_job_email_notification(job_name => \(literal(j.qualifiedName)), recipients => \(literal(j.emailRecipients.joined(separator: ","))), events => \(literal(j.emailEvents.joined(separator: ","))));\n"
+        return "  dbms_scheduler.add_job_email_notification(job_name => \(name ?? literal(j.qualifiedName)), recipients => \(literal(j.emailRecipients.joined(separator: ","))), events => \(literal(j.emailEvents.joined(separator: ","))));\n"
     }
 
     /// SQL zmiany zadania: `set_attribute` dla zmienionych atrybutów (edycja w miejscu, UG 10.2).
     public nonisolated static func alterSQL(from old: SchedulerJob, to new: SchedulerJob) -> String {
         var calls: [String] = []
-        let n = literal(new.qualifiedName)
+        let n = nameLiteral(owner: new.owner, name: new.name)
         func set(_ attr: String, _ value: String) { calls.append("  dbms_scheduler.set_attribute(\(n), \(literal(attr)), \(value));") }
         if old.action != new.action { set(new.type == .program ? "program_name" : "job_action", literal(new.action)) }
         if old.type != new.type, new.type != .program { set("job_type", literal(new.type.rawValue)) }
@@ -142,14 +151,14 @@ public enum Scheduler {
             if !old.emailRecipients.isEmpty {
                 calls.append("  dbms_scheduler.remove_job_email_notification(job_name => \(n), recipients => \(literal(old.emailRecipients.joined(separator: ","))));")
             }
-            let e = emailSQL(new)
+            let e = emailSQL(new, name: n)
             if !e.isEmpty { calls.append(String(e.dropLast())) }
         }
         return calls.isEmpty ? "" : "begin\n" + calls.joined(separator: "\n") + "\nend;"
     }
 
     public nonisolated static func dropSQL(_ kind: SchedulerObjectKind, owner: String, name: String, force: Bool) -> String {
-        let n = literal(owner.isEmpty || owner == "SYS" ? name : "\(owner).\(name)")
+        let n = nameLiteral(owner: owner.isEmpty || owner == "SYS" ? nil : owner, name: name)
         let proc: String = switch kind {
         case .jobs: "drop_job(\(n), force => \(force ? "true" : "false"))"
         case .schedules: "drop_schedule(\(n), force => \(force ? "true" : "false"))"
@@ -269,12 +278,12 @@ public enum Scheduler {
     }
 
     public nonisolated static func stopSQL(owner: String, name: String, force: Bool) -> String {
-        "begin dbms_scheduler.stop_job(\(literal("\(owner).\(name)")), force => \(force ? "true" : "false")); end;"
+        "begin dbms_scheduler.stop_job(\(nameLiteral(owner: owner, name: name)), force => \(force ? "true" : "false")); end;"
     }
 
     /// Uruchomienie zadania w osobnej sesji (nazwa jako literał z podwojonymi apostrofami).
     public nonisolated static func runSQL(owner: String, name: String) -> String {
-        "begin dbms_scheduler.run_job(\(literal("\(owner).\(name)")), use_current_session => false); end;"
+        "begin dbms_scheduler.run_job(\(nameLiteral(owner: owner, name: name)), use_current_session => false); end;"
     }
 }
 

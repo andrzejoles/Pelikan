@@ -116,8 +116,7 @@ public enum NameResolver {
             let prev = i > 0 ? t[i - 1] : nil
             let startsStatement = starters.contains(t[i].upper) && t[i].isWord
                 && (prev == nil || prev!.kind == .semicolon || prev!.kind == .slash
-                    || ["BEGIN", "THEN", "ELSE", "LOOP", "DECLARE", "IS", "AS", "EXCEPTION"].contains(prev!.upper) && prev!.isWord
-                    || (prev!.kind == .rightParen && false))
+                    || ["BEGIN", "THEN", "ELSE", "LOOP", "DECLARE", "IS", "AS", "EXCEPTION"].contains(prev!.upper) && prev!.isWord)
                 && !(t[i].upper == "UPDATE" && prev?.upper == "FOR") && !(t[i].upper == "DELETE" && prev?.upper == "ON")
             guard startsStatement else { i += 1; continue }
             var depth = 0, j = i
@@ -162,7 +161,7 @@ public enum NameResolver {
                         && !["TABLE", "ONLY", "XMLTABLE", "JSON_TABLE", "THE"].contains(t[k].upper)) else { return nil }
             var owner: String?
             var name = t[k].name
-            var start = t[k].start, end = t[k].end
+            var end = t[k].end
             var n = k + 1
             if n + 1 < range.upperBound, t[n].kind == .dot, t[n + 1].isWord {
                 owner = name; name = t[n + 1].name; end = t[n + 1].end; n += 2
@@ -171,14 +170,12 @@ public enum NameResolver {
             if n < range.upperBound, t[n].kind == .leftParen { return nil }
             if n < range.upperBound, t[n].text == "@" { return nil }
             if n < range.upperBound, t[n].kind == .operator, t[n].text.hasPrefix("@") { return nil }
-            _ = start
             var alias: String?
             if n < range.upperBound, t[n].upper == "AS", n + 1 < range.upperBound, t[n + 1].isWord { alias = t[n + 1].name; n += 2 }
             else if n < range.upperBound, t[n].kind == .identifier || t[n].kind == .quotedIdentifier, !clauseEnd.contains(t[n].upper), !joinWords.contains(t[n].upper) {
                 alias = t[n].name; n += 1
             }
-            start = t[k].start
-            return (Relation(owner: owner, name: name, alias: alias, range: start..<end, isCTE: owner == nil && ctes.contains(name)), n)
+            return (Relation(owner: owner, name: name, alias: alias, range: t[k].start..<end, isCTE: owner == nil && ctes.contains(name)), n)
         }
         i = range.lowerBound
         // Poziomy nawiasów z aktywną listą FROM (przecinek dodaje relację tylko na tym poziomie; ON/USING jej nie kończą).
@@ -198,7 +195,7 @@ public enum NameResolver {
                 next = i + 1
             case "USING" where starter == "MERGE":
                 next = i + 1
-            case "INTO" where prev?.upper == "INSERT" || prev?.upper == "MERGE" || (prev?.upper == "ALL" && false):
+            case "INTO" where prev?.upper == "INSERT" || prev?.upper == "MERGE":
                 next = i + 1
             case "UPDATE" where i == range.lowerBound:
                 next = i + 1

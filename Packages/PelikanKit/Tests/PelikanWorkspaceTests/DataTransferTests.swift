@@ -30,12 +30,21 @@ struct DataTransferOfflineTests {
     }
 
     @Test("Mapowanie: liczby z przecinkiem, data z liczby Excela, funkcja z #, blok z filtrem i duplikatami, skrypt")
-    func mapping() {
+    func mapping() throws {
         let num = FieldMapping(column: "KWOTA", field: 2, type: .number)
         #expect(TextImport.prepared(" 1 234,50", num) == "1234.50")
         let date = FieldMapping(column: "D", field: 0, type: .date, dateFormat: "DD.MM.YYYY")
-        #expect(TextImport.prepared("45292", date) == "2024-01-01 00:00:00")
-        #expect(TextImport.prepared("45292.5", date) == "2024-01-01 12:00:00")
+        #expect(TextImport.prepared("45292", date, excelSerial: true) == "2024-01-01 00:00:00")
+        #expect(TextImport.prepared("45292.5", date, excelSerial: true) == "2024-01-01 12:00:00")
+        #expect(TextImport.dateFormat("45292", date, excelSerial: true) == "YYYY-MM-DD HH24:MI:SS")
+        // WS1-10: w pliku tekstowym liczba w polu daty to data w formacie pola (YYMMDD), nie numer seryjny Excela.
+        let compact = FieldMapping(column: "D", field: 0, type: .date, dateFormat: "YYMMDD")
+        #expect(TextImport.prepared("240115", compact) == "240115" && TextImport.dateFormat("240115", compact) == "YYMMDD")
+        var csv = ImportTarget(owner: "S", table: "T", mappings: [compact])
+        #expect(TextImport.script([["240115"]], fieldNames: ["d"], target: csv).contains("select TO_DATE('240115', 'YYMMDD') from dual"))
+        csv.excelSerialDates = true
+        csv.mappings = [date]
+        #expect(TextImport.script([["45292"]], fieldNames: ["d"], target: csv).contains("TO_DATE('2024-01-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS')"))
         var t = ImportTarget(owner: "S", table: "T", mappings: [FieldMapping(column: "ID", field: 0, type: .number),
                                                                FieldMapping(column: "NAZWA", field: 1, function: "upper(#)"), FieldMapping(column: "X", field: nil)])
         t.filter = ":KWOTA > 5"
@@ -45,6 +54,22 @@ struct DataTransferOfflineTests {
         #expect(sql.contains("when dup_val_on_index then :n_ := 0; update S.T set NAZWA = upper(:NAZWA) where ID = :ID"))
         let script = TextImport.script([["1", "a'b", "7"]], fieldNames: ["id", "nazwa", "kwota"], target: t)
         #expect(script.contains("select 1, upper('a''b') from dual where '7' > 5;"))
+        // WS1-22: zmienne filtra po tokenach — pole A nie psuje :AB, a ':A' w literale zostaje.
+        var ab = ImportTarget(owner: "S", table: "T", mappings: [FieldMapping(column: "A", field: 0)])
+        ab.filter = ":AB > 0 and :A <> ':A'"
+        #expect(TextImport.script([["x", "5"]], fieldNames: ["A", "AB"], target: ab).contains("from dual where '5' > 0 and 'x' <> ':A';"))
+        // WS1-13: nazwy ze słownika bez zmiany wielkości liter (kolumna "colA", tabela "Mixed"), wpisane — w cudzysłowie bez zmiany.
+        var mixed = ImportTarget(owner: "S", table: "Mixed", mappings: [FieldMapping(column: "colA", field: 0), FieldMapping(column: "ID", field: 1)])
+        mixed.duplicates = .overwrite
+        let ms = TextImport.rowStatement(mixed, fieldNames: ["a", "id"], keyColumns: ["ID"])
+        #expect(ms.contains("insert into S.\"Mixed\" (\"colA\", ID)") && ms.contains("set \"colA\" = :A where ID = :ID"))
+        #expect(ResultExporter.dictionaryName(" \"Mixed\" ") == "Mixed" && ResultExporter.dictionaryName("mixed") == "MIXED"
+                && ResultExporter.dictionaryName("\"a\"\"b\"") == "a\"b")
+        var job = DataTransferJob()
+        job.targetOwner = "app"; job.targetTable = "\"Mixed\""; job.sourceOwner = "\"Src\""; job.sourceTable = "t"
+        #expect(job.targetName == "APP.\"Mixed\"" && job.sourceSQL == "select * from \"Src\".T")
+        #expect(try ObjectAdmin.setEnabled(DBObject(owner: "S", name: "T", type: .table), enabled: false, constraint: "\"fk_Mixed\"")
+                == "ALTER TABLE S.T DISABLE CONSTRAINT \"fk_Mixed\"")
         let (create, maps) = TextImport.createTable(owner: "S", table: "NOWA", fieldNames: ["id", "data", "opis"],
                                                     rows: [["1", "2024-01-02", "abc"], ["2", "2024-02-03", "de"]])
         #expect(create.contains("ID NUMBER") && create.contains("DATA DATE") && create.contains("OPIS VARCHAR2(10 CHAR)"))
@@ -269,6 +294,20 @@ struct DataTransferOfflineTests {
             _ = try await DataTransferRunner.run(job, source: RecordingSession(columns: objCols, rows: []), target: target3)
         }
         #expect(target3.executed.withLock { $0 }.isEmpty)
+        // WS1-09: błąd odczytu źródła i błąd wiersza bez kontynuacji — wycofanie w sesji celu.
+        job.mode = .append
+        let target4 = RecordingSession()
+        let failing = RecordingSession(columns: [cols[0]], rows: [[.number("1")]])
+        failing.fetchError = CommandError.notAvailable("ORA-01476")
+        await #expect(throws: CommandError.self) { _ = try await DataTransferRunner.run(job, source: failing, target: target4) }
+        #expect(target4.rollbacks.withLock { $0 } == 1)
+        let target5 = RecordingSession()
+        target5.executeError = CommandError.notAvailable("ORA-00001")
+        job.continueOnError = false
+        await #expect(throws: CommandError.self) {
+            _ = try await DataTransferRunner.run(job, source: RecordingSession(columns: cols, rows: [[.number("1"), blob(5)]]), target: target5)
+        }
+        #expect(target5.rollbacks.withLock { $0 } == 1)
     }
 
     @Test("R7-04, R7-18: raport, źródło przeniesienia i eksport zadania lokalnego odmawiają przed wykonaniem czegokolwiek poza zapytaniem")
@@ -324,7 +363,11 @@ struct DataTransferOfflineTests {
         #expect(west.formatted("TZH:TZM") == "-05:30" && t.formatted("TZH:TZM") == "+05:30" && west.formatted("HH24", zone: true) == "10 -05:30")
         #expect(TableTransfer.encode(.timestamp(t, .timestamp)) == "2024-01-02 10:05:06.000000007")
         #expect(TableTransfer.valueExpression("TIMESTAMP(6) WITH TIME ZONE", bind: "c0") == "TO_TIMESTAMP_TZ(:c0, 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM')")
-        #expect(TableTransfer.valueExpression("TIMESTAMP(6) WITH LOCAL TIME ZONE", bind: "c0").hasPrefix("TO_TIMESTAMP(:c0"))
+        // WS1-25: LTZ w formacie własnym w UTC z przesunięciem — odczyt w UTC, import TO_TIMESTAMP_TZ.
+        #expect(TableTransfer.valueExpression("TIMESTAMP(6) WITH LOCAL TIME ZONE", bind: "c0") == "TO_TIMESTAMP_TZ(:c0, 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM')")
+        #expect(TableTransfer.TableColumn(name: "T", type: "TIMESTAMP(6) WITH LOCAL TIME ZONE", virtual: false, identityAlways: false).selectExpression
+                == "T at time zone '+00:00' as T")
+        #expect(TableTransfer.TableColumn(name: "T", type: "TIMESTAMP(6) WITH TIME ZONE", virtual: false, identityAlways: false).selectExpression == "T")
         #expect(TableTransfer.valueExpression("TIMESTAMP(3)", bind: "c0").hasPrefix("TO_TIMESTAMP(:c0"))
     }
 
@@ -397,16 +440,24 @@ final class RecordingSession: DatabaseSession, @unchecked Sendable {
     let columns: [ColumnInfo]
     let rows: [[OracleValue]]
     let executed = Mutex<[(sql: String, binds: [BindVariable])]>([])
+    let rollbacks = Mutex(0)
+    /// Błąd pobrania wierszy (źródło) albo wykonania polecenia innego niż zapytanie (cel); ustawiane przed użyciem.
+    var fetchError: CommandError?
+    var executeError: CommandError?
     init(columns: [ColumnInfo] = [], rows: [[OracleValue]] = []) { self.columns = columns; self.rows = rows }
     func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
         if sql.hasPrefix("select") { return ExecutionResult(kind: .query, resultSet: ResultSetDescriptor(id: ResultSetID(1), columns: columns)) }
+        if let executeError { throw executeError }
         executed.withLock { $0.append((sql, binds)) }
         return ExecutionResult(kind: .dml, rowsAffected: 1)
     }
-    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: rows, hasMore: false) }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
+        if let fetchError { throw fetchError }
+        return RowBatch(rows: rows, hasMore: false)
+    }
     func closeResultSet(_ resultSet: ResultSetID) async {}
     func commit() async throws {}
-    func rollback() async throws {}
+    func rollback() async throws { rollbacks.withLock { $0 += 1 } }
     func breakExecution() {}
     func ping() async throws {}
     func setTags(_ tags: SessionTags) async throws {}

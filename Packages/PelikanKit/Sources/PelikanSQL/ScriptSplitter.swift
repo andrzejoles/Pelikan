@@ -236,7 +236,8 @@ public enum ScriptSplitter {
         guard i < w.count else { return false }
         switch w[i] {
         case "FUNCTION", "PROCEDURE", "PACKAGE", "TRIGGER", "TYPE", "LIBRARY", "JAVA": return true
-        case "MLE": return true   // CREATE MLE MODULE … AS <kod JavaScript>
+        // CREATE MLE MODULE … AS <kod JavaScript>; CREATE MLE ENV to zwykłe DDL kończone `;`.
+        case "MLE": return i + 1 >= w.count || w[i + 1] == "MODULE"
         default: return false
         }
     }

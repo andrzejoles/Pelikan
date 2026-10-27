@@ -11,7 +11,8 @@ do {
     try Bridge.run(options)
     exit(0)
 } catch {
-    FileHandle.standardError.write(Data("pelikan-mcp: \(error)\n".utf8))
+    // stderr zamknięty przez klienta MCP: błąd zapisu pomijany (stare `write(_:)` kończyło proces wyjątkiem ObjC).
+    try? FileHandle.standardError.write(contentsOf: Data("pelikan-mcp: \(error)\n".utf8))
     exit(1)
 }
 #else

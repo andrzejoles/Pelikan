@@ -8,40 +8,48 @@ Wymagania: [`PROMPT.md`](PROMPT.md). Decyzje: [`DECISIONS.md`](DECISIONS.md), AD
 ```
 Pelikan/
 ├── project.yml                 # definicja projektu Xcode (XcodeGen) — źródło prawdy
-├── Makefile                    # build, test, test-integration, testdb, report…
-├── Config/Brand.xcconfig       # NAZWA APLIKACJI I BUNDLE ID — jedyne miejsce
-├── App/                        # cel Pelikan.app (AppKit; SwiftUI w ustawieniach i prostych oknach)
+├── Makefile                    # build, test, test-unit, test-ssh, test-integration, testdb, installer…
+├── Config/                     # Brand.xcconfig (NAZWA APLIKACJI I BUNDLE ID — jedyne miejsce), uprawnienia podpisu
+├── App/                        # cel Pelikan.app (AppKit; SwiftUI w preferencjach i prostych oknach), QuickLook/
 ├── Packages/PelikanKit/        # cała logika jako pakiet SPM, testowalny bez interfejsu
 │   ├── Sources/
-│   │   ├── PelikanSQL/         # lekser, dzielenie skryptów, klasyfikacja, zmienne (& : Jasper), parser (Etap 2)
-│   │   ├── PelikanDB/          # protokoły: DatabaseSession, wartości, błędy, MetadataProvider (Etap 2), Debugger (3)
+│   │   ├── PelikanLog/         # dziennik aplikacji z prywatnością wartości (D170), bez zależności
+│   │   ├── PelikanSQL/         # lekser, dzielenie skryptów, klasyfikacja poleceń, zmienne (& :), formater
+│   │   ├── PelikanDB/          # protokół DatabaseSession, wartości, błędy, Oracle Net (tnsnames, LDAP, sqlnet.ora)
 │   │   ├── CODPI/              # ODPI-C 26.0 (C, dołączone źródła)
-│   │   ├── PelikanODPI/        # sterownik Instant Client
-│   │   ├── PelikanThin/        # sterownik OracleNIO (Etap 1)
-│   │   ├── PelikanWorkspace/   # model stanu, rejestr komend, komendy, ustawienia, połączenia, historia
-│   │   ├── PelikanTest/        # utPLSQL: TestRunner, eksplorator, pokrycie (Etap 4)
-│   │   ├── PelikanAgent/       # polityka uprawnień, sesje agenta, serwer gniazda, narzędzia MCP (Etap 5)
-│   │   ├── PelikanBridgeKit/   # most stdio ↔ gniazdo Unix (Etap 5)
-│   │   └── pelikan-mcp/        # plik wykonywalny mostu (Etap 5)
-│   └── Tests/                  # Swift Testing; PelikanDBTests łączą się tylko z bazą testową
-├── scripts/                    # version.sh, testdb.sh, progress.py, status.py, release.sh (Etap 8)…
-└── docs/
+│   │   ├── PelikanODPI/        # sterownik Instant Client (thick)
+│   │   ├── PelikanThin/        # sterownik OracleNIO (thin)
+│   │   ├── PelikanWorkspace/   # model stanu i komendy: Model, Commands, Connections, SQL, Editor, Metadata
+│   │   │                       # (MetadataProvider), Debug (DebuggerEngine), UtPLSQL, Agent (baza agenta), Tools…
+│   │   ├── PelikanAgent/       # serwer gniazda, polityka uprawnień, katalog narzędzi MCP (tylko macOS)
+│   │   ├── PelikanBridgeKit/   # most stdio ↔ gniazdo Unix
+│   │   ├── pelikan-mcp/        # plik wykonywalny mostu
+│   │   ├── PelikanRemote/      # SSH przez systemowe ssh/scp (ControlMaster, askpass przez FIFO; tylko macOS)
+│   │   └── PelikanProC/        # cele SSH i wdrożenia Pro*C (build na serwerze, repozytorium, kopie)
+│   └── Tests/                  # Swift Testing; PelikanDBTests łączą się tylko z bazą testową, SSH — z lokalnym sshd
+├── scripts/                    # version.sh, testdb.sh, l10n.py, screenshots.sh, signing.sh, release.sh, status.py…
+└── docs/                       # dokumentacja, instrukcja (docs/manual), zrzuty, raport postępów
 ```
 
-Zależności (strzałka = „zależy od”):
+Zależności między modułami (wg Package.swift i project.yml; `PelikanLog` używają prawie wszystkie — pominięty):
 
-```
-Pelikan.app ─► PelikanWorkspace ─► PelikanDB ─► PelikanSQL
-     │               ▲   ▲
-     │               │   └── PelikanODPI ─► CODPI      PelikanThin ─► OracleNIO
-     ├─► PelikanAgent┘ ─► PelikanBridgeKit             pelikan-mcp ─► PelikanBridgeKit
-     ├─► PelikanTest ─► PelikanDB
-     └─► SwiftTerm, Sparkle
-```
+| Moduł | Zależy od |
+|---|---|
+| Pelikan.app | PelikanWorkspace, PelikanODPI, PelikanThin, PelikanAgent, PelikanProC, PelikanRemote, SwiftTerm, Sparkle; osadza pelikan-mcp i PelikanQuickLook |
+| PelikanWorkspace | PelikanDB, PelikanSQL |
+| PelikanDB | — |
+| PelikanODPI | PelikanDB, CODPI |
+| PelikanThin | PelikanDB, PelikanSQL, OracleNIO, NIOCore |
+| PelikanRemote | — |
+| PelikanAgent | PelikanWorkspace, PelikanBridgeKit, swift-sdk MCP |
+| PelikanProC | PelikanWorkspace, PelikanRemote |
+| pelikan-mcp | PelikanBridgeKit |
+| PelikanQuickLook (rozszerzenie) | PelikanSQL |
 
-`PelikanSQL`, `PelikanDB`, sterowniki i `PelikanTest` nie importują AppKit i budują się na Linuksie (CI z bazą Oracle).
-`PelikanWorkspace` nie importuje AppKit (testowalny bez interfejsu); interfejs dostaje usługi przez protokół `UIServices`
-(pytania, okna wyboru, okno zgody), który w testach implementują atrapy.
+`PelikanLog`, `PelikanSQL`, `PelikanDB`, sterowniki i `PelikanWorkspace` nie importują AppKit i budują się na Linuksie
+(CI z bazą Oracle); `PelikanAgent` i `PelikanRemote` są w `#if canImport(Darwin)`, w `PelikanProC` — tylko części z SSH.
+Interfejs dostaje usługi przez protokół `UIServices` (pytania, okna wyboru, edytory obiektów), który w testach
+implementują atrapy.
 
 ## 2. Warstwa bazy (PelikanDB)
 
@@ -50,13 +58,17 @@ Pelikan.app ─► PelikanWorkspace ─► PelikanDB ─► PelikanSQL
   `setTags` (MODULE/ACTION/CLIENT_INFO), `close`, `info` (`SessionInfo`: sterownik, wersje, `DriverCapabilities`,
   schemat). Wartości: `OracleValue` (NUMBER jako tekst — pełna precyzja), `ColumnInfo`, `BindVariable` (IN/OUT/IN OUT,
   REF CURSOR, LOB), błędy `OracleError` (kod, komunikat, pozycja, ostrzeżenie, utrata połączenia, anulowanie).
-- `ConnectionTarget` (zapisywane: użytkownik, connect string, rola, proxy, external auth, katalog TNS, edition) jest
-  oddzielone od `Credentials` (tylko w pamięci, `description` ukrywa treść, nie `Codable`).
+- `ConnectionTarget` (zapisywane: użytkownik, connect string, rola, proxy, external auth, portfel, katalog TNS, edition)
+  jest oddzielone od `Credentials` (tylko w pamięci, `description` ukrywa treść, nie `Codable`).
+- Oracle Net: tnsnames.ora, sqlnet.ora i nazewnictwo katalogowe (LDAP — D158) czyta Pelikan.
 - Sterownik ODPI: sesja na własnej szeregowej kolejce GCD (wywołania OCI blokują), `breakExecution` poza kolejką
   (OCIBreak, tryb THREADED), pobieranie tablicowe (fetch array 500), LOB do limitu (1 MB) z pełną długością.
-- `MetadataProvider` (Etap 2): zapytania słownika odporne na wersję (ALL_/DBA_, brak kolumn na starszych wersjach →
-  zapytanie alternatywne), cache w pamięci per połączenie, odświeżanie w tle, unieważnianie po kompilacji/DDL.
-- `Debugger` (Etap 3): DBMS_DEBUG (sesja docelowa + sesja sterująca) i DBMS_DEBUG_JDWP (Pelikan jako serwer JDWP).
+
+Słownik i debuger leżą w `PelikanWorkspace`, bo korzystają z modelu połączeń i sesji:
+- `MetadataProvider` (`PelikanWorkspace/Metadata`): zapytania słownika odporne na wersję (ALL_/DBA_, brak kolumn na
+  starszych wersjach → zapytanie alternatywne), cache w pamięci per połączenie, unieważnianie po kompilacji/DDL.
+- `DebuggerEngine` (`PelikanWorkspace/Debug`, ADR 0006): DBMS_DEBUG — sesja docelowa i sesja nadzorująca. Debuger
+  DBMS_DEBUG_JDWP pominięty (D106).
 
 ## 3. Model stanu aplikacji (PelikanWorkspace)
 
@@ -65,21 +77,19 @@ Pelikan.app ─► PelikanWorkspace ─► PelikanDB ─► PelikanSQL
 ```
 Workspace
 ├── connections: ConnectionStore      # definicje (foldery, kolory, środowisko dev/test/prod, sterownik, opcje agenta)
-├── sessions: SessionManager           # sesje bazy: główna, per okno (multi/dual/single), kompilacji, agenta
-├── documents: [Document]              # okna: SQL, Program, Test, Command, Explain Plan, Report, Diagram, Notebook…
+├── sessions: SessionManager           # sesje bazy: główna, per okno (multi/dual/single), kompilacji, agenta;
+│                                      # openConnections — otwarte połączenia w drzewie Object Browsera (D185)
+├── documents: [Document]              # okna: SQL, Program, Test, Command, Explain Plan, Report, Diagram, Notebook
 ├── activeDocumentID
-├── history: StatementHistory          # Recall Statement (bez poleceń z hasłami)
-├── settings: Settings                 # preferencje (zestawy preferencji w Etapie 8), skróty
+├── history: [HistoryEntry]            # Recall Statement (bez poleceń z hasłami)
+├── settings: Settings                 # preferencje, zestawy preferencji, skróty
 ├── registry: CommandRegistry, keymap: Keymap
-└── journal: ActionJournal             # dziennik zmian (cofanie, „Cofnij sesję agenta”)
+├── breakpoints, utplsqlHistory, project…
+└── tasks: WorkspaceTaskCenter         # długie operacje w tle (postęp, przerwanie)
 
-Document (wspólne): id, kind, title, connectionID (przypięte/nieprzypięte), fileURL, isModified, isCompiledStale,
-                   transactionOpen, executing
-SQLDocument: editor (EditorModel: tekst, zaznaczenie, kursor), results: [ResultTab] (ResultGridModel, pinned),
-             output (DBMS_OUTPUT), statistics, variables (wartości & i :bind, Jasper)
-ProgramDocument: units: [ProgramUnit] (karty), compileErrors, breakpoints
-TestDocument: block, variables: [TestVariable], debugState
-CommandDocument: dialog (bufor tekstu), editor, sqlplusState (SET…, DEFINE, VARIABLE, SPOOL)
+Document (wspólny dla rodzajów DocumentKind): id, kind, text, selectedRange, fileURL, isModified, isCompileStale,
+          isExecuting, transactionOpen, connectionID (przypięte/nieprzypięte), sessionPurpose, results: [ResultTab],
+          output (DBMS_OUTPUT), programUnits (karty okna programu)
 ```
 
 Interfejs obserwuje model (`withObservationTracking`, D6 w Bifoldzie). Długie operacje (zapytania, kompilacja,
@@ -94,29 +104,31 @@ skróty dla dwóch profili (`plsqlDeveloper` — F-klawisze i Ctrl wzorca z zami
 parametry (→ schemat narzędzia MCP), **poziom dostępu agenta** (`none/read/approval/full`), skutki
 (`none/uiState/modifiesEditor/modifiesDatabase/transaction/external/settings`) i opis skutków. Komenda ma `run` i
 opcjonalnie `preview` (skutki na sucho: tekst polecenia, obiekty, plan, liczba wierszy — okno zgody).
-Menu, paski narzędzi, skróty (`KeyRouter`), paleta komend (Cmd+Shift+P) i API agenta wywołują
-`Workspace.invoke(id, args, invoker)` — jedną funkcję. `docs/SKROTY.md` generuje test z rejestru.
+Menu, wstążka, skróty (`Keymap`), paleta komend i API agenta wywołują `Workspace.invoke(id, args, invoker)` — jedną
+funkcję. `docs/SKROTY.md` generuje test z rejestru.
 
-## 5. Agent AI (Etap 5) — przepływ wywołania
+## 5. Agent AI — przepływ wywołania
 
 Jak w Bifoldzie (ARCHITECTURE §7–8): `AgentLauncher` uruchamia CLI w terminalu SwiftTerm z tokenem 256 bit w środowisku
 i konfiguracją MCP tylko dla sesji; CLI uruchamia `pelikan-mcp` (stdio), most łączy się z gniazdem Unix
-(`~/Library/Application Support/Pelikan/run/agent.sock`, 0600 w katalogu 0700), serwer weryfikuje UID, drzewo procesów
-i token, `ToolCatalog` mapuje narzędzia MCP na komendy rejestru, `AgentPolicy` liczy poziom efektywny
-min(komenda, sesja, połączenie/środowisko), `ApprovalCenter` pokazuje okno zgody z podglądem.
-Specyfika bazy: agent ma własną sesję bazy (`AgentSessionManager`, MODULE `Pelikan agent`, ACTION = narzędzie),
-odczyt w `SET TRANSACTION READ ONLY` z limitami, klasyfikacja poleceń (`StatementClassifier`) przed wykonaniem, DML
-niezatwierdzone do osobnej zgody, historia DDL obiektów przed zmianą (cofanie), dane z bazy jako `untrusted_content`.
-
-Stan po Etapie 5 (D33–D35): logika bazy agenta leży w `PelikanWorkspace/Agent` (testy także na Linuksie), kanał
-i serwer MCP w `PelikanAgent` + `PelikanBridgeKit` + wykonywalny `pelikan-mcp` (tylko macOS, `swift-sdk` 0.12.1).
+(`~/Library/Application Support/Pelikan/run/agent.sock`, 0600 w katalogu 0700), `AgentServer` weryfikuje UID, drzewo
+procesów i token, `ToolCatalog` mapuje narzędzia MCP na komendy rejestru, `AgentPolicy` liczy poziom efektywny
+min(komenda, sesja, połączenie/środowisko), a `AgentController` (bramka `AgentInvocationGate`) prosi interfejs
+(`ApprovalPresenter` — w aplikacji `AgentUIController`) o okno zgody z podglądem.
+Specyfika bazy (`PelikanWorkspace/Agent`, testy także na Linuksie): agent ma własną sesję bazy
+(`Workspace.agentDatabaseSession`, MODULE `Pelikan agent`, ACTION = narzędzie), odczyt w `SET TRANSACTION READ ONLY`
+z limitami, klasyfikacja poleceń (`StatementClassifier`) przed wykonaniem, DML niezatwierdzone do osobnej zgody
+(`AgentChanges`), historia DDL obiektów przed zmianą (`undoAgentSession`), dane z bazy jako `untrusted_content`.
 Narzędzia MCP to komendy `agent.*` z rejestru; `run_command` widzi tylko komendy z `AgentPolicy.appCommands`.
 
 ## 6. Interfejs (Pelikan.app)
 
-ADR 0005: jedno okno główne z lewą kolumną narzędzi (Object Browser, Connection List, Window List, Templates, File
-Browser), obszarem dokumentów z własnym paskiem kart i prawym panelem (agent, Bookmarks, Search, Clipboard).
-Edytor — ADR 0003 (TextKit 2), siatka — ADR 0004 (NSTableView). Ustawienia i proste okna — SwiftUI.
+ADR 0005: jedno okno główne ze wstążką, lewą kolumną z kartami (Połączenia, Obiekty, Okna, Szablony, Pliki), obszarem
+dokumentów z własnym paskiem kart i panelem agenta. Object Browser pokazuje na najwyższym poziomie wszystkie otwarte
+połączenia (D185). Pozostałe narzędzia (To-Do, projekt, historia schowka, narzędzia DBA…) otwierają się domyślnie jako
+karty w panelach narzędzi po prawej i na dole okna głównego, z przeciąganiem między panelami i do osobnych okien
+(`ToolDockManager`, D183). Edytor — ADR 0003 (TextKit 2), siatka — ADR 0004 (NSTableView). Preferencje i proste
+okna — SwiftUI.
 
 ## 7. Dane aplikacji
 

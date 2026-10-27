@@ -90,7 +90,8 @@ struct DBAPanelView: View {
 
     private func lock(_ lock: Bool) {
         guard let user = selected?.first else { return }
-        Task { await run("dba.lockUser", ["user": .string(user), "lock": .bool(lock)]) }
+        // Nazwa ze słownika — w postaci SQL (`"app_User"` w cudzysłowie), argument komendy podniósłby zwykłą nazwę.
+        Task { await run("dba.lockUser", ["user": .string(ResultExporter.identifier(user)), "lock": .bool(lock)]) }
     }
 
     private func run(_ id: CommandID, _ args: [String: JSONValue]) async {
@@ -108,6 +109,8 @@ struct DBAPanelView: View {
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
     let workspace: Workspace
+    /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
+    @Environment(\.toolLifetime) private var lifetime
     @State private var connection: UUID?
     @State private var snap: InstanceSnapshot?
     @State private var auto = true
@@ -166,7 +169,7 @@ struct InstanceViewerView: View {
             await refresh()
             while auto, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
-                await refresh()
+                if lifetime?.isVisible ?? true { await refresh() }
             }
         }
     }

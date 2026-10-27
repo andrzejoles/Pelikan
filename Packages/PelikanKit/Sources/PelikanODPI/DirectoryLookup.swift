@@ -23,6 +23,11 @@ enum DirectoryLookup {
                 }
             case "ldap":
                 if let d = try search(alias, config: config) { return d }
+            case "ezconnect":
+                // Metoda hostname/EZConnect: sama nazwa hosta (`dbhost` → dbhost:1521, usługa domyślna listenera)
+                // zostaje klientowi, gdy host istnieje w DNS. Tylko przed LDAP w kolejności — inaczej klient najpierw
+                // użyłby własnego adaptera LDAP (D158).
+                if !config.path.prefix(while: { $0 != "ezconnect" }).contains("ldap"), hostResolves(alias) { return nil }
             default:
                 continue
             }
@@ -52,6 +57,17 @@ enum DirectoryLookup {
     }
 
 #if os(macOS)
+    /// Czy nazwa jest nazwą hosta znaną resolwerowi systemu (DNS, /etc/hosts).
+    static func hostResolves(_ name: String) -> Bool {
+        var hints = addrinfo()
+        hints.ai_family = AF_UNSPEC
+        hints.ai_socktype = SOCK_STREAM
+        var result: UnsafeMutablePointer<addrinfo>?
+        guard getaddrinfo(name, nil, &hints, &result) == 0 else { return false }
+        freeaddrinfo(result)
+        return true
+    }
+
     private typealias Initialize = @convention(c) (UnsafeMutablePointer<OpaquePointer?>, UnsafePointer<CChar>) -> Int32
     private typealias SetOption = @convention(c) (OpaquePointer?, Int32, UnsafeRawPointer?) -> Int32
     private typealias SimpleBind = @convention(c) (OpaquePointer?, UnsafePointer<CChar>?, UnsafePointer<CChar>?) -> Int32

@@ -42,7 +42,7 @@ struct ApprovalView: View {
                         }
                     }
                     if let rows = preview.estimatedRows {
-                        section(L10n.tr("Szacowana liczba wierszy")) { Text("\(rows)").font(.callout.monospacedDigit()) }
+                        section(L10n.tr("Szacowana liczba wierszy")) { Text("\(rows)").font(.ui.monospacedDigit()) }
                     }
                     if let plan = preview.plan, !plan.isEmpty {
                         section(L10n.tr("Plan wykonania")) {
@@ -132,7 +132,7 @@ struct PermissionMatrixView: View {
                 Toggle(isOn: $useProjectDirectory) {
                     VStack(alignment: .leading, spacing: 1) {
                         Text(L10n.tr("Katalog roboczy agenta: folder pliku aktywnego okna")).font(.ui)
-                        Text(projectDirectory).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
+                        Text(projectDirectory).font(.code).foregroundStyle(.secondary)
                             .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
                     }
                 }

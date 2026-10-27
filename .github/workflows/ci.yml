@@ -10,15 +10,17 @@ on:
 permissions:
   contents: read
 
+# Nowy push do PR przerywa jego poprzedni przebieg; przebiegi na main (scalenia) kończą się zawsze — każde scalenie
+# ma pełny wynik CI.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   macos:
     name: macOS — budowanie i testy jednostkowe
-    # macOS 27 + Xcode 27 (obraz w wersji próbnej): cel wdrożenia 27.0 i ten sam Swift co lokalnie — macos-latest ma
-    # Xcode 26 i ostrzega o nieobsługiwanym celu (D166).
+    # macOS 27 + Xcode 27 (obraz w wersji próbnej): cel wdrożenia 27.0 — macos-latest ma Xcode 26 i ostrzega
+    # o nieobsługiwanym celu (D166). Lokalnie Xcode w tym samym wydaniu co DEVELOPER_DIR niżej (inaczej inny kompilator).
     runs-on: xcode-27
     # Zawieszony test nie może blokować runnera godzinami.
     timeout-minutes: 60
@@ -27,9 +29,12 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
     steps:
-      - uses: actions/checkout@v7
+      # Akcja przypięta do commita (tag można przesunąć) — podnosić świadomie przy przeglądach stosu (D182).
+      # Bez tokenu w .git/config: żaden krok nie pobiera ani nie wypycha.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0   # wersja liczona z historii scalonych PR (scripts/version.sh)
+          persist-credentials: false
       - name: Środowisko
         run: |
           sw_vers
@@ -56,35 +61,60 @@ jobs:
         run: scripts/ci-ssh-tests.sh
       - name: Aplikacja
         if: hashFiles('project.yml') != ''
+        shell: bash
         run: |
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
-          make generate build
+          make generate build 2>&1 | tee /tmp/app.log
+      - name: Aplikacja bez ostrzeżeń
+        if: hashFiles('project.yml') != ''
+        run: scripts/ci-no-warnings.sh /tmp/app.log
+      - name: Podpis z Hardened Runtime
+        if: hashFiles('project.yml') != ''
+        shell: bash
+        # Bez runtime proces użytkownika mógłby wstrzyknąć bibliotekę przez DYLD_INSERT_LIBRARIES (D189).
+        run: |
+          app=build/DerivedData.noindex/Build/Products/Debug/Pelikan.app
+          codesign -d --verbose=4 "$app" 2>&1 | grep -q 'flags=.*runtime' || { echo "::error::$app bez Hardened Runtime"; exit 1; }
+      # Release (optymalizacja, kod spoza #if DEBUG) tylko po scaleniu na main — w PR dodawałby ok. 10 minut.
+      - name: Aplikacja w konfiguracji Release
+        if: hashFiles('project.yml') != '' && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          make release 2>&1 | tee /tmp/app-release.log
+          scripts/ci-no-warnings.sh /tmp/app-release.log
 
   linux-db:
     name: Linux — warstwa bazy na Oracle Free 26ai + utPLSQL
     runs-on: ubuntu-24.04
+    # Zawieszony test bazy nie może trzymać runnera do domyślnych 6 godzin.
+    timeout-minutes: 60
     env:
       PELIKAN_OCI_LIB_DIR: /opt/oracle/instantclient
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - name: Swift 6.4 (swiftly — oficjalny instalator swift.org; setup-swift@v2 nie zna 6.4)
+          persist-credentials: false
+      # shellcheck jest w obrazie ubuntu-24.04 (cudzysłowy „…” dopuszcza .shellcheckrc).
+      - name: Skrypty powłoki (shellcheck)
+        run: shellcheck -S warning scripts/*.sh scripts/testdb/*/*.sh
+      - name: Pakiety systemowe (curl dla Swifta, libaio i unzip dla Instant Client)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev libaio1t64 unzip >/dev/null
+      - name: Swift 6.4.1 (swiftly — oficjalny instalator swift.org; setup-swift@v2 nie zna 6.4)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev >/dev/null
           cd /tmp
-          # Wersja swiftly i suma SHA-256 przypięte (podnosić razem).
+          # Wersja swiftly i suma SHA-256 przypięte (podnosić razem). Swift przypięty do łatki — „6.4” wybierałoby
+          # najnowszą 6.4.x bez zmiany w repo; podnosić świadomie, razem z Xcode w zadaniu macOS.
           curl -fsSL -o /tmp/swiftly.tar.gz https://download.swift.org/swiftly/linux/swiftly-1.2.0-x86_64.tar.gz
           echo "0b26b568811404374c7d7f07276b6aad4145db5d1893a45f307de6a94ca8d9c3  /tmp/swiftly.tar.gz" | sha256sum -c -
           tar -xzf /tmp/swiftly.tar.gz -C /tmp
           /tmp/swiftly init --quiet-shell-followup --assume-yes --skip-install
           . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
-          swiftly install --use 6.4
+          swiftly install --use 6.4.1
           echo "${SWIFTLY_BIN_DIR:-$HOME/.local/share/swiftly/bin}" >> "$GITHUB_PATH"
           swift --version
       - name: Oracle Instant Client (Linux x64, Basic Light)
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq libaio1t64 unzip >/dev/null
           sudo ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
           curl -fsSL -o /tmp/ic.zip https://download.oracle.com/otn_software/linux/instantclient/2326400/instantclient-basiclite-linux.x64-23.26.4.0.0.zip
           echo "d049e593bba0041feb15c14ea894e2f1a437377462b99d9bdb6b7ab30b2dd660  /tmp/ic.zip" | sha256sum -c -

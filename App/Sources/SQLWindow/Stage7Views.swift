@@ -152,10 +152,7 @@ struct SnippetsView: View {
                     Button(L10n.tr("Wstaw")) { insert(s) }
                     Button(L10n.tr("Edytuj…")) { editing = s }
                     if !s.isBuiltIn {
-                        Button(L10n.tr("Usuń")) {
-                            do { try workspace.snippets.remove(id: s.id) } catch { workspace.ui?.showError(error.localizedDescription) }
-                            reload()
-                        }
+                        Button(L10n.tr("Usuń")) { run("snippets.remove", ["id": .string(s.id)]) }
                     }
                 }
             } primaryAction: { ids in
@@ -171,12 +168,24 @@ struct SnippetsView: View {
             SnippetEditor(snippet: s) { edited in
                 editing = nil
                 guard let edited else { return }
-                do { try workspace.snippets.save(edited); reload() } catch { message = error.localizedDescription }
+                // Edycja własnego snippetu ze zmianą nazwy zastępuje go (wbudowany zostaje — własny go przesłania).
+                var args: [String: JSONValue] = ["category": .string(edited.category), "name": .string(edited.name), "text": .string(edited.text)]
+                if snippets.contains(where: { $0.id == s.id && !$0.isBuiltIn }) { args["replaces"] = .string(s.id) }
+                run("snippets.save", args)
             }
         }
     }
 
     private func reload() { snippets = workspace.snippets.all }
+
+    /// Zapis i usunięcie przez komendy rejestru (dziennik komend, makra; usunięcie z potwierdzeniem).
+    private func run(_ id: CommandID, _ arguments: [String: JSONValue]) {
+        Task {
+            do { try await workspace.invoke(id, CommandArguments(arguments)); message = "" } catch CommandError.cancelledByUser {
+            } catch { message = error.localizedDescription }
+            reload()
+        }
+    }
 
     private func insert(_ s: Snippet) {
         Task {

@@ -136,9 +136,25 @@ struct AgentSecurityTests {
         let (opened, _) = try await client.call("open_editor", ["kind": "program", "text": "create package p as end;"])
         #expect(opened.contains("window") && env.workspace.documents.count == 2)
         #expect(env.approver.requests.isEmpty)
-        let r = env.workspace.undoAgentEdits(session: session.id)
+        let r = await env.workspace.undoAgentEdits(session: session.id)
         #expect(r.undone == 3 && r.conflicts.isEmpty)
         #expect(doc.text == "select 1\nfrom dual;\n" && env.workspace.documents.count == 1)
+    }
+
+    @Test("MOD-01: get_editor dla okna z 5 MB tekstu — wynik ucięty ze znacznikiem, most MCP działa dalej")
+    func oversizedEditorResult() async throws {
+        let env = try AgentEnv()
+        defer { env.shutdown() }
+        let line = "select 'a\"b' from dual; -- \\ zażółć\n"
+        _ = env.workspace.newDocument(.sql, text: String(repeating: line, count: 5_000_000 / line.utf8.count))
+        let (_, token) = env.session()
+        let client = try BridgeClient(socket: env.socket, token: token)
+        defer { client.terminate() }
+        try await client.initialize()
+        let (text, isError) = try await client.call("get_editor")
+        #expect(!isError && text.contains("result_truncated") && text.contains("nie polecenia"))
+        #expect(client.process.isRunning)
+        #expect(try await client.call("list_connections").1 == false)
     }
 
     @Test("Komenda zmieniająca edytor przez run_command wymaga zgody; odrzucenie nic nie zmienia")

@@ -18,7 +18,7 @@ struct DebuggerPanel: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L10n.tr("Stos wywołań")).font(.uiSecondary.bold())
                     List(Array(debugger.stack.enumerated()), id: \.offset) { i, f in
-                        Button { Task { await debugger.selectFrame(i) } } label: {
+                        Button { run("debug.selectFrame", ["frame": .int(Int64(i))]) } label: {
                             HStack {
                                 Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.uiSecondary)
                                 Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.code)
@@ -36,7 +36,7 @@ struct DebuggerPanel: View {
                     Text(L10n.tr("Obserwowane")).font(.uiSecondary.bold())
                     List(debugger.watchValues, children: \.children) { v in
                         variableRow(v).contextMenu {
-                            Button(L10n.tr("Usuń z obserwowanych")) { debugger.removeWatch(v.path) }
+                            Button(L10n.tr("Usuń z obserwowanych")) { run("debug.removeWatch", ["expression": .string(v.path)]) }
                         }
                     }
                     .frame(minHeight: 70)
@@ -53,23 +53,19 @@ struct DebuggerPanel: View {
         .frame(minWidth: 560, minHeight: 320)
     }
 
-    /// SQL / PL/SQL w sesji debugowanej (DBMS_DEBUG.EXECUTE) — wynik w karcie Wyjście okna testu.
-    private func executeInTarget() {
-        Task {
-            guard let sql = await workspace.ui?.askText(L10n.tr("Wykonaj w sesji debugowanej"), message: L10n.tr("Zapytanie (pierwsze 100 wierszy) albo blok PL/SQL."),
-                                                        defaultValue: ""), !sql.isEmpty else { return }
-            do {
-                let lines = try await debugger.executeInTarget(sql)
-                document.output.append("SQL> " + sql)
-                document.output.append(contentsOf: lines)
-            } catch { workspace.ui?.showError(error.localizedDescription) }
-        }
-    }
-
     private func addWatch() {
         let w = newWatch
         newWatch = ""
-        Task { await debugger.addWatch(w) }
+        run("debug.addWatch", ["expression": .string(w)])
+    }
+
+    /// Czynności panelu przez komendy rejestru (dziennik komend, makra) — na debugerze tego okna testu.
+    private func run(_ id: CommandID, _ arguments: [String: JSONValue]) {
+        workspace.activate(document.id)
+        Task {
+            do { try await workspace.invoke(id, CommandArguments(arguments)) } catch CommandError.cancelledByUser {
+            } catch { workspace.ui?.showError(error.localizedDescription) }
+        }
     }
 
     /// Wiersz zmiennej z menu: Ustaw wartość (SET_VALUE, tylko skalary), Kopiuj, Obserwuj (UG 5.10).
@@ -86,12 +82,12 @@ struct DebuggerPanel: View {
                     Task {
                         guard let value = await workspace.ui?.askText(L10n.tr("Nowa wartość \(v.name)"), message: L10n.tr("Literał PL/SQL albo tekst; NULL — wartość pusta."),
                                                                    defaultValue: v.value) else { return }
-                        do { try await debugger.setValue(v.path, to: value) } catch { workspace.ui?.showError(error.localizedDescription) }
+                        run("debug.setValue", ["variable": .string(v.path), "value": .string(value)])
                     }
                 }.disabled(debugger.state != .paused)
             }
             Button(L10n.tr("Kopiuj wartość")) { workspace.ui?.copyToClipboard(v.value, html: nil) }
-            Button(L10n.tr("Obserwuj")) { Task { await debugger.addWatch(v.path) } }
+            Button(L10n.tr("Obserwuj")) { run("debug.addWatch", ["expression": .string(v.path)]) }
         }
     }
 
@@ -122,8 +118,8 @@ struct DebuggerPanel: View {
             button("exclamationmark.triangle", "debug.runToException")
             Divider().frame(height: 18)
             button("stop.fill", "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
-            Button { executeInTarget() } label: { Image(systemName: "terminal") }
-                .iconLabel(L10n.tr("Wykonaj SQL w sesji debugowanej…")).disabled(debugger.state != .paused)
+            // SQL / PL/SQL w sesji debugowanej (DBMS_DEBUG.EXECUTE) — komenda rejestru ze strażnikiem zmian (APP2-06).
+            button("terminal", "debug.executeInTarget")
             Spacer()
             if debugger.state == .running { ProgressView().controlSize(.small) }
         }

@@ -80,7 +80,7 @@ enum ToolCommands {
                                           CommandParameter("tableDefinitions", .boolean, L10n.tr("Szukaj w definicjach tabel (kolumny, komentarze, CHECK)")),
                                           CommandParameter("saved", .string, L10n.tr("Nazwa zapisanych kryteriów")),
                                       ],
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Wyszukuje tekst w źródłach PL/SQL, zapytaniach widoków i nazwach obiektów; wynik: obiekt, linia, tekst."),
                                       feature: "PD-TOOL-001"),
                     validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
@@ -101,7 +101,7 @@ enum ToolCommands {
                                           CommandParameter("owner", .string, L10n.tr("Właściciel (domyślnie bieżący schemat)")),
                                           CommandParameter("run", .boolean, L10n.tr("Kompiluj od razu (bez — tylko lista)")),
                                       ],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Lista nieprawidłowych obiektów schematu i ich kompilacja w kolejności zależności (ALTER … COMPILE) z błędami."),
                                       feature: "PD-TOOL-002"),
                     validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
@@ -131,12 +131,16 @@ enum ToolCommands {
 
 extension Workspace {
     /// Otwiera obiekt (źródło w oknie programu, pozostałe — DDL) i ustawia kursor w linii źródła danej jednostki.
-    public func openObject(_ o: DBObject, line: Int = 0) async throws {
+    /// `connection` — połączenie, z którego pochodzi obiekt (wynik wyszukiwania, przebieg testów, debuger); bez niego —
+    /// połączenie aktywnego okna (D185), które może być inną bazą niż ta, w której obiekt znaleziono.
+    public func openObject(_ o: DBObject, line: Int = 0, connection: UUID? = nil) async throws {
         recordJump()
-        try await invoke("ob.edit", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue)]))
+        var args: [String: JSONValue] = ["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue)]
+        if let connection { args["connection"] = .string(connection.uuidString) }
+        try await invoke("ob.edit", CommandArguments(args))
         guard line > 0, let doc = activeDocument, doc.kind == .program else { return }
         let unit = ProgramCompiler.units(in: doc.text).first { $0.type == o.type } ?? ProgramCompiler.units(in: doc.text).first
-        let offset = ProgramCompiler.offset(line: (unit?.line ?? 0) + line, column: 1, in: doc.text)
+        let offset = ProgramCompiler.offset(line: (unit?.sourceLine ?? 0) + line, column: 1, in: doc.text)
         doc.selectedRange = offset..<offset
     }
 }

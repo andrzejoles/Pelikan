@@ -223,6 +223,14 @@ struct BuildMessageParserTests {
 #if canImport(Darwin)
 @Suite("Testuj cel SSH na lokalnym sshd", .serialized, .enabled(if: sshdAvailable), .timeLimit(.minutes(2)))
 struct SSHTargetTesterTests {
+    @Test("Baner serwera: limit czasu obejmuje connect (host bez odpowiedzi, TEST-NET)")
+    func bannerConnectTimeout() {
+        let start = Date()
+        // 192.0.2.1 (RFC 5737) nie odpowiada — bez limitu na connect czekanie trwałoby ok. 75 s (MOD-19).
+        #expect(SSHTargetTester.serverBanner(host: "192.0.2.1", port: 22, timeout: 1) == nil)
+        #expect(Date().timeIntervalSince(start) < 4)
+    }
+
     @Test("Testuj: logowanie, wersja serwera, git w working copy (gałąź, czystość), katalogi i utworzenie katalogu backupów")
     func testTarget() throws {
         let sshd = try TestSSHD()

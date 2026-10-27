@@ -377,10 +377,10 @@ public struct DataGenerator {
         var out = "-- " + L10n.tr("Dane testowe — wygenerowane przez Pelikana") + "\n"
         let ordered = tables.filter { $0.parent == nil } + tables.filter { $0.parent != nil }
         for t in ordered {
-            let cols = t.fields.map { ResultExporter.identifier($0.name.uppercased()) }.joined(separator: ", ")
+            let cols = t.fields.map { ResultExporter.identifier($0.name) }.joined(separator: ", ")
             for (i, row) in (data[t.name] ?? []).enumerated() {
                 let values = t.fields.map { literal(row[$0.name.uppercased()] ?? "", type: $0.type) }
-                out += "insert into \(ResultExporter.identifier(owner)).\(ResultExporter.identifier(t.name.uppercased())) (\(cols)) values (\(values.joined(separator: ", ")));\n"
+                out += "insert into \(ResultExporter.identifier(owner)).\(ResultExporter.identifier(t.name)) (\(cols)) values (\(values.joined(separator: ", ")));\n"
                 if commitEvery > 0, (i + 1) % commitEvery == 0 { out += "commit;\n" }
             }
         }
@@ -401,7 +401,7 @@ public struct DataGenerator {
                 }
                 return ":\(b)"
             }
-            let sql = "insert into \(ResultExporter.identifier(owner)).\(ResultExporter.identifier(t.name.uppercased())) (\(t.fields.map { ResultExporter.identifier($0.name.uppercased()) }.joined(separator: ", "))) values (\(exprs.joined(separator: ", ")))"
+            let sql = "insert into \(ResultExporter.identifier(owner)).\(ResultExporter.identifier(t.name)) (\(t.fields.map { ResultExporter.identifier($0.name) }.joined(separator: ", "))) values (\(exprs.joined(separator: ", ")))"
             for (i, row) in (data[t.name] ?? []).enumerated() {
                 let values = zip(t.fields, binds).map { f, b -> BindVariable in
                     let v = row[f.name.uppercased()] ?? ""
@@ -421,13 +421,14 @@ public struct DataGenerator {
         return result
     }
 
-    /// Domyślna definicja tabeli z kolumn słownika (klucz główny — Sequence, liczby — Random, daty — zakres, tekst — wzorzec).
+    /// Domyślna definicja tabeli z kolumn słownika (klucz główny — Sequence, liczby — Random, daty — zakres, tekst — wzorzec);
+    /// właściciel i tabela w postaci słownika (`ResultExporter.dictionaryName` dla wpisanych).
     public static func defaultTable(owner: String, table: String, in s: any DatabaseSession) async throws -> GeneratorTable {
         let pk = Set(try await TextImport.primaryKey(owner: owner, table: table, in: s))
         let (_, rows) = try await s.queryAll("""
             select column_name, data_type, nvl(data_precision, 0), nvl(data_scale, 0), char_length from all_tab_cols
              where owner = :o and table_name = :t and virtual_column = 'NO' and hidden_column = 'NO' order by column_id
-            """, binds: [BindVariable(name: "o", value: .text(owner.uppercased())), BindVariable(name: "t", value: .text(table.uppercased()))])
+            """, binds: [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "t", value: .text(table))])
         let fields = rows.map { r -> GeneratorTable.Field in
             let name = r[0].displayText ?? ""
             let type = r[1].displayText ?? ""
@@ -449,7 +450,7 @@ public struct DataGenerator {
             }
             return GeneratorTable.Field(name: name, type: type, definition: def)
         }
-        return GeneratorTable(name: table.uppercased(), minRecords: 10, maxRecords: 10, fields: fields)
+        return GeneratorTable(name: table, minRecords: 10, maxRecords: 10, fields: fields)
     }
 }
 

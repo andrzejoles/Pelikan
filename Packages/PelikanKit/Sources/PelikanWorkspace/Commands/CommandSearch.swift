@@ -21,9 +21,10 @@ public enum CommandSearch {
     }
 
     /// Komendy, których szuka użytkownik (wstążka, paleta komend): pozycje menu — bez komend pomocniczych okien i API
-    /// agenta (`agent.*`), które poza agentem nie mają sensu.
+    /// agenta (`agent.*`), które poza agentem nie mają sensu; komendy panelu agenta (`AgentUICommands`) są czynnościami
+    /// użytkownika.
     public static func userCommands(_ descriptors: [CommandDescriptor]) -> [CommandDescriptor] {
-        descriptors.filter { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") }
+        descriptors.filter { $0.inMenu && (!$0.id.rawValue.hasPrefix("agent.") || AgentUICommands.isUserCommand($0.id)) }
     }
 
     /// Nazwy komend w innym języku (tytuł i podmenu, np. angielskie przy interfejsie po polsku) — dla `alternateTitles`.

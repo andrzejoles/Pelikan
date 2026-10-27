@@ -13,7 +13,6 @@ public enum PLSQLTrace {
         public static let allExceptions = Level(rawValue: 4)
         public static let enabledExceptions = Level(rawValue: 8)
         public static let allSQL = Level(rawValue: 32)
-        public static let enabledSQL = Level(rawValue: 64)
         public static let allLines = Level(rawValue: 128)
         public static let enabledLines = Level(rawValue: 256)
     }

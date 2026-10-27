@@ -5,8 +5,10 @@ import UniformTypeIdentifiers
 
 /// Test Manager (UG 24.16, PD-TOOL-018): zestaw testów, edycja testu (blok, zmienne z wejściem i oczekiwaniem,
 /// DBMS_OUTPUT, limit czasu), zmienne globalne, uruchomienie z wynikami, przejście do okna testu (debugowanie).
+/// Połączenie ustalone przy otwarciu (aktywne okno albo główne, D182/D185), widoczne i zmieniane w nagłówku.
 struct TestManagerView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var testSet = TestSet(name: L10n.tr("Nowy zestaw"))
     @State private var selection: TestCase.ID?
     @State private var results: [UUID: TestCaseResult] = [:]
@@ -30,8 +32,10 @@ struct TestManagerView: View {
                 }
                 Button(L10n.tr("Usuń test")) { if let i = index { testSet.cases.remove(at: i) } }.disabled(index == nil)
                 Spacer()
+                ToolConnectionPicker(workspace: workspace, connection: $connection).disabled(running)
                 Button(L10n.tr("Otwórz w oknie testu")) { openInTestWindow() }.disabled(index == nil)
-                Button { Task { await run() } } label: { Label(L10n.tr("Uruchom"), systemImage: "play.fill") }.disabled(running || testSet.cases.isEmpty)
+                Button { Task { await run() } } label: { Label(L10n.tr("Uruchom"), systemImage: "play.fill") }
+                    .disabled(running || testSet.cases.isEmpty || connection == nil)
             }
             HSplitView {
                 List(selection: $selection) {
@@ -57,6 +61,11 @@ struct TestManagerView: View {
         }
         .padding(10)
         .frame(minWidth: 820, minHeight: 520)
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     @ViewBuilder private var editor: some View {
@@ -105,7 +114,7 @@ struct TestManagerView: View {
     }
 
     private func run() async {
-        guard let conn = workspace.sessions.mainConnectionID else { return }
+        guard let conn = connection else { return }
         applyGlobals()
         running = true
         results = [:]
@@ -117,7 +126,8 @@ struct TestManagerView: View {
         guard let i = index else { return }
         let c = testSet.cases[i]
         let d = workspace.newDocument(.test, text: c.block)
-        d.connectionID = workspace.sessions.mainConnectionID
+        // Okno testu na połączeniu Test Managera (przypięte, gdy to nie główne).
+        workspace.bind(d, to: connection)
         d.testVariables = c.variables.map { TestVariable(name: $0.name, type: $0.type, value: $0.input.map { TestManager.resolve($0, globals: testSet.globals) } ?? "", isNull: $0.input == nil) }
     }
 

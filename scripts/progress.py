@@ -125,7 +125,8 @@ def parse_features() -> list[dict]:
         if not line.startswith("|"):
             header = None
             continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        # `\|` — znak `|` w treści komórki (GitHub), nie granica kolumny.
+        cells = [c.strip().replace("\\|", "|") for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
         if header is None:
             header = [c.lower() for c in cells]
             continue

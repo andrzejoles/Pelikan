@@ -34,7 +34,7 @@ struct ProblemReportView: View {
                 Toggle(L10n.tr("Dołącz komunikat błędu (może zawierać nazwy obiektów, schematów i dane — sprawdź i popraw poniżej)"), isOn: $report.includeErrorMessage)
                 if report.includeErrorMessage {
                     TextEditor(text: $report.errorMessage)
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(.code)
                         .frame(minHeight: 50, maxHeight: 90)
                         .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
                 }

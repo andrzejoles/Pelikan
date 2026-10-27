@@ -33,7 +33,8 @@ final class FileTreeModel {
         let url = loc.url
         Task {
             let status = await Task.detached { GitRepository.discover(for: url).flatMap { try? $0.status() } }.value
-            guard status != self.git else { return }
+            // Lokalizacja zmieniona w trakcie — stan Git poprzedniego repozytorium nie trafia do nowej.
+            guard self.locationID == loc.id, status != self.git else { return }
             self.git = status
             self.invalidate()
         }

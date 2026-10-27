@@ -53,11 +53,12 @@ enum ObjectAdminCommands {
                                                          binds: [BindVariable(name: "n", value: .text(o.qualifiedName))])
                 return CommandResult(message: L10n.tr("Odświeżono \(o.name)"))
             },
-            command("ob.testLink", L10n.tr("Testuj łącze"), params: objectParams, agent: .read, effect: .none,
+            command("ob.testLink", L10n.tr("Testuj łącze"), params: objectParams, agent: .none, effect: .none,
                     summary: L10n.tr("Sprawdza łącze bazy danych zapytaniem do DUAL po drugiej stronie i podaje czas odpowiedzi."), feature: "PD-OB-019",
                     validate: { $0.selectedObject?.type == .databaseLink }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard o.name.range(of: #"^[A-Za-z0-9_$#.@]+$"#, options: .regularExpression) != nil else { throw CommandError.invalidArgument("object", o.name) }
+                try MultiObjectCommands.requireOwnLink(o, sessionUser: try await m.session().info.sessionUser)
                 // Zapytanie przez łącze otwiera transakcję rozproszoną — osobna sesja narzędzia, wycofana i zamknięta
                 // (w trybie Dual sesja główna jest sesją okien).
                 let key = SessionKey(connectionID: m.connectionID, purpose: .tool("dblink"))
@@ -130,7 +131,7 @@ enum ObjectAdminCommands {
                 doc.statusText = L10n.tr("Wczytano ponownie z bazy")
                 return .ok
             },
-            command("ob.recycleBin", L10n.tr("Kosz"), submenu: nil, params: [CommandContext.toolConnectionParam], agent: .read, effect: .none,
+            command("ob.recycleBin", L10n.tr("Kosz"), submenu: nil, params: [CommandContext.toolConnectionParam], agent: .none, effect: .none,
                     summary: L10n.tr("Obiekty usunięte do kosza (USER_RECYCLEBIN): nazwa pierwotna, typ, czas usunięcia."), feature: "PD-OB-021",
                     validate: { $0.objectBrowserConnection != nil }) { ctx in
                 let items = try await ObjectAdmin.recycleBin(try await mainSession(ctx))
@@ -226,7 +227,7 @@ enum ObjectAdminCommands {
                 return CommandResult(message: errors == 0 ? L10n.tr("Kompilacja próbna bez błędów") : L10n.tr("Kompilacja próbna: błędów \(errors)"),
                                      value: .int(Int64(errors)))
             },
-            command("prog.checkChanges", L10n.tr("Sprawdź zmiany obiektów w bazie"), .session, submenu: nil, agent: .read, effect: .none,
+            command("prog.checkChanges", L10n.tr("Sprawdź zmiany obiektów w bazie"), .session, submenu: nil, agent: .none, effect: .none,
                     summary: L10n.tr("Porównuje czas ostatniej zmiany obiektów okna programu w bazie z chwilą wczytania albo kompilacji."), feature: "PD-PROG-011",
                     validate: { programDocument($0) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace), let conn = ctx.workspace.effectiveConnection(of: doc) else { throw CommandError.notConnected }

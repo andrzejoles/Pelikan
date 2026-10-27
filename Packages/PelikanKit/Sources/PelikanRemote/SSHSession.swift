@@ -41,6 +41,7 @@ public final class SSHSession: Sendable {
     let secret: @Sendable () -> String?
     static let ssh = "/usr/bin/ssh", scp = "/usr/bin/scp"
     private let startLock = Mutex(())
+    private let resolved = Mutex<ResolvedHost?>(nil)
 
     public init(config: Config, runDirectory: URL, secret: @escaping @Sendable () -> String?) throws {
         // Bez znaków, które `ssh` mógłby wziąć za opcję albo rozdzielić (wstrzyknięcie opcji).
@@ -191,11 +192,55 @@ public final class SSHSession: Sendable {
         return .io(code: 0, detail: message)
     }
 
-    /// Plik znanych kluczy serwerów, którego używa ta sesja.
-    public var knownHostsPath: String { config.knownHostsFile ?? NSHomeDirectory() + "/.ssh/known_hosts" }
+    /// Plik znanych kluczy serwerów, którego używa ta sesja (z konfiguracji ssh, gdy ustawia UserKnownHostsFile).
+    public var knownHostsPath: String { config.knownHostsFile ?? resolvedHost.knownHostsFile ?? NSHomeDirectory() + "/.ssh/known_hosts" }
 
-    /// Nazwa serwera w known_hosts (`[host]:port` dla portu innego niż 22).
-    var knownHostsName: String { config.port.map { $0 == 22 ? config.host : "[\(config.host)]:\($0)" } ?? config.host }
+    /// Nazwa serwera w known_hosts, pod którą szuka go ssh: HostKeyAlias albo HostName (`[nazwa]:port` dla portu
+    /// innego niż 22) — po rozwinięciu konfiguracji, nie z pól Pelikana (alias z ~/.ssh/config).
+    var knownHostsName: String { Self.knownHostsName(resolvedHost) }
+
+    static func knownHostsName(_ r: ResolvedHost) -> String {
+        if let alias = r.hostKeyAlias { return alias }
+        return r.port == 22 ? r.hostname : "[\(r.hostname)]:\(r.port)"
+    }
+
+    /// Cel po rozwinięciu konfiguracji ssh (`ssh -G`, bez łączenia): alias z ~/.ssh/config albo `configFile` może
+    /// wskazywać inny HostName, Port, HostKeyAlias i UserKnownHostsFile — pod nimi ssh sprawdza klucz serwera.
+    struct ResolvedHost: Sendable, Equatable {
+        var hostname: String
+        var port: Int
+        var hostKeyAlias: String?
+        var knownHostsFile: String?
+    }
+
+    /// Wynik `ssh -G` (konfiguracja się nie zmienia w czasie sesji); błąd — pola Pelikana, bez zapamiętania.
+    var resolvedHost: ResolvedHost {
+        if let r = resolved.withLock({ $0 }) { return r }
+        var args = commonOptions(master: false)
+        if let port = config.port { args += ["-p", String(port)] }
+        args += ["-G", destination]
+        guard let r = try? Spawn.run(Self.ssh, args.map { Array($0.utf8) }, environment: environment, timeout: 10), r.status == 0,
+              let parsed = Self.parseResolvedHost(String(decoding: r.output, as: UTF8.self)) else {
+            return ResolvedHost(hostname: config.host, port: config.port ?? 22)
+        }
+        resolved.withLock { $0 = parsed }
+        return parsed
+    }
+
+    static func parseResolvedHost(_ text: String) -> ResolvedHost? {
+        var values: [String: String] = [:]
+        for line in text.split(whereSeparator: \.isNewline) {
+            guard let space = line.firstIndex(of: " ") else { continue }
+            let key = String(line[..<space]).lowercased()
+            if values[key] == nil { values[key] = String(line[line.index(after: space)...]) }
+        }
+        guard let host = values["hostname"], !host.isEmpty, let port = values["port"].flatMap({ Int($0) }) else { return nil }
+        // Lista plików rozdzielona spacjami, ścieżki już rozwinięte (absolutne; spacja w ścieżce zostaje, bo kolejny plik
+        // zaczyna się od „ /”) — nowe klucze ssh dopisuje do pierwszego.
+        let file = values["userknownhostsfile"]?.components(separatedBy: " /").first.flatMap { $0.hasPrefix("/") ? $0 : nil }
+        let alias = values["hostkeyalias"].flatMap { $0.isEmpty || $0 == "none" ? nil : $0 }
+        return ResolvedHost(hostname: host, port: port, hostKeyAlias: alias, knownHostsFile: file)
+    }
 
     /// Klucze nieznanego serwera (odczytane bez logowania) i ich odciski SHA256 do potwierdzenia.
     public struct HostKeyScan: Sendable, Equatable {

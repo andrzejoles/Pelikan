@@ -115,6 +115,75 @@ struct PreferencesStartupTests {
         if case .blocked = ws.modificationCheck(["delete from emp"], connectionID: def.id) {} else { Issue.record("readonly= nie zablokował zmiany") }
     }
 
+    @Test("WS1-23: link pelikan:// nie tworzy workseta (tylko otwiera istniejący); parametr startowy tworzy")
+    func linkDoesNotCreateWorkset() async throws {
+        let t = try TempDirectory()
+        let ws = Workspace(dataDirectory: t.url)
+        let link = StartupOptions.parse(url: URL(string: "pelikan://open?workset=Obcy")!, scheme: "pelikan")
+        #expect(link.fromLink && link.workset == "Obcy" && !StartupOptions.parse(["workset=Obcy"]).fromLink)
+        let messages = await ws.applyStartup(link)
+        #expect(ws.worksets.existingName("Obcy") == nil && messages.contains { $0.contains("Obcy") })
+        _ = await ws.applyStartup(StartupOptions.parse(["workset=Obcy"]))
+        #expect(ws.worksets.existingName("Obcy") == "Obcy")
+    }
+
+    @Test("WS1-06: import preferencji uruchamiających programy pyta; po imporcie menu narzędzi użytkownika aktualne")
+    func importRunningCodeAsks() async throws {
+        let t = try TempDirectory()
+        let source = Workspace()
+        var tool = UserTool(name: "Obcy program")
+        tool.program = "/bin/echo"
+        source.settings.userTools = [tool]
+        source.settings.agent.profiles[0].executable = "/tmp/nie-claude"
+        source.settings.agent.queryMaxRows = 50
+        source.settings.tabSize = 7
+        let file = t.url.appendingPathComponent("zespol.json")
+        try PreferenceSets.export(source.settings, sections: nil).write(to: file)
+        let values = try PreferenceSets.importValues(try Data(contentsOf: file), sections: nil)
+        let ws = Workspace()
+        #expect(PreferenceSets.changesRunningCode(values, current: ws.settings) == [L10n.tr("Narzędzia użytkownika"), L10n.tr("Agenci")])
+        // Same limity agenta i inne pola — bez pytania.
+        #expect(PreferenceSets.changesRunningCode(["agent": values["agent"]!, "tabSize": .int(3)], current: source.settings).isEmpty)
+        let ui = FakeUI()
+        ws.ui = ui
+        ui.answers = [1]
+        await #expect(throws: CommandError.self) { try await ws.invoke("prefs.import", CommandArguments(["file": .string(file.path)])) }
+        #expect(ui.asked.count == 1 && ws.settings.userTools.isEmpty && ws.settings.tabSize != 7)
+        ui.answers = [0]
+        try await ws.invoke("prefs.import", CommandArguments(["file": .string(file.path)]))
+        #expect(ws.settings.userTools == [tool] && ws.settings.tabSize == 7)
+        #expect(ws.registry.command(tool.commandID) != nil)
+        // Narzędzia z zestawu preferencji połączenia głównego — komendy po zmianie połączenia.
+        let def = try connection(ws, name: "Dev", user: "APP", db: "dev")
+        var other = UserTool(name: "Narzędzie połączenia")
+        other.program = "/bin/echo"
+        try ws.savePreferenceSet(PreferenceSet(name: "Dev", kind: .personalConnection, pattern: "Dev",
+                                               values: ["userTools": try JSONValue.encode([other])]))
+        ws.sessions.setMainConnection(def.id)
+        #expect(ws.registry.command(other.commandID) != nil && ws.registry.command(tool.commandID) == nil)
+    }
+
+    @Test("WS1-12: nieczytelne settings.json, history.json i zestawy zachowane jako .bad-…, komunikat, oryginał nienadpisany")
+    func damagedPreferenceFiles() async throws {
+        let t = try TempDirectory()
+        try t.file("settings.json", "{ uszkodzony")
+        try t.file("history.json", "[ uszkodzony")
+        try t.file("Preferences/sets.json", "[ uszkodzony")
+        let ws = Workspace(dataDirectory: t.url)
+        #expect(ws.loadProblems.count == 3)
+        ws.settings.tabSize = 9
+        ws.recordHistory("select 1 from dual")
+        try ws.savePreferenceSet(PreferenceSet(name: "Zespół", kind: .defaultGlobal, values: ["tabSize": .int(2)]))
+        for (dir, name) in [("", "settings.json"), ("", "history.json"), ("Preferences", "sets.json")] {
+            let names = try FileManager.default.contentsOfDirectory(atPath: t.url.appendingPathComponent(dir).path)
+            let bad = try #require(names.first { $0.hasPrefix(name + ".bad-") }, "\(name)")
+            #expect(try String(contentsOf: t.url.appendingPathComponent(dir).appendingPathComponent(bad), encoding: .utf8).contains("uszkodzony"))
+        }
+        // Nowe pliki zapisane obok kopii; następne uruchomienie je czyta bez komunikatów.
+        let again = Workspace(dataDirectory: t.url)
+        #expect(again.loadProblems.isEmpty && again.history.first?.text == "select 1 from dual" && again.preferenceSets.count == 1)
+    }
+
     @Test("Usługi macOS: formatowanie wg reguł z Preferencji, otwarcie tekstu w nowym SQL Window")
     func services() throws {
         let ws = Workspace()

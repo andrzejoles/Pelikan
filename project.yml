@@ -20,7 +20,11 @@ settings:
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
-    ENABLE_HARDENED_RUNTIME: NO
+    # Hardened Runtime (wszystkie cele): dyld ignoruje DYLD_* i inne procesy nie podłączą się do Pelikana (dostęp do
+    # haseł z Pęku kluczy). Instant Client (dlopen) — uprawnienie disable-library-validation w Pelikan.entitlements.
+    # Przy podpisie ad hoc („-”) Xcode pomija ENABLE_HARDENED_RUNTIME — stąd jawna opcja codesign (Debug, zrzuty, CI).
+    ENABLE_HARDENED_RUNTIME: YES
+    OTHER_CODE_SIGN_FLAGS: "$(inherited) --options=runtime"
     # Tryb Swift 6 = pełne sprawdzanie współbieżności. Nadchodzące cechy Swift 7 jak w pakiecie (Package.swift);
     # NonisolatedNonsendingByDefault — świadomie jeszcze nie (zmienia miejsce wykonania funkcji async).
     SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: YES
@@ -61,7 +65,7 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
         GENERATE_INFOPLIST_FILE: NO
-        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
     postBuildScripts:
       # Tłumaczenia nazw w menu Usługi (klucze z nazwą aplikacji po rozwinięciu Brand.xcconfig).
       - name: ServicesMenu.strings

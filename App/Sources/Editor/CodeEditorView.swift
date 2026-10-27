@@ -19,6 +19,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private lazy var completion = CompletionPopup(textView: textView)
     private var assistWork: DispatchWorkItem?
     private var pairGeneration = 0
+    /// Licznik zmian znaków w magazynie tekstu — wyniki analiz w tle przyjmowane tylko dla niezmienionego tekstu,
+    /// bez porównywania całych łańcuchów (`textView.string` kopiuje cały dokument).
+    private var textEdits = 0
+    /// Wersja tekstu dokumentu (`textRevision`) zgodna z widokiem — `syncFromModel` przy samej zmianie zaznaczenia
+    /// nie porównuje całego tekstu.
+    private var syncedRevision = -1
     private var pairRanges: [NSTextRange] = []
     /// Wystąpienia nazwy pod kursorem i polecenia transakcyjne (PD-EDIT-018, PD-PROG-015) — osobne kolory.
     private var occurrenceRanges: [NSTextRange] = []
@@ -209,7 +215,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func showColorMarks(_ marks: [ColorMark]) {
         guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
         for r in colorMarkRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r.range) }
-        let len = (textView.string as NSString).length
+        let len = textView.textLength
         colorMarkRanges = []
         for m in marks where m.range.upperBound <= len {
             guard let a = content.location(content.documentRange.location, offsetBy: m.range.lowerBound),
@@ -222,7 +228,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     /// Zaznaczenia z modelu → zaznaczenia widoku (pierwsze — główne).
     private func applyAdditionalSelections(_ extra: [Range<Int>]) {
-        let len = (textView.string as NSString).length
+        let len = textView.textLength
         let main = document.selectedRange
         let all = ([main] + extra).map { NSRange(location: min($0.lowerBound, len), length: max(0, min($0.upperBound, len) - min($0.lowerBound, len))) }
         let current = textView.selectedRanges.map(\.rangeValue)
@@ -296,6 +302,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                 self.ruler.needsDisplay = true
             }
         }
+        textView.lineStart = { [weak self] line in
+            guard let starts = self?.highlighter.lineStarts, line >= 0, line < starts.count else { return nil }
+            return starts[line]
+        }
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
             self.textView.executionLine = self.document.executionLine
@@ -362,6 +372,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func load(_ text: String) {
         updatingFromModel = true
         textView.string = text
+        syncedRevision = document.textRevision
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
         // Zaznaczenie z modelu (np. otwarcie obiektu na linii), a nie koniec wczytanego tekstu.
         let len = (text as NSString).length
@@ -399,7 +410,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         assistWork?.cancel()
         guard let ws = (NSApp.delegate as? AppDelegate)?.workspace, ws.settings.codeAssistantAutomatic else { return }
         let caret = textView.selectedRange().location
-        guard caret > 0, (textView.string as NSString).character(at: caret - 1) == 0x2E else { return }
+        guard caret > 0, caret <= textView.textLength, textView.textStorage?.mutableString.character(at: caret - 1) == 0x2E else { return }
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.textView.selectedRange().location == caret, !self.completion.isVisible else { return }
             ws.perform("edit.codeAssistant")
@@ -415,7 +426,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         pairGeneration += 1
         let generation = pairGeneration
         let sel = textView.selectedRange()
-        let text = textView.string
+        let text = textView.string, edits = textEdits
         let ws = (NSApp.delegate as? AppDelegate)?.workspace
         let occurrencesOn = ws?.settings.highlightOccurrences ?? true
         let transactionsOn = ws?.settings.highlightTransactions ?? true
@@ -426,7 +437,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let occurrences = occurrencesOn ? PairMatcher.occurrences(text, selection: selection) : []
             let transactions = transactionsOn ? PairMatcher.transactionStatements(text) : []
             await MainActor.run { [weak self] in
-                guard let self, self.pairGeneration == generation, self.textView.string == text else { return }
+                guard let self, self.pairGeneration == generation, self.textEdits == edits else { return }
                 self.pairRanges = self.show(pairs, replacing: self.pairRanges)
                 self.occurrenceRanges = self.show(occurrences, replacing: self.occurrenceRanges)
                 self.transactionRanges = self.show(transactions, replacing: self.transactionRanges)
@@ -514,11 +525,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             // Analiza w tle (pakiet 50 000 linii); wynik tylko dla niezmienionego tekstu.
-            let text = self.textView.string
+            let text = self.textView.string, edits = self.textEdits
             Task.detached(priority: .userInitiated) {
                 let r = CodeFolding.regions(text)
                 await MainActor.run { [weak self] in
-                    guard let self, self.textView.string == text else { return }
+                    guard let self, self.textEdits == edits else { return }
                     self.regions = r
                     self.applyFolds()
                     self.ruler.needsDisplay = true
@@ -538,11 +549,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            let text = self.textView.string, baseline = self.document.baselineText
+            let text = self.textView.string, baseline = self.document.baselineText, edits = self.textEdits
             Task.detached(priority: .utility) {
                 let status = TextDiff.lineStatus(baseline: baseline, current: text)
                 await MainActor.run { [weak self] in
-                    guard let self, self.textView.string == text else { return }
+                    guard let self, self.textEdits == edits else { return }
                     self.ruler.lineStatus = status
                     self.ruler.needsDisplay = true
                 }
@@ -602,11 +613,14 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let text = document.text
         let selection = document.selectedRange
         let error = document.errorRange
-        if text != textView.string {
+        // Sama zmiana zaznaczenia nie zmienia wersji tekstu — bez porównania całego dokumentu.
+        if document.textRevision != syncedRevision, text != textView.string {
             applyExternal(text)
             scheduleAnalysis()
+        } else {
+            syncedRevision = document.textRevision
         }
-        let len = (textView.string as NSString).length
+        let len = textView.textLength
         let current = textView.selectedRange()
         let wanted = NSRange(location: min(selection.lowerBound, len), length: max(0, min(selection.upperBound, len) - min(selection.lowerBound, len)))
         // Przy podziale edytora zaznaczenie z modelu stosuje tylko widok, w którym nie pisze się właśnie w drugim.
@@ -624,6 +638,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             // Zaznacz słowo z błędem (NF15: podkreślenie całego słowa).
             let word = textView.selectionRange(forProposedRange: r, granularity: .selectByWord)
             if word.length > 0 { textView.showFindIndicator(for: word) }
+            // Błąd zaznaczany raz: bez wyczyszczenia każda zmiana zaznaczenia (klik, strzałka) uruchamiałaby to
+            // śledzenie ponownie i kursor wracałby na błąd. Ponowne wykonanie albo kompilacja ustawia go od nowa.
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.document.errorRange == error else { return }
+                self.document.errorRange = nil
+            }
         }
     }
 
@@ -640,10 +660,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
         updatingFromModel = true
         defer { updatingFromModel = false }
-        if old.length == 0 || range.length == old.length && old.length > 200_000 {
-            load(text)
-            return
-        }
+        // Także wstawienie do pustego okna i pełna zamiana dużego tekstu idą przez shouldChangeText — jedna operacja
+        // cofania; `textView.string =` nie rejestrowało cofania, a na stosie zostawały zakresy starego tekstu.
+        let whole = range.length == old.length && old.length > 200_000
         // Model jest źródłem prawdy: zmiana z modelu trafia do widoku także w oknie chwilowo nieedytowalnym (wykonanie,
         // tylko do odczytu) — inaczej widok pokazywałby stary tekst, a ⌘S zapisał niewidoczny (R4-06).
         let editable = textView.isEditable
@@ -652,10 +671,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if textView.shouldChangeText(in: range, replacementString: replacement) {
             textView.textStorage?.replaceCharacters(in: range, with: replacement)
             textView.didChangeText()
+            syncedRevision = document.textRevision
         }
         if let storage = textView.textStorage {
-            highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
-                                  delta: (replacement as NSString).length - range.length, font: font)
+            if whole {
+                highlighter.highlightAll(storage, font: font)
+            } else {
+                highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
+                                      delta: (replacement as NSString).length - range.length, font: font)
+            }
         }
         ruler.needsDisplay = true
         scheduleRegions()
@@ -664,9 +688,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
 
     @objc private func storageDidProcessEditing(_ note: Notification) {
-        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters), !updatingFromModel else { return }
+        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters) else { return }
+        textEdits &+= 1
         let editedRange = storage.editedRange
         let delta = storage.changeInLength
+        // Obszary zwijania przesuwane od razu, tak jak klucze zwinięć w modelu (`Document.text`) — do przeliczenia
+        // w tle `applyFolds` dopasowuje przesunięte klucze do przesuniętych obszarów, bez rozwijania i zwijania.
+        if !regions.isEmpty {
+            regions = CodeFolding.shift(regions, edited: editedRange.location..<(editedRange.location + editedRange.length), delta: delta)
+        }
+        guard !updatingFromModel else { return }
         // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).
         DispatchQueue.main.async { [weak self] in
             guard let self, let storage = self.textView.textStorage else { return }
@@ -684,6 +715,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         guard !updatingFromModel else { return }
         updatingFromModel = true
         document.text = textView.string
+        syncedRevision = document.textRevision
         document.errorRange = nil
         updatingFromModel = false
         if completion.isVisible { completion.textChanged() } else { scheduleAutomaticAssist() }
@@ -712,8 +744,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self else { return }
             let r = self.textView.selectedRange()
             let line = self.highlighter.line(containing: r.location)
-            let col = r.location - (line < self.highlighter.lineStarts.count ? self.highlighter.lineStarts[line] : 0)
-            self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(r.length)]" : "\(line + 1):\(col + 1)")
+            let start = min(r.location, line < self.highlighter.lineStarts.count ? self.highlighter.lineStarts[line] : 0)
+            // Kolumna i długość w znakach (jak kolumny Oracle), nie w jednostkach UTF-16 — emoji liczone raz.
+            let ns: NSString = self.textView.textStorage?.mutableString ?? ""
+            let col = TextEditing.characterCount(ns, range: NSRange(location: start, length: r.location - start))
+            let length = TextEditing.characterCount(ns, range: r)
+            self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(length)]" : "\(line + 1):\(col + 1)")
             self.ruler.needsDisplay = true
             self.updatePairs()
             self.updateDiagnosticTip()
@@ -759,6 +795,9 @@ final class CodeTextView: NSTextView {
     var highlightCurrentLine = true
     /// Linia debugera (od 1) — wyróżniona tłem (UG 5.10).
     var executionLine: Int? { didSet { if executionLine != oldValue { needsDisplay = true } } }
+    /// Początek linii (od 0) z tablicy podświetlania — linia debugera bez przechodzenia tekstu od początku przy
+    /// każdym rysowaniu; nil — za końcem tekstu.
+    var lineStart: ((Int) -> Int?)?
     static let executionLineColor = NSColor.systemGreen.withAlphaComponent(0.22)
     /// Początki zwiniętych struktur — za ich linią rysowany jest znacznik „⋯”.
     var foldedLines: [Int] = [] { didSet { needsDisplay = true } }
@@ -774,14 +813,19 @@ final class CodeTextView: NSTextView {
             NSRect(x: x, y: rect.minY, width: 1, height: rect.height).fill()
         }
         if let line = executionLine, let tlm = textLayoutManager, let content = tlm.textContentManager {
-            let ns = string as NSString
-            var offset = 0, current = 1
-            while current < line, offset < ns.length {
-                let r = ns.lineRange(for: NSRange(location: offset, length: 0))
-                offset = r.location + r.length
-                current += 1
+            let length = textLength
+            var offset = 0
+            if let lineStart {
+                offset = lineStart(line - 1) ?? length
+            } else if let ns = textStorage?.mutableString {
+                var current = 1
+                while current < line, offset < ns.length {
+                    let r = ns.lineRange(for: NSRange(location: offset, length: 0))
+                    offset = r.location + r.length
+                    current += 1
+                }
             }
-            if let loc = content.location(content.documentRange.location, offsetBy: min(offset, ns.length)),
+            if let loc = content.location(content.documentRange.location, offsetBy: min(offset, length)),
                let f = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame {
                 // Na wierzchu podświetlenia bieżącej linii (rysowanego niżej).
                 let rect = NSRect(x: 0, y: f.minY + textContainerInset.height, width: bounds.width, height: f.height)
@@ -803,7 +847,7 @@ final class CodeTextView: NSTextView {
               let loc = content.location(content.documentRange.location, offsetBy: selectedRange().location) else { return }
         let fragment = tlm.textLayoutFragment(for: loc)
         var frame = fragment?.layoutFragmentFrame ?? .zero
-        if frame == .zero || selectedRange().location == (string as NSString).length && string.hasSuffix("\n") {
+        if frame == .zero || selectedRange().location == textLength && endsWithNewline {
             let h = (font?.ascender ?? 12) - (font?.descender ?? -3) + (font?.leading ?? 0)
             frame = NSRect(x: 0, y: fragment.map(trailingEmptyLineY) ?? 0, width: bounds.width, height: h)
         }
@@ -946,7 +990,7 @@ final class CodeTextView: NSTextView {
     /// Znaki specjalne (UG 23.12 „Show special characters”): kropka dla spacji, strzałka dla tabulacji, ¶ na końcu linii.
     private func drawSpecialCharacters(in dirtyRect: NSRect) {
         guard showSpecialCharacters, let tlm = textLayoutManager, let content = tlm.textContentManager else { return }
-        let ns = string as NSString
+        let ns: NSString = textStorage?.mutableString ?? ""
         let attrs: [NSAttributedString.Key: Any] = [.font: font ?? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular),
                                                     .foregroundColor: NSColor.tertiaryLabelColor]
         let start = tlm.textViewportLayoutController.viewportRange?.location ?? tlm.documentRange.location
@@ -1366,7 +1410,7 @@ final class LineNumberRulerView: NSView {
             return true
         }
         // Pusta ostatnia linia po końcowym znaku nowej linii nie ma własnego fragmentu.
-        if tv.string.hasSuffix("\n"), lastFrame.maxY < visible.maxY {
+        if tv.endsWithNewline, lastFrame.maxY < visible.maxY {
             let y = lastFragment.map(trailingEmptyLineY) ?? lastFrame.maxY
             label(highlighter.lineStarts.count - 1, y: y + inset - visible.minY, height: lineHeight)
         }
@@ -1382,4 +1426,13 @@ private func trailingEmptyLineY(_ fragment: NSTextLayoutFragment) -> CGFloat {
         return frame.minY + extra.typographicBounds.minY
     }
     return frame.maxY
+}
+
+fileprivate extension NSTextView {
+    /// Długość i ostatni znak z magazynu tekstu — `string` kopiuje cały dokument przy każdym odczycie.
+    var textLength: Int { textStorage?.length ?? 0 }
+    var endsWithNewline: Bool {
+        guard let s = textStorage, s.length > 0 else { return false }
+        return s.mutableString.character(at: s.length - 1) == 0x0A
+    }
 }

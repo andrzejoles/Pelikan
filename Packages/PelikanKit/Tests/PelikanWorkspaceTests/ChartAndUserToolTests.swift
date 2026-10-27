@@ -144,4 +144,22 @@ struct UserToolTests {
         ws.updateUserTools([sql])
         #expect(ws.registry.command(echo.commandID) == nil)
     }
+
+    @Test("WS1-07: narzędzie sesji otwiera okno na połączeniu aktywnego okna, nie na głównym")
+    func sessionToolUsesActiveWindowConnection() async throws {
+        let ws = Workspace()
+        let main = ConnectionDefinition(name: "dev_main", target: ConnectionTarget(user: "a", connectString: "db1"))
+        let other = ConnectionDefinition(name: "dev_other", target: ConnectionTarget(user: "b", connectString: "db2"))
+        try ws.connections.upsert(main)
+        try ws.connections.upsert(other)
+        ws.sessions.setMainConnection(main.id)
+        var tool = UserTool(name: "Sesje", kind: .session)
+        tool.sql = "select '#connection' from dual"
+        ws.updateUserTools([tool])
+        let source = ws.newDocument(.sql)
+        source.connectionID = other.id
+        try await ws.invoke(tool.commandID)
+        let opened = try #require(ws.documents.last)
+        #expect(opened.id != source.id && opened.connectionID == other.id && opened.text.contains(other.agentAlias))
+    }
 }

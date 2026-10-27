@@ -10,12 +10,13 @@ extension SQLPlusEngine {
             guard let o = args.first else { throw SQLPlusError(L10n.tr("Podaj nazwę obiektu")) }
             return o
         }
-        func invoke(_ id: CommandID, _ extra: [String: JSONValue] = [:]) async throws {
+        @discardableResult
+        func invoke(_ id: CommandID, _ extra: [String: JSONValue] = [:]) async throws -> CommandResult {
             var a: [String: JSONValue] = ["object": .string(try object())]
             // Obiekt z połączenia tego okna poleceń, nie głównego (D185).
             if let windowConnection { a["connection"] = .string(windowConnection.uuidString) }
             for (k, v) in extra { a[k] = v }
-            _ = try await workspace.invoke(id, CommandArguments(a))
+            return try await workspace.invoke(id, CommandArguments(a))
         }
         switch cmd {
         case "EDIT":
@@ -37,7 +38,7 @@ extension SQLPlusEngine {
         case "QUERYDATA": try await invoke("ob.queryData")
         case "PROPERTIES": try await invoke("ob.properties")
         case "RECOMPILE":
-            let r = try await workspace.invoke("ob.recompile", CommandArguments(["object": .string(try object())]))
+            let r = try await invoke("ob.recompile")
             emit(r.message ?? r.value?.description ?? L10n.tr("Skompilowano"))
         case "TEST": try await invoke("ob.test")
         case "VIEW": try await invoke("ob.ddl")
@@ -65,8 +66,11 @@ extension SQLPlusEngine {
         case "BEAUTIFY":
             guard let file = args.first else { throw SQLPlusError(L10n.tr("Podaj plik")) }
             let url = resolve(file, baseDirectory: nil)
-            let text = try String(contentsOf: url, encoding: .utf8)
-            try Beautifier.format(text, options: workspace.settings.beautifier).write(to: url, atomically: true, encoding: .utf8)
+            // Kodowanie, BOM i zakończenia linii pliku zostają (jak FORMAT FILE).
+            guard let (text, format) = readScript(url) else {
+                throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(url.lastPathComponent)”."), osError: true)
+            }
+            try writeScript(Beautifier.format(text, options: workspace.settings.beautifier), format: format, to: url)
             emit(L10n.tr("Sformatowano: \(url.lastPathComponent)"))
         case "ZIP":
             guard args.count >= 2 else { throw SQLPlusError(L10n.tr("ZIP archiwum.zip plik…")) }

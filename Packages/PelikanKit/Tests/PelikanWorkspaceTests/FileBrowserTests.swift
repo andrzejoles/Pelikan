@@ -191,6 +191,40 @@ struct GitRepositoryTests {
         #expect(TextFileCodec.decode(try #require(try repo.headContent(of: l))).text == "-- święty\n")
     }
 
+    @Test("Odczyty w tle nie wykonują poleceń z .git/config repozytorium (core.fsmonitor, filtr clean, log.showSignature)")
+    func untrustedConfigNotExecuted() throws {
+        let t = try TempDirectory()
+        let dir = t.url
+        for args in [["init", "-q", "-b", "main"], ["config", "user.name", "Test"], ["config", "user.email", "test@example.invalid"],
+                     ["config", "commit.gpgsign", "false"]] {
+            try GitRepository.run(args, in: dir)
+        }
+        let f = try t.file("a.sql", "select 1 from dual;\n")
+        try t.file(".gitattributes", "*.sql filter=obcy\n")
+        let repo = try #require(GitRepository.discover(for: f))
+        try repo.add([f, dir.appendingPathComponent(".gitattributes")])
+        _ = try repo.commit(message: "start")
+        // Repozytorium „z archiwum”: polecenia w konfiguracji lokalnej.
+        let fsmonitor = dir.appendingPathComponent("fsmonitor-uruchomiony"), clean = dir.appendingPathComponent("clean-uruchomiony")
+        let gpg = dir.appendingPathComponent("gpg-uruchomiony")
+        try GitRepository.run(["config", "core.fsmonitor", "touch '\(fsmonitor.path)'; true"], in: dir)
+        try GitRepository.run(["config", "filter.obcy.clean", "touch '\(clean.path)'; cat"], in: dir)
+        try GitRepository.run(["config", "filter.obcy.required", "true"], in: dir)
+        try GitRepository.run(["config", "log.showSignature", "true"], in: dir)
+        try GitRepository.run(["config", "gpg.program", "touch '\(gpg.path)'; false"], in: dir)
+        // Zmieniony czas modyfikacji: git status liczy treść pliku (filtrem clean).
+        try FileManager.default.setAttributes([.modificationDate: Date().addingTimeInterval(120)], ofItemAtPath: f.path)
+        #expect(try repo.status().state(of: f) == .unmodified)
+        _ = try repo.log()
+        _ = try repo.headContent(of: f)
+        _ = GitRepository.discover(for: f)
+        for marker in [fsmonitor, clean, gpg] { #expect(!FileManager.default.fileExists(atPath: marker.path), "\(marker.lastPathComponent)") }
+        // Kontrola: zwykłe wywołanie gita (jak w terminalu) wykonuje te polecenia.
+        _ = try? GitRepository.run(["status", "--porcelain=v2", "-z"], in: dir)
+        #expect(FileManager.default.fileExists(atPath: fsmonitor.path) && FileManager.default.fileExists(atPath: clean.path))
+        #expect(GitRepository.untrustedFilterConfig(in: dir).contains { $0 == ("filter.obcy.clean", "") })
+    }
+
     @Test("Stan Git plików projektu: gałąź, zmieniony, nieśledzony, bez zmian; projekt poza repozytorium — nil")
     @MainActor func projectStatus() throws {
         let t = try TempDirectory()

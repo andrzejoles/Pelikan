@@ -101,7 +101,9 @@ Las siguientes funciones se comportan de forma distinta que en el programa de re
 comprobado en un entorno real:
 
 - El **controlador Thin** no admite TCPS ni carteras, autenticación externa, cambio de una contraseña caducada ni
-  interrupción de la ejecución.
+  interrupción de la ejecución. Lee CLOB y DBMS_OUTPUT hasta 65 535 caracteres (los más largos, con marca de
+  truncado), y una consulta con una columna INTERVAL YEAR TO MONTH o BFILE cierra la aplicación (error de la
+  biblioteca OracleNIO): para esos datos usa el controlador Instant Client.
 - **Kerberos** en macOS: cuando `sqlnet.ora` activa KERBEROS5, la conexión termina con un error claro (el adaptador
   de Instant Client entra en conflicto con el Kerberos del sistema dentro de la aplicación); en Linux el inicio de
   sesión con tique funciona. **Microsoft Entra ID** y las **conexiones TCPS** están implementados según la documentación
@@ -113,8 +115,7 @@ comprobado en un entorno real:
 - **Command Window**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
 - El **Event Monitor** no lee el DBMS_OUTPUT de otras sesiones (Oracle no lo ofrece).
 - Las **herramientas de la columna izquierda** son pestañas de un único panel (Conexiones, Objetos, Ventanas, Templates,
-  Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Las tareas To-Do, el proyecto, el historial del
-  portapapeles y otras herramientas se abren en ventanas aparte. Los documentos son pestañas de una única ventana
+  Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Los documentos son pestañas de una única ventana
   principal, no pestañas nativas de macOS.
 - **Quick Look** para archivos SQL (vista previa en el Finder) puede no funcionar: macOS puede rechazar una extensión
   firmada con un certificado propio.

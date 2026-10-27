@@ -374,8 +374,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         var out: [ResultSetDescriptor] = []
         while true {
             var child: OpaquePointer?
+            // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
+            // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
-            dpiStmt_addRef(child)
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
@@ -553,7 +554,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             try check(dpiRowid_getStringValue(v.asRowid, &p, &len))
             return .rowid(String(decoding: UnsafeRawBufferPointer(start: p, count: Int(len)), as: UTF8.self))
         case DPI_NATIVE_TYPE_LOB:
-            return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit))
+            guard oracle == .bfile else { return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit)) }
+            // BFILE do brakującego pliku/katalogu (ORA-22288, ORA-22285) — błąd w komórce, pozostałe wiersze dalej.
+            do { return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit)) }
+            catch { return .lob(LOBValue(kind: .bfile, length: 0, truncated: false, readError: LOBValue.errorText(error))) }
         case DPI_NATIVE_TYPE_JSON:
             var node: UnsafeMutablePointer<dpiJsonNode>?
             try check(dpiJson_getValue(v.asJson, UInt32(DPI_JSON_OPT_NUMBER_AS_STRING), &node))
@@ -643,8 +647,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             return quote(s)
         case DPI_NATIVE_TYPE_TIMESTAMP:
             let t = v.pointee.asTimestamp
-            let ts = OracleTimestamp(year: t.year, month: t.month, day: t.day, hour: t.hour, minute: t.minute, second: t.second, fsecond: t.fsecond)
-            return quote(ts.formatted("YYYY-MM-DD\"T\"HH24:MI:SS"))
+            let ts = OracleTimestamp(year: t.year, month: t.month, day: t.day, hour: t.hour, minute: t.minute, second: t.second, fsecond: t.fsecond,
+                                     tzHourOffset: t.tzHourOffset, tzMinuteOffset: t.tzMinuteOffset)
+            // ISO 8601 jak JSON_SERIALIZE: ułamek tylko niezerowy (6 cyfr, 9 przy nanosekundach), przesunięcie strefy
+            // niezerowe (ODPI-C podaje TIMESTAMP WITH TIME ZONE jako TIMESTAMP z przesunięciem).
+            var mask = "YYYY-MM-DD\"T\"HH24:MI:SS"
+            if t.fsecond != 0 { mask += t.fsecond % 1000 == 0 ? ".FF6" : ".FF9" }
+            if t.tzHourOffset != 0 || t.tzMinuteOffset != 0 { mask += "TZH:TZM" }
+            return quote(ts.formatted(mask))
         case DPI_NATIVE_TYPE_JSON_OBJECT:
             let o = v.pointee.asJsonObject
             var parts: [String] = []

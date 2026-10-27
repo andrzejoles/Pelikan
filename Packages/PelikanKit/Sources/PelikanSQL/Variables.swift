@@ -227,7 +227,10 @@ public enum Variables {
                 addBind(name, value(o.name) ?? .null)
             case .jasperClause:
                 handledClauses.insert(o.start)
-                if let c = o.clause { out += expand(c, value: value, newBind: newBind) }
+                // Nieznana funkcja (literówka) zostaje w tekście — Oracle zgłosi błąd składni zamiast warunku `0 = 0`,
+                // który w DELETE/UPDATE objąłby wszystkie wiersze (JasperReports też zgłasza błąd).
+                if let c = o.clause, let e = expand(c, value: value, newBind: newBind) { out += e }
+                else { out += String(decoding: utf16[o.start..<cursor], as: UTF16.self) }
             case .bind:
                 break
             }
@@ -245,7 +248,8 @@ public enum Variables {
     }
 
     /// Rozwinięcie `$X{…}` jak w JasperReports: brak wartości (NULL / pusta kolekcja) → warunek zawsze prawdziwy `0 = 0`.
-    static func expand(_ c: JasperClause, value: (String) -> VariableValue?, newBind: (VariableValue) -> String) -> String {
+    /// Nieznana funkcja → nil (wystąpienie zostaje bez zmian).
+    static func expand(_ c: JasperClause, value: (String) -> VariableValue?, newBind: (VariableValue) -> String) -> String? {
         let col = c.column
         let p1 = c.parameters.first.flatMap(value) ?? .null
         let p2 = c.parameters.count > 1 ? (value(c.parameters[1]) ?? .null) : .null
@@ -284,7 +288,7 @@ public enum Variables {
             case (false, false): return "\(col) \(lo) \(newBind(p1)) AND \(col) \(hi) \(newBind(p2))"
             }
         default:
-            return "0 = 0"
+            return nil
         }
     }
 }

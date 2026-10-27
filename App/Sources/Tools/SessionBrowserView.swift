@@ -8,6 +8,8 @@ import SwiftUI
 /// zabijanie i akcje na połączeniu okna (ustalonym przy otwarciu) — SID/SERIAL# zawsze z tej samej bazy.
 struct SessionBrowserView: View {
     let workspace: Workspace
+    /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
+    @Environment(\.toolLifetime) private var lifetime
     @State private var connection: UUID?
     @State private var filter = ""
     @State private var rows: [SessionRow] = []
@@ -74,7 +76,7 @@ struct SessionBrowserView: View {
             guard autoRefresh else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
-                await reload()
+                if lifetime?.isVisible ?? true { await reload() }
             }
         }
         .onChange(of: filter) { Task { await reload() } }

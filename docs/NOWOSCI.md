@@ -2,6 +2,41 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.2.4 — poprawki z przeglądu kodu
+
+- **Bezpieczeństwo** — aplikacja jest podpisana z Hardened Runtime. Plik eksportu połączeń z hasłami od początku ma
+  prawa 0600; definicje połączeń są chronione razem z hasłami (zmieniony host w pliku odrzuca hasła), a nieudany import
+  niczego nie zostawia w Pęku kluczy. Import preferencji pyta, zanim zmieni ustawienia uruchamiające programy (narzędzia
+  użytkownika, agenci, edytor zewnętrzny, Instant Client…). Przeglądarka plików nie wykonuje poleceń z konfiguracji gita
+  obcego repozytorium. Uszkodzony plik ustawień zostaje zachowany jako kopia `.bad-…` zamiast nadpisania.
+- **Połączenia i sesje** — w trybach *Dwie sesje* i *Jedna sesja* CONNECT i DISCONNECT w Oknie poleceń nie zamykają już
+  sesji głównej (wcześniej wycofywały niezatwierdzone zmiany innych okien). Rozłączenie i zmiana połączenia czekają, aż
+  okno skończy wykonywać polecenie. Debuger nie zawiesza się w trybach *Dwie sesje* i *Jedna sesja*, a blok z błędem
+  kompilacji kończy debugowanie po kilku sekundach. Preferencja „przypinaj nowe okna do połączenia” zaczęła działać.
+  Znajdź obiekty, Kompiluj niepoprawne, Test Manager i Test Explorer pokazują swoje połączenie z możliwością wyboru
+  i otwierają obiekty na nim (wcześniej mogły otworzyć obiekt o tej samej nazwie z innej bazy).
+- **Edytory i słownik** — edytor tabeli działa na bazach 19c i starszych (wcześniej ORA-00904), edytor widoku czyta
+  pełne zapytanie także ponad 4000 znaków. Wyzwalacze i indeksy innego schematu niż tabela są zmieniane w schemacie
+  właściciela. Linia błędu kompilacji jest właściwa także przy `CREATE OR REPLACE` w osobnej linii, a kolumna na pasku
+  stanu liczy znaki jak Oracle. Drzewo przeglądarki zachowuje rozwinięcie i zaznaczenie po odświeżeniu; prywatnego
+  łącza innego schematu nie da się usunąć ani przetestować (trafiało we własne łącze o tej nazwie). `@plik`, START, GET
+  i FORMAT FILE w Oknie poleceń czytają pliki w Windows-1250 i z BOM jak edytor.
+- **Narzędzia danych** — import, przeniesienie danych i generator po błędzie lub przerwaniu wycofują niezatwierdzone
+  wiersze i przywracają wyzwalacze i klucze. Nazwy tabel i kolumn z małymi literami są zachowane. TIMESTAMP WITH LOCAL
+  TIME ZONE przenoszony bez przesunięcia strefy. Porównanie rekordów i wyników oraz „Kolumna do plików” biorą
+  zaznaczone wiersze także w posortowanej lub przefiltrowanej siatce. `$X{…}` z nieznaną funkcją jest błędem zamiast
+  warunku zawsze prawdziwego.
+- **Agent AI** — narzędzia edytora agenta nie sięgają do okien połączeń ukrytych przed agentem, a `get_editor` zakrywa
+  hasła. Maskowanie kolumn odrzuca kolejne obejścia (`*` w argumencie funkcji, DBMS_XMLGEN, XMLQUERY, CURSOR). Bardzo
+  duży wynik narzędzia jest przycinany z jawnym znacznikiem, a limit „Największy wynik” wynosi najwyżej 1,5 MB.
+- **Interfejs** — zamknięcie okna głównego kończy aplikację (z pytaniami o zapis i transakcje); kliknięcie ikony
+  w Docku przywraca okno. Komendy panelu agenta są na wstążce (**Narzędzia › Agent AI**) i w wyszukiwarce czynności.
+  Czynności na komórkach notatnika, elementach projektu, snippetach, makrach, w panelu debugera i na kanwie diagramu
+  trafiają do dziennika komend i makr. Esc w trakcie przeciągania karty narzędzia nie odłącza go.
+- **Sterownik thin** — tekst CLOB i DBMS_OUTPUT ponad 65 535 znaków jest obcinany ze znacznikiem zamiast kończyć
+  aplikację; obsługa typu VECTOR. Znane ograniczenie: zapytanie zwracające kolumnę INTERVAL YEAR TO MONTH albo BFILE
+  kończy aplikację w sterowniku thin (błąd biblioteki OracleNIO) — do takich danych używaj Instant Client.
+
 ## 1.2.3 — łącza bazy danych w przeglądarce
 
 - **Łącza bazy danych** — przeglądarka czyta łącza z widoków `ALL_DB_LINKS`/`DBA_DB_LINKS`. W trybie *Wszyscy

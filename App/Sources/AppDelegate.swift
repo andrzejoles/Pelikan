@@ -173,7 +173,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let startup = StartupOptions.parse(Array(ProcessInfo.processInfo.arguments.dropFirst()))
         // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10). Pominięty (`noloaddesktop`, `workset=…`)
         // zostaje w zapisanym worksecie — autozapis dopisuje jego okna zamiast je nadpisać (R3-01).
-        var problems = [workspace.connections.loadProblem].compactMap(\.self)
+        var problems = [workspace.connections.loadProblem].compactMap(\.self) + workspace.loadProblems
         if workspace.settings.worksetAutosave {
             do {
                 if let saved = try workspace.worksets.load(workspace.worksets.current) {
@@ -189,7 +189,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         launchURLs = nil
         if !pending.isEmpty { application(NSApp, open: pending) }
         if workspace.settings.autosaveLayout, let layout = workspace.worksets.loadLayout() { window.apply(layout) }
-        // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
+        // Pierwsze okno SQL jak we wzorcu po zalogowaniu.
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
@@ -327,6 +327,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
+    /// Kliknięcie ikony w Docku bez widocznych okien (okno główne zminimalizowane albo schowane) przywraca okno główne.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { mainWindow?.window?.makeKeyAndOrderFront(nil) }
+        return true
+    }
+
     /// Procesy ssh tuneli i połączenia główne celów Pro*C kończą się razem z aplikacją.
     func applicationWillTerminate(_ notification: Notification) {
         Log.app.info("Zamknięcie aplikacji")
@@ -401,7 +407,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showFindObjects(_ criteria: DatabaseSearchCriteria) {
-        ToolWindowController.show(key: "findObjects", title: L10n.tr("Znajdź obiekty bazy"), size: NSSize(width: 760, height: 520)) {
+        // Kryteria z argumentów komendy zastępują otwarte narzędzie; bez nich — tylko przywołanie (z wynikami).
+        ToolWindowController.show(key: "findObjects", for: criteria == DatabaseSearchCriteria() ? nil : criteria,
+                                  title: L10n.tr("Znajdź obiekty bazy"), size: NSSize(width: 760, height: 520)) {
             FindObjectsView(workspace: workspace, criteria: criteria)
         }
     }
@@ -838,14 +846,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if !NSApp.isActive { NSApp.requestUserAttention(.informationalRequest) }
     }
 
+    // QBE i filtr kolumn działają na karcie wyniku, z której je otwarto: dla innej karty — nowa zawartość.
     func showQueryByExample(_ tab: ResultTab) {
-        ToolWindowController.show(key: "qbe", title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
+        ToolWindowController.show(key: "qbe", for: tab.id, title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
             QueryByExampleView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "qbe") }
         }
     }
 
     func showColumnFilter(_ tab: ResultTab) {
-        ToolWindowController.show(key: "columnFilter", title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
+        ToolWindowController.show(key: "columnFilter", for: tab.id, title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
             ColumnFilterView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "columnFilter") }
         }
     }
@@ -1030,10 +1039,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func showLogon() {
         guard let window = mainWindow?.window else { return }
         var sheet: NSWindow?
+        let previous = window.firstResponder
         let view = LogonView(workspace: workspace) { [weak self] in
             if let sheet { window.endSheet(sheet) }
             sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
-            self?.mainWindow?.documentArea.focusActiveDocument()
+            self?.mainWindow?.restoreFocus(after: previous)
         }
         let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
         sheet = w
@@ -1054,6 +1064,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                                   legend: Bool) async -> [String: VariableValue]? {
         guard let window = mainWindow?.window else { return nil }
         let model = VariablesModel(requests: requests, workspace: workspace, document: document)
+        let previous = window.firstResponder
         return await withCheckedContinuation { cont in
             var sheet: NSWindow?
             var finished = false
@@ -1062,7 +1073,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 finished = true
                 if let sheet { window.endSheet(sheet) }
                 sheet = nil  // zrywa cykl okno → widok → domknięcie → okno
-                self.mainWindow?.documentArea.focusActiveDocument()
+                self.mainWindow?.restoreFocus(after: previous)
                 cont.resume(returning: values)
             }
             let w = NSWindow(contentViewController: NSHostingController(rootView: view.interfaceFont()))
@@ -1081,6 +1092,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         pb.setString(text, forType: .string)
         if let html { pb.setString(html, forType: .html) }
         workspace.recordClipboard(text)
+    }
+
+    /// Edytor komórki siatki z fokusem kończy edycję (wartość do modelu przez `controlTextDidEndEditing`); fokus
+    /// zostaje w tabeli. Przyciski i skróty komend nie przejmują fokusu, więc bez tego wpisana wartość by przepadła.
+    func commitPendingEdits() {
+        for window in [NSApp.keyWindow, NSApp.mainWindow].compactMap({ $0 }) {
+            guard let editor = window.firstResponder as? NSTextView, editor.isFieldEditor else { continue }
+            var view = editor.delegate as? NSView
+            while let v = view, !(v is GridTableView) { view = v.superview }
+            if let table = view { window.makeFirstResponder(table) }
+        }
     }
 
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
@@ -1113,8 +1135,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         alert.addButton(withTitle: L10n.tr("Anuluj"))
         alert.window.initialFirstResponder = field
         guard let window = mainWindow?.window else { return alert.runModal() == .alertFirstButtonReturn ? field.stringValue : nil }
+        let previous = window.firstResponder
         let r = await alert.beginSheetModal(for: window)
-        mainWindow?.documentArea.focusActiveDocument()
+        mainWindow?.restoreFocus(after: previous)
         return r == .alertFirstButtonReturn ? field.stringValue : nil
     }
 
@@ -1243,9 +1266,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         guard let script = uiScriptURL else { return false }
         let line = "\(ISO8601DateFormatter().string(from: Date())) pominięto okno dialogowe: \(what)\n"
         if let h = FileHandle(forWritingAtPath: script.path + ".log") {
-            h.seekToEndOfFile()
-            h.write(Data(line.utf8))
-            try? h.close()
+            defer { try? h.close() }
+            _ = try? h.seekToEnd()
+            try? h.write(contentsOf: Data(line.utf8))
         }
         return true
     }
@@ -1256,7 +1279,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let logURL = url.appendingPathExtension("log")
         func log(_ s: String) {
             let line = Data((ISO8601DateFormatter().string(from: Date()) + " " + s + "\n").utf8)
-            if let h = try? FileHandle(forWritingTo: logURL) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: logURL) }
+            if let h = try? FileHandle(forWritingTo: logURL) {
+                defer { try? h.close() }
+                _ = try? h.seekToEnd()
+                try? h.write(contentsOf: line)
+            } else {
+                try? line.write(to: logURL)
+            }
         }
         log("start: kroki \(steps.count), okna \(workspace.documents.count)")
         Task { @MainActor in

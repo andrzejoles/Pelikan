@@ -11,7 +11,7 @@ enum ProgramUnitCommands {
                                           CommandParameter("values", .object, L10n.tr("Wartości zmiennych szablonu (nazwa → tekst); brakujące — domyślne")),
                                           CommandParameter("text", .string, L10n.tr("Gotowy tekst jednostki zamiast szablonu")),
                                       ],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Dodaje na końcu okna programu nową jednostkę (z szablonu albo z tekstu) jako kolejną kartę."),
                                       feature: "PD-PROG-001"),
                     validate: { programDocument($0) != nil }) { ctx in
@@ -47,7 +47,7 @@ enum ProgramUnitCommands {
                                       parameters: [
                                           CommandParameter("unit", .string, L10n.tr("Jednostka: nazwa albo „nazwa body” (domyślnie jednostka pod kursorem)")),
                                       ],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Usuwa jednostkę (kartę) z tekstu okna programu razem z kończącym ukośnikiem; obiekt w bazie zostaje."),
                                       feature: "PD-PROG-001"),
                     validate: { ws in programDocument(ws) != nil }) { ctx in
@@ -86,7 +86,7 @@ enum ProgramUnitCommands {
                                           CommandParameter("source", .string, L10n.tr("Skąd: baseline — stan z otwarcia lub zapisu (domyślnie), database — źródło z bazy"),
                                                            allowed: ["baseline", "database"]),
                                       ],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Odrzuca zmiany okna: przywraca tekst z chwili otwarcia, wczytania z bazy albo zapisu (albo ponownie wczytuje źródło jednostek z bazy)."),
                                       feature: "PD-PROG-009"),
                     validate: { ws in BuiltinCommands.editable(ws).map { $0.isModified && !$0.isReadOnly } ?? false }) { ctx in

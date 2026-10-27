@@ -104,6 +104,8 @@ public final class DebuggerEngine {
     @ObservationIgnored var target: (any DatabaseSession)?
     @ObservationIgnored var debug: (any DatabaseSession)?
     @ObservationIgnored var execution: Task<ExecutionResult, any Error>?
+    /// Wykonanie bloku w sesji okna trwa (flaga ustawiana po jego zakończeniu — odczyt bez czekania na wynik).
+    @ObservationIgnored var executionRunning = false
     @ObservationIgnored var bindsUsed: [BindVariable] = []
     @ObservationIgnored var hitCounts: [UUID: Int] = [:]
     @ObservationIgnored var bpNumbers: [Int: UUID] = [:]
@@ -118,6 +120,14 @@ public final class DebuggerEngine {
     nonisolated static func trace(_ m: @autoclosure () -> LogMessage) {
         Log.debugger.debug(m())
     }
+
+    /// Limit czasu oczekiwania sesji nadzorującej na zdarzenie (DBMS_DEBUG.SET_TIMEOUT, sekundy; domyślnie Oracle 3600 s).
+    /// Po jego upływie SYNCHRONIZE/CONTINUE zwraca error_timeout, a debuger sprawdza, czy blok w sesji okna jeszcze się
+    /// wykonuje. Program zatrzymany w debugerze czeka dalej (sprawdzone na bazie testowej) — limit dotyczy tylko sesji nadzorującej.
+    nonisolated static let eventTimeout = 5
+    /// DBMS_DEBUG.error_timeout.
+    nonisolated static let errorTimeout = 31
+    nonisolated static let infoFlags = "dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo"
 
     init(workspace: Workspace, document: Document) {
         self.workspace = workspace
@@ -177,16 +187,26 @@ public final class DebuggerEngine {
                 throw CommandError.notAvailable(L10n.tr("DBMS_DEBUG nie zwrócił identyfikatora sesji"))
             }
             Self.trace("initialize -> \(id, privacy: .hash)")
-            _ = try await debug.execute("begin dbms_debug.attach_session(:id); end;", binds: [BindVariable(name: "id", value: .text(id))])
+            // Limit czasu oczekiwania na zdarzenie: blok, który nie wejdzie do interpretera (błąd kompilacji bloku ORA-06550,
+            // brak uprawnień), nie wysyła żadnego zdarzenia — bez limitu SYNCHRONIZE czekałby godzinę (WS2-09).
+            _ = try await debug.execute("begin dbms_debug.attach_session(:id); :t := dbms_debug.set_timeout(:s); end;",
+                                        binds: [BindVariable(name: "id", value: .text(id)), BindVariable(name: "t", type: .number, direction: .output),
+                                                BindVariable(name: "s", type: .number, value: .number(String(Self.eventTimeout)))])
             attached = true
             Self.trace("attached")
             bindsUsed = binds
             document.isExecuting = true
             document.errorStack = []
-            execution = Task.detached { try await target.execute(sql, binds: binds) }
+            let run = Task.detached { try await target.execute(sql, binds: binds) }
+            execution = run
+            executionRunning = true
+            Task { [weak self] in
+                _ = try? await run.value
+                if self?.execution == run { self?.executionRunning = false }
+            }
             state = .running
             // Pierwsze zdarzenie: start interpretera; punkty przerwania; potem pierwsza linia.
-            info = try await runtimeCall("dbms_debug.synchronize(ri, dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            info = try await waitEvent("dbms_debug.synchronize(ri, \(Self.infoFlags))")
             if !info.terminated { try await applyBreakpoints(block: false) }
         } catch {
             if attached {
@@ -269,7 +289,7 @@ public final class DebuggerEngine {
         // Program może przechwycić przerwanie (np. ut.run uruchamia dalsze testy) — przerwanie aż do zakończenia.
         if state == .paused {
             for _ in 0..<200 {
-                guard let info = try? await runtimeCall("dbms_debug.continue(ri, dbms_debug.abort_execution, 0)") else { break }
+                guard let info = try? await waitEvent("dbms_debug.continue(ri, dbms_debug.abort_execution, 0)") else { break }
                 if info.terminated || info.reason == 15 || info.reason == 25 { break }
             }
         }
@@ -324,11 +344,32 @@ public final class DebuggerEngine {
                            owner: s("owner"), name: s("name"), unitType: n("utype"))
     }
 
+    /// SYNCHRONIZE/CONTINUE z limitem czasu (WS2-09): po error_timeout dalej SYNCHRONIZE, dopóki blok w sesji okna się
+    /// wykonuje (`running`, domyślnie wykonanie programu). Wykonanie zakończone bez zdarzenia (błąd kompilacji bloku)
+    /// — wynik „zakończony”. Stop w trakcie długiego polecenia programu (SQL, blokada) przerywa je w sesji okna (OCIBreak).
+    func waitEvent(_ call: String, running: (() -> Bool)? = nil) async throws -> RuntimeInfo {
+        var info = try await runtimeCall(call)
+        var interrupted = false
+        while info.status == Self.errorTimeout {
+            guard running?() ?? executionRunning else {
+                info.terminated = true
+                return info
+            }
+            if running == nil, stopRequested, !interrupted {
+                target?.breakExecution()
+                interrupted = true
+            }
+            Self.trace("timeout: synchronize")
+            info = try await runtimeCall("dbms_debug.synchronize(ri, \(Self.infoFlags))")
+        }
+        return info
+    }
+
     func continueExecution(breakflags: String) async throws {
         state = .running
         var flags = breakflags
         while true {
-            let info = try await runtimeCall("dbms_debug.continue(ri, \(flags), dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
+            let info = try await waitEvent("dbms_debug.continue(ri, \(flags), \(Self.infoFlags))")
             flags = breakflags
             lastReason = info.reason
             Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner, privacy: .hash).\(info.name, privacy: .hash)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
@@ -387,22 +428,25 @@ public final class DebuggerEngine {
             "begin loop dbms_output.get_line(l, st); exit when st <> 0; i := 1; " +
             "loop pp.extend; pp(pp.count) := substr(l, i, 249); i := i + 249; exit when i > nvl(length(l), 0); end loop; " +
             "pp(pp.count) := pp(pp.count) || chr(10); end loop; :1 := pp; end;"
+        // Blok w sesji docelowej zdejmuje z bufora wszystkie linie — wynik w CLOB, bez limitu VARCHAR2 (WS2-11).
         let r = try? await debug.execute("""
             declare
               coll sys.dbms_debug_vc2coll;
               errm varchar2(4000);
-              s varchar2(32767);
+              s clob;
             begin
               dbms_debug.execute(:b, -1, 1, coll, errm);
+              dbms_lob.createtemporary(s, true);
               if coll is not null and coll.count > 0 then
                 for i in coll.first .. coll.last loop
-                  if nvl(lengthb(s), 0) <= 31000 then s := s || coll(i); end if;
+                  if coll(i) is not null then dbms_lob.writeappend(s, length(coll(i)), coll(i)); end if;
                 end loop;
               end if;
               :s := s;
             end;
-            """, binds: [BindVariable(name: "b", value: .text(block)), BindVariable(name: "s", direction: .output, maxSize: 32767)])
-        let text = r?.outBinds["s"]?.displayText ?? r?.outBinds["S"]?.displayText ?? ""
+            """, binds: [BindVariable(name: "b", value: .text(block)), BindVariable(name: "s", type: .clob, direction: .output)],
+            options: ExecuteOptions(lobLimit: 50_000_000))
+        let text = r.map { Self.clobText($0, "s") } ?? ""
         let lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).dropLast()
         if !lines.isEmpty { document.output.append(contentsOf: lines) }
     }
@@ -415,6 +459,10 @@ public final class DebuggerEngine {
         let isQuery = trimmed.lowercased().hasPrefix("select") || trimmed.lowercased().hasPrefix("with")
         // Średnik końcowy tylko z zapytania (blok PL/SQL musi go zachować).
         if isQuery { trimmed = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "; \n")) }
+        // Strażnik zmian jak w oknie SQL (APP2-06): zapytanie przechodzi, DML, DDL i blok — blokada na połączeniu tylko do
+        // odczytu, pytanie na produkcyjnym.
+        try await workspace.guardModification([trimmed], connectionID: workspace.effectiveConnection(of: document))
+        guard state == .paused else { throw CommandError.notAvailable(L10n.tr("Debuger nie jest zatrzymany")) }
         // Zapytanie: wiersze jako JSON (DBMS_SQL jest zablokowany w DBMS_DEBUG.EXECUTE — ORA-29471), w kawałkach po 250 znaków
         // (elementy SYS.DBMS_DEBUG_VC2COLL mają limit w bajtach — najgorszy przypadek VARCHAR2(1000) BYTE, ≤ 4 bajty na znak).
         let what = isQuery ? """
@@ -425,30 +473,41 @@ public final class DebuggerEngine {
               end if;
               :1 := pp; end;
             """ : trimmed
+        // Wynik w CLOB — obcięty JSON dawałby niepełne wiersze (WS2-11).
         let r = try await debug.execute("""
             declare
               coll sys.dbms_debug_vc2coll;
               errm varchar2(4000);
-              s varchar2(32767);
+              s clob;
             begin
               dbms_debug.execute(:w, -1, :b, coll, errm);
+              dbms_lob.createtemporary(s, true);
               if coll is not null and coll.count > 0 then
                 for i in coll.first .. coll.last loop
-                  if nvl(lengthb(s), 0) <= 31000 then s := s || coll(i) || chr(10); end if;
+                  dbms_lob.writeappend(s, nvl(length(coll(i)), 0) + 1, coll(i) || chr(10));
                 end loop;
               end if;
               :s := s;
               :e := errm;
             end;
             """, binds: [BindVariable(name: "w", value: .text(what)), BindVariable(name: "b", type: .number, value: .number(isQuery ? "1" : "0")),
-                         BindVariable(name: "s", direction: .output, maxSize: 32767), BindVariable(name: "e", direction: .output, maxSize: 4000)])
+                         BindVariable(name: "s", type: .clob, direction: .output), BindVariable(name: "e", direction: .output, maxSize: 4000)])
         if let e = (r.outBinds["e"] ?? r.outBinds["E"])?.displayText, !e.isEmpty { throw CommandError.notAvailable(e) }
-        let text = r.outBinds["s"]?.displayText ?? r.outBinds["S"]?.displayText ?? ""
+        let text = Self.clobText(r, "s")
         if isQuery {
             // Kawałki JSON (separator chr(10) dodany przez blok — w JSON nowe linie są zawsze w postaci \n).
             return Self.jsonRows(text.replacingOccurrences(of: "\n", with: ""))
         }
         return text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).dropLast().map { $0 }
+    }
+
+    /// Tekst wyjściowej zmiennej CLOB (albo tekstowej) bloku.
+    nonisolated static func clobText(_ r: ExecutionResult, _ name: String) -> String {
+        switch r.outBinds[name] ?? r.outBinds[name.uppercased()] {
+        case .lob(let l)?: l.text ?? ""
+        case let v?: v.displayText ?? ""
+        case nil: ""
+        }
     }
 
     /// Wiersze z `[{"A":1,"B":"x"},…]` z zachowaniem kolejności kolumn; wartości rozdzielone tabulatorem.
@@ -632,9 +691,12 @@ public final class DebuggerEngine {
         if let target, let debug {
             Self.trace("debug_off")
             let off = Task.detached { try await target.execute("begin dbms_debug.debug_off; end;") }
-            if let info = try? await runtimeCall("dbms_debug.synchronize(ri, 0)"), !info.terminated {
+            let offRunning = RunningFlag()
+            Task { _ = try? await off.value; offRunning.value = false }
+            // Z limitem czasu: sesja okna zerwana albo DEBUG_OFF bez zdarzeń — koniec oczekiwania po jego zakończeniu.
+            if let info = try? await waitEvent("dbms_debug.synchronize(ri, 0)", running: { offRunning.value }), !info.terminated {
                 for _ in 0..<20 {
-                    guard let i = try? await runtimeCall("dbms_debug.continue(ri, 0, 0)") else { break }
+                    guard let i = try? await waitEvent("dbms_debug.continue(ri, 0, 0)", running: { offRunning.value }) else { break }
                     if i.terminated || i.reason == 15 || i.reason == 25 { break }
                 }
             }
@@ -646,6 +708,7 @@ public final class DebuggerEngine {
         // inaczej zapytanie czekałoby na debuger).
         if let target { document.transactionOpen = (try? await SessionUtilities.transactionOpen(target)) ?? document.transactionOpen }
         execution = nil
+        executionRunning = false
         document.isExecuting = false
     }
 
@@ -684,10 +747,18 @@ public final class DebuggerEngine {
     /// Źródło jednostki ramki (blok testu — tekst okna) do ustalenia deklaracji w zasięgu.
     func source(of l: DebugLocation) async -> String {
         if l.isTestBlock { return document.text }
-        let key = "\(l.owner).\(l.name).\(l.unitType)"
+        guard let type = l.objectType else { return "" }
+        return await source(of: DBObject(owner: l.owner, name: l.name, type: type))
+    }
+
+    /// Źródło obiektu ze słownika — w sesji nadzorującej, nie przez MetadataProvider: w trybach Dual i Single sesja okna
+    /// (debugowana) to sesja główna połączenia, której używa też MetadataProvider, a zapytanie czekałoby w jej kolejce
+    /// za blokiem, który czeka na debuger (WS2-02). Sesja nadzorująca między zdarzeniami wykonuje zwykły SQL.
+    func source(of o: DBObject) async -> String {
+        let key = "\(o.owner).\(o.name).\(o.type.rawValue)"
         if let c = sourceCache[key] { return c }
-        guard let type = l.objectType, let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) else { return "" }
-        let s = (try? await m.source(of: DBObject(owner: l.owner, name: l.name, type: type))) ?? ""
+        guard let debug else { return "" }
+        let s = (try? await MetadataProvider.source(of: o, in: debug)) ?? ""
         sourceCache[key] = s
         return s
     }
@@ -763,15 +834,9 @@ public final class DebuggerEngine {
 
     /// Zmienne z poziomu pakietu (bez podprogramów): grupy „Globalne prywatne” i „Globalne publiczne”.
     func packageGlobals(owner: String, name: String, context ctx: CompletionContext) async -> [DebugVariable] {
-        guard let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) else { return [] }
         var groups: [DebugVariable] = []
         for (type, ns, title) in [(DBObjectType.packageBody, 2, L10n.tr("Globalne prywatne")), (DBObjectType.package, 1, L10n.tr("Globalne publiczne"))] {
-            let key = "\(owner).\(name).\(type.rawValue)"
-            let src: String
-            if let c = sourceCache[key] { src = c } else {
-                src = (try? await m.source(of: DBObject(owner: owner, name: name, type: type))) ?? ""
-                sourceCache[key] = src
-            }
+            let src = await source(of: DBObject(owner: owner, name: name, type: type))
             guard let unit = PLSQLOutline.parse(src).first else { continue }
             var children: [DebugVariable] = []
             for d in unit.children where [.variable, .constant].contains(d.kind) {
@@ -850,14 +915,15 @@ public final class DebuggerEngine {
         return out
     }
 
-    /// Pola rekordu: typ lokalny RECORD albo `tabela%ROWTYPE` (kolumny ze słownika).
+    /// Pola rekordu: typ lokalny RECORD albo `tabela%ROWTYPE` (kolumny ze słownika). Słownik — w sesji nadzorującej
+    /// (jak `source(of:)`, WS2-02).
     func recordFields(_ type: String, context ctx: CompletionContext) async -> [String] {
         let up = type.uppercased().trimmingCharacters(in: .whitespaces)
         if let decl = ctx.typeDeclarations[up] { return CodeAssistant.recordFields(decl).map(\.name) }
+        guard let s = debug else { return [] }
         // Typ obiektowy schematu (zmienna obiektu, SELF w metodzie): atrybuty z ALL_TYPE_ATTRS.
         // Rekord pętli FOR (typ „record”) nie ma typu w słowniku.
-        if !up.isEmpty, up != "RECORD", !up.contains("%"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)),
-           let s = try? await m.session() {
+        if !up.isEmpty, up != "RECORD", !up.contains("%") {
             let parts = up.split(separator: ".").map(String.init)
             let owner = parts.count > 1 ? parts[0] : nil
             let name = parts.last ?? up
@@ -868,11 +934,23 @@ public final class DebuggerEngine {
                 return rows.compactMap { $0[0].displayText }
             }
         }
-        if up.hasSuffix("%ROWTYPE"), let m = workspace.metadata(for: workspace.effectiveConnection(of: document)) {
+        if up.hasSuffix("%ROWTYPE") {
             let base = String(up.dropLast("%ROWTYPE".count))
             let parts = base.split(separator: ".").map(String.init)
-            if let o = try? await m.resolve(owner: parts.count > 1 ? parts[0] : nil, name: parts.last ?? base) {
-                return ((try? await m.columns(of: o)) ?? []).map(\.name)
+            // Tabela albo widok w schemacie (bieżącym albo podanym), potem synonim prywatny i publiczny.
+            let sql = """
+                select t.pri, c.column_name from all_tab_columns c join (
+                  select nvl(:o, sys_context('userenv', 'current_schema')) owner, :n table_name, 0 pri from dual
+                  union all
+                  select table_owner, table_name, decode(owner, 'PUBLIC', 2, 1) from all_synonyms
+                   where synonym_name = :n and db_link is null
+                     and (owner = nvl(:o, sys_context('userenv', 'current_schema')) or (owner = 'PUBLIC' and :o is null))
+                ) t on c.owner = t.owner and c.table_name = t.table_name
+                order by t.pri, c.column_id
+                """
+            let binds = [BindVariable(name: "o", value: parts.count > 1 ? .text(parts[0]) : .null), BindVariable(name: "n", value: .text(parts.last ?? base))]
+            if let rows = try? await s.queryAll(sql, binds: binds, limit: 5000).rows, let first = rows.first?[0].displayText {
+                return rows.filter { $0[0].displayText == first }.compactMap { $0[1].displayText }
             }
         }
         return []
@@ -989,6 +1067,12 @@ public final class DebuggerEngine {
             if status == 0 { workspace.unappliedBreakpoints.remove(bp.id) } else { workspace.unappliedBreakpoints.insert(bp.id) }
         }
     }
+}
+
+/// Flaga „wywołanie w tle trwa” dla oczekiwania z limitem czasu.
+@MainActor
+final class RunningFlag {
+    var value = true
 }
 
 extension Workspace {

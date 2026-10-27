@@ -338,19 +338,21 @@ public struct QueryModel: Sendable, Codable, Hashable {
         }
 
         // Pola: kolumna z aliasem tabeli (a.kolumna [alias]) albo wyrażenie.
-        // Przecinki i nawiasy w literałach '…' i identyfikatorach "…" nie dzielą listy.
+        // Przecinki i nawiasy w literałach ('…', q'[…]'), identyfikatorach "…" i komentarzach nie dzielą listy (tokeny Lexer).
         func splitTop(_ s: String) -> [String] {
-            var out: [String] = [], cur = "", d = 0
-            var quote: Character?
-            for ch in s {
-                if let q = quote {
-                    if ch == q { quote = nil }
-                } else if ch == "'" || ch == "\"" {
-                    quote = ch
-                } else if ch == "(" { d += 1 } else if ch == ")" { d -= 1 }
-                if ch == ",", d == 0, quote == nil { out.append(cur); cur = "" } else { cur.append(ch) }
+            let ns = s as NSString
+            var out: [String] = [], from = 0, d = 0
+            for t in Lexer(s).tokenize() {
+                switch t.kind {
+                case .leftParen: d += 1
+                case .rightParen: d -= 1
+                case .comma where d == 0:
+                    out.append(ns.substring(with: NSRange(location: from, length: t.start - from)))
+                    from = t.start + t.length
+                default: break
+                }
             }
-            out.append(cur)
+            out.append(ns.substring(from: from))
             return out.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         }
         if select != "*" {

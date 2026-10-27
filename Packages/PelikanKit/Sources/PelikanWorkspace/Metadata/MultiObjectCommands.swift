@@ -59,6 +59,13 @@ enum MultiObjectCommands {
         }
     }
 
+    /// Prywatne łącze innego schematu (z DBA_DB_LINKS, D188): Oracle nie pozwala kwalifikować nazwy łącza schematem —
+    /// DROP DATABASE LINK i zapytanie `@ŁĄCZE` trafiłyby we własne albo publiczne łącze o tej nazwie, nie w pokazane.
+    nonisolated static func requireOwnLink(_ o: DBObject, sessionUser: String) throws {
+        guard o.type == .databaseLink, o.owner != "PUBLIC", o.owner != sessionUser else { return }
+        throw CommandError.notAvailable(L10n.tr("Prywatne łącze innego schematu może usunąć albo testować tylko jego właściciel"))
+    }
+
     @MainActor static var hasSelection: ValidationHandler { { $0.selectedObjects.count > 1 || $0.selectedObject != nil } }
 
     @MainActor static var all: [Command] {
@@ -75,7 +82,7 @@ enum MultiObjectCommands {
                 return CommandResult(message: text, value: .string(text))
             },
             Command(CommandDescriptor(id: "ob.recompileSelected", title: L10n.tr("Rekompiluj zaznaczone"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Kompiluje ponownie zaznaczone obiekty; zwraca te, które pozostały nieprawidłowe."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
@@ -102,7 +109,13 @@ enum MultiObjectCommands {
                                       parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera DDL wszystkich zaznaczonych obiektów w jednym oknie SQL."), feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
-                let objs = try targets(ctx)
+                // DDL specyfikacji pakietu i typu zawiera ciało (DBMS_METADATA domyślnie) — ciało zaznaczone razem ze
+                // specyfikacją nie jest powtarzane.
+                let all = try targets(ctx)
+                let objs = all.filter { o in
+                    let spec: DBObjectType? = o.type == .packageBody ? .package : o.type == .typeBody ? .type : nil
+                    return spec.map { t in !all.contains { $0.type == t && $0.owner == o.owner && $0.name == o.name } } ?? true
+                }
                 guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()) else { throw CommandError.notConnected }
                 var parts: [String] = []
                 for o in objs { parts.append((try? await m.ddl(of: o)) ?? "-- \(o.qualifiedName): " + L10n.tr("brak DDL")) }
@@ -111,12 +124,16 @@ enum MultiObjectCommands {
                 return CommandResult(message: text)
             },
             Command(CommandDescriptor(id: "ob.dropSelected", title: L10n.tr("Usuń zaznaczone…"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Usuwa zaznaczone obiekty (DROP) po jednym potwierdzeniu z listą; błędy nie przerywają pozostałych."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx).filter { ![.user, .role, .profile].contains($0.type) }
                 guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()), !objs.isEmpty else { throw CommandError.notConnected }
+                if objs.contains(where: { $0.type == .databaseLink }) {
+                    let user = try await m.session().info.sessionUser
+                    for o in objs { try requireOwnLink(o, sessionUser: user) }
+                }
                 let sql = try objs.map { try dropStatement($0) }
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 if ctx.invoker == .user, let ui = ctx.ui {

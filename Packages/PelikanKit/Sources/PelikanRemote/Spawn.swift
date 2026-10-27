@@ -154,10 +154,16 @@ public enum Spawn {
         var stopped = false
         var status: Int32 = 0
         var cancelled = false, timedOut = false
+        // Błąd waitpid (np. ECHILD) — wynik procesu nieznany; nie wolno go zgłosić jako kodu 0.
+        var waitError: Int32 = 0
         while true {
             let r = waitpid(p.pid, &status, WNOHANG)
             if r == p.pid { break }
-            if r < 0, errno != EINTR { break }
+            if r < 0 {
+                if errno == EINTR { continue }
+                waitError = errno
+                break
+            }
             let expired = deadline.map { Date() > $0 } ?? false
             if isCancelled() || expired {
                 cancelled = isCancelled()
@@ -165,7 +171,9 @@ public enum Spawn {
                 if stopped { kill(p.pid, SIGCONT) }
                 kill(p.pid, SIGTERM)
                 var waited = 0
-                while waitpid(p.pid, &status, WNOHANG) == 0 {
+                while true {
+                    let r = waitpid(p.pid, &status, WNOHANG)
+                    if r == p.pid || (r < 0 && errno != EINTR) { break }
                     if waited == 100 { kill(p.pid, SIGKILL) }
                     usleep(20_000)
                     waited += 1
@@ -185,6 +193,7 @@ public enum Spawn {
         }
         if cancelled { throw SSHError.cancelled }
         if timedOut { throw SSHError.timeout }
+        if waitError != 0 { throw SSHError.io(code: waitError, detail: executable) }
         let (out, err) = collected.withLock { $0 }
         return Result(status: exitCode(status), output: out, error: err)
     }
@@ -268,10 +277,11 @@ public final class SpawnedProcess: Sendable {
         Thread.detachNewThread {
             var status: Int32 = 0
             var exited = false
+            var waitError: Int32 = 0
             while !exited {
                 let r = waitpid(pid, &status, WNOHANG)
                 if r == pid { shared.value.withLock { $0.reaped = true }; exited = true; break }
-                if r < 0, errno != EINTR { break }
+                if r < 0, errno != EINTR { waitError = errno; break }
                 let now = Date()
                 let (last, reason) = shared.value.withLock { ($0.lastActivity, $0.reason) }
                 let total = timeout.map { now.timeIntervalSince(started) > $0 } ?? false
@@ -292,6 +302,9 @@ public final class SpawnedProcess: Sendable {
             }
             if let reason {
                 continuation.finish(throwing: reason)
+            } else if waitError != 0 {
+                // Wynik procesu nieznany — błąd zamiast fałszywego `.exit(0)`.
+                continuation.finish(throwing: SSHError.io(code: waitError, detail: "waitpid"))
             } else {
                 continuation.yield(.exit(Spawn.exitCode(status)))
                 continuation.finish()

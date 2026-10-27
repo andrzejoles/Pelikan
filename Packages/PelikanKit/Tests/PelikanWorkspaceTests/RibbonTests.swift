@@ -9,7 +9,14 @@ import AppKit
 @MainActor
 @Suite("Wstążka")
 struct RibbonTests {
-    let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+    let ws: Workspace
+
+    /// Komendy panelu agenta rejestruje aplikacja — test rejestruje te same opisy (AgentUICommands), jak AgentUIController.
+    init() {
+        ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let agent = AgentUICommands.fixed + ws.settings.agent.profiles.map(AgentUICommands.launch)
+        ws.register(agent.map { Command($0) { _ in .ok } })
+    }
 
     @Test("każda komenda wstążki jest w rejestrze, grupy nie są puste i nie powtarzają komend")
     func commandsExist() {
@@ -29,7 +36,7 @@ struct RibbonTests {
     func coverage() {
         let onRibbon = Set(RibbonModel.expand(RibbonModel.tabs.flatMap(\.commands), in: ws.registry))
         let missing = ws.registry.descriptors
-            .filter { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") }
+            .filter(\.inMenu)
             .map(\.id.rawValue)
             .filter { !onRibbon.contains($0) && !RibbonModel.notOnRibbon.contains($0) }
         #expect(missing.isEmpty, "brak na wstążce: \(missing.sorted())")
@@ -101,8 +108,13 @@ struct RibbonTests {
     func userCommandsAndFirstAvailable() {
         let user = CommandSearch.userCommands(ws.registry.descriptors)
         #expect(!user.isEmpty)
-        #expect(user.allSatisfy { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") })
-        #expect(ws.registry.descriptors.contains { $0.id.rawValue.hasPrefix("agent.") })
+        #expect(user.allSatisfy { $0.inMenu && (!$0.id.rawValue.hasPrefix("agent.") || AgentUICommands.isUserCommand($0.id)) })
+        #expect(ws.registry.descriptors.contains { $0.id.rawValue.hasPrefix("agent.") && !AgentUICommands.isUserCommand($0.id) })
+        // Komendy panelu agenta (Panel agenta, uruchamianie CLI, dziennik) są czynnościami użytkownika — w wyszukiwarce,
+        // palecie i na wstążce (APP1-05).
+        #expect(user.contains { $0.id == AgentUICommands.togglePane } && user.contains { $0.id.rawValue.hasPrefix(AgentUICommands.launchPrefix) })
+        #expect(RibbonModel.location(of: "agent.showLog")?.tab.id == "tools")
+        #expect(!RibbonModel.expand(["agent.launch.*"], in: ws.registry).isEmpty)
         #expect(!user.contains { $0.id == "view.addToQuickAccess" })
         let items = user.filter { ["session.commit", "sql.execute", "file.newIndex"].contains($0.id.rawValue) }
         #expect(items.count == 3)

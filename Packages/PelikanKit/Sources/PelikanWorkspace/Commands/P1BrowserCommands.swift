@@ -47,7 +47,9 @@ enum P1BrowserCommands {
             let r = try await ws.invoke("ob.generateCode", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""),
                                                                              "type": .string(o.type.rawValue),
                                                                              "kind": .string(action.codeKind?.rawValue ?? ""),
-                                                                             "returnOnly": .bool(true)]))
+                                                                             "returnOnly": .bool(true),
+                                                                             // Kolumny i parametry z połączenia gałęzi obiektu (D185).
+                                                                             "connection": .string(m.connectionID.uuidString)]))
             return r.value?.stringValue ?? ""
         }
     }
@@ -58,7 +60,7 @@ enum P1BrowserCommands {
             // MARK: Zmiana nazwy (PD-OB-016)
             command("ob.rename", L10n.tr("Zmień nazwę…"),
                     params: objectParams + [CommandParameter("newName", .string, L10n.tr("Nowa nazwa (w cudzysłowie — z zachowaniem wielkości liter)"))],
-                    agent: .approval, effect: .modifiesDatabase,
+                    agent: .none, effect: .modifiesDatabase,
                     summary: L10n.tr("Zmienia nazwę tabeli, widoku, sekwencji, synonimu, indeksu albo wyzwalacza (ALTER … RENAME TO / RENAME)."),
                     feature: "PD-OB-016",
                     validate: { ws in ws.selectedObject.map { ObjectRename.renamable.contains($0.type) } ?? false }) { ctx in
@@ -79,7 +81,7 @@ enum P1BrowserCommands {
                     params: objectParams + [CommandParameter("kind", .string, required: true, L10n.tr("column, constraint, index albo trigger")),
                                             CommandParameter("name", .string, required: true, L10n.tr("Bieżąca nazwa elementu")),
                                             CommandParameter("newName", .string, L10n.tr("Nowa nazwa"))],
-                    agent: .approval, effect: .modifiesDatabase,
+                    agent: .none, effect: .modifiesDatabase,
                     summary: L10n.tr("Zmienia nazwę kolumny, więzu, indeksu albo wyzwalacza tabeli."), feature: "PD-OB-016") { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard let rawKind = ctx.arguments.string("kind"), let kind = DBObjectChild.Kind(rawValue: rawKind) else {

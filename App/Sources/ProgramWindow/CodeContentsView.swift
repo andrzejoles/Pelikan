@@ -134,7 +134,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         let sort = NSMenuItem(title: L10n.tr("Sortuj"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for (o, title) in [(CodeContents.Order.source, L10n.tr("Jak w źródle")), (.name, L10n.tr("Alfabetycznie")), (.kind, L10n.tr("Według rodzaju"))] {
-            let i = ClosureMenuItem(title: title) { ws.settings.codeContentsOrder = o }
+            let i = ClosureMenuItem(title: title) { ws.perform("codeContents.sort", CommandArguments(["order": .string(o.rawValue)])) }
             i.state = order == o ? .on : .off
             sub.addItem(i)
         }
@@ -195,12 +195,13 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     }
 
     static func symbol(_ k: OutlineNode.Kind) -> String {
+        // Rodzaje będące obiektami bazy — ikony jak w Object Browserze i podpowiedziach.
         switch k {
-        case .package, .packageBody: "shippingbox"
-        case .type, .typeBody, .typeDeclaration: "t.square"
-        case .procedure: "p.square"
-        case .function: "f.square"
-        case .trigger: "bolt"
+        case .package, .packageBody: ObjectSymbols.symbol(for: .package)
+        case .type, .typeBody, .typeDeclaration: ObjectSymbols.symbol(for: .type)
+        case .procedure: ObjectSymbols.symbol(for: .procedure)
+        case .function: ObjectSymbols.symbol(for: .function)
+        case .trigger: ObjectSymbols.symbol(for: .trigger)
         case .block, .declareSection, .beginSection, .exceptionSection: "curlybraces"
         case .cursor: "list.bullet.rectangle"
         case .exception: "exclamationmark.triangle"

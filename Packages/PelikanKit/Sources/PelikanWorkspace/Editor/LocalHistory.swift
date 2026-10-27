@@ -28,13 +28,15 @@ public struct LocalHistoryItem: Codable, Sendable, Hashable, Identifiable {
 @MainActor
 @Observable
 public final class LocalHistory {
-    public static let maxEntries = 50
-    public static let maxAge: TimeInterval = 30 * 24 * 3600
+    nonisolated public static let maxEntries = 50
+    nonisolated public static let maxAge: TimeInterval = 30 * 24 * 3600
 
     let directory: URL?
+    /// Pozycje otwarte w oknie historii (i wszystkie, gdy historia jest tylko w pamięci, bez katalogu). Zapis wersji
+    /// pozycji spoza pamięci nie wczytuje jej na wątku głównym ani nie zostawia w pamięci do końca sesji.
     @ObservationIgnored private var cache: [String: LocalHistoryItem] = [:]
-    /// Zapisy na dysk po kolei poza głównym wątkiem (do 50 pełnych wersji dużego pakietu to dziesiątki MB JSON —
-    /// kodowanie i zapis przy każdym ⌘S i kompilacji blokowałyby interfejs).
+    /// Odczyty do dopisania wersji i zapisy na dysk po kolei poza głównym wątkiem (do 50 pełnych wersji dużego
+    /// pakietu to dziesiątki MB JSON — dekodowanie, kodowanie i zapis przy każdym ⌘S i kompilacji blokowałyby interfejs).
     @ObservationIgnored private let writes = DispatchQueue(label: "LocalHistory.writes", qos: .utility)
     /// Licznik zmian (odświeżanie okna historii).
     public private(set) var revision = 0
@@ -74,7 +76,7 @@ public final class LocalHistory {
         return "\(readable.prefix(40))-\(String(h, radix: 16)).json"
     }
 
-    static var decoder: JSONDecoder {
+    nonisolated static var decoder: JSONDecoder {
         let d = JSONDecoder()
         d.dateDecodingStrategy = .iso8601
         return d
@@ -82,11 +84,18 @@ public final class LocalHistory {
 
     func url(_ key: String) -> URL? { directory?.appendingPathComponent(Self.fileName(key)) }
 
+    /// Pozycja (okno historii): po zaplanowanych zapisach, z dysku do pamięci podręcznej.
     public func item(_ key: String) -> LocalHistoryItem? {
         if let c = cache[key] { return c }
-        guard let u = url(key), let data = try? Data(contentsOf: u),
-              let item = try? Self.decoder.decode(LocalHistoryItem.self, from: data), item.key == key else { return nil }
+        guard let u = url(key) else { return nil }
+        writes.sync {}
+        guard let item = Self.read(u, key: key) else { return nil }
         cache[key] = item
+        return item
+    }
+
+    nonisolated static func read(_ u: URL, key: String) -> LocalHistoryItem? {
+        guard let data = try? Data(contentsOf: u), let item = try? decoder.decode(LocalHistoryItem.self, from: data), item.key == key else { return nil }
         return item
     }
 
@@ -94,17 +103,35 @@ public final class LocalHistory {
     public func entries(_ key: String) -> [LocalHistoryEntry] { (item(key)?.entries ?? []).reversed() }
 
     /// Dopisanie wersji (pomijane, gdy tekst jak w ostatniej); najstarsze ponad limit liczby i wieku są usuwane.
+    /// Pozycja spoza pamięci jest wczytywana i uzupełniana w kolejce zapisów, nie na wątku głównym.
     public func record(key: String, title: String, text: String, label: String, date: Date = Date()) {
-        var item = item(key) ?? LocalHistoryItem(key: key, title: title, entries: [])
-        if item.entries.last?.text == text { return }
-        item.title = title
-        item.entries.append(LocalHistoryEntry(date: date, label: label, text: text))
-        item.entries = Array(item.entries.filter { date.timeIntervalSince($0.date) <= Self.maxAge }.suffix(Self.maxEntries))
-        cache[key] = item
+        let entry = LocalHistoryEntry(date: date, label: label, text: text)
+        let u = url(key)
+        if u == nil || cache[key] != nil {
+            var item = cache[key] ?? LocalHistoryItem(key: key, title: title, entries: [])
+            if item.entries.last?.text == text { return }
+            item.title = title
+            item.entries = Self.appending(entry, to: item.entries)
+            cache[key] = item
+            revision += 1
+            guard let u else { return }
+            let saved = item
+            writes.async { Self.write(saved, to: u) }
+            return
+        }
+        guard let u else { return }
+        writes.async {
+            var item = Self.read(u, key: key) ?? LocalHistoryItem(key: key, title: title, entries: [])
+            guard item.entries.last?.text != text else { return }
+            item.title = title
+            item.entries = Self.appending(entry, to: item.entries)
+            Self.write(item, to: u)
+        }
         revision += 1
-        guard let u = url(key) else { return }
-        let saved = item
-        writes.async { Self.write(saved, to: u) }
+    }
+
+    nonisolated static func appending(_ entry: LocalHistoryEntry, to entries: [LocalHistoryEntry]) -> [LocalHistoryEntry] {
+        Array((entries + [entry]).filter { entry.date.timeIntervalSince($0.date) <= maxAge }.suffix(maxEntries))
     }
 
     /// Czeka na zapis wszystkich wersji na dysk (zamknięcie aplikacji, testy).
@@ -119,21 +146,6 @@ public final class LocalHistory {
             try? data.write(to: u, options: .atomic)
             try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: u.path)
         }
-    }
-
-    /// Wszystkie pozycje historii (od ostatnio zmienianej). Pozycje z dysku nie trafiają do pamięci podręcznej —
-    /// pełne teksty wszystkich wersji wszystkich plików zostawałyby w pamięci na stałe.
-    public func allItems() -> [LocalHistoryItem] {
-        var items = cache
-        if let dir = directory, let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
-            let dec = Self.decoder
-            for f in files where f.pathExtension == "json" {
-                if let data = try? Data(contentsOf: f), let item = try? dec.decode(LocalHistoryItem.self, from: data), items[item.key] == nil {
-                    items[item.key] = item
-                }
-            }
-        }
-        return items.values.sorted { ($0.entries.last?.date ?? .distantPast) > ($1.entries.last?.date ?? .distantPast) }
     }
 
     public func clear(_ key: String) {

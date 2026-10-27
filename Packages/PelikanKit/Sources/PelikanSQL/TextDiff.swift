@@ -176,14 +176,19 @@ public enum TextDiff {
         return out.trimmingCharacters(in: .whitespaces)
     }
 
-    /// Zakresy różnicy w linii: wspólny początek i koniec (UTF-16).
+    /// Zakresy różnicy w linii: wspólny początek i koniec. Porównanie po znakach (grafemach), żeby granica nie
+    /// wypadła w środku emoji z modyfikatorem ani znaku z akcentem łączącym; wynik w jednostkach UTF-16.
     static func intraline(_ a: String, _ b: String) -> (Range<Int>, Range<Int>) {
-        let x = Array(a.utf16), y = Array(b.utf16)
+        let x = Array(a), y = Array(b)
         var p = 0
         while p < x.count, p < y.count, x[p] == y[p] { p += 1 }
         var s = 0
         while s < x.count - p, s < y.count - p, x[x.count - 1 - s] == y[y.count - 1 - s] { s += 1 }
-        return (p..<(x.count - s), p..<(y.count - s))
+        func utf16(_ c: [Character], _ r: Range<Int>) -> Range<Int> {
+            let lower = c[..<r.lowerBound].reduce(0) { $0 + $1.utf16.count }
+            return lower..<(lower + c[r].reduce(0) { $0 + $1.utf16.count })
+        }
+        return (utf16(x, p..<(x.count - s)), utf16(y, p..<(y.count - s)))
     }
 
     enum Op: Equatable { case equal(Int, Int), delete(Int), insert(Int) }

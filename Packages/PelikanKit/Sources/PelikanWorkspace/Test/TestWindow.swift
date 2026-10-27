@@ -324,7 +324,12 @@ public enum TestRunner {
                 doc.errorRange = o..<o
             }
             doc.statusText = SQLExecutor.statusMessage(for: e)
-            if !e.isConnectionLost { doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen }
+            if e.isConnectionLost {
+                ws.dropLostSession(session)
+                doc.transactionOpen = false
+            } else {
+                doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
+            }
             throw e
         } catch {
             // Inne błędy (sterownik, anulowanie): ślad i profiler też zatrzymane, inaczej zostają włączone w sesji okna.

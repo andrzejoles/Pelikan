@@ -141,7 +141,7 @@ enum DataGripCommands {
             // MARK: Analiza kodu (DG-RES-001, DG-INSP-001)
             Command(CommandDescriptor(id: "edit.analyzeCode", title: L10n.tr("Analizuj kod"), category: .edit, submenu: L10n.tr("Analiza kodu"),
                                       parameters: [CommandParameter("text", .sql, L10n.tr("Tekst do analizy (domyślnie aktywne okno)"))],
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Inspekcje kodu (nieużywane zmienne i parametry, kod nieosiągalny, UPDATE/DELETE bez WHERE, niejawne konwersje) i nieznane tabele, kolumny, aliasy wg słownika połączenia; lista problemów."),
                                       feature: "DG-INSP-001")) { ctx in
                 let ws = ctx.workspace
@@ -200,6 +200,7 @@ enum DataGripCommands {
                 let conn = editor(ws).flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
                 if let m = ws.metadata(for: conn), let o = try await m.find(owner.map { "\($0).\(name)" } ?? name) {
                     hits += try await UsageFinder.inDatabase(owner: o.owner, name: o.name, column: column, session: try await m.session())
+                        .map { var h = $0; h.connection = m.connectionID; return h }
                 }
                 hits += await UsageFinder.inTexts(name: name, owner: owner, column: column, documents: editorDocuments(ws), files: projectFiles(ws),
                                                   encoding: ws.projectEncodingResolver())
@@ -216,7 +217,7 @@ enum DataGripCommands {
                                       parameters: [CommandParameter("newName", .string, L10n.tr("Nowa nazwa")),
                                                    CommandParameter("name", .string, L10n.tr("Obiekt albo ALIAS.KOLUMNA (domyślnie nazwa pod kursorem)")),
                                                    CommandParameter("column", .string, L10n.tr("Kolumna tabeli"))],
-                                      agent: .approval, effect: .external,
+                                      agent: .none, effect: .external,
                                       summary: L10n.tr("Zmienia nazwę zmiennej lub parametru w jej zakresie albo obiektu lub kolumny w oknach i plikach projektu; podgląd różnic przed zastosowaniem, DDL zmiany w bazie trafia do nowego okna bez wykonania."),
                                       feature: "DG-REF-001"),
                     validate: hasEditor,
@@ -248,7 +249,7 @@ enum DataGripCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "file.localHistoryList", title: L10n.tr("Wersje w historii lokalnej"), category: .file, submenu: L10n.tr("Historia lokalna"),
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Lista wersji aktywnego okna: identyfikator, czas, zdarzenie, długość tekstu."),
                                       inMenu: false, feature: "DG-HIST-001"),
                     validate: hasHistory) { ctx in

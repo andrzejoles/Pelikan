@@ -222,7 +222,7 @@ struct AgentGateTests {
         sql.selectedRange = 0..<(sql.text as NSString).length
         _ = try await ws.invoke("edit.uppercase", invoker: agent)
         #expect(sql.text == "SELECT 1 FROM DUAL")
-        #expect(ws.undoAgentEdits(session: "g1").undone == 1 && sql.text == "select 1 from dual")
+        #expect(await ws.undoAgentEdits(session: "g1").undone == 1 && sql.text == "select 1 from dual")
         sql.isReadOnly = true
         for id: CommandID in ["edit.uppercase", "edit.beautify"] {
             await #expect(throws: CommandError.self) { try await ws.invoke(id, invoker: agent) }
@@ -234,6 +234,116 @@ struct AgentGateTests {
         #expect(throws: CommandError.self) { try Stage7Commands.insert("x", into: sql) }
         #expect(throws: CommandError.self) { try ws.insertInEditor("x") }
         #expect(sql.text == "select 1 from dual")
+    }
+
+    @Test("WS1-01: okno połączenia ukrytego przed agentem — odmowa narzędzi edytora i brak w get_state; hasła w get_editor zakryte")
+    func hiddenConnectionWindow() async throws {
+        let (ws, gate) = try workspace()
+        defer { withExtendedLifetime(gate) {} }
+        var hidden = ConnectionDefinition(name: "dev_hidden", target: ConnectionTarget(user: "h", connectString: "db2"))
+        hidden.agent.visibleToAgent = false
+        try ws.connections.upsert(hidden)
+        let secret = ws.newDocument(.sql, text: "select tajne_dane from t")
+        secret.connectionID = hidden.id
+        secret.selectedRange = 0..<6
+        let window: JSONValue = .string(Workspace.agentWindowID(secret))
+        let calls: [(CommandID, [String: JSONValue])] = [
+            ("agent.editor", [:]), ("agent.insertText", ["text": "x"]), ("agent.replaceRange", ["fromLine": 1, "toLine": 1, "text": "x"]),
+            ("agent.format", [:]), ("agent.navigate", ["line": 1]),
+        ]
+        for (id, args) in calls {
+            await #expect(throws: AgentDenial.self, "\(id)") { try await ws.invoke(id, CommandArguments(args.merging(["window": window]) { $1 }), invoker: agent) }
+            await #expect(throws: AgentDenial.self, "\(id)") { try await ws.invoke(id, CommandArguments(args), invoker: agent) }   // aktywne okno
+        }
+        await #expect(throws: AgentDenial.self) { try await ws.invoke("edit.uppercase", invoker: agent) }
+        #expect(secret.text == "select tajne_dane from t")
+        let visible = ws.newDocument(.sql, text: "alter user app identified by Tajne123;\ncreate database link l connect to u identified by \"Haslo 2\" using 'x';")
+        let state = try #require(try await ws.invoke("agent.state", invoker: agent).value).description
+        #expect(!state.contains(window.stringValue!) && state.contains(Workspace.agentWindowID(visible)))
+        let editor = try #require(try await ws.invoke("agent.editor", invoker: agent).value).description
+        #expect(editor.contains("identified by") && !editor.contains("Tajne123") && !editor.contains("Haslo 2"))
+    }
+
+    @Test("WS1-16: narzędzia edytora agenta odmawiają w oknie w trakcie wykonania")
+    func agentEditWhileExecuting() async throws {
+        let (ws, gate) = try workspace()
+        defer { withExtendedLifetime(gate) {} }
+        let doc = ws.newDocument(.sql, text: "select 1 from dual")
+        doc.isExecuting = true
+        for (id, args) in [("agent.insertText", ["text": "x"]), ("agent.replaceRange", ["fromLine": 1, "toLine": 1, "text": "x"]),
+                           ("agent.format", [:])] as [(CommandID, [String: JSONValue])] {
+            await #expect(throws: CommandError.self, "\(id)") { try await ws.invoke(id, CommandArguments(args), invoker: agent) }
+        }
+        #expect(doc.text == "select 1 from dual")
+    }
+
+    @Test("WS1-03: cofnięcie sesji agenta zamyka jego okno jak z menu — transakcja okna wycofana, sesja okna zamknięta")
+    func undoClosesAgentWindowLikeMenu() async throws {
+        let driver = FakeDriver()
+        let (ws, gate) = try workspace(driver)
+        defer { withExtendedLifetime(gate) {} }
+        ws.settings.sessionMode = .multi
+        ws.settings.logoffWithOpenTransaction = .rollback
+        let opened = try #require(try await ws.invoke("agent.openEditor", CommandArguments(["text": "delete from t"]), invoker: agent).value)
+        let doc = try #require(ws.documents.first { Workspace.agentWindowID($0) == opened["window"]?.stringValue })
+        let s = try #require(try await ws.session(for: doc) as? FakeSession)
+        doc.transactionOpen = true
+        // Okno w trakcie wykonania nie jest zamykane — konflikt, wpis zostaje do ponownego cofnięcia.
+        doc.isExecuting = true
+        let busy = await ws.undoAgentEdits(session: "g1")
+        #expect(busy.undone == 0 && busy.conflicts.count == 1 && ws.documents.contains { $0 === doc } && ws.agentEdits.count == 1)
+        doc.isExecuting = false
+        let r = await ws.undoAgentEdits(session: "g1")
+        #expect(r.undone == 1 && !ws.documents.contains { $0 === doc } && ws.agentEdits.isEmpty)
+        #expect(s.transactions.withLock { $0 } == ["rollback"] && s.closedFlag.withLock { $0 })
+    }
+
+    @Test("WS1-04: konflikty i nieudane przywrócenia zostają w historii — drugie cofnięcie z wymuszeniem je cofa")
+    func undoKeepsConflictsAndErrors() async throws {
+        let (ws, gate) = try workspace()
+        defer { withExtendedLifetime(gate) {} }
+        let doc = ws.newDocument(.sql, text: "select 1 from dual")
+        _ = try await ws.invoke("agent.insertText", CommandArguments(["text": "-- agent\n", "line": 1]), invoker: agent)
+        doc.text += "\n-- użytkownik"
+        let first = await ws.undoAgentEdits(session: "g1")
+        #expect(first.undone == 0 && first.conflicts.count == 1 && ws.agentEdits.count == 1)
+        let forced = await ws.undoAgentEdits(session: "g1", force: true)
+        #expect(forced.undone == 1 && doc.text == "select 1 from dual" && ws.agentEdits.isEmpty)
+        // Przywrócenie kodu obiektu nieudane (brak sesji kompilacji: złe hasło) — wpis zostaje.
+        let broken = ConnectionDefinition(name: "dev_broken", target: ConnectionTarget(user: "u", connectString: "db3"))
+        try ws.connections.upsert(broken, password: "zle")
+        ws.agentCodeChanges.append(AgentCodeChange(session: "g1", connectionID: broken.id, object: DBObject(owner: "U", name: "P", type: .procedure),
+                                                   before: "create or replace procedure p is begin null; end;", after: nil))
+        let report = await ws.undoAgentSession("g1")
+        #expect(report.errors.count == 1 && ws.agentCodeChanges.count == 1)
+    }
+
+    @Test("WS1-02: przy kolumnach maskowanych — odmowa JSON_OBJECT(*), t.*, DBMS_XMLGEN, CURSOR, XMLQUERY i nazwy w literale")
+    func maskBypassRejected() throws {
+        let masked: Set<String> = ["PESEL"]
+        for sql in ["select json_object(*) from hr.emp", "select json_object(e.*) from emp e", "select json {*} from emp",
+                    "select json_arrayagg(json_object(*)) from emp",
+                    "select dbms_xmlgen.getxml('select x from emp') from dual", "select dbms_xmlgen.getxml(q'[select pesel from emp]') from dual",
+                    "select cursor(select * from emp) from dual", "select xmlquery('fn:collection(\"oradb:/HR/EMP\")' returning content) from dual",
+                    "select * from emp where name = 'pesel'"] {
+            #expect(throws: AgentQueryRules.Violation.self, "\(sql)") { try AgentQueryRules.validate(sql, masked: masked) }
+        }
+        for sql in ["select count(*) from emp", "select * from emp", "select e.*, 2 * 3 x from emp e", "select * from (select e.* from emp e)",
+                    "select a * b from t where exists (select * from u)", "select count(*) over (partition by x) from t"] {
+            #expect(throws: Never.self, "\(sql)") { _ = try AgentQueryRules.validate(sql, masked: masked) }
+        }
+        // Bez maskowania — bez ograniczeń.
+        #expect(throws: Never.self) { _ = try AgentQueryRules.validate("select json_object(*) from emp") }
+    }
+
+    @Test("WS1-17: limity agenta z pliku przycinane do zakresów Preferencji")
+    func agentLimitsClamped() throws {
+        let json = #"{"callsPerMinute": -5, "queryMaxRows": 0, "queryTimeoutSeconds": 99999999999, "queryMaxBytes": 50000000}"#
+        let s = try JSONDecoder().decode(AgentSettings.self, from: Data(json.utf8))
+        #expect(s.callsPerMinute == AgentSettings.callsPerMinuteRange.lowerBound && s.queryMaxRows == AgentSettings.queryMaxRowsRange.lowerBound)
+        #expect(s.queryTimeoutSeconds == AgentSettings.queryTimeoutRange.upperBound && s.queryMaxBytes == AgentSettings.queryMaxBytesRange.upperBound)
+        let ok = try JSONDecoder().decode(AgentSettings.self, from: Data(#"{"queryTimeoutSeconds": 45}"#.utf8))
+        #expect(ok.queryTimeoutSeconds == 45 && ok.callsPerMinute == AgentSettings().callsPerMinute)
     }
 
     @Test("Stan menu sprawdzany mimo kluczy wewnętrznych (run_command); agent bez numeru linii nie dostaje okna dialogowego")

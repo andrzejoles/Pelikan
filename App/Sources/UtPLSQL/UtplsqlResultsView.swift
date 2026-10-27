@@ -60,7 +60,7 @@ struct UtplsqlResultsView: View {
                 if !run.finished {
                     Button(L10n.tr("Przerwij")) { workspace.perform("utplsql.cancel") }
                 } else {
-                    Button(L10n.tr("Uruchom ponownie")) { workspace.perform("utplsql.runPath", CommandArguments(["path": .string(run.paths.joined(separator: ","))])) }
+                    Button(L10n.tr("Uruchom ponownie")) { workspace.perform("utplsql.runPath", UtNodeRow.arguments(["path": .string(run.paths.joined(separator: ","))], connection: run.connectionID)) }
                     Button(L10n.tr("Ponownie nieudane")) { workspace.perform("utplsql.rerunFailed") }.disabled(run.failedPaths.isEmpty)
                     if run.coverageHTML != nil { Button(L10n.tr("Raport pokrycia")) { openCoverage() } }
                     Menu(L10n.tr("Historia")) {
@@ -125,7 +125,7 @@ struct UtplsqlResultsView: View {
 
     private var tree: some View {
         List(selection: $selection) {
-            ForEach(filteredRoots) { n in UtNodeRow(node: n, workspace: workspace, open: { openSource($0, line: 0) }) }
+            ForEach(filteredRoots) { n in UtNodeRow(node: n, workspace: workspace, connection: run.connectionID, open: { openSource($0, line: 0) }) }
         }
     }
 
@@ -215,17 +215,17 @@ struct UtplsqlResultsView: View {
 
     private func openFrame(_ f: ErrorStackFrame) {
         Task {
-            // Linie w stosie odnoszą się do ciała pakietu.
-            try? await workspace.openObject(DBObject(owner: f.owner, name: f.unit, type: .packageBody), line: f.line)
-            NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+            // Linie w stosie odnoszą się do ciała pakietu; obiekt z bazy przebiegu, nie z połączenia aktywnego okna.
+            try? await workspace.openObject(DBObject(owner: f.owner, name: f.unit, type: .packageBody), line: f.line, connection: run.connectionID)
+            ToolWindowController.showMainWindow()
         }
     }
 
     private func openSource(_ n: UtNode, line: Int) {
         guard !n.objectName.isEmpty else { return }
         Task {
-            try? await workspace.openObject(DBObject(owner: n.owner, name: n.objectName, type: .packageBody), line: line)
-            NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+            try? await workspace.openObject(DBObject(owner: n.owner, name: n.objectName, type: .packageBody), line: line, connection: run.connectionID)
+            ToolWindowController.showMainWindow()
         }
     }
 
@@ -244,13 +244,15 @@ struct UtplsqlResultsView: View {
 struct UtNodeRow: View {
     let node: UtNode
     let workspace: Workspace
+    /// Połączenie przebiegu (ponowne uruchomienie na tej samej bazie).
+    var connection: UUID?
     let open: (UtNode) -> Void
     @State private var expanded = true
 
     var body: some View {
         if let children = node.children, !children.isEmpty {
             DisclosureGroup(isExpanded: $expanded) {
-                ForEach(children) { UtNodeRow(node: $0, workspace: workspace, open: open) }
+                ForEach(children) { UtNodeRow(node: $0, workspace: workspace, connection: connection, open: open) }
             } label: { label }
         } else {
             label
@@ -266,10 +268,19 @@ struct UtNodeRow: View {
         }
         .tag(node.id)
         .contextMenu {
-            Button(L10n.tr("Uruchom")) { workspace.perform("utplsql.runPath", CommandArguments(["path": .string(node.runPath)])) }
-            Button(L10n.tr("Uruchom z pokryciem")) { workspace.perform("utplsql.runPath", CommandArguments(["path": .string(node.runPath), "coverage": .bool(true)])) }
+            Button(L10n.tr("Uruchom")) { workspace.perform("utplsql.runPath", Self.arguments(["path": .string(node.runPath)], connection: connection)) }
+            Button(L10n.tr("Uruchom z pokryciem")) {
+                workspace.perform("utplsql.runPath", Self.arguments(["path": .string(node.runPath), "coverage": .bool(true)], connection: connection))
+            }
             Button(L10n.tr("Otwórz źródło testu")) { open(node) }
         }
+    }
+
+    /// Argumenty `utplsql.runPath` z połączeniem przebiegu (bez niego — aktywne okno albo główne).
+    static func arguments(_ args: [String: JSONValue], connection: UUID?) -> CommandArguments {
+        var a = args
+        if let connection { a["connection"] = .string(connection.uuidString) }
+        return CommandArguments(a)
     }
 
     static func icon(_ s: UtStatus) -> String {

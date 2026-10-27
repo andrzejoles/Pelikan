@@ -17,8 +17,10 @@ enum Perf {
 
     static func ms(_ d: Duration) -> String { String(format: "%.2f ms", Double(d.components.attoseconds) / 1e15 + Double(d.components.seconds) * 1000) }
 
-    /// Wynik pomiaru do raportu (scripts/status.py perf) — tylko w Release.
+    /// Wynik pomiaru do raportu (scripts/status.py perf) — tylko w Release (PELIKAN_PERF_STRICT=1); w Debug cel Release
+    /// i tak nie obowiązuje, a „fail” przy zielonym teście tylko mylił w dzienniku.
     static func report(_ name: String, _ value: Duration, _ target: Duration) {
+        guard strict else { return }
         print("PERF\t\(name)\t\(ms(value))\t< \(ms(target))\t\(value < target ? "ok" : "fail")")
     }
 

@@ -93,7 +93,7 @@ struct ResultExportTests {
             p.standardOutput = pipe
             p.standardError = pipe
             try p.run()
-            let out = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            let out = String(decoding: (try? pipe.fileHandleForReading.readToEnd()) ?? Data(), as: UTF8.self)
             p.waitUntilExit()
             return (p.terminationStatus, out)
         }

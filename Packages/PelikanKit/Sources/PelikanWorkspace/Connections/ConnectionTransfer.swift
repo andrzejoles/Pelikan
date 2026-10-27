@@ -40,6 +40,9 @@ public enum ConnectionTransfer {
         public var salt: Data
         /// AES-GCM: nonce, szyfrogram i znacznik (`SealedBox.combined`).
         public var box: Data
+        /// Definicje pliku (foldery i połączenia) uwierzytelnione razem z hasłami (dane dodatkowe AES-GCM): zmiana hosta albo
+        /// tunelu po eksporcie odrzuca import. nil — plik sprzed tej ochrony.
+        public var authenticatesDefinitions: Bool?
     }
 
     public enum TransferError: LocalizedError, Equatable {
@@ -54,11 +57,14 @@ public enum ConnectionTransfer {
     }
 
     public static let iterations = 600_000
+    /// Górna granica iteracji z pliku: spreparowany plik nie zatrzyma importu na minuty.
+    public static let maximumIterations = 2_000_000
     public static let minimumPassphraseLength = 8
 
-    /// Sekcja haseł w trybie jawnym albo zaszyfrowanym.
+    /// Sekcja haseł w trybie jawnym albo zaszyfrowanym. `definitions` — plik eksportu bez sekcji haseł: jego foldery
+    /// i połączenia są uwierzytelniane razem z hasłami (tylko tryb zaszyfrowany).
     public static func envelope(_ secrets: [UUID: ConnectionSecrets], mode: Mode, passphrase: String?,
-                                iterations: Int = iterations) throws -> Envelope {
+                                iterations: Int = iterations, definitions: Data? = nil) throws -> Envelope {
         let byID = Dictionary(uniqueKeysWithValues: secrets.filter { !$0.value.isEmpty }.map { ($0.key.uuidString, $0.value) })
         switch mode {
         case .plain:
@@ -66,25 +72,35 @@ public enum ConnectionTransfer {
         case .encrypted:
             guard let passphrase, passphrase.count >= minimumPassphraseLength else { throw TransferError.weakPassphrase }
             let salt = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) })
-            let key = SymmetricKey(data: pbkdf2(passphrase, salt: salt, iterations: iterations))
+            let key = SymmetricKey(data: try pbkdf2(passphrase, salt: salt, iterations: iterations))
             let plain = try JSONEncoder().encode(byID)
-            guard let box = try AES.GCM.seal(plain, using: key).combined else { throw TransferError.unsupported("AES-GCM") }
-            return Envelope(mode: .encrypted, encrypted: Sealed(iterations: iterations, salt: salt, box: box))
+            let sealed = try definitions.map { try AES.GCM.seal(plain, using: key, authenticating: try definitionsDigest($0)) } ?? AES.GCM.seal(plain, using: key)
+            guard let box = sealed.combined else { throw TransferError.unsupported("AES-GCM") }
+            return Envelope(mode: .encrypted, encrypted: Sealed(iterations: iterations, salt: salt, box: box,
+                                                                authenticatesDefinitions: definitions != nil ? true : nil))
         }
     }
 
-    /// Hasła z sekcji pliku (zaszyfrowane — po podaniu frazy).
-    public static func open(_ envelope: Envelope, passphrase: String?) throws -> [String: ConnectionSecrets] {
+    /// Hasła z sekcji pliku (zaszyfrowane — po podaniu frazy). `definitions` — cały plik importu (definicje
+    /// uwierzytelnione przy eksporcie muszą się zgadzać). Pusta fraza, zła fraza i zmieniony plik — `wrongPassphrase`.
+    public static func open(_ envelope: Envelope, passphrase: String?, definitions: Data? = nil) throws -> [String: ConnectionSecrets] {
         switch envelope.mode {
         case .plain:
             return envelope.plain ?? [:]
         case .encrypted:
             guard let sealed = envelope.encrypted else { throw TransferError.unsupported("encrypted") }
-            guard sealed.kdf == "PBKDF2-HMAC-SHA256", (1...10_000_000).contains(sealed.iterations) else { throw TransferError.unsupported(sealed.kdf) }
-            guard let passphrase else { throw TransferError.wrongPassphrase }
-            let key = SymmetricKey(data: pbkdf2(passphrase, salt: sealed.salt, iterations: sealed.iterations))
+            guard sealed.kdf == "PBKDF2-HMAC-SHA256", (1...maximumIterations).contains(sealed.iterations) else { throw TransferError.unsupported(sealed.kdf) }
+            guard sealed.salt.count >= 16 else { throw TransferError.unsupported("salt") }
+            guard let passphrase, !passphrase.isEmpty else { throw TransferError.wrongPassphrase }
+            var aad: Data?
+            if sealed.authenticatesDefinitions == true {
+                guard let definitions else { throw TransferError.unsupported("definitions") }
+                aad = try definitionsDigest(definitions)
+            }
+            let key = SymmetricKey(data: try pbkdf2(passphrase, salt: sealed.salt, iterations: sealed.iterations))
             do {
-                let plain = try AES.GCM.open(try AES.GCM.SealedBox(combined: sealed.box), using: key)
+                let box = try AES.GCM.SealedBox(combined: sealed.box)
+                let plain = try aad.map { try AES.GCM.open(box, using: key, authenticating: $0) } ?? AES.GCM.open(box, using: key)
                 return try JSONDecoder().decode([String: ConnectionSecrets].self, from: plain)
             } catch {
                 throw TransferError.wrongPassphrase
@@ -98,8 +114,18 @@ public enum ConnectionTransfer {
         return try JSONDecoder.pelikan.decode(File.self, from: data).secrets
     }
 
-    /// PBKDF2-HMAC-SHA256 (RFC 8018), klucz 32 bajty: CommonCrypto na macOS, HMAC z Crypto na Linuksie.
-    static func pbkdf2(_ passphrase: String, salt: Data, iterations: Int) -> Data {
+    /// Skrót SHA-256 folderów i połączeń pliku eksportu w postaci kanonicznej (JSON z posortowanymi kluczami, bez sekcji
+    /// haseł) — dane dodatkowe AES-GCM. Ogólny JSON, nie model: plik z nowszej wersji z dodatkowymi polami daje ten sam skrót.
+    static func definitionsDigest(_ file: Data) throws -> Data {
+        guard let root = try JSONSerialization.jsonObject(with: file) as? [String: Any] else { throw TransferError.unsupported("JSON") }
+        let canonical = try JSONSerialization.data(withJSONObject: ["folders": root["folders"] ?? [Any](), "connections": root["connections"] ?? [Any]()],
+                                                   options: [.sortedKeys])
+        return Data(SHA256.hash(data: canonical))
+    }
+
+    /// PBKDF2-HMAC-SHA256 (RFC 8018), klucz 32 bajty: CommonCrypto na macOS, HMAC z Crypto na Linuksie. Błąd CommonCrypto
+    /// (np. pusta fraza albo sól) — `wrongPassphrase`, nie zatrzymanie aplikacji.
+    static func pbkdf2(_ passphrase: String, salt: Data, iterations: Int) throws -> Data {
         #if canImport(CommonCrypto)
         var key = [UInt8](repeating: 0, count: 32)
         let pass = Array(passphrase.utf8)
@@ -110,7 +136,7 @@ public enum ConnectionTransfer {
                                      CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256), UInt32(iterations), &key, key.count)
             }
         }
-        precondition(status == kCCSuccess, "PBKDF2")
+        guard status == kCCSuccess else { throw TransferError.wrongPassphrase }
         return Data(key)
         #else
         return pbkdf2HMAC(passphrase, salt: salt, iterations: iterations)
@@ -134,10 +160,11 @@ public enum ConnectionTransfer {
 
 extension ConnectionStore {
     /// Hasła do eksportu: hasło bazy (Pęk kluczy albo podane w tej sesji) i hasło tunelu SSH, dla definicji, które je mają.
-    public func secretsForExport() -> [UUID: ConnectionSecrets] {
+    /// `password` — hasło bazy znane menedżerowi sesji (podane przy logowaniu, zmienione w sesji); domyślnie z magazynu.
+    public func secretsForExport(password known: ((UUID) -> String?)? = nil) -> [UUID: ConnectionSecrets] {
         var out: [UUID: ConnectionSecrets] = [:]
         for c in connections {
-            let s = ConnectionSecrets(password: password(for: c.id), sshPassword: c.sshTunnel?.usesPassword == true ? sshPassword(for: c.id) : nil)
+            let s = ConnectionSecrets(password: known?(c.id) ?? password(for: c.id), sshPassword: c.sshTunnel?.usesPassword == true ? sshPassword(for: c.id) : nil)
             if !s.isEmpty { out[c.id] = s }
         }
         return out

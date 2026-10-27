@@ -150,11 +150,12 @@ extension SimpleObjectEditor {
         case .view:
             var out: [String] = []
             if changed(["name", "query", "force", "readOnly", "checkOption"]) {
-                if !isNew, old("name") != name { out.append("DROP VIEW \(Self.q(owner)).\(Self.q(old("name")))") }
                 var q = value("query").trimmingCharacters(in: .whitespacesAndNewlines)
                 while q.hasSuffix(";") || q.hasSuffix("/") { q = String(q.dropLast()).trimmingCharacters(in: .whitespacesAndNewlines) }
                 let clause = flag("readOnly") ? "\nWITH READ ONLY" : flag("checkOption") ? "\nWITH CHECK OPTION" : ""
                 out.append("CREATE OR REPLACE \(flag("force") ? "FORCE " : "")VIEW \(qn) AS\n\(q)\(clause)")
+                // Zmiana nazwy: stary widok usuwany dopiero po utworzeniu nowego — błąd CREATE nie zostawia bazy bez widoku (WS2-04).
+                if !isNew, old("name") != name { out.append("DROP VIEW \(Self.q(owner)).\(Self.q(old("name")))") }
             }
             if isNew ? !value("comments").isEmpty : value("comments") != old("comments") || old("name") != name {
                 out.append("COMMENT ON TABLE \(qn) IS \(Self.literal(value("comments")))")
@@ -213,11 +214,20 @@ extension SimpleObjectEditor {
             let r = try await one("select username, host, decode(owner, 'PUBLIC', 'Y', 'N') from all_db_links where owner in (:o, 'PUBLIC') and db_link = :n order by decode(owner, :o, 0, 1)", b)
             v["user"] = r[0]; v["connect"] = r[1]; v["public"] = r[2]
         case .view:
-            let r = try await one("select text_vc, decode(read_only, 'Y', 'Y', 'N') from all_views where owner = :o and view_name = :n", b)
-            v["query"] = Self.stripViewClauses(r[0]); v["readOnly"] = r[1]
+            // Pełny tekst z TEXT (LONG; 11g–26ai) — TEXT_VC ma 4000 bajtów i obcina dłuższe widoki, a zapis z obciętym
+            // zapytaniem zastąpiłby działający widok niepoprawnym (WS2-04). Tekst krótszy niż TEXT_LENGTH (bajty) — odczyt
+            // niepełny, edytor się nie otwiera.
+            let r = try await one("select text, text_length from all_views where owner = :o and view_name = :n", b)
+            if let length = Int(r[1]), r[0].utf8.count < length {
+                throw CommandError.notAvailable(L10n.tr("Nie udało się wczytać pełnego tekstu widoku \(owner).\(name) — edycja wyłączona"))
+            }
+            v["query"] = Self.stripViewClauses(r[0])
             v["force"] = "N"
-            let (_, chk) = try await s.queryAll("select 1 from all_constraints where owner = :o and table_name = :n and constraint_type = 'V'", binds: b, limit: 1)
-            v["checkOption"] = chk.isEmpty ? "N" : "Y"
+            // WITH READ ONLY (więz O) i WITH CHECK OPTION (V) — z więzów widoku (ALL_VIEWS.READ_ONLY jest dopiero od 12c).
+            let (_, chk) = try await s.queryAll("select constraint_type from all_constraints where owner = :o and table_name = :n and constraint_type in ('V', 'O')",
+                                                binds: b, limit: 10)
+            v["readOnly"] = chk.contains { $0.first?.displayText == "O" } ? "Y" : "N"
+            v["checkOption"] = chk.contains { $0.first?.displayText == "V" } ? "Y" : "N"
             v["comments"] = (try await s.queryAll("select comments from all_tab_comments where owner = :o and table_name = :n", binds: b, limit: 1)).rows.first?.first?.displayText ?? ""
         default:
             break

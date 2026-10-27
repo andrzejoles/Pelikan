@@ -34,6 +34,13 @@ enum PreferenceCommands {
                 else if let u = await ctx.ui?.chooseFilesToOpen().first { url = u }
                 else { throw CommandError.cancelledByUser }
                 let values = try PreferenceSets.importValues(try Data(contentsOf: url), sections: sections(ctx))
+                // Programy i biblioteki z cudzego pliku uruchamiałyby się przy następnym użyciu albo starcie — tylko za zgodą.
+                let running = PreferenceSets.changesRunningCode(values, current: ctx.workspace.settings)
+                if !running.isEmpty, let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Importować ustawienia, które uruchamiają programy?"),
+                                       message: L10n.tr("Plik zmienia: \(running.joined(separator: ", ")). Te ustawienia uruchamiają programy albo ładują biblioteki. Importuj tylko plik z zaufanego źródła."),
+                                       buttons: [L10n.tr("Importuj"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
                 try ctx.workspace.importPreferences(values)
                 return CommandResult(message: L10n.tr("Wczytano ustawień: \(values.count)"))
             },

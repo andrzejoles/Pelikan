@@ -58,18 +58,31 @@
   z `callTimeout`, limitem wierszy i bajtów; `runAgentStatements` (odmowa DDL przy otwartej transakcji, historia kodu),
   `undoAgentSession`, `closeAgentDatabase` (ROLLBACK i zamknięcie sesji `agent`, `agent/run`, `agent/events`).
 - Maskowanie działa po nazwie kolumny (ostatni człon wpisu) w każdej tabeli; zapytanie odwołujące się do takiej nazwy
-  jest odrzucane. To ułatwienie, nie granica — kolumnę można odczytać np. przez widok o innej nazwie kolumny; granicą są
-  uprawnienia użytkownika bazy agenta.
+  jest odrzucane. Przy niepustej liście maskowanej odrzucane są też obejścia jednym zapytaniem: `*` jako argument funkcji
+  (`JSON_OBJECT(*)`, `JSON_OBJECT(t.*)`, `JSON {*}`; `COUNT(*)` dozwolone), dynamiczny SQL i XQuery (`DBMS_XMLGEN`,
+  `DBMS_SQL`, `CURSOR(…)`, `XMLQUERY`, `XMLTABLE`, `XMLEXISTS`) i nazwa maskowanej kolumny w literale. To ułatwienie, nie
+  granica — kolumnę można odczytać np. przez widok o innej nazwie kolumny albo funkcję PL/SQL z dynamicznym SQL (nazwa
+  sklejona z części literałów); granicą są uprawnienia użytkownika bazy agenta.
+- Okna SQL i programu przypięte do połączenia niewidocznego dla agenta (albo połączenia tymczasowego) są poza jego
+  zasięgiem jak okno poleceń: nie ma ich w `get_state`, narzędzia edytora odmawiają. `get_editor` zakrywa hasła
+  (`IDENTIFIED BY …`, `CONNECT u/hasło`) jak panel aktywności i dziennik.
+- Wynik narzędzia większy niż mieści ramka mostu (4 MB po podwójnym kodowaniu JSON) jest przycinany z jawnym
+  znacznikiem `result_truncated` (z przypomnieniem, że dane z bazy są niezaufane); most przy błędzie ramki kończy się
+  z komunikatem na stderr i kodem ≠ 0.
 - Hasła SSH (tunel do bazy DB-SSH-001, cele SSH Pro*C): tylko Pęk kluczy (konto `<uuid>.ssh` dla tunelu). `ssh`
   dostaje `SSH_ASKPASS` — skrypt `cat` z jednorazowej kolejki FIFO (0600, katalog 0700); w środowisku jest tylko ścieżka
   kolejki, a sekret zapisuje do niej wątek Pelikana raz i kolejka znika. Hasło nie trafia do argumentów, środowiska,
   plików ani dziennika; błąd logowania pokazuje komunikat `ssh` bez sekretu (D134).
 - Eksport połączeń z hasłami (D186, wyjątek od „hasła tylko w Pęku kluczy” na wyraźne życzenie właściciela — hasło
   sprzed lat może nie być zapisane nigdzie indziej): tylko użytkownik (agent nie ma komendy), zawsze po
-  uwierzytelnieniu właściciela Maca (Touch ID albo hasło, LocalAuthentication), plik 0600. Hasła zaszyfrowane frazą
-  (AES-256-GCM, klucz z PBKDF2-HMAC-SHA256, 600 000 iteracji, losowa sól) albo — po osobnym ostrzeżeniu — jawnym
-  tekstem. Fraza tylko z okna z polem bez podglądu, nigdy z argumentów, dziennika ani historii. Import zapisuje hasła
-  w Pęku kluczy i usuwa plik z hasłami; zła fraza nie importuje niczego i zostawia plik. Dziennik: tylko liczby.
+  uwierzytelnieniu właściciela Maca (Touch ID albo hasło, LocalAuthentication), plik 0600 od chwili utworzenia (dysk
+  bez praw POSIX — exFAT, udział sieciowy: plik z hasłami jawnymi jest usuwany, zaszyfrowany zostaje z ostrzeżeniem).
+  Hasła zaszyfrowane frazą (AES-256-GCM, klucz z PBKDF2-HMAC-SHA256, 600 000 iteracji, losowa sól; definicje połączeń
+  uwierzytelnione jako dane dodatkowe — zmiana hosta albo tunelu po eksporcie odrzuca import; z pliku najwyżej
+  2 000 000 iteracji, liczone poza wątkiem głównym) albo — po osobnym ostrzeżeniu — jawnym tekstem. Fraza tylko z okna
+  z polem bez podglądu, nigdy z argumentów, dziennika ani historii. Import zapisuje hasła w Pęku kluczy i usuwa plik
+  z hasłami; zła fraza nie importuje niczego i zostawia plik, a błąd Pęku kluczy wycofuje cały import. Dziennik: tylko
+  liczby.
 - Nazewnictwo katalogowe (LDAP, PD-CONN-013): na macOS Pelikan sam pyta katalog o deskryptor aliasu — wiązanie
   anonimowe LDAPv3 bez poświadczeń, tylko odczyt atrybutu `orclNetDescString`, limit czasu 5 s na połączenie i 10 s na
   zapytanie. Wiązanie uwierzytelnione portfelem (`NAMES.LDAP_AUTHENTICATE_BIND`) i LDAPS nie są obsługiwane; Pelikan
@@ -100,10 +113,23 @@
   typowych zapisach i zamienia katalog domowy na `~` także w wartościach jawnych. Jawne nazwy (Preferencje) są
   opcjonalne i domyślnie wyłączone. Test szczelności: łączenie z błędnym i dobrym hasłem, `IDENTIFIED BY` i literał
   w SQL — w żadnym wpisie (także diagnostycznym z jawnymi nazwami) nie ma hasła, treści SQL ani wartości.
+- Podpis z Hardened Runtime (przegląd 2026-10-27): aplikacja, rozszerzenie Quick Look, `pelikan-mcp` i części Sparkle
+  podpisane z `--options runtime` (project.yml, `scripts/signing.sh` — także przy podpisie ad hoc). dyld ignoruje
+  `DYLD_INSERT_LIBRARIES`/`DYLD_LIBRARY_PATH`, a inny proces tego samego użytkownika nie podłączy się do Pelikana —
+  wstrzyknięty kod nie odczyta z Pęku kluczy haseł zapisanych dla podpisu Pelikana. Jedyne uprawnienie
+  `com.apple.security.cs.disable-library-validation`: Instant Client ładowany `dlopen` z katalogu użytkownika jest
+  podpisany przez Oracle, nie certyfikatem Pelikana. Bez `allow-dyld-environment-variables`; `get-task-allow` tylko
+  w kompilacji Debug (dodaje je Xcode).
 - Zgłaszanie problemów (PL-INFRA-013, D173): Pelikan nie wysyła niczego sam — otwiera stronę nowego zgłoszenia
   na GitHubie z treścią do przejrzenia, użytkownik wysyła ją ze swojego konta; bez tokenów w aplikacji. Treść (opis,
   komunikat, opis awarii bez ścieżek, środowisko, ostatnie wpisy dziennika z ukrytymi nazwami) przechodzi przez
   `LogRedactor`; okno ostrzega, że zgłoszenia są publiczne.
+- Git (PD-VCS-001, przegląd 4): odczyty uruchamiane samoczynnie (stan przy otwarciu pliku, przeglądarka plików,
+  projekt, treść z HEAD, historia) nie wykonują poleceń z konfiguracji obcego repozytorium (pobranego albo
+  rozpakowanego): `core.fsmonitor=false`, `core.hooksPath=/dev/null`, `log.showSignature=false` (bez `gpg.program`),
+  filtry `clean`/`smudge`/`process` z konfiguracji lokalnej repozytorium wyłączone (git status liczy nimi treść plików),
+  podmoduły pomijane, `show --no-textconv`. Ustawienia przekazywane przez `GIT_CONFIG_KEY_n`, filtry z konfiguracji
+  globalnej (np. git-lfs) zostają. Dodawanie i zatwierdzanie — czynności jawne — działają jak git w terminalu (hooki).
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność

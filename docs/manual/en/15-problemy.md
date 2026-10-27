@@ -95,7 +95,9 @@ The following features work differently than in the reference product, are incom
 real environment:
 
 - The **Thin driver** does not support TCPS and wallets, external authentication, changing an expired password, or
-  interrupting execution.
+  interrupting execution. It reads CLOB and DBMS_OUTPUT up to 65,535 characters (longer ones with a truncation mark),
+  and a query with an INTERVAL YEAR TO MONTH or BFILE column closes the app (a bug in the OracleNIO library) — use the
+  Instant Client driver for such data.
 - **Kerberos** on macOS: when `sqlnet.ora` enables KERBEROS5, the connection ends with a clear error (the Instant
   Client adapter conflicts with the system Kerberos inside the app); on Linux, logging in with a ticket works.
   **Microsoft Entra ID** and **TCPS connections** are implemented according to the Oracle documentation but have not
@@ -107,8 +109,7 @@ real environment:
 - **Command Window**: the `COPY` and `SET ENVVAR` commands are not supported.
 - The **Event Monitor** does not read the DBMS_OUTPUT of other sessions (Oracle does not provide it).
 - **Tools in the left column** are tabs of one panel (Connections, Objects, Windows, Templates, Files); they cannot be
-  docked freely or hidden automatically. To-Do items, the project, the clipboard history and other tools open in
-  separate windows. Documents are tabs of one main window, not native macOS tabs.
+  docked freely or hidden automatically. Documents are tabs of one main window, not native macOS tabs.
 - **Quick Look** for SQL files (preview in the Finder) may not work — macOS may reject an extension signed with a
   self-signed certificate.
 - The **Pro*C remote build** has been tested on a local SSH server with the ksh93 shell; the parsers for `proc` and

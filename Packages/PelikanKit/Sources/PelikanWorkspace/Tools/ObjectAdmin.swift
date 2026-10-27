@@ -8,13 +8,14 @@ public enum ObjectAdmin {
 
     // MARK: Włączanie i wyłączanie
 
-    /// Wyzwalacz: ALTER TRIGGER … ENABLE/DISABLE; tabela: wszystkie wyzwalacze albo wskazany więz.
+    /// Wyzwalacz: ALTER TRIGGER … ENABLE/DISABLE; tabela: wszystkie wyzwalacze albo wskazany więz (nazwa wpisana:
+    /// w cudzysłowie bez zmiany wielkości liter).
     public static func setEnabled(_ o: DBObject, enabled: Bool, constraint: String? = nil) throws -> String {
         let state = enabled ? "ENABLE" : "DISABLE"
         switch o.type {
         case .trigger: return "ALTER TRIGGER \(ident(o.owner)).\(ident(o.name)) \(state)"
         case .table:
-            if let c = constraint, !c.isEmpty { return "ALTER TABLE \(ident(o.owner)).\(ident(o.name)) \(state) CONSTRAINT \(ident(c.uppercased()))" }
+            if let c = constraint, !c.isEmpty { return "ALTER TABLE \(ident(o.owner)).\(ident(o.name)) \(state) CONSTRAINT \(ident(ResultExporter.dictionaryName(c)))" }
             return "ALTER TABLE \(ident(o.owner)).\(ident(o.name)) \(state) ALL TRIGGERS"
         default: throw CommandError.notAvailable(L10n.tr("Włączanie i wyłączanie dotyczy wyzwalaczy i tabel (wyzwalacze, więzy)"))
         }
@@ -144,7 +145,7 @@ public enum ObjectAdmin {
             for r in rows {
                 let attr = (r[3].displayText ?? "ERROR").uppercased()
                 messages.append(CompileMessage(severity: attr == "WARNING" ? .warning : .error, unit: u.tabTitle,
-                                               line: u.line + (Int(r[0].format(.default)) ?? 1), column: Int(r[1].format(.default)) ?? 1,
+                                               line: u.sourceLine + (Int(r[0].format(.default)) ?? 1), column: Int(r[1].format(.default)) ?? 1,
                                                text: (r[2].displayText ?? "").replacingOccurrences(of: temp, with: base).trimmingCharacters(in: .whitespacesAndNewlines)))
             }
         }

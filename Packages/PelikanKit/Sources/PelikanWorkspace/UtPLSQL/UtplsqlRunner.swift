@@ -44,7 +44,7 @@ public enum UtplsqlRunner {
     public static func start(paths: [String], coverageSchemes: [String] = [], include: [String] = [], exclude: [String] = [],
                              in ws: Workspace, connectionID: UUID,
                              purposes: (SessionPurpose, SessionPurpose) = (.utplsql("run"), .utplsql("events"))) async throws -> UtplsqlRun {
-        let run = UtplsqlRun(paths: paths)
+        let run = UtplsqlRun(paths: paths, connectionID: connectionID)
         let producer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: purposes.0))
         let consumer = try await ws.sessions.session(SessionKey(connectionID: connectionID, purpose: purposes.1))
         guard await version(producer) != nil else {

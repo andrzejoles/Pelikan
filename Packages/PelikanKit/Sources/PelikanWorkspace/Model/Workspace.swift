@@ -22,6 +22,9 @@ public protocol UIServices: AnyObject {
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
     /// Schowek: tekst i opcjonalnie HTML (wklejanie do Excela/Numbers z formatowaniem).
     func copyToClipboard(_ text: String, html: String?)
+    /// Zakończenie edycji komórki siatki (wpisana, niezatwierdzona Enterem wartość trafia do modelu) — przed
+    /// zatwierdzaniem, kopiowaniem SQL i anulowaniem zmian siatki (APP2-04).
+    func commitPendingEdits()
     /// Druk dokumentu HTML (raport, PD-REP-001).
     func printHTML(_ html: String, title: String)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
@@ -199,6 +202,7 @@ extension UIServices {
     public func showClipboardHistory() {}
     public func showTodoItems() {}
     public func clipboardText() -> String? { nil }
+    public func commitPendingEdits() {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}
@@ -358,6 +362,7 @@ public final class Workspace {
         didSet {
             if settings.shortcutProfile != oldValue.shortcutProfile { shortcutProfile = settings.shortcutProfile }
             if settings.keyOverrides != oldValue.keyOverrides { keyOverrides = settings.keyOverrides }
+            if settings.userTools != oldValue.userTools { refreshUserToolCommands(previous: oldValue.userTools) }
             guard !applyingPreferenceSets else { settingsBox.value = settings; return }
             recordPreferenceChange(from: oldValue, to: settings)
         }
@@ -371,7 +376,13 @@ public final class Workspace {
     /// Połączenia tylko do odczytu w tym uruchomieniu (parametr startowy `readonly=`, PD-CLI-001).
     public var startupReadOnlyPatterns: [String] = []
     @ObservationIgnored private var applyingPreferenceSets = false
-    @ObservationIgnored private let preferenceStore: PreferenceSetStore
+    @ObservationIgnored private var preferenceStore: PreferenceSetStore
+    /// Nieczytelne pliki danych przy starcie (settings.json, history.json, zestawy preferencji) zachowane jako `.bad-…`
+    /// — komunikaty dla użytkownika (D182).
+    @ObservationIgnored public private(set) var loadProblems: [String] = []
+    /// Kopia nieczytelnego settings.json / history.json się nie udała — zapis zablokowany, żeby nie nadpisać oryginału.
+    @ObservationIgnored private var settingsSaveBlocked = false
+    @ObservationIgnored private var historySaveBlocked = false
     public let connections: ConnectionStore
     public let sessions: SessionManager
     /// Katalog danych aplikacji (nil = bez zapisu: testy, `persists: false`).
@@ -490,12 +501,22 @@ public final class Workspace {
     public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
                 secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
         self.dataDirectory = dataDirectory
-        preferenceStore = PreferenceSetStore(directory: dataDirectory)
-        let sets = preferenceStore.load()
+        var setStore = PreferenceSetStore(directory: dataDirectory)
+        let sets = setStore.load()
+        preferenceStore = setStore
+        var problems = [setStore.loadProblem].compactMap(\.self)
         var personal: [String: JSONValue] = [:]
-        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")),
-           case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
-            personal = o
+        // Nieczytelny plik (uszkodzony, poprawiony ręcznie, z nowszej wersji) — zachowany obok, zanim pierwsza zmiana
+        // preferencji albo wykonane polecenie nadpisze go pustą zawartością.
+        var blocked: (settings: Bool, history: Bool) = (false, false)
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")) {
+            if case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
+                personal = o
+            } else {
+                let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("settings.json"))
+                problems.append(message)
+                blocked.settings = !preserved
+            }
         }
         if let profile { personal["shortcutProfile"] = .string(profile.rawValue) }
         // Przy starcie bez połączenia: zestawy globalne i osobisty użytkownika.
@@ -516,10 +537,18 @@ public final class Workspace {
         sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
         box.value = loaded
         settingsBox = box
-        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")),
-           let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
-            history = h
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")) {
+            if let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
+                history = h
+            } else {
+                let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("history.json"))
+                problems.append(message)
+                blocked.history = !preserved
+            }
         }
+        loadProblems = problems
+        settingsSaveBlocked = blocked.settings
+        historySaveBlocked = blocked.history
         // Komendy z plików użytkownika: makra z biblioteki i własne formaty Special Copy.
         macroLibrary = MacroLibrary.load(from: dataDirectory)
         if commands == nil {
@@ -539,13 +568,11 @@ public final class Workspace {
         let user = sessions.mainConnectionID.flatMap { connections.connection($0)?.target.driverUserName } ?? ""
         history.insert(HistoryEntry(date: Date(), user: user, text: text), at: 0)
         if history.count > limit { history.removeLast(history.count - limit) }
-        guard let dir = dataDirectory else { return }
+        guard let dir = dataDirectory, !historySaveBlocked else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(history) {
-            // Tekst wykonanych poleceń może zawierać cokolwiek — tylko dla właściciela (jak worksety).
-            let url = dir.appendingPathComponent("history.json")
-            try? data.write(to: url, options: [.atomic])
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            // Tekst wykonanych poleceń może zawierać cokolwiek — tylko dla właściciela (jak worksety), od chwili utworzenia pliku.
+            _ = try? PrivateFile.write(data, to: dir.appendingPathComponent("history.json"))
         }
     }
 
@@ -553,7 +580,7 @@ public final class Workspace {
 
     private func saveSettings() {
         settingsBox.value = settings
-        guard let dir = dataDirectory else { return }
+        guard let dir = dataDirectory, !settingsSaveBlocked else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(JSONValue.object(personalPreferences)) {
             try? data.write(to: dir.appendingPathComponent("settings.json"), options: [.atomic])
@@ -654,6 +681,13 @@ public final class Workspace {
         let n = (ordinals[kind] ?? 0) + 1
         ordinals[kind] = n
         let doc = Document(kind: kind, ordinal: n, text: text, fileURL: fileURL)
+        // Preferencje › Ogólne › „Przypinaj połączenie nowych okien” (PD-CONN-019, UG 23.1): nowe okno SQL, programu,
+        // testu i poleceń zostaje przy bieżącym połączeniu głównym, gdy główne się zmieni. Bez połączenia głównego okno
+        // nie ma czego przypiąć — dostanie główne przy logowaniu, jak nieprzypięte.
+        if settings.pinWindowConnectionsByDefault, [.sql, .program, .test, .command].contains(kind), let main = sessions.mainConnectionID {
+            doc.connectionID = main
+            doc.connectionPinned = true
+        }
         documents.append(doc)
         activeDocumentID = doc.id
         return doc
@@ -764,8 +798,9 @@ public final class Workspace {
         return EffectPreview(summary: command.descriptor.summary)
     }
 
-    /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane.
-    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) {
+    /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane. Zadanie — gdy trzeba poczekać na koniec.
+    @discardableResult
+    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) -> Task<Void, Never> {
         Task {
             do {
                 try await invoke(id, arguments)
@@ -863,6 +898,17 @@ extension Workspace {
             if commit { try await s.commit() } else { try await s.rollback() }
             d.transactionOpen = false
         }
+    }
+
+    /// Polecenie okna skończyło się utratą połączenia (ORA-03113, ORA-03114…): martwa sesja znika z mapy, żeby
+    /// kolejne polecenie połączyło się ponownie. Sesja szukana po tożsamości, nie po bieżącym kluczu okna — połączenie
+    /// okna albo główne mogło się zmienić w trakcie polecenia. Okna tej sesji (Dual/Single: wszystkie na sesji głównej)
+    /// tracą otwartą transakcję — wycofał ją serwer.
+    @discardableResult
+    public func dropLostSession(_ session: any DatabaseSession) -> Bool {
+        guard let key = sessions.key(of: session), sessions.dropLost(key) else { return false }
+        for d in documents where d.transactionOpen && sessionKey(for: d) == key { d.transactionOpen = false }
+        return true
     }
 }
 

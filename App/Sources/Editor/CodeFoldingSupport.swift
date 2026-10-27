@@ -12,6 +12,13 @@ final class FoldingContentDelegate: NSObject, NSTextContentStorageDelegate {
         let doc = textContentManager.documentRange.location
         let a = textContentManager.offset(from: doc, to: range.location)
         let b = textContentManager.offset(from: doc, to: range.endLocation)
-        return !hidden.contains { $0.lowerBound <= a && b <= $0.upperBound }
+        // Zakresy posortowane i rozłączne (`CodeFolding.hiddenRanges`) — wyszukiwanie binarne ostatniego zakresu
+        // zaczynającego się nie dalej niż akapit („Zwiń wszystko” w dużym pakiecie).
+        var lo = 0, hi = hidden.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if hidden[mid].lowerBound <= a { lo = mid + 1 } else { hi = mid }
+        }
+        return lo == 0 || b > hidden[lo - 1].upperBound
     }
 }

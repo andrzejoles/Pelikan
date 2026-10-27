@@ -32,10 +32,18 @@ extension Workspace {
         return try e.encode(BreakpointFile(entries: entries, errorCodes: errorBreakpoints))
     }
 
+    /// Warunki punktów przerwania w pliku (bez pustych) — do potwierdzenia przed wczytaniem: warunek jest wykonywany
+    /// jako SQL w sesji nadzorującej debugera (WS2-21).
+    public static func breakpointConditions(in data: Data) -> [String] {
+        guard let f = try? JSONDecoder().decode(BreakpointFile.self, from: data) else { return [] }
+        return f.entries.compactMap { $0.breakpoint.condition?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+
     /// Wczytuje punkty (`replace` — zamiast bieżących, inaczej dopisuje bez duplikatów); punkty bloku testu trafiają do
-    /// otwartego okna z tym plikiem. Zwraca liczbę dodanych punktów.
+    /// otwartego okna z tym plikiem. `keepConditions: false` — bez warunków (plik z niezaufanego źródła). Zwraca liczbę
+    /// dodanych punktów.
     @discardableResult
-    public func importBreakpoints(_ data: Data, replace: Bool) throws -> Int {
+    public func importBreakpoints(_ data: Data, replace: Bool, keepConditions: Bool = true) throws -> Int {
         guard let f = try? JSONDecoder().decode(BreakpointFile.self, from: data), f.format == "pelikan-breakpoints" else {
             throw CommandError.invalidArgument("file", L10n.tr("To nie jest plik punktów przerwania Pelikana"))
         }
@@ -44,6 +52,7 @@ extension Workspace {
         for e in f.entries {
             var bp = e.breakpoint
             bp.id = UUID()
+            if !keepConditions { bp.condition = nil }
             if let path = e.testFile {
                 guard let doc = documents.first(where: { $0.fileURL?.standardizedFileURL.path == URL(fileURLWithPath: path).standardizedFileURL.path }) else { continue }
                 bp.document = doc.id.raw
@@ -161,8 +170,27 @@ enum DebugP2Commands {
                 var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
                 if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
                 guard let url else { throw CommandError.cancelledByUser }
-                let n = try ctx.workspace.importBreakpoints(try Data(contentsOf: url), replace: ctx.arguments.bool("replace") ?? false)
-                return CommandResult(message: L10n.tr("Wczytano punkty przerwania: \(n)"), value: .int(Int64(n)))
+                let data = try Data(contentsOf: url)
+                @MainActor func load(_ keep: Bool) throws -> CommandResult {
+                    let n = try ctx.workspace.importBreakpoints(data, replace: ctx.arguments.bool("replace") ?? false, keepConditions: keep)
+                    return CommandResult(message: L10n.tr("Wczytano punkty przerwania: \(n)"), value: .int(Int64(n)))
+                }
+                // Warunki to SQL wykonywany przy zatrzymaniu (np. funkcja z autonomiczną transakcją) — pokazane do
+                // potwierdzenia; bez interfejsu wczytywane bez warunków (WS2-21).
+                var keep = true
+                let conditions = Workspace.breakpointConditions(in: data)
+                if !conditions.isEmpty {
+                    guard let ui = ctx.ui else { return try load(false) }
+                    let list = conditions.prefix(20).map { "• " + $0 }.joined(separator: "\n") + (conditions.count > 20 ? "\n…" : "")
+                    switch await ui.ask(L10n.tr("Punkty przerwania z warunkami"),
+                                        message: L10n.tr("Warunki są wykonywane jako SQL w bazie przy każdym zatrzymaniu:") + "\n" + list,
+                                        buttons: [L10n.tr("Wczytaj bez warunków"), L10n.tr("Wczytaj z warunkami"), L10n.tr("Anuluj")]) {
+                    case 0?: keep = false
+                    case 1?: keep = true
+                    default: throw CommandError.cancelledByUser
+                    }
+                }
+                return try load(keep)
             },
             // Przyciski listy punktów przerwania (R4-18) — komendy rejestru (skróty, makra).
             Command(CommandDescriptor(id: "debug.enableAllBreakpoints", title: L10n.tr("Włącz wszystkie punkty przerwania"), category: .debug,
@@ -181,6 +209,74 @@ enum DebugP2Commands {
                                       agent: .none, effect: .uiState, summary: L10n.tr("Usuwa wszystkie punkty przerwania."),
                                       inMenu: false, feature: "PD-DBG-008")) { ctx in
                 ctx.workspace.breakpoints.removeAll()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.removeBreakpoint", title: L10n.tr("Usuń punkt przerwania"), category: .debug,
+                                      parameters: [CommandParameter("id", .string, required: true, L10n.tr("Identyfikator punktu przerwania"))],
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Usuwa jeden punkt przerwania z listy."),
+                                      inMenu: false, feature: "PD-DBG-008")) { ctx in
+                let raw = ctx.arguments.string("id") ?? ""
+                guard let id = UUID(uuidString: raw), ctx.workspace.breakpoints.contains(where: { $0.id == id }) else {
+                    throw CommandError.invalidArgument("id", raw)
+                }
+                ctx.workspace.breakpoints.removeAll { $0.id == id }
+                return .ok
+            },
+        ] + debuggerPanelCommands
+    }
+
+    /// Debuger okna testu (aktywnego albo zatrzymanego) dla czynności panelu debugera.
+    @MainActor static func debugger(_ ws: Workspace) -> DebuggerEngine? { DebugCommands.testDocument(ws).map(ws.debugger(for:)) }
+
+    @MainActor static func pausedDebugger(_ ws: Workspace) -> DebuggerEngine? { debugger(ws).flatMap { $0.state == .paused ? $0 : nil } }
+
+    /// Czynności panelu debugera (UG 5.10): ramka stosu, obserwowane wyrażenia, zmiana wartości zmiennej (APP2-18).
+    @MainActor static var debuggerPanelCommands: [Command] {
+        let expression = CommandParameter("expression", .string, required: true, L10n.tr("Zmienna albo wyrażenie (np. v, r.pole, t(3))"))
+        return [
+            Command(CommandDescriptor(id: "debug.selectFrame", title: L10n.tr("Ramka stosu wywołań"), category: .debug,
+                                      parameters: [CommandParameter("frame", .integer, required: true, L10n.tr("Numer ramki stosu (od 0)"))],
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Wybiera ramkę stosu wywołań — panel pokazuje zmienne tej ramki."),
+                                      inMenu: false, feature: "PD-DBG-001"),
+                    validate: { pausedDebugger($0) != nil }) { ctx in
+                guard let d = pausedDebugger(ctx.workspace) else { return .ok }
+                guard let f = ctx.arguments.int("frame"), d.stack.indices.contains(Int(f)) else {
+                    throw CommandError.invalidArgument("frame", ctx.arguments.string("frame") ?? "")
+                }
+                await d.selectFrame(Int(f))
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.addWatch", title: L10n.tr("Obserwuj wyrażenie"), category: .debug,
+                                      parameters: [expression], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Dodaje zmienną albo wyrażenie do obserwowanych w panelu debugera."),
+                                      inMenu: false, feature: "PD-DBG-001"),
+                    validate: { debugger($0) != nil }) { ctx in
+                guard let d = debugger(ctx.workspace) else { return .ok }
+                guard let e = ctx.arguments.string("expression") else { throw CommandError.missingArgument("expression") }
+                await d.addWatch(e)
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.removeWatch", title: L10n.tr("Usuń z obserwowanych"), category: .debug,
+                                      parameters: [expression], agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Usuwa wyrażenie z obserwowanych w panelu debugera."), inMenu: false, feature: "PD-DBG-001"),
+                    validate: { debugger($0) != nil }) { ctx in
+                guard let d = debugger(ctx.workspace) else { return .ok }
+                guard let e = ctx.arguments.string("expression") else { throw CommandError.missingArgument("expression") }
+                d.removeWatch(e)
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.setValue", title: L10n.tr("Ustaw wartość zmiennej"), category: .debug,
+                                      parameters: [CommandParameter("variable", .string, required: true, L10n.tr("Ścieżka zmiennej skalarnej (np. v, r.pole)")),
+                                                   CommandParameter("value", .string, required: true, L10n.tr("Literał PL/SQL albo tekst; NULL — wartość pusta"))],
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Zmienia wartość zmiennej skalarnej w bieżącej ramce debugowanego programu (DBMS_DEBUG.SET_VALUE)."),
+                                      inMenu: false, feature: "PD-DBG-001"),
+                    validate: { pausedDebugger($0) != nil }) { ctx in
+                guard let d = pausedDebugger(ctx.workspace) else { return .ok }
+                guard let path = ctx.arguments.string("variable"), let value = ctx.arguments.string("value") else {
+                    throw CommandError.missingArgument("variable, value")
+                }
+                try await d.setValue(path, to: value)
                 return .ok
             },
         ]

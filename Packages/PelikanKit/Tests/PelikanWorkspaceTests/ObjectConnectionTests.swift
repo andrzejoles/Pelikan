@@ -37,6 +37,22 @@ struct ObjectConnectionTests {
         #expect(s.openConnections.isEmpty)
     }
 
+    @Test("Połączenie tymczasowe okna poleceń: w drzewie po CONNECT; po zmianie połączenia i DISCONNECT znika razem z definicją")
+    func temporaryConnection() async throws {
+        let ws = Workspace(drivers: [.instantClient: FakeDriver()])
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        #expect(await engine.run("connect u/good@dev_db1") == .finished, "\(doc.console.map(\.text))")
+        let first = try #require(doc.connectionID)
+        #expect(ws.sessions.openConnections.contains(first))
+        #expect(await engine.run("connect v/good@dev_db2") == .finished, "\(doc.console.map(\.text))")
+        let second = try #require(doc.connectionID)
+        #expect(second != first && !ws.sessions.openConnections.contains(first) && ws.connections.connection(first) == nil)
+        #expect(ws.sessions.openConnections.contains(second))
+        #expect(await engine.run("disconnect") == .finished)
+        #expect(!ws.sessions.openConnections.contains(second) && ws.connections.connection(second) == nil)
+    }
+
     @Test("Połączenie obiektu: argument, nazwa obiektu — okno, zaznaczenie — gałąź drzewa, bez kontekstu — główne")
     func objectConnection() throws {
         let (ws, ids) = try workspace(["dev_main", "dev_other", "dev_window"])
@@ -85,5 +101,24 @@ struct ObjectConnectionTests {
         }
         let compare = try #require(ws.registry.command("ob.compareWithConnection")?.descriptor)
         #expect(compare.parameters.filter { $0.name == "connection" }.count == 1)
+    }
+
+    @Test("utPLSQL z eksploratora i okna wyników: argument connection ma pierwszeństwo przed aktywnym oknem")
+    func utplsqlConnection() throws {
+        let (ws, ids) = try workspace(["dev_main", "dev_other"])
+        ws.sessions.setMainConnection(ids[0])
+        func ctx(_ args: [String: JSONValue] = [:]) -> CommandContext {
+            CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args))
+        }
+        #expect(try UtplsqlCommands.connection(ctx()) == ids[0])
+        let doc = ws.newDocument(.sql)
+        ws.bind(doc, to: ids[1])
+        #expect(try UtplsqlCommands.connection(ctx()) == ids[1], "bez argumentu — połączenie aktywnego okna")
+        #expect(try UtplsqlCommands.connection(ctx(["connection": .string(ids[0].uuidString)])) == ids[0])
+        #expect(throws: CommandError.self) { try UtplsqlCommands.connection(ctx(["connection": .string("dev_main")])) }
+        for id in ["utplsql.runAll", "utplsql.runPath", "utplsql.runWithOptions", "utplsql.coverage", "utplsql.export"] {
+            let d = try #require(ws.registry.command(CommandID(rawValue: id))?.descriptor, "\(id)")
+            #expect(d.parameters.filter { $0.name == "connection" }.count == 1, "\(id)")
+        }
     }
 }

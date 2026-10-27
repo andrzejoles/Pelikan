@@ -222,4 +222,64 @@ struct ODPISessionTests {
         let batch = try await s.fetch(r.implicitResults[0].id, maxRows: 10)
         #expect(batch.rows.map { $0[0] } == [.number("10"), .number("20"), .number("30"), .number("40")])
     }
+
+    @Test("Data i czas w wartości typu JSON (21c+) jako tekst ISO 8601")
+    func jsonTimestamps() async throws {
+        let s = try await TestDatabase.connect()
+        defer { Task { await s.close() } }
+        guard s.info.server.major >= 21 else { return }
+        let (_, rows) = try await s.queryAll("""
+            SELECT json_object('d' VALUE DATE '2024-05-01', 't' VALUE TIMESTAMP '2024-05-01 10:20:30.123' RETURNING JSON) FROM dual
+            """)
+        #expect(rows.first?.first == .json("{\"d\":\"2024-05-01T00:00:00\",\"t\":\"2024-05-01T10:20:30.123000\"}"))
+    }
+
+    @Test("DBMS_OUTPUT ponad limit LOB z opcji połączenia (1,2 mln znaków) odczytany w całości")
+    func largeOutput() async throws {
+        let s = try await TestDatabase.connect()
+        try await LargeOutputCheck.run(s)
+        await s.close()
+    }
+
+    @Test("BFILE, którego nie da się otworzyć: błąd w komórce zamiast przerwania pobierania")
+    func unreadableBFILE() async throws {
+        let s = try await TestDatabase.connect()
+        defer { Task { await s.close() } }
+        // '.' — sam katalog: FILEOPEN kończy się ORA-22288 przy odczycie (jak plik bez uprawnień w systemie plików).
+        let (_, rows) = try await s.queryAll("""
+            SELECT n, CASE n WHEN 1 THEN bfilename('DATA_PUMP_DIR', '.')
+                             WHEN 2 THEN bfilename('DATA_PUMP_DIR', 'pelikan_nie_ma_takiego_pliku.bin') END
+              FROM (SELECT level n FROM dual CONNECT BY level <= 3) ORDER BY n
+            """)
+        #expect(rows.map { $0[0] } == [.number("1"), .number("2"), .number("3")])
+        guard case .lob(let l) = rows[0][1] else { Issue.record("brak wartości BFILE: \(rows[0][1])"); return }
+        #expect(l.kind == .bfile && l.readError?.hasPrefix("ORA-22288") == true)
+        #expect(rows[0][1].displayText?.hasPrefix("<BFILE> ORA-22288") == true)
+        // Brakujący plik: serwer podaje długość 0 — pusta wartość, bez błędu.
+        guard case .lob(let missing) = rows[1][1] else { Issue.record("brak wartości BFILE: \(rows[1][1])"); return }
+        #expect(missing.length == 0 && missing.readError == nil)
+        #expect(rows[2][1] == .null)
+    }
+
+    @Test("Wielokrotne niejawne wyniki: pobranie, zamknięcie i zamknięcie sesji bez podwójnego zwolnienia")
+    func implicitResultsRelease() async throws {
+        let s = try await TestDatabase.connect()
+        for _ in 0..<20 {
+            let r = try await s.execute("""
+                DECLARE c1 SYS_REFCURSOR; c2 SYS_REFCURSOR;
+                BEGIN
+                  OPEN c1 FOR SELECT deptno FROM dept ORDER BY deptno; DBMS_SQL.RETURN_RESULT(c1);
+                  OPEN c2 FOR SELECT 1 FROM dual; DBMS_SQL.RETURN_RESULT(c2);
+                END;
+                """)
+            #expect(r.implicitResults.count == 2)
+            let all = try await s.fetch(r.implicitResults[0].id, maxRows: 100)   // koniec danych zamyka wynik
+            #expect(all.rows.count == 4)
+            await s.closeResultSet(r.implicitResults[1].id)
+        }
+        // Wynik niepobrany i niezamknięty — zwalniany przy zamknięciu sesji.
+        let left = try await s.execute("DECLARE c SYS_REFCURSOR; BEGIN OPEN c FOR SELECT 1 FROM dual; DBMS_SQL.RETURN_RESULT(c); END;")
+        #expect(left.implicitResults.count == 1)
+        await s.close()
+    }
 }

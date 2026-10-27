@@ -11,7 +11,17 @@ public struct ProgramUnit: Sendable, Hashable, Identifiable {
     public var range: Range<Int>
     public var line: Int
     public var text: String
+    /// Linia dokumentu (od 0) i kolumna (UTF-16, od 0) słowa typu: Oracle zapisuje źródło od niego (`PACKAGE BODY …`),
+    /// więc linia 1 ALL_SOURCE/ALL_ERRORS to ta linia, nie linia CREATE — przy `CREATE OR REPLACE` w osobnej linii albo
+    /// komentarzu przed typem różnią się (WS2-10).
+    public var sourceLine = 0
+    public var sourceColumn = 0
     public var id: String { "\(type.rawValue):\(owner ?? "").\(name)@\(range.lowerBound)" }
+
+    /// Linia i kolumna dokumentu (od 1) dla pozycji w źródle obiektu w bazie (ALL_SOURCE, ALL_ERRORS, DBMS_DEBUG — od 1).
+    public func documentPosition(line l: Int, column c: Int = 1) -> (line: Int, column: Int) {
+        (sourceLine + l, l == 1 ? c + sourceColumn : c)
+    }
 
     /// Nazwa karty jednostki.
     public var tabTitle: String {
@@ -39,8 +49,17 @@ public enum ProgramCompiler {
     /// Jednostki programu w tekście (polecenia CREATE PL/SQL zakończone `/`).
     public static func units(in text: String) -> [ProgramUnit] {
         ScriptSplitter.split(text).compactMap { s in
-            guard let (type, owner, name) = header(s.text) else { return nil }
-            return ProgramUnit(type: type, owner: owner, name: name, range: s.start..<s.end, line: s.line, text: s.text)
+            guard let h = headerTokens(s.text) else { return nil }
+            var u = ProgramUnit(type: h.type, owner: h.owner, name: h.name, range: s.start..<s.end, line: s.line, text: s.text)
+            u.sourceLine = s.line
+            // Java i MLE: ALL_SOURCE zawiera sam kod, bez nagłówka — zostaje linia CREATE.
+            if ![.javaSource, .mleModule].contains(h.type) {
+                let before = (s.text as NSString).substring(to: h.typeStart)
+                let lines = before.components(separatedBy: "\n")
+                u.sourceLine += lines.count - 1
+                u.sourceColumn = (lines.last ?? "").utf16.count
+            }
+            return u
         }
     }
 
@@ -83,7 +102,7 @@ public enum ProgramCompiler {
         return ns as String
     }
 
-    private static func headerTokens(_ sql: String) -> (type: DBObjectType, owner: String?, name: String, nameStart: Int)? {
+    private static func headerTokens(_ sql: String) -> (type: DBObjectType, owner: String?, name: String, nameStart: Int, typeStart: Int)? {
         let tokens = Lexer(sql).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment].contains($0.kind) }
         let ns = sql as NSString
         let words = tokens.prefix(14).map { ns.substring(with: NSRange(location: $0.start, length: $0.length)) }
@@ -94,6 +113,7 @@ public enum ProgramCompiler {
         let skip: Set<String> = ["OR", "REPLACE", "EDITIONABLE", "NONEDITIONABLE", "EDITIONING", "FORCE", "NOFORCE", "AND", "RESOLVE", "COMPILE"]
         while i < up.count, skip.contains(up[i]) { i += 1 }
         guard i < up.count else { return nil }
+        let typeStart = tokens[i].start
         var type: DBObjectType
         switch up[i] {
         case "PACKAGE": type = .package
@@ -118,8 +138,8 @@ public enum ProgramCompiler {
         }
         guard i < words.count else { return nil }
         func clean(_ s: String) -> String { s.hasPrefix("\"") ? String(s.dropFirst().dropLast()) : s.uppercased() }
-        if i + 2 < words.count, words[i + 1] == "." { return (type, clean(words[i]), clean(words[i + 2]), tokens[i + 2].start) }
-        return (type, nil, clean(words[i]), tokens[i].start)
+        if i + 2 < words.count, words[i + 1] == "." { return (type, clean(words[i]), clean(words[i + 2]), tokens[i + 2].start, typeStart) }
+        return (type, nil, clean(words[i]), tokens[i].start, typeStart)
     }
 
     /// Wynik kompilacji okna.
@@ -134,6 +154,10 @@ public enum ProgramCompiler {
     /// preferencji PLSQL_WARNINGS. Linie błędów przeliczane na linie dokumentu (od 1).
     @MainActor
     public static func compile(_ doc: Document, in ws: Workspace) async throws -> Result {
+        // Od początku (przed strażnikiem i łączeniem): drugie F8 albo zamknięcie okna w tym czasie są odrzucane (D168).
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
+        let wasOpen = ws.documents.contains { $0 === doc }
         if ws.settings.beautifier.beforeCompile { ws.autoBeautify(doc) }
         let units = units(in: doc.text)
         guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
@@ -145,6 +169,7 @@ public enum ProgramCompiler {
         }
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
+        try await ws.ensureStillOpen(doc, wasOpen: wasOpen)
         // Ostrzeżenia i parametry kompilatora z Preferencji (PD-PROG-013); błąd parametru (np. NATIVE bez uprawnień)
         // nie zatrzymuje kompilacji — obowiązuje ustawienie serwera.
         for statement in ws.settings.compiler.statements(warnings: ws.settings.plsqlWarnings) {
@@ -152,8 +177,6 @@ public enum ProgramCompiler {
         }
         var result = Result(messages: [], compiled: 0, stoppedAt: nil)
         let schema = s.info.currentSchema
-        doc.isExecuting = true
-        defer { doc.isExecuting = false }
         for u in units {
             do {
                 _ = try await s.execute(u.text)
@@ -180,11 +203,10 @@ public enum ProgramCompiler {
                 """, binds: [BindVariable(name: "o", value: .text(u.owner ?? schema)), BindVariable(name: "n", value: .text(u.name)),
                              BindVariable(name: "t", value: .text(u.type.rawValue))], limit: 10_000)
             for r in rows {
-                let line = Int(r[0].format(.default)) ?? 1
-                let col = Int(r[1].format(.default)) ?? 1
+                let at = u.documentPosition(line: Int(r[0].format(.default)) ?? 1, column: Int(r[1].format(.default)) ?? 1)
                 let attr = (r[3].displayText ?? "ERROR").uppercased()
                 result.messages.append(CompileMessage(severity: attr == "WARNING" ? .warning : .error, unit: u.tabTitle,
-                                                      line: u.line + line, column: col,
+                                                      line: at.line, column: at.column,
                                                       text: (r[2].displayText ?? "").trimmingCharacters(in: .whitespacesAndNewlines)))
             }
             if rows.contains(where: { ($0[3].displayText ?? "").uppercased() == "ERROR" }) {
@@ -226,6 +248,8 @@ public enum ProgramCompiler {
         let start = TextEditing.offset(ofLine: line, in: text)
         let ns = text as NSString
         let lineEnd = ns.lineRange(for: NSRange(location: min(start, ns.length), length: 0))
-        return min(start + max(0, column - 1), max(start, lineEnd.location + lineEnd.length - 1))
+        // Kolumna Oracle liczona w znakach — emoji spoza BMP zajmuje dwie jednostki UTF-16.
+        let last = max(start, lineEnd.location + lineEnd.length - 1)
+        return min(TextEditing.utf16Offset(ns, from: start, characters: max(0, column - 1), limit: last), last)
     }
 }

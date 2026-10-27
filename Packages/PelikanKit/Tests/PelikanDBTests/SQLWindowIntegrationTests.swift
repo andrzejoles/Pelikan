@@ -1,3 +1,8 @@
+#if canImport(Glibc)
+import Glibc
+#else
+import Darwin
+#endif
 import Foundation
 import PelikanDB
 import PelikanODPI
@@ -500,10 +505,34 @@ struct CommandWindowIntegrationTests {
     }
 }
 
+extension TestDatabase {
+    /// Serwer SSH testów tunelu (scripts/testdb.sh ssh-up) przygotowany i przyjmuje połączenia. Port i klucz zostają
+    /// w .testdb na stałe, a kontener po restarcie maszyny bywa zatrzymany — wtedy zestaw się pomija zamiast padać
+    /// (uruchom scripts/testdb.sh up albo ssh-up).
+    static var isSSHServerUp: Bool {
+        guard isAvailable, let port = config?.sshPort.flatMap(UInt16.init(exactly:)), let dir = config?.sshDirectory,
+              FileManager.default.fileExists(atPath: dir + "/id_ed25519") else { return false }
+        #if canImport(Glibc)
+        let fd = socket(AF_INET, Int32(SOCK_STREAM.rawValue), 0)
+        let connectSocket = Glibc.connect
+        #else
+        let fd = socket(AF_INET, SOCK_STREAM, 0)
+        let connectSocket = Darwin.connect
+        #endif
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+        var addr = sockaddr_in()
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = port.bigEndian
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+        return withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connectSocket(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) == 0 }
+        }
+    }
+}
+
 @MainActor
-@Suite("Tunel SSH do bazy testowej", .serialized,
-       .enabled(if: TestDatabase.isAvailable && TestDatabase.config?.sshPort != nil
-                && FileManager.default.fileExists(atPath: (TestDatabase.config?.sshDirectory ?? "") + "/id_ed25519")))
+@Suite("Tunel SSH do bazy testowej", .serialized, .enabled(if: TestDatabase.isSSHServerUp))
 struct SSHTunnelIntegrationTests {
     func workspace(identity: String) throws -> (Workspace, ConnectionDefinition) {
         let c = TestDatabase.config!

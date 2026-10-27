@@ -22,7 +22,6 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         table.addTableColumn(column)
         table.headerView = nil
         table.style = .plain
-        table.rowHeight = 22
         table.dataSource = self
         table.delegate = self
         table.target = self
