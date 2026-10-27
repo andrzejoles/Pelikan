@@ -37,7 +37,7 @@ final class AgentUIController: ApprovalPresenter {
             guard profiles != self.registeredProfiles else { return }
             // Usunięty profil znika z menu i palety od razu (domknięcie komendy trzyma kopię profilu).
             let removed = self.registeredProfiles.filter { old in !profiles.contains { $0.id == old.id } }
-            self.workspace.unregister(removed.map { CommandID(rawValue: "agent.launch.\($0.id)") })
+            self.workspace.unregister(removed.map(AgentUICommands.launchID))
             self.workspace.register(self.launchCommands(profiles))
         }
         do {
@@ -56,19 +56,12 @@ final class AgentUIController: ApprovalPresenter {
         Bundle.main.bundleURL.appendingPathComponent("Contents/MacOS/pelikan-mcp").path
     }
 
-    // MARK: Komendy (tylko dla użytkownika — poziom agenta „Brak”)
-
-    private static var submenu: String { L10n.tr("Agent AI") }
+    // MARK: Komendy (tylko dla użytkownika — poziom agenta „Brak”; opisy w AgentUICommands)
 
     private func launchCommands(_ profiles: [AgentProfile]) -> [Command] {
         registeredProfiles = profiles
         return profiles.map { profile in
-            Command(CommandDescriptor(
-                id: CommandID(rawValue: "agent.launch.\(profile.id)"), title: L10n.tr("Uruchom \(profile.name)"), category: .tools,
-                submenu: Self.submenu, agent: .none, effect: .external,
-                summary: L10n.tr("Uruchamia \(profile.name) w panelu agenta z serwerem MCP Pelikana tylko dla tej sesji; najpierw macierz uprawnień sesji."),
-                feature: "AI-PANEL-001")
-            ) { [weak self] _ in
+            Command(AgentUICommands.launch(profile)) { [weak self] _ in
                 try await self?.launch(profile)
                 return .ok
             }
@@ -77,41 +70,22 @@ final class AgentUIController: ApprovalPresenter {
 
     private func commands() -> [Command] {
         var list = launchCommands(workspace.settings.agent.profiles)
-        list.append(Command(CommandDescriptor(
-            id: "agent.togglePane", title: L10n.tr("Panel agenta"), category: .view,
-            agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje lub ukrywa panel agenta z terminalem i aktywnością."),
-            feature: "AI-PANEL-002")
-        ) { [weak self] _ in
-            self?.togglePane()
-            return .ok
-        })
-        list.append(Command(CommandDescriptor(
-            id: "agent.undoSession", title: L10n.tr("Cofnij sesję agenta…"), category: .tools, submenu: Self.submenu,
-            agent: .none, effect: .modifiesEditor,
-            summary: L10n.tr("Cofa zmiany wybranej sesji agenta: tekst okien, okna otwarte przez agenta; z podglądem i wykrywaniem konfliktów."),
-            feature: "AI-SEC-008")
-        ) { [weak self] _ in
-            guard let self, let id = self.pane.selectedSessionID else { throw CommandError.notAvailable(L10n.tr("Brak sesji agenta")) }
-            self.undoSession(id)
-            return .ok
-        })
-        list.append(Command(CommandDescriptor(
-            id: "agent.endSession", title: L10n.tr("Zakończ sesję agenta"), category: .tools, submenu: Self.submenu,
-            agent: .none, effect: .external,
-            summary: L10n.tr("Kończy proces CLI, unieważnia token sesji, wycofuje niezatwierdzone zmiany agenta i zamyka jego sesje bazy."),
-            feature: "AI-PANEL-001")
-        ) { [weak self] _ in
-            if let self, let id = self.pane.selectedSessionID { self.endSession(id) }
-            return .ok
-        })
-        list.append(Command(CommandDescriptor(
-            id: "agent.showLog", title: L10n.tr("Dziennik agentów…"), category: .tools, submenu: Self.submenu,
-            agent: .none, effect: .uiState, summary: L10n.tr("Przeglądarka dziennika wywołań narzędzi agentów (JSONL)."),
-            feature: "AI-LOG-001")
-        ) { [weak self] _ in
-            self?.showLog()
-            return .ok
-        })
+        for d in AgentUICommands.fixed {
+            list.append(Command(d) { [weak self] _ in
+                guard let self else { return .ok }
+                switch d.id {
+                case AgentUICommands.togglePane: self.togglePane()
+                case AgentUICommands.undoSession:
+                    guard let id = self.pane.selectedSessionID else { throw CommandError.notAvailable(L10n.tr("Brak sesji agenta")) }
+                    self.undoSession(id)
+                case AgentUICommands.endSession:
+                    if let id = self.pane.selectedSessionID { self.endSession(id) }
+                case AgentUICommands.showLog: self.showLog()
+                default: break
+                }
+                return .ok
+            })
+        }
         return list
     }
 

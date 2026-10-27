@@ -39,8 +39,8 @@ struct NotebookView: View {
             HStack {
                 Button(L10n.tr("Wykonaj wszystkie")) { perform("notebook.runAll") }.disabled(running)
                 Menu(L10n.tr("Dodaj komórkę")) {
-                    Button("SQL") { add(.sql) }
-                    Button("Markdown") { add(.markdown) }
+                    Button("SQL") { perform("notebook.addSQLCell") }
+                    Button("Markdown") { perform("notebook.addMarkdownCell") }
                 }
                 .fixedSize()
                 Spacer()
@@ -58,7 +58,9 @@ struct NotebookView: View {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(document.notebook.cells) { c in
                         NotebookCellView(document: document, cellID: c.id, running: running,
-                                         run: { run(c.id) }, remove: { remove(c.id) }, move: { move(c.id, by: $0) })
+                                         run: { perform("notebook.runCell", on: c.id) }, remove: { perform("notebook.removeCell", on: c.id) },
+                                         move: { perform("notebook.moveCell", on: c.id, ["by": .int(Int64($0))]) },
+                                         toggleChart: { perform("notebook.toggleChart", on: c.id) })
                     }
                 }
                 .padding(12)
@@ -72,29 +74,11 @@ struct NotebookView: View {
         workspace.perform(id, arguments)
     }
 
-    private func add(_ kind: NotebookCell.Kind) {
-        document.notebook.cells.append(NotebookCell(kind: kind, text: ""))
-        document.isModified = true
-    }
-
-    // Komórki po identyfikatorze, nie po indeksie z chwili rysowania (lista mogła się zmienić).
-    private func remove(_ id: NotebookCell.ID) {
-        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
-        document.notebook.cells.remove(at: i)
-        document.isModified = true
-    }
-
-    private func move(_ id: NotebookCell.ID, by d: Int) {
-        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
-        let j = i + d
-        guard document.notebook.cells.indices.contains(j) else { return }
-        document.notebook.cells.swapAt(i, j)
-        document.isModified = true
-    }
-
-    private func run(_ id: NotebookCell.ID) {
-        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
-        perform("notebook.runCell", CommandArguments(["index": .int(Int64(i))]))
+    /// Czynności komórki — komendy z numerem komórki ustalonym z jej identyfikatora w chwili kliknięcia (lista komórek
+    /// mogła się zmienić od narysowania).
+    private func perform(_ id: CommandID, on cell: NotebookCell.ID, _ extra: [String: JSONValue] = [:]) {
+        guard let i = document.notebook.cells.firstIndex(where: { $0.id == cell }) else { return }
+        perform(id, CommandArguments(extra.merging(["index": .int(Int64(i))]) { _, new in new }))
     }
 }
 
@@ -105,6 +89,7 @@ struct NotebookCellView: View {
     let run: () -> Void
     let remove: () -> Void
     let move: (Int) -> Void
+    let toggleChart: () -> Void
     @State private var editing = false
 
     private var cell: Binding<NotebookCell> {
@@ -164,11 +149,6 @@ struct NotebookCellView: View {
             Text(line).font(.code).textSelection(.enabled)
         }
         Text(L10n.tr("Czas: \(String(format: "%.3f", Double(r.milliseconds) / 1000)) s")).font(.uiSecondary).foregroundStyle(.secondary)
-    }
-
-    private func toggleChart() {
-        guard let r = cell.wrappedValue.result else { return }
-        cell.wrappedValue.chart = cell.wrappedValue.chart == nil ? r.suggestedChart() : nil
     }
 }
 

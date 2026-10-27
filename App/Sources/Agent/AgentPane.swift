@@ -311,8 +311,13 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     private let entries = NSTableView()
     private let raw = NSTextView()
     private var urls: [URL] = []
-    private var lines: [[String: Any]] = []
+    /// Wpisy zaznaczonego pliku — wartości pól jako tekst (parsowane w tle).
+    private var lines: [[String: String]] = []
     private var rawLines: [String] = []
+    /// Zaznaczony plik po nazwie — po ponownym wczytaniu listy kolejność może być inna.
+    private var selectedName: String?
+    private var loadTask: Task<Void, Never>?
+    private var fontToken: ObservationToken?
 
     init(directory: URL) {
         self.directory = directory
@@ -335,11 +340,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
         entries.setAccessibilityLabel(L10n.tr("Wpisy dziennika"))
         entries.delegate = self
         entries.usesAlternatingRowBackgroundColors = true
-        // Wiersze dziennika czcionką pomocniczą interfejsu — wysokość z czcionki (D178).
-        for t in [files, entries] {
-            t.rowSizeStyle = .custom
-            t.rowHeight = AppFonts.rowHeight(for: InterfaceFonts.shared.small) - 4
-        }
+        for t in [files, entries] { t.rowSizeStyle = .custom }
         entries.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         let left = NSScrollView()
         left.documentView = files
@@ -348,7 +349,6 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
         middle.documentView = entries
         middle.hasVerticalScroller = true
         raw.isEditable = false
-        raw.font = InterfaceFonts.shared.code
         raw.autoresizingMask = [.width]
         let bottom = NSScrollView()
         bottom.documentView = raw
@@ -364,15 +364,64 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
         view = split
         split.setPosition(260, ofDividerAt: 0)
         rightSplit.setPosition(460, ofDividerAt: 0)
+        fontToken = trackChanges { [weak self] in self?.applyFonts() }
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    /// Wiersze dziennika czcionką pomocniczą interfejsu, surowy wiersz czcionką kodu — także po zmianie w Preferencjach
+    /// (D178); wysokość wierszy z czcionki.
+    private func applyFonts() {
+        let fonts = InterfaceFonts.shared
+        for t in [files, entries] {
+            t.rowHeight = AppFonts.rowHeight(for: fonts.small) - 4
+            t.reloadData()
+        }
+        raw.font = fonts.code
+    }
+
+    /// Lista plików od nowa; zaznaczony plik (po nazwie) zostaje zaznaczony i jest wczytywany ponownie — dziennik
+    /// bieżącej sesji mógł się wydłużyć.
     func reload() {
         urls = ((try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)) ?? [])
             .filter { $0.pathExtension == "jsonl" }.sorted { $0.lastPathComponent > $1.lastPathComponent }
         files.reloadData()
+        if let name = selectedName, let i = urls.firstIndex(where: { $0.lastPathComponent == name }) {
+            files.selectRowIndexes([i], byExtendingSelection: false)
+            load(urls[i])
+        } else {
+            selectedName = nil
+            files.deselectAll(nil)
+            show([], [])
+        }
+    }
+
+    /// Odczyt i parsowanie pliku w tle (długa sesja agenta to tysiące wpisów z wynikami zapytań).
+    private func load(_ url: URL) {
+        loadTask?.cancel()
+        show([], [])
+        let name = url.lastPathComponent
+        loadTask = Task { [weak self] in
+            let (raw, parsed) = await Task.detached { Self.read(url) }.value
+            guard let self, !Task.isCancelled, self.selectedName == name else { return }
+            self.show(raw, parsed)
+        }
+    }
+
+    private func show(_ raw: [String], _ parsed: [[String: String]]) {
+        rawLines = raw
+        lines = parsed
+        entries.reloadData()
+        self.raw.string = ""
+    }
+
+    nonisolated private static func read(_ url: URL) -> ([String], [[String: String]]) {
+        let raw = ((try? String(contentsOf: url, encoding: .utf8)) ?? "").split(separator: "\n").map(String.init)
+        let parsed = raw.map { line in
+            ((try? JSONSerialization.jsonObject(with: Data(line.utf8))) as? [String: Any] ?? [:]).mapValues { "\($0)" }
+        }
+        return (raw, parsed)
     }
 
     func numberOfRows(in tableView: NSTableView) -> Int { tableView === files ? urls.count : lines.count }
@@ -383,7 +432,7 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
             text = urls[row].lastPathComponent
         } else {
             let e = lines[row]
-            func s(_ k: String) -> String? { e[k].map { "\($0)" } }
+            func s(_ k: String) -> String? { e[k] }
             switch tableColumn?.identifier.rawValue {
             case "time": text = s("time") ?? ""
             case "tool": text = s("tool") ?? s("approval").map { L10n.tr("zgoda: \($0)") } ?? s("event") ?? ""
@@ -401,11 +450,11 @@ final class AgentLogViewController: NSViewController, NSTableViewDataSource, NST
     func tableViewSelectionDidChange(_ notification: Notification) {
         guard let table = notification.object as? NSTableView else { return }
         if table === files {
-            guard files.selectedRow >= 0 else { return }
-            rawLines = ((try? String(contentsOf: urls[files.selectedRow], encoding: .utf8)) ?? "").split(separator: "\n").map(String.init)
-            lines = rawLines.map { (try? JSONSerialization.jsonObject(with: Data($0.utf8))) as? [String: Any] ?? [:] }
-            entries.reloadData()
-            raw.string = ""
+            guard files.selectedRow >= 0, files.selectedRow < urls.count else { return }
+            let url = urls[files.selectedRow]
+            guard url.lastPathComponent != selectedName else { return }
+            selectedName = url.lastPathComponent
+            load(url)
         } else if entries.selectedRow >= 0, entries.selectedRow < rawLines.count {
             raw.string = rawLines[entries.selectedRow]
         }

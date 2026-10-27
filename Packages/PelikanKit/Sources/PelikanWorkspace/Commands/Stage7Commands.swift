@@ -188,6 +188,37 @@ enum Stage7Commands {
                 try insert(s.text, into: doc)
                 return .ok
             },
+            Command(CommandDescriptor(id: "snippets.save", title: L10n.tr("Zapisz snippet"), category: .edit,
+                                      parameters: [CommandParameter("category", .string, required: true, L10n.tr("Kategoria")),
+                                                   CommandParameter("name", .string, required: true, L10n.tr("Nazwa")),
+                                                   CommandParameter("text", .string, required: true, L10n.tr("Tekst fragmentu")),
+                                                   CommandParameter("replaces", .string, L10n.tr("Identyfikator edytowanego snippetu (kategoria/nazwa) — przy zmianie nazwy"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Zapisuje własny snippet w bibliotece (snippet o tej samej kategorii i nazwie jest zastępowany)."),
+                                      inMenu: false, feature: "SC-SNIP-001")) { ctx in
+                guard let category = ctx.arguments.string("category"), let name = ctx.arguments.string("name"),
+                      let text = ctx.arguments.string("text") else { throw CommandError.missingArgument("category, name, text") }
+                let snippet = Snippet(category: category, name: name, text: text)
+                try ctx.workspace.snippets.save(snippet)
+                // Zmiana nazwy albo kategorii własnego snippetu — bez kopii pod starą nazwą.
+                if let old = ctx.arguments.string("replaces"), old != snippet.id { try ctx.workspace.snippets.remove(id: old) }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "snippets.remove", title: L10n.tr("Usuń snippet"), category: .edit,
+                                      parameters: [CommandParameter("id", .string, required: true, L10n.tr("Identyfikator: kategoria/nazwa"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Usuwa własny snippet z biblioteki (po potwierdzeniu); wbudowanych nie można usunąć."),
+                                      inMenu: false, feature: "SC-SNIP-001")) { ctx in
+                let id = ctx.arguments.string("id") ?? ""
+                guard let s = ctx.workspace.snippets.all.first(where: { $0.id == id }) else { throw CommandError.invalidArgument("id", id) }
+                guard !s.isBuiltIn else { throw CommandError.notAvailable(L10n.tr("Wbudowanego snippetu nie można usunąć")) }
+                if let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Usunąć snippet „\(s.name)”?"), message: s.category,
+                                       buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                try ctx.workspace.snippets.remove(id: id)
+                return .ok
+            },
         ]
     }
 }

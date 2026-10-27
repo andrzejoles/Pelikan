@@ -17,15 +17,11 @@ struct MacroLibraryView: View {
             }
             Table(workspace.macroLibrary.macros, selection: $selection) {
                 TableColumn(L10n.tr("Nazwa")) { m in
-                    TextField("", text: binding(m, \.name)).textFieldStyle(.plain)
+                    CommitTextField(title: "", value: m.name) { run("edit.macroRename", m, ["name": .string($0)]) }.textFieldStyle(.plain)
                 }
                 TableColumn(L10n.tr("Skrót")) { m in
-                    TextField(L10n.tr("np. ctrl+shift+1"), text: Binding(get: { m.key ?? "" }, set: { value in
-                        var lib = workspace.macroLibrary
-                        guard let i = lib.macros.firstIndex(where: { $0.id == m.id }) else { return }
-                        lib.macros[i].key = value.isEmpty ? nil : value
-                        workspace.updateMacros(lib)
-                    })).textFieldStyle(.plain)
+                    CommitTextField(title: L10n.tr("np. ctrl+shift+1"), value: m.key ?? "") { run("edit.macroSetKey", m, ["key": .string($0)]) }
+                        .textFieldStyle(.plain)
                 }.width(140)
                 TableColumn(L10n.tr("Kroki")) { m in Text("\(m.steps.count)").monospacedDigit() }.width(50)
             }
@@ -34,11 +30,7 @@ struct MacroLibraryView: View {
             }
             HStack {
                 Button(L10n.tr("Odtwórz")) { if let m = selected { play(m) } }.disabled(selected == nil)
-                Button(L10n.tr("Usuń")) {
-                    var lib = workspace.macroLibrary
-                    lib.macros.removeAll { $0.id == selection }
-                    workspace.updateMacros(lib)
-                }.disabled(selected == nil)
+                Button(L10n.tr("Usuń")) { if let m = selected { run("edit.macroRemove", m) } }.disabled(selected == nil)
                 Spacer()
                 Text(L10n.tr("Skrót zajęty przez inną komendę jest pomijany.")).font(.uiSecondary).foregroundStyle(.secondary)
             }
@@ -54,13 +46,15 @@ struct MacroLibraryView: View {
         workspace.perform(m.commandID)
     }
 
-    private func binding(_ m: Macro, _ path: WritableKeyPath<Macro, String>) -> Binding<String> {
-        Binding(get: { m[keyPath: path] }, set: { value in
-            var lib = workspace.macroLibrary
-            guard let i = lib.macros.firstIndex(where: { $0.id == m.id }) else { return }
-            lib.macros[i][keyPath: path] = value
-            workspace.updateMacros(lib)
-        })
+    /// Zmiany biblioteki przez komendy rejestru (dziennik komend; usunięcie z potwierdzeniem). Makra już nie ma
+    /// (usunięte przy edycji pola) — bez komendy.
+    private func run(_ id: CommandID, _ m: Macro, _ extra: [String: JSONValue] = [:]) {
+        guard workspace.macroLibrary.macros.contains(where: { $0.id == m.id }) else { return }
+        Task {
+            do { try await workspace.invoke(id, CommandArguments(extra.merging(["macro": .string(m.id.uuidString)]) { _, new in new })) }
+            catch CommandError.cancelledByUser {}
+            catch { workspace.ui?.showError(error.localizedDescription) }
+        }
     }
 }
 

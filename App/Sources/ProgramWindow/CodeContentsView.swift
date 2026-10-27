@@ -134,7 +134,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         let sort = NSMenuItem(title: L10n.tr("Sortuj"), action: nil, keyEquivalent: "")
         let sub = NSMenu()
         for (o, title) in [(CodeContents.Order.source, L10n.tr("Jak w źródle")), (.name, L10n.tr("Alfabetycznie")), (.kind, L10n.tr("Według rodzaju"))] {
-            let i = ClosureMenuItem(title: title) { ws.settings.codeContentsOrder = o }
+            let i = ClosureMenuItem(title: title) { ws.perform("codeContents.sort", CommandArguments(["order": .string(o.rawValue)])) }
             i.state = order == o ? .on : .off
             sub.addItem(i)
         }

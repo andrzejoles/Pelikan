@@ -264,6 +264,119 @@ enum ProjectCommands {
         try p.encoded().write(to: url, options: .atomic)
     }
 
+    /// Zmiana projektu z zapisem pliku projektu.
+    static func mutate(_ ws: Workspace, _ change: (inout Project, URL) throws -> Void) throws {
+        var (p, url) = try current(ws)
+        try change(&p, url)
+        ws.project = p
+        try save(ws)
+    }
+
+    /// Element z argumentu `item` (identyfikator elementu projektu).
+    static func itemIndex(_ ctx: CommandContext, in p: Project) throws -> Int {
+        guard let raw = ctx.arguments.string("item") else { throw CommandError.missingArgument("item") }
+        guard let id = UUID(uuidString: raw), let i = p.items.firstIndex(where: { $0.id == id }) else {
+            throw CommandError.invalidArgument("item", raw)
+        }
+        return i
+    }
+
+    static let itemParameter = CommandParameter("item", .string, required: true, L10n.tr("Identyfikator elementu projektu"))
+
+    /// Opcje projektu zmieniane komendą `project.setOption`.
+    static let options = ["connection", "haltOnFirstError", "beautifyOnBuild"]
+
+    /// Czynności na elementach i opcjach projektu (okno projektu, PD-PROJ-001/002) — każda zapisuje plik projektu.
+    static var itemCommands: [Command] {
+        let hasProject: @MainActor (Workspace) -> Bool = { $0.project != nil }
+        return [
+            Command(CommandDescriptor(id: "project.addFiles", title: L10n.tr("Dodaj pliki do projektu…"), category: .project,
+                                      parameters: [CommandParameter("files", .string, L10n.tr("Ścieżki plików (lista); bez — wybór plików"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Dodaje pliki do projektu (ścieżki względne wobec pliku projektu); pliki już obecne są pomijane."),
+                                      feature: "PD-PROJ-001"),
+                    validate: hasProject) { ctx in
+                _ = try current(ctx.workspace)
+                var files = (ctx.arguments.strings("files") ?? []).map { URL(fileURLWithPath: $0) }
+                if ctx.arguments.strings("files") == nil { files = await ctx.ui?.chooseFilesToOpen() ?? [] }
+                guard !files.isEmpty else { return .ok }
+                var added = 0
+                try mutate(ctx.workspace) { p, url in
+                    for f in files {
+                        let rel = ProjectEngine.relativePath(f, projectURL: url)
+                        if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)); added += 1 }
+                    }
+                }
+                return CommandResult(message: L10n.tr("Dodano plików: \(added)"))
+            },
+            Command(CommandDescriptor(id: "project.addNote", title: L10n.tr("Dodaj notatkę do projektu"), category: .project,
+                                      parameters: [CommandParameter("text", .string, L10n.tr("Tekst notatki"))],
+                                      agent: .none, effect: .external, summary: L10n.tr("Dodaje do projektu element-notatkę."), feature: "PD-PROJ-001"),
+                    validate: hasProject) { ctx in
+                let note = ProjectItem.note(ctx.arguments.string("text") ?? L10n.tr("Notatka"))
+                try mutate(ctx.workspace) { p, _ in p.items.append(note) }
+                return CommandResult(value: .string(note.id.uuidString))
+            },
+            Command(CommandDescriptor(id: "project.removeItem", title: L10n.tr("Usuń element z projektu"), category: .project,
+                                      parameters: [itemParameter], agent: .none, effect: .external,
+                                      summary: L10n.tr("Usuwa element z projektu (plik na dysku i obiekt w bazie zostają)."), inMenu: false,
+                                      feature: "PD-PROJ-001"),
+                    validate: hasProject) { ctx in
+                try mutate(ctx.workspace) { p, _ in
+                    let i = try itemIndex(ctx, in: p)
+                    p.items.remove(at: i)
+                }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "project.setItemGroup", title: L10n.tr("Grupa elementu projektu"), category: .project,
+                                      parameters: [itemParameter, CommandParameter("group", .string, L10n.tr("Nazwa grupy (pusta — bez grupy)"))],
+                                      agent: .none, effect: .external, summary: L10n.tr("Przenosi element projektu do grupy."), inMenu: false,
+                                      feature: "PD-PROJ-001"),
+                    validate: hasProject) { ctx in
+                let group = ctx.arguments.string("group").flatMap { $0.isEmpty ? nil : $0 }
+                try mutate(ctx.workspace) { p, _ in
+                    let i = try itemIndex(ctx, in: p)
+                    p.items[i].group = group
+                }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "project.setNote", title: L10n.tr("Tekst notatki projektu"), category: .project,
+                                      parameters: [itemParameter, CommandParameter("text", .string, required: true, L10n.tr("Tekst notatki"))],
+                                      agent: .none, effect: .external, summary: L10n.tr("Zmienia tekst elementu-notatki projektu."), inMenu: false,
+                                      feature: "PD-PROJ-001"),
+                    validate: hasProject) { ctx in
+                guard let text = ctx.arguments.string("text") else { throw CommandError.missingArgument("text") }
+                try mutate(ctx.workspace) { p, _ in
+                    let i = try itemIndex(ctx, in: p)
+                    guard p.items[i].kind == .note else { throw CommandError.invalidArgument("item", p.items[i].id.uuidString) }
+                    p.items[i].note = text
+                }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "project.setOption", title: L10n.tr("Opcja projektu"), category: .project,
+                                      parameters: [CommandParameter("option", .string, required: true, L10n.tr("Opcja"), allowed: options),
+                                                   CommandParameter("value", .string, required: true,
+                                                                    L10n.tr("Wartość: nazwa połączenia (pusta — główne) albo true/false"))],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zmienia opcję projektu: połączenie budowania, zatrzymanie po pierwszym błędzie, formatowanie przy budowaniu."),
+                                      inMenu: false, feature: "PD-PROJ-002"),
+                    validate: hasProject) { ctx in
+                guard let option = ctx.arguments.string("option") else { throw CommandError.missingArgument("option") }
+                guard let value = ctx.arguments.values["value"] else { throw CommandError.missingArgument("value") }
+                let flag = value.boolValue ?? (value.stringValue.map { ["true", "1", "yes", "tak"].contains($0.lowercased()) })
+                try mutate(ctx.workspace) { p, _ in
+                    switch option {
+                    case "connection": p.options.connection = value.stringValue.flatMap { $0.isEmpty ? nil : $0 }
+                    case "haltOnFirstError": p.options.haltOnFirstError = flag ?? p.options.haltOnFirstError
+                    case "beautifyOnBuild": p.options.beautifyOnBuild = flag ?? p.options.beautifyOnBuild
+                    default: throw CommandError.invalidArgument("option", option)
+                    }
+                }
+                return .ok
+            },
+        ]
+    }
+
     static var all: [Command] {
         let hasProject: @MainActor (Workspace) -> Bool = { $0.project != nil }
         return [
@@ -351,7 +464,7 @@ enum ProjectCommands {
                 return CommandResult(message: L10n.tr("Trafienia: \(matches.count)"),
                                      value: .array(matches.map { .object(["item": .string($0.title), "line": .int(Int64($0.line)), "text": .string($0.text)]) }))
             },
-        ]
+        ] + itemCommands
     }
 
     static func build(_ ctx: CommandContext, make: Bool) async throws -> CommandResult {

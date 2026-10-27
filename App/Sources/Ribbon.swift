@@ -412,8 +412,8 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     }
 }
 
-/// Widok z osią Y w dół (zawartość przewijana od lewej górnej krawędzi).
-private final class FlippedView: NSView {
+/// Widok z osią Y w dół (zawartość przewijana od lewej górnej krawędzi) — wstążka i panele narzędzi.
+final class FlippedView: NSView {
     override var isFlipped: Bool { true }
 }
 

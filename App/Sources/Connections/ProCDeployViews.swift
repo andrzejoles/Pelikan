@@ -308,7 +308,7 @@ struct DeployRunView: View {
     @ViewBuilder private func row(_ line: DeployConsoleLine, message: BuildMessage?) -> some View {
         switch line.kind {
         case .step:
-            Text(line.text).font(.system(size: 12, weight: .bold)).padding(.top, 6).padding(.bottom, 2)
+            Text(line.text).font(.uiHeadline).padding(.top, 6).padding(.bottom, 2)
         case .info:
             Text(line.text).font(.code).foregroundStyle(.secondary)
         case .output, .error:

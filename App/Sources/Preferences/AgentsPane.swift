@@ -5,16 +5,20 @@ import SwiftUI
 struct AgentsPane: View {
     let workspace: Workspace
 
-    private var profiles: Binding<[AgentProfile]> { setting(workspace, \.agent.profiles) }
+    /// Pole profilu wskazanego identyfikatorem (nie indeksem): usunięcie wiersza przy fokusie w polu nie zapisze
+    /// wartości do sąsiedniego profilu ani poza zakres (jak R5-02).
+    private func field<T>(_ p: AgentProfile, _ key: WritableKeyPath<AgentProfile, T>) -> Binding<T> {
+        setting(workspace, \.agent.profiles, p.id, key, fallback: p[keyPath: key])
+    }
 
     var body: some View {
         Form {
             Section {
-                ForEach(profiles) { $p in
+                ForEach(workspace.settings.agent.profiles) { p in
                     HStack {
-                        TextField(L10n.tr("Nazwa"), text: $p.name).frame(width: 150)
-                        TextField(L10n.tr("Polecenie"), text: $p.executable).font(.code).frame(width: 130)
-                        Picker(L10n.tr("Konfiguracja MCP jak"), selection: $p.flavor) {
+                        TextField(L10n.tr("Nazwa"), text: field(p, \.name)).frame(width: 150)
+                        TextField(L10n.tr("Polecenie"), text: field(p, \.executable)).font(.code).frame(width: 130)
+                        Picker(L10n.tr("Konfiguracja MCP jak"), selection: field(p, \.flavor)) {
                             ForEach(AgentFlavor.allCases, id: \.self) { Text(flavorName($0)).tag($0) }
                         }
                         .frame(width: 260)

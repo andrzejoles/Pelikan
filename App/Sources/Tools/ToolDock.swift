@@ -507,11 +507,6 @@ final class ToolDockViewController: NSViewController {
     }
 }
 
-/// Dokument przewijanej zawartości narzędzia — od góry, jak okno.
-private final class FlippedView: NSView {
-    override var isFlipped: Bool { true }
-}
-
 /// Korzeń panelu przyjmujący upuszczone karty narzędzi.
 private final class ToolDropView: NSView {
     var onDrop: ((String) -> Void)?

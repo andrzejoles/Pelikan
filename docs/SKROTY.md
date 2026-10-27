@@ -108,6 +108,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zapisz pulpit projektu | `project.saveDesktop` |  |  | Brak | PD-PROJ-003 |
 | Otwórz pulpit projektu | `project.openDesktop` |  |  | Brak | PD-PROJ-003 |
 | Szukaj w projekcie… | `project.find` |  |  | Brak | PD-PROJ-003 |
+| Dodaj pliki do projektu… | `project.addFiles` |  |  | Brak | PD-PROJ-001 |
+| Dodaj notatkę do projektu | `project.addNote` |  |  | Brak | PD-PROJ-001 |
+| Usuń element z projektu | `project.removeItem` |  |  | Brak | PD-PROJ-001 |
+| Grupa elementu projektu | `project.setItemGroup` |  |  | Brak | PD-PROJ-001 |
+| Tekst notatki projektu | `project.setNote` |  |  | Brak | PD-PROJ-001 |
+| Opcja projektu | `project.setOption` |  |  | Brak | PD-PROJ-002 |
 
 ## Edycja
 
@@ -145,6 +151,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
+| Zapisz snippet | `snippets.save` |  |  | Brak | SC-SNIP-001 |
+| Usuń snippet | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
 | Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | PD-GRID-005 |
 | Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | PD-GRID-007 |
 | Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | PD-GRID-007 |
@@ -169,6 +177,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Szukaj w edytorach i plikach… | `edit.searchBar` | ⌥⇧⌘F | ⌥⇧⌘F | Brak | PD-CA-015 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | PD-EDIT-027 |
 | Otwórz w zewnętrznym edytorze | `edit.openInExternalEditor` |  |  | Brak | PD-EDIT-028 |
+| Notatnik › Dodaj komórkę SQL | `notebook.addSQLCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Dodaj komórkę Markdown | `notebook.addMarkdownCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Usuń komórkę | `notebook.removeCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Przesuń komórkę | `notebook.moveCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Wykres z wyniku komórki | `notebook.toggleChart` |  |  | Brak | SD-NB-002 |
 | Analiza kodu › Analizuj kod | `edit.analyzeCode` |  |  | Brak | DG-INSP-001 |
 | Analiza kodu › Analiza kodu w czasie pisania | `edit.toggleCodeAnalysis` |  |  | Brak | DG-RES-001 |
 | Analiza kodu › Następny problem | `edit.nextProblem` |  | F2 | Brak | DG-RES-001 |
@@ -177,6 +190,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Znajdź użycia | `edit.findUsages` |  | ⌥F7 | Brak | DG-USE-001 |
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Brak | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Brak | PD-TPL-002 |
+| Zawartość kodu › Kolejność Code Contents | `codeContents.sort` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Brak | PD-CA-010 |
@@ -190,6 +204,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Makra › Odtwórz makro wielokrotnie… | `edit.macroRepeat` | ⇧F12 † | ⇧F12 | Brak | PD-EDIT-015 |
 | Makra › Zapisz makro w bibliotece… | `edit.macroSave` |  |  | Brak | PD-EDIT-015 |
 | Makra › Biblioteka makr… | `edit.macroLibrary` |  |  | Brak | PD-EDIT-015 |
+| Makra › Zmień nazwę makra | `edit.macroRename` |  |  | Brak | PD-EDIT-015 |
+| Makra › Skrót makra | `edit.macroSetKey` |  |  | Brak | PD-EDIT-015 |
+| Makra › Usuń makro | `edit.macroRemove` |  |  | Brak | PD-EDIT-015 |
 | Kopiuj jako literał › Swift | `edit.specialCopy.swift` |  |  | Brak | PD-EDIT-016 |
 | Kopiuj jako literał › Java | `edit.specialCopy.java` |  |  | Brak | PD-EDIT-016 |
 | Kopiuj jako literał › C# | `edit.specialCopy.csharp` |  |  | Brak | PD-EDIT-016 |
@@ -301,6 +318,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Włącz wszystkie punkty przerwania | `debug.enableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Wyłącz wszystkie punkty przerwania | `debug.disableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Usuń wszystkie punkty przerwania | `debug.removeAllBreakpoints` |  |  | Brak | PD-DBG-008 |
+| Usuń punkt przerwania | `debug.removeBreakpoint` |  |  | Brak | PD-DBG-008 |
+| Ramka stosu wywołań | `debug.selectFrame` |  |  | Brak | PD-DBG-001 |
+| Obserwuj wyrażenie | `debug.addWatch` |  |  | Brak | PD-DBG-001 |
+| Usuń z obserwowanych | `debug.removeWatch` |  |  | Brak | PD-DBG-001 |
+| Ustaw wartość zmiennej | `debug.setValue` |  |  | Brak | PD-DBG-001 |
 | Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | PD-TEST-009 |
 | Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | PD-OPT-007 |
 | Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | PD-OPT-007 |
@@ -468,6 +490,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Diagram › Kopiuj diagram jako obraz | `diagram.copyImage` |  |  | Brak | PD-DIAG-003 |
 | Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | PD-DIAG-003 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | PD-QB-001 |
+| Diagram › Przesuń zaznaczone | `diagram.move` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Dodaj punkt łamania | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Przesuń punkt łamania | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Usuń punkt łamania | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Tekst notatki diagramu | `diagram.editNote` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Kolor zaznaczonych | `diagram.setColor` |  |  | Brak | PD-DIAG-002 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | PD-TOOL-003 |
 | Import tabel… | `tools.importTables` |  |  | Brak | PD-TOOL-006 |
 | Import tekstu… | `tools.textImporter` |  |  | Brak | PD-TOOL-008 |

@@ -364,6 +364,13 @@ public enum RibbonModel {
                 ]),
                 .menu(L10n.tr("Preferencje"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
             ]),
+            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Preferencji › Agenci.
+            RibbonGroup(L10n.tr("Agent AI"), [
+                .large("agent.togglePane"),
+                .menu(L10n.tr("Uruchom agenta"), symbol: "sparkles", commands: ["agent.launch.*"], large: true),
+                .small("agent.undoSession", label: L10n.tr("Cofnij sesję")), .small("agent.endSession", label: L10n.tr("Zakończ sesję")),
+                .small("agent.showLog", label: L10n.tr("Dziennik agentów")),
+            ]),
         ])
     }
 
@@ -392,6 +399,7 @@ public enum RibbonModel {
                 .small("view.objectBrowser"), .small("view.fileBrowser"), .small("view.snippets"),
                 .small("view.taskMonitor"), .small("view.clipboardHistory"), .small("view.todoItems"),
                 .small("grid.valuePanel"), .small("view.templateWindow"), .small("view.codeContents"),
+                .small("agent.togglePane"),
             ]),
             RibbonGroup(L10n.tr("Edytor"), [
                 .small("view.splitEditor"), .small("view.wordWrap"), .small("view.specialCharacters"),
@@ -417,7 +425,7 @@ public enum RibbonModel {
             RibbonGroup(L10n.tr("Projekt i workset"), [
                 .menu(L10n.tr("Projekt"), symbol: "folder.badge.gearshape", commands: [
                     "project.show", "project.new", "project.open", "project.close", separator, "project.addActiveFile", "project.addSelectedObject",
-                    separator, "project.build", "project.make", "project.find", separator, "project.saveDesktop", "project.openDesktop",
+                    "project.addFiles", "project.addNote", separator, "project.build", "project.make", "project.find", separator, "project.saveDesktop", "project.openDesktop",
                 ], large: true),
                 .menu(L10n.tr("Workset"), symbol: "square.stack.3d.up", commands: [
                     "workset.new", "workset.open", "workset.save", "workset.revert", "workset.close", separator, "workset.compare",
@@ -579,6 +587,11 @@ public enum RibbonModel {
                 .large("notebook.runAll", label: L10n.tr("Wykonaj wszystko")),
                 .small("notebook.runCell", label: L10n.tr("Wykonaj komórkę")), .small("sql.break"),
                 .small("notebook.exportMarkdown", label: L10n.tr("Eksportuj Markdown")),
+            ]),
+            // Usuwanie, przestawianie i wykres — przyciski w komórce (komendy z numerem komórki).
+            RibbonGroup(L10n.tr("Komórki"), [
+                .small("notebook.addSQLCell", label: L10n.tr("Komórka SQL")),
+                .small("notebook.addMarkdownCell", label: L10n.tr("Komórka Markdown")),
             ]),
         ])
     }

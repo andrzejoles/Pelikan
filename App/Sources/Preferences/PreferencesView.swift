@@ -297,8 +297,8 @@ struct SQLWindowPane: View {
                 }
             }
             Section(L10n.tr("Formaty dat (UG 23.17)")) {
-                TextField(L10n.tr("DATE"), text: setting(workspace, \.dateFormat)).font(.body.monospaced())
-                TextField(L10n.tr("TIMESTAMP"), text: setting(workspace, \.timestampFormat)).font(.body.monospaced())
+                TextField(L10n.tr("DATE"), text: setting(workspace, \.dateFormat)).font(.code)
+                TextField(L10n.tr("TIMESTAMP"), text: setting(workspace, \.timestampFormat)).font(.code)
             }
         }
         .formStyle(.grouped)
@@ -637,7 +637,7 @@ struct KeyboardPane: View {
                 TableColumn(L10n.tr("Komenda")) { (r: Row) in Text(r.d.submenu.map { "\($0) › \(r.d.title)" } ?? r.d.title) }
                 TableColumn(L10n.tr("Menu")) { (r: Row) in Text(r.d.category.displayName).foregroundStyle(.secondary) }.width(110)
                 TableColumn(L10n.tr("Skróty")) { (r: Row) in
-                    Text(workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ")).font(.body.monospaced())
+                    Text(workspace.keymap.chords(for: r.d.id).map(\.displayString).joined(separator: "  ")).font(.code)
                 }.width(170)
             }
             .onChange(of: selection) { _, _ in message = nil }

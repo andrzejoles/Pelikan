@@ -35,7 +35,7 @@ struct BreakpointsView: View {
                     Toggle("", isOn: Binding(get: { b.dontBreak ?? false }, set: { b.dontBreak = $0 ? true : nil })).labelsHidden()
                 }.width(90)
                 TableColumn("") { $b in
-                    Button { workspace.breakpoints.removeAll { $0.id == b.id } } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
+                    Button { workspace.perform("debug.removeBreakpoint", CommandArguments(["id": .string(b.id.uuidString)])) } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń")).buttonStyle(.borderless)
                 }.width(30)
             }
             HStack {
