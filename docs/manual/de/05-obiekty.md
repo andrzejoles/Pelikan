@@ -2,13 +2,23 @@
 
 ## Object Browser
 
-Der Tab **Objekte** in der linken Spalte zeigt die Datenbankobjekte der Hauptverbindung in Ordnern nach Typ:
+Der Tab **Objekte** in der linken Spalte zeigt die Datenbankobjekte der geöffneten Verbindungen in Ordnern nach Typ:
 **Funktionen**, **Prozeduren**, **Pakete**, **Package Bodies**, **Typen**, **Trigger**, **Java-Quellen**,
 **Bibliotheken**, **Tabellen**, **Views**, **Materialized Views**, **Sequenzen**, **Synonyme**, **Indizes**,
 **Datenbank-Links**, **Queues**, **Jobs (Scheduler)**, **Benutzer**, **Rollen**, **Profile**, **Verzeichnisse** und
 weitere. Auf Datenbanken 23ai und 26ai kommen **MLE-Module**, **MLE-Umgebungen**, **Domänen**, **Property Graphs**,
 **Annotationen** und **Assertions** hinzu. Ordner erscheinen nur, wenn die Datenbankversion und Ihre Berechtigungen es
 zulassen.
+
+Auf der obersten Ebene des Baums stehen die **geöffneten Verbindungen** — wie in DBeaver. Die Hauptverbindung steht
+zuerst, mit Stern, fett und mit „Haupt“ beschriftet; die anderen erscheinen nach dem Verbinden (z. B. über ein Fenster
+auf einer anderen Verbindung oder **Verbinden** in der Verbindungsliste) und verschwinden nach dem Trennen. Jede
+Verbindung hat eigene Ordner, **Zuletzt** und eine eigene Benutzerauswahl. Aktionen an einem Objekt (Daten anzeigen,
+Bearbeiten, DDL, Neu kompilieren, Ziehen in den Editor …) wirken auf die Verbindung des Zweigs, und Fenster für ein
+Objekt einer anderen als der Hauptverbindung sind an sie angeheftet. Das Verbindungsmenü im Baum: **Als
+Hauptverbindung festlegen**, **Neues SQL-Fenster auf dieser Verbindung**, **Aktualisieren**, **Verbindung
+bearbeiten …** und **Trennen**. Die Hauptverbindung gilt nur dann, wenn sich aus dem Kontext keine andere ergibt — ein
+neues Fenster aus dem Menü, ein Werkzeug ohne aktives Fenster.
 
 - **Benutzerauswahl** über dem Baum: *Aktueller Benutzer*, *Alle Benutzer* oder ein bestimmtes Schema (Pelikan merkt
   sich die Auswahl pro Verbindung).

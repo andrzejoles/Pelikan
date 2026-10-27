@@ -1726,3 +1726,24 @@ reguła zostaje dla historii sprzed #102. Bezpieczeństwo przejścia 10.5.0 → 
 „starszą” aplikację); znaczniki v7.9.0–v10.5.0 nie kolidują z v1.x. `scripts/version-test.sh` (w CI) sprawdza regułę
 na tymczasowym repozytorium. Notatki wydań stabilnych: `docs/NOWOSCI.md`; `docs/BETA.md` zostaje jako historia bet.
 
+### D185 · 2026-10-27 — Przeglądarka obiektów z wieloma połączeniami (jak w DBeaverze)
+Właściciel poprosił, żeby Object Browser pokazywał wszystkie uruchomione połączenia, znikające po rozłączeniu, z
+wyróżnionym połączeniem głównym, które jest domyślne tylko wtedy, gdy kontekst wywołania nie wskazuje innego.
+`SessionManager.openConnections` to otwarte połączenia w kolejności połączenia: od pierwszej sesji poza agentem AI
+(sesja agenta nie dodaje połączenia do drzewa użytkownika) albo ustawienia jako główne do rozłączenia; zamknięcie
+bezczynnej i utrata sesji go nie usuwają. Drzewo: gałąź na połączenie (główne pierwsze, ★, pogrubione, „główne”,
+kolor połączenia), pod nią foldery, Ostatnie i foldery użytkownika; wybór użytkownika osobno dla każdej gałęzi (lista
+nad drzewem dotyczy gałęzi zaznaczonego wiersza), filtr — wspólny. Zaznaczenie zapisuje połączenie gałęzi
+(`Workspace.selectedObjectConnection`); zaznaczenie wielu obiektów obejmuje jedno połączenie.
+
+Połączenie komendy obiektu (`CommandContext.objectConnection`): argument `connection`; obiekt wskazany nazwą
+(`object`, `objects`) — połączenie aktywnego okna (okno poleceń przekazuje swoje połączenie jawnie); bez argumentów —
+gałąź zaznaczonego obiektu; dopiero potem główne. Wszystkie `ob.*` mają parametr `connection`; „Porównaj z obiektem
+w innej bazie” zachowuje swój `connection` (druga baza, nazwą), a obiekt bierze z kontekstu. Okno otwarte dla obiektu
+innego połączenia niż główne jest do niego przypięte (`Workspace.bind`, zostaje w worksecie); dla głównego — jak dotąd.
+Przeciągnięcie obiektu niesie połączenie gałęzi (czwarta część schowka; stary format trzech części działa). Nowe
+obiekty („Nowa tabela…”, prosty edytor), wyszukiwanie obiektów i kompilacja niepoprawnych — połączenie aktywnego okna.
+Poprawione przy okazji: „Wczytaj ponownie z bazy” czytał źródło z połączenia głównego zamiast okna; generator kodu
+brał alias połączenia głównego. Pierwsze zbudowanie drzewa po wczytaniu widoku (synchronicznie z loadView kolumna
+zostawała wąska i nazwy były obcinane). Komendy połączeń przyjmują też nazwę definicji (skrypty, scenariusze zrzutów).
+

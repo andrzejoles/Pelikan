@@ -2,12 +2,21 @@
 
 ## Przeglądarka obiektów
 
-Karta **Obiekty** w lewej kolumnie pokazuje obiekty bazy połączenia głównego w folderach według typu: **Funkcje**,
+Karta **Obiekty** w lewej kolumnie pokazuje obiekty baz otwartych połączeń w folderach według typu: **Funkcje**,
 **Procedury**, **Pakiety**, **Ciała pakietów**, **Typy**, **Wyzwalacze**, **Źródła Java**, **Biblioteki**, **Tabele**,
 **Widoki**, **Widoki zmaterializowane**, **Sekwencje**, **Synonimy**, **Indeksy**, **Łącza bazy danych**, **Kolejki**,
 **Zadania (Scheduler)**, **Użytkownicy**, **Role**, **Profile**, **Katalogi** i inne. Na bazach 23ai i 26ai dochodzą
 **Moduły MLE**, **Środowiska MLE**, **Domeny**, **Grafy właściwości**, **Adnotacje** i **Asercje**. Foldery pojawiają
 się tylko wtedy, gdy wersja bazy i Twoje uprawnienia na to pozwalają.
+
+Na najwyższym poziomie drzewa są **otwarte połączenia** — jak w DBeaverze. Połączenie główne jest pierwsze,
+oznaczone gwiazdką, pogrubione i opisane „główne”; pozostałe pojawiają się po połączeniu (np. przez okno na innym
+połączeniu albo **Połącz** na liście połączeń) i znikają po rozłączeniu. Każde połączenie ma pod sobą własne foldery,
+**Ostatnie** i wybór użytkownika. Czynności na obiekcie (Pokaż dane, Edytuj, DDL, Rekompiluj, przeciągnięcie do
+edytora…) działają na połączeniu gałęzi, a okna otwarte dla obiektu innego połączenia niż główne są do niego
+przypięte. Menu połączenia w drzewie: **Ustaw jako połączenie główne**, **Nowe okno SQL na tym połączeniu**,
+**Odśwież**, **Edytuj połączenie…** i **Rozłącz**. Połączenie główne jest domyślne tylko wtedy, gdy z kontekstu nie
+wynika inne — nowe okno z menu, narzędzie bez aktywnego okna.
 
 - **Wybór użytkownika** nad drzewem: *Bieżący użytkownik*, *Wszyscy użytkownicy* albo konkretny schemat (Pelikan
   pamięta wybór dla połączenia).
