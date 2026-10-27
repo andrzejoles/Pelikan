@@ -181,7 +181,7 @@ struct PortedServerTests {
         p.arguments = ["-q", "-t", "rsa", "-b", "2048", "-N", "", "-f", other.path + "/k"]
         p.detachStandardIO()
         try p.run()
-        p.waitUntilExit()
+        p.waitForExit(timeout: 30)
         let fake = try String(contentsOfFile: other.path + "/k.pub", encoding: .utf8).split(separator: " ").prefix(2).joined(separator: " ")
         try Data("[127.0.0.1]:\(sshd.port) \(fake)\n".utf8).write(to: URL(fileURLWithPath: sshd.knownHosts))
         let (session, run) = try sshd.session()
