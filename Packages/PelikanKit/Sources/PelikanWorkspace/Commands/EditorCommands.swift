@@ -9,8 +9,9 @@ enum EditorCommands {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"),
                                   agent: .none, effect: .uiState, summary: L10n.tr("Otwiera edytor nowego obiektu: \(title.replacingOccurrences(of: "…", with: ""))."),
                                   feature: feature),
-                validate: { $0.metadata() != nil }) { ctx in
-            guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
+            // Nowy obiekt: na połączeniu aktywnego okna, bez okna — głównym (D185).
+            guard let m = ctx.workspace.metadata(for: ctx.workspace.toolConnection()) else { throw CommandError.notConnected }
             var e = SimpleObjectEditor(kind: kind, owner: try await m.currentSchema())
             switch kind {
             case .sequence: e.values = ["name": "NOWA_SEKWENCJA", "start": "1", "increment": "1", "cache": "20"]
@@ -33,8 +34,8 @@ enum EditorCommands {
             Command(CommandDescriptor(id: "file.newTable", title: L10n.tr("Tabela…"), category: .file, submenu: L10n.tr("Nowy"),
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera edytor definicji nowej tabeli w schemacie bieżącym."), feature: "PD-OED-001"),
-                    validate: { $0.metadata() != nil }) { ctx in
-                guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                    validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
+                guard let m = ctx.workspace.metadata(for: ctx.workspace.toolConnection()) else { throw CommandError.notConnected }
                 var d = TableDefinition(owner: try await m.currentSchema(), name: "NOWA_TABELA")
                 d.columns = [TableDefinition.Column(name: "ID", type: "NUMBER", nullable: false)]
                 d.keys = [TableDefinition.Key(name: "NOWA_TABELA_PK", kind: .primary, columns: ["ID"])]
@@ -97,6 +98,7 @@ enum EditorCommands {
                 let member = ctx.arguments.string("member")
                 let (text, vars) = try await TestRunner.script(for: o, member: member, overload: ctx.arguments.int("overload").map(Int.init), metadata: m)
                 let doc = ctx.workspace.newDocument(.test, text: text)
+                ctx.workspace.bind(doc, to: m.connectionID)
                 doc.testVariables = vars
                 doc.customTitle = L10n.tr("Test \(member ?? o.name)").lowercased()
                 return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -124,6 +126,7 @@ enum EditorCommands {
                 let (call, vars) = try await TestRunner.script(for: o, member: member, metadata: m)
                 let (block, all) = StandardTestStore.apply(try store.load(name), call: call, variables: vars)
                 let doc = ctx.workspace.newDocument(.test, text: block)
+                ctx.workspace.bind(doc, to: m.connectionID)
                 doc.testVariables = all
                 doc.customTitle = name + " — " + (member ?? o.name).lowercased()
                 return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -194,7 +197,7 @@ enum EditorCommands {
                                       feature: "PD-DBG-013")) { ctx in
                 let ws = ctx.workspace
                 var user = ctx.arguments.string("user")
-                if user == nil, let m = ws.metadata() { user = try? await m.currentSchema() }
+                if user == nil, let m = ws.metadata(for: ws.toolConnection()) { user = try? await m.currentSchema() }
                 guard let user, SessionManager.isSafeIdentifier(user) else { throw CommandError.invalidArgument("user", user ?? "") }
                 let script = """
                     -- Uprawnienia debugera PL/SQL dla \(user.uppercased()) — wykonuje administrator (DBA).

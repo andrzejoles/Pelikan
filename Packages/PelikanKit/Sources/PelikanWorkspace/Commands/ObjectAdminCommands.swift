@@ -12,16 +12,15 @@ enum ObjectAdminCommands {
                                   summary: summary, feature: feature), validate: validate, run: run)
     }
 
+    /// Sesja główna połączenia obiektu (gałąź Object Browsera, argument `connection`, a bez nich — połączenie główne).
     static func mainSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
-        guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
-        return try await ctx.workspace.sessions.session(SessionKey(connectionID: conn, purpose: .main))
+        try await ctx.workspace.sessions.session(SessionKey(connectionID: try ctx.objectConnection(), purpose: .main))
     }
 
     /// Sesja poleceń z niejawnym COMMIT (DDL, DBMS_MVIEW/DBMS_JOB/DBMS_AQADM): sesja kompilacji, jak `ob.recompile` —
     /// w trybie Dual sesja główna jest sesją okien i zatwierdziłaby po cichu ich transakcje.
     static func changeSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
-        guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
-        return try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: conn))
+        try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: try ctx.objectConnection()))
     }
 
     static func programDocument(_ ws: Workspace) -> Document? { ws.activeDocument.flatMap { $0.kind == .program ? $0 : nil } }
@@ -35,11 +34,11 @@ enum ObjectAdminCommands {
                     summary: enabled ? L10n.tr("Włącza wyzwalacz albo więz lub wszystkie wyzwalacze tabeli.") : L10n.tr("Wyłącza wyzwalacz albo więz lub wszystkie wyzwalacze tabeli."),
                     feature: "PD-OB-019",
                     validate: { ws in ws.selectedObject.map { [.trigger, .table].contains($0.type) } ?? false }) { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
                 let sql = try ObjectAdmin.setEnabled(o, enabled: enabled, constraint: ctx.arguments.string("constraint"))
-                try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID ?? UUID())
+                try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await changeSession(ctx).execute(sql)
-                ctx.workspace.metadata()?.refresh()
+                m.refresh()
                 return CommandResult(message: sql)
             }
         }
@@ -57,12 +56,11 @@ enum ObjectAdminCommands {
             command("ob.testLink", L10n.tr("Testuj łącze"), params: objectParams, agent: .read, effect: .none,
                     summary: L10n.tr("Sprawdza łącze bazy danych zapytaniem do DUAL po drugiej stronie i podaje czas odpowiedzi."), feature: "PD-OB-019",
                     validate: { $0.selectedObject?.type == .databaseLink }) { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
                 guard o.name.range(of: #"^[A-Za-z0-9_$#.@]+$"#, options: .regularExpression) != nil else { throw CommandError.invalidArgument("object", o.name) }
                 // Zapytanie przez łącze otwiera transakcję rozproszoną — osobna sesja narzędzia, wycofana i zamknięta
                 // (w trybie Dual sesja główna jest sesją okien).
-                guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
-                let key = SessionKey(connectionID: conn, purpose: .tool("dblink"))
+                let key = SessionKey(connectionID: m.connectionID, purpose: .tool("dblink"))
                 defer { Task { await ctx.workspace.sessions.close(key) } }
                 let s = try await ctx.workspace.sessions.session(key)
                 let start = ContinuousClock.now
@@ -109,7 +107,10 @@ enum ObjectAdminCommands {
             command("prog.reloadFromDatabase", L10n.tr("Wczytaj ponownie z bazy"), .session, submenu: nil, agent: .none, effect: .modifiesEditor,
                     summary: L10n.tr("Zastępuje tekst okna programu źródłem obiektów z bazy (po potwierdzeniu, gdy są niezapisane zmiany)."), feature: "PD-PROG-011",
                     validate: { programDocument($0).map { !$0.objectTimestamps.isEmpty } ?? false }) { ctx in
-                guard let doc = programDocument(ctx.workspace), let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                // Źródło z połączenia okna (nie głównego — okno mogło wczytać obiekt z innego połączenia, PD-OB-001).
+                guard let doc = programDocument(ctx.workspace), let m = ctx.workspace.metadata(for: ctx.workspace.effectiveConnection(of: doc)) else {
+                    throw CommandError.notConnected
+                }
                 if doc.isModified, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Wczytać ponownie z bazy?"), message: L10n.tr("Niezapisane zmiany w oknie zostaną utracone."),
                                        buttons: [L10n.tr("Wczytaj"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
@@ -129,9 +130,9 @@ enum ObjectAdminCommands {
                 doc.statusText = L10n.tr("Wczytano ponownie z bazy")
                 return .ok
             },
-            command("ob.recycleBin", L10n.tr("Kosz"), submenu: nil, agent: .read, effect: .none,
+            command("ob.recycleBin", L10n.tr("Kosz"), submenu: nil, params: [CommandContext.toolConnectionParam], agent: .read, effect: .none,
                     summary: L10n.tr("Obiekty usunięte do kosza (USER_RECYCLEBIN): nazwa pierwotna, typ, czas usunięcia."), feature: "PD-OB-021",
-                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                    validate: { $0.objectBrowserConnection != nil }) { ctx in
                 let items = try await ObjectAdmin.recycleBin(try await mainSession(ctx))
                 if ctx.invoker == .user {
                     let text = items.isEmpty ? L10n.tr("Kosz jest pusty.") : items.map { "\($0.originalName)  \($0.type)  \($0.dropTime)  \($0.binName)" }.joined(separator: "\n")
@@ -142,23 +143,25 @@ enum ObjectAdminCommands {
             },
             command("ob.restoreFromRecycleBin", L10n.tr("Przywróć z kosza…"), submenu: L10n.tr("Kosz"),
                     params: [CommandParameter("name", .string, required: true, L10n.tr("Nazwa pierwotna albo BIN$…")),
-                             CommandParameter("renameTo", .string, L10n.tr("Nowa nazwa (puste — pierwotna)"))],
+                             CommandParameter("renameTo", .string, L10n.tr("Nowa nazwa (puste — pierwotna)")), CommandContext.toolConnectionParam],
                     effect: .modifiesDatabase, summary: L10n.tr("Przywraca tabelę z kosza (FLASHBACK TABLE … TO BEFORE DROP), opcjonalnie pod nową nazwą."),
-                    feature: "PD-OB-021", validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                    feature: "PD-OB-021", validate: { $0.objectBrowserConnection != nil }) { ctx in
+                let conn = try ctx.objectConnection()
                 let s = try await changeSession(ctx)
                 let name = ctx.arguments.string("name") ?? ""
                 guard let item = try await ObjectAdmin.recycleBin(s).first(where: { $0.binName == name || $0.originalName.caseInsensitiveCompare(name) == .orderedSame }),
                       item.canRestore else { throw CommandError.notAvailable(L10n.tr("Nie ma w koszu obiektu „\(name)” do przywrócenia")) }
                 let sql = ObjectAdmin.restoreStatement(binName: item.binName, renameTo: ctx.arguments.string("renameTo"))
-                try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID)
+                try await ctx.workspace.guardModification([sql], connectionID: conn)
                 _ = try await s.execute(sql)
-                ctx.workspace.metadata()?.refresh()
+                ctx.workspace.metadata(for: conn)?.refresh()
                 return CommandResult(message: sql)
             },
             command("ob.purgeRecycleBin", L10n.tr("Opróżnij kosz…"), submenu: L10n.tr("Kosz"),
-                    params: [CommandParameter("name", .string, L10n.tr("Obiekt (puste — cały kosz)"))],
+                    params: [CommandParameter("name", .string, L10n.tr("Obiekt (puste — cały kosz)")), CommandContext.toolConnectionParam],
                     effect: .modifiesDatabase, summary: L10n.tr("Trwale usuwa obiekt z kosza albo cały kosz użytkownika (PURGE) — po potwierdzeniu."),
-                    feature: "PD-OB-021", validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                    feature: "PD-OB-021", validate: { $0.objectBrowserConnection != nil }) { ctx in
+                let conn = try ctx.objectConnection()
                 let s = try await changeSession(ctx)
                 var item: ObjectAdmin.RecycledObject?
                 if let name = ctx.arguments.string("name"), !name.isEmpty {
@@ -171,7 +174,7 @@ enum ObjectAdminCommands {
                                        buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 let sql = ObjectAdmin.purgeStatement(item)
-                try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID)
+                try await ctx.workspace.guardModification([sql], connectionID: conn)
                 _ = try await s.execute(sql)
                 return CommandResult(message: sql)
             },
@@ -191,7 +194,7 @@ enum ObjectAdminCommands {
                 let sql = try ObjectAdmin.ccflagsStatement(o, flags: flags)
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await s.execute(sql)
-                ctx.workspace.metadata()?.refresh()
+                m.refresh()
                 return CommandResult(value: .string(try await ObjectAdmin.ccflags(o, in: s)))
             },
             command("ob.addSourceToEditor", L10n.tr("Dodaj źródło do edytora"), params: objectParams, agent: .none, effect: .modifiesEditor,

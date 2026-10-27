@@ -246,11 +246,14 @@ enum UtplsqlCommands {
                     validate: { ws in ws.selectedObject?.type == .package || ws.activeDocument?.kind == .program }) { ctx in
                 let ws = ctx.workspace
                 var name: String?, owner: String?, spec: String?
+                var connection: UUID?
                 if ctx.arguments.string("object") == nil, let doc = ws.activeDocument, doc.kind == .program,
                    let u = ProgramCompiler.units(in: doc.text).first(where: { $0.type == .package }) {
                     name = u.name; owner = u.owner; spec = u.text
+                    connection = ws.effectiveConnection(of: doc)
                 } else {
                     let (o, m) = try await ObjectCommands.target(ctx)
+                    connection = m.connectionID
                     guard o.type == .package || o.type == .packageBody else { throw CommandError.notAvailable(L10n.tr("Wybierz pakiet")) }
                     name = o.name; owner = o.owner
                     spec = try await m.source(of: DBObject(owner: o.owner, name: o.name, type: .package))
@@ -258,6 +261,7 @@ enum UtplsqlCommands {
                 guard let name, let spec else { throw CommandError.notAvailable(L10n.tr("Brak specyfikacji pakietu")) }
                 let text = UtplsqlExplorer.skeleton(for: name, owner: owner, specification: spec)
                 let doc = ws.newDocument(.program, text: text)
+                ws.bind(doc, to: connection)
                 return CommandResult(message: doc.fullTitle, value: .string(text))
             },
             Command(CommandDescriptor(id: "utplsql.toggleTest", title: L10n.tr("utPLSQL: przejdź do testu / testowanego pakietu"), category: .tools, submenu: "utPLSQL",

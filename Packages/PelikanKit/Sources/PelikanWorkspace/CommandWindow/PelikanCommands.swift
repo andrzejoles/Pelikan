@@ -12,6 +12,8 @@ extension SQLPlusEngine {
         }
         func invoke(_ id: CommandID, _ extra: [String: JSONValue] = [:]) async throws {
             var a: [String: JSONValue] = ["object": .string(try object())]
+            // Obiekt z połączenia tego okna poleceń, nie głównego (D185).
+            if let windowConnection { a["connection"] = .string(windowConnection.uuidString) }
             for (k, v) in extra { a[k] = v }
             _ = try await workspace.invoke(id, CommandArguments(a))
         }
@@ -28,6 +30,8 @@ extension SQLPlusEngine {
             guard let m = workspace.metadata(for: windowConnection),
                   let o = try await m.find(try object()) else { throw SQLPlusError(L10n.tr("Nie znaleziono obiektu \(args.first ?? "")")) }
             workspace.selectedObject = o
+            workspace.selectedObjects = [o]
+            workspace.selectedObjectConnection = windowConnection
             emit(L10n.tr("Zaznaczono w przeglądarce obiektów: \(o.type.rawValue) \(o.qualifiedName)"))
         case "EDITDATA": try await invoke("ob.editData")
         case "QUERYDATA": try await invoke("ob.queryData")

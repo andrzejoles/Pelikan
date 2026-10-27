@@ -83,13 +83,13 @@ enum ToolCommands {
                                       agent: .read, effect: .none,
                                       summary: L10n.tr("Wyszukuje tekst w źródłach PL/SQL, zapytaniach widoków i nazwach obiektów; wynik: obiekt, linia, tekst."),
                                       feature: "PD-TOOL-001"),
-                    validate: { $0.metadata() != nil }) { ctx in
+                    validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
                 let c = try searchCriteria(ctx)
                 guard !c.text.isEmpty else {
                     ctx.ui?.showFindObjects(c)
                     return .ok
                 }
-                guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                guard let m = ctx.workspace.metadata(for: ctx.workspace.toolConnection()) else { throw CommandError.notConnected }
                 let hits = try await DatabaseSearch.search(c, metadata: m, limit: 2000)
                 return CommandResult(message: L10n.tr("Znaleziono: \(hits.count)"), value: .array(hits.map { h in
                     .object(["object": .string("\(h.object.owner).\(h.object.name)"), "type": .string(h.object.type.rawValue),
@@ -104,8 +104,8 @@ enum ToolCommands {
                                       agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Lista nieprawidłowych obiektów schematu i ich kompilacja w kolejności zależności (ALTER … COMPILE) z błędami."),
                                       feature: "PD-TOOL-002"),
-                    validate: { $0.metadata() != nil }) { ctx in
-                guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                    validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
+                guard let m = ctx.workspace.metadata(for: ctx.workspace.toolConnection()) else { throw CommandError.notConnected }
                 if ctx.arguments.isEmpty, ctx.ui != nil, ctx.invoker == .user {
                     ctx.ui?.showCompileInvalid()
                     return .ok

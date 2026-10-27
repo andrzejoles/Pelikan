@@ -64,23 +64,23 @@ enum MultiObjectCommands {
     @MainActor static var all: [Command] {
         [
             Command(CommandDescriptor(id: "ob.copyNames", title: L10n.tr("Kopiuj nazwy po przecinku"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam], agent: .none, effect: .none,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje nazwy zaznaczonych obiektów oddzielone przecinkami (Cmd+C w Object Browserze)."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx)
-                let schema = (try? await ctx.workspace.metadata()?.currentSchema()) ?? ""
+                let schema = (try? await ctx.workspace.metadata(for: try ctx.objectConnection())?.currentSchema()) ?? ""
                 let text = commaSeparated(objs, currentSchema: schema)
                 ctx.workspace.ui?.copyToClipboard(text, html: nil)
                 return CommandResult(message: text, value: .string(text))
             },
             Command(CommandDescriptor(id: "ob.recompileSelected", title: L10n.tr("Rekompiluj zaznaczone"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Kompiluje ponownie zaznaczone obiekty; zwraca te, które pozostały nieprawidłowe."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx)
-                guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()) else { throw CommandError.notConnected }
                 let sql = objs.compactMap(ObjectCommands.compileStatement)
                 guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Żadnego z zaznaczonych obiektów nie da się kompilować")) }
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
@@ -99,24 +99,24 @@ enum MultiObjectCommands {
                                      value: .array(invalid.map { .string($0) }))
             },
             Command(CommandDescriptor(id: "ob.ddlSelected", title: L10n.tr("DDL zaznaczonych"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam], agent: .none, effect: .uiState,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera DDL wszystkich zaznaczonych obiektów w jednym oknie SQL."), feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx)
-                guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+                guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()) else { throw CommandError.notConnected }
                 var parts: [String] = []
                 for o in objs { parts.append((try? await m.ddl(of: o)) ?? "-- \(o.qualifiedName): " + L10n.tr("brak DDL")) }
                 let text = parts.joined(separator: "\n\n")
-                _ = try await ObjectCommands.sqlWindow(ctx.workspace, title: L10n.tr("DDL (\(objs.count))"), text: text, execute: false)
+                _ = try await ObjectCommands.sqlWindow(ctx.workspace, title: L10n.tr("DDL (\(objs.count))"), text: text, execute: false, connection: m.connectionID)
                 return CommandResult(message: text)
             },
             Command(CommandDescriptor(id: "ob.dropSelected", title: L10n.tr("Usuń zaznaczone…"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Usuwa zaznaczone obiekty (DROP) po jednym potwierdzeniu z listą; błędy nie przerywają pozostałych."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx).filter { ![.user, .role, .profile].contains($0.type) }
-                guard let m = ctx.workspace.metadata(), !objs.isEmpty else { throw CommandError.notConnected }
+                guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()), !objs.isEmpty else { throw CommandError.notConnected }
                 let sql = try objs.map { try dropStatement($0) }
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 if ctx.invoker == .user, let ui = ctx.ui {

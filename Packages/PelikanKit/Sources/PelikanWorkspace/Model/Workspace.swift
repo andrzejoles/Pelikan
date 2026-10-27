@@ -332,6 +332,8 @@ public final class Workspace {
     public var selectedObject: DBObject?
     /// Wszystkie obiekty zaznaczone w Object Browserze (PD-OB-011); `selectedObject` — ostatnio kliknięty.
     public var selectedObjects: [DBObject] = []
+    /// Połączenie zaznaczonych obiektów (gałąź drzewa Object Browsera z wieloma połączeniami, PD-OB-001; nil — główne).
+    public var selectedObjectConnection: UUID?
     /// Filtry nazwane i foldery użytkownika Object Browsera (`browser.json`, PD-OB-007/008) i filtr bieżący.
     public private(set) var browserCustomization = BrowserCustomization()
     public var browserFilter: BrowserFilter?
@@ -340,7 +342,7 @@ public final class Workspace {
         try c.save(to: dataDirectory)
         browserCustomization = c
         if let f = browserFilter, !c.filters.contains(where: { $0.id == f.id }) { browserFilter = nil }
-        metadata()?.refresh()
+        refreshOpenMetadata()
     }
     /// Ostatnie wyszukiwanie (Znajdź następne — F3).
     public var lastSearch: TextSearch?

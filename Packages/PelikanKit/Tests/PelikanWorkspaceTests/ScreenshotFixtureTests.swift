@@ -25,6 +25,10 @@ struct ScreenshotFixtureTests {
         var def = ConnectionDefinition(name: "dev_baza_testowa", target: target, connectOnStartup: true)
         def.environment = .test
         try ws.connections.upsert(def)
+        // Drugie połączenie do tej samej bazy — drzewo Object Browsera z kilkoma połączeniami (D185, scenariusz 62).
+        var second = ConnectionDefinition(name: "dev_baza_druga", target: target)
+        second.environment = .development
+        try ws.connections.upsert(second)
         #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("connections.json").path))
     }
 }
