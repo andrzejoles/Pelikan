@@ -155,7 +155,7 @@ struct ConnectionEditorView: View {
                     p.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
                     p.arguments = ["-x", "-k", zip.path, target.path]
                     try p.run()
-                    p.waitUntilExit()
+                    await p.waitForExitAsync()
                     return p.terminationStatus
                 }.value
                 guard status == 0 else {
