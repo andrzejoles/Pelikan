@@ -3,6 +3,8 @@ import PelikanSQL
 
 /// Zmiana tekstu okna wykonana przez agenta (cofanie sesji agenta, PROMPT §7.6).
 public struct AgentEdit: Sendable, Hashable {
+    /// Identyfikator wpisu (cofnięcie usuwa z historii tylko wpisy cofnięte).
+    public var id = UUID()
     public var session: String
     public var document: DocumentID
     public var before: String
@@ -59,15 +61,26 @@ extension Workspace {
     }
 
     /// Okno wskazane przez agenta identyfikatorem z `get_state` (bez — aktywne).
-    /// Okno do zmiany tekstu przez agenta: okno tylko do odczytu (Plik › Tylko do odczytu) jest odrzucane (PD-FILE-003).
+    /// Okno do zmiany tekstu przez agenta: okno tylko do odczytu (Plik › Tylko do odczytu, PD-FILE-003) i okno w trakcie
+    /// wykonania są odrzucane — jak komendy edycji (`BuiltinCommands.checkWritable`).
     func agentEditableDocument(_ id: String?) throws -> Document {
         let d = try agentDocument(id)
         guard !d.isReadOnly else { throw CommandError.notAvailable(L10n.tr("Okno „\(d.title)” jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(d)
         return d
     }
 
+    /// Czy okno jest w zasięgu agenta: okno poleceń nie jest (PROMPT §7.3), okno połączenia ukrytego przed agentem
+    /// (albo połączenia tymczasowego spoza listy) też nie — jego tekst to kod i SQL bazy, do której agent nie ma dostępu.
+    /// Okno bez połączenia (rozłączone, brak połączenia głównego) jest w zasięgu.
+    func agentCanSee(_ d: Document) -> Bool {
+        guard d.kind != .command else { return false }
+        return effectiveConnection(of: d).map { agentVisibleConnection($0) != nil } ?? true
+    }
+
     /// Okno poleceń jest poza zasięgiem agenta (PROMPT §7.3): jego tekst może zawierać `CONNECT u/hasło`, a tekst
-    /// wstawiony przez agenta (SPOOL, HOST, CONNECT) wykonałby użytkownik jednym Execute.
+    /// wstawiony przez agenta (SPOOL, HOST, CONNECT) wykonałby użytkownik jednym Execute. Okno połączenia niewidocznego
+    /// dla agenta — odmowa jak dla takiego połączenia (`agentCanSee`).
     func agentDocument(_ id: String?) throws -> Document {
         let d: Document
         if let id, !id.isEmpty {
@@ -80,6 +93,7 @@ extension Workspace {
             d = active
         }
         guard d.kind != .command else { throw AgentDenial.permissionDenied(L10n.tr("okno poleceń jest niedostępne dla agenta")) }
+        guard agentCanSee(d) else { throw AgentDenial.permissionDenied(L10n.tr("okno połączenia niedostępnego dla agenta")) }
         return d
     }
 
@@ -91,17 +105,27 @@ extension Workspace {
     }
 
     /// Cofnięcie zmian edytorów sesji agenta w odwrotnej kolejności; okno zmienione później przez kogoś innego to
-    /// konflikt (pomijany bez `force`). Zwraca liczbę cofniętych zmian i konflikty (tytuły okien).
+    /// konflikt (pomijany bez `force`). Okno otwarte przez agenta zamyka się jak z menu (`BuiltinCommands.closeDocument`:
+    /// pytanie o otwartą transakcję, zamknięcie sesji okna; okno w trakcie wykonania — konflikt). Konflikty zostają
+    /// w historii, więc da się je cofnąć później z wymuszeniem. Zwraca liczbę cofniętych zmian i konflikty (tytuły okien).
     @discardableResult
-    public func undoAgentEdits(session: String, force: Bool = false) -> (undone: Int, conflicts: [String]) {
-        var undone = 0, conflicts: [String] = []
+    public func undoAgentEdits(session: String, force: Bool = false) async -> (undone: Int, conflicts: [String]) {
+        var undone = 0, conflicts: [String] = [], finished = Set<UUID>()
         for e in agentEdits.filter({ $0.session == session }).reversed() {
-            guard let d = documents.first(where: { $0.id == e.document }) else { continue }
-            if d.text != e.after && !force { conflicts.append(d.fullTitle); continue }
-            if e.created { close(d.id) } else { d.text = e.before }
+            guard let d = documents.first(where: { $0.id == e.document }) else { finished.insert(e.id); continue }
+            let changedLater = d.text != e.after
+            if changedLater && !force { conflicts.append(d.fullTitle); continue }
+            if e.created {
+                // Zmiany użytkownika (tylko przy wymuszeniu) — z pytaniem o zapis.
+                let closed = (try? await BuiltinCommands.closeDocument(d, in: self, askToSave: changedLater)) ?? false
+                guard closed else { conflicts.append(d.fullTitle); continue }
+            } else {
+                d.text = e.before
+            }
+            finished.insert(e.id)
             undone += 1
         }
-        agentEdits.removeAll { $0.session == session }
+        agentEdits.removeAll { finished.contains($0.id) }
         return (undone, conflicts)
     }
 }
@@ -156,7 +180,9 @@ enum AgentCommands {
                                       summary: L10n.tr("Otwarte okna (identyfikator, rodzaj, tytuł, połączenie, zmienione, aktywne) i połączenie główne."),
                                       inMenu: false, feature: "AI-TOOL-001")) { ctx in
                 let ws = ctx.workspace
-                let windows: [JSONValue] = ws.documents.map { d in
+                // Okna połączeń niewidocznych dla agenta pomijane — jak te połączenia w list_connections (okno poleceń
+                // zostaje na liście bez połączenia; narzędzia edytora i tak go odmawiają).
+                let windows: [JSONValue] = ws.documents.filter { $0.kind == .command || ws.agentCanSee($0) }.map { d in
                     let alias = ws.effectiveConnection(of: d).flatMap { ws.agentVisibleConnection($0)?.agentAlias }
                     return .object([
                         "window": .string(Workspace.agentWindowID(d)),
@@ -180,7 +206,9 @@ enum AgentCommands {
                     .object(["severity": .string($0.severity.rawValue), "unit": .string($0.unit), "line": .int(Int64($0.line)), "column": .int(Int64($0.column)), "text": .string($0.text)])
                 }
                 return CommandResult(value: untrusted(.object([
-                    "window": .string(Workspace.agentWindowID(d)), "kind": .string(d.kind.rawValue), "text": .string(d.text),
+                    // Hasła z tekstu okna (CREATE USER/ALTER USER/CREATE DATABASE LINK … IDENTIFIED BY) nie trafiają do
+                    // agenta (SECURITY A6/A17) — jak w panelu aktywności i dzienniku.
+                    "window": .string(Workspace.agentWindowID(d)), "kind": .string(d.kind.rawValue), "text": .string(SQLPlusEngine.maskPassword(d.text)),
                     "selection": .object(["start": .int(Int64(d.selectedRange.lowerBound)), "end": .int(Int64(d.selectedRange.upperBound))]),
                     "cursor": .object(["line": .int(Int64(line)), "column": .int(Int64(col))]),
                     "compileMessages": .array(messages),

@@ -58,8 +58,17 @@
   z `callTimeout`, limitem wierszy i bajtów; `runAgentStatements` (odmowa DDL przy otwartej transakcji, historia kodu),
   `undoAgentSession`, `closeAgentDatabase` (ROLLBACK i zamknięcie sesji `agent`, `agent/run`, `agent/events`).
 - Maskowanie działa po nazwie kolumny (ostatni człon wpisu) w każdej tabeli; zapytanie odwołujące się do takiej nazwy
-  jest odrzucane. To ułatwienie, nie granica — kolumnę można odczytać np. przez widok o innej nazwie kolumny; granicą są
-  uprawnienia użytkownika bazy agenta.
+  jest odrzucane. Przy niepustej liście maskowanej odrzucane są też obejścia jednym zapytaniem: `*` jako argument funkcji
+  (`JSON_OBJECT(*)`, `JSON_OBJECT(t.*)`, `JSON {*}`; `COUNT(*)` dozwolone), dynamiczny SQL i XQuery (`DBMS_XMLGEN`,
+  `DBMS_SQL`, `CURSOR(…)`, `XMLQUERY`, `XMLTABLE`, `XMLEXISTS`) i nazwa maskowanej kolumny w literale. To ułatwienie, nie
+  granica — kolumnę można odczytać np. przez widok o innej nazwie kolumny albo funkcję PL/SQL z dynamicznym SQL (nazwa
+  sklejona z części literałów); granicą są uprawnienia użytkownika bazy agenta.
+- Okna SQL i programu przypięte do połączenia niewidocznego dla agenta (albo połączenia tymczasowego) są poza jego
+  zasięgiem jak okno poleceń: nie ma ich w `get_state`, narzędzia edytora odmawiają. `get_editor` zakrywa hasła
+  (`IDENTIFIED BY …`, `CONNECT u/hasło`) jak panel aktywności i dziennik.
+- Wynik narzędzia większy niż mieści ramka mostu (4 MB po podwójnym kodowaniu JSON) jest przycinany z jawnym
+  znacznikiem `result_truncated` (z przypomnieniem, że dane z bazy są niezaufane); most przy błędzie ramki kończy się
+  z komunikatem na stderr i kodem ≠ 0.
 - Hasła SSH (tunel do bazy DB-SSH-001, cele SSH Pro*C): tylko Pęk kluczy (konto `<uuid>.ssh` dla tunelu). `ssh`
   dostaje `SSH_ASKPASS` — skrypt `cat` z jednorazowej kolejki FIFO (0600, katalog 0700); w środowisku jest tylko ścieżka
   kolejki, a sekret zapisuje do niej wątek Pelikana raz i kolejka znika. Hasło nie trafia do argumentów, środowiska,

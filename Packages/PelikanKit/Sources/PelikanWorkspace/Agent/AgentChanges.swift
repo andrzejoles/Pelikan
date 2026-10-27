@@ -261,7 +261,7 @@ extension Workspace {
     /// niezatwierdzonych zmian. Przywracanie wykonuje sesja kompilacji użytkownika (cofnięcie zleca użytkownik).
     public func undoAgentSession(_ session: String, force: Bool = false) async -> AgentUndoReport {
         var report = AgentUndoReport()
-        let edits = undoAgentEdits(session: session, force: force)
+        let edits = await undoAgentEdits(session: session, force: force)
         report.editsUndone = edits.undone
         report.conflicts = edits.conflicts
         for key in sessions.keys(purpose: .agent(session)) {
@@ -285,6 +285,9 @@ extension Workspace {
             [.packageBody, .typeBody].contains(c.object.type) && changes.first { $0.object == c.object }?.before != nil
         }
         latest = latest.filter { !restoredBodyLast($0) } + latest.filter(restoredBodyLast)
+        // Konflikty i przywrócenia zakończone błędem zostają w historii — kod sprzed zmiany agenta da się jeszcze
+        // przywrócić (z wymuszeniem albo po usunięciu przyczyny błędu).
+        var kept = Set<DBObject>()
         for change in latest {
             let first = changes.first { $0.object == change.object }!
             do {
@@ -292,6 +295,7 @@ extension Workspace {
                 let now = await AgentChanges.currentCode(change.object, in: s)
                 if now != change.after, !force {
                     report.conflicts.append("\(change.object.type.rawValue) \(change.object.qualifiedName)")
+                    kept.insert(change.object)
                     continue
                 }
                 if let b = first.before {
@@ -303,9 +307,10 @@ extension Workspace {
                 report.objectsRestored += 1
             } catch {
                 report.errors.append("\(change.object.qualifiedName): \(error.localizedDescription)")
+                kept.insert(change.object)
             }
         }
-        agentCodeChanges.removeAll { $0.session == session && !report.conflicts.contains("\($0.object.type.rawValue) \($0.object.qualifiedName)") }
+        agentCodeChanges.removeAll { $0.session == session && !kept.contains($0.object) }
         return report
     }
 }
