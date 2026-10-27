@@ -116,6 +116,7 @@ enum P1BrowserCommands {
                     script += "\n\nINSERT INTO \(ResultExporter.identifier(o.owner)).\(ResultExporter.identifier(name)) SELECT * FROM \(o.qualifiedName);\n"
                 }
                 let doc = ctx.workspace.newDocument(.sql, text: script)
+                ctx.workspace.bind(doc, to: m.connectionID)
                 doc.isModified = false
                 return CommandResult(message: L10n.tr("Skrypt kopii: \(name)"), value: .string(script))
             },
@@ -137,10 +138,11 @@ enum P1BrowserCommands {
                     params: objectParams, agent: .none, effect: .uiState,
                     summary: L10n.tr("Akcja z preferencji dla obiektu upuszczonego poza edytorem: Edytuj, Pokaż dane, DDL, Opis albo Właściwości."),
                     feature: "PD-OB-010") { ctx in
-                let (o, _) = try await ObjectCommands.target(ctx)
+                let (o, m) = try await ObjectCommands.target(ctx)
                 let id = ctx.workspace.settings.browserWorkspaceDrop.command(for: o.type)
                 return try await ctx.workspace.invoke(id, CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""),
-                                                                           "type": .string(o.type.rawValue)]))
+                                                                           "type": .string(o.type.rawValue),
+                                                                           "connection": .string(m.connectionID.uuidString)]))
             },
         ]
     }

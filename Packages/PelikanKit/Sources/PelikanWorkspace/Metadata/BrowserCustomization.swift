@@ -132,12 +132,12 @@ enum BrowserCommands {
                     }
                     name = i < options.count - 1 ? options[i] : ""
                 }
-                guard let name, !name.isEmpty else { ws.browserFilter = nil; ws.metadata()?.refresh(); return .ok }
+                guard let name, !name.isEmpty else { ws.browserFilter = nil; ws.refreshOpenMetadata(); return .ok }
                 guard let f = ws.browserCustomization.filters.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
                     throw CommandError.invalidArgument("name", name)
                 }
                 ws.browserFilter = f
-                ws.metadata()?.refresh()
+                ws.refreshOpenMetadata()
                 return CommandResult(message: f.name)
             },
             Command(CommandDescriptor(id: "ob.addToFolder", title: L10n.tr("Dodaj do folderu…"), category: .tools, submenu: L10n.tr("Obiekt"),

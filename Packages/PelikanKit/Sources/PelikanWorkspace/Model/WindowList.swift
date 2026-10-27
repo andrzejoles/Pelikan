@@ -22,7 +22,12 @@ public enum WindowListSort: String, Sendable, Codable, CaseIterable {
 extension Workspace {
     /// Kolor połączenia okna: pierwsza pasująca reguła wskaźników `user@baza`, inaczej kolor połączenia lub środowiska.
     public func indicatorColor(for doc: Document) -> RGBColor? {
-        guard let id = effectiveConnection(of: doc), let c = connections.connection(id) else { return nil }
+        effectiveConnection(of: doc).flatMap(indicatorColor(forConnection:))
+    }
+
+    /// Kolor połączenia (wskaźniki, kolor połączenia albo środowiska) — także dla gałęzi Object Browsera.
+    public func indicatorColor(forConnection id: UUID) -> RGBColor? {
+        guard let c = connections.connection(id) else { return nil }
         let user = c.target.driverUserName
         for rule in settings.connectionIndicators {
             if Wildcard.matches(user: user, database: c.target.connectString, pattern: rule.pattern)

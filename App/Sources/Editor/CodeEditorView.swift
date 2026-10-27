@@ -1114,16 +1114,15 @@ final class CodeTextView: NSTextView {
         if !NSEvent.modifierFlags.contains(.option),
            let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
            let ws = (NSApp.delegate as? AppDelegate)?.workspace {
-            let parts = raw.components(separatedBy: "\u{1}")
             let preferred = ws.settings.browserDropAction
-            if parts.count == 3, let type = DBObjectType(rawValue: parts[2]), NSEvent.modifierFlags.contains(.control) || preferred != .name {
+            if let drag = BrowserObjectDrag(raw), let type = DBObjectType(rawValue: drag.type),
+               NSEvent.modifierFlags.contains(.control) || preferred != .name {
                 let point = convert(sender.draggingLocation, from: nil)
                 let i = characterIndexForInsertion(at: point)
                 setSelectedRange(NSRange(location: i, length: 0))
                 window?.makeFirstResponder(self)
-                let args: (BrowserDropAction) -> CommandArguments = { a in
-                    CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2]), "action": .string(a.rawValue)])
-                }
+                // Obiekt z połączenia gałęzi drzewa (kolumny, DDL), nie z połączenia okna (D185).
+                let args: (BrowserDropAction) -> CommandArguments = { a in drag.arguments(["action": .string(a.rawValue)]) }
                 if NSEvent.modifierFlags.contains(.control) || preferred == .ask {
                     let menu = NSMenu()
                     for a in BrowserDropAction.actions(for: type) {
@@ -1143,16 +1142,14 @@ final class CodeTextView: NSTextView {
         if NSEvent.modifierFlags.contains(.option),
            let raw = sender.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType),
            let ws = (NSApp.delegate as? AppDelegate)?.workspace {
-            let parts = raw.components(separatedBy: "\u{1}")
-            if parts.count == 3, let type = DBObjectType(rawValue: parts[2]) {
+            if let drag = BrowserObjectDrag(raw), let type = DBObjectType(rawValue: drag.type) {
                 let kind: CodeGenerator.Kind? = [.table, .view, .materializedView, .synonym].contains(type) ? .select
                     : [.procedure, .function].contains(type) ? .call : nil
                 if let kind {
                     let i = characterIndexForInsertion(at: convert(sender.draggingLocation, from: nil))
                     setSelectedRange(NSRange(location: i, length: 0))
                     window?.makeFirstResponder(self)
-                    ws.perform("ob.generateCode", CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2]),
-                                                                    "kind": .string(kind.rawValue)]))
+                    ws.perform("ob.generateCode", drag.arguments(["kind": .string(kind.rawValue)]))
                     return true
                 }
             }

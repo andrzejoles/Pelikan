@@ -82,6 +82,9 @@ extension ConnectionPrompter {
 @Observable
 public final class SessionManager {
     public private(set) var mainConnectionID: UUID?
+    /// Otwarte połączenia w kolejności połączenia (drzewo Object Browsera, PD-OB-001): od pierwszej sesji poza agentem
+    /// AI do rozłączenia. Zamknięcie bezczynnych sesji i utrata sesji nie usuwają połączenia — wraca przy następnym użyciu.
+    public private(set) var openConnections: [UUID] = []
     private var sessions: [SessionKey: any DatabaseSession] = [:]
     /// SID, numer seryjny i numer instancji sesji (przy otwarciu) — do zakończenia sesji okna z innej sesji (PD-CONN-027).
     /// Numer seryjny z chwili otwarcia: SID utraconej sesji serwer mógł już przydzielić innej (nil — brak DBMS_DEBUG_JDWP).
@@ -166,7 +169,10 @@ public final class SessionManager {
     public func setMainConnection(_ id: UUID?) {
         let changed = mainConnectionID != id
         mainConnectionID = id
-        if let id { store.markUsed(id) }
+        if let id {
+            store.markUsed(id)
+            noteOpen(id)
+        }
         if changed { onMainConnectionChange?() }
     }
 
@@ -234,6 +240,7 @@ public final class SessionManager {
         sessions[key] = s
         lastActivity[key] = Date()
         store.markUsed(key.connectionID)
+        if case .agent = key.purpose {} else { noteOpen(key.connectionID) }
         // SID sesji okien i głównej (wykonują polecenia użytkownika) — do zakończenia sesji, gdy Przerwij nie działa.
         switch key.purpose {
         case .main, .document: await recordServerSessionID(s, key: key)
@@ -411,9 +418,15 @@ public final class SessionManager {
         }
         sessionPasswords[connectionID] = nil
         ownerConfirmed.remove(connectionID)
+        openConnections.removeAll { $0 == connectionID }
+    }
+
+    private func noteOpen(_ connectionID: UUID) {
+        if !openConnections.contains(connectionID) { openConnections.append(connectionID) }
     }
 
     public func disconnectAll() async {
+        openConnections.removeAll()
         for key in Array(sessions.keys) { await close(key) }
         sessionPasswords.removeAll()
         ownerConfirmed.removeAll()

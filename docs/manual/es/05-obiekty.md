@@ -2,13 +2,23 @@
 
 ## Object Browser
 
-La pestaña **Objetos** de la columna izquierda muestra los objetos de la base de datos de la conexión principal en
+La pestaña **Objetos** de la columna izquierda muestra los objetos de la base de datos de las conexiones abiertas en
 carpetas por tipo: **Funciones**, **Procedimientos**, **Paquetes**, **Cuerpos de paquete**, **Tipos**, **Disparadores**,
 **Fuentes Java**, **Bibliotecas**, **Tablas**, **Vistas**, **Vistas materializadas**, **Secuencias**, **Sinónimos**,
 **Índices**, **Enlaces de base de datos**, **Colas**, **Trabajos (Scheduler)**, **Usuarios**, **Roles**, **Perfiles**,
 **Directorios** y otras. En las bases de datos 23ai y 26ai se añaden **Módulos MLE**, **Entornos MLE**, **Dominios**,
 **Grafos de propiedades**, **Anotaciones** y **Aserciones**. Las carpetas solo aparecen si la versión de la base de
 datos y tus privilegios lo permiten.
+
+En el nivel superior del árbol están las **conexiones abiertas**, como en DBeaver. La conexión principal va primero,
+marcada con una estrella, en negrita y con la etiqueta «principal»; las demás aparecen al conectarse (por ejemplo, con
+una ventana en otra conexión o **Conectar** en la lista de conexiones) y desaparecen al desconectarse. Cada conexión
+tiene sus propias carpetas, **Recientes** y selección de usuario. Las acciones sobre un objeto (Mostrar datos, Editar,
+DDL, Recompilar, arrastrar al editor…) actúan sobre la conexión de la rama, y las ventanas abiertas para un objeto de
+una conexión distinta de la principal quedan fijadas a ella. El menú de la conexión en el árbol: **Establecer como
+conexión principal**, **Nueva ventana SQL en esta conexión**, **Actualizar**, **Editar conexión…** y **Desconectar**.
+La conexión principal es la predeterminada solo cuando el contexto no indica otra: una ventana nueva desde el menú, una
+herramienta sin ventana activa.
 
 - **Selección de usuario** sobre el árbol: *Usuario actual*, *Todos los usuarios* o un esquema concreto (Pelikan
   recuerda la elección para la conexión).

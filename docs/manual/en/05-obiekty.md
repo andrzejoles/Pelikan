@@ -2,12 +2,21 @@
 
 ## Object Browser
 
-The **Objects** tab in the left column shows the database objects of the main connection in folders by type:
+The **Objects** tab in the left column shows the database objects of the open connections in folders by type:
 **Functions**, **Procedures**, **Packages**, **Package bodies**, **Types**, **Triggers**, **Java sources**,
 **Libraries**, **Tables**, **Views**, **Materialized views**, **Sequences**, **Synonyms**, **Indexes**, **Database
 links**, **Queues**, **Jobs (Scheduler)**, **Users**, **Roles**, **Profiles**, **Directories** and others. On 23ai and
 26ai databases, **MLE modules**, **MLE environments**, **Domains**, **Property graphs**, **Annotations** and
 **Assertions** are added. Folders appear only when the database version and your privileges allow it.
+
+The top level of the tree shows the **open connections**, as in DBeaver. The main connection comes first, marked
+with a star, in bold and labelled “main”; the others appear once connected (for example through a window on another
+connection or **Connect** in the connection list) and disappear when disconnected. Each connection has its own folders,
+**Recent** and user selection. Actions on an object (Query Data, Edit, DDL, Recompile, dragging into the editor…) work
+on the branch's connection, and windows opened for an object of a connection other than the main one are pinned to it.
+The connection menu in the tree: **Set as Main Connection**, **New SQL Window on This Connection**, **Refresh**,
+**Edit Connection…** and **Disconnect**. The main connection is the default only when the context does not tell
+otherwise — a new window from the menu, a tool without an active window.
 
 - **User selection** above the tree: *Current user*, *All users* or a specific schema (Pelikan remembers the choice for
   the connection).

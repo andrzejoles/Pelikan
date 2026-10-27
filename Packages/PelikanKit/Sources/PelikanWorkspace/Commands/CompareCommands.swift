@@ -58,7 +58,7 @@ enum CompareCommands {
             },
             Command(CommandDescriptor(id: "ob.compareWithConnection", title: L10n.tr("Porównaj z obiektem w innej bazie…"), category: .tools,
                                       submenu: L10n.tr("Obiekt"),
-                                      parameters: ObjectCommands.objectParams + [
+                                      parameters: ObjectCommands.objectNameParams + [
                                         CommandParameter("connection", .string, L10n.tr("Nazwa połączenia (bez — wybór z listy)")),
                                         CommandParameter("schema", .string, L10n.tr("Schemat w tamtej bazie (domyślnie ten sam)")),
                                       ],
@@ -66,7 +66,8 @@ enum CompareCommands {
                                       summary: L10n.tr("Porównuje źródło (albo DDL) obiektu z obiektem o tej samej nazwie w bazie innego połączenia."),
                                       feature: "PD-OB-022"),
                     validate: { ws in ws.selectedObject != nil && ws.connections.connections.count > 1 }) { ctx in
-                let (o, m) = try await ObjectCommands.target(ctx)
+                // `connection` to tu druga baza — obiekt z gałęzi drzewa, okna albo połączenia głównego.
+                let (o, m) = try await ObjectCommands.target(ctx, connectionArgument: false)
                 let (other, name) = try await otherConnection(ctx, excluding: m.connectionID)
                 guard let om = ctx.workspace.metadata(for: other) else { throw CommandError.notConnected }
                 let owner = ctx.arguments.string("schema")?.uppercased() ?? o.owner

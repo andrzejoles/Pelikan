@@ -6,14 +6,17 @@ import PelikanDB
 /// Obiekt wskazuje argument `object` (`WŁAŚCICIEL.NAZWA`) i `type` (typ z ALL_OBJECTS); bez nich — zaznaczenie
 /// w Object Browserze (`Workspace.selectedObject`).
 public enum ObjectCommands {
-    static let objectParams = [
+    /// Obiekt wskazany nazwą i typem — bez połączenia (komendy z własnym argumentem `connection`).
+    static let objectNameParams = [
         CommandParameter("object", .string, L10n.tr("Obiekt: WŁAŚCICIEL.NAZWA (domyślnie zaznaczony w Object Browserze)")),
         CommandParameter("type", .string, L10n.tr("Typ obiektu jak w ALL_OBJECTS, np. TABLE, PACKAGE BODY")),
     ]
+    /// Obiekt i jego połączenie (domyślnie gałąź zaznaczonego obiektu, przy nazwie — aktywne okno, potem główne; D185).
+    static let objectParams = objectNameParams + [CommandContext.toolConnectionParam]
 
     @MainActor
-    static func target(_ ctx: CommandContext) async throws -> (DBObject, MetadataProvider) {
-        guard let m = ctx.workspace.metadata() else { throw CommandError.notConnected }
+    static func target(_ ctx: CommandContext, connectionArgument: Bool = true) async throws -> (DBObject, MetadataProvider) {
+        guard let m = ctx.workspace.metadata(for: try ctx.objectConnection(connectionArgument: connectionArgument)) else { throw CommandError.notConnected }
         if let spec = ctx.arguments.string("object") {
             let type = ctx.arguments.string("type").flatMap { DBObjectType(rawValue: $0.uppercased()) }
             // `pakiet.element` z edytora — gdy nie ma obiektu o tej nazwie, obiektem jest pakiet (pierwszy człon).
@@ -31,12 +34,13 @@ public enum ObjectCommands {
     }
 
     @MainActor
-    static func hasSelection(_ ws: Workspace) -> Bool { ws.selectedObject != nil && ws.sessions.mainConnectionID != nil }
+    static func hasSelection(_ ws: Workspace) -> Bool { ws.selectedObject != nil && ws.objectBrowserConnection != nil }
 
-    /// Nowe okno SQL z tekstem (opcjonalnie wykonanym).
+    /// Nowe okno SQL z tekstem (opcjonalnie wykonanym) — na połączeniu obiektu.
     @MainActor
-    static func sqlWindow(_ ws: Workspace, title: String, text: String, execute: Bool) async throws -> Document {
+    static func sqlWindow(_ ws: Workspace, title: String, text: String, execute: Bool, connection: UUID? = nil) async throws -> Document {
         let doc = ws.newDocument(.sql, text: text)
+        ws.bind(doc, to: connection)
         doc.customTitle = title
         doc.isModified = false
         doc.selectedRange = 0..<0
@@ -75,7 +79,7 @@ public enum ObjectCommands {
                     validate: { ws in ws.selectedObject.map { $0.type.hasData } ?? false }) { ctx in
                 let (o, m) = try await target(ctx)
                 m.touch(o)
-                _ = try await sqlWindow(ctx.workspace, title: o.name, text: "select * from \(o.qualifiedName)", execute: true)
+                _ = try await sqlWindow(ctx.workspace, title: o.name, text: "select * from \(o.qualifiedName)", execute: true, connection: m.connectionID)
                 return .ok
             },
             Command(CommandDescriptor(id: "ob.editData", title: L10n.tr("Edytuj dane"), category: .tools, submenu: L10n.tr("Obiekt"),
@@ -84,7 +88,7 @@ public enum ObjectCommands {
                     validate: { ws in ws.selectedObject.map { $0.type == .table } ?? false }) { ctx in
                 let (o, m) = try await target(ctx)
                 m.touch(o)
-                let doc = try await sqlWindow(ctx.workspace, title: o.name, text: "select t.*, t.rowid from \(o.qualifiedName) t", execute: true)
+                let doc = try await sqlWindow(ctx.workspace, title: o.name, text: "select t.*, t.rowid from \(o.qualifiedName) t", execute: true, connection: m.connectionID)
                 if let grid = doc.results.first?.grid { try await grid.beginEditing() }
                 return .ok
             },
@@ -94,7 +98,7 @@ public enum ObjectCommands {
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
                 let ddl = try await m.ddl(of: o)
-                if !ctx.invoker.isAgent { _ = try await sqlWindow(ctx.workspace, title: "\(o.name).sql", text: ddl, execute: false) }
+                if !ctx.invoker.isAgent { _ = try await sqlWindow(ctx.workspace, title: "\(o.name).sql", text: ddl, execute: false, connection: m.connectionID) }
                 return CommandResult(message: ddl)
             },
             Command(CommandDescriptor(id: "ob.describe", title: L10n.tr("Opis"), category: .tools, submenu: L10n.tr("Obiekt"),
@@ -153,6 +157,7 @@ public enum ObjectCommands {
                         text = f
                     }
                     let doc = ctx.workspace.newDocument(.program, text: text)
+                    ctx.workspace.bind(doc, to: m.connectionID)
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
                     // Ciało wskazane w przeglądarce: kursor na początku drugiej jednostki (karta ciała); po formatowaniu
@@ -179,7 +184,7 @@ public enum ObjectCommands {
                     ctx.ui?.showTableEditor(d, original: d, connectionID: m.connectionID)
                 } else {
                     let ddl = try await m.ddl(of: o)
-                    _ = try await sqlWindow(ctx.workspace, title: "\(o.name).sql", text: ddl, execute: false)
+                    _ = try await sqlWindow(ctx.workspace, title: "\(o.name).sql", text: ddl, execute: false, connection: m.connectionID)
                 }
                 return .ok
             },
@@ -253,10 +258,16 @@ public enum ObjectCommands {
                 return CommandResult(message: name)
             },
             Command(CommandDescriptor(id: "ob.refresh", title: L10n.tr("Odśwież Object Browser"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      agent: .full, effect: .uiState, summary: L10n.tr("Czyści pamięć podręczną słownika i przeładowuje drzewo."),
+                                      parameters: [CommandContext.toolConnectionParam],
+                                      agent: .full, effect: .uiState,
+                                      summary: L10n.tr("Czyści pamięć podręczną słownika i przeładowuje drzewo (wszystkie otwarte połączenia albo wskazane)."),
                                       feature: "PD-OB-004"),
-                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
-                ctx.workspace.metadata()?.refresh()
+                    validate: { !$0.sessions.openConnections.isEmpty }) { ctx in
+                if ctx.arguments.string("connection") != nil {
+                    ctx.workspace.metadata(for: try ctx.toolConnection())?.refresh()
+                } else {
+                    ctx.workspace.refreshOpenMetadata()
+                }
                 return .ok
             },
         ]

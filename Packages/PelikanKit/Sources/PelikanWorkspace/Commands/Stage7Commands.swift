@@ -153,7 +153,7 @@ enum Stage7Commands {
                     let cols = try await m.columns(of: o).filter { $0.kind == .column }.map {
                         CodeGenerator.Column(name: $0.name, type: $0.detail, isKey: pk.contains($0.name))
                     }
-                    let alias = ws.sessions.mainConnectionID.flatMap { ws.connections.connection($0)?.agentAlias } ?? "ALIAS"
+                    let alias = ws.connections.connection(m.connectionID)?.agentAlias ?? "ALIAS"
                     code = CodeGenerator.generate(kind, object: o, columns: cols, connectionAlias: alias)
                 }
                 if ctx.arguments.bool("returnOnly") == true { return CommandResult(value: .string(code)) }

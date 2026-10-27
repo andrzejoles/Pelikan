@@ -2,6 +2,17 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.1.0 — wiele połączeń w przeglądarce obiektów
+
+- **Przeglądarka obiektów jak w DBeaverze** — na najwyższym poziomie drzewa są wszystkie otwarte połączenia, każde
+  z własnymi folderami, **Ostatnimi** i wyborem użytkownika. Połączenie główne jest pierwsze, z gwiazdką, pogrubione
+  i opisane „główne”; rozłączone połączenie znika z drzewa. Czynności na obiekcie (Pokaż dane, Edytuj, DDL, Rekompiluj,
+  przeciągnięcie do edytora…) działają na połączeniu jego gałęzi, a okna obiektów innego połączenia niż główne są do
+  niego przypięte. Menu połączenia w drzewie: ustaw jako główne, nowe okno SQL, odśwież, edytuj, rozłącz.
+- **Połączenie z kontekstu** — połączenie główne jest domyślne tylko wtedy, gdy kontekst nie wskazuje innego: obiekt
+  wskazany w oknie poleceń albo przez nazwę bierze połączenie okna, „Nowa tabela…” i inne nowe obiekty — połączenie
+  aktywnego okna. „Wczytaj ponownie z bazy” w oknie programu czyta źródło z połączenia okna (wcześniej z głównego).
+
 ## 1.0.0 — pierwsze wydanie stabilne
 
 Pelikan wychodzi z bety. To natywne IDE dla Oracle SQL i PL/SQL na macOS (Apple Silicon): okna SQL, poleceń,
@@ -22,4 +33,4 @@ Nowe od ostatniej bety (10.4.0):
 
 Znane ograniczenia: Kerberos na macOS niedostępny (błąd adaptera Oracle w procesie z AppKit), logowanie Entra ID bez
 próby na Azure, podgląd Quick Look wymaga notaryzacji, karty okien własne zamiast natywnych kart macOS — szczegóły
-w [`docs/STATUS.md`](STATUS.md).
+w [`docs/STATUS.md`](https://github.com/andrzejoles/Pelikan/blob/main/docs/STATUS.md).

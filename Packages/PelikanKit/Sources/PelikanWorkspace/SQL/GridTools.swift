@@ -246,7 +246,8 @@ enum GridToolCommands {
                     throw CommandError.invalidArgument("name", ctx.arguments.string("name") ?? "")
                 }
                 let columns = try await m.columns(of: o).map(\.name)
-                _ = try await ObjectCommands.sqlWindow(ctx.workspace, title: "\(o.name).sql", text: q.text(owner: o.owner, table: o.name, columns: columns), execute: true)
+                _ = try await ObjectCommands.sqlWindow(ctx.workspace, title: "\(o.name).sql", text: q.text(owner: o.owner, table: o.name, columns: columns), execute: true,
+                                                     connection: m.connectionID)
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.saveAsStandardQuery", title: L10n.tr("Zapisz jako zapytanie standardowe…"), category: .session, submenu: L10n.tr("Wynik"),

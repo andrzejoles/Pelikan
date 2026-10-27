@@ -20,7 +20,7 @@ extension Workspace {
 
 extension CommandContext {
     /// Parametr komend wołanych z okna narzędzia: połączenie ustalone przy otwarciu okna.
-    static let toolConnectionParam = CommandParameter("connection", .string, L10n.tr("Identyfikator połączenia (domyślnie połączenie aktywnego okna albo główne)"))
+    nonisolated static let toolConnectionParam = CommandParameter("connection", .string, L10n.tr("Identyfikator połączenia (domyślnie połączenie aktywnego okna albo główne)"))
 
     /// Połączenie komendy narzędzia: argument `connection` (UUID znanej definicji), bez niego — `toolConnection()`.
     @MainActor

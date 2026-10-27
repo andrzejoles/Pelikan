@@ -3,15 +3,15 @@ import PelikanDB
 
 /// Komendy połączeń (UG 3, 19, 20). Argument `connection` = UUID definicji; bez argumentu — połączenie główne.
 public enum ConnectionCommands {
-    static let connectionParam = CommandParameter("connection", .string, L10n.tr("Identyfikator połączenia (domyślnie połączenie główne)"))
+    static let connectionParam = CommandParameter("connection", .string, L10n.tr("Identyfikator albo nazwa połączenia (domyślnie połączenie główne)"))
 
     @MainActor
     static func connectionID(_ ctx: CommandContext) throws -> UUID {
         if let s = ctx.arguments.string("connection") {
-            guard let id = UUID(uuidString: s), ctx.workspace.connections.connection(id) != nil else {
-                throw CommandError.invalidArgument("connection", L10n.tr("nieznane połączenie"))
-            }
-            return id
+            if let id = UUID(uuidString: s), ctx.workspace.connections.connection(id) != nil { return id }
+            // Także nazwa definicji (parametry startowe, skrypty) — bez rozróżniania wielkości liter.
+            if let def = ctx.workspace.connections.connections.first(where: { $0.name.caseInsensitiveCompare(s) == .orderedSame }) { return def.id }
+            throw CommandError.invalidArgument("connection", L10n.tr("nieznane połączenie"))
         }
         guard let main = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
         return main
