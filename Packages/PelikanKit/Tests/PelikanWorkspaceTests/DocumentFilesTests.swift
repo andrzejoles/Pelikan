@@ -34,6 +34,8 @@ final class FakeUI: UIServices {
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { saveURL }
     var printed: [String] = []
     func printHTML(title: String, html: String) { printed.append(title) }
+    var onCommitPendingEdits: (() -> Void)?
+    func commitPendingEdits() { onCommitPendingEdits?() }
 }
 
 @MainActor

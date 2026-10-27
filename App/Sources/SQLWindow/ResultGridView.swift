@@ -364,7 +364,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             }
             lastRowCount = count
         }
-        if let rowNo = table.tableColumns.first { rowNo.width = max(36, CGFloat(String(count).count) * 8 + 14) }
+        if let rowNo = table.tableColumns.first(where: { $0.identifier.rawValue == "#" }) { rowNo.width = max(36, CGFloat(String(count).count) * 8 + 14) }
         if !record.isHidden { showRecord() }
     }
 
@@ -459,9 +459,16 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         return cell
     }
 
+    /// Pisanie w komórce: komendy zatwierdzania zmian dostępne, zanim wartość trafi do modelu (APP2-04).
+    func controlTextDidBeginEditing(_ obj: Notification) {
+        guard let field = obj.object as? NSTextField, table.row(for: field) >= 0 else { return }
+        grid.cellEditorOpen = true
+    }
+
     /// Koniec edycji komórki: wartość do modelu (konwersja typu), błąd — komunikat i przywrócenie.
     func controlTextDidEndEditing(_ obj: Notification) {
         guard let field = obj.object as? NSTextField else { return }
+        if grid.cellEditorOpen { grid.cellEditorOpen = false }
         let row = table.row(for: field), col = table.column(for: field)
         guard row >= 0, col >= 0, let i = Int(table.tableColumns[col].identifier.rawValue.dropFirst()) else { return }
         let text = field.stringValue
@@ -478,6 +485,13 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
     func tableView(_ tableView: NSTableView, mouseDownInHeaderOf tableColumn: NSTableColumn) {
         guard tableColumn.identifier.rawValue != "#", let i = Int(tableColumn.identifier.rawValue.dropFirst()) else { return }
         grid.toggleSort(column: i, add: NSEvent.modifierFlags.contains(.shift))
+    }
+
+    /// Kolumna numerów „#” zostaje pierwsza: nie da się jej przeciągnąć ani wstawić kolumny danych przed nią
+    /// (szerokość numerów i `applyLayout` zakładają ją na początku).
+    func tableView(_ tableView: NSTableView, shouldReorderColumn columnIndex: Int, toColumn newColumnIndex: Int) -> Bool {
+        guard columnIndex >= 0, columnIndex < tableView.tableColumns.count else { return true }
+        return tableView.tableColumns[columnIndex].identifier.rawValue != "#" && newColumnIndex != 0
     }
 
     /// Komórka z błędem po zatwierdzaniu zmian (NF12): zaznacz wiersz, przewiń do kolumny, rozpocznij edycję.

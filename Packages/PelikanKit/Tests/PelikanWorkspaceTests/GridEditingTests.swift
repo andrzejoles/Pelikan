@@ -68,6 +68,39 @@ struct GridEditingUnitTests {
         #expect(g.changesSQL() == "INSERT INTO U.T (ID, NAME) VALUES (DEFAULT, DEFAULT);")
     }
 
+    @Test("Wartość w otwartym edytorze komórki: komendy zmian dostępne, edycja kończona przed wykonaniem (APP2-04)")
+    @MainActor
+    func pendingCellEditor() async throws {
+        let columns = [ColumnInfo(name: "ID", type: .number, typeName: "NUMBER"), ColumnInfo(name: "NAME", type: .varchar2, typeName: "VARCHAR2(20)"),
+                       ColumnInfo(name: "ROWID", type: .rowid, typeName: "ROWID")]
+        let g = ResultGridModel(columns: columns, resultSet: ResultSetID(1), session: RowsSession([[.number("1"), .text("a"), .text("AAA1")]]),
+                                sql: "select id, name, rowid from t", format: ValueFormat())
+        await g.fetchAll()
+        g.edit.target = EditTarget(owner: "U", table: "T", rowidColumn: 2, editableColumns: [0, 1], tableColumn: [0: "ID", 1: "NAME"])
+        g.edit.isEditing = true
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.sql)
+        doc.results = [ResultTab(title: "w", statementRange: 0..<0, grid: g)]
+        doc.activeResultID = doc.results[0].id
+        #expect(!ws.isEnabled("grid.copyChangesSQL") && !ws.isEnabled("grid.post"))
+        // Pierwsza zmiana jeszcze w edytorze komórki (bez Enter): model bez zmian, a komendy już dostępne.
+        g.cellEditorOpen = true
+        #expect(ws.isEnabled("grid.copyChangesSQL") && ws.isEnabled("grid.post") && ws.isEnabled("grid.cancelChanges"))
+        var commits = 0
+        ui.onCommitPendingEdits = {
+            commits += 1
+            g.cellEditorOpen = false
+            try? g.setText("b", row: 0, column: 1)
+        }
+        let r = try await ws.invoke("grid.copyChangesSQL")
+        #expect(commits == 1 && r.message?.contains("UPDATE U.T") == true)
+        g.cellEditorOpen = true
+        try await ws.invoke("grid.cancelChanges")
+        #expect(commits == 2 && !g.edit.hasChanges)
+    }
+
     @Test("Kolumna z komunikatu ORA-12899 / ORA-01400")
     @MainActor
     func errorColumn() {

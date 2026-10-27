@@ -1083,6 +1083,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         workspace.recordClipboard(text)
     }
 
+    /// Edytor komórki siatki z fokusem kończy edycję (wartość do modelu przez `controlTextDidEndEditing`); fokus
+    /// zostaje w tabeli. Przyciski i skróty komend nie przejmują fokusu, więc bez tego wpisana wartość by przepadła.
+    func commitPendingEdits() {
+        for window in [NSApp.keyWindow, NSApp.mainWindow].compactMap({ $0 }) {
+            guard let editor = window.firstResponder as? NSTextView, editor.isFieldEditor else { continue }
+            var view = editor.delegate as? NSView
+            while let v = view, !(v is GridTableView) { view = v.superview }
+            if let table = view { window.makeFirstResponder(table) }
+        }
+    }
+
     func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool {
         if Self.scriptSkipsDialog("saveFile") { return false }
         guard let window = mainWindow?.window else { return false }
