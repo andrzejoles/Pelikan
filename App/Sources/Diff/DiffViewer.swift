@@ -18,6 +18,8 @@ struct DiffViewer: View {
     @State private var options = DiffOptions()
     @State private var rows: [DiffRow] = []
     @State private var current = -1
+    /// Numer przeliczenia różnic — starszy wynik z tła nie nadpisuje nowszego.
+    @State private var generation = 0
     @State private var scrollTarget: Int?
     /// Szerokość najdłuższej linii (obie strony) — kolumny tekstu co najmniej tak szerokie, z przewijaniem w poziomie.
     @State private var textWidth: CGFloat = 0
@@ -110,10 +112,18 @@ struct DiffViewer: View {
     private static func weight(_ s: String) -> Int { s.utf16.count + s.utf16.filter { $0 == 0x09 }.count * 7 }
 
     private func recompute() {
-        rows = TextDiff.rows(left, right, options: options)
-        textWidth = Self.widestLine(rows)
-        current = -1
-        if let first = changes.first { scrollTarget = max(0, first - 3); current = 0 }
+        // Zestawienie (Myers) liczone w tle — duży plik z wieloma zmianami nie zamraża okna; wynik tylko dla
+        // ostatniego przeliczenia (zmiana opcji, zamiana stron, Reload w trakcie liczenia).
+        generation += 1
+        let (g, l, r, o) = (generation, left, right, options)
+        Task {
+            let computed = await Task.detached(priority: .userInitiated) { TextDiff.rows(l, r, options: o) }.value
+            guard g == generation else { return }
+            rows = computed
+            textWidth = Self.widestLine(computed)
+            current = -1
+            if let first = changes.first { scrollTarget = max(0, first - 3); current = 0 }
+        }
     }
 
     /// Reload: obie strony wczytane ponownie (z zachowaniem zamiany stron i pozycji bieżącej różnicy).
@@ -179,15 +189,14 @@ struct DiffRowView: View {
     }
 
     private func attributed(_ text: String, change: Range<Int>?, side: Side) -> AttributedString {
-        var a = AttributedString(text)
-        guard let change, !change.isEmpty else { return a }
+        guard let change, !change.isEmpty else { return AttributedString(text) }
+        // Zakres w UTF-16 — tekst składany z trzech kawałków NSString, bez przesuwania indeksów po znakach
+        // (granica w środku grafemu wychodziłaby poza tekst).
         let ns = text as NSString
-        let prefix = ns.substring(to: min(change.lowerBound, ns.length))
-        let mid = ns.substring(with: NSRange(location: min(change.lowerBound, ns.length), length: min(change.count, ns.length - min(change.lowerBound, ns.length))))
-        let start = a.index(a.startIndex, offsetByCharacters: prefix.count)
-        let end = a.index(start, offsetByCharacters: mid.count)
-        a[start..<end].backgroundColor = side == .left ? Color.red.opacity(0.3) : Color.green.opacity(0.3)
-        return a
+        let lower = min(change.lowerBound, ns.length), upper = min(change.upperBound, ns.length)
+        var mid = AttributedString(ns.substring(with: NSRange(location: lower, length: upper - lower)))
+        mid.backgroundColor = side == .left ? Color.red.opacity(0.3) : Color.green.opacity(0.3)
+        return AttributedString(ns.substring(to: lower)) + mid + AttributedString(ns.substring(from: upper))
     }
 }
 
