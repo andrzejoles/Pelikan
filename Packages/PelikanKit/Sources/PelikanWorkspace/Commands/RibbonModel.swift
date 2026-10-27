@@ -281,6 +281,7 @@ public enum RibbonModel {
                 .large("debug.start", label: L10n.tr("Debuguj")),
                 .small("debug.run"), .small("debug.stepInto"), .small("debug.stepOver"), .small("debug.stepOut"),
                 .small("debug.runToCursor"), .small("debug.runToException"), .small("debug.stop", label: L10n.tr("Zatrzymaj")),
+                .small("debug.executeInTarget", label: L10n.tr("SQL w sesji")),
             ]),
             RibbonGroup(L10n.tr("Punkty przerwania"), [
                 .large("debug.toggleBreakpoint"),

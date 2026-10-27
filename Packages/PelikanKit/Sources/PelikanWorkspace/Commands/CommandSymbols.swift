@@ -49,7 +49,7 @@ public enum CommandSymbols {
         // Debugowanie i testy
         "debug.start": "ladybug", "debug.stepInto": "arrow.down.to.line", "debug.stepOver": "arrow.turn.down.right", "debug.stepOut": "arrow.up.to.line",
         "debug.runToCursor": "arrow.right.to.line.compact", "debug.runToException": "bolt.trianglebadge.exclamationmark",
-        "debug.stop": "stop.circle", "debug.toggleBreakpoint": "smallcircle.filled.circle", "debug.breakpoints": "list.bullet.circle",
+        "debug.stop": "stop.circle", "debug.executeInTarget": "terminal", "debug.toggleBreakpoint": "smallcircle.filled.circle", "debug.breakpoints": "list.bullet.circle",
         "debug.saveBreakpoints": "square.and.arrow.down", "debug.loadBreakpoints": "square.and.arrow.up", "debug.grantPrivileges": "lock.open",
         "utplsql.runAll": "checkmark.diamond", "utplsql.runEditor": "play.diamond", "utplsql.rerunFailed": "arrow.counterclockwise",
         "utplsql.coverage": "chart.pie", "utplsql.explorer": "list.bullet.indent", "utplsql.cancel": "stop.circle",

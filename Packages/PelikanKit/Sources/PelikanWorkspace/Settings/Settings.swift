@@ -9,7 +9,7 @@ public enum SessionMode: String, Sendable, Codable, CaseIterable {
     case multi
     /// Okna jednego połączenia dzielą sesję; osobna sesja kompilacji.
     case dual
-    /// Wszystko w jednej sesji (debuger wyłączony).
+    /// Wszystko w jednej sesji (debuger działa — sesja nadzorująca jest zawsze osobna, WS2-02).
     case single
 
     public var displayName: String {

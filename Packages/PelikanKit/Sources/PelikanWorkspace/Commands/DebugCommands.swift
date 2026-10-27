@@ -71,6 +71,24 @@ enum DebugCommands {
                 ctx.workspace.showDebugLocation(d, testDocument: doc)
                 return .ok
             },
+            Command(CommandDescriptor(id: "debug.executeInTarget", title: L10n.tr("Wykonaj SQL w sesji debugowanej…"), category: .debug,
+                                      parameters: [CommandParameter("sql", .string, L10n.tr("Zapytanie albo blok PL/SQL"))],
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Wykonuje zapytanie (pierwsze 100 wierszy) albo blok PL/SQL w sesji debugowanej podczas zatrzymania; wynik w karcie Wyjście okna testu."),
+                                      feature: "PD-DBG-009"),
+                    validate: { ws in testDocument(ws).map { ws.debugger(for: $0).state == .paused } ?? false }) { ctx in
+                guard let doc = testDocument(ctx.workspace) else { return .ok }
+                var sql = ctx.arguments.string("sql")
+                if sql == nil {
+                    sql = await ctx.ui?.askText(L10n.tr("Wykonaj w sesji debugowanej"), message: L10n.tr("Zapytanie (pierwsze 100 wierszy) albo blok PL/SQL."),
+                                                defaultValue: "")
+                }
+                guard let sql, !sql.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw CommandError.cancelledByUser }
+                let lines = try await ctx.workspace.debugger(for: doc).executeInTarget(sql)
+                doc.output.append("SQL> " + sql)
+                doc.output.append(contentsOf: lines)
+                return CommandResult(value: .array(lines.map { .string($0) }))
+            },
             Command(CommandDescriptor(id: "debug.breakpoints", title: L10n.tr("Punkty przerwania…"), category: .debug,
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Lista punktów przerwania (włączanie, licznik przejść, usuwanie) i zatrzymanie na kodach błędów."),
@@ -104,9 +122,9 @@ enum DebugCommands {
         switch doc.kind {
         case .test: return Breakpoint(document: doc.id.raw, line: line)
         case .program:
-            // Linia 1 źródła jednostki = linia nagłówka CREATE (unit.line od 0).
-            guard let u = doc.programUnits.last(where: { $0.line < line }) else { return nil }
-            return Breakpoint(owner: u.owner, unit: u.name, type: u.type, line: line - u.line)
+            // Linia 1 źródła jednostki = linia słowa typu w nagłówku (`sourceLine` od 0; WS2-10).
+            guard let u = doc.programUnits.last(where: { $0.line < line }), line > u.sourceLine else { return nil }
+            return Breakpoint(owner: u.owner, unit: u.name, type: u.type, line: line - u.sourceLine)
         default: return nil
         }
     }
@@ -155,16 +173,29 @@ extension Workspace {
         guard let type = l.objectType else { return }
         if let doc = documents.first(where: { $0.kind == .program && $0.programUnits.contains { $0.name == l.name && $0.type == type } }),
            let u = doc.programUnits.first(where: { $0.name == l.name && $0.type == type }) {
-            doc.executionLine = u.line + l.line
-            let o = ProgramCompiler.offset(line: u.line + l.line, column: 1, in: doc.text)
+            doc.executionLine = u.sourceLine + l.line
+            let o = ProgramCompiler.offset(line: u.sourceLine + l.line, column: 1, in: doc.text)
             doc.selectedRange = o..<o
             activate(doc.id)
             return
         }
         Task {
-            try? await openObject(DBObject(owner: l.owner, name: l.name, type: type), line: l.line)
+            if let key = sessionKey(for: testDocument), key.purpose == .main {
+                // Dual i Single: sesja okna testu to sesja główna, a ta wykonuje program czekający na debuger — otwarcie
+                // przez Object Browser (MetadataProvider) czekałoby do końca programu. Źródło z sesji nadzorującej (WS2-02).
+                let source = await d.source(of: DBObject(owner: l.owner, name: l.name, type: type))
+                guard !source.isEmpty else { return }
+                let doc = newDocument(.program, text: source + "\n/\n")
+                bind(doc, to: key.connectionID)
+                doc.customTitle = l.name.lowercased() + "." + ObjectCommands.fileExtension(type)
+                doc.isModified = false
+            } else {
+                try? await openObject(DBObject(owner: l.owner, name: l.name, type: type), line: l.line)
+            }
             if let doc = activeDocument, doc.kind == .program, let u = doc.programUnits.first(where: { $0.name == l.name && $0.type == type }) {
-                doc.executionLine = u.line + l.line
+                doc.executionLine = u.sourceLine + l.line
+                let o = ProgramCompiler.offset(line: u.sourceLine + l.line, column: 1, in: doc.text)
+                doc.selectedRange = o..<o
             }
         }
     }
