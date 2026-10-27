@@ -783,19 +783,68 @@ extension Workspace {
         doc.isDisconnected ? nil : doc.connectionID ?? sessions.mainConnectionID
     }
 
+    /// Klucz sesji okna wg trybu sesji (nil — okno bez połączenia).
+    public func sessionKey(for doc: Document) -> SessionKey? {
+        guard let c = effectiveConnection(of: doc) else { return nil }
+        return doc.sessionPurpose.map { SessionKey(connectionID: c, purpose: $0) } ?? sessions.key(forDocument: doc.id, connection: c)
+    }
+
     /// Sesja okna wg trybu sesji (łączy, jeśli trzeba).
     public func session(for doc: Document) async throws -> any DatabaseSession {
-        guard let c = effectiveConnection(of: doc) else { throw CommandError.notConnected }
-        let key = doc.sessionPurpose.map { SessionKey(connectionID: c, purpose: $0) } ?? sessions.key(forDocument: doc.id, connection: c)
+        guard let key = sessionKey(for: doc) else { throw CommandError.notConnected }
         sessions.touch(key)
         return try await sessions.session(key)
+    }
+
+    /// Po zestawieniu sesji (łączenie, pytania): okno mogło zostać zamknięte w międzyczasie — wtedy jego świeża sesja
+    /// (tryb Multi) jest zamykana, a polecenie się nie wykonuje. `wasOpen` — okno było na liście na początku wykonania
+    /// (dokumenty spoza listy, np. testy Test Managera, nie są sprawdzane).
+    func ensureStillOpen(_ doc: Document, wasOpen: Bool) async throws {
+        guard wasOpen, !documents.contains(where: { $0 === doc }) else { return }
+        if let key = sessionKey(for: doc), case .document(doc.id) = key.purpose { await sessions.close(key) }
+        throw CommandError.cancelledByUser
+    }
+
+    /// Sesje okien zajęte wykonaniem albo otwartym kursorem wyniku (dociąganie wierszy).
+    var busySessionKeys: Set<SessionKey> {
+        Set(documents.filter { d in d.isExecuting || d.results.contains { $0.grid?.hasMore == true } }.compactMap(sessionKey(for:)))
+    }
+
+    /// Przebieg sprawdzania połączeń (UG 23.1 „Check connection”, timer aplikacji): zamykanie bezczynnych sesji okien
+    /// (PD-CONN-026), zmiany obiektów okien programu (PD-PROG-011) i — gdy interwał > 0 — ping sesji głównych oraz sesji
+    /// okien z otwartą transakcją. Interwał 0 wyłącza tylko ping (pozostałe co minutę); zmiana interwału działa od razu.
+    /// Kolejny przebieg nie rusza przed końcem poprzedniego. Zwraca komunikat o utraconych połączeniach (nil — brak).
+    public func connectionCheckTick(now: Date = Date()) async -> String? {
+        let seconds = settings.checkConnectionIntervalSeconds
+        let period = TimeInterval(seconds > 0 ? max(15, seconds) : 60)
+        guard !sessions.connectionCheckRunning, now.timeIntervalSince(sessions.lastConnectionCheck) >= period - 1 else { return nil }
+        sessions.connectionCheckRunning = true
+        defer { sessions.connectionCheckRunning = false }
+        sessions.lastConnectionCheck = now
+        await sessions.closeIdleSessions(olderThan: settings.closeIdleSessionsMinutes, busy: busySessionKeys, now: now)
+        await checkProgramWindowChanges()
+        guard seconds > 0 else { return nil }
+        let withTransaction = Set(documents.filter(\.transactionOpen).compactMap(sessionKey(for:)))
+        let lost = Set(await sessions.checkConnections(also: withTransaction, busy: busySessionKeys))
+        guard !lost.isEmpty else { return nil }
+        // Tylko okna, których sesja przepadła (w trybie Multi inne okna połączenia mają własne, żywe sesje).
+        var windows: [String] = []
+        for d in documents where d.transactionOpen {
+            guard let k = sessionKey(for: d), lost.contains(k) else { continue }
+            d.transactionOpen = false
+            windows.append(d.title)
+        }
+        let names = Set(lost.compactMap { connections.connection($0.connectionID)?.displayName }).sorted().joined(separator: ", ")
+        var message = L10n.tr("Połączenie utracone: \(names). Kolejne polecenie połączy się ponownie.")
+        if !windows.isEmpty { message += " " + L10n.tr("Niezatwierdzone zmiany okien zostały wycofane przez serwer: \(windows.joined(separator: ", ")).") }
+        return message
     }
 
     /// Kończy transakcje okien (COMMIT/ROLLBACK) przed rozłączeniem lub zamknięciem.
     public func endTransactions(of docs: [Document], commit: Bool) async throws {
         for d in docs {
-            guard let c = effectiveConnection(of: d),
-                  let s = sessions.existingSession(sessions.key(forDocument: d.id, connection: c)) else { continue }
+            // Klucz jak przy wykonaniu (także okna z własnym przeznaczeniem sesji), inaczej COMMIT/ROLLBACK trafiłby obok.
+            guard let key = sessionKey(for: d), let s = sessions.existingSession(key) else { continue }
             if commit { try await s.commit() } else { try await s.rollback() }
             d.transactionOpen = false
         }

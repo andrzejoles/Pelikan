@@ -158,13 +158,32 @@ public enum SessionCommands {
                                       summary: L10n.tr("ALTER SYSTEM KILL SESSION dla zaznaczonej sesji (po potwierdzeniu)."), inMenu: false,
                                       feature: "PD-TOOL-015")) { ctx in
                 guard let sid = ctx.arguments.int("sid"), let serial = ctx.arguments.int("serial") else { throw CommandError.missingArgument("sid, serial") }
+                // Strażnik zmian jak w panelu DBA: tylko do odczytu blokuje, produkcja wymaga potwierdzenia.
+                let conn = try ctx.toolConnection()
+                try await ctx.workspace.guardModification(["alter system kill session '\(sid),\(serial)'"], connectionID: conn)
                 if let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Zabić sesję \(sid),\(serial)?"), message: L10n.tr("Niezatwierdzona transakcja tej sesji zostanie wycofana."),
                                        buttons: [L10n.tr("Zabij"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 try await SessionBrowser.kill(sid: Int(sid), serial: Int(serial), immediate: ctx.arguments.bool("immediate") ?? true,
-                                         in: try await toolSession(ctx.workspace, connection: try ctx.toolConnection()))
+                                         in: try await toolSession(ctx.workspace, connection: conn))
                 return CommandResult(message: L10n.tr("Sesja \(sid),\(serial) zabita"))
+            },
+            Command(CommandDescriptor(id: "sessions.action", title: L10n.tr("Akcja sesji"), category: .tools, submenu: L10n.tr("Sesje"),
+                                      parameters: sessionParams + [CommandParameter("action", .string, required: true, L10n.tr("Nazwa akcji z Preferencji › Sesje")),
+                                                                   CommandContext.toolConnectionParam],
+                                      agent: .none, effect: .modifiesDatabase,
+                                      summary: L10n.tr("Wykonuje akcję przeglądarki sesji (polecenie z Preferencji) dla zaznaczonej sesji przez strażnika zmian."),
+                                      inMenu: false, feature: "PD-TOOL-015")) { ctx in
+                guard let sid = ctx.arguments.int("sid"), let serial = ctx.arguments.int("serial") else { throw CommandError.missingArgument("sid, serial") }
+                let name = ctx.arguments.string("action") ?? ""
+                guard let item = ctx.workspace.settings.sessionQueries.actions.first(where: { $0.name == name }) else {
+                    throw CommandError.invalidArgument("action", name)
+                }
+                let conn = try ctx.toolConnection()
+                try await ctx.workspace.guardModification([item.sql], connectionID: conn)
+                try await SessionBrowser.perform(item, sid: Int(sid), serial: Int(serial), in: try await toolSession(ctx.workspace, connection: conn))
+                return CommandResult(message: L10n.tr("Wykonano: \(item.name)"))
             },
         ]
     }

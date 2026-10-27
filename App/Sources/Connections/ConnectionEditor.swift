@@ -413,14 +413,16 @@ enum ConnectionEditorPresenter {
                 password = workspace.connections.password(for: def.id)
             }
             var target = def.target
-            var tunnelOpened = false
-            defer { if tunnelOpened { workspace.sessions.tunnels.release(def.id) } }
+            var tunnel: SSHTunnelManager.Tunnel?
+            defer { if let tunnel { workspace.sessions.tunnels.release(tunnel, of: def.id) } }
             do {
                 if def.sshTunnel != nil {
-                    let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
-                    let tunnel = try await workspace.sessions.tunnels.open(for: def, tns: tns)
-                    tunnelOpened = true
-                    target.connectString = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) ?? target.connectString
+                    // Katalogi TNS i hasło SSH jak przy łączeniu: wpisane w oknie albo zapisane (po potwierdzeniu właściciela).
+                    let tns = workspace.sessions.tnsEntries(for: def)
+                    let secret = draft.sshUsesPassword && !draft.sshPassword.isEmpty ? draft.sshPassword : try await workspace.sessions.tunnelSecret(for: def)
+                    let opened = try await workspace.sessions.tunnels.open(for: def, tns: tns, secret: secret)
+                    tunnel = opened
+                    target.connectString = ConnectStringRewriter.rewrite(def.target.connectString, localPort: opened.localPort, tns: tns) ?? target.connectString
                 }
                 let module = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
                 let s = try await driver.connect(target: target, credentials: Credentials(password: password),

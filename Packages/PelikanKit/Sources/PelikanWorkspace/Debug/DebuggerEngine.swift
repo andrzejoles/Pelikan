@@ -136,7 +136,7 @@ public final class DebuggerEngine {
         try await workspace.guardModification([sql], connectionID: conn)
         let binds = try document.testVariables.map { v -> BindVariable in
             let (t, size) = v.type.bind
-            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try TestRunner.value(v), maxSize: size)
+            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try TestRunner.value(v, format: workspace.settings.valueFormat), maxSize: size)
         }
         let target = try await workspace.session(for: document)
         let debug = try await workspace.sessions.session(workspace.sessions.debuggerKey(document: document.id, connection: conn))
@@ -603,7 +603,7 @@ public final class DebuggerEngine {
                 var n = v
                 if case .cursor = out { n.value = L10n.tr("(kursor)"); n.isNull = false } else {
                     n.isNull = out.isNull
-                    n.value = out.isNull ? "" : out.format(workspace.settings.valueFormat)
+                    n.value = out.isNull ? "" : TestRunner.outputText(out, format: workspace.settings.valueFormat)
                 }
                 n.changed = n.value != v.value || n.isNull != v.isNull
                 document.testVariables[i] = n
@@ -641,6 +641,9 @@ public final class DebuggerEngine {
             _ = try? await debug.execute("begin dbms_debug.detach_session; end;")
         }
         await restoreOptimizeLevel()
+        // Program mógł zmienić dane bez COMMIT — stan transakcji sesji okna jak po wykonaniu w oknie testu (po DEBUG_OFF,
+        // inaczej zapytanie czekałoby na debuger).
+        if let target { document.transactionOpen = (try? await SessionUtilities.transactionOpen(target)) ?? document.transactionOpen }
         execution = nil
         document.isExecuting = false
     }

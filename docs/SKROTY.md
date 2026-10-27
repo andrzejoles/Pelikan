@@ -444,6 +444,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | PD-TOOL-007 |
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | PD-TOOL-012 |
 | Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | PD-TOOL-015 |
+| Sesje › Akcja sesji | `sessions.action` |  |  | Brak | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Brak | PD-SCHED-001 |
 | Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | PD-DIAG-001 |
 | Diagram › Dodaj powiązane tabele | `diagram.addRelated` |  |  | Brak | PD-DIAG-001 |
