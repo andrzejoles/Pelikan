@@ -189,7 +189,7 @@ public enum GridCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.post", title: L10n.tr("Zatwierdź zmiany (Post)"), category: .session, submenu: L10n.tr("Wynik"),
-                                      mac: ["cmd+alt+s"], agent: .approval, effect: .modifiesDatabase,
+                                      mac: ["cmd+alt+s"], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Zapisuje zmiany siatki w bazie (UPDATE/INSERT/DELETE po ROWID) — bez COMMIT."), feature: "PD-GRID-017"),
                     validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
                 guard let (_, grid) = activeGrid(ctx.workspace), let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
@@ -214,7 +214,7 @@ public enum GridCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.copyChangesSQL", title: L10n.tr("Kopiuj SQL zmian"), category: .session, submenu: L10n.tr("Wynik"),
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje polecenia, które wykona Zatwierdź zmiany (podgląd przed zapisem)."), feature: "PD-GRID-020"),
                     validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
                 guard let (_, grid) = activeGrid(ctx.workspace) else { return .ok }

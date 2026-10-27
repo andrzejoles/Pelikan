@@ -192,7 +192,7 @@ enum EditorExtraCommands {
                         typed: true) { text, sel, name, type in try CodeRefactoring.extractGlobalConstant(text, selection: sel, name: name, type: type) },
             refactoring("edit.extractProcedure", L10n.tr("Wydziel procedurę…"), summary: L10n.tr("Przenosi zaznaczone instrukcje do procedury lokalnej; używane zmienne stają się parametrami."),
                         typed: false) { text, sel, name, _ in try CodeRefactoring.extractProcedure(text, selection: sel, name: name) },
-            command("edit.replaceAssignmentWithInitialization", L10n.tr("Zamień przypisanie na inicjalizację"), submenu: refactor, agent: .full, effect: .modifiesEditor,
+            command("edit.replaceAssignmentWithInitialization", L10n.tr("Zamień przypisanie na inicjalizację"), submenu: refactor, agent: .none, effect: .modifiesEditor,
                     summary: L10n.tr("Przenosi przypisanie „zmienna := wyrażenie;” z początku ciała do deklaracji zmiennej."), feature: "PD-CA-014") { ctx in
                 guard let doc = editor(ctx.workspace) else { return .ok }
                 try BuiltinCommands.checkWritable(doc)
@@ -210,7 +210,7 @@ enum EditorExtraCommands {
                              CommandParameter("directories", .string, L10n.tr("Katalogi rozdzielone ; (domyślnie lokalizacje File Browsera)")),
                              CommandParameter("caseSensitive", .boolean, L10n.tr("Wielkość liter")), CommandParameter("wholeWord", .boolean, L10n.tr("Całe słowa")),
                              CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne"))],
-                    agent: .read, effect: .none,
+                    agent: .none, effect: .none,
                     summary: L10n.tr("Szuka tekstu w bieżącym edytorze, we wszystkich edytorach albo w plikach skryptów w katalogach; lista wyników przenosi do miejsca."),
                     feature: "PD-CA-015", validate: { _ in true }) { ctx in
                 let ws = ctx.workspace
@@ -248,7 +248,7 @@ enum EditorExtraCommands {
                             _ transform: @escaping @MainActor (String, Range<Int>, String, String?) throws -> TextEdit) -> Command {
         var params = [CommandParameter("name", .string, L10n.tr("Nazwa"))]
         if typed { params.append(CommandParameter("type", .string, L10n.tr("Typ (domyślnie z wyrażenia)"))) }
-        return command(id, title, submenu: L10n.tr("Refaktoryzacja"), params: params, agent: .full, effect: .modifiesEditor, summary: summary, feature: "PD-CA-014",
+        return command(id, title, submenu: L10n.tr("Refaktoryzacja"), params: params, agent: .none, effect: .modifiesEditor, summary: summary, feature: "PD-CA-014",
                        validate: { editor($0).map { !$0.selectedRange.isEmpty } ?? false }) { ctx in
             guard let doc = editor(ctx.workspace) else { return .ok }
             try BuiltinCommands.checkWritable(doc)

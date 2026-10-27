@@ -15,11 +15,12 @@ public enum BuiltinCommands {
         ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
     }
 
+    /// `agent` — poziom tylko dla okien z listy `AgentPolicy.appCommands` (poza nią agent i tak nie dociera, D33).
     private static func newDocument(_ kind: DocumentKind, id: String, title: String, pd: [String] = [], mac: [String]? = nil,
-                                    feature: String) -> Command {
+                                    agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
-            agent: .full, effect: .uiState, summary: L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."), feature: feature
+            agent: agent, effect: .uiState, summary: L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."), feature: feature
         )) { ctx in
             let doc = ctx.workspace.newDocument(kind)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -121,9 +122,9 @@ public enum BuiltinCommands {
 
     @MainActor static var file: [Command] {
         [
-            newDocument(.sql, id: "file.new.sql", title: L10n.tr("Okno SQL"), mac: ["cmd+n"], feature: "PD-SQLW-002"),
-            newDocument(.program, id: "file.new.program", title: L10n.tr("Okno programu"), mac: ["cmd+shift+n"], feature: "PD-PROG-001"),
-            newDocument(.test, id: "file.new.test", title: L10n.tr("Okno testu"), feature: "PD-TEST-001"),
+            newDocument(.sql, id: "file.new.sql", title: L10n.tr("Okno SQL"), mac: ["cmd+n"], agent: .full, feature: "PD-SQLW-002"),
+            newDocument(.program, id: "file.new.program", title: L10n.tr("Okno programu"), mac: ["cmd+shift+n"], agent: .full, feature: "PD-PROG-001"),
+            newDocument(.test, id: "file.new.test", title: L10n.tr("Okno testu"), agent: .full, feature: "PD-TEST-001"),
             newDocument(.command, id: "file.new.command", title: L10n.tr("Okno poleceń"), feature: "PD-CMDW-001"),
             newDocument(.explainPlan, id: "file.new.explainPlan", title: L10n.tr("Okno planu (Explain Plan)"), feature: "PD-OPT-001"),
             newDocument(.report, id: "file.new.report", title: L10n.tr("Okno raportu"), feature: "PD-REP-002"),
@@ -153,7 +154,7 @@ public enum BuiltinCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "file.save", title: L10n.tr("Zapisz"), category: .file, mac: ["cmd+s"],
-                                      agent: .approval, effect: .external, summary: L10n.tr("Zapisuje okno do pliku."),
+                                      agent: .none, effect: .external, summary: L10n.tr("Zapisuje okno do pliku."),
                                       feature: "PD-SQLW-012"),
                     validate: { $0.activeDocument != nil }) { ctx in
                 guard let doc = ctx.workspace.activeDocument else { return .ok }
@@ -255,12 +256,13 @@ public enum BuiltinCommands {
         return doc
     }
 
-    /// Komenda zmieniająca tekst edytora czystą funkcją (cofalne w edytorze — zmiana trafia przez model).
+    /// Komenda zmieniająca tekst edytora czystą funkcją (cofalne w edytorze — zmiana trafia przez model). `agent` — poziom
+    /// tylko dla komend z listy `AgentPolicy.appCommands`.
     @MainActor
-    static func editCommand(_ id: String, _ title: String, pd: [String] = [], mac: [String]? = nil, summary: String, feature: String,
+    static func editCommand(_ id: String, _ title: String, pd: [String] = [], mac: [String]? = nil, agent: AgentAccess = .none, summary: String, feature: String,
                             _ transform: @escaping @Sendable (String, Range<Int>) -> TextEdit) -> Command {
         Command(CommandDescriptor(id: CommandID(rawValue: id), title: title, category: .edit, submenu: L10n.tr("Zaznaczenie"), pd: pd, mac: mac,
-                                  agent: .full, effect: .modifiesEditor, summary: summary, feature: feature),
+                                  agent: agent, effect: .modifiesEditor, summary: summary, feature: feature),
                 validate: { editable($0) != nil }) { ctx in
             guard let doc = try editTarget(ctx) else { return .ok }
             let before = doc.text
@@ -342,7 +344,7 @@ public enum BuiltinCommands {
                                       feature: "PD-EDIT-008"),
                     validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in try findNext(ctx, backwards: true) },
             Command(CommandDescriptor(id: "edit.replace", title: L10n.tr("Zamień"), category: .edit, parameters: replaceParameters,
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Zamienia zaznaczone wystąpienie szukanego tekstu i zaznacza następne."), feature: "PD-EDIT-008"),
                     validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
                 guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
@@ -356,7 +358,7 @@ public enum BuiltinCommands {
             },
             Command(CommandDescriptor(id: "edit.replaceAll", title: L10n.tr("Zamień wszystko"), category: .edit,
                                       parameters: replaceParameters + [CommandParameter("inSelection", .boolean, L10n.tr("Tylko w zaznaczeniu"))],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Zamienia wszystkie wystąpienia szukanego tekstu w oknie albo w zaznaczeniu."), feature: "PD-EDIT-008"),
                     validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
                 guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
@@ -417,7 +419,7 @@ public enum BuiltinCommands {
                 return CommandResult(message: L10n.tr("Sformatowano"))
             },
             Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
-                                      pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .read, effect: .none,
+                                      pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .none, effect: .none,
                                       summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),
                                       feature: "PD-CA-001"),
                     validate: { editable($0) != nil }) { ctx in
@@ -430,7 +432,7 @@ public enum BuiltinCommands {
                 return CommandResult(message: r.items.prefix(200).map(\.label).joined(separator: ", "))
             },
             Command(CommandDescriptor(id: "edit.refreshCodeAssistant", title: L10n.tr("Odśwież podpowiedzi kodu"), category: .edit,
-                                      agent: .full, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Czyści pamięć podręczną słownika używaną przez podpowiedzi (np. po zmianie tabel w innej sesji)."),
                                       feature: "PD-CA-009"),
                     validate: { ws in editable(ws).flatMap { ws.metadata(for: ws.effectiveConnection(of: $0)) } != nil }) { ctx in
@@ -487,7 +489,7 @@ public enum BuiltinCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "edit.gotoDeclaration", title: L10n.tr("Przejdź do deklaracji"), category: .edit,
-                                      pd: ["ctrl+alt+d"], mac: ["ctrl+cmd+j"], agent: .full, effect: .uiState,
+                                      pd: ["ctrl+alt+d"], mac: ["ctrl+cmd+j"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Deklaracja identyfikatora pod kursorem: lokalna (zmienna, parametr, podprogram) albo obiekt bazy."),
                                       feature: "PD-CA-012"),
                     validate: { editable($0) != nil }) { ctx in
@@ -531,11 +533,11 @@ public enum BuiltinCommands {
                 return .ok
             },
             editCommand("edit.commentLine", L10n.tr("Komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
-                        summary: L10n.tr("Dodaje lub usuwa -- na początku zaznaczonych linii."), feature: "PD-EDIT-006") {
+                        agent: .full, summary: L10n.tr("Dodaje lub usuwa -- na początku zaznaczonych linii."), feature: "PD-EDIT-006") {
                 TextEditing.toggleLineComment($0, selection: $1)
             },
             editCommand("edit.duplicateLine", L10n.tr("Powiel linię"), mac: ["cmd+shift+d"],
-                        summary: L10n.tr("Powiela bieżącą linię albo zaznaczone linie."), feature: "PD-EDIT-020") {
+                        agent: .full, summary: L10n.tr("Powiela bieżącą linię albo zaznaczone linie."), feature: "PD-EDIT-020") {
                 TextEditing.duplicateLines($0, selection: $1)
             },
             editCommand("edit.deleteNextWord", L10n.tr("Usuń następne słowo"), pd: ["ctrl+delete"], mac: ["ctrl+alt+delete"],
@@ -547,23 +549,23 @@ public enum BuiltinCommands {
                 TextEditing.firstCharacterOnLine($0, selection: $1)
             },
             editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
-                        summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
+                        agent: .full, summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: true)
             },
             editCommand("edit.lowercase", L10n.tr("Małe litery"), mac: ["cmd+alt+shift+u"],
-                        summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), feature: "PD-EDIT-005") {
+                        agent: .full, summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: false)
             },
             editCommand("edit.indent", L10n.tr("Zwiększ wcięcie"), mac: ["cmd+]"],
-                        summary: L10n.tr("Wcina zaznaczone linie."), feature: "PD-EDIT-005") { t, s in
+                        agent: .full, summary: L10n.tr("Wcina zaznaczone linie."), feature: "PD-EDIT-005") { t, s in
                 TextEditing.indent(t, selection: s)
             },
             editCommand("edit.outdent", L10n.tr("Zmniejsz wcięcie"), mac: ["cmd+["],
-                        summary: L10n.tr("Cofa wcięcie zaznaczonych linii."), feature: "PD-EDIT-005") { t, s in
+                        agent: .full, summary: L10n.tr("Cofa wcięcie zaznaczonych linii."), feature: "PD-EDIT-005") { t, s in
                 TextEditing.indent(t, selection: s, outdent: true)
             },
             editCommand("edit.removeTrailingSpaces", L10n.tr("Usuń końcowe spacje"),
-                        summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
+                        agent: .full, summary: L10n.tr("Usuwa spacje i tabulacje na końcach linii (zaznaczenie albo cały tekst)."), feature: "PD-EDIT-005") {
                 TextEditing.removeTrailingSpaces($0, selection: $1)
             },
         ]

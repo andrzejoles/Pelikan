@@ -134,14 +134,14 @@ enum UtplsqlCommands {
     @MainActor static var all: [Command] {
         [
             Command(CommandDescriptor(id: "utplsql.runAll", title: L10n.tr("utPLSQL: uruchom wszystkie testy"), category: .tools, submenu: "utPLSQL",
-                                      pd: ["ctrl+shift+u"], mac: ["cmd+shift+u"], agent: .approval, effect: .modifiesDatabase,
+                                      pd: ["ctrl+shift+u"], mac: ["cmd+shift+u"], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia wszystkie testy utPLSQL bieżącego użytkownika; wyniki na żywo w oknie wyników."),
                                       feature: "UT-RUN-001"),
                     validate: { connection($0) != nil }) { ctx in
                 try await run(ctx, paths: nil, coverage: false)
             },
             Command(CommandDescriptor(id: "utplsql.runPath", title: L10n.tr("utPLSQL: uruchom testy ze ścieżki…"), category: .tools, submenu: "utPLSQL",
-                                      parameters: runParams, agent: .approval, effect: .modifiesDatabase,
+                                      parameters: runParams, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia testy ze ścieżki: schemat.pakiet.procedura albo schemat:suitepath (kilka po przecinku)."),
                                       feature: "UT-RUN-002")) { ctx in
                 var path = ctx.arguments.string("path") ?? ""
@@ -159,7 +159,7 @@ enum UtplsqlCommands {
                                         CommandParameter("include", .string, L10n.tr("Obiekty uwzględniane w pokryciu po przecinku")),
                                         CommandParameter("exclude", .string, L10n.tr("Obiekty pomijane w pokryciu po przecinku")),
                                       ],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Okno opcji przebiegu: ścieżki testów, pokrycie, schematy pokrycia oraz obiekty uwzględniane i pomijane."),
                                       feature: "UT-RUN-003"),
                     validate: { connection($0) != nil }) { ctx in
@@ -179,14 +179,14 @@ enum UtplsqlCommands {
                                      schemes: list("schemes"), include: list("include"), exclude: list("exclude"))
             },
             Command(CommandDescriptor(id: "utplsql.coverage", title: L10n.tr("utPLSQL: testy z pokryciem kodu"), category: .tools, submenu: "utPLSQL",
-                                      parameters: runParams, agent: .approval, effect: .modifiesDatabase,
+                                      parameters: runParams, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia testy z pokryciem kodu bieżącego schematu: raport HTML i linie pokryte na marginesie edytora. Pokrycie zbiera dane profilera."),
                                       feature: "UT-COV-001")) { ctx in
                 let p = ctx.arguments.string("path").map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
                 return try await run(ctx, paths: p, coverage: true)
             },
             Command(CommandDescriptor(id: "utplsql.runEditor", title: L10n.tr("utPLSQL: uruchom test pod kursorem"), category: .tools, submenu: "utPLSQL",
-                                      pd: ["ctrl+alt+u"], mac: ["cmd+ctrl+u"], agent: .approval, effect: .modifiesDatabase,
+                                      pd: ["ctrl+alt+u"], mac: ["cmd+ctrl+u"], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia test (procedurę pod kursorem) albo cały pakiet testowy z okna programu."),
                                       feature: "UT-RUN-004"),
                     validate: { $0.activeDocument?.kind == .program }) { ctx in
@@ -196,20 +196,20 @@ enum UtplsqlCommands {
                 return try await run(ctx, paths: [path], coverage: false)
             },
             Command(CommandDescriptor(id: "utplsql.rerunFailed", title: L10n.tr("utPLSQL: uruchom ponownie nieudane"), category: .tools, submenu: "utPLSQL",
-                                      agent: .approval, effect: .modifiesDatabase, summary: L10n.tr("Uruchamia ponownie testy nieudane w ostatnim przebiegu."),
+                                      agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Uruchamia ponownie testy nieudane w ostatnim przebiegu."),
                                       feature: "UT-RUN-006"),
                     validate: { ws in ws.lastUtplsqlRun.map { $0.finished && !$0.failedPaths.isEmpty } ?? false }) { ctx in
                 guard let failed = ctx.workspace.lastUtplsqlRun?.failedPaths, !failed.isEmpty else { return .ok }
                 return try await run(ctx, paths: failed, coverage: false)
             },
             Command(CommandDescriptor(id: "utplsql.cancel", title: L10n.tr("utPLSQL: przerwij"), category: .tools, submenu: "utPLSQL",
-                                      agent: .full, effect: .uiState, summary: L10n.tr("Przerywa trwający przebieg testów."), feature: "UT-RUN-006"),
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Przerywa trwający przebieg testów."), feature: "UT-RUN-006"),
                     validate: { ws in ws.lastUtplsqlRun.map { !$0.finished } ?? false }) { ctx in
                 if let r = ctx.workspace.lastUtplsqlRun { UtplsqlRunner.cancel(r) }
                 return .ok
             },
             Command(CommandDescriptor(id: "utplsql.version", title: L10n.tr("utPLSQL: wersja w bazie"), category: .tools, submenu: "utPLSQL",
-                                      agent: .read, effect: .none, summary: L10n.tr("Wersja utPLSQL zainstalowanego w bazie połączenia (ut_runner.version)."),
+                                      agent: .none, effect: .none, summary: L10n.tr("Wersja utPLSQL zainstalowanego w bazie połączenia (ut_runner.version)."),
                                       feature: "UT-INS-001"),
                     validate: { connection($0) != nil }) { ctx in
                 guard let conn = connection(ctx.workspace) else { throw CommandError.notConnected }
@@ -221,7 +221,7 @@ enum UtplsqlCommands {
                                       parameters: [CommandParameter("version", .string, L10n.tr("Znacznik wydania (domyślnie najnowsze)")),
                                                    CommandParameter("owner", .string, L10n.tr("Schemat utPLSQL przy nowej instalacji (domyślnie UT3)")),
                                                    CommandParameter("tablespace", .string, L10n.tr("Przestrzeń tabel schematu (domyślnie USERS)"))],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w oknie poleceń — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu."),
                                       feature: "UT-INS-002"),
                     validate: { connection($0) != nil }) { ctx in
@@ -229,7 +229,7 @@ enum UtplsqlCommands {
                 return try await install(ctx, connection: conn)
             },
             Command(CommandDescriptor(id: "utplsql.explorer", title: L10n.tr("Eksplorator testów utPLSQL"), category: .view,
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Drzewo suit, kontekstów i testów bieżącego użytkownika (ut_runner.get_suites_info) z ostatnim wynikiem."),
                                       feature: "UT-EXP-001"),
                     validate: { connection($0) != nil }) { ctx in
@@ -240,7 +240,7 @@ enum UtplsqlCommands {
                 return CommandResult(value: .array(flat(items).filter { $0.kind == .test }.map { .string($0.runPath) }))
             },
             Command(CommandDescriptor(id: "utplsql.generateTest", title: L10n.tr("utPLSQL: generuj pakiet testowy"), category: .tools, submenu: "utPLSQL",
-                                      parameters: ObjectCommands.objectParams, agent: .full, effect: .uiState,
+                                      parameters: ObjectCommands.objectParams, agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno programu ze szkieletem pakietu testowego (suita, test na każdą procedurę i funkcję) dla pakietu."),
                                       feature: "UT-GEN-001"),
                     validate: { ws in ws.selectedObject?.type == .package || ws.activeDocument?.kind == .program }) { ctx in
@@ -265,7 +265,7 @@ enum UtplsqlCommands {
                 return CommandResult(message: doc.fullTitle, value: .string(text))
             },
             Command(CommandDescriptor(id: "utplsql.toggleTest", title: L10n.tr("utPLSQL: przejdź do testu / testowanego pakietu"), category: .tools, submenu: "utPLSQL",
-                                      pd: ["ctrl+shift+t"], mac: ["cmd+ctrl+t"], agent: .full, effect: .uiState,
+                                      pd: ["ctrl+shift+t"], mac: ["cmd+ctrl+t"], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Z pakietu otwiera jego pakiet testowy (test_nazwa albo zależność), z pakietu testowego — testowany pakiet."),
                                       feature: "UT-NAV-001"),
                     validate: { $0.activeDocument?.kind == .program }) { ctx in
@@ -283,7 +283,7 @@ enum UtplsqlCommands {
             Command(CommandDescriptor(id: "utplsql.export", title: L10n.tr("utPLSQL: eksport wyników…"), category: .tools, submenu: "utPLSQL",
                                       parameters: runParams + [CommandParameter("format", .string, required: true, L10n.tr("Format wyniku albo pokrycia"),
                                                                                  allowed: UtplsqlReportFormat.allCases.map(\.rawValue))],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia testy z reporterem JUnit, Sonar, TeamCity, TAP albo pokryciem Cobertura/Sonar/HTML i zapisuje wynik do pliku (agent dostaje tekst)."),
                                       feature: "UT-CI-001")) { ctx in
                 let ws = ctx.workspace
@@ -302,7 +302,7 @@ enum UtplsqlCommands {
                 return CommandResult(value: .string(text))
             },
             Command(CommandDescriptor(id: "utplsql.cliScript", title: L10n.tr("utPLSQL: skrypt dla wiersza poleceń"), category: .tools, submenu: "utPLSQL",
-                                      parameters: [runParams[0]], agent: .full, effect: .uiState,
+                                      parameters: [runParams[0]], agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera skrypt SQL*Plus/SQLcl uruchamiający te same testy z wynikiem JUnit oraz skrypt powłoki (bez hasła)."),
                                       feature: "UT-CI-001")) { ctx in
                 let ws = ctx.workspace
@@ -343,7 +343,7 @@ enum UtplsqlCommands {
             },
             Command(CommandDescriptor(id: "ob.utplsqlRun", title: L10n.tr("Uruchom testy utPLSQL"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams + [CommandParameter("coverage", .boolean, L10n.tr("Z pokryciem kodu"))],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Testy utPLSQL zaznaczonego pakietu, procedury albo użytkownika (opcjonalnie z pokryciem)."),
                                       feature: "UT-RUN-003"),
                     validate: { ws in ws.selectedObject.map { [.package, .packageBody, .procedure, .user].contains($0.type) } ?? false }) { ctx in

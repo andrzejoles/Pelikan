@@ -12,13 +12,13 @@ enum TemplateCommands {
     @MainActor static var all: [Command] {
         [
             Command(CommandDescriptor(id: "edit.insertTemplate", title: L10n.tr("Wstaw szablon…"), category: .edit,
-                                      parameters: insertParams, agent: .full, effect: .modifiesEditor,
+                                      parameters: insertParams, agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia szablon w miejscu kursora (zmienne z formularza albo z argumentów); bez okna edytora — w nowym oknie."),
                                       inMenu: false, feature: "PD-TPL-002")) { ctx in
                 try await insert(ctx, newWindow: false)
             },
             Command(CommandDescriptor(id: "file.newFromTemplate", title: L10n.tr("Nowy program z szablonu…"), category: .file, submenu: L10n.tr("Nowy"),
-                                      parameters: insertParams, agent: .full, effect: .uiState,
+                                      parameters: insertParams, agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera nowe okno programu (albo SQL dla szablonów spoza jednostek programów) z tekstem szablonu."),
                                       inMenu: false, feature: "PD-PROG-002")) { ctx in
                 try await insert(ctx, newWindow: true)
@@ -29,7 +29,7 @@ enum TemplateCommands {
                                           CommandParameter("name", .string, required: true, L10n.tr("Nazwa szablonu")),
                                           CommandParameter("text", .string, L10n.tr("Tekst (domyślnie zaznaczenie albo cały tekst okna)")),
                                       ],
-                                      agent: .full, effect: .settings,
+                                      agent: .none, effect: .settings,
                                       summary: L10n.tr("Zapisuje szablon użytkownika (folder/nazwa) w katalogu danych."), feature: "PD-TPL-003")) { ctx in
                 var folder = ctx.arguments.string("folder") ?? ""
                 var name = ctx.arguments.string("name") ?? ""
@@ -54,7 +54,7 @@ enum TemplateCommands {
             },
             Command(CommandDescriptor(id: "templates.delete", title: L10n.tr("Usuń szablon"), category: .tools, submenu: L10n.tr("Szablony"),
                                       parameters: [CommandParameter("template", .string, required: true, L10n.tr("Szablon użytkownika: folder/nazwa"))],
-                                      agent: .approval, effect: .settings,
+                                      agent: .none, effect: .settings,
                                       summary: L10n.tr("Usuwa szablon użytkownika (szablony wbudowane zostają)."), inMenu: false, feature: "PD-TPL-003")) { ctx in
                 guard let id = ctx.arguments.string("template"), let t = ctx.workspace.templates.template(id), !t.isBuiltIn else {
                     throw CommandError.invalidArgument("template", L10n.tr("brak szablonu użytkownika"))
@@ -70,7 +70,7 @@ enum TemplateCommands {
                                           CommandParameter("name", .string, L10n.tr("Nowa nazwa")),
                                           CommandParameter("text", .string, L10n.tr("Nowy tekst")),
                                       ],
-                                      agent: .full, effect: .settings,
+                                      agent: .none, effect: .settings,
                                       summary: L10n.tr("Edytuje tekst, nazwę i folder szablonu (wbudowany — zapisany jako szablon użytkownika) albo tworzy nowy."),
                                       feature: "PD-TPL-003")) { ctx in
                 let lib = ctx.workspace.templates
@@ -91,7 +91,7 @@ enum TemplateCommands {
             },
             Command(CommandDescriptor(id: "templates.newFolder", title: L10n.tr("Nowy folder szablonów…"), category: .tools, submenu: L10n.tr("Szablony"),
                                       parameters: [CommandParameter("folder", .string, L10n.tr("Nazwa folderu"))],
-                                      agent: .full, effect: .settings, summary: L10n.tr("Tworzy pusty folder szablonów użytkownika."),
+                                      agent: .none, effect: .settings, summary: L10n.tr("Tworzy pusty folder szablonów użytkownika."),
                                       inMenu: false, feature: "PD-TPL-003")) { ctx in
                 var name = ctx.arguments.string("folder") ?? ""
                 if name.isEmpty {
@@ -108,7 +108,7 @@ enum TemplateCommands {
                                       submenu: L10n.tr("Szablony"),
                                       parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder")),
                                                    CommandParameter("name", .string, L10n.tr("Nowa nazwa"))],
-                                      agent: .full, effect: .settings, summary: L10n.tr("Zmienia nazwę folderu szablonów użytkownika (z szablonami)."),
+                                      agent: .none, effect: .settings, summary: L10n.tr("Zmienia nazwę folderu szablonów użytkownika (z szablonami)."),
                                       inMenu: false, feature: "PD-TPL-003")) { ctx in
                 guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }
                 var name = ctx.arguments.string("name") ?? ""
@@ -124,7 +124,7 @@ enum TemplateCommands {
             },
             Command(CommandDescriptor(id: "templates.deleteFolder", title: L10n.tr("Usuń folder szablonów"), category: .tools, submenu: L10n.tr("Szablony"),
                                       parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder"))],
-                                      agent: .approval, effect: .settings,
+                                      agent: .none, effect: .settings,
                                       summary: L10n.tr("Usuwa folder szablonów użytkownika z jego szablonami (wbudowane zostają)."),
                                       inMenu: false, feature: "PD-TPL-003")) { ctx in
                 guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }

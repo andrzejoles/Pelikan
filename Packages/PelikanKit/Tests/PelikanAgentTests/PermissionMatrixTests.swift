@@ -26,6 +26,18 @@ struct PermissionMatrixTests {
         #expect(o.count == all.filter { $0.base > .read }.count && o.values.allSatisfy { $0 == .read })
     }
 
+    @Test("WS1-21: poziom agenta wyższy niż Brak tylko dla agent.* i AgentPolicy.appCommands; te zmieniają tylko interfejs albo edytor")
+    func agentAccessOnlyWhereReachable() throws {
+        let ws = Workspace()
+        // Poziom komendy, do której agent i tak nie dociera (D33), byłby niesprawdzonym pod kątem skutków metadanym.
+        let dead = ws.registry.commands.filter { $0.descriptor.agentAccess > .none && !AgentPolicy.isAgentCommand($0.id) && !AgentPolicy.appCommands.contains($0.id) }
+        #expect(dead.isEmpty, "\(dead.map(\.id.rawValue).sorted())")
+        for id in AgentPolicy.appCommands {
+            let d = try #require(ws.registry.command(id)?.descriptor, "\(id)")
+            #expect(AgentPolicy.appCommandEffects.contains(d.effect) && d.agentAccess > .none, "\(id)")
+        }
+    }
+
     @Test("Obniżenie z macierzy obowiązuje w sesji: poziom wywołania = minimum")
     func sessionMinimum() throws {
         let ws = Workspace()
