@@ -70,4 +70,33 @@ struct ObjectBrowserConnectionsDBTests {
         #expect(ws.sessions.openConnections.contains(main))
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Kod z obiektu drugiego połączenia: przeciągnięcie SELECT i nowe okno na jego połączeniu; RECOMPILE okna poleceń na połączeniu okna")
+    func codeAndRecompileOnBranchConnection() async throws {
+        let (ws, ui, main, second) = try workspace()
+        defer { withExtendedLifetime(ui) {} }   // interfejs obszaru roboczego jest słaby
+        let mainKey = SessionKey(connectionID: main, purpose: .main)
+        // Upuszczenie z akcją SELECT: kolumny z połączenia gałęzi, sesja połączenia głównego nieotwierana (ZMIANY-08).
+        let r = try await ws.invoke("ob.dropText", CommandArguments(["object": "DEPT", "type": "TABLE", "action": "select",
+                                                                     "connection": .string(second.uuidString)]))
+        #expect(r.value?.stringValue?.lowercased().contains("deptno") == true, "\(String(describing: r.value))")
+        #expect(ws.sessions.existingSession(mainKey) == nil)
+        // Generuj kod w nowym oknie — okno przypięte do połączenia obiektu (ZMIANY-09).
+        _ = try await ws.invoke("ob.generateCode", CommandArguments(["object": "DEPT", "type": "TABLE", "kind": "select", "newWindow": .bool(true),
+                                                                     "connection": .string(second.uuidString)]))
+        let generated = try #require(ws.activeDocument)
+        #expect(generated.connectionID == second && generated.connectionPinned)
+        #expect(ws.sessions.existingSession(mainKey) == nil)
+
+        // RECOMPILE w oknie poleceń drugiego połączenia, gdy aktywne jest okno połączenia głównego (WS2-14).
+        let command = ws.newDocument(.command)
+        command.connectionID = second
+        let engine = ws.sqlplusEngine(for: command)
+        _ = ws.newDocument(.sql)
+        let outcome = await engine.run("recompile emp_api")
+        #expect(outcome == .finished, "\(command.console.map(\.text))")
+        #expect(ws.sessions.existingSession(ws.sessions.compileKey(connection: second)) != nil)
+        #expect(ws.sessions.existingSession(ws.sessions.compileKey(connection: main)) == nil)
+        await ws.sessions.disconnectAll()
+    }
 }

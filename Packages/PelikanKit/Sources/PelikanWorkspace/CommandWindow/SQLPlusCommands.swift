@@ -64,7 +64,8 @@ extension SQLPlusEngine {
                 i += n
             }
         case "SHOW":
-            try await show(upper, args)
+            // Słowa bez zdejmowania cudzysłowów — nazwa obiektu w SHOW ERRORS z zachowaną wielkością liter.
+            try await show(upper, args, raw: line.split(whereSeparator: \.isWhitespace).dropFirst().map(String.init))
         case "DEFINE":
             define(line)
         case "UNDEFINE":
@@ -115,7 +116,7 @@ extension SQLPlusEngine {
             document.connectionID = nil
             if let c {
                 await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: c))
-                releaseTemporary(c)
+                await releaseTemporary(c)
             }
             document.transactionOpen = false
             document.isDisconnected = true
@@ -244,7 +245,7 @@ extension SQLPlusEngine {
 
     // MARK: SHOW
 
-    func show(_ upper: [String], _ args: [String]) async throws {
+    func show(_ upper: [String], _ args: [String], raw: [String] = []) async throws {
         switch upper.first ?? "" {
         case "USER":
             let s = try await windowSession()
@@ -259,7 +260,7 @@ extension SQLPlusEngine {
                 emit(L10n.tr("Brak połączenia"))
             }
         case "ERR", "ERRO", "ERROR", "ERRORS":
-            try await showErrors(Array(args.dropFirst()))
+            try await showErrors(Array((raw.count == args.count ? raw : args).dropFirst()))
         case "ALL":
             emit(state.summary.joined(separator: "\n"))
         case "SQLFORMAT", "SQLFO", "SQLFOR", "SQLFORM", "SQLFORMA":
@@ -287,7 +288,8 @@ extension SQLPlusEngine {
                 type = rest.removeFirst().uppercased()
                 if type == "PACKAGE" || type == "TYPE", rest.first?.uppercased() == "BODY" { type! += " BODY"; rest.removeFirst() }
             }
-            let parts = (rest.first ?? "").split(separator: ".").map { String($0).uppercased() }
+            // Nazwa w cudzysłowie bez zmiany wielkości liter (D182).
+            let parts = (rest.first ?? "").split(separator: ".").map { MultiObjectCommands.identifierPart(String($0)) }
             if parts.count == 2 { owner = parts[0]; name = parts[1] } else { name = parts.first }
         } else if let last = state.lastCompiled {
             type = last.type; owner = last.owner; name = last.name
@@ -596,11 +598,12 @@ extension SQLPlusEngine {
     }
 
     /// Połączenie tymczasowe (CONNECT u/hasło@baza) po odejściu okna: usunięte razem z hasłem z pamięci, chyba że
-    /// używa go inne okno albo jest połączeniem głównym.
-    func releaseTemporary(_ id: UUID) {
+    /// używa go inne okno albo jest połączeniem głównym. Rozłączone — znika też z drzewa Object Browsera (D185).
+    func releaseTemporary(_ id: UUID) async {
         guard !workspace.connections.connections.contains(where: { $0.id == id }), workspace.connections.connection(id) != nil,
               workspace.sessions.mainConnectionID != id,
               !workspace.documents.contains(where: { $0.connectionID == id }) else { return }
+        await workspace.sessions.disconnect(id)
         workspace.connections.removeTemporary(id)
     }
 
@@ -612,7 +615,7 @@ extension SQLPlusEngine {
         document.connectionID = id
         document.transactionOpen = false
         document.isDisconnected = false
-        if let old, old != id { releaseTemporary(old) }
+        if let old, old != id { await releaseTemporary(old) }
         let s = try await workspace.session(for: document)
         emit(L10n.tr("Połączono jako \(s.info.sessionUser)."))
     }
