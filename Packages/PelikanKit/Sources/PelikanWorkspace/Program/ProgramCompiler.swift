@@ -226,6 +226,8 @@ public enum ProgramCompiler {
         let start = TextEditing.offset(ofLine: line, in: text)
         let ns = text as NSString
         let lineEnd = ns.lineRange(for: NSRange(location: min(start, ns.length), length: 0))
-        return min(start + max(0, column - 1), max(start, lineEnd.location + lineEnd.length - 1))
+        // Kolumna Oracle liczona w znakach — emoji spoza BMP zajmuje dwie jednostki UTF-16.
+        let last = max(start, lineEnd.location + lineEnd.length - 1)
+        return min(TextEditing.utf16Offset(ns, from: start, characters: max(0, column - 1), limit: last), last)
     }
 }
