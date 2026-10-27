@@ -239,7 +239,7 @@ public final class SSHTunnelManager {
         let deadline = ContinuousClock.now + .seconds(20)
         while ContinuousClock.now < deadline {
             if !p.isRunning {
-                let msg = String(decoding: err.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                let msg = String(decoding: (try? err.fileHandleForReading.readToEnd()) ?? Data(), as: UTF8.self)
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH nie powstał: \(msg.isEmpty ? "ssh zakończył się kodem \(p.terminationStatus)" : msg)"))
             }
