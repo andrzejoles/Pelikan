@@ -34,11 +34,17 @@ for name in "${scenarios[@]}"; do
     rm -f "$run.done"
     rm -rf "$DATA/Recovery"
     started=$(date +%s)
+    # Instancje sprzed startu (np. aplikacja Debug właściciela z tej samej ścieżki) — tych nie wolno fotografować ani
+    # zamykać; zrzut tylko z nowego procesu.
+    before=" $(pgrep -f "$APP/Contents/MacOS/Pelikan" | tr '\n' ' ' || true) "
     open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" "$APP"
     for _ in $(seq 1 120); do [ -f "$run.done" ] && break; sleep 0.5; done
     sleep 1.5
-    pid=$(pgrep -n -f "$APP/Contents/MacOS/Pelikan" || true)
-    [ -n "$pid" ] || { echo "$name: aplikacja nie wystartowała" >&2; continue; }
+    pid=""
+    for p in $(pgrep -f "$APP/Contents/MacOS/Pelikan" || true); do
+        [[ "$before" == *" $p "* ]] || pid=$p
+    done
+    [ -n "$pid" ] || { echo "$name: instancja scenariusza nie działa (nie wystartowała albo już się zakończyła) — bez zrzutu" >&2; continue; }
     # Nazwa pliku od tytułu okna (kolejność okien między przebiegami nie jest stała): 17-narzedzia-dbms-scheduler.png,
     # okno główne — „glowne”; powtórzony tytuł dostaje numer.
     while IFS=$'\t' read -r wid title size; do

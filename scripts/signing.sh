@@ -22,21 +22,32 @@ SERVICE="pelikan-signing-keychain"
 
 password() { security find-generic-password -s "$SERVICE" -a pelikan -w 2>/dev/null; }
 
+# Polecenie `security` z hasłem: przez stdin trybu interaktywnego, nie w argumentach procesu (widocznych w `ps`).
+# `printf` jest wbudowany w powłokę, więc hasło nie trafia do argumentów żadnego procesu; kod wyjścia — z polecenia.
+# Ścieżki w cudzysłowie (security -i rozdziela słowa jak powłoka); hasła są szesnastkowe albo bez znaku `"`.
+sec() { printf '%s\n' "$1" | security -i; }
+
 create_keychain() {
     local pw
     pw="$(openssl rand -hex 24)"
-    security add-generic-password -U -s "$SERVICE" -a pelikan -w "$pw" -T /usr/bin/security
-    security create-keychain -p "$pw" "$KC"
+    sec "add-generic-password -U -s \"$SERVICE\" -a pelikan -w $pw -T /usr/bin/security"
+    sec "create-keychain -p $pw \"$KC\""
     security set-keychain-settings "$KC"
-    # Bez dopisywania do listy wyszukiwania użytkownika (codesign dostaje --keychain).
-    security list-keychains -d user -s $(security list-keychains -d user | tr -d '"' | grep -v pelikan-signing)
+    # Bez dopisywania do listy wyszukiwania użytkownika (codesign dostaje --keychain). Ścieżki jako osobne argumenty —
+    # także ze spacjami (bash 3.2 z macOS: bez mapfile, pusta tablica przez ${…+…}).
+    local list=() k
+    while IFS= read -r k; do
+        k="$(printf '%s' "$k" | sed -E 's/^[[:space:]]*"?//; s/"?[[:space:]]*$//')"
+        [ -n "$k" ] && [[ "$k" != *pelikan-signing* ]] && list+=("$k")
+    done < <(security list-keychains -d user)
+    security list-keychains -d user -s ${list[@]+"${list[@]}"}
 }
 
 import_p12() {
     local file="$1" p12pw="$2"
-    security unlock-keychain -p "$(password)" "$KC"
-    security import "$file" -k "$KC" -P "$p12pw" -T /usr/bin/codesign >/dev/null
-    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$(password)" "$KC" >/dev/null
+    sec "unlock-keychain -p $(password) \"$KC\""
+    sec "import \"$file\" -k \"$KC\" -P \"$p12pw\" -T /usr/bin/codesign" >/dev/null
+    sec "set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $(password) \"$KC\"" >/dev/null
 }
 
 ensure() {
@@ -61,12 +72,12 @@ keyUsage=critical,digitalSignature
 extendedKeyUsage=critical,codeSigning
 CNF
         openssl req -x509 -newkey rsa:3072 -nodes -keyout "$tmp/key.pem" -out "$tmp/cert.pem" -days 7300 -config "$tmp/cert.cnf" 2>/dev/null
-        openssl pkcs12 -export -legacy -inkey "$tmp/key.pem" -in "$tmp/cert.pem" -out "$tmp/id.p12" -passout "pass:$p12pw" 2>/dev/null \
-            || openssl pkcs12 -export -inkey "$tmp/key.pem" -in "$tmp/cert.pem" -out "$tmp/id.p12" -passout "pass:$p12pw"
+        openssl pkcs12 -export -legacy -inkey "$tmp/key.pem" -in "$tmp/cert.pem" -out "$tmp/id.p12" -passout fd:3 3<<<"$p12pw" 2>/dev/null \
+            || openssl pkcs12 -export -inkey "$tmp/key.pem" -in "$tmp/cert.pem" -out "$tmp/id.p12" -passout fd:3 3<<<"$p12pw"
         import_p12 "$tmp/id.p12" "$p12pw"
         echo "Utworzono tożsamość „${NAME}” w $KC" >&2
     fi
-    security unlock-keychain -p "$(password)" "$KC"
+    sec "unlock-keychain -p $(password) \"$KC\""
 }
 
 identity() {
@@ -124,8 +135,8 @@ case "${1:-}" in
         [ ! -f "$KC" ] || { echo "Już jest $KC — najpierw go usuń, jeśli chcesz odtworzyć kopię" >&2; exit 1; }
         PW="$(cat "$DIR/pelikan-signing-haslo-pęku.txt")"
         cp -p "$DIR/pelikan-signing.keychain-db" "$KC"
-        security add-generic-password -U -s "$SERVICE" -a pelikan -w "$PW" -T /usr/bin/security
-        security unlock-keychain -p "$PW" "$KC"
+        sec "add-generic-password -U -s \"$SERVICE\" -a pelikan -w $PW -T /usr/bin/security"
+        sec "unlock-keychain -p $PW \"$KC\""
         identity
         ;;
     import)
