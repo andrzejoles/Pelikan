@@ -845,7 +845,7 @@ okien bez pliku); odświeżenie karty i automatyczne odświeżanie używają zap
 ### D112 · 2026-10-24 — Narzędzia w kartach i kolory z motywu systemu
 Wzorzec pozwala dokować i odrywać każde narzędzie oraz ustawiać kolor i tło czcionek. Pelikan trzyma narzędzia w kartach
 lewej kolumny (zwijanej) i w osobnych oknach narzędzi — to układ zgodny z HIG i z trybem jasnym/ciemnym; dowolne
-dokowanie paneli wymagałoby własnego menedżera układu na AppKit. Kolory tekstu i tła biorą się z motywu systemu
+dokowanie paneli wymagałoby własnego menedżera układu na AppKit (dokowanie narzędzi — D183). Kolory tekstu i tła biorą się z motywu systemu
 (czytelność w obu trybach, VoiceOver); w Preferencjach są czcionka i rozmiary. Oba wiersze ⚠️.
 
 ### D113 · 2026-10-24 — Przebieg zrzutów w tle
@@ -1679,3 +1679,38 @@ Częściowo / świadomie bez zmian: sortowanie siatki kliknięciem nagłówka ni
 Buildera stałe jak w diagramie; File Browser listuje katalogi synchronicznie; przeglądarka różnic nie przewija sama do
 zmiany w linii; wspólny pasek stanu okien SQL/Program/Test — refaktoryzacja poza zakresem; ORDS i XcodeGen w CI bez
 przypięcia wersji (brak wersjonowanych adresów).
+
+### D183 · 2026-10-27 — Dokowanie narzędzi w panelach okna głównego (zmienia D112)
+Właściciel poprosił o prawdziwe dokowanie okien narzędzi (dotąd każde otwierało się w osobnym oknie), preferowane po
+prawej. Okno główne ma dwa panele narzędzi w zagnieżdżonych podziałach — prawy obok obszaru dokumentów i dolny pod
+nim — żeby zapamiętany układ kolumn (lewa kolumna, panel agenta) się nie zmienił; rozmiar paneli jest zapamiętany.
+Wszystkie narzędzia z `ToolWindowController.show` (ok. 70) oraz Large Data Editor, informacje o obiekcie i dziennik
+agentów otwierają się domyślnie w prawym panelu, każde w karcie. Karta przechodzi do drugiego panelu przeciągnięciem,
+a upuszczona poza panelami — do osobnego okna w miejscu upuszczenia; to samo robią menu karty i przyciski nagłówka
+panelu, a okno narzędzia wraca do panelu przyciskiem na pasku tytułu. Każda czynność jest komendą
+(`view.toolDockRight|Bottom`, `view.dockToolRight|Bottom`, `view.floatTool`, `view.closeTool`, `view.toolDockAutoHide`;
+agent — brak dostępu), miejsce przeniesionego narzędzia jest zapamiętane dla jego rodzaju (`toolDock` w ustawieniach,
+klucze jednorazowe `diff-…`, `table-…` dzielą miejsce rodzaju). W Preferencjach: miejsce nowych narzędzi (prawy
+panel, dolny panel albo osobne okna jak przed D183), autoukrywanie (fokus w edytorze chowa panele) i przywrócenie
+miejsc domyślnych. Zgoda na operację agenta domyślnie zostaje w osobnym oknie. Zwinięty panel z narzędziami pokazuje
+na pasku stanu przycisk z liczbą narzędzi; ⌘W z fokusem w panelu zamyka narzędzie, nie okno dokumentu.
+
+- **Przenoszenie bez utraty stanu:** widok narzędzia (SwiftUI albo AppKit) przechodzi między panelem a oknem ten sam,
+  więc `@State` zostaje. SwiftUI wywołuje jednak przy tym onDisappear/onAppear i przerywa `.task`: przerwanie
+  wyszukiwania, zatrzymanie monitora zdarzeń i testu obciążenia przeszły na `onToolClose` (tylko przy zamknięciu
+  narzędzia), wczytanie zależne od połączenia — na `toolTask(id:)` (raz dla wartości), a wypełnienie pól na starcie —
+  na `onFirstAppear`. Karty panelu przełączają się ukrywaniem widoków (bez zdarzeń cyklu życia).
+- **Rozmiar:** w panelu widok SwiftUI zgłasza tylko minimum; mniejszy panel przewija zawartość, a otwarcie narzędzia
+  poszerza panel do jego minimum (najwyżej 60% obszaru). Wypełnienie ma priorytet niższy niż podział okna — inaczej
+  minimum narzędzia rozpychało panel.
+- **Skróty:** SwiftUI obsługuje `keyboardShortcut` (Enter — przycisk domyślny, Esc — Anuluj) poza hierarchią widoków,
+  w całym oknie: Enter w drzewie obiektów wykonywał przycisk domyślny narzędzia z panelu (sprawdzone w osobnym
+  procesie). Okno główne na czas obsługi skrótu ukrywa narzędzia paneli bez fokusu — skrót działa tylko w narzędziu,
+  w którym jest kursor, i nie przejmuje skrótów menu.
+- **Instrukcja:** `NavigationSplitView` dokłada elementy do paska narzędzi okna i w panelu okna głównego zapętlał układ
+  (zawieszenie przy otwarciu instrukcji) — zastąpiony `HSplitView`, jak w innych narzędziach. Dodatek paska tytułu
+  okna narzędzia jest w kontenerze o stałej ramce (AppKit nie pozwala przesuwać widoku dodatku).
+
+Karty lewej kolumny (połączenia, obiekty, okna, szablony, pliki) zostają w niej; otwarte narzędzia nie są
+przywracane po ponownym uruchomieniu (jak dotąd okna narzędzi). Zrzuty w tle: `60-dokowanie`, `61-dokowanie-powrot`;
+istniejące scenariusze narzędzi pokazują je teraz w panelu okna głównego.

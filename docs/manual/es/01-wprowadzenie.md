@@ -90,6 +90,16 @@ Pelikan tiene una única ventana principal:
   lectura»), el estado de la transacción («● transacción abierta»), el número de filas y el tiempo de ejecución, la
   posición del cursor y la rama Git del archivo. Al hacer clic en el nombre de la conexión puedes cambiar la conexión de
   la ventana.
+- **Paneles de herramientas** a la derecha y abajo: las herramientas (Sesiones, Buscar objetos de la base de datos,
+  Tareas To-Do, Historial del portapapeles, este manual, editores de tablas, exportación e importación, informes y
+  otras) se abren por omisión en el panel derecho, cada una en su propia pestaña. Arrastra una pestaña al otro panel o
+  fuera de los paneles: la herramienta pasa entonces a una ventana independiente donde la sueltes; lo mismo hacen el
+  menú de la pestaña y los botones de la cabecera del panel. Una ventana de herramienta vuelve a un panel con el botón
+  de su barra de título. Pelikan recuerda la ubicación de cada tipo de herramienta. Un panel contraído con herramientas
+  muestra en la barra de estado un botón con su número. Los comandos están en **Vista › Paneles de herramientas**; en
+  **Preferencias › General › Paneles de herramientas** eliges dónde se abren las herramientas nuevas (también en
+  ventanas independientes) y la ocultación automática. Los atajos de una herramienta acoplada (Retorno, Esc) solo
+  funcionan mientras el cursor está en esa herramienta.
 - **Panel del agente** a la derecha (contraído por omisión): el terminal del agente de IA con la lista de sus acciones.
   Se muestra con **Vista › Panel del agente** (consulta el capítulo *Agentes de IA*).
 

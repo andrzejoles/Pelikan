@@ -90,6 +90,16 @@ Pelikan hat ein Hauptfenster:
 - **Statusleiste** des Fensters: die Verbindung des Fensters (mit Umgebungsfarbe, Anheften 📌 und Kennzeichnung „nur
   Lesen“), der Transaktionsstatus („● Transaktion offen“), Zeilenzahl und Ausführungszeit, Cursorposition sowie der
   Git-Branch der Datei. Ein Klick auf den Verbindungsnamen ermöglicht es, die Verbindung des Fensters zu wechseln.
+- **Werkzeugbereiche** rechts und unten — Werkzeuge (Sitzungen, Datenbankobjekte suchen, To-Do-Einträge,
+  Zwischenablage-Verlauf, diese Anleitung, Tabelleneditoren, Export und Import, Berichte und mehr) öffnen sich
+  standardmäßig im rechten Bereich, jedes in einem eigenen Tab. Ziehen Sie einen Tab in den anderen Bereich oder aus
+  den Bereichen heraus — das Werkzeug erhält dann ein eigenes Fenster an der Ablagestelle; dasselbe tun das Tab-Menü
+  und die Tasten im Kopf des Bereichs. Ein Werkzeugfenster kehrt mit der Taste in seiner Titelleiste in einen Bereich
+  zurück. Pelikan merkt sich den Ort jeder Werkzeugart. Ein eingeklappter Bereich mit Werkzeugen zeigt in der
+  Statusleiste eine Taste mit ihrer Anzahl. Die Befehle stehen unter **Ansicht › Werkzeugbereiche**; unter
+  **Einstellungen › Allgemein › Werkzeugbereiche** wählen Sie den Ort neuer Werkzeuge (auch eigene Fenster) und das
+  automatische Ausblenden. Die Kurzbefehle eines angedockten Werkzeugs (Return, Esc) wirken nur, solange der Cursor in
+  diesem Werkzeug steht.
 - **Agentenbereich** rechts (standardmäßig eingeklappt) — das Terminal des KI-Agenten mit einer Liste seiner Aktionen.
   Er wird über **Ansicht › Agentenbereich** angezeigt (siehe Kapitel *KI-Agenten*).
 
