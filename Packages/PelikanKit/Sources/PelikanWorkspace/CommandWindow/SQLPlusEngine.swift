@@ -190,7 +190,8 @@ public final class SQLPlusEngine {
                 return try await sqlplus(cmd, text, baseDirectory: baseDirectory)
             } catch {
                 emit(error.localizedDescription, .error)
-                return state.whenever == .continue ? .finished : await exitOnError()
+                let os = Self.isOSError(error)
+                return (os ? state.wheneverOS : state.whenever) == .continue ? .finished : await exitOnError(os: os)
             }
         }
         if raw == "/" {
@@ -247,13 +248,19 @@ public final class SQLPlusEngine {
         return out
     }
 
-    func exitOnError() async -> Outcome {
-        if case .exit(let commit) = state.whenever, let session = try? await windowSession() {
+    func exitOnError(os: Bool = false) async -> Outcome {
+        if case .exit(let commit) = os ? state.wheneverOS : state.whenever, let session = try? await windowSession() {
             if commit { try? await session.commit() } else { try? await session.rollback() }
             document.transactionOpen = false
         }
-        emit(L10n.tr("WHENEVER SQLERROR: przerwano skrypt"), .info)
+        emit(os ? L10n.tr("WHENEVER OSERROR: przerwano skrypt") : L10n.tr("WHENEVER SQLERROR: przerwano skrypt"), .info)
         return .exit
+    }
+
+    /// Błąd systemu operacyjnego: plik skryptu albo SPOOL, błąd systemu plików (Foundation, POSIX).
+    nonisolated static func isOSError(_ error: any Error) -> Bool {
+        if let e = error as? SQLPlusError { return e.isOSError }
+        return error is CocoaError || error is POSIXError
     }
 
     // MARK: SQL i PL/SQL

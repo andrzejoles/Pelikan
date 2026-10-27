@@ -66,13 +66,19 @@ extension SQLPlusEngine {
             emit(L10n.tr("Sformatowano: \(url.lastPathComponent)"))
         case "ZIP":
             guard args.count >= 2 else { throw SQLPlusError(L10n.tr("ZIP archiwum.zip plik…")) }
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
-            p.currentDirectoryURL = currentDirectory
-            p.arguments = ["-q", "-j", resolve(args[0], baseDirectory: nil).path] + args.dropFirst().map { resolve($0, baseDirectory: nil).path }
-            try p.run()
-            p.waitUntilExit()
-            guard p.terminationStatus == 0 else { throw SQLPlusError(L10n.tr("ZIP zakończył się błędem \(p.terminationStatus)")) }
+            // Poza głównym aktorem jak HOST (R7-19): duże archiwum nie zamraża interfejsu, Przerwij kończy proces.
+            let arguments = ["-q", "-j", resolve(args[0], baseDirectory: nil).path] + args.dropFirst().map { resolve($0, baseDirectory: nil).path }
+            let directory = currentDirectory
+            let task = Task.detached {
+                try await HostCommand.run(executable: URL(fileURLWithPath: "/usr/bin/zip"), arguments: arguments, directory: directory, timeout: 3600)
+            }
+            hostTask = task
+            defer { hostTask = nil }
+            let r = try await task.value
+            guard r.status == 0 else {
+                if !r.output.isEmpty { emit(r.output.trimmingCharacters(in: .newlines), .output) }
+                throw SQLPlusError(L10n.tr("ZIP zakończył się błędem \(r.status)"))
+            }
             emit(L10n.tr("Utworzono: \(args[0])"))
         case "EXPORT":
             try await export(args)

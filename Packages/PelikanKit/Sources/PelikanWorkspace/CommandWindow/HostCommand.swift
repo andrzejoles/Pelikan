@@ -42,9 +42,14 @@ public enum HostCommand {
     }
 
     public static func run(_ command: String, directory: URL?, timeout: TimeInterval = 120) async throws -> Result {
+        try await run(executable: URL(fileURLWithPath: "/bin/sh"), arguments: ["-c", command], directory: directory, timeout: timeout)
+    }
+
+    /// Program z argumentami w tablicy (bez powłoki), np. ZIP.
+    public static func run(executable: URL, arguments: [String], directory: URL?, timeout: TimeInterval = 120) async throws -> Result {
         let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/bin/sh")
-        p.arguments = ["-c", command]
+        p.executableURL = executable
+        p.arguments = arguments
         if let directory { p.currentDirectoryURL = directory }
         // Środowisko bez zmiennych Pelikana (np. TNS_ADMIN katalogu zarządzanego, tokenów agentów).
         p.environment = ProcessInfo.processInfo.environment.filter { !$0.key.hasPrefix("PELIKAN_") && $0.key != "TNS_ADMIN" }
