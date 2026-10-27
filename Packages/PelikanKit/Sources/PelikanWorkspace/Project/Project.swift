@@ -145,10 +145,17 @@ public enum ProjectEngine {
     public static func build(_ project: inout Project, projectURL: URL, make: Bool, in ws: Workspace) async throws -> [ProjectBuildResult] {
         let def = try connection(project, in: ws)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
+        // Ostrzeżenia i parametry kompilatora z Preferencji — jak kompilacja okna programu (PD-PROG-013); błąd
+        // parametru nie zatrzymuje budowania.
+        for statement in ws.settings.compiler.statements(warnings: ws.settings.plsqlWarnings) {
+            _ = try? await s.execute(statement)
+        }
         var results: [ProjectBuildResult] = []
         for item in project.items where item.kind != .note {
             var statements: [String] = []
             var compiled: [DBObject] = []
+            // Informacje bez wpływu na wynik (pominięte polecenia).
+            var notes: [String] = []
             switch item.kind {
             case .file:
                 guard let url = url(of: item, projectURL: projectURL) else { continue }
@@ -162,6 +169,10 @@ public enum ProjectEngine {
                 if project.options.beautifyOnBuild, let f = try? Beautifier.format(text, options: ws.settings.beautifier) { text = f }
                 let units = ProgramCompiler.units(in: text)
                 statements = units.map(\.text)
+                // Build kompiluje jednostki programów; pozostałe polecenia pliku (CREATE TABLE, GRANT, SET…) nie są
+                // wykonywane — informacja zamiast cichego pominięcia.
+                let other = ScriptSplitter.split(text).count { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } - units.count
+                if other > 0 { notes.append(L10n.tr("Pominięto poleceń innych niż jednostki programów: \(other) (budowanie kompiluje tylko jednostki PL/SQL).")) }
                 let schema = s.info.currentSchema
                 compiled = units.map { DBObject(owner: $0.owner ?? schema, name: $0.name, type: $0.type) }
             case .object:
@@ -192,7 +203,7 @@ public enum ProjectEngine {
             }
             let ok = messages.isEmpty
             if ok { project.lastBuild[item.id] = Date() }
-            results.append(ProjectBuildResult(id: item.id, title: item.title, status: ok ? .compiled : .failed, messages: messages))
+            results.append(ProjectBuildResult(id: item.id, title: item.title, status: ok ? .compiled : .failed, messages: messages + notes))
             if !ok, project.options.haltOnFirstError { break }
         }
         return results
