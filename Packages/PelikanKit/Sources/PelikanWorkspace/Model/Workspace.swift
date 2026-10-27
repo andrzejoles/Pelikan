@@ -766,8 +766,9 @@ public final class Workspace {
         return EffectPreview(summary: command.descriptor.summary)
     }
 
-    /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane.
-    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) {
+    /// Wywołanie z interfejsu: błędy pokazywane użytkownikowi zamiast rzucane. Zadanie — gdy trzeba poczekać na koniec.
+    @discardableResult
+    public func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) -> Task<Void, Never> {
         Task {
             do {
                 try await invoke(id, arguments)
@@ -865,6 +866,17 @@ extension Workspace {
             if commit { try await s.commit() } else { try await s.rollback() }
             d.transactionOpen = false
         }
+    }
+
+    /// Polecenie okna skończyło się utratą połączenia (ORA-03113, ORA-03114…): martwa sesja znika z mapy, żeby
+    /// kolejne polecenie połączyło się ponownie. Sesja szukana po tożsamości, nie po bieżącym kluczu okna — połączenie
+    /// okna albo główne mogło się zmienić w trakcie polecenia. Okna tej sesji (Dual/Single: wszystkie na sesji głównej)
+    /// tracą otwartą transakcję — wycofał ją serwer.
+    @discardableResult
+    public func dropLostSession(_ session: any DatabaseSession) -> Bool {
+        guard let key = sessions.key(of: session), sessions.dropLost(key) else { return false }
+        for d in documents where d.transactionOpen && sessionKey(for: d) == key { d.transactionOpen = false }
+        return true
     }
 }
 

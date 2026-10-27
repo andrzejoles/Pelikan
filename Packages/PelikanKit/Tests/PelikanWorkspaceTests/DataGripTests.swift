@@ -241,7 +241,7 @@ struct DataGripModelTests {
         // Nowa instancja czyta z dysku (zapis w tle — po zakończeniu zaplanowanych zapisów).
         ws.localHistory.flush()
         let fresh = LocalHistory(directory: dir.appendingPathComponent("LocalHistory"))
-        #expect(fresh.entries(key).count == 2 && fresh.allItems().first?.title == "a.sql")
+        #expect(fresh.entries(key).count == 2 && fresh.item(key)?.title == "a.sql")
         doc.text = "select 3 from dual"                     // niezapisana zmiana trafia do historii przed przywróceniem
         ws.restore(ws.localHistory.entries(key)[1], in: doc)
         #expect(doc.text == "select 1 from dual")

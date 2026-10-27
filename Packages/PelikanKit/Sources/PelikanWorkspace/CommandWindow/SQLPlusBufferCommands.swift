@@ -37,7 +37,7 @@ extension SQLPlusEngine {
         case "GET":
             guard let name = args.first else { throw SQLPlusError(L10n.tr("SP2-0110: Podaj nazwę pliku.")) }
             let url = file(name, baseDirectory: baseDirectory)
-            guard var text = try? String(contentsOf: url, encoding: .utf8) else {
+            guard var text = readScript(url)?.text else {
                 throw SQLPlusError(L10n.tr("SP2-0160: Nie można otworzyć pliku \(url.lastPathComponent)"))
             }
             var lines = text.components(separatedBy: "\n")

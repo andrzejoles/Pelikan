@@ -86,24 +86,36 @@ public final class SQLPlusEngine {
 
     // MARK: Wyjście
 
+    /// Najwięcej linii konsoli; po przekroczeniu bufor przycinany partiami do `consoleTrimmedLines` (każde przycięcie
+    /// to przesunięcie tablicy i zmiana widoku — nie przy każdej linii).
+    nonisolated static let consoleMaxLines = 100_000
+    nonisolated static let consoleTrimmedLines = 90_000
+
     func emit(_ text: String, _ kind: ConsoleLine.Kind = .output) {
         let lines = text.components(separatedBy: "\n")
         if state.termOut || kind == .error || kind == .prompt {
             document.console.append(contentsOf: lines.map { ConsoleLine($0, kind) })
-            if document.console.count > 100_000 { document.console.removeFirst(document.console.count - 100_000) }
+            if document.console.count > Self.consoleMaxLines { document.console.removeFirst(document.console.count - Self.consoleTrimmedLines) }
         }
-        if let url = state.spoolURL { Self.append(lines.joined(separator: "\n") + "\n", to: url) }
+        if let url = state.spoolURL {
+            do {
+                try Self.append(lines.joined(separator: "\n") + "\n", to: url)
+            } catch {
+                // Pełny dysk, odłączony wolumin: SPOOL wyłączony z jednym komunikatem zamiast cichego gubienia linii.
+                state.spoolURL = nil
+                emit(L10n.tr("SP2-0606: Nie można zapisać pliku SPOOL „\(url.path)” — SPOOL wyłączony."), .error)
+            }
+        }
     }
 
-    static func append(_ text: String, to url: URL) {
-        guard let data = text.data(using: .utf8) else { return }
-        if let h = try? FileHandle(forWritingTo: url) {
-            h.seekToEndOfFile()
-            h.write(data)
-            try? h.close()
-        } else {
-            try? data.write(to: url)
-        }
+    /// Dopisanie do pliku SPOOL; błąd zapisu jako błąd Swift (stare `write(_:)` zgłaszało wyjątek Objective-C — awaria).
+    nonisolated static func append(_ text: String, to url: URL) throws {
+        let data = Data(text.utf8)
+        guard FileManager.default.fileExists(atPath: url.path) else { try data.write(to: url); return }
+        let h = try FileHandle(forWritingTo: url)
+        defer { try? h.close() }
+        try h.seekToEnd()
+        try h.write(contentsOf: data)
     }
 
     public func cancel() {
@@ -249,7 +261,10 @@ public final class SQLPlusEngine {
     }
 
     func exitOnError(os: Bool = false) async -> Outcome {
-        if case .exit(let commit) = os ? state.wheneverOS : state.whenever, let session = try? await windowSession() {
+        // Tylko istniejąca sesja okna: po błędzie logowania albo utracie połączenia nie łączymy (pytanie o hasło)
+        // tylko po to, by zatwierdzić albo wycofać pustą transakcję.
+        if case .exit(let commit) = os ? state.wheneverOS : state.whenever, !document.isDisconnected,
+           let key = workspace.sessionKey(for: document), let session = workspace.sessions.existingSession(key) {
             if commit { try? await session.commit() } else { try? await session.rollback() }
             document.transactionOpen = false
         }
@@ -267,10 +282,12 @@ public final class SQLPlusEngine {
 
     func executeSQL(_ sql: String, original: String, isPLSQL: Bool) async -> Outcome {
         let start = ContinuousClock.now
+        var used: (any DatabaseSession)?
         do {
             guard !document.isDisconnected else { throw SQLPlusError(L10n.tr("SP2-0640: Brak połączenia.")) }
             try await workspace.guardModification([sql], connectionID: windowConnection)
             let session = try await windowSession()
+            used = session
             if state.serverOutput { try await SessionUtilities.enableOutput(session, bufferSize: workspace.settings.dbmsOutputBufferSize) }
             let names = Variables.distinct(Variables.find(in: sql, syntax: .sqlplus)).filter { $0.kind == .bind }.map(\.name)
             var binds: [BindVariable] = []
@@ -314,7 +331,7 @@ public final class SQLPlusEngine {
                 let lines = try await SessionUtilities.readOutput(session)
                 if !lines.isEmpty { emit(lines.joined(separator: "\n")) }
             }
-            if state.autoPrint, !names.isEmpty { printBinds(names.map { $0.uppercased() }) }
+            if state.autoPrint, !names.isEmpty { try await printBinds(names.map { $0.uppercased() }) }
             if state.timing { emit(L10n.tr("Czas: ") + Self.elapsed(ContinuousClock.now - start), .info) }
             workspace.recordHistory(original)
             Log.sql.debug("Okno poleceń: \(r.kind.rawValue, privacy: .public) w \(ms: start)")
@@ -328,7 +345,12 @@ public final class SQLPlusEngine {
         } catch let e as OracleError {
             Log.sql.info("Okno poleceń: błąd \(e as any Error)")
             emit(e.message, .error)
-            if e.isConnectionLost { emit(L10n.tr("Połączenie utracone — kolejne polecenie połączy się ponownie."), .info) }
+            if e.isConnectionLost {
+                // Martwa sesja usuwana — inaczej każde kolejne polecenie dostawałoby ją z mapy sesji i ten sam błąd.
+                if let used { workspace.dropLostSession(used) }
+                document.transactionOpen = false
+                emit(L10n.tr("Połączenie utracone — kolejne polecenie połączy się ponownie."), .info)
+            }
             return state.whenever == .continue ? .finished : await exitOnError()
         } catch {
             emit(error.localizedDescription, .error)
@@ -419,17 +441,23 @@ public final class SQLPlusEngine {
         if total == 0 { emit(L10n.tr("Nie wybrano wierszy.")) } else { feedback(L10n.tr("Wybrano wierszy: \(total)"), count: total) }
     }
 
-    func printBinds(_ names: [String]) {
+    func printBinds(_ names: [String]) async throws {
         for n in names {
             guard let slot = state.binds[n] else { emit(L10n.tr("SP2-0552: Zmienna wiązana „\(n)” nie jest zadeklarowana."), .error); continue }
             var f = TextResultFormatter(columns: [ColumnInfo(name: n, type: slot.type == .refCursor ? .varchar2 : slot.type, typeName: slot.type.rawValue)],
                                         state: state, format: workspace.settings.valueFormat)
-            if case .cursor(let id) = slot.value, let c = windowConnection,
-               let session = workspace.sessions.existingSession(workspace.sessions.key(forDocument: document.id, connection: c)) {
-                Task { [weak self] in
-                    // REF CURSOR: opis kolumn z wyniku zagnieżdżonego nie jest dostępny bez ponownego opisu — pobierz wiersze.
-                    let batch = try? await session.fetch(id, maxRows: 10_000)
-                    self?.emit((batch?.rows ?? []).map { $0.map { $0.format(.default) }.joined(separator: " ") }.joined(separator: "\n"))
+            if case .cursor(let id) = slot.value, !document.isDisconnected, let key = workspace.sessionKey(for: document),
+               let session = workspace.sessions.existingSession(key) {
+                // REF CURSOR w przebiegu skryptu (wiersze przed wyjściem kolejnych poleceń i w SPOOL), z nagłówkami
+                // z opisu kursora; sterownik bez opisu — same wartości.
+                let columns = await session.columns(of: id)
+                emit("")
+                if !columns.isEmpty {
+                    try await printQuery(ResultSetDescriptor(id: id, columns: columns), session: session)
+                } else {
+                    let batch = try await session.fetch(id, maxRows: 10_000)
+                    emit(batch.rows.map { $0.map { $0.format(workspace.settings.valueFormat) }.joined(separator: " ") }.joined(separator: "\n"))
+                    if batch.hasMore { await session.closeResultSet(id) }
                 }
                 continue
             }

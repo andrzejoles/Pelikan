@@ -125,9 +125,15 @@ extension Workspace {
         guard let dir = reportsDirectory,
               let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
         var commands: [Command] = []
-        for url in files where url.pathExtension.lowercased() == "rep" {
+        // Nazwy różniące się tylko znakami spoza liter i cyfr albo wielkością liter („Sprzedaż 2026”, „sprzedaż-2026”)
+        // dają ten sam identyfikator — kolejne dostają przyrostek (kolejność plików stała), zamiast zastępować komendę.
+        var used: Set<String> = []
+        for url in files.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) where url.pathExtension.lowercased() == "rep" {
             let base = url.deletingPathExtension().lastPathComponent
-            let slug = base.lowercased().map { $0.isLetter || $0.isNumber ? String($0) : "_" }.joined()
+            let stem = base.lowercased().map { $0.isLetter || $0.isNumber ? String($0) : "_" }.joined()
+            var slug = stem
+            var n = 2
+            while !used.insert(slug).inserted { slug = "\(stem)_\(n)"; n += 1 }
             commands.append(Command(CommandDescriptor(id: CommandID(rawValue: "reports.user.\(slug)"), title: base, category: .reports,
                                                       submenu: L10n.tr("Moje raporty"), agent: .none, effect: .uiState,
                                                       summary: L10n.tr("Raport użytkownika z katalogu raportów: \(base)."), feature: "PD-REP-004")) { ctx in
