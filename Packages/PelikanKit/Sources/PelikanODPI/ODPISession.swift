@@ -643,8 +643,14 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             return quote(s)
         case DPI_NATIVE_TYPE_TIMESTAMP:
             let t = v.pointee.asTimestamp
-            let ts = OracleTimestamp(year: t.year, month: t.month, day: t.day, hour: t.hour, minute: t.minute, second: t.second, fsecond: t.fsecond)
-            return quote(ts.formatted("YYYY-MM-DD\"T\"HH24:MI:SS"))
+            let ts = OracleTimestamp(year: t.year, month: t.month, day: t.day, hour: t.hour, minute: t.minute, second: t.second, fsecond: t.fsecond,
+                                     tzHourOffset: t.tzHourOffset, tzMinuteOffset: t.tzMinuteOffset)
+            // ISO 8601 jak JSON_SERIALIZE: ułamek tylko niezerowy (6 cyfr, 9 przy nanosekundach), przesunięcie strefy
+            // niezerowe (ODPI-C podaje TIMESTAMP WITH TIME ZONE jako TIMESTAMP z przesunięciem).
+            var mask = "YYYY-MM-DD\"T\"HH24:MI:SS"
+            if t.fsecond != 0 { mask += t.fsecond % 1000 == 0 ? ".FF6" : ".FF9" }
+            if t.tzHourOffset != 0 || t.tzMinuteOffset != 0 { mask += "TZH:TZM" }
+            return quote(ts.formatted(mask))
         case DPI_NATIVE_TYPE_JSON_OBJECT:
             let o = v.pointee.asJsonObject
             var parts: [String] = []

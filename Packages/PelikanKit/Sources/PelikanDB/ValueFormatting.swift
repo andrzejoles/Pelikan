@@ -56,7 +56,8 @@ public extension OracleValue {
 }
 
 public extension OracleTimestamp {
-    /// Formatowanie wg podzbioru masek Oracle: YYYY, YY, MM, MON, DD, HH24, HH, MI, SS, FF[1-9], AM/PM, TZH, TZM.
+    /// Formatowanie wg podzbioru masek Oracle: YYYY, YY, MM, MON, DD, HH24, HH, MI, SS, FF[1-9], AM/PM, TZH, TZM;
+    /// tekst w cudzysłowie (`"T"`, `"de"`) to literał bez cudzysłowów — jak w Oracle.
     func formatted(_ mask: String, zone: Bool = false) -> String {
         var out = ""
         // Przesunięcie strefy w minutach — znak z całości (-00:30: TZH = 0, TZM = -30).
@@ -72,7 +73,13 @@ public extension OracleTimestamp {
             return false
         }
         while i < mask.endIndex {
-            if take("YYYY") { out += String(format: "%04d", Int(year)) }
+            if mask[i] == "\"" {
+                let from = mask.index(after: i)
+                let to = mask[from...].firstIndex(of: "\"") ?? mask.endIndex
+                out += mask[from..<to]
+                i = to < mask.endIndex ? mask.index(after: to) : to
+            }
+            else if take("YYYY") { out += String(format: "%04d", Int(year)) }
             else if take("YY") { out += String(format: "%02d", Int(year) % 100) }
             else if take("MON") { out += months[max(0, min(11, Int(month) - 1))] }
             else if take("MM") { out += String(format: "%02d", month) }
@@ -114,7 +121,7 @@ public extension Data {
 
 public extension OracleTimestamp {
     /// Odczyt tekstu wg podzbioru masek Oracle (jak `formatted`): YYYY, YY, MM, MON, DD, HH24, HH/HH12, MI, SS, FF[1-9], AM/PM.
-    /// Separatory w masce dopasowują dowolny pojedynczy znak niebędący cyfrą; brakujący koniec tekstu (np. sama data
+    /// Separatory w masce dopasowują dowolny pojedynczy znak niebędący cyfrą, literał `"…"` — te same znaki; brakujący koniec tekstu (np. sama data
     /// przy masce z czasem) daje zera.
     static func parse(_ text: String, mask: String) -> OracleTimestamp? {
         let s = Array(text.trimmingCharacters(in: .whitespaces))
@@ -135,7 +142,16 @@ public extension OracleTimestamp {
         }
         while mi < m.count {
             if si >= s.count { break }    // reszta maski bez tekstu — wartości domyślne
-            if take("YYYY") { guard let v = number(maxDigits: 4) else { return nil }; y = v }
+            if m[mi] == "\"" {
+                // Literał w cudzysłowie: te same znaki w tekście (bez względu na wielkość liter).
+                let end = m[(mi + 1)...].firstIndex(of: "\"") ?? m.count
+                for c in m[(mi + 1)..<end] {
+                    guard si < s.count, String(s[si]).uppercased() == String(c) else { return nil }
+                    si += 1
+                }
+                mi = min(end + 1, m.count)
+            }
+            else if take("YYYY") { guard let v = number(maxDigits: 4) else { return nil }; y = v }
             else if take("YY") { guard let v = number(maxDigits: 2) else { return nil }; y = 2000 + v }
             else if take("MON") {
                 guard si + 3 <= s.count, let i = months.firstIndex(of: String(s[si..<(si + 3)]).uppercased()) else { return nil }
