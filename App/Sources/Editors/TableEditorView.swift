@@ -207,18 +207,20 @@ struct TableEditorView: View {
             }
             Section(L10n.tr("Wyzwalacze")) {
                 if definition.triggers.isEmpty { Text(L10n.tr("Brak wyzwalaczy")).foregroundStyle(.secondary) }
-                ForEach(definition.triggers, id: \.name) { trg in
+                ForEach(definition.triggers) { trg in
                     HStack {
-                        Text(trg.name)
+                        // Wyzwalacz z innego schematu (np. audytu) — z właścicielem (APP2-14).
+                        Text(trg.owner == definition.owner ? trg.name : "\(trg.owner).\(trg.name)")
                         Spacer()
                         Button(trg.enabled ? L10n.tr("Wyłącz") : L10n.tr("Włącz")) {
                             Task {
                                 do {
-                                    // Na połączeniu edytora (jak Zastosuj), nie głównym; nazwa dokładna, bez wyszukiwania.
-                                    let sql = try ObjectAdmin.setEnabled(DBObject(owner: definition.owner, name: trg.name, type: .trigger), enabled: !trg.enabled)
-                                    try await workspace.guardModification([sql], connectionID: connectionID)
-                                    _ = try await workspace.sessions.session(workspace.sessions.compileKey(connection: connectionID)).execute(sql)
-                                    workspace.metadata(for: connectionID)?.refresh()
+                                    // Komenda rejestru (strażnik, sesja kompilacji) na połączeniu edytora, nie głównym; wyzwalacz
+                                    // wskazany dokładnie właścicielem i nazwą (APP2-14).
+                                    try await workspace.invoke(CommandID(rawValue: trg.enabled ? "ob.disable" : "ob.enable"), CommandArguments([
+                                        "object": .string("\"\(trg.owner)\".\"\(trg.name)\""), "type": .string(DBObjectType.trigger.rawValue),
+                                        "connection": .string(connectionID.uuidString),
+                                    ]))
                                     refresh()
                                 } catch CommandError.cancelledByUser {
                                     message = L10n.tr("Anulowano")
