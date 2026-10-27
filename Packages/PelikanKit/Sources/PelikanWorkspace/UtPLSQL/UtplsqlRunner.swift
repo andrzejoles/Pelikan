@@ -57,7 +57,7 @@ public enum UtplsqlRunner {
         let block = """
             declare
               r ut_realtime_reporter := ut_realtime_reporter();
-              \(coverage ? "s ut_coverage_sonar_reporter := ut_coverage_sonar_reporter(); h ut_coverage_html_reporter := ut_coverage_html_reporter();" : "")
+              \(coverage ? "s ut_coverage_sonar_reporter := ut_coverage_sonar_reporter(); h ut_coverage_html_reporter := ut_coverage_html_reporter(a_html_report_assets_path => './');" : "")
             begin
               r.set_reporter_id(:rid);
               r.output_buffer.init();
@@ -146,6 +146,30 @@ public enum UtplsqlRunner {
         p.delegate = d
         _ = p.parse()
         return d.out
+    }
+
+    /// Raport pokrycia HTML do pokazania w aplikacji (widok bez JavaScriptu, CSP, D168/D169): bez skryptów, arkuszy,
+    /// ikon i obrazu ładowania (utPLSQL domyślnie ładuje je z sieci — strona zawiera kod źródłowy z bazy), treść
+    /// odsłonięta (bez skryptu zostałaby ukryta przez `display:none`) i własne style kolorów pokrycia.
+    nonisolated public static func localCoverageDocument(_ html: String) -> String {
+        var s = html
+        for pattern in [#"<script\b[^>]*>.*?</script\s*>"#, #"<script\b[^>]*/?>"#, #"<link\b[^>]*>"#, #"<div id="loading">.*?</div>"#, #"<img\b[^>]*>"#] {
+            s = s.replacingOccurrences(of: pattern, with: "", options: [.regularExpression, .caseInsensitive])
+        }
+        s = s.replacingOccurrences(of: #"<div id="wrapper" style="[^"]*">"#, with: #"<div id="wrapper">"#, options: .regularExpression)
+        let style = """
+            <style>
+            body { font: 13px -apple-system, sans-serif; margin: 12px; }
+            table.file_list { border-collapse: collapse; } table.file_list td, table.file_list th { border: 1px solid #ccc; padding: 2px 6px; }
+            .green { color: #1a7f37; } .yellow { color: #9a6700; } .red { color: #cf222e; }
+            .source_table ol { font: 12px Menlo, monospace; } code { white-space: pre; }
+            li.covered { background: #dafbe1; } li.missed { background: #ffebe9; } li.partcov { background: #fff8c5; }
+            li.never, li.skipped { color: #6e7781; } .hits, .blocks { float: right; color: #6e7781; margin-left: 8px; }
+            .timestamp, #footer { color: #6e7781; font-size: 11px; }
+            </style>
+            """
+        if let head = s.range(of: "<head>", options: .caseInsensitive) { s.insert(contentsOf: style, at: head.upperBound) } else { s = style + s }
+        return s
     }
 
     /// Klucz obiektu z atrybutu `path` raportu Sonar (np. `package body pelikan_test.emp_api` → `PELIKAN_TEST.EMP_API`
