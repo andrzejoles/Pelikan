@@ -90,4 +90,42 @@ struct UIActionCommandsTests {
         #expect(!doc.notebook.cells.contains { $0.id == id })
         #expect(doc.notebook.cells.count == start + 1)
     }
+
+    @Test("projekt: pliki, notatka, grupa, tekst notatki, opcje i usunięcie elementu komendami — z zapisem pliku")
+    func projectItems() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-prj-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("p.prj")
+        #expect(!ws.isEnabled("project.addNote"))
+        try await ws.invoke("project.new", CommandArguments(["file": .string(url.path)]))
+        let a = dir.appendingPathComponent("src/a.sql").path
+        let files = try await ws.invoke("project.addFiles", CommandArguments(["files": .array([.string(a), .string(a)])]))
+        #expect(files.message?.hasSuffix(": 1") == true, "\(files.message ?? "")")
+        #expect(ws.project?.items.map(\.path) == ["src/a.sql"])
+        let note = try await ws.invoke("project.addNote", CommandArguments(["text": "do przeglądu"]))
+        let noteID = try #require(note.value?.stringValue)
+        let fileID = try #require(ws.project?.items.first?.id.uuidString)
+        try await ws.invoke("project.setItemGroup", CommandArguments(["item": .string(fileID), "group": "Pakiety"]))
+        try await ws.invoke("project.setNote", CommandArguments(["item": .string(noteID), "text": "przejrzane"]))
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("project.setNote", CommandArguments(["item": .string(fileID), "text": "x"]))
+        }
+        try await ws.invoke("project.setOption", CommandArguments(["option": "haltOnFirstError", "value": false]))
+        try await ws.invoke("project.setOption", CommandArguments(["option": "beautifyOnBuild", "value": "true"]))
+        try await ws.invoke("project.setOption", CommandArguments(["option": "connection", "value": "dev_test"]))
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("project.setOption", CommandArguments(["option": "inna", "value": "x"]))
+        }
+        // Plik projektu zapisany po każdej zmianie.
+        let saved = try Project.decode(Data(contentsOf: url))
+        #expect(saved.items.first?.group == "Pakiety" && saved.items.last?.note == "przejrzane")
+        #expect(!saved.options.haltOnFirstError && saved.options.beautifyOnBuild && saved.options.connection == "dev_test")
+        try await ws.invoke("project.setOption", CommandArguments(["option": "connection", "value": ""]))
+        try await ws.invoke("project.removeItem", CommandArguments(["item": .string(fileID)]))
+        await #expect(throws: CommandError.self) { try await ws.invoke("project.removeItem", CommandArguments(["item": .string(fileID)])) }
+        let after = try Project.decode(Data(contentsOf: url))
+        #expect(after.items.count == 1 && after.items[0].kind == .note && after.options.connection == nil)
+    }
 }

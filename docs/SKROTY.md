@@ -108,6 +108,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zapisz pulpit projektu | `project.saveDesktop` |  |  | Brak | PD-PROJ-003 |
 | Otwórz pulpit projektu | `project.openDesktop` |  |  | Brak | PD-PROJ-003 |
 | Szukaj w projekcie… | `project.find` |  |  | Brak | PD-PROJ-003 |
+| Dodaj pliki do projektu… | `project.addFiles` |  |  | Brak | PD-PROJ-001 |
+| Dodaj notatkę do projektu | `project.addNote` |  |  | Brak | PD-PROJ-001 |
+| Usuń element z projektu | `project.removeItem` |  |  | Brak | PD-PROJ-001 |
+| Grupa elementu projektu | `project.setItemGroup` |  |  | Brak | PD-PROJ-001 |
+| Tekst notatki projektu | `project.setNote` |  |  | Brak | PD-PROJ-001 |
+| Opcja projektu | `project.setOption` |  |  | Brak | PD-PROJ-002 |
 
 ## Edycja
 

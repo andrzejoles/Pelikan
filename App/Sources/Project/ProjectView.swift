@@ -36,8 +36,8 @@ struct ProjectView: View {
                 HStack {
                     Button(L10n.tr("Dodaj pliki…")) { addFiles() }
                     Button(L10n.tr("Dodaj zaznaczony obiekt")) { workspace.perform("project.addSelectedObject") }.disabled(workspace.selectedObject == nil)
-                    Button(L10n.tr("Dodaj notatkę")) { mutate { $0.items.append(.note(L10n.tr("Notatka"))) } }
-                    Button(L10n.tr("Usuń")) { mutate { p in p.items.removeAll { $0.id == selection } } }.disabled(selection == nil)
+                    Button(L10n.tr("Dodaj notatkę")) { run("project.addNote") }
+                    Button(L10n.tr("Usuń")) { if let id = selection { perform("project.removeItem", item: id) } }.disabled(selection == nil)
                     Spacer()
                     Button(L10n.tr("Zapisz pulpit")) { workspace.perform("project.saveDesktop") }
                     Button(L10n.tr("Otwórz pulpit")) { workspace.perform("project.openDesktop") }
@@ -104,8 +104,8 @@ struct ProjectView: View {
     private func row(_ item: ProjectItem) -> some View {
         HStack {
             Image(systemName: item.kind == .file ? "doc.text" : item.kind == .object ? "cylinder" : "note.text")
-            if item.kind == .note, let i = workspace.project?.items.firstIndex(where: { $0.id == item.id }) {
-                TextField("", text: Binding(get: { workspace.project?.items[i].note ?? "" }, set: { v in mutate { $0.items[i].note = v } }))
+            if item.kind == .note {
+                CommitTextField(title: "", value: item.note ?? "") { perform("project.setNote", item: item.id, ["text": .string($0)]) }
             } else {
                 Text(item.title)
             }
@@ -113,22 +113,20 @@ struct ProjectView: View {
                 Text(s.badge).font(.code.bold()).foregroundStyle(gitColor(s)).help(s.displayName)
             }
             Spacer()
-            TextField(L10n.tr("grupa"), text: Binding(get: { item.group ?? "" }, set: { v in
-                mutate { p in if let i = p.items.firstIndex(where: { $0.id == item.id }) { p.items[i].group = v.isEmpty ? nil : v } }
-            }))
-            .frame(width: 110).font(.uiSecondary)
+            CommitTextField(title: L10n.tr("grupa"), value: item.group ?? "") { perform("project.setItemGroup", item: item.id, ["group": .string($0)]) }
+                .frame(width: 110).font(.uiSecondary)
         }
     }
 
     private func optionsView(_ p: Project) -> some View {
         HStack {
-            Picker(L10n.tr("Połączenie"), selection: Binding(get: { p.options.connection ?? "" }, set: { v in mutate { $0.options.connection = v.isEmpty ? nil : v } })) {
+            Picker(L10n.tr("Połączenie"), selection: Binding(get: { p.options.connection ?? "" }, set: { setOption("connection", .string($0)) })) {
                 Text(L10n.tr("Główne")).tag("")
                 ForEach(workspace.connections.connections) { Text($0.displayName).tag($0.displayName) }
             }
             .frame(maxWidth: 280)
-            Toggle(L10n.tr("Zatrzymaj po pierwszym błędzie"), isOn: Binding(get: { p.options.haltOnFirstError }, set: { v in mutate { $0.options.haltOnFirstError = v } }))
-            Toggle(L10n.tr("Formatuj przy budowaniu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { v in mutate { $0.options.beautifyOnBuild = v } }))
+            Toggle(L10n.tr("Zatrzymaj po pierwszym błędzie"), isOn: Binding(get: { p.options.haltOnFirstError }, set: { setOption("haltOnFirstError", .bool($0)) }))
+            Toggle(L10n.tr("Formatuj przy budowaniu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { setOption("beautifyOnBuild", .bool($0)) }))
         }
         .toggleStyle(.checkbox).font(.uiSecondary)
     }
@@ -141,17 +139,21 @@ struct ProjectView: View {
         }
     }
 
-    private func mutate(_ change: (inout Project) -> Void) {
-        guard var p = workspace.project, let url = workspace.projectURL else { return }
-        change(&p)
-        workspace.project = p
-        do { try p.encoded().write(to: url, options: .atomic) } catch { message = error.localizedDescription }
+    private func run(_ id: CommandID, _ arguments: CommandArguments = .empty) {
+        Task {
+            do { message = try await workspace.invoke(id, arguments).message ?? "" } catch CommandError.cancelledByUser {
+            } catch { message = error.localizedDescription }
+        }
     }
 
-    private func run(_ id: CommandID) {
-        Task {
-            do { message = try await workspace.invoke(id).message ?? "" } catch { message = error.localizedDescription }
-        }
+    /// Czynność na elemencie projektu po identyfikatorze — element mógł zniknąć (np. usunięty przy edycji pola notatki).
+    private func perform(_ id: CommandID, item: ProjectItem.ID, _ extra: [String: JSONValue] = [:]) {
+        guard workspace.project?.items.contains(where: { $0.id == item }) == true else { return }
+        run(id, CommandArguments(extra.merging(["item": .string(item.uuidString)]) { _, new in new }))
+    }
+
+    private func setOption(_ option: String, _ value: JSONValue) {
+        run("project.setOption", CommandArguments(["option": .string(option), "value": value]))
     }
 
     private func newProject() {
@@ -173,13 +175,8 @@ struct ProjectView: View {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.directoryURL = url.deletingLastPathComponent()
-        guard panel.runModal() == .OK else { return }
-        mutate { p in
-            for f in panel.urls {
-                let rel = ProjectEngine.relativePath(f, projectURL: url)
-                if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
-            }
-        }
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
+        run("project.addFiles", CommandArguments(["files": .array(panel.urls.map { .string($0.path) })]))
     }
 
     private func open(_ id: ProjectItem.ID, line: Int = 0) {
@@ -207,5 +204,28 @@ struct ProjectView: View {
                 message = L10n.tr("Trafienia: \(matches.count)")
             } catch { message = error.localizedDescription }
         }
+    }
+}
+
+/// Pole tekstowe zatwierdzane Enterem albo przy utracie fokusu (projekt, biblioteka makr) — zmiana idzie komendą raz,
+/// a nie przy każdym znaku; bez edycji pole pokazuje bieżącą wartość.
+struct CommitTextField: View {
+    let title: String
+    let value: String
+    let commit: (String) -> Void
+    @State private var draft: String?
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        TextField(title, text: Binding(get: { draft ?? value }, set: { draft = $0 }))
+            .focused($focused)
+            .onSubmit(save)
+            .onChange(of: focused) { if !focused { save() } }
+    }
+
+    private func save() {
+        guard let d = draft else { return }
+        draft = nil
+        if d != value { commit(d) }
     }
 }

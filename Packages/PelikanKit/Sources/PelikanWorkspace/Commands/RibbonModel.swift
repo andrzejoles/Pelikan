@@ -425,7 +425,7 @@ public enum RibbonModel {
             RibbonGroup(L10n.tr("Projekt i workset"), [
                 .menu(L10n.tr("Projekt"), symbol: "folder.badge.gearshape", commands: [
                     "project.show", "project.new", "project.open", "project.close", separator, "project.addActiveFile", "project.addSelectedObject",
-                    separator, "project.build", "project.make", "project.find", separator, "project.saveDesktop", "project.openDesktop",
+                    "project.addFiles", "project.addNote", separator, "project.build", "project.make", "project.find", separator, "project.saveDesktop", "project.openDesktop",
                 ], large: true),
                 .menu(L10n.tr("Workset"), symbol: "square.stack.3d.up", commands: [
                     "workset.new", "workset.open", "workset.save", "workset.revert", "workset.close", separator, "workset.compare",
