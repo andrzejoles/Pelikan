@@ -22,9 +22,8 @@ struct QueryBuilderView: View {
                 TextField(L10n.tr("Tabela albo widok (NAZWA lub SCHEMAT.NAZWA)"), text: $tableName).textFieldStyle(.roundedBorder)
                     .onSubmit { add(tableName) }
                 Button(L10n.tr("Dodaj")) { add(tableName) }.disabled(tableName.isEmpty)
-                Button(L10n.tr("Dodaj zaznaczony obiekt")) { if let o = workspace.selectedObject { add("\"\(o.owner)\".\"\(o.name)\"") } }
+                Button(L10n.tr("Dodaj zaznaczony obiekt")) { addSelected() }.disabled(workspace.selectedObject == nil)
                 Button(L10n.tr("Dodaj podzapytanie…")) { addSubquery() }
-                    .disabled(workspace.selectedObject == nil)
                 Spacer()
                 Toggle("DISTINCT", isOn: $model.distinct).toggleStyle(.checkbox)
             }
@@ -53,7 +52,9 @@ struct QueryBuilderView: View {
         }
         .padding(10)
         .frame(minWidth: 900, minHeight: 640)
-        .task { await load() }
+        // Raz: przeniesienie narzędzia między panelem a oknem nie zastępuje modelu zbudowanego przez użytkownika
+        // modelem z SQL z chwili otwarcia.
+        .toolTask(id: 0) { await load() }
     }
 
     // MARK: Płótno
@@ -228,6 +229,17 @@ struct QueryBuilderView: View {
         }
     }
 
+    /// Obiekt zaznaczony w Object Browserze — tylko z gałęzi połączenia Query Buildera (ta sama nazwa w innej bazie
+    /// może być innym obiektem).
+    private func addSelected() {
+        guard let o = workspace.selectedObject else { return }
+        guard workspace.objectBrowserConnection == connectionID else {
+            message = L10n.tr("Zaznaczony obiekt pochodzi z innego połączenia niż Query Builder")
+            return
+        }
+        add("\"\(o.owner)\".\"\(o.name)\"")
+    }
+
     private func addSubquery() {
         Task {
             guard let ui = workspace.ui,
@@ -245,6 +257,11 @@ struct QueryBuilderView: View {
     private func insert() {
         let sql = model.sql()
         if let id = targetDocument, let d = workspace.documents.first(where: { $0.id == id }) {
+            // Jak komendy edycji: okno tylko do odczytu i okno w trakcie wykonania nie przyjmują tekstu (R4-06).
+            if d.isReadOnly || d.isExecuting {
+                workspace.ui?.showError(d.isReadOnly ? L10n.tr("Okno jest tylko do odczytu") : L10n.tr("Okno już wykonuje polecenie"))
+                return
+            }
             let ns = d.text as NSString
             let sel = d.selectedRange
             let range = NSRange(location: min(sel.lowerBound, ns.length), length: min(sel.count, max(0, ns.length - sel.lowerBound)))

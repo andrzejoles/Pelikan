@@ -56,7 +56,7 @@ struct SQLMonitorView: View {
         }
         .padding(10)
         .frame(minWidth: 860, minHeight: 420)
-        .task { await reload() }
+        .toolTask(id: 0) { await reload() }
     }
 
     init(workspace: Workspace, connection: UUID) {

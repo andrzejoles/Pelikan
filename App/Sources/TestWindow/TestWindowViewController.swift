@@ -328,7 +328,7 @@ struct TestPanel: View {
                   let o = try? await m.find("\"\(f.owner)\".\"\(f.unit)\"") else { return }
             // Linie stosu odnoszą się do ciała pakietu/typu, jeśli istnieje.
             let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : o.type == .type ? .typeBody : o.type)
-            try? await workspace.openObject(body, line: f.line)
+            try? await workspace.openObject(body, line: f.line, connection: m.connectionID)
         }
     }
 }

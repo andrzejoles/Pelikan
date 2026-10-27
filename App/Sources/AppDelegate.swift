@@ -401,7 +401,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showFindObjects(_ criteria: DatabaseSearchCriteria) {
-        ToolWindowController.show(key: "findObjects", title: L10n.tr("Znajdź obiekty bazy"), size: NSSize(width: 760, height: 520)) {
+        // Kryteria z argumentów komendy zastępują otwarte narzędzie; bez nich — tylko przywołanie (z wynikami).
+        ToolWindowController.show(key: "findObjects", for: criteria == DatabaseSearchCriteria() ? nil : criteria,
+                                  title: L10n.tr("Znajdź obiekty bazy"), size: NSSize(width: 760, height: 520)) {
             FindObjectsView(workspace: workspace, criteria: criteria)
         }
     }
@@ -838,14 +840,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if !NSApp.isActive { NSApp.requestUserAttention(.informationalRequest) }
     }
 
+    // QBE i filtr kolumn działają na karcie wyniku, z której je otwarto: dla innej karty — nowa zawartość.
     func showQueryByExample(_ tab: ResultTab) {
-        ToolWindowController.show(key: "qbe", title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
+        ToolWindowController.show(key: "qbe", for: tab.id, title: L10n.tr("Query By Example"), size: NSSize(width: 480, height: 420)) {
             QueryByExampleView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "qbe") }
         }
     }
 
     func showColumnFilter(_ tab: ResultTab) {
-        ToolWindowController.show(key: "columnFilter", title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
+        ToolWindowController.show(key: "columnFilter", for: tab.id, title: L10n.tr("Filtr kolumn"), size: NSSize(width: 500, height: 300)) {
             ColumnFilterView(workspace: workspace, tab: tab) { ToolWindowController.close(key: "columnFilter") }
         }
     }

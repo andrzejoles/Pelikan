@@ -24,20 +24,24 @@ public struct ToolDockSettings: Codable, Sendable, Hashable {
 
     public init() {}
 
-    /// Narzędzia domyślnie w osobnym oknie: zgoda na operację agenta ma być widoczna niezależnie od stanu paneli.
+    /// Narzędzia domyślnie w osobnym oknie. `approval` to okno podglądu zgody ze scenariusza zrzutów
+    /// (`debug.approval`); w aplikacji zgoda na operację agenta jest arkuszem na oknie głównym, nie narzędziem.
     public static let floatingByDefault: Set<String> = ["approval"]
 
-    /// Rodzaj narzędzia z klucza okna: klucze jednorazowe (`diff-<UUID>`, `table-APP.T`, `debugger-<id>`) dzielą
-    /// miejsce z innymi oknami tego rodzaju; pozostałe klucze są rodzajem same w sobie.
+    /// Przedrostki kluczy jednorazowych (`diff-<UUID>`, `table-APP.T`, `debugger-<id>`): okna dzielą miejsce rodzaju
+    /// i nie zapamiętują własnej ramki. Jedyna lista — okno narzędzia rozpoznaje klucz jednorazowy przez `kind(of:)`.
+    static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-", "objectInfo-", "largeData-"]
+
+    /// Rodzaj narzędzia z klucza okna: klucze jednorazowe dzielą miejsce z innymi oknami tego rodzaju; pozostałe klucze
+    /// są rodzajem same w sobie (`kind(of:) == key`).
     public static func kind(of key: String) -> String {
-        for prefix in ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-", "objectInfo-", "largeData-"]
-            where key.hasPrefix(prefix) {
+        for prefix in transientPrefixes where key.hasPrefix(prefix) {
             return String(prefix.dropLast())
         }
         return key
     }
 
-    /// Miejsce, w którym otwiera się narzędzie: wybór użytkownika, a bez niego miejsce domyślne (zgoda agenta — okno).
+    /// Miejsce, w którym otwiera się narzędzie: wybór użytkownika, a bez niego miejsce domyślne (`floatingByDefault` — okno).
     public func placement(for key: String) -> ToolPlacement {
         let kind = Self.kind(of: key)
         return placements[kind] ?? standard(for: kind)

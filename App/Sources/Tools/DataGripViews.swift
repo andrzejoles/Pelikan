@@ -53,9 +53,9 @@ struct UsagesView: View {
             d.selectedRange = o..<o
         case .dependency, .source, .plscope:
             guard let owner = h.owner, let name = h.name, let type = h.type.flatMap(DBObjectType.init(rawValue:)) else { return }
-            Task { try? await workspace.openObject(DBObject(owner: owner, name: name, type: type), line: h.line) }
+            Task { try? await workspace.openObject(DBObject(owner: owner, name: name, type: type), line: h.line, connection: h.connection) }
         }
-        NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+        ToolWindowController.showMainWindow()
     }
 }
 

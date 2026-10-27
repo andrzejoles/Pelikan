@@ -15,9 +15,28 @@ enum ToolWindowController {
         manager.show(key: key, title: title, size: size, content: view, lifetime: lifetime)
     }
 
+    /// Narzędzie związane z argumentem (wynik, cel wdrożenia): wywołanie z innym argumentem niż otwarte narzędzie
+    /// zastępuje je nową zawartością, z tym samym — tylko przywołuje. `argument: nil` — przywołanie bez zmiany.
+    static func show<V: View>(key: String, for argument: AnyHashable?, title: String, size: NSSize, @ViewBuilder content: () -> V) {
+        if let argument {
+            if arguments[key] != argument { close(key: key) }
+            arguments[key] = argument
+        }
+        show(key: key, title: title, size: size, content: content)
+    }
+
+    /// Argument otwartego narzędzia danego klucza (wpis po zamknięciu narzędzia nie przeszkadza: otwarcie tworzy nowe).
+    private static var arguments: [String: AnyHashable] = [:]
+
     /// Zamyka narzędzie o danym kluczu (np. przed pokazaniem nowej zawartości).
     static func close(key: String) {
         ToolDockManager.shared.close(key: key)
+    }
+
+    /// Okno główne na wierzch po otwarciu dokumentu z narzędzia. `NSApp.mainWindow` nie wystarcza: narzędzie odłączone
+    /// do osobnego okna samo jest wtedy oknem głównym aplikacji i dokument otwierałby się za nim.
+    static func showMainWindow() {
+        ToolDockManager.shared.mainWindow?.window?.makeKeyAndOrderFront(nil)
     }
 }
 
@@ -43,14 +62,18 @@ struct ToolConnectionPicker: View {
     }
 }
 
-/// Find Database Objects (UG 24.2): kryteria, wyszukiwanie w tle, wyniki z przejściem do linii źródła.
+/// Find Database Objects (UG 24.2): kryteria, wyszukiwanie w tle, wyniki z przejściem do linii źródła; połączenie
+/// ustalone przy otwarciu (aktywne okno albo główne, D185) — wyszukiwanie i otwarcie trafienia na tej samej bazie.
 struct FindObjectsView: View {
     let workspace: Workspace
     @State var criteria: DatabaseSearchCriteria
+    @State private var connection: UUID?
     @State private var owner = ""
     @State private var hits: [DatabaseSearchHit] = []
     @State private var running = false
     @State private var task: Task<Void, Never>?
+    /// Numer bieżącego wyszukiwania: przerwane wcześniejsze, kończące się później, nie zmienia stanu okna.
+    @State private var runID = 0
     @State private var message = ""
     @State private var selection: DatabaseSearchHit.ID?
     @FocusState private var textFocused: Bool
@@ -69,6 +92,18 @@ struct FindObjectsView: View {
         }
         // Zamknięcie narzędzia przerywa wyszukiwanie (inaczej zajmowałoby sesję metadanych nawet przez minuty).
         .onToolClose { task?.cancel() }
+        // Trafienia dotyczą bazy, w której szukano — po zmianie połączenia lista byłaby myląca.
+        .onChange(of: connection) {
+            if running { cancel() }
+            hits = []
+            message = ""
+        }
+    }
+
+    init(workspace: Workspace, criteria: DatabaseSearchCriteria) {
+        self.workspace = workspace
+        _criteria = State(initialValue: criteria)
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private var criteriaForm: some View {
@@ -93,6 +128,7 @@ struct FindObjectsView: View {
                 TextField(L10n.tr("Nazwa obiektu (%)"), text: $criteria.nameFilter)
                 typesMenu
                 savedMenu
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
             }
         }
     }
@@ -170,22 +206,23 @@ struct FindObjectsView: View {
     private func run() {
         // Jedno wyszukiwanie naraz: Enter w polu w trakcie wyszukiwania nie uruchamia drugiego.
         guard !running else { return }
-        guard let m = workspace.metadata() else { message = L10n.tr("Brak połączenia głównego"); return }
+        guard let m = workspace.metadata(for: connection) else { message = L10n.tr("Brak połączenia"); return }
         var c = criteria
         c.owners = owner.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }
         running = true
         message = L10n.tr("Wyszukiwanie…")
         task?.cancel()
+        runID += 1
+        let id = runID
         task = Task {
             do {
                 let r = try await DatabaseSearch.search(c, metadata: m)
-                guard !Task.isCancelled else { return }
+                guard id == runID, !Task.isCancelled else { return }
                 hits = r
                 message = L10n.tr("Znaleziono: \(r.count)")
-            } catch is CancellationError {
-                message = L10n.tr("Przerwano")
             } catch {
-                guard !Task.isCancelled else { return }
+                // Przerwane wyszukiwanie: komunikat i stan ustawił już `cancel()` (a może trwać następne).
+                guard id == runID, !Task.isCancelled else { return }
                 message = error.localizedDescription
             }
             running = false
@@ -194,14 +231,16 @@ struct FindObjectsView: View {
 
     private func cancel() {
         task?.cancel()
+        runID += 1
         running = false
         message = L10n.tr("Przerwano")
     }
 
     private func open(_ h: DatabaseSearchHit) {
+        let connection = connection
         Task {
-            do { try await workspace.openObject(h.object, line: h.line) } catch { workspace.ui?.showError(error.localizedDescription) }
-            NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+            do { try await workspace.openObject(h.object, line: h.line, connection: connection) } catch { workspace.ui?.showError(error.localizedDescription) }
+            ToolWindowController.showMainWindow()
         }
     }
 
@@ -216,9 +255,11 @@ struct FindObjectsView: View {
     }
 }
 
-/// Compile Invalid Objects (UG 24.3): lista nieprawidłowych obiektów, kompilacja, błędy.
+/// Compile Invalid Objects (UG 24.3): lista nieprawidłowych obiektów, kompilacja, błędy; połączenie ustalone przy
+/// otwarciu (aktywne okno albo główne, D185) — lista, kompilacja i otwarcie obiektu na tej samej bazie.
 struct CompileInvalidView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var owner = ""
     @State private var objects: [DBObject] = []
     @State private var results: [String: InvalidObjectResult] = [:]
@@ -226,11 +267,13 @@ struct CompileInvalidView: View {
     @State private var progress = 0.0
     @State private var message = ""
     @State private var selection: DBObject.ID?
+    @State private var refreshTask: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 TextField(L10n.tr("Właściciel (puste — bieżący schemat)"), text: $owner).onSubmit { refresh() }
+                ToolConnectionPicker(workspace: workspace, connection: $connection).disabled(running)
                 Button(L10n.tr("Odśwież")) { refresh() }.disabled(running)
                 Button(L10n.tr("Kompiluj wszystkie")) { compile() }.keyboardShortcut(.defaultAction).disabled(running || objects.isEmpty)
             }
@@ -242,7 +285,13 @@ struct CompileInvalidView: View {
         }
         .padding(12)
         .frame(minWidth: 560, minHeight: 340)
-        .onAppear { refresh() }
+        // Raz dla połączenia: przeniesienie narzędzia między panelem a oknem (onAppear od nowa) nie kasuje wyników kompilacji.
+        .toolTask(id: connection) { refresh() }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private var objectsTable: some View {
@@ -253,7 +302,11 @@ struct CompileInvalidView: View {
         }
         .contextMenu(forSelectionType: DBObject.ID.self) { _ in } primaryAction: { ids in
             if let id = ids.first, let o = objects.first(where: { $0.id == id }) {
-                Task { try? await workspace.openObject(o) }
+                let connection = connection
+                Task {
+                    try? await workspace.openObject(o, connection: connection)
+                    ToolWindowController.showMainWindow()
+                }
             }
         }
     }
@@ -267,21 +320,36 @@ struct CompileInvalidView: View {
         }
     }
 
+    /// Lista od nowa; poprzednie odświeżenie jest przerywane (nie nadpisze nowszej listy), a w trakcie kompilacji —
+    /// bez zmiany listy, na której kompilacja działa.
     private func refresh() {
-        guard let m = workspace.metadata() else { message = L10n.tr("Brak połączenia głównego"); return }
-        Task {
+        guard !running else { return }
+        guard let m = workspace.metadata(for: connection) else {
+            objects = []
+            results = [:]
+            message = L10n.tr("Brak połączenia")
+            return
+        }
+        refreshTask?.cancel()
+        refreshTask = Task {
             do {
                 var o = owner.trimmingCharacters(in: .whitespaces).uppercased()
                 if o.isEmpty { o = try await m.currentSchema() }
-                objects = try await InvalidObjects.list(m, owner: o)
+                let list = try await InvalidObjects.list(m, owner: o)
+                guard !Task.isCancelled else { return }
+                objects = list
                 results = [:]
                 message = L10n.tr("Nieprawidłowe obiekty: \(objects.count)")
-            } catch { message = error.localizedDescription }
+            } catch {
+                guard !Task.isCancelled else { return }
+                message = error.localizedDescription
+            }
         }
     }
 
     private func compile() {
-        guard let m = workspace.metadata() else { return }
+        guard let m = workspace.metadata(for: connection) else { message = L10n.tr("Brak połączenia"); return }
+        refreshTask?.cancel()
         running = true
         progress = 0
         Task {

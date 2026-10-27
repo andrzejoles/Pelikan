@@ -86,4 +86,23 @@ struct ObjectConnectionTests {
         let compare = try #require(ws.registry.command("ob.compareWithConnection")?.descriptor)
         #expect(compare.parameters.filter { $0.name == "connection" }.count == 1)
     }
+
+    @Test("utPLSQL z eksploratora i okna wyników: argument connection ma pierwszeństwo przed aktywnym oknem")
+    func utplsqlConnection() throws {
+        let (ws, ids) = try workspace(["dev_main", "dev_other"])
+        ws.sessions.setMainConnection(ids[0])
+        func ctx(_ args: [String: JSONValue] = [:]) -> CommandContext {
+            CommandContext(workspace: ws, invoker: .user, arguments: CommandArguments(args))
+        }
+        #expect(try UtplsqlCommands.connection(ctx()) == ids[0])
+        let doc = ws.newDocument(.sql)
+        ws.bind(doc, to: ids[1])
+        #expect(try UtplsqlCommands.connection(ctx()) == ids[1], "bez argumentu — połączenie aktywnego okna")
+        #expect(try UtplsqlCommands.connection(ctx(["connection": .string(ids[0].uuidString)])) == ids[0])
+        #expect(throws: CommandError.self) { try UtplsqlCommands.connection(ctx(["connection": .string("dev_main")])) }
+        for id in ["utplsql.runAll", "utplsql.runPath", "utplsql.runWithOptions", "utplsql.coverage", "utplsql.export"] {
+            let d = try #require(ws.registry.command(CommandID(rawValue: id))?.descriptor, "\(id)")
+            #expect(d.parameters.filter { $0.name == "connection" }.count == 1, "\(id)")
+        }
+    }
 }
