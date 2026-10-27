@@ -41,8 +41,28 @@ scripts/sparkle-tools.sh generate_appcast \
 
 PREVIOUS="$(git describe --tags --abbrev=0 2>/dev/null || true)"
 TITLE="$APP_NAME $VERSION"
-# Sekcja „## <wersja>” (także „## <wersja> — opis”) z docs/NOWOSCI.md, bez nagłówka.
-NEWS="$(awk -v v="## $VERSION" '/^## /{on = ($0 == v || index($0, v " ") == 1)} on' docs/NOWOSCI.md 2>/dev/null | sed '1d')"
+# Nowości z docs/NOWOSCI.md: sekcja „## <wersja>” bez nagłówka i sekcje wersji pośrednich bez osobnego wydania (nowsze niż
+# poprzedni znacznik) jako „### Także z <wersja> — opis”.
+NEWS="$(python3 - "$VERSION" "${PREVIOUS#v}" docs/NOWOSCI.md <<'PY' 2>/dev/null
+import re, sys
+version, previous, path = sys.argv[1], sys.argv[2], sys.argv[3]
+key = lambda v: tuple(int(x) for x in v.split("."))
+sections = re.split(r"(?m)^## ", open(path, encoding="utf-8").read())[1:]
+out = []
+for s in sections:
+    head, _, body = s.partition("\n")
+    m = re.match(r"(\d+\.\d+\.\d+)(.*)", head)
+    if not m:
+        continue
+    v = m.group(1)
+    # Poprzedni znacznik „wyższy” od bieżącej wersji (bety 10.x przed 1.0.0) nie ogranicza listy.
+    bounded = re.fullmatch(r"\d+\.\d+\.\d+", previous or "") and key(previous) < key(version)
+    if key(v) > key(version) or (bounded and key(v) <= key(previous)):
+        continue
+    out.append(body.strip() if v == version else "### Także z " + head.strip() + "\n\n" + body.strip())
+print("\n\n".join(out))
+PY
+)"
 [ "$BETA" = 1 ] && TITLE="$TITLE beta"
 {
     echo "$TITLE"
