@@ -374,8 +374,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         var out: [ResultSetDescriptor] = []
         while true {
             var child: OpaquePointer?
+            // Referencja należy już do nas (ODPI-C tworzy instrukcję z licznikiem 1 i sama trzyma rodzica) —
+            // bez dpiStmt_addRef, inaczej struktura wyniku i połączenia nie byłyby nigdy zwolnione.
             guard dpiStmt_getImplicitResult(stmt, &child) == DPI_SUCCESS, let child else { break }
-            dpiStmt_addRef(child)
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
