@@ -64,6 +64,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var browserRecentLimit = 20
     /// Filtr nazw przeglądarki obiektów bez `%`: fragment nazwy (`%tekst%`) albo początek (`tekst%`).
     public var browserFilterContains = true
+    /// Zakres przeglądarki obiektów po połączeniu (D187): obiekty dostępne (także z innych schematów) zamiast własnych.
+    public var browserShowAccessible = false
     public var browserDoubleClick: [String: String] = [:]
     /// Przeciąganie obiektu (PD-OB-010, UG 23.11): tekst po upuszczeniu w edytorze i akcja na obszarze okien.
     public var browserDropAction: BrowserDropAction = .name
@@ -334,6 +336,7 @@ public struct Settings: Sendable, Codable, Hashable {
         browserFolders = v(.browserFolders, browserFolders)
         browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
         browserFilterContains = v(.browserFilterContains, browserFilterContains)
+        browserShowAccessible = v(.browserShowAccessible, browserShowAccessible)
         browserDoubleClick = v(.browserDoubleClick, browserDoubleClick)
         browserDropAction = v(.browserDropAction, browserDropAction)
         browserWorkspaceDrop = v(.browserWorkspaceDrop, browserWorkspaceDrop)

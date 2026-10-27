@@ -32,6 +32,10 @@ struct BrowserPane: View {
             Section(L10n.tr("Zachowanie")) {
                 Stepper(L10n.tr("Ostatnie obiekty: \(workspace.settings.browserRecentLimit)"), value: $workspace.settings.browserRecentLimit, in: 5...100, step: 5)
                 Toggle(L10n.tr("Potwierdzaj rekompilację"), isOn: $workspace.settings.confirmRecompile)
+                Picker(L10n.tr("Po połączeniu pokazuj"), selection: $workspace.settings.browserShowAccessible) {
+                    Text(L10n.tr("Obiekty bieżącego użytkownika (z publicznymi łączami i synonimami)")).tag(false)
+                    Text(L10n.tr("Obiekty dostępne (także z innych schematów)")).tag(true)
+                }
                 Picker(L10n.tr("Filtr nazw bez %"), selection: $workspace.settings.browserFilterContains) {
                     Text(L10n.tr("Zawiera tekst (%nazwa%)")).tag(true)
                     Text(L10n.tr("Zaczyna się od tekstu (nazwa%)")).tag(false)

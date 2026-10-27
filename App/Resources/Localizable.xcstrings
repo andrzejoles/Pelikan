@@ -1709,6 +1709,34 @@
         }
       }
     },
+    "<Dostępne obiekty>" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<Accessible objects>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<Zugängliche Objekte>"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<Objetos accesibles>"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<Доступні об'єкти>"
+          }
+        }
+      }
+    },
     "<Wszyscy użytkownicy>" : {
       "localizations" : {
         "en" : {
@@ -44773,6 +44801,62 @@
         }
       }
     },
+    "Obiekty bieżącego użytkownika (z publicznymi łączami i synonimami)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects of the current user (with public links and synonyms)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte des aktuellen Benutzers (mit öffentlichen Links und Synonymen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos del usuario actual (con enlaces y sinónimos públicos)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти поточного користувача (з публічними посиланнями й синонімами)"
+          }
+        }
+      }
+    },
+    "Obiekty dostępne (także z innych schematów)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessible objects (also from other schemas)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zugängliche Objekte (auch aus anderen Schemas)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objetos accesibles (también de otros esquemas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступні об'єкти (також з інших схем)"
+          }
+        }
+      }
+    },
     "Obiekty pomijane w pokryciu po przecinku" : {
       "localizations" : {
         "en" : {
@@ -54569,6 +54653,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Після повернення до Pelikan зміни файлу завантажуються у вікно. Вікно без файлу записується в тимчасовий файл у теці даних."
+          }
+        }
+      }
+    },
+    "Po połączeniu pokazuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After connecting, show"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach dem Verbinden anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al conectar, mostrar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Після з'єднання показувати"
           }
         }
       }

@@ -48,8 +48,18 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     /// Gałąź połączenia: węzeł, wybór użytkownika i stan wczytania (osobno dla każdego połączenia).
     final class Branch {
         let node: Node
-        var owner: String?          // nil — wszyscy użytkownicy
-        var ownerMode = 0           // 0 bieżący, 1 wszyscy, 2 wybrany
+        var owner: String?          // schemat bieżący (tryb 0) albo wybrany (3)
+        var ownerMode = 0           // 0 bieżący, 1 dostępne, 2 wszyscy, 3 wybrany (D187)
+
+        /// Zakres folderów gałęzi (D187).
+        var scope: ObjectScope {
+            switch ownerMode {
+            case 0: owner.map(ObjectScope.mine) ?? .accessible
+            case 1: .accessible
+            case 2: .all
+            default: owner.map(ObjectScope.user) ?? .all
+            }
+        }
         var users: (current: String, list: [String])?
         var generation = -1
         var recent: [DBObject] = []
@@ -203,6 +213,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         roots = ids.map { id in
             if let b = branches[id] { return b.node }
             let b = Branch(id)
+            if workspace.settings.browserShowAccessible { b.ownerMode = 1 }
             branches[id] = b
             return b.node
         }
@@ -267,12 +278,12 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         guard let b = currentBranch, let users = b.users else { userPopup.isEnabled = false; return }
         userPopup.isEnabled = true
         userPopup.addItem(withTitle: L10n.tr("<Bieżący użytkownik> \(users.current)"))
+        userPopup.addItem(withTitle: L10n.tr("<Dostępne obiekty>"))
         userPopup.addItem(withTitle: L10n.tr("<Wszyscy użytkownicy>"))
         userPopup.menu?.addItem(.separator())
         for u in users.list { userPopup.addItem(withTitle: u) }
         switch b.ownerMode {
-        case 0: userPopup.selectItem(at: 0)
-        case 1: userPopup.selectItem(at: 1)
+        case 0, 1, 2: userPopup.selectItem(at: b.ownerMode)
         default: userPopup.selectItem(withTitle: b.owner ?? "")
         }
     }
@@ -286,13 +297,13 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         }
         node.loading = true
         let filter = ObjectFilter(filterField.stringValue, named: workspace.browserFilter, contains: workspace.settings.browserFilterContains)
-        let owner = branches[id]?.owner
+        let scope = branches[id]?.scope ?? .accessible
         Task {
             defer { node.loading = false }
             do {
                 switch node.kind {
                 case .folder(let t):
-                    let objects = try await m.objects(t, owner: t.isGlobal ? nil : owner, filter: filter)
+                    let objects = try await m.objects(t, scope: scope, filter: filter)
                     node.children = objects.isEmpty ? [Node(.message(L10n.tr("(brak)")), connection: id)] : objects.map { Node(.object($0), connection: id) }
                     status.stringValue = L10n.tr("\(t.folderName): \(objects.count)")
                 case .recent:
@@ -327,7 +338,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         switch i {
         case 0: b.ownerMode = 0
         case 1: b.ownerMode = 1; b.owner = nil
-        default: b.ownerMode = 2; b.owner = userPopup.titleOfSelectedItem
+        case 2: b.ownerMode = 2; b.owner = nil
+        default: b.ownerMode = 3; b.owner = userPopup.titleOfSelectedItem
         }
         Task { await reload(b, users: false) }
     }
@@ -392,7 +404,9 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         var color: NSColor = .secondaryLabelColor
         var textColor: NSColor = .labelColor
         var font = browserFont
-        let ownerMode = branches[n.connection]?.ownerMode ?? 0
+        // Bez właściciela tylko obiekty własnego schematu w trybie bieżącego użytkownika (publiczne łącza i synonimy,
+        // obiekty innych schematów — z właścicielem).
+        let ownSchema = branches[n.connection].flatMap { $0.ownerMode == 0 ? $0.owner : nil }
         switch n.kind {
         case .connection:
             // Połączenie główne wyróżnione: gwiazdka, pogrubienie, dopisek; kolor połączenia albo środowiska.
@@ -411,7 +425,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             symbol = "folder.fill"
             color = f.color.flatMap(Self.namedColor) ?? .systemBlue
         case .object(let o):
-            title = ownerMode == 0 || o.type.isGlobal ? o.name : "\(o.owner).\(o.name)"
+            title = o.type.isGlobal || o.owner == ownSchema ? o.name : "\(o.owner).\(o.name)"
             symbol = Self.symbol(o.type)
             color = o.isValid ? Self.color(o.type) : .systemRed
             if !o.isValid { textColor = .systemRed }

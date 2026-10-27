@@ -20,8 +20,15 @@ conexión principal**, **Nueva ventana SQL en esta conexión**, **Actualizar**, 
 La conexión principal es la predeterminada solo cuando el contexto no indica otra: una ventana nueva desde el menú, una
 herramienta sin ventana activa.
 
-- **Selección de usuario** sobre el árbol: *Usuario actual*, *Todos los usuarios* o un esquema concreto (Pelikan
-  recuerda la elección para la conexión).
+- **Selección de usuario** sobre el árbol (por separado para cada conexión):
+  - *Usuario actual*: objetos de tu esquema más los enlaces de base de datos públicos y los sinónimos públicos de
+    objetos de la aplicación (sin los miles de sinónimos a esquemas de sistema de Oracle);
+  - *Objetos accesibles*: todo lo que puedes usar: objetos propios, objetos de otros esquemas con privilegios
+    concedidos y públicos (con el propietario delante del nombre);
+  - *Todos los usuarios*: objetos de todos los esquemas (con las vistas DBA si tienes acceso a ellas, también los
+    directorios de Oracle sin privilegios concedidos);
+  - un esquema concreto.
+  El ámbito al conectar se ajusta en **Preferencias › Object Browser › Al conectar, mostrar**.
 - **Filtro** bajo la selección de usuario: parte del nombre (en cualquier posición: `emp` encuentra `EMP` y
   `T_EMP_HIST`), un patrón con `%` (p. ej. `EMP%`: solo el principio del nombre; el comportamiento sin `%` se cambia en
   **Preferencias › Object Browser**), varios patrones separados por comas,

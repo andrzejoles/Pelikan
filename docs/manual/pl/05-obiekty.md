@@ -18,8 +18,15 @@ przypięte. Menu połączenia w drzewie: **Ustaw jako połączenie główne**, *
 **Odśwież**, **Edytuj połączenie…** i **Rozłącz**. Połączenie główne jest domyślne tylko wtedy, gdy z kontekstu nie
 wynika inne — nowe okno z menu, narzędzie bez aktywnego okna.
 
-- **Wybór użytkownika** nad drzewem: *Bieżący użytkownik*, *Wszyscy użytkownicy* albo konkretny schemat (Pelikan
-  pamięta wybór dla połączenia).
+- **Wybór użytkownika** nad drzewem (osobno dla każdego połączenia):
+  - *Bieżący użytkownik* — obiekty Twojego schematu oraz publiczne łącza bazy danych i publiczne synonimy obiektów
+    aplikacji (bez tysięcy synonimów do schematów systemowych Oracle);
+  - *Dostępne obiekty* — wszystko, czego możesz użyć: własne obiekty, obiekty innych schematów z nadanymi uprawnieniami
+    i publiczne (z właścicielem przed nazwą);
+  - *Wszyscy użytkownicy* — obiekty wszystkich schematów (z widokami DBA, gdy masz do nich dostęp, także katalogi
+    Oracle bez nadanych uprawnień);
+  - konkretny schemat.
+  Zakres po połączeniu ustawisz w **Preferencje › Object Browser › Po połączeniu pokazuj**.
 - **Filtr** pod wyborem użytkownika: część nazwy (szukana w dowolnym miejscu nazwy — `emp` znajdzie `EMP` i `T_EMP_HIST`),
   wzorzec z `%` (np. `EMP%` — tylko początek nazwy; zachowanie bez `%` zmienisz w **Preferencje › Object Browser**), kilka wzorców po przecinku, `status=invalid` (tylko
   niepoprawne obiekty) albo `source=tekst` (obiekty, których źródło zawiera tekst).
