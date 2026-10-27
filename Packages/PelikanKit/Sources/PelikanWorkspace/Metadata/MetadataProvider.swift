@@ -324,9 +324,10 @@ public final class MetadataProvider {
                 : "select profile, profile, 'VALID', null, null from user_users o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "profile", filter: filter, binds: &binds) + " order by 1"
         case .directory:
-            // Katalogi należą do SYS: dostępne (ALL_DIRECTORIES — z uprawnieniem READ/WRITE), wszystkie — DBA_DIRECTORIES.
-            var view = px
-            if view != "dba", scope == .all, try await readable("dba_directories") { view = "dba" }
+            // Katalogi należą do SYS i nie mają właściciela schematu: we wszystkich trybach DBA_DIRECTORIES, gdy da się go
+            // czytać (ALL_DIRECTORIES pokazuje tylko katalogi z nadanym READ/WRITE, D188).
+            var view = try await dictionaryPrefix()
+            if view != "dba", try await readable("dba_directories") { view = "dba" }
             sql = "select owner, directory_name, 'VALID', null, null from \(view)_directories o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
         case .databaseLink:

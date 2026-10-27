@@ -1790,4 +1790,7 @@ innym użytkownikiem, są tylko w DBA_DB_LINKS: tryb *Wszyscy użytkownicy* i wy
 na sam widok (sprawdzane zapytaniem, wynik pamiętany do odświeżenia). *Bieżący użytkownik* i *Dostępne obiekty*
 pokazują łącza własne i publiczne. Baza testowa: użytkownik testowy ma SELECT na DBA_DB_LINKS (`testdb.sh`), test
 z prywatnym łączem schematu SYSTEM.
+ALL_OBJECTS nie musi zawierać publicznych łączy bazy — źródłem łączy są widoki *_DB_LINKS. Folder Katalogi (obiekty
+bez właściciela schematu) czyta DBA_DIRECTORIES we wszystkich trybach, gdy da się go czytać; ALL_DIRECTORIES pokazuje
+tylko katalogi z nadanym uprawnieniem.
 
