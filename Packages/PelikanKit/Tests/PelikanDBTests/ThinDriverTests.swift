@@ -1,5 +1,8 @@
 import Foundation
+import NIOCore
+import OracleNIO
 import PelikanDB
+import PelikanODPI
 import PelikanSQL
 @testable import PelikanThin
 import PelikanWorkspace
