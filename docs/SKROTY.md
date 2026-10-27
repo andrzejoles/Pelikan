@@ -489,6 +489,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Diagram › Kopiuj diagram jako obraz | `diagram.copyImage` |  |  | Brak | PD-DIAG-003 |
 | Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | PD-DIAG-003 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | PD-QB-001 |
+| Diagram › Przesuń zaznaczone | `diagram.move` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Dodaj punkt łamania | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Przesuń punkt łamania | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Usuń punkt łamania | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Tekst notatki diagramu | `diagram.editNote` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Kolor zaznaczonych | `diagram.setColor` |  |  | Brak | PD-DIAG-002 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | PD-TOOL-003 |
 | Import tabel… | `tools.importTables` |  |  | Brak | PD-TOOL-006 |
 | Import tekstu… | `tools.textImporter` |  |  | Brak | PD-TOOL-008 |

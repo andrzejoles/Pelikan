@@ -134,7 +134,10 @@ final class DiagramCanvas: NSView {
     private var dragStart: NSPoint?
     private var dragOffset = CGSize.zero
     private var rubber: NSRect?
-    private var bendDrag: (link: UUID, index: Int)?
+    private var bendDrag: (link: UUID, index: Int, inserted: Bool)?
+    /// Podgląd zmiany w trakcie gestu (punkt łamania, powiększenie) — dokument zmienia dopiero komenda na końcu gestu
+    /// (dziennik komend, makra), podgląd znika po jej wykonaniu.
+    private var preview: Diagram?
 
     override var isFlipped: Bool { true }
     override var acceptsFirstResponder: Bool { true }
@@ -149,7 +152,7 @@ final class DiagramCanvas: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    var diagram: Diagram { document.diagram }
+    var diagram: Diagram { preview ?? document.diagram }
     var zoom: CGFloat { plain ? 1 : CGFloat(diagram.zoom) }
 
     func refresh() {
@@ -331,31 +334,26 @@ final class DiagramCanvas: NSView {
         let p = convert(event.locationInWindow, from: nil)
         let m = model(p)
         if event.clickCount == 2, let id = hit(m), let it = diagram.item(id), it.kind == .note {
-            Task { @MainActor in
-                guard let text = await workspace?.ui?.askText(L10n.tr("Notatka"), message: L10n.tr("Tekst notatki"), defaultValue: it.text) else { return }
-                if let i = document.diagram.items.firstIndex(where: { $0.id == id }) {
-                    document.diagram.items[i].text = text
-                    document.isModified = true
-                }
-            }
+            run("diagram.editNote", ["item": .string(id.uuidString)])
             return
         }
         // Punkty łamania linii (PD-DIAG-002): przeciąganie, Option+klik usuwa, dwuklik na linii dodaje.
         let tolerance = 6 / Double(zoom)
         if let b = diagram.bend(at: m, tolerance: tolerance) {
             if event.modifierFlags.contains(.option) {
-                document.diagram.removeBend(link: b.link, index: b.index)
-                document.isModified = true
+                run("diagram.removeBend", ["link": .string(b.link.uuidString), "index": .int(Int64(b.index))])
             } else {
                 document.diagramSelection = [b.link]
-                bendDrag = b
+                bendDrag = (b.link, b.index, false)
             }
             return
         }
         if hit(m) == nil, let l = diagram.link(at: m, tolerance: tolerance) {
-            if event.clickCount == 2, let b = document.diagram.insertBend(at: m, tolerance: tolerance) {
-                document.isModified = true
-                bendDrag = b
+            var d = document.diagram
+            if event.clickCount == 2, let b = d.insertBend(at: m, tolerance: tolerance) {
+                preview = d
+                bendDrag = (b.link, b.index, true)
+                needsDisplay = true
             }
             document.diagramSelection = [l.link]
             return
@@ -376,8 +374,9 @@ final class DiagramCanvas: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         if let b = bendDrag {
-            document.diagram.moveBend(link: b.link, index: b.index, to: model(convert(event.locationInWindow, from: nil)))
-            document.isModified = true
+            var d = preview ?? document.diagram
+            d.moveBend(link: b.link, index: b.index, to: model(convert(event.locationInWindow, from: nil)))
+            preview = d
             needsDisplay = true
             return
         }
@@ -392,24 +391,53 @@ final class DiagramCanvas: NSView {
     }
 
     override func mouseUp(with event: NSEvent) {
-        defer { dragStart = nil; dragOffset = .zero; rubber = nil; bendDrag = nil; needsDisplay = true }
+        defer { dragStart = nil; rubber = nil; bendDrag = nil; needsDisplay = true }
+        if let b = bendDrag {
+            // Koniec przeciągania punktu łamania: wstawienie albo przesunięcie komendą (pozycja z podglądu).
+            guard let bends = preview?.links.first(where: { $0.id == b.link })?.bends, bends.indices.contains(b.index) else { preview = nil; return }
+            let p = bends[b.index]
+            let args: [String: JSONValue] = ["link": .string(b.link.uuidString), "index": .int(Int64(b.index)), "x": .double(p.x), "y": .double(p.y)]
+            run(b.inserted ? "diagram.addBend" : "diagram.moveBend", args)
+            return
+        }
         if let r = rubber {
             let mr = DiagramRect(x: Double(r.minX / zoom), y: Double(r.minY / zoom), width: Double(r.width / zoom), height: Double(r.height / zoom))
             document.diagramSelection.formUnion(diagram.items.filter { $0.frame.intersects(mr) }.map(\.id))
             return
         }
         guard dragOffset != .zero else { return }
+        // Przesunięcie widoczne do wykonania komendy (bez mignięcia w starym miejscu).
         let dx = Double(dragOffset.width / zoom), dy = Double(dragOffset.height / zoom)
-        document.diagram.move(document.diagramSelection, dx: dx, dy: dy)
-        document.isModified = true
+        run("diagram.move", ["dx": .double(dx), "dy": .double(dy)])
+    }
+
+    /// Czynność kanwy komendą rejestru; po wykonaniu znika podgląd gestu i przesunięcie.
+    private func run(_ id: CommandID, _ arguments: [String: JSONValue]) {
+        guard let ws = workspace else { return }
+        ws.activate(document.id)
+        Task { @MainActor [weak self] in
+            do { try await ws.invoke(id, CommandArguments(arguments)) } catch CommandError.cancelledByUser {
+            } catch { ws.ui?.showError(error.localizedDescription) }
+            guard let self else { return }
+            self.preview = nil
+            self.dragOffset = .zero
+            self.refresh()
+        }
     }
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 51 || event.keyCode == 117 { workspace?.perform("diagram.delete") } else { super.keyDown(with: event) }
     }
 
+    /// Zoom gestem: podgląd w trakcie, na końcu gestu komenda `diagram.zoom` (jak lista powiększenia).
     override func magnify(with event: NSEvent) {
-        document.diagram.setZoom(document.diagram.zoom * (1 + Double(event.magnification)))
+        var d = preview ?? document.diagram
+        d.setZoom(d.zoom * (1 + Double(event.magnification)))
+        preview = d
+        refresh()
+        if event.phase.isEmpty || event.phase.contains(.ended) || event.phase.contains(.cancelled) {
+            run("diagram.zoom", ["percent": .int(Int64((d.zoom * 100).rounded()))])
+        }
     }
 
     override func menu(for event: NSEvent) -> NSMenu? {
@@ -443,11 +471,7 @@ final class DiagramCanvas: NSView {
     }
 
     private func setColor(_ c: PelikanWorkspace.RGBColor?) {
-        let sel = document.diagramSelection
-        for i in document.diagram.items.indices where sel.contains(document.diagram.items[i].id) { document.diagram.items[i].color = c }
-        for i in document.diagram.links.indices where sel.contains(document.diagram.links[i].id) { document.diagram.links[i].color = c }
-        for i in document.diagram.groups.indices where sel.contains(document.diagram.groups[i].id) { document.diagram.groups[i].color = c }
-        document.isModified = true
+        run("diagram.setColor", ["color": .string(c?.hex ?? "")])
     }
 
     // MARK: Upuszczanie z Object Browsera (nazwa obiektu jako tekst)

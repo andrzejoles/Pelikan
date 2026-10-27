@@ -178,4 +178,37 @@ struct UIActionCommandsTests {
         try await ws.invoke("debug.removeWatch", CommandArguments(["expression": "v_licznik"]))
         #expect(d.watches.isEmpty)
     }
+
+    @Test("diagram: przesunięcie, punkty łamania, tekst notatki i kolor komendami kanwy")
+    func diagramCanvas() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.diagram)
+        doc.diagram.snapToGrid = false
+        let noteID = doc.diagram.addNote("a", at: DiagramPoint(16, 16))
+        let other = doc.diagram.addNote("b", at: DiagramPoint(400, 16))
+        let link = DiagramLink(kind: .manual, from: noteID, to: other)
+        doc.diagram.links.append(link)
+        let x0 = try #require(doc.diagram.item(noteID)?.frame.x)
+        doc.diagramSelection = [noteID]
+        try await ws.invoke("diagram.move", CommandArguments(["dx": .double(24), "dy": 8]))
+        #expect(doc.diagram.item(noteID)?.frame.x == x0 + 24 && doc.isModified)
+        let l = JSONValue.string(link.id.uuidString)
+        try await ws.invoke("diagram.addBend", CommandArguments(["link": l, "index": 0, "x": 203, "y": 100]))
+        #expect(doc.diagram.links[0].bends == [DiagramPoint(Diagram.snap(203), Diagram.snap(100))])
+        await #expect(throws: CommandError.self) { try await ws.invoke("diagram.addBend", CommandArguments(["link": l, "index": 5, "x": 1, "y": 1])) }
+        try await ws.invoke("diagram.moveBend", CommandArguments(["link": l, "index": 0, "x": 240, "y": 120]))
+        #expect(doc.diagram.links[0].bends == [DiagramPoint(Diagram.snap(240), Diagram.snap(120))])
+        try await ws.invoke("diagram.removeBend", CommandArguments(["link": l, "index": 0]))
+        #expect(doc.diagram.links[0].bends.isEmpty)
+        try await ws.invoke("diagram.editNote", CommandArguments(["item": .string(noteID.uuidString), "text": "nowy"]))
+        #expect(doc.diagram.item(noteID)?.text == "nowy")
+        doc.diagramSelection = [noteID, link.id]
+        let otherColor = doc.diagram.item(other)?.color
+        try await ws.invoke("diagram.setColor", CommandArguments(["color": "#FF0000"]))
+        #expect(doc.diagram.item(noteID)?.color == RGBColor(hex: "#FF0000") && doc.diagram.links[0].color == RGBColor(hex: "FF0000"))
+        #expect(doc.diagram.item(other)?.color == otherColor)
+        await #expect(throws: CommandError.self) { try await ws.invoke("diagram.setColor", CommandArguments(["color": "zielony"])) }
+        try await ws.invoke("diagram.setColor", CommandArguments(["color": ""]))
+        #expect(doc.diagram.item(noteID)?.color == nil)
+    }
 }
