@@ -72,6 +72,14 @@ public enum Profiler {
         _ = try await s.execute("begin dbms_hprof.create_tables; end;")
     }
 
+    /// Tworzy brakujące tabele profilera (DDL — wywoływać w sesji bez transakcji okien).
+    static func createTables(_ kind: ProfilerKind, session s: any DatabaseSession) async throws {
+        switch kind {
+        case .lines: try await ensureLineTables(s)
+        case .hierarchical: try await ensureHierarchicalTables(s)
+        }
+    }
+
     /// Czy brakuje tabel profilera (ich utworzenie to DDL — przez strażnika modyfikacji).
     static func needsTables(_ kind: ProfilerKind, session s: any DatabaseSession) async -> Bool {
         let table = kind == .lines ? "PLSQL_PROFILER_RUNS" : "DBMSHP_RUNS"

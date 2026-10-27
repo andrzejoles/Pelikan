@@ -48,6 +48,9 @@ public enum ReportRunner {
     /// `values` — wartości podane z góry (testy, raporty bez pytania).
     @discardableResult
     public static func run(_ doc: Document, in ws: Workspace, values provided: [String: VariableValue]? = nil) async throws -> String {
+        // Od początku (przed pytaniem o zmienne i łączeniem) — drugie F8 w tym czasie jest odrzucane (D168).
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
         var def = doc.report
         def.sql = doc.text
         let requests = SQLExecutor.variableRequests(ScriptSplitter.split(def.sql), remembered: doc.variableValues)
@@ -60,8 +63,6 @@ public enum ReportRunner {
         guard let conn = connection(for: doc, in: ws) else { throw CommandError.notConnected }
         let session = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("report")))
         let prepared = Variables.prepare(def.sql, values: values)
-        doc.isExecuting = true
-        defer { doc.isExecuting = false }
         do {
             let data = try await data(prepared.sql, binds: binds(prepared), maxRows: def.maxRows, format: ws.settings.valueFormat, in: session)
             var header: [String: String] = [:]

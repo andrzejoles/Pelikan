@@ -139,8 +139,9 @@ public enum TestRunner {
         return text.range(of: pattern, options: .regularExpression) != nil ? .cursor : .string
     }
 
-    /// Wartość zmiennej jako wartość sterownika.
-    static func value(_ v: TestVariable) throws -> OracleValue {
+    /// Wartość zmiennej jako wartość sterownika. Zmienne są IN OUT — po wykonaniu wartość wraca w formacie wyświetlania
+    /// (`format`), więc daty i znaczniki czasu są czytane maskami z Preferencji, a dopiero potem stałymi ISO.
+    static func value(_ v: TestVariable, format: ValueFormat = .default) throws -> OracleValue {
         if v.isNull || v.type == .cursor { return .null }
         switch v.type {
         case .integer, .float:
@@ -148,7 +149,8 @@ public enum TestRunner {
             guard Double(s) != nil else { throw CommandError.invalidArgument(v.name, L10n.tr("„\(v.value)” nie jest liczbą")) }
             return .number(s)
         case .date, .timestamp:
-            guard let t = OracleTimestamp.parse(v.value, mask: "YYYY-MM-DD HH24:MI:SS") ?? OracleTimestamp.parse(v.value, mask: "YYYY-MM-DD") else {
+            let masks = [format.dateFormat, format.timestampFormat, "YYYY-MM-DD HH24:MI:SS.FF", "YYYY-MM-DD HH24:MI:SS", "YYYY-MM-DD"]
+            guard let t = masks.lazy.compactMap({ OracleTimestamp.parse(v.value, mask: $0) }).first else {
                 throw CommandError.invalidArgument(v.name, L10n.tr("„\(v.value)” nie jest datą (RRRR-MM-DD GG:MI:SS)"))
             }
             return .timestamp(t, v.type == .date ? .date : .timestamp)
@@ -156,16 +158,32 @@ public enum TestRunner {
             let s = v.value.lowercased()
             return .boolean(["true", "1", "t", "y", "tak", "prawda"].contains(s))
         case .longRaw, .blob, .tempBlob:
-            return .raw(Data(hex: v.value) ?? Data(v.value.utf8))
+            // Tylko szesnastkowo (wynik też jest zapisywany szesnastkowo) — tekst nie trafia po cichu jako bajty.
+            let hex = v.value.filter { !$0.isWhitespace }
+            guard hex.count.isMultiple(of: 2), let d = Data(hex: hex) else {
+                throw CommandError.invalidArgument(v.name, L10n.tr("„\(v.value)” nie jest wartością szesnastkową"))
+            }
+            return .raw(d)
         default:
             return .text(v.value)
         }
+    }
+
+    /// Wartość wyjściowa zmiennej jako tekst do ponownego użycia na wejściu: binarne szesnastkowo w całości
+    /// (wyświetlanie LOB-a dodaje opis i skraca), reszta w formacie wyświetlania.
+    static func outputText(_ v: OracleValue, format: ValueFormat) -> String {
+        if case .lob(let l) = v, let bytes = l.bytes { return bytes.hexUpper }
+        return v.format(format)
     }
 
     /// Wykonuje blok okna testowego w sesji okna. Zwraca czas wykonania; przy błędzie ustawia `doc.errorStack`.
     /// `allowAutoCommit: false` — bez zatwierdzenia z opcji okna testu (Test Manager wycofuje zmiany testów).
     @discardableResult
     public static func execute(_ doc: Document, in ws: Workspace, allowAutoCommit: Bool = true) async throws -> Duration {
+        // Od początku (przed strażnikiem i łączeniem): drugie F8 albo zamknięcie okna w tym czasie są odrzucane (D168).
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
+        let wasOpen = ws.documents.contains { $0 === doc }
         synchronize(doc)
         let text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { throw CommandError.notAvailable(L10n.tr("Okno testu jest puste")) }
@@ -178,13 +196,12 @@ public enum TestRunner {
         try await ws.guardModification([sql], connectionID: ws.effectiveConnection(of: doc))
         let binds = try doc.testVariables.filter { $0.type != .substitution && $0.type != .bfile }.map { v -> BindVariable in
             let (t, size) = v.type.bind
-            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try value(v), maxSize: size)
+            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try value(v, format: ws.settings.valueFormat), maxSize: size)
         } + bfiles.binds
         let session = try await ws.session(for: doc)
-        doc.isExecuting = true
+        try await ws.ensureStillOpen(doc, wasOpen: wasOpen)
         doc.errorRange = nil
         doc.errorStack = []
-        defer { doc.isExecuting = false }
         if doc.outputEnabled && ws.settings.dbmsOutputEnabled {
             if ws.settings.dbmsOutputClearBeforeExecute { doc.output = [] }
             try? await SessionUtilities.enableOutput(session, bufferSize: ws.settings.dbmsOutputBufferSize)
@@ -196,9 +213,19 @@ public enum TestRunner {
         var profileID: Int?
         let profileComment = "Pelikan \(doc.title) \(UUID().uuidString.prefix(8))"
         if let kind = doc.profiler {
-            if await Profiler.needsTables(kind, session: session) {
+            if await Profiler.needsTables(kind, session: session), let conn = ws.effectiveConnection(of: doc) {
                 try await ws.guardModification([kind == .lines ? "CREATE TABLE plsql_profiler_runs" : "BEGIN dbms_hprof.create_tables; END;"],
-                                               connectionID: ws.effectiveConnection(of: doc))
+                                               connectionID: conn)
+                // DDL tabel w osobnej sesji narzędzia: w sesji okna (w trybie Single/Dual — wspólnej) niejawny COMMIT
+                // zatwierdziłby otwarte transakcje okien.
+                let key = SessionKey(connectionID: conn, purpose: .tool("profiler"))
+                do {
+                    try await Profiler.createTables(kind, session: try await ws.sessions.session(key))
+                    await ws.sessions.close(key)
+                } catch {
+                    await ws.sessions.close(key)
+                    throw error
+                }
             }
             profileID = try await Profiler.start(kind, session: session, comment: profileComment)
         }
@@ -256,7 +283,7 @@ public enum TestRunner {
                     if batch.hasMore { await session.closeResultSet(id) }
                 } else {
                     n.isNull = out.isNull
-                    n.value = out.isNull ? "" : out.format(ws.settings.valueFormat)
+                    n.value = out.isNull ? "" : outputText(out, format: ws.settings.valueFormat)
                 }
                 n.changed = n.value != v.value || n.isNull != v.isNull
                 doc.testVariables[i] = n
@@ -277,9 +304,10 @@ public enum TestRunner {
             // AutoCommit after execute (PD-TEST-003): zatwierdzenie po udanym wykonaniu, jak w opcji okna testu wzorca.
             if allowAutoCommit && ws.settings.autoCommitTestWindow {
                 try await session.commit()
-                doc.transactionOpen = false
                 doc.statusText = (doc.statusText ?? "") + " · " + L10n.tr("zatwierdzono")
             }
+            // Blok mógł zmienić dane bez COMMIT (albo DDL zatwierdził) — stan transakcji z sesji, jak w oknie SQL.
+            doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
             return r.elapsed
         } catch let e as OracleError {
             await finishMeasurements()
@@ -290,7 +318,13 @@ public enum TestRunner {
                 doc.errorRange = o..<o
             }
             doc.statusText = SQLExecutor.statusMessage(for: e)
+            if !e.isConnectionLost { doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen }
             throw e
+        } catch {
+            // Inne błędy (sterownik, anulowanie): ślad i profiler też zatrzymane, inaczej zostają włączone w sesji okna.
+            await finishMeasurements()
+            doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen
+            throw error
         }
     }
 

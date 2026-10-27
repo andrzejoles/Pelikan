@@ -126,6 +126,11 @@ public enum SQLExecutor {
             doc.statusText = L10n.tr("Brak polecenia do wykonania")
             return false
         }
+        // Od początku (przed strażnikiem, pytaniem o zmienne i łączeniem): drugie F8 albo zamknięcie okna w tym czasie
+        // są odrzucane (D168).
+        doc.isExecuting = true
+        defer { doc.isExecuting = false }
+        let wasOpen = ws.documents.contains { $0 === doc }
         try await ws.guardModification(stmts.map(\.text), connectionID: ws.effectiveConnection(of: doc))
         // Zmienne (& : Jasper) — jedno okno dla wszystkich poleceń.
         var values = doc.variableValues
@@ -138,9 +143,8 @@ public enum SQLExecutor {
             }
         }
         let session = try await ws.session(for: doc)
-        doc.isExecuting = true
+        try await ws.ensureStillOpen(doc, wasOpen: wasOpen)
         doc.errorRange = nil
-        defer { doc.isExecuting = false }
 
         // Karty: przypięte zostają, reszta zamykana (UG 7.10).
         for r in doc.results where !r.pinned { await r.grid?.close() }

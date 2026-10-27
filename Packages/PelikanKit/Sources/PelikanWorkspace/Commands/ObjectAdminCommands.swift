@@ -17,6 +17,13 @@ enum ObjectAdminCommands {
         return try await ctx.workspace.sessions.session(SessionKey(connectionID: conn, purpose: .main))
     }
 
+    /// Sesja poleceń z niejawnym COMMIT (DDL, DBMS_MVIEW/DBMS_JOB/DBMS_AQADM): sesja kompilacji, jak `ob.recompile` —
+    /// w trybie Dual sesja główna jest sesją okien i zatwierdziłaby po cichu ich transakcje.
+    static func changeSession(_ ctx: CommandContext) async throws -> any DatabaseSession {
+        guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
+        return try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: conn))
+    }
+
     static func programDocument(_ ws: Workspace) -> Document? { ws.activeDocument.flatMap { $0.kind == .program ? $0 : nil } }
 
     static var all: [Command] {
@@ -31,7 +38,7 @@ enum ObjectAdminCommands {
                 let (o, _) = try await ObjectCommands.target(ctx)
                 let sql = try ObjectAdmin.setEnabled(o, enabled: enabled, constraint: ctx.arguments.string("constraint"))
                 try await ctx.workspace.guardModification([sql], connectionID: ctx.workspace.sessions.mainConnectionID ?? UUID())
-                _ = try await mainSession(ctx).execute(sql)
+                _ = try await changeSession(ctx).execute(sql)
                 ctx.workspace.metadata()?.refresh()
                 return CommandResult(message: sql)
             }
@@ -43,8 +50,8 @@ enum ObjectAdminCommands {
                     validate: { $0.selectedObject?.type == .materializedView }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 try await ctx.workspace.guardModification(["begin dbms_mview.refresh(:n); end;"], connectionID: m.connectionID)
-                _ = try await mainSession(ctx).execute("begin dbms_mview.refresh(:n); end;",
-                                                       binds: [BindVariable(name: "n", value: .text("\(o.owner).\(o.name)"))])
+                _ = try await changeSession(ctx).execute("begin dbms_mview.refresh(:n); end;",
+                                                         binds: [BindVariable(name: "n", value: .text(o.qualifiedName))])
                 return CommandResult(message: L10n.tr("Odświeżono \(o.name)"))
             },
             command("ob.testLink", L10n.tr("Testuj łącze"), params: objectParams, agent: .read, effect: .none,
@@ -64,7 +71,7 @@ enum ObjectAdminCommands {
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard o.name.allSatisfy(\.isNumber) else { throw CommandError.notAvailable(L10n.tr("To nie jest zadanie DBMS_JOB (numer zadania)")) }
                 try await ctx.workspace.guardModification(["begin dbms_job.run(:j); end;"], connectionID: m.connectionID)
-                _ = try await mainSession(ctx).execute("begin dbms_job.run(:j); end;", binds: [BindVariable(name: "j", type: .number, value: .text(o.name))])
+                _ = try await changeSession(ctx).execute("begin dbms_job.run(:j); end;", binds: [BindVariable(name: "j", type: .number, value: .text(o.name))])
                 return CommandResult(message: L10n.tr("Zadanie \(o.name) wykonane"))
             },
             command("ob.startQueue", L10n.tr("Uruchom kolejkę"), params: objectParams + [
@@ -76,7 +83,7 @@ enum ObjectAdminCommands {
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let sql = "begin dbms_aqadm.start_queue(queue_name => :q, enqueue => \(ctx.arguments.bool("enqueue") ?? true ? "true" : "false"), dequeue => \(ctx.arguments.bool("dequeue") ?? true ? "true" : "false")); end;"
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
-                _ = try await mainSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text("\(o.owner).\(o.name)"))])
+                _ = try await changeSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text(o.qualifiedName))])
                 return CommandResult(message: L10n.tr("Kolejka \(o.name) uruchomiona"))
             },
             command("ob.stopQueue", L10n.tr("Zatrzymaj kolejkę"), params: objectParams + [
@@ -89,7 +96,7 @@ enum ObjectAdminCommands {
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let sql = "begin dbms_aqadm.stop_queue(queue_name => :q, enqueue => \(ctx.arguments.bool("enqueue") ?? true ? "true" : "false"), dequeue => \(ctx.arguments.bool("dequeue") ?? true ? "true" : "false"), wait => true); end;"
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
-                _ = try await mainSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text("\(o.owner).\(o.name)"))])
+                _ = try await changeSession(ctx).execute(sql, binds: [BindVariable(name: "q", value: .text(o.qualifiedName))])
                 return CommandResult(message: L10n.tr("Kolejka \(o.name) zatrzymana"))
             },
             command("prog.reloadFromDatabase", L10n.tr("Wczytaj ponownie z bazy"), .session, submenu: nil, agent: .none, effect: .modifiesEditor,
@@ -131,7 +138,7 @@ enum ObjectAdminCommands {
                              CommandParameter("renameTo", .string, L10n.tr("Nowa nazwa (puste — pierwotna)"))],
                     effect: .modifiesDatabase, summary: L10n.tr("Przywraca tabelę z kosza (FLASHBACK TABLE … TO BEFORE DROP), opcjonalnie pod nową nazwą."),
                     feature: "PD-OB-021", validate: { $0.sessions.mainConnectionID != nil }) { ctx in
-                let s = try await mainSession(ctx)
+                let s = try await changeSession(ctx)
                 let name = ctx.arguments.string("name") ?? ""
                 guard let item = try await ObjectAdmin.recycleBin(s).first(where: { $0.binName == name || $0.originalName.caseInsensitiveCompare(name) == .orderedSame }),
                       item.canRestore else { throw CommandError.notAvailable(L10n.tr("Nie ma w koszu obiektu „\(name)” do przywrócenia")) }
@@ -145,7 +152,7 @@ enum ObjectAdminCommands {
                     params: [CommandParameter("name", .string, L10n.tr("Obiekt (puste — cały kosz)"))],
                     effect: .modifiesDatabase, summary: L10n.tr("Trwale usuwa obiekt z kosza albo cały kosz użytkownika (PURGE) — po potwierdzeniu."),
                     feature: "PD-OB-021", validate: { $0.sessions.mainConnectionID != nil }) { ctx in
-                let s = try await mainSession(ctx)
+                let s = try await changeSession(ctx)
                 var item: ObjectAdmin.RecycledObject?
                 if let name = ctx.arguments.string("name"), !name.isEmpty {
                     item = try await ObjectAdmin.recycleBin(s).first { $0.binName == name || $0.originalName.caseInsensitiveCompare(name) == .orderedSame }
@@ -167,7 +174,7 @@ enum ObjectAdminCommands {
                     summary: L10n.tr("Pokazuje PLSQL_CCFLAGS jednostki albo ustawia nowe i rekompiluje ją (REUSE SETTINGS)."), feature: "PD-OB-020",
                     validate: { ws in ws.selectedObject.map(\.type.isProgram) ?? false }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
-                let s = try await mainSession(ctx)
+                let s = try await changeSession(ctx)
                 let current = try await ObjectAdmin.ccflags(o, in: s)
                 var flags = ctx.arguments.string("flags")
                 if flags == nil, ctx.invoker == .user { flags = await ctx.ui?.askText(L10n.tr("Flagi kompilacji warunkowej"), message: "PLSQL_CCFLAGS", defaultValue: current) }

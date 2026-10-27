@@ -91,9 +91,11 @@ public enum NotebookRunner {
         let started = ContinuousClock.now
         var result = NotebookResult()
         let statements = ScriptSplitter.split(doc.notebook.cells[index].text, mode: .commandWindow).filter { $0.sqlplusCommand == nil }
+        var session: (any DatabaseSession)?
         do {
             try await ws.guardModification(statements.map(\.text), connectionID: ws.effectiveConnection(of: doc))
             let s = try await ws.session(for: doc)
+            session = s
             try? await SessionUtilities.enableOutput(s, bufferSize: ws.settings.dbmsOutputBufferSize)
             for st in statements {
                 var sql = st.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -121,7 +123,6 @@ public enum NotebookRunner {
                     if result.truncated { await s.closeResultSet(rs.id) }
                 } else if r.kind == .dml {
                     result.messages.append(L10n.tr("Wierszy: \(r.rowsAffected)"))
-                    doc.transactionOpen = true
                 } else {
                     result.messages.append(L10n.tr("Wykonano."))
                 }
@@ -130,6 +131,8 @@ public enum NotebookRunner {
         } catch {
             result.error = error.localizedDescription
         }
+        // Stan transakcji z sesji (DML w bloku PL/SQL, SELECT FOR UPDATE, DDL zatwierdzający) — jak w oknie SQL.
+        if let session { doc.transactionOpen = (try? await SessionUtilities.transactionOpen(session)) ?? doc.transactionOpen }
         let d = ContinuousClock.now - started
         result.milliseconds = Int(d.components.seconds) * 1000 + Int(d.components.attoseconds / 1_000_000_000_000_000)
         result.finished = Date()
