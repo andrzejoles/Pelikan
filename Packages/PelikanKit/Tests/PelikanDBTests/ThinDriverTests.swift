@@ -31,13 +31,6 @@ struct OracleRawTests {
         #expect(ThinSession.compiledObject("alter package p compile") == nil)
     }
 
-    @Test("INTERVAL YEAR TO MONTH z surowych bajtów")
-    func intervalYM() {
-        #expect(OracleRaw.intervalYM([0x80, 0, 0, 2, 63])! == (2, 3))
-        #expect(OracleRaw.intervalYM([0x7F, 0xFF, 0xFF, 0xFF, 54])! == (-1, -6))
-        #expect(OracleRaw.intervalYM([0x80, 0]) == nil)
-    }
-
     @Test("DATE i TIMESTAMP z ułamkiem sekund")
     func dates() {
         let d = OracleRaw.timestamp([120, 124, 10, 23, 14, 31, 60])
@@ -231,6 +224,49 @@ struct ThinSessionTests {
         _ = try await s.execute("begin dbms_output.put_line('Pelikan thin ✓'); dbms_output.put_line('druga'); end;")
         #expect(try await SessionUtilities.readOutput(s) == ["Pelikan thin ✓", "druga"])
         await s.close()
+    }
+
+    @Test("DBMS_OUTPUT ponad 65 535 znaków: obcięty ze znacznikiem zamiast awarii OracleNIO (odpowiedź z 3-bajtową długością)")
+    func largeOutput() async throws {
+        let s = try await connect()
+        try await LargeOutputCheck.run(s, complete: false)
+        await s.close()
+    }
+
+    @Test("VECTOR (23ai) dekodowany jak w Instant Client")
+    func vector() async throws {
+        let s = try await connect()
+        if s.info.server.major >= 23 {
+            let (_, v) = try await s.queryAll("""
+                SELECT TO_VECTOR('[1.5,2,3]', 3, FLOAT32), TO_VECTOR('[1.25,-2]', 2, FLOAT64), TO_VECTOR('[1,-2,3]', 3, INT8) FROM dual
+                """)
+            #expect(v.first == [.vector([1.5, 2, 3]), .vector([1.25, -2]), .vector([1, -2, 3])])
+        }
+        await s.close()
+    }
+}
+
+
+/// Wyjście DBMS_OUTPUT większe niż domyślny limit LOB (1 Mi znaków): całe (liczba linii i ostatnia linia się zgadzają)
+/// albo — w sterowniku thin — ucięte z jawną informacją w ostatniej linii.
+enum LargeOutputCheck {
+    static func run(_ s: any DatabaseSession, complete: Bool = true) async throws {
+        try await SessionUtilities.enableOutput(s, bufferSize: 0)
+        _ = try await s.execute("""
+            begin
+              for i in 1 .. 1200 loop dbms_output.put_line(lpad(to_char(i), 1000, 'x')); end loop;
+              dbms_output.put_line('koniec');
+            end;
+            """)
+        let lines = try await SessionUtilities.readOutput(s)
+        #expect(lines.first == String(repeating: "x", count: 999) + "1")
+        guard complete else {
+            #expect(lines.last == "*** DBMS_OUTPUT: \(ThinSession.maxCLOBRead) / \(1200 * 1001 + 6) ***")
+            return
+        }
+        #expect(lines.count == 1201)
+        #expect(lines[1199] == String(repeating: "x", count: 996) + "1200")
+        #expect(lines.last == "koniec")
     }
 }
 

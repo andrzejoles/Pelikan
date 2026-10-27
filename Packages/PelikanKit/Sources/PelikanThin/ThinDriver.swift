@@ -11,6 +11,7 @@ public struct ThinDriver: DatabaseDriver {
     public let kind = DriverKind.thin
     // Bez debugowania: DBMS_DEBUG wymaga Instant Client, JDWP pominięte (D106). Bez `.json`: natywny JSON (21c+)
     // OracleNIO dekoduje tylko stratnie (słownik bez kolejności pól, NUMBER jako Double) — komórka zostaje `<JSON>`.
+    // Kolumn INTERVAL YEAR TO MONTH i BFILE OracleNIO nie obsługuje w wierszach (fatalError w RowData) — tylko Instant Client.
     public static let capabilitySet: DriverCapabilities = [.lobs, .proxyUser, .sysdba, .tnsNames]
     public var capabilities: DriverCapabilities { Self.capabilitySet }
 
@@ -284,14 +285,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             var data = Data()
             var stopped = false
             let total = lob.estimatedSize
-            do {
-                for try await chunk in lob.readChunks(on: connection) {
-                    data.append(contentsOf: chunk.readableBytesView)
-                    if data.count >= lobLimit { stopped = true; break }
-                }
-            } catch where t == .bFile {
-                // BFILE do brakującego pliku/katalogu (ORA-22288, ORA-22285) — błąd w komórce, pozostałe wiersze dalej.
-                return .lob(LOBValue(kind: .bfile, length: 0, truncated: false, readError: LOBValue.errorText(Self.map(error))))
+            for try await chunk in lob.readChunks(on: connection) {
+                data.append(contentsOf: chunk.readableBytesView)
+                if data.count >= lobLimit { stopped = true; break }
             }
             // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
             let truncated = data.count > lobLimit || (stopped && total > data.count)
@@ -300,8 +296,6 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             let i = try cell.decode(IntervalDS.self, context: .default)
             return .intervalDS(days: Int32(i.days), hours: Int32(i.hours), minutes: Int32(i.minutes), seconds: Int32(i.seconds),
                                fseconds: Int32(i.fractionalSeconds))
-        case .intervalYM:
-            return OracleRaw.intervalYM(buf.readBytes(length: buf.readableBytes) ?? []).map { .intervalYM(years: $0.years, months: $0.months) } ?? .null
         case .vector:
             // Format wektora jest w nagłówku wartości — dekoder OracleNIO odrzuca inny format (typeMismatch).
             if let v = try? cell.decode(OracleVectorFloat32.self, context: .default) { return .vector(v.map(Double.init)) }
@@ -479,13 +473,18 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         return OracleError(code: 24344, message: "ORA-24344: success with compilation error", isWarning: true)
     }
 
+    /// Największy odczyt CLOB w sterowniku thin (znaki) — zob. `readCLOB`.
+    static let maxCLOBRead = 65_535
+
     /// CLOB do `limit` znaków jednym żądaniem odczytu. `LOB.readChunks` w OracleNIO przesuwa pozycję o liczbę bajtów
     /// porcji, a pozycja CLOB liczy się w znakach: przy UTF-16 druga porcja wypadała za końcem i odczyt kończył się po
     /// pierwszej (32 600 znaków) bez znacznika obcięcia — narzędzia danych zapisywały ucięte wartości (R8-01).
     /// Obcięte, gdy LOB jest dłuższy niż limit albo serwer oddał mniej znaków niż żądano (strażnik z D168 to zatrzyma).
+    /// Najwyżej `maxCLOBRead` znaków: odpowiedź z liczbą znaków ≥ 65 536 (UB8 zapisane na 3 bajtach) kończy proces
+    /// w OracleNIO (`preconditionFailure` w `readSB8`), więc dłuższy CLOB jest obcięty ze znacznikiem zamiast awarii.
     func readCLOB(_ lob: LOB, kind: LOBValue.Kind, limit: Int) async throws -> LOBValue {
         let size = lob.estimatedSize
-        let amount = min(size, max(0, limit))
+        let amount = min(size, max(0, limit), Self.maxCLOBRead)
         var data = Data()
         if amount > 0 {
             var it = lob.readChunks(ofSize: amount, on: connection).makeAsyncIterator()
