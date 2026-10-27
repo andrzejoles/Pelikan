@@ -134,7 +134,8 @@ struct EditorReviewFixesTests {
     @Test("Filtr kolumn i Pokaż wszystkie kolumny na karcie wskazanej argumentem tab, nie na aktywnej")
     func columnFilterOnTab() async throws {
         let ws = Workspace()
-        ws.ui = GridUI()
+        let ui = GridUI()
+        ws.ui = ui
         let columns = [ColumnInfo(name: "EMPNO", type: .number, typeName: "NUMBER"), ColumnInfo(name: "ENAME", type: .varchar2, typeName: "VARCHAR2(10)")]
         func tab() async -> ResultTab {
             let g = ResultGridModel(columns: columns, resultSet: ResultSetID(1), session: RowsSession([[.number("1"), .text("KING")]]),
