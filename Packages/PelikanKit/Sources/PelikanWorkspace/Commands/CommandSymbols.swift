@@ -75,7 +75,9 @@ public enum CommandSymbols {
         "view.zoomOut": "minus.magnifyingglass", "view.zoomReset": "1.magnifyingglass", "window.previous": "chevron.left.square",
         "window.next": "chevron.right.square", "window.rename": "character.cursor.ibeam", "view.saveLayout": "rectangle.3.group",
         "view.restoreLayout": "rectangle.3.group.fill", "view.autosaveLayout": "arrow.triangle.2.circlepath", "view.ribbon": "menubar.rectangle", "view.ribbonCollapse": "rectangle.compress.vertical",
-        "view.customizeToolbar": "slider.horizontal.3", "help.manual": "book.closed", "help.context": "questionmark.circle",
+        "view.customizeToolbar": "slider.horizontal.3", "view.toolDockRight": "sidebar.right", "view.toolDockBottom": "rectangle.bottomthird.inset.filled",
+        "view.toolDockAutoHide": "eye.slash", "view.dockToolRight": "rectangle.righthalf.inset.filled", "view.dockToolBottom": "dock.arrow.down.rectangle",
+        "view.floatTool": "macwindow.on.rectangle", "view.closeTool": "xmark.rectangle", "help.manual": "book.closed", "help.context": "questionmark.circle",
         "help.oracleManuals": "books.vertical", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "help.reportProblem": "exclamationmark.bubble", "view.ribbonSearch": "magnifyingglass.circle",
         // Wynik
         "sql.refreshResult": "arrow.clockwise", "sql.autoRefresh": "timer", "grid.nextPage": "arrow.down.doc", "grid.lastPage": "arrow.down.to.line",

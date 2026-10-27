@@ -120,7 +120,7 @@ public enum PreferenceSets {
     public static let sections: [(name: String, keys: [String])] = [
         (L10n.tr("Ogólne"), ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
                              "appearance", "uiFontName", "uiFontSize", "uiFontWeight", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
-                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "logLevel", "logIncludeNames"]),
+                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames"]),
         (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",

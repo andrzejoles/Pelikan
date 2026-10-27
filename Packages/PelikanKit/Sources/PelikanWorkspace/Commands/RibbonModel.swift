@@ -407,6 +407,13 @@ public enum RibbonModel {
                 .small("view.saveLayout"), .small("view.restoreLayout"), .small("view.autosaveLayout"),
                 .small("view.ribbon"), .small("view.ribbonCollapse"), .small("view.customizeToolbar", label: L10n.tr("Dostosuj pasek")),
             ]),
+            RibbonGroup(L10n.tr("Panele narzędzi"), [
+                .small("view.toolDockRight", label: L10n.tr("Panel po prawej")), .small("view.toolDockBottom", label: L10n.tr("Panel na dole")),
+                .small("view.toolDockAutoHide", label: L10n.tr("Autoukrywanie")),
+                .menu(L10n.tr("Narzędzie"), symbol: "rectangle.portrait.on.rectangle.portrait", commands: [
+                    "view.dockToolRight", "view.dockToolBottom", "view.floatTool", separator, "view.closeTool",
+                ]),
+            ]),
             RibbonGroup(L10n.tr("Projekt i workset"), [
                 .menu(L10n.tr("Projekt"), symbol: "folder.badge.gearshape", commands: [
                     "project.show", "project.new", "project.open", "project.close", separator, "project.addActiveFile", "project.addSelectedObject",
