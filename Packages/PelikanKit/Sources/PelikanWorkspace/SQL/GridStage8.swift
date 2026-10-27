@@ -315,8 +315,8 @@ public enum ExportDirectives {
         let cal = Calendar(identifier: .gregorian)
         let c = cal.dateComponents([.year, .month, .day, .hour, .minute, .second], from: now)
         var s = template.trimmingCharacters(in: .whitespaces)
-        s = s.replacingOccurrences(of: "%dbuser%", with: user, options: .caseInsensitive)
-            .replacingOccurrences(of: "%dbname%", with: database, options: .caseInsensitive)
+        s = s.replacingOccurrences(of: "%dbuser%", with: component(user), options: .caseInsensitive)
+            .replacingOccurrences(of: "%dbname%", with: component(database), options: .caseInsensitive)
             .replacingOccurrences(of: "%date%", with: String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0), options: .caseInsensitive)
             .replacingOccurrences(of: "%time%", with: String(format: "%02d%02d%02d", c.hour ?? 0, c.minute ?? 0, c.second ?? 0), options: .caseInsensitive)
         while let r = s.range(of: #"%&([A-Za-z0-9_$#]+)%"#, options: .regularExpression) {
@@ -326,12 +326,20 @@ public enum ExportDirectives {
             case .list(let l)?: l.joined(separator: "_")
             default: ""
             }
-            s.replaceSubrange(r, with: value)
+            s.replaceSubrange(r, with: component(value))
         }
-        // Znaki niedozwolone w nazwie pliku z wartości zmiennych (poza separatorem katalogów w szablonie).
         s = s.replacingOccurrences(of: ":", with: "-")
         let expanded = (s as NSString).expandingTildeInPath
         return expanded.hasPrefix("/") ? URL(fileURLWithPath: expanded) : base.appendingPathComponent(expanded)
+    }
+
+    /// Wartość podstawiana w szablon (użytkownik, baza, zmienna) jako fragment nazwy pliku: bez separatorów katalogów,
+    /// znaków sterujących i wiodącej kropki albo tyldy — katalogi wyznacza tylko sam szablon (EZConnect
+    /// `host:1521/usługa` ani wartość `../x` nie tworzą podkatalogów i nie wychodzą poza katalog; `:` → `-` dalej).
+    static func component(_ value: String) -> String {
+        let bad = CharacterSet(charactersIn: "/\\\0").union(.newlines).union(.controlCharacters)
+        let cleaned = String(value.unicodeScalars.map { bad.contains($0) ? "_" : Character($0) })
+        return cleaned.hasPrefix(".") || cleaned.hasPrefix("~") ? "_" + cleaned.dropFirst() : cleaned
     }
 }
 

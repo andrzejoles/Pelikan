@@ -88,7 +88,9 @@ extension SQLPlusEngine {
             let (_, rows) = try await s.queryAll("select column_name from all_tab_columns where owner = :o and table_name = :t order by column_id",
                                                  binds: [BindVariable(name: "o", value: .text(o.owner)), BindVariable(name: "t", value: .text(o.name))], limit: 2000)
             let cols = rows.compactMap { $0.first?.displayText }.map { "  " + ResultExporter.identifier($0) }.joined(separator: ",\n")
-            let sql = "create table \(args[1].lowercased()) as\nselect\n\(cols)\n  from \(o.qualifiedName.lowercased())"
+            // Nowa nazwa w cudzysłowie — bez zmiany wielkości liter.
+            let newName = args[1].contains("\"") ? args[1] : args[1].lowercased()
+            let sql = "create table \(newName) as\nselect\n\(cols)\n  from \(ResultExporter.displayQualified(owner: o.owner, name: o.name))"
             state.buffer = sql
             emit(sql + ";")
         default:

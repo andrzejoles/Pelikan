@@ -400,8 +400,8 @@ public enum TableDDL {
         }
         if let (_, ann) = try? await s.queryAll("""
             select column_name, annotation_name, annotation_value from all_annotations_usage
-             where object_name = :n and object_type = 'TABLE' and domain_name is null order by annotation_name
-            """, binds: [BindVariable(name: "n", value: .text(name))], limit: 10_000) {
+             where annotation_owner = :o and object_name = :n and object_type = 'TABLE' and domain_name is null order by annotation_name
+            """, binds: b, limit: 10_000) {
             for r in ann {
                 let a = TableDefinition.Annotation(name: r[1].displayText ?? "", value: r[2].displayText ?? "")
                 if let col = r[0].displayText, let i = d.columns.firstIndex(where: { $0.name == col }) { d.columns[i].annotations.append(a) }
@@ -808,7 +808,24 @@ public enum TableDDL {
         let backupName = String(("PLK$" + old.name).prefix(128))
         let backup = q(old.owner) + "." + q(backupName)
         let oldTable = qualified(old)
-        var out = ["CREATE TABLE \(backup) AS SELECT * FROM \(oldTable)", "DROP TABLE \(oldTable) CASCADE CONSTRAINTS"]
+        // Kopia z jawną listą kolumn: `SELECT *` pomija kolumny INVISIBLE (ich wartości przepadłyby, a przeniesienie
+        // kończyłoby się ORA-00904 już po usunięciu tabeli). Przed DROP — kontrola liczby wierszy kopii.
+        let stored = old.columns.filter { $0.virtualExpression.isEmpty }.map { q($0.name) }
+        let check = L10n.tr("Kopia tabeli ma inną liczbę wierszy niż tabela — tabela nie została usunięta").replacingOccurrences(of: "'", with: "''")
+        var out = ["CREATE TABLE \(backup) AS SELECT \(stored.isEmpty ? "*" : stored.joined(separator: ", ")) FROM \(oldTable)",
+                   """
+                   DECLARE
+                     n NUMBER;
+                     k NUMBER;
+                   BEGIN
+                     SELECT COUNT(*) INTO n FROM \(oldTable);
+                     SELECT COUNT(*) INTO k FROM \(backup);
+                     IF n <> k THEN
+                       RAISE_APPLICATION_ERROR(-20001, '\(check)');
+                     END IF;
+                   END;
+                   """,
+                   "DROP TABLE \(oldTable) CASCADE CONSTRAINTS"]
         // Kolumny przenoszone: istniejące wcześniej (wg nazwy pierwotnej), bez wirtualnych.
         func copied(_ c: TableDefinition.Column) -> Bool {
             guard let orig = c.originalName, c.virtualExpression.isEmpty else { return false }

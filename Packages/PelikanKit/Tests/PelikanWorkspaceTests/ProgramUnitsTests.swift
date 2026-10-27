@@ -25,4 +25,16 @@ struct ProgramUnitsTests {
         #expect(u[1].line == 2)
         #expect(ProgramCompiler.offset(line: 3, column: 5, in: text) == (text as NSString).range(of: "create or replace editionable").location + 4)
     }
+
+    @Test("JAVA SOURCE z ALL_SOURCE (sam kod Javy): nagłówek CREATE … JAVA SOURCE NAMED, jednostka rozpoznana, właściciel (R6-10)")
+    func javaSourceHeader() {
+        let java = "public class Hello {\n  public static String hi() { return \"hi\"; }\n}"
+        let ddl = MetadataProvider.javaSourceDDL(name: "com/acme/Hello", source: java)
+        #expect(ddl == "CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED \"com/acme/Hello\" AS\n" + java)
+        let u = ProgramCompiler.units(in: ddl + "\n/\n")
+        #expect(u.map(\.type) == [.javaSource] && u.first?.name == "com/acme/Hello" && u.first?.owner == nil)
+        let owned = ProgramCompiler.withOwner(ddl, owner: "HR")
+        #expect(owned.hasPrefix("CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED HR.\"com/acme/Hello\" AS\n"))
+        #expect(ProgramCompiler.units(in: owned + "\n/\n").first?.owner == "HR")
+    }
 }

@@ -151,11 +151,11 @@ public enum BrowserWorkspaceDrop: String, Codable, CaseIterable, Sendable {
 public enum BrowserDrop {
     /// Folder upuszczony w edytorze: nazwy elementów po przecinku (UG 21.1).
     public static func namesList(_ names: [String]) -> String {
-        names.map { ResultExporter.identifier($0).lowercased() }.joined(separator: ", ")
+        names.map(ResultExporter.displayIdentifier).joined(separator: ", ")
     }
 
     /// Nazwa obiektu do wstawienia: bez właściciela w bieżącym schemacie.
     public static func name(_ o: DBObject, currentSchema: String, qualified: Bool) -> String {
-        (qualified || o.owner != currentSchema ? o.qualifiedName : ResultExporter.identifier(o.name)).lowercased()
+        qualified || o.owner != currentSchema ? ResultExporter.displayQualified(owner: o.owner, name: o.name) : ResultExporter.displayIdentifier(o.name)
     }
 }

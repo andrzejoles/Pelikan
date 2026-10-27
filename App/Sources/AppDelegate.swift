@@ -315,6 +315,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         Log.app.info("Zamknięcie aplikacji")
         defer { Log.fileSink?.flush() }
         workspace.persistConsoles()
+        workspace.localHistory.flush()
         crashMonitor?.end()
         // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
         workspace.recovery.end()

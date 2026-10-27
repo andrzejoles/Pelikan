@@ -80,7 +80,18 @@ struct TableEditorStage8DBTests {
         d.rowArchival = true
         d.annotations = [.init(name: "Opis", value: "Tabela testowa")]
         for sql in TableDDL.statements(from: nil, to: d) { _ = try await s.execute(sql) }
+        // Tabela o tej samej nazwie w innym schemacie (widoczna przez ALL_) — jej adnotacje nie trafiają do definicji (R7-16).
+        let sys = try await ODPISession.connect(target: ConnectionTarget(user: "SYSTEM", connectString: c.connectString),
+                                                credentials: Credentials(password: c.systemPassword), options: ConnectOptions())
+        _ = try? await sys.execute("drop user pelikan_ann cascade")
+        _ = try await sys.execute("create user pelikan_ann no authentication quota 1m on users")
+        _ = try await sys.execute("create table pelikan_ann.pelikan_oed (id number annotations (Obca 'k')) annotations (Obca 't')")
+        _ = try await sys.execute("grant select on pelikan_ann.pelikan_oed to \(c.user)")
         var loaded = try await TableDDL.load(owner: owner, name: "PELIKAN_OED", metadata: m)
+        _ = try? await sys.execute("drop user pelikan_ann cascade")
+        await sys.close()
+        #expect(!loaded.annotations.contains { $0.name.uppercased() == "OBCA" })
+        #expect(!loaded.columns.contains { $0.annotations.contains { $0.name.uppercased() == "OBCA" } })
         #expect(loaded.columns.first { $0.name == "EMAIL" }?.domain == "\(owner).PELIKAN_OED_D")
         #expect(loaded.columns.first { $0.name == "EMAIL" }?.annotations.first?.value == "E-mail")
         #expect(loaded.annotations.contains { $0.name.uppercased() == "OPIS" } && loaded.rowArchival && loaded.partitionInfo.hasPrefix("HASH"))

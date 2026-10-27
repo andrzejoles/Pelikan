@@ -24,6 +24,10 @@ struct P2MultiObjectTests {
         #expect(r.value == .string("hr.emp, scott.pkg"))
         let r2 = try await ws.invoke("ob.copyNames", CommandArguments(["objects": .string("hr.dept:TABLE, hr.v1:view")]))
         #expect(r2.value == .string("hr.dept, hr.v1"))
+        // Nazwy w cudzysłowie: wielkość liter zachowana w argumencie i w skopiowanym tekście (R6-09).
+        let r3 = try await ws.invoke("ob.copyNames", CommandArguments(["objects": .string("HR.\"MyTab\":TABLE, \"Ab\".x:VIEW")]))
+        #expect(r3.value == .string("hr.\"MyTab\", \"Ab\".x"))
+        #expect(MultiObjectCommands.commaSeparated([DBObject(owner: "HR", name: "MixedCase", type: .table)], currentSchema: "HR") == "\"MixedCase\"")
         await #expect(throws: (any Error).self) { try await ws.invoke("ob.copyNames", CommandArguments(["objects": .string("dept")])) }
     }
 }

@@ -6,6 +6,15 @@ import Foundation
 enum FileCommands {
     static let pathParam = CommandParameter("path", .string, L10n.tr("Ścieżka pliku albo katalogu"))
 
+    /// Okna pliku albo plików z wnętrza katalogu (jak przy zmianie nazwy) zostają oknami bez pliku ze zmianą do zapisu.
+    static func detachDocuments(under u: URL, in ws: Workspace) {
+        for d in ws.documents {
+            guard let f = d.fileURL?.standardizedFileURL, f == u || f.path.hasPrefix(u.path + "/") else { continue }
+            d.fileURL = nil
+            d.isModified = true
+        }
+    }
+
     static func url(_ ctx: CommandContext, _ key: String = "path") -> URL? {
         guard let p = ctx.arguments.string(key), !p.isEmpty else { return nil }
         return URL(fileURLWithPath: (p as NSString).expandingTildeInPath).standardizedFileURL
@@ -132,7 +141,7 @@ enum FileCommands {
                     }
                 }
                 try FileBrowser.trash(u)
-                for d in ctx.workspace.documents where d.fileURL?.standardizedFileURL == u { d.fileURL = nil; d.isModified = true }
+                detachDocuments(under: u, in: ctx.workspace)
                 return .ok
             },
             command("fb.showInFinder", L10n.tr("Pokaż w Finderze"), submenu: fb,

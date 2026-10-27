@@ -304,9 +304,18 @@ public enum SchemaDoc {
             .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
     }
 
+    /// Nazwa pliku strony obiektu. Nazwa inna niż zwykła (małe litery, `$`, `#`, spacje…) dostaje skrót FNV-1a całej
+    /// nazwy — `"Emp"` i `EMP` albo `A$B` i `A#B` dawałyby ten sam plik (druga strona nadpisałaby pierwszą).
     nonisolated static func fileName(_ type: String, _ name: String) -> String {
         let safe = name.lowercased().map { $0.isLetter || $0.isNumber || $0 == "_" ? $0 : "_" }
-        return type.lowercased().replacingOccurrences(of: " ", with: "_") + "-" + String(safe) + ".html"
+        let plain = name.allSatisfy { ($0.isLetter && $0.isUppercase) || $0.isNumber || $0 == "_" }
+        var suffix = ""
+        if !plain {
+            var h: UInt32 = 0x811c_9dc5
+            for b in name.utf8 { h = (h ^ UInt32(b)) &* 0x0100_0193 }
+            suffix = "-" + String(h, radix: 16)
+        }
+        return type.lowercased().replacingOccurrences(of: " ", with: "_") + "-" + String(safe) + suffix + ".html"
     }
 
     static let css = """
