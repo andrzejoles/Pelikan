@@ -27,6 +27,25 @@ enum EditorToolCommands {
         }
     }
 
+    static let macroParameter = CommandParameter("macro", .string, required: true, L10n.tr("Identyfikator makra z biblioteki"))
+
+    /// Makro biblioteki z argumentu `macro` (identyfikator).
+    static func macroIndex(_ ctx: CommandContext) throws -> Int {
+        let raw = ctx.arguments.string("macro") ?? ""
+        guard let id = UUID(uuidString: raw), let i = ctx.workspace.macroLibrary.macros.firstIndex(where: { $0.id == id }) else {
+            throw CommandError.invalidArgument("macro", raw)
+        }
+        return i
+    }
+
+    /// Zmiana makra biblioteki z zapisem i odświeżeniem komend makr (skróty).
+    static func updateMacro(_ ctx: CommandContext, _ change: (inout Macro) -> Void) throws {
+        let i = try macroIndex(ctx)
+        var lib = ctx.workspace.macroLibrary
+        change(&lib.macros[i])
+        ctx.workspace.updateMacros(lib)
+    }
+
     static var all: [Command] {
         [
             Command(CommandDescriptor(id: "edit.macroRecord", title: L10n.tr("Nagrywaj makro"), category: .edit, submenu: L10n.tr("Makra"),
@@ -90,6 +109,42 @@ enum EditorToolCommands {
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Okno biblioteki makr: odtwarzanie, nazwy, skróty klawiszowe, usuwanie."), feature: "PD-EDIT-015")) { ctx in
                 ctx.ui?.showMacroLibrary()
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.macroRename", title: L10n.tr("Zmień nazwę makra"), category: .edit, submenu: L10n.tr("Makra"),
+                                      parameters: [macroParameter, CommandParameter("name", .string, required: true, L10n.tr("Nazwa makra"))],
+                                      agent: .none, effect: .settings, summary: L10n.tr("Zmienia nazwę makra w bibliotece."), inMenu: false,
+                                      feature: "PD-EDIT-015")) { ctx in
+                guard let name = ctx.arguments.string("name")?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
+                    throw CommandError.missingArgument("name")
+                }
+                try updateMacro(ctx) { $0.name = name }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.macroSetKey", title: L10n.tr("Skrót makra"), category: .edit, submenu: L10n.tr("Makra"),
+                                      parameters: [macroParameter, CommandParameter("key", .string, L10n.tr("Skrót klawiszowy, np. ctrl+shift+1 (pusty — bez skrótu)"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Ustawia albo usuwa skrót klawiszowy makra z biblioteki (skrót zajęty przez inną komendę jest pomijany)."),
+                                      inMenu: false, feature: "PD-EDIT-015")) { ctx in
+                let key = ctx.arguments.string("key")?.trimmingCharacters(in: .whitespaces) ?? ""
+                if !key.isEmpty, KeyChord(string: key) == nil { throw CommandError.invalidArgument("key", L10n.tr("nieprawidłowy skrót")) }
+                try updateMacro(ctx) { $0.key = key.isEmpty ? nil : key }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "edit.macroRemove", title: L10n.tr("Usuń makro"), category: .edit, submenu: L10n.tr("Makra"),
+                                      parameters: [macroParameter], agent: .none, effect: .settings,
+                                      summary: L10n.tr("Usuwa makro z biblioteki (po potwierdzeniu) razem z jego komendą i skrótem."), inMenu: false,
+                                      feature: "PD-EDIT-015")) { ctx in
+                let ws = ctx.workspace
+                let macro = ws.macroLibrary.macros[try macroIndex(ctx)]
+                if let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Usunąć makro „\(macro.name)”?"), message: L10n.tr("Makro zniknie z biblioteki razem ze skrótem."),
+                                       buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                // Po potwierdzeniu biblioteka mogła się zmienić — usunięcie po identyfikatorze.
+                var lib = ws.macroLibrary
+                lib.macros.removeAll { $0.id == macro.id }
+                ws.updateMacros(lib)
                 return .ok
             },
         ] + CopyFormat.builtIn.map(specialCopy) + [

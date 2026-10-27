@@ -151,6 +151,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | PD-GRID-003 |
 | Wstaw snippet | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
+| Zapisz snippet | `snippets.save` |  |  | Brak | SC-SNIP-001 |
+| Usuń snippet | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
 | Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | PD-GRID-005 |
 | Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | PD-GRID-007 |
 | Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | PD-GRID-007 |
@@ -201,6 +203,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Makra › Odtwórz makro wielokrotnie… | `edit.macroRepeat` | ⇧F12 † | ⇧F12 | Brak | PD-EDIT-015 |
 | Makra › Zapisz makro w bibliotece… | `edit.macroSave` |  |  | Brak | PD-EDIT-015 |
 | Makra › Biblioteka makr… | `edit.macroLibrary` |  |  | Brak | PD-EDIT-015 |
+| Makra › Zmień nazwę makra | `edit.macroRename` |  |  | Brak | PD-EDIT-015 |
+| Makra › Skrót makra | `edit.macroSetKey` |  |  | Brak | PD-EDIT-015 |
+| Makra › Usuń makro | `edit.macroRemove` |  |  | Brak | PD-EDIT-015 |
 | Kopiuj jako literał › Swift | `edit.specialCopy.swift` |  |  | Brak | PD-EDIT-016 |
 | Kopiuj jako literał › Java | `edit.specialCopy.java` |  |  | Brak | PD-EDIT-016 |
 | Kopiuj jako literał › C# | `edit.specialCopy.csharp` |  |  | Brak | PD-EDIT-016 |

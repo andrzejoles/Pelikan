@@ -128,4 +128,36 @@ struct UIActionCommandsTests {
         let after = try Project.decode(Data(contentsOf: url))
         #expect(after.items.count == 1 && after.items[0].kind == .note && after.options.connection == nil)
     }
+
+    @Test("snippety: zapis, zmiana nazwy (bez kopii) i usunięcie komendami; wbudowanego nie można usunąć")
+    func snippets() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        try await ws.invoke("snippets.save", CommandArguments(["category": "Moje", "name": "A", "text": "select 1 from dual"]))
+        #expect(ws.snippets.all.contains { $0.id == "Moje/A" && !$0.isBuiltIn })
+        try await ws.invoke("snippets.save", CommandArguments(["category": "Moje", "name": "B", "text": "select 2 from dual", "replaces": "Moje/A"]))
+        #expect(!ws.snippets.all.contains { $0.id == "Moje/A" } && ws.snippets.all.contains { $0.id == "Moje/B" })
+        try await ws.invoke("snippets.remove", CommandArguments(["id": "Moje/B"]))
+        #expect(!ws.snippets.all.contains { $0.id == "Moje/B" })
+        let builtIn = try #require(ws.snippets.all.first { $0.isBuiltIn })
+        await #expect(throws: CommandError.self) { try await ws.invoke("snippets.remove", CommandArguments(["id": .string(builtIn.id)])) }
+    }
+
+    @Test("biblioteka makr: nazwa, skrót (zły odrzucony, pusty usuwa) i usunięcie komendami")
+    func macroLibrary() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let m = Macro(name: "M", steps: [.text("x")])
+        ws.updateMacros(MacroLibrary(macros: [m]))
+        let id = JSONValue.string(m.id.uuidString)
+        try await ws.invoke("edit.macroRename", CommandArguments(["macro": id, "name": "Nowa"]))
+        #expect(ws.macroLibrary.macros.first?.name == "Nowa")
+        #expect(ws.registry.command(m.commandID)?.descriptor.title.contains("Nowa") == true)
+        try await ws.invoke("edit.macroSetKey", CommandArguments(["macro": id, "key": "ctrl+shift+9"]))
+        #expect(ws.macroLibrary.macros.first?.key == "ctrl+shift+9")
+        await #expect(throws: CommandError.self) { try await ws.invoke("edit.macroSetKey", CommandArguments(["macro": id, "key": "nie+skrót+x"])) }
+        try await ws.invoke("edit.macroSetKey", CommandArguments(["macro": id, "key": ""]))
+        #expect(ws.macroLibrary.macros.first?.key == nil)
+        try await ws.invoke("edit.macroRemove", CommandArguments(["macro": id]))
+        #expect(ws.macroLibrary.macros.isEmpty && ws.registry.command(m.commandID) == nil)
+        await #expect(throws: CommandError.self) { try await ws.invoke("edit.macroRemove", CommandArguments(["macro": id])) }
+    }
 }
