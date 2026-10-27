@@ -88,6 +88,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    /// Zamknięcie okna głównego kończy aplikację drogą `applicationShouldTerminate` (pytania o zapis i transakcje).
+    /// Okno zostaje, gdy użytkownik anuluje — inaczej przy innym otwartym oknie (Preferencje, narzędzie w osobnym oknie)
+    /// aplikacja działałaby dalej bez okna głównego i bez sposobu na jego przywrócenie.
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        NSApp.terminate(nil)
+        return false
+    }
+
     // MARK: Prawa kolumna — panel agenta (ADR 0005)
 
     private var agentItem: NSSplitViewItem?
@@ -165,6 +173,19 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
               responder.isDescendant(of: documentArea.view) else { return }
         for p in [ToolPlacement.right, .bottom] where isDockVisible(p) { setDock(p, visible: false) }
     }
+
+    /// Fokus po arkuszu (pytanie o tekst, zmienne, logowanie): gdy przed arkuszem był w narzędziu panelu albo w lewej
+    /// kolumnie, tam zostaje — przeniesienie do edytora zwijałoby przy autoukrywaniu panel, w którym użytkownik pracuje.
+    /// W pozostałych przypadkach — edytor aktywnego okna.
+    func restoreFocus(after previous: NSResponder?) {
+        var view = previous as? NSView
+        if let text = view as? NSTextView, text.isFieldEditor { view = text.delegate as? NSView }
+        if let view, let window, view.window === window, !view.isDescendant(of: documentArea.view) {
+            if window.firstResponder !== previous { window.makeFirstResponder(view) }
+            return
+        }
+        documentArea.focusActiveDocument()
+    }
 }
 
 /// Okno główne zgłaszające zmianę fokusu (autoukrywanie paneli narzędzi) i ograniczające skróty narzędzi w panelach.
@@ -176,12 +197,20 @@ private final class MainWindow: NSWindow {
     /// przycisków AppKit) działają tylko z fokusem w tym narzędziu: Enter w drzewie obiektów czy siatce nie może wykonać
     /// czynności narzędzia z panelu, a skrót narzędzia nie może przejąć skrótu menu. SwiftUI obsługuje skróty poza
     /// hierarchią widoków i pomija tylko widoki ukryte — narzędzia bez fokusu są ukrywane na czas obsługi zdarzenia
-    /// (bez rysowania; ukrycie nie wywołuje onDisappear).
+    /// (bez rysowania; ukrycie nie wywołuje onDisappear). Zwykłe pisanie (bez ⌘/⌃/⌥, poza Enter i Esc) nie może być
+    /// skrótem narzędzia — wtedy bez ukrywania, żeby każdy znak w edytorze nie unieważniał układu narzędzi w panelach.
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard Self.mayBeToolShortcut(event) else { return super.performKeyEquivalent(with: event) }
         let hidden = (toolsWithoutFocus?() ?? []).filter { !$0.isHidden }
         hidden.forEach { $0.isHidden = true }
         defer { hidden.forEach { $0.isHidden = false } }
         return super.performKeyEquivalent(with: event)
+    }
+
+    /// Skróty narzędzi to przycisk domyślny (Enter), Anuluj (Esc) i skróty z modyfikatorem.
+    private static func mayBeToolShortcut(_ event: NSEvent) -> Bool {
+        if !event.modifierFlags.intersection([.command, .control, .option]).isEmpty { return true }
+        return ["\r", "\u{3}", "\u{1b}"].contains(event.charactersIgnoringModifiers ?? "")
     }
 
     override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
@@ -247,7 +276,7 @@ final class DockSplitViewController: NSSplitViewController {
 
 // MARK: - Lewa kolumna
 
-/// Lewa kolumna narzędzi: Lista połączeń (Etap 1), Przeglądarka obiektów (Etap 2), Lista okien.
+/// Lewa kolumna narzędzi: połączenia, przeglądarka obiektów, lista okien, szablony i pliki.
 final class SidebarViewController: NSViewController {
     private let workspace: Workspace
     private let selector = NSSegmentedControl(labels: [L10n.tr("Połączenia"), L10n.tr("Obiekty"), L10n.tr("Okna"), L10n.tr("Szablony"), L10n.tr("Pliki")],
@@ -321,7 +350,6 @@ final class SidebarViewController: NSViewController {
 
 // MARK: - Obszar dokumentów
 
-/// Pasek kart dokumentów (SDI wzorca) + widok aktywnego dokumentu + pasek stanu.
 /// Widok obszaru dokumentów przyjmujący upuszczone pliki (MAC-FILE-001).
 final class FileDropView: NSView {
     var onDrop: (([URL]) -> Void)?
@@ -374,6 +402,7 @@ protocol DocumentContentController: NSViewController {
     var preferredFirstResponder: NSView { get }
 }
 
+/// Pasek kart dokumentów (SDI wzorca) + widok aktywnego dokumentu + pasek stanu.
 final class DocumentAreaViewController: NSViewController {
     private let workspace: Workspace
     private let tabBar = NSStackView()
