@@ -20,6 +20,8 @@ struct ObjectScopeDBTests {
         _ = try await sys.execute("grant select on pelikan_scope.scope_t to \(c.user)")
         _ = try await sys.execute("create public synonym pelikan_scope_syn for pelikan_scope.scope_t")
         _ = try await sys.execute("create public database link pelikan_scope_link using 'pelikan_scope_nonexistent'")
+        // Prywatne łącze innego schematu: widzi je tylko właściciel i DBA_DB_LINKS (użytkownik testowy ma na nim SELECT).
+        _ = try await sys.execute("create database link pelikan_scope_sys_link using 'pelikan_scope_nonexistent'")
         _ = try await sys.execute("create or replace directory pelikan_scope_dir as '/tmp'")
         _ = try await sys.execute("create or replace directory pelikan_scope_dir2 as '/tmp'")
         _ = try await sys.execute("grant read on directory pelikan_scope_dir to \(c.user)")
@@ -27,7 +29,8 @@ struct ObjectScopeDBTests {
     }
 
     func cleanUp(_ sys: ODPISession) async {
-        for sql in ["drop public synonym pelikan_scope_syn", "drop public database link pelikan_scope_link", "drop directory pelikan_scope_dir",
+        for sql in ["drop public synonym pelikan_scope_syn", "drop public database link pelikan_scope_link",
+                    "drop database link pelikan_scope_sys_link", "drop directory pelikan_scope_dir",
                     "drop directory pelikan_scope_dir2", "drop user pelikan_scope cascade"] {
             _ = try? await sys.execute(sql)
         }
@@ -50,6 +53,13 @@ struct ObjectScopeDBTests {
         #expect(mineTables.contains("\(schema).DEPT") && !mineTables.contains("PELIKAN_SCOPE.SCOPE_T"))
         let mineLinks = names(try await m.objects(.databaseLink, scope: .mine(schema)))
         #expect(mineLinks.contains("PUBLIC.PELIKAN_SCOPE_LINK"), "\(mineLinks)")
+        #expect(!mineLinks.contains("SYSTEM.PELIKAN_SCOPE_SYS_LINK"))
+        let accessibleLinks = names(try await m.objects(.databaseLink, scope: .accessible))
+        #expect(accessibleLinks.contains("PUBLIC.PELIKAN_SCOPE_LINK") && !accessibleLinks.contains("SYSTEM.PELIKAN_SCOPE_SYS_LINK"))
+        // Wszyscy użytkownicy i wybrany schemat — z DBA_DB_LINKS (nadany SELECT bez uprawnień do całego słownika).
+        #expect(names(try await m.objects(.databaseLink, scope: .all)).contains("SYSTEM.PELIKAN_SCOPE_SYS_LINK"))
+        #expect(names(try await m.objects(.databaseLink, scope: .user("SYSTEM"))) == ["SYSTEM.PELIKAN_SCOPE_SYS_LINK"])
+        #expect(names(try await m.objects(.databaseLink, scope: .mine(schema), filter: ObjectFilter("scope_li"))) == ["PUBLIC.PELIKAN_SCOPE_LINK"])
         let mineSynonyms = names(try await m.objects(.synonym, scope: .mine(schema)))
         #expect(mineSynonyms.contains("PUBLIC.PELIKAN_SCOPE_SYN"), "publiczny synonim aplikacji")
         #expect(!mineSynonyms.contains("PUBLIC.DUAL") && !mineSynonyms.contains("PUBLIC.DBMS_OUTPUT"), "publiczne synonimy SYS pominięte")

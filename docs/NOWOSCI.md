@@ -2,6 +2,17 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.2.3 — łącza bazy danych w przeglądarce
+
+- **Łącza bazy danych** — przeglądarka czyta łącza z widoków `ALL_DB_LINKS`/`DBA_DB_LINKS`. W trybie *Wszyscy
+  użytkownicy* i po wybraniu schematu widać prywatne łącza innych schematów, także gdy masz odczyt samego
+  `DBA_DB_LINKS` (bez uprawnień do całego słownika). Prywatne łącze innego schematu nie pojawia się w trybach
+  *Bieżący użytkownik* i *Dostępne obiekty* — używać go może tylko jego właściciel.
+- **Łącza publiczne** — `ALL_OBJECTS` nie musi zawierać publicznych łączy bazy danych (są w `ALL_DB_LINKS`),
+  dlatego w 1.2.2 część łączy mogła nie być widoczna.
+- **Katalogi Oracle** — przy dostępie do widoków DBA folder pokazuje wszystkie katalogi w każdym trybie (wcześniej
+  tylko te z nadanym uprawnieniem).
+
 ## 1.2.2 — kompletne obiekty w przeglądarce
 
 - **Brakujące obiekty w przeglądarce** — tryb *Bieżący użytkownik* pokazuje też publiczne łącza bazy danych i publiczne

@@ -23,9 +23,11 @@ otherwise — a new window from the menu, a tool without an active window.
     (without the thousands of synonyms to Oracle's system schemas);
   - *Accessible objects* — everything you can use: your own objects, objects of other schemas you have privileges on
     and public ones (with the owner before the name);
-  - *All users* — objects of all schemas (with DBA views when you have access to them, also Oracle directories without
-    granted privileges);
+  - *All users* — objects of all schemas (with DBA views when you have access to them, also private database links of other schemas — the latter also when you can read just
+    `DBA_DB_LINKS`; another schema's private link is not “accessible” to you, because only its owner can use it);
   - a specific schema.
+  The **Directories** folder (Oracle directories have no schema owner) shows all directories in every mode when you
+  have access to DBA views, and otherwise those you have privileges on.
   Set the scope after connecting in **Preferences › Object Browser › After connecting, show**.
 - **Filter** below the user selection: part of a name (matched anywhere in the name — `emp` finds `EMP` and
   `T_EMP_HIST`), a pattern with `%` (e.g. `EMP%` — only the start of the name; change the behaviour without `%` in

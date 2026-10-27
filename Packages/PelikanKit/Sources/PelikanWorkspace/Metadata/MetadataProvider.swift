@@ -182,6 +182,8 @@ public final class MetadataProvider {
     @ObservationIgnored private var cache: [String: [DBObject]] = [:]
     @ObservationIgnored private var childCache: [String: [DBObjectChild]] = [:]
     @ObservationIgnored private var dbaViews: Bool?
+    /// Widoki DBA_ odczytywalne bez uprawnień do całego słownika (np. nadany SELECT na DBA_DB_LINKS) — po nazwie widoku.
+    @ObservationIgnored private var readableDBAViews: [String: Bool] = [:]
     @ObservationIgnored private var features: DictionaryFeatures?
     /// Pamięć podręczna Code Assistant: nazwy obiektów schematu, rozwiązane nazwy (synonimy), linki.
     @ObservationIgnored var nameCache: [String: [(name: String, type: String)]] = [:]
@@ -207,6 +209,7 @@ public final class MetadataProvider {
         resolveCache.removeAll()
         linkCache = nil
         features = nil
+        readableDBAViews.removeAll()
         generation += 1
         // Słownik analizy nazw w czasie pisania (po DDL Object Browsera, edytorów obiektów, odświeżeniu).
         workspace.resetNameResolutionCache(connectionID)
@@ -229,6 +232,15 @@ public final class MetadataProvider {
         }
         dbaViews = d
         return d ? "dba" : "all"
+    }
+
+    /// Czy widok DBA_ da się czytać w tej sesji (bez uprawnień do całego słownika — np. nadany SELECT na widok).
+    func readable(_ view: String) async throws -> Bool {
+        if let r = readableDBAViews[view] { return r }
+        let s = try await session()
+        let r = (try? await s.scalar("select count(*) from \(view) where rownum = 1")) != nil
+        readableDBAViews[view] = r
+        return r
     }
 
     /// Schemat bieżący sesji (<CURRENT USER>).
@@ -312,9 +324,34 @@ public final class MetadataProvider {
                 : "select profile, profile, 'VALID', null, null from user_users o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "profile", filter: filter, binds: &binds) + " order by 1"
         case .directory:
-            // Katalogi należą do SYS: dostępne (ALL_DIRECTORIES — z uprawnieniem READ/WRITE), wszystkie — DBA_DIRECTORIES.
-            sql = "select owner, directory_name, 'VALID', null, null from \(px)_directories o where 1 = 1"
+            // Katalogi należą do SYS i nie mają właściciela schematu: we wszystkich trybach DBA_DIRECTORIES, gdy da się go
+            // czytać (ALL_DIRECTORIES pokazuje tylko katalogi z nadanym READ/WRITE, D188).
+            var view = try await dictionaryPrefix()
+            if view != "dba", try await readable("dba_directories") { view = "dba" }
+            sql = "select owner, directory_name, 'VALID', null, null from \(view)_directories o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
+        case .databaseLink:
+            // Łącza z *_DB_LINKS (D187): ALL_DB_LINKS — własne i publiczne (prywatne łącze widzi tylko właściciel),
+            // DBA_DB_LINKS — wszystkie; we „Wszyscy użytkownicy” i wybranym schemacie DBA_, gdy da się go czytać,
+            // także bez uprawnień do całego słownika (nadany SELECT na DBA_DB_LINKS).
+            var view = "all"
+            switch scope {
+            case .all, .user:
+                if px == "dba" { view = "dba" } else if try await readable("dba_db_links") { view = "dba" }
+            case .mine, .accessible: break
+            }
+            sql = "select owner, db_link, 'VALID', created, null from \(view)_db_links o where 1 = 1"
+            switch scope {
+            case .mine(let own):
+                binds.append(BindVariable(name: "own", value: .text(own)))
+                sql += " and owner in (:own, 'PUBLIC')"
+            case .user(let u):
+                binds.append(BindVariable(name: "own", value: .text(u)))
+                sql += " and owner = :own"
+            case .accessible, .all:
+                break
+            }
+            sql = Self.applyNameFilter(sql, column: "db_link", filter: filter, binds: &binds) + " order by 2, 1"
         case .annotation, .assertion:
             // Adnotacje (23ai) i asercje (23.26) nie mają wierszy w ALL_OBJECTS (asercja: typ UNDEFINED) — PD-OB-002.
             let (column, ownerColumn) = type == .annotation ? ("annotation_name", "annotation_owner") : ("assertion_name", "owner")
