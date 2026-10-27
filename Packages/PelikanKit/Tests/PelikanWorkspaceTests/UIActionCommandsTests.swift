@@ -55,4 +55,39 @@ struct UIActionCommandsTests {
         ws.settings.pinWindowConnectionsByDefault = false
         #expect(!ws.newDocument(.program).connectionPinned)
     }
+
+    @Test("notatnik: dodanie, przesunięcie, wykres i usunięcie komórki komendami; nie w trakcie wykonania")
+    func notebookCells() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.notebook)
+        let start = doc.notebook.cells.count
+        let added = try await ws.invoke("notebook.addSQLCell", CommandArguments(["text": "select 1 from dual"]))
+        #expect(added.value?.intValue == Int64(start))
+        try await ws.invoke("notebook.addMarkdownCell", CommandArguments(["text": "# A", "index": 0]))
+        #expect(doc.notebook.cells.count == start + 2)
+        #expect(doc.notebook.cells[0].kind == .markdown && doc.notebook.cells[0].text == "# A")
+        #expect(doc.notebook.cells.last?.text == "select 1 from dual" && doc.isModified)
+        let last = doc.notebook.cells.count - 1
+        let id = doc.notebook.cells[last].id
+        try await ws.invoke("notebook.moveCell", CommandArguments(["index": .int(Int64(last)), "by": -1]))
+        #expect(doc.notebook.cells[last - 1].id == id)
+        // Wykres tylko z wynikiem zapytania.
+        await #expect(throws: CommandError.self) { try await ws.invoke("notebook.toggleChart", CommandArguments(["index": .int(Int64(last - 1))])) }
+        var r = NotebookResult()
+        r.columns = ["NAZWA", "ILE"]
+        r.columnTypes = ["VARCHAR2", "NUMBER"]
+        r.rows = [["a", "1"]]
+        doc.notebook.cells[last - 1].result = r
+        try await ws.invoke("notebook.toggleChart", CommandArguments(["index": .int(Int64(last - 1))]))
+        #expect(doc.notebook.cells[last - 1].chart != nil)
+        try await ws.invoke("notebook.toggleChart", CommandArguments(["index": .int(Int64(last - 1))]))
+        #expect(doc.notebook.cells[last - 1].chart == nil)
+        await #expect(throws: CommandError.self) { try await ws.invoke("notebook.removeCell", CommandArguments(["index": 99])) }
+        doc.isExecuting = true
+        #expect(!ws.isEnabled("notebook.removeCell") && !ws.isEnabled("notebook.moveCell"))
+        doc.isExecuting = false
+        try await ws.invoke("notebook.removeCell", CommandArguments(["index": .int(Int64(last - 1))]))
+        #expect(!doc.notebook.cells.contains { $0.id == id })
+        #expect(doc.notebook.cells.count == start + 1)
+    }
 }

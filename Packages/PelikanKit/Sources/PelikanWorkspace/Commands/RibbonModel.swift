@@ -588,6 +588,11 @@ public enum RibbonModel {
                 .small("notebook.runCell", label: L10n.tr("Wykonaj komórkę")), .small("sql.break"),
                 .small("notebook.exportMarkdown", label: L10n.tr("Eksportuj Markdown")),
             ]),
+            // Usuwanie, przestawianie i wykres — przyciski w komórce (komendy z numerem komórki).
+            RibbonGroup(L10n.tr("Komórki"), [
+                .small("notebook.addSQLCell", label: L10n.tr("Komórka SQL")),
+                .small("notebook.addMarkdownCell", label: L10n.tr("Komórka Markdown")),
+            ]),
         ])
     }
 }

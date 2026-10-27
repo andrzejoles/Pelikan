@@ -179,8 +179,78 @@ enum NotebookCommands {
         return d
     }
 
+    /// Notatnik bez trwającego wykonania (usuwanie i przestawianie komórek czeka na koniec — wynik trafia po id komórki).
+    static func idleNotebook(_ ws: Workspace) -> Document? {
+        notebook(ws).flatMap { $0.isExecuting ? nil : $0 }
+    }
+
+    /// Komórka z argumentu `index` (od 0).
+    static func cellIndex(_ ctx: CommandContext, in d: Document) throws -> Int {
+        guard let i = ctx.arguments.int("index") else { throw CommandError.missingArgument("index") }
+        guard d.notebook.cells.indices.contains(Int(i)) else { throw CommandError.invalidArgument("index", String(i)) }
+        return Int(i)
+    }
+
+    static let indexParameter = CommandParameter("index", .integer, required: true, L10n.tr("Numer komórki (od 0)"))
+
+    /// Dodanie komórki SQL albo Markdown (SD-NB-001): na końcu albo przed komórką `index`, z tekstem `text`.
+    static func addCell(_ kind: NotebookCell.Kind, id: CommandID, title: String) -> Command {
+        Command(CommandDescriptor(id: id, title: title, category: .edit, submenu: L10n.tr("Notatnik"),
+                                  parameters: [CommandParameter("text", .string, L10n.tr("Tekst komórki")),
+                                               CommandParameter("index", .integer, L10n.tr("Pozycja nowej komórki (od 0; domyślnie na końcu)"))],
+                                  agent: .none, effect: .modifiesEditor,
+                                  summary: L10n.tr("Dodaje do notatnika nową komórkę; notatnik jest zmieniony do zapisu."), feature: "SD-NB-001"),
+                validate: { notebook($0) != nil }) { ctx in
+            guard let d = notebook(ctx.workspace) else { return .ok }
+            let cell = NotebookCell(kind: kind, text: ctx.arguments.string("text") ?? "")
+            let at = ctx.arguments.int("index").map { min(max(0, Int($0)), d.notebook.cells.count) } ?? d.notebook.cells.count
+            d.notebook.cells.insert(cell, at: at)
+            d.isModified = true
+            return CommandResult(value: .int(Int64(at)))
+        }
+    }
+
     static var all: [Command] {
         [
+            addCell(.sql, id: "notebook.addSQLCell", title: L10n.tr("Dodaj komórkę SQL")),
+            addCell(.markdown, id: "notebook.addMarkdownCell", title: L10n.tr("Dodaj komórkę Markdown")),
+            Command(CommandDescriptor(id: "notebook.removeCell", title: L10n.tr("Usuń komórkę"), category: .edit, submenu: L10n.tr("Notatnik"),
+                                      parameters: [indexParameter], agent: .none, effect: .modifiesEditor,
+                                      summary: L10n.tr("Usuwa komórkę notatnika razem z jej wynikiem."), inMenu: false, feature: "SD-NB-001"),
+                    validate: { idleNotebook($0) != nil }) { ctx in
+                guard let d = idleNotebook(ctx.workspace) else { return .ok }
+                d.notebook.cells.remove(at: try cellIndex(ctx, in: d))
+                d.isModified = true
+                return .ok
+            },
+            Command(CommandDescriptor(id: "notebook.moveCell", title: L10n.tr("Przesuń komórkę"), category: .edit, submenu: L10n.tr("Notatnik"),
+                                      parameters: [indexParameter, CommandParameter("by", .integer, required: true, L10n.tr("Przesunięcie: -1 w górę, 1 w dół"))],
+                                      agent: .none, effect: .modifiesEditor,
+                                      summary: L10n.tr("Przesuwa komórkę notatnika w górę albo w dół."), inMenu: false, feature: "SD-NB-001"),
+                    validate: { idleNotebook($0) != nil }) { ctx in
+                guard let d = idleNotebook(ctx.workspace) else { return .ok }
+                let i = try cellIndex(ctx, in: d)
+                guard let by = ctx.arguments.int("by") else { throw CommandError.missingArgument("by") }
+                let j = i + Int(by)
+                guard d.notebook.cells.indices.contains(j) else { return .ok }
+                d.notebook.cells.swapAt(i, j)
+                d.isModified = true
+                return .ok
+            },
+            Command(CommandDescriptor(id: "notebook.toggleChart", title: L10n.tr("Wykres z wyniku komórki"), category: .edit, submenu: L10n.tr("Notatnik"),
+                                      parameters: [indexParameter], agent: .none, effect: .modifiesEditor,
+                                      summary: L10n.tr("Pokazuje wykres z wyniku komórki SQL (propozycja z kolumn liczbowych) albo go usuwa."), inMenu: false,
+                                      feature: "SD-NB-002"),
+                    validate: { notebook($0) != nil }) { ctx in
+                guard let d = notebook(ctx.workspace) else { return .ok }
+                let i = try cellIndex(ctx, in: d)
+                guard let r = d.notebook.cells[i].result, !r.columns.isEmpty else {
+                    throw CommandError.notAvailable(L10n.tr("Komórka nie ma wyniku zapytania"))
+                }
+                d.notebook.cells[i].chart = d.notebook.cells[i].chart == nil ? r.suggestedChart() : nil
+                d.isModified = true
+                return .ok
+            },
             Command(CommandDescriptor(id: "notebook.runAll", title: L10n.tr("Wykonaj wszystkie komórki"), category: .session, submenu: L10n.tr("Notatnik"),
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Wykonuje po kolei komórki SQL notatnika; wyniki zapisują się w notatniku."), feature: "SD-NB-001"),

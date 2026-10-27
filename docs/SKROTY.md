@@ -169,6 +169,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Szukaj w edytorach i plikach… | `edit.searchBar` | ⌥⇧⌘F | ⌥⇧⌘F | Brak | PD-CA-015 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | PD-EDIT-027 |
 | Otwórz w zewnętrznym edytorze | `edit.openInExternalEditor` |  |  | Brak | PD-EDIT-028 |
+| Notatnik › Dodaj komórkę SQL | `notebook.addSQLCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Dodaj komórkę Markdown | `notebook.addMarkdownCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Usuń komórkę | `notebook.removeCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Przesuń komórkę | `notebook.moveCell` |  |  | Brak | SD-NB-001 |
+| Notatnik › Wykres z wyniku komórki | `notebook.toggleChart` |  |  | Brak | SD-NB-002 |
 | Analiza kodu › Analizuj kod | `edit.analyzeCode` |  |  | Brak | DG-INSP-001 |
 | Analiza kodu › Analiza kodu w czasie pisania | `edit.toggleCodeAnalysis` |  |  | Brak | DG-RES-001 |
 | Analiza kodu › Następny problem | `edit.nextProblem` |  | F2 | Brak | DG-RES-001 |
