@@ -297,6 +297,7 @@ struct EditorPane: View {
                 Stepper(value: setting(workspace, \.editorFontSize), in: 8...40, step: 1) {
                     Text(L10n.tr("Rozmiar: \(Int(workspace.settings.editorFontSize)) pt"))
                 }
+                Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
             }
             Section(L10n.tr("Siatka wyników")) {
                 FontFamilyPicker(title: L10n.tr("Krój"), selection: setting(workspace, \.gridFontName),
@@ -314,7 +315,6 @@ struct EditorPane: View {
                     Text(workspace.settings.browserFontSize == 0 ? L10n.tr("Object Browser: jak interfejs")
                          : L10n.tr("Object Browser: \(Int(workspace.settings.browserFontSize)) pt"))
                 }
-                Toggle(L10n.tr("Ligatury (np. Fira Code, JetBrains Mono)"), isOn: setting(workspace, \.editorLigatures))
             }
             Section(L10n.tr("Kolory czcionek")) {
                 colorRow(L10n.tr("Edytor"), \.editorColors)
