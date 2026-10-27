@@ -171,6 +171,16 @@ public enum ResultExporter {
         return "\"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\""
     }
 
+    /// Identyfikator wstawiany w tekst (kopiowanie nazw, przeciąganie z Object Browsera): zwykły małymi literami,
+    /// w cudzysłowie bez zmian — `"MyTab"` to inny obiekt niż `"mytab"`.
+    static func displayIdentifier(_ name: String) -> String {
+        let id = identifier(name)
+        return id.hasPrefix("\"") ? id : id.lowercased()
+    }
+
+    /// `właściciel.nazwa` w postaci `displayIdentifier`.
+    static func displayQualified(owner: String, name: String) -> String { displayIdentifier(owner) + "." + displayIdentifier(name) }
+
     /// Nazwa z `tableName(fromQuery:)` (bez cudzysłowów, `WŁAŚCICIEL.TABELA`) w składni SQL.
     static func qualifiedIdentifier(_ name: String) -> String {
         name.split(separator: ".").map { identifier(String($0)) }.joined(separator: ".")

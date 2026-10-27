@@ -231,7 +231,9 @@ struct P1DataTests {
         #expect(BrowserWorkspaceDrop.queryData.command(for: .package) == "ob.edit")
         #expect(BrowserWorkspaceDrop.queryData.command(for: .table) == "ob.queryData")
         #expect(BrowserWorkspaceDrop.ddl.command == "ob.ddl")
-        #expect(BrowserDrop.namesList(["ID", "NAME", "Mixed"]) == "id, name, \"mixed\"")
+        // Nazwa w cudzysłowie bez zmiany wielkości liter — `"mixed"` to inny obiekt (R6-09).
+        #expect(BrowserDrop.namesList(["ID", "NAME", "Mixed"]) == "id, name, \"Mixed\"")
+        #expect(BrowserDrop.name(DBObject(owner: "Hr", name: "Emp Data", type: .table), currentSchema: "HR", qualified: false) == "\"Hr\".\"Emp Data\"")
         let o = DBObject(owner: "HR", name: "EMP", type: .table)
         #expect(BrowserDrop.name(o, currentSchema: "HR", qualified: false) == "emp")
         #expect(BrowserDrop.name(o, currentSchema: "SCOTT", qualified: false) == "hr.emp")

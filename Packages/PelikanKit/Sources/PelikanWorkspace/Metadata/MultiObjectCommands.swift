@@ -7,6 +7,13 @@ enum MultiObjectCommands {
     static let objectsParam = CommandParameter("objects", .string,
                                                L10n.tr("Obiekty „SCHEMAT.NAZWA:TYP” po przecinku (domyślnie zaznaczone w Object Browserze)"))
 
+    /// Część nazwy z argumentu: w cudzysłowie bez zmiany wielkości liter (jak `MetadataProvider.find`), inaczej wielkie litery.
+    nonisolated static func identifierPart(_ s: String) -> String {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        guard t.count >= 2, t.hasPrefix("\""), t.hasSuffix("\"") else { return t.uppercased() }
+        return String(t.dropFirst().dropLast()).replacingOccurrences(of: "\"\"", with: "\"")
+    }
+
     /// `HR.EMP:TABLE, HR.PKG:PACKAGE BODY` → obiekty; bez argumentu — zaznaczenie (albo pojedynczy wybrany obiekt).
     @MainActor
     static func targets(_ ctx: CommandContext) throws -> [DBObject] {
@@ -17,7 +24,7 @@ enum MultiObjectCommands {
                 guard parts.count == 2, name.count == 2, let type = DBObjectType(rawValue: parts[1].uppercased()) else {
                     throw CommandError.invalidArgument("objects", L10n.tr("Oczekiwano SCHEMAT.NAZWA:TYP, otrzymano „\(item)”"))
                 }
-                return DBObject(owner: name[0].uppercased(), name: name[1].uppercased(), type: type)
+                return DBObject(owner: identifierPart(name[0]), name: identifierPart(name[1]), type: type)
             }
             guard !objs.isEmpty else { throw CommandError.invalidArgument("objects", L10n.tr("Pusta lista obiektów")) }
             return objs
@@ -29,7 +36,7 @@ enum MultiObjectCommands {
 
     /// Nazwy po przecinku: bez schematu dla bieżącego, z kwalifikacją dla innych (jak Kopiuj nazwę).
     nonisolated static func commaSeparated(_ objs: [DBObject], currentSchema: String) -> String {
-        objs.map { $0.owner == currentSchema ? ResultExporter.identifier($0.name).lowercased() : $0.qualifiedName.lowercased() }
+        objs.map { $0.owner == currentSchema ? ResultExporter.displayIdentifier($0.name) : ResultExporter.displayQualified(owner: $0.owner, name: $0.name) }
             .joined(separator: ", ")
     }
 

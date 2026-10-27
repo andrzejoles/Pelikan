@@ -266,17 +266,17 @@ public final class MetadataProvider {
         switch type {
         case .user:
             sql = "select username, username, 'VALID', created, created from all_users o where 1 = 1"
-            sql = applyNameFilter(sql, column: "username", filter: filter, binds: &binds) + " order by 1"
+            sql = Self.applyNameFilter(sql, column: "username", filter: filter, binds: &binds) + " order by 1"
         case .role:
             sql = px == "dba" ? "select role, role, 'VALID', null, null from dba_roles o where 1 = 1" : "select role, role, 'VALID', null, null from session_roles o where 1 = 1"
-            sql = applyNameFilter(sql, column: "role", filter: filter, binds: &binds) + " order by 1"
+            sql = Self.applyNameFilter(sql, column: "role", filter: filter, binds: &binds) + " order by 1"
         case .profile:
             sql = px == "dba" ? "select distinct profile, profile, 'VALID', null, null from dba_profiles o where 1 = 1"
                 : "select profile, profile, 'VALID', null, null from user_users o where 1 = 1"
-            sql = applyNameFilter(sql, column: "profile", filter: filter, binds: &binds) + " order by 1"
+            sql = Self.applyNameFilter(sql, column: "profile", filter: filter, binds: &binds) + " order by 1"
         case .directory:
             sql = "select owner, directory_name, 'VALID', null, null from all_directories o where 1 = 1"
-            sql = applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
+            sql = Self.applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
         case .annotation, .assertion:
             // Adnotacje (23ai) i asercje (23.26) nie mają wierszy w ALL_OBJECTS (asercja: typ UNDEFINED) — PD-OB-002.
             let (column, ownerColumn) = type == .annotation ? ("annotation_name", "annotation_owner") : ("assertion_name", "owner")
@@ -287,7 +287,7 @@ public final class MetadataProvider {
                 binds.append(BindVariable(name: "own", value: .text(owner)))
                 sql += " and \(ownerColumn) = :own"
             }
-            sql = applyNameFilter(sql, column: column, filter: filter, binds: &binds) + " order by 2, 1"
+            sql = Self.applyNameFilter(sql, column: column, filter: filter, binds: &binds) + " order by 2, 1"
         default:
             sql = "select o.owner, o.object_name, o.status, o.created, o.last_ddl_time from \(px)_objects o where o.object_type = :t"
             binds.append(BindVariable(name: "t", value: .text(type.rawValue)))
@@ -320,11 +320,13 @@ public final class MetadataProvider {
         return list
     }
 
-    func applyNameFilter(_ sql: String, column: String, filter: ObjectFilter, binds: inout [BindVariable]) -> String {
+    /// Filtr nazw folderów spoza ALL_OBJECTS (użytkownicy, role, profile, katalogi, adnotacje, asercje) — wzorzec jak
+    /// w pozostałych folderach (D175: fragment nazwy albo początek wg preferencji).
+    nonisolated static func applyNameFilter(_ sql: String, column: String, filter: ObjectFilter, binds: inout [BindVariable]) -> String {
         let names = filter.parsed().names
         guard !names.isEmpty else { return sql }
         let ors = names.enumerated().map { i, n -> String in
-            binds.append(BindVariable(name: "fn\(i)", value: .text(n.contains("%") ? n : n + "%")))
+            binds.append(BindVariable(name: "fn\(i)", value: .text(filter.namePattern(n))))
             return "\(column) like :fn\(i)"
         }
         return sql + " and (" + ors.joined(separator: " or ") + ")"
@@ -432,9 +434,16 @@ public final class MetadataProvider {
         }
         // Pierwsza linia z ALL_SOURCE zaczyna się od typu ("PACKAGE emp_api AS") — dodajemy CREATE OR REPLACE, a dla
         // obiektu z innego schematu także właściciela (bez niego kompilacja utworzyłaby kopię w schemacie sesji).
-        let created = "CREATE OR REPLACE " + text
+        // JAVA SOURCE: ALL_SOURCE zawiera sam kod Javy — pełny nagłówek CREATE … JAVA SOURCE NAMED.
+        let created = o.type == .javaSource ? javaSourceDDL(name: o.name, source: text) : "CREATE OR REPLACE " + text
         let current = rows.first.flatMap { $0.count > 1 ? $0[1].displayText : nil }
         return current.map { $0 == o.owner } ?? true ? created : ProgramCompiler.withOwner(created, owner: o.owner)
+    }
+
+    /// `CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED "nazwa" AS <kod>` — nazwa zawsze w cudzysłowie (nazwy klas Javy
+    /// mają małe litery i `/`); właściciela dopisuje `ProgramCompiler.withOwner`, gdy trzeba.
+    nonisolated static func javaSourceDDL(name: String, source: String) -> String {
+        "CREATE OR REPLACE AND COMPILE JAVA SOURCE NAMED \"" + name.replacingOccurrences(of: "\"", with: "\"\"") + "\" AS\n" + source
     }
 
     /// DDL obiektu przez DBMS_METADATA (UG 23.2): zakończenie `;`/`/`, bez atrybutów składowania.
