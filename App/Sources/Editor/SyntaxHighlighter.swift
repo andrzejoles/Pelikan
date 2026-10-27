@@ -1,5 +1,6 @@
 import AppKit
 import PelikanSQL
+import Synchronization
 
 /// Kolory składni (dynamiczne — tryb jasny i ciemny).
 enum SyntaxTheme {
@@ -11,7 +12,12 @@ enum SyntaxTheme {
     static let quoted = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.85, green: 0.60, blue: 0.95, alpha: 1) : NSColor(srgbRed: 0.42, green: 0.22, blue: 0.62, alpha: 1) }
     static let hint = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.55, green: 0.85, blue: 0.75, alpha: 1) : NSColor(srgbRed: 0.10, green: 0.50, blue: 0.45, alpha: 1) }
     /// Własny kolor zwykłego tekstu edytora z Preferencji (PD-PREF-005); nil — kolor systemu (jasny/ciemny).
-    nonisolated(unsafe) static var customPlain: NSColor?
+    /// Pod blokadą: czyta go dostawca dynamicznego koloru, którego AppKit może wywołać poza głównym wątkiem.
+    nonisolated static var customPlain: NSColor? {
+        get { customPlainStore.withLock { $0 } }
+        set { customPlainStore.withLock { $0 = newValue } }
+    }
+    private nonisolated static let customPlainStore = Mutex<NSColor?>(nil)
     static let plain = NSColor(name: nil) { _ in customPlain ?? NSColor.textColor }
     static let op = NSColor.secondaryLabelColor
 

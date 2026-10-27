@@ -749,7 +749,7 @@ final class GridCell: NSTableCellView {
 
     static let modifiedColor = NSColor.systemBlue
     /// Własny kolor tekstu komórek z Preferencji (PD-PREF-005); nil — kolor systemu.
-    nonisolated(unsafe) static var customText: NSColor?
+    static var customText: NSColor?
     static let insertedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.28, blue: 0.16, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.97, blue: 0.88, alpha: 1) }
     static let modifiedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.12, green: 0.20, blue: 0.32, alpha: 1) : NSColor(srgbRed: 0.88, green: 0.93, blue: 1.0, alpha: 1) }
     static let deletedBackground = NSColor(name: nil) { $0.isDark ? NSColor(srgbRed: 0.32, green: 0.12, blue: 0.12, alpha: 1) : NSColor(srgbRed: 1.0, green: 0.90, blue: 0.90, alpha: 1) }

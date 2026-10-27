@@ -139,7 +139,7 @@ public enum FileBackup {
 
 /// Odzyskiwanie po awarii (UG 23.31): znacznik działającej sesji i okresowa migawka niezapisanych okien w katalogu
 /// danych (`Recovery/`, pliki 0600). Znacznik pozostały po poprzednim uruchomieniu = nieczyste zamknięcie.
-public final class RecoveryStore: @unchecked Sendable {
+public final class RecoveryStore: Sendable {
     public let directory: URL?
     var markerURL: URL? { directory?.appendingPathComponent("running") }
     var snapshotURL: URL? { directory?.appendingPathComponent("windows.json") }
