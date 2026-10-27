@@ -99,7 +99,12 @@ struct GridStage8Tests {
                                       now: now, base: URL(fileURLWithPath: "/tmp/b"))
         #expect(u.path == "/tmp/b/raporty/SCOTT_2026-10-24_070509_10.xlsx")
         #expect(ExportDirectives.path("/x/%dbname%.csv", user: "", database: "host:1521/svc", values: [:], now: now, base: URL(fileURLWithPath: "/b")).path
-                == "/x/host-1521/svc.csv")
+                == "/x/host-1521_svc.csv")
+        // Wartości zmiennych nie wychodzą poza katalog ani nie tworzą podkatalogów; separatory z szablonu zostają (R6-13).
+        #expect(ExportDirectives.path("out/%&f%.csv", user: "", database: "", values: ["F": .text("../../etc/x")], now: now,
+                                      base: URL(fileURLWithPath: "/b")).path == "/b/out/_._.._etc_x.csv")
+        #expect(ExportDirectives.path("%&f%.csv", user: "", database: "", values: ["F": .text("~/x\ny")], now: now,
+                                      base: URL(fileURLWithPath: "/b")).path == "/b/__x_y.csv")
     }
 
     @Test("Lista wartości z CHECK … IN (…): cudzysłowy, liczby, apostrof w wartości; inny warunek — nil")
