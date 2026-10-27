@@ -37,8 +37,10 @@ Zależności między modułami (wg Package.swift i project.yml; `PelikanLog` uż
 |---|---|
 | Pelikan.app | PelikanWorkspace, PelikanODPI, PelikanThin, PelikanAgent, PelikanProC, PelikanRemote, SwiftTerm, Sparkle; osadza pelikan-mcp i PelikanQuickLook |
 | PelikanWorkspace | PelikanDB, PelikanSQL |
-| PelikanDB | PelikanSQL |
-| PelikanODPI / PelikanThin | PelikanDB + CODPI / OracleNIO |
+| PelikanDB | — |
+| PelikanODPI | PelikanDB, CODPI |
+| PelikanThin | PelikanDB, PelikanSQL, OracleNIO, NIOCore |
+| PelikanRemote | — |
 | PelikanAgent | PelikanWorkspace, PelikanBridgeKit, swift-sdk MCP |
 | PelikanProC | PelikanWorkspace, PelikanRemote |
 | pelikan-mcp | PelikanBridgeKit |

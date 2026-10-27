@@ -66,8 +66,11 @@ extension SQLPlusEngine {
         case "BEAUTIFY":
             guard let file = args.first else { throw SQLPlusError(L10n.tr("Podaj plik")) }
             let url = resolve(file, baseDirectory: nil)
-            let text = try String(contentsOf: url, encoding: .utf8)
-            try Beautifier.format(text, options: workspace.settings.beautifier).write(to: url, atomically: true, encoding: .utf8)
+            // Kodowanie, BOM i zakończenia linii pliku zostają (jak FORMAT FILE).
+            guard let (text, format) = readScript(url) else {
+                throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(url.lastPathComponent)”."), osError: true)
+            }
+            try writeScript(Beautifier.format(text, options: workspace.settings.beautifier), format: format, to: url)
             emit(L10n.tr("Sformatowano: \(url.lastPathComponent)"))
         case "ZIP":
             guard args.count >= 2 else { throw SQLPlusError(L10n.tr("ZIP archiwum.zip plik…")) }
