@@ -167,6 +167,32 @@ public enum PreferenceSets {
         return file.values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
     }
 
+    /// Pola, które uruchamiają programy albo ładują kod: narzędzia użytkownika (program i argumenty), polecenia CLI
+    /// agentów i tryb ścisły, edytor i przeglądarka różnic zewnętrzne, Instant Client (biblioteka ładowana w proces),
+    /// katalogi Oracle Net i portfela, wyszukiwania w sieci (zaznaczony tekst wysyłany pod adres). Import z cudzego pliku
+    /// tylko ze świadomą zgodą — jak definicje połączeń z tunelem SSH albo skryptem inicjalizacji.
+    static let codeRunningKeys: [(key: String, label: String)] = [
+        ("userTools", L10n.tr("Narzędzia użytkownika")), ("agent", L10n.tr("Agenci")),
+        ("externalEditor", L10n.tr("Edytor zewnętrzny")), ("externalDiff", L10n.tr("Zewnętrzna przeglądarka różnic")),
+        ("instantClientDirectory", L10n.tr("Oracle Instant Client")), ("oracleNetDirectory", L10n.tr("Oracle Net i Oracle Wallet")),
+        ("walletDirectory", L10n.tr("Oracle Net i Oracle Wallet")), ("webSearches", L10n.tr("Szukaj w sieci")),
+    ]
+
+    /// Ustawienia z `codeRunningKeys`, które import zmieniłby względem obecnych (nazwy do pytania, bez powtórzeń). Dla
+    /// agentów liczą się tylko polecenia CLI i tryb ścisły — limity niczego nie uruchamiają.
+    public static func changesRunningCode(_ imported: [String: JSONValue], current: Settings) -> [String] {
+        let now = values(of: current)
+        var labels: [String] = []
+        for (key, label) in codeRunningKeys {
+            guard let new = imported[key] else { continue }
+            let changed = key == "agent"
+                ? ["profiles", "strictMode"].contains { k in new[k].map { $0 != now[key]?[k] } ?? false }
+                : new != now[key]
+            if changed, !labels.contains(label) { labels.append(label) }
+        }
+        return labels
+    }
+
     struct ExportFile: Codable {
         static let formatName = "pelikan-preferences"
         var format: String
@@ -179,18 +205,31 @@ public enum PreferenceSets {
 /// (zapis częściowy względem zestawów domyślnych).
 public struct PreferenceSetStore: Sendable {
     public let fileURL: URL?
+    /// Komunikat o nieczytelnym pliku zestawów (zachowanym jako `.bad-…`, D182).
+    public private(set) var loadProblem: String?
+    /// Kopia nieczytelnego pliku się nie udała — zapis zablokowany, żeby nie nadpisać oryginału.
+    private var saveBlocked = false
 
     public init(directory: URL?) {
         fileURL = directory?.appendingPathComponent("Preferences", isDirectory: true).appendingPathComponent("sets.json")
     }
 
-    public func load() -> [PreferenceSet] {
-        guard let u = fileURL, let d = try? Data(contentsOf: u), let sets = try? JSONDecoder().decode([PreferenceSet].self, from: d) else { return [] }
+    /// Zestawy z pliku; nieczytelny plik (uszkodzony albo z nowszej wersji) jest zachowany obok, zanim pierwszy zapis
+    /// nadpisze go pustą listą.
+    public mutating func load() -> [PreferenceSet] {
+        guard let u = fileURL, let d = try? Data(contentsOf: u) else { return [] }
+        guard let sets = try? JSONDecoder().decode([PreferenceSet].self, from: d) else {
+            let (message, preserved) = DamagedFile.preserve(u)
+            loadProblem = message
+            saveBlocked = !preserved
+            return []
+        }
         return sets.filter { $0.kind != .personalUser }
     }
 
     public func save(_ sets: [PreferenceSet]) throws {
         guard let u = fileURL else { return }
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         try FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true)
         let enc = JSONEncoder()
         enc.outputFormatting = [.prettyPrinted, .sortedKeys]

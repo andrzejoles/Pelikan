@@ -20,6 +20,8 @@ public struct StartupOptions: Sendable, Equatable {
     public var readOnly: [String] = []
     public var files: [String] = []
     public var warnings: [String] = []
+    /// Parametry z linku `pelikan://` (dowolna strona albo wiadomość) — tylko otwieranie istniejącego, bez tworzenia.
+    public var fromLink = false
 
     public init() {}
 
@@ -68,6 +70,7 @@ public struct StartupOptions: Sendable, Equatable {
     /// workset, projekt) i tryb tylko do odczytu — nigdy skryptu do wykonania (`commandfile`).
     public static func parse(url: URL, scheme: String) -> StartupOptions {
         var o = StartupOptions()
+        o.fromLink = true
         guard url.scheme?.lowercased() == scheme.lowercased() else { return o }
         for q in URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [] {
             guard let v = q.value else { continue }
@@ -146,6 +149,8 @@ extension Workspace {
         if let w = o.workset {
             await step(L10n.tr("Workset")) {
                 if worksets.existingName(w) != nil { try await invoke("workset.open", CommandArguments(["name": .string(w)])) }
+                // Link nie tworzy workseta (nowy plik i przełączenie zamykają bieżące okna, D163) — tylko otwiera istniejący.
+                else if o.fromLink { throw CommandError.notAvailable(L10n.tr("Nie ma workseta „\(w)”")) }
                 else { try await invoke("workset.new", CommandArguments(["name": .string(w)])) }
             }
         }
