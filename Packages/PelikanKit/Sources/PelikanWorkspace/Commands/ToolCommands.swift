@@ -80,7 +80,7 @@ enum ToolCommands {
                                           CommandParameter("tableDefinitions", .boolean, L10n.tr("Szukaj w definicjach tabel (kolumny, komentarze, CHECK)")),
                                           CommandParameter("saved", .string, L10n.tr("Nazwa zapisanych kryteriów")),
                                       ],
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Wyszukuje tekst w źródłach PL/SQL, zapytaniach widoków i nazwach obiektów; wynik: obiekt, linia, tekst."),
                                       feature: "PD-TOOL-001"),
                     validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in
@@ -101,7 +101,7 @@ enum ToolCommands {
                                           CommandParameter("owner", .string, L10n.tr("Właściciel (domyślnie bieżący schemat)")),
                                           CommandParameter("run", .boolean, L10n.tr("Kompiluj od razu (bez — tylko lista)")),
                                       ],
-                                      agent: .approval, effect: .modifiesDatabase,
+                                      agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Lista nieprawidłowych obiektów schematu i ich kompilacja w kolejności zależności (ALTER … COMPILE) z błędami."),
                                       feature: "PD-TOOL-002"),
                     validate: { $0.metadata(for: $0.toolConnection()) != nil }) { ctx in

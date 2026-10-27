@@ -1,6 +1,7 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
+import MCP
 @testable import PelikanAgent
 @testable import PelikanBridgeKit
 import Testing
@@ -71,6 +72,66 @@ struct BridgeTransportTests {
         #expect(PendingRequests.responseID(Data(#"{"id":3,"jsonrpc":"2.0","method":"ping"}"#.utf8)) == nil)
         let big = Data(#"{"id":12,"jsonrpc":"2.0","result":{"text":""#.utf8) + Data(repeating: 0x61, count: 2_000_000) + Data(#""}}"#.utf8)
         #expect(PendingRequests.responseID(big) == "n:12")
+    }
+
+    @Test("MOD-01: wynik ponad limit ramki — przycięty ze znacznikiem; za duża odpowiedź zastąpiona błędem JSON-RPC")
+    @MainActor
+    func oversizedResults() throws {
+        let small = AgentController.limitedContent("abc", untrusted: true)
+        #expect(small.count == 1)
+        let text = String(repeating: "zażółć \"gęślą\" jaźń\n", count: 200_000)
+        let parts = AgentController.limitedContent(text, untrusted: true)
+        // Tekst elementu treści przez JSON (wzorzec `.text(…)` koliduje z funkcjami `Content.text` z SDK).
+        let texts = try parts.map { try #require(try JSONSerialization.jsonObject(with: JSONEncoder().encode($0)) as? [String: Any])["text"] as? String ?? "" }
+        try #require(texts.count == 2)
+        let (head, notice) = (texts[0], texts[1])
+        #expect(head.utf8.count <= AgentController.maxResultBytes && text.hasPrefix(head) && !head.unicodeScalars.contains("\u{FFFD}"))
+        #expect(notice.hasPrefix("result_truncated") && notice.contains("\(text.utf8.count)") && notice.contains("nie polecenia"))
+        // Po podwójnym kodowaniu JSON (najgorszy przypadek: każdy bajt dwa razy) mieści się w ramce mostu.
+        #expect(2 * AgentController.maxResultBytes + 4096 < Wire.maxFrame)
+
+        #expect(SocketTransport.fittingFrame(Data("{}".utf8)) == Data("{}".utf8))
+        let big = Data(#"{"id":"a\/1","jsonrpc":"2.0","result":{"text":""#.utf8) + Data(repeating: 0x61, count: Wire.maxFrame) + Data(#""}}"#.utf8)
+        let replaced = try #require(SocketTransport.fittingFrame(big))
+        let o = try #require(try JSONSerialization.jsonObject(with: replaced) as? [String: Any])
+        #expect(o["id"] as? String == "a/1" && ((o["error"] as? [String: Any])?["message"] as? String)?.hasPrefix("result_too_large") == true)
+        #expect(PendingRequests.responseID(replaced) == "s:a/1")
+        #expect(SocketTransport.fittingFrame(Data(repeating: 0x20, count: Wire.maxFrame + 1)) == nil)
+    }
+
+    @Test("MOD-01: pelikan-mcp przy za dużej ramce z aplikacji kończy się z komunikatem i kodem ≠ 0")
+    func bridgeReportsOversizedFrame() async throws {
+        let path = "/tmp/pbt-\(UUID().uuidString.prefix(8)).sock"
+        defer { unlink(path) }
+        let listener = socket(AF_UNIX, SOCK_STREAM, 0)
+        defer { close(listener) }
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        withUnsafeMutableBytes(of: &addr.sun_path) { raw in
+            let bytes = Array(path.utf8)
+            raw.copyBytes(from: bytes)
+            raw[bytes.count] = 0
+        }
+        let bound = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(listener, $0, socklen_t(MemoryLayout<sockaddr_un>.size)) }
+        }
+        #expect(bound == 0 && listen(listener, 1) == 0)
+        // Atrapa aplikacji: welcome, potem nagłówek ramki większej niż limit.
+        let server = Thread {
+            let c = accept(listener, nil, nil)
+            guard c >= 0 else { return }
+            defer { close(c) }
+            guard (try? Wire.readFrame(from: c)) != nil,
+                  (try? Wire.writeFrame(JSONEncoder().encode(Wire.Reply.welcome), to: c)) != nil else { return }
+            var length = UInt32(Wire.maxFrame + 1).bigEndian
+            try? Wire.writeAll(Data(bytes: &length, count: 4), to: c)
+            usleep(2_000_000)
+        }
+        server.start()
+        let client = try BridgeClient(socket: URL(fileURLWithPath: path), token: "test")
+        defer { client.terminate() }
+        #expect(await client.waitForExit() == 1)
+        #expect(client.stderr.contains("\(Wire.maxFrame + 1)"))
     }
 
     @Test("pelikan-mcp: po EOF na wejściu odpowiedź aplikacji w drodze trafia jeszcze na wyjście")

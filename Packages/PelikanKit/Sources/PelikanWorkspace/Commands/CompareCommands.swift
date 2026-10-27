@@ -7,7 +7,7 @@ enum CompareCommands {
     @MainActor static var all: [Command] {
         [
             Command(CommandDescriptor(id: "prog.compareWithDatabase", title: L10n.tr("Porównaj ze źródłem w bazie"), category: .file, submenu: L10n.tr("Porównaj"),
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Porównuje jednostki okna programu ze źródłem tych obiektów w bazie (ALL_SOURCE)."), feature: "PD-PROG-008"),
                     validate: { ws in ws.activeDocument.map { $0.kind == .program && ws.effectiveConnection(of: $0) != nil } ?? false }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .program else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu")) }
@@ -29,7 +29,7 @@ enum CompareCommands {
                 }
             },
             Command(CommandDescriptor(id: "ob.compare", title: L10n.tr("Porównaj z aktywnym oknem"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: ObjectCommands.objectParams, agent: .read, effect: .none,
+                                      parameters: ObjectCommands.objectParams, agent: .none, effect: .none,
                                       summary: L10n.tr("Porównuje źródło (albo DDL) obiektu bazy z tekstem aktywnego okna."), feature: "PD-OB-022"),
                     validate: { ws in ws.selectedObject != nil && BuiltinCommands.editable(ws) != nil }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
@@ -43,7 +43,7 @@ enum CompareCommands {
                                       submenu: L10n.tr("Porównaj"),
                                       parameters: [CommandParameter("connection", .string, L10n.tr("Nazwa połączenia (bez — wybór z listy)")),
                                                    CommandParameter("schema", .string, L10n.tr("Schemat w tamtej bazie (domyślnie z nagłówków albo bieżący)"))],
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Porównuje jednostki okna programu ze źródłem obiektów o tych nazwach w bazie innego połączenia."),
                                       feature: "PD-PROG-008"),
                     validate: { ws in ws.activeDocument?.kind == .program && ws.connections.connections.count > 1 }) { ctx in
@@ -62,7 +62,7 @@ enum CompareCommands {
                                         CommandParameter("connection", .string, L10n.tr("Nazwa połączenia (bez — wybór z listy)")),
                                         CommandParameter("schema", .string, L10n.tr("Schemat w tamtej bazie (domyślnie ten sam)")),
                                       ],
-                                      agent: .read, effect: .none,
+                                      agent: .none, effect: .none,
                                       summary: L10n.tr("Porównuje źródło (albo DDL) obiektu z obiektem o tej samej nazwie w bazie innego połączenia."),
                                       feature: "PD-OB-022"),
                     validate: { ws in ws.selectedObject != nil && ws.connections.connections.count > 1 }) { ctx in
@@ -95,7 +95,7 @@ enum CompareCommands {
                                           CommandParameter("ignoreWhitespace", .boolean, L10n.tr("Ignoruj białe znaki")),
                                           CommandParameter("ignoreComments", .boolean, L10n.tr("Ignoruj komentarze")),
                                       ],
-                                      agent: .read, effect: .none, summary: L10n.tr("Różnica dwóch tekstów w formacie unified."), inMenu: false,
+                                      agent: .none, effect: .none, summary: L10n.tr("Różnica dwóch tekstów w formacie unified."), inMenu: false,
                                       feature: "PD-DIFF-001")) { ctx in
                 let o = DiffOptions(ignoreCase: ctx.arguments.bool("ignoreCase") ?? false, ignoreWhitespace: ctx.arguments.bool("ignoreWhitespace") ?? false,
                                     ignoreComments: ctx.arguments.bool("ignoreComments") ?? false)

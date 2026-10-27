@@ -173,7 +173,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let startup = StartupOptions.parse(Array(ProcessInfo.processInfo.arguments.dropFirst()))
         // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10). Pominięty (`noloaddesktop`, `workset=…`)
         // zostaje w zapisanym worksecie — autozapis dopisuje jego okna zamiast je nadpisać (R3-01).
-        var problems = [workspace.connections.loadProblem].compactMap(\.self)
+        var problems = [workspace.connections.loadProblem].compactMap(\.self) + workspace.loadProblems
         if workspace.settings.worksetAutosave {
             do {
                 if let saved = try workspace.worksets.load(workspace.worksets.current) {

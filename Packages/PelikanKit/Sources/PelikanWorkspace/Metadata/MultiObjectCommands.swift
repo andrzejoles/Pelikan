@@ -75,7 +75,7 @@ enum MultiObjectCommands {
                 return CommandResult(message: text, value: .string(text))
             },
             Command(CommandDescriptor(id: "ob.recompileSelected", title: L10n.tr("Rekompiluj zaznaczone"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Kompiluje ponownie zaznaczone obiekty; zwraca te, które pozostały nieprawidłowe."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
@@ -111,7 +111,7 @@ enum MultiObjectCommands {
                 return CommandResult(message: text)
             },
             Command(CommandDescriptor(id: "ob.dropSelected", title: L10n.tr("Usuń zaznaczone…"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .approval, effect: .modifiesDatabase,
+                                      parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Usuwa zaznaczone obiekty (DROP) po jednym potwierdzeniu z listą; błędy nie przerywają pozostałych."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in

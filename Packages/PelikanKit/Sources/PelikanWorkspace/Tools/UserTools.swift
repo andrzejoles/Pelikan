@@ -201,8 +201,10 @@ extension Workspace {
         let ctx = userToolContext()
         switch tool.kind {
         case .session:
+            // Połączenie okna wyjściowego (jak zmienne #connection i #schema) — przed `newDocument`, które aktywuje nowe okno.
+            let connection = activeDocument.flatMap { effectiveConnection(of: $0) } ?? sessions.mainConnectionID
             let d = newDocument(.sql, text: UserTools.expand(tool.sql, ctx))
-            d.connectionID = activeDocument.flatMap { effectiveConnection(of: $0) } ?? sessions.mainConnectionID
+            d.connectionID = connection
             d.isModified = false
             if tool.executeImmediately { try await invoke("sql.execute") }
             return CommandResult(message: tool.name)
@@ -221,11 +223,16 @@ extension Workspace {
         }
     }
 
-    /// Zmiana listy narzędzi (Preferencje) — zapis w ustawieniach i odświeżenie komend.
+    /// Zmiana listy narzędzi (Preferencje) — zapis w ustawieniach; komendy odświeża `refreshUserToolCommands`.
     public func updateUserTools(_ tools: [UserTool]) {
-        let removed = settings.userTools.map(\.commandID).filter { id in !tools.contains { $0.commandID == id } }
         settings.userTools = tools
-        unregister(removed)
+    }
+
+    /// Komendy narzędzi po każdej zmianie listy (Preferencje, import preferencji, zestaw preferencji połączenia
+    /// głównego): usunięte narzędzia znikają z menu, nowe i zmienione są rejestrowane.
+    func refreshUserToolCommands(previous: [UserTool]) {
+        guard previous != settings.userTools else { return }
+        unregister(previous.map(\.commandID).filter { id in !settings.userTools.contains { $0.commandID == id } })
         registerUserToolCommands()
     }
 

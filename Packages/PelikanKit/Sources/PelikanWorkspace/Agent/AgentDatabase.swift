@@ -48,7 +48,7 @@ extension Workspace {
 /// zdefiniowanych w klauzuli WITH (mogą mieć transakcje autonomiczne), bez odwołań do kolumn maskowanych.
 public enum AgentQueryRules {
     public enum Violation: Error, LocalizedError, Equatable {
-        case notSingleStatement, notQuery(String), locksRows, inlinePLSQL, maskedColumn(String)
+        case notSingleStatement, notQuery(String), locksRows, inlinePLSQL, maskedColumn(String), maskedWildcard, maskedDynamic(String)
 
         public var errorDescription: String? {
             switch self {
@@ -57,6 +57,8 @@ public enum AgentQueryRules {
             case .locksRows: "permission_denied: " + L10n.tr("SELECT … FOR UPDATE blokuje wiersze — to nie jest odczyt")
             case .inlinePLSQL: "permission_denied: " + L10n.tr("funkcje i procedury w klauzuli WITH są niedozwolone")
             case .maskedColumn(let c): "permission_denied: " + L10n.tr("kolumna \(c) jest maskowana dla agenta")
+            case .maskedWildcard: "permission_denied: " + L10n.tr("przy kolumnach maskowanych funkcja nie może przyjmować * (wszystkich kolumn)")
+            case .maskedDynamic(let c): "permission_denied: " + L10n.tr("przy kolumnach maskowanych zapytanie nie może używać \(c) (dynamiczny SQL albo XQuery)")
             }
         }
     }
@@ -79,9 +81,53 @@ public enum AgentQueryRules {
             let name = w.kind == .quotedIdentifier ? String(w.text.dropFirst().dropLast()) : w.text
             if masked.contains(name) { throw Violation.maskedColumn(name) }
         }
+        if !masked.isEmpty { try checkMaskBypass(words, masked: masked) }
         var text = only.text.trimmingCharacters(in: .whitespacesAndNewlines)
         while text.hasSuffix(";") { text.removeLast() }
         return text
+    }
+
+    /// Wywołania i wyrażenia, które czytają kolumny bez ich nazwy w tekście zapytania: dynamiczny SQL (`DBMS_XMLGEN.GETXML
+    /// ('select …')`, `CURSOR(…)`) i XQuery (`fn:collection("oradb:/…")`).
+    static let dynamicSQL: Set<String> = ["CURSOR", "DBMS_XMLGEN", "DBMS_SQL", "DBMS_XMLQUERY", "XMLQUERY", "XMLTABLE", "XMLEXISTS"]
+
+    /// Słowa, po których nawias otwiera podzapytanie albo grupowanie, nie argumenty funkcji.
+    static let subqueryWords: Set<String> = ["FROM", "JOIN", "IN", "EXISTS", "AS", "SELECT", "WHERE", "AND", "OR", "NOT", "ON", "UNION",
+                                             "INTERSECT", "MINUS", "EXCEPT", "ALL", "ANY", "SOME", "LATERAL", "APPLY", "WITH", "HAVING", "BY",
+                                             "WHEN", "THEN", "ELSE", "USING", "DISTINCT", "PIVOT", "UNPIVOT", "FOR"]
+
+    /// Obejścia maskowania jednym zapytaniem (przy niepustej liście maskowanej): `*` jako argument funkcji
+    /// (`JSON_OBJECT(*)`, `JSON_OBJECT(t.*)`, `JSON {*}` — wszystkie kolumny w jednej wartości; `COUNT(*)` dozwolone),
+    /// dynamiczny SQL i XQuery (`dynamicSQL`) oraz nazwa kolumny maskowanej w literale (tekst zapytania dla dynamicznego
+    /// SQL). To nadal ułatwienie, nie granica — funkcja PL/SQL użytkownika z dynamicznym SQL albo nazwa sklejona z części
+    /// je omija (SECURITY.md); granicą są uprawnienia użytkownika bazy agenta.
+    static func checkMaskBypass(_ words: [(kind: TokenKind, text: String)], masked: Set<String>) throws {
+        var openers: [String] = []   // funkcja każdego otwartego nawiasu ("" — podzapytanie albo grupowanie)
+        for (i, w) in words.enumerated() {
+            let prev = i > 0 ? words[i - 1] : nil
+            switch w.kind {
+            case .leftParen:
+                let call = prev.map { ($0.kind == .identifier || $0.kind == .keyword) && !subqueryWords.contains($0.text) } ?? false
+                openers.append(call ? prev!.text : "")
+            case .rightParen:
+                _ = openers.popLast()
+            case .operator where w.text == "{":
+                openers.append("{")
+            case .operator where w.text == "}":
+                _ = openers.popLast()
+            case .operator where w.text == "*":
+                // Gwiazdka-symbol wszystkich kolumn (po nawiasie, kropce, przecinku albo klamrze), nie mnożenie.
+                let wildcard = prev.map { [.leftParen, .dot, .comma].contains($0.kind) || $0.text == "{" } ?? false
+                if wildcard, let f = openers.last, !f.isEmpty, f != "COUNT" { throw Violation.maskedWildcard }
+            case .identifier, .keyword:
+                if dynamicSQL.contains(w.text) { throw Violation.maskedDynamic(w.text) }
+            case .string:
+                let parts = w.text.split { !($0.isLetter || $0.isNumber || "_$#".contains($0)) }.map(String.init)
+                if let name = parts.first(where: masked.contains) { throw Violation.maskedColumn(name) }
+            default:
+                break
+            }
+        }
     }
 
     /// Nazwy kolumn maskowanych połączenia (ostatni człon `SCHEMAT.TABELA.KOLUMNA`, wielkie litery). Maskowanie
@@ -263,7 +309,7 @@ enum AgentDatabaseCommands {
                 let pending = try await s.scalar("select dbms_transaction.local_transaction_id from dual") != nil
                 if !pending { _ = try await s.execute("set transaction read only") }
                 do {
-                    let r = try await s.execute(sql, binds: [], options: ExecuteOptions(callTimeoutMs: UInt32(limits.queryTimeoutSeconds * 1000), lobLimit: 16_000))
+                    let r = try await s.execute(sql, binds: [], options: ExecuteOptions(callTimeoutMs: UInt32(clamping: min(max(limits.queryTimeoutSeconds, 1), AgentSettings.queryTimeoutRange.upperBound) * 1000), lobLimit: 16_000))
                     guard let rs = r.resultSet else { throw AgentQueryRules.Violation.notQuery("?") }
                     var rows: [[JSONValue]] = [], bytes = 0, truncated = false
                     let maskIndex = Set(rs.columns.enumerated().filter { masked.contains($0.element.name.uppercased()) }.map(\.offset))

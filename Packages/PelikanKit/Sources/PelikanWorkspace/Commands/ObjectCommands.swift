@@ -93,7 +93,7 @@ public enum ObjectCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "ob.ddl", title: L10n.tr("DDL"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .read, effect: .none,
+                                      parameters: objectParams, agent: .none, effect: .none,
                                       summary: L10n.tr("Skrypt DDL obiektu (DBMS_METADATA) w nowym oknie SQL."), feature: "PD-OB-015"),
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
@@ -102,7 +102,7 @@ public enum ObjectCommands {
                 return CommandResult(message: ddl)
             },
             Command(CommandDescriptor(id: "ob.describe", title: L10n.tr("Opis"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .read, effect: .none,
+                                      parameters: objectParams, agent: .none, effect: .none,
                                       summary: L10n.tr("Kolumny, parametry, elementy pakietu albo atrybuty typu (UG 21.1 Describe)."), feature: "PD-OB-013"),
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
@@ -116,7 +116,7 @@ public enum ObjectCommands {
                                      value: .array(items.map { .object(["name": .string($0.name), "detail": .string($0.detail), "kind": .string($0.kind.rawValue)]) }))
             },
             Command(CommandDescriptor(id: "ob.properties", title: L10n.tr("Właściwości"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .read, effect: .none,
+                                      parameters: objectParams, agent: .none, effect: .none,
                                       summary: L10n.tr("Właściwości obiektu ze słownika danych (UG 21.1 Properties)."), feature: "PD-OB-012"),
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
@@ -189,7 +189,7 @@ public enum ObjectCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "ob.recompile", title: L10n.tr("Rekompiluj"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .approval, effect: .modifiesDatabase,
+                                      parameters: objectParams, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Kompiluje obiekt ponownie (ALTER … COMPILE) w sesji kompilacji."), feature: "PD-OB-009"),
                     validate: { ws in ws.selectedObject.flatMap { compileStatement($0) } != nil }) { ctx in
                 let (o, m) = try await target(ctx)
@@ -213,7 +213,7 @@ public enum ObjectCommands {
                                      value: .string(status ?? ""))
             },
             Command(CommandDescriptor(id: "ob.addDebugInfo", title: L10n.tr("Dodaj informację debugowania"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .approval, effect: .modifiesDatabase,
+                                      parameters: objectParams, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Kompiluje jednostkę PL/SQL z informacją debugowania (ALTER … COMPILE DEBUG), także ciało pakietu/typu."),
                                       feature: "PD-DBG-011"),
                     validate: { ws in ws.selectedObject.flatMap { debugCompileStatement($0) } != nil }) { ctx in
@@ -232,7 +232,7 @@ public enum ObjectCommands {
                 return CommandResult(message: L10n.tr("Dodano informację debugowania: \(o.qualifiedName)"))
             },
             Command(CommandDescriptor(id: "ob.drop", title: L10n.tr("Usuń obiekt…"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: objectParams, agent: .approval, effect: .modifiesDatabase,
+                                      parameters: objectParams, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Usuwa obiekt z bazy (DROP) po potwierdzeniu."), feature: "PD-OB-016"),
                     validate: { ws in ws.selectedObject.map { ![.user, .role, .profile].contains($0.type) } ?? false }) { ctx in
                 let (o, m) = try await target(ctx)
@@ -259,7 +259,7 @@ public enum ObjectCommands {
             },
             Command(CommandDescriptor(id: "ob.refresh", title: L10n.tr("Odśwież Object Browser"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: [CommandContext.toolConnectionParam],
-                                      agent: .full, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Czyści pamięć podręczną słownika i przeładowuje drzewo (wszystkie otwarte połączenia albo wskazane)."),
                                       feature: "PD-OB-004"),
                     validate: { !$0.sessions.openConnections.isEmpty }) { ctx in

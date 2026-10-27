@@ -41,18 +41,18 @@ struct AgentsPane: View {
             Section(L10n.tr("Bezpieczeństwo")) {
                 Toggle(L10n.tr("Tryb ścisły — CLI bez własnej powłoki i edycji plików, tylko narzędzia Pelikana (gdzie CLI na to pozwala)"),
                        isOn: setting(workspace, \.agent.strictMode))
-                Stepper(value: setting(workspace, \.agent.callsPerMinute), in: 10...1000, step: 10) {
+                Stepper(value: setting(workspace, \.agent.callsPerMinute), in: 10...AgentSettings.callsPerMinuteRange.upperBound, step: 10) {
                     Text(L10n.tr("Limit wywołań narzędzi: \(workspace.settings.agent.callsPerMinute) na minutę"))
                 }
             }
             Section(L10n.tr("Zapytania agenta (run_query)")) {
-                Stepper(value: setting(workspace, \.agent.queryMaxRows), in: 10...100_000, step: 100) {
+                Stepper(value: setting(workspace, \.agent.queryMaxRows), in: AgentSettings.queryMaxRowsRange, step: 100) {
                     Text(L10n.tr("Najwięcej wierszy: \(workspace.settings.agent.queryMaxRows)"))
                 }
-                Stepper(value: setting(workspace, \.agent.queryTimeoutSeconds), in: 1...600, step: 5) {
+                Stepper(value: setting(workspace, \.agent.queryTimeoutSeconds), in: AgentSettings.queryTimeoutRange, step: 5) {
                     Text(L10n.tr("Limit czasu: \(workspace.settings.agent.queryTimeoutSeconds) s"))
                 }
-                Stepper(value: setting(workspace, \.agent.queryMaxBytes), in: 10_000...50_000_000, step: 100_000) {
+                Stepper(value: setting(workspace, \.agent.queryMaxBytes), in: AgentSettings.queryMaxBytesRange, step: 100_000) {
                     Text(L10n.tr("Największy wynik: \(workspace.settings.agent.queryMaxBytes / 1000) kB"))
                 }
             }

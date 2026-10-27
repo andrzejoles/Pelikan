@@ -175,11 +175,25 @@ public actor SocketTransport: Transport {
         continuation.finish()
     }
 
+    /// Wiadomość mieszcząca się w ramce mostu: odpowiedź większa niż `Wire.maxFrame` zerwałaby połączenie MCP (most
+    /// odrzuca taką ramkę), więc zastępuje ją błąd JSON-RPC dla tego samego żądania. Wyniki narzędzi przycina wcześniej
+    /// `AgentController.limitedContent` — to zabezpieczenie dla pozostałych wiadomości. nil — nie da się zastąpić.
+    static func fittingFrame(_ data: Data) -> Data? {
+        guard data.count > Wire.maxFrame else { return data }
+        let head = String(decoding: data.prefix(512), as: UTF8.self)
+        guard let m = head.firstMatch(of: #/^\{"id":("(?:[^"\\]|\\.)*"|-?[0-9]+),/#) else { return nil }
+        return Data(#"{"error":{"code":-32603,"message":"result_too_large: odpowiedź (\#(data.count) bajtów) przekracza limit kanału MCP (\#(Wire.maxFrame) bajtów)"},"id":\#(m.1),"jsonrpc":"2.0"}"#.utf8)
+    }
+
     public func send(_ data: Data) async throws {
         guard !closed else { throw MCPError.connectionClosed }
         let socket = socket, pending = pending
         SocketTransport.trace("←", data)
         let answers = PendingRequests.responseID(data)
+        guard let data = Self.fittingFrame(data) else {
+            pending.answered(answers)
+            throw MCPError.internalError("frame too large")
+        }
         try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, any Swift.Error>) in
             writeQueue.async {
                 defer { pending.answered(answers) }

@@ -108,7 +108,7 @@ enum EditorCommands {
                                           CommandParameter("name", .string, L10n.tr("Nazwa testu standardowego")),
                                           CommandParameter("member", .string, L10n.tr("Podprogram pakietu")),
                                       ],
-                                      agent: .read, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Otwiera okno testu z testu standardowego (szablon z %CALL%) dla procedury lub funkcji."),
                                       feature: "PD-TEST-009"),
                     validate: { ws in ws.selectedObject.map { [.procedure, .function, .package].contains($0.type) } ?? false }) { ctx in
@@ -212,7 +212,7 @@ enum EditorCommands {
             Command(CommandDescriptor(id: "test.profiler", title: L10n.tr("Profiler przy wykonaniu"), category: .debug,
                                       parameters: [CommandParameter("kind", .string, L10n.tr("lines (DBMS_PROFILER), hierarchical (DBMS_HPROF) albo off"),
                                                                     allowed: ["lines", "hierarchical", "off"])],
-                                      agent: .full, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Włącza profiler liniowy albo hierarchiczny dla kolejnych wykonań okna testu (raport w karcie Profiler)."),
                                       feature: "PD-OPT-005"),
                     validate: { $0.activeDocument?.kind == .test }) { ctx in
@@ -238,7 +238,7 @@ enum EditorCommands {
                 return CommandResult(message: doc.fullTitle, value: .string(script))
             },
             Command(CommandDescriptor(id: "ob.editTable", title: L10n.tr("Edytuj definicję tabeli"), category: .tools, submenu: L10n.tr("Obiekt"),
-                                      parameters: ObjectCommands.objectParams, agent: .read, effect: .none,
+                                      parameters: ObjectCommands.objectParams, agent: .none, effect: .none,
                                       summary: L10n.tr("Otwiera edytor definicji tabeli (kolumny, klucze, warunki, indeksy); agent dostaje definicję jako DDL."),
                                       feature: "PD-OED-002"),
                     validate: { ws in ws.selectedObject?.type == .table }) { ctx in

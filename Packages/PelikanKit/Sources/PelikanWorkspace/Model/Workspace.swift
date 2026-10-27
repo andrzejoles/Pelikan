@@ -362,6 +362,7 @@ public final class Workspace {
         didSet {
             if settings.shortcutProfile != oldValue.shortcutProfile { shortcutProfile = settings.shortcutProfile }
             if settings.keyOverrides != oldValue.keyOverrides { keyOverrides = settings.keyOverrides }
+            if settings.userTools != oldValue.userTools { refreshUserToolCommands(previous: oldValue.userTools) }
             guard !applyingPreferenceSets else { settingsBox.value = settings; return }
             recordPreferenceChange(from: oldValue, to: settings)
         }
@@ -375,7 +376,13 @@ public final class Workspace {
     /// Połączenia tylko do odczytu w tym uruchomieniu (parametr startowy `readonly=`, PD-CLI-001).
     public var startupReadOnlyPatterns: [String] = []
     @ObservationIgnored private var applyingPreferenceSets = false
-    @ObservationIgnored private let preferenceStore: PreferenceSetStore
+    @ObservationIgnored private var preferenceStore: PreferenceSetStore
+    /// Nieczytelne pliki danych przy starcie (settings.json, history.json, zestawy preferencji) zachowane jako `.bad-…`
+    /// — komunikaty dla użytkownika (D182).
+    @ObservationIgnored public private(set) var loadProblems: [String] = []
+    /// Kopia nieczytelnego settings.json / history.json się nie udała — zapis zablokowany, żeby nie nadpisać oryginału.
+    @ObservationIgnored private var settingsSaveBlocked = false
+    @ObservationIgnored private var historySaveBlocked = false
     public let connections: ConnectionStore
     public let sessions: SessionManager
     /// Katalog danych aplikacji (nil = bez zapisu: testy, `persists: false`).
@@ -494,12 +501,22 @@ public final class Workspace {
     public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
                 secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
         self.dataDirectory = dataDirectory
-        preferenceStore = PreferenceSetStore(directory: dataDirectory)
-        let sets = preferenceStore.load()
+        var setStore = PreferenceSetStore(directory: dataDirectory)
+        let sets = setStore.load()
+        preferenceStore = setStore
+        var problems = [setStore.loadProblem].compactMap(\.self)
         var personal: [String: JSONValue] = [:]
-        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")),
-           case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
-            personal = o
+        // Nieczytelny plik (uszkodzony, poprawiony ręcznie, z nowszej wersji) — zachowany obok, zanim pierwsza zmiana
+        // preferencji albo wykonane polecenie nadpisze go pustą zawartością.
+        var blocked: (settings: Bool, history: Bool) = (false, false)
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")) {
+            if case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
+                personal = o
+            } else {
+                let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("settings.json"))
+                problems.append(message)
+                blocked.settings = !preserved
+            }
         }
         if let profile { personal["shortcutProfile"] = .string(profile.rawValue) }
         // Przy starcie bez połączenia: zestawy globalne i osobisty użytkownika.
@@ -520,10 +537,18 @@ public final class Workspace {
         sessions = SessionManager(store: store, drivers: drivers, settings: { box.value })
         box.value = loaded
         settingsBox = box
-        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")),
-           let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
-            history = h
+        if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("history.json")) {
+            if let h = try? JSONDecoder.pelikan.decode([HistoryEntry].self, from: data) {
+                history = h
+            } else {
+                let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("history.json"))
+                problems.append(message)
+                blocked.history = !preserved
+            }
         }
+        loadProblems = problems
+        settingsSaveBlocked = blocked.settings
+        historySaveBlocked = blocked.history
         // Komendy z plików użytkownika: makra z biblioteki i własne formaty Special Copy.
         macroLibrary = MacroLibrary.load(from: dataDirectory)
         if commands == nil {
@@ -543,7 +568,7 @@ public final class Workspace {
         let user = sessions.mainConnectionID.flatMap { connections.connection($0)?.target.driverUserName } ?? ""
         history.insert(HistoryEntry(date: Date(), user: user, text: text), at: 0)
         if history.count > limit { history.removeLast(history.count - limit) }
-        guard let dir = dataDirectory else { return }
+        guard let dir = dataDirectory, !historySaveBlocked else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(history) {
             // Tekst wykonanych poleceń może zawierać cokolwiek — tylko dla właściciela (jak worksety), od chwili utworzenia pliku.
@@ -555,7 +580,7 @@ public final class Workspace {
 
     private func saveSettings() {
         settingsBox.value = settings
-        guard let dir = dataDirectory else { return }
+        guard let dir = dataDirectory, !settingsSaveBlocked else { return }
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(JSONValue.object(personalPreferences)) {
             try? data.write(to: dir.appendingPathComponent("settings.json"), options: [.atomic])

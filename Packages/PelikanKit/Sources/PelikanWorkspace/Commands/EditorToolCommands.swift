@@ -13,7 +13,7 @@ enum EditorToolCommands {
     /// Komenda kopiowania jako literał w formacie (wbudowanym albo z katalogu danych).
     static func specialCopy(_ f: CopyFormat) -> Command {
         Command(CommandDescriptor(id: CommandID(rawValue: "edit.specialCopy." + f.id), title: f.name, category: .edit,
-                                  submenu: L10n.tr("Kopiuj jako literał"), agent: .full, effect: .uiState,
+                                  submenu: L10n.tr("Kopiuj jako literał"), agent: .none, effect: .uiState,
                                   summary: L10n.tr("Kopiuje zaznaczenie (albo cały tekst) jako literał tekstowy języka \(f.name); agent dostaje wynik zamiast schowka."),
                                   feature: "PD-EDIT-016"),
                 validate: { BuiltinCommands.editable($0) != nil }) { ctx in
@@ -97,7 +97,7 @@ enum EditorToolCommands {
                                       submenu: L10n.tr("Kopiuj jako literał"),
                                       parameters: [CommandParameter("text", .string, L10n.tr("Kod z literałem (domyślnie schowek)")),
                                                    CommandParameter("format", .string, L10n.tr("Identyfikator formatu (domyślnie wykrywany)"))],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wkleja SQL wydobyty z literałów tekstowych kodu (Java, C#, Delphi, VB…): cudzysłowy, sklejanie i escapy usunięte."),
                                       feature: "PD-EDIT-016"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
@@ -130,7 +130,7 @@ enum EditorToolCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "view.todoItems", title: L10n.tr("Zadania To-Do"), category: .view,
-                                      agent: .read, effect: .uiState,
+                                      agent: .none, effect: .uiState,
                                       summary: L10n.tr("Zadania TODO/DONE z komentarzy otwartych okien: priorytet, kategoria, właściciel; agent dostaje listę."),
                                       feature: "PD-TODO-001")) { ctx in
                 if ctx.invoker == .user { ctx.ui?.showTodoItems(); return .ok }
@@ -145,7 +145,7 @@ enum EditorToolCommands {
             },
             Command(CommandDescriptor(id: "edit.todoInsert", title: L10n.tr("Wstaw zadanie To-Do"), category: .edit,
                                       parameters: [CommandParameter("owner", .string, L10n.tr("Właściciel zadania"))],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia nad bieżącą linią komentarz „-- TODO: ” z wcięciem linii."), feature: "PD-TODO-001"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let d = BuiltinCommands.editable(ctx.workspace) else { return .ok }
@@ -157,7 +157,7 @@ enum EditorToolCommands {
             },
             Command(CommandDescriptor(id: "edit.todoToggle", title: L10n.tr("Zamknij lub otwórz zadanie To-Do"), category: .edit,
                                       parameters: [CommandParameter("line", .integer, L10n.tr("Linia zadania (domyślnie linia kursora)"))],
-                                      agent: .full, effect: .modifiesEditor,
+                                      agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Zamienia TODO na DONE (zamknięcie) albo DONE na TODO w zadaniu z linii."), feature: "PD-TODO-001"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let d = BuiltinCommands.editable(ctx.workspace) else { return .ok }

@@ -45,6 +45,15 @@ public struct AgentSettings: Sendable, Codable, Hashable {
     public var queryTimeoutSeconds = 30
     public var queryMaxBytes = 1_000_000
 
+    /// Dozwolone zakresy limitów (Preferencje › Agenci); wartości z pliku (settings.json, zestaw preferencji, import)
+    /// są do nich przycinane: ujemny albo ogromny limit czasu przerywał aplikację przy konwersji, limit wywołań ≤ 0
+    /// blokował wszystko bez komunikatu. Rozmiar wyniku — z zapasem poniżej limitu ramki mostu MCP (4 MB, tekst
+    /// kodowany w JSON dwa razy).
+    public static let callsPerMinuteRange = 1...1000
+    public static let queryMaxRowsRange = 10...100_000
+    public static let queryTimeoutRange = 1...600
+    public static let queryMaxBytesRange = 10_000...1_500_000
+
     public init() {}
 
     public init(from decoder: any Decoder) throws {
@@ -53,11 +62,12 @@ public struct AgentSettings: Sendable, Codable, Hashable {
         func v<T: Decodable>(_ k: CodingKeys, _ cur: T) -> T { (try? c.decodeIfPresent(T.self, forKey: k)) ?? cur }
         profiles = v(.profiles, profiles)
         strictMode = v(.strictMode, strictMode)
-        callsPerMinute = v(.callsPerMinute, callsPerMinute)
+        func clamped(_ value: Int, _ range: ClosedRange<Int>) -> Int { min(max(value, range.lowerBound), range.upperBound) }
+        callsPerMinute = clamped(v(.callsPerMinute, callsPerMinute), Self.callsPerMinuteRange)
         accessOverrides = v(.accessOverrides, accessOverrides)
-        queryMaxRows = v(.queryMaxRows, queryMaxRows)
-        queryTimeoutSeconds = v(.queryTimeoutSeconds, queryTimeoutSeconds)
-        queryMaxBytes = v(.queryMaxBytes, queryMaxBytes)
+        queryMaxRows = clamped(v(.queryMaxRows, queryMaxRows), Self.queryMaxRowsRange)
+        queryTimeoutSeconds = clamped(v(.queryTimeoutSeconds, queryTimeoutSeconds), Self.queryTimeoutRange)
+        queryMaxBytes = clamped(v(.queryMaxBytes, queryMaxBytes), Self.queryMaxBytesRange)
     }
 }
 
