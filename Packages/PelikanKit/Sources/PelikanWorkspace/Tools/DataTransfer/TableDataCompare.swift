@@ -97,13 +97,13 @@ public enum TableDataCompare {
     public static func compare(table: String, sourceOwner: String, source: any DatabaseSession, targetOwner: String, target: any DatabaseSession) async throws -> TableDataDiff {
         let keys = try await TextImport.primaryKey(owner: sourceOwner, table: table, in: source)
         guard !keys.isEmpty else { throw CommandError.notAvailable(L10n.tr("Tabela \(table) nie ma klucza głównego — porównanie wymaga klucza")) }
-        // Kolumny wspólne obu tabel (bez LOB-ów długich typów LONG).
-        let colSQL = "select column_name from all_tab_columns where owner = :o and table_name = :t and data_type not in ('LONG', 'LONG RAW') order by column_id"
-        let (_, sc) = try await source.queryAll(colSQL, binds: [BindVariable(name: "o", value: .text(sourceOwner)), BindVariable(name: "t", value: .text(table))])
-        let (_, tc) = try await target.queryAll(colSQL, binds: [BindVariable(name: "o", value: .text(targetOwner)), BindVariable(name: "t", value: .text(table))])
-        let targetCols = Set(tc.compactMap { $0.first?.displayText })
+        // Kolumny wspólne obu tabel z wartościami (bez wirtualnych — UPDATE/INSERT daje ORA-54013; bez typów LONG).
+        func stored(_ owner: String, _ s: any DatabaseSession) async throws -> [String] {
+            try await TableTransfer.columns(table, owner: owner, in: s).filter { !$0.virtual && !["LONG", "LONG RAW"].contains($0.type) }.map(\.name)
+        }
+        let targetCols = Set(try await stored(targetOwner, target))
         guard !targetCols.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak tabeli \(targetOwner).\(table) w celu")) }
-        let columns = sc.compactMap { $0.first?.displayText }.filter { targetCols.contains($0) }
+        let columns = try await stored(sourceOwner, source).filter { targetCols.contains($0) }
         let idx = keys.compactMap { columns.firstIndex(of: $0) }
         guard idx.count == keys.count else { throw CommandError.notAvailable(L10n.tr("Kolumny klucza \(table) różnią się w celu")) }
         let src = try await rows(table, owner: sourceOwner, columns: columns, in: source)

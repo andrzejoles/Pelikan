@@ -57,10 +57,10 @@ public enum DataTransferRunner {
         targetColumns.map { t in TransferColumnMapping(target: t, source: sourceColumns.first { $0.caseInsensitiveCompare(t) == .orderedSame }) }
     }
 
+    /// Kolumny celu, które przyjmują wartości: bez wirtualnych (ORA-54013) i identity ALWAYS (ORA-32795).
     public static func targetColumns(_ job: DataTransferJob, in s: any DatabaseSession) async throws -> [String] {
-        let (_, rows) = try await s.queryAll("select column_name from all_tab_columns where owner = :o and table_name = :t order by column_id",
-                                             binds: [BindVariable(name: "o", value: .text(job.targetOwner.uppercased())), BindVariable(name: "t", value: .text(job.targetTable.uppercased()))])
-        return rows.compactMap { $0.first?.displayText }
+        try await TableTransfer.columns(job.targetTable.uppercased(), owner: job.targetOwner.uppercased(), in: s)
+            .filter { !$0.virtual && !$0.identityAlways }.map(\.name)
     }
 
     /// Kolumny zapytania źródłowego (bez pobierania wierszy).

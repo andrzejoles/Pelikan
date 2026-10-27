@@ -272,6 +272,50 @@ struct DataTransferOfflineTests {
         #expect(TableTransfer.bindValue("VARCHAR2", name: "c4", value: nil).value == .null)
     }
 
+    @Test("Format własny: TIMESTAMP WITH TIME ZONE z przesunięciem (także ujemnym poniżej godziny) i TO_TIMESTAMP_TZ przy imporcie (R7-03)")
+    func nativeTimeZone() {
+        let t = OracleTimestamp(year: 2024, month: 1, day: 2, hour: 10, minute: 5, second: 6, fsecond: 7, tzHourOffset: 5, tzMinuteOffset: 30)
+        #expect(TableTransfer.encode(.timestamp(t, .timestampTZ)) == "2024-01-02 10:05:06.000000007 +05:30")
+        var neg = t
+        neg.tzHourOffset = 0
+        neg.tzMinuteOffset = -30
+        #expect(TableTransfer.encode(.timestamp(neg, .timestampTZ))?.hasSuffix(" -00:30") == true)
+        #expect(TableTransfer.encode(.timestamp(t, .timestamp)) == "2024-01-02 10:05:06.000000007")
+        #expect(TableTransfer.valueExpression("TIMESTAMP(6) WITH TIME ZONE", bind: "c0") == "TO_TIMESTAMP_TZ(:c0, 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM')")
+        #expect(TableTransfer.valueExpression("TIMESTAMP(6) WITH LOCAL TIME ZONE", bind: "c0").hasPrefix("TO_TIMESTAMP(:c0"))
+        #expect(TableTransfer.valueExpression("TIMESTAMP(3)", bind: "c0").hasPrefix("TO_TIMESTAMP(:c0"))
+    }
+
+    @Test("Import formatu własnego z „Utwórz”: tylko DDL tej tabeli — CREATE TABLE/INDEX, ALTER TABLE, COMMENT (R7-10)")
+    func nativeDDLAllowList() {
+        let ok = [
+            "CREATE TABLE \"PELIKAN_T\" (\"ID\" NUMBER, CONSTRAINT \"PK\" PRIMARY KEY (\"ID\"))",
+            "CREATE GLOBAL TEMPORARY TABLE pelikan_t (id number) ON COMMIT PRESERVE ROWS",
+            "CREATE TABLE HR.PELIKAN_T (v number generated always as (id / 2) virtual)",
+            "CREATE UNIQUE INDEX \"PELIKAN_T_IX\" ON \"PELIKAN_T\" (\"ID\")",
+            "CREATE BITMAP INDEX hr.pelikan_t_bx ON hr.pelikan_t (id)",
+            "ALTER TABLE \"PELIKAN_T\" ADD CONSTRAINT \"FK\" FOREIGN KEY (\"ID\") REFERENCES \"INNA\" (\"ID\") ENABLE",
+            "COMMENT ON TABLE pelikan_t IS 'opis; z średnikiem'",
+            "COMMENT ON COLUMN \"PELIKAN_T\".\"ID\" IS 'x'",
+        ]
+        for sql in ok { #expect(TableTransfer.isTableDDL(sql, table: "PELIKAN_T", owner: "HR"), "\(sql)") }
+        let bad = [
+            "GRANT DBA TO PUBLIC",
+            "BEGIN EXECUTE IMMEDIATE 'DROP TABLE X'; END",
+            "DROP TABLE PELIKAN_T",
+            "CREATE TABLE INNA (id number)",
+            "CREATE TABLE SYS.PELIKAN_T (id number)",
+            "CREATE TABLE PELIKAN_T AS SELECT * FROM HR.SALARIES",
+            "CREATE INDEX IX ON INNA (ID)",
+            "ALTER TABLE INNA ADD (X NUMBER)",
+            "ALTER TABLE PELIKAN_T DROP COLUMN ID",
+            "ALTER USER HR ACCOUNT UNLOCK",
+            "COMMENT ON TABLE INNA IS 'x'",
+            "CREATE OR REPLACE PROCEDURE PELIKAN_T IS BEGIN NULL; END",
+        ]
+        for sql in bad { #expect(!TableTransfer.isTableDDL(sql, table: "PELIKAN_T", owner: "HR"), "\(sql)") }
+    }
+
     @Test("Eksport obiektów: bezpieczne nazwy plików, kolizje nazw rozróżnione, specyfikacja z ciałem w jednym pliku")
     func objectExportFiles() {
         var o = ObjectExportOptions()
