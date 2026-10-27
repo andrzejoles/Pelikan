@@ -2,6 +2,7 @@
 # Wydanie: instalatory, archiwum dla Sparkle, appcast.xml podpisany kluczem EdDSA i SZKIC wydania na GitHubie
 # (jak w Bifoldzie). Publikacja po sprawdzeniu szkicu: gh release edit vX.Y.Z --draft=false.
 # Zainstalowane kopie pobiorą aktualizację same dopiero po publikacji (kanał: releases/latest/download/appcast.xml).
+# Bez --beta (od 1.0.0, D184): notatki z sekcji „## <wersja>” w docs/NOWOSCI.md, jeśli jest.
 # --beta: tytuł „… beta” i notatki z docs/BETA.md. Celowo NIE „pre-release” na GitHubie: kanał Sparkle to
 # releases/latest, a GitHub pomija wydania wstępne w „latest” — testerzy nie dostaliby kolejnych wersji (D153).
 set -euo pipefail
@@ -40,12 +41,19 @@ scripts/sparkle-tools.sh generate_appcast \
 
 PREVIOUS="$(git describe --tags --abbrev=0 2>/dev/null || true)"
 TITLE="$APP_NAME $VERSION"
+# Sekcja „## <wersja>” (także „## <wersja> — opis”) z docs/NOWOSCI.md, bez nagłówka.
+NEWS="$(awk -v v="## $VERSION" '/^## /{on = ($0 == v || index($0, v " ") == 1)} on' docs/NOWOSCI.md 2>/dev/null | sed '1d')"
 [ "$BETA" = 1 ] && TITLE="$TITLE beta"
 {
     echo "$TITLE"
     echo
     if [ "$BETA" = 1 ]; then
         sed -e '1d' -e '/^Autor: /d' docs/BETA.md
+        echo
+        echo "## Zmiany od poprzedniego wydania"
+        echo
+    elif [ -n "$NEWS" ]; then
+        printf '%s\n' "$NEWS"
         echo
         echo "## Zmiany od poprzedniego wydania"
         echo

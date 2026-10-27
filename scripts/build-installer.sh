@@ -57,6 +57,8 @@ trap 'rm -rf "$PKGROOT"' EXIT
 ditto "$APP" "$PKGROOT/root/$APP_NAME.app"
 pkgbuild --analyze --root "$PKGROOT/root" "$PKGROOT/component.plist" >/dev/null
 plutil -replace 0.BundleIsRelocatable -bool NO "$PKGROOT/component.plist"
+# Bez sprawdzania wersji: instalator nie pomija aplikacji o „niższym” numerze (1.0.0 po betach 10.x, D184).
+plutil -replace 0.BundleIsVersionChecked -bool NO "$PKGROOT/component.plist"
 pkgbuild --root "$PKGROOT/root" --component-plist "$PKGROOT/component.plist" --install-location /Applications \
     --identifier "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist").pkg" \
     --version "$VERSION" "$PKG" >/dev/null

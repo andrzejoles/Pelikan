@@ -1714,3 +1714,15 @@ na pasku stanu przycisk z liczbą narzędzi; ⌘W z fokusem w panelu zamyka narz
 Karty lewej kolumny (połączenia, obiekty, okna, szablony, pliki) zostają w niej; otwarte narzędzia nie są
 przywracane po ponownym uruchomieniu (jak dotąd okna narzędzi). Zrzuty w tle: `60-dokowanie`, `61-dokowanie-powrot`;
 istniejące scenariusze narzędzi pokazują je teraz w panelu okna głównego.
+
+### D184 · 2026-10-27 — Koniec bety: wydanie 1.0.0 i numeracja semantyczna
+Właściciel zdecydował o wyjściu z bety bez etapu RC: stan po dokowaniu narzędzi (D183) to 1.0.0, a przeglądarka
+obiektów w stylu DBeavera (połączenia w drzewie) wejdzie jako 1.1.0; 1.0.0 publikowane od razu po scaleniu (słowo
+właściciela). Dotychczasowa reguła (pierwsza cyfra co 10 scalonych PR) dała 10.x bez znaczenia, więc od scalenia
+PR #102 numer jest semantyczny i dalej automatyczny: tytuł PR `feat…` podnosi środkową cyfrę, pozostałe — ostatnią,
+`typ!:`/„BREAKING CHANGE” — główną (tylko na słowo właściciela); commity po scaleniu nie zmieniają numeru. Stara
+reguła zostaje dla historii sprzed #102. Bezpieczeństwo przejścia 10.5.0 → 1.0.0: Sparkle porównuje numer kompilacji
+(liczba commitów, rośnie), a instalator `.pkg` ma wyłączone `BundleIsVersionChecked` (inaczej mógłby pominąć
+„starszą” aplikację); znaczniki v7.9.0–v10.5.0 nie kolidują z v1.x. `scripts/version-test.sh` (w CI) sprawdza regułę
+na tymczasowym repozytorium. Notatki wydań stabilnych: `docs/NOWOSCI.md`; `docs/BETA.md` zostaje jako historia bet.
+

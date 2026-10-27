@@ -37,6 +37,8 @@ jobs:
           swift --version
           ls /Applications | grep -i xcode || true
           scripts/version.sh
+      - name: Reguła numeracji wersji (scripts/version-test.sh)
+        run: scripts/version-test.sh
       - name: Teksty interfejsu w katalogu (scripts/l10n.py)
         run: python3 scripts/l10n.py check --strict
       - name: Indeks wyszukiwarki Preferencji (scripts/prefs-index.py)

@@ -11,7 +11,9 @@ decyzje, zanim cokolwiek zmienisz.**
   (blokada w raporcie: `scripts/status.py block "…" "…"`).
 - **Raport postępów** po każdym zadaniu, commicie, blokadzie i co ≤ 30 min: `scripts/status.py done|task|next|tests…`
   (generuje `docs/progress/index.html` i `~/Pelikan-raport/index.html`). Właściciel patrzy na raport — aktualizuj go.
-- Wersja z historii gita (`scripts/version.sh`); zmiany na `main` tylko przez PR scalane „Merge pull request”
+- Wersja z historii gita (`scripts/version.sh`, D184): od 1.0.0 tytuł scalonego PR `feat…` podnosi środkową cyfrę,
+  inne — ostatnią; `typ!:` (główna cyfra) tylko na słowo właściciela. Nowości wydania: sekcja w `docs/NOWOSCI.md`.
+  Zmiany na `main` tylko przez PR scalane „Merge pull request”
   (`gh pr merge --merge --delete-branch`), nigdy squash/rebase, nigdy push na `main`. CI czerwone — naprawiać.
 - Commity: konwencjonalne prefiksy po angielsku + identyfikator z macierzy, np. `feat(sqlwin): … (PD-SQLW-004)`;
   stopka `Co-Authored-By` z promptu systemowego. Tożsamość gita lokalnie: adres noreply (D3).
