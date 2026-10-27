@@ -59,6 +59,9 @@ public extension OracleTimestamp {
     /// Formatowanie wg podzbioru masek Oracle: YYYY, YY, MM, MON, DD, HH24, HH, MI, SS, FF[1-9], AM/PM, TZH, TZM.
     func formatted(_ mask: String, zone: Bool = false) -> String {
         var out = ""
+        // Przesunięcie strefy w minutach — znak z całości (-00:30: TZH = 0, TZM = -30).
+        let offset = Int(tzHourOffset) * 60 + Int(tzMinuteOffset)
+        let sign = offset < 0 ? "-" : "+"
         var i = mask.startIndex
         let months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
         func take(_ token: String) -> Bool {
@@ -85,12 +88,12 @@ public extension OracleTimestamp {
                 out += String(ns.prefix(digits))
             }
             else if take("AM") || take("PM") { out += hour < 12 ? "AM" : "PM" }
-            else if take("TZH") { out += String(format: "%+03d", tzHourOffset) }
-            else if take("TZM") { out += String(format: "%02d", abs(Int(tzMinuteOffset))) }
+            else if take("TZH") { out += sign + String(format: "%02d", abs(offset) / 60) }
+            else if take("TZM") { out += String(format: "%02d", abs(offset) % 60) }
             else { out.append(mask[i]); i = mask.index(after: i) }
         }
         if zone, !mask.uppercased().contains("TZH") {
-            out += String(format: " %+03d:%02d", tzHourOffset, abs(Int(tzMinuteOffset)))
+            out += " " + sign + String(format: "%02d:%02d", abs(offset) / 60, abs(offset) % 60)
         }
         return out
     }

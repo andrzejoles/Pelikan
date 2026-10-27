@@ -250,10 +250,7 @@ public enum TableTransfer {
         case .boolean(let b): return b ? "1" : "0"
         case .timestamp(let t, let type):
             // TIMESTAMP WITH TIME ZONE z przesunięciem — bez niego import przyjąłby strefę sesji celu (inna chwila).
-            let text = t.formatted("YYYY-MM-DD HH24:MI:SS.FF9")
-            guard type == .timestampTZ else { return text }
-            let minutes = Int(t.tzHourOffset) * 60 + Int(t.tzMinuteOffset)
-            return text + String(format: " %@%02d:%02d", minutes < 0 ? "-" : "+", abs(minutes) / 60, abs(minutes) % 60)
+            return t.formatted(type == .timestampTZ ? "YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM" : "YYYY-MM-DD HH24:MI:SS.FF9")
         case .raw(let d): return d.base64EncodedString()
         case .lob(let l):
             if let t = l.text { return t }
@@ -413,11 +410,16 @@ public enum TableTransfer {
                     return text
                 })
             }
+            // DDL z pliku jest bez schematu — tabela i indeksy w schemacie docelowym, nie w bieżącym schemacie sesji.
+            var previous = owner
+            if !ddl.isEmpty { previous = try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? owner }
+            if previous != owner { _ = try await s.execute("alter session set current_schema = \(q(owner))") }
             for (name, statements) in ddl {
                 for text in statements {
                     do { _ = try await s.execute(text) } catch { result.errors.append("\(name): \(error.localizedDescription)") }
                 }
             }
+            if previous != owner { _ = try await s.execute("alter session set current_schema = \(q(previous))") }
         }
         if o.disableTriggers { for t in tables { _ = try? await s.execute("alter table \(q(owner)).\(q(t.name)) disable all triggers") } }
         var fks: [String: [String]] = [:]
