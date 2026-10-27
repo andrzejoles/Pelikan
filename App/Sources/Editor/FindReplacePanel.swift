@@ -38,30 +38,22 @@ final class FindReplaceModel {
         }
     }
 
-    func replace() {
-        guard let doc = document, !search.pattern.isEmpty else { return }
-        workspace.lastSearch = search
-        do {
-            if let r = try search.replace(in: doc.text, selection: doc.selectedRange) {
-                doc.text = r.text
-                doc.selectedRange = r.range.upperBound..<r.range.upperBound
-            }
-            find()
-        } catch {
-            message = L10n.tr("Błędne wyrażenie regularne: \(error.localizedDescription)")
-        }
-    }
+    /// Zamiana przez komendy rejestru (`edit.replace`, `edit.replaceAll`): tylko do odczytu, trwające wykonanie, okno
+    /// poleceń dla agenta i cofanie — jak w innych komendach edycji (R4-06).
+    func replace() { invokeReplace("edit.replace") }
 
-    func replaceAll() {
-        guard let doc = document, !search.pattern.isEmpty else { return }
+    func replaceAll() { invokeReplace("edit.replaceAll", ["inSelection": .bool(inSelection)]) }
+
+    private func invokeReplace(_ id: CommandID, _ args: [String: JSONValue] = [:]) {
+        guard document != nil, !search.pattern.isEmpty else { return }
         workspace.lastSearch = search
-        do {
-            let scope = inSelection && !doc.selectedRange.isEmpty ? doc.selectedRange : nil
-            let r = try search.replaceAll(in: doc.text, within: scope)
-            if r.count > 0 { doc.text = r.text }
-            message = L10n.tr("Zamieniono: \(r.count)")
-        } catch {
-            message = L10n.tr("Błędne wyrażenie regularne: \(error.localizedDescription)")
+        message = nil
+        Task {
+            do {
+                message = try await workspace.invoke(id, CommandArguments(args)).message
+            } catch {
+                message = error.localizedDescription
+            }
         }
     }
 }
@@ -137,7 +129,12 @@ struct RecallStatementView: View {
 
     /// Wiele zaznaczonych poleceń — rozdzielone pustą linią, każde zakończone średnikiem (jak „wiele naraz” we wzorcu).
     func insert(_ indexes: [Int]) {
-        guard let doc = workspace.activeDocument, !indexes.isEmpty else { return }
+        guard let doc = workspace.activeDocument, [.sql, .command, .program, .test].contains(doc.kind), !indexes.isEmpty else { return }
+        // Jak komendy edycji: okno tylko do odczytu i okno w trakcie wykonania nie przyjmują tekstu (R4-06).
+        if doc.isReadOnly || doc.isExecuting {
+            workspace.ui?.showError(doc.isReadOnly ? L10n.tr("Okno jest tylko do odczytu") : L10n.tr("Okno już wykonuje polecenie"))
+            return
+        }
         let texts = indexes.sorted().compactMap { workspace.history.indices.contains($0) ? workspace.history[$0].text : nil }
         let block = texts.count == 1 ? texts[0] : texts.map { $0.hasSuffix(";") || $0.hasSuffix("/") ? $0 : $0 + ";" }.joined(separator: "\n\n")
         let ns = doc.text as NSString

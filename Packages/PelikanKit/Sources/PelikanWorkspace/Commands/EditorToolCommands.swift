@@ -162,6 +162,7 @@ enum EditorToolCommands {
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let d = BuiltinCommands.editable(ctx.workspace) else { return .ok }
                 if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+                if d.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
                 let line = ctx.arguments.int("line").map(Int.init)
                     ?? (d.text as NSString).substring(to: min(d.selectedRange.lowerBound, (d.text as NSString).length)).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
                 guard let item = TodoItems.parse(d.text).first(where: { $0.line == line }) else {

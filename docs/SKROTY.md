@@ -115,6 +115,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Znajdź i zamień… | `edit.find` | ⌃F, ⌘F | ⌘F | Brak | PD-EDIT-008 |
 | Znajdź następne | `edit.findNext` | F3 †, ⌘G | ⌘G, F3 | Za zgodą | PD-EDIT-008 |
 | Znajdź poprzednie | `edit.findPrevious` | ⇧F3 †, ⇧⌘G | ⇧⌘G, ⇧F3 | Za zgodą | PD-EDIT-008 |
+| Zamień | `edit.replace` |  |  | Brak | PD-EDIT-008 |
+| Zamień wszystko | `edit.replaceAll` |  |  | Brak | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Za zgodą | PD-EDIT-010 |
 | Formatuj kod PL/SQL | `edit.beautify` | ⇧⌘F | ⇧⌘F | Za zgodą | PD-BEAU-002 |
 | Podpowiedź kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Brak | PD-CA-001 |
