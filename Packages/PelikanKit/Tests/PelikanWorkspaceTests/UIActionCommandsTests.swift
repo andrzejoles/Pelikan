@@ -160,4 +160,22 @@ struct UIActionCommandsTests {
         #expect(ws.macroLibrary.macros.isEmpty && ws.registry.command(m.commandID) == nil)
         await #expect(throws: CommandError.self) { try await ws.invoke("edit.macroRemove", CommandArguments(["macro": id])) }
     }
+
+    @Test("debuger: usunięcie jednego punktu przerwania; czynności panelu tylko przy debugerze okna testu")
+    func debuggerPanel() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        ws.breakpoints = [Breakpoint(owner: "A", unit: "P", type: .procedure, line: 3), Breakpoint(owner: "A", unit: "P", type: .procedure, line: 7)]
+        let first = ws.breakpoints[0].id
+        try await ws.invoke("debug.removeBreakpoint", CommandArguments(["id": .string(first.uuidString)]))
+        #expect(ws.breakpoints.count == 1 && !ws.breakpoints.contains { $0.id == first })
+        await #expect(throws: CommandError.self) { try await ws.invoke("debug.removeBreakpoint", CommandArguments(["id": .string(first.uuidString)])) }
+        #expect(!ws.isEnabled("debug.selectFrame") && !ws.isEnabled("debug.setValue") && !ws.isEnabled("debug.addWatch"))
+        _ = ws.newDocument(.test)
+        #expect(ws.isEnabled("debug.addWatch") && !ws.isEnabled("debug.setValue"))
+        try await ws.invoke("debug.addWatch", CommandArguments(["expression": "v_licznik"]))
+        let d = try #require(DebugP2Commands.debugger(ws))
+        #expect(d.watches == ["v_licznik"])
+        try await ws.invoke("debug.removeWatch", CommandArguments(["expression": "v_licznik"]))
+        #expect(d.watches.isEmpty)
+    }
 }

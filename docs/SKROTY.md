@@ -317,6 +317,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Włącz wszystkie punkty przerwania | `debug.enableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Wyłącz wszystkie punkty przerwania | `debug.disableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Usuń wszystkie punkty przerwania | `debug.removeAllBreakpoints` |  |  | Brak | PD-DBG-008 |
+| Usuń punkt przerwania | `debug.removeBreakpoint` |  |  | Brak | PD-DBG-008 |
+| Ramka stosu wywołań | `debug.selectFrame` |  |  | Brak | PD-DBG-001 |
+| Obserwuj wyrażenie | `debug.addWatch` |  |  | Brak | PD-DBG-001 |
+| Usuń z obserwowanych | `debug.removeWatch` |  |  | Brak | PD-DBG-001 |
+| Ustaw wartość zmiennej | `debug.setValue` |  |  | Brak | PD-DBG-001 |
 | Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | PD-TEST-009 |
 | Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | PD-OPT-007 |
 | Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | PD-OPT-007 |
