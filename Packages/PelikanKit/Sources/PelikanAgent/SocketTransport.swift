@@ -4,11 +4,41 @@ import Darwin
 import Foundation
 import Logging
 import MCP
+import Synchronization
+
+/// Deskryptor gniazda wspólny dla aktora, wątku odczytu i kolejki zapisu. Zamyka go tylko kolejka zapisu, po zapisach
+/// już przyjętych (R8-06): wcześniej `disconnect` zamykał deskryptor od razu, a wątek odczytu albo czekający zapis mogły
+/// trafić w ten sam numer przydzielony już gniazdu innego mostu.
+final class SocketHandle: Sendable {
+    let fd: Int32
+    /// closing — po `shutdown`, nowe zapisy odrzucane; closed — deskryptor zamknięty.
+    private let state = Mutex<(closing: Bool, closed: Bool)>((false, false))
+
+    init(fd: Int32) { self.fd = fd }
+
+    var isClosing: Bool { state.withLock { $0.closing } }
+
+    /// Kończy ruch w obu kierunkach (wątek odczytu dostaje EOF); deskryptor zostaje otwarty do `close`.
+    func shutdownBoth() {
+        state.withLock { s in
+            if !s.closing, !s.closed { _ = Darwin.shutdown(fd, SHUT_RDWR) }
+            s.closing = true
+        }
+    }
+
+    func close() {
+        state.withLock { s in
+            if !s.closed { _ = Darwin.close(fd) }
+            s.closing = true
+            s.closed = true
+        }
+    }
+}
 
 /// Transport MCP po stronie aplikacji: ramki gniazda ⇄ wiadomości JSON-RPC.
 public actor SocketTransport: Transport {
     public nonisolated let logger = Logger(label: "pelikan.agent.transport")
-    private let fd: Int32
+    private let socket: SocketHandle
     private let stream: AsyncThrowingStream<Data, any Swift.Error>
     private let continuation: AsyncThrowingStream<Data, any Swift.Error>.Continuation
     private let writeQueue = DispatchQueue(label: "pelikan.agent.write")
@@ -47,7 +77,7 @@ public actor SocketTransport: Transport {
     }
 
     public init(fd: Int32, onClose: @escaping @Sendable () -> Void = {}) {
-        self.fd = fd
+        socket = SocketHandle(fd: fd)
         self.onClose = onClose
         (stream, continuation) = AsyncThrowingStream.makeStream()
     }
@@ -55,14 +85,17 @@ public actor SocketTransport: Transport {
     public func connect() async throws {
         guard !started else { return }
         started = true
-        let fd = fd, continuation = continuation, onClose = onClose
+        let socket = socket, continuation = continuation, onClose = onClose, writeQueue = writeQueue
         let reader = Thread {
             while true {
                 do {
-                    let frame = try Wire.readFrame(from: fd)
+                    let frame = try Wire.readFrame(from: socket.fd)
                     SocketTransport.trace("→", frame)
                     continuation.yield(SocketTransport.normalizeIncoming(frame))
                 } catch {
+                    // Jedyny właściciel zamknięcia: po wyjściu z pętli odczytu i po zapisach już w kolejce.
+                    socket.shutdownBoth()
+                    writeQueue.async { socket.close() }
                     continuation.finish()
                     onClose()
                     return
@@ -76,19 +109,21 @@ public actor SocketTransport: Transport {
     public func disconnect() async {
         guard !closed else { return }
         closed = true
-        shutdown(fd, SHUT_RDWR)
-        close(fd)
+        socket.shutdownBoth()
+        // Bez wątku odczytu deskryptor zamyka kolejka zapisu tutaj; inaczej zrobi to wątek odczytu po EOF.
+        if !started { let socket = socket; writeQueue.async { socket.close() } }
         continuation.finish()
     }
 
     public func send(_ data: Data) async throws {
         guard !closed else { throw MCPError.connectionClosed }
-        let fd = fd
+        let socket = socket
         SocketTransport.trace("←", data)
         try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, any Swift.Error>) in
             writeQueue.async {
+                guard !socket.isClosing else { c.resume(throwing: MCPError.connectionClosed); return }
                 do {
-                    try Wire.writeFrame(data, to: fd)
+                    try Wire.writeFrame(data, to: socket.fd)
                     c.resume()
                 } catch {
                     c.resume(throwing: error)
