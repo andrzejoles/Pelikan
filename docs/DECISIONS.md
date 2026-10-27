@@ -1781,3 +1781,13 @@ setne części sekundy; filtr nazw je obejmuje, filtr stanu, źródła i filtr n
 pokazuj** (Object Browser) wybiera tryb startowy gałęzi; domyślnie *Bieżący użytkownik*. Test na bazie: drugi schemat
 z tabelą nadaną i nienadaną, publiczny synonim, publiczne łącze, katalog z uprawnieniem; limit czasu folderów.
 
+### D188 · 2026-10-27 — Łącza bazy danych z *_DB_LINKS
+Po 1.2.2 właściciel zgłosił, że łączy bazy dalej brakuje. Łącza są teraz czytane z widoków wskazanych przez Oracle
+(Database Reference 19c, ALL_DB_LINKS / DBA_DB_LINKS), nie z ALL_OBJECTS. Prywatne łącze może używać i widzieć w
+ALL_DB_LINKS tylko jego właściciel (Administrator's Guide 19c, 31.2.7), więc łącza schematu aplikacji, gdy łączysz się
+innym użytkownikiem, są tylko w DBA_DB_LINKS: tryb *Wszyscy użytkownicy* i wybrany schemat sięgają po DBA_DB_LINKS
+(i DBA_DIRECTORIES), gdy da się je czytać — także bez SELECT ANY DICTIONARY / SELECT_CATALOG_ROLE, przy nadanym SELECT
+na sam widok (sprawdzane zapytaniem, wynik pamiętany do odświeżenia). *Bieżący użytkownik* i *Dostępne obiekty*
+pokazują łącza własne i publiczne. Baza testowa: użytkownik testowy ma SELECT na DBA_DB_LINKS (`testdb.sh`), test
+z prywatnym łączem schematu SYSTEM.
+

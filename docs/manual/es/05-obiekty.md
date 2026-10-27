@@ -26,7 +26,9 @@ herramienta sin ventana activa.
   - *Objetos accesibles*: todo lo que puedes usar: objetos propios, objetos de otros esquemas con privilegios
     concedidos y públicos (con el propietario delante del nombre);
   - *Todos los usuarios*: objetos de todos los esquemas (con las vistas DBA si tienes acceso a ellas, también los
-    directorios de Oracle sin privilegios concedidos);
+    directorios de Oracle sin privilegios concedidos y los enlaces privados de otros esquemas; estos últimos también
+    cuando solo puedes leer `DBA_DB_LINKS`; el enlace privado de otro esquema no te es «accesible», porque solo su
+    propietario puede usarlo);
   - un esquema concreto.
   El ámbito al conectar se ajusta en **Preferencias › Object Browser › Al conectar, mostrar**.
 - **Filtro** bajo la selección de usuario: parte del nombre (en cualquier posición: `emp` encuentra `EMP` y

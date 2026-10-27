@@ -24,7 +24,9 @@ wynika inne — nowe okno z menu, narzędzie bez aktywnego okna.
   - *Dostępne obiekty* — wszystko, czego możesz użyć: własne obiekty, obiekty innych schematów z nadanymi uprawnieniami
     i publiczne (z właścicielem przed nazwą);
   - *Wszyscy użytkownicy* — obiekty wszystkich schematów (z widokami DBA, gdy masz do nich dostęp, także katalogi
-    Oracle bez nadanych uprawnień);
+    Oracle bez nadanych uprawnień i prywatne łącza bazy innych schematów — te ostatnie także wtedy, gdy masz odczyt
+    samego `DBA_DB_LINKS`; prywatne łącze innego schematu nie jest dla Ciebie „dostępne”, bo używać go może tylko
+    jego właściciel);
   - konkretny schemat.
   Zakres po połączeniu ustawisz w **Preferencje › Object Browser › Po połączeniu pokazuj**.
 - **Filtr** pod wyborem użytkownika: część nazwy (szukana w dowolnym miejscu nazwy — `emp` znajdzie `EMP` i `T_EMP_HIST`),

@@ -26,7 +26,9 @@ neues Fenster aus dem Menü, ein Werkzeug ohne aktives Fenster.
   - *Zugängliche Objekte* — alles, was Sie verwenden können: eigene Objekte, Objekte anderer Schemas mit erteilten
     Rechten und öffentliche (mit dem Eigentümer vor dem Namen);
   - *Alle Benutzer* — Objekte aller Schemas (mit DBA-Views, wenn Sie Zugriff darauf haben, auch Oracle-Verzeichnisse
-    ohne erteilte Rechte);
+    ohne erteilte Rechte und private Datenbank-Links anderer Schemas — Letztere auch, wenn Sie nur `DBA_DB_LINKS`
+    lesen dürfen; ein privater Link eines anderen Schemas ist für Sie nicht „zugänglich“, weil nur sein Eigentümer
+    ihn verwenden kann);
   - ein bestimmtes Schema.
   Den Umfang nach dem Verbinden legen Sie unter **Einstellungen › Object Browser › Nach dem Verbinden anzeigen** fest.
 - **Filter** unter der Benutzerauswahl: ein Namensteil (an beliebiger Stelle — `emp` findet `EMP` und `T_EMP_HIST`),

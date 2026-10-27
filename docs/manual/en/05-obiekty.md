@@ -24,7 +24,8 @@ otherwise — a new window from the menu, a tool without an active window.
   - *Accessible objects* — everything you can use: your own objects, objects of other schemas you have privileges on
     and public ones (with the owner before the name);
   - *All users* — objects of all schemas (with DBA views when you have access to them, also Oracle directories without
-    granted privileges);
+    granted privileges and private database links of other schemas — the latter also when you can read just
+    `DBA_DB_LINKS`; another schema's private link is not “accessible” to you, because only its owner can use it);
   - a specific schema.
   Set the scope after connecting in **Preferences › Object Browser › After connecting, show**.
 - **Filter** below the user selection: part of a name (matched anywhere in the name — `emp` finds `EMP` and
