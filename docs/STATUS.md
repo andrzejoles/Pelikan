@@ -1,4 +1,4 @@
-# Stan Pelikana — beta po przeglądzie kodu (2026-10-27)
+# Stan Pelikana — wydanie 1.0.0 (2026-10-27)
 
 Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) ma **438** wierszy:
 

@@ -7,8 +7,8 @@ dla PL/SQL, z wbudowanymi testami jednostkowymi utPLSQL, wybranymi funkcjami z i
 w zakresie Oracle) i bezpiecznym API dla agentów AI (Claude Code, Codex CLI, Grok CLI, Antigravity) przez lokalny
 serwer MCP.
 
-> **Wersja beta.** Pelikan jest gotowy do testów na prawdziwych bazach, ale nie jest jeszcze wydaniem stabilnym.
-> Pracuj na kopiach i środowiskach testowych, zanim zaufasz mu na produkcji. Błędy zgłaszaj w
+> **Wersja 1.0.** Pierwsze wydanie stabilne, po becie na prawdziwych bazach (wersje 7.9–10.5). Jak przy każdym IDE
+> pracującym na bazie: zmiany na produkcji zatwierdzaj świadomie. Błędy zgłaszaj w
 > [Issues](https://github.com/andrzejoles/Pelikan/issues).
 
 ![Okno programu: pakiet ze specyfikacją i ciałem, konspekt jednostek](docs/screenshots/04-program-1.png)
@@ -76,8 +76,8 @@ funkcji [`docs/FEATURES.md`](docs/FEATURES.md), architektura [`docs/ARCHITECTURE
 
 Pelikan is a native macOS (Apple Silicon) IDE for Oracle SQL and PL/SQL: SQL and command windows, program and test
 windows with a debugger and profiler, utPLSQL, object browser and editors, schema compare, reports, notebooks, and a
-secure MCP API for AI coding agents. The UI is available in Polish, English, German, Spanish and Ukrainian. This is a
-**beta** — please test on non-production databases first and report issues on GitHub.
+secure MCP API for AI coding agents. The UI is available in Polish, English, German, Spanish and Ukrainian. Version 1.0 is the
+first stable release after the public beta (7.9–10.5); please report issues on GitHub.
 
 Pelikan nie jest produktem Oracle ani Allround Automations i nie jest z nimi powiązany. Nazwy „Oracle” i „PL/SQL” są
 znakami towarowymi Oracle Corporation; używamy ich wyłącznie do opisu zgodności.

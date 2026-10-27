@@ -1,4 +1,6 @@
-# Pelikan — wydanie beta
+# Pelikan — wydania beta (7.9.0–10.5.0)
+
+> Beta zakończona: od 1.0.0 nowości są w [`docs/NOWOSCI.md`](NOWOSCI.md) (D184).
 
 Kolejna beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0, 9.7.0, 10.0.0–10.3.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
