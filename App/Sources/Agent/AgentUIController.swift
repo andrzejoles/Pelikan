@@ -35,7 +35,11 @@ final class AgentUIController: ApprovalPresenter {
         profilesToken = trackChanges { [weak self] in
             guard let self else { return }
             let profiles = self.workspace.settings.agent.profiles
-            if profiles != self.registeredProfiles { self.workspace.register(self.launchCommands(profiles)) }
+            guard profiles != self.registeredProfiles else { return }
+            // Usunięty profil znika z menu i palety od razu (domknięcie komendy trzyma kopię profilu).
+            let removed = self.registeredProfiles.filter { old in !profiles.contains { $0.id == old.id } }
+            self.workspace.unregister(removed.map { CommandID(rawValue: "agent.launch.\($0.id)") })
+            self.workspace.register(self.launchCommands(profiles))
         }
         do {
             try controller.start()
@@ -121,12 +125,15 @@ final class AgentUIController: ApprovalPresenter {
         guard let executable = await Self.which(profile.executable) else {
             throw CommandError.notAvailable(L10n.tr("Nie znaleziono polecenia „\(profile.executable)” w PATH powłoki logowania."))
         }
-        guard let overrides = await askPermissions(profile) else { throw CommandError.cancelledByUser }
+        // Katalog roboczy: folder pliku aktywnego okna (projekt) albo katalog tymczasowy sesji — ustalony przed macierzą
+        // uprawnień, która go pokazuje (z wyborem katalogu tymczasowego); katalog domowy i `/` — zawsze tymczasowy.
+        let candidate = AgentLauncher.projectDirectory(workspace.activeDocument?.fileURL?.deletingLastPathComponent().path)
+        guard let choice = await askPermissions(profile, projectDirectory: candidate) else { throw CommandError.cancelledByUser }
+        let overrides = choice.overrides
         if profile.flavor == .antigravity { try await ensureAntigravityRegistration(executable: executable) }
         let settings = workspace.settings.agent
 
-        // Katalog roboczy: folder pliku aktywnego okna (projekt) albo katalog tymczasowy sesji.
-        let projectDirectory = workspace.activeDocument?.fileURL?.deletingLastPathComponent().path
+        let projectDirectory = choice.useProjectDirectory ? candidate : nil
         let (session, token) = controller.createSession(profile: profile, directory: projectDirectory ?? "", accessOverrides: overrides)
         let sessionDir = runDirectory.appendingPathComponent("session-\(session.id)", isDirectory: true)
         try FileManager.default.createDirectory(at: sessionDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -212,10 +219,10 @@ final class AgentUIController: ApprovalPresenter {
 
     // MARK: Macierz uprawnień
 
-    private func askPermissions(_ profile: AgentProfile) async -> [CommandID: AgentAccess]? {
+    private func askPermissions(_ profile: AgentProfile, projectDirectory: String?) async -> PermissionChoice? {
         let rows = PermissionMatrix.rows(registry: workspace.registry, settings: workspace.settings.agent)
         return await presentSheet { finish in
-            PermissionMatrixView(profileName: profile.name, rows: rows) { finish($0) }
+            PermissionMatrixView(profileName: profile.name, rows: rows, projectDirectory: projectDirectory) { finish($0) }
         } ?? nil
     }
 

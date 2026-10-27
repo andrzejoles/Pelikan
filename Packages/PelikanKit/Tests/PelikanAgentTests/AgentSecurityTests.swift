@@ -334,6 +334,15 @@ struct AgentUnitTests {
         #expect(sink.text.contains("agent.state"))
     }
 
+    @Test("R5-21: katalog domowy i / nie są katalogiem projektu agenta")
+    func projectDirectory() {
+        #expect(AgentLauncher.projectDirectory("/Users/u", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/Users/u/", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory(nil, home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/Users/u/projekt/sql", home: "/Users/u") == "/Users/u/projekt/sql")
+    }
+
     @Test("Porównanie stałoczasowe, base64url, tokeny 256 bit i unikalne")
     func tokens() {
         let a: [UInt8] = Array(0..<32)
