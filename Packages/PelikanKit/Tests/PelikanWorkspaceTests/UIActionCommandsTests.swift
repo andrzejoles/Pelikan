@@ -40,4 +40,19 @@ struct UIActionCommandsTests {
         try await ws.invoke("debug.removeAllBreakpoints")
         #expect(ws.breakpoints.isEmpty)
     }
+
+    @Test("przypinanie nowych okien (Preferencje): okno SQL przypięte do połączenia głównego, bez głównego — nieprzypięte")
+    func pinNewWindowsByDefault() {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        ws.settings.pinWindowConnectionsByDefault = true
+        let before = ws.newDocument(.sql)
+        #expect(!before.connectionPinned && before.connectionID == nil)
+        let main = UUID()
+        ws.sessions.setMainConnection(main)
+        let sql = ws.newDocument(.sql)
+        #expect(sql.connectionPinned && sql.connectionID == main)
+        #expect(!ws.newDocument(.diagram).connectionPinned)
+        ws.settings.pinWindowConnectionsByDefault = false
+        #expect(!ws.newDocument(.program).connectionPinned)
+    }
 }

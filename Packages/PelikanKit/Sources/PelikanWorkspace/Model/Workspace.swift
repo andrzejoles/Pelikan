@@ -654,6 +654,13 @@ public final class Workspace {
         let n = (ordinals[kind] ?? 0) + 1
         ordinals[kind] = n
         let doc = Document(kind: kind, ordinal: n, text: text, fileURL: fileURL)
+        // Preferencje › Ogólne › „Przypinaj połączenie nowych okien” (PD-CONN-019, UG 23.1): nowe okno SQL, programu,
+        // testu i poleceń zostaje przy bieżącym połączeniu głównym, gdy główne się zmieni. Bez połączenia głównego okno
+        // nie ma czego przypiąć — dostanie główne przy logowaniu, jak nieprzypięte.
+        if settings.pinWindowConnectionsByDefault, [.sql, .program, .test, .command].contains(kind), let main = sessions.mainConnectionID {
+            doc.connectionID = main
+            doc.connectionPinned = true
+        }
         documents.append(doc)
         activeDocumentID = doc.id
         return doc
