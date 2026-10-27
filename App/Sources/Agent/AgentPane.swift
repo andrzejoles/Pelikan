@@ -304,8 +304,8 @@ final class TerminalExitDelegate: NSObject, LocalProcessTerminalViewDelegate {
 }
 
 /// Przeglądarka dziennika agentów (pliki JSONL w agent-logs/, PROMPT §7.6): lista plików, wpisy w tabeli
-/// (czas, narzędzie, decyzja, argumenty, wynik), surowy wiersz pod tabelą.
-final class AgentLogWindowController: NSWindowController, NSTableViewDataSource, NSTableViewDelegate {
+/// (czas, narzędzie, decyzja, argumenty, wynik), surowy wiersz pod tabelą; narzędzie w panelu albo oknie (D183).
+final class AgentLogViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     private let directory: URL
     private let files = NSTableView()
     private let entries = NSTableView()
@@ -316,11 +316,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
 
     init(directory: URL) {
         self.directory = directory
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1100, height: 640), styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                              backing: .buffered, defer: false)
-        window.title = L10n.tr("Dziennik agentów")
-        window.setFrameAutosaveName((Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan") + ".agentLog")
-        super.init(window: window)
+        super.init(nibName: nil, bundle: nil)
         let fileColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("file"))
         fileColumn.title = L10n.tr("Plik")
         fileColumn.width = 240
@@ -361,11 +357,11 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         rightSplit.isVertical = false
         rightSplit.addArrangedSubview(middle)
         rightSplit.addArrangedSubview(bottom)
-        let split = NSSplitView()
+        let split = NSSplitView(frame: NSRect(x: 0, y: 0, width: 1100, height: 640))
         split.isVertical = true
         split.addArrangedSubview(left)
         split.addArrangedSubview(rightSplit)
-        window.contentView = split
+        view = split
         split.setPosition(260, ofDividerAt: 0)
         rightSplit.setPosition(460, ofDividerAt: 0)
     }

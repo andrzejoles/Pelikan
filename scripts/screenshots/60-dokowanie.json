@@ -1,0 +1,8 @@
+[
+  {"command": "view.todoItems", "delay": 1},
+  {"command": "help.manual", "delay": 2},
+  {"command": "view.clipboardHistory", "delay": 1},
+  {"command": "view.dockToolBottom", "args": {"tool": "clipboardHistory"}, "delay": 1},
+  {"command": "view.templateWindow", "delay": 1},
+  {"command": "view.floatTool", "args": {"tool": "templates"}, "delay": 2}
+]

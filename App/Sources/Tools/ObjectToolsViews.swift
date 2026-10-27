@@ -74,7 +74,7 @@ struct ExportObjectsView: View {
         }
         .padding(12)
         .frame(minWidth: 620, minHeight: 560)
-        .task(id: connection) {
+        .toolTask(id: connection) {
             owner = workspace.sessions.connectedSchema(connection) ?? ""
             await load()
         }
@@ -181,7 +181,7 @@ struct CompareObjectsView: View {
         .padding(12)
         .frame(minWidth: 900, minHeight: 560)
         .task { if targetID == nil { targetID = connection } }
-        .task(id: connection) {
+        .toolTask(id: connection) {
             owner = workspace.sessions.connectedSchema(connection) ?? ""
             await load()
         }

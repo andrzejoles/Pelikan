@@ -577,24 +577,20 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     }
 }
 
-/// Okno informacji o obiekcie (Opis, Właściwości): tabela, kopiowanie zaznaczenia, niemodalne.
-final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NSTableViewDataSource, NSTableViewDelegate {
+/// Informacje o obiekcie (Opis, Właściwości): tabela, kopiowanie zaznaczenia; narzędzie w panelu albo oknie (D183).
+final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
     private let rows: [[String]]
     private let table = NSTableView()
-    private static var open: [ObjectInfoWindowController] = []
 
     static func show(title: String, columns: [String], rows: [[String]]) {
-        let c = ObjectInfoWindowController(title: title, columns: columns, rows: rows)
-        open.append(c)
-        c.showWindow(nil)
+        let c = ObjectInfoViewController(title: title, columns: columns, rows: rows)
+        ToolDockManager.shared.show(key: "objectInfo-" + UUID().uuidString, title: title, size: NSSize(width: 560, height: 420),
+                                    content: c.view, owner: c)
     }
 
     init(title: String, columns: [String], rows: [[String]]) {
         self.rows = rows
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 420), styleMask: [.titled, .closable, .resizable, .utilityWindow],
-                         backing: .buffered, defer: false)
-        w.title = title
-        super.init(window: w)
+        super.init(nibName: nil, bundle: nil)
         table.setAccessibilityLabel(title)
         for (i, name) in columns.enumerated() {
             let c = NSTableColumn(identifier: .init("c\(i)"))
@@ -612,13 +608,7 @@ final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NS
         let scroll = NSScrollView()
         scroll.documentView = table
         scroll.hasVerticalScroller = true
-        w.contentView = scroll
-        w.center()
-        w.delegate = self
-    }
-
-    func windowWillClose(_ notification: Notification) {
-        Self.open.removeAll { $0 === self }
+        view = scroll
     }
 
     @available(*, unavailable)

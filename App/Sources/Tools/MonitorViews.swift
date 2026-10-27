@@ -38,7 +38,7 @@ struct EventMonitorView: View {
         }
         .padding(10)
         .frame(minWidth: 620, minHeight: 360)
-        .onDisappear { Task { await monitor?.stop() } }
+        .onToolClose { Task { await monitor?.stop() } }
     }
 
     init(workspace: Workspace) {
@@ -109,7 +109,7 @@ struct LoadTesterView: View {
         .padding(10)
         .frame(minWidth: 900, minHeight: 520)
         // Zamknięcie okna kończy test — inaczej wątki działałyby dalej na sesjach bez możliwości zatrzymania.
-        .onDisappear { tester?.stop() }
+        .onToolClose { tester?.stop() }
     }
 
     init(workspace: Workspace) {

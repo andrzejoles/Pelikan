@@ -57,7 +57,7 @@ struct DualityViewsView: View {
         }
         .padding(10)
         .frame(minWidth: 760, minHeight: 460)
-        .task(id: connection) { selection = nil; detail = ""; await reload() }
+        .toolTask(id: connection) { selection = nil; detail = ""; await reload() }
     }
 
     init(workspace: Workspace) {
@@ -136,7 +136,7 @@ struct MLEModulesView: View {
         }
         .padding(10)
         .frame(minWidth: 620, minHeight: 380)
-        .task(id: connection) { selection = nil; await reload() }
+        .toolTask(id: connection) { selection = nil; await reload() }
         .sheet(isPresented: $debugging) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.tr("Debugowanie po wykonaniu: \(modules.first { $0.id == selection }?.name ?? "")")).font(.uiHeadline)

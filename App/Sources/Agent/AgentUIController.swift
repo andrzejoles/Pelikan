@@ -14,7 +14,6 @@ final class AgentUIController: ApprovalPresenter {
     weak var mainWindow: MainWindowController?
     let pane: AgentPane
     private var approvalChain: Task<Void, Never>?
-    private var logWindow: AgentLogWindowController?
     private var profilesToken: ObservationToken?
     private var registeredProfiles: [AgentProfile] = []
     private let runDirectory: URL
@@ -318,8 +317,11 @@ final class AgentUIController: ApprovalPresenter {
     }
 
     func showLog() {
-        if logWindow == nil { logWindow = AgentLogWindowController(directory: controller.logDirectory) }
-        logWindow?.showWindow(nil)
-        logWindow?.reload()
+        let manager = ToolDockManager.shared
+        if !manager.reveal(key: "agentLog") {
+            let c = AgentLogViewController(directory: controller.logDirectory)
+            manager.show(key: "agentLog", title: L10n.tr("Dziennik agentów"), size: NSSize(width: 1100, height: 640), content: c.view, owner: c)
+        }
+        (manager.item("agentLog")?.owner as? AgentLogViewController)?.reload()
     }
 }

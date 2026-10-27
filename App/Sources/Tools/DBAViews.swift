@@ -51,7 +51,7 @@ struct DBAPanelView: View {
             .padding(10)
         }
         .frame(minWidth: 900, minHeight: 540)
-        .task(id: connection) { await reload() }
+        .toolTask(id: connection) { await reload() }
         .onChange(of: section) { Task { await reload() } }
     }
 
