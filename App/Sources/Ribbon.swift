@@ -22,6 +22,7 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
     private var buttons: [RibbonButton] = []
     private var tokens: [ObservationToken] = []
     private var updateObserver: (any NSObjectProtocol)?
+    private var refreshScheduled = false
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -128,8 +129,17 @@ final class RibbonController: NSTitlebarAccessoryViewController, NSSearchFieldDe
         guard updateObserver == nil, let window = view.window else { return }
         // Dostępność komend zależy też od stanu spoza modelu (zaznaczenie w edytorze, pierwszy responder) — jak pasek
         // narzędzi, wstążka sprawdza ją po każdym zdarzeniu okna.
+        // Zdarzeń jest wiele na obieg pętli (keyDown, keyUp…) — sprawdzenie raz, scalone (R4-01).
         updateObserver = NotificationCenter.default.addObserver(forName: NSWindow.didUpdateNotification, object: window, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshEnabled() }
+            MainActor.assumeIsolated {
+                guard let self, !self.refreshScheduled else { return }
+                self.refreshScheduled = true
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.refreshScheduled = false
+                    self.refreshEnabled()
+                }
+            }
         }
     }
 

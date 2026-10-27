@@ -50,9 +50,9 @@ enum ProgramUnitCommands {
                                       agent: .full, effect: .modifiesEditor,
                                       summary: L10n.tr("Usuwa jednostkę (kartę) z tekstu okna programu razem z kończącym ukośnikiem; obiekt w bazie zostaje."),
                                       feature: "PD-PROG-001"),
-                    validate: { ws in programDocument(ws).map { ProgramCompiler.units(in: $0.text).count > 0 } ?? false }) { ctx in
+                    validate: { ws in programDocument(ws) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu")) }
-                let units = ProgramCompiler.units(in: doc.text)
+                let units = doc.programUnits
                 let unit: ProgramUnit
                 if let spec = ctx.arguments.string("unit") {
                     let words = spec.uppercased().split(separator: " ").map(String.init)

@@ -5,7 +5,7 @@ import PelikanWorkspace
 /// Program Window (UG 4): karty jednostek (specyfikacja, ciało…) nad edytorem — przejście do jednostki, edytor kodu,
 /// lista błędów i ostrzeżeń kompilacji (klik = przejście do linii), wskaźniki: niebieski — zmieniony niezapisany,
 /// żółty — zmieniony nieskompilowany (UG 4.3). F8 kompiluje wszystkie jednostki.
-final class ProgramWindowViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
+final class ProgramWindowViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, DocumentContentController {
     private let document: Document
     private let workspace: Workspace
     private var editor: CodeEditorView!
@@ -171,6 +171,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             let units = ProgramCompiler.units(in: text)
             await MainActor.run { [weak self] in
                 guard let self, self.document.text == text else { return }
+                // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
+                self.document.cacheProgramUnits(units, forText: text)
                 self.apply(outline: outline, units: units)
             }
         }
