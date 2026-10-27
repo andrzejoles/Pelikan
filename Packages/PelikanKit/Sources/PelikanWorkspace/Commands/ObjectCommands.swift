@@ -236,6 +236,7 @@ public enum ObjectCommands {
                                       summary: L10n.tr("Usuwa obiekt z bazy (DROP) po potwierdzeniu."), feature: "PD-OB-016"),
                     validate: { ws in ws.selectedObject.map { ![.user, .role, .profile].contains($0.type) } ?? false }) { ctx in
                 let (o, m) = try await target(ctx)
+                if o.type == .databaseLink { try MultiObjectCommands.requireOwnLink(o, sessionUser: try await m.session().info.sessionUser) }
                 let sql = try MultiObjectCommands.dropStatement(o, cascadeConstraints: false)
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 let choice = await ctx.ui?.ask(L10n.tr("Usunąć \(o.type.rawValue) \(o.qualifiedName)?"), message: L10n.tr("Tej operacji nie da się cofnąć (poza koszem dla tabel)."),

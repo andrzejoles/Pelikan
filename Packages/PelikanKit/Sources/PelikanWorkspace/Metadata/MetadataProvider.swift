@@ -235,10 +235,17 @@ public final class MetadataProvider {
     }
 
     /// Czy widok DBA_ da się czytać w tej sesji (bez uprawnień do całego słownika — np. nadany SELECT na widok).
+    /// Pamiętany jest tylko wynik pewny: odczyt albo błąd uprawnień; inny błąd (utrata sesji, przerwanie) idzie dalej.
     func readable(_ view: String) async throws -> Bool {
         if let r = readableDBAViews[view] { return r }
         let s = try await session()
-        let r = (try? await s.scalar("select count(*) from \(view) where rownum = 1")) != nil
+        let r: Bool
+        do {
+            _ = try await s.scalar("select count(*) from \(view) where rownum = 1")
+            r = true
+        } catch let e where DBAPanel.isPrivilegeError(e) {
+            r = false
+        }
         readableDBAViews[view] = r
         return r
     }
@@ -371,10 +378,9 @@ public final class MetadataProvider {
             if type == .table { sql += " and o.secondary = 'N'" }
             switch scope {
             case .mine(let own):
-                // Własne i używane w schemacie bez kwalifikacji: publiczne łącza bazy i publiczne synonimy aplikacji.
+                // Własne; publiczne synonimy aplikacji — osobnym zapytaniem niżej (połączone z ALL_OBJECTS trwało ponad minutę).
                 binds.append(BindVariable(name: "own", value: .text(own)))
-                // Publiczne synonimy aplikacji — osobnym zapytaniem niżej (połączone z ALL_OBJECTS trwało ponad minutę).
-                sql += type == .databaseLink ? " and o.owner in (:own, 'PUBLIC')" : " and o.owner = :own"
+                sql += " and o.owner = :own"
             case .accessible:
                 if type == .synonym { sql += " and o.owner <> 'PUBLIC'" }
             case .user(let u):
@@ -402,7 +408,9 @@ public final class MetadataProvider {
                      created: Self.timestamp(r[3]), lastDDL: Self.timestamp(r[4]))
         }
         if type == .synonym, scope.includesPublicSynonyms {
-            list = (list + (try await applicationPublicSynonyms(filter, in: s))).sorted { ($0.name, $0.owner) < ($1.name, $1.owner) }
+            // Sortowanie tylko po dołączeniu publicznych (z filtrem nazwanym ich nie ma — zostaje jego ORDER BY).
+            let publicSynonyms = try await applicationPublicSynonyms(filter, in: s)
+            if !publicSynonyms.isEmpty { list = (list + publicSynonyms).sorted { ($0.name, $0.owner) < ($1.name, $1.owner) } }
         }
         cache[key] = list
         return list
@@ -539,11 +547,10 @@ public final class MetadataProvider {
         try await Self.ddl(of: o, in: session())
     }
 
-    /// DDL obiektu w podanej sesji (także sesji agenta).
-    public nonisolated static func ddl(of o: DBObject, in s: any DatabaseSession) async throws -> String {
-        // DBMS_METADATA nie obsługuje asercji ani adnotacji (ORA-31600) — DDL ze słownika (PD-OB-002).
-        if o.type == .assertion || o.type == .annotation { return try await Oracle23Dictionary.ddl(of: o, in: s) }
-        let metaType: String = switch o.type {
+    /// Typ obiektu w DBMS_METADATA (PL/SQL Packages 19c, tabela 110-12): zadania Schedulera to PROCOBJ (JOB — zadania
+    /// DBMS_JOB, bez nazwy), kolejki — AQ_QUEUE.
+    nonisolated static func metadataType(_ t: DBObjectType) -> String {
+        switch t {
         case .packageBody: "PACKAGE_BODY"
         case .typeBody: "TYPE_BODY"
         case .materializedView: "MATERIALIZED_VIEW"
@@ -551,17 +558,31 @@ public final class MetadataProvider {
         case .javaSource: "JAVA_SOURCE"
         case .mleModule: "MLE_MODULE"
         case .domain: "SQL_DOMAIN"
-        default: o.type.rawValue.replacingOccurrences(of: " ", with: "_")
+        case .job: "PROCOBJ"
+        case .queue: "AQ_QUEUE"
+        default: t.rawValue.replacingOccurrences(of: " ", with: "_")
         }
+    }
+
+    /// DDL obiektu w podanej sesji (także sesji agenta).
+    public nonisolated static func ddl(of o: DBObject, in s: any DatabaseSession) async throws -> String {
+        // DBMS_METADATA nie obsługuje asercji ani adnotacji (ORA-31600) — DDL ze słownika (PD-OB-002).
+        if o.type == .assertion || o.type == .annotation { return try await Oracle23Dictionary.ddl(of: o, in: s) }
+        // Parametry przekształcenia sesji przywracane do domyślnych także po błędzie — własne GET_DDL użytkownika w tej
+        // sesji (tryb Dual/Single) działają jak bez Pelikana.
         let r = try await s.execute("""
-            declare h number; begin
+            begin
               dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'SQLTERMINATOR', true);
               dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'PRETTY', true);
               begin dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'SEGMENT_ATTRIBUTES', false); exception when others then null; end;
               begin dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'STORAGE', false); exception when others then null; end;
               :ddl := dbms_metadata.get_ddl(:t, :n, :o);
+              dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'DEFAULT');
+            exception when others then
+              dbms_metadata.set_transform_param(dbms_metadata.session_transform, 'DEFAULT');
+              raise;
             end;
-            """, binds: [BindVariable(name: "ddl", type: .clob, direction: .output), BindVariable(name: "t", value: .text(metaType)),
+            """, binds: [BindVariable(name: "ddl", type: .clob, direction: .output), BindVariable(name: "t", value: .text(metadataType(o.type))),
                          BindVariable(name: "n", value: .text(o.name)), BindVariable(name: "o", value: .text(o.owner))])
         guard case .lob(let l)? = r.outBinds["ddl"], let text = l.text else { return "" }
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
