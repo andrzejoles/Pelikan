@@ -27,6 +27,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         didSet { if order != oldValue { update(rawNodes) } }
     }
 
+    private var fontToken: ObservationToken?
+
     override init(frame: NSRect) {
         super.init(frame: frame)
         let c = NSTableColumn(identifier: .init("name"))
@@ -34,7 +36,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         outline.addTableColumn(c)
         outline.outlineTableColumn = c
         outline.headerView = nil
-        outline.rowSizeStyle = .small
+        // Wysokość wiersza z czcionki interfejsu (przy stylu innym niż `.custom` AppKit ignoruje `rowHeight`).
+        outline.rowSizeStyle = .custom
         // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
         outline.style = .plain
         outline.indentationPerLevel = 16
@@ -54,6 +57,15 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             scroll.topAnchor.constraint(equalTo: topAnchor), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor), scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+        fontToken = trackChanges { [weak self] in
+            guard let self else { return }
+            let font = InterfaceFonts.shared.small
+            outline.rowHeight = AppFonts.rowHeight(for: font)
+            // Bez `reloadData` — zachowuje rozwinięcie i zaznaczenie.
+            for row in 0..<outline.numberOfRows {
+                (outline.view(atColumn: 0, row: row, makeIfNecessary: false) as? NSTableCellView)?.textField?.font = font
+            }
+        }
     }
 
     @available(*, unavailable)

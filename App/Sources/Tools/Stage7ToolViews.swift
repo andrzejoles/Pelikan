@@ -113,7 +113,7 @@ struct PredefinedReportsView: View {
 
     @ViewBuilder private func output(_ r: PredefinedReport, _ res: PredefinedReportResult) -> some View {
         if r.style == .dbmsOutput {
-            ScrollView { Text(res.output.joined(separator: "\n")).font(.system(.body, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            ScrollView { Text(res.output.joined(separator: "\n")).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
         } else {
             if r.style == .chart, let data = PredefinedReports.chartData(r, res) { SimpleChartView(data: data, kind: r.chart?.kind ?? .bar).frame(minHeight: 200) }
             SimpleGridView(columns: res.columns.map(\.name), rows: res.rows.map { $0.map { $0.displayText ?? "" } })
@@ -324,7 +324,7 @@ struct SchemaCopyView: View {
             }
             Text(L10n.tr("Typy obiektów (puste — wszystkie)")).font(.uiSecondary)
             ObjectTypesPicker(types: $options.types)
-            List(log, id: \.self) { Text($0).font(.system(size: 12, design: .monospaced)) }
+            List(log, id: \.self) { Text($0).font(.code) }
             HStack {
                 Spacer()
                 if busy { ProgressView().controlSize(.small) }
@@ -703,7 +703,7 @@ struct LocalTasksView: View {
         case .script(let file, let text, let commit):
             TextField(L10n.tr("Plik skryptu (puste — tekst poniżej)"), text: Binding(get: { file ?? "" }, set: { draft.action = .script(file: $0.isEmpty ? nil : $0, text: text, commit: commit) }))
             TextField(L10n.tr("Skrypt"), text: Binding(get: { text }, set: { draft.action = .script(file: file, text: $0, commit: commit) }), axis: .vertical).lineLimit(3...8)
-                .font(.system(.body, design: .monospaced))
+                .font(.code)
             Toggle(L10n.tr("Zatwierdź (COMMIT) na końcu"), isOn: Binding(get: { commit }, set: { draft.action = .script(file: file, text: text, commit: $0) }))
         case .export(let query, let directory, let fileName, let format):
             TextField(L10n.tr("Zapytanie"), text: Binding(get: { query }, set: { draft.action = .export(query: $0, directory: directory, fileName: fileName, format: format) }), axis: .vertical).lineLimit(2...6)

@@ -33,7 +33,7 @@ struct ApprovalView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if !preview.statements.isEmpty {
                         section(L10n.tr("Polecenia")) {
-                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            Text(preview.statements.joined(separator: "\n\n")).font(.code).textSelection(.enabled)
                         }
                     }
                     if !preview.affectedObjects.isEmpty {
@@ -48,14 +48,14 @@ struct ApprovalView: View {
                         section(L10n.tr("Plan wykonania")) {
                             // Wiersze DBMS_XPLAN są szersze niż okno — przewijanie w poziomie zamiast zawijania.
                             ScrollView(.horizontal) {
-                                Text(plan).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize()
+                                Text(plan).font(.code).textSelection(.enabled).fixedSize()
                             }
                         }
                     }
                     let args = request.arguments.values.filter { !$0.key.hasPrefix("__") }
                     if !args.isEmpty {
                         section(L10n.tr("Argumenty")) {
-                            Text(JSONValue.object(args).description).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            Text(JSONValue.object(args).description).font(.code).textSelection(.enabled)
                         }
                     }
                 }
@@ -105,7 +105,7 @@ struct PermissionMatrixView: View {
                 ForEach($rows) { $row in
                     HStack {
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(row.tool).font(.system(size: 12, design: .monospaced))
+                            Text(row.tool).font(.code)
                             Text(row.title).font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         Spacer()

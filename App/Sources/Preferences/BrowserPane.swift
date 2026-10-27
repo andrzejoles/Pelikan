@@ -63,9 +63,9 @@ struct BrowserPane: View {
                             Button { customization.filters.removeAll { $0.id == f.id } } label: { Image(systemName: "minus.circle") }
                                 .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń filtr"))
                         }
-                        TextField(L10n.tr("WHERE (alias o; :browser_user, &browser_filter)"), text: $f.whereClause).font(.system(.body, design: .monospaced))
+                        TextField(L10n.tr("WHERE (alias o; :browser_user, &browser_filter)"), text: $f.whereClause).font(.code)
                         HStack {
-                            TextField(L10n.tr("ORDER BY"), text: $f.orderBy).font(.system(.body, design: .monospaced))
+                            TextField(L10n.tr("ORDER BY"), text: $f.orderBy).font(.code)
                             TextField(L10n.tr("Użytkownik bazy (puste — wszyscy)"), text: $f.forUser)
                         }
                     }
@@ -86,7 +86,7 @@ struct BrowserPane: View {
                             Button { customization.folders.removeAll { $0.id == f.id } } label: { Image(systemName: "minus.circle") }
                                 .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń folder"))
                         }
-                        TextField(L10n.tr("Zapytanie: OWNER, OBJECT_NAME, OBJECT_TYPE (opcjonalne)"), text: $f.query).font(.system(.body, design: .monospaced))
+                        TextField(L10n.tr("Zapytanie: OWNER, OBJECT_NAME, OBJECT_TYPE (opcjonalne)"), text: $f.query).font(.code)
                         HStack {
                             TextField(L10n.tr("Połączenia (wzorzec, puste — wszystkie)"), text: $f.connectionPattern)
                             Picker(L10n.tr("Folder nadrzędny"), selection: $f.parentID) {

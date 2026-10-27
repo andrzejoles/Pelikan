@@ -61,7 +61,7 @@ struct ProjectView: View {
                 }
                 if !matches.isEmpty {
                     List(matches) { m in
-                        Text("\(m.title):\(m.line)  \(m.text)").font(.system(size: 12, design: .monospaced)).lineLimit(1)
+                        Text("\(m.title):\(m.line)  \(m.text)").font(.code).lineLimit(1)
                             .onTapGesture(count: 2) { open(m.item, line: m.line) }
                     }
                     .frame(height: 120)
@@ -70,7 +70,7 @@ struct ProjectView: View {
                     List(workspace.projectBuildResults) { r in
                         VStack(alignment: .leading) {
                             Text("\(statusText(r.status)) — \(r.title)").foregroundStyle(r.status == .failed ? .red : r.status == .skipped ? .secondary : .primary)
-                            ForEach(r.messages, id: \.self) { Text($0).font(.subheadline.monospaced()) }
+                            ForEach(r.messages, id: \.self) { Text($0).font(.code) }
                         }
                     }
                     .frame(height: 140)
@@ -110,7 +110,7 @@ struct ProjectView: View {
                 Text(item.title)
             }
             if let s = git?.items[item.id], !s.badge.isEmpty {
-                Text(s.badge).font(.subheadline.monospaced().bold()).foregroundStyle(gitColor(s)).help(s.displayName)
+                Text(s.badge).font(.code.bold()).foregroundStyle(gitColor(s)).help(s.displayName)
             }
             Spacer()
             TextField(L10n.tr("grupa"), text: Binding(get: { item.group ?? "" }, set: { v in

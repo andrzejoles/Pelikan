@@ -50,7 +50,6 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
             self.view.window?.makeFirstResponder(self.editor.textView)
         }
-        hierarchyLabel.font = InterfaceFonts.shared.small
         hierarchyLabel.textColor = .secondaryLabelColor
         hierarchyLabel.lineBreakMode = .byTruncatingHead
         hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -67,7 +66,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             messages.addTableColumn(c)
         }
         messages.usesAlternatingRowBackgroundColors = true
-        messages.rowSizeStyle = .small
+        messages.rowSizeStyle = .custom
         messages.dataSource = self
         messages.delegate = self
         messages.target = self
@@ -76,7 +75,6 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         messagesScroll.documentView = messages
         messagesScroll.hasVerticalScroller = true
 
-        caretLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         caretLabel.textColor = .secondaryLabelColor
         modifiedDot.textColor = .systemBlue
         modifiedDot.toolTip = L10n.tr("Zmieniony, niezapisany")
@@ -100,7 +98,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             barContainer.topAnchor.constraint(equalTo: editorPane.topAnchor),
             barContainer.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
             barContainer.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
-            barContainer.heightAnchor.constraint(equalToConstant: 26),
+            barContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 26),
+            { let c = barContainer.heightAnchor.constraint(equalTo: unitBar.heightAnchor); c.priority = .defaultHigh; return c }(),
             unitBar.leadingAnchor.constraint(equalTo: barContainer.leadingAnchor),
             unitBar.centerYAnchor.constraint(equalTo: barContainer.centerYAnchor),
             editor.topAnchor.constraint(equalTo: barContainer.bottomAnchor),
@@ -135,6 +134,17 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
         tokens.append(trackChanges { [weak self] in self?.refreshMessages() })
         tokens.append(trackChanges { [weak self] in self?.refreshIndicators() })
+        tokens.append(trackChanges { [weak self] in self?.applyInterfaceFont() })
+    }
+
+    /// Czcionka interfejsu z Preferencji (D178): pasek okna, karty jednostek i lista komunikatów — także po zmianie.
+    private func applyInterfaceFont() {
+        let small = InterfaceFonts.shared.small
+        hierarchyLabel.font = small
+        caretLabel.font = .monospacedDigitSystemFont(ofSize: small.pointSize, weight: .regular)
+        for case let b as NSButton in unitBar.arrangedSubviews { b.font = small }
+        messages.rowHeight = AppFonts.rowHeight(for: small)
+        messages.reloadData()
     }
 
     private var didPositionContents = false

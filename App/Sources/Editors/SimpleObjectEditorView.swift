@@ -21,7 +21,7 @@ struct SimpleObjectEditorView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("SQL").font(.uiHeadline).padding(.horizontal, 8).padding(.top, 8)
                     ScrollView {
-                        Text(preview).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                        Text(preview).font(.code).textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
                     }
                     .background(Color(nsColor: .textBackgroundColor))
@@ -67,7 +67,7 @@ struct SimpleObjectEditorView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(f.label)
                 TextField("", text: binding, axis: .vertical).labelsHidden().lineLimit(3...14)
-                    .font(.system(size: 12, design: .monospaced)).multilineTextAlignment(.leading).disabled(disabled)
+                    .font(.code).multilineTextAlignment(.leading).disabled(disabled)
                     .textFieldStyle(.roundedBorder)
             }
         case .text:

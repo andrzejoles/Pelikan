@@ -141,7 +141,7 @@ struct FileBrowserPane: View {
                 List(selection: $selection) {
                     FileTreeLevel(model: model, directory: loc.url, workspace: workspace)
                 }
-                .listStyle(.sidebar)
+                .listStyle(.plain)
                 .accessibilityLabel(L10n.tr("File Browser"))
                 .contextMenu(forSelectionType: String.self) { ids in
                     if let path = ids.first { menu(for: URL(fileURLWithPath: path)) }
@@ -295,7 +295,7 @@ struct FileTreeLevel: View {
                     Text(e.name).lineLimit(1)
                     Spacer()
                     if let g = e.git, !g.badge.isEmpty {
-                        Text(g.badge).font(.subheadline.monospaced().bold()).foregroundStyle(color(g)).help(g.displayName)
+                        Text(g.badge).font(.code.bold()).foregroundStyle(color(g)).help(g.displayName)
                     }
                 }
                 .tag(e.url.path)

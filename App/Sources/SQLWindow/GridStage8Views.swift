@@ -20,7 +20,7 @@ struct QueryByExampleView: View {
                 Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 4) {
                     ForEach(columns, id: \.self) { name in
                         GridRow {
-                            Text(name).font(.system(size: 12, design: .monospaced))
+                            Text(name).font(.code)
                             TextField("", text: Binding(get: { criteria[name] ?? "" }, set: { criteria[name] = $0 }))
                                 .textFieldStyle(.roundedBorder).frame(minWidth: 220)
                         }
@@ -78,7 +78,7 @@ struct ColumnFilterView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.tr("Fragmenty nazw kolumn (po przecinku albo w liniach — można wkleić listę)")).font(.uiSecondary)
-            TextEditor(text: $names).font(.system(size: 12, design: .monospaced)).frame(minHeight: 70)
+            TextEditor(text: $names).font(.code).frame(minHeight: 70)
             if !workspace.settings.columnFilterHistory.isEmpty {
                 Menu(L10n.tr("Historia")) {
                     ForEach(workspace.settings.columnFilterHistory, id: \.self) { h in Button(h.replacingOccurrences(of: "\n", with: ", ")) { names = h } }

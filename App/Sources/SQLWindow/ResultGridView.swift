@@ -94,7 +94,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             let col = NSTableColumn(identifier: .init("c\(i)"))
             col.title = c.name
             col.headerToolTip = "\(c.name) — \(c.typeName)\(c.nullable ? "" : " NOT NULL")"
-            col.width = Self.initialWidth(c)
+            col.width = Self.initialWidth(c, charWidth: charWidth)
             col.minWidth = 24
             layout = workspace.settings.gridNumberLayout
             if c.type.isNumeric, layout.alignsRight { col.headerCell.alignment = .right }
@@ -139,7 +139,6 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.representedObject = f.rawValue
         }
         export.toolTip = L10n.tr("Eksportuj zaznaczenie albo cały pobrany wynik")
-        countLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         countLabel.textColor = .secondaryLabelColor
         // Edycja (UG 7.6): kłódka Edit data, Wstaw, Usuń, Zatwierdź zmiany (z menu: kopiuj SQL zmian, anuluj).
         editButton.image = NSImage(systemSymbolName: "lock", accessibilityDescription: L10n.tr("Edytuj dane"))
@@ -213,7 +212,8 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         panel.isHidden = true
     }
 
-    static func initialWidth(_ c: ColumnInfo) -> CGFloat {
+    /// Szerokość początkowa kolumny w znakach czcionki siatki (`charWidth` — szerokość znaku, domyślnie dla 12 pt).
+    static func initialWidth(_ c: ColumnInfo, charWidth: CGFloat = 7.6) -> CGFloat {
         let chars: Int
         switch c.type {
         case .number, .binaryDouble, .binaryFloat, .binaryInteger:
@@ -224,13 +224,15 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         case .varchar2, .nvarchar2, .char, .nchar: chars = min(max(Int(c.size), c.name.count), 40)
         default: chars = max(c.name.count, 10)
         }
-        return CGFloat(chars) * 7.6 + 14
+        return CGFloat(chars) * charWidth + 14
     }
 
     private var charWidth: CGFloat { CGFloat(lastFontSize) * 0.62 }
 
     /// Czcionka (PD-GRID-025), kolumny ukryte filtrem (PD-GRID-011), szerokości i kolejność z wyrównania (PD-GRID-012).
     private func applyLayout() {
+        // Licznik wierszy czcionką interfejsu (D178) — odczyt rejestruje śledzenie zmian.
+        countLabel.font = .monospacedDigitSystemFont(ofSize: InterfaceFonts.shared.small.pointSize, weight: .regular)
         let numberLayout = workspace.settings.gridNumberLayout
         if numberLayout != layout {
             layout = numberLayout
@@ -276,7 +278,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             lastWidths = widths
             for col in table.tableColumns {
                 guard let i = dataColumnIndex(col) else { continue }
-                col.width = widths?[i].map { charWidth * CGFloat($0) + 14 } ?? Self.initialWidth(grid.columns[i])
+                col.width = widths?[i].map { charWidth * CGFloat($0) + 14 } ?? Self.initialWidth(grid.columns[i], charWidth: charWidth)
             }
         }
         let order = tab.columnOrder
@@ -572,6 +574,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         let fields = tab.recordFields(row: row, columns: visibleColumns().filter { !tab.hiddenColumns.contains($0) }).map {
             SingleRecordView.Field(name: $0.name, value: $0.value, type: $0.type, comment: $0.comment, isNull: $0.isNull)
         }
+        record.font = font
         record.show(row: row, of: grid.rowCount, fields: fields)
     }
 
@@ -782,6 +785,8 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
     private let table = NSTableView()
     private let label = NSTextField(labelWithString: "")
     var onMove: ((Int) -> Void)?
+    /// Czcionka siatki z Preferencji (D178) — ustawia ją siatka przed `show`.
+    var font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -806,7 +811,6 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         prev.toolTip = L10n.tr("Poprzedni rekord")
         next.toolTip = L10n.tr("Następny rekord")
         for b in [prev, next] { b.bezelStyle = .accessoryBarAction }
-        label.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         label.textColor = .secondaryLabelColor
         let nav = NSStackView(views: [prev, next, label])
         nav.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 4)
@@ -829,6 +833,7 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
 
     func show(row: Int, of count: Int, fields: [Field]) {
         self.fields = fields
+        label.font = .monospacedDigitSystemFont(ofSize: InterfaceFonts.shared.small.pointSize, weight: .regular)
         label.stringValue = count == 0 ? "" : L10n.tr("Rekord \(row + 1) z \(count)")
         table.reloadData()
     }
@@ -842,10 +847,10 @@ final class SingleRecordView: NSView, NSTableViewDataSource, NSTableViewDelegate
         switch tableColumn?.identifier.rawValue {
         case "name":
             tf.stringValue = f.name
-            tf.font = .boldSystemFont(ofSize: 12)
+            tf.font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
         case "value":
             tf.stringValue = f.value
-            tf.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+            tf.font = font
             if f.isNull {
                 tf.drawsBackground = true
                 tf.backgroundColor = ResultGridView.nullColor

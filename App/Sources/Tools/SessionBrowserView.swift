@@ -82,7 +82,7 @@ struct SessionBrowserView: View {
     @ViewBuilder private var detailView: some View {
         if let d = detail {
             if let text = d.text {
-                ScrollView { Text(text).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                ScrollView { Text(text).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
             } else {
                 Table(d.rows.indices.map { DetailRow(id: $0, values: d.rows[$0]) }) {
                     TableColumnForEach(d.columns.indices.map { $0 }, id: \.self) { i in
@@ -167,7 +167,7 @@ struct SessionQueriesEditor: View {
                 ForEach(items) { $item in
                     VStack(alignment: .leading, spacing: 2) {
                         TextField(L10n.tr("Nazwa"), text: $item.name).font(.uiHeadline)
-                        TextField("SQL", text: $item.sql, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(1...4)
+                        TextField("SQL", text: $item.sql, axis: .vertical).font(.code).lineLimit(1...4)
                     }
                 }
                 .onDelete { items.wrappedValue.remove(atOffsets: $0) }

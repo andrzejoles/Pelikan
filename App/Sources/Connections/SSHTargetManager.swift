@@ -375,7 +375,7 @@ struct SSHTargetEditor: View {
                     TextField("PATH", text: draft.path)
                     VStack(alignment: .leading) {
                         Text(L10n.tr("Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)")).font(.uiSecondary)
-                        TextEditor(text: extraEnvironment).font(.system(.body, design: .monospaced)).frame(height: 54)
+                        TextEditor(text: extraEnvironment).font(.code).frame(height: 54)
                     }
                 }
                 if !model.checks.isEmpty {
@@ -385,7 +385,7 @@ struct SSHTargetEditor: View {
                                 Image(systemName: c.status == .ok ? "checkmark.circle.fill" : c.status == .warning ? "exclamationmark.triangle.fill" : "xmark.octagon.fill")
                                     .foregroundStyle(c.status == .ok ? .green : c.status == .warning ? .orange : .red)
                                 Text(c.title).frame(width: 150, alignment: .leading)
-                                Text(c.detail).textSelection(.enabled).lineLimit(4).font(.system(.callout, design: .monospaced))
+                                Text(c.detail).textSelection(.enabled).lineLimit(4).font(.code)
                             }
                         }
                     }

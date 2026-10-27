@@ -53,6 +53,11 @@ enum AppFonts {
         }
     }
 
+    /// Wielkość mniejszej odmiany tekstu: o `by` pt mniej, nie poniżej 11 pt (D177), chyba że podstawowa jest mniejsza.
+    static func reduced(_ size: Double, by: Double) -> Double {
+        max(min(size, 11), size - by)
+    }
+
     /// Wysokość wiersza listy dla czcionki (tekst + odstęp, najmniej 22 pt).
     static func rowHeight(for font: NSFont) -> CGFloat {
         max(22, ceil(font.ascender - font.descender + font.leading) + 7)
@@ -78,26 +83,42 @@ final class InterfaceFonts {
     private(set) var family = ""
     private(set) var size: Double = 13
     private(set) var weight: FontWeightChoice = .regular
+    /// Krój, wielkość i grubość edytora — dla kodu poza edytorem (podglądy, wyniki tekstowe, okno poleceń).
+    private(set) var codeFamily = ""
+    private(set) var codeSize: Double = 13
+    private(set) var codeWeight: FontWeightChoice = .regular
 
     func apply(_ s: PelikanWorkspace.Settings) {
         if family != s.uiFontName { family = s.uiFontName }
         if size != s.uiFontSize { size = s.uiFontSize }
         if weight != s.uiFontWeight { weight = s.uiFontWeight }
+        // „SF Mono” to systemowa czcionka o stałej szerokości (jak w edytorze).
+        let codeName = s.editorFontName == "SF Mono" ? "" : s.editorFontName
+        if codeFamily != codeName { codeFamily = codeName }
+        if codeSize != s.editorFontSize { codeSize = s.editorFontSize }
+        if codeWeight != s.editorFontWeight { codeWeight = s.editorFontWeight }
     }
 
     /// Tekst podstawowy.
     var body: NSFont { AppFonts.font(family: family, size: size, weight: weight) }
-    /// Tekst pomocniczy: o 2 pt mniejszy (najmniej 9 pt).
-    var small: NSFont { AppFonts.font(family: family, size: max(9, size - 2), weight: weight) }
-    /// Podpisy przycisków wstążki i kart okien: o 1 pt mniejsze.
-    var label: NSFont { AppFonts.font(family: family, size: max(9, size - 1), weight: weight) }
+    /// Tekst pomocniczy: o 2 pt mniejszy, ale nie mniej niż 11 pt (D177) — chyba że sam tekst podstawowy jest mniejszy.
+    var small: NSFont { AppFonts.font(family: family, size: AppFonts.reduced(size, by: 2), weight: weight) }
+    /// Podpisy przycisków wstążki i kart okien: o 1 pt mniejsze (najmniej 11 pt jak wyżej).
+    var label: NSFont { AppFonts.font(family: family, size: AppFonts.reduced(size, by: 1), weight: weight) }
     var bold: NSFont { AppFonts.font(family: family, size: size, weight: .semibold) }
+    /// Kod w podglądach i wynikach tekstowych (D177, R3-12): krój edytora o 1 pt mniejszy (najmniej 11 pt) — jeden
+    /// rozmiar we wszystkich podglądach.
+    var code: NSFont { AppFonts.font(family: codeFamily, size: max(11, codeSize - 1), weight: codeWeight, monospaced: true) }
+    /// Edycja kodu poza edytorem (okno poleceń, edytor szablonu, LOB): krój i wielkość edytora.
+    var editor: NSFont { AppFonts.font(family: codeFamily, size: codeSize, weight: codeWeight, monospaced: true) }
 }
 
 extension Font {
     @MainActor static var ui: Font { Font(InterfaceFonts.shared.body as CTFont) }
     @MainActor static var uiSecondary: Font { Font(InterfaceFonts.shared.small as CTFont) }
     @MainActor static var uiHeadline: Font { Font(InterfaceFonts.shared.bold as CTFont) }
+    /// Kod w podglądach i wynikach — krój edytora, jeden rozmiar (R3-12).
+    @MainActor static var code: Font { Font(InterfaceFonts.shared.code as CTFont) }
 }
 
 extension View {

@@ -142,7 +142,7 @@ struct InstanceViewerView: View {
                 }
                 Text(L10n.tr("Najdroższe SQL (czas)")).font(.uiSecondary.bold())
                 Table(s.topSQL) {
-                    TableColumn("SQL_ID") { t in Text(t.sqlID).font(.subheadline.monospaced()) }.width(110)
+                    TableColumn("SQL_ID") { t in Text(t.sqlID).font(.code) }.width(110)
                     TableColumn(L10n.tr("Wykonania")) { t in Text("\(t.executions)").monospacedDigit() }.width(80)
                     TableColumn(L10n.tr("Czas s")) { t in Text(String(format: "%.2f", t.elapsedSeconds)).monospacedDigit() }.width(70)
                     TableColumn("CPU s") { t in Text(String(format: "%.2f", t.cpuSeconds)).monospacedDigit() }.width(70)

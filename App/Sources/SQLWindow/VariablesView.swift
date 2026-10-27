@@ -137,7 +137,7 @@ struct VariablesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title).font(.title3.bold())
+            Text(title).font(.uiHeadline)
             Form {
                 ForEach($model.fields) { $f in
                     if !f.request.options.hidden { row($f) }

@@ -23,7 +23,7 @@ struct LogonView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(L10n.tr("Zaloguj")).font(.title2.bold())
+            Text(L10n.tr("Zaloguj")).font(.uiHeadline)
             TextField(L10n.tr("Szukaj połączenia"), text: $query).textFieldStyle(.roundedBorder)
                 .focused($searchFocused)
                 .onSubmit { connect() }

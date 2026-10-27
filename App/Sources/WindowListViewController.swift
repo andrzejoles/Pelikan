@@ -21,7 +21,7 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         column.title = L10n.tr("Okna")
         table.addTableColumn(column)
         table.headerView = nil
-        table.style = .sourceList
+        table.style = .plain
         table.rowHeight = 22
         table.dataSource = self
         table.delegate = self

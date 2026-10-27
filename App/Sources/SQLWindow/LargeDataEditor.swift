@@ -57,7 +57,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         mode.target = self
         mode.action = #selector(modeChanged)
         let tv = textView.documentView as! NSTextView
-        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = InterfaceFonts.shared.editor
         tv.isRichText = false
         tv.allowsUndo = true
         tv.isAutomaticQuoteSubstitutionEnabled = false
