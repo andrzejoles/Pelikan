@@ -13,7 +13,8 @@ kompilacji (`CFBundleVersion`) = liczba wszystkich commitów — rośnie z każd
 na 1.0.0), a po nim porównuje wersje Sparkle; instalator `.pkg` nie sprawdza wersji aplikacji (`BundleIsVersionChecked`
 wyłączone), więc 1.0.0 zastępuje bety. Zmiany wchodzą na `main` przez PR scalane „Merge pull request” (nie squash).
 `make version` wypisuje wersję; `scripts/set-version.sh` zapisuje ją do `build/Version.xcconfig` przed budowaniem.
-Wydanie stabilne: `scripts/release.sh` (notatki z sekcji wersji w `docs/NOWOSCI.md`); `--beta` — dawny tryb bety.
+Wydanie stabilne: `scripts/release.sh` (notatki z sekcji wersji w `docs/NOWOSCI.md` i sekcji wersji pośrednich bez
+osobnego wydania — nowszych niż poprzedni znacznik); `--beta` — dawny tryb bety.
 
 ## Podpis
 
