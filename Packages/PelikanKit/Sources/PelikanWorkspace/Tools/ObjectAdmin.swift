@@ -144,7 +144,7 @@ public enum ObjectAdmin {
             for r in rows {
                 let attr = (r[3].displayText ?? "ERROR").uppercased()
                 messages.append(CompileMessage(severity: attr == "WARNING" ? .warning : .error, unit: u.tabTitle,
-                                               line: u.line + (Int(r[0].format(.default)) ?? 1), column: Int(r[1].format(.default)) ?? 1,
+                                               line: u.sourceLine + (Int(r[0].format(.default)) ?? 1), column: Int(r[1].format(.default)) ?? 1,
                                                text: (r[2].displayText ?? "").replacingOccurrences(of: temp, with: base).trimmingCharacters(in: .whitespacesAndNewlines)))
             }
         }
