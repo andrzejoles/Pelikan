@@ -61,7 +61,7 @@ targets:
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
         LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
         GENERATE_INFOPLIST_FILE: NO
-        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
     postBuildScripts:
       # Tłumaczenia nazw w menu Usługi (klucze z nazwą aplikacji po rozwinięciu Brand.xcconfig).
       - name: ServicesMenu.strings
