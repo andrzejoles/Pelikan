@@ -90,7 +90,8 @@ struct DBAPanelView: View {
 
     private func lock(_ lock: Bool) {
         guard let user = selected?.first else { return }
-        Task { await run("dba.lockUser", ["user": .string(user), "lock": .bool(lock)]) }
+        // Nazwa ze słownika — w postaci SQL (`"app_User"` w cudzysłowie), argument komendy podniósłby zwykłą nazwę.
+        Task { await run("dba.lockUser", ["user": .string(ResultExporter.identifier(user)), "lock": .bool(lock)]) }
     }
 
     private func run(_ id: CommandID, _ args: [String: JSONValue]) async {

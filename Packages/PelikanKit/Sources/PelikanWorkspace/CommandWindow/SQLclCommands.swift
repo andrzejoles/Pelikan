@@ -136,9 +136,9 @@ extension SQLPlusEngine {
         let (header, rows) = TextImport.parse(text, format)
         guard !header.isEmpty else { throw SQLPlusError(L10n.tr("Plik nie ma nagłówka z nazwami kolumn")) }
         let s = try await windowSession()
-        let parts = table.split(separator: ".").map { String($0).uppercased() }
+        let parts = table.split(separator: ".").map { ResultExporter.dictionaryName(String($0)) }
         let owner = parts.count == 2 ? parts[0] : (try await s.scalar("select sys_context('userenv','current_schema') from dual") ?? "")
-        let name = parts.last ?? table.uppercased()
+        let name = parts.last ?? ResultExporter.dictionaryName(table)
         let conn = windowConnection
         var mappings: [FieldMapping]
         if create {

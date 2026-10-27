@@ -50,6 +50,9 @@ public struct ImportTarget: Sendable, Codable, Hashable {
     /// Warunek SQL (bez WHERE) z odwołaniami `:NAZWA_POLA` — wiersz importowany, gdy spełniony.
     public var filter = ""
     public var commitEvery = 1000
+    /// Liczby w polach dat to numery seryjne Excela (komórki liczbowe arkusza xlsx). W pliku tekstowym nie — tam
+    /// „240115” to data w formacie użytkownika (np. `YYMMDD`), nie dzień nr 240 115 od 1899-12-30.
+    public var excelSerialDates = false
 
     public init(owner: String, table: String, mappings: [FieldMapping]) {
         self.owner = owner; self.table = table; self.mappings = mappings
@@ -190,14 +193,14 @@ public enum TextImport {
     }
 
     /// Wartość pola przygotowana do wiązania: liczba z kropką dziesiętną bez spacji; data z liczby Excela
-    /// (dni od 1899-12-30) zamieniana na `YYYY-MM-DD HH24:MI:SS`.
-    static func prepared(_ value: String, _ m: FieldMapping) -> String {
+    /// (dni od 1899-12-30, tylko `excelSerial` — arkusz xlsx) zamieniana na `YYYY-MM-DD HH24:MI:SS`.
+    static func prepared(_ value: String, _ m: FieldMapping, excelSerial: Bool = false) -> String {
         let v = value.trimmingCharacters(in: .whitespaces)
         switch m.type {
         case .string: return value
         case .number: return v.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "\u{00A0}", with: "").replacingOccurrences(of: ",", with: ".")
         case .date:
-            if let serial = Double(v), v.range(of: #"^\d+(\.\d+)?$"#, options: .regularExpression) != nil, serial > 0, serial < 2_958_466 {
+            if excelSerial, let serial = Double(v), v.range(of: #"^\d+(\.\d+)?$"#, options: .regularExpression) != nil, serial > 0, serial < 2_958_466 {
                 let seconds = (serial * 86_400).rounded()
                 var cal = Calendar(identifier: .gregorian)
                 cal.timeZone = TimeZone(identifier: "UTC")!
@@ -210,9 +213,9 @@ public enum TextImport {
         }
     }
 
-    /// Format daty dla wartości przygotowanej z liczby Excela.
-    static func dateFormat(_ value: String, _ m: FieldMapping) -> String {
-        value.trimmingCharacters(in: .whitespaces).range(of: #"^\d+(\.\d+)?$"#, options: .regularExpression) != nil ? "YYYY-MM-DD HH24:MI:SS" : m.dateFormat
+    /// Format daty: dla wartości przygotowanej z liczby Excela stały, inaczej format pola.
+    static func dateFormat(_ value: String, _ m: FieldMapping, excelSerial: Bool = false) -> String {
+        prepared(value, m, excelSerial: excelSerial) != value.trimmingCharacters(in: .whitespaces) ? "YYYY-MM-DD HH24:MI:SS" : m.dateFormat
     }
 
     /// Wyrażenie SQL kolumny: konwersja typu, potem funkcja z `#`.
@@ -227,7 +230,9 @@ public enum TextImport {
         return f.contains("#") ? f.replacingOccurrences(of: "#", with: base) : base
     }
 
-    static func q(_ s: String) -> String { ResultExporter.identifier(s.uppercased()) }
+    /// Nazwy celu i kolumn w postaci słownika (z ALL_TAB_COLUMNS albo `ResultExporter.dictionaryName`) — bez zmiany
+    /// wielkości liter: kolumna `"dataUr"` to nie `DATAUR`.
+    static func q(_ s: String) -> String { ResultExporter.identifier(s) }
 
     /// Blok PL/SQL importu jednego wiersza: INSERT … SELECT … FROM dual WHERE filtr; duplikaty klucza pomijane albo
     /// nadpisywane (UPDATE po kluczu głównym); `:n_` — liczba wstawionych (1/0), `:u_` — zaktualizowanych.
@@ -243,9 +248,9 @@ public enum TextImport {
         case .error: break
         case .ignore: handler = " exception when dup_val_on_index then :n_ := 0;"
         case .overwrite:
-            let keys = Set(keyColumns.map { $0.uppercased() })
-            let sets = zip(used, exprs).filter { !keys.contains($0.0.column.uppercased()) }.map { "\(q($0.0.column)) = \($0.1)" }
-            let wheres = zip(used, exprs).filter { keys.contains($0.0.column.uppercased()) }.map { "\(q($0.0.column)) = \($0.1)" }
+            let keys = Set(keyColumns)
+            let sets = zip(used, exprs).filter { !keys.contains($0.0.column) }.map { "\(q($0.0.column)) = \($0.1)" }
+            let wheres = zip(used, exprs).filter { keys.contains($0.0.column) }.map { "\(q($0.0.column)) = \($0.1)" }
             if !sets.isEmpty, !wheres.isEmpty {
                 handler = " exception when dup_val_on_index then :n_ := 0; update \(table) set \(sets.joined(separator: ", ")) where \(wheres.joined(separator: " and ")); :u_ := sql%rowcount;"
             } else {
@@ -255,24 +260,25 @@ public enum TextImport {
         return "begin :u_ := 0; \(insert); :n_ := sql%rowcount;\(handler) end;"
     }
 
-    /// Kolumny klucza głównego tabeli.
+    /// Kolumny klucza głównego tabeli (właściciel i tabela w postaci słownika).
     public static func primaryKey(owner: String, table: String, in s: any DatabaseSession) async throws -> [String] {
         let (_, rows) = try await s.queryAll("""
             select cc.column_name from all_constraints c join all_cons_columns cc on cc.owner = c.owner and cc.constraint_name = c.constraint_name
              where c.owner = :o and c.table_name = :t and c.constraint_type = 'P' order by cc.position
-            """, binds: [BindVariable(name: "o", value: .text(owner.uppercased())), BindVariable(name: "t", value: .text(table.uppercased()))])
+            """, binds: [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "t", value: .text(table))])
         return rows.compactMap { $0.first?.displayText }
     }
 
-    /// Kolumny tabeli z typami — domyślne mapowanie po nazwie (bez względu na wielkość liter) albo po kolejności.
+    /// Kolumny tabeli z typami — domyślne mapowanie po nazwie (bez względu na wielkość liter) albo po kolejności;
+    /// właściciel i tabela w postaci słownika.
     public static func defaultMappings(owner: String, table: String, fieldNames: [String], in s: any DatabaseSession) async throws -> [FieldMapping] {
         let (_, rows) = try await s.queryAll("select column_name, data_type from all_tab_columns where owner = :o and table_name = :t order by column_id",
-                                             binds: [BindVariable(name: "o", value: .text(owner.uppercased())), BindVariable(name: "t", value: .text(table.uppercased()))])
+                                             binds: [BindVariable(name: "o", value: .text(owner)), BindVariable(name: "t", value: .text(table))])
         let upper = fieldNames.map { $0.uppercased().trimmingCharacters(in: .whitespaces) }
         return rows.enumerated().map { i, r in
             let col = r[0].displayText ?? ""
             let type = r[1].displayText ?? ""
-            let field = upper.firstIndex(of: col) ?? (upper.allSatisfy { $0.hasPrefix("POLE") } && i < fieldNames.count ? i : nil)
+            let field = upper.firstIndex(of: col.uppercased()) ?? (upper.allSatisfy { $0.hasPrefix("POLE") } && i < fieldNames.count ? i : nil)
             let t: ImportFieldType = type.contains("DATE") || type.hasPrefix("TIMESTAMP") ? .date : ["NUMBER", "FLOAT", "BINARY_DOUBLE", "BINARY_FLOAT", "INTEGER"].contains(type) ? .number : .string
             return FieldMapping(column: col, field: field, type: t)
         }
@@ -283,56 +289,63 @@ public enum TextImport {
     public static func run(_ rows: [[String]], fieldNames: [String], target t: ImportTarget, in s: any DatabaseSession,
                            progress: (@MainActor (Int) -> Void)? = nil) async throws -> ImportResult {
         let keys = t.duplicates == .overwrite ? try await primaryKey(owner: t.owner, table: t.table, in: s) : []
-        switch t.clear {
-        case .none: break
-        case .delete: _ = try await s.execute("delete from \(q(t.owner)).\(q(t.table))")
-        case .truncate: _ = try await s.execute("truncate table \(q(t.owner)).\(q(t.table))")
-        }
         var result = ImportResult()
-        let used = t.mappings.filter { $0.field != nil }
-        let filterBinds = Set(Lexer(t.filter).tokenize().filter { $0.kind == .bindVariable }.map {
-            (t.filter as NSString).substring(with: NSRange(location: $0.start + 1, length: $0.length - 1)).uppercased()
-        })
-        for (i, row) in rows.enumerated() {
-            var formats: [String: String] = [:]
-            for m in used where m.type == .date { formats[m.column] = dateFormat(row.indices.contains(m.field!) ? row[m.field!] : "", m) }
-            let sql = rowStatement(t, fieldNames: fieldNames, keyColumns: keys, dateFormats: formats)
-            var binds: [String: BindVariable] = [:]
-            for m in used {
-                let name = bindName(fieldNames[m.field!], index: m.field!)
-                let raw = row.indices.contains(m.field!) ? row[m.field!] : ""
-                let v = prepared(raw, m)
-                binds[name] = m.type == .number
-                    ? BindVariable(name: name, type: .number, value: v.isEmpty ? .null : .number(v))
-                    : BindVariable(name: name, value: v.isEmpty ? .null : .text(v))
+        do {
+            switch t.clear {
+            case .none: break
+            case .delete: _ = try await s.execute("delete from \(q(t.owner)).\(q(t.table))")
+            case .truncate: _ = try await s.execute("truncate table \(q(t.owner)).\(q(t.table))")
             }
-            for (fi, fname) in fieldNames.enumerated() {
-                let name = bindName(fname, index: fi)
-                if filterBinds.contains(name), binds[name] == nil {
-                    // Pole tylko w filtrze: liczba (także z przecinkiem dziesiętnym) wiązana jako NUMBER, reszta jako tekst.
-                    let v = row.indices.contains(fi) ? row[fi] : ""
-                    let n = prepared(v, FieldMapping(column: "", field: fi, type: .number))
-                    binds[name] = v.isEmpty ? BindVariable(name: name, value: .null)
-                        : Double(n) != nil ? BindVariable(name: name, type: .number, value: .number(n)) : BindVariable(name: name, value: .text(v))
+            let used = t.mappings.filter { $0.field != nil }
+            let filterBinds = Set(Lexer(t.filter).tokenize().filter { $0.kind == .bindVariable }.map {
+                (t.filter as NSString).substring(with: NSRange(location: $0.start + 1, length: $0.length - 1)).uppercased()
+            })
+            for (i, row) in rows.enumerated() {
+                var formats: [String: String] = [:]
+                for m in used where m.type == .date { formats[m.column] = dateFormat(row.indices.contains(m.field!) ? row[m.field!] : "", m, excelSerial: t.excelSerialDates) }
+                let sql = rowStatement(t, fieldNames: fieldNames, keyColumns: keys, dateFormats: formats)
+                var binds: [String: BindVariable] = [:]
+                for m in used {
+                    let name = bindName(fieldNames[m.field!], index: m.field!)
+                    let raw = row.indices.contains(m.field!) ? row[m.field!] : ""
+                    let v = prepared(raw, m, excelSerial: t.excelSerialDates)
+                    binds[name] = m.type == .number
+                        ? BindVariable(name: name, type: .number, value: v.isEmpty ? .null : .number(v))
+                        : BindVariable(name: name, value: v.isEmpty ? .null : .text(v))
                 }
+                for (fi, fname) in fieldNames.enumerated() {
+                    let name = bindName(fname, index: fi)
+                    if filterBinds.contains(name), binds[name] == nil {
+                        // Pole tylko w filtrze: liczba (także z przecinkiem dziesiętnym) wiązana jako NUMBER, reszta jako tekst.
+                        let v = row.indices.contains(fi) ? row[fi] : ""
+                        let n = prepared(v, FieldMapping(column: "", field: fi, type: .number))
+                        binds[name] = v.isEmpty ? BindVariable(name: name, value: .null)
+                            : Double(n) != nil ? BindVariable(name: name, type: .number, value: .number(n)) : BindVariable(name: name, value: .text(v))
+                    }
+                }
+                binds["n_"] = BindVariable(name: "n_", type: .number, direction: .output)
+                binds["u_"] = BindVariable(name: "u_", type: .number, direction: .output)
+                do {
+                    let r = try await s.execute(sql, binds: Array(binds.values))
+                    let n = Int(r.outBinds["n_"]?.displayText ?? r.outBinds["N_"]?.displayText ?? "0") ?? 0
+                    let u = Int(r.outBinds["u_"]?.displayText ?? r.outBinds["U_"]?.displayText ?? "0") ?? 0
+                    result.inserted += n
+                    result.updated += u
+                    if n == 0, u == 0 { result.skipped += 1 }
+                } catch {
+                    result.errors.append(L10n.tr("Wiersz \(i + 1): \(error.localizedDescription)"))
+                    if result.errors.count > 1000 { break }
+                }
+                if t.commitEvery > 0, (i + 1) % t.commitEvery == 0 { try await s.commit() }
+                if i % 100 == 0 { await progress?(i + 1) }
             }
-            binds["n_"] = BindVariable(name: "n_", type: .number, direction: .output)
-            binds["u_"] = BindVariable(name: "u_", type: .number, direction: .output)
-            do {
-                let r = try await s.execute(sql, binds: Array(binds.values))
-                let n = Int(r.outBinds["n_"]?.displayText ?? r.outBinds["N_"]?.displayText ?? "0") ?? 0
-                let u = Int(r.outBinds["u_"]?.displayText ?? r.outBinds["U_"]?.displayText ?? "0") ?? 0
-                result.inserted += n
-                result.updated += u
-                if n == 0, u == 0 { result.skipped += 1 }
-            } catch {
-                result.errors.append(L10n.tr("Wiersz \(i + 1): \(error.localizedDescription)"))
-                if result.errors.count > 1000 { break }
-            }
-            if t.commitEvery > 0, (i + 1) % t.commitEvery == 0 { try await s.commit() }
-            if i % 100 == 0 { await progress?(i + 1) }
+            try await s.commit()
+        } catch {
+            // Błąd w połowie (COMMIT, utrata sesji): wiersze od ostatniego COMMIT wycofane — sesja narzędzia jest
+            // długożyjąca i jej następne użycie zatwierdziłoby je.
+            try? await s.rollback()
+            throw error
         }
-        try await s.commit()
         return result
     }
 
@@ -346,25 +359,31 @@ public enum TextImport {
         case .delete: out += "delete from \(table);\n"
         case .truncate: out += "truncate table \(table);\n"
         }
+        // Zmienne filtra po tokenach leksera (jak wiązanie w `run`) — `:A` nie zmienia `:AB`, a `:A` w literale zostaje;
+        // od końca, żeby podstawienie nie przesuwało dalszych zakresów.
+        let filterText = t.filter.trimmingCharacters(in: .whitespacesAndNewlines)
+        let filterBinds: [(NSRange, Int)] = Lexer(filterText).tokenize().reversed().compactMap { tok in
+            guard tok.kind == .bindVariable else { return nil }
+            let name = (filterText as NSString).substring(with: NSRange(location: tok.start + 1, length: tok.length - 1)).uppercased()
+            return fieldNames.indices.first { bindName(fieldNames[$0], index: $0) == name }.map { (NSRange(location: tok.start, length: tok.length), $0) }
+        }
         for (i, row) in rows.enumerated() {
             func lit(_ fi: Int, _ m: FieldMapping?) -> String {
                 let raw = row.indices.contains(fi) ? row[fi] : ""
-                let v = m.map { prepared(raw, $0) } ?? raw
+                let v = m.map { prepared(raw, $0, excelSerial: t.excelSerialDates) } ?? raw
                 if v.isEmpty { return "NULL" }
                 if m?.type == .number, Double(v) != nil { return v }
                 return ResultExporter.quote(v)
             }
             var exprs: [String] = []
             for m in used {
-                let df = m.type == .date ? dateFormat(row.indices.contains(m.field!) ? row[m.field!] : "", m) : m.dateFormat
+                let df = m.type == .date ? dateFormat(row.indices.contains(m.field!) ? row[m.field!] : "", m, excelSerial: t.excelSerialDates) : m.dateFormat
                 let e = expression(m, bind: "X_", dateFormat: df)
                 exprs.append(e.replacingOccurrences(of: ":X_", with: lit(m.field!, m)))
             }
-            var filter = t.filter.trimmingCharacters(in: .whitespacesAndNewlines)
-            for (fi, fname) in fieldNames.enumerated() {
-                filter = filter.replacingOccurrences(of: ":\(bindName(fname, index: fi))", with: lit(fi, nil), options: .caseInsensitive)
-            }
-            out += "insert into \(table) (\(used.map { q($0.column) }.joined(separator: ", "))) select \(exprs.joined(separator: ", ")) from dual\(filter.isEmpty ? "" : " where \(filter)");\n"
+            let filter = NSMutableString(string: filterText)
+            for (range, fi) in filterBinds { filter.replaceCharacters(in: range, with: lit(fi, nil)) }
+            out += "insert into \(table) (\(used.map { q($0.column) }.joined(separator: ", "))) select \(exprs.joined(separator: ", ")) from dual\(filter.length == 0 ? "" : " where \(filter)");\n"
             if t.commitEvery > 0, (i + 1) % t.commitEvery == 0 { out += "commit;\n" }
         }
         return out + "commit;\n"

@@ -102,6 +102,12 @@ public enum TableTransfer {
         var virtual: Bool
         /// Identity GENERATED ALWAYS — INSERT z wartością daje ORA-32795.
         var identityAlways: Bool
+
+        /// Wyrażenie listy SELECT: TIMESTAMP WITH LOCAL TIME ZONE jako czas UTC z przesunięciem (TSTZ) — wartość w strefie
+        /// sesji źródła wczytana w sesji celu o innej strefie przesunęłaby się, a porównanie pokazałoby fałszywe różnice.
+        var selectExpression: String {
+            type.uppercased().hasSuffix("WITH LOCAL TIME ZONE") ? "\(q(name)) at time zone '+00:00' as \(q(name))" : q(name)
+        }
     }
 
     /// Kolumny użytkownika tabeli (także INVISIBLE — `SELECT *` je pomija; bez ukrytych systemowych) w kolejności tabeli.
@@ -133,7 +139,7 @@ public enum TableTransfer {
         var stored: [TableColumn] = []
         if let columns { stored = columns } else { stored = try await self.columns(table, owner: owner, in: s) }
         stored.removeAll(where: \.virtual)
-        let list = stored.isEmpty ? "*" : stored.map { q($0.name) }.joined(separator: ", ")
+        let list = stored.isEmpty ? "*" : stored.map(\.selectExpression).joined(separator: ", ")
         let r = try await s.execute("select \(list) from \(q(owner)).\(q(table))\(cond.isEmpty ? "" : " where \(cond)")", binds: [],
                                     options: ExecuteOptions(lobLimit: 10_000_000, bulk: true))
         guard let rs = r.resultSet else { return [] }
@@ -143,6 +149,16 @@ public enum TableTransfer {
             if !batch.hasMore { break }
         }
         return rs.columns
+    }
+
+    /// Górna granica danych eksportu budowanego w pamięci (tekst skryptu, wartości formatu własnego) — większa tabela
+    /// przerywa z czytelnym błędem zamiast zatrzymać aplikację (kilka kopii danych w pamięci przy zapisie).
+    static let memoryLimit = 500_000_000
+
+    static func checkMemoryLimit(_ bytes: Int) throws {
+        if bytes > memoryLimit {
+            throw CommandError.notAvailable(L10n.tr("Eksport przekracza 500 MB danych — zawęź go warunkiem WHERE albo użyj Data Pump"))
+        }
     }
 
     /// Skrypt SQL Inserts zgodny z oknem poleceń / SQL*Plus.
@@ -191,6 +207,7 @@ public enum TableTransfer {
                     return ResultExporter.literal(v)
                 }
                 out += header + values.joined(separator: ", ") + ");\n"
+                try checkMemoryLimit(out.utf8.count)
                 n += 1
                 if o.commitEvery > 0, n % o.commitEvery == 0 { out += "commit;\n" }
             }
@@ -263,6 +280,7 @@ public enum TableTransfer {
     public static func exportNative(_ tables: [String], owner: String, whereClause: String = "", includeDDL: Bool = true,
                                     in s: any DatabaseSession, progress: (@MainActor (String) -> Void)? = nil) async throws -> Data {
         var file = PelikanTableFile(created: ISO8601DateFormatter().string(from: Date()), tables: [])
+        var bytes = 0
         for t in try await orderByForeignKeys(tables, owner: owner, in: s) {
             await progress?(t)
             var rows: [[String?]] = []
@@ -272,8 +290,11 @@ public enum TableTransfer {
             let cols = try await fetch(t, owner: owner, whereClause: whereClause, columns: columns, in: s) { info, row in
                 rows.append(try zip(info, row).map { c, v in
                     try TransferValues.check(v, column: "\(t).\(c.name)")
-                    return encode(v)
+                    let e = encode(v)
+                    bytes += (e?.utf8.count ?? 0) + 8
+                    return e
                 })
+                try checkMemoryLimit(bytes)
             }
             let types = Dictionary(columns.map { ($0.name, $0.type) }, uniquingKeysWith: { a, _ in a })
             let ddl = includeDDL ? try await tableDDL(t, owner: owner, settings: ObjectExportSettings(storage: false), in: s) : ""
@@ -313,7 +334,9 @@ public enum TableTransfer {
     static func valueExpression(_ type: String, bind: String) -> String {
         let t = type.uppercased()
         if t == "DATE" { return "TO_DATE(SUBSTR(:\(bind), 1, 19), 'YYYY-MM-DD HH24:MI:SS')" }
-        if t.hasPrefix("TIMESTAMP"), t.hasSuffix("WITH TIME ZONE"), !t.contains("LOCAL") {
+        // TIMESTAMP WITH LOCAL TIME ZONE też z przesunięciem (eksport w UTC); w plikach sprzed tej zmiany bez przesunięcia
+        // TO_TIMESTAMP_TZ przyjmuje strefę sesji — jak dawniej TO_TIMESTAMP.
+        if t.hasPrefix("TIMESTAMP"), t.hasSuffix("TIME ZONE") {
             return "TO_TIMESTAMP_TZ(:\(bind), 'YYYY-MM-DD HH24:MI:SS.FF9 TZH:TZM')"
         }
         if t.hasPrefix("TIMESTAMP") { return "TO_TIMESTAMP(:\(bind), 'YYYY-MM-DD HH24:MI:SS.FF9')" }
@@ -421,56 +444,165 @@ public enum TableTransfer {
             }
             if previous != owner { _ = try await s.execute("alter session set current_schema = \(q(previous))") }
         }
-        if o.disableTriggers { for t in tables { _ = try? await s.execute("alter table \(q(owner)).\(q(t.name)) disable all triggers") } }
         var fks: [String: [String]] = [:]
-        if o.disableForeignKeys {
+        do {
+            // Nieudane wyłączenie wyzwalacza albo więzu — w raporcie (import idzie dalej z włączonym).
+            if o.disableTriggers {
+                for t in tables {
+                    do { _ = try await s.execute("alter table \(q(owner)).\(q(t.name)) disable all triggers") } catch { result.errors.append("\(t.name): \(error.localizedDescription)") }
+                }
+            }
+            if o.disableForeignKeys {
+                for t in tables {
+                    fks[t.name] = try await foreignKeys(t.name, owner: owner, in: s)
+                    for c in fks[t.name] ?? [] {
+                        do { _ = try await s.execute("alter table \(q(owner)).\(q(t.name)) disable constraint \(q(c))") } catch { result.errors.append("\(t.name).\(c): \(error.localizedDescription)") }
+                    }
+                }
+            }
+            for t in tables.reversed() {
+                if o.truncate { _ = try await s.execute("truncate table \(q(owner)).\(q(t.name))") } else if o.delete { _ = try await s.execute("delete from \(q(owner)).\(q(t.name))") }
+            }
             for t in tables {
-                fks[t.name] = try await foreignKeys(t.name, owner: owner, in: s)
-                for c in fks[t.name] ?? [] { _ = try? await s.execute("alter table \(q(owner)).\(q(t.name)) disable constraint \(q(c))") }
+                await progress?(t.name)
+                // Kolumny celu: wirtualne pomijane (pliki sprzed poprawki je zawierają — ORA-54013); identity ALWAYS na czas
+                // importu BY DEFAULT, potem licznik od największej wartości (jak Recreate table).
+                let target = try await columns(t.name, owner: owner, in: s)
+                let virtual = Set(target.filter(\.virtual).map(\.name))
+                let used = t.columns.indices.filter { !virtual.contains(t.columns[$0].name) }
+                let always = t.rows.isEmpty ? [] : target.filter { c in c.identityAlways && used.contains { t.columns[$0].name == c.name } }
+                let table = "\(q(owner)).\(q(t.name))"
+                let sql = "insert into \(table) (\(used.map { q(t.columns[$0].name) }.joined(separator: ", "))) values ("
+                    + used.map { valueExpression(t.columns[$0].type, bind: "c\($0)") }.joined(separator: ", ") + ")"
+                for c in always { _ = try await s.execute("alter table \(table) modify (\(q(c.name)) generated by default as identity)") }
+                do {
+                    for (i, row) in t.rows.enumerated() {
+                        try Task.checkCancellation()
+                        let values: [BindVariable] = used.map { j in bindValue(t.columns[j].type, name: "c\(j)", value: j < row.count ? row[j] : nil) }
+                        do {
+                            _ = try await s.execute(sql, binds: values)
+                            result.inserted += 1
+                        } catch {
+                            result.errors.append("\(t.name) " + L10n.tr("wiersz \(i + 1): \(error.localizedDescription)"))
+                        }
+                        if o.commitEvery > 0, (i + 1) % o.commitEvery == 0 { try await s.commit() }
+                    }
+                    try await s.commit()
+                } catch {
+                    // ALTER zatwierdza transakcję — najpierw wycofanie wierszy od ostatniego COMMIT.
+                    try? await s.rollback()
+                    for c in always { _ = try? await s.execute("alter table \(table) modify (\(q(c.name)) generated always as identity (start with limit value))") }
+                    throw error
+                }
+                for c in always {
+                    do { _ = try await s.execute("alter table \(table) modify (\(q(c.name)) generated always as identity (start with limit value))") }
+                    catch { result.errors.append("\(t.name).\(c.name): \(error.localizedDescription)") }
+                }
+            }
+        } catch {
+            // Błąd albo przerwanie w połowie: niezatwierdzone wiersze wycofane (sesja narzędzia jest długożyjąca — następne
+            // jej użycie by je zatwierdziło), więzy i wyzwalacze włączone z powrotem; nieudane przywrócenie w komunikacie.
+            try? await s.rollback()
+            let failed = await restore(tables.map(\.name), foreignKeys: fks, triggers: o.disableTriggers, owner: owner, in: s)
+            if failed.isEmpty { throw error }
+            throw CommandError.notAvailable(error.localizedDescription + "\n" + L10n.tr("Nie przywrócono więzów i wyzwalaczy:") + "\n" + failed.joined(separator: "\n"))
+        }
+        result.errors += await restore(tables.map(\.name), foreignKeys: fks, triggers: o.disableTriggers, owner: owner, in: s)
+        return result
+    }
+
+    /// Włączenie więzów FK i wyzwalaczy wyłączonych na czas importu; zwraca błędy (tabela.więz: komunikat).
+    static func restore(_ tables: [String], foreignKeys fks: [String: [String]], triggers: Bool, owner: String, in s: any DatabaseSession) async -> [String] {
+        var errors: [String] = []
+        for t in tables {
+            for c in fks[t] ?? [] {
+                do { _ = try await s.execute("alter table \(q(owner)).\(q(t)) enable constraint \(q(c))") } catch { errors.append("\(t).\(c): \(error.localizedDescription)") }
             }
         }
-        for t in tables.reversed() {
-            if o.truncate { _ = try await s.execute("truncate table \(q(owner)).\(q(t.name))") } else if o.delete { _ = try await s.execute("delete from \(q(owner)).\(q(t.name))") }
+        if triggers {
+            for t in tables {
+                do { _ = try await s.execute("alter table \(q(owner)).\(q(t)) enable all triggers") } catch { errors.append("\(t): \(error.localizedDescription)") }
+            }
         }
-        for t in tables {
-            await progress?(t.name)
-            // Kolumny celu: wirtualne pomijane (pliki sprzed poprawki je zawierają — ORA-54013); identity ALWAYS na czas
-            // importu BY DEFAULT, potem licznik od największej wartości (jak Recreate table).
-            let target = try await columns(t.name, owner: owner, in: s)
-            let virtual = Set(target.filter(\.virtual).map(\.name))
-            let used = t.columns.indices.filter { !virtual.contains(t.columns[$0].name) }
-            let always = t.rows.isEmpty ? [] : target.filter { c in c.identityAlways && used.contains { t.columns[$0].name == c.name } }
-            let table = "\(q(owner)).\(q(t.name))"
-            let sql = "insert into \(table) (\(used.map { q(t.columns[$0].name) }.joined(separator: ", "))) values ("
-                + used.map { valueExpression(t.columns[$0].type, bind: "c\($0)") }.joined(separator: ", ") + ")"
-            for c in always { _ = try await s.execute("alter table \(table) modify (\(q(c.name)) generated by default as identity)") }
-            do {
-                for (i, row) in t.rows.enumerated() {
-                    let values: [BindVariable] = used.map { j in bindValue(t.columns[j].type, name: "c\(j)", value: j < row.count ? row[j] : nil) }
+        return errors
+    }
+
+    /// Kopia wierszy tabeli do tabeli o tej samej nazwie w schemacie celu (Kopiowanie schematu): partiami prosto z sesji
+    /// źródła, bez pliku pośredniego i bez całej tabeli w pamięci; wartości jak w formacie własnym (`encode`,
+    /// `valueExpression`, `bindValue`). Wartości nieprzenoszalne (obiekt, BFILE, LOB ponad limit odczytu) sprawdzane przed
+    /// pierwszym wierszem — `CommandError` bez żadnego wiersza w celu. Błąd albo przerwanie w trakcie — wycofanie od
+    /// ostatniego COMMIT i przywrócenie identity ALWAYS.
+    static func copyRows(_ table: String, sourceOwner: String, source: any DatabaseSession, targetOwner: String, target: any DatabaseSession,
+                         whereClause: String, commitEvery: Int) async throws -> ImportResult {
+        let cond = whereClause.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cond.contains(";") else { throw CommandError.invalidArgument("where", L10n.tr("warunek bez średnika")) }
+        let from = "\(q(sourceOwner)).\(q(table))" + (cond.isEmpty ? "" : " where \(cond)")
+        let targetColumns = try await columns(table, owner: targetOwner, in: target)
+        let virtual = Set(targetColumns.filter(\.virtual).map(\.name))
+        let used = try await columns(table, owner: sourceOwner, in: source).filter { !$0.virtual && !virtual.contains($0.name) }
+        guard !used.isEmpty else { return ImportResult() }
+        let lobLimit = 10_000_000
+        let lobs = used.filter { ["BLOB", "CLOB", "NCLOB"].contains($0.type) }
+        if !lobs.isEmpty {
+            let (_, r) = try await source.queryAll("select \(lobs.map { "max(dbms_lob.getlength(\(q($0.name))))" }.joined(separator: ", ")) from \(from)", limit: 1)
+            for (i, c) in lobs.enumerated() where (Int(r.first?[i].displayText ?? "") ?? 0) > lobLimit {
+                let column = "\(table).\(c.name)"
+                throw CommandError.notAvailable(L10n.tr("Kolumna \(column): wartości LOB są większe niż limit przenoszenia (10 MB)"))
+            }
+        }
+        let r = try await source.execute("select \(used.map(\.selectExpression).joined(separator: ", ")) from \(from)", binds: [],
+                                         options: ExecuteOptions(lobLimit: lobLimit, bulk: true))
+        guard let rs = r.resultSet else { return ImportResult() }
+        if let bad = rs.columns.first(where: { [.object, .bfile, .refCursor].contains($0.type) }) {
+            await source.closeResultSet(rs.id)
+            let column = "\(table).\(bad.name)"
+            throw CommandError.notAvailable(L10n.tr("Kolumna \(column): wartości typu \(bad.typeName) nie da się porównać ani przenieść"))
+        }
+        let dst = "\(q(targetOwner)).\(q(table))"
+        let sql = "insert into \(dst) (\(used.map { q($0.name) }.joined(separator: ", "))) values ("
+            + used.indices.map { valueExpression(used[$0].type, bind: "c\($0)") }.joined(separator: ", ") + ")"
+        // Identity ALWAYS przyjmuje wartości tylko jako BY DEFAULT; potem licznik od największej wartości.
+        let always = targetColumns.filter { c in c.identityAlways && used.contains { $0.name == c.name } }
+        var switched: [TableColumn] = []
+        var result = ImportResult()
+        var n = 0
+        do {
+            for c in always {
+                _ = try await target.execute("alter table \(dst) modify (\(q(c.name)) generated by default as identity)")
+                switched.append(c)
+            }
+            while true {
+                try Task.checkCancellation()
+                let batch = try await source.fetch(rs.id, maxRows: 5000)
+                for row in batch.rows {
+                    let binds = try used.indices.map { j -> BindVariable in
+                        let v = j < row.count ? row[j] : .null
+                        try TransferValues.check(v, column: "\(table).\(used[j].name)")
+                        return bindValue(used[j].type, name: "c\(j)", value: encode(v))
+                    }
                     do {
-                        _ = try await s.execute(sql, binds: values)
+                        _ = try await target.execute(sql, binds: binds)
                         result.inserted += 1
                     } catch {
-                        result.errors.append("\(t.name) " + L10n.tr("wiersz \(i + 1): \(error.localizedDescription)"))
+                        result.errors.append("\(table) " + L10n.tr("wiersz \(n + 1): \(error.localizedDescription)"))
                     }
-                    if o.commitEvery > 0, (i + 1) % o.commitEvery == 0 { try await s.commit() }
+                    n += 1
+                    if commitEvery > 0, n % commitEvery == 0 { try await target.commit() }
                 }
-                try await s.commit()
-            } catch {
-                for c in always { _ = try? await s.execute("alter table \(table) modify (\(q(c.name)) generated always as identity (start with limit value))") }
-                throw error
+                if !batch.hasMore { break }
             }
-            for c in always {
-                do { _ = try await s.execute("alter table \(table) modify (\(q(c.name)) generated always as identity (start with limit value))") }
-                catch { result.errors.append("\(t.name).\(c.name): \(error.localizedDescription)") }
-            }
+            try await target.commit()
+        } catch {
+            // ALTER zatwierdza transakcję — najpierw wycofanie wierszy od ostatniego COMMIT.
+            await source.closeResultSet(rs.id)
+            try? await target.rollback()
+            for c in switched { _ = try? await target.execute("alter table \(dst) modify (\(q(c.name)) generated always as identity (start with limit value))") }
+            throw error
         }
-        if o.disableForeignKeys {
-            for t in tables { for c in fks[t.name] ?? [] {
-                do { _ = try await s.execute("alter table \(q(owner)).\(q(t.name)) enable constraint \(q(c))") } catch { result.errors.append("\(t.name).\(c): \(error.localizedDescription)") }
-            } }
+        for c in switched {
+            do { _ = try await target.execute("alter table \(dst) modify (\(q(c.name)) generated always as identity (start with limit value))") }
+            catch { result.errors.append("\(table).\(c.name): \(error.localizedDescription)") }
         }
-        if o.disableTriggers { for t in tables { _ = try? await s.execute("alter table \(q(owner)).\(q(t.name)) enable all triggers") } }
         return result
     }
 

@@ -26,10 +26,11 @@ public struct ImportWizardState: Sendable, Codable, Hashable {
     public init() {}
 
     public var target: ImportTarget {
-        var t = ImportTarget(owner: owner.uppercased(), table: table.uppercased(), mappings: mappings)
+        var t = ImportTarget(owner: ResultExporter.dictionaryName(owner), table: ResultExporter.dictionaryName(table), mappings: mappings)
         t.clear = clear
         t.duplicates = duplicates
         t.commitEvery = commitEvery
+        t.excelSerialDates = source == .excel
         return t
     }
 }
@@ -142,15 +143,18 @@ public enum ImportWizard {
     /// Mapowanie: dla nowej tabeli z typów wykrytych w danych, dla istniejącej — po nazwach kolumn.
     public static func prepareMappings(_ state: inout ImportWizardState, data: ImportSourceData, in s: (any DatabaseSession)?) async throws {
         if state.createTable || s == nil {
-            state.mappings = TextImport.createTable(owner: state.owner.uppercased(), table: state.table.uppercased(), fieldNames: data.fieldNames, rows: data.rows).mappings
+            state.mappings = TextImport.createTable(owner: ResultExporter.dictionaryName(state.owner), table: ResultExporter.dictionaryName(state.table),
+                                                    fieldNames: data.fieldNames, rows: data.rows).mappings
         } else if let s {
-            state.mappings = try await TextImport.defaultMappings(owner: state.owner.uppercased(), table: state.table.uppercased(), fieldNames: data.fieldNames, in: s)
+            state.mappings = try await TextImport.defaultMappings(owner: ResultExporter.dictionaryName(state.owner), table: ResultExporter.dictionaryName(state.table),
+                                                                 fieldNames: data.fieldNames, in: s)
         }
     }
 
     /// Polecenia DDL nowej tabeli (z typów mapowania) — podgląd przed importem.
     public static func createTableSQL(_ state: ImportWizardState, data: ImportSourceData) -> String {
-        TextImport.createTable(owner: state.owner.uppercased(), table: state.table.uppercased(), fieldNames: data.fieldNames, rows: data.rows).sql
+        TextImport.createTable(owner: ResultExporter.dictionaryName(state.owner), table: ResultExporter.dictionaryName(state.table),
+                               fieldNames: data.fieldNames, rows: data.rows).sql
     }
 
     /// Import: utworzenie tabeli (gdy nowa), wstawienie wierszy; COMMIT według opcji celu.

@@ -290,7 +290,8 @@ public final class LocalTaskScheduler {
         switch d.action {
         case .transfer(let name):
             let job = try DataTransferStore.load(name, in: ws.dataDirectory)
-            let r = try await ws.runDataTransfer(job) { n in task.message = L10n.tr("Wierszy: \(n)") }
+            // Pusta nazwa połączenia w definicji — połączenie główne, jak w skrypcie i eksporcie zadania.
+            let r = try await ws.runDataTransfer(job, emptyIsMain: true) { n in task.message = L10n.tr("Wierszy: \(n)") }
             return [L10n.tr("Przeniesiono wierszy: \(r.inserted), błędy: \(r.errors.count)")] + r.errors.prefix(50)
         case .script(let file, let text, let commit):
             let conn = try connection(d, in: ws)

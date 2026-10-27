@@ -60,6 +60,7 @@ struct PlanAnalysisTests {
         #expect(try DBAPanel.alterParameterSQL(name: "nls_date_format", value: "YYYY-MM-DD", scope: "SPFILE") == "alter system set nls_date_format = 'YYYY-MM-DD' scope = spfile")
         #expect(try DBAPanel.lockUserSQL("scott", lock: true) == "alter user SCOTT account lock")
         #expect(throws: CommandError.self) { try DBAPanel.lockUserSQL("x; drop user y", lock: false) }
+        #expect(try DBAPanel.lockUserSQL("\"app_User\"", lock: false) == "alter user \"app_User\" account unlock")
         #expect(throws: CommandError.self) { try DBAPanel.alterParameterSQL(name: "a", value: "1", scope: "ALL") }
     }
 

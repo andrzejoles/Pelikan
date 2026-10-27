@@ -330,4 +330,130 @@ struct DataTransferDBTests {
         for t in ["pelikan_dt_d", "pelikan_dt_m"] { _ = try? await s.execute("drop table \(t) purge") }
         await ws.sessions.disconnectAll()
     }
+
+    func openTransaction(_ s: any DatabaseSession) async throws -> Bool {
+        try await s.scalar("select dbms_transaction.local_transaction_id from dual") != nil
+    }
+
+    @Test("WS1-09: błąd w połowie importu i przeniesienia — wiersze wycofane, wyzwalacze i więzy włączone, sesja bez transakcji")
+    func failureRollsBack() async throws {
+        let s = try await TestDatabase.connect()
+        let src = try await TestDatabase.connect()
+        defer { Task { for t in ["pelikan_rb_c", "pelikan_rb_p", "pelikan_rb_t"] { _ = try? await s.execute("drop table \(t) purge") }; await s.close(); await src.close() } }
+        for t in ["pelikan_rb_c", "pelikan_rb_p", "pelikan_rb_t"] { _ = try? await s.execute("drop table \(t) purge") }
+        _ = try await s.execute("create table pelikan_rb_p (id number primary key, n varchar2(10))")
+        _ = try await s.execute("create table pelikan_rb_c (id number primary key, p_id number constraint pelikan_rb_fk references pelikan_rb_p)")
+        _ = try await s.execute("create or replace trigger pelikan_rb_trg before insert on pelikan_rb_p for each row begin null; end;")
+        _ = try await s.execute("insert into pelikan_rb_p values (1, 'a')")
+        _ = try await s.execute("insert into pelikan_rb_c values (1, 1)")
+        try await s.commit()
+        // Import formatu własnego: TRUNCATE tabeli nadrzędnej z włączonym kluczem obcym tabeli spoza importu — ORA-02266
+        // po wyłączeniu wyzwalaczy; wyzwalacze wracają, transakcji nie ma.
+        let file = PelikanTableFile(created: "", tables: [PelikanTableData(owner: schema, name: "PELIKAN_RB_P", ddl: "",
+                                                                           columns: [.init(name: "ID", type: "NUMBER"), .init(name: "N", type: "VARCHAR2")],
+                                                                           rows: [["2", "b"]])])
+        var o = TableImportOptions()
+        o.truncate = true
+        o.disableTriggers = true
+        await #expect(throws: (any Error).self) { _ = try await TableTransfer.importNative(file, tables: ["PELIKAN_RB_P"], intoOwner: schema, options: o, in: s) }
+        #expect(try await s.scalar("select status from user_triggers where trigger_name = 'PELIKAN_RB_TRG'") == "ENABLED")
+        #expect(try await openTransaction(s) == false)
+        // Wyłączony FK tabeli podrzędnej, błąd wiersza (kolumna spoza tabeli) — po imporcie więz znowu włączony.
+        o.truncate = false
+        o.disableTriggers = false
+        o.disableForeignKeys = true
+        var bad = file
+        bad.tables[0].name = "PELIKAN_RB_C"
+        bad.tables[0].columns[1].name = "BRAK"
+        let r = try await TableTransfer.importNative(bad, tables: ["PELIKAN_RB_C"], intoOwner: schema, options: o, in: s)
+        #expect(r.inserted == 0 && r.errors.count == 1, "\(r.errors)")
+        #expect(try await s.scalar("select status from user_constraints where constraint_name = 'PELIKAN_RB_FK'") == "ENABLED")
+        #expect(try await openTransaction(s) == false)
+        // Przeniesienie: błąd źródła w drugiej paczce (dzielenie przez zero w wierszu 6000) — 5000 wstawionych wierszy
+        // wycofanych, sesja celu bez transakcji (jej następne użycie niczego nie zatwierdzi).
+        _ = try await s.execute("create table pelikan_rb_t (id number)")
+        var job = DataTransferJob()
+        job.sourceQuery = "select 1 / (6000 - level) id from dual connect by level <= 6000"
+        job.targetOwner = schema; job.targetTable = "PELIKAN_RB_T"
+        job.mappings = [TransferColumnMapping(target: "ID", source: "ID")]
+        job.commitEvery = 0
+        await #expect(throws: (any Error).self) { _ = try await DataTransferRunner.run(job, source: src, target: s) }
+        #expect(try await openTransaction(s) == false)
+        #expect(try await s.scalar("select count(*) from pelikan_rb_t") == "0")
+    }
+
+    @Test("WS1-13, WS1-10: import CSV, przeniesienie i generator do tabeli i kolumn w cudzysłowie; liczba w polu daty CSV w formacie użytkownika")
+    func mixedCaseNames() async throws {
+        let s = try await TestDatabase.connect()
+        defer { Task { _ = try? await s.execute("drop table \"Pelikan_Mixed\" purge"); await s.close() } }
+        _ = try? await s.execute("drop table \"Pelikan_Mixed\" purge")
+        _ = try await s.execute("create table \"Pelikan_Mixed\" (\"colA\" number primary key, \"dataUr\" date)")
+        let table = ResultExporter.dictionaryName("\"Pelikan_Mixed\"")
+        #expect(table == "Pelikan_Mixed")
+        let csv = "colA;dataUr\n1;240115\n"
+        let (h, rows) = TextImport.parse(csv, TextImport.detect(csv))
+        var t = ImportTarget(owner: schema, table: table, mappings: try await TextImport.defaultMappings(owner: schema, table: table, fieldNames: h, in: s))
+        #expect(t.mappings.map(\.column) == ["colA", "dataUr"] && t.mappings.map(\.field) == [0, 1])
+        // WS1-10: „240115” w pliku tekstowym to data w formacie pola, nie numer seryjny Excela.
+        t.mappings[1].dateFormat = "YYMMDD"
+        t.duplicates = .overwrite
+        let r = try await TextImport.run(rows, fieldNames: h, target: t, in: s)
+        #expect(r.inserted == 1 && r.errors.isEmpty, "\(r.errors)")
+        #expect(try await s.scalar("select to_char(\"dataUr\", 'YYYY-MM-DD') from \"Pelikan_Mixed\" where \"colA\" = 1") == "2024-01-15")
+        let r2 = try await TextImport.run([["1", "240116"]], fieldNames: h, target: t, in: s)
+        #expect(r2.updated == 1 && r2.errors.isEmpty, "\(r2.errors)")
+        // Przeniesienie: tabela wpisana w cudzysłowie, schemat małymi literami, kolumny celu ze słownika.
+        var job = DataTransferJob()
+        job.sourceQuery = "select 2 a, date '2024-02-03' d from dual"
+        job.targetOwner = schema.lowercased(); job.targetTable = "\"Pelikan_Mixed\""
+        #expect(try await DataTransferRunner.targetColumns(job, in: s) == ["colA", "dataUr"])
+        job.mappings = [TransferColumnMapping(target: "colA", source: "A"), TransferColumnMapping(target: "dataUr", source: "D")]
+        let r3 = try await DataTransferRunner.run(job, source: s, target: s)
+        #expect(r3.inserted == 1 && r3.errors.isEmpty, "\(r3.errors)")
+        // Generator: definicja ze słownika i zapis do bazy.
+        var g = try await DataGenerator.defaultTable(owner: schema, table: table, in: s)
+        #expect(g.name == "Pelikan_Mixed" && g.fields.map(\.name) == ["colA", "dataUr"])
+        g.fields[0].definition = "Sequence(10)"
+        g.minRecords = 2
+        g.maxRecords = 2
+        var gen = DataGenerator(seed: 1, session: s)
+        let data = try await gen.generate([g])
+        let r4 = try await DataGenerator.insert(data, tables: [g], owner: schema, in: s)
+        #expect(r4.inserted == 2 && r4.errors.isEmpty, "\(r4.errors)")
+        #expect(try await s.scalar("select count(*) from \"Pelikan_Mixed\"") == "4")
+    }
+
+    @Test("WS1-25: TIMESTAMP WITH LOCAL TIME ZONE między sesjami o różnej strefie — format własny, skrypt i porównanie bez przesunięcia")
+    func localTimeZone() async throws {
+        let a = try await TestDatabase.connect()
+        let b = try await TestDatabase.connect()
+        defer { Task { for t in ["pelikan_ltz_s", "pelikan_ltz_t"] { _ = try? await a.execute("drop table \(t) purge") }; await a.close(); await b.close() } }
+        for t in ["pelikan_ltz_s", "pelikan_ltz_t"] { _ = try? await a.execute("drop table \(t) purge") }
+        _ = try await a.execute("alter session set time_zone = '+02:00'")
+        _ = try await b.execute("alter session set time_zone = '-05:00'")
+        _ = try await a.execute("create table pelikan_ltz_s (id number primary key, t timestamp(9) with local time zone)")
+        _ = try await a.execute("create table pelikan_ltz_t (id number primary key, t timestamp(9) with local time zone)")
+        _ = try await a.execute("insert into pelikan_ltz_s values (1, timestamp '2024-06-01 12:00:00.123456789 +02:00')")
+        try await a.commit()
+        // Porównanie tej samej tabeli z dwóch sesji: bez fałszywych różnic.
+        #expect(try await TableDataCompare.compare(table: "PELIKAN_LTZ_S", sourceOwner: schema, source: a, targetOwner: schema, target: b).isEmpty)
+        // Format własny: eksport w sesji +02:00, import w sesji -05:00 — ta sama chwila.
+        var file = try TableTransfer.unpackNative(try await TableTransfer.exportNative(["PELIKAN_LTZ_S"], owner: schema, includeDDL: false, in: a))
+        #expect(file.tables[0].rows[0][1] == "2024-06-01 10:00:00.123456789 +00:00")
+        file.tables[0].name = "PELIKAN_LTZ_T"
+        let imp = try await TableTransfer.importNative(file, tables: ["PELIKAN_LTZ_T"], intoOwner: schema, options: TableImportOptions(), in: b)
+        #expect(imp.inserted == 1 && imp.errors.isEmpty, "\(imp.errors)")
+        let same = "select count(*) from pelikan_ltz_s s join pelikan_ltz_t t on t.id = s.id and sys_extract_utc(t.t) = sys_extract_utc(s.t)"
+        #expect(try await a.scalar(same) == "1")
+        // Plik sprzed poprawki (bez przesunięcia): strefa sesji celu, jak dawniej TO_TIMESTAMP.
+        _ = try await b.execute("delete from pelikan_ltz_t")
+        try await b.commit()
+        file.tables[0].rows[0][1] = "2024-06-01 05:00:00.123456789"
+        let old = try await TableTransfer.importNative(file, tables: ["PELIKAN_LTZ_T"], intoOwner: schema, options: TableImportOptions(), in: b)
+        #expect(old.inserted == 1 && old.errors.isEmpty, "\(old.errors)")
+        #expect(try await a.scalar(same) == "1")
+        // Skrypt SQL Inserts: literał z przesunięciem.
+        let script = try await TableTransfer.sqlInserts(["PELIKAN_LTZ_S"], owner: schema, options: TableExportOptions(), in: a)
+        #expect(script.contains("TO_TIMESTAMP_TZ('2024-06-01 10:00:00.123456789 +00:00'"), "\(script)")
+    }
 }

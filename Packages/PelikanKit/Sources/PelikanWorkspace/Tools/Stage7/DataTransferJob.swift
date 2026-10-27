@@ -42,10 +42,14 @@ public struct DataTransferJob: Sendable, Codable, Hashable {
             return t
         }
         let w = whereClause.trimmingCharacters(in: .whitespaces)
-        return "select * from \(ResultExporter.identifier(sourceOwner.uppercased())).\(ResultExporter.identifier(sourceTable.uppercased()))" + (w.isEmpty ? "" : " where \(w)")
+        return "select * from \(ResultExporter.identifier(ResultExporter.dictionaryName(sourceOwner))).\(ResultExporter.identifier(ResultExporter.dictionaryName(sourceTable)))"
+            + (w.isEmpty ? "" : " where \(w)")
     }
 
-    var targetName: String { "\(ResultExporter.identifier(targetOwner.uppercased())).\(ResultExporter.identifier(targetTable.uppercased()))" }
+    /// Tabela celu w SQL — schemat i tabela wpisane w polach (w cudzysłowie bez zmiany wielkości liter).
+    var targetName: String {
+        "\(ResultExporter.identifier(ResultExporter.dictionaryName(targetOwner))).\(ResultExporter.identifier(ResultExporter.dictionaryName(targetTable)))"
+    }
 }
 
 public enum DataTransferRunner {
@@ -59,7 +63,7 @@ public enum DataTransferRunner {
 
     /// Kolumny celu, które przyjmują wartości: bez wirtualnych (ORA-54013) i identity ALWAYS (ORA-32795).
     public static func targetColumns(_ job: DataTransferJob, in s: any DatabaseSession) async throws -> [String] {
-        try await TableTransfer.columns(job.targetTable.uppercased(), owner: job.targetOwner.uppercased(), in: s)
+        try await TableTransfer.columns(ResultExporter.dictionaryName(job.targetTable), owner: ResultExporter.dictionaryName(job.targetOwner), in: s)
             .filter { !$0.virtual && !$0.identityAlways }.map(\.name)
     }
 
@@ -130,37 +134,40 @@ public enum DataTransferRunner {
                 throw CommandError.notAvailable(L10n.tr("Kolumna \(c.name): wartości LOB są większe niż limit przenoszenia (10 MB)"))
             }
         }
-        switch job.mode {
-        case .append: break
-        case .truncate: _ = try await target.execute("truncate table \(job.targetName)")
-        case .delete: result.deleted = Int(try await target.execute("delete from \(job.targetName)").rowsAffected)
-        }
-        var n = 0
-        while true {
-            try Task.checkCancellation()
-            let batch = try await source.fetch(rs.id, maxRows: 5000)
-            for row in batch.rows {
-                // Wartość nieprzenoszalna (np. LOB ponad limit odczytu) przerywa całe przeniesienie — bez cichego NULL.
-                let st: (sql: String, binds: [BindVariable])
-                do { st = try statement(job, columns: columns, row: row, bind: true) } catch {
-                    await source.closeResultSet(rs.id)
-                    try await target.rollback()
-                    throw error
-                }
-                do {
-                    _ = try await target.execute(st.sql, binds: st.binds)
-                    result.inserted += 1
-                } catch {
-                    result.errors.append(L10n.tr("Wiersz \(n + 1): \(error.localizedDescription)"))
-                    if !job.continueOnError { await source.closeResultSet(rs.id); try await target.rollback(); throw error }
-                }
-                n += 1
-                if job.commitEvery > 0, n % job.commitEvery == 0 { try await target.commit() }
+        do {
+            switch job.mode {
+            case .append: break
+            case .truncate: _ = try await target.execute("truncate table \(job.targetName)")
+            case .delete: result.deleted = Int(try await target.execute("delete from \(job.targetName)").rowsAffected)
             }
-            await progress?(n)
-            if !batch.hasMore { break }
+            var n = 0
+            while true {
+                try Task.checkCancellation()
+                let batch = try await source.fetch(rs.id, maxRows: 5000)
+                for row in batch.rows {
+                    // Wartość nieprzenoszalna (np. LOB ponad limit odczytu) przerywa całe przeniesienie — bez cichego NULL.
+                    let st = try statement(job, columns: columns, row: row, bind: true)
+                    do {
+                        _ = try await target.execute(st.sql, binds: st.binds)
+                        result.inserted += 1
+                    } catch {
+                        result.errors.append(L10n.tr("Wiersz \(n + 1): \(error.localizedDescription)"))
+                        if !job.continueOnError { throw error }
+                    }
+                    n += 1
+                    if job.commitEvery > 0, n % job.commitEvery == 0 { try await target.commit() }
+                }
+                await progress?(n)
+                if !batch.hasMore { break }
+            }
+            try await target.commit()
+        } catch {
+            // Błąd, przerwanie albo wartość nieprzenoszalna: kursor źródła zamknięty, wiersze od ostatniego COMMIT wycofane —
+            // sesja celu jest długożyjąca i jej następne użycie zatwierdziłoby je (po ponownym uruchomieniu — dwa razy).
+            await source.closeResultSet(rs.id)
+            try? await target.rollback()
+            throw error
         }
-        try await target.commit()
         return result
     }
 }
@@ -196,10 +203,20 @@ extension Workspace {
         return connections.connections.first { $0.displayName.caseInsensitiveCompare(n) == .orderedSame }?.id
     }
 
+    /// Połączenia źródła i celu przeniesienia. Pusta nazwa — połączenie aktywnego okna, a w zadaniu lokalnym
+    /// (`emptyIsMain`) połączenie główne: zadanie cykliczne nie może trafiać na bazę okna aktywnego w chwili uruchomienia.
+    func dataTransferConnections(_ job: DataTransferJob, emptyIsMain: Bool) throws -> (source: UUID, target: UUID) {
+        func id(_ name: String) -> UUID? {
+            emptyIsMain && name.trimmingCharacters(in: .whitespaces).isEmpty ? sessions.mainConnectionID : connectionID(named: name)
+        }
+        guard let src = id(job.sourceConnection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie źródła „\(job.sourceConnection)”")) }
+        guard let dst = id(job.targetConnection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie celu „\(job.targetConnection)”")) }
+        return (src, dst)
+    }
+
     /// Przeniesienie danych w sesjach narzędzi połączeń źródła i celu; zmiana celu przez strażnika zmian.
-    public func runDataTransfer(_ job: DataTransferJob, progress: (@MainActor (Int) -> Void)? = nil) async throws -> ImportResult {
-        guard let src = connectionID(named: job.sourceConnection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie źródła „\(job.sourceConnection)”")) }
-        guard let dst = connectionID(named: job.targetConnection) else { throw CommandError.notAvailable(L10n.tr("Nieznane połączenie celu „\(job.targetConnection)”")) }
+    public func runDataTransfer(_ job: DataTransferJob, emptyIsMain: Bool = false, progress: (@MainActor (Int) -> Void)? = nil) async throws -> ImportResult {
+        let (src, dst) = try dataTransferConnections(job, emptyIsMain: emptyIsMain)
         try await guardModification(["insert into \(job.targetName) values (null)"], connectionID: dst)
         let source = try await sessions.session(SessionKey(connectionID: src, purpose: .tool("transfer-source")))
         let target = try await sessions.session(SessionKey(connectionID: dst, purpose: .tool("transfer-target")))
