@@ -21,6 +21,10 @@ public struct ProblemReport: Sendable, Equatable {
     public var details = ""
     public var includeEnvironment = true
     public var includeLog = true
+    /// Komunikat błędu (`.error`) do treści — widoczny i edytowalny w oknie zgłoszenia, z możliwością pominięcia:
+    /// komunikaty aplikacji i Oracle (ORA-20xxx) mogą zawierać nazwy obiektów, schematów i dane.
+    public var includeErrorMessage = true
+    public var errorMessage = ""
     public var environment: String
     public var logTail: [String]
 
@@ -31,10 +35,17 @@ public struct ProblemReport: Sendable, Equatable {
         switch origin {
         case .manual: self.title = title
         case .error(let message):
-            self.title = title.isEmpty ? L10n.tr("Błąd: \(Self.firstLine(message, limit: 80))") : title
+            errorMessage = message
+            // Tytuł bez treści komunikatu — tylko kod błędu, gdy jest.
+            self.title = title.isEmpty ? Self.errorCode(message).map { L10n.tr("Błąd: \($0)") } ?? L10n.tr("Błąd w aplikacji") : title
         case .crash(let summary):
             self.title = title.isEmpty ? L10n.tr("Awaria: \(summary?.exceptionType ?? L10n.tr("nieoczekiwane zamknięcie"))") : title
         }
+    }
+
+    /// Kod błędu z komunikatu (ORA-, PLS-, TNS-, DPI-, SP2-) albo nil.
+    static func errorCode(_ message: String) -> String? {
+        message.range(of: #"\b(ORA|PLS|TNS|DPI|SP2)-\d{4,5}\b"#, options: .regularExpression).map { String(message[$0]) }
     }
 
     static func firstLine(_ s: String, limit: Int) -> String {
@@ -49,8 +60,11 @@ public struct ProblemReport: Sendable, Equatable {
         out += (text.isEmpty ? L10n.tr("(brak opisu)") : LogRedactor.redact(text)) + "\n\n"
         switch origin {
         case .manual: break
-        case .error(let message):
-            out += "### " + L10n.tr("Komunikat błędu") + "\n\n" + Self.fenced(LogRedactor.redact(message)) + "\n"
+        case .error:
+            let message = errorMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+            if includeErrorMessage, !message.isEmpty {
+                out += "### " + L10n.tr("Komunikat błędu") + "\n\n" + Self.fenced(LogRedactor.redact(message)) + "\n"
+            }
         case .crash(let summary):
             out += "### " + L10n.tr("Awaria") + "\n\n"
             out += Self.fenced(summary.map { LogRedactor.redact($0.text) } ?? L10n.tr("Aplikacja została zamknięta nieoczekiwanie (bez raportu awarii macOS).")) + "\n"

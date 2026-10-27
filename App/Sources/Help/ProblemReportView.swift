@@ -30,6 +30,15 @@ struct ProblemReportView: View {
                 .font(.ui)
                 .frame(minHeight: 90)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
+            if case .error = report.origin {
+                Toggle(L10n.tr("Dołącz komunikat błędu (może zawierać nazwy obiektów, schematów i dane — sprawdź i popraw poniżej)"), isOn: $report.includeErrorMessage)
+                if report.includeErrorMessage {
+                    TextEditor(text: $report.errorMessage)
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(minHeight: 50, maxHeight: 90)
+                        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
+                }
+            }
             Toggle(L10n.tr("Dołącz opis środowiska (wersja, system, sterowniki — bez nazw połączeń)"), isOn: $report.includeEnvironment)
             Toggle(L10n.tr("Dołącz ostatnie wpisy dziennika (\(report.logTail.count))"), isOn: $report.includeLog)
                 .disabled(report.logTail.isEmpty)

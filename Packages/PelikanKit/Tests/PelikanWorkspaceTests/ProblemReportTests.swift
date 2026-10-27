@@ -33,6 +33,19 @@ struct ProblemReportTests {
         #expect(ProblemReport(origin: .crash(nil), environment: "", logTail: []).title == "Awaria: nieoczekiwane zamknięcie")
     }
 
+    @Test("R3-05: tytuł z samego kodu błędu, komunikat do edycji albo pominięcia")
+    func errorMessageOptional() {
+        var r = ProblemReport(origin: .error("ORA-20001: Klient Jan Kowalski nie ma limitu\nORA-06512: at \"HR.LIMITY\", line 7"),
+                              environment: "", logTail: [])
+        #expect(r.title == "Błąd: ORA-20001")
+        #expect(r.body().contains("Jan Kowalski"))
+        r.errorMessage = "ORA-20001: (dane usunięte)"
+        #expect(!r.body().contains("Kowalski") && r.body().contains("(dane usunięte)"))
+        r.includeErrorMessage = false
+        #expect(!r.body().contains("### Komunikat błędu") && !r.body().contains("ORA-20001"))
+        #expect(ProblemReport(origin: .error("Nie można otworzyć pliku /Volumes/Klient/umowa.sql"), environment: "", logTail: []).title == "Błąd w aplikacji")
+    }
+
     @Test("adres nowego zgłoszenia: repozytorium, tytuł, treść, znak +")
     func url() throws {
         var r = ProblemReport(origin: .manual, title: "Okno + wynik", environment: "Wersja: 1.0", logTail: ["a + b"])
