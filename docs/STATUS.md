@@ -1,12 +1,12 @@
-# Stan Pelikana — beta po przeglądzie kodu (2026-10-25)
+# Stan Pelikana — beta po przeglądzie kodu (2026-10-27)
 
-Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) ma **434** wiersze:
+Etapy 0–8 i Pro\*C (P) są zakończone. Macierz funkcji (`docs/FEATURES.md`) ma **438** wierszy:
 
 | Stan | Liczba |
 |---|---|
-| ✅ zrobione, potwierdzone testem | 405 |
-| 👁 potwierdzone zrzutem ekranu | 18 |
-| ⚠️ częściowo | 5 |
+| ✅ zrobione, potwierdzone testem | 409 |
+| 👁 potwierdzone zrzutem ekranu | 19 |
+| ⚠️ częściowo | 4 |
 | pominięte decyzją | 6 |
 
 Żaden wiersz nie ma stanu „do zrobienia”. Co testować w becie i znane ograniczenia: [`docs/BETA.md`](BETA.md).
@@ -69,7 +69,6 @@ Próba wykryła też błąd: program z innego schematu kompilowałby się w sche
 | ID | Funkcja | Stan |
 |---|---|---|
 | PD-CONN-014 | Uwierzytelnianie zewnętrzne / Kerberos | ⚠️ działa na Linuksie; na macOS blokada zamiast awarii (D159) |
-| PD-UI-003 | Narzędzia dokowane i pływające | ⚠️ karty lewej kolumny i osobne okna, bez swobodnego dokowania (D112) |
 | SD-AUTH-001 | Uwierzytelnianie Entra ID | ⚠️ zbudowane, bez próby na Azure |
 | MAC-QL-001 | Quick Look dla plików SQL | ⚠️ zbudowane, wymaga podpisu z notaryzacją |
 | MAC-UI-001 | Natywne karty, pełny ekran, tryby jasny i ciemny | ⚠️ karty własne w jednym oknie (D15) |

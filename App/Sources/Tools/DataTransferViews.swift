@@ -139,7 +139,7 @@ struct ExportTablesView: View {
         }
         .padding(12)
         .frame(minWidth: 720, minHeight: 560)
-        .task(id: connection) { owner = DataTransferUI.schema(workspace, connection); await load() }
+        .toolTask(id: connection) { owner = DataTransferUI.schema(workspace, connection); await load() }
     }
 
     init(workspace: Workspace) {
@@ -242,7 +242,7 @@ struct ImportTablesView: View {
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 520)
-        .task(id: connection) { owner = DataTransferUI.schema(workspace, connection); fromSchema = owner }
+        .toolTask(id: connection) { owner = DataTransferUI.schema(workspace, connection); fromSchema = owner }
     }
 
     init(workspace: Workspace) {
@@ -355,8 +355,8 @@ struct ImporterView: View {
         }
         .padding(12)
         .frame(minWidth: 860, minHeight: 640)
-        .task(id: connection) { owner = DataTransferUI.schema(workspace, connection) }
-        .onDisappear { parseTask?.cancel() }
+        .toolTask(id: connection) { owner = DataTransferUI.schema(workspace, connection) }
+        .onToolClose { parseTask?.cancel() }
     }
 
     init(workspace: Workspace, excel: Bool) {
@@ -595,7 +595,7 @@ struct DataGeneratorView: View {
         }
         .padding(12)
         .frame(minWidth: 860, minHeight: 600)
-        .task(id: connection) { owner = DataTransferUI.schema(workspace, connection) }
+        .toolTask(id: connection) { owner = DataTransferUI.schema(workspace, connection) }
     }
 
     init(workspace: Workspace) {
@@ -705,7 +705,7 @@ struct CompareTableDataView: View {
         .padding(12)
         .frame(minWidth: 860, minHeight: 540)
         .task { if targetID == nil { targetID = connection } }
-        .task(id: connection) {
+        .toolTask(id: connection) {
             owner = DataTransferUI.schema(workspace, connection)
             await load()
         }

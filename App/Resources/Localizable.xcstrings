@@ -4509,6 +4509,146 @@
         }
       }
     },
+    "Autoukrywanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-hide"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar automáticamente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоприховування"
+          }
+        }
+      }
+    },
+    "Autoukrywanie paneli narzędzi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-hide tool panels"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugbereiche automatisch ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar automáticamente los paneles de herramientas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоприховування панелей інструментів"
+          }
+        }
+      }
+    },
+    "Autoukrywanie paneli, gdy praca wraca do edytora" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-hide panels when work returns to the editor"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereiche automatisch ausblenden, wenn die Arbeit zum Editor zurückkehrt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar los paneles automáticamente cuando el trabajo vuelve al editor"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматично приховувати панелі, коли робота повертається до редактора"
+          }
+        }
+      }
+    },
+    "Autoukrywanie wyłączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-hide off"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisches Ausblenden aus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultación automática desactivada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоприховування вимкнено"
+          }
+        }
+      }
+    },
+    "Autoukrywanie włączone" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-hide on"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisches Ausblenden ein"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultación automática activada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоприховування увімкнено"
+          }
+        }
+      }
+    },
     "Autozapis układu okna" : {
       "localizations" : {
         "en" : {
@@ -6805,6 +6945,34 @@
         }
       }
     },
+    "Brak narzędzi w panelu. Przeciągnij tu kartę narzędzia albo wybierz Widok › Panele narzędzi." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tools in this panel. Drag a tool tab here or choose View › Tool Panels."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Werkzeuge in diesem Bereich. Ziehen Sie einen Werkzeug-Tab hierher oder wählen Sie Ansicht › Werkzeugbereiche."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay herramientas en este panel. Arrastre aquí la pestaña de una herramienta o elija Vista › Paneles de herramientas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На цій панелі немає інструментів. Перетягніть сюди вкладку інструмента або виберіть Вигляд › Панелі інструментів."
+          }
+        }
+      }
+    },
     "Brak okien na tym połączeniu" : {
       "localizations" : {
         "en" : {
@@ -6969,6 +7137,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Keine zuletzt verwendeten Dateien"
+          }
+        }
+      }
+    },
+    "Brak otwartego narzędzia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No open tool"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein geöffnetes Werkzeug"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna herramienta abierta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає відкритого інструмента"
           }
         }
       }
@@ -27189,6 +27385,34 @@
         }
       }
     },
+    "Klucz narzędzia (puste — bieżące)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tool key (empty — current)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugschlüssel (leer — aktuelles)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de la herramienta (vacía — la actual)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ інструмента (порожньо — поточний)"
+          }
+        }
+      }
+    },
     "Klucz serwera inny niż zapamiętany w known_hosts — możliwa podmiana serwera; sprawdź z administratorem" : {
       "localizations" : {
         "en" : {
@@ -36737,6 +36961,34 @@
         }
       }
     },
+    "Narzędzia z własnym miejscem: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tools with their own location: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeuge mit eigenem Ort: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herramientas con ubicación propia: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інструменти з власним місцем: %@"
+          }
+        }
+      }
+    },
     "Narzędzie" : {
       "localizations" : {
         "en" : {
@@ -36789,6 +37041,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Werkzeug / Ereignis"
+          }
+        }
+      }
+    },
+    "Narzędzie przenosi się przeciągnięciem karty do drugiego panelu albo poza panele (osobne okno), menu karty i przyciskiem na pasku tytułu okna narzędzia. Pelikan zapamiętuje miejsce każdego rodzaju narzędzia." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move a tool by dragging its tab to the other panel or outside the panels (separate window), with the tab menu, or with the button in the tool window's title bar. Pelikan remembers the location of each kind of tool."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Werkzeug wird durch Ziehen seines Tabs in den anderen Bereich oder aus den Bereichen heraus (eigenes Fenster), über das Tab-Menü oder mit der Taste in der Titelleiste des Werkzeugfensters verschoben. Pelikan merkt sich den Ort jeder Werkzeugart."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una herramienta se mueve arrastrando su pestaña al otro panel o fuera de los paneles (ventana independiente), con el menú de la pestaña o con el botón de la barra de título de la ventana de la herramienta. Pelikan recuerda la ubicación de cada tipo de herramienta."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інструмент переміщується перетягуванням його вкладки на іншу панель або за межі панелей (окреме вікно), через меню вкладки або кнопкою на рядку заголовка вікна інструмента. Pelikan запам’ятовує місце кожного виду інструментів."
           }
         }
       }
@@ -41805,6 +42085,34 @@
         }
       }
     },
+    "Nowe narzędzia otwieraj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open new tools in"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Werkzeuge öffnen in"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir las herramientas nuevas en"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкривати нові інструменти"
+          }
+        }
+      }
+    },
     "Nowe narzędzie" : {
       "localizations" : {
         "en" : {
@@ -45781,6 +46089,62 @@
         }
       }
     },
+    "Odłącz do osobnego okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detach to separate window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In eigenes Fenster lösen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separar en una ventana independiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від’єднати в окреме вікно"
+          }
+        }
+      }
+    },
+    "Odłącz narzędzie do osobnego okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detach tool to separate window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug in eigenes Fenster lösen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separar la herramienta en una ventana independiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Від’єднати інструмент в окреме вікно"
+          }
+        }
+      }
+    },
     "Odśwież" : {
       "localizations" : {
         "en" : {
@@ -47905,6 +48269,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Особистий з'єднання"
+          }
+        }
+      }
+    },
+    "Osobne okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Separate window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eigenes Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventana independiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Окреме вікно"
           }
         }
       }
@@ -51297,6 +51689,118 @@
         }
       }
     },
+    "Panel na dole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottom panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterer Bereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel inferior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нижня панель"
+          }
+        }
+      }
+    },
+    "Panel narzędzi na dole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bottom tool panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unterer Werkzeugbereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel de herramientas inferior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нижня панель інструментів"
+          }
+        }
+      }
+    },
+    "Panel narzędzi po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right tool panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechter Werkzeugbereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel de herramientas derecho"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Права панель інструментів"
+          }
+        }
+      }
+    },
+    "Panel po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechter Bereich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Panel derecho"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Права панель"
+          }
+        }
+      }
+    },
     "Panel wartości" : {
       "localizations" : {
         "en" : {
@@ -51349,6 +51853,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Панелі"
+          }
+        }
+      }
+    },
+    "Panele narzędzi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tool Panels"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugbereiche"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paneles de herramientas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панелі інструментів"
+          }
+        }
+      }
+    },
+    "Panele narzędzi chowają się, gdy praca wraca do edytora; otwarcie narzędzia je pokazuje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tool panels hide when work returns to the editor; opening a tool shows them."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeugbereiche werden ausgeblendet, wenn die Arbeit zum Editor zurückkehrt; das Öffnen eines Werkzeugs zeigt sie an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los paneles de herramientas se ocultan cuando el trabajo vuelve al editor; abrir una herramienta los muestra."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панелі інструментів приховуються, коли робота повертається до редактора; відкриття інструмента їх показує."
           }
         }
       }
@@ -55245,6 +55805,62 @@
         }
       }
     },
+    "Pokazuje albo chowa dolny panel narzędzi okna głównego." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides the bottom tool panel of the main window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt oder verbirgt den unteren Werkzeugbereich des Hauptfensters."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta el panel de herramientas inferior de la ventana principal."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує нижню панель інструментів головного вікна."
+          }
+        }
+      }
+    },
+    "Pokazuje albo chowa prawy panel narzędzi okna głównego." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows or hides the right tool panel of the main window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt oder verbirgt den rechten Werkzeugbereich des Hauptfensters."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta el panel de herramientas derecho de la ventana principal."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує праву панель інструментів головного вікна."
+          }
+        }
+      }
+    },
     "Pokazuje albo ukrywa drugi widok tego samego tekstu pod edytorem." : {
       "localizations" : {
         "en" : {
@@ -55749,6 +56365,62 @@
         }
       }
     },
+    "Pokaż lub ukryj panel na dole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or Hide Bottom Panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unteren Bereich ein-/ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar u ocultar el panel inferior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати або приховати нижню панель"
+          }
+        }
+      }
+    },
+    "Pokaż lub ukryj panel po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show or Hide Right Panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechten Bereich ein-/ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar u ocultar el panel derecho"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати або приховати праву панель"
+          }
+        }
+      }
+    },
     "Pokaż okna połączenia" : {
       "localizations" : {
         "en" : {
@@ -55773,6 +56445,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати вікна з'єднання"
+          }
+        }
+      }
+    },
+    "Pokaż panel na dole (narzędzia: %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show bottom panel (tools: %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unteren Bereich anzeigen (Werkzeuge: %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el panel inferior (herramientas: %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати нижню панель (інструментів: %@)"
+          }
+        }
+      }
+    },
+    "Pokaż panel po prawej (narzędzia: %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show right panel (tools: %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechten Bereich anzeigen (Werkzeuge: %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar el panel derecho (herramientas: %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати праву панель (інструментів: %@)"
           }
         }
       }
@@ -62497,6 +63225,62 @@
         }
       }
     },
+    "Przenieś narzędzie na dół" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move tool to bottom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug nach unten verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover la herramienta abajo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити інструмент униз"
+          }
+        }
+      }
+    },
+    "Przenieś narzędzie w prawo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move tool to right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug nach rechts verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover la herramienta a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити інструмент праворуч"
+          }
+        }
+      }
+    },
     "Przenieść do Kosza?" : {
       "localizations" : {
         "en" : {
@@ -62689,6 +63473,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Переміщує курсор на перший непробільний символ рядка, а повторно — на початок рядка."
+          }
+        }
+      }
+    },
+    "Przenosi narzędzie do dolnego panelu; narzędzia tego rodzaju będą się tam otwierać." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the tool to the bottom panel; tools of this kind will open there."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt das Werkzeug in den unteren Bereich; Werkzeuge dieser Art werden dort geöffnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la herramienta al panel inferior; las herramientas de este tipo se abrirán allí."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує інструмент на нижню панель; інструменти цього виду відкриватимуться там."
+          }
+        }
+      }
+    },
+    "Przenosi narzędzie do prawego panelu; narzędzia tego rodzaju będą się tam otwierać." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the tool to the right panel; tools of this kind will open there."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt das Werkzeug in den rechten Bereich; Werkzeuge dieser Art werden dort geöffnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la herramienta al panel derecho; las herramientas de este tipo se abrirán allí."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує інструмент на праву панель; інструменти цього виду відкриватимуться там."
+          }
+        }
+      }
+    },
+    "Przenosi narzędzie z panelu do osobnego okna; narzędzia tego rodzaju będą się otwierać w oknie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the tool from the panel to a separate window; tools of this kind will open in a window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt das Werkzeug aus dem Bereich in ein eigenes Fenster; Werkzeuge dieser Art werden in einem Fenster geöffnet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la herramienta del panel a una ventana independiente; las herramientas de este tipo se abrirán en una ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує інструмент з панелі в окреме вікно; інструменти цього виду відкриватимуться у вікні."
           }
         }
       }
@@ -64117,6 +64985,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Standard wiederherstellen"
+          }
+        }
+      }
+    },
+    "Przywróć miejsca domyślne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore default locations"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardorte wiederherstellen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restaurar ubicaciones predeterminadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити типові місця"
           }
         }
       }
@@ -79321,6 +80217,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Приховати редактор"
+          }
+        }
+      }
+    },
+    "Ukryj panel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide panel"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereich ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar panel"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приховати панель"
           }
         }
       }
@@ -96853,6 +97777,146 @@
         }
       }
     },
+    "Zadokuj na dole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock at bottom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unten andocken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acoplar abajo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закріпити внизу"
+          }
+        }
+      }
+    },
+    "Zadokuj narzędzie na dole" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tool at Bottom"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug unten andocken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acoplar la herramienta abajo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закріпити інструмент унизу"
+          }
+        }
+      }
+    },
+    "Zadokuj narzędzie po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Tool on Right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug rechts andocken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acoplar la herramienta a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закріпити інструмент праворуч"
+          }
+        }
+      }
+    },
+    "Zadokuj po prawej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock on right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechts andocken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acoplar a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закріпити праворуч"
+          }
+        }
+      }
+    },
+    "Zadokuj w oknie głównym" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock in main window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Hauptfenster andocken"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acoplar en la ventana principal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закріпити в головному вікні"
+          }
+        }
+      }
+    },
     "Zaimportowano %@…" : {
       "localizations" : {
         "en" : {
@@ -98169,6 +99233,34 @@
         }
       }
     },
+    "Zamknij narzędzie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Tool"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Werkzeug schließen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar la herramienta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрити інструмент"
+          }
+        }
+      }
+    },
     "Zamknij okna połączenia" : {
       "localizations" : {
         "en" : {
@@ -98585,6 +99677,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Закриває вкладки результатів вікна (типово крім закріплених)."
+          }
+        }
+      }
+    },
+    "Zamyka narzędzie w panelu albo jego okno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Closes the tool in its panel or its window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schließt das Werkzeug in seinem Bereich oder sein Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cierra la herramienta en su panel o su ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закриває інструмент на його панелі або його вікно."
           }
         }
       }

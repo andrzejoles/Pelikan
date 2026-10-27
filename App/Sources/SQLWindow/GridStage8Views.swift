@@ -38,7 +38,7 @@ struct QueryByExampleView: View {
         }
         .padding(12)
         .frame(minWidth: 420, minHeight: 300)
-        .onAppear {
+        .onFirstAppear {
             guard let g = tab.grid else { return }
             for (i, v) in tab.qbeCriteria where i < g.columns.count { criteria[g.columns[i].name] = v }
         }
@@ -109,7 +109,7 @@ struct ColumnFilterView: View {
         }
         .padding(12)
         .frame(minWidth: 460)
-        .onAppear {
+        .onFirstAppear {
             guard let f = tab.columnFilter else { return }
             names = f.names.joined(separator: "\n"); types = f.types; mandatory = f.mandatoryOnly; keys = f.keys
         }

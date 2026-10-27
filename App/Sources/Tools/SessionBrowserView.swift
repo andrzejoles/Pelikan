@@ -65,7 +65,7 @@ struct SessionBrowserView: View {
         }
         .padding(10)
         .frame(minWidth: 900, minHeight: 520)
-        .task {
+        .toolTask(id: 0) {
             filter = queries.filters.first { $0.sql == "type = 'USER'" }?.sql ?? queries.filters.first?.sql ?? ""
             detailName = queries.details.first?.name ?? ""
             await reload()

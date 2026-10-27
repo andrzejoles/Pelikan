@@ -1,0 +1,9 @@
+[
+  {"command": "view.templateWindow", "delay": 1},
+  {"command": "view.floatTool", "args": {"tool": "templates"}, "delay": 1},
+  {"command": "view.dockToolBottom", "args": {"tool": "templates"}, "delay": 1},
+  {"command": "agent.showLog", "delay": 2},
+  {"command": "view.todoItems", "delay": 1},
+  {"command": "view.closeTool", "args": {"tool": "todoItems"}, "delay": 1},
+  {"command": "view.toolDockRight", "delay": 1}
+]

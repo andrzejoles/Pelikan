@@ -219,7 +219,7 @@ struct DatabaseDiffView: View {
         }
         .padding(12)
         .task { if targetID == nil { targetID = connection } }
-        .task(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
+        .toolTask(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
     }
 
     init(workspace: Workspace) {
@@ -358,7 +358,7 @@ struct SchemaCopyView: View {
         }
         .padding(12)
         .task { if targetID == nil { targetID = connection } }
-        .task(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
+        .toolTask(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
     }
 
     init(workspace: Workspace) {
@@ -506,8 +506,8 @@ struct ImportWizardView: View {
         .onChange(of: state.fixedStarts) { reload() }
         .onChange(of: state.sheet) { reload() }
         .onChange(of: state.header) { reload() }
-        .task(id: connection) { state.owner = workspace.sessions.connectedSchema(connection) ?? "" }
-        .onDisappear { readTask?.cancel() }
+        .toolTask(id: connection) { state.owner = workspace.sessions.connectedSchema(connection) ?? "" }
+        .onToolClose { readTask?.cancel() }
     }
 
     init(workspace: Workspace) {

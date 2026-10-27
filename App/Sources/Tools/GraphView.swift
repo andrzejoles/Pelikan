@@ -302,7 +302,7 @@ struct UserToolsView: View {
             .padding(8)
         }
         .frame(minWidth: 680, minHeight: 420)
-        .onAppear { tools = workspace.settings.userTools }
+        .onFirstAppear { tools = workspace.settings.userTools }
     }
 
     private func editor(_ t: Binding<UserTool>) -> some View {

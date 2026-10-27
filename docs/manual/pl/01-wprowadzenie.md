@@ -84,6 +84,14 @@ Pelikan ma jedno okno główne:
 - **Pasek stanu** okna: połączenie okna (z kolorem środowiska, przypięciem 📌 i oznaczeniem „tylko odczyt”), stan
   transakcji („● transakcja otwarta”), liczba wierszy i czas wykonania, pozycja kursora oraz gałąź Git pliku.
   Kliknięcie nazwy połączenia pozwala zmienić połączenie okna.
+- **Panele narzędzi** po prawej i na dole — narzędzia (Sesje, Znajdź obiekty, Zadania To-Do, Historia schowka,
+  instrukcja, edytory tabel, eksport i import, raporty i inne) otwierają się domyślnie w panelu po prawej, każde we
+  własnej karcie. Kartę przeciągasz do drugiego panelu albo poza panele — wtedy narzędzie dostaje osobne okno
+  w miejscu upuszczenia; to samo robi menu karty i przyciski w nagłówku panelu. Okno narzędzia wraca do panelu
+  przyciskiem na pasku tytułu. Pelikan zapamiętuje miejsce każdego rodzaju narzędzia. Zwinięty panel z narzędziami
+  pokazuje na pasku stanu przycisk z ich liczbą. Polecenia są w **Widok › Panele narzędzi**, a w **Preferencje ›
+  Ogólne › Panele narzędzi** wybierasz miejsce nowych narzędzi (także osobne okna) i autoukrywanie paneli.
+  Skróty narzędzia w panelu (Enter, Esc) działają tylko wtedy, gdy kursor jest w tym narzędziu.
 - **Panel agenta** po prawej (domyślnie zwinięty) — terminal agenta AI z listą jego działań. Pokazuje go **Widok ›
   Panel agenta** (zobacz rozdział *Agenci AI*).
 

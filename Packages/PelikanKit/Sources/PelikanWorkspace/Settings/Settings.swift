@@ -245,6 +245,8 @@ public struct Settings: Sendable, Codable, Hashable {
     /// Wstążka pod paskiem narzędzi (PD-UI-012): widoczna i zwinięta do samych kart.
     public var showRibbon = true
     public var ribbonCollapsed = false
+    /// Dokowanie narzędzi w panelach okna głównego (PD-UI-003): miejsce rodzajów narzędzi i autoukrywanie.
+    public var toolDock = ToolDockSettings()
     // Pliki
     public var recentFiles: [String] = []
     /// Pytanie o zapis zmian przy zamykaniu okna bez pliku (nowe okno z tekstem).
@@ -358,6 +360,7 @@ public struct Settings: Sendable, Codable, Hashable {
         quickAccessCommands = v(.quickAccessCommands, quickAccessCommands)
         showRibbon = v(.showRibbon, showRibbon)
         ribbonCollapsed = v(.ribbonCollapsed, ribbonCollapsed)
+        toolDock = v(.toolDock, toolDock)
         confirmCommitRollback = v(.confirmCommitRollback, confirmCommitRollback)
         useDBAViews = v(.useDBAViews, useDBAViews)
         dbmsOutputEnabled = v(.dbmsOutputEnabled, dbmsOutputEnabled)

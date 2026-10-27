@@ -5,6 +5,14 @@ ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan prze
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
+## Co nowego: dokowanie narzędzi (D183)
+
+- **Panele narzędzi** — okna narzędzi (Sesje, Znajdź obiekty, To-Do, instrukcja, edytory tabel, eksport, raporty
+  i inne) otwierają się w panelu po prawej stronie okna głównego, każde w karcie. Kartę przeciągasz do panelu na dole
+  albo poza panele (osobne okno); okno narzędzia wraca do panelu przyciskiem na pasku tytułu. Pelikan zapamiętuje
+  miejsce każdego rodzaju narzędzia. Domyślne miejsce (także osobne okna jak dotąd) i autoukrywanie paneli ustawisz
+  w **Preferencje › Ogólne › Panele narzędzi**, polecenia są w **Widok › Panele narzędzi**.
+
 ## Co nowego po trzecim przeglądzie kodu (D182)
 
 - **Bezpieczniejsze okna po ponownym uruchomieniu** — otwarcie pliku z Findera przy starcie nie gubi już niezapisanych

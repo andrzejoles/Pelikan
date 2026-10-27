@@ -10,10 +10,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private(set) lazy var sidebarController = SidebarViewController(workspace: workspace)
     private(set) var toolbarController: MainToolbarController?
     private(set) lazy var ribbon = RibbonController(workspace: workspace)
+    /// Panele narzędzi (PD-UI-003, D183): prawy obok obszaru dokumentów, dolny pod nim — w zagnieżdżonych podziałach,
+    /// żeby zapamiętany układ kolumn okna (lewa kolumna, panel agenta) się nie zmienił.
+    private(set) lazy var rightDock = ToolDockViewController(placement: .right, workspace: workspace)
+    private(set) lazy var bottomDock = ToolDockViewController(placement: .bottom, workspace: workspace)
+    private let workArea = DockSplitViewController(placement: .right)
+    private let centerArea = DockSplitViewController(placement: .bottom)
+    private var rightDockItem: NSSplitViewItem!
+    private var bottomDockItem: NSSplitViewItem!
 
     init(workspace: Workspace) {
         self.workspace = workspace
-        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 820),
+        let window = MainWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 820),
                               styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                               backing: .buffered, defer: false)
         window.title = Bundle.main.object(forInfoDictionaryKey: "PelikanAppName") as? String ?? "Pelikan"
@@ -32,7 +40,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         sidebar.minimumThickness = 220
         sidebar.maximumThickness = 420
         sidebar.canCollapse = true
-        let content = NSSplitViewItem(viewController: documentArea)
+        centerArea.splitView.isVertical = false
+        let documents = NSSplitViewItem(viewController: documentArea)
+        documents.minimumThickness = 200
+        bottomDockItem = DockSplitViewController.dockItem(bottomDock, minimum: 120)
+        centerArea.addSplitViewItem(documents)
+        centerArea.addSplitViewItem(bottomDockItem)
+        let center = NSSplitViewItem(viewController: centerArea)
+        center.minimumThickness = 480
+        rightDockItem = DockSplitViewController.dockItem(rightDock, minimum: 240)
+        workArea.addSplitViewItem(center)
+        workArea.addSplitViewItem(rightDockItem)
+        let content = NSSplitViewItem(viewController: workArea)
         content.minimumThickness = 480
         split.addSplitViewItem(sidebar)
         split.addSplitViewItem(content)
@@ -51,6 +70,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         toolbarController = MainToolbarController(workspace: workspace, toolbar: toolbar)
         window.toolbar = toolbar
         window.addTitlebarAccessoryViewController(ribbon)
+        window.onFirstResponderChange = { [weak self] in self?.autoHideDocks() }
+        window.toolsWithoutFocus = { [weak self] in
+            guard let self else { return [] }
+            let responder = self.window?.firstResponder
+            return [self.rightDock, self.bottomDock].compactMap { $0.isViewLoaded ? $0.unfocusedContent(responder: responder) : nil }
+        }
         trackChanges { [weak self] in
             guard let self else { return }
             // Tytuł z połączeniem i worksetem, podtytuł z oknem i jego połączeniem (PD-UI-009).
@@ -103,6 +128,120 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     func setAgentPane(visible: Bool) {
         agentItem?.animator().isCollapsed = !visible
+    }
+
+    // MARK: Panele narzędzi (PD-UI-003)
+
+    func dock(_ placement: ToolPlacement) -> ToolDockViewController { placement == .bottom ? bottomDock : rightDock }
+
+    func isDockVisible(_ placement: ToolPlacement) -> Bool {
+        !(placement == .bottom ? bottomDockItem : rightDockItem).isCollapsed
+    }
+
+    /// Pokazuje albo chowa panel; przy pokazaniu przywraca zapamiętany rozmiar i poszerza panel do minimalnego rozmiaru
+    /// narzędzia `fitting` (najwyżej do 60% obszaru, dalej zawartość się przewija).
+    func setDock(_ placement: ToolPlacement, visible: Bool, fitting item: ToolItem? = nil) {
+        guard placement != .floating else { return }
+        let area = placement == .bottom ? centerArea : workArea
+        let item = item.map { placement == .bottom ? $0.minimumSize.height : $0.minimumSize.width }
+        let dockItem = placement == .bottom ? bottomDockItem! : rightDockItem!
+        defer { ToolDockManager.shared.noteChange() }
+        if !visible {
+            dockItem.isCollapsed = true
+            return
+        }
+        let wasCollapsed = dockItem.isCollapsed
+        dockItem.isCollapsed = false
+        area.view.layoutSubtreeIfNeeded()
+        let current = area.dockSize
+        var size = wasCollapsed ? area.savedSize : current
+        if let item { size = max(size, item + 16) }
+        if wasCollapsed || size > current + 1 { area.setDockSize(size) }
+    }
+
+    /// Autoukrywanie (Preferencje › Panele narzędzi): fokus w edytorze okna chowa panele z narzędziami.
+    private func autoHideDocks() {
+        guard workspace.settings.toolDock.autoHide, let responder = window?.firstResponder as? NSView,
+              responder.isDescendant(of: documentArea.view) else { return }
+        for p in [ToolPlacement.right, .bottom] where isDockVisible(p) { setDock(p, visible: false) }
+    }
+}
+
+/// Okno główne zgłaszające zmianę fokusu (autoukrywanie paneli narzędzi) i ograniczające skróty narzędzi w panelach.
+private final class MainWindow: NSWindow {
+    var onFirstResponderChange: (() -> Void)?
+    var toolsWithoutFocus: (() -> [NSView])?
+
+    /// Skróty narzędzia w panelu (przycisk domyślny — Enter, Anuluj — Esc, `keyboardShortcut` SwiftUI, klawisze
+    /// przycisków AppKit) działają tylko z fokusem w tym narzędziu: Enter w drzewie obiektów czy siatce nie może wykonać
+    /// czynności narzędzia z panelu, a skrót narzędzia nie może przejąć skrótu menu. SwiftUI obsługuje skróty poza
+    /// hierarchią widoków i pomija tylko widoki ukryte — narzędzia bez fokusu są ukrywane na czas obsługi zdarzenia
+    /// (bez rysowania; ukrycie nie wywołuje onDisappear).
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let hidden = (toolsWithoutFocus?() ?? []).filter { !$0.isHidden }
+        hidden.forEach { $0.isHidden = true }
+        defer { hidden.forEach { $0.isHidden = false } }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    override func makeFirstResponder(_ responder: NSResponder?) -> Bool {
+        let changed = super.makeFirstResponder(responder)
+        if changed { onFirstResponderChange?() }
+        return changed
+    }
+}
+
+/// Podział z panelem narzędzi jako drugim elementem; rozmiar panelu zapamiętany między uruchomieniami.
+final class DockSplitViewController: NSSplitViewController {
+    let placement: ToolPlacement
+    private var defaultsKey: String { "Pelikan.toolDock." + placement.rawValue }
+
+    init(placement: ToolPlacement) {
+        self.placement = placement
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    static func dockItem(_ vc: NSViewController, minimum: CGFloat) -> NSSplitViewItem {
+        let item = NSSplitViewItem(viewController: vc)
+        item.minimumThickness = minimum
+        item.canCollapse = true
+        item.isCollapsed = true
+        item.holdingPriority = .defaultLow + 10
+        return item
+    }
+
+    private var total: CGFloat { splitView.isVertical ? splitView.bounds.width : splitView.bounds.height }
+
+    var dockSize: CGFloat {
+        guard let v = splitViewItems.last?.viewController.view else { return 0 }
+        return splitView.isVertical ? v.frame.width : v.frame.height
+    }
+
+    var savedSize: CGFloat {
+        let saved = UserDefaults.standard.double(forKey: defaultsKey)
+        return saved > 0 ? saved : (placement == .bottom ? 280 : 440)
+    }
+
+    func setDockSize(_ size: CGFloat) {
+        let s = min(size, total * 0.6)
+        splitView.setPosition(total - s - splitView.dividerThickness, ofDividerAt: 0)
+    }
+
+    private var wasCollapsed = true
+
+    override func splitViewDidResizeSubviews(_ notification: Notification) {
+        super.splitViewDidResizeSubviews(notification)
+        guard let dock = splitViewItems.last else { return }
+        // Zwinięcie przeciągnięciem podziału — pasek stanu pokazuje przycisk panelu.
+        if dock.isCollapsed != wasCollapsed {
+            wasCollapsed = dock.isCollapsed
+            ToolDockManager.shared.noteChange()
+        }
+        guard !dock.isCollapsed, dockSize > 0 else { return }
+        UserDefaults.standard.set(Double(dockSize), forKey: defaultsKey)
     }
 }
 
@@ -246,6 +385,8 @@ final class DocumentAreaViewController: NSViewController {
     private let connectionButton = NSButton(title: "", target: nil, action: nil)
     /// Gałąź i stan Git pliku aktywnego okna (PD-VCS-001).
     private let gitLabel = NSTextField(labelWithString: "")
+    /// Przyciski zwiniętych paneli narzędzi z liczbą narzędzi (D183).
+    private let dockButtons = NSStackView()
     private var gitKey: String?
     private var controllers: [DocumentID: NSViewController] = [:]
     private var installedID: DocumentID?
@@ -312,6 +453,10 @@ final class DocumentAreaViewController: NSViewController {
         gitLabel.setContentHuggingPriority(.required, for: .horizontal)
         gitLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         status.addSubview(gitLabel)
+        dockButtons.spacing = 6
+        dockButtons.translatesAutoresizingMaskIntoConstraints = false
+        dockButtons.setContentHuggingPriority(.required, for: .horizontal)
+        status.addSubview(dockButtons)
         let separator = NSBox()
         separator.boxType = .separator
         let topSeparator = NSBox()
@@ -345,12 +490,43 @@ final class DocumentAreaViewController: NSViewController {
             connectionButton.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             statusLabel.leadingAnchor.constraint(equalTo: connectionButton.trailingAnchor, constant: 6),
             statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: gitLabel.leadingAnchor, constant: -10),
-            gitLabel.trailingAnchor.constraint(equalTo: status.trailingAnchor, constant: -10),
+            gitLabel.trailingAnchor.constraint(equalTo: dockButtons.leadingAnchor, constant: -8),
+            dockButtons.trailingAnchor.constraint(equalTo: status.trailingAnchor, constant: -10),
+            dockButtons.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             gitLabel.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             statusLabel.centerYAnchor.constraint(equalTo: status.centerYAnchor),
         ])
         view = root
         trackChanges { [weak self] in self?.refresh() }
+        trackChanges { [weak self] in self?.refreshDockButtons() }
+    }
+
+    /// Zwinięty panel z narzędziami: przycisk z liczbą narzędzi, który go pokazuje.
+    private func refreshDockButtons() {
+        let manager = ToolDockManager.shared
+        let font = InterfaceFonts.shared.small
+        dockButtons.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        for (placement, symbol, command) in [(ToolPlacement.bottom, "rectangle.bottomthird.inset.filled", "view.toolDockBottom"),
+                                             (.right, "sidebar.right", "view.toolDockRight")] {
+            let count = manager.count(in: placement)
+            guard count > 0, manager.mainWindow?.isDockVisible(placement) == false else { continue }
+            let tip = placement == .right ? L10n.tr("Pokaż panel po prawej (narzędzia: \(count))")
+                                          : L10n.tr("Pokaż panel na dole (narzędzia: \(count))")
+            let b = NSButton(title: String(count), image: NSImage(systemSymbolName: symbol, accessibilityDescription: tip) ?? NSImage(),
+                             target: self, action: #selector(showDock(_:)))
+            b.isBordered = false
+            b.font = font
+            b.imagePosition = .imageLeading
+            b.toolTip = tip
+            b.setAccessibilityLabel(tip)
+            b.identifier = NSUserInterfaceItemIdentifier(command)
+            dockButtons.addArrangedSubview(b)
+        }
+    }
+
+    @objc private func showDock(_ sender: NSButton) {
+        guard let id = sender.identifier?.rawValue else { return }
+        workspace.perform(CommandID(rawValue: id))
     }
 
     private func refresh() {

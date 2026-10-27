@@ -157,6 +157,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let window = MainWindowController(workspace: workspace)
         window.showWindow(nil)
         mainWindow = window
+        ToolDockManager.shared.workspace = workspace
+        ToolDockManager.shared.mainWindow = window
         prompts.window = window.window
         if let agents = AgentUIController(workspace: workspace) {
             agents.mainWindow = window
@@ -231,6 +233,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     func focusRibbonSearch() {
         mainWindow?.window?.makeKeyAndOrderFront(nil)
         mainWindow?.ribbon.focusSearch()
+    }
+
+    func toggleToolDock(_ placement: ToolPlacement) {
+        ToolDockManager.shared.toggle(placement)
+    }
+
+    func placeTool(_ key: String?, at placement: ToolPlacement) -> String? {
+        ToolDockManager.shared.place(key, at: placement)
+    }
+
+    func closeTool(_ key: String?) -> String? {
+        let manager = ToolDockManager.shared
+        guard let key = key ?? manager.currentKey(), manager.item(key) != nil else { return nil }
+        manager.close(key: key)
+        return key
     }
 
     func showPreferenceSets() {
@@ -1116,7 +1133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showObjectInfo(title: String, columns: [String], rows: [[String]]) {
-        ObjectInfoWindowController.show(title: title, columns: columns, rows: rows)
+        ObjectInfoViewController.show(title: title, columns: columns, rows: rows)
     }
 
     /// Ekran pomocy przy braku Instant Client (PD-CONN-029): pobranie od Oracle, wskazanie katalogu, sterownik thin.
@@ -1346,7 +1363,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showLargeDataEditor(_ model: LargeDataModel) {
-        LargeDataEditorController.show(model, workspace: workspace, relativeTo: mainWindow?.window)
+        LargeDataEditorController.show(model, workspace: workspace)
     }
 
     func openURL(_ url: URL) {

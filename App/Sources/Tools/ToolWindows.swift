@@ -3,43 +3,22 @@ import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
-/// Okno narzędzia (SwiftUI w niemodalnym oknie); jedno okno danego rodzaju — ponowne wywołanie je przywołuje.
+/// Narzędzie SwiftUI w panelu okna głównego albo w osobnym oknie (miejsce wg Preferencji, D183); jedno narzędzie
+/// danego rodzaju — ponowne wywołanie je przywołuje.
 @MainActor
-final class ToolWindowController: NSWindowController, NSWindowDelegate {
-    private static var open: [String: ToolWindowController] = [:]
-    private let key: String
-    private static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-"]
-
+enum ToolWindowController {
     static func show<V: View>(key: String, title: String, size: NSSize, @ViewBuilder content: () -> V) {
-        if let c = open[key] { c.showWindow(nil); c.window?.makeKeyAndOrderFront(nil); return }
-        let c = ToolWindowController(key: key, title: title, size: size, view: AnyView(content()))
-        open[key] = c
-        c.showWindow(nil)
+        let manager = ToolDockManager.shared
+        if manager.reveal(key: key) { return }
+        let lifetime = ToolLifetime()
+        let view = NSHostingView(rootView: AnyView(content().interfaceFont().environment(\.toolLifetime, lifetime)))
+        manager.show(key: key, title: title, size: size, content: view, lifetime: lifetime)
     }
 
-    /// Zamyka okno o danym kluczu (np. przed pokazaniem nowej zawartości).
+    /// Zamyka narzędzie o danym kluczu (np. przed pokazaniem nowej zawartości).
     static func close(key: String) {
-        open[key]?.close()
-        open[key] = nil
+        ToolDockManager.shared.close(key: key)
     }
-
-    init(key: String, title: String, size: NSSize, view: AnyView) {
-        self.key = key
-        let w = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                         backing: .buffered, defer: false)
-        w.title = title
-        w.contentView = NSHostingView(rootView: view.interfaceFont())
-        w.center()
-        // Okna z kluczem jednorazowym (UUID, id dokumentu) bez zapamiętanej ramki — każde zostawiałoby wpis w UserDefaults.
-        if !Self.transientPrefixes.contains(where: key.hasPrefix) { w.setFrameAutosaveName("Pelikan.\(key)") }
-        super.init(window: w)
-        w.delegate = self
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
-
-    func windowWillClose(_ notification: Notification) { Self.open[key] = nil }
 }
 
 /// Połączenie okna narzędzia: ustalone przy otwarciu (`Workspace.toolConnection()` — aktywne okno albo główne),
@@ -84,12 +63,12 @@ struct FindObjectsView: View {
         }
         .padding(12)
         .frame(minWidth: 620, minHeight: 380)
-        .onAppear {
+        .onFirstAppear {
             owner = criteria.owners.joined(separator: ", ")
             textFocused = true
         }
-        // Zamknięcie okna przerywa wyszukiwanie (inaczej zajmowałoby sesję metadanych nawet przez minuty).
-        .onDisappear { task?.cancel() }
+        // Zamknięcie narzędzia przerywa wyszukiwanie (inaczej zajmowałoby sesję metadanych nawet przez minuty).
+        .onToolClose { task?.cancel() }
     }
 
     private var criteriaForm: some View {

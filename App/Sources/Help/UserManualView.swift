@@ -9,18 +9,22 @@ struct UserManualView: View {
     @State private var selection: UserManual.Chapter.ID?
 
     var body: some View {
-        NavigationSplitView {
+        // HSplitView zamiast NavigationSplitView: ten dokłada pasek narzędzi okna, a w panelu okna głównego (D183)
+        // zapętlał układ okna.
+        HSplitView {
             List(chapters, selection: $selection) { Text($0.title).tag($0.id) }
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220)
-        } detail: {
-            if let c = chapters.first(where: { $0.id == selection }) {
-                HTMLPreview(html: UserManual.page(c))
-            } else {
-                Text(L10n.tr("Wybierz rozdział")).foregroundStyle(.secondary)
+                .frame(minWidth: 180, idealWidth: 220, maxWidth: 320)
+            Group {
+                if let c = chapters.first(where: { $0.id == selection }) {
+                    HTMLPreview(html: UserManual.page(c))
+                } else {
+                    Text(L10n.tr("Wybierz rozdział")).foregroundStyle(.secondary)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 760, minHeight: 520)
-        .onAppear(perform: load)
+        .onFirstAppear(perform: load)
     }
 
     private func load() {

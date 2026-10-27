@@ -140,12 +140,18 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
             key.performClose(nil)
             return
         }
+        // ⌘W z fokusem w panelu narzędzi zamyka narzędzie (D183).
+        if raw == "file.close", let tool = ToolDockManager.shared.focusedDockedKey() {
+            workspace.perform("view.closeTool", CommandArguments(["tool": .string(tool)]))
+            return
+        }
         workspace.perform(CommandID(rawValue: raw))
     }
 
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         guard let raw = menuItem.representedObject as? String else { return true }
         if raw == "file.close", let key = NSApp.keyWindow, key.identifier != MainWindowController.windowID { return true }
+        if raw == "file.close", ToolDockManager.shared.focusedDockedKey() != nil { return true }
         return workspace.isEnabled(CommandID(rawValue: raw))
     }
 

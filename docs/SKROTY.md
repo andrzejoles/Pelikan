@@ -521,6 +521,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Szukaj czynności… | `view.ribbonSearch` |  |  | Brak | PD-UI-012 |
 | Dodaj do paska szybkiego dostępu | `view.addToQuickAccess` |  |  | Brak | PD-UI-006 |
 | Usuń z paska szybkiego dostępu | `view.removeFromQuickAccess` |  |  | Brak | PD-UI-006 |
+| Panele narzędzi › Pokaż lub ukryj panel po prawej | `view.toolDockRight` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Pokaż lub ukryj panel na dole | `view.toolDockBottom` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Zadokuj narzędzie po prawej | `view.dockToolRight` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Zadokuj narzędzie na dole | `view.dockToolBottom` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Odłącz narzędzie do osobnego okna | `view.floatTool` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Zamknij narzędzie | `view.closeTool` |  |  | Brak | PD-UI-003 |
+| Panele narzędzi › Autoukrywanie paneli narzędzi | `view.toolDockAutoHide` |  |  | Brak | PD-UI-003 |
 | Podgląd przestrzenny | `grid.spatialPreview` |  |  | Brak | SD-DATA-001 |
 | Zawijaj wiersze | `view.wordWrap` |  |  | Brak | PD-EDIT-004 |
 | Okno szablonów | `view.templateWindow` |  |  | Brak | PD-TPL-001 |

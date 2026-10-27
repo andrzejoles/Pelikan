@@ -48,8 +48,8 @@ struct SchedulerView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 900, minHeight: 560)
-        .task { reportName = reports.first?.name ?? "" }
-        .task(id: connection) {
+        .onFirstAppear { reportName = reports.first?.name ?? "" }
+        .toolTask(id: connection) {
             selection = nil
             await reload()
             await reloadTab()

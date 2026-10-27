@@ -73,6 +73,12 @@ public protocol UIServices: AnyObject {
     func showProblemReport(_ report: ProblemReport)
     /// Pole „Szukaj czynności” na wstążce (PD-UI-012).
     func focusRibbonSearch()
+    /// Panele narzędzi okna głównego (PD-UI-003): pokazanie albo ukrycie panelu.
+    func toggleToolDock(_ placement: ToolPlacement)
+    /// Przeniesienie narzędzia (nil — bieżącego) do panelu albo osobnego okna; zwraca klucz narzędzia (nil — brak narzędzia).
+    func placeTool(_ key: String?, at placement: ToolPlacement) -> String?
+    /// Zamknięcie narzędzia (nil — bieżącego); zwraca klucz zamkniętego narzędzia.
+    func closeTool(_ key: String?) -> String?
     func showPreferenceSets()
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
@@ -200,6 +206,9 @@ extension UIServices {
     public func customizeToolbar() {}
     public func showProblemReport(_ report: ProblemReport) {}
     public func focusRibbonSearch() {}
+    public func toggleToolDock(_ placement: ToolPlacement) {}
+    public func placeTool(_ key: String?, at placement: ToolPlacement) -> String? { nil }
+    public func closeTool(_ key: String?) -> String? { nil }
     public func showPreferenceSets() {}
     public func showHTMLReport(title: String, html: String) {}
     public func openURL(_ url: URL) {}

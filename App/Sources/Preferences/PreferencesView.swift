@@ -178,6 +178,20 @@ struct GeneralPane: View {
                 Text(L10n.tr("Karty kontekstowe (Program, Wynik, Diagram…) pojawiają się przy oknie danego rodzaju. Pole „Szukaj czynności” znajduje każdą komendę po nazwie, także bez polskich znaków i po angielskiej nazwie z PL/SQL Developera."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
             }
+            Section(L10n.tr("Panele narzędzi")) {
+                Picker(L10n.tr("Nowe narzędzia otwieraj"), selection: setting(workspace, \.toolDock.defaultPlacement)) {
+                    ForEach(ToolPlacement.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                }
+                Toggle(L10n.tr("Autoukrywanie paneli, gdy praca wraca do edytora"), isOn: setting(workspace, \.toolDock.autoHide))
+                HStack {
+                    Text(L10n.tr("Narzędzia z własnym miejscem: \(workspace.settings.toolDock.placements.count)"))
+                    Spacer()
+                    Button(L10n.tr("Przywróć miejsca domyślne")) { workspace.settings.toolDock.placements = [:] }
+                        .disabled(workspace.settings.toolDock.placements.isEmpty)
+                }
+                Text(L10n.tr("Narzędzie przenosi się przeciągnięciem karty do drugiego panelu albo poza panele (osobne okno), menu karty i przyciskiem na pasku tytułu okna narzędzia. Pelikan zapamiętuje miejsce każdego rodzaju narzędzia."))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+            }
             Section(L10n.tr("Język interfejsu")) {
                 // AppleLanguages ustawia AppDelegate.applyLanguage po każdej zmianie ustawienia (także z importu i zestawów).
                 Picker(L10n.tr("Język"), selection: Binding(get: { workspace.settings.language ?? "" }, set: { v in

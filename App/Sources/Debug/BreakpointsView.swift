@@ -55,7 +55,7 @@ struct BreakpointsView: View {
         }
         .padding(12)
         .frame(minWidth: 860, minHeight: 300)
-        .onAppear { codes = workspace.errorBreakpoints.map(String.init).joined(separator: ", ") }
+        .onFirstAppear { codes = workspace.errorBreakpoints.map(String.init).joined(separator: ", ") }
     }
 
     private func place(_ b: Breakpoint) -> String {

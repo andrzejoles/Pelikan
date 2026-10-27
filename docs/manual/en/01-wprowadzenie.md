@@ -85,6 +85,14 @@ Pelikan has one main window:
 - The window's **status bar**: the window's connection (with the environment color, the 📌 pin and the “read only” mark),
   the transaction state (“● transaction open”), the number of rows and execution time, the cursor position and the
   file's Git branch. Clicking the connection name lets you change the window's connection.
+- **Tool panels** on the right and at the bottom — tools (Sessions, Find Database Objects, To-Do Items, Clipboard
+  History, this manual, table editors, export and import, reports and more) open in the right panel by default, each in
+  its own tab. Drag a tab to the other panel or outside the panels — the tool then gets a separate window where you drop
+  it; the tab menu and the buttons in the panel header do the same. A tool window goes back to a panel with the button
+  in its title bar. Pelikan remembers the location of each kind of tool. A collapsed panel with tools shows a button
+  with their number in the status bar. The commands are in **View › Tool Panels**; in **Preferences › General › Tool
+  Panels** you choose where new tools open (also separate windows) and turn on auto-hide. A docked tool's shortcuts
+  (Return, Esc) work only while the cursor is in that tool.
 - **Agent panel** on the right (collapsed by default) — the AI agent's terminal with a list of its actions. It is shown
   with **View › Agent panel** (see the *AI agents* chapter).
 

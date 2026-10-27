@@ -6,7 +6,8 @@ import WebKit
 
 /// Large Data Editor (UG 27): okno dla komórki LOB/LONG/RAW/długiego tekstu — tekst (z formatowaniem JSON/XML),
 /// podgląd szesnastkowy, obraz, PDF; zapis do pliku, wczytanie z pliku, zastosowanie zmian w siatce.
-final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NSTextViewDelegate {
+/// Narzędzie w panelu okna głównego albo w osobnym oknie (D183).
+final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     private let model: LargeDataModel
     private let workspace: Workspace
     private let mode = NSSegmentedControl()
@@ -21,29 +22,22 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     private let content = NSView()
     private var tokens: [ObservationToken] = []
     private var updating = false
-    private static var open: [LargeDataEditorController] = []
+    private let key = "largeData-" + UUID().uuidString
     private var externalEdit: ExternalLargeDataEdit?
     private var externalTimer: Timer?
 
-    static func show(_ model: LargeDataModel, workspace: Workspace, relativeTo parent: NSWindow?) {
+    static func show(_ model: LargeDataModel, workspace: Workspace) {
         let c = LargeDataEditorController(model: model, workspace: workspace)
-        open.append(c)
-        if let parent, let w = c.window {
-            let f = parent.frame
-            w.setFrameOrigin(NSPoint(x: f.midX - w.frame.width / 2, y: f.midY - w.frame.height / 2))
-        }
-        c.showWindow(nil)
+        let lifetime = ToolLifetime()
+        lifetime.register(UUID()) { c.finish() }
+        ToolDockManager.shared.show(key: c.key, title: L10n.tr("Large Data Editor — \(model.columnName)"), size: NSSize(width: 820, height: 600),
+                                    content: c.view, lifetime: lifetime, owner: c)
     }
 
     init(model: LargeDataModel, workspace: Workspace) {
         self.model = model
         self.workspace = workspace
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 820, height: 600), styleMask: [.titled, .closable, .resizable, .miniaturizable],
-                         backing: .buffered, defer: false)
-        w.title = L10n.tr("Large Data Editor — \(model.columnName)")
-        w.minSize = NSSize(width: 480, height: 320)
-        super.init(window: w)
-        w.delegate = self
+        super.init(nibName: nil, bundle: nil)
         build()
         tokens.append(trackChanges { [weak self] in self?.refresh() })
     }
@@ -107,7 +101,9 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
             bottom.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -12),
             bottom.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -10),
         ])
-        window?.contentView = root
+        root.widthAnchor.constraint(greaterThanOrEqualToConstant: 480).isActive = true
+        root.heightAnchor.constraint(greaterThanOrEqualToConstant: 320).isActive = true
+        view = root
         mode.selectedSegment = model.format.isImage ? 2 : model.format == .pdf ? 3 : (model.isBinary && !model.format.isText ? 1 : 0)
         modeChanged()
     }
@@ -238,7 +234,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     }
 
     @objc private func load() {
-        guard let w = window else { return }
+        guard let w = view.window else { return }
         let panel = NSOpenPanel()
         panel.canChooseDirectories = false
         panel.beginSheetModal(for: w) { [weak self] r in
@@ -265,18 +261,18 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
     @objc private func apply() {
         do {
             try model.apply()
-            close()
+            closeWindow()
         } catch {
             workspace.ui?.showError(error.localizedDescription)
         }
     }
 
-    @objc private func closeWindow() { close() }
+    @objc private func closeWindow() { ToolDockManager.shared.close(key: key) }
 
-    func windowWillClose(_ notification: Notification) {
+    /// Zamknięcie narzędzia: ostatnie zmiany z edytora zewnętrznego i koniec jego śledzenia.
+    private func finish() {
         externalTimer?.invalidate()
         externalEdit?.checkForChanges()
         externalEdit?.finish()
-        Self.open.removeAll { $0 === self }
     }
 }
