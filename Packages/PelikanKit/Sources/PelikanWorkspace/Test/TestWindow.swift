@@ -229,7 +229,13 @@ public enum TestRunner {
             }
             profileID = try await Profiler.start(kind, session: session, comment: profileComment)
         }
-        if let level = doc.traceLevel { try await PLSQLTrace.start(level, in: session) }
+        if let level = doc.traceLevel {
+            do { try await PLSQLTrace.start(level, in: session) } catch {
+                // Profiler już działa — bez zatrzymania zbierałby dane kolejnych wywołań w sesji okna.
+                if let kind = doc.profiler, let id = profileID { _ = try? await Profiler.stop(kind, id: id, comment: profileComment, session: session) }
+                throw error
+            }
+        }
         // Raz: błąd po udanym wykonaniu (pobranie kursora, COMMIT) nie liczy statystyk podwójnie i nie nadpisuje raportu.
         var measured = false
         func finishMeasurements() async {

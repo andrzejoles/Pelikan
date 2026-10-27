@@ -21,6 +21,34 @@ final class ConnectGateDriver: DatabaseDriver, @unchecked Sendable {
     }
 }
 
+/// Sesja, w której DBMS_PROFILER startuje (status 0), DBMS_TRACE zgłasza błąd, a pozostałe polecenia są tylko notowane.
+final class ProfilerFakeSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    let executed = Mutex<[String]>([])
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        executed.withLock { $0.append(sql) }
+        if sql.contains("dbms_trace.set_plsql_trace") { throw OracleError(code: 6550, message: "ORA-06550: DBMS_TRACE niedostępny") }
+        return ExecutionResult(kind: .other, outBinds: sql.contains("start_profiler") ? ["st": .number("0")] : [:])
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+final class ProfilerFakeDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    let session = ProfilerFakeSession()
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { session }
+}
+
 @MainActor
 @Suite("Wykonanie w oknie i wartości okna testu (przegląd 3)")
 struct ExecutionStateTests {
@@ -70,5 +98,30 @@ struct ExecutionStateTests {
         #expect(hex == "AB01")
         #expect(try TestRunner.value(TestVariable(name: "b", type: .blob, value: hex, isNull: false)) == .raw(Data([0xAB, 0x01])))
         #expect(throws: CommandError.self) { try TestRunner.value(TestVariable(name: "b", type: .blob, value: "<BLOB 2 B> AB01", isNull: false)) }
+    }
+
+    @Test("Koniec transakcji okna z własnym przeznaczeniem sesji trafia do tej sesji")
+    func endTransactionsUsesWindowKey() async throws {
+        let (ws, def) = try workspace(FakeDriver())
+        let doc = ws.newDocument(.test)
+        doc.sessionPurpose = .tool("tests-x")
+        let own = try #require(try await ws.session(for: doc) as? FakeSession)
+        let main = try #require(try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main)) as? FakeSession)
+        doc.transactionOpen = true
+        try await ws.endTransactions(of: [doc], commit: true)
+        #expect(own.transactions.withLock { $0 } == ["commit"] && main.transactions.withLock { $0 }.isEmpty && !doc.transactionOpen)
+    }
+
+    @Test("Okno testu: nieudany start śladu DBMS_TRACE zatrzymuje uruchomiony już profiler")
+    func profilerStoppedWhenTraceFails() async throws {
+        let driver = ProfilerFakeDriver()
+        let (ws, _) = try workspace(driver)
+        let doc = ws.newDocument(.test, text: "begin null; end;")
+        doc.profiler = .lines
+        doc.traceLevel = .allCalls                                             // błąd startu śladu (brak tabel albo pakietu)
+        await #expect(throws: (any Error).self) { try await TestRunner.execute(doc, in: ws) }
+        let executed = driver.session.executed.withLock { $0 }
+        #expect(executed.contains { $0.contains("start_profiler") } && executed.contains { $0.contains("stop_profiler") })
+        #expect(!executed.contains { $0 == "begin null; end;" } && !doc.isExecuting)
     }
 }

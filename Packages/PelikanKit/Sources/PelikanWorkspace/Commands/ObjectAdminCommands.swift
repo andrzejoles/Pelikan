@@ -59,9 +59,16 @@ enum ObjectAdminCommands {
                     validate: { $0.selectedObject?.type == .databaseLink }) { ctx in
                 let (o, _) = try await ObjectCommands.target(ctx)
                 guard o.name.range(of: #"^[A-Za-z0-9_$#.@]+$"#, options: .regularExpression) != nil else { throw CommandError.invalidArgument("object", o.name) }
+                // Zapytanie przez łącze otwiera transakcję rozproszoną — osobna sesja narzędzia, wycofana i zamknięta
+                // (w trybie Dual sesja główna jest sesją okien).
+                guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
+                let key = SessionKey(connectionID: conn, purpose: .tool("dblink"))
+                defer { Task { await ctx.workspace.sessions.close(key) } }
+                let s = try await ctx.workspace.sessions.session(key)
                 let start = ContinuousClock.now
-                let v = try await mainSession(ctx).scalar("select dummy from dual@\(o.name)")
+                let v = try await s.scalar("select dummy from dual@\(o.name)")
                 let ms = Int((ContinuousClock.now - start) / .milliseconds(1))
+                try? await s.rollback()
                 guard v == "X" else { throw CommandError.notAvailable(L10n.tr("Łącze \(o.name) nie odpowiada poprawnie")) }
                 return CommandResult(message: L10n.tr("Łącze \(o.name) działa (\(ms) ms)"), value: .int(Int64(ms)))
             },

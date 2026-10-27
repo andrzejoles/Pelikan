@@ -843,8 +843,8 @@ extension Workspace {
     /// Kończy transakcje okien (COMMIT/ROLLBACK) przed rozłączeniem lub zamknięciem.
     public func endTransactions(of docs: [Document], commit: Bool) async throws {
         for d in docs {
-            guard let c = effectiveConnection(of: d),
-                  let s = sessions.existingSession(sessions.key(forDocument: d.id, connection: c)) else { continue }
+            // Klucz jak przy wykonaniu (także okna z własnym przeznaczeniem sesji), inaczej COMMIT/ROLLBACK trafiłby obok.
+            guard let key = sessionKey(for: d), let s = sessions.existingSession(key) else { continue }
             if commit { try await s.commit() } else { try await s.rollback() }
             d.transactionOpen = false
         }

@@ -97,4 +97,22 @@ struct SessionTransactionDBTests {
         #expect(ws.sessions.existingSession(key) != nil)
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Test łącza: zapytanie przez łącze nie zostawia transakcji rozproszonej w sesji głównej (tryb Dual)")
+    func linkTestLeavesNoTransaction() async throws {
+        let c = TestDatabase.config!
+        let (ws, def, _) = try workspace()
+        ws.settings.sessionMode = .dual
+        let main = try await ws.sessions.session(SessionKey(connectionID: def.id, purpose: .main))
+        let schema = try await ws.metadata()!.currentSchema()
+        // Łącze do tej samej bazy (z wnętrza kontenera: port 1521) — hasło testowe tylko w poleceniu do bazy testowej.
+        _ = try? await main.execute("drop database link pelikan_tx_loop")
+        _ = try await main.execute("create database link pelikan_tx_loop connect to \(c.user) identified by \"\(c.password)\" using 'localhost:1521/FREEPDB1'")
+        ws.selectedObject = DBObject(owner: schema, name: "PELIKAN_TX_LOOP", type: .databaseLink)
+        let r = try await ws.invoke("ob.testLink", CommandArguments())
+        #expect(r.message?.isEmpty == false)
+        #expect(try await !SessionUtilities.transactionOpen(main))
+        _ = try? await main.execute("drop database link pelikan_tx_loop")
+        await ws.sessions.disconnectAll()
+    }
 }
