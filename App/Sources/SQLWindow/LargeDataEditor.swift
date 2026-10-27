@@ -150,9 +150,11 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
         if model.truncated { parts.append(L10n.tr("obcięte — pełna treść niedostępna (brak ROWID)")) }
         if loading { parts.append(L10n.tr("pobieranie…")) }
         if !model.isEditable { parts.append(L10n.tr("tylko do odczytu")) }
+        let binaryText = model.editableText == nil
+        if model.isEditable, binaryText { parts.append(L10n.tr("dane binarne — zmiana przez Wczytaj z pliku")) }
         info.stringValue = parts.joined(separator: "  ·  ")
         applyButton.isEnabled = model.isEditable
-        (textView.documentView as? NSTextView)?.isEditable = model.isEditable && mode.selectedSegment == 0
+        (textView.documentView as? NSTextView)?.isEditable = model.isEditable && mode.selectedSegment == 0 && !binaryText
         // Edycja w widoku zmienia model, a śledzenie ponawia `refresh` asynchronicznie — już po zdjęciu `updating`.
         // Widok, który pokazuje dokładnie treść modelu, zostaje bez przebudowy (fokus, kursor, cofanie — R4-03).
         if !updating, !textViewShowsModel { modeChanged() }
@@ -190,16 +192,14 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
             view = webView
         default:
             updating = true
-            if model.bytes != nil, model.text == nil {
-                tv.string = String(data: model.fileData, encoding: .utf8) ?? LargeDataModel.hexDump(model.fileData)
-            } else {
-                tv.string = model.text ?? ""
-            }
+            // Bajty spoza UTF-8: zrzut szesnastkowy tylko do odczytu — zmiana przez „Wczytaj z pliku…”.
+            let text = model.editableText
+            tv.string = text ?? LargeDataModel.hexDump(model.fileData)
             // Auto Format: tylko widok (wartość zmienia się dopiero po edycji).
-            if workspace.settings.largeDataAutoFormat, !model.modified, let out = LargeDataModel.autoFormatted(tv.string, format: model.format) {
+            if text != nil, workspace.settings.largeDataAutoFormat, !model.modified, let out = LargeDataModel.autoFormatted(tv.string, format: model.format) {
                 tv.string = out
             }
-            tv.isEditable = model.isEditable
+            tv.isEditable = model.isEditable && text != nil
             updating = false
             view = textView
         }
@@ -212,7 +212,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
     }
 
     func textDidChange(_ notification: Notification) {
-        guard !updating, mode.selectedSegment == 0, let tv = textView.documentView as? NSTextView else { return }
+        guard !updating, mode.selectedSegment == 0, model.editableText != nil, let tv = textView.documentView as? NSTextView else { return }
         updating = true
         if model.isBinary { model.setBytes(Data(tv.string.utf8)) } else { model.setText(tv.string) }
         updating = false
@@ -244,11 +244,7 @@ final class LargeDataEditorController: NSViewController, NSTextViewDelegate {
                 self.workspace.ui?.showError(error.localizedDescription)
                 return
             }
-            if self.model.isBinary {
-                self.model.setBytes(data)
-            } else {
-                self.model.setText(String(decoding: data, as: UTF8.self))
-            }
+            self.model.load(file: data, preferredEncoding: self.workspace.projectEncodingResolver()(url))
             self.modeChanged()
         }
     }

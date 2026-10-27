@@ -124,6 +124,28 @@ struct LargeDataUnitTests {
         #expect(LargeDataFormat.detect(text: nil, bytes: Data("<a>tekst w BLOB</a>".utf8)) == .xml)
     }
 
+    @Test("Karta Tekst: BLOB spoza UTF-8 bez tekstu do edycji; wczytanie pliku w kodowaniu projektu z końcami linii (APP2-05)")
+    @MainActor
+    func binaryTextAndFileLoad() async {
+        let columns = [ColumnInfo(name: "B", type: .raw, typeName: "RAW(100)"), ColumnInfo(name: "T", type: .varchar2, typeName: "VARCHAR2(100)")]
+        let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0xFF, 0x00])
+        let g = ResultGridModel(columns: columns, resultSet: ResultSetID(1), session: RowsSession([[.raw(png), .text("a")], [.raw(Data("tekst".utf8)), .null]]),
+                                sql: "select b, t from t", format: ValueFormat())
+        await g.fetchAll()
+        #expect(LargeDataModel(grid: g, row: 0, column: 0).editableText == nil)
+        #expect(LargeDataModel(grid: g, row: 1, column: 0).editableText == "tekst")
+        #expect(LargeDataModel(grid: g, row: 0, column: 1).editableText == "a")
+
+        let text = LargeDataModel(grid: g, row: 1, column: 1)
+        text.load(file: "zażółć\r\ngęślą".data(using: .windowsCP1250)!, preferredEncoding: .windowsCP1250)
+        #expect(text.text == "zażółć\r\ngęślą" && text.modified)
+        text.load(file: Data([0xEF, 0xBB, 0xBF]) + Data("łódź".utf8))
+        #expect(text.text == "łódź")
+        let blob = LargeDataModel(grid: g, row: 0, column: 0)
+        blob.load(file: png)
+        #expect(blob.bytes == png && blob.text == nil)
+    }
+
     @Test("Podgląd hex: offset, bajty, ASCII, ograniczenie długości")
     func hex() {
         let d = Data("Pelikan".utf8) + Data([0, 255])

@@ -124,6 +124,23 @@ public final class LargeDataModel {
     /// Treść do zapisu w pliku.
     public var fileData: Data { bytes ?? Data((text ?? "").utf8) }
 
+    /// Treść karty „Tekst”: tekst kolumny albo bajty BLOB/RAW jako UTF-8; nil, gdy bajty nie są poprawnym UTF-8
+    /// (obraz, ZIP) — karta pokazuje wtedy zrzut szesnastkowy tylko do odczytu, bo zapis jego tekstu zastąpiłby
+    /// dane binarne (APP2-05).
+    public var editableText: String? {
+        guard let bytes, text == nil else { return text ?? "" }
+        return String(data: bytes, encoding: .utf8)
+    }
+
+    /// „Wczytaj z pliku…”: BLOB/RAW — bajty bez zmian; kolumna tekstowa — tekst w wykrytym kodowaniu (BOM, UTF-8,
+    /// jednobajtowe jak przy otwieraniu skryptów albo kodowanie projektu), z końcami linii z pliku.
+    public func load(file data: Data, preferredEncoding: String.Encoding? = nil) {
+        guard !isBinary else { setBytes(data); return }
+        let format = TextFileCodec.decode(data, preferred: preferredEncoding).format
+        let body = format.hasBOM ? data.dropFirst(format.encoding == .utf8 ? 3 : 2) : data
+        setText(String(data: body, encoding: format.encoding) ?? String(decoding: data, as: UTF8.self))
+    }
+
     /// Zapis zmian w siatce (do zatwierdzenia przez Post).
     public func apply() throws {
         guard modified else { return }
