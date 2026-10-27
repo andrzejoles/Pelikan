@@ -43,6 +43,7 @@ public extension OracleValue {
             return "\(sign)\(String(format: "%02d", abs(y)))-\(String(format: "%02d", abs(m)))"
         case .raw(let d): return d.hexUpper
         case .lob(let l):
+            if let e = l.readError { return "<\(l.kind.rawValue)> " + e }
             if let t = l.text { return t }
             if let b = l.bytes { return "<\(l.kind.rawValue) \(l.length) B> " + b.prefix(32).hexUpper }
             return "<\(l.kind.rawValue)>"

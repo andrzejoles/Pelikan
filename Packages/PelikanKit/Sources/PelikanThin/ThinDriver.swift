@@ -281,9 +281,14 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             var data = Data()
             var stopped = false
             let total = lob.estimatedSize
-            for try await chunk in lob.readChunks(on: connection) {
-                data.append(contentsOf: chunk.readableBytesView)
-                if data.count >= lobLimit { stopped = true; break }
+            do {
+                for try await chunk in lob.readChunks(on: connection) {
+                    data.append(contentsOf: chunk.readableBytesView)
+                    if data.count >= lobLimit { stopped = true; break }
+                }
+            } catch where t == .bFile {
+                // BFILE do brakującego pliku/katalogu (ORA-22288, ORA-22285) — błąd w komórce, pozostałe wiersze dalej.
+                return .lob(LOBValue(kind: .bfile, length: 0, truncated: false, readError: LOBValue.errorText(Self.map(error))))
             }
             // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
             let truncated = data.count > lobLimit || (stopped && total > data.count)

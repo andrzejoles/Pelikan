@@ -553,7 +553,10 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             try check(dpiRowid_getStringValue(v.asRowid, &p, &len))
             return .rowid(String(decoding: UnsafeRawBufferPointer(start: p, count: Int(len)), as: UTF8.self))
         case DPI_NATIVE_TYPE_LOB:
-            return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit))
+            guard oracle == .bfile else { return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit)) }
+            // BFILE do brakującego pliku/katalogu (ORA-22288, ORA-22285) — błąd w komórce, pozostałe wiersze dalej.
+            do { return .lob(try readLOB(v.asLOB, type: oracle, limit: lobLimit)) }
+            catch { return .lob(LOBValue(kind: .bfile, length: 0, truncated: false, readError: LOBValue.errorText(error))) }
         case DPI_NATIVE_TYPE_JSON:
             var node: UnsafeMutablePointer<dpiJsonNode>?
             try check(dpiJson_getValue(v.asJson, UInt32(DPI_JSON_OPT_NUMBER_AS_STRING), &node))
