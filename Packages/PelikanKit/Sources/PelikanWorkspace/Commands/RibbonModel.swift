@@ -364,6 +364,13 @@ public enum RibbonModel {
                 ]),
                 .menu(L10n.tr("Preferencje"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
             ]),
+            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Preferencji › Agenci.
+            RibbonGroup(L10n.tr("Agent AI"), [
+                .large("agent.togglePane"),
+                .menu(L10n.tr("Uruchom agenta"), symbol: "sparkles", commands: ["agent.launch.*"], large: true),
+                .small("agent.undoSession", label: L10n.tr("Cofnij sesję")), .small("agent.endSession", label: L10n.tr("Zakończ sesję")),
+                .small("agent.showLog", label: L10n.tr("Dziennik agentów")),
+            ]),
         ])
     }
 
@@ -392,6 +399,7 @@ public enum RibbonModel {
                 .small("view.objectBrowser"), .small("view.fileBrowser"), .small("view.snippets"),
                 .small("view.taskMonitor"), .small("view.clipboardHistory"), .small("view.todoItems"),
                 .small("grid.valuePanel"), .small("view.templateWindow"), .small("view.codeContents"),
+                .small("agent.togglePane"),
             ]),
             RibbonGroup(L10n.tr("Edytor"), [
                 .small("view.splitEditor"), .small("view.wordWrap"), .small("view.specialCharacters"),
