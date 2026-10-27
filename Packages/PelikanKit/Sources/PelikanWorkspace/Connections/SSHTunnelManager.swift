@@ -254,6 +254,11 @@ public final class SSHTunnelManager {
             p.terminate()
             throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH: przekroczony czas oczekiwania"))
         }
+        // Po zestawieniu stderr ssh (np. „channel N: open failed” przy każdym nieudanym przekierowaniu) jest czytany
+        // i odrzucany — pełny potok (64 KiB) zatrzymałby ssh, a tunel przestałby przekazywać ruch.
+        err.fileHandleForReading.readabilityHandler = { h in
+            if h.availableData.isEmpty { h.readabilityHandler = nil }
+        }
         let tunnel = Tunnel(localPort: port, remote: remote)
         running[def.id] = Running(process: p, tunnel: tunnel)
         return tunnel
