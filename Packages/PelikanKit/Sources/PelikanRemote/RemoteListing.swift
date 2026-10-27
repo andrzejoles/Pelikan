@@ -1,4 +1,6 @@
 // Pochodzi z BiFold (Remote/ScpFS.swift @ a1ee643), dalej rozwijany w Pelikanie.
+// Kod produkcyjny jeszcze go nie wywołuje — zostaje świadomie jako wiersz macierzy PC-SSH-004 (sprawdzanie plików na
+// serwerze, np. binarek i kopii przed wdrożeniem Pro*C), z testami na próbkach AIX/Linux/BSD; tak samo `scp(download:)`.
 import Foundation
 
 /// Wpis katalogu na serwerze z wyjścia `ls -la`.
