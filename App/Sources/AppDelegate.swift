@@ -969,23 +969,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         palette?.show(relativeTo: mainWindow?.window)
     }
 
-    /// Sprawdzanie połączeń co n s (UG 23.1 „Check connection”); utracone — komunikat o wycofanej transakcji.
+    /// Sprawdzanie połączeń (UG 23.1 „Check connection”): timer co 15 s, przebieg wg interwału z Preferencji
+    /// (`Workspace.connectionCheckTick` — 0 wyłącza ping, zmiana interwału bez restartu, bez nakładania przebiegów).
     private func startConnectionCheck() {
-        let interval = TimeInterval(max(15, workspace.settings.checkConnectionIntervalSeconds))
-        connectionCheck = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        connectionCheck = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                guard let self else { return }
-                // Bezczynne sesje okien bez transakcji (Preferencje › Oracle, PD-CONN-026).
-                await self.workspace.sessions.closeIdleSessions(olderThan: self.workspace.settings.closeIdleSessionsMinutes)
-                // Okna programu: obiekty zmienione w bazie przez innych od wczytania (PD-PROG-011) — ostrzeżenie na pasku stanu.
-                await self.workspace.checkProgramWindowChanges()
-                let lost = await self.workspace.sessions.checkConnections()
-                guard !lost.isEmpty else { return }
-                let names = Set(lost.compactMap { self.workspace.connections.connection($0.connectionID)?.displayName })
-                for d in self.workspace.documents where d.transactionOpen && lost.contains(where: { $0.connectionID == self.workspace.effectiveConnection(of: d) }) {
-                    d.transactionOpen = false
-                }
-                self.showError(L10n.tr("Połączenie utracone: \(names.sorted().joined(separator: ", ")). Niezatwierdzone zmiany zostały wycofane przez serwer. Kolejne polecenie połączy się ponownie."))
+                guard let self, let message = await self.workspace.connectionCheckTick() else { return }
+                self.showError(message)
             }
         }
     }

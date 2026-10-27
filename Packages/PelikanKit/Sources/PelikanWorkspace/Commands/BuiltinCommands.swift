@@ -520,16 +520,21 @@ public enum BuiltinCommands {
                 guard let doc = ws.activeDocument, let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
                 let key = ws.sessions.key(forDocument: doc.id, connection: conn)
                 guard let id = ws.sessions.serverSessionIDs[key] else { throw CommandError.notAvailable(L10n.tr("Okno nie ma sesji")) }
+                // Tryb Dual/Single: sesja wspólna wszystkich okien połączenia i Object Browsera — pytanie je wymienia.
+                let sharing = ws.documents.filter { ws.sessionKey(for: $0) == key }
                 if let ui = ctx.ui {
-                    guard await ui.ask(L10n.tr("Zakończyć sesję okna?"),
-                                       message: L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną."),
+                    let message = key.purpose == .main
+                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Object Browsera. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
+                        : L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną.")
+                    guard await ui.ask(L10n.tr("Zakończyć sesję okna?"), message: message,
                                        buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 let toolKey = SessionKey(connectionID: conn, purpose: .tool("kill"))
                 let tool = try await ws.sessions.session(toolKey)
                 defer { Task { await ws.sessions.close(toolKey) } }
-                try await SessionKiller.kill(sid: id.sid, instance: id.instance, using: tool)
+                try await SessionKiller.kill(sid: id.sid, serial: id.serial, instance: id.instance, using: tool)
                 doc.isExecuting = false
+                for d in sharing { d.transactionOpen = false }
                 await ws.sessions.close(key)
                 return CommandResult(message: L10n.tr("Sesja \(id.sid) zakończona"))
             },

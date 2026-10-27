@@ -59,6 +59,7 @@ public final class ConnectionStore {
 
     /// Dodaje lub aktualizuje definicję; hasło (opcjonalne) trafia do Pęku kluczy albo do pamięci sesji.
     public func upsert(_ def: ConnectionDefinition, password: String? = nil) throws {
+        try def.sshTunnel?.validate()
         if let i = connections.firstIndex(where: { $0.id == def.id }) {
             connections[i] = def
         } else {
@@ -164,9 +165,19 @@ public final class ConnectionStore {
         try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections))
     }
 
-    /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie.
+    /// Definicje z pliku importu, które coś uruchamiają przy połączeniu (tunel SSH — proces `ssh`, skrypt
+    /// inicjalizacji — polecenia w bazie): nazwy do ostrzeżenia przed importem z niezaufanego źródła.
+    public static func definitionsRunningCode(in data: Data) throws -> [String] {
+        try JSONDecoder.pelikan.decode(Snapshot.self, from: data).connections
+            .filter { $0.sshTunnel != nil || !$0.initScript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map(\.displayName)
+    }
+
+    /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie. Tunel z hostem albo
+    /// użytkownikiem wyglądającym jak opcja `ssh` odrzuca cały plik.
     public func importDefinitions(_ data: Data) throws -> Int {
         let snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: data)
+        for c in snap.connections { try c.sshTunnel?.validate() }
         var folderMap: [UUID: UUID] = [:]
         let firstImported = folders.count
         for var f in snap.folders {

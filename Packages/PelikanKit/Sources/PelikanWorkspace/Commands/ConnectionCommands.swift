@@ -54,7 +54,15 @@ public enum ConnectionCommands {
                 var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
                 if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
                 guard let url else { throw CommandError.cancelledByUser }
-                let n = try ctx.workspace.connections.importDefinitions(try Data(contentsOf: url))
+                let data = try Data(contentsOf: url)
+                // Tunel SSH i skrypt inicjalizacji działają przy każdym połączeniu — import tylko ze świadomą zgodą.
+                let running = try ConnectionStore.definitionsRunningCode(in: data)
+                if !running.isEmpty, let ui = ctx.ui {
+                    guard await ui.ask(L10n.tr("Importować definicje z tunelem SSH albo skryptem inicjalizacji?"),
+                                       message: L10n.tr("Połączenia \(running.joined(separator: ", ")) uruchamiają przy łączeniu ssh albo polecenia w bazie. Importuj tylko plik z zaufanego źródła."),
+                                       buttons: [L10n.tr("Importuj"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                let n = try ctx.workspace.connections.importDefinitions(data)
                 return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n)"), value: .int(Int64(n)))
             },
             Command(CommandDescriptor(id: "connection.new", title: L10n.tr("Nowe połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),

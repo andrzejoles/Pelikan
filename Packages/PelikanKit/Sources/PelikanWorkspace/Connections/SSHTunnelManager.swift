@@ -71,9 +71,11 @@ public final class SSHTunnelManager {
     public struct Tunnel: Sendable {
         public let localPort: Int
         public let remote: ConnectStringRewriter.Endpoint
+        /// Przebieg procesu ssh: po jego śmierci i ponownym otwarciu stare sesje zwalniają swój tunel, nie nowy.
+        let run = UUID()
     }
 
-    private final class Running {
+    final class Running {
         let process: Process
         let tunnel: Tunnel
         var users = 1
@@ -126,7 +128,7 @@ public final class SSHTunnelManager {
         func set() { value.withLock { $0 = true } }
     }
 
-    private var running: [UUID: Running] = [:]
+    var running: [UUID: Running] = [:]
     /// Otwierane tunele: równoległe otwarcia tego samego połączenia czekają na jeden proces ssh.
     private var opening: [UUID: Task<Tunnel, any Error>] = [:]
     /// Dodatkowe opcje ssh (testy: własny plik known_hosts).
@@ -175,7 +177,8 @@ public final class SSHTunnelManager {
         if let id = t.identityFile, !id.isEmpty { a += ["-i", (id as NSString).expandingTildeInPath, "-o", "IdentitiesOnly=yes"] }
         if let j = t.jumpHost, !j.isEmpty { a += ["-J", j] }
         a += extra
-        a.append(t.user.isEmpty ? t.host : "\(t.user)@\(t.host)")
+        // „--”: cel nie może być wzięty za opcję (host/użytkownik sprawdzane też w `SSHTunnel.validate`).
+        a += ["--", t.user.isEmpty ? t.host : "\(t.user)@\(t.host)"]
         return a
     }
 
@@ -208,6 +211,7 @@ public final class SSHTunnelManager {
 
     private func start(for def: ConnectionDefinition, tns: [TNSEntry], secret: String?) async throws -> Tunnel {
         guard let t = def.sshTunnel else { throw DatabaseError.driverUnavailable(L10n.tr("Połączenie nie ma tunelu SSH")) }
+        try t.validate()
         if t.usesPassword, (secret ?? "").isEmpty {
             throw DatabaseError.driverUnavailable(L10n.tr("Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia."))
         }
@@ -255,9 +259,10 @@ public final class SSHTunnelManager {
         return tunnel
     }
 
-    /// Zwalnia tunel (zamyka, gdy nikt go nie używa).
-    public func release(_ id: UUID) {
-        guard let r = running[id] else { return }
+    /// Zwalnia tunel (zamyka, gdy nikt go nie używa). Tunel z wcześniejszego przebiegu ssh (proces padł, otwarto nowy)
+    /// jest pomijany — licznik nowego tunelu należy do sesji, które go otworzyły.
+    public func release(_ tunnel: Tunnel, of id: UUID) {
+        guard let r = running[id], r.tunnel.run == tunnel.run else { return }
         r.users -= 1
         if r.users <= 0 {
             r.process.terminate()

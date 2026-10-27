@@ -126,8 +126,9 @@ struct SessionBrowserView: View {
         guard let r = selected else { return }
         Task {
             do {
-                try await SessionBrowser.perform(a, sid: r.sid, serial: r.serial, in: try await SessionCommands.toolSession(workspace))
+                try await workspace.invoke("sessions.action", CommandArguments(["sid": .int(Int64(r.sid)), "serial": .int(Int64(r.serial)), "action": .string(a.name)]))
                 message = L10n.tr("Wykonano: \(a.name)")
+            } catch CommandError.cancelledByUser {
             } catch { message = error.localizedDescription }
         }
     }
