@@ -1,6 +1,6 @@
 # Serwer SSH do testów tunelu Pelikana (tylko środowisko testowe: `tunnel` — klucz, `haslo` — hasło ustawiane
 # przy starcie przez scripts/testdb.sh; przekierowanie portów).
-FROM alpine:3.20
+FROM alpine:3.24
 RUN apk add --no-cache openssh \
  && ssh-keygen -A \
  && adduser -D -s /bin/sh tunnel \

@@ -4,7 +4,8 @@ import PelikanODPI
 import Testing
 
 /// Dostęp do lokalnej bazy testowej (scripts/testdb.sh). Testy NIGDY nie łączą się z inną bazą:
-/// host musi być lokalny (127.0.0.1/localhost) — wyjątek tylko w CI, gdzie baza jest kontenerem usługi.
+/// host musi być lokalny (127.0.0.1/localhost) albo nazwą kontenera bazy testowej (testy z kontenera w sieci Docker
+/// bazy — `scripts/testdb.sh kdc-linux`).
 enum TestDatabase {
     struct Config: Sendable {
         var connectString: String
@@ -39,7 +40,8 @@ enum TestDatabase {
               let service = env["PELIKAN_TESTDB_SERVICE"], let user = env["PELIKAN_TESTDB_USER"],
               let password = env["PELIKAN_TESTDB_PASSWORD"] else { return nil }
         let isLocal = ["127.0.0.1", "localhost", "::1"].contains(host)
-        guard isLocal || env["CI"] != nil else {
+            || host == (env["PELIKAN_TESTDB_CONTAINER"] ?? "pelikan-testdb")
+        guard isLocal else {
             fatalError("Testy łączą się tylko z lokalną bazą testową, nie z \(host)")
         }
         // Portfel testowy (scripts/testdb.sh wallet) i LDAP (ldap-up): katalog Oracle Net jak w aplikacji, jako TNS_ADMIN
