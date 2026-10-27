@@ -9,21 +9,23 @@ import Testing
 @MainActor
 @Suite("Object Browser: obiekty drugiego połączenia", .enabled(if: TestDatabase.isAvailable), .serialized, .timeLimit(.minutes(3)))
 struct ObjectBrowserConnectionsDBTests {
-    func workspace() throws -> (Workspace, main: UUID, second: UUID) {
+    func workspace() throws -> (Workspace, TestUI, main: UUID, second: UUID) {
         let c = TestDatabase.config!
         let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
-        ws.ui = TestUI()
+        let ui = TestUI()
+        ws.ui = ui
         let main = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         let second = ConnectionDefinition(name: "dev_test_druga", target: ConnectionTarget(user: c.user, connectString: c.connectString))
         try ws.connections.upsert(main, password: c.password)
         try ws.connections.upsert(second, password: c.password)
         ws.sessions.setMainConnection(main.id)
-        return (ws, main.id, second.id)
+        return (ws, ui, main.id, second.id)
     }
 
     @Test("Pokaż dane i Edytuj z gałęzi drugiego połączenia: okno przypięte do niego, połączenie główne bez zmian")
     func windowsOnBranchConnection() async throws {
-        let (ws, main, second) = try workspace()
+        let (ws, ui, main, second) = try workspace()
+        defer { withExtendedLifetime(ui) {} }   // interfejs obszaru roboczego jest słaby
         _ = try await ws.invoke("connection.connect", CommandArguments(["connection": .string("dev_test_druga")]))
         #expect(ws.sessions.openConnections == [main, second])
         ws.selectedObjectConnection = second
@@ -49,7 +51,8 @@ struct ObjectBrowserConnectionsDBTests {
 
     @Test("Rekompilacja w sesji kompilacji połączenia gałęzi; upuszczenie obiektu przekazuje połączenie; rozłączenie usuwa gałąź")
     func compileAndDisconnect() async throws {
-        let (ws, main, second) = try workspace()
+        let (ws, ui, main, second) = try workspace()
+        defer { withExtendedLifetime(ui) {} }   // interfejs obszaru roboczego jest słaby
         _ = try await ws.sessions.session(SessionKey(connectionID: second, purpose: .main))
         ws.selectedObjectConnection = second
         ws.selectedObject = DBObject(owner: TestDatabase.config!.user.uppercased(), name: "EMP_API", type: .package)
