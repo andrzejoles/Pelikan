@@ -10,12 +10,13 @@ extension SQLPlusEngine {
             guard let o = args.first else { throw SQLPlusError(L10n.tr("Podaj nazwę obiektu")) }
             return o
         }
-        func invoke(_ id: CommandID, _ extra: [String: JSONValue] = [:]) async throws {
+        @discardableResult
+        func invoke(_ id: CommandID, _ extra: [String: JSONValue] = [:]) async throws -> CommandResult {
             var a: [String: JSONValue] = ["object": .string(try object())]
             // Obiekt z połączenia tego okna poleceń, nie głównego (D185).
             if let windowConnection { a["connection"] = .string(windowConnection.uuidString) }
             for (k, v) in extra { a[k] = v }
-            _ = try await workspace.invoke(id, CommandArguments(a))
+            return try await workspace.invoke(id, CommandArguments(a))
         }
         switch cmd {
         case "EDIT":
@@ -37,7 +38,7 @@ extension SQLPlusEngine {
         case "QUERYDATA": try await invoke("ob.queryData")
         case "PROPERTIES": try await invoke("ob.properties")
         case "RECOMPILE":
-            let r = try await workspace.invoke("ob.recompile", CommandArguments(["object": .string(try object())]))
+            let r = try await invoke("ob.recompile")
             emit(r.message ?? r.value?.description ?? L10n.tr("Skompilowano"))
         case "TEST": try await invoke("ob.test")
         case "VIEW": try await invoke("ob.ddl")

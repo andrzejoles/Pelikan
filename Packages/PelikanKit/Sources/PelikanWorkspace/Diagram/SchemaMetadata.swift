@@ -90,9 +90,10 @@ public struct SessionSchemaMetadata: SchemaMetadataSource {
     func bind(_ n: String, _ v: String?) -> BindVariable { BindVariable(name: n, value: v.map { .text($0) } ?? .null) }
 
     public func resolve(_ raw: String) async throws -> DBObject? {
-        let parts = raw.split(separator: ".", maxSplits: 1).map { String($0).replacingOccurrences(of: "\"", with: "") }
-        let owner = parts.count == 2 ? parts[0].uppercased() : nil
-        let name = (parts.last ?? raw).uppercased()
+        // Części w cudzysłowie bez zmiany wielkości liter, pozostałe wielkimi literami (D182).
+        let parts = raw.split(separator: ".", maxSplits: 1).map { MultiObjectCommands.identifierPart(String($0)) }
+        let owner = parts.count == 2 ? parts[0] : nil
+        let name = parts.last ?? MultiObjectCommands.identifierPart(raw)
         let (_, rows) = try await session.queryAll("""
             select owner, object_name, object_type from all_objects
              where object_name = :n and owner = nvl(:o, sys_context('userenv', 'current_schema'))

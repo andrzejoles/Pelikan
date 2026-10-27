@@ -143,7 +143,7 @@ final class DiagramCanvas: NSView {
         self.document = document
         self.workspace = workspace
         super.init(frame: NSRect(x: 0, y: 0, width: 1600, height: 1200))
-        registerForDraggedTypes([.string])
+        registerForDraggedTypes([ObjectBrowserViewController.objectPasteboardType, .string])
     }
 
     @available(*, unavailable)
@@ -450,20 +450,39 @@ final class DiagramCanvas: NSView {
         document.isModified = true
     }
 
-    // MARK: Upuszczanie z Object Browsera (nazwa obiektu jako tekst)
+    // MARK: Upuszczanie z Object Browsera (obiekt z właścicielem, typem i połączeniem) albo nazwy obiektu jako tekstu
 
     override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation { .copy }
 
+    /// Tekst upuszczony jako nazwa obiektu: `nazwa` albo `schemat.nazwa` (części w cudzysłowie — dowolne znaki).
+    static func isObjectName(_ s: String) -> Bool {
+        let part = #"("[^"]+"|[A-Za-z][A-Za-z0-9_$#]*)"#
+        return s.range(of: "^\(part)(\\.\(part))?$", options: .regularExpression) != nil
+    }
+
     override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
-        guard let name = sender.draggingPasteboard.string(forType: .string), let ws = workspace else { return false }
+        guard let ws = workspace else { return false }
+        let pasteboard = sender.draggingPasteboard
         let at = model(convert(sender.draggingLocation, from: nil))
         let doc = document
+        // Obiekt z Object Browsera (D185): kolumny są czytane z połączenia diagramu, więc obiekt innego połączenia — odmowa.
+        var dragged: DBObject?
+        if let raw = pasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType), let d = BrowserObjectDrag(raw),
+           let type = DBObjectType(rawValue: d.type) {
+            if let c = d.connection.flatMap(UUID.init(uuidString:)), c != ws.effectiveConnection(of: doc) {
+                Task { @MainActor in ws.ui?.showError(L10n.tr("Obiekt pochodzi z innego połączenia niż diagram")) }
+                return false
+            }
+            dragged = DBObject(owner: d.owner, name: d.name, type: type)
+        }
+        // Tekst (np. z edytora) — tylko nazwa obiektu, nie dowolny SQL.
+        let name = pasteboard.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard dragged != nil || Self.isObjectName(name) else { return false }
+        let object = dragged
         Task { @MainActor in
             do {
                 let source = try await ws.schemaSource(for: doc)
-                // Przeciąganie z Object Browsera zaznacza obiekt — ten ma właściciela i typ; inaczej nazwa ze słownika.
-                let selected = ws.selectedObject.flatMap { $0.name.lowercased() == name.lowercased() ? $0 : nil }
-                var found = selected
+                var found = object
                 if found == nil { found = try await source.resolve(name) }
                 guard let o = found else { return }
                 var d = doc.diagram

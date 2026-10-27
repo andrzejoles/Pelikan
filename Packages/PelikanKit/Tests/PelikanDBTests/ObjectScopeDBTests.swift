@@ -78,6 +78,21 @@ struct ObjectScopeDBTests {
         #expect(try await m.objects(.table, scope: .user("PELIKAN_SCOPE")).allSatisfy { $0.owner == "PELIKAN_SCOPE" })
 
         #expect(ContinuousClock.now - started < .seconds(30), "foldery wczytują się szybko (połączenie ALL_OBJECTS z ALL_SYNONYMS trwało ponad minutę)")
+
+        // Prywatne łącze innego schematu (ZMIANY-04): DROP i test trafiłyby we własne/publiczne łącze o tej nazwie — odmowa.
+        let foreignLink = DBObject(owner: "SYSTEM", name: "PELIKAN_SCOPE_SYS_LINK", type: .databaseLink)
+        ws.selectedObjectConnection = def.id
+        ws.selectedObject = foreignLink
+        ws.selectedObjects = [foreignLink]
+        for id: CommandID in ["ob.drop", "ob.testLink", "ob.dropSelected"] {
+            do {
+                _ = try await ws.invoke(id)
+                Issue.record("\(id): bez odmowy")
+            } catch {
+                if case CommandError.notAvailable = error {} else { Issue.record("\(id): \(error)") }
+            }
+        }
+        #expect(try await sys.scalar("select count(*) from dba_db_links where owner = 'SYSTEM' and db_link like 'PELIKAN_SCOPE_SYS_LINK%'") == "1")
         await ws.sessions.disconnectAll()
         await cleanUp(sys)
         await sys.close()

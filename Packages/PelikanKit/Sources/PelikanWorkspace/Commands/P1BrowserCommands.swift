@@ -47,7 +47,9 @@ enum P1BrowserCommands {
             let r = try await ws.invoke("ob.generateCode", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""),
                                                                              "type": .string(o.type.rawValue),
                                                                              "kind": .string(action.codeKind?.rawValue ?? ""),
-                                                                             "returnOnly": .bool(true)]))
+                                                                             "returnOnly": .bool(true),
+                                                                             // Kolumny i parametry z połączenia gałęzi obiektu (D185).
+                                                                             "connection": .string(m.connectionID.uuidString)]))
             return r.value?.stringValue ?? ""
         }
     }

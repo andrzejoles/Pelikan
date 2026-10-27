@@ -161,6 +161,8 @@ enum Stage7Commands {
                     try insert(code, into: doc)
                 } else {
                     let doc = ws.newDocument(.sql, text: code)
+                    // Okno kodu obiektu innego połączenia jest do niego przypięte (D185).
+                    ws.bind(doc, to: m.connectionID)
                     doc.isModified = false
                 }
                 return CommandResult(value: .string(code))

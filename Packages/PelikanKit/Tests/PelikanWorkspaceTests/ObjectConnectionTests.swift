@@ -37,6 +37,22 @@ struct ObjectConnectionTests {
         #expect(s.openConnections.isEmpty)
     }
 
+    @Test("Połączenie tymczasowe okna poleceń: w drzewie po CONNECT; po zmianie połączenia i DISCONNECT znika razem z definicją")
+    func temporaryConnection() async throws {
+        let ws = Workspace(drivers: [.instantClient: FakeDriver()])
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        #expect(await engine.run("connect u/good@dev_db1") == .finished, "\(doc.console.map(\.text))")
+        let first = try #require(doc.connectionID)
+        #expect(ws.sessions.openConnections.contains(first))
+        #expect(await engine.run("connect v/good@dev_db2") == .finished, "\(doc.console.map(\.text))")
+        let second = try #require(doc.connectionID)
+        #expect(second != first && !ws.sessions.openConnections.contains(first) && ws.connections.connection(first) == nil)
+        #expect(ws.sessions.openConnections.contains(second))
+        #expect(await engine.run("disconnect") == .finished)
+        #expect(!ws.sessions.openConnections.contains(second) && ws.connections.connection(second) == nil)
+    }
+
     @Test("Połączenie obiektu: argument, nazwa obiektu — okno, zaznaczenie — gałąź drzewa, bez kontekstu — główne")
     func objectConnection() throws {
         let (ws, ids) = try workspace(["dev_main", "dev_other", "dev_window"])

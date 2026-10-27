@@ -164,25 +164,26 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     }
 
     static func symbol(_ k: CompletionItem.Kind) -> String {
+        // Rodzaje będące obiektami bazy — ikony jak w Object Browserze i Code Contents.
         switch k {
         case .column, .field: "c.square"
-        case .table: "tablecells"
-        case .view: "eye"
-        case .synonym: "arrow.triangle.turn.up.right.diamond"
-        case .package: "shippingbox"
-        case .procedure: "p.square"
-        case .function: "f.square"
-        case .sequence: "number"
-        case .type, .localType: "t.square"
-        case .trigger: "bolt"
-        case .schema: "person"
+        case .table: ObjectSymbols.symbol(for: .table)
+        case .view: ObjectSymbols.symbol(for: .view)
+        case .synonym: ObjectSymbols.symbol(for: .synonym)
+        case .package: ObjectSymbols.symbol(for: .package)
+        case .procedure: ObjectSymbols.symbol(for: .procedure)
+        case .function: ObjectSymbols.symbol(for: .function)
+        case .sequence: ObjectSymbols.symbol(for: .sequence)
+        case .type, .localType: ObjectSymbols.symbol(for: .type)
+        case .trigger: ObjectSymbols.symbol(for: .trigger)
+        case .schema: ObjectSymbols.symbol(for: .user)
         case .variable, .parameter, .constant: "v.square"
         case .cursor: "list.bullet.rectangle"
         case .exception: "exclamationmark.triangle"
         case .alias: "a.square"
         case .keyword: "textformat"
         case .pseudoColumn: "sparkle"
-        case .databaseLink: "link"
+        case .databaseLink: ObjectSymbols.symbol(for: .databaseLink)
         case .object: "cube"
         }
     }

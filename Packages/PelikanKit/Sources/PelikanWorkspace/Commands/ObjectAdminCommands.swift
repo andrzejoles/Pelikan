@@ -58,6 +58,7 @@ enum ObjectAdminCommands {
                     validate: { $0.selectedObject?.type == .databaseLink }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard o.name.range(of: #"^[A-Za-z0-9_$#.@]+$"#, options: .regularExpression) != nil else { throw CommandError.invalidArgument("object", o.name) }
+                try MultiObjectCommands.requireOwnLink(o, sessionUser: try await m.session().info.sessionUser)
                 // Zapytanie przez łącze otwiera transakcję rozproszoną — osobna sesja narzędzia, wycofana i zamknięta
                 // (w trybie Dual sesja główna jest sesją okien).
                 let key = SessionKey(connectionID: m.connectionID, purpose: .tool("dblink"))

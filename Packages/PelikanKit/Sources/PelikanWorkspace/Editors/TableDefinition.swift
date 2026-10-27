@@ -110,6 +110,8 @@ public struct TableDefinition: Sendable, Hashable {
         public enum Kind: String, Sendable, Hashable, CaseIterable { case normal, unique, bitmap }
         public var id = UUID()
         public var originalName: String?
+        /// Właściciel istniejącego indeksu (może być inny niż schemat tabeli); "" — schemat tabeli.
+        public var owner = ""
         public var name: String
         public var kind: Kind = .normal
         /// Kolumny albo wyrażenia, z opcjonalnym DESC (`kolumna DESC`).
@@ -354,6 +356,7 @@ public enum TableDDL {
             }
             var x = TableDefinition.Index(name: r[0].displayText ?? "", columns: columns)
             x.originalName = x.name
+            x.owner = r[6].displayText ?? ""
             x.kind = (r[2].displayText ?? "").hasPrefix("BITMAP") ? .bitmap : r[1].displayText == "UNIQUE" ? .unique : .normal
             x.tablespace = r[3].displayText ?? ""
             x.invisible = r[4].displayText == "INVISIBLE"
@@ -535,7 +538,10 @@ public enum TableDDL {
         for c in dropped(old.checks, new.checks, name: \.name, orig: \.originalName, same: { $0.condition == $1.condition }) {
             out.append("ALTER TABLE \(t) DROP CONSTRAINT \(q(c))")
         }
-        for x in dropped(old.indexes, new.indexes, name: \.name, orig: \.originalName, same: sameIndex) { out.append("DROP INDEX \(q(new.owner)).\(q(x))") }
+        // Indeks w schemacie właściciela indeksu, nie tabeli (indeks może należeć do innego schematu).
+        func indexOwner(_ x: TableDefinition.Index) -> String { q(x.owner.isEmpty ? new.owner : x.owner) }
+        let droppedIndexes = Set(dropped(old.indexes, new.indexes, name: \.name, orig: \.originalName, same: sameIndex))
+        for x in old.indexes where droppedIndexes.contains(x.name) { out.append("DROP INDEX \(indexOwner(x)).\(q(x.name))") }
         // Kolumny: usunięte, zmienione nazwy, zmienione definicje, dodane.
         let kept = Set(new.columns.compactMap(\.originalName))
         for c in old.columns where !kept.contains(c.name) { out.append("ALTER TABLE \(t) DROP COLUMN \(q(c.name))") }
@@ -598,8 +604,8 @@ public enum TableDDL {
             guard let on = x.originalName, let before = old.indexes.first(where: { $0.name == on }), sameIndex(before, x) else {
                 out.append(createIndex(x, table: new)); continue
             }
-            if on != x.name { out.append("ALTER INDEX \(q(new.owner)).\(q(on)) RENAME TO \(q(x.name))") }
-            if before.invisible != x.invisible { out.append("ALTER INDEX \(q(new.owner)).\(q(x.name)) \(x.invisible ? "INVISIBLE" : "VISIBLE")") }
+            if on != x.name { out.append("ALTER INDEX \(indexOwner(before)).\(q(on)) RENAME TO \(q(x.name))") }
+            if before.invisible != x.invisible { out.append("ALTER INDEX \(indexOwner(before)).\(q(x.name)) \(x.invisible ? "INVISIBLE" : "VISIBLE")") }
         }
         out += partitionChanges(old.partitioning, new.partitioning, table: t)
         return out
