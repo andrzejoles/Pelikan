@@ -84,8 +84,11 @@ identity() {
     security find-identity -p codesigning "$KC" | awk -v n="\"$NAME\"" 'index($0, n) {print $2; exit}'
 }
 
+# Hardened Runtime jawnie (`--options runtime`) dla każdej części — `flags` w --preserve-metadata zachowałoby go tylko,
+# gdyby był już w dotychczasowym podpisie; uprawnienia (np. disable-library-validation) zostają z podpisu Xcode.
 sign_one() {
-    codesign --force --sign "$ID" --keychain "$KC" --timestamp=none --preserve-metadata=identifier,entitlements,flags "$@"
+    codesign --force --sign "$ID" --keychain "$KC" --timestamp=none --options runtime \
+        --preserve-metadata=identifier,entitlements,flags "$@"
 }
 
 case "${1:-}" in
@@ -116,6 +119,7 @@ case "${1:-}" in
         done
         sign_one "$APP"
         codesign --verify --deep --strict "$APP"
+        codesign -d --verbose=2 "$APP" 2>&1 | grep -q 'flags=.*runtime' || { echo "Brak Hardened Runtime w podpisie $APP" >&2; exit 1; }
         codesign -d -r- "$APP" 2>&1 | grep designated
         ;;
     export)

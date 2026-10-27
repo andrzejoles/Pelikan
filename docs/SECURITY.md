@@ -100,6 +100,13 @@
   typowych zapisach i zamienia katalog domowy na `~` także w wartościach jawnych. Jawne nazwy (Preferencje) są
   opcjonalne i domyślnie wyłączone. Test szczelności: łączenie z błędnym i dobrym hasłem, `IDENTIFIED BY` i literał
   w SQL — w żadnym wpisie (także diagnostycznym z jawnymi nazwami) nie ma hasła, treści SQL ani wartości.
+- Podpis z Hardened Runtime (przegląd 2026-10-27): aplikacja, rozszerzenie Quick Look, `pelikan-mcp` i części Sparkle
+  podpisane z `--options runtime` (project.yml, `scripts/signing.sh` — także przy podpisie ad hoc). dyld ignoruje
+  `DYLD_INSERT_LIBRARIES`/`DYLD_LIBRARY_PATH`, a inny proces tego samego użytkownika nie podłączy się do Pelikana —
+  wstrzyknięty kod nie odczyta z Pęku kluczy haseł zapisanych dla podpisu Pelikana. Jedyne uprawnienie
+  `com.apple.security.cs.disable-library-validation`: Instant Client ładowany `dlopen` z katalogu użytkownika jest
+  podpisany przez Oracle, nie certyfikatem Pelikana. Bez `allow-dyld-environment-variables`; `get-task-allow` tylko
+  w kompilacji Debug (dodaje je Xcode).
 - Zgłaszanie problemów (PL-INFRA-013, D173): Pelikan nie wysyła niczego sam — otwiera stronę nowego zgłoszenia
   na GitHubie z treścią do przejrzenia, użytkownik wysyła ją ze swojego konta; bez tokenów w aplikacji. Treść (opis,
   komunikat, opis awarii bez ścieżek, środowisko, ostatnie wpisy dziennika z ukrytymi nazwami) przechodzi przez
