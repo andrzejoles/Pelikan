@@ -4,7 +4,7 @@ import FoundationXML
 #endif
 
 /// Odczyt archiwum ZIP (wpisy „stored” i „deflate”) bez bibliotek zewnętrznych — dla plików xlsx (PD-TOOL-009).
-public struct ZipReader {
+public struct ZipReader: Sendable {
     public enum Failure: Error, LocalizedError {
         case notZip, unsupported(String), corrupted(String)
         public var errorDescription: String? {
@@ -16,7 +16,7 @@ public struct ZipReader {
         }
     }
 
-    struct Entry { var name: String; var method: UInt16; var compressedSize: Int; var size: Int; var localOffset: Int }
+    struct Entry: Sendable { var name: String; var method: UInt16; var compressedSize: Int; var size: Int; var localOffset: Int }
 
     let data: Data
     let entries: [String: Entry]
@@ -81,7 +81,7 @@ public struct ZipReader {
 }
 
 /// Skoroszyt xlsx: arkusze i komórki jako tekst (liczby w zapisie z pliku, wartości logiczne 0/1).
-public struct XlsxWorkbook {
+public struct XlsxWorkbook: Sendable {
     public struct Sheet: Sendable, Hashable { public var name: String; public var path: String }
     public let sheets: [Sheet]
     let zip: ZipReader

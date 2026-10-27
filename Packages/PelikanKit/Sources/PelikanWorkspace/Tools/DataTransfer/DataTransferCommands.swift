@@ -9,15 +9,15 @@ public enum DataTransferTool: String, Sendable, CaseIterable {
 /// Komendy narzędzi danych (PD-TOOL-003…013). Wszystkie dla użytkownika (agent — Brak): zmieniają dane albo pliki.
 @MainActor
 public enum DataTransferCommands {
-    /// Połączenie narzędzia: aktywnego okna albo główne.
-    public static func connection(_ ws: Workspace) -> UUID? {
-        ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
-    }
+    /// Połączenie narzędzia: aktywnego okna albo główne (`Workspace.toolConnection()`).
+    public static func connection(_ ws: Workspace) -> UUID? { ws.toolConnection() }
 
-    /// Sesja narzędzi danych (osobna od okien użytkownika — import zatwierdza własne transakcje).
+    /// Przeznaczenie sesji narzędzi danych (osobna od okien użytkownika — import zatwierdza własne transakcje).
+    public static let sessionPurpose = "dane"
+
+    /// Sesja narzędzi danych na wskazanym połączeniu (bez wskazanego — połączenie narzędzia).
     public static func session(_ ws: Workspace, connection: UUID? = nil) async throws -> any DatabaseSession {
-        guard let conn = connection ?? self.connection(ws) else { throw CommandError.notConnected }
-        return try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("dane")))
+        try await ws.toolSession(sessionPurpose, connection: connection ?? ws.toolConnection())
     }
 
     static func open(_ id: CommandID, _ title: String, _ tool: DataTransferTool, summary: String, feature: String) -> Command {

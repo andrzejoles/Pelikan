@@ -37,9 +37,10 @@ struct ObjectPicker: View {
     }
 }
 
-/// Eksport obiektów użytkownika (UG 24.6, PD-TOOL-007).
+/// Eksport obiektów użytkownika (UG 24.6, PD-TOOL-007). Schemat i obiekty z połączenia okna (ustalonego przy otwarciu).
 struct ExportObjectsView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var owner = ""
     @State private var objects: [DBObject] = []
     @State private var selected: Set<DBObject> = []
@@ -50,6 +51,7 @@ struct ExportObjectsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 TextField(L10n.tr("Schemat"), text: $owner).frame(maxWidth: 220).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
                 Button(L10n.tr("Wczytaj")) { Task { await load() } }
             }
@@ -72,14 +74,19 @@ struct ExportObjectsView: View {
         }
         .padding(12)
         .frame(minWidth: 620, minHeight: 560)
-        .task {
-            owner = workspace.sessions.connectedSchema(workspace.sessions.mainConnectionID) ?? ""
+        .task(id: connection) {
+            owner = workspace.sessions.connectedSchema(connection) ?? ""
             await load()
         }
     }
 
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
     private func session() async throws -> any DatabaseSession {
-        try await SessionCommands.toolSession(workspace)
+        try await workspace.toolSession("sessions", connection: connection)
     }
 
     private func load() async {
@@ -107,9 +114,10 @@ struct ExportObjectsView: View {
     }
 }
 
-/// Porównanie obiektów użytkowników (UG 24.11, PD-TOOL-012).
+/// Porównanie obiektów użytkowników (UG 24.11, PD-TOOL-012). Źródło — połączenie okna (ustalone przy otwarciu).
 struct CompareObjectsView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var owner = ""
     @State private var objects: [DBObject] = []
     @State private var selected: Set<DBObject> = []
@@ -124,6 +132,7 @@ struct CompareObjectsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 TextField(L10n.tr("Schemat źródłowy"), text: $owner).frame(maxWidth: 200).textFieldStyle(.roundedBorder).onSubmit { Task { await load() } }
                 Button(L10n.tr("Wczytaj")) { Task { await load() } }
                 Spacer()
@@ -171,11 +180,16 @@ struct CompareObjectsView: View {
         }
         .padding(12)
         .frame(minWidth: 900, minHeight: 560)
-        .task {
-            owner = workspace.sessions.connectedSchema(workspace.sessions.mainConnectionID) ?? ""
-            targetID = workspace.sessions.mainConnectionID
+        .task { if targetID == nil { targetID = connection } }
+        .task(id: connection) {
+            owner = workspace.sessions.connectedSchema(connection) ?? ""
             await load()
         }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private func status(_ s: ObjectDifference.Status) -> String {
@@ -188,7 +202,7 @@ struct CompareObjectsView: View {
 
     private func load() async {
         do {
-            objects = try await ObjectExport.objects(owner: owner.uppercased(), in: try await SessionCommands.toolSession(workspace))
+            objects = try await ObjectExport.objects(owner: owner.uppercased(), in: try await workspace.toolSession("sessions", connection: connection))
             selected = []
             message = L10n.tr("Obiekty: \(objects.count)")
         } catch { message = error.localizedDescription }
@@ -199,8 +213,8 @@ struct CompareObjectsView: View {
         busy = true
         defer { busy = false }
         do {
-            let target = try await workspace.sessions.session(SessionKey(connectionID: targetID, purpose: .tool("compare")))
-            diffs = try await ObjectCompare.compare(Array(selected), source: try await SessionCommands.toolSession(workspace),
+            let target = try await workspace.toolSession("compare", connection: targetID)
+            diffs = try await ObjectCompare.compare(Array(selected), source: try await workspace.toolSession("sessions", connection: connection),
                                                    targetOwner: targetOwner.uppercased(), target: target, options: options) { n in
                 message = L10n.tr("Porównano \(n) z \(selected.count)")
             }

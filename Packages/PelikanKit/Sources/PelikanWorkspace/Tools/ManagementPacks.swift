@@ -151,9 +151,8 @@ public enum ManagementPacks {
 @MainActor
 enum PackCommands {
     static func session(_ ctx: CommandContext) async throws -> (UUID, any DatabaseSession) {
-        let ws = ctx.workspace
-        guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID else { throw CommandError.notConnected }
-        return (conn, try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("packs"))))
+        let conn = try ctx.toolConnection()
+        return (conn, try await ctx.workspace.toolSession("packs", connection: conn))
     }
 
     static func html(_ title: String, _ text: String) -> String {
@@ -195,7 +194,7 @@ enum PackCommands {
                 return html("ADDM", try await ManagementPacks.addmReport(s, begin: snaps.begin, end: snaps.end))
             },
             report("tools.sqlMonitorReport", L10n.tr("Raport SQL Monitor"), L10n.tr("Raport Real-Time SQL Monitoring (HTML) dla SQL_ID; wymaga Tuning Pack."), "SD-MON-001",
-                   need: .tuning, params: [CommandParameter("sqlId", .string, required: true, "SQL_ID")]) { ctx, s in
+                   need: .tuning, params: [CommandParameter("sqlId", .string, required: true, "SQL_ID"), CommandContext.toolConnectionParam]) { ctx, s in
                 try await ManagementPacks.sqlMonitorReport(s, sqlID: ctx.arguments.string("sqlId") ?? "")
             },
             Command(CommandDescriptor(id: "tools.sqlMonitor", title: L10n.tr("SQL Monitor"), category: .tools, submenu: L10n.tr("Wydajność (pakiety Oracle)"),
@@ -205,7 +204,8 @@ enum PackCommands {
                     validate: { $0.sessions.mainConnectionID != nil }) { ctx in
                 let (conn, s) = try await session(ctx)
                 try await ManagementPacks.require(.tuning, connection: conn, session: s, in: ctx.workspace, invoker: ctx.invoker)
-                ctx.ui?.showSQLMonitor()
+                // Okno pracuje na połączeniu, dla którego sprawdzono licencję (lista i raporty).
+                ctx.ui?.showSQLMonitor(connection: conn)
                 return .ok
             },
             report("tools.sqlTuningAdvisor", L10n.tr("SQL Tuning Advisor"), L10n.tr("Zalecenia SQL Tuning Advisor dla polecenia pod kursorem albo zaznaczenia; wymaga Tuning Pack."), "SD-DBA-003",
