@@ -19,6 +19,8 @@ struct DiffViewer: View {
     @State private var rows: [DiffRow] = []
     @State private var current = -1
     @State private var scrollTarget: Int?
+    /// Szerokość najdłuższej linii (obie strony) — kolumny tekstu co najmniej tak szerokie, z przewijaniem w poziomie.
+    @State private var textWidth: CGFloat = 0
 
     private var changes: [Int] {
         // Pierwsze wiersze bloków zmian.
@@ -79,22 +81,37 @@ struct DiffViewer: View {
     }
 
     private var content: some View {
-        ScrollViewReader { proxy in
-            ScrollView([.vertical]) {
-                LazyVStack(spacing: 0) {
-                    ForEach(rows.indices, id: \.self) { i in
-                        DiffRowView(row: rows[i]).id(i)
+        // Długie linie bez ucinania wielokropkiem: obie kolumny tej samej szerokości (połowa widoku albo najdłuższa
+        // linia), całość przewijana także w poziomie — różnica na końcu długiej linii jest widoczna (R5-16).
+        GeometryReader { geo in
+            let half = max(0, (geo.size.width - 1) / 2 - DiffRowView.numberWidth - 6)
+            ScrollViewReader { proxy in
+                ScrollView([.vertical, .horizontal]) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        ForEach(rows.indices, id: \.self) { i in
+                            DiffRowView(row: rows[i], textWidth: max(half, textWidth)).id(i)
+                        }
                     }
                 }
-            }
-            .onChange(of: scrollTarget) {
-                if let t = scrollTarget { withAnimation { proxy.scrollTo(t, anchor: .center) } }
+                .onChange(of: scrollTarget) {
+                    if let t = scrollTarget { withAnimation { proxy.scrollTo(t, anchor: .center) } }
+                }
             }
         }
     }
 
+    /// Szerokość najdłuższej linii czcionką widoku (tabulator liczony jak w tekście).
+    private static func widestLine(_ rows: [DiffRow]) -> CGFloat {
+        let lines = rows.flatMap { [$0.leftText, $0.rightText] }
+        guard let longest = lines.max(by: { weight($0) < weight($1) }), !longest.isEmpty else { return 0 }
+        return ceil((longest as NSString).size(withAttributes: [.font: NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)]).width) + 16
+    }
+
+    private static func weight(_ s: String) -> Int { s.utf16.count + s.utf16.filter { $0 == 0x09 }.count * 7 }
+
     private func recompute() {
         rows = TextDiff.rows(left, right, options: options)
+        textWidth = Self.widestLine(rows)
         current = -1
         if let first = changes.first { scrollTarget = max(0, first - 3); current = 0 }
     }
@@ -125,6 +142,9 @@ struct DiffViewer: View {
 
 struct DiffRowView: View {
     let row: DiffRow
+    /// Szerokość kolumny tekstu każdej strony (wspólna dla wszystkich wierszy).
+    let textWidth: CGFloat
+    static let numberWidth: CGFloat = 44
 
     var body: some View {
         HStack(spacing: 0) {
@@ -140,9 +160,10 @@ struct DiffRowView: View {
     private func cell(number: Int?, text: String, change: Range<Int>?, side: Side) -> some View {
         HStack(spacing: 6) {
             Text(number.map(String.init) ?? "")
-                .font(.code).foregroundStyle(.tertiary).frame(width: 44, alignment: .trailing)
+                .font(.code).foregroundStyle(.tertiary).frame(width: Self.numberWidth, alignment: .trailing)
             Text(attributed(text, change: change, side: side))
-                .font(.code).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.code).lineLimit(1).fixedSize()
+                .frame(width: textWidth, alignment: .leading)
         }
         .padding(.vertical, 1)
         .background(background(side: side, present: number != nil))

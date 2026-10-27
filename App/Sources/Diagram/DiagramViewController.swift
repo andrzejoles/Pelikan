@@ -2,7 +2,7 @@ import AppKit
 import PelikanWorkspace
 
 /// Okno diagramu (UG 11, PD-DIAG-001..003): pasek narzędzi i płótno z obiektami, liniami, grupami i notatkami.
-final class DiagramViewController: NSViewController {
+final class DiagramViewController: NSViewController, DocumentContentController {
     let document: PelikanWorkspace.Document
     let workspace: Workspace
     private(set) var canvas: DiagramCanvas!
@@ -480,8 +480,21 @@ final class DiagramCanvas: NSView {
 /// Eksport obrazu, schowek i druk diagramu (PD-DIAG-003) — rysowanie bez zaznaczenia i siatki, w skali 100 %.
 @MainActor
 enum DiagramOutput {
+    /// Wygląd jasny niezależnie od trybu aplikacji: obraz, PDF, schowek i wydruk na białym tle z ciemnym tekstem
+    /// (płótno rysuje kolorami dynamicznymi — w trybie ciemnym wychodziło czarne tło, R5-17), jak wykres w `GraphView`.
+    static let light = NSAppearance(named: .aqua)
+
+    /// Rysowanie z jasnym wyglądem jako bieżącym (kolory dynamiczne rozwiązywane w trakcie rysowania).
+    static func inLight<T>(_ body: () -> T) -> T {
+        guard let light else { return body() }
+        var out: T?
+        light.performAsCurrentDrawingAppearance { out = body() }
+        return out!
+    }
+
     static func offscreen(_ doc: PelikanWorkspace.Document) -> (DiagramCanvas, NSRect) {
         let c = DiagramCanvas(document: doc, workspace: nil)
+        c.appearance = light
         c.plain = true
         let b = doc.diagram.bounds
         c.setFrameSize(NSSize(width: b.x + b.width + 16, height: b.y + b.height + 16))
@@ -491,13 +504,13 @@ enum DiagramOutput {
     static func png(_ doc: PelikanWorkspace.Document) -> Data? {
         let (c, r) = offscreen(doc)
         guard let rep = c.bitmapImageRepForCachingDisplay(in: r) else { return nil }
-        c.cacheDisplay(in: r, to: rep)
+        inLight { c.cacheDisplay(in: r, to: rep) }
         return rep.representation(using: .png, properties: [:])
     }
 
     static func pdf(_ doc: PelikanWorkspace.Document) -> Data {
         let (c, r) = offscreen(doc)
-        return c.dataWithPDF(inside: r)
+        return inLight { c.dataWithPDF(inside: r) }
     }
 
     static func export(_ doc: PelikanWorkspace.Document, format: String, workspace: Workspace) {
@@ -519,6 +532,6 @@ enum DiagramOutput {
         let info = NSPrintInfo.shared.copy() as! NSPrintInfo
         info.horizontalPagination = .fit
         info.verticalPagination = .automatic
-        NSPrintOperation(view: c, printInfo: info).run()
+        inLight { _ = NSPrintOperation(view: c, printInfo: info).run() }
     }
 }

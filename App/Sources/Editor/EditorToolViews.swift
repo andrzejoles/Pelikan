@@ -177,9 +177,9 @@ struct TodoItemsView: View {
         NSApp.mainWindow?.makeKeyAndOrderFront(nil)
     }
 
+    /// Przez komendę `edit.todoToggle` w oknie zadania — tylko do odczytu i trwające wykonanie jak w menu (R4-06).
     private func toggle(_ r: Row) {
-        let sel = r.document.selectedRange
-        r.document.text = TodoItems.toggle(r.item, in: r.document.text)
-        r.document.selectedRange = sel
+        workspace.activate(r.document.id)
+        workspace.perform("edit.todoToggle", CommandArguments(["line": .int(Int64(r.item.line))]))
     }
 }

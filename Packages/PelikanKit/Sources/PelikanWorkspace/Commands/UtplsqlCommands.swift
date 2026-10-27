@@ -372,7 +372,7 @@ extension Workspace {
         var covered = Set<Int>(), uncovered = Set<Int>(), partial = Set<Int>()
         var owners = Set<String>()
         let schema = sessions.connectedSchema(effectiveConnection(of: doc))
-        for u in ProgramCompiler.units(in: doc.text) {
+        for u in doc.programUnits {
             let key = "\(u.type.rawValue) \(u.owner ?? schema ?? "").\(u.name)".uppercased()
             // Klucz raportu: „TYP WŁAŚCICIEL.NAZWA” — typ porównywany dokładnie (PACKAGE ≠ PACKAGE BODY).
             let match = cov.first { k, _ in

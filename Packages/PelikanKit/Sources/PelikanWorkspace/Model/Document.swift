@@ -68,6 +68,7 @@ public final class Document: Identifiable {
     public var text: String {
         didSet {
             if text != oldValue {
+                textRevision &+= 1
                 isModified = true
                 if kind == .program { isCompileStale = true }
                 if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
@@ -79,6 +80,26 @@ public final class Document: Identifiable {
             }
         }
     }
+    /// Numer wersji tekstu (rośnie przy każdej zmianie) — klucz pamięci podręcznej jednostek programu.
+    @ObservationIgnored public private(set) var textRevision = 0
+    @ObservationIgnored private var unitsCache: (revision: Int, units: [ProgramUnit])?
+
+    /// Jednostki okna programu (`ProgramCompiler.units`) liczone raz na zmianę tekstu, nie przy każdym rysowaniu
+    /// marginesu czy walidacji wstążki (pakiet 50 000 linii — R4-01). Odczyt rejestruje obserwację `text`.
+    public var programUnits: [ProgramUnit] {
+        let current = text
+        if let c = unitsCache, c.revision == textRevision { return c.units }
+        let units = ProgramCompiler.units(in: current)
+        unitsCache = (textRevision, units)
+        return units
+    }
+
+    /// Jednostki policzone w tle dla tekstu `forText` — trafiają do pamięci, gdy tekst okna się od tego czasu nie zmienił.
+    public func cacheProgramUnits(_ units: [ProgramUnit], forText: String) {
+        guard text == forText else { return }
+        unitsCache = (textRevision, units)
+    }
+
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false {
         didSet { if !isModified { baselineText = text } }

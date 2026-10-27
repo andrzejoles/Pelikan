@@ -3,7 +3,7 @@ import PelikanWorkspace
 import SwiftUI
 
 /// Okno testu (UG 5): blok PL/SQL u góry, pod nim karty Zmienne / Wyjście / Stos błędu; F8 wykonuje blok.
-final class TestWindowViewController: NSViewController {
+final class TestWindowViewController: NSViewController, DocumentContentController {
     private let document: PelikanWorkspace.Document
     private let workspace: Workspace
     private var editor: CodeEditorView!

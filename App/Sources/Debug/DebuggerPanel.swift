@@ -97,7 +97,13 @@ struct DebuggerPanel: View {
 
     private var status: String {
         switch debugger.state {
-        case .idle: L10n.tr("Gotowy — Start (F9) uruchamia skrypt okna testu z debugerem")
+        case .idle:
+            // Skrót z bieżącej mapy klawiszy (profil, własne skróty), nie zaszyty w tekście.
+            if let chord = workspace.keymap.chords(for: "debug.start").first {
+                L10n.tr("Gotowy — \(chord.displayString) uruchamia skrypt okna testu z debugerem")
+            } else {
+                L10n.tr("Gotowy — „\(help("debug.start"))” uruchamia skrypt okna testu z debugerem")
+            }
         case .running: L10n.tr("Wykonywanie…")
         case .paused:
             debugger.location.map { $0.isTestBlock ? L10n.tr("Zatrzymano: blok testu, linia \($0.line)") : L10n.tr("Zatrzymano: \($0.owner).\($0.name), linia \($0.line)") } ?? ""
@@ -107,15 +113,15 @@ struct DebuggerPanel: View {
 
     private var toolbar: some View {
         HStack(spacing: 6) {
-            button("play.fill", L10n.tr("Rozpocznij debugowanie (F9)"), "debug.start", enabled: debugger.state != .paused && debugger.state != .running)
+            button("play.fill", "debug.start", enabled: debugger.state != .paused && debugger.state != .running)
             Divider().frame(height: 18)
-            button("forward.end.fill", L10n.tr("Kontynuuj (⌃R)"), "debug.run")
-            button("arrow.down.to.line", L10n.tr("Wejdź (⌃N)"), "debug.stepInto")
-            button("arrow.turn.down.right", L10n.tr("Przejdź (⌃O)"), "debug.stepOver")
-            button("arrow.up.to.line", L10n.tr("Wyjdź (⌃T)"), "debug.stepOut")
-            button("exclamationmark.triangle", L10n.tr("Wykonaj do wyjątku"), "debug.runToException")
+            button("forward.end.fill", "debug.run")
+            button("arrow.down.to.line", "debug.stepInto")
+            button("arrow.turn.down.right", "debug.stepOver")
+            button("arrow.up.to.line", "debug.stepOut")
+            button("exclamationmark.triangle", "debug.runToException")
             Divider().frame(height: 18)
-            button("stop.fill", L10n.tr("Zatrzymaj (⇧F9)"), "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
+            button("stop.fill", "debug.stop", enabled: debugger.state == .paused || debugger.state == .running)
             Button { executeInTarget() } label: { Image(systemName: "terminal") }
                 .iconLabel(L10n.tr("Wykonaj SQL w sesji debugowanej…")).disabled(debugger.state != .paused)
             Spacer()
@@ -123,13 +129,20 @@ struct DebuggerPanel: View {
         }
     }
 
-    private func button(_ symbol: String, _ help: String, _ command: String, enabled: Bool? = nil) -> some View {
+    /// Podpowiedź: tytuł komendy z rejestru i skrót z bieżącej mapy klawiszy (profil, własne skróty) — jak na wstążce (R4-19).
+    private func help(_ command: CommandID) -> String {
+        let title = workspace.registry.command(command)?.descriptor.title ?? command.rawValue
+        guard let chord = workspace.keymap.chords(for: command).first else { return title }
+        return "\(title) (\(chord.displayString))"
+    }
+
+    private func button(_ symbol: String, _ command: String, enabled: Bool? = nil) -> some View {
         Button {
             // Komendy debugera działają na aktywnym oknie testu — najpierw okno tego debugera.
             workspace.activate(document.id)
             workspace.perform(CommandID(rawValue: command))
         } label: { Image(systemName: symbol) }
-        .iconLabel(help)
+        .iconLabel(help(CommandID(rawValue: command)))
         .disabled(!(enabled ?? (debugger.state == .paused)))
     }
 }

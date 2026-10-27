@@ -237,13 +237,21 @@ public enum BuiltinCommands {
         return d
     }
 
-    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu — błąd (PD-FILE-003); dla agenta (`run_command`)
+    /// Tekst okna może zmienić komenda: tylko do odczytu (PD-FILE-003) i okno w trakcie wykonania (edytor jest wtedy
+    /// nieedytowalny, jak we wzorcu) — błąd.
+    @MainActor
+    static func checkWritable(_ doc: Document) throws {
+        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
+    }
+
+    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu i w trakcie wykonania — błąd (`checkWritable`); dla agenta (`run_command`)
     /// także bez okna poleceń, jak w narzędziach edytora (PROMPT §7.3). Zmianę agenta zapisuje `recordAgentEdit`.
     @MainActor
     static func editTarget(_ ctx: CommandContext) throws -> Document? {
         guard let doc = editable(ctx.workspace) else { return nil }
         if ctx.invoker.isAgent { _ = try ctx.workspace.agentDocument(nil) }
-        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(doc)
         return doc
     }
 
@@ -283,6 +291,28 @@ public enum BuiltinCommands {
         return w.isEmpty ? nil : (w.replacingOccurrences(of: "\"", with: ""), a..<b)
     }
 
+    static var replaceParameters: [CommandParameter] {
+        [
+            CommandParameter("pattern", .string, L10n.tr("Szukany tekst (domyślnie ostatnio szukany)")),
+            CommandParameter("replacement", .string, L10n.tr("Tekst zamiany (domyślnie ostatnio użyty)")),
+            CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne")),
+        ]
+    }
+
+    /// Okno i wyszukiwanie dla Zamień / Zamień wszystko (PD-EDIT-008): argumenty nadpisują ostatnie wyszukiwanie, które
+    /// zostaje zapamiętane (F3). Okno tylko do odczytu i okno w trakcie wykonania — błąd (`editTarget`, R4-06).
+    @MainActor
+    static func replaceTarget(_ ctx: CommandContext) throws -> (Document, TextSearch)? {
+        guard let doc = try editTarget(ctx) else { return nil }
+        var search = ctx.workspace.lastSearch ?? TextSearch(pattern: "")
+        if let p = ctx.arguments.string("pattern") { search.pattern = p }
+        if let r = ctx.arguments.string("replacement") { search.replacement = r }
+        if let x = ctx.arguments.bool("regex") { search.regex = x }
+        guard !search.pattern.isEmpty else { throw CommandError.missingArgument("pattern") }
+        ctx.workspace.lastSearch = search
+        return (doc, search)
+    }
+
     @MainActor
     static func findNext(_ ctx: CommandContext, backwards: Bool) throws -> CommandResult {
         guard let doc = editable(ctx.workspace), let search = ctx.workspace.lastSearch else { return .ok }
@@ -311,6 +341,34 @@ public enum BuiltinCommands {
                                       agent: .full, effect: .uiState, summary: L10n.tr("Zaznacza poprzednie wystąpienie ostatnio szukanego tekstu."),
                                       feature: "PD-EDIT-008"),
                     validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in try findNext(ctx, backwards: true) },
+            Command(CommandDescriptor(id: "edit.replace", title: L10n.tr("Zamień"), category: .edit, parameters: replaceParameters,
+                                      agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Zamienia zaznaczone wystąpienie szukanego tekstu i zaznacza następne."), feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
+                guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
+                let before = doc.text
+                if let r = try search.replace(in: doc.text, selection: doc.selectedRange) {
+                    doc.text = r.text
+                    doc.selectedRange = r.range.upperBound..<r.range.upperBound
+                    ctx.workspace.recordAgentEdit(ctx, doc, before: before)
+                }
+                return try findNext(ctx, backwards: false)
+            },
+            Command(CommandDescriptor(id: "edit.replaceAll", title: L10n.tr("Zamień wszystko"), category: .edit,
+                                      parameters: replaceParameters + [CommandParameter("inSelection", .boolean, L10n.tr("Tylko w zaznaczeniu"))],
+                                      agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Zamienia wszystkie wystąpienia szukanego tekstu w oknie albo w zaznaczeniu."), feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
+                guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
+                let before = doc.text
+                let scope = ctx.arguments.bool("inSelection") == true && !doc.selectedRange.isEmpty ? doc.selectedRange : nil
+                let r = try search.replaceAll(in: doc.text, within: scope)
+                if r.count > 0 {
+                    doc.text = r.text
+                    ctx.workspace.recordAgentEdit(ctx, doc, before: before)
+                }
+                return CommandResult(message: L10n.tr("Zamieniono: \(r.count)"), value: .int(Int64(r.count)))
+            },
             Command(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
                                       parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1)"))],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."), feature: "PD-EDIT-010"),

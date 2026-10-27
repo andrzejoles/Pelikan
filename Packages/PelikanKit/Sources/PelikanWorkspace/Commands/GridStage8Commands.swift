@@ -22,10 +22,27 @@ enum GridStage8Commands {
                                   agent: agent, effect: effect, summary: summary, feature: feature), validate: validate, run: run)
     }
 
-    /// Słownik kolumn tabeli wyniku (pamiętany w karcie).
-    static func dictionary(_ tab: ResultTab, _ grid: ResultGridModel, ws: Workspace) async throws -> [Int: ColumnDictionaryInfo] {
+    /// Karta wyniku wskazana argumentem `tab` (okna narzędzi QBE i Filtr kolumn działają na karcie, z której je
+    /// otwarto, także po przełączeniu okna — R4-10) albo aktywna karta aktywnego okna; z oknem karty.
+    static func target(_ ctx: CommandContext) throws -> (Document?, ResultTab, ResultGridModel) {
+        guard let id = ctx.arguments.string("tab") else {
+            let (tab, grid) = try grid(ctx)
+            return (SQLCommands.sqlDocument(ctx.workspace), tab, grid)
+        }
+        for d in ctx.workspace.documents {
+            if let tab = d.results.first(where: { $0.id.uuidString == id }), let grid = tab.grid { return (d, tab, grid) }
+        }
+        throw CommandError.notAvailable(L10n.tr("Brak siatki wyników"))
+    }
+
+    static var tabParameter: CommandParameter {
+        CommandParameter("tab", .string, L10n.tr("Identyfikator karty wyniku (domyślnie aktywna)"))
+    }
+
+    /// Słownik kolumn tabeli wyniku (pamiętany w karcie); sesja okna karty (domyślnie aktywnego).
+    static func dictionary(_ tab: ResultTab, _ grid: ResultGridModel, ws: Workspace, document: Document? = nil) async throws -> [Int: ColumnDictionaryInfo] {
         if let d = tab.columnInfo { return d }
-        guard let doc = SQLCommands.sqlDocument(ws) else { return [:] }
+        guard let doc = document ?? SQLCommands.sqlDocument(ws) else { return [:] }
         let s = try await ws.session(for: doc)
         guard let t = try await GridDictionary.table(of: grid.sql, in: s) else { tab.columnInfo = [:]; return [:] }
         let byName = try await GridDictionary.load(owner: t.owner, table: t.table, in: s)
@@ -77,10 +94,10 @@ enum GridStage8Commands {
                     params: [CommandParameter("names", .string, L10n.tr("Fragmenty nazw (po przecinku albo w liniach)")),
                              CommandParameter("types", .string, L10n.tr("Typy: text, number, date, lob, other")),
                              CommandParameter("mandatory", .boolean, L10n.tr("Tylko obowiązkowe (NOT NULL)")),
-                             CommandParameter("keys", .string, L10n.tr("Klucze: primary, unique, foreign"))],
+                             CommandParameter("keys", .string, L10n.tr("Klucze: primary, unique, foreign")), tabParameter],
                     summary: L10n.tr("Pokazuje tylko kolumny pasujące do nazw, typów, obowiązkowości i kluczy; lista nazw może być wklejona."),
                     feature: "PD-GRID-011", validate: hasGrid) { ctx in
-                let (tab, grid) = try grid(ctx)
+                let (doc, tab, grid) = try target(ctx)
                 let a = ctx.arguments
                 guard a.string("names") != nil || a.string("types") != nil || a.bool("mandatory") != nil || a.string("keys") != nil else {
                     ctx.ui?.showColumnFilter(tab)
@@ -93,7 +110,7 @@ enum GridStage8Commands {
                                      mandatoryOnly: a.bool("mandatory") ?? false, keys: set("keys", ColumnFilter.KeyKind.self))
                 var keyInfo: [String: Set<ColumnFilter.KeyKind>] = [:], mandatory: Set<String> = []
                 if !f.keys.isEmpty || f.mandatoryOnly {
-                    for (i, info) in try await dictionary(tab, grid, ws: ctx.workspace) {
+                    for (i, info) in try await dictionary(tab, grid, ws: ctx.workspace, document: doc) {
                         keyInfo[grid.columns[i].name.uppercased()] = info.keys
                         if !info.nullable { mandatory.insert(grid.columns[i].name.uppercased()) }
                     }
@@ -108,9 +125,9 @@ enum GridStage8Commands {
                 return CommandResult(message: L10n.tr("Widoczne kolumny: \(visible.count) z \(grid.columns.count)"),
                                      value: .array(visible.sorted().map { .string(grid.columns[$0].name) }))
             },
-            command("grid.clearColumnFilter", L10n.tr("Pokaż wszystkie kolumny"),
+            command("grid.clearColumnFilter", L10n.tr("Pokaż wszystkie kolumny"), params: [tabParameter],
                     summary: L10n.tr("Wyłącza filtr kolumn siatki."), feature: "PD-GRID-011", validate: hasGrid) { ctx in
-                let (tab, _) = try grid(ctx)
+                let (_, tab, _) = try target(ctx)
                 tab.columnFilter = nil
                 tab.hiddenColumns = []
                 return .ok
@@ -303,12 +320,13 @@ enum GridStage8Commands {
             },
             // MARK: Query By Example (PD-SQLW-022)
             command("grid.queryByExample", L10n.tr("Query By Example…"),
-                    params: [CommandParameter("criteria", .object, L10n.tr("Kolumna → kryterium (wartość, %, > < <> , in (…), between … and …, null)"))],
+                    params: [CommandParameter("criteria", .object, L10n.tr("Kolumna → kryterium (wartość, %, > < <> , in (…), between … and …, null)")),
+                             tabParameter],
                     mac: ["cmd+shift+e"],
                     summary: L10n.tr("Zawęża wynik kryteriami wpisanymi pod nazwami kolumn i wykonuje zapytanie ponownie."),
                     feature: "PD-SQLW-022", validate: { ws in GridCommands.activeTab(ws)?.statementText != nil }) { ctx in
-                guard let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
-                let (tab, grid) = try grid(ctx)
+                let (window, tab, grid) = try target(ctx)
+                guard let doc = window else { return .ok }
                 guard case .object(let o)? = ctx.arguments.values["criteria"] else {
                     ctx.ui?.showQueryByExample(tab)
                     return .ok

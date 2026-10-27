@@ -12,6 +12,9 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     private var result: CompletionResult?
     /// Ponowne pobranie podpowiedzi dla bieżącego tekstu i kursora (wynik nil — zamknięcie).
     var requery: (() async -> CompletionResult?)?
+    /// Numer zapytania — odpowiedź dla starszego prefiksu (wolniejsza) nie nadpisze nowszej ani nie otworzy zamkniętej listy.
+    private var generation = 0
+    private var resignObserver: (any NSObjectProtocol)?
 
     var isVisible: Bool { panel.isVisible }
 
@@ -67,9 +70,20 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         panel.setFrame(frame, display: true)
         if panel.parent == nil { window.addChildWindow(panel, ordered: .above) }
         panel.orderFront(nil)
+        // Inne okno aplikacji albo inna aplikacja — lista znika (klawisze trafiałyby już gdzie indziej, R4-13).
+        if resignObserver == nil {
+            resignObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.close() }
+            }
+        }
     }
 
     func close() {
+        generation += 1
+        if let o = resignObserver {
+            NotificationCenter.default.removeObserver(o)
+            resignObserver = nil
+        }
         guard panel.isVisible else { return }
         panel.parent?.removeChildWindow(panel)
         panel.orderOut(nil)
@@ -94,8 +108,12 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     /// Po zmianie tekstu przy otwartej liście — nowe zapytanie (zawężenie albo zamknięcie).
     func textChanged() {
         guard panel.isVisible, let requery else { return }
+        generation += 1
+        let current = generation
         Task { @MainActor in
-            if let r = await requery() { self.show(r) } else { self.close() }
+            let r = await requery()
+            guard current == self.generation else { return }
+            if let r { self.show(r) } else { self.close() }
         }
     }
 

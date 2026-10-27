@@ -63,7 +63,7 @@ struct TestManagerView: View {
         if let i = index {
             Form {
                 TextField(L10n.tr("Nazwa"), text: $testSet.cases[i].name)
-                TextEditor(text: $testSet.cases[i].block).font(.code).frame(minHeight: 120)
+                CodeTextEditor(text: $testSet.cases[i].block).frame(minHeight: 120)
                 Section(L10n.tr("Zmienne")) {
                     ForEach($testSet.cases[i].variables) { $v in
                         HStack {

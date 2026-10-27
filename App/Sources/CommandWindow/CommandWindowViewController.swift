@@ -4,7 +4,7 @@ import PelikanWorkspace
 
 /// Command Window (UG 8): karta Dialog (wyjście i linia poleceń jak SQL*Plus, historia linii strzałkami) i karta
 /// Editor (skrypt z podświetlaniem; F8 wykonuje i przełącza na Dialog). Pasek opcji SET (dwuklik przełącza — UG 8.1).
-final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
+final class CommandWindowViewController: NSViewController, NSTextFieldDelegate, DocumentContentController {
     private let document: Document
     private let workspace: Workspace
     private let engine: SQLPlusEngine

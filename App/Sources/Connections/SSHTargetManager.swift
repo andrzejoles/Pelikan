@@ -375,7 +375,7 @@ struct SSHTargetEditor: View {
                     TextField("PATH", text: draft.path)
                     VStack(alignment: .leading) {
                         Text(L10n.tr("Dodatkowe zmienne (NAZWA=wartość, po jednej w wierszu)")).font(.uiSecondary)
-                        TextEditor(text: extraEnvironment).font(.code).frame(height: 54)
+                        CodeTextEditor(text: extraEnvironment).frame(height: 54)
                     }
                 }
                 if !model.checks.isEmpty {

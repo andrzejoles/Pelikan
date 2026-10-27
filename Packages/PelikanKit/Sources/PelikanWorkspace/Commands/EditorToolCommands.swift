@@ -149,7 +149,7 @@ enum EditorToolCommands {
                                       summary: L10n.tr("Wstawia nad bieżącą linią komentarz „-- TODO: ” z wcięciem linii."), feature: "PD-TODO-001"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let d = BuiltinCommands.editable(ctx.workspace) else { return .ok }
-                if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+                try BuiltinCommands.checkWritable(d)
                 let r = TodoItems.insert(in: d.text, at: d.selectedRange.lowerBound, owner: ctx.arguments.string("owner"))
                 d.text = r.text
                 d.selectedRange = r.caret..<r.caret
@@ -161,7 +161,7 @@ enum EditorToolCommands {
                                       summary: L10n.tr("Zamienia TODO na DONE (zamknięcie) albo DONE na TODO w zadaniu z linii."), feature: "PD-TODO-001"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 guard let d = BuiltinCommands.editable(ctx.workspace) else { return .ok }
-                if d.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+                try BuiltinCommands.checkWritable(d)
                 let line = ctx.arguments.int("line").map(Int.init)
                     ?? (d.text as NSString).substring(to: min(d.selectedRange.lowerBound, (d.text as NSString).length)).reduce(1) { $1 == "\n" ? $0 + 1 : $0 }
                 guard let item = TodoItems.parse(d.text).first(where: { $0.line == line }) else {
