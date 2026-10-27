@@ -72,7 +72,7 @@ final class ProCDeployModel {
         guard let url = localURL(for: m, target: t), let d = try? workspace.openFile(url) else { NSSound.beep(); return }
         let o = ProgramCompiler.offset(line: m.line ?? 1, column: m.column ?? 1, in: d.text)
         d.selectedRange = o..<o
-        NSApp.mainWindow?.makeKeyAndOrderFront(nil)
+        ToolWindowController.showMainWindow()
     }
 
     /// Ręczne zdjęcie blokady: pokazuje właściciela, pyta o potwierdzenie (PROD — nazwa celu).
@@ -104,14 +104,15 @@ enum ProCDeployWindows {
         }
     }
 
+    /// Wdrożenie i wycofanie na wskazany cel: inny cel niż w otwartym narzędziu — nowa zawartość; bez celu — przywołanie.
     static func showStart(_ model: ProCDeployModel, target: String?) {
-        ToolWindowController.show(key: "procDeploy", title: L10n.tr("Wdrożenie"), size: NSSize(width: 760, height: 560)) {
+        ToolWindowController.show(key: "procDeploy", for: target, title: L10n.tr("Wdrożenie"), size: NSSize(width: 760, height: 560)) {
             DeployStartView(model: model, selection: model.target(named: target)?.id ?? model.store.targets.first?.id)
         }
     }
 
     static func showRollback(_ model: ProCDeployModel, target: String?) {
-        ToolWindowController.show(key: "procRollback", title: L10n.tr("Wycofanie binarki"), size: NSSize(width: 620, height: 460)) {
+        ToolWindowController.show(key: "procRollback", for: target, title: L10n.tr("Wycofanie binarki"), size: NSSize(width: 620, height: 460)) {
             RollbackView(model: model, selection: model.target(named: target)?.id ?? model.store.targets.first?.id)
         }
     }
@@ -179,7 +180,7 @@ struct DeployStartView: View {
         }
         .padding(14)
         .frame(minWidth: 680, minHeight: 460)
-        .task(id: selection) { await load() }
+        .toolTask(id: selection) { await load() }
     }
 
     private func load() async {
@@ -378,7 +379,7 @@ struct RollbackView: View {
         }
         .padding(14)
         .frame(minWidth: 520, minHeight: 300)
-        .task(id: selection) { await load() }
+        .toolTask(id: selection) { await load() }
     }
 
     private func load() async {
@@ -497,7 +498,7 @@ struct GitDeployStatusView: View {
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 360)
-        .task { await load(fetch: false) }
+        .toolTask(id: 0) { await load(fetch: false) }
     }
 
     private func load(fetch: Bool) async {

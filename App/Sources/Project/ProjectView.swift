@@ -192,7 +192,8 @@ struct ProjectView: View {
                     d.selectedRange = off..<off
                 }
             case .object:
-                if let o = item.object?.dbObject { try? await workspace.openObject(o, line: line) }
+                // Obiekt projektu z bazy projektu (opcja „Połączenie”), nie z połączenia aktywnego okna.
+                if let o = item.object?.dbObject { try? await workspace.openObject(o, line: line, connection: (try? ProjectEngine.connection(p, in: workspace))?.id) }
             case .note:
                 break
             }

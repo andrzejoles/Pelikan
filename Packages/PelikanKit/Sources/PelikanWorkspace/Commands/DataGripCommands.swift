@@ -200,6 +200,7 @@ enum DataGripCommands {
                 let conn = editor(ws).flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
                 if let m = ws.metadata(for: conn), let o = try await m.find(owner.map { "\($0).\(name)" } ?? name) {
                     hits += try await UsageFinder.inDatabase(owner: o.owner, name: o.name, column: column, session: try await m.session())
+                        .map { var h = $0; h.connection = m.connectionID; return h }
                 }
                 hits += await UsageFinder.inTexts(name: name, owner: owner, column: column, documents: editorDocuments(ws), files: projectFiles(ws),
                                                   encoding: ws.projectEncodingResolver())

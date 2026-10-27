@@ -162,7 +162,8 @@ extension Workspace {
             return
         }
         Task {
-            try? await openObject(DBObject(owner: l.owner, name: l.name, type: type), line: l.line)
+            // Jednostka z bazy, w której działa debugowany blok (okno testu), nie z połączenia aktywnego okna.
+            try? await openObject(DBObject(owner: l.owner, name: l.name, type: type), line: l.line, connection: effectiveConnection(of: testDocument))
             if let doc = activeDocument, doc.kind == .program, let u = doc.programUnits.first(where: { $0.name == l.name && $0.type == type }) {
                 doc.executionLine = u.line + l.line
             }

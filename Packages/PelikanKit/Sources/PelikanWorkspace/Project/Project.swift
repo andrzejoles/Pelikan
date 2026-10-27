@@ -133,7 +133,8 @@ public enum ProjectEngine {
         return path.hasPrefix(base) ? String(path.dropFirst(base.count)) : path
     }
 
-    static func connection(_ project: Project, in ws: Workspace) throws -> ConnectionDefinition {
+    /// Połączenie projektu: z opcji projektu (alias agenta albo nazwa), bez niej — główne.
+    public static func connection(_ project: Project, in ws: Workspace) throws -> ConnectionDefinition {
         if let alias = project.options.connection, let def = ws.connections.connections.first(where: { $0.agentAlias == alias || $0.displayName == alias }) {
             return def
         }
