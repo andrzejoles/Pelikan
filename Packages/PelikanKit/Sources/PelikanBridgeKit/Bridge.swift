@@ -8,7 +8,7 @@ public enum Bridge {
     public static let tokenVariable = "PELIKAN_AGENT_TOKEN"
     public static let socketVariable = "PELIKAN_AGENT_SOCKET"
 
-    public struct Options {
+    public struct Options: Sendable {
         public var socketPath: String
         public var token: String
 

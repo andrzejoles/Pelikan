@@ -37,6 +37,42 @@ struct BridgeTransportTests {
         }
     }
 
+    @Test("SocketTransport: po EOF od mostu odpowiedź na żądanie w toku wychodzi przed zamknięciem gniazda i serwera")
+    func transportDrainsAfterEOF() async throws {
+        var fds: [Int32] = [0, 0]
+        #expect(socketpair(AF_UNIX, SOCK_STREAM, 0, &fds) == 0)
+        let closed = DispatchSemaphore(value: 0)
+        let t = SocketTransport(fd: fds[0], drainTimeout: 5, onClose: { closed.signal() })
+        try await t.connect()
+        // Klient: żądanie i powiadomienie (bez id — nie czeka na odpowiedź), potem zamknięcie swojej strony zapisu.
+        try Wire.writeFrame(Data(#"{"jsonrpc":"2.0","id":"a/1","method":"tools/list"}"#.utf8), to: fds[1])
+        try Wire.writeFrame(Data(#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#.utf8), to: fds[1])
+        shutdown(fds[1], SHUT_WR)
+        var frames = 0
+        for try await _ in await t.receive() { frames += 1 }
+        #expect(frames == 2)
+        #expect(!(await wait(closed, seconds: 0.3)))
+        // Odpowiedź serwera MCP (klucze posortowane) — dopiero po niej transport się zamyka.
+        let response = Data(#"{"id":"a\/1","jsonrpc":"2.0","result":{"tools":[]}}"#.utf8)
+        try await t.send(response)
+        #expect(await wait(closed))
+        let peer = fds[1]
+        let got = await Task.detached { try? Wire.readFrame(from: peer) }.value
+        #expect(got == response)
+        close(fds[1])
+    }
+
+    @Test("Identyfikatory żądań i odpowiedzi JSON-RPC: liczby, teksty, wsad, duży wynik po początku ramki")
+    func pendingIDs() {
+        #expect(PendingRequests.requestIDs(Data(#"{"jsonrpc":"2.0","id":7,"method":"x"}"#.utf8)) == ["n:7"])
+        #expect(PendingRequests.requestIDs(Data(#"[{"id":"q","method":"x"},{"method":"n"},{"id":2,"result":{}}]"#.utf8)) == ["s:q"])
+        #expect(PendingRequests.responseID(Data(#"{"id":7,"jsonrpc":"2.0","result":{}}"#.utf8)) == "n:7")
+        #expect(PendingRequests.responseID(Data(#"{"error":{"code":-1,"message":"m"},"id":"q","jsonrpc":"2.0"}"#.utf8)) == "s:q")
+        #expect(PendingRequests.responseID(Data(#"{"id":3,"jsonrpc":"2.0","method":"ping"}"#.utf8)) == nil)
+        let big = Data(#"{"id":12,"jsonrpc":"2.0","result":{"text":""#.utf8) + Data(repeating: 0x61, count: 2_000_000) + Data(#""}}"#.utf8)
+        #expect(PendingRequests.responseID(big) == "n:12")
+    }
+
     @Test("pelikan-mcp: po EOF na wejściu odpowiedź aplikacji w drodze trafia jeszcze na wyjście")
     func bridgeDrainsAfterInputEOF() async throws {
         let path = "/tmp/pbt-\(UUID().uuidString.prefix(8)).sock"
@@ -96,6 +132,23 @@ struct BridgeTransportTests {
         close(input[0])
         close(output[0])
         #expect(received == "odpowiedz:{\"id\":1}\n")
+    }
+}
+
+@MainActor
+@Suite("Most i aplikacja: odpowiedź po zamknięciu wejścia")
+struct BridgeEOFEndToEndTests {
+    @Test("Klient wysyła żądanie i zamyka stdin: odpowiedź aplikacji dochodzi, most kończy się sam")
+    func requestThenEOF() async throws {
+        let env = try AgentEnv()
+        defer { env.shutdown() }
+        let (_, token) = env.session()
+        let client = try BridgeClient(socket: env.socket, token: token)
+        defer { client.terminate() }
+        try await client.initialize()
+        let r = try await client.requestThenCloseInput("tools/list")
+        #expect(((r["result"] as? [String: Any])?["tools"] as? [Any])?.isEmpty == false)
+        #expect(await client.waitForExit() == 0)
     }
 }
 #endif

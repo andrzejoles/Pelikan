@@ -151,6 +151,20 @@ final class BridgeClient: @unchecked Sendable {
         return (text, result["isError"] as? Bool ?? false)
     }
 
+    /// Wysyła żądanie, zamyka wejście mostu (EOF, jak `echo … | pelikan-mcp`) i czeka na odpowiedź.
+    func requestThenCloseInput(_ method: String, timeout: Double = 10) async throws -> [String: Any] {
+        let id = nextID
+        nextID += 1
+        try send(["jsonrpc": "2.0", "id": id, "method": method, "params": [:] as [String: Any]])
+        try input.fileHandleForWriting.close()
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            guard let line = try await readLine() else { break }
+            if let obj = try JSONSerialization.jsonObject(with: line) as? [String: Any], obj["id"] as? Int == id { return obj }
+        }
+        throw URLError(.timedOut)
+    }
+
     func terminate() {
         try? input.fileHandleForWriting.close()
         if process.isRunning { process.terminate() }

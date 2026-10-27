@@ -130,7 +130,8 @@ struct SQLPlusHostStepTests {
     @Test("WHENEVER SQLERROR i OSERROR niezależne: OSERROR CONTINUE nie wyłącza przerywania na błędach SQL i odwrotnie")
     func wheneverKinds() async {
         let ws = Workspace()
-        ws.ui = FakeUI()
+        let ui = FakeUI()
+        ws.ui = ui
         let doc = ws.newDocument(.command)
         let engine = ws.sqlplusEngine(for: doc)
         // Bez połączenia SELECT kończy się błędem — jak błąd SQL.
@@ -150,7 +151,8 @@ struct SQLPlusHostStepTests {
     @Test("ZIP poza głównym aktorem: archiwum z plikami, błąd zip z kodem wyjścia")
     func zip() async throws {
         let ws = Workspace()
-        ws.ui = FakeUI()
+        let ui = FakeUI()
+        ws.ui = ui
         let doc = ws.newDocument(.command)
         let engine = ws.sqlplusEngine(for: doc)
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("zip-\(UUID().uuidString.prefix(6))")
