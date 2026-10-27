@@ -9,6 +9,8 @@ final class ObservationToken {
 
 /// Śledzi właściwości modelu `@Observable` odczytane w `apply` i wywołuje je ponownie po każdej zmianie (na głównym
 /// aktorze). Nazwa inna niż `observe`, bo `NSObject` ma metodę KVO o tej nazwie.
+/// Ponowne `apply` jest asynchroniczne: flaga ustawiona na czas zmiany modelu z widoku (np. `updating = true … false`)
+/// jest już zdjęta, gdy `apply` się wykona — `apply` musi samo rozpoznać, że widok jest aktualny.
 @MainActor
 @discardableResult
 func trackChanges(_ apply: @escaping @MainActor () -> Void) -> ObservationToken {
