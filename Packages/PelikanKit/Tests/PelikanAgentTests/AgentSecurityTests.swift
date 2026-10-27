@@ -327,10 +327,10 @@ struct AgentUnitTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
         let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
-        let secret = "select_karta_\(UUID().uuidString.prefix(8))"
-        let r = await controller.callTool("run_command", arguments: ["command": .string(secret)], sessionID: session.id)
+        let unknownID = "select_karta_\(UUID().uuidString.prefix(8))"
+        let r = await controller.callTool("run_command", arguments: ["command": .string(unknownID)], sessionID: session.id)
         #expect(r.isError == true)
-        #expect(!sink.text.contains(secret) && sink.text.contains("<nieznana>"), "\(sink.text)")
+        #expect(!sink.text.contains(unknownID) && sink.text.contains("<nieznana>"), "\(sink.text)")
         _ = await controller.callTool("get_state", arguments: [:], sessionID: session.id)
         #expect(sink.text.contains("agent.state"))
     }
