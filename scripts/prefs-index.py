@@ -3,6 +3,8 @@
 
 Uruchomienie bez argumentów zapisuje App/Sources/Preferences/PreferenceIndex.swift; `--check` kończy się błędem,
 gdy plik jest nieaktualny (CI). Etykiety: Section, Toggle, Picker, TextField, Stepper, ColorPicker z `L10n.tr("…")`,
+kontrolki własne Preferencji z etykietą w pierwszym argumencie (FontFamilyPicker(title:), directoryRow, colorRow),
+FontWeightPicker (stała etykieta „Styl” z AppFonts.swift),
 etykiety `Text(L10n.tr("…"))` (także obie gałęzie `warunek ? … : …`) w domknięciu Stepper/Toggle oraz pola TextField z etykietą z listy `ForEach([…])`
 (np. katalogi startowe, NLS) — w strukturach `…Pane: View` wymienionych w PreferencesView. Przyciski są pomijane
 (to czynności, nie ustawienia). Etykieta w indeksie to klucz L10n (interpolacja `\\(…)` → `%@`, `%` → `%%`);
@@ -20,7 +22,9 @@ DIR = ROOT / "App/Sources/Preferences"
 OUT = DIR / "PreferenceIndex.swift"
 # Literał klucza zaczyna się na końcu dopasowania (cudzysłów otwierający).
 STRING = r'"(?:[^"\\\n]|\\.)*"'
-CONTROL = re.compile(r'\b(?:Section|Toggle|Picker|TextField|Stepper|ColorPicker)\(\s*L10n\.tr\(\s*(?=")')
+CONTROL = re.compile(r'\b(?:Section|Toggle|Picker|TextField|Stepper|ColorPicker|FontFamilyPicker|directoryRow|colorRow)\(\s*(?:title:\s*)?L10n\.tr\(\s*(?=")')
+# Kontrolki własne z etykietą ustaloną w ich kodzie (nie w wywołaniu) — klucz musi być taki jak tam.
+FIXED_LABELS = {re.compile(r'\bFontWeightPicker\('): "Styl"}
 CLOSURE_LABEL = re.compile(r'\b(?:Stepper|Toggle)\((?:[^{}"\n]|' + STRING + r')*?\)\s*\{\s*Text\(')
 TR = re.compile(r'L10n\.tr\(\s*(?=")')
 LABEL_LIST = re.compile(r'\bForEach\(\[((?:[^\]"]|' + STRING + r')*)\][^{]*\{\s*(?:\w+\s*,\s*)?(\w+)\s+in\s+TextField\(\s*(\w+)\s*,')
@@ -55,6 +59,8 @@ def labels(src):
             found.append((i, parse_key(src, i)[0]))
         except ParseError:
             pass
+    for pattern, key in FIXED_LABELS.items():
+        found += [(m.start(), key) for m in pattern.finditer(src)]
     for m in LABEL_LIST.finditer(src):
         if m.group(2) != m.group(3):
             continue

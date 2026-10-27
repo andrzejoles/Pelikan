@@ -27,19 +27,21 @@ final class NotebookViewController: NSViewController {
 struct NotebookView: View {
     let document: PelikanWorkspace.Document
     let workspace: Workspace
-    @State private var running: Int?
+
+    /// Wykonanie trwa (jedno naraz w sesji okna) — wtedy bez usuwania i przestawiania komórek.
+    private var running: Bool { document.isExecuting }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button(L10n.tr("Wykonaj wszystkie")) { Task { await runAll() } }.disabled(running != nil)
+                Button(L10n.tr("Wykonaj wszystkie")) { perform("notebook.runAll") }.disabled(running)
                 Menu(L10n.tr("Dodaj komórkę")) {
                     Button("SQL") { add(.sql) }
                     Button("Markdown") { add(.markdown) }
                 }
                 .fixedSize()
                 Spacer()
-                if running != nil { ProgressView().controlSize(.small) }
+                if running { ProgressView().controlSize(.small) }
                 Button(L10n.tr("Eksport Markdown…")) {
                     Task {
                         do { try await workspace.invoke("notebook.exportMarkdown") } catch CommandError.cancelledByUser {
@@ -51,9 +53,9 @@ struct NotebookView: View {
             Divider()
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(document.notebook.cells.enumerated()), id: \.element.id) { i, _ in
-                        NotebookCellView(document: document, index: i, running: running == i,
-                                         run: { Task { await run(i) } }, remove: { remove(i) }, move: { move(i, by: $0) })
+                    ForEach(document.notebook.cells) { c in
+                        NotebookCellView(document: document, cellID: c.id, running: running,
+                                         run: { run(c.id) }, remove: { remove(c.id) }, move: { move(c.id, by: $0) })
                     }
                 }
                 .padding(12)
@@ -61,41 +63,41 @@ struct NotebookView: View {
         }
     }
 
+    /// Komendy notatnika działają na aktywnym oknie — najpierw to okno (jak pasek diagramu).
+    private func perform(_ id: CommandID, _ arguments: CommandArguments = .empty) {
+        workspace.activate(document.id)
+        workspace.perform(id, arguments)
+    }
+
     private func add(_ kind: NotebookCell.Kind) {
         document.notebook.cells.append(NotebookCell(kind: kind, text: ""))
         document.isModified = true
     }
 
-    private func remove(_ i: Int) {
-        guard document.notebook.cells.indices.contains(i) else { return }
+    // Komórki po identyfikatorze, nie po indeksie z chwili rysowania (lista mogła się zmienić).
+    private func remove(_ id: NotebookCell.ID) {
+        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
         document.notebook.cells.remove(at: i)
         document.isModified = true
     }
 
-    private func move(_ i: Int, by d: Int) {
+    private func move(_ id: NotebookCell.ID, by d: Int) {
+        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
         let j = i + d
-        guard document.notebook.cells.indices.contains(i), document.notebook.cells.indices.contains(j) else { return }
+        guard document.notebook.cells.indices.contains(j) else { return }
         document.notebook.cells.swapAt(i, j)
         document.isModified = true
     }
 
-    private func run(_ i: Int) async {
-        running = i
-        await NotebookRunner.run(cell: i, in: document, ws: workspace)
-        running = nil
-    }
-
-    private func runAll() async {
-        for i in document.notebook.cells.indices where document.notebook.cells[i].kind == .sql {
-            await run(i)
-            if document.notebook.cells[i].result?.error != nil { break }
-        }
+    private func run(_ id: NotebookCell.ID) {
+        guard !running, let i = document.notebook.cells.firstIndex(where: { $0.id == id }) else { return }
+        perform("notebook.runCell", CommandArguments(["index": .int(Int64(i))]))
     }
 }
 
 struct NotebookCellView: View {
     let document: PelikanWorkspace.Document
-    let index: Int
+    let cellID: NotebookCell.ID
     let running: Bool
     let run: () -> Void
     let remove: () -> Void
@@ -103,8 +105,10 @@ struct NotebookCellView: View {
     @State private var editing = false
 
     private var cell: Binding<NotebookCell> {
-        Binding(get: { document.notebook.cells.indices.contains(index) ? document.notebook.cells[index] : NotebookCell(kind: .sql, text: "") },
-                set: { if document.notebook.cells.indices.contains(index) { document.notebook.cells[index] = $0; document.isModified = true } })
+        Binding(get: { document.notebook.cells.first { $0.id == cellID } ?? NotebookCell(kind: .sql, text: "") },
+                set: { v in
+                    if let i = document.notebook.cells.firstIndex(where: { $0.id == cellID }) { document.notebook.cells[i] = v; document.isModified = true }
+                })
     }
 
     var body: some View {
@@ -119,9 +123,12 @@ struct NotebookCellView: View {
                 } else {
                     Button(editing ? L10n.tr("Gotowe") : L10n.tr("Edytuj")) { editing.toggle() }
                 }
-                Button { move(-1) } label: { Image(systemName: "arrow.up") }.iconLabel(L10n.tr("Przesuń w górę"))
-                Button { move(1) } label: { Image(systemName: "arrow.down") }.iconLabel(L10n.tr("Przesuń w dół"))
-                Button { remove() } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń"))
+                Group {
+                    Button { move(-1) } label: { Image(systemName: "arrow.up") }.iconLabel(L10n.tr("Przesuń w górę"))
+                    Button { move(1) } label: { Image(systemName: "arrow.down") }.iconLabel(L10n.tr("Przesuń w dół"))
+                    Button { remove() } label: { Image(systemName: "trash") }.iconLabel(L10n.tr("Usuń"))
+                }
+                .disabled(running)
             }
             .buttonStyle(.borderless)
             if cell.wrappedValue.kind == .markdown && !editing && !cell.wrappedValue.text.isEmpty {

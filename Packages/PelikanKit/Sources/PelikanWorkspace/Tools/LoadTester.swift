@@ -142,7 +142,21 @@ public final class LoadTester {
         for t in tasks { _ = await t.value }
     }
 
-    /// Wyniki do Excela (CSV z separatorem średnika, jak eksport wyników).
+    /// Wyniki jako arkusz (zapis do Excela przez `ResultExporter.xlsx`): czasy jako liczby, min bez wykonań — puste.
+    public func exportData() -> ExportData {
+        func col(_ name: String, _ number: Bool) -> ColumnInfo {
+            ColumnInfo(name: name, type: number ? .number : .varchar2, typeName: number ? "NUMBER" : "VARCHAR2")
+        }
+        func ms(_ v: Double) -> OracleValue { .number(String(format: "%.2f", v)) }
+        let cols = [col(L10n.tr("Krok"), false), col(L10n.tr("Wykonania"), true), col(L10n.tr("Błędy"), true),
+                    col(L10n.tr("Średnio ms"), true), col(L10n.tr("Min ms"), true), col(L10n.tr("Maks ms"), true)]
+        let rows: [[OracleValue]] = stats.map { s in
+            [.text(s.name), .number(String(s.count)), .number(String(s.errors)), ms(s.averageMs), s.minMs.isFinite ? ms(s.minMs) : .null, ms(s.maxMs)]
+        }
+        return ExportData(title: L10n.tr("Test obciążenia"), columns: cols, rows: rows)
+    }
+
+    /// Wyniki jako CSV z separatorem średnika.
     public func csv() -> String {
         var out = [L10n.tr("Krok;Wykonania;Błędy;Średnio ms;Min ms;Maks ms")]
         for s in stats {

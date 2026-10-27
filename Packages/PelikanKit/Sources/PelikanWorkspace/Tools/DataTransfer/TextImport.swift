@@ -108,6 +108,17 @@ public enum TextImport {
     }
 
     /// Nazwy pól i wiersze danych (pola w cudzysłowach mogą zawierać separator i nowe linie).
+    /// Wiersze arkusza Excela jako nagłówek i dane: `headerLine` (od 1; 0 — bez nagłówka, nazwy POLEn),
+    /// `lastLine` (0 — do końca arkusza). Puste nazwy w nagłówku — POLEn.
+    public static func sheetTable(_ all: [[String]], headerLine: Int, lastLine: Int) -> (header: [String], rows: [[String]]) {
+        var all = all
+        if lastLine > 0, lastLine < all.count { all = Array(all.prefix(lastLine)) }
+        if headerLine > 0, headerLine <= all.count {
+            return (all[headerLine - 1].enumerated().map { $1.isEmpty ? "POLE\($0 + 1)" : $1 }, Array(all.dropFirst(headerLine)))
+        }
+        return ((0..<(all.map(\.count).max() ?? 0)).map { "POLE\($0 + 1)" }, all)
+    }
+
     public static func parse(_ text: String, _ f: TextFormat) -> (header: [String], rows: [[String]]) {
         // Separator wieloznakowy (pole tekstowe kreatora) — liczy się pierwszy znak.
         let delim = f.delimiter.first ?? ","

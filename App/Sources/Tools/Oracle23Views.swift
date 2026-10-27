@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 /// Widoki dualności JSON (SD-DV-001): lista, dokumenty, struktura i nowy widok z tabel.
 struct DualityViewsView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var views: [DualityViews.View] = []
     @State private var selection: DualityViews.View.ID?
     @State private var detail = ""
@@ -18,6 +19,7 @@ struct DualityViewsView: View {
         HSplitView {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
                     Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                     Spacer()
                 }
@@ -33,7 +35,8 @@ struct DualityViewsView: View {
                         TextField(L10n.tr("Tabela główna"), text: $newRoot)
                         TextField(L10n.tr("Tabele podrzędne (po przecinku)"), text: $newChildren)
                         Button(L10n.tr("Generuj DDL")) {
-                            workspace.perform("tools.dualityViewDDL", CommandArguments(["name": .string(newName), "root": .string(newRoot), "children": .string(newChildren)]))
+                            workspace.perform("tools.dualityViewDDL", CommandArguments(["name": .string(newName), "root": .string(newRoot), "children": .string(newChildren),
+                                                                         "connection": .string(connection?.uuidString ?? "")]))
                         }.disabled(newName.isEmpty || newRoot.isEmpty)
                     }
                 }
@@ -54,14 +57,19 @@ struct DualityViewsView: View {
         }
         .padding(10)
         .frame(minWidth: 760, minHeight: 460)
-        .task { await reload() }
+        .task(id: connection) { selection = nil; detail = ""; await reload() }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private var selected: DualityViews.View? { views.first { $0.id == selection } }
 
     private func reload() async {
         do {
-            let (s, owner) = try await Oracle23Commands.session(workspace)
+            let (s, owner) = try await Oracle23Commands.session(workspace, connection: connection)
             views = try await DualityViews.list(owner: owner, in: s)
             message = L10n.tr("Widoki: \(views.count)")
         } catch { message = error.localizedDescription }
@@ -70,7 +78,7 @@ struct DualityViewsView: View {
     private func documents() async {
         guard let v = selected else { return }
         do {
-            let (s, _) = try await Oracle23Commands.session(workspace)
+            let (s, _) = try await Oracle23Commands.session(workspace, connection: connection)
             detail = try await DualityViews.documents(v, in: s).joined(separator: "\n\n")
         } catch { message = error.localizedDescription }
     }
@@ -78,7 +86,7 @@ struct DualityViewsView: View {
     private func guide() async {
         guard let v = selected else { return }
         do {
-            let (s, _) = try await Oracle23Commands.session(workspace)
+            let (s, _) = try await Oracle23Commands.session(workspace, connection: connection)
             detail = try await DualityViews.dataGuide(v, in: s).map { "\($0.path)  \($0.type)" }.joined(separator: "\n")
         } catch { message = error.localizedDescription }
     }
@@ -87,6 +95,7 @@ struct DualityViewsView: View {
 /// Moduły i środowiska MLE (SD-MLE-001).
 struct MLEModulesView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var modules: [MLE.Module] = []
     @State private var environments: [String] = []
     @State private var selection: MLE.Module.ID?
@@ -99,6 +108,7 @@ struct MLEModulesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Importuj plik JavaScript…")) {
                     let p = NSOpenPanel()
@@ -126,7 +136,7 @@ struct MLEModulesView: View {
         }
         .padding(10)
         .frame(minWidth: 620, minHeight: 380)
-        .task { await reload() }
+        .task(id: connection) { selection = nil; await reload() }
         .sheet(isPresented: $debugging) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.tr("Debugowanie po wykonaniu: \(modules.first { $0.id == selection }?.name ?? "")")).font(.uiHeadline)
@@ -141,7 +151,8 @@ struct MLEModulesView: View {
                         debugging = false
                         guard let m = modules.first(where: { $0.id == selection }) else { return }
                         workspace.perform("tools.debugMLE", CommandArguments(["module": .string(m.name), "lines": .string(debugLines),
-                                                                              "watch": .string(debugWatch), "call": .string(debugCall)]))
+                                                                              "watch": .string(debugWatch), "call": .string(debugCall),
+                                                                              "connection": .string(connection?.uuidString ?? "")]))
                     }.disabled(debugLines.isEmpty || debugCall.isEmpty)
                 }
             }
@@ -150,9 +161,14 @@ struct MLEModulesView: View {
         }
     }
 
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
     private func reload() async {
         do {
-            let (s, owner) = try await Oracle23Commands.session(workspace)
+            let (s, owner) = try await Oracle23Commands.session(workspace, connection: connection)
             modules = try await MLE.modules(owner: owner, in: s)
             environments = try await MLE.environments(owner: owner, in: s)
             message = ""
@@ -162,7 +178,7 @@ struct MLEModulesView: View {
     private func openSource() async {
         guard let m = modules.first(where: { $0.id == selection }) else { return }
         do {
-            let (s, _) = try await Oracle23Commands.session(workspace)
+            let (s, _) = try await Oracle23Commands.session(workspace, connection: connection)
             let src = try await MLE.source(owner: m.owner, name: m.name, in: s)
             workspace.newDocument(.program, text: MLE.createModuleDDL(name: m.name, source: src, version: m.version.isEmpty ? nil : m.version) + "\n/\n")
         } catch { message = error.localizedDescription }

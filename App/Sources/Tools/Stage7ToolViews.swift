@@ -29,8 +29,7 @@ enum Stage7ToolWindows {
     static let objectTypes = ["TABLE", "VIEW", "SEQUENCE", "INDEX", "SYNONYM", "PACKAGE", "PACKAGE BODY", "PROCEDURE", "FUNCTION", "TRIGGER", "TYPE", "TYPE BODY", "MATERIALIZED VIEW"]
 
     static func session(_ ws: Workspace, _ conn: UUID?, purpose: String) async throws -> any DatabaseSession {
-        guard let conn else { throw CommandError.notConnected }
-        return try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool(purpose)))
+        try await ws.toolSession(purpose, connection: conn)
     }
 }
 
@@ -52,6 +51,7 @@ struct ObjectTypesPicker: View {
 
 struct PredefinedReportsView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var selection: String?
     @State private var values: [String: String] = [:]
     @State private var result: PredefinedReportResult?
@@ -73,6 +73,7 @@ struct PredefinedReportsView: View {
             }
             .frame(minWidth: 240, idealWidth: 260, maxWidth: 320)
             VStack(alignment: .leading, spacing: 8) {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 if let r = report {
                     Text(r.title).font(.uiHeadline)
                     ForEach(r.variables, id: \.name) { v in
@@ -109,6 +110,12 @@ struct PredefinedReportsView: View {
             .frame(minWidth: 600)
         }
         .onChange(of: selection) { result = nil; detail = nil; message = "" }
+        .onChange(of: connection) { result = nil; detail = nil; message = "" }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     @ViewBuilder private func output(_ r: PredefinedReport, _ res: PredefinedReportResult) -> some View {
@@ -124,7 +131,7 @@ struct PredefinedReportsView: View {
         busy = true
         defer { busy = false }
         do {
-            let s = try await DataTransferCommands.session(workspace)
+            let s = try await session()
             var v = Dictionary(uniqueKeysWithValues: r.variables.map { ($0.name, $0.defaultValue) })
             v.merge(values) { $1 }
             result = try await PredefinedReports.run(r, values: v, in: s)
@@ -135,9 +142,13 @@ struct PredefinedReportsView: View {
 
     private func showDetail(_ r: PredefinedReport, _ res: PredefinedReportResult) async {
         do {
-            let s = try await DataTransferCommands.session(workspace)
+            let s = try await session()
             detail = try await PredefinedReports.detail(r, master: res, row: detailRow - 1, values: values, in: s)
         } catch { message = error.localizedDescription }
+    }
+
+    private func session() async throws -> any DatabaseSession {
+        try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
     }
 
     private func export(_ r: PredefinedReport, _ f: ExportFormat) {
@@ -152,6 +163,7 @@ struct PredefinedReportsView: View {
 
 struct DatabaseDiffView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var sourceOwner = ""
     @State private var targetID: UUID?
     @State private var targetOwner = ""
@@ -164,6 +176,7 @@ struct DatabaseDiffView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Form {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 TextField(L10n.tr("Schemat źródłowy"), text: $sourceOwner)
                 Picker(L10n.tr("Połączenie docelowe"), selection: $targetID) {
                     ForEach(workspace.connections.connections) { Text($0.displayName).tag(UUID?.some($0.id)) }
@@ -205,18 +218,21 @@ struct DatabaseDiffView: View {
             }
         }
         .padding(12)
-        .task {
-            sourceOwner = workspace.sessions.connectedSchema(DataTransferCommands.connection(workspace)) ?? ""
-            targetID = workspace.sessions.mainConnectionID
-        }
+        .task { if targetID == nil { targetID = connection } }
+        .task(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private func compare() async {
         busy = true
         defer { busy = false }
         do {
-            let src = try await DataTransferCommands.session(workspace)
-            let dst = try await Stage7ToolWindows.session(workspace, targetID, purpose: "diff")
+            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let dst = try await workspace.toolSession("diff", connection: targetID)
             diffs = try await DatabaseDiff.run(sourceOwner: sourceOwner.uppercased(), source: src, targetOwner: targetOwner.uppercased(), target: dst, options: options) { n, all in
                 message = L10n.tr("Porównano \(n) z \(all)")
             }
@@ -229,6 +245,7 @@ struct DatabaseDiffView: View {
 
 struct CartView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var cart = DeploymentCart(name: "")
     @State private var selection: Set<UUID> = []
     @State private var objectName = ""
@@ -237,6 +254,7 @@ struct CartView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 TextField(L10n.tr("Nazwa koszyka"), text: $cart.name)
                 Toggle(L10n.tr("Nazwa schematu w DDL"), isOn: $cart.includeOwner).toggleStyle(.checkbox)
                 Toggle(L10n.tr("Uprawnienia"), isOn: $cart.includeGrants).toggleStyle(.checkbox)
@@ -264,13 +282,18 @@ struct CartView: View {
         .onChange(of: cart) { persist() }
     }
 
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
     private func persist() {
         do { try workspace.saveCart(cart) } catch { message = error.localizedDescription }
     }
 
     private func add() async {
         do {
-            guard let m = workspace.metadata(for: DataTransferCommands.connection(workspace)), let o = try await m.find(objectName) else {
+            guard let m = workspace.metadata(for: connection), let o = try await m.find(objectName) else {
                 message = L10n.tr("Nie znaleziono obiektu \(objectName)"); return
             }
             cart.add(o)
@@ -290,7 +313,7 @@ struct CartView: View {
 
     private func script() async {
         do {
-            let s = try await DataTransferCommands.session(workspace)
+            let s = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
             let text = try await cart.deploymentScript(in: s) { message = L10n.tr("DDL: \($0)") }
             let d = workspace.newDocument(.sql, text: text)
             d.customTitle = cart.name
@@ -303,6 +326,7 @@ struct CartView: View {
 
 struct SchemaCopyView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var sourceOwner = ""
     @State private var targetID: UUID?
     @State private var targetOwner = ""
@@ -313,6 +337,7 @@ struct SchemaCopyView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Form {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 TextField(L10n.tr("Schemat źródłowy"), text: $sourceOwner)
                 Picker(L10n.tr("Połączenie docelowe"), selection: $targetID) {
                     ForEach(workspace.connections.connections) { Text($0.displayName).tag(UUID?.some($0.id)) }
@@ -332,10 +357,13 @@ struct SchemaCopyView: View {
             }
         }
         .padding(12)
-        .task {
-            sourceOwner = workspace.sessions.connectedSchema(DataTransferCommands.connection(workspace)) ?? ""
-            targetID = workspace.sessions.mainConnectionID
-        }
+        .task { if targetID == nil { targetID = connection } }
+        .task(id: connection) { sourceOwner = workspace.sessions.connectedSchema(connection) ?? "" }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private func copy() async {
@@ -344,8 +372,8 @@ struct SchemaCopyView: View {
         log = []
         do {
             try await workspace.guardModification(["create table \(targetOwner).x (x number)"], connectionID: targetID)
-            let src = try await DataTransferCommands.session(workspace)
-            let dst = try await Stage7ToolWindows.session(workspace, targetID, purpose: "copy")
+            let src = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
+            let dst = try await workspace.toolSession("copy", connection: targetID)
             let r = try await SchemaCopy.run(sourceOwner: sourceOwner.uppercased(), source: src, targetOwner: targetOwner.uppercased(), target: dst, options: options) { log.append($0) }
             log.append(L10n.tr("Utworzono: \(r.created.count), pominięto: \(r.skipped.count), wierszy: \(r.rows), błędy: \(r.errors.count)"))
             log += r.skipped.map { L10n.tr("pominięto (istnieje): \($0)") } + r.errors
@@ -357,6 +385,7 @@ struct SchemaCopyView: View {
 
 struct ImportWizardView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var fileURL: URL?
     @State private var fileData = Data()
     @State private var state = ImportWizardState()
@@ -365,6 +394,7 @@ struct ImportWizardView: View {
     @State private var profileName = ""
     @State private var message = ""
     @State private var busy = false
+    @State private var readTask: Task<Void, Never>?
 
     var body: some View {
         HSplitView {
@@ -399,6 +429,7 @@ struct ImportWizardView: View {
                     }
                 }
                 Section(L10n.tr("Cel")) {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
                     TextField(L10n.tr("Schemat"), text: $state.owner)
                     TextField(L10n.tr("Tabela"), text: $state.table)
                     Toggle(L10n.tr("Nowa tabela (typy z danych)"), isOn: $state.createTable)
@@ -475,29 +506,56 @@ struct ImportWizardView: View {
         .onChange(of: state.fixedStarts) { reload() }
         .onChange(of: state.sheet) { reload() }
         .onChange(of: state.header) { reload() }
-        .task { state.owner = workspace.sessions.connectedSchema(DataTransferCommands.connection(workspace)) ?? "" }
+        .task(id: connection) { state.owner = workspace.sessions.connectedSchema(connection) ?? "" }
+        .onDisappear { readTask?.cancel() }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private func choose() async {
-        guard let url = await workspace.ui?.chooseFilesToOpen().first, let data = try? Data(contentsOf: url) else { return }
+        guard let url = await workspace.ui?.chooseFilesToOpen().first else { return }
+        // Odczyt i rozpoznanie pliku poza wątkiem głównym (duży CSV nie zamraża okna).
+        let loaded = await Task.detached(priority: .userInitiated) { () -> (Data, ImportWizardState, [String])? in
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            let suggested = ImportWizard.suggest(fileName: url.lastPathComponent, data: data)
+            let sheets = suggested.source == .excel ? ((try? XlsxWorkbook(data))?.sheets ?? []).map(\.name) : []
+            return (data, suggested, sheets)
+        }.value
+        guard let (data, suggested, names) = loaded else { return }
         fileURL = url
         fileData = data
         let owner = state.owner
-        state = ImportWizard.suggest(fileName: url.lastPathComponent, data: data)
+        state = suggested
         state.owner = owner
-        if state.source == .excel { sheets = ((try? XlsxWorkbook(data))?.sheets ?? []).map(\.name) }
+        sheets = names
         reload()
     }
 
+    /// Podgląd po zmianie pliku albo opcji: w tle, z krótkim opóźnieniem (pisanie w polach Separator, Cudzysłów)
+    /// i anulowaniem poprzedniego odczytu — wynik tylko z ostatniego.
     private func reload() {
         guard !fileData.isEmpty else { return }
-        do { source = try ImportWizard.read(fileData, state: state); message = "" } catch { source = nil; message = error.localizedDescription }
+        readTask?.cancel()
+        let data = fileData, st = state
+        readTask = Task {
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            let r = await Task.detached(priority: .userInitiated) { Result { try ImportWizard.read(data, state: st) } }.value
+            guard !Task.isCancelled else { return }
+            switch r {
+            case .success(let d): source = d; message = ""
+            case .failure(let e): source = nil; message = e.localizedDescription
+            }
+        }
     }
 
     private func mapAutomatically() async {
         guard let s = source else { return }
         do {
-            let sess: (any DatabaseSession)? = state.createTable ? nil : try await DataTransferCommands.session(workspace)
+            let sess: (any DatabaseSession)? = state.createTable ? nil : try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
             var st = state
             try await ImportWizard.prepareMappings(&st, data: s, in: sess)
             state = st
@@ -509,8 +567,9 @@ struct ImportWizardView: View {
         busy = true
         defer { busy = false }
         do {
-            try await workspace.guardModification(["insert into \(state.owner).\(state.table) values (null)"], connectionID: DataTransferCommands.connection(workspace))
-            let sess = try await DataTransferCommands.session(workspace)
+            guard let connection else { throw CommandError.notConnected }
+            try await workspace.guardModification(["insert into \(state.owner).\(state.table) values (null)"], connectionID: connection)
+            let sess = try await workspace.toolSession(DataTransferCommands.sessionPurpose, connection: connection)
             let r = try await ImportWizard.execute(state, data: s, in: sess) { n in message = L10n.tr("Wierszy: \(n)") }
             message = L10n.tr("Wstawiono: \(r.inserted), zaktualizowano: \(r.updated), pominięto: \(r.skipped), błędy: \(r.errors.count)")
             if !r.errors.isEmpty { workspace.ui?.showObjectInfo(title: L10n.tr("Błędy importu"), columns: [L10n.tr("Błąd")], rows: r.errors.map { [$0] }) }

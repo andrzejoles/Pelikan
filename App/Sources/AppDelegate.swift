@@ -926,8 +926,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                             text: text.string)
     }
 
-    func showSQLMonitor() {
-        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
+    func showSQLMonitor(connection: UUID) {
+        // Okno związane z połączeniem sprawdzonej licencji — przy innym połączeniu otwierane od nowa.
+        ToolWindowController.close(key: "sqlMonitor")
+        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) {
+            SQLMonitorView(workspace: workspace, connection: connection)
+        }
     }
 
     func showTestManager() {

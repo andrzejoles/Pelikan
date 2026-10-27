@@ -7,6 +7,7 @@ import SwiftUI
 /// Panel DBA (SD-DBA-001): sekcje słownika, brak uprawnień jako komunikat, zmiany parametrów i kont po potwierdzeniu.
 struct DBAPanelView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var section: DBAPanel.Section? = .tablespaces
     @State private var result: DBASectionResult?
     @State private var filter = ""
@@ -20,6 +21,7 @@ struct DBAPanelView: View {
                 .frame(minWidth: 160, idealWidth: 180, maxWidth: 240)
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
+                    ToolConnectionPicker(workspace: workspace, connection: $connection)
                     TextField(L10n.tr("Filtr"), text: $filter).textFieldStyle(.roundedBorder).frame(maxWidth: 260)
                     Spacer()
                     if section == .parameters { Button(L10n.tr("Zmień wartość…")) { alterParameter() }.disabled(selected == nil) }
@@ -49,8 +51,13 @@ struct DBAPanelView: View {
             .padding(10)
         }
         .frame(minWidth: 900, minHeight: 540)
-        .task { await reload() }
+        .task(id: connection) { await reload() }
         .onChange(of: section) { Task { await reload() } }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private var filtered: [DetailRow] {
@@ -66,7 +73,7 @@ struct DBAPanelView: View {
         result = nil
         selection = nil
         do {
-            let s = try await Stage7Session.session(workspace, "dba")
+            let s = try await workspace.toolSession("dba", connection: connection)
             result = await DBAPanel.load(section, in: s)
             message = L10n.tr("Wierszy: \(result?.rows.count ?? 0)")
         } catch { result = .failed(error.localizedDescription) }
@@ -87,7 +94,10 @@ struct DBAPanelView: View {
     }
 
     private func run(_ id: CommandID, _ args: [String: JSONValue]) async {
+        guard let connection else { return }
         do {
+            var args = args
+            args["connection"] = .string(connection.uuidString)
             message = try await workspace.invoke(id, CommandArguments(args)).message ?? ""
             await reload()
         } catch CommandError.cancelledByUser {
@@ -95,18 +105,10 @@ struct DBAPanelView: View {
     }
 }
 
-/// Sesja narzędzi dla okien Etapu 7.
-@MainActor
-enum Stage7Session {
-    static func session(_ ws: Workspace, _ name: String) async throws -> any DatabaseSession {
-        guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID else { throw CommandError.notConnected }
-        return try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool(name)))
-    }
-}
-
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var snap: InstanceSnapshot?
     @State private var auto = true
     @State private var interval = 5.0
@@ -115,6 +117,7 @@ struct InstanceViewerView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 if let s = snap {
                     VStack(alignment: .leading) {
                         Text("\(s.instanceName ?? "—") · \(s.status ?? "") · \(s.databaseRole ?? "") · \(s.logMode ?? "")").font(.uiHeadline)
@@ -158,6 +161,7 @@ struct InstanceViewerView: View {
         }
         .padding(10)
         .frame(minWidth: 860, minHeight: 560)
+        .onChange(of: connection) { snap = nil; Task { await refresh() } }
         .task(id: auto ? interval : 0) {
             await refresh()
             while auto, !Task.isCancelled {
@@ -169,10 +173,15 @@ struct InstanceViewerView: View {
 
     private func refresh() async {
         do {
-            let s = try await Stage7Session.session(workspace, "instance")
+            let s = try await workspace.toolSession("instance", connection: connection)
             snap = await InstanceViewer.snapshot(in: s, previous: snap)
             error = nil
         } catch { self.error = error.localizedDescription }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private func uptime(_ t: TimeInterval?) -> String {
@@ -191,7 +200,6 @@ struct SGAItem: Identifiable {
 /// Task Monitor (SD-MON-002): zadania w tle ze stanem, czasem i anulowaniem.
 struct TaskMonitorView: View {
     let workspace: Workspace
-    @State private var tick = Date()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -204,7 +212,14 @@ struct TaskMonitorView: View {
                 TableColumn(L10n.tr("Zadanie")) { t in Text(t.title) }
                 TableColumn(L10n.tr("Rodzaj")) { t in Text(t.kind).foregroundStyle(.secondary) }.width(90)
                 TableColumn(L10n.tr("Stan")) { t in Text(status(t)).foregroundStyle(color(t)) }.width(160)
-                TableColumn(L10n.tr("Czas")) { t in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }.width(70)
+                // Czas zadania w toku odświeża sama komórka (co sekundę) — bez przebudowy tabeli (przewinięcie, „Anuluj”).
+                TableColumn(L10n.tr("Czas")) { t in
+                    if t.isRunning {
+                        TimelineView(.periodic(from: .now, by: 1)) { _ in Text(String(format: "%.1f s", t.duration)).monospacedDigit() }
+                    } else {
+                        Text(String(format: "%.1f s", t.duration)).monospacedDigit()
+                    }
+                }.width(70)
                 TableColumn(L10n.tr("Postęp")) { t in
                     if let p = t.progress { ProgressView(value: p) } else { Text(t.message ?? "").font(.uiSecondary).lineLimit(1) }
                 }
@@ -212,16 +227,9 @@ struct TaskMonitorView: View {
                     if t.isRunning { Button(L10n.tr("Anuluj")) { t.cancel() } }
                 }.width(70)
             }
-            .id(tick)
         }
         .padding(10)
         .frame(minWidth: 680, minHeight: 320)
-        .task {
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
-                if workspace.tasks.tasks.contains(where: \.isRunning) { tick = Date() }
-            }
-        }
     }
 
     private func status(_ t: WorkspaceTask) -> String {

@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import Observation
 import PelikanWorkspace
 import SwiftUI
@@ -100,7 +99,7 @@ struct FileBrowserPane: View {
     @State private var nameFilter = ""
     @State private var showOptions = false
     @State private var selection: String?
-    private let timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect()
+    @Environment(\.controlActiveState) private var activeState
 
     init(workspace: Workspace) {
         self.workspace = workspace
@@ -163,7 +162,16 @@ struct FileBrowserPane: View {
         .padding(.bottom, 6)
         .onChange(of: model.locationID) { model.reload() }
         .onAppear { model.reload() }
-        .onReceive(timer) { _ in model.refresh() }
+        // Odświeżanie co 5 s (git status, daty katalogów) tylko przy widocznej karcie Pliki (zadanie kończy się, gdy
+        // karta znika z okna) i aktywnej aplikacji — wcześniej zegar odpytywał git przez cały czas działania aplikacji.
+        .task(id: activeState == .inactive) {
+            guard activeState != .inactive else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+                model.refresh()
+            }
+        }
     }
 
     private var filterBar: some View {

@@ -47,7 +47,6 @@ struct ToolsPane: View {
                               }
                           }), prompt: Text("/usr/local/bin/opendiff"))
                 TextField(L10n.tr("Argumenty"), text: $diffArguments)
-                    .onSubmit { applyDiffArguments() }
                     .disabled(workspace.settings.externalDiff == nil)
                 Text(L10n.tr("%1 i %2 — pliki lewy i prawy, %3 i %4 — ich tytuły. Program jest uruchamiany bez powłoki; argumenty rozdziela spacja, cudzysłów grupuje."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
@@ -92,7 +91,11 @@ struct ToolsPane: View {
         }
         .formStyle(.grouped)
         .onAppear { diffArguments = ExternalDiffTool.join(workspace.settings.externalDiff?.arguments ?? ["%1", "%2"]) }
-        .onDisappear { applyDiffArguments() }
+        // Argumenty zapisywane przy każdej zmianie pola (jak reszta Preferencji); zmiana z zestawu lub importu odświeża pole.
+        .onChange(of: diffArguments) { applyDiffArguments() }
+        .onChange(of: workspace.settings.externalDiff?.arguments) { _, new in
+            if let new, ExternalDiffTool.split(diffArguments) != new { diffArguments = ExternalDiffTool.join(new) }
+        }
     }
 
     /// Pole tekstowe elementu listy ustawień wskazanego identyfikatorem.
@@ -106,7 +109,9 @@ struct ToolsPane: View {
 
     private func applyDiffArguments() {
         guard var t = workspace.settings.externalDiff else { return }
-        t.arguments = ExternalDiffTool.split(diffArguments)
+        let arguments = ExternalDiffTool.split(diffArguments)
+        guard arguments != t.arguments else { return }
+        t.arguments = arguments
         workspace.settings.externalDiff = t
     }
 

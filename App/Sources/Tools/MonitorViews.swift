@@ -6,6 +6,7 @@ import SwiftUI
 /// Monitor zdarzeń (UG 24.13): alerty i rury, lista odebranych zdarzeń.
 struct EventMonitorView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var kind: EventMonitor.Kind = .alert
     @State private var names = ""
     @State private var monitor: EventMonitor?
@@ -14,6 +15,7 @@ struct EventMonitorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection).disabled(monitor?.running == true)
                 Picker("", selection: $kind) {
                     Text("DBMS_ALERT").tag(EventMonitor.Kind.alert)
                     Text("DBMS_PIPE").tag(EventMonitor.Kind.pipe)
@@ -39,8 +41,13 @@ struct EventMonitorView: View {
         .onDisappear { Task { await monitor?.stop() } }
     }
 
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
     private func start() async {
-        guard let conn = workspace.sessions.mainConnectionID else { message = L10n.tr("Brak połączenia"); return }
+        guard let conn = connection else { message = L10n.tr("Brak połączenia"); return }
         await monitor?.stop()
         let m = EventMonitor(kind: kind, names: names.split(separator: ",").map(String.init), connectionID: conn, in: workspace)
         do {
@@ -54,6 +61,7 @@ struct EventMonitorView: View {
 /// Test obciążenia (UG 24.17): kroki, wątki, iteracje; wyniki na żywo w tabeli, słupkach i linii przepustowości.
 struct LoadTesterView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var test: LoadTest = {
         var t = LoadTest()
         t.steps = [LoadStep(name: L10n.tr("Krok 1"), sql: "select count(*) from dual where :iteration > 0")]
@@ -65,6 +73,7 @@ struct LoadTesterView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection).disabled(tester?.running == true)
                 Stepper(L10n.tr("Wątki: \(test.threads)"), value: $test.threads, in: 1...64)
                 Stepper(L10n.tr("Iteracje: \(test.iterations)"), value: $test.iterations, in: 1...100_000)
                 Toggle(L10n.tr("ROLLBACK po iteracji"), isOn: $test.rollback).toggleStyle(.checkbox)
@@ -103,6 +112,11 @@ struct LoadTesterView: View {
         .onDisappear { tester?.stop() }
     }
 
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
     @ViewBuilder private var results: some View {
         if let t = tester {
             VStack(alignment: .leading, spacing: 6) {
@@ -129,7 +143,7 @@ struct LoadTesterView: View {
     }
 
     private func start() {
-        guard let conn = workspace.sessions.mainConnectionID else { return }
+        guard let conn = connection else { return }
         Task {
             // Kroki mogą zmieniać dane — strażnik zmian jak dla okna SQL (prod potwierdza, tylko do odczytu blokuje).
             do {
@@ -148,10 +162,8 @@ struct LoadTesterView: View {
 
     private func export() {
         guard let t = tester else { return }
-        let p = NSSavePanel()
-        p.nameFieldStringValue = "test-obciazenia.csv"
-        guard p.runModal() == .OK, let url = p.url else { return }
-        do { try Data(t.csv().utf8).write(to: url) } catch { workspace.ui?.showError(error.localizedDescription) }
+        let data = ResultExporter.xlsx([t.exportData()])
+        Task { _ = await workspace.ui?.saveFile(suggestedName: L10n.tr("Test obciążenia"), fileExtension: "xlsx", data: data) }
     }
 }
 

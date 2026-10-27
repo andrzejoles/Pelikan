@@ -1,11 +1,14 @@
 import AppKit
+import PelikanDB
 import PelikanWorkspace
 import SwiftUI
 
 /// Przeglądarka sesji (UG 16, PD-TOOL-015/016): filtr, lista sesji, automatyczne odświeżanie, karty szczegółów
-/// zaznaczonej sesji, zabijanie sesji i akcje (SQL Trace), edycja zapytań (Define Session Queries).
+/// zaznaczonej sesji, zabijanie sesji i akcje (SQL Trace), edycja zapytań (Define Session Queries). Lista, szczegóły,
+/// zabijanie i akcje na połączeniu okna (ustalonym przy otwarciu) — SID/SERIAL# zawsze z tej samej bazy.
 struct SessionBrowserView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var filter = ""
     @State private var rows: [SessionRow] = []
     @State private var selection: SessionRow.ID?
@@ -23,6 +26,7 @@ struct SessionBrowserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 Picker(L10n.tr("Filtr"), selection: $filter) {
                     ForEach(queries.filters) { Text($0.name).tag($0.sql) }
                 }
@@ -74,9 +78,22 @@ struct SessionBrowserView: View {
             }
         }
         .onChange(of: filter) { Task { await reload() } }
+        .onChange(of: connection) {
+            selection = nil
+            Task { await reload() }
+        }
         .onChange(of: selection) { Task { await loadDetail() } }
         .onChange(of: detailName) { Task { await loadDetail() } }
         .sheet(isPresented: $editing) { SessionQueriesEditor(workspace: workspace, done: { editing = false }) }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
+    }
+
+    private func session() async throws -> any DatabaseSession {
+        try await workspace.toolSession("sessions", connection: connection)
     }
 
     @ViewBuilder private var detailView: some View {
@@ -97,7 +114,7 @@ struct SessionBrowserView: View {
 
     private func reload() async {
         do {
-            let s = try await SessionCommands.toolSession(workspace)
+            let s = try await session()
             rows = try await SessionBrowser.list(filter: filter, in: s)
             message = L10n.tr("Sesje: \(rows.count)")
             await loadDetail()
@@ -107,15 +124,16 @@ struct SessionBrowserView: View {
     private func loadDetail() async {
         guard let r = selected, let item = queries.details.first(where: { $0.name == detailName }) else { detail = nil; return }
         do {
-            detail = try await SessionBrowser.detail(item, sid: r.sid, serial: r.serial, in: try await SessionCommands.toolSession(workspace))
+            detail = try await SessionBrowser.detail(item, sid: r.sid, serial: r.serial, in: try await session())
         } catch { message = error.localizedDescription; detail = nil }
     }
 
     private func kill(immediate: Bool) {
-        guard let r = selected else { return }
+        guard let r = selected, let connection else { return }
         Task {
             do {
-                try await workspace.invoke("sessions.kill", CommandArguments(["sid": .int(Int64(r.sid)), "serial": .int(Int64(r.serial)), "immediate": .bool(immediate)]))
+                try await workspace.invoke("sessions.kill", CommandArguments(["sid": .int(Int64(r.sid)), "serial": .int(Int64(r.serial)), "immediate": .bool(immediate),
+                                                                               "connection": .string(connection.uuidString)]))
                 await reload()
             } catch CommandError.cancelledByUser {
             } catch { message = error.localizedDescription }
@@ -126,7 +144,7 @@ struct SessionBrowserView: View {
         guard let r = selected else { return }
         Task {
             do {
-                try await SessionBrowser.perform(a, sid: r.sid, serial: r.serial, in: try await SessionCommands.toolSession(workspace))
+                try await SessionBrowser.perform(a, sid: r.sid, serial: r.serial, in: try await session())
                 message = L10n.tr("Wykonano: \(a.name)")
             } catch { message = error.localizedDescription }
         }

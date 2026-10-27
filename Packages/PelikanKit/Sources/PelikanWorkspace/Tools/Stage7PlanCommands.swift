@@ -4,13 +4,10 @@ import PelikanDB
 /// Komendy Etapu 7 (plany, DBA, zadania w tle, dokumentacja).
 @MainActor
 enum Stage7PlanCommands {
-    static func connection(_ ws: Workspace) -> UUID? {
-        ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
-    }
+    static func connection(_ ws: Workspace) -> UUID? { ws.toolConnection() }
 
     static func toolSession(_ ws: Workspace, _ name: String) async throws -> any DatabaseSession {
-        guard let conn = connection(ws) else { throw CommandError.notConnected }
-        return try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool(name)))
+        try await ws.toolSession(name, connection: ws.toolConnection())
     }
 
     static var all: [Command] {
@@ -69,10 +66,11 @@ enum Stage7PlanCommands {
             Command(CommandDescriptor(id: "dba.alterParameter", title: L10n.tr("Zmień parametr instancji"), category: .tools, submenu: L10n.tr("DBA"),
                                       parameters: [CommandParameter("name", .string, required: true, L10n.tr("Parametr")),
                                                    CommandParameter("value", .string, required: true, L10n.tr("Wartość")),
-                                                   CommandParameter("scope", .string, L10n.tr("Zakres"), allowed: ["MEMORY", "SPFILE", "BOTH"])],
+                                                   CommandParameter("scope", .string, L10n.tr("Zakres"), allowed: ["MEMORY", "SPFILE", "BOTH"]),
+                                                   CommandContext.toolConnectionParam],
                                       agent: .none, effect: .modifiesDatabase, summary: L10n.tr("ALTER SYSTEM SET po potwierdzeniu i strażniku zmian."),
                                       inMenu: false, feature: "SD-DBA-001")) { ctx in
-                guard let conn = connection(ctx.workspace) else { throw CommandError.notConnected }
+                let conn = try ctx.toolConnection()
                 let sql = try DBAPanel.alterParameterSQL(name: ctx.arguments.string("name") ?? "", value: ctx.arguments.string("value") ?? "",
                                                          scope: ctx.arguments.string("scope") ?? "BOTH")
                 if let ui = ctx.ui {
@@ -85,10 +83,11 @@ enum Stage7PlanCommands {
             },
             Command(CommandDescriptor(id: "dba.lockUser", title: L10n.tr("Zablokuj / odblokuj konto"), category: .tools, submenu: L10n.tr("DBA"),
                                       parameters: [CommandParameter("user", .string, required: true, L10n.tr("Użytkownik")),
-                                                   CommandParameter("lock", .boolean, required: true, L10n.tr("Zablokuj (true) albo odblokuj (false)"))],
+                                                   CommandParameter("lock", .boolean, required: true, L10n.tr("Zablokuj (true) albo odblokuj (false)")),
+                                                   CommandContext.toolConnectionParam],
                                       agent: .none, effect: .modifiesDatabase, summary: L10n.tr("ALTER USER … ACCOUNT LOCK/UNLOCK po potwierdzeniu i strażniku zmian."),
                                       inMenu: false, feature: "SD-DBA-001")) { ctx in
-                guard let conn = connection(ctx.workspace) else { throw CommandError.notConnected }
+                let conn = try ctx.toolConnection()
                 let sql = try DBAPanel.lockUserSQL(ctx.arguments.string("user") ?? "", lock: ctx.arguments.bool("lock") ?? true)
                 if let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Zmienić stan konta?"), message: sql, buttons: [L10n.tr("Wykonaj"), L10n.tr("Anuluj")]) == 0 else {

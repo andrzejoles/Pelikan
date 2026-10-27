@@ -6,6 +6,7 @@ import SwiftUI
 /// zadań, przebiegi z raportami i kolorami, uruchomione zadania ze Stop (Force).
 struct SchedulerView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var kind: SchedulerObjectKind? = .jobs
     @State private var objects: [SchedulerObject] = []
     @State private var selection: SchedulerObject.ID?
@@ -17,6 +18,7 @@ struct SchedulerView: View {
     @State private var runs: (columns: [String], rows: [[String]]) = ([], [])
     @State private var running: (columns: [String], rows: [[String]]) = ([], [])
     @State private var runningSelection: Int?
+    @State private var editingReports = false
 
     private var selected: SchedulerObject? { objects.first { $0.id == selection } }
     private var reports: [Scheduler.RunReport] { workspace.settings.schedulerReports }
@@ -27,6 +29,7 @@ struct SchedulerView: View {
             List(SchedulerObjectKind.allCases, id: \.self, selection: $kind) { Text($0.displayName) }
                 .frame(minWidth: 170, idealWidth: 190, maxWidth: 260)
             VStack(alignment: .leading, spacing: 6) {
+                ToolConnectionPicker(workspace: workspace, connection: $connection)
                 Picker("", selection: $tab) {
                     Text(L10n.tr("Obiekty")).tag(0)
                     Text(L10n.tr("Przebiegi")).tag(1)
@@ -45,11 +48,23 @@ struct SchedulerView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 900, minHeight: 560)
-        .task { reportName = reports.first?.name ?? ""; await reload() }
+        .task { reportName = reports.first?.name ?? "" }
+        .task(id: connection) {
+            selection = nil
+            await reload()
+            await reloadTab()
+        }
         .onChange(of: kind) { Task { await reload() } }
         .onChange(of: selection) { Task { await loadSQL() } }
         .onChange(of: tab) { Task { await reloadTab() } }
         .onChange(of: reportName) { Task { await reloadTab() } }
+        .sheet(isPresented: $editingReports) {
+            SchedulerReportsEditor(workspace: workspace) {
+                editingReports = false
+                if !reports.contains(where: { $0.name == reportName }) { reportName = reports.first?.name ?? "" }
+                Task { await reloadTab() }
+            }
+        }
         .sheet(item: $editing) { e in
             JobEditor(original: e.job, isNew: e.isNew) { job in
                 editing = nil
@@ -59,6 +74,11 @@ struct SchedulerView: View {
                 run(text, then: { await reload() })
             }
         }
+    }
+
+    init(workspace: Workspace) {
+        self.workspace = workspace
+        _connection = State(initialValue: workspace.toolConnection())
     }
 
     private var objectsTab: some View {
@@ -96,6 +116,7 @@ struct SchedulerView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Picker(L10n.tr("Raport"), selection: $reportName) { ForEach(reports) { Text($0.name).tag($0.name) } }.frame(maxWidth: 280)
+                Button(L10n.tr("Raporty…")) { editingReports = true }
                 Spacer()
                 Button { Task { await reloadTab() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
             }
@@ -130,14 +151,14 @@ struct SchedulerView: View {
     private func reload() async {
         guard let kind else { return }
         do {
-            objects = try await Scheduler.objects(kind, in: try await SchedulerCommands.session(workspace).1)
+            objects = try await Scheduler.objects(kind, in: try await SchedulerCommands.session(workspace, connection: connection).1)
             message = L10n.tr("\(kind.displayName): \(objects.count)")
         } catch { message = error.localizedDescription }
     }
 
     private func reloadTab() async {
         do {
-            let s = try await SchedulerCommands.session(workspace).1
+            let s = try await SchedulerCommands.session(workspace, connection: connection).1
             if tab == 1, let r = reports.first(where: { $0.name == reportName }) { runs = try await Scheduler.runs(r, in: s) }
             if tab == 2 { running = try await Scheduler.running(in: s) }
         } catch { message = error.localizedDescription }
@@ -146,7 +167,7 @@ struct SchedulerView: View {
     private func loadSQL() async {
         guard let o = selected else { sql = ""; return }
         do {
-            let s = try await SchedulerCommands.session(workspace).1
+            let s = try await SchedulerCommands.session(workspace, connection: connection).1
             sql = o.kind == .jobs ? Scheduler.createSQL(try await Scheduler.job(owner: o.owner, name: o.name, in: s))
                 : try await Scheduler.ddl(owner: o.owner, name: o.name, in: s)
         } catch { sql = error.localizedDescription }
@@ -156,7 +177,7 @@ struct SchedulerView: View {
         guard let o = selected else { return }
         Task {
             do {
-                let j = try await Scheduler.job(owner: o.owner, name: o.name, in: try await SchedulerCommands.session(workspace).1)
+                let j = try await Scheduler.job(owner: o.owner, name: o.name, in: try await SchedulerCommands.session(workspace, connection: connection).1)
                 editing = JobEditing(job: j, isNew: false)
             } catch { message = error.localizedDescription }
         }
@@ -178,12 +199,92 @@ struct SchedulerView: View {
     private func run(_ text: String, then: (() async -> Void)? = nil) {
         Task {
             do {
-                try await SchedulerCommands.execute(text, in: workspace)
+                try await SchedulerCommands.execute(text, connection: connection, in: workspace)
                 message = L10n.tr("Wykonano")
                 await then?()
             } catch CommandError.cancelledByUser {
             } catch { message = error.localizedDescription }
         }
+    }
+}
+
+/// Własne raporty przebiegów (PD-SCHED-003): nazwa, warunek WHERE na ALL_SCHEDULER_JOB_RUN_DETAILS i kolory wierszy
+/// (kolumna = wartość → kolor). Zapis do ustawień (`schedulerReports`) po „Zapisz”.
+struct SchedulerReportsEditor: View {
+    /// Wiersze edytora z własnym identyfikatorem — nazwa raportu zmienia się w trakcie edycji.
+    struct Rule: Identifiable {
+        let id = UUID()
+        var column: String
+        var value: String
+        var color: Color
+    }
+
+    struct Draft: Identifiable {
+        let id = UUID()
+        var name: String
+        var condition: String
+        var rules: [Rule]
+    }
+
+    let workspace: Workspace
+    let done: () -> Void
+    @State private var drafts: [Draft] = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            List {
+                ForEach($drafts) { $d in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            TextField(L10n.tr("Nazwa"), text: $d.name).font(.uiHeadline)
+                            Button { drafts.removeAll { $0.id == d.id } } label: { Image(systemName: "minus.circle") }
+                                .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń"))
+                        }
+                        TextField(L10n.tr("Warunek"), text: $d.condition, prompt: Text("status <> 'SUCCEEDED'"))
+                            .font(.system(size: 12, design: .monospaced))
+                        Text(L10n.tr("Kolory wierszy")).font(.uiSecondary).foregroundStyle(.secondary)
+                        ForEach($d.rules) { $r in
+                            HStack {
+                                TextField(L10n.tr("Kolumna"), text: $r.column, prompt: Text("STATUS")).frame(width: 160)
+                                TextField(L10n.tr("Wartość"), text: $r.value, prompt: Text("FAILED"))
+                                ColorPicker(L10n.tr("Kolor"), selection: $r.color, supportsOpacity: false).labelsHidden()
+                                Button { d.rules.removeAll { $0.id == r.id } } label: { Image(systemName: "minus.circle") }
+                                    .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń regułę"))
+                            }
+                        }
+                        Button(L10n.tr("Dodaj regułę")) { d.rules.append(Rule(column: "STATUS", value: "", color: .red)) }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            HStack {
+                Button(L10n.tr("Dodaj")) { drafts.append(Draft(name: L10n.tr("Nowy raport"), condition: "", rules: [])) }
+                Button(L10n.tr("Domyślne")) { drafts = Self.drafts(Scheduler.RunReport.standard) }
+                Spacer()
+                Button(L10n.tr("Anuluj"), role: .cancel) { done() }.keyboardShortcut(.cancelAction)
+                Button(L10n.tr("Zapisz")) {
+                    workspace.settings.schedulerReports = Scheduler.RunReport.normalized(drafts.map(Self.report))
+                    done()
+                }
+            }
+        }
+        .padding(14)
+        .windowSize(width: 720, height: 480)
+        .onAppear { drafts = Self.drafts(workspace.settings.schedulerReports) }
+    }
+
+    static func drafts(_ reports: [Scheduler.RunReport]) -> [Draft] {
+        reports.map { r in
+            Draft(name: r.name, condition: r.condition,
+                  rules: r.colors.map { Rule(column: $0.column, value: $0.value, color: Color(red: $0.color.red, green: $0.color.green, blue: $0.color.blue)) })
+        }
+    }
+
+    static func report(_ d: Draft) -> Scheduler.RunReport {
+        Scheduler.RunReport(name: d.name, condition: d.condition, colors: d.rules.map { r in
+            let n = NSColor(r.color).usingColorSpace(.sRGB) ?? .systemRed
+            return .init(column: r.column, value: r.value, color: RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent))
+        })
     }
 }
 

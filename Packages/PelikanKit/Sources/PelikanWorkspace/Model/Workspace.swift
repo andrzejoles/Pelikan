@@ -76,7 +76,7 @@ public protocol UIServices: AnyObject {
     func showPreferenceSets()
     /// Raport HTML (AWR, ASH, ADDM, SQL Monitor, Tuning Advisor) i lista SQL Monitor.
     func showHTMLReport(title: String, html: String)
-    func showSQLMonitor()
+    func showSQLMonitor(connection: UUID)
     /// Koniec długiego wykonania (dźwięk, uwaga aplikacji — PD-SQLW-015).
     func notifyExecutionFinished(title: String, elapsed: String, success: Bool)
     /// Okno Query By Example (PD-SQLW-022) i filtr kolumn (PD-GRID-011) dla karty wyniku.
@@ -207,7 +207,7 @@ extension UIServices {
     public func askWithSuppression(_ title: String, message: String, buttons: [String]) async -> (Int?, Bool) {
         (await ask(title, message: message, buttons: buttons), false)
     }
-    public func showSQLMonitor() {}
+    public func showSQLMonitor(connection: UUID) {}
     public func notifyExecutionFinished(title: String, elapsed: String, success: Bool) {}
     public func showQueryByExample(_ tab: ResultTab) {}
     public func showColumnFilter(_ tab: ResultTab) {}

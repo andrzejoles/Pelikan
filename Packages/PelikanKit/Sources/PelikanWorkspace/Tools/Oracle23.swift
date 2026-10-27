@@ -263,10 +263,9 @@ public enum Spatial {
 /// Komendy widoków dualności, MLE i podglądu przestrzennego.
 @MainActor
 public enum Oracle23Commands {
-    /// Sesja narzędzia dla połączenia aktywnego okna i bieżący schemat.
-    public static func session(_ ws: Workspace) async throws -> (session: any DatabaseSession, owner: String) {
-        guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID else { throw CommandError.notConnected }
-        let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("oracle23")))
+    /// Sesja narzędzia na wskazanym połączeniu (bez wskazanego — połączenie narzędzia) i bieżący schemat.
+    public static func session(_ ws: Workspace, connection: UUID? = nil) async throws -> (session: any DatabaseSession, owner: String) {
+        let s = try await ws.toolSession("oracle23", connection: connection ?? ws.toolConnection())
         let owner = try await s.scalar("select sys_context('userenv', 'current_schema') from dual") ?? ""
         return (s, owner)
     }
@@ -284,11 +283,12 @@ public enum Oracle23Commands {
             Command(CommandDescriptor(id: "tools.dualityViewDDL", title: L10n.tr("Nowy widok dualności…"), category: .tools,
                                       parameters: [CommandParameter("name", .string, required: true, L10n.tr("Nazwa widoku")),
                                                    CommandParameter("root", .string, required: true, L10n.tr("Tabela główna")),
-                                                   CommandParameter("children", .string, L10n.tr("Tabele podrzędne (po przecinku)"))],
+                                                   CommandParameter("children", .string, L10n.tr("Tabele podrzędne (po przecinku)")),
+                                                   CommandContext.toolConnectionParam],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Generuje DDL widoku dualności do nowego okna SQL (nie wykonuje go)."), feature: "SD-DV-001"),
                     validate: connected) { ctx in
-                let (s, owner) = try await session(ctx.workspace)
+                let (s, owner) = try await session(ctx.workspace, connection: try ctx.toolConnection())
                 let children = (ctx.arguments.string("children") ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }
                 let ddl = try await DualityViews.generateDDL(view: ctx.arguments.string("name") ?? "", owner: owner,
                                                              rootTable: (ctx.arguments.string("root") ?? "").uppercased(), children: children, in: s)
@@ -321,11 +321,12 @@ public enum Oracle23Commands {
                                       parameters: [CommandParameter("module", .string, required: true, L10n.tr("Moduł")),
                                                    CommandParameter("lines", .string, required: true, L10n.tr("Linie punktów (po przecinku)")),
                                                    CommandParameter("watch", .string, L10n.tr("Obserwowane zmienne (po przecinku; puste — wszystkie lokalne)")),
-                                                   CommandParameter("call", .sql, required: true, L10n.tr("Instrukcje PL/SQL wywołujące kod modułu"))],
+                                                   CommandParameter("call", .sql, required: true, L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")),
+                                                   CommandContext.toolConnectionParam],
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Wykonuje podane instrukcje z punktami debugowania DBMS_MLE i pokazuje wartości zmiennych w punktach."),
                                       feature: "SD-MLE-001"), validate: connected) { ctx in
-                let (s, owner) = try await session(ctx.workspace)
+                let (s, owner) = try await session(ctx.workspace, connection: try ctx.toolConnection())
                 func list(_ k: String) -> [String] {
                     (ctx.arguments.string(k) ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
                 }
