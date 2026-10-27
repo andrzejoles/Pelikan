@@ -53,16 +53,23 @@ PELIKAN_TESTDB_AGENT_PASSWORD=A$(rand)
 ENV
         )
     fi
-    # shellcheck disable=SC1090
-    set -a; . "$ENVFILE"; set +a
+    set -a
+    # shellcheck source=/dev/null
+    . "$ENVFILE"
+    set +a
 }
 
 container_exists() { docker container inspect "$NAME" >/dev/null 2>&1; }
 
+# Dziennik tylko z bieżącego startu kontenera: „DATABASE IS READY” z poprzedniego uruchomienia nie znaczy, że baza
+# już wstała. Bez potoku do `grep -q` — przy pipefail zamknięty potok (SIGPIPE w `docker logs`) dawał „nie gotowa”.
 wait_ready() {
     echo "Czekam na bazę w kontenerze ${NAME}…" >&2
+    local started logs
+    started="$(docker container inspect -f '{{.State.StartedAt}}' "$NAME")"
     for _ in $(seq 1 180); do
-        if docker logs "$NAME" 2>&1 | grep -q "DATABASE IS READY TO USE"; then
+        logs="$(docker logs --since "$started" "$NAME" 2>&1 || true)"
+        if [[ "$logs" == *"DATABASE IS READY TO USE"* ]]; then
             echo "Baza gotowa." >&2
             return 0
         fi
@@ -72,24 +79,67 @@ wait_ready() {
     return 1
 }
 
+# Istniejący kontener zostaje przy swoim obrazie — ostrzeżenie, gdy to nie jest przypięty $IMAGE (bez kasowania danych).
+check_image() {
+    local have want
+    have="$(docker container inspect -f '{{.Image}}' "$NAME")"
+    want="$(docker image inspect -f '{{.Id}}' "$IMAGE" 2>/dev/null || true)"
+    if [ "$have" != "$want" ]; then
+        echo "Uwaga: kontener ${NAME} jest z obrazu $(docker container inspect -f '{{.Config.Image}}' "$NAME"), przypięty jest ${IMAGE}." >&2
+        echo "       Odtworzenie bazy testowej od nowa: scripts/testdb.sh reset (potem owm, ssh-up… jeśli używane)." >&2
+    fi
+}
+
+# PDB otwarta w trybie RESTRICTED (np. niezgodność opcji CDB/PDB po instalacji OWM tylko w PDB) — logowanie użytkowników
+# testowych kończy się ORA-01035, więc przerwanie z odczytem PDB_PLUG_IN_VIOLATIONS zamiast dziwnych błędów testów.
+pdb_restricted() {
+    [ "$(printf "SET HEADING OFF\nSELECT restricted FROM v\$pdbs WHERE name = 'FREEPDB1';\n" | sql_cdb | tr -dc '[:upper:]')" = "YES" ]
+}
+
+check_pdb() {
+    pdb_restricted || return 0
+    echo "FREEPDB1 jest otwarta w trybie RESTRICTED (logowanie użytkowników testowych: ORA-01035). Naruszenia:" >&2
+    printf "SET HEADING OFF\nSET LINESIZE 300\nSELECT type || ' ' || status || ': ' || message FROM pdb_plug_in_violations WHERE name = 'FREEPDB1' AND status <> 'RESOLVED';\n" \
+        | sql_cdb >&2 || true
+    echo "Przy niezgodności opcji OWM: scripts/testdb.sh owm (instaluje Workspace Manager także w CDB\$ROOT i otwiera PDB ponownie)." >&2
+    return 1
+}
+
 up() {
     ensure_env
     if container_exists; then
+        check_image
         docker start "$NAME" >/dev/null
     else
+        # Hasło SYS/SYSTEM z pliku 0600 (--env-file), nie w argumentach procesu `docker run`.
+        local runenv rc=0
+        runenv="$(mktemp "$STATE/run-env.XXXXXX")"
+        printf 'ORACLE_PASSWORD=%s\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD" > "$runenv"
         docker run -d --name "$NAME" \
             -p "127.0.0.1:${PELIKAN_TESTDB_PORT}:1521" \
-            -e ORACLE_PASSWORD="$PELIKAN_TESTDB_SYSTEM_PASSWORD" \
+            --env-file "$runenv" \
             --shm-size=1g \
-            "$IMAGE" >/dev/null
+            "$IMAGE" >/dev/null || rc=$?
+        rm -f "$runenv"
+        [ "$rc" = 0 ] || return "$rc"
     fi
     wait_ready
+    check_pdb
+    # Serwer SSH testów tunelu (ssh-up) startuje razem z bazą — po restarcie maszyny zestaw tunelu inaczej by padał.
+    if docker container inspect "$SSH_NAME" >/dev/null 2>&1; then
+        docker start "$SSH_NAME" >/dev/null
+    fi
 }
+
+# Przed CONNECT: nieudane logowanie (ORA-01017, ORA-01035) kończy sqlplus błędem — bez tego /nolog działa dalej
+# bez sesji (SP2-0640 przy każdym poleceniu) i zwraca 0.
+sql_prolog() { printf 'WHENEVER SQLERROR EXIT FAILURE\nWHENEVER OSERROR EXIT FAILURE\n'; }
 
 # sqlplus wewnątrz kontenera; hasło przez stdin (nie w argumentach procesu).
 sql_as() {
     local user="$1" pw="$2"
-    { printf 'CONNECT %s/"%s"@//localhost:1521/FREEPDB1\n' "$user" "$pw"
+    { sql_prolog
+      printf 'CONNECT %s/"%s"@//localhost:1521/FREEPDB1\n' "$user" "$pw"
       printf 'WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET FEEDBACK OFF\nSET SERVEROUTPUT ON\n'
       cat
       printf '\nEXIT\n'
@@ -97,8 +147,18 @@ sql_as() {
 }
 
 sql_sys() {
-    { printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
+    { sql_prolog
+      printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
       printf 'WHENEVER SQLERROR EXIT SQL.SQLCODE\nSET FEEDBACK OFF\nSET SERVEROUTPUT ON\n'
+      cat
+      printf '\nEXIT\n'
+    } | docker exec -i "$NAME" bash -c "$SQLPLUS"
+}
+
+# SYS w CDB$ROOT przez uwierzytelnianie systemu operacyjnego w kontenerze (bez hasła) — stan PDB, opcje całej bazy.
+sql_cdb() {
+    { sql_prolog
+      printf 'CONNECT / AS SYSDBA\nWHENEVER SQLERROR EXIT SQL.SQLCODE\nSET FEEDBACK OFF\nSET SERVEROUTPUT ON\n'
       cat
       printf '\nEXIT\n'
     } | docker exec -i "$NAME" bash -c "$SQLPLUS"
@@ -177,7 +237,6 @@ GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDU
       DEBUG CONNECT SESSION TO $PELIKAN_TESTDB_USER;
 GRANT EXECUTE ON DBMS_DEBUG_JDWP TO $PELIKAN_TESTDB_USER;
 GRANT EXECUTE ON DBMS_HPROF TO $PELIKAN_TESTDB_USER;
-GRANT SELECT ON V_\$SESSION TO $PELIKAN_TESTDB_USER;
 GRANT SELECT ON V_\$SQL_PLAN TO $PELIKAN_TESTDB_USER;
 GRANT SELECT ON V_\$SQL_PLAN_STATISTICS_ALL TO $PELIKAN_TESTDB_USER;
 -- Eksport/import przez Data Pump (PD-TOOL-005): katalog DATA_PUMP_DIR — tylko w bazie testowej.
@@ -223,8 +282,7 @@ GRANT EXECUTE ON DBMS_SQLTUNE TO $PELIKAN_TESTDB_USER;
 -- Synonimy PUBLIC (Query Builder, PD-QB-001) — tylko baza testowa.
 GRANT CREATE PUBLIC SYNONYM TO $PELIKAN_TESTDB_USER;
 GRANT DROP PUBLIC SYNONYM TO $PELIKAN_TESTDB_USER;
--- Zakończenie sesji okna i SQL Trace (PD-CONN-027, PD-OPT-008) — tylko baza testowa.
-GRANT ALTER SYSTEM TO $PELIKAN_TESTDB_USER;
+-- Zakończenie sesji okna i SQL Trace (PD-CONN-027, PD-OPT-008; ALTER SYSTEM wyżej) — tylko baza testowa.
 GRANT ALTER SESSION TO $PELIKAN_TESTDB_USER;
 -- MLE (SD-MLE-001).
 GRANT CREATE MLE TO $PELIKAN_TESTDB_USER;
@@ -251,10 +309,16 @@ ALTER USER $PELIKAN_TESTDB_AGENT_USER GRANT CONNECT THROUGH $PELIKAN_TESTDB_USER
 SQL
     install_utplsql
     install_tracetab
+    local log="$STATE/seed.log"
+    : > "$log"
     for f in "$ROOT"/scripts/testdb/seed/*.sql; do
         [ -f "$f" ] || continue
         echo "Seed: $(basename "$f")" >&2
-        sql_as "$PELIKAN_TESTDB_USER" "$PELIKAN_TESTDB_PASSWORD" < "$f" >/dev/null
+        if ! sql_as "$PELIKAN_TESTDB_USER" "$PELIKAN_TESTDB_PASSWORD" < "$f" >> "$log" 2>&1; then
+            tail -30 "$log" >&2
+            echo "Seed $(basename "$f") nie powiódł się (pełny log: $log)" >&2
+            exit 1
+        fi
     done
     # Rekompilacja zależnych (niepoprawny ma zostać tylko celowo zepsuty BROKEN_PKG) i konto agenta:
     # tylko odczyt tabel i widoków schematu testowego.
@@ -343,18 +407,35 @@ wallet() {
 }
 
 # Workspace Manager (PD-CONN-009): obraz Oracle Free ma skrypty OWM w ORACLE_HOME, ale bez zainstalowanego WMSYS.
-# owminst.plb w PDB testowej (kilka minut, raz), potem przestrzeń robocza DEV_PELIKAN_WS dla użytkownika testowego.
+# owminst.plb najpierw w CDB$ROOT, potem w PDB testowej (kilka minut, raz) — z OWM tylko w PDB kolejne otwarcie PDB
+# (restart kontenera) kończy się trybem RESTRICTED („Database option OWM mismatch”). Potem przestrzeń robocza
+# DEV_PELIKAN_WS dla użytkownika testowego.
+owm_valid() {
+    printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | "$1" | tr -dc '0-9'
+}
+
 install_owm() {
     ensure_env
-    local n log="$STATE/owm-install.log"
-    n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
+    local log="$STATE/owm-install.log" n
+    n="$(owm_valid sql_cdb)"
     if [ "${n:-0}" = "0" ]; then
-        echo "Instaluję Workspace Manager (owminst.plb)…" >&2
-        { printf 'CONNECT sys/"%s"@//localhost:1521/FREEPDB1 AS SYSDBA\n' "$PELIKAN_TESTDB_SYSTEM_PASSWORD"
-          printf 'WHENEVER SQLERROR CONTINUE\nSET ECHO OFF\n@?/rdbms/admin/owminst.plb\nEXIT\n'
-        } | docker exec -i "$NAME" bash -c "$SQLPLUS" > "$log" 2>&1 || true
-        n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
+        echo "Instaluję Workspace Manager w CDB\$ROOT (owminst.plb)…" >&2
+        printf 'WHENEVER SQLERROR CONTINUE\nSET ECHO OFF\n@?/rdbms/admin/owminst.plb\n' | sql_cdb > "$log" 2>&1 || true
+        n="$(owm_valid sql_cdb)"
+        [ "${n:-0}" != "0" ] || { tail -30 "$log" >&2; echo "Instalacja Workspace Manager w CDB\$ROOT nie powiodła się (log: $log)" >&2; exit 1; }
+    fi
+    n="$(owm_valid sql_sys)"
+    if [ "${n:-0}" = "0" ]; then
+        echo "Instaluję Workspace Manager w FREEPDB1 (owminst.plb)…" >&2
+        printf 'WHENEVER SQLERROR CONTINUE\nSET ECHO OFF\n@?/rdbms/admin/owminst.plb\n' | sql_sys > "$log" 2>&1 || true
+        n="$(owm_valid sql_sys)"
         [ "${n:-0}" != "0" ] || { tail -30 "$log" >&2; echo "Instalacja Workspace Manager nie powiodła się (log: $log)" >&2; exit 1; }
+    fi
+    # Tryb RESTRICTED po wcześniejszej instalacji tylko w PDB — po uzupełnieniu CDB$ROOT PDB otwierana ponownie.
+    if pdb_restricted; then
+        echo "Ponownie otwieram FREEPDB1 (tryb RESTRICTED)…" >&2
+        printf 'ALTER PLUGGABLE DATABASE FREEPDB1 CLOSE IMMEDIATE;\nALTER PLUGGABLE DATABASE FREEPDB1 OPEN;\n' | sql_cdb >/dev/null
+        check_pdb
     fi
     # GrantSystemPriv jako SYS kończy się ORA-06598 (pakiet WMSYS z prawami wywołującego) — rola administracyjna OWM
     # dla użytkownika testowego (tylko baza testowa), przestrzeń tworzy on sam.

@@ -38,7 +38,6 @@ struct DebuggerTests {
         _ = schema
         let d = ws.debugger(for: doc)
         try await d.start()
-        print("DBG start", d.location as Any)
         #expect(d.state == .paused)
         #expect(d.location?.isTestBlock == true && d.location?.line == 2)
         try await d.step(.into)
@@ -46,7 +45,6 @@ struct DebuggerTests {
         #expect(d.stack.count >= 2)
         // Kroki do wnętrza pętli po kilku iteracjach.
         for _ in 0..<8 where d.state == .paused { try await d.step(.over) }
-        print("DBG at", d.location as Any, d.variables.map { "\($0.name)=\($0.value) \($0.children?.count ?? -1)" })
         #expect(d.variables.contains { $0.name == "v" })
         #expect(d.variables.first { $0.name == "r" }?.children?.contains { $0.name == "deptno" } == true)
         #expect(d.variables.first { $0.name == "tab" }?.children?.isEmpty == false)
@@ -108,13 +106,11 @@ struct DebuggerTriggerTests {
         #expect(globals.first { $0.name == "g_publiczna" }?.value == "7")
         // BEGIN i INSERT, potem wyzwalacz.
         for _ in 0..<3 where d.location?.name != "PELIKAN_DBG_TRG" { try await d.step(.into) }
-        print("DBG trg", d.location as Any, d.stack.map { "\($0.name)/\($0.unitType):\($0.line)" }, d.variables.map { "\($0.name)=\($0.value)" })
         #expect(d.location?.name == "PELIKAN_DBG_TRG" && d.location?.objectType == .trigger)
         #expect(d.stack.count >= 3)
         try await d.step(.run)           // do punktu przerwania w linii 3 bloku
         #expect(d.location?.isTestBlock == true && d.location?.line == 3)
         try await d.step(.runToException)
-        print("DBG exc", d.location as Any, d.lastReason)
         #expect(d.location?.name == "PELIKAN_DBG_K" && d.stoppedOnException)
         await d.stop()
         #expect(d.state == .finished)
@@ -188,9 +184,6 @@ struct DebuggerStopTests {
         try ws.connections.upsert(def, password: c.password)
         ws.sessions.setMainConnection(def.id)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: def.id))
-        // Rozmiar elementu kolekcji (diagnostyka założenia w DebuggerEngine: najgorszy przypadek VARCHAR2(1000) BYTE).
-        let elem = try? await s.scalar("select length || ' ' || char_used from all_coll_types where owner = 'SYS' and type_name = 'DBMS_DEBUG_VC2COLL'")
-        print("DBMS_DEBUG_VC2COLL element:", (elem ?? nil) ?? "?")
         _ = try await s.execute("""
             create or replace procedure pelikan_dbg_s is
               n number := 0;

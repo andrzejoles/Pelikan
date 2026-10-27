@@ -15,7 +15,6 @@
 #         scripts/signing.sh restore KATALOG   odtworzenie z kopii (np. na nowym Macu)
 #         scripts/signing.sh import plik.p12   tożsamość z pliku .p12 (np. własny certyfikat)
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KC="$HOME/Library/Keychains/pelikan-signing.keychain-db"
 NAME="Pelikan Self-Signed"
 SERVICE="pelikan-signing-keychain"
@@ -126,6 +125,8 @@ case "${1:-}" in
         # Kopia całego pęku (zaszyfrowany swoim hasłem) i hasła — bez eksportu klucza, który
         # wymagałby okna zgody z hasłem pęku.
         DIR="${2:?Podaj katalog kopii}"
+        # 700 tylko na samym katalogu kopii (ostatnim w ścieżce) — wystarczy, pliki mają 600.
+        # shellcheck disable=SC2174
         mkdir -p -m 700 "$DIR"
         ensure >/dev/null
         (umask 077

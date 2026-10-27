@@ -35,6 +35,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", "3.0.0"..<"6.0.0"),
         // Serwer MCP agentów (oficjalne SDK, jak w Bifoldzie — D33); tylko macOS.
         .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", exact: "0.12.1"),
+        // NIOCore importowany wprost przez sterownik thin; już w grafie zależności przez OracleNIO.
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.81.0"),
     ],
     targets: [
         // Dziennik aplikacji (D170): poziomy, widoczność wartości, plik z rotacją, dziennik systemowy — bez zależności.
@@ -42,18 +44,18 @@ let package = Package(
         // Lekser, dzielenie skryptów, klasyfikacja poleceń, zmienne podstawiania — czysty Swift (także Linux).
         .target(name: "PelikanSQL", swiftSettings: strict),
         // Protokoły warstwy bazy (DatabaseSession, wartości, metadane) — bez AppKit, bez sterownika.
-        .target(name: "PelikanDB", dependencies: ["PelikanSQL", "PelikanLog"], swiftSettings: strict),
+        .target(name: "PelikanDB", dependencies: ["PelikanLog"], swiftSettings: strict),
         // ODPI-C (oracle/odpi v26.0.0, UPL/Apache 2.0) — Instant Client ładowany dynamicznie (dlopen).
         .target(
             name: "CODPI",
             exclude: ["LICENSE.txt", "NOTICE.txt", "VENDORED.md"],
-            cSettings: [.unsafeFlags(["-Wno-everything"])],
             linkerSettings: [.linkedLibrary("dl", .when(platforms: [.linux])),
                              .linkedLibrary("pthread", .when(platforms: [.linux]))]),
         // Sterownik „thick”: ODPI-C + Oracle Instant Client.
         .target(name: "PelikanODPI", dependencies: ["PelikanDB", "CODPI"], swiftSettings: strict),
         // Sterownik „thin”: OracleNIO (bez Instant Client).
-        .target(name: "PelikanThin", dependencies: ["PelikanDB", .product(name: "OracleNIO", package: "oracle-nio")], swiftSettings: strict),
+        .target(name: "PelikanThin", dependencies: ["PelikanDB", "PelikanSQL", .product(name: "OracleNIO", package: "oracle-nio"),
+                                                 .product(name: "NIOCore", package: "swift-nio")], swiftSettings: strict),
         // Model stanu aplikacji i rejestr komend — bez AppKit.
         .target(name: "PelikanWorkspace", dependencies: ["PelikanDB", "PelikanSQL", "PelikanLog",
                                                          .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))],
@@ -73,7 +75,9 @@ let package = Package(
 
         .testTarget(name: "PelikanLogTests", dependencies: ["PelikanLog"], swiftSettings: strict),
         .testTarget(name: "PelikanSQLTests", dependencies: ["PelikanSQL"], swiftSettings: strict),
-        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL"], swiftSettings: strict),
+        .testTarget(name: "PelikanDBTests", dependencies: ["PelikanDB", "PelikanODPI", "PelikanThin", "PelikanWorkspace", "PelikanSQL",
+                                                       .product(name: "OracleNIO", package: "oracle-nio"),
+                                                       .product(name: "NIOCore", package: "swift-nio")], swiftSettings: strict),
         .testTarget(name: "PelikanWorkspaceTests", dependencies: ["PelikanWorkspace", "PelikanLog"], swiftSettings: strict),
         .testTarget(name: "PelikanAgentTests", dependencies: ["PelikanAgent", "pelikan-mcp"], swiftSettings: strict),
         .testTarget(name: "PelikanRemoteTests", dependencies: ["PelikanRemote"], swiftSettings: strict),

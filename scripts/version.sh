@@ -6,7 +6,8 @@
 # Od wydania 1.0.0 (D184) — numer semantyczny GŁÓWNY.ŚRODKOWY.OSTATNI:
 # - scalenie PR #BASE_PR daje 1.0.0,
 # - każdy późniejszy scalony PR podnosi numer wg prefiksu tytułu (konwencjonalne prefiksy):
-#   „typ!: …” albo „BREAKING CHANGE” w tytule → GŁÓWNY (tylko na wyraźne słowo właściciela),
+#   „typ!: …” albo tytuł zaczynający się od „BREAKING CHANGE:” → GŁÓWNY (tylko na wyraźne słowo właściciela;
+#   „BREAKING CHANGE” w środku tytułu, np. „docs: explain BREAKING CHANGE policy”, głównej nie podnosi),
 #   „feat…” → ŚRODKOWY (OSTATNI od 0), pozostałe (fix, docs, chore, test…) → OSTATNI.
 # Commity po ostatnim scaleniu (gałąź robocza) nie zmieniają numeru.
 #
@@ -28,23 +29,24 @@ if git -C "$ROOT" rev-parse --verify -q HEAD >/dev/null 2>&1; then
         git -C "$ROOT" rev-list --count HEAD
         exit 0
     fi
-    MERGES="$(git -C "$ROOT" log --first-parent --merges --grep='^Merge pull request #' --format=%H HEAD)"
     BASE="$(git -C "$ROOT" log --first-parent --merges --grep="^Merge pull request #$BASE_PR from " --format=%H HEAD)"
     if [ -n "$BASE" ]; then
         MAJOR=1 MINOR=0 PATCH=0
-        while read -r sha; do
-            [ -n "$sha" ] || continue
-            title="$(git -C "$ROOT" log -1 --format=%b "$sha" | awk 'NF{print; exit}')"
-            if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]] || [[ "$title" == *"BREAKING CHANGE"* ]]; then
+        # Tytuły wszystkich PR po BASE jednym wywołaniem gita (treści commitów rozdzielone znakiem RS, z każdej
+        # pierwsza niepusta linia) — bez osobnego `git log` na każdy scalony PR.
+        while IFS= read -r title; do
+            if [[ "$title" =~ ^[a-z]+(\([^\)]*\))?!: ]] || [[ "$title" == "BREAKING CHANGE:"* ]]; then
                 MAJOR=$((MAJOR + 1)) MINOR=0 PATCH=0
             elif [[ "$title" =~ ^feat(\([^\)]*\))?: ]]; then
                 MINOR=$((MINOR + 1)) PATCH=0
             else
                 PATCH=$((PATCH + 1))
             fi
-        done < <(git -C "$ROOT" log --first-parent --merges --reverse --grep='^Merge pull request #' --format=%H "$BASE..HEAD")
+        done < <(git -C "$ROOT" log --first-parent --merges --reverse --grep='^Merge pull request #' --format='%x1e%b' "$BASE..HEAD" \
+                 | awk -v RS=$'\x1e' 'NR > 1 { n = split($0, l, "\n"); t = ""; for (i = 1; i <= n; i++) if (l[i] ~ /[^[:space:]]/) { t = l[i]; break }; print t }')
         VERSION="$MAJOR.$MINOR.$PATCH"
     else
+        MERGES="$(git -C "$ROOT" log --first-parent --merges --grep='^Merge pull request #' --format=%H HEAD)"
         PRS="$(printf '%s' "$MERGES" | grep -c . || true)"
         # Pierwsza linia bez potoku do head (przy pipefail head potrafi przerwać printf sygnałem SIGPIPE).
         LAST="${MERGES%%$'\n'*}"

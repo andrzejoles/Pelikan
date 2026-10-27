@@ -9,6 +9,9 @@ trap 'rm -rf "$WORK"' EXIT
 mkdir -p "$WORK/scripts"
 cp "$ROOT/scripts/version.sh" "$WORK/scripts/"
 cd "$WORK"
+# Bez globalnej i systemowej konfiguracji gita: commit.gpgsign, core.hooksPath czy szablony właściciela albo CI
+# nie mogą zatrzymać testu (pytanie o klucz) ani uruchomić obcych hooków.
+export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 git init -q -b main
 git config user.email test@example.invalid
 git config user.name test
@@ -47,10 +50,16 @@ merge $((BASE_PR + 4)) "fix: crash"
 expect 1.1.1 "fix po feat"
 merge $((BASE_PR + 5)) "feat!: new file format"
 expect 2.0.0 "typ! → główna cyfra"
-merge $((BASE_PR + 6)) "refactor: BREAKING CHANGE in settings"
-expect 3.0.0 "BREAKING CHANGE → główna cyfra"
-merge $((BASE_PR + 7)) "feature flag cleanup"
-expect 3.0.1 "tytuł bez prefiksu feat → ostatnia cyfra"
+merge $((BASE_PR + 6)) "docs: explain BREAKING CHANGE policy"
+expect 2.0.1 "BREAKING CHANGE w środku tytułu → ostatnia cyfra"
+merge $((BASE_PR + 7)) "BREAKING CHANGE: settings format"
+expect 3.0.0 "tytuł od BREAKING CHANGE: → główna cyfra"
+merge $((BASE_PR + 8)) "fix(grid)!: drop old export API"
+expect 4.0.0 "typ(zakres)! → główna cyfra"
+merge $((BASE_PR + 9)) "feature flag cleanup"
+expect 4.0.1 "tytuł bez prefiksu feat → ostatnia cyfra"
+merge $((BASE_PR + 10)) ""
+expect 4.0.2 "scalenie bez tytułu PR → ostatnia cyfra"
 
 [ "$failures" = 0 ] || { echo "Błędy: $failures" >&2; exit 1; }
 echo "Numeracja wersji: wszystkie przypadki poprawne"

@@ -1,0 +1,2 @@
+# Polskie cudzysłowy „…” w tekstach skryptów są celowe (SC1111 ostrzega przed cudzysłowami Unicode).
+disable=SC1111
