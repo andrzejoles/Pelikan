@@ -72,7 +72,14 @@ public final class KeychainSecretStore: SecretStore {
     }
 
     public func setPassword(_ password: String, for account: String) throws {
-        try deletePassword(for: account)
+        // Istniejący wpis — zmiana hasła w miejscu (usunięcie przed dodaniem zostawiało połączenie bez hasła, gdy
+        // dodanie się nie udało).
+        let updated = SecItemUpdate(baseQuery(account) as CFDictionary, [kSecValueData as String: Data(password.utf8)] as CFDictionary)
+        if updated == errSecSuccess {
+            Log.keychain.info("Zapisano hasło w Pęku kluczy")
+            return
+        }
+        guard updated == errSecItemNotFound else { throw failure("zapis", updated) }
         var q = baseQuery(account)
         q[kSecValueData as String] = Data(password.utf8)
         q[kSecAttrLabel as String] = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? service

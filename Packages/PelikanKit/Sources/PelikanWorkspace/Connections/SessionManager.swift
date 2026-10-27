@@ -121,10 +121,13 @@ public final class SessionManager {
         guard minutes > 0 else { return 0 }
         var closed = 0
         for key in busy where sessions[key] != nil { lastActivity[key] = now }
+        let isIdle = { (key: SessionKey) in now.timeIntervalSince(self.lastActivity[key] ?? .distantPast) > Double(minutes * 60) }
         for (key, s) in sessions {
-            guard case .document = key.purpose, now.timeIntervalSince(lastActivity[key] ?? .distantPast) > Double(minutes * 60) else { continue }
+            guard case .document = key.purpose, isIdle(key) else { continue }
             // Zamykamy tylko sesję, która odpowiada i nie ma otwartej transakcji (decyzję o transakcji podejmuje użytkownik).
             let tx: String?? = try? await s.scalar("select dbms_transaction.local_transaction_id from dual")
+            // W czasie zapytania okno mogło zacząć wykonanie (użycie sesji) albo sesja mogła zostać zastąpiona.
+            guard sessions[key] === s, isIdle(key) else { continue }
             if case .some(.none) = tx {
                 await close(key)
                 closed += 1
@@ -219,6 +222,10 @@ public final class SessionManager {
         if def.savePassword { try store.rememberPassword(new, for: id) }
         return true
     }
+
+    /// Hasło bazy podane w tym uruchomieniu (logowanie bez zapamiętania, zmiana albo wygaśnięcie hasła) — eksport
+    /// z hasłami (D186); nil — brak.
+    public func enteredPassword(for id: UUID) -> String? { sessionPasswords[id] }
 
     /// Klucze otwartych sesji o danym przeznaczeniu (np. wszystkie sesje jednej sesji agenta).
     public func keys(purpose: SessionPurpose) -> [SessionKey] { sessions.keys.filter { $0.purpose == purpose } }

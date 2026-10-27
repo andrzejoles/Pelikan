@@ -13,6 +13,33 @@ final class LostMainDriver: DatabaseDriver, @unchecked Sendable {
     }
 }
 
+/// Sesja, której zapytanie wywołuje `onQuery` (np. okno zaczyna wykonanie w trakcie sprawdzania bezczynności).
+final class HookSession: DatabaseSession, @unchecked Sendable {
+    let info = SessionInfo(driver: .instantClient, driverVersion: "fake", clientVersion: "0", server: ServerVersion(major: 23),
+                           capabilities: [], currentSchema: "U", sessionUser: "U")
+    var onQuery: (@Sendable () async -> Void)?
+    func execute(_ sql: String, binds: [BindVariable], options: ExecuteOptions) async throws -> ExecutionResult {
+        await onQuery?()
+        return ExecutionResult(kind: .other)
+    }
+    func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch { RowBatch(rows: [], hasMore: false) }
+    func closeResultSet(_ resultSet: ResultSetID) async {}
+    func commit() async throws {}
+    func rollback() async throws {}
+    func breakExecution() {}
+    func ping() async throws {}
+    func setTags(_ tags: SessionTags) async throws {}
+    func close() async {}
+}
+
+final class HookDriver: DatabaseDriver, @unchecked Sendable {
+    let kind = DriverKind.instantClient
+    let capabilities: DriverCapabilities = []
+    let session = HookSession()
+    func availability() -> Result<Void, DatabaseError> { .success(()) }
+    func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession { session }
+}
+
 @MainActor
 @Suite("Sesje: sprawdzanie połączeń, bezczynne sesje, hasło tunelu (przegląd 3)")
 struct SessionCheckTests {
@@ -84,6 +111,46 @@ struct SessionCheckTests {
         let doc = ws.newDocument(.sql)
         doc.isExecuting = true
         #expect(ws.busySessionKeys == [try #require(ws.sessionKey(for: doc))])
+    }
+
+    @Test("Bezczynne sesje: okno, które zaczęło wykonanie w trakcie sprawdzania transakcji, zachowuje sesję")
+    func idleRecheckAfterQuery() async throws {
+        let driver = HookDriver()
+        let (ws, def) = try workspace(driver)
+        let key = SessionKey(connectionID: def.id, purpose: .document(DocumentID()))
+        _ = try await ws.sessions.session(key)
+        let later = Date().addingTimeInterval(3600)
+        let sessions = ws.sessions
+        driver.session.onQuery = { await MainActor.run { sessions.touch(key, at: later) } }
+        #expect(await ws.sessions.closeIdleSessions(olderThan: 15, now: later) == 0)
+        #expect(ws.sessions.existingSession(key) != nil)
+        driver.session.onQuery = nil
+        #expect(await ws.sessions.closeIdleSessions(olderThan: 15, now: later.addingTimeInterval(3600)) == 1)
+    }
+
+    @Test("Okno wykonujące polecenie: zmiana połączenia okna i rozłączenie odmówione; ponowne łączenie pomija otwarty kursor")
+    func busyWindowsKeepSessions() async throws {
+        let (ws, def) = try workspace(FakeDriver())
+        try ws.connections.upsert(ConnectionDefinition(name: "dev_y", target: ConnectionTarget(user: "u", connectString: "db2")), password: "good")
+        let doc = ws.newDocument(.sql)
+        _ = try await ws.session(for: doc)
+        let key = try #require(ws.sessionKey(for: doc))
+        doc.isExecuting = true
+        await #expect(throws: CommandError.self) { try await ws.invoke("session.windowConnection", CommandArguments(["connection": "dev_y"])) }
+        #expect(doc.connectionID == nil && ws.sessions.existingSession(key) != nil)
+        await #expect(throws: CommandError.self) { try await ws.invoke("connection.disconnect", CommandArguments(["connection": .string(def.id.uuidString)])) }
+        #expect(ws.sessions.existingSession(key) != nil)
+        doc.isExecuting = false
+        // Otwarty kursor wyniku (dociąganie wierszy) — sesja okna nie jest zamykana.
+        let grid = ResultGridModel(columns: [], resultSet: ResultSetID(1), session: FakeSession(), sql: "select 1 from dual", format: ValueFormat())
+        doc.results = [ResultTab(title: "t", statementRange: 0..<0, grid: grid)]
+        let reconnect = CommandArguments(["connection": .string(def.id.uuidString)])
+        #expect(try await ws.invoke("connection.reconnectWindows", reconnect).value == .int(0))
+        #expect(ws.sessions.existingSession(key) != nil)
+        doc.results.removeAll()
+        #expect(try await ws.invoke("connection.reconnectWindows", reconnect).value == .int(1))
+        _ = try await ws.invoke("connection.disconnect", reconnect)
+        #expect(ws.sessions.openSessionCount == 0)
     }
 
     @Test("Utracona sesja: SID, ślad i czas użycia zapomniane (zakończenie sesji nie wskaże cudzej sesji)")

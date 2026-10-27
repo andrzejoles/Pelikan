@@ -41,3 +41,41 @@ struct SSHTunnelUnitTests {
         #expect(SSHTunnelManager.freePort().map { $0 > 1024 } == true)
     }
 }
+
+@MainActor
+@Suite("Tunel SSH — atrapa ssh")
+struct SSHTunnelStderrTests {
+    @Test("Po zestawieniu tunelu stderr ssh jest opróżniany — ponad 64 KiB komunikatów nie zatrzymuje ssh")
+    func stderrDrained() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-ssh-atrapa-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // Atrapa ssh: nasłuch na porcie z -L, po pierwszym połączeniu 256 KiB na stderr, potem plik znacznika.
+        let script = dir.appendingPathComponent("ssh")
+        let marker = dir.appendingPathComponent("koniec")
+        try Data("""
+            #!/usr/bin/env perl
+            use IO::Socket::INET;
+            my ($port) = map { /^127\\.0\\.0\\.1:(\\d+):/ ? $1 : () } @ARGV;
+            my ($marker) = map { /^Marker=(.*)$/ ? $1 : () } @ARGV;
+            my $srv = IO::Socket::INET->new(LocalAddr => "127.0.0.1", LocalPort => $port, Listen => 5, ReuseAddr => 1) or die "listen";
+            my $c = $srv->accept; close $c;
+            print STDERR ("channel 1: open failed: connect failed" . ("." x 985) . "\\n") for 1..256;
+            open my $m, ">", $marker; close $m;
+            sleep 30;
+
+            """.utf8).write(to: script)
+        chmod(script.path, 0o755)
+        let manager = SSHTunnelManager()
+        manager.sshPath = script.path
+        manager.extraOptions = ["-o", "Marker=\(marker.path)"]
+        var def = ConnectionDefinition(name: "dev_atrapa", target: ConnectionTarget(user: "u", connectString: "db.example.invalid:1521/s"))
+        def.sshTunnel = SSHTunnel(host: "bastion", user: "ops")
+        _ = try await manager.open(for: def)
+        defer { manager.closeAll() }
+        let deadline = ContinuousClock.now + .seconds(15)
+        while !FileManager.default.fileExists(atPath: marker.path), ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(50)) }
+        #expect(FileManager.default.fileExists(atPath: marker.path), "ssh zablokowany na zapisie stderr")
+        #expect(manager.isOpen(def.id))
+    }
+}
