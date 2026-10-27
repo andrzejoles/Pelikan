@@ -276,7 +276,7 @@ public struct FileWindowState: Sendable, Codable, Equatable {
 }
 
 /// Magazyn stanów okien w katalogu danych (`WindowState/<skrót ścieżki>.json`, uprawnienia 0600).
-public final class FileStateStore: @unchecked Sendable {
+public final class FileStateStore: Sendable {
     let directory: URL?
 
     public init(directory: URL?) { self.directory = directory }

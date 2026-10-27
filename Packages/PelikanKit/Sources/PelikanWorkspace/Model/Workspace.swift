@@ -22,6 +22,9 @@ public protocol UIServices: AnyObject {
     func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]?
     /// Schowek: tekst i opcjonalnie HTML (wklejanie do Excela/Numbers z formatowaniem).
     func copyToClipboard(_ text: String, html: String?)
+    /// Zakończenie edycji komórki siatki (wpisana, niezatwierdzona Enterem wartość trafia do modelu) — przed
+    /// zatwierdzaniem, kopiowaniem SQL i anulowaniem zmian siatki (APP2-04).
+    func commitPendingEdits()
     /// Druk dokumentu HTML (raport, PD-REP-001).
     func printHTML(_ html: String, title: String)
     /// Okno zapisu pliku; zwraca false przy anulowaniu.
@@ -199,6 +202,7 @@ extension UIServices {
     public func showClipboardHistory() {}
     public func showTodoItems() {}
     public func clipboardText() -> String? { nil }
+    public func commitPendingEdits() {}
     public func showFindObjects(_ criteria: DatabaseSearchCriteria) {}
     public func showCompileInvalid() {}
     public func showDebugger(_ debugger: DebuggerEngine, document: Document) {}

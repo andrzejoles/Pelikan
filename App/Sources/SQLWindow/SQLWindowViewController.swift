@@ -16,6 +16,8 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
     private let executingIndicator = NSProgressIndicator()
     private var tokens: [ObservationToken] = []
     private var gridViews: [UUID: NSView] = [:]
+    /// Widok karty Output z pokazanymi liniami i czcionką — dopisywanie zamiast przebudowy (APP2-20).
+    private var outputCache: (view: NSView, lines: [String], font: NSFont)?
     private var showingOutput = false
     private var showingStatistics = false
     private var resultsCollapsed = true
@@ -156,21 +158,28 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
                 self?.refreshResults()
             })
         }
-        resultContainer.subviews.forEach { $0.removeFromSuperview() }
         let alive = Set(results.map(\.id))
         gridViews = gridViews.filter { alive.contains($0.key) }
+        let shown: NSView?
         if showingStatistics, !stats.isEmpty {
             // Ostatnie wykonanie i suma okna, statystyki wybrane w Preferencjach (PD-OPT-004).
             let rows = Profiler.rows(last: stats, totals: document.statisticTotals, selected: workspace.settings.selectedStatistics)
             let width = max(rows.map(\.name.count).max() ?? 0, 10)
             let header = L10n.tr("Statystyka").padding(toLength: width, withPad: " ", startingAt: 0) + "  " + L10n.tr("Ostatnie") + "  " + L10n.tr("Suma")
-            install(textView(([header] + rows.map { $0.name.padding(toLength: width, withPad: " ", startingAt: 0) + "  " + String(format: "%.0f", $0.last) + "  " + String(format: "%.0f", $0.total) })
-                .joined(separator: "\n"), isError: false))
+            shown = textView(([header] + rows.map { $0.name.padding(toLength: width, withPad: " ", startingAt: 0) + "  " + String(format: "%.0f", $0.last) + "  " + String(format: "%.0f", $0.total) })
+                .joined(separator: "\n"), isError: false)
         } else if showingOutput || results.isEmpty {
-            install(outputView(output))
+            shown = outputView(output)
         } else if let r = results.first(where: { $0.id == active }) ?? results.first {
-            install(view(for: r))
+            shown = view(for: r)
+        } else {
+            shown = nil
         }
+        // Widok już pokazany zostaje w kontenerze: przeniesienie zabierało fokus siatce (i edytowanej komórce)
+        // i przewijało Output na początek.
+        if let shown, shown.superview === resultContainer, resultContainer.subviews.count == 1 { return }
+        resultContainer.subviews.forEach { $0.removeFromSuperview() }
+        if let shown { install(shown) }
     }
 
     private func select(_ r: ResultTab) {
@@ -207,7 +216,20 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
     }
 
     private func outputView(_ lines: [String]) -> NSView {
-        textView(lines.isEmpty ? L10n.tr("Brak wyjścia DBMS_OUTPUT") : lines.joined(separator: "\n"), isError: false, placeholder: lines.isEmpty)
+        // Wyjście tylko przybywa (albo jest czyszczone przed wykonaniem): nowe linie dopisywane do pokazanego widoku.
+        let font = InterfaceFonts.shared.code
+        if let c = outputCache, c.font == font, c.lines.isEmpty == lines.isEmpty, lines.starts(with: c.lines),
+           let tv = (c.view as? NSScrollView)?.documentView as? NSTextView {
+            if lines.count > c.lines.count {
+                let added = "\n" + lines[c.lines.count...].joined(separator: "\n")
+                tv.textStorage?.append(NSAttributedString(string: added, attributes: [.font: font, .foregroundColor: NSColor.labelColor]))
+            }
+            outputCache = (c.view, lines, font)
+            return c.view
+        }
+        let v = textView(lines.isEmpty ? L10n.tr("Brak wyjścia DBMS_OUTPUT") : lines.joined(separator: "\n"), isError: false, placeholder: lines.isEmpty)
+        outputCache = (v, lines, font)
+        return v
     }
 
     private func textView(_ text: String, isError: Bool, placeholder: Bool = false) -> NSView {

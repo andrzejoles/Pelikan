@@ -15,6 +15,13 @@ public enum GridCommands {
         return (tab, grid)
     }
 
+    /// Zmiany siatki do zatwierdzenia — także wartość wpisywana w otwartym edytorze komórki (trafi do modelu po
+    /// `commitPendingEdits`).
+    @MainActor
+    static func hasPendingChanges(_ ws: Workspace) -> Bool {
+        activeGrid(ws).map { $0.1.edit.hasChanges || $0.1.cellEditorOpen } ?? false
+    }
+
     /// Zaznaczenie (albo wszystkie pobrane wiersze) w kolejności widoku.
     @MainActor
     static func selection(_ ws: Workspace) -> ExportData? {
@@ -191,8 +198,9 @@ public enum GridCommands {
             Command(CommandDescriptor(id: "grid.post", title: L10n.tr("Zatwierdź zmiany (Post)"), category: .session, submenu: L10n.tr("Wynik"),
                                       mac: ["cmd+alt+s"], agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Zapisuje zmiany siatki w bazie (UPDATE/INSERT/DELETE po ROWID) — bez COMMIT."), feature: "PD-GRID-017"),
-                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
-                guard let (_, grid) = activeGrid(ctx.workspace), let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
+                    validate: { ws in hasPendingChanges(ws) }) { ctx in
+                ctx.workspace.ui?.commitPendingEdits()
+                guard let (_, grid) = activeGrid(ctx.workspace), grid.edit.hasChanges, let doc = SQLCommands.sqlDocument(ctx.workspace) else { return .ok }
                 try await ctx.workspace.guardModification(["update t set x = 1"], connectionID: ctx.workspace.effectiveConnection(of: doc))
                 do {
                     let n = try await grid.postChanges()
@@ -209,15 +217,17 @@ public enum GridCommands {
             },
             Command(CommandDescriptor(id: "grid.cancelChanges", title: L10n.tr("Anuluj zmiany"), category: .session, submenu: L10n.tr("Wynik"),
                                       agent: .none, effect: .uiState, summary: L10n.tr("Przywraca wartości sprzed edycji."), feature: "PD-GRID-017"),
-                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
+                    validate: { ws in hasPendingChanges(ws) }) { ctx in
+                ctx.workspace.ui?.commitPendingEdits()
                 activeGrid(ctx.workspace)?.1.cancelChanges()
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.copyChangesSQL", title: L10n.tr("Kopiuj SQL zmian"), category: .session, submenu: L10n.tr("Wynik"),
                                       agent: .read, effect: .none,
                                       summary: L10n.tr("Kopiuje polecenia, które wykona Zatwierdź zmiany (podgląd przed zapisem)."), feature: "PD-GRID-020"),
-                    validate: { ws in activeGrid(ws)?.1.edit.hasChanges ?? false }) { ctx in
-                guard let (_, grid) = activeGrid(ctx.workspace) else { return .ok }
+                    validate: { ws in hasPendingChanges(ws) }) { ctx in
+                ctx.workspace.ui?.commitPendingEdits()
+                guard let (_, grid) = activeGrid(ctx.workspace), grid.edit.hasChanges else { return .ok }
                 let sql = grid.changesSQL()
                 ctx.workspace.ui?.copyToClipboard(sql, html: nil)
                 return CommandResult(message: sql)

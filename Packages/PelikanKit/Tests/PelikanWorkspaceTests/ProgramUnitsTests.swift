@@ -26,6 +26,18 @@ struct ProgramUnitsTests {
         #expect(ProgramCompiler.offset(line: 3, column: 5, in: text) == (text as NSString).range(of: "create or replace editionable").location + 4)
     }
 
+    @Test("Kolumny w znakach jak Oracle, nie w UTF-16: emoji spoza BMP to jeden znak (APP2-23)")
+    func columnsInCharacters() {
+        let text = "a\n-- 😀 x := 1;\nb"
+        let ns = text as NSString
+        // Kolumna 6 (Oracle) wskazuje „x”: przed nim „-- 😀 ” = 5 znaków, 6 jednostek UTF-16.
+        #expect(ProgramCompiler.offset(line: 2, column: 6, in: text) == ns.range(of: "x").location)
+        #expect(ProgramCompiler.offset(line: 2, column: 99, in: text) == ns.range(of: ";").location + 1)
+        #expect(TextEditing.characterCount(ns, range: NSRange(location: 2, length: ns.range(of: "x").location - 2)) == 5)
+        #expect(TextEditing.characterCount(ns, range: NSRange(location: 0, length: ns.length)) == ns.length - 1)
+        #expect(TextEditing.characterCount(ns, range: NSRange(location: 0, length: 0)) == 0)
+    }
+
     @Test("JAVA SOURCE z ALL_SOURCE (sam kod Javy): nagłówek CREATE … JAVA SOURCE NAMED, jednostka rozpoznana, właściciel (R6-10)")
     func javaSourceHeader() {
         let java = "public class Hello {\n  public static String hi() { return \"hi\"; }\n}"

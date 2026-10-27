@@ -68,6 +68,27 @@ public enum CodeFolding {
         })
     }
 
+    /// Przesunięcie obszarów po edycji (`edited` — zakres w nowym tekście, `delta` — zmiana długości), zanim zostaną
+    /// przeliczone w tle: zwinięcia poniżej miejsca pisania nie rozwijają się na chwilę (APP2-12). Obszar, którego
+    /// początek był w zmienionym fragmencie, znika — jak klucz zwinięcia w `shift(_:from:to:)`.
+    public static func shift(_ regions: [FoldRegion], edited: Range<Int>, delta: Int) -> [FoldRegion] {
+        let oldStart = edited.lowerBound, oldEnd = edited.upperBound - delta
+        // Koniec ukrytego zakresu to początek następnej linii: tekst wpisany właśnie tam zostaje widoczny.
+        func map(_ p: Int, upper: Bool) -> Int {
+            if p < oldStart || (upper && p == oldStart) { return p }
+            if p >= oldEnd { return p + delta }
+            return upper ? edited.upperBound : edited.lowerBound
+        }
+        return regions.compactMap { r in
+            guard r.start < oldStart || r.start >= oldEnd else { return nil }
+            var out = r
+            out.start = map(r.start, upper: false)
+            let lower = map(r.hidden.lowerBound, upper: false)
+            out.hidden = lower..<max(lower, map(r.hidden.upperBound, upper: true))
+            return out
+        }
+    }
+
     /// Podgląd zwiniętego obszaru (UG 25.17): ukryte linie bez wspólnego wcięcia, najwyżej `maxLines` (dalej „…”).
     public static func preview(_ region: FoldRegion, in text: String, maxLines: Int = 20) -> String {
         let ns = text as NSString

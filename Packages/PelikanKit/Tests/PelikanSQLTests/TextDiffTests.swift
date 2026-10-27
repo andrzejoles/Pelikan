@@ -1,5 +1,5 @@
 import Foundation
-import PelikanSQL
+@testable import PelikanSQL
 import Testing
 
 @Suite("Porównanie tekstów")
@@ -72,5 +72,16 @@ struct TextDiffTests {
         let t = clock.measure { changed = TextDiff.rows(a.joined(separator: "\n"), b.joined(separator: "\n")).filter { $0.kind == .changed }.count }
         #expect(changed == 50)
         #expect(t < .seconds(10), "\(t)")
+    }
+
+    @Test("Różnica w linii na granicach znaków: emoji z modyfikatorem, akcent łączący, surogaty (APP2-02)")
+    func intralineGraphemes() {
+        // „x👍” ↔ „x👍🏽”: zmieniony cały znak 👍 → 👍🏽, nie sam modyfikator.
+        #expect(TextDiff.intraline("x👍", "x👍🏽") == (1..<3, 1..<5))
+        // „cafe” ↔ „café” z rozłożonym é: e ↔ e + U+0301.
+        #expect(TextDiff.intraline("cafe", "cafe\u{301}") == (3..<4, 3..<5))
+        // „a😀b” ↔ „a😃b”: wspólny wysoki surogat nie należy do wspólnego początku.
+        #expect(TextDiff.intraline("a😀b", "a😃b") == (1..<3, 1..<3))
+        #expect(TextDiff.intraline("abc", "abc") == (3..<3, 3..<3))
     }
 }

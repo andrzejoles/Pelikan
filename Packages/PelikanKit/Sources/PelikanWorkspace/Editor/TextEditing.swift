@@ -200,6 +200,25 @@ public enum TextEditing {
         }
         return i
     }
+
+    /// Liczba znaków w zakresie UTF-16 tak, jak liczy kolumny Oracle (skalary Unicode): emoji spoza BMP to jeden
+    /// znak, nie dwie jednostki UTF-16 (kolumna na pasku stanu, długość zaznaczenia).
+    public static func characterCount(_ text: NSString, range: NSRange) -> Int {
+        guard range.length > 0 else { return 0 }
+        var buffer = [unichar](repeating: 0, count: range.length)
+        text.getCharacters(&buffer, range: range)
+        return buffer.reduce(0) { UTF16.isTrailSurrogate($1) ? $0 : $0 + 1 }
+    }
+
+    /// Pozycja UTF-16 o `characters` znaków (skalarów Unicode) za `start`, nie dalej niż `limit`.
+    public static func utf16Offset(_ text: NSString, from start: Int, characters: Int, limit: Int) -> Int {
+        var i = start, n = 0
+        while n < characters, i < limit {
+            i += UTF16.isLeadSurrogate(text.character(at: i)) && i + 1 < limit ? 2 : 1
+            n += 1
+        }
+        return i
+    }
 }
 
 /// Znajdź i zamień (UG 25.3): tekst albo wyrażenie regularne (z `$1`, `\t`, `\n` w zamianie), całe słowa, wielkość liter,
