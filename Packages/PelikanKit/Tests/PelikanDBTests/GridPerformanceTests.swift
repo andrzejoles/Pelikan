@@ -61,15 +61,19 @@ struct GridPerformanceTests {
         #expect(all < .seconds(15))
 
         // Rysowanie widocznych komórek: losowy dostęp do tekstu komórek (ekran ≈ 50 wierszy × 4 kolumny).
+        // Mediana z 7 pomiarów — pojedynczy (ok. 2,5 ms przy progu 4 ms) przekraczał próg przy obciążeniu w tle.
         var rng = SystemRandomNumberGenerator()
         var chars = 0
-        let cells = clock.measure {
-            for _ in 0..<200 {
-                let r = Int.random(in: 0..<1_000_000, using: &rng)
-                for c in 0..<4 { chars += grid.text(row: r, column: c).utf8.count }
+        let samples = (0..<7).map { _ in
+            clock.measure {
+                for _ in 0..<200 {
+                    let r = Int.random(in: 0..<1_000_000, using: &rng)
+                    for c in 0..<4 { chars += grid.text(row: r, column: c).utf8.count }
+                }
             }
         }
-        Self.report("Siatka: tekst 200 komórek z dowolnego miejsca (jeden ekran)", String(format: "%.2f ms", Self.ms(cells)), "< 4 ms", cells < .milliseconds(4))
+        let cells = samples.sorted()[samples.count / 2]
+        Self.report("Siatka: tekst 200 komórek z dowolnego miejsca (jeden ekran, mediana z 7)", String(format: "%.2f ms", Self.ms(cells)), "< 4 ms", cells < .milliseconds(4))
         #expect(chars > 0)
         #expect(cells < .milliseconds(4))
 
