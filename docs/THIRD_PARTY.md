@@ -7,8 +7,13 @@
 | OracleNIO (lovetodream/oracle-nio) | commit 7cda9e0 z main (po 1.0.0-rc.4) | Apache 2.0 | sterownik thin | ADR 0001, D20 |
 | SwiftNIO, swift-nio-ssl, swift-nio-transport-services, swift-crypto, swift-asn1, swift-log, swift-atomics, swift-collections, swift-async-algorithms, swift-system, swift-service-lifecycle, swift-distributed-tracing, swift-syntax (zależności OracleNIO; swift-crypto także bezpośrednio — SHA-256 na Linuksie) | wg Package.resolved (swift-crypto 5.x) | Apache 2.0 | sterownik thin | D20 |
 | SwiftTerm | 1.99.1 | MIT | terminal panelu agenta | PROMPT §4.1 |
+| swift-png, h (rarestype/h), swift-argument-parser (zależności SwiftTerm) | wg Package.resolved projektu Xcode | Apache 2.0 | w grafie pakietów SwiftTerm | PROMPT §4.1 |
 | Sparkle | 2.10.1 | MIT | aktualizacje | PROMPT §4.1 |
 | swift-sdk MCP (modelcontextprotocol/swift-sdk) | 0.12.1 (najnowsze; jak Bifold D17) | MIT | serwer MCP w aplikacji | Bifold D17 |
+| eventsource (mattt/eventsource; zależność swift-sdk MCP) | wg Package.resolved projektu Xcode | MIT | w grafie pakietów swift-sdk | Bifold D17 |
+
+Teksty licencji w aplikacji (`Licencje zewnętrzne.txt`) składa `scripts/third-party-licenses.sh` — ODPI-C i każdy pakiet
+z Package.resolved projektu Xcode z wersją i rewizją; brak checkoutu albo pliku licencji przerywa budowanie instalatora.
 
 Narzędzia deweloperskie (nie trafiają do aplikacji): XcodeGen, Colima + Docker CLI (MIT/Apache), obraz
 `gvenzl/oracle-free` (Oracle Database Free — licencja Oracle Free Use; tylko lokalna baza testowa), utPLSQL v3.2.3
