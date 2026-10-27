@@ -49,11 +49,8 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
         tabs.action = #selector(tabChanged)
 
         console.isEditable = false
-        console.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         console.textContainerInset = NSSize(width: 6, height: 6)
         console.setAccessibilityLabel(L10n.tr("Wyjście Command Window"))
-        promptLabel.font = .monospacedSystemFont(ofSize: 12, weight: .semibold)
-        input.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
         input.placeholderString = L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL (blok kończy „/”)")
         input.delegate = self
         input.target = self
@@ -119,6 +116,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
         tabChanged()
         tokens.append(trackChanges { [weak self] in self?.renderConsole() })
         tokens.append(trackChanges { [weak self] in self?.refreshOptions() })
+        tokens.append(trackChanges { [weak self] in self?.applyCodeFont() })
     }
 
     @objc private func tabChanged() {
@@ -135,8 +133,25 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate {
 
     // MARK: Konsola
 
+    /// Czcionka edytora z Preferencji (R3-12): konsola, linia poleceń i znak zachęty — także już wypisane linie.
+    private func applyCodeFont() {
+        let font = InterfaceFonts.shared.editor, bold = Self.bold(font)
+        console.font = font
+        input.font = font
+        promptLabel.font = bold
+        guard let storage = console.textStorage, storage.length > 0 else { return }
+        storage.beginEditing()
+        storage.enumerateAttribute(.font, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+            let isBold = (value as? NSFont)?.fontDescriptor.symbolicTraits.contains(.bold) == true
+            storage.addAttribute(.font, value: isBold ? bold : font, range: range)
+        }
+        storage.endEditing()
+    }
+
+    private static func bold(_ font: NSFont) -> NSFont { NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask) }
+
     private func attributes(_ kind: ConsoleLine.Kind) -> [NSAttributedString.Key: Any] {
-        let font = NSFont.monospacedSystemFont(ofSize: 12, weight: kind == .prompt ? .semibold : .regular)
+        let font = kind == .prompt ? Self.bold(InterfaceFonts.shared.editor) : InterfaceFonts.shared.editor
         let color: NSColor = switch kind {
         case .error: .systemRed
         case .echo: .secondaryLabelColor

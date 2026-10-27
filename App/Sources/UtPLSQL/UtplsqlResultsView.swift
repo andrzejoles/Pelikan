@@ -39,7 +39,7 @@ struct UtplsqlResultsView: View {
             if diff.isEmpty { Text(L10n.tr("Bez zmian stanów testów.")).foregroundStyle(.secondary) }
             List(diff, id: \.path) { d in
                 HStack {
-                    Text(d.path).font(.system(size: 12, design: .monospaced)).lineLimit(1).truncationMode(.head)
+                    Text(d.path).font(.code).lineLimit(1).truncationMode(.head)
                     Spacer()
                     Text(d.before?.displayName ?? L10n.tr("nowy")).foregroundStyle(.secondary)
                     Image(systemName: "arrow.right")
@@ -145,7 +145,7 @@ struct UtplsqlResultsView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.uiSecondary.bold()).foregroundStyle(.secondary)
                 ForEach(Array(lines.enumerated()), id: \.offset) { i, l in
-                    Text(l).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                    Text(l).font(.code).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(i < other.count && other[i] == l ? Color.clear : Color.red.opacity(0.12))
                 }
@@ -165,13 +165,13 @@ struct UtplsqlResultsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 if let n = selected {
                     Text(n.title).font(.uiHeadline)
-                    Text(n.id).font(.subheadline.monospaced()).foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(n.id).font(.code).foregroundStyle(.secondary).textSelection(.enabled)
                     Text(n.status.displayName).foregroundStyle(color(n.status))
                     if !n.disabledReason.isEmpty { Text(L10n.tr("Wyłączony: \(n.disabledReason)")).foregroundStyle(.secondary) }
                     ForEach(Array(n.expectations.enumerated()), id: \.offset) { _, e in
                         VStack(alignment: .leading, spacing: 4) {
                             if !e.description.isEmpty { Text(e.description).bold() }
-                            Text(e.message).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            Text(e.message).font(.code).textSelection(.enabled)
                             if let c = e.comparison { comparison(c) }
                             if !e.caller.isEmpty { stackText(e.caller, node: n) }
                         }
@@ -184,15 +184,15 @@ struct UtplsqlResultsView: View {
                     }
                     if !n.serverOutput.isEmpty {
                         Text("DBMS_OUTPUT").font(.uiSecondary.bold())
-                        Text(n.serverOutput).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                        Text(n.serverOutput).font(.code).textSelection(.enabled)
                     }
                     if !n.warnings.isEmpty {
                         Text(L10n.tr("Ostrzeżenia")).font(.uiSecondary.bold())
-                        Text(n.warnings).font(.system(size: 12, design: .monospaced))
+                        Text(n.warnings).font(.code)
                     }
                 } else {
                     Text(L10n.tr("Wybierz test, żeby zobaczyć szczegóły.")).foregroundStyle(.secondary)
-                    if !run.errorStack.isEmpty { Text(run.errorStack).font(.system(size: 12, design: .monospaced)) }
+                    if !run.errorStack.isEmpty { Text(run.errorStack).font(.code) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -205,9 +205,9 @@ struct UtplsqlResultsView: View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { _, line in
                 if let frame = TestRunner.errorStack("ORA-06512: at " + line.replacingOccurrences(of: "ORA-06512: at ", with: "")).first, !frame.unit.isEmpty {
-                    Button(line) { openFrame(frame) }.buttonStyle(.link).font(.system(size: 12, design: .monospaced))
+                    Button(line) { openFrame(frame) }.buttonStyle(.link).font(.code)
                 } else {
-                    Text(line).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                    Text(line).font(.code).textSelection(.enabled)
                 }
             }
         }

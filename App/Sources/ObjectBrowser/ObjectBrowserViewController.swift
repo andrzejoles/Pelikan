@@ -60,7 +60,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
         outline.style = .plain
         outline.indentationPerLevel = 16
-        outline.rowSizeStyle = .small
+        // Wysokość wiersza z czcionki drzewa (przy stylu innym niż `.custom` AppKit ignoruje `rowHeight`).
+        outline.rowSizeStyle = .custom
         outline.dataSource = self
         outline.delegate = self
         outline.target = self
@@ -130,7 +131,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     var browserFont: NSFont {
         let s = workspace.settings, ui = InterfaceFonts.shared
         return AppFonts.font(family: s.browserFontName.isEmpty ? ui.family : s.browserFontName,
-                             size: s.browserFontSize > 0 ? s.browserFontSize : max(9, ui.size - 1), weight: s.browserFontWeight)
+                             size: s.browserFontSize > 0 ? s.browserFontSize : AppFonts.reduced(ui.size, by: 1), weight: s.browserFontWeight)
     }
 
     private func modelChanged() {
@@ -587,6 +588,9 @@ final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NS
         }
         table.usesAlternatingRowBackgroundColors = true
         table.allowsMultipleSelection = true
+        // Wysokość wiersza z czcionki interfejsu i kodu (D178).
+        table.rowSizeStyle = .custom
+        table.rowHeight = max(AppFonts.rowHeight(for: InterfaceFonts.shared.body), AppFonts.rowHeight(for: InterfaceFonts.shared.code)) - 4
         table.dataSource = self
         table.delegate = self
         let scroll = NSScrollView()
@@ -610,7 +614,8 @@ final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NS
         guard let id = tableColumn?.identifier.rawValue, let i = Int(id.dropFirst()) else { return nil }
         let tf = NSTextField(labelWithString: i < rows[row].count ? rows[row][i] : "")
         tf.isSelectable = true
-        tf.font = i == 0 ? .systemFont(ofSize: 12, weight: .medium) : .monospacedSystemFont(ofSize: 12, weight: .regular)
+        let fonts = InterfaceFonts.shared
+        tf.font = i == 0 ? AppFonts.font(family: fonts.family, size: fonts.size, weight: .medium) : fonts.code
         tf.lineBreakMode = .byTruncatingTail
         return tf
     }

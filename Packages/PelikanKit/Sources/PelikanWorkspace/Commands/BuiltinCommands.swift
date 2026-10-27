@@ -146,6 +146,12 @@ public enum BuiltinCommands {
                 try ctx.workspace.openFile(URL(fileURLWithPath: path))
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.clearRecent", title: L10n.tr("Wyczyść listę ostatnich plików"), category: .file,
+                                      agent: .none, effect: .settings, summary: L10n.tr("Czyści listę ostatnio używanych plików (menu Plik › Ostatnie)."),
+                                      inMenu: false, feature: "PD-SQLW-012")) { ctx in
+                ctx.workspace.settings.recentFiles = []
+                return .ok
+            },
             Command(CommandDescriptor(id: "file.save", title: L10n.tr("Zapisz"), category: .file, mac: ["cmd+s"],
                                       agent: .approval, effect: .external, summary: L10n.tr("Zapisuje okno do pliku."),
                                       feature: "PD-SQLW-012"),

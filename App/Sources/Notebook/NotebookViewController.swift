@@ -137,7 +137,7 @@ struct NotebookCellView: View {
                     .onTapGesture(count: 2) { editing = true }
             } else {
                 TextEditor(text: cell.text)
-                    .font(.system(.body, design: .monospaced))
+                    .font(.code)
                     .frame(minHeight: 60, maxHeight: 220)
                     .overlay(RoundedRectangle(cornerRadius: 4).stroke(.separator))
             }
@@ -159,7 +159,7 @@ struct NotebookCellView: View {
             if r.truncated { Text(L10n.tr("Wynik obcięty do \(r.rows.count) wierszy")).font(.uiSecondary).foregroundStyle(.orange) }
         }
         ForEach(Array((r.messages + r.output).enumerated()), id: \.offset) { _, line in
-            Text(line).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+            Text(line).font(.code).textSelection(.enabled)
         }
         Text(L10n.tr("Czas: \(String(format: "%.3f", Double(r.milliseconds) / 1000)) s")).font(.uiSecondary).foregroundStyle(.secondary)
     }
@@ -181,7 +181,7 @@ struct SimpleGridView: View {
                 GridRow { ForEach(Array(columns.enumerated()), id: \.offset) { _, c in Text(c).font(.uiSecondary.bold()) } }
                 Divider()
                 ForEach(Array(rows.prefix(1000).enumerated()), id: \.offset) { _, r in
-                    GridRow { ForEach(Array(r.enumerated()), id: \.offset) { _, v in Text(v).font(.system(size: 12, design: .monospaced)).lineLimit(1) } }
+                    GridRow { ForEach(Array(r.enumerated()), id: \.offset) { _, v in Text(v).font(.code).lineLimit(1) } }
                 }
             }
             .textSelection(.enabled)

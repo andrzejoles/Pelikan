@@ -268,7 +268,7 @@ struct ConnectionEditorView: View {
                         Toggle(L10n.tr("Połącz przy starcie aplikacji"), isOn: $draft.connectOnStartup)
                     }
                     Section(L10n.tr("Skrypt inicjalizacji sesji")) {
-                        TextEditor(text: $draft.initScript).font(.system(.body, design: .monospaced)).frame(minHeight: 80)
+                        TextEditor(text: $draft.initScript).font(.code).frame(minHeight: 80)
                     }
                     Section(L10n.tr("Komunikat przy logowaniu")) {
                         TextEditor(text: $draft.logonMessage).frame(minHeight: 50)

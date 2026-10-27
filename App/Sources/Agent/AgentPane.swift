@@ -35,6 +35,7 @@ final class AgentPane: NSView {
     private let activityTable = NSTableView()
     private var rows: [AgentActivity] = []
     private var token: ObservationToken?
+    private var fontToken: ObservationToken?
     private let split = NSSplitView()
 
     var selectedSessionID: String? {
@@ -46,6 +47,7 @@ final class AgentPane: NSView {
         self.controller = controller
         super.init(frame: .zero)
         build()
+        fontToken = trackChanges { [weak self] in self?.applyFonts() }
         token = trackChanges { [weak self] in
             guard let self else { return }
             _ = self.controller.activities.count
@@ -66,11 +68,9 @@ final class AgentPane: NSView {
         let end = NSButton(title: L10n.tr("Zakończ"), target: self, action: #selector(end))
         let log = NSButton(title: L10n.tr("Dziennik"), target: self, action: #selector(showLog))
         for b in [undo, end, log] { b.controlSize = .small; b.bezelStyle = .accessoryBarAction; b.refusesFirstResponder = true }
-        warningLabel.font = InterfaceFonts.shared.small
         warningLabel.textColor = .systemOrange
         warningLabel.maximumNumberOfLines = 3
         warningLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        pendingLabel.font = AppFonts.font(family: InterfaceFonts.shared.family, size: max(9, InterfaceFonts.shared.size - 2), weight: .semibold)
         pendingLabel.textColor = .systemOrange
         let icon = NSImageView(image: NSImage(systemSymbolName: "cpu", accessibilityDescription: L10n.tr("Agent AI"))!)
         let header = NSStackView(views: [icon, picker, NSView(), pendingLabel, undo, end, log])
@@ -89,7 +89,7 @@ final class AgentPane: NSView {
         activityTable.dataSource = self
         activityTable.setAccessibilityLabel(L10n.tr("Aktywność agenta"))
         activityTable.delegate = self
-        activityTable.rowHeight = 18
+        activityTable.rowSizeStyle = .custom
         activityTable.usesAlternatingRowBackgroundColors = true
         activityTable.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         let activityScroll = NSScrollView()
@@ -120,10 +120,21 @@ final class AgentPane: NSView {
         ])
     }
 
+    /// Czcionka interfejsu i kodu z Preferencji (D178, R5-12) — także po zmianie: etykiety, wysokość wierszy aktywności
+    /// (przy 13 pt — 18 pt), terminale sesji.
+    private func applyFonts() {
+        let fonts = InterfaceFonts.shared
+        warningLabel.font = fonts.small
+        pendingLabel.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 2), weight: .semibold)
+        activityTable.rowHeight = AppFonts.rowHeight(for: fonts.small) - 4
+        activityTable.reloadData()
+        for s in sessions where s.terminal.font != fonts.code { s.terminal.font = fonts.code }
+    }
+
     /// Dodaje sesję i zwraca terminal, w którym aplikacja uruchomi CLI.
     func addSession(session: AgentSession, warnings: [String], command: String, onExit: @escaping @MainActor () -> Void) -> LocalProcessTerminalView {
         let tv = AgentTerminalView(frame: .zero)
-        tv.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = InterfaceFonts.shared.code
         tv.nativeBackgroundColor = .textBackgroundColor
         tv.nativeForegroundColor = .textColor
         let view = SessionView(id: session.id, profile: session.profile, terminal: tv, warnings: warnings, command: command)
@@ -328,6 +339,11 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         entries.setAccessibilityLabel(L10n.tr("Wpisy dziennika"))
         entries.delegate = self
         entries.usesAlternatingRowBackgroundColors = true
+        // Wiersze dziennika czcionką pomocniczą interfejsu — wysokość z czcionki (D178).
+        for t in [files, entries] {
+            t.rowSizeStyle = .custom
+            t.rowHeight = AppFonts.rowHeight(for: InterfaceFonts.shared.small) - 4
+        }
         entries.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         let left = NSScrollView()
         left.documentView = files
@@ -336,7 +352,7 @@ final class AgentLogWindowController: NSWindowController, NSTableViewDataSource,
         middle.documentView = entries
         middle.hasVerticalScroller = true
         raw.isEditable = false
-        raw.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        raw.font = InterfaceFonts.shared.code
         raw.autoresizingMask = [.width]
         let bottom = NSScrollView()
         bottom.documentView = raw

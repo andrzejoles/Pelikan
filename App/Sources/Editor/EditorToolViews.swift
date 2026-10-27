@@ -77,7 +77,7 @@ struct ClipboardHistoryView: View {
             VSplitView {
                 List(entries, selection: $selection) { e in
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(e.title).lineLimit(1).font(.system(size: 12, design: .monospaced))
+                        Text(e.title).lineLimit(1).font(.code)
                         Text(e.date.formatted(date: .omitted, time: .standard)).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                     .tag(e.id)
@@ -88,7 +88,7 @@ struct ClipboardHistoryView: View {
                 .frame(minHeight: 160)
                 ScrollView {
                     Text(entries.first { $0.id == selection }?.text ?? "")
-                        .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                        .font(.code).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading).padding(6)
                 }
                 .frame(minHeight: 100)

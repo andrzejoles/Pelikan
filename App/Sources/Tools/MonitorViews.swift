@@ -91,7 +91,7 @@ struct LoadTesterView: View {
                         ForEach($test.steps) { $s in
                             VStack(alignment: .leading) {
                                 TextField(L10n.tr("Nazwa"), text: $s.name).font(.uiHeadline)
-                                TextField("SQL", text: $s.sql, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(1...5)
+                                TextField("SQL", text: $s.sql, axis: .vertical).font(.code).lineLimit(1...5)
                             }
                             .tag(s.id)
                         }

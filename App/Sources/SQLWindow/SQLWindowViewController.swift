@@ -36,10 +36,8 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         editor.onCaretChange = { [weak self] s in self?.caretLabel.stringValue = s }
 
         // Pasek okna (dół edytora): pozycja, &, wykonywanie.
-        caretLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         caretLabel.textColor = .secondaryLabelColor
         substitutionButton.bezelStyle = .accessoryBarAction
-        substitutionButton.font = .boldSystemFont(ofSize: 12)
         substitutionButton.target = self
         substitutionButton.action = #selector(toggleSubstitution)
         substitutionButton.toolTip = L10n.tr("Podstawianie zmiennych & i : (kliknij, aby wyłączyć)")
@@ -111,10 +109,13 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         }
         let executing = document.isExecuting
         if executing { executingIndicator.startAnimation(nil) } else { executingIndicator.stopAnimation(nil) }
+        // Pasek okna czcionką interfejsu (D178) — także po zmianie w Preferencjach.
+        let fonts = InterfaceFonts.shared
+        caretLabel.font = .monospacedDigitSystemFont(ofSize: fonts.small.pointSize, weight: .regular)
         substitutionButton.contentTintColor = document.substitutionEnabled ? nil : .systemRed
         substitutionButton.attributedTitle = NSAttributedString(string: "&", attributes: [
             .foregroundColor: document.substitutionEnabled ? NSColor.labelColor : NSColor.systemRed,
-            .font: NSFont.boldSystemFont(ofSize: 12),
+            .font: AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 1), weight: .bold),
         ])
     }
 
@@ -135,15 +136,11 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         for r in results {
             tabBar.addArrangedSubview(tabButton(title: (r.pinned ? "📌 " : "") + r.title,
                                                 selected: !showingOutput && r.id == active, isError: r.grid == nil && r.message?.hasPrefix("ORA-") == true) { [weak self] in
-                // Shift+klik karty przypina albo odpina wynik (UG 7.10, PD-SQLW-017).
-                if NSEvent.modifierFlags.contains(.shift) {
-                    r.pinned.toggle()
-                    self?.refreshResults()
-                    return
-                }
                 self?.showingOutput = false; self?.showingStatistics = false
                 self?.document.activeResultID = r.id
                 self?.select(r)
+                // Shift+klik karty przypina albo odpina wynik (UG 7.10, PD-SQLW-017) — komendą rejestru.
+                if NSEvent.modifierFlags.contains(.shift) { self?.workspace.perform("sql.pinResult") }
             })
         }
         tabBar.addArrangedSubview(tabButton(title: output.isEmpty ? L10n.tr("Output") : L10n.tr("Output (\(output.count))"),
@@ -217,7 +214,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         let scroll = NSTextView.scrollableTextView()
         let tv = scroll.documentView as! NSTextView
         tv.isEditable = false
-        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = InterfaceFonts.shared.code
         tv.textColor = isError ? .systemRed : (placeholder ? .secondaryLabelColor : .labelColor)
         tv.string = text
         tv.textContainerInset = NSSize(width: 6, height: 6)
@@ -230,7 +227,7 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
         b.setButtonType(.pushOnPushOff)
         b.state = selected ? .on : .off
         let fonts = InterfaceFonts.shared
-        b.font = AppFonts.font(family: fonts.family, size: max(9, fonts.size - 2), weight: selected ? .semibold : fonts.weight)
+        b.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 2), weight: selected ? .semibold : fonts.weight)
         if isError {
             // Karta z błędem: czerwony tytuł z ikoną (UG 7.1 — wynik z błędem wyróżniony).
             b.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: L10n.tr("Błąd"))

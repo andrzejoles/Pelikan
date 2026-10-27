@@ -36,7 +36,7 @@ struct ProblemReportView: View {
             Text(L10n.tr("Podgląd treści")).font(.uiHeadline)
             ScrollView {
                 Text(report.body())
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.code)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(6)

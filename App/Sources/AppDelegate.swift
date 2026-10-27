@@ -898,7 +898,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         name.setAccessibilityLabel(L10n.tr("Nazwa szablonu"))
         let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 520, height: 260))
         text.string = template.text
-        text.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        text.font = InterfaceFonts.shared.editor
         text.isAutomaticQuoteSubstitutionEnabled = false
         text.isAutomaticDashSubstitutionEnabled = false
         text.isRichText = false

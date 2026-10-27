@@ -57,7 +57,7 @@ struct PreferenceSetsPane: View {
                     }
                     ForEach(s.values.keys.sorted(), id: \.self) { key in
                         HStack {
-                            Text(key).font(.system(.body, design: .monospaced))
+                            Text(key).font(.code)
                             Text(PreferenceSets.section(of: key)).font(.uiSecondary).foregroundStyle(.secondary)
                             Spacer()
                             Text(s.values[key]?.summary ?? "").lineLimit(1)

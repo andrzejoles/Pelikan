@@ -37,7 +37,7 @@ struct BeautifierPane: View {
                 Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.uiSecondary).foregroundStyle(.secondary)
                 ScrollView([.vertical, .horizontal]) {
                     Text(highlighted)
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(.code)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(8)
@@ -220,7 +220,7 @@ struct BeautifierPane: View {
             Text(title).font(.uiSecondary.bold())
             ScrollView([.vertical, .horizontal]) {
                 Text(text)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.code)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .padding(6)
             }

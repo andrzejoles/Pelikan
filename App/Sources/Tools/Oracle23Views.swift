@@ -50,7 +50,7 @@ struct DualityViewsView: View {
                     Text(message).font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 ScrollView([.vertical, .horizontal]) {
-                    Text(detail).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
+                    Text(detail).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
                 }
             }
             .frame(minWidth: 420)
@@ -143,7 +143,7 @@ struct MLEModulesView: View {
                 TextField(L10n.tr("Linie punktów (po przecinku)"), text: $debugLines)
                 TextField(L10n.tr("Obserwowane zmienne (puste — wszystkie lokalne)"), text: $debugWatch)
                 Text(L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")).font(.uiSecondary)
-                TextEditor(text: $debugCall).font(.system(size: 12, design: .monospaced)).frame(minHeight: 90)
+                TextEditor(text: $debugCall).font(.code).frame(minHeight: 90)
                 HStack {
                     Spacer()
                     Button(L10n.tr("Anuluj"), role: .cancel) { debugging = false }.keyboardShortcut(.cancelAction)
@@ -157,7 +157,7 @@ struct MLEModulesView: View {
                 }
             }
             .padding(14)
-            .frame(width: 520)
+            .frame(minWidth: 520, idealWidth: 520, maxWidth: .infinity)
         }
     }
 
@@ -218,7 +218,7 @@ struct SpatialPreviewView: View {
             .frame(minHeight: 260)
             .background(Color(nsColor: .textBackgroundColor))
             ScrollView {
-                Text(wkt.joined(separator: "\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
+                Text(wkt.joined(separator: "\n")).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .frame(minHeight: 80)
         }

@@ -133,7 +133,7 @@ struct ExportTablesView: View {
                 .frame(minWidth: 300, maxHeight: .infinity, alignment: .top)
             }
             HStack {
-                ScrollView { Text(message).font(.subheadline.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 90)
+                ScrollView { Text(message).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }.frame(maxHeight: 90)
                 Button(L10n.tr("Eksportuj…")) { Task { await export() } }.disabled(busy || (selected.isEmpty && method != .dataPump))
             }
         }
@@ -238,7 +238,7 @@ struct ImportTablesView: View {
                 }
                 Button(L10n.tr("Importuj")) { Task { await importDump() } }.disabled(busy || dumpFile.isEmpty)
             }
-            ScrollView { Text(message).font(.subheadline.monospaced()).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+            ScrollView { Text(message).font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
         }
         .padding(12)
         .frame(minWidth: 680, minHeight: 520)
@@ -568,7 +568,7 @@ struct DataGeneratorView: View {
                             HStack {
                                 Text(f.name).frame(width: 150, alignment: .leading)
                                 Text(f.type).foregroundStyle(.secondary).frame(width: 90, alignment: .leading)
-                                TextField(L10n.tr("Definicja"), text: $f.definition).font(.system(.body, design: .monospaced))
+                                TextField(L10n.tr("Definicja"), text: $f.definition).font(.code)
                             }
                         }
                     }

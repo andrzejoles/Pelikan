@@ -171,7 +171,7 @@ struct FindObjectsView: View {
             TableColumn(L10n.tr("Obiekt")) { (h: DatabaseSearchHit) in Text(h.object.owner + "." + h.object.name) }.width(min: 140, ideal: 200)
             TableColumn(L10n.tr("Typ")) { (h: DatabaseSearchHit) in Text(h.object.type.rawValue.lowercased()) }.width(min: 70, ideal: 100)
             TableColumn(L10n.tr("Linia")) { (h: DatabaseSearchHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
-            TableColumn(L10n.tr("Tekst")) { (h: DatabaseSearchHit) in Text(h.text).font(.system(size: 12, design: .monospaced)).lineLimit(1) }
+            TableColumn(L10n.tr("Tekst")) { (h: DatabaseSearchHit) in Text(h.text).font(.code).lineLimit(1) }
         }
         .contextMenu(forSelectionType: DatabaseSearchHit.ID.self) { _ in } primaryAction: { ids in
             if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }

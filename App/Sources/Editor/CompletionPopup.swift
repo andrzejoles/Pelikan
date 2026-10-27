@@ -23,9 +23,8 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         panel.hasShadow = true
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        let background = NSVisualEffectView()
-        background.material = .menu
-        background.state = .active
+        // Tło bez vibrancy (D179): tekst listy rysowany zwykłym trybem także w aktywnym oknie.
+        let background = SolidBackgroundView(material: .menu)
         background.wantsLayer = true
         background.layer?.cornerRadius = 6
         background.layer?.masksToBounds = true
@@ -33,7 +32,7 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         c.resizingMask = .autoresizingMask
         table.addTableColumn(c)
         table.headerView = nil
-        table.rowSizeStyle = .small
+        table.rowSizeStyle = .custom
         table.backgroundColor = .clear
         table.dataSource = self
         table.delegate = self
@@ -52,6 +51,8 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     func show(_ r: CompletionResult) {
         guard let tv = textView, let window = tv.window else { return }
         result = r
+        let fonts = InterfaceFonts.shared
+        table.rowHeight = max(AppFonts.rowHeight(for: fonts.code), AppFonts.rowHeight(for: fonts.small)) - 4
         table.reloadData()
         table.selectRowIndexes([0], byExtendingSelection: false)
         table.scrollRowToVisible(0)
@@ -126,7 +127,7 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(item.kind), accessibilityDescription: item.kind.rawValue) ?? NSImage())
         icon.contentTintColor = Self.tint(item.kind)
         let label = NSTextField(labelWithString: item.insertText)
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        label.font = InterfaceFonts.shared.code
         label.lineBreakMode = .byTruncatingTail
         let detail = NSTextField(labelWithString: item.detail)
         detail.font = InterfaceFonts.shared.small

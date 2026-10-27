@@ -106,16 +106,22 @@ final class DiagramViewController: NSViewController {
         workspace.perform(CommandID(rawValue: id))
     }
 
+    // Zoom, eksport, kopiowanie i druk — komendy rejestru (R5-23): dziennik komend, walidacja, makra.
+    private func runCommand(_ id: CommandID, _ args: CommandArguments = .empty) {
+        workspace.activate(document.id)
+        workspace.perform(id, args)
+    }
+
     @objc private func zoomChanged() {
-        document.diagram.setZoom(Double(zoomPopup.selectedTag()) / 100)
+        runCommand("diagram.zoom", CommandArguments(["percent": .int(Int64(zoomPopup.selectedTag()))]))
     }
 
     @objc private func exportItem(_ item: NSMenuItem) {
-        DiagramOutput.export(document, format: item.representedObject as? String ?? "png", workspace: workspace)
+        runCommand("diagram.export", CommandArguments(["format": .string(item.representedObject as? String ?? "png")]))
     }
 
-    @objc private func copyImage() { DiagramOutput.copy(document) }
-    @objc private func printDiagram() { DiagramOutput.print(document) }
+    @objc private func copyImage() { runCommand("diagram.copyImage") }
+    @objc private func printDiagram() { runCommand("diagram.print") }
 }
 
 /// Płótno diagramu: rysowanie, zaznaczanie, przeciąganie (z dociąganiem do siatki), prostokąt zaznaczenia, zoom gestem,

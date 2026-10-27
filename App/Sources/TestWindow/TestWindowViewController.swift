@@ -95,7 +95,7 @@ struct TestPanel: View {
 
     private var variables: some View {
         Table($document.testVariables) {
-            TableColumn(L10n.tr("Zmienna")) { $v in Text(v.name).font(.system(.body, design: .monospaced)) }.width(min: 90, ideal: 140)
+            TableColumn(L10n.tr("Zmienna")) { $v in Text(v.name).font(.code) }.width(min: 90, ideal: 140)
             TableColumn(L10n.tr("Typ")) { $v in
                 Picker("", selection: $v.type) {
                     ForEach(TestVariableType.allCases, id: \.self) { Text($0.displayName).tag($0) }
@@ -109,7 +109,7 @@ struct TestPanel: View {
                         Button("…") { cursorShown = v }.disabled(v.cursorColumns.isEmpty)
                     } else {
                         TextField(v.isNull ? L10n.tr("(null)") : "", text: Binding(get: { v.value }, set: { v.value = $0; v.isNull = $0.isEmpty; v.changed = false }))
-                            .font(.system(.body, design: .monospaced))
+                            .font(.code)
                     }
                 }
                 .padding(.horizontal, 4)
@@ -138,7 +138,7 @@ struct TestPanel: View {
             .padding(.horizontal, 6)
             ScrollView {
                 Text(showHTP ? (document.htpOutput ?? (document.htpEnabled ? L10n.tr("(pusta strona HTP)") : L10n.tr("Włącz zbieranie HTP i wykonaj blok."))) : document.output.joined(separator: "\n"))
-                    .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                    .font(.code).textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
             }
         }
@@ -151,7 +151,7 @@ struct TestPanel: View {
             } label: {
                 HStack {
                     Image(systemName: "exclamationmark.triangle").foregroundStyle(.red)
-                    Text(f.unit.isEmpty ? L10n.tr("Blok testu") : "\(f.owner).\(f.unit)").font(.system(.body, design: .monospaced))
+                    Text(f.unit.isEmpty ? L10n.tr("Blok testu") : "\(f.owner).\(f.unit)").font(.code)
                     Text(L10n.tr("linia \(f.line)")).foregroundStyle(.red)
                 }
             }
@@ -214,13 +214,13 @@ struct TestPanel: View {
                         TableColumn(L10n.tr("Wykonań")) { (l: ProfilerLine) in Text(String(l.occurrences)) }.width(64)
                         TableColumn(L10n.tr("Czas [\(unit.symbol)]")) { (l: ProfilerLine) in Text(unit.format(nanoseconds: l.totalTime)) }.width(84)
                         TableColumn("%") { (l: ProfilerLine) in bar(l.totalTime / total) }.width(90)
-                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.system(size: 12, design: .monospaced)).lineLimit(1) }
+                        TableColumn(L10n.tr("Tekst")) { (l: ProfilerLine) in Text(l.text).font(.code).lineLimit(1) }
                     }
                 } else if showCallTree {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
                     List(Profiler.callTree(r), children: \.children) { n in
                         HStack {
-                            Text(n.function.displayName).font(.system(.body, design: .monospaced))
+                            Text(n.function.displayName).font(.code)
                             Spacer()
                             Text(L10n.tr("\(n.function.calls) wyw.")).foregroundStyle(.secondary)
                             Text(String(format: "%.0f µs", n.function.subtreeTime)).monospacedDigit().frame(width: 100, alignment: .trailing)
@@ -230,7 +230,7 @@ struct TestPanel: View {
                 } else {
                     let total = max(r.functions.map(\.subtreeTime).max() ?? 1, 1)
                     Table(r.functions) {
-                        TableColumn(L10n.tr("Funkcja")) { (f: ProfilerFunction) in Text(f.displayName).font(.system(.body, design: .monospaced)) }.width(min: 160, ideal: 240)
+                        TableColumn(L10n.tr("Funkcja")) { (f: ProfilerFunction) in Text(f.displayName).font(.code) }.width(min: 160, ideal: 240)
                         TableColumn(L10n.tr("Wywołań")) { (f: ProfilerFunction) in Text(String(f.calls)) }.width(64)
                         TableColumn(L10n.tr("Własny [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.functionTime)) }.width(84)
                         TableColumn(L10n.tr("Z wywołaniami [µs]")) { (f: ProfilerFunction) in Text(String(format: "%.0f", f.subtreeTime)) }.width(120)
@@ -264,7 +264,7 @@ struct TestPanel: View {
                     Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 3) {
                         GridRow { ForEach(r.columns, id: \.self) { Text($0).bold() } }
                         ForEach(Array(r.rows.enumerated()), id: \.offset) { _, row in
-                            GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 12, design: .monospaced)) } }
+                            GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.code) } }
                         }
                     }
                 }
@@ -345,7 +345,7 @@ struct CursorResultView: View {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 4) {
                     GridRow { ForEach(variable.cursorColumns, id: \.self) { Text($0).bold() } }
                     ForEach(Array(variable.cursorRows.enumerated()), id: \.offset) { _, row in
-                        GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.system(size: 12, design: .monospaced)) } }
+                        GridRow { ForEach(Array(row.enumerated()), id: \.offset) { _, c in Text(c).font(.code) } }
                     }
                 }
                 .padding(6)

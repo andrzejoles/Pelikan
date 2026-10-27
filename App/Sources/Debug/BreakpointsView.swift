@@ -18,7 +18,7 @@ struct BreakpointsView: View {
                             Image(systemName: "circle").foregroundStyle(.red)
                                 .help(L10n.tr("Punkt niezastosowany: brak jednostki, informacji debugowania albo kodu w tej linii"))
                         }
-                        Text(place(b)).font(.system(.body, design: .monospaced))
+                        Text(place(b)).font(.code)
                     }
                 }
                 TableColumn(L10n.tr("Linia")) { $b in Text("\(b.line)") }.width(50)
@@ -39,9 +39,9 @@ struct BreakpointsView: View {
                 }.width(30)
             }
             HStack {
-                Button(L10n.tr("Włącz wszystkie")) { for i in workspace.breakpoints.indices { workspace.breakpoints[i].enabled = true } }
-                Button(L10n.tr("Wyłącz wszystkie")) { for i in workspace.breakpoints.indices { workspace.breakpoints[i].enabled = false } }
-                Button(L10n.tr("Usuń wszystkie")) { workspace.breakpoints.removeAll() }
+                Button(L10n.tr("Włącz wszystkie")) { workspace.perform("debug.enableAllBreakpoints") }
+                Button(L10n.tr("Wyłącz wszystkie")) { workspace.perform("debug.disableAllBreakpoints") }
+                Button(L10n.tr("Usuń wszystkie")) { workspace.perform("debug.removeAllBreakpoints") }
                 Spacer()
                 Button(L10n.tr("Zapisz…")) { workspace.perform("debug.saveBreakpoints") }
                 Button(L10n.tr("Wczytaj…")) { workspace.perform("debug.loadBreakpoints") }

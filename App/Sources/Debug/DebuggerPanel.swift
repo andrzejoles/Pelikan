@@ -21,7 +21,7 @@ struct DebuggerPanel: View {
                         Button { Task { await debugger.selectFrame(i) } } label: {
                             HStack {
                                 Image(systemName: i == debugger.selectedFrame ? "arrowtriangle.right.fill" : "circle").font(.uiSecondary)
-                                Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.system(.body, design: .monospaced))
+                                Text(f.isTestBlock ? L10n.tr("Blok testu") : "\(f.owner).\(f.name)").font(.code)
                                 Spacer()
                                 Text("\(f.line)").foregroundStyle(.secondary)
                             }
@@ -75,9 +75,9 @@ struct DebuggerPanel: View {
     /// Wiersz zmiennej z menu: Ustaw wartość (SET_VALUE, tylko skalary), Kopiuj, Obserwuj (UG 5.10).
     private func variableRow(_ v: DebugVariable) -> some View {
         HStack {
-            Text(v.name).font(.system(.body, design: .monospaced))
+            Text(v.name).font(.code)
             Spacer()
-            Text(v.value).font(.system(.body, design: .monospaced)).foregroundStyle(v.children == nil ? .primary : .secondary)
+            Text(v.value).font(.code).foregroundStyle(v.children == nil ? .primary : .secondary)
                 .textSelection(.enabled)
         }
         .contextMenu {

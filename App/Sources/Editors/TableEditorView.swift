@@ -110,7 +110,7 @@ struct TableEditorView: View {
                     TextField(L10n.tr("Katalog (DIRECTORY)"), text: upper(Binding(get: { definition.external?.directory ?? "" }, set: { definition.external?.directory = $0 })))
                     ListTextField(L10n.tr("Pliki (po przecinku)"), text: list(Binding(get: { definition.external?.locations ?? [] }, set: { definition.external?.locations = $0 })))
                     TextField(L10n.tr("Parametry dostępu"), text: Binding(get: { definition.external?.accessParameters ?? "" }, set: { definition.external?.accessParameters = $0 }),
-                              axis: .vertical).lineLimit(2...6).font(.system(.body, design: .monospaced))
+                              axis: .vertical).lineLimit(2...6).font(.code)
                     TextField("REJECT LIMIT", text: upper(Binding(get: { definition.external?.rejectLimit ?? "" }, set: { definition.external?.rejectLimit = $0 })))
                 }
             }
@@ -157,11 +157,11 @@ struct TableEditorView: View {
                                 TextField(L10n.tr("Nazwa"), text: partition(i, \.name, transform: { $0.uppercased() }))
                                     .frame(width: 180)
                                 if p.partitions[i].originalName != nil || p.method == .hash {
-                                    Text(p.partitions[i].values).font(.system(.body, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                                    Text(p.partitions[i].values).font(.code).foregroundStyle(.secondary).lineLimit(1)
                                 } else {
                                     TextField(p.method == .range ? L10n.tr("VALUES LESS THAN") : L10n.tr("VALUES"),
                                               text: partition(i, \.values))
-                                        .font(.system(.body, design: .monospaced))
+                                        .font(.code)
                                 }
                                 Spacer()
                                 Button {
@@ -200,7 +200,7 @@ struct TableEditorView: View {
                                 guard let n = parts.first, !n.isEmpty else { return nil }
                                 return TableDefinition.Partition(name: n.uppercased(), values: parts.count > 1 ? parts[1] : "")
                             }
-                        }), axis: .vertical).lineLimit(3...8).font(.system(.body, design: .monospaced))
+                        }), axis: .vertical).lineLimit(3...8).font(.code)
                     }
                 }
             }
@@ -299,7 +299,7 @@ struct TableEditorView: View {
         VStack(alignment: .leading) {
             Table($definition.checks) {
                 TableColumn(L10n.tr("Nazwa")) { $c in TextField("", text: upper($c.name)) }.width(min: 140, ideal: 180)
-                TableColumn(L10n.tr("Warunek")) { $c in TextField("", text: $c.condition).font(.system(.body, design: .monospaced)) }
+                TableColumn(L10n.tr("Warunek")) { $c in TextField("", text: $c.condition).font(.code) }
                 TableColumn(L10n.tr("Włączony")) { $c in Toggle("", isOn: $c.enabled).labelsHidden() }.width(60)
             }
             listButtons(add: { definition.checks.append(TableDefinition.Check(name: "\(definition.name)_CK\(definition.checks.count + 1)", condition: "")) },
@@ -343,7 +343,7 @@ struct TableEditorView: View {
         VStack(alignment: .leading) {
             ScrollView {
                 Text(ddl.isEmpty ? L10n.tr("-- Brak zmian") : ddl.map { $0 + ";" }.joined(separator: "\n\n"))
-                    .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                    .font(.code).textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .topLeading).padding(8)
             }
             .background(Color(nsColor: .textBackgroundColor))

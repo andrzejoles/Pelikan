@@ -118,7 +118,7 @@ struct RecallStatementView: View {
             TextField(L10n.tr("Filtr"), text: $filter)
             List(entries, id: \.0, selection: $selection) { item in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.1.text.replacingOccurrences(of: "\n", with: " ")).font(.body.monospaced()).lineLimit(2)
+                    Text(item.1.text.replacingOccurrences(of: "\n", with: " ")).font(.code).lineLimit(2)
                     Text("\(item.1.date.formatted(date: .abbreviated, time: .shortened))  ·  \(item.1.user)").font(.uiSecondary).foregroundStyle(.secondary)
                 }
                 .contextMenu { Button(L10n.tr("Wstaw")) { insert([item.0]) } }
