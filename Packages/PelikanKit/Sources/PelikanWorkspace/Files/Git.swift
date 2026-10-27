@@ -129,14 +129,45 @@ public struct GitRepository: Sendable, Hashable {
 
     public static let executable = URL(fileURLWithPath: "/usr/bin/git")
 
-    /// Wykonuje git z katalogu `directory`; wyjście standardowe albo błąd z treścią stderr.
+    /// Wykonuje git z katalogu `directory`; wyjście standardowe albo błąd z treścią stderr. `config` — ustawienia
+    /// na czas wywołania (zakres „command”, pierwszeństwo przed plikami konfiguracji).
     @discardableResult
-    static func run(_ args: [String], in directory: URL, input: String? = nil) throws -> String {
-        String(decoding: try runData(args, in: directory, input: input), as: UTF8.self)
+    static func run(_ args: [String], in directory: URL, input: String? = nil, config: [(String, String)] = []) throws -> String {
+        String(decoding: try runData(args, in: directory, input: input, config: config), as: UTF8.self)
+    }
+
+    /// Odczyty uruchamiane samoczynnie (stan przy otwarciu pliku i w przeglądarce plików, projekt, treść z HEAD,
+    /// historia) nie wykonują poleceń z konfiguracji repozytorium: pobrane albo rozpakowane repozytorium może mieć
+    /// w `.git/config` `core.fsmonitor` (git status uruchamia je zawsze), `log.showSignature` z `gpg.program` albo
+    /// hooki. Filtry — osobno (`untrustedFilterConfig`). Dodawanie i zatwierdzanie (czynności jawne użytkownika)
+    /// działają jak git w terminalu.
+    static let backgroundConfig: [(String, String)] = [
+        ("core.fsmonitor", "false"), ("core.hooksPath", "/dev/null"), ("log.showSignature", "false"),
+    ]
+
+    /// Filtry `clean`/`smudge`/`process` z konfiguracji repozytorium (zakres local/worktree, także z jej `include`) wyłączone:
+    /// git status liczy nimi treść plików o zmienionym czasie modyfikacji, a `.gitattributes` przychodzi z repozytorium.
+    /// Filtry z konfiguracji globalnej i systemowej (np. git-lfs) to ustawienia właściciela Maca — zostają.
+    static func untrustedFilterConfig(in directory: URL) -> [(String, String)] {
+        guard let out = try? run(["config", "-z", "--show-scope", "--get-regexp", #"^filter\."#], in: directory, config: backgroundConfig) else { return [] }
+        // Rekordy: zakres NUL klucz LF wartość NUL.
+        let fields = out.split(separator: "\0", omittingEmptySubsequences: false)
+        var names: Set<String> = []
+        var i = 0
+        while i + 1 < fields.count {
+            let scope = fields[i], key = fields[i + 1].prefix { $0 != "\n" }
+            i += 2
+            guard scope == "local" || scope == "worktree", key.hasPrefix("filter."), let dot = key.lastIndex(of: "."),
+                  dot > key.index(key.startIndex, offsetBy: 7) else { continue }
+            names.insert(String(key[key.index(key.startIndex, offsetBy: 7)..<dot]))
+        }
+        return names.sorted().flatMap { n in
+            [("filter.\(n).clean", ""), ("filter.\(n).smudge", ""), ("filter.\(n).process", ""), ("filter.\(n).required", "false")]
+        }
     }
 
     /// Jak `run`, ale wyjście w bajtach (treść plików w ich kodowaniu, np. ISO-8859-2).
-    static func runData(_ args: [String], in directory: URL, input: String? = nil) throws -> Data {
+    static func runData(_ args: [String], in directory: URL, input: String? = nil, config: [(String, String)] = []) throws -> Data {
         guard FileManager.default.isExecutableFile(atPath: executable.path) else { throw Failure.notInstalled }
         let p = Process()
         p.executableURL = executable
@@ -146,13 +177,21 @@ public struct GitRepository: Sendable, Hashable {
         env["GIT_TERMINAL_PROMPT"] = "0"
         env["GIT_OPTIONAL_LOCKS"] = "0"
         env["LC_ALL"] = "C"
+        // Ustawienia przez GIT_CONFIG_KEY_n/VALUE_n — dowolne nazwy podsekcji (np. z „=”) bez rozbioru jak przy `-c`.
+        var n = Int(env["GIT_CONFIG_COUNT"] ?? "") ?? 0
+        for (key, value) in config {
+            env["GIT_CONFIG_KEY_\(n)"] = key
+            env["GIT_CONFIG_VALUE_\(n)"] = value
+            n += 1
+        }
+        if !config.isEmpty { env["GIT_CONFIG_COUNT"] = String(n) }
         p.environment = env
         let out = Pipe(), err = Pipe(), inp = Pipe()
         p.standardOutput = out
         p.standardError = err
         p.standardInput = inp
         try p.run()
-        if let input { inp.fileHandleForWriting.write(Data(input.utf8)) }
+        if let input { try? inp.fileHandleForWriting.write(contentsOf: Data(input.utf8)) }
         try? inp.fileHandleForWriting.close()
         // stderr czytany równolegle — pełny bufor potoku stderr zatrzymałby gita przed końcem stdout.
         let errHandle = err.fileHandleForReading, errData = Mutex(Data()), group = DispatchGroup()
@@ -175,7 +214,7 @@ public struct GitRepository: Sendable, Hashable {
         var dir = url
         var isDir: ObjCBool = false
         if !FileManager.default.fileExists(atPath: dir.path, isDirectory: &isDir) || !isDir.boolValue { dir = dir.deletingLastPathComponent() }
-        guard let top = try? run(["rev-parse", "--show-toplevel"], in: dir).trimmingCharacters(in: .whitespacesAndNewlines), !top.isEmpty else { return nil }
+        guard let top = try? run(["rev-parse", "--show-toplevel"], in: dir, config: backgroundConfig).trimmingCharacters(in: .whitespacesAndNewlines), !top.isEmpty else { return nil }
         return GitRepository(root: URL(fileURLWithPath: top, isDirectory: true))
     }
 
@@ -192,14 +231,16 @@ public struct GitRepository: Sendable, Hashable {
     }
 
     public func status() throws -> GitStatus {
-        GitStatus.parse(try Self.run(["status", "--porcelain=v2", "--branch", "-z", "--untracked-files=normal"], in: root), root: root)
+        // Podmoduły pomijane: ich konfiguracja jest tak samo obca, a git status uruchamia w nich osobne procesy gita.
+        GitStatus.parse(try Self.run(["status", "--porcelain=v2", "--branch", "-z", "--untracked-files=normal", "--ignore-submodules=all"], in: root,
+                                     config: Self.backgroundConfig + Self.untrustedFilterConfig(in: root)), root: root)
     }
 
     /// Treść pliku w HEAD w bajtach — dekodowanie jak pliku na dysku (`TextFileCodec`); nil — plik nowy, nieobecny w HEAD.
     public func headContent(of url: URL) throws -> Data? {
         guard let rel = Self.relativePath(of: url, root: root) else { throw Failure.failed(L10n.tr("Plik spoza repozytorium")) }
         do {
-            return try Self.runData(["show", "HEAD:\(rel)"], in: root)
+            return try Self.runData(["show", "--no-textconv", "HEAD:\(rel)"], in: root, config: Self.backgroundConfig)
         } catch Failure.failed {
             return nil
         }
@@ -225,7 +266,7 @@ public struct GitRepository: Sendable, Hashable {
         var args = ["log", "-n", String(max(1, limit)), "--pretty=format:%H%x1f%an%x1f%aI%x1f%s%x1e"]
         if let file, let rel = Self.relativePath(of: file, root: root) { args += ["--", rel] }
         let out: String
-        do { out = try Self.run(args, in: root) } catch Failure.failed { return [] }   // repozytorium bez zatwierdzeń
+        do { out = try Self.run(args, in: root, config: Self.backgroundConfig) } catch Failure.failed { return [] }   // repozytorium bez zatwierdzeń
         let iso = ISO8601DateFormatter()
         return out.split(separator: "\u{1e}").compactMap { rec in
             let f = rec.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: "\u{1f}", omittingEmptySubsequences: false).map(String.init)

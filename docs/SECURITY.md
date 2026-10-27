@@ -104,6 +104,12 @@
   na GitHubie z treścią do przejrzenia, użytkownik wysyła ją ze swojego konta; bez tokenów w aplikacji. Treść (opis,
   komunikat, opis awarii bez ścieżek, środowisko, ostatnie wpisy dziennika z ukrytymi nazwami) przechodzi przez
   `LogRedactor`; okno ostrzega, że zgłoszenia są publiczne.
+- Git (PD-VCS-001, przegląd 4): odczyty uruchamiane samoczynnie (stan przy otwarciu pliku, przeglądarka plików,
+  projekt, treść z HEAD, historia) nie wykonują poleceń z konfiguracji obcego repozytorium (pobranego albo
+  rozpakowanego): `core.fsmonitor=false`, `core.hooksPath=/dev/null`, `log.showSignature=false` (bez `gpg.program`),
+  filtry `clean`/`smudge`/`process` z konfiguracji lokalnej repozytorium wyłączone (git status liczy nimi treść plików),
+  podmoduły pomijane, `show --no-textconv`. Ustawienia przekazywane przez `GIT_CONFIG_KEY_n`, filtry z konfiguracji
+  globalnej (np. git-lfs) zostają. Dodawanie i zatwierdzanie — czynności jawne — działają jak git w terminalu (hooki).
 
 ### 4.1 Pierwotny opis (Etap 0)
 Jak w Bifoldzie SECURITY §4: gniazdo i katalog sprawdzane przy starcie (właściciel, brak dowiązań), kolejność
