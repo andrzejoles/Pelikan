@@ -253,17 +253,25 @@ struct BeautifierAligner {
 
     // MARK: Elementy klauzul
 
-    /// Lista klauzuli (SELECT, FROM, SET) z elementem w linii: linia z klauzulą i kolejne od kolumny pierwszego elementu.
+    /// Lista klauzuli (SELECT, FROM, SET): linia pierwszego elementu i kolejne od jego kolumny. Pierwszy element jest
+    /// w linii klauzuli albo — gdy klauzula stoi sama w linii (układ „w osobnej linii”) — w następnej.
     func clauseItemGroups(_ clauses: Set<String>, anchor: ([Tok], Int, Int) -> Int?) -> [Group] {
         var groups: [Group] = []
         var k = 0
         while k < lines.count {
-            guard let t = tokens(k), let c = t.firstIndex(where: { clauses.contains($0.upper) }), c + 1 < t.count else { k += 1; continue }
+            guard var t = tokens(k), let c = t.firstIndex(where: { clauses.contains($0.upper) }) else { k += 1; continue }
             var first = c + 1
-            if ["DISTINCT", "UNIQUE", "ALL"].contains(t[first].upper), first + 1 < t.count { first += 1 }
-            let col = column(k, t[first].start)
-            var group: Group = [(k, [itemAnchor(t, from: first, anchor: anchor)])]
-            var j = k + 1
+            if first < t.count, ["DISTINCT", "UNIQUE", "ALL"].contains(t[first].upper) { first += 1 }
+            var start = k
+            if first >= t.count {
+                guard k + 1 < lines.count, let u = tokens(k + 1), !u.isEmpty, !clauses.contains(u[0].upper) else { k += 1; continue }
+                start = k + 1
+                t = u
+                first = 0
+            }
+            let col = column(start, t[first].start)
+            var group: Group = [(start, [itemAnchor(t, from: first, anchor: anchor)])]
+            var j = start + 1
             while j < lines.count, let u = tokens(j), !u.isEmpty {
                 let f = u[0].kind == .comma && u.count > 1 ? 1 : 0
                 guard column(j, u[f].start) == col else { break }

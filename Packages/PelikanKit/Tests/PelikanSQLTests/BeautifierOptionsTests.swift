@@ -126,6 +126,30 @@ struct BeautifierOptionsTests {
             """)
     }
 
+    @Test("klauzule w osobnej linii: wyrównanie aliasów i UPDATE … SET od linii po słowie klauzuli")
+    func ownLineAlignment() throws {
+        let q = "select e.a x, e.bbb yy from emp e, department d"
+        #expect(try f(q) { $0.clauseLayout = .ownLine; $0.alignAliases = true } == """
+            SELECT
+              e.a   x,
+              e.bbb yy
+            FROM
+              emp        e,
+              department d
+            """)
+        let u = try f("update t set a = 1, bbb = 2 where c = 3") { $0.clauseLayout = .ownLine; $0.alignSetValues = true }
+        #expect(u.contains("  a   = 1,\n  bbb = 2"), "\(u)")
+    }
+
+    @Test("AND/OR na końcu linii po komentarzu: warunek na początku następnej linii, nie samo AND")
+    func andAfterLineComment() throws {
+        let r = try f("select a from t where x = 1 -- c\n and y = 2 and z = 3") { $0.andOrPosition = .lineEnd }
+        let lines = r.components(separatedBy: "\n")
+        #expect(!lines.contains { $0.trimmingCharacters(in: .whitespaces) == "AND" }, "\(r)")
+        #expect(lines.contains { $0.hasSuffix("x = 1 -- c") }, "\(r)")
+        #expect(lines.contains { $0.trimmingCharacters(in: .whitespaces).hasPrefix("AND") && $0.contains("y = 2 AND") }, "\(r)")
+    }
+
     @Test("THEN w osobnej linii, CASE wieloliniowy w PL/SQL i SQL, CASE z AND w WHERE")
     func thenAndCase() throws {
         #expect(try f("begin if a then x := case when b then 1 else 2 end; end if; end;") { $0.thenOnNewLine = true; $0.caseLayout = .multiline } == """
