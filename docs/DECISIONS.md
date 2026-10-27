@@ -1794,3 +1794,92 @@ ALL_OBJECTS nie musi zawierać publicznych łączy bazy — źródłem łączy s
 bez właściciela schematu) czyta DBA_DIRECTORIES we wszystkich trybach, gdy da się go czytać; ALL_DIRECTORIES pokazuje
 tylko katalogi z nadanym uprawnieniem.
 
+
+### D189 · 2026-10-28 — Czwarta runda przeglądu kodu: połączenie narzędzi, sesje wspólne, zgodność słownika, Hardened Runtime
+
+Właściciel poprosił o kolejną rundę dogłębnego przeglądu (stos, ostrzeżenia, spójność, pozostałości) z podziałem na
+subagentów: ośmiu recenzentów tylko do odczytu (stos i zależności, ostrzeżenia budowania i testów, zmiany D183–D188,
+aplikacja ×2, PelikanWorkspace ×2, pozostałe moduły, skrypty i dokumentacja), potem dwunastu poprawiających w osobnych
+gałęziach scalonych w jeden PR. 153 zgłoszenia (11 wysokich, 52 średnie, 90 niskich). Przed poprawkami: stos aktualny
+poza łatkami swift-collections 1.7.5 i swift-png 4.5.2 (podniesione), budowanie aplikacji i pakietu bez ostrzeżeń,
+`xcodebuild analyze` tylko znane miejsca ODPI-C, testy zielone (618 jednostkowych, 49 SSH, 240 na bazie).
+
+- **Połączenie narzędzi (D185):** Znajdź obiekty i Kompiluj niepoprawne pracowały na połączeniu głównym, a trafienia
+  otwierały na połączeniu aktywnego okna (możliwy obiekt o tej samej nazwie z innej bazy). Narzędzia ustalają połączenie
+  przy otwarciu, pokazują je z wyborem (także Test Manager i Test Explorer), a `Workspace.openObject` przyjmuje połączenie
+  pochodzenia obiektu (narzędzia, utPLSQL, debuger, projekt, użycia). Komendy `utplsql.*` mają parametr `connection`,
+  ponowienie nieudanych — połączenie ostatniego przebiegu. Narzędzie wywołane dla innego argumentu (QBE, Filtr kolumn,
+  wdrożenie Pro*C) zastępuje otwarte zamiast je przywołać; przeniesienie narzędzia (D183) nie ponawia zapytań; Esc
+  w trakcie przeciągania nie odłącza narzędzia; auto-odświeżanie wstrzymane, gdy narzędzie jest niewidoczne. Zgoda na
+  operację agenta to arkusz — okno `approval` w D183 to podgląd ze scenariusza zrzutów.
+- **Sesje wspólne:** w trybach Dwie sesje i Jedna sesja CONNECT/DISCONNECT w Oknie poleceń zamykały sesję główną
+  (wycofanie zmian innych okien) — okno teraz tylko się odpina, a sesję zamyka tylko w trybie Wiele sesji. Debuger
+  czyta źródła i typy przez sesję nadzorującą (wcześniej czekał na sesję główną zajętą debugowanym blokiem); sesja
+  nadzorująca ma limit oczekiwania 5 s (blok z błędem kompilacji kończy debugowanie po ok. 5 s zamiast godziny);
+  debugowanie zostaje dostępne w trybie Jedna sesja. Utrata połączenia zeruje „transakcja otwarta” we wszystkich oknach
+  tej sesji (serwer już wycofał). Rozłączenie i wylogowanie odmawiają, gdy okno połączenia wykonuje polecenie (wcześniej
+  sesja była zamykana pod wykonaniem); zamykanie bezczynnych sesji sprawdza bezczynność ponownie po zapytaniu.
+- **Słownik i edytory obiektów:** edytor tabeli czytał `ALL_TAB_COLS.DATA_DEFAULT_VC` (dopiero od 23ai — ORA-00904 na
+  19c i starszych), widoku `ALL_VIEWS.TEXT_VC` (obcięte do 4000 znaków, zapis odtwarzał widok z obciętym zapytaniem).
+  Teraz kolumny LONG (`DATA_DEFAULT`, `SEARCH_CONDITION`, `TEXT`) na każdej wersji, wariant 11g bez kolumn 12c; tekst
+  krótszy niż `TEXT_LENGTH` wyłącza edycję; zmiana nazwy widoku najpierw tworzy nowy. Wyzwalacze i indeksy innego
+  schematu niż tabela — w schemacie właściciela. Prywatne łącze innego schematu (DBA_DB_LINKS, D188) można oglądać,
+  ale nie usunąć ani przetestować (wcześniej trafiało się we własne łącze o tej samej nazwie); filtr nazwany i filtry
+  stanu/źródła nie dotyczą łączy ani katalogów; pamiętany jest tylko brak uprawnień do widoku DBA_. Prefiks właściciela
+  pomijany dla własnego schematu we wszystkich trybach; filtr domyślny gałęzi pochodzi z połączenia głównego. DDL zadań
+  Schedulera i kolejek przez typy PROCOBJ/AQ_QUEUE; „DDL zaznaczonych” nie powtarza ciała pakietu przy specyfikacji.
+  Drzewo przeglądarki zachowuje rozwinięcie i zaznaczenie po odświeżeniu.
+- **Agent AI:** narzędzia edytora agenta odmawiają okien połączeń ukrytych przed agentem (tekst z `IDENTIFIED BY`
+  trafiał do agenta), `get_editor` zakrywa hasła; maskowanie kolumn odrzuca obejścia (`*` w argumencie funkcji,
+  DBMS_XMLGEN/DBMS_SQL/XMLQUERY/XMLTABLE, CURSOR, nazwa maskowanej kolumny w literale — pozostałe obejścia opisane
+  w SECURITY.md). Wynik narzędzia ponad ok. 2 MB jest przycinany ze znacznikiem `result_truncated`, ramka ponad 4 MB
+  zastępowana błędem JSON-RPC, most kończy się kodem 1 z komunikatem (wcześniej ciche `exit(0)`); limit „Największy
+  wynik” 50 → 1,5 MB. „Cofnij sesję agenta” zamyka okna drogą Zamknij i nie kasuje konfliktów z historii. Deklarowane
+  poziomy dostępu agenta zwykłych komend (96 komend spoza `agent.*` i `AgentPolicy.appCommands`) ustawione na Brak —
+  zgodnie z D33 i tak nie były osiągalne; test pilnuje spójności rejestru. Import preferencji pyta, gdy zmienia
+  ustawienia uruchamiające programy lub ładujące biblioteki; link `pelikan://` otwiera tylko istniejący workset.
+- **Eksport haseł (D186):** plik 0600 od utworzenia (O_EXCL, potem zmiana nazwy); na dysku bez praw POSIX plik jawny
+  jest usuwany z błędem, zaszyfrowany zostaje z ostrzeżeniem. Pusta fraza lub uszkodzona sól — komunikat zamiast
+  awarii (`precondition` w PBKDF2). Definicje połączeń są uwierzytelnione razem z hasłami (AAD = SHA-256 definicji,
+  pole `authenticatesDefinitions`; starsze pliki czytelne), limit iteracji przy otwieraniu 2 000 000, liczenie poza
+  wątkiem głównym. Import wycofuje zapisane hasła i definicje po błędzie (bez duplikatów przy ponowieniu); eksport
+  bierze hasło wpisane w tej sesji. Pęk kluczy: aktualizacja wpisu zamiast usunięcia i dodania.
+- **Dane i skrypty:** narzędzia danych po błędzie lub przerwaniu wycofują niezatwierdzone wiersze i przywracają
+  wyzwalacze i klucze (wcześniej następne narzędzie zatwierdzało pół importu; ALTER identity commitował go od razu).
+  Zasada nazw: nazwy ze słownika przechodzą bez zmian, normalizowane są tylko wpisane (`ResultExporter.dictionaryName`,
+  uzupełnia D182). Kopiowanie schematu przesyła wiersze porcjami po 5000; eksport do pliku ponad 500 MB kończy się
+  błędem (strumieniowy zapis wymaga wyboru pliku przed eksportem — później). TIMESTAMP WITH LOCAL TIME ZONE w UTC.
+  `@plik`, `@@`, START, GET, FORMAT FILE i BEAUTIFY w Oknie poleceń dekodują i zapisują plik jak edytor (BOM,
+  Windows-1250, kodowanie projektu, CRLF). Siatka: przy sortowaniu/filtrze porównania, „Kolumna do plików” i zapytania
+  powiązane brały inne wiersze niż zaznaczone.
+- **Git w przeglądarce plików:** automatyczne odczyty (`status`, `log`, `show`, `rev-parse`) nie wykonują poleceń
+  z konfiguracji obcego repozytorium (`core.fsmonitor`, hooki, `log.showSignature`/`gpg.program`, lokalne filtry
+  clean/smudge, textconv, submoduły); `add`/`commit` z woli użytkownika — jak git w terminalu. Skutek uboczny: plik
+  z filtrem tylko lokalnym może chwilowo wyglądać na zmieniony.
+- **Sterowniki:** `$X{…}` z nieznaną funkcją zostaje błędem zamiast zawsze prawdziwego `0 = 0` (`DELETE … WHERE`
+  usuwał wszystko); DBMS_OUTPUT czytany w całości z jawnym znacznikiem obcięcia; CREATE MLE ENV dzielony jak DDL.
+- **Aplikacja:** zamknięcie okna głównego = zakończenie aplikacji (z pytaniami o zapis i transakcje); kliknięcie
+  w Docku przywraca okno. Czynności dostępne dotąd tylko z interfejsu są komendami (komórki notatnika, elementy
+  projektu, snippety, makra, panel debugera, kanwa diagramu, kolejność Code Contents); czynności na wskazanym elemencie
+  mają `inMenu: false` i argument; gest na kanwie zmienia dokument jedną komendą na końcu. Komendy panelu agenta są na
+  wstążce (Narzędzia › Agent AI) i w wyszukiwarce. Preferencja „przypinaj nowe okna do połączenia” zaczęła działać.
+  Wykonanie SQL w sesji debugowanej to komenda `debug.executeInTarget` przez strażnika zmian.
+- **Podpis i budowanie:** Hardened Runtime włączony (także przy podpisie ad hoc — jawne `--options=runtime`), jedyne
+  uprawnienie `com.apple.security.cs.disable-library-validation` (Instant Client przez `dlopen`), bez
+  `allow-dyld-environment-variables`; CI sprawdza flagę. `ENABLE_USER_SCRIPT_SANDBOXING` włączone. ODPI-C bez
+  `-Wno-everything` (czysty przy `-Wall -Wextra`). Bramka ostrzeżeń CI obejmuje też `App/` i `ld: warning`; aplikacja
+  w konfiguracji Release budowana w CI tylko po scaleniu na main (w PR dodawałaby ok. 10 min); `cancel-in-progress`
+  tylko dla PR; `actions/checkout` przypięty do SHA bez `persist-credentials`; Swift na Linuksie przypięty do 6.4.1;
+  shellcheck w CI. Stare `FileHandle.seekToEndOfFile()`/`write(_:)` (wyjątek ObjC przy pełnym dysku) zastąpione wszędzie.
+- **Wersje (D184):** główna cyfra rośnie tylko przy `typ!:` albo tytule zaczynającym się od `BREAKING CHANGE:`
+  (wcześniej także przy słowach w środku tytułu); `version.sh` jednym `git log` (3,3 → 0,6 s).
+- **Baza testowa:** `make testdb` czekał na „READY” z poprzedniego startu i padał na SIGPIPE przy dużym dzienniku;
+  `seed` kończył się sukcesem mimo nieudanego logowania; Workspace Manager instalowany tylko w PDB (FREEPDB1 po
+  restarcie w trybie RESTRICTED) — teraz w CDB$ROOT i PDB; `up` uruchamia też kontener SSH, a testy tunelu bez serwera
+  są pomijane. Hasło kontenera przez `--env-file`.
+
+Częściowo / świadomie bez zmian: wyszarzanie pozycji menu dla obcego łącza (wymaga synchronicznej wiedzy o użytkowniku
+sesji); eksport danych strumieniowo do pliku; zamknięcie okna z niezatwierdzonymi zmianami siatki bez pytania (szersza
+luka); ostrzeżenie o utracie uprawnień przy zmianie nazwy widoku; parser `ls -la` i `scp(download:)` zostają jako
+PC-SSH-004/002; upuszczenie narzędzia w oknie głównym poza panelami nadal je odłącza (D183); Xcode 27.2 w CI i 27.1
+lokalnie oraz odtworzenie lokalnego kontenera bazy z przypiętego obrazu (`testdb.sh reset`) — do decyzji właściciela.
