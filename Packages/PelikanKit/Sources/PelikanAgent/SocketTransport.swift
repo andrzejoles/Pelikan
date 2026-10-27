@@ -103,9 +103,10 @@ public actor SocketTransport: Transport {
         guard let path = traceFile else { return }
         let line = Data("\(direction) \(String(decoding: data.prefix(4000), as: UTF8.self))\n".utf8)
         if let h = FileHandle(forWritingAtPath: path) {
-            h.seekToEndOfFile()
-            h.write(line)
-            h.closeFile()
+            // Nowe API zgłasza błąd zapisu (pełny dysk) jako błąd Swift — stare `write(_:)` rzucało wyjątek ObjC (awaria).
+            defer { try? h.close() }
+            _ = try? h.seekToEnd()
+            try? h.write(contentsOf: line)
         } else {
             // Ślad zawiera wyniki zapytań — tylko dla właściciela.
             FileManager.default.createFile(atPath: path, contents: line, attributes: [.posixPermissions: 0o600])

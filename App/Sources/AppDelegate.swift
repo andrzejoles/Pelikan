@@ -1243,9 +1243,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         guard let script = uiScriptURL else { return false }
         let line = "\(ISO8601DateFormatter().string(from: Date())) pominięto okno dialogowe: \(what)\n"
         if let h = FileHandle(forWritingAtPath: script.path + ".log") {
-            h.seekToEndOfFile()
-            h.write(Data(line.utf8))
-            try? h.close()
+            defer { try? h.close() }
+            _ = try? h.seekToEnd()
+            try? h.write(contentsOf: Data(line.utf8))
         }
         return true
     }
@@ -1256,7 +1256,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let logURL = url.appendingPathExtension("log")
         func log(_ s: String) {
             let line = Data((ISO8601DateFormatter().string(from: Date()) + " " + s + "\n").utf8)
-            if let h = try? FileHandle(forWritingTo: logURL) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: logURL) }
+            if let h = try? FileHandle(forWritingTo: logURL) {
+                defer { try? h.close() }
+                _ = try? h.seekToEnd()
+                try? h.write(contentsOf: line)
+            } else {
+                try? line.write(to: logURL)
+            }
         }
         log("start: kroki \(steps.count), okna \(workspace.documents.count)")
         Task { @MainActor in

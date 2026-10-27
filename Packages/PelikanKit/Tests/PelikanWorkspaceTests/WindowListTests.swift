@@ -63,7 +63,7 @@ struct SSHTunnelPasswordTests {
         #expect(!script.contains(secret))
         let fifo = a.environment["PELIKAN_ASKPASS_FIFO"]!
         let h = try #require(FileHandle(forReadingAtPath: fifo))
-        let read = String(decoding: h.readDataToEndOfFile(), as: UTF8.self)
+        let read = String(decoding: (try? h.readToEnd()) ?? Data(), as: UTF8.self)
         try? h.close()
         #expect(read == secret + "\n")
         // Wątek zapisu usuwa kolejkę zaraz po zapisie — jednorazowa.

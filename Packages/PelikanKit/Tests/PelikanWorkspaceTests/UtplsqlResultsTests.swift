@@ -81,7 +81,7 @@ struct UtplsqlResultsTests {
             p.standardOutput = out
             try p.run()
             p.waitUntilExit()
-            return String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            return String(decoding: (try? out.fileHandleForReading.readToEnd()) ?? Data(), as: UTF8.self)
         }
         #expect(try connect(["OWN": "x"]) == "APP$OWN@db:1521/o'k")
         #expect(try connect(["PELIKAN_UT_CONNECT": "u@d"]) == "u@d")
