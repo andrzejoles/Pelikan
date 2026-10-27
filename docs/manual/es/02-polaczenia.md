@@ -175,6 +175,14 @@ mano.
 sin contraseñas. **Importar definiciones de conexión…** las carga en otro Mac; las contraseñas las indicarás en la
 primera conexión.
 
+**Sesión › Conexiones › Exportar conexiones con contraseñas…** guarda las definiciones junto con las contraseñas de
+las bases de datos y de los túneles SSH, por ejemplo para llevar las conexiones a un Mac nuevo o leer una contraseña de
+hace años y configurar otra herramienta. La exportación requiere la confirmación del propietario del Mac (Touch ID o
+contraseña). Las contraseñas pueden ir **cifradas con una frase** (sin la frase no se pueden recuperar) o en **texto
+plano**; en ese caso Pelikan avisa una vez más y cualquiera que tenga el archivo puede leerlas. **Importar definiciones
+de conexión…** reconoce un archivo con contraseñas, pide la frase si está cifrado, guarda las contraseñas en el Llavero
+y **elimina el archivo**.
+
 ## Licencias de los paquetes de Oracle
 
 Los informes AWR, ASH y ADDM requieren el Oracle Diagnostics Pack de pago, y SQL Monitor y SQL Tuning Advisor, el Tuning

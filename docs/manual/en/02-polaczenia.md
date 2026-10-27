@@ -167,6 +167,13 @@ saved automatically and comes back when reopened, also after Pelikan is restarte
 without passwords. **Import Connection Definitions…** loads them on another Mac; you enter the passwords on the first
 connection.
 
+**Session › Connections › Export Connections with Passwords…** saves the definitions together with the database and
+SSH tunnel passwords — for example to move connections to a new Mac or to read a years-old password to configure
+another tool. The export requires confirmation by the Mac owner (Touch ID or password). Passwords can be **encrypted
+with a passphrase** (without the passphrase they cannot be recovered) or in **plain text** — Pelikan then warns once
+more, and anyone who has the file can read them. **Import Connection Definitions…** recognizes a file with passwords,
+asks for the passphrase if it is encrypted, saves the passwords in the Keychain and **deletes the file**.
+
 ## Oracle pack licenses
 
 AWR, ASH and ADDM reports require the paid Oracle Diagnostics Pack, and SQL Monitor and SQL Tuning Advisor require the

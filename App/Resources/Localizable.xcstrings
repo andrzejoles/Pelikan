@@ -9941,6 +9941,34 @@
         }
       }
     },
+    "Co najmniej %@ znaków. Bez frazy haseł z pliku nie da się odzyskać." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At least %@ characters. Without the passphrase the passwords in the file cannot be recovered."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindestens %@ Zeichen. Ohne die Passphrase lassen sich die Passwörter in der Datei nicht wiederherstellen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al menos %@ caracteres. Sin la frase, las contraseñas del archivo no se pueden recuperar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Щонайменше %@ символів. Без фрази паролі з файлу неможливо відновити."
+          }
+        }
+      }
+    },
     "Co się stało" : {
       "localizations" : {
         "en" : {
@@ -17893,6 +17921,34 @@
         }
       }
     },
+    "Eksport haseł tylko przez użytkownika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords can be exported only by the user"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwörter kann nur der Benutzer exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo el usuario puede exportar las contraseñas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати паролі може лише користувач"
+          }
+        }
+      }
+    },
     "Eksport i import" : {
       "localizations" : {
         "en" : {
@@ -18001,6 +18057,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Export der Benutzerobjekte …"
+          }
+        }
+      }
+    },
+    "Eksport połączeń z hasłami" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export connections with passwords"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungen mit Passwörtern exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar conexiones con contraseñas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експорт з'єднань з паролями"
           }
         }
       }
@@ -18481,6 +18565,34 @@
         }
       }
     },
+    "Eksportuj jawnie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export in plain text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unverschlüsselt exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar en texto plano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати відкритим текстом"
+          }
+        }
+      }
+    },
     "Eksportuj notatnik jako Markdown…" : {
       "localizations" : {
         "en" : {
@@ -18533,6 +18645,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Експортувати повний журнал…"
+          }
+        }
+      }
+    },
+    "Eksportuj połączenia z hasłami…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Export Connections with Passwords…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungen mit Passwörtern exportieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exportar conexiones con contraseñas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Експортувати з'єднання з паролями…"
           }
         }
       }
@@ -20721,6 +20861,118 @@
         }
       }
     },
+    "Fraza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фраза"
+          }
+        }
+      }
+    },
+    "Fraza musi mieć co najmniej %@ znaków" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The passphrase must have at least %@ characters"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Passphrase muss mindestens %@ Zeichen haben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La frase debe tener al menos %@ caracteres"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фраза має містити щонайменше %@ символів"
+          }
+        }
+      }
+    },
+    "Fraza pliku połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection file passphrase"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase der Verbindungsdatei"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase del archivo de conexiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фраза файлу з'єднань"
+          }
+        }
+      }
+    },
+    "Fraza szyfrująca" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encryption passphrase"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschlüsselungs-Passphrase"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase de cifrado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фраза шифрування"
+          }
+        }
+      }
+    },
     "Funkcja" : {
       "localizations" : {
         "en" : {
@@ -22345,6 +22597,34 @@
         }
       }
     },
+    "Hasła jawnym tekstem?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords in plain text?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwörter im Klartext?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Contraseñas en texto plano?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Паролі відкритим текстом?"
+          }
+        }
+      }
+    },
     "Hasła połączeń" : {
       "localizations" : {
         "en" : {
@@ -22425,6 +22705,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwörter liegen im Schlüsselbund (Anmeldeschlüsselbund, ohne iCloud-Synchronisierung). Wenn aktiviert, fragt Pelikan während der Laufzeit einmal pro Verbindung nach Bestätigung — auch wenn ein Agent die Verbindung nutzt. Ohne „Merken“ eingegebene Passwörter bleiben nur im Arbeitsspeicher."
+          }
+        }
+      }
+    },
+    "Hasła w pliku są zaszyfrowane. Podaj frazę użytą przy eksporcie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The passwords in the file are encrypted. Enter the passphrase used for the export."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Passwörter in der Datei sind verschlüsselt. Geben Sie die beim Export verwendete Passphrase ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las contraseñas del archivo están cifradas. Introduce la frase usada al exportar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Паролі у файлі зашифровані. Введіть фразу, використану під час експорту."
+          }
+        }
+      }
+    },
+    "Hasła: encrypted — zaszyfrowane frazą, plain — jawnym tekstem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords: encrypted — with a passphrase, plain — plain text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwörter: encrypted — mit Passphrase verschlüsselt, plain — Klartext"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraseñas: encrypted — cifradas con frase, plain — texto plano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Паролі: encrypted — зашифровані фразою, plain — відкритим текстом"
           }
         }
       }
@@ -25705,6 +26041,34 @@
         }
       }
     },
+    "Jak zapisać hasła w pliku? Zaszyfrowane wymagają frazy przy imporcie; jawne może odczytać każdy, kto ma plik." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How should passwords be stored in the file? Encrypted ones need the passphrase on import; plain ones can be read by anyone who has the file."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie sollen Passwörter in der Datei gespeichert werden? Verschlüsselte erfordern beim Import die Passphrase; Klartext kann jeder lesen, der die Datei hat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cómo guardar las contraseñas en el archivo? Las cifradas requieren la frase al importar; las de texto plano puede leerlas cualquiera que tenga el archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Як зберегти паролі у файлі? Зашифровані потребують фрази під час імпорту; відкриті може прочитати кожен, хто має файл."
+          }
+        }
+      }
+    },
     "Jako SQL" : {
       "localizations" : {
         "en" : {
@@ -25869,6 +26233,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ändert ausdrücklich die Kodierung, in der das Fenster gespeichert wird (UTF-8, ISO-8859-2, Windows-1250); Zeichen außerhalb der Kodierung werden angezeigt."
+          }
+        }
+      }
+    },
+    "Jawnym tekstem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plain text"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klartext"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto plano"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкритим текстом"
           }
         }
       }
@@ -40629,6 +41021,34 @@
         }
       }
     },
+    "Nieobsługiwany format haseł w pliku: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported password format in the file: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht unterstütztes Passwortformat in der Datei: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato de contraseñas no compatible en el archivo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Непідтримуваний формат паролів у файлі: %@"
+          }
+        }
+      }
+    },
     "Niepoprawna nazwa: %@" : {
       "localizations" : {
         "en" : {
@@ -40709,6 +41129,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fehlschläge"
+          }
+        }
+      }
+    },
+    "Nieprawidłowa fraza albo uszkodzony plik — hasła nie zostały odszyfrowane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong passphrase or damaged file — the passwords were not decrypted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falsche Passphrase oder beschädigte Datei — die Passwörter wurden nicht entschlüsselt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase incorrecta o archivo dañado: las contraseñas no se descifraron"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Неправильна фраза або пошкоджений файл — паролі не розшифровано"
           }
         }
       }
@@ -52585,6 +53033,34 @@
         }
       }
     },
+    "Pelikan-połączenia-z-hasłami" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan-connections-with-passwords"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan-Verbindungen-mit-Passwoertern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan-conexiones-con-contrasenas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pelikan-zjednannia-z-paroliamy"
+          }
+        }
+      }
+    },
     "Pełny" : {
       "localizations" : {
         "en" : {
@@ -53393,6 +53869,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файл бібліотеки на сервері"
+          }
+        }
+      }
+    },
+    "Plik będzie zawierał hasła baz i tuneli SSH bez szyfrowania. Przechowuj go w bezpiecznym miejscu i usuń, gdy nie będzie potrzebny." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file will contain database and SSH tunnel passwords without encryption. Keep it in a safe place and delete it when no longer needed."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei enthält Datenbank- und SSH-Tunnel-Passwörter unverschlüsselt. Bewahren Sie sie sicher auf und löschen Sie sie, wenn sie nicht mehr gebraucht wird."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo contendrá las contraseñas de las bases de datos y de los túneles SSH sin cifrar. Guárdalo en un lugar seguro y bórralo cuando ya no lo necesites."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл міститиме паролі баз і тунелів SSH без шифрування. Зберігайте його в безпечному місці й видаліть, коли він стане непотрібним."
           }
         }
       }
@@ -60197,6 +60701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wiederholung (z. B. FREQ=DAILY;BYHOUR=3)"
+          }
+        }
+      }
+    },
+    "Powtórz frazę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeat passphrase"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passphrase wiederholen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repite la frase"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторіть фразу"
           }
         }
       }
@@ -88621,6 +89153,34 @@
         }
       }
     },
+    "Wpisane frazy się różnią. Wpisz je ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The passphrases do not match. Enter them again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Passphrasen stimmen nicht überein. Geben Sie sie erneut ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las frases no coinciden. Escríbelas de nuevo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введені фрази відрізняються. Введіть їх ще раз."
+          }
+        }
+      }
+    },
     "Wpisy dziennika" : {
       "localizations" : {
         "en" : {
@@ -98085,6 +98645,62 @@
         }
       }
     },
+    "Zaimportowano połączeń: %@, hasła zapisano w Pęku kluczy, ale pliku z hasłami nie udało się usunąć — usuń go ręcznie: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported connections: %@, passwords saved in the Keychain, but the file with passwords could not be deleted — delete it manually: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importierte Verbindungen: %@, Passwörter im Schlüsselbund gespeichert, aber die Datei mit Passwörtern konnte nicht gelöscht werden — löschen Sie sie manuell: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexiones importadas: %@, contraseñas guardadas en el Llavero, pero no se pudo eliminar el archivo con contraseñas; elimínalo manualmente: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортовано з'єднань: %@, паролі збережено у Зв’язці ключів, але файл із паролями не вдалося видалити — видаліть його вручну: %@"
+          }
+        }
+      }
+    },
+    "Zaimportowano połączeń: %@; hasła zapisano w Pęku kluczy, plik z hasłami usunięto" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imported connections: %@; passwords saved in the Keychain, the file with passwords was deleted"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importierte Verbindungen: %@; Passwörter im Schlüsselbund gespeichert, die Datei mit Passwörtern wurde gelöscht"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexiones importadas: %@; contraseñas guardadas en el Llavero, el archivo con contraseñas se eliminó"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортовано з'єднань: %@; паролі збережено у Зв’язці ключів, файл із паролями видалено"
+          }
+        }
+      }
+    },
     "Zainstalowano utPLSQL %@" : {
       "localizations" : {
         "en" : {
@@ -100325,6 +100941,34 @@
         }
       }
     },
+    "Zapisano %@ połączeń, z hasłami: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved %@ connections, with passwords: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Verbindungen gespeichert, mit Passwörtern: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se guardaron %@ conexiones, con contraseñas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Збережено %@ з'єднань, із паролями: %@"
+          }
+        }
+      }
+    },
     "Zapisano DDL do %@" : {
       "localizations" : {
         "en" : {
@@ -100993,6 +101637,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зберігає визначення з'єднань і теки у файлі JSON — без паролів (вони залишаються у В'язці ключів)."
+          }
+        }
+      }
+    },
+    "Zapisuje definicje połączeń z hasłami (bazy i tunelu SSH) — zaszyfrowanymi frazą albo jawnym tekstem — po uwierzytelnieniu właściciela Maca." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves connection definitions with passwords (database and SSH tunnel) — encrypted with a passphrase or in plain text — after authenticating the Mac owner."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichert Verbindungsdefinitionen mit Passwörtern (Datenbank und SSH-Tunnel) — mit Passphrase verschlüsselt oder im Klartext — nach Authentifizierung des Mac-Besitzers."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda las definiciones de conexión con contraseñas (base de datos y túnel SSH), cifradas con frase o en texto plano, tras autenticar al propietario del Mac."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберігає визначення з'єднань із паролями (бази й тунелю SSH) — зашифрованими фразою або відкритим текстом — після автентифікації власника Mac."
           }
         }
       }
@@ -103233,6 +103905,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Замінює виділений вираз константою, оголошеною в підпрограмі або блоці."
+          }
+        }
+      }
+    },
+    "Zaszyfrowane frazą" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encrypted with a passphrase"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Passphrase verschlüsselt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cifradas con frase"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зашифровані фразою"
           }
         }
       }
@@ -115777,6 +116477,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zurücksetzen der Binärdatei"
+          }
+        }
+      }
+    },
+    "wyeksportować hasła połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "export connection passwords"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungspasswörter exportieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "exportar las contraseñas de las conexiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "експортувати паролі з'єднань"
           }
         }
       }

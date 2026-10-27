@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 
 /// Komendy połączeń (UG 3, 19, 20). Argument `connection` = UUID definicji; bez argumentu — połączenie główne.
 public enum ConnectionCommands {
@@ -55,6 +56,18 @@ public enum ConnectionCommands {
                 if url == nil { url = await ctx.ui?.chooseFilesToOpen().first }
                 guard let url else { throw CommandError.cancelledByUser }
                 let data = try Data(contentsOf: url)
+                // Plik z hasłami (D186): zaszyfrowane — fraza; po imporcie plik jest usuwany.
+                let envelope = try ConnectionTransfer.envelope(in: data)
+                var secrets: [String: ConnectionSecrets] = [:]
+                if let envelope {
+                    var passphrase: String?
+                    if envelope.mode == .encrypted {
+                        passphrase = await ctx.ui?.askSecret(L10n.tr("Fraza pliku połączeń"),
+                                                             message: L10n.tr("Hasła w pliku są zaszyfrowane. Podaj frazę użytą przy eksporcie."), confirm: false)
+                        guard passphrase != nil else { throw CommandError.cancelledByUser }
+                    }
+                    secrets = try ConnectionTransfer.open(envelope, passphrase: passphrase)
+                }
                 // Tunel SSH i skrypt inicjalizacji działają przy każdym połączeniu — import tylko ze świadomą zgodą.
                 let running = try ConnectionStore.definitionsRunningCode(in: data)
                 if !running.isEmpty, let ui = ctx.ui {
@@ -62,8 +75,25 @@ public enum ConnectionCommands {
                                        message: L10n.tr("Połączenia \(running.joined(separator: ", ")) uruchamiają przy łączeniu ssh albo polecenia w bazie. Importuj tylko plik z zaufanego źródła."),
                                        buttons: [L10n.tr("Importuj"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
-                let n = try ctx.workspace.connections.importDefinitions(data)
-                return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n)"), value: .int(Int64(n)))
+                let n = try ctx.workspace.connections.importDefinitions(data, secrets: secrets)
+                guard envelope != nil else { return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n)"), value: .int(Int64(n))) }
+                Log.connection.info("Import połączeń z hasłami: \(n, privacy: .public) definicji, \(secrets.count, privacy: .public) z hasłami")
+                do {
+                    try FileManager.default.removeItem(at: url)
+                } catch {
+                    throw CommandError.notAvailable(L10n.tr("Zaimportowano połączeń: \(n), hasła zapisano w Pęku kluczy, ale pliku z hasłami nie udało się usunąć — usuń go ręcznie: \(error.localizedDescription)"))
+                }
+                return CommandResult(message: L10n.tr("Zaimportowano połączeń: \(n); hasła zapisano w Pęku kluczy, plik z hasłami usunięto"), value: .int(Int64(n)))
+            },
+            Command(CommandDescriptor(id: "connection.exportWithPasswords", title: L10n.tr("Eksportuj połączenia z hasłami…"), category: .session,
+                                      submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik JSON")),
+                                                   CommandParameter("mode", .string, L10n.tr("Hasła: encrypted — zaszyfrowane frazą, plain — jawnym tekstem"),
+                                                                    allowed: ["encrypted", "plain"])],
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje definicje połączeń z hasłami (bazy i tunelu SSH) — zaszyfrowanymi frazą albo jawnym tekstem — po uwierzytelnieniu właściciela Maca."),
+                                      feature: "PD-CONN-010")) { ctx in
+                try await exportWithPasswords(ctx)
             },
             Command(CommandDescriptor(id: "connection.new", title: L10n.tr("Nowe połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       agent: .none, effect: .settings, summary: L10n.tr("Definiuje nowe połączenie."), feature: "PD-CONN-004")) { ctx in
@@ -244,6 +274,48 @@ public enum ConnectionCommands {
                 return .ok
             },
         ]
+    }
+
+    /// Eksport z hasłami (D186): tylko użytkownik, uwierzytelnienie właściciela Maca (Touch ID albo hasło) zawsze,
+    /// tryb jawny po dodatkowym ostrzeżeniu; fraza tylko z okna (nigdy z argumentów); plik z prawami 0600.
+    @MainActor
+    static func exportWithPasswords(_ ctx: CommandContext) async throws -> CommandResult {
+        guard ctx.invoker == .user, let ui = ctx.ui else { throw CommandError.notAvailable(L10n.tr("Eksport haseł tylko przez użytkownika")) }
+        var mode = ctx.arguments.string("mode").flatMap(ConnectionTransfer.Mode.init(rawValue:))
+        if mode == nil {
+            let a = await ui.ask(L10n.tr("Eksport połączeń z hasłami"),
+                                 message: L10n.tr("Jak zapisać hasła w pliku? Zaszyfrowane wymagają frazy przy imporcie; jawne może odczytać każdy, kto ma plik."),
+                                 buttons: [L10n.tr("Zaszyfrowane frazą"), L10n.tr("Jawnym tekstem"), L10n.tr("Anuluj")])
+            guard let a, a < 2 else { throw CommandError.cancelledByUser }
+            mode = a == 0 ? .encrypted : .plain
+        }
+        guard let mode else { throw CommandError.cancelledByUser }
+        if mode == .plain {
+            guard await ui.ask(L10n.tr("Hasła jawnym tekstem?"),
+                               message: L10n.tr("Plik będzie zawierał hasła baz i tuneli SSH bez szyfrowania. Przechowuj go w bezpiecznym miejscu i usuń, gdy nie będzie potrzebny."),
+                               buttons: [L10n.tr("Eksportuj jawnie"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+        }
+        guard await ctx.workspace.sessions.prompter?.authenticateOwner(reason: L10n.tr("wyeksportować hasła połączeń")) == true else {
+            throw CommandError.cancelledByUser
+        }
+        var passphrase: String?
+        if mode == .encrypted {
+            passphrase = await ui.askSecret(L10n.tr("Fraza szyfrująca"),
+                                            message: L10n.tr("Co najmniej \(ConnectionTransfer.minimumPassphraseLength) znaków. Bez frazy haseł z pliku nie da się odzyskać."),
+                                            confirm: true)
+            guard passphrase != nil else { throw CommandError.cancelledByUser }
+        }
+        var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+        if url == nil { url = await ui.chooseSaveURL(suggestedName: L10n.tr("Pelikan-połączenia-z-hasłami"), fileExtension: "json") }
+        guard let url else { throw CommandError.cancelledByUser }
+        let secrets = ctx.workspace.connections.secretsForExport()
+        let envelope = try ConnectionTransfer.envelope(secrets, mode: mode, passphrase: passphrase)
+        let data = try ctx.workspace.connections.exportDefinitions(secrets: envelope)
+        try data.write(to: url, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        Log.connection.info("Eksport połączeń z hasłami (\(mode.rawValue, privacy: .public)): \(secrets.count, privacy: .public) z hasłami")
+        return CommandResult(message: L10n.tr("Zapisano \(ctx.workspace.connections.connections.count) połączeń, z hasłami: \(secrets.count)"),
+                             value: .string(url.path))
     }
 
     /// Rozłączenie z pytaniem o otwarte transakcje okien tego połączenia (D10).

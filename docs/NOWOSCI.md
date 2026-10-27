@@ -2,6 +2,13 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.2.0 — eksport i import połączeń z hasłami
+
+- **Połączenia z hasłami** — **Sesja › Połączenia › Eksportuj połączenia z hasłami…** zapisuje definicje razem
+  z hasłami baz i tuneli SSH, po potwierdzeniu właściciela Maca (Touch ID albo hasło). Hasła są zaszyfrowane frazą
+  albo — po dodatkowym ostrzeżeniu — zapisane jawnym tekstem (np. żeby odczytać dawne hasło do innego narzędzia).
+  **Importuj definicje połączeń…** rozpoznaje taki plik, pyta o frazę, zapisuje hasła w Pęku kluczy i usuwa plik.
+
 ## 1.1.0 — wiele połączeń w przeglądarce obiektów
 
 - **Przeglądarka obiektów jak w DBeaverze** — na najwyższym poziomie drzewa są wszystkie otwarte połączenia, każde
