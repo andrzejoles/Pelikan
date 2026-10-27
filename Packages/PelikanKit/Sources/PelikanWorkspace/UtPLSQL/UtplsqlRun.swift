@@ -144,8 +144,13 @@ public final class UtplsqlRun: Identifiable {
     public internal(set) var coverageHTML: String?
     /// Pokrycie linii: obiekt (OWNER.NAZWA) → linie pokryte / niepokryte (z reportera Sonar).
     public internal(set) var coverage: [String: CoverageLines] = [:]
+    /// Połączenie przebiegu: źródła testów, ramki stosu i ponowne uruchomienie dotyczą tej bazy, nie aktywnego okna.
+    public let connectionID: UUID?
 
-    init(paths: [String]) { self.paths = paths }
+    init(paths: [String], connectionID: UUID? = nil) {
+        self.paths = paths
+        self.connectionID = connectionID
+    }
 
     /// Wszystkie testy (liście) w kolejności drzewa.
     public var tests: [UtNode] {

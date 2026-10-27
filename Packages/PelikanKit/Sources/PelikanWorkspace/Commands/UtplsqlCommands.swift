@@ -8,6 +8,7 @@ enum UtplsqlCommands {
     static let runParams = [
         CommandParameter("path", .string, L10n.tr("Ścieżka: schemat, schemat.pakiet[.procedura] albo schemat:suitepath (domyślnie bieżący użytkownik)")),
         CommandParameter("coverage", .boolean, L10n.tr("Zbieraj pokrycie kodu bieżącego schematu")),
+        CommandContext.toolConnectionParam,
     ]
 
     /// Instalacja/aktualizacja utPLSQL (UT-INS-002); agent — po zgodzie w oknie zgody, bez drugiego pytania.
@@ -50,6 +51,13 @@ enum UtplsqlCommands {
         ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID
     }
 
+    /// Połączenie komendy przebiegu: argument `connection` (eksplorator testów, okno wyników — połączenie, z którego
+    /// pochodzi lista), bez niego — aktywnego okna albo główne.
+    @MainActor
+    static func connection(_ ctx: CommandContext) throws -> UUID? {
+        ctx.arguments.string("connection") != nil ? try ctx.toolConnection() : connection(ctx.workspace)
+    }
+
     /// Jednorazowe (na sesję aplikacji) ostrzeżenie przed pierwszym pokryciem (UT-COV-003): utPLSQL zbiera je przez
     /// DBMS_PROFILER/DBMS_PLSQL_CODE_COVERAGE, co wymaga uprawnień i zapisuje dane profilera w bazie.
     @MainActor
@@ -64,10 +72,10 @@ enum UtplsqlCommands {
 
     @MainActor
     static func run(_ ctx: CommandContext, paths: [String]?, coverage: Bool, schemes: [String] = [],
-                    include: [String] = [], exclude: [String] = []) async throws -> CommandResult {
+                    include: [String] = [], exclude: [String] = [], connection fixed: UUID? = nil) async throws -> CommandResult {
         let ws = ctx.workspace
         if coverage { try await confirmCoverage(ctx) }
-        guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
+        guard let conn = try fixed ?? connection(ctx), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
         let schema = try await m.currentSchema()
         let p = paths ?? [schema]
         let run = try await UtplsqlRunner.start(paths: p, coverageSchemes: coverage ? (schemes.isEmpty ? [schema] : schemes) : [],
@@ -134,7 +142,8 @@ enum UtplsqlCommands {
     @MainActor static var all: [Command] {
         [
             Command(CommandDescriptor(id: "utplsql.runAll", title: L10n.tr("utPLSQL: uruchom wszystkie testy"), category: .tools, submenu: "utPLSQL",
-                                      pd: ["ctrl+shift+u"], mac: ["cmd+shift+u"], agent: .approval, effect: .modifiesDatabase,
+                                      pd: ["ctrl+shift+u"], mac: ["cmd+shift+u"], parameters: [CommandContext.toolConnectionParam],
+                                      agent: .approval, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia wszystkie testy utPLSQL bieżącego użytkownika; wyniki na żywo w oknie wyników."),
                                       feature: "UT-RUN-001"),
                     validate: { connection($0) != nil }) { ctx in
@@ -199,8 +208,9 @@ enum UtplsqlCommands {
                                       agent: .approval, effect: .modifiesDatabase, summary: L10n.tr("Uruchamia ponownie testy nieudane w ostatnim przebiegu."),
                                       feature: "UT-RUN-006"),
                     validate: { ws in ws.lastUtplsqlRun.map { $0.finished && !$0.failedPaths.isEmpty } ?? false }) { ctx in
-                guard let failed = ctx.workspace.lastUtplsqlRun?.failedPaths, !failed.isEmpty else { return .ok }
-                return try await run(ctx, paths: failed, coverage: false)
+                guard let last = ctx.workspace.lastUtplsqlRun, !last.failedPaths.isEmpty else { return .ok }
+                // Nieudane testy są w bazie ostatniego przebiegu.
+                return try await run(ctx, paths: last.failedPaths, coverage: false, connection: last.connectionID)
             },
             Command(CommandDescriptor(id: "utplsql.cancel", title: L10n.tr("utPLSQL: przerwij"), category: .tools, submenu: "utPLSQL",
                                       agent: .full, effect: .uiState, summary: L10n.tr("Przerywa trwający przebieg testów."), feature: "UT-RUN-006"),
@@ -277,7 +287,7 @@ enum UtplsqlCommands {
                 guard let o = try await UtplsqlExplorer.counterpart(of: u.name, owner: owner, metadata: m) else {
                     throw CommandError.notAvailable(L10n.tr("Nie znaleziono pakietu testowego ani testowanego dla \(u.name)"))
                 }
-                try await ws.openObject(o)
+                try await ws.openObject(o, connection: m.connectionID)
                 return CommandResult(message: "\(o.owner).\(o.name)")
             },
             Command(CommandDescriptor(id: "utplsql.export", title: L10n.tr("utPLSQL: eksport wyników…"), category: .tools, submenu: "utPLSQL",
@@ -287,7 +297,7 @@ enum UtplsqlCommands {
                                       summary: L10n.tr("Uruchamia testy z reporterem JUnit, Sonar, TeamCity, TAP albo pokryciem Cobertura/Sonar/HTML i zapisuje wynik do pliku (agent dostaje tekst)."),
                                       feature: "UT-CI-001")) { ctx in
                 let ws = ctx.workspace
-                guard let conn = connection(ws), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
+                guard let conn = try connection(ctx), let m = ws.metadata(for: conn) else { throw CommandError.notConnected }
                 guard let format = UtplsqlReportFormat(rawValue: ctx.arguments.string("format") ?? "") else {
                     throw CommandError.invalidArgument("format", UtplsqlReportFormat.allCases.map(\.rawValue).joined(separator: ", "))
                 }
