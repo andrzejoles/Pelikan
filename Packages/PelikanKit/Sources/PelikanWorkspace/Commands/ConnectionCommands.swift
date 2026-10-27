@@ -197,9 +197,11 @@ public enum ConnectionCommands {
                 let id = try connectionID(ctx)
                 let ws = ctx.workspace
                 var n = 0
+                // Pomijane sesje zajęte: wykonanie w toku albo otwarty kursor wyniku (dociąganie wierszy).
+                let busy = ws.busySessionKeys
                 for d in ws.documents where ws.effectiveConnection(of: d) == id && !d.transactionOpen && !d.isExecuting {
                     let key = ws.sessions.key(forDocument: d.id, connection: id)
-                    guard case .document = key.purpose, ws.sessions.existingSession(key) != nil else { continue }
+                    guard case .document = key.purpose, !busy.contains(key), ws.sessions.existingSession(key) != nil else { continue }
                     await ws.sessions.close(key)
                     n += 1
                 }
@@ -252,6 +254,8 @@ public enum ConnectionCommands {
                     target = def.id
                 }
                 guard target != doc.connectionID else { return .ok }
+                // Zmiana połączenia zamyka sesję okna — trwające wykonanie trzeba najpierw przerwać (jak przy zamknięciu okna).
+                if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” wykonuje polecenie — najpierw przerwij wykonanie.")) }
                 if doc.transactionOpen {
                     let a = await ctx.ui?.ask(L10n.tr("Transakcja okna „\(doc.title)” jest otwarta"),
                                               message: L10n.tr("Zatwierdzić czy wycofać zmiany przed zmianą połączenia okna?"),
@@ -344,6 +348,15 @@ public enum ConnectionCommands {
     /// Rozłączenie z pytaniem o otwarte transakcje okien tego połączenia (D10).
     @MainActor
     static func disconnect(_ ctx: CommandContext, _ id: UUID) async throws {
+        // Wykonanie w toku trzeba najpierw przerwać; debugowanie jest kończone przed zamknięciem sesji (DEBUG_OFF z sesji
+        // nadzorującej, ADR 0006) — jak przy zamknięciu okna.
+        let ws = ctx.workspace
+        let windows = ws.documents.filter { ws.effectiveConnection(of: $0) == id }
+        let debugging: (Document) -> DebuggerEngine? = { d in ws.debuggers[d.id].flatMap { [.running, .paused].contains($0.state) ? $0 : nil } }
+        if let busy = windows.first(where: { $0.isExecuting && debugging($0) == nil }) {
+            throw CommandError.notAvailable(L10n.tr("Okno „\(busy.title)” wykonuje polecenie — najpierw przerwij wykonanie."))
+        }
+        for d in windows { await debugging(d)?.stop() }
         let open = ctx.workspace.documents.filter { $0.transactionOpen && ctx.workspace.effectiveConnection(of: $0) == id }
         if !open.isEmpty {
             switch ctx.workspace.settings.logoffWithOpenTransaction {

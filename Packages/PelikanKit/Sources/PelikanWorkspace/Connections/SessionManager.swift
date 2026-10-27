@@ -121,10 +121,13 @@ public final class SessionManager {
         guard minutes > 0 else { return 0 }
         var closed = 0
         for key in busy where sessions[key] != nil { lastActivity[key] = now }
+        let isIdle = { (key: SessionKey) in now.timeIntervalSince(self.lastActivity[key] ?? .distantPast) > Double(minutes * 60) }
         for (key, s) in sessions {
-            guard case .document = key.purpose, now.timeIntervalSince(lastActivity[key] ?? .distantPast) > Double(minutes * 60) else { continue }
+            guard case .document = key.purpose, isIdle(key) else { continue }
             // Zamykamy tylko sesję, która odpowiada i nie ma otwartej transakcji (decyzję o transakcji podejmuje użytkownik).
             let tx: String?? = try? await s.scalar("select dbms_transaction.local_transaction_id from dual")
+            // W czasie zapytania okno mogło zacząć wykonanie (użycie sesji) albo sesja mogła zostać zastąpiona.
+            guard sessions[key] === s, isIdle(key) else { continue }
             if case .some(.none) = tx {
                 await close(key)
                 closed += 1
