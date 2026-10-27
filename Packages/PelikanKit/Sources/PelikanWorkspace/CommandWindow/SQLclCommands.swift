@@ -30,8 +30,10 @@ extension SQLPlusEngine {
                 guard args.count >= 2 else { throw SQLPlusError(L10n.tr("FORMAT FILE wejście [wyjście]")) }
                 let input = resolve(args[1], baseDirectory: baseDirectory)
                 let output = args.count > 2 ? resolve(args[2], baseDirectory: baseDirectory) : input
-                let text = try String(contentsOf: input, encoding: .utf8)
-                try Beautifier.format(text, options: workspace.settings.beautifier).write(to: output, atomically: true, encoding: .utf8)
+                guard let (text, format) = readScript(input) else {
+                    throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(input.lastPathComponent)”."), osError: true)
+                }
+                try writeScript(try Beautifier.format(text, options: workspace.settings.beautifier), format: format, to: output)
                 emit(L10n.tr("Sformatowano: \(output.lastPathComponent)"))
             } else {
                 guard let b = state.buffer else { throw SQLPlusError(L10n.tr("SP2-0103: Bufor SQL jest pusty.")) }

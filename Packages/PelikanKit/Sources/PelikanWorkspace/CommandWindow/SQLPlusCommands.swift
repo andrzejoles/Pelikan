@@ -72,7 +72,7 @@ extension SQLPlusEngine {
         case "VARIABLE":
             try variable(args)
         case "PRINT":
-            printBinds(upper.isEmpty ? state.binds.keys.sorted() : upper.map { $0.hasPrefix(":") ? String($0.dropFirst()) : $0 })
+            try await printBinds(upper.isEmpty ? state.binds.keys.sorted() : upper.map { $0.hasPrefix(":") ? String($0.dropFirst()) : $0 })
         case "EXECUTE":
             let body = Self.rest(text).trimmingCharacters(in: CharacterSet(charactersIn: "; \n"))
             return await executeSQL("BEGIN \(body); END;", original: text, isPLSQL: true)
@@ -112,11 +112,9 @@ extension SQLPlusEngine {
         case "DISCONNECT":
             guard try await endTransactionBeforeLogoff() else { emit(L10n.tr("Anulowano"), .info); return .finished }
             let c = windowConnection
+            await closeOwnSession()
             document.connectionID = nil
-            if let c {
-                await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: c))
-                releaseTemporary(c)
-            }
+            if let c { releaseTemporary(c) }
             document.transactionOpen = false
             document.isDisconnected = true
             emit(L10n.tr("Rozłączono."))
@@ -423,16 +421,34 @@ extension SQLPlusEngine {
         guard var path = parts.first else { throw SQLPlusError(L10n.tr("SP2-0310: Brak nazwy pliku.")) }
         if (path as NSString).pathExtension.isEmpty { path += ".sql" }
         let url = resolve(path, baseDirectory: cmd == "@@" ? baseDirectory : nil)
-        guard let data = FileManager.default.contents(atPath: url.path) else {
+        guard let script = readScript(url)?.text else {
             throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(url.lastPathComponent)”."), osError: true)
         }
         guard depth < 20 else { throw SQLPlusError(L10n.tr("SP2-0309: Zbyt głębokie zagnieżdżenie skryptów.")) }
-        let script = String(decoding: data, as: UTF8.self)
         depth += 1
         defer { depth -= 1 }
         let saved = (1...9).map { state.defines[String($0)] }
         defer { for (i, v) in saved.enumerated() { state.defines[String(i + 1)] = v } }
         return await run(script, arguments: Array(parts.dropFirst()), baseDirectory: url.deletingLastPathComponent())
+    }
+
+    /// Plik skryptu odczytany jak w edytorze: BOM UTF-8/UTF-16, UTF-8, inaczej Windows-1250/ISO-8859-2 albo kodowanie
+    /// projektu (D55); linie zakończone LF. nil — pliku nie da się odczytać.
+    func readScript(_ url: URL) -> (text: String, format: TextFileFormat)? {
+        guard let data = FileManager.default.contents(atPath: url.path) else { return nil }
+        return TextFileCodec.decode(data, preferred: workspace.projectEncoding(for: url))
+    }
+
+    /// Zapis przetworzonego pliku skryptu (FORMAT FILE) w formacie oryginału — kodowanie, BOM, zakończenia linii —
+    /// z zachowaniem dowiązania i uprawnień, jak zapis okna. Znak spoza kodowania blokuje zapis.
+    func writeScript(_ text: String, format: TextFileFormat, to url: URL) throws {
+        guard let data = TextFileCodec.encode(text, format: format) else {
+            let bad = TextFileCodec.firstUnencodable(text, encoding: format.encoding)
+            let e = TextFileError.unencodable(line: bad?.line ?? 0, column: bad?.column ?? 0, character: bad.map { String($0.character) } ?? "?",
+                                              encoding: format.displayName.components(separatedBy: " ").first ?? "")
+            throw SQLPlusError(e.localizedDescription, osError: true)
+        }
+        try Workspace.writeKeepingFile(data, to: url)
     }
 
     func spool(_ args: [String]) throws {
@@ -604,11 +620,18 @@ extension SQLPlusEngine {
         workspace.connections.removeTemporary(id)
     }
 
+    /// Zamyka sesję okna przy CONNECT/DISCONNECT tylko, gdy jest jego własna (tryb Wiele sesji). W trybie Dwie sesje
+    /// i Jedna sesja okno korzysta ze wspólnej sesji głównej połączenia (inne okna, Object Browser) — jej zamknięcie
+    /// wycofałoby niezatwierdzone zmiany innych okien i zabrało im stan sesji; okno tylko się odpina (jak zmiana
+    /// połączenia okna komendą i zamknięcie okna).
+    func closeOwnSession() async {
+        guard let key = workspace.sessionKey(for: document), case .document(document.id) = key.purpose else { return }
+        await workspace.sessions.close(key)
+    }
+
     func switchConnection(_ id: UUID) async throws {
         let old = windowConnection
-        if let old {
-            await workspace.sessions.close(workspace.sessions.key(forDocument: document.id, connection: old))
-        }
+        await closeOwnSession()
         document.connectionID = id
         document.transactionOpen = false
         document.isDisconnected = false

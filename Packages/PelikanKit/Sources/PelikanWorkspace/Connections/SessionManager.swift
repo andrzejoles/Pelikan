@@ -201,6 +201,9 @@ public final class SessionManager {
 
     public func existingSession(_ key: SessionKey) -> (any DatabaseSession)? { sessions[key] }
 
+    /// Klucz, pod którym jest ta sesja (nil — już zamknięta, usunięta albo zastąpiona nową).
+    public func key(of session: any DatabaseSession) -> SessionKey? { sessions.first { $0.value === session }?.key }
+
     /// Zmiana hasła użytkownika połączenia w otwartej sesji głównej (PD-CONN-017): OCIPasswordChange, nowe hasło
     /// w pamięci sesji i — gdy definicja zapisuje hasło — w Pęku kluczy. false — anulowano.
     public func changePassword(_ id: UUID) async throws -> Bool {

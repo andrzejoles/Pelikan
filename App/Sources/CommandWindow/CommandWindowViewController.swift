@@ -20,12 +20,15 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate, 
     private var optionButtons: [String: NSButton] = [:]
     private let executingIndicator = NSProgressIndicator()
     private var tokens: [ObservationToken] = []
-    private var renderedLines = 0
-    private var renderedFirstID: UUID?
+    /// Linie konsoli w widoku (identyfikatory i długości w UTF-16) — przycięcie bufora z przodu usuwa ich znaki
+    /// zamiast przebudowy całej konsoli.
+    private var renderedIDs: [UUID] = []
+    private var renderedLengths: [Int] = []
     private var pending: [String] = []
     /// Polecenia wpisane w trakcie wykonywania — kolejka jak w SQL*Plus (type-ahead).
     private var queue: [String] = []
-    private var wasExecuting = false
+    /// Linia z kolejki albo wpisana trwa (od wysłania komendy do jej końca, także zanim okno zacznie wykonanie).
+    private var lineRunning = false
     private var historyIndex: Int?
 
     var preferredFirstResponder: NSView { tabs.selectedSegment == 0 ? input : editor.textView }
@@ -162,29 +165,37 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate, 
         return [.font: font, .foregroundColor: color]
     }
 
-    /// Dopisywanie nowych linii (CLEAR SCREEN albo przycięcie bufora — pełne przerysowanie).
+    /// Dopisywanie nowych linii; przycięcie bufora z przodu usuwa znaki odciętych linii, CLEAR SCREEN i inne zmiany —
+    /// pełne przerysowanie.
     private func renderConsole() {
         let lines = document.console
         let executing = document.isExecuting
         if executing { executingIndicator.startAnimation(nil) } else { executingIndicator.stopAnimation(nil) }
         if executing, tabs.selectedSegment == 1 { DispatchQueue.main.async { [weak self] in self?.showDialog() } }
-        if wasExecuting, !executing, !queue.isEmpty {
-            let next = queue.removeFirst()
-            DispatchQueue.main.async { [weak self] in self?.execute(next) }
-        }
-        wasExecuting = executing
+        // Kolejka rusza po każdym końcu wykonania (bez warunku zbocza: wykonanie mogło się zacząć i skończyć między
+        // przebiegami śledzenia zmian).
+        if !executing, !queue.isEmpty { DispatchQueue.main.async { [weak self] in self?.drainQueue() } }
         promptLabel.stringValue = pending.isEmpty ? engine.state.sqlPrompt.trimmingCharacters(in: .whitespaces) : String(format: "%3d", pending.count + 1)
         guard let storage = console.textStorage else { return }
-        if lines.count < renderedLines || lines.first?.id != renderedFirstID {
-            storage.setAttributedString(NSAttributedString())
-            renderedLines = 0
+        if let first = lines.first?.id, first != renderedIDs.first, let k = renderedIDs.firstIndex(of: first) {
+            storage.deleteCharacters(in: NSRange(location: 0, length: renderedLengths[..<k].reduce(0, +)))
+            renderedIDs.removeFirst(k)
+            renderedLengths.removeFirst(k)
         }
-        renderedFirstID = lines.first?.id
-        guard renderedLines < lines.count else { return }
+        if lines.count < renderedIDs.count || lines.first?.id != renderedIDs.first || renderedIDs.last.map({ lines[renderedIDs.count - 1].id != $0 }) == true {
+            storage.setAttributedString(NSAttributedString())
+            renderedIDs.removeAll()
+            renderedLengths.removeAll()
+        }
+        guard renderedIDs.count < lines.count else { return }
         let add = NSMutableAttributedString()
-        for l in lines[renderedLines...] { add.append(NSAttributedString(string: l.text + "\n", attributes: attributes(l.kind))) }
+        for l in lines[renderedIDs.count...] {
+            let text = l.text + "\n"
+            add.append(NSAttributedString(string: text, attributes: attributes(l.kind)))
+            renderedIDs.append(l.id)
+            renderedLengths.append(text.utf16.count)
+        }
         storage.append(add)
-        renderedLines = lines.count
         console.scrollToEndOfDocument(nil)
     }
 
@@ -226,12 +237,24 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate, 
             return
         }
         pending = []
-        if document.isExecuting { queue.append(text) } else { execute(text) }
+        if document.isExecuting || lineRunning || !queue.isEmpty { queue.append(text) } else { execute(text) }
     }
 
     private func execute(_ text: String) {
+        lineRunning = true
         // Okno wskazane jawnie: kolejka (type-ahead) rusza też wtedy, gdy aktywne jest inne okno — bez przełączania kart.
-        workspace.perform("cmd.executeLine", CommandArguments(["line": .string(text), "echo": .bool(false), "document": .string(document.id.description)]))
+        let task = workspace.perform("cmd.executeLine", CommandArguments(["line": .string(text), "echo": .bool(false), "document": .string(document.id.description)]))
+        Task { [weak self] in
+            await task.value
+            self?.lineRunning = false
+            self?.drainQueue()
+        }
+    }
+
+    /// Następne polecenie z kolejki, gdy okno nic nie wykonuje.
+    private func drainQueue() {
+        guard !document.isExecuting, !lineRunning, !queue.isEmpty else { return }
+        execute(queue.removeFirst())
     }
 
     private func moveHistory(_ delta: Int) {

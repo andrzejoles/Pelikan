@@ -217,7 +217,8 @@ public enum SQLExecutor {
                 newTabs.append(ResultTab(title: tabTitle(for: s), statementRange: s.start..<s.end, message: e.message))
                 doc.statusText = SQLExecutor.statusMessage(for: e)
                 ok = false
-                if e.isConnectionLost { ws.sessions.dropLost(ws.sessions.key(forDocument: doc.id, connection: ws.effectiveConnection(of: doc)!)) }
+                // Martwa sesja usuwana (kolejne polecenie połączy się ponownie); transakcję wycofał serwer.
+                if e.isConnectionLost { ws.dropLostSession(session); doc.transactionOpen = false }
                 break
             }
         }
