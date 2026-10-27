@@ -47,7 +47,7 @@ struct UtplsqlTests {
         await wait(run)
         #expect(run.failure == nil, "\(run.failure ?? "")")
         #expect(run.coverage.contains { $0.key.contains("EMP_API") && !$0.value.covered.isEmpty })
-        #expect(run.coverageHTML?.contains("<html") == true)
+        #expect(run.coverageHTML?.contains("<html") == true && run.coverageHTML?.contains("utplsql.github.io") == false)
         // Pokrycie na marginesie okna programu pakietu (linie dokumentu ciała).
         try await ws.invoke("ob.edit", CommandArguments(["object": .string("emp_api"), "type": .string("PACKAGE")]))
         let doc = try #require(ws.activeDocument)

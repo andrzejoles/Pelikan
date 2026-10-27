@@ -229,13 +229,11 @@ struct UtplsqlResultsView: View {
         }
     }
 
+    /// Raport pokrycia w oknie aplikacji (bez JavaScriptu i zasobów z sieci; strona zawiera kod źródłowy z bazy),
+    /// bez pliku tymczasowego otwieranego w przeglądarce.
     private func openCoverage() {
         guard let html = run.coverageHTML else { return }
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-pokrycie-\(run.id.uuidString.prefix(8)).html")
-        do {
-            try html.write(to: url, atomically: true, encoding: .utf8)
-            NSWorkspace.shared.open(url)
-        } catch { workspace.ui?.showError(error.localizedDescription) }
+        workspace.ui?.showHTMLReport(title: L10n.tr("Raport pokrycia"), html: UtplsqlRunner.localCoverageDocument(html))
     }
 
     private func color(_ s: UtStatus) -> Color { UtNodeRow.color(s) }

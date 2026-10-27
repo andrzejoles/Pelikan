@@ -101,6 +101,8 @@ public enum DataTransferRunner {
             throw CommandError.notAvailable(L10n.tr("Wskaż tabelę albo zapytanie źródłowe"))
         }
         guard job.mappings.contains(where: \.isUsed) else { throw CommandError.notAvailable(L10n.tr("Mapowanie nie zawiera żadnej kolumny")) }
+        // Zapisana definicja (plik, zadanie cykliczne) nie wykona w sesji źródła niczego poza zapytaniem.
+        guard StatementClassifier.isPlainQuery(job.sourceSQL) else { throw CommandError.notAvailable(L10n.tr("Źródło musi być zapytaniem SELECT")) }
     }
 
     /// Przeniesienie: odczyt partiami ze źródła, INSERT do celu, COMMIT co n wierszy (źródło i cel mogą być różnymi sesjami).

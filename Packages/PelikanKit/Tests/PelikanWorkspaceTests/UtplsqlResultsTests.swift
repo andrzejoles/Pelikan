@@ -5,6 +5,18 @@ import Testing
 @MainActor
 @Suite("utPLSQL — wyniki i pokrycie bez bazy (UT-RES-001, UT-RES-002, UT-COV-001, UT-COV-002)")
 struct UtplsqlResultsTests {
+    @Test("R5-05: raport pokrycia HTML bez skryptów i zasobów z sieci, treść widoczna, kolory pokrycia lokalnie")
+    func localCoverageDocument() {
+        let a = "https://utplsql.github.io/utPLSQL-coverage-html/assets/"
+        let html = "<!DOCTYPE html><html><head><title>Code coverage</title><script src='\(a)application.js'></script>"
+            + "<link href='\(a)application.css' media='screen, print' rel='stylesheet' type='text/css'/><link rel=\"icon\" type=\"image/png\" href=\"\(a)favicon_red.png\" /></head>"
+            + "<body><div id=\"loading\"><img src=\"\(a)loading.gif\" alt=\"loading\"/></div><div id=\"wrapper\" style=\"display:none;\">"
+            + "<ol><li class=\"covered\" data-hits=\"1\"><code class=\"sql\">x := 1;</code></li></ol></div></body></html>"
+        let doc = UtplsqlRunner.localCoverageDocument(html)
+        #expect(!doc.contains("http") && !doc.lowercased().contains("<script") && !doc.contains("<link") && !doc.contains("display:none"))
+        #expect(doc.contains("<div id=\"wrapper\">") && doc.contains("li.covered") && doc.contains("x := 1;"))
+    }
+
     @Test("Porównanie: wartość skalarna i różnice wierszy kursora")
     func comparison() throws {
         let scalar = UtExpectation(description: "", message: "Actual: 2 (number) was expected to equal: 3 (number)", caller: "")

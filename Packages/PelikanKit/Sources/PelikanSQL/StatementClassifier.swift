@@ -91,6 +91,15 @@ public enum StatementClassifier {
         }
     }
 
+    /// Dokładnie jedno zapytanie bez skutków ubocznych: bez FOR UPDATE i bez funkcji PL/SQL w klauzuli WITH (mogą mieć
+    /// transakcję autonomiczną). Narzędzia, które mają tylko czytać (raport, źródło przenoszenia danych, eksport zadania
+    /// lokalnego), sprawdzają to **przed** wykonaniem — tekst z cudzego pliku nie wykona DML ani DDL bez strażnika zmian.
+    public static func isPlainQuery(_ sql: String) -> Bool {
+        let statements = ScriptSplitter.split(sql)
+        guard statements.count == 1, let s = statements.first, s.category == .query, !s.isPLSQL else { return false }
+        return !hasForUpdate(s.text)
+    }
+
     static func hasForUpdate(_ sql: String) -> Bool {
         let lexer = Lexer(sql)
         let words = lexer.tokenize().filter { !$0.isTrivia }.map { lexer.upper($0) }

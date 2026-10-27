@@ -19,7 +19,7 @@ enum AppLogging {
 
     /// Poziom i nazwy z Preferencji (Ogólne › Dziennik aplikacji).
     static func apply(_ settings: Settings) {
-        Log.configure(level: settings.logLevel, revealPrivate: settings.logIncludeNames)
+        Log.configure(level: settings.logLevel, revealNames: settings.logIncludeNames)
     }
 
     /// Pierwszy wpis uruchomienia: wersja, system, architektura, język — bez ścieżek i nazw.

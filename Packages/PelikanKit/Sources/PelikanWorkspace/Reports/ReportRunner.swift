@@ -18,6 +18,9 @@ public enum ReportRunner {
     public static func data(_ sql: String, binds: [BindVariable], maxRows: Int, format: ValueFormat, in s: any DatabaseSession) async throws -> ReportData {
         var text = sql.trimmingCharacters(in: .whitespacesAndNewlines)
         while text.hasSuffix(";") { text.removeLast() }
+        // Przed wykonaniem: raport (także zablokowany plik .rep od kogoś innego) tylko czyta — sesja narzędzi nie ma
+        // strażnika zmian ani śladu transakcji.
+        guard StatementClassifier.isPlainQuery(text) else { throw CommandError.notAvailable(L10n.tr("Raport wymaga zapytania SELECT")) }
         let r = try await s.execute(text, binds: binds, options: ExecuteOptions(lobLimit: 64_000))
         guard let rs = r.resultSet else { throw CommandError.notAvailable(L10n.tr("Raport wymaga zapytania SELECT")) }
         var rows: [[ReportValue]] = []
