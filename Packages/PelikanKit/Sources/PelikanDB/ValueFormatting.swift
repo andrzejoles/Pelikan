@@ -90,7 +90,7 @@ public extension OracleTimestamp {
             else { out.append(mask[i]); i = mask.index(after: i) }
         }
         if zone, !mask.uppercased().contains("TZH") {
-            out += String(format: " %+03d:%02d", tzHourOffset, abs(Int(tzMinuteOffset)))
+            out += tzRegion.map { " " + $0 } ?? String(format: " %+03d:%02d", tzHourOffset, abs(Int(tzMinuteOffset)))
         }
         return out
     }

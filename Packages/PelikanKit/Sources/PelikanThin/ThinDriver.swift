@@ -19,7 +19,7 @@ public struct ThinDriver: DatabaseDriver {
 
     /// Host, port i usługa z EZConnect albo deskryptora (alias TNS rozwija SessionManager/`resolve`).
     static func endpoint(_ connect: String) throws -> (host: String, port: Int, service: OracleServiceMethod) {
-        var s = connect.trimmingCharacters(in: .whitespaces)
+        var s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if s.lowercased().hasPrefix("tcps://") {
             throw DatabaseError.unsupported("Połączenia TCPS (TLS/wallet) wymagają sterownika Instant Client")
         }
@@ -52,6 +52,29 @@ public struct ThinDriver: DatabaseDriver {
         return (host, port, .serviceName(service))
     }
 
+    /// Konfiguracja połączenia OracleNIO. Bez OOB (przerwania poza pasmem): OracleNIO po sprawdzeniu OOB wybiera
+    /// szybkie uwierzytelnianie według flagi OOB zamiast FastAuth, więc serwer 19c z OOB, ale bez FastAuth, zrywa
+    /// połączenie (`uncleanShutdown`, oracle-nio #124). Thin i tak nie przerywa wywołań (`breakExecution` puste), a
+    /// znaczniki w paśmie (anulowanie strumienia, błędy) działają bez OOB. Do usunięcia po wydaniu OracleNIO z poprawką.
+    static func configuration(_ ep: (host: String, port: Int, service: OracleServiceMethod), target: ConnectionTarget,
+                              password: String) -> OracleConnection.Configuration {
+        var config = OracleConnection.Configuration(host: ep.host, port: ep.port, service: ep.service,
+                                                    username: target.user, password: password)
+        config.proxyUser = target.proxyClient
+        switch target.role {
+        case .normal: break
+        case .sysdba: config.mode = .sysDBA
+        case .sysoper: config.mode = .sysOPER
+        case .sysbackup: config.mode = .sysBKP
+        case .sysdg: config.mode = .sysDGD
+        case .syskm: config.mode = .sysKMT
+        case .sysasm: config.mode = .sysASM
+        }
+        config.options.connectTimeout = .seconds(20)
+        config.disableOOB = true
+        return config
+    }
+
     public func connect(target: ConnectionTarget, credentials: Credentials, options: ConnectOptions) async throws -> any DatabaseSession {
         if target.usesExternalCredentials { throw DatabaseError.unsupported("Uwierzytelnianie zewnętrzne (wallet, Kerberos) wymaga sterownika Instant Client") }
         if credentials.newPassword != nil { throw DatabaseError.unsupported("Zmiana wygasłego hasła wymaga sterownika Instant Client") }
@@ -64,19 +87,7 @@ public struct ThinDriver: DatabaseDriver {
             connect = e.descriptor
         }
         let ep = try Self.endpoint(connect)
-        var config = OracleConnection.Configuration(host: ep.host, port: ep.port, service: ep.service,
-                                                    username: target.user, password: credentials.password ?? "")
-        config.proxyUser = target.proxyClient
-        switch target.role {
-        case .normal: break
-        case .sysdba: config.mode = .sysDBA
-        case .sysoper: config.mode = .sysOPER
-        case .sysbackup: config.mode = .sysBKP
-        case .sysdg: config.mode = .sysDGD
-        case .syskm: config.mode = .sysKMT
-        case .sysasm: config.mode = .sysASM
-        }
-        config.options.connectTimeout = .seconds(20)
+        let config = Self.configuration(ep, target: target, password: credentials.password ?? "")
         let conn: OracleConnection
         do {
             conn = try await OracleConnection.connect(configuration: config, id: Int.random(in: 1...Int(Int32.max)))
@@ -97,12 +108,35 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
     let options: ConnectOptions
     private let state = Mutex(State())
 
+    /// Kursor z iteratorem OracleNIO. Iterator nie jest bezpieczny wątkowo, a `fetch` tego samego wyniku może przyjść
+    /// równolegle (dociąganie przy przewijaniu i eksport, agent i okno) — pobrania czekają na siebie (`acquire`).
     final class Cursor: @unchecked Sendable {
         var iterator: OracleRowSequence.AsyncIterator
+        var finished = false
         let columns: [ColumnInfo]
         let lobLimit: Int
+        private let gate = Mutex<(busy: Bool, waiters: [CheckedContinuation<Void, Never>])>((false, []))
         init(iterator: OracleRowSequence.AsyncIterator, columns: [ColumnInfo], lobLimit: Int) {
             self.iterator = iterator; self.columns = columns; self.lobLimit = lobLimit
+        }
+
+        func acquire() async {
+            await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+                let free = gate.withLock { g -> Bool in
+                    if !g.busy { g.busy = true; return true }
+                    g.waiters.append(c)
+                    return false
+                }
+                if free { c.resume() }
+            }
+        }
+
+        func release() {
+            let next = gate.withLock { g -> CheckedContinuation<Void, Never>? in
+                if g.waiters.isEmpty { g.busy = false; return nil }
+                return g.waiters.removeFirst()
+            }
+            next?.resume()
         }
     }
 
@@ -240,7 +274,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             return .raw(Data(buf.readBytes(length: buf.readableBytes) ?? []))
         case .rowID, .uRowID:
             return .rowid(try cell.decode(String.self, context: .default))
-        case .clob, .nCLOB, .blob, .bFile:
+        case .clob, .nCLOB:
+            return .lob(try await readCLOB(try cell.decode(LOB.self, context: .default), kind: t == .clob ? .clob : .nclob, limit: lobLimit))
+        case .blob, .bFile:
             let lob = try cell.decode(LOB.self, context: .default)
             var data = Data()
             var stopped = false
@@ -251,13 +287,7 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             }
             // Obcięte: odczyt przerwany na limicie albo ostatnia porcja przekroczyła limit (prefix niżej ucina).
             let truncated = data.count > lobLimit || (stopped && total > data.count)
-            switch t {
-            case .clob, .nCLOB:
-                let text = Self.clobText(data.prefix(lobLimit))
-                return .lob(LOBValue(kind: t == .clob ? .clob : .nclob, text: text, length: UInt64(total), truncated: truncated))
-            default:
-                return .lob(LOBValue(kind: t == .blob ? .blob : .bfile, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated))
-            }
+            return .lob(LOBValue(kind: t == .blob ? .blob : .bfile, bytes: data.prefix(lobLimit), length: UInt64(total), truncated: truncated))
         case .intervalDS:
             let i = try cell.decode(IntervalDS.self, context: .default)
             return .intervalDS(days: Int32(i.days), hours: Int32(i.hours), minutes: Int32(i.minutes), seconds: Int32(i.seconds),
@@ -432,13 +462,43 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
         return OracleError(code: 24344, message: "ORA-24344: success with compilation error", isWarning: true)
     }
 
+    /// CLOB do `limit` znaków jednym żądaniem odczytu. `LOB.readChunks` w OracleNIO przesuwa pozycję o liczbę bajtów
+    /// porcji, a pozycja CLOB liczy się w znakach: przy UTF-16 druga porcja wypadała za końcem i odczyt kończył się po
+    /// pierwszej (32 600 znaków) bez znacznika obcięcia — narzędzia danych zapisywały ucięte wartości (R8-01).
+    /// Obcięte, gdy LOB jest dłuższy niż limit albo serwer oddał mniej znaków niż żądano (strażnik z D168 to zatrzyma).
+    func readCLOB(_ lob: LOB, kind: LOBValue.Kind, limit: Int) async throws -> LOBValue {
+        let size = lob.estimatedSize
+        let amount = min(size, max(0, limit))
+        var data = Data()
+        if amount > 0 {
+            var it = lob.readChunks(ofSize: amount, on: connection).makeAsyncIterator()
+            if let chunk = try await it.next() { data.append(contentsOf: chunk.readableBytesView) }
+        }
+        let text = Self.clobText(data, characters: amount)
+        return LOBValue(kind: kind, text: text, length: UInt64(size), truncated: size > amount || text.utf16.count < amount)
+    }
+
+    /// Tekst CLOB, gdy wiadomo, ile znaków (jednostek UTF-16) odczytano: UTF-8 (zestaw znaków bazy o stałej szerokości),
+    /// jeśli dokładnie się zgadza, inaczej UTF-16BE (AL16UTF16 przy zestawie wielobajtowym, NCLOB). Bajtów jest dwa razy
+    /// więcej niż znaków także w UTF-8 z samymi dwubajtowymi znakami (np. „żż”) — wtedy UTF-8 też rozstrzyga długość.
+    static func clobText(_ data: Data, characters: Int) -> String {
+        if characters > 0, data.count == characters * 2 {
+            if let s = String(validating: data, as: UTF8.self), s.utf16.count == characters { return s }
+            return utf16BE(data)
+        }
+        if let s = String(validating: data, as: UTF8.self) { return s }
+        return clobText(data)
+    }
+
+    static func utf16BE(_ data: Data) -> String {
+        String(decoding: stride(from: 0, to: data.count - 1, by: 2).map { i in
+            UInt16(data[data.startIndex + i]) << 8 | UInt16(data[data.startIndex + i + 1])
+        }, as: UTF16.self)
+    }
+
     /// Tekst CLOB z bajtów odczytanych z lokatora: przy wielobajtowym zestawie znaków bazy CLOB jest w AL16UTF16 (UTF-16BE).
     static func clobText(_ data: Data) -> String {
-        if data.count >= 2, data.count % 2 == 0, data.contains(0) {
-            return String(decoding: stride(from: 0, to: data.count, by: 2).map { i in
-                UInt16(data[data.startIndex + i]) << 8 | UInt16(data[data.startIndex + i + 1])
-            }, as: UTF16.self)
-        }
+        if data.count >= 2, data.count % 2 == 0, data.contains(0) { return utf16BE(data) }
         return String(decoding: data, as: UTF8.self)
     }
 
@@ -454,7 +514,9 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             return .number(n.description.hasSuffix(".0") ? String(n.description.dropLast(2)) : n.description)
         case .binaryDouble, .binaryFloat: return .double(try ref.decode(as: Double.self))
         case .boolean: return .boolean(try ref.decode(as: Bool.self))
-        case .clob, .nclob, .blob:
+        case .clob, .nclob:
+            return .lob(try await readCLOB(try ref.decode(as: LOB.self), kind: type == .nclob ? .nclob : .clob, limit: lobLimit))
+        case .blob:
             let lob = try ref.decode(as: LOB.self)
             var data = Data()
             for try await chunk in lob.readChunks(on: connection) {
@@ -462,20 +524,22 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
                 if data.count >= lobLimit { break }
             }
             let total = UInt64(lob.estimatedSize)
-            if type == .blob { return .lob(LOBValue(kind: .blob, bytes: data, length: total, truncated: Int(total) > data.count)) }
-            let s = Self.clobText(data)
-            return .lob(LOBValue(kind: type == .nclob ? .nclob : .clob, text: s, length: total, truncated: Int(total) > data.count))
+            return .lob(LOBValue(kind: .blob, bytes: data.prefix(lobLimit), length: total, truncated: Int(total) > min(data.count, lobLimit)))
         default: return .text(try ref.decode(as: String.self))
         }
     }
 
     public func fetch(_ resultSet: ResultSetID, maxRows: Int) async throws -> RowBatch {
         guard let cursor = state.withLock({ $0.cursors[resultSet.raw] }) else { throw DatabaseError.unknownResultSet }
+        await cursor.acquire()
+        defer { cursor.release() }
         var out: [[OracleValue]] = []
+        if cursor.finished { return RowBatch(rows: out, hasMore: false) }
         out.reserveCapacity(min(maxRows, 10_000))
         do {
             while out.count < maxRows {
                 guard let row = try await cursor.iterator.next() else {
+                    cursor.finished = true
                     _ = state.withLock { $0.cursors.removeValue(forKey: resultSet.raw) }
                     return RowBatch(rows: out, hasMore: false)
                 }

@@ -49,8 +49,11 @@ enum OracleRaw {
             tzh = Int8(Int(b[11]) - 20)
             tzm = Int8(Int(b[12]) - 60)
         }
+        // Strefa nazwana (bit 0x80: identyfikator regionu z pliku stref Oracle, bez publicznej tablicy nazw) — czas
+        // zostaje w UTC i jest tak oznaczony; moment się zgadza, czas lokalny strefy pokaże Instant Client.
+        let region: String? = b.count >= 13 && b[11] & 0x80 != 0 ? "UTC" : nil
         var t = OracleTimestamp(year: Int16(year), month: b[2], day: b[3], hour: b[4] &- 1, minute: b[5] &- 1, second: b[6] &- 1,
-                                fsecond: ns, tzHourOffset: tzh, tzMinuteOffset: tzm)
+                                fsecond: ns, tzHourOffset: tzh, tzMinuteOffset: tzm, tzRegion: region)
         // TIMESTAMP WITH TIME ZONE przechowuje czas UTC — czas lokalny strefy = UTC + przesunięcie.
         if b.count >= 13, tzh != 0 || tzm != 0 {
             var cal = Calendar(identifier: .gregorian)
