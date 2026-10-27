@@ -5,6 +5,20 @@ ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan prze
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
+## Co nowego po trzecim przeglądzie kodu (D182)
+
+- **Bezpieczniejsze okna po ponownym uruchomieniu** — otwarcie pliku z Findera przy starcie nie gubi już niezapisanych
+  okien poprzedniej sesji; zmiana workseta pyta o niezatwierdzoną transakcję.
+- **Transakcje** — Zatwierdź/Wycofaj i pytanie przy zamykaniu działają też po oknie testu, debugerze i notatniku.
+- **Dane** — kopiowanie tabel zachowuje strefę czasową, za duży LOB przerywa operację zamiast cicho uciąć wartość,
+  kolumny wirtualne, niewidoczne i identity są obsłużone; sterownik thin czyta duże CLOB-y w całości.
+- **Edytor** — szybsze okno programu przy dużych pakietach; pola kodu w oknach dialogowych nie zamieniają apostrofów
+  na „inteligentne” cudzysłowy.
+- **Spójny wygląd** — wysokość wierszy drzew, list i wstążki rośnie z czcionką interfejsu; pozostałe listy bez efektu
+  przezroczystości; okna narzędzi pokazują, na którym połączeniu działają.
+- **Bezpieczeństwo** — agent AI nie korzysta z tymczasowych połączeń Okna poleceń, dziennik nie odsłania treści
+  komunikatów, aktualizacje wymagają podpisanego kanału.
+
 ## Co nowego w 10.1.0–10.3.0
 
 - **Gładki tekst na monitorach bez Retina** — lewy panel i wstążka bez efektu przezroczystości i „płynnego szkła”;
