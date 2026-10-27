@@ -1857,7 +1857,15 @@ poza łatkami swift-collections 1.7.5 i swift-png 4.5.2 (podniesione), budowanie
   clean/smudge, textconv, submoduły); `add`/`commit` z woli użytkownika — jak git w terminalu. Skutek uboczny: plik
   z filtrem tylko lokalnym może chwilowo wyglądać na zmieniony.
 - **Sterowniki:** `$X{…}` z nieznaną funkcją zostaje błędem zamiast zawsze prawdziwego `0 = 0` (`DELETE … WHERE`
-  usuwał wszystko); DBMS_OUTPUT czytany w całości z jawnym znacznikiem obcięcia; CREATE MLE ENV dzielony jak DDL.
+  usuwał wszystko); DBMS_OUTPUT czytany w całości z jawnym znacznikiem obcięcia; CREATE MLE ENV dzielony jak DDL;
+  maski dat z literałami w cudzysłowie (`"T"`), JSON z datą w ISO 8601; nieczytelny BFILE pokazuje błąd w komórce;
+  ODPI nie dodaje referencji do wyników niejawnych (wyciek); EZConnect/hostname przed LDAP w NAMES.DIRECTORY_PATH
+  zostawia nazwę klientowi. **Thin (OracleNIO):** odpowiedź LOB z liczbą znaków ≥ 65 536 kończyła proces
+  (`preconditionFailure` w `readSB8`, błąd sprzed tej rundy) — odczyt CLOB w thin ograniczony do 65 535 znaków ze
+  znacznikiem obcięcia (zawęża D182 dla thin); kolumny INTERVAL YEAR TO MONTH i BFILE kończą proces w dekoderze
+  wierszy OracleNIO (`fatalError` „not implemented”) zanim wartość dotrze do Pelikana — bez obejścia po naszej stronie,
+  do zgłoszenia w oracle-nio; VECTOR obsłużony; możliwość JSON wyłączona (dekodowanie stratne); parametry EZConnect
+  Plus (`?…`) pomijane w nazwie usługi.
 - **Aplikacja:** zamknięcie okna głównego = zakończenie aplikacji (z pytaniami o zapis i transakcje); kliknięcie
   w Docku przywraca okno. Czynności dostępne dotąd tylko z interfejsu są komendami (komórki notatnika, elementy
   projektu, snippety, makra, panel debugera, kanwa diagramu, kolejność Code Contents); czynności na wskazanym elemencie
