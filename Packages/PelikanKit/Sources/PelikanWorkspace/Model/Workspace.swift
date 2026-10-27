@@ -572,7 +572,7 @@ public final class Workspace {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         if let data = try? JSONEncoder.pelikan.encode(history) {
             // Tekst wykonanych poleceń może zawierać cokolwiek — tylko dla właściciela (jak worksety), od chwili utworzenia pliku.
-            try? PrivateFile.write(data, to: dir.appendingPathComponent("history.json"))
+            _ = try? PrivateFile.write(data, to: dir.appendingPathComponent("history.json"))
         }
     }
 
