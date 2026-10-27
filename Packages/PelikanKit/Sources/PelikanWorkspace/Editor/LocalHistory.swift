@@ -33,6 +33,9 @@ public final class LocalHistory {
 
     let directory: URL?
     @ObservationIgnored private var cache: [String: LocalHistoryItem] = [:]
+    /// Zapisy na dysk po kolei poza głównym wątkiem (do 50 pełnych wersji dużego pakietu to dziesiątki MB JSON —
+    /// kodowanie i zapis przy każdym ⌘S i kompilacji blokowałyby interfejs).
+    @ObservationIgnored private let writes = DispatchQueue(label: "LocalHistory.writes", qos: .utility)
     /// Licznik zmian (odświeżanie okna historii).
     public private(set) var revision = 0
 
@@ -100,6 +103,14 @@ public final class LocalHistory {
         cache[key] = item
         revision += 1
         guard let u = url(key) else { return }
+        let saved = item
+        writes.async { Self.write(saved, to: u) }
+    }
+
+    /// Czeka na zapis wszystkich wersji na dysk (zamknięcie aplikacji, testy).
+    public func flush() { writes.sync {} }
+
+    nonisolated static func write(_ item: LocalHistoryItem, to u: URL) {
         // Pełny tekst okien — katalog i plik tylko dla właściciela.
         try? FileManager.default.createDirectory(at: u.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let enc = JSONEncoder()
@@ -110,24 +121,27 @@ public final class LocalHistory {
         }
     }
 
-
-    /// Wszystkie pozycje historii (od ostatnio zmienianej).
+    /// Wszystkie pozycje historii (od ostatnio zmienianej). Pozycje z dysku nie trafiają do pamięci podręcznej —
+    /// pełne teksty wszystkich wersji wszystkich plików zostawałyby w pamięci na stałe.
     public func allItems() -> [LocalHistoryItem] {
+        var items = cache
         if let dir = directory, let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
             let dec = Self.decoder
             for f in files where f.pathExtension == "json" {
-                if let data = try? Data(contentsOf: f), let item = try? dec.decode(LocalHistoryItem.self, from: data), cache[item.key] == nil {
-                    cache[item.key] = item
+                if let data = try? Data(contentsOf: f), let item = try? dec.decode(LocalHistoryItem.self, from: data), items[item.key] == nil {
+                    items[item.key] = item
                 }
             }
         }
-        return cache.values.sorted { ($0.entries.last?.date ?? .distantPast) > ($1.entries.last?.date ?? .distantPast) }
+        return items.values.sorted { ($0.entries.last?.date ?? .distantPast) > ($1.entries.last?.date ?? .distantPast) }
     }
 
     public func clear(_ key: String) {
         cache[key] = nil
-        if let u = url(key) { try? FileManager.default.removeItem(at: u) }
         revision += 1
+        guard let u = url(key) else { return }
+        // Po zaplanowanych zapisach — inaczej zapis w toku odtworzyłby usunięty plik.
+        writes.async { try? FileManager.default.removeItem(at: u) }
     }
 }
 
