@@ -183,7 +183,8 @@
 			<dict/>
 		</dict>
 	</array>
-	<key>UTExportedTypeDeclarations</key>
+	<!-- Rozszerzenia wspólne z innymi narzędziami SQL (.sql, pakiety, programy) — import według zaleceń Apple; eksport tylko dla typów wyłącznie tej aplikacji (.tst, .sqlnb). -->
+	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
@@ -245,6 +246,9 @@
 				</array>
 			</dict>
 		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
 			<string>$(PELIKAN_BUNDLE_ID).test</string>
