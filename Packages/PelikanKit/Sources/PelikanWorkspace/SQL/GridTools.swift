@@ -113,7 +113,7 @@ public enum GridTools {
     @MainActor
     public static func rowValues(_ grid: ResultGridModel, viewRow: Int) -> [String: OracleValue] {
         var v: [String: OracleValue] = [:]
-        for (i, c) in grid.columns.enumerated() { v[c.name.uppercased()] = grid.value(row: grid.dataRow(viewRow), column: i) }
+        for (i, c) in grid.columns.enumerated() { v[c.name.uppercased()] = grid.value(row: viewRow, column: i) }
         return v
     }
 
@@ -130,7 +130,7 @@ public enum GridTools {
     @MainActor
     public static func compareRecords(_ grid: ResultGridModel, viewRows: [Int], ignoreCase: Bool) -> [ColumnComparison] {
         grid.columns.indices.map { c in
-            let values = viewRows.map { grid.text(row: grid.dataRow($0), column: c) }
+            let values = viewRows.map { grid.text(row: $0, column: c) }
             let normalized = Set(values.map { ignoreCase ? $0.lowercased() : $0 })
             return ColumnComparison(column: grid.columns[c].name, values: values, identical: normalized.count <= 1)
         }
@@ -162,8 +162,8 @@ public enum GridTools {
         let n = min(left.rowCount, right.rowCount)
         for r in 0..<n {
             for name in common {
-                var a = left.text(row: left.dataRow(r), column: ln.firstIndex(of: name)!)
-                var b = right.text(row: right.dataRow(r), column: rn.firstIndex(of: name)!)
+                var a = left.text(row: r, column: ln.firstIndex(of: name)!)
+                var b = right.text(row: r, column: rn.firstIndex(of: name)!)
                 if ignoreCase { a = a.lowercased(); b = b.lowercased() }
                 if a != b { cells.insert(.init(row: r, column: name)) }
             }
@@ -194,8 +194,8 @@ public enum GridTools {
     @MainActor
     public static func columnToFiles(_ grid: ResultGridModel, column: Int, viewRows: [Int], directory: URL, template: String) throws -> (files: Int, truncated: Int) {
         var files = 0, truncated = 0
-        for (i, r) in viewRows.enumerated() {
-            let row = grid.dataRow(r)
+        // `value`/`text` przyjmują wiersz widoku (same mapują przez sortowanie i filtr).
+        for (i, row) in viewRows.enumerated() {
             var values: [String: String] = [:]
             for (c, col) in grid.columns.enumerated() { values[col.name.uppercased()] = grid.text(row: row, column: c) }
             let name = fileName(template, values: values, index: i + 1)

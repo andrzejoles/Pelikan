@@ -96,7 +96,7 @@ struct CompareResultsView: View {
     private func side(_ tab: ResultTab, _ diff: GridTools.ResultDifference?) -> some View {
         let grid = tab.grid
         let columns = grid?.columns.map(\.name) ?? []
-        let rows = (0..<(grid?.rowCount ?? 0)).map { r in DetailRow(id: r, values: columns.indices.map { grid!.text(row: grid!.dataRow(r), column: $0) }) }
+        let rows = (0..<(grid?.rowCount ?? 0)).map { r in DetailRow(id: r, values: columns.indices.map { grid!.text(row: r, column: $0) }) }
         return VStack(alignment: .leading, spacing: 2) {
             Text(tab.title).font(.uiSecondary.bold())
             Table(rows) {
