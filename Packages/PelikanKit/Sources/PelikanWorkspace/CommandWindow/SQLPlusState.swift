@@ -55,7 +55,9 @@ public struct SQLPlusState: Sendable {
     public var computes: [SQLPlusCompute] = []
     /// Ostatnio kompilowany obiekt (SHOW ERRORS bez argumentów).
     public var lastCompiled: (type: String, owner: String?, name: String)?
+    /// WHENEVER SQLERROR (błędy poleceń) i WHENEVER OSERROR (błędy plików skryptów i SPOOL, błędy systemu plików).
     public var whenever: Whenever = .continue
+    public var wheneverOS: Whenever = .continue
     public var spoolURL: URL?
     /// Katalog bieżący (CD, @plik, SPOOL).
     public var directory: URL?

@@ -19,7 +19,7 @@ public enum ConnectStringRewriter {
 
     /// Host i port bazy z EZConnect (`host[:port]/usługa`, `//host…`, `tcps://…`, `[IPv6]`) albo deskryptora.
     public static func endpoint(of connect: String) -> Endpoint? {
-        let s = connect.trimmingCharacters(in: .whitespaces)
+        let s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if s.hasPrefix("(") {
             guard let h = TNSNames.value("HOST", in: s) else { return nil }
             return Endpoint(host: h, port: TNSNames.value("PORT", in: s).flatMap(Int.init) ?? 1521)
@@ -40,7 +40,7 @@ public enum ConnectStringRewriter {
 
     /// Connect string z adresem zastąpionym przez `127.0.0.1:localPort` (alias TNS — rozwinięty do deskryptora).
     public static func rewrite(_ connect: String, localPort: Int, tns: [TNSEntry] = []) -> String? {
-        var s = connect.trimmingCharacters(in: .whitespaces)
+        var s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if !s.hasPrefix("("), !s.contains("/"), !s.contains(":"),
            let entry = tns.first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(s) == .orderedSame } }) {
             s = entry.descriptor

@@ -112,7 +112,10 @@ public enum TNSNames {
     }
 
     /// Wartość parametru `(NAZWA=wartość)` z deskryptora (pierwsze wystąpienie, bez rozróżniania wielkości liter).
+    /// Deskryptor wpisany albo wklejony w zwykłym zapisie Oracle Net (`(HOST = db)`, w wielu liniach) jest najpierw
+    /// zwijany jak plik tnsnames.ora (R8-04: thin, tunel SSH i portfel TCPS nie widziały w nim HOST/PROTOCOL).
     public static func value(_ key: String, in descriptor: String) -> String? {
+        let descriptor = compact(descriptor)
         guard let r = descriptor.range(of: "(\(key)=", options: .caseInsensitive) else { return nil }
         let rest = descriptor[r.upperBound...]
         guard let end = rest.firstIndex(of: ")") else { return nil }
@@ -154,7 +157,7 @@ public extension TNSNames {
     /// Dopisuje parametry uwierzytelniania tokenem: w deskryptorze do sekcji SECURITY (tworzonej, gdy jej brak),
     /// w EZConnect jako parametry `?klucz=wartość`. Alias trzeba wcześniej rozwinąć (nil — nie da się dopisać).
     static func applyTokenAuth(_ connect: String, parameters: [(String, String)]) -> String? {
-        let s = connect.trimmingCharacters(in: .whitespaces)
+        let s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !parameters.isEmpty else { return s }
         if s.hasPrefix("(") {
             let items = parameters.map { "(\($0.0)=\($0.1))" }.joined()
@@ -180,7 +183,7 @@ public extension TNSNames {
     /// rozwinięcia (magazyn haseł szuka poświadczenia po dokładnym tekście aliasu, D53).
     static func resolveForConnection(_ connect: String, configDirectory: String?, walletDirectory: String? = nil, keepAlias: Bool = false) -> String {
         let walletDir = (walletDirectory ?? configDirectory).map { ($0 as NSString).expandingTildeInPath }.flatMap { $0.isEmpty ? nil : $0 }
-        var s = connect.trimmingCharacters(in: .whitespaces)
+        var s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if let w = walletDir, s.lowercased().hasPrefix("tcps://"), !s.lowercased().contains("wallet_location") {
             return s + (s.contains("?") ? "&" : "?") + "wallet_location=\(w)"
         }

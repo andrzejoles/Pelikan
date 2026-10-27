@@ -101,6 +101,35 @@ struct ODPISessionTests {
         #expect(batch.rows[0][1] == .text("WÓJCIK") || batch.rows[0][1] == .text("KOWALSKI"))
     }
 
+    @Test("Kursory zagnieżdżone CURSOR(…) w 1500 wierszach: bez ORA-01000, nieotwarte zamykane, otwarte działają")
+    func nestedCursors() async throws {
+        let s = try await TestDatabase.connect()
+        defer { Task { await s.close() } }
+        let r = try await s.execute("select level n, cursor(select 2 from dual) c from dual connect by level <= 1500")
+        let id = try #require(r.resultSet).id
+        var rows: [[OracleValue]] = []
+        var firstCursor: ResultSetID?
+        while true {
+            let b = try await s.fetch(id, maxRows: 100)
+            rows += b.rows
+            if firstCursor == nil, case .cursor(let c)? = b.rows.last?[1] {
+                // Otwarty od razu (jak komórka <Cursor> w siatce) — nie podlega zamykaniu najstarszych.
+                firstCursor = c
+                #expect(try await s.fetch(c, maxRows: 10).rows.first?.first == .number("2"))
+            }
+            if !b.hasMore { break }
+        }
+        #expect(rows.count == 1500)
+        // Najnowszy kursor nadal otwarty; najstarszy nieotwarty — zamknięty (sesja nie trzyma 1500 kursorów).
+        guard case .cursor(let last)? = rows.last?[1], case .cursor(let oldest) = rows[1][1] else { Issue.record("brak kursorów"); return }
+        #expect(try await s.fetch(last, maxRows: 10).rows.first?.first == .number("2"))
+        await #expect(throws: DatabaseError.self) { try await s.fetch(oldest, maxRows: 10) }
+        if let open = try? await s.scalar("select count(*) from v$open_cursor where sid = sys_context('userenv', 'sid')") {
+            #expect(Int(open) ?? 0 < 300, "\(open)")
+        }
+        _ = firstCursor
+    }
+
     @Test("LOB, JSON i ROWID")
     func lobJsonRowid() async throws {
         let s = try await TestDatabase.connect()

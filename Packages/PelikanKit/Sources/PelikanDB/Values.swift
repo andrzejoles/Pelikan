@@ -26,12 +26,16 @@ public struct OracleTimestamp: Sendable, Hashable, Codable {
     public var hour: UInt8, minute: UInt8, second: UInt8
     public var fsecond: UInt32          // nanosekundy
     public var tzHourOffset: Int8, tzMinuteOffset: Int8
+    /// Nazwa strefy zamiast przesunięcia (TZR), np. „UTC”: sterownik thin nie zna tablicy regionów Oracle i wartość ze
+    /// strefą nazwaną podaje jako czas UTC — wtedy pokazujemy „UTC”, nie „+00:00” (R8-05).
+    public var tzRegion: String?
 
     public init(year: Int16, month: UInt8, day: UInt8, hour: UInt8 = 0, minute: UInt8 = 0, second: UInt8 = 0,
-                fsecond: UInt32 = 0, tzHourOffset: Int8 = 0, tzMinuteOffset: Int8 = 0) {
+                fsecond: UInt32 = 0, tzHourOffset: Int8 = 0, tzMinuteOffset: Int8 = 0, tzRegion: String? = nil) {
         self.year = year; self.month = month; self.day = day
         self.hour = hour; self.minute = minute; self.second = second
         self.fsecond = fsecond; self.tzHourOffset = tzHourOffset; self.tzMinuteOffset = tzMinuteOffset
+        self.tzRegion = tzRegion
     }
 }
 

@@ -80,5 +80,17 @@ struct ConnectionConfigDirectoryTests {
         #expect(local.contains("(HOST=localhost)") && !local.contains("SECURITY"))
         #expect(TNSNames.resolveForConnection("LOCAL", configDirectory: nil) == "LOCAL")
         #expect(TNSNames.resolveForConnection("host:1521/svc", configDirectory: dir.path) == "host:1521/svc")
+        // Deskryptor wklejony w polu „Baza” w zwykłym zapisie Oracle Net, w wielu liniach (R8-04).
+        let pasted = """
+
+        (DESCRIPTION =
+          (ADDRESS = (PROTOCOL = TCPS)(HOST = db.example.org)(PORT = 2484))
+          (CONNECT_DATA = (SERVICE_NAME = sklep))
+        )
+        """
+        #expect(TNSNames.value("host", in: pasted) == "db.example.org" && TNSNames.value("PORT", in: pasted) == "2484")
+        #expect(TNSNames.value("SERVICE_NAME", in: pasted) == "sklep" && TNSNames.value("SID", in: pasted) == nil)
+        #expect(TNSNames.resolveForConnection(pasted, configDirectory: dir.path).contains("(SECURITY=(MY_WALLET_DIRECTORY=\(dir.path)))"))
+        #expect(TNSNames.value("SSL_SERVER_CERT_DN", in: "(SECURITY = (SSL_SERVER_CERT_DN = \"CN=a b, O=c\"))") == "\"CN=a b, O=c\"")
     }
 }

@@ -54,6 +54,17 @@ struct DeployScriptTests {
         t = sampleTarget()
         t.workingCopyDirectory = "src"
         #expect(throws: DeployScriptError.invalidPath("src")) { try DeployScripts.deploy(t, plan: plan) }
+        // Remote i gałąź nie mogą zamienić się w opcje gita (R8-09).
+        t = sampleTarget()
+        t.remote = "--upload-pack=touch /tmp/x"
+        #expect(throws: DeployScriptError.invalidGitName(t.remote)) { try DeployScripts.deploy(t, plan: plan) }
+        #expect(t.gitNameErrors.count == 1 && t.validationErrors.contains(t.gitNameErrors[0]))
+        t = sampleTarget()
+        t.branch = "-x"
+        #expect(throws: DeployScriptError.invalidGitName("-x")) { try DeployScripts.deploy(t, plan: plan) }
+        #expect(PelikanSSHTarget.isSafeGitName("feature/ABC-12_x.1") && !PelikanSSHTarget.isSafeGitName("a b")
+                && !PelikanSSHTarget.isSafeGitName("") && !PelikanSSHTarget.isSafeGitName("a;b"))
+        #expect((try? DeployScripts.deploy(sampleTarget(), plan: plan))?.contains("git fetch -- \"$REMOTE\"") == true)
     }
 
     #if canImport(Darwin)
@@ -375,6 +386,12 @@ struct LocalGitTests {
         let head = try DeployFixture.git(work, "rev-parse", "HEAD")
         #expect(try LocalGit.commits(repo: repo, from: s.remoteHead!, to: head).count == 1)
         #expect(LocalGit.hasCommit(repo: repo, head) && !LocalGit.hasCommit(repo: repo, String(repeating: "0", count: 40)))
+        // Nazwy z celu nie trafiają do gita jako opcje (R8-09); hasz zaczynający się od „-” to rewizja, nie opcja.
+        #expect(throws: DeployScriptError.invalidGitName("--upload-pack=x")) { try LocalGit.fetch(repo: repo, remote: "--upload-pack=x") }
+        #expect(throws: DeployScriptError.invalidGitName("-b")) { try LocalGit.status(repo: repo, remote: "origin", branch: "-b") }
+        #expect(!LocalGit.hasCommit(repo: repo, "--help"))
+        #expect((try? LocalGit.commits(repo: repo, from: "--output=x", to: head)) == [])
+        #expect(!FileManager.default.fileExists(atPath: work + "/x..\(head)"))
     }
 }
 #endif

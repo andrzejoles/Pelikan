@@ -13,6 +13,9 @@ struct SSHTunnelUnitTests {
         #expect(ConnectStringRewriter.endpoint(of: "//[fd00::5]:1530/svc") == .init(host: "fd00::5", port: 1530))
         #expect(ConnectStringRewriter.endpoint(of: "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.5)(PORT=1525))(CONNECT_DATA=(SERVICE_NAME=S)))") == .init(host: "10.0.0.5", port: 1525))
         #expect(ConnectStringRewriter.endpoint(of: "ALIAS_TNS") == nil)
+        // Deskryptor ze spacjami i w wielu liniach (R8-04).
+        #expect(ConnectStringRewriter.endpoint(of: "\n(DESCRIPTION =\n (ADDRESS = (PROTOCOL = TCP)(HOST = db.example.org)(PORT = 1530))\n (CONNECT_DATA = (SERVICE_NAME = S)))\n")
+                == .init(host: "db.example.org", port: 1530))
     }
 
     @Test("Przepisanie na 127.0.0.1:port lokalny (EZConnect, tcps, deskryptor, alias TNS)")

@@ -29,7 +29,17 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         let stmt: OpaquePointer
         let columns: [ColumnInfo]
         let lobLimit: Int
+        /// Kursor zagnieżdżony (`CURSOR(…)` w wierszu): wynik nadrzędny, dopóki nikt nie pobrał z niego wierszy.
+        var parent: UInt64?
     }
+
+    /// Kursory zagnieżdżone jeszcze nieotwarte przez użytkownika, od najstarszego. Każdy wiersz z kolumną `CURSOR(…)`
+    /// otwiera kursor w sesji serwera; trzymanie wszystkich kończyło się ORA-01000 (R8-02) — najstarsze ponad limit są
+    /// zamykane (ich komórka zgłasza wtedy nieznany wynik).
+    private var pendingNested: [UInt64] = []
+    static let maxPendingNestedCursors = 100
+    /// Paczka pobierania zapytania z kolumną kursora: serwer otwiera kursor zagnieżdżony dla każdego wiersza paczki.
+    static let nestedCursorFetchArraySize: UInt32 = 25
 
     /// Paczka pobierania hurtowego: przy opóźnieniu ~50 ms paczka 500 daje ~8 tys. wierszy/s, 5000 — 40–60 tys.
     /// Najwyżej 10 000 wierszy i ~16 MB buforów (szeroki wiersz — mniejsza paczka), nigdy mniej niż bieżąca.
@@ -206,7 +216,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
     }
 
     public func closeResultSet(_ resultSet: ResultSetID) async {
-        _ = try? await onQueue { [self] in closeSync(resultSet) }
+        _ = try? await onQueue { [self] in closeWithNestedSync(resultSet) }
     }
 
     public func commit() async throws {
@@ -302,6 +312,7 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                 }
             }
             let columns = try describeColumns(stmt, count: numCols)
+            try limitFetchForNestedCursors(stmt, columns: columns)
             result.resultSet = register(stmt: stmt, columns: columns, lobLimit: options.lobLimit ?? self.options.lobPrefetchLimit)
             keepStmt = true
         } else {
@@ -342,11 +353,21 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
         }
     }
 
-    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int) -> ResultSetDescriptor {
+    private func register(stmt: OpaquePointer, columns: [ColumnInfo], lobLimit: Int, parent: UInt64? = nil) -> ResultSetDescriptor {
         let id = nextResultSetID
         nextResultSetID += 1
-        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit)
+        resultSets[id] = OpenResultSet(stmt: stmt, columns: columns, lobLimit: lobLimit, parent: parent)
+        if parent != nil {
+            pendingNested.append(id)
+            if pendingNested.count > Self.maxPendingNestedCursors { closeSync(ResultSetID(pendingNested[0])) }
+        }
         return ResultSetDescriptor(id: ResultSetID(id), columns: columns)
+    }
+
+    /// Mniejsza paczka, gdy wynik ma kolumnę kursora (przed pierwszym pobraniem — zmniejszyć ODPI-C pozwala zawsze).
+    private func limitFetchForNestedCursors(_ stmt: OpaquePointer, columns: [ColumnInfo]) throws {
+        guard columns.contains(where: { $0.type == .refCursor }), currentFetchArraySize > Self.nestedCursorFetchArraySize else { return }
+        try check(dpiStmt_setFetchArraySize(stmt, Self.nestedCursorFetchArraySize))
     }
 
     private func implicitResults(_ stmt: OpaquePointer, lobLimit: Int) throws -> [ResultSetDescriptor] {
@@ -358,7 +379,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-            out.append(register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit))
+            let columns = try describeColumns(child, count: n)
+            try limitFetchForNestedCursors(child, columns: columns)
+            out.append(register(stmt: child, columns: columns, lobLimit: lobLimit))
         }
         return out
     }
@@ -446,6 +469,11 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     func fetchSync(_ id: ResultSetID, maxRows: Int) throws -> RowBatch {
         guard let rs = resultSets[id.raw] else { throw DatabaseError.unknownResultSet }
+        if rs.parent != nil {
+            // Otwarty przez użytkownika — już nie podlega zamykaniu najstarszych.
+            resultSets[id.raw]?.parent = nil
+            pendingNested.removeAll { $0 == id.raw }
+        }
         var rows: [[OracleValue]] = []
         rows.reserveCapacity(min(maxRows, 10_000))
         var found: Int32 = 0
@@ -463,7 +491,8 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
                 var native: dpiNativeTypeNum = 0
                 var data: UnsafeMutablePointer<dpiData>?
                 try check(dpiStmt_getQueryValue(rs.stmt, UInt32(pos + 1), &native, &data))
-                row.append(try value(native: native, oracle: rs.columns[pos].type, data: data, typeName: rs.columns[pos].typeName, lobLimit: rs.lobLimit))
+                row.append(try value(native: native, oracle: rs.columns[pos].type, data: data, typeName: rs.columns[pos].typeName,
+                                     lobLimit: rs.lobLimit, parent: id.raw))
             }
             rows.append(row)
         }
@@ -472,14 +501,24 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
 
     func closeSync(_ id: ResultSetID) {
         if let rs = resultSets.removeValue(forKey: id.raw) {
+            if rs.parent != nil { pendingNested.removeAll { $0 == id.raw } }
             dpiStmt_close(rs.stmt, nil, 0)
             dpiStmt_release(rs.stmt)
         }
     }
 
+    /// Zamknięcie wyniku na żądanie (zamknięta siatka): razem z jego nieotwartymi kursorami zagnieżdżonymi. Koniec
+    /// danych (`fetchSync`) zamyka tylko sam wynik — komórki `<Cursor>` pobranych wierszy można jeszcze otworzyć.
+    func closeWithNestedSync(_ id: ResultSetID) {
+        closeSync(id)
+        for child in resultSets.filter({ $0.value.parent == id.raw }).keys { closeSync(ResultSetID(child)) }
+    }
+
     // MARK: - Wartości
 
-    private func value(native: dpiNativeTypeNum, oracle: OracleType, data: UnsafeMutablePointer<dpiData>?, typeName: String, lobLimit: Int) throws -> OracleValue {
+    /// `parent` — wynik, z którego pochodzi wiersz (kursor zagnieżdżony `CURSOR(…)`); nil dla zmiennych OUT.
+    private func value(native: dpiNativeTypeNum, oracle: OracleType, data: UnsafeMutablePointer<dpiData>?, typeName: String, lobLimit: Int,
+                       parent: UInt64? = nil) throws -> OracleValue {
         guard let data, data.pointee.isNull == 0 else { return .null }
         let v = data.pointee.value
         switch Int32(native) {
@@ -530,8 +569,9 @@ public final class ODPISession: DatabaseSession, @unchecked Sendable {
             var n: UInt32 = 0
             try check(dpiStmt_getNumQueryColumns(child, &n))
             try check(dpiStmt_setFetchArraySize(child, currentFetchArraySize))
-            let rs = register(stmt: child, columns: try describeColumns(child, count: n), lobLimit: lobLimit)
-            return .cursor(rs.id)
+            let columns = try describeColumns(child, count: n)
+            try limitFetchForNestedCursors(child, columns: columns)
+            return .cursor(register(stmt: child, columns: columns, lobLimit: lobLimit, parent: parent).id)
         case DPI_NATIVE_TYPE_OBJECT:
             return .object(typeName: typeName, description: "")
         default:

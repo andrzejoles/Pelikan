@@ -52,8 +52,12 @@ public enum Bridge {
         throw Failure.missingToken
     }
 
-    /// Łączy się, przechodzi uzgadnianie i przekazuje dane do końca jednego ze strumieni.
-    public static func run(_ options: Options, input: Int32 = STDIN_FILENO, output: Int32 = STDOUT_FILENO) throws {
+    /// Łączy się, przechodzi uzgadnianie i przekazuje dane do końca jednego ze strumieni. Po EOF na wejściu czeka
+    /// (najwyżej `drainTimeout`), aż aplikacja zamknie swoją stronę — odpowiedzi w drodze trafiają jeszcze na wyjście
+    /// (R8-11: `echo … | pelikan-mcp` kończył się przed odpowiedzią). `exitWhenClosed` — zamknięcie gniazda przez
+    /// aplikację kończy proces mostu (także gdy wejście jest jeszcze otwarte); testy wyłączają.
+    public static func run(_ options: Options, input: Int32 = STDIN_FILENO, output: Int32 = STDOUT_FILENO,
+                           drainTimeout: TimeInterval = 30, exitWhenClosed: Bool = true) throws {
         let fd: Int32
         do {
             fd = try Wire.connect(path: options.socketPath)
@@ -76,6 +80,7 @@ public enum Bridge {
         Wire.setReadTimeout(fd, seconds: 0)
 
         // gniazdo → stdout
+        let drained = DispatchSemaphore(value: 0)
         let socketToStdout = Thread {
             while true {
                 guard let frame = try? Wire.readFrame(from: fd) else { break }
@@ -83,8 +88,9 @@ public enum Bridge {
                 line.append(0x0A)
                 if (try? Wire.writeAll(line, to: output)) == nil { break }
             }
+            drained.signal()
             // Aplikacja zamknęła sesję — kończymy proces mostu.
-            exit(0)
+            if exitWhenClosed { exit(0) }
         }
         socketToStdout.start()
 
@@ -106,6 +112,7 @@ public enum Bridge {
             if buffer.count > Wire.maxFrame { throw Failure.connection("za długa wiadomość") }
         }
         shutdown(fd, SHUT_WR)
+        _ = drained.wait(timeout: .now() + drainTimeout)
     }
 }
 #endif

@@ -43,6 +43,43 @@ struct OracleRawTests {
         let d = try ThinDriver.endpoint("(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=h)(PORT=1530))(CONNECT_DATA=(SERVICE_NAME=S)))")
         #expect(d.host == "h" && d.port == 1530)
         #expect(throws: DatabaseError.self) { try ThinDriver.endpoint("tcps://adb.example:1522/x") }
+        // Deskryptor w zwykłym zapisie Oracle Net, w wielu liniach (R8-04).
+        let spaced = try ThinDriver.endpoint("""
+            (DESCRIPTION =
+              (ADDRESS = (PROTOCOL = TCP)(HOST = db.example.org)(PORT = 1530))
+              (CONNECT_DATA = (SID = ORCL)))
+            """)
+        #expect(spaced.host == "db.example.org" && spaced.port == 1530)
+        #expect("\(spaced.service)".contains("ORCL") && "\(spaced.service)".lowercased().contains("sid"))
+        #expect(throws: DatabaseError.self) { try ThinDriver.endpoint("(DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h)(PORT = 2484)))") }
+    }
+
+    @Test("Konfiguracja OracleNIO bez OOB (oracle-nio #124: 19c z OOB bez FastAuth), rola i limit czasu")
+    func configuration() {
+        let c = ThinDriver.configuration(("h", 1521, .serviceName("s")), target: ConnectionTarget(user: "u", connectString: "h/s", role: .sysdba), password: "x")
+        #expect(c.disableOOB && c.mode == .sysDBA && c.options.connectTimeout == .seconds(20))
+    }
+
+    @Test("TIMESTAMP WITH TIME ZONE: przesunięcie przeliczone na czas lokalny; strefa nazwana jako czas UTC z oznaczeniem")
+    func timestampTZ() {
+        // 2026-07-26 10:00:00 UTC, przesunięcie +02:00 (bajty 11–12: godzina + 20, minuta + 60).
+        let offset = OracleRaw.timestamp([120, 126, 7, 26, 11, 1, 1, 0, 0, 0, 0, 22, 60])
+        #expect(offset?.hour == 12 && offset?.tzHourOffset == 2 && offset?.tzRegion == nil)
+        #expect(offset?.formatted("YYYY-MM-DD HH24:MI:SS", zone: true) == "2026-07-26 12:00:00 +02:00")
+        // Bit 0x80: identyfikator regionu (np. Europe/Warsaw) — czas zostaje w UTC i jest tak opisany.
+        let region = OracleRaw.timestamp([120, 126, 7, 26, 11, 1, 1, 0, 0, 0, 0, 0x80 | 0x2A, 0x5C])
+        #expect(region?.hour == 10 && region?.tzRegion == "UTC")
+        #expect(region?.formatted("YYYY-MM-DD HH24:MI:SS", zone: true) == "2026-07-26 10:00:00 UTC")
+    }
+
+    @Test("Tekst CLOB: UTF-16BE (AL16UTF16) albo UTF-8 według liczby odczytanych znaków")
+    func clobText() {
+        func utf16(_ s: String) -> Data { Data(s.utf16.flatMap { [UInt8($0 >> 8), UInt8($0 & 0xFF)] }) }
+        #expect(ThinSession.clobText(utf16("abc"), characters: 3) == "abc")
+        #expect(ThinSession.clobText(utf16("żż"), characters: 2) == "żż")       // bez bajtu zerowego
+        #expect(ThinSession.clobText(Data("żż".utf8), characters: 2) == "żż")    // UTF-8, też 4 bajty
+        #expect(ThinSession.clobText(Data("zażółć".utf8), characters: 6) == "zażółć")
+        #expect(ThinSession.clobText(Data(), characters: 0) == "")
     }
 }
 
@@ -111,6 +148,58 @@ struct ThinSessionTests {
         #expect(b2.rows.first?.first == .number("101"))
         await s.closeResultSet(rs.id)
         await s.close()
+    }
+
+    @Test("CLOB powyżej 32 600 znaków (kolumna i OUT) jak w Instant Client; limit LOB daje znacznik obcięcia")
+    func longCLOB() async throws {
+        let thin = try await connect()
+        let odpi = try await TestDatabase.connect()
+        let ascii = "select xmlagg(xmlelement(e, lpad(level, 6, '0'))).getclobval() from dual connect by level <= 3000"
+        let polish = "select xmlagg(xmlelement(e, 'żółć' || lpad(level, 6, '0'))).getclobval() from dual connect by level <= 3000"
+        for sql in [ascii, polish] {
+            let t = try #require(try await thin.queryAll(sql).rows.first?.first)
+            let o = try #require(try await odpi.queryAll(sql).rows.first?.first)
+            guard case .lob(let tl) = t, case .lob(let ol) = o else { Issue.record("CLOB \(t)"); continue }
+            #expect(tl.text?.count ?? 0 >= 39_000 && tl.text == ol.text && !tl.truncated && tl.length == ol.length)
+            #expect(tl.text?.hasSuffix("003000</E>") == true)
+        }
+        // Zmienna OUT.
+        let block = "begin select xmlagg(xmlelement(e, lpad(level, 6, '0'))).getclobval() into :c from dual connect by level <= 3000; end;"
+        let out = try await thin.execute(block, binds: [BindVariable(name: "c", type: .clob, direction: .output)])
+        if case .lob(let l) = out.outBinds["c"] { #expect(l.text?.count == 39_000 && !l.truncated) } else { Issue.record("OUT \(String(describing: out.outBinds["c"]))") }
+        // Limit LOB w znakach: obcięte i oznaczone (strażnik narzędzi danych, D168).
+        let r = try await thin.execute(polish, binds: [], options: ExecuteOptions(lobLimit: 1000))
+        let batch = try await thin.fetch(try #require(r.resultSet).id, maxRows: 1)
+        if case .lob(let l) = batch.rows.first?.first { #expect(l.text?.count == 1000 && l.truncated && l.text?.hasPrefix("<E>żółć") == true) }
+        else { Issue.record("limit") }
+        await thin.close()
+        await odpi.close()
+    }
+
+    @Test("Równoległe pobieranie z jednego wyniku: wiersze bez powtórzeń i braków")
+    func concurrentFetch() async throws {
+        let s = try await connect()
+        let r = try await s.execute("select level n from dual connect by level <= 3000")
+        let id = try #require(r.resultSet).id
+        let batches = try? await withThrowingTaskGroup(of: [Int].self) { group in
+            for _ in 0..<6 {
+                group.addTask {
+                    var got: [Int] = []
+                    while true {
+                        let b: RowBatch
+                        // Wynik do końca pobrany przez inne zadanie jest już zamknięty (jak w ODPI).
+                        do { b = try await s.fetch(id, maxRows: 100) } catch DatabaseError.unknownResultSet { return got }
+                        got += b.rows.compactMap { $0.first?.displayText.flatMap { Int($0) } }
+                        if !b.hasMore { return got }
+                    }
+                }
+            }
+            var all: [Int] = []
+            for try await part in group { all += part }
+            return all
+        }
+        await s.close()
+        #expect(batches?.sorted() == Array(1...3000))
     }
 
     @Test("Błąd ORA z kodem; DBMS_OUTPUT przez narzędzia sesji")
