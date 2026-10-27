@@ -11,6 +11,16 @@ import SwiftUI
 final class ToolLifetime {
     private var handlers: [UUID: () -> Void] = [:]
     private var ended = false
+    /// Zawartość narzędzia (ustawiana przy otwarciu) — do sprawdzenia, czy narzędzie widać.
+    weak var content: NSView?
+
+    /// Narzędzie widać: karta wybrana w rozwiniętym panelu (karty i zwinięty panel chowają widoki) albo okno
+    /// niezminimalizowane. Pętle auto-odświeżania (Sesje, Instance Viewer, wykres) nie odpytują wtedy bazy na próżno.
+    var isVisible: Bool {
+        guard let content else { return true }
+        guard let window = content.window else { return false }
+        return window.isVisible && !window.isMiniaturized && !content.isHiddenOrHasHiddenAncestor
+    }
 
     func register(_ id: UUID, _ handler: @escaping () -> Void) {
         if !ended { handlers[id] = handler }
@@ -106,6 +116,7 @@ final class ToolItem {
         self.content = content
         self.lifetime = lifetime
         self.owner = owner
+        lifetime.content = content
     }
 
     /// Najmniejszy rozmiar zawartości (minimalna ramka widoku SwiftUI, ograniczenia AppKit) — w panelu, po wstawieniu.
@@ -611,8 +622,10 @@ private final class ToolTabView: NSView, NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation { .move }
 
     func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-        // Upuszczona poza panelami: osobne okno w miejscu upuszczenia.
+        // Upuszczona poza panelami: osobne okno w miejscu upuszczenia. Przeciąganie przerwane klawiszem Esc też kończy
+        // się bez operacji — wtedy narzędzie zostaje na miejscu.
         guard operation == [], let workspace = ToolDockManager.shared.workspace else { return }
+        if let event = NSApp.currentEvent, event.type == .keyDown, event.keyCode == 53 { return }
         ToolDockManager.shared.nextFloatOrigin = screenPoint
         workspace.perform("view.floatTool", CommandArguments(["tool": .string(key)]))
     }
@@ -625,7 +638,6 @@ private final class ToolTabView: NSView, NSDraggingSource {
 final class ToolFloatingWindowController: NSWindowController, NSWindowDelegate {
     let item: ToolItem
     private var detaching = false
-    private static let transientPrefixes = ["diff-", "table-", "graph-", "spatial-", "debugger-", "html-", "objectInfo-", "largeData-"]
 
     init(item: ToolItem, origin: NSPoint?, dockable: Bool) {
         self.item = item
@@ -637,7 +649,7 @@ final class ToolFloatingWindowController: NSWindowController, NSWindowDelegate {
         w.contentView = item.content
         w.center()
         // Okna z kluczem jednorazowym (UUID, id dokumentu) bez zapamiętanej ramki — każde zostawiałoby wpis w UserDefaults.
-        if !Self.transientPrefixes.contains(where: item.key.hasPrefix) { w.setFrameAutosaveName("Pelikan.\(item.key)") }
+        if ToolDockSettings.kind(of: item.key) == item.key { w.setFrameAutosaveName("Pelikan.\(item.key)") }
         if let origin { w.setFrameTopLeftPoint(origin) }
         super.init(window: w)
         w.delegate = self

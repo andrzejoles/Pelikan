@@ -108,6 +108,8 @@ struct DBAPanelView: View {
 /// Instance Viewer (SD-DBA-004): pulpit instancji z odświeżaniem.
 struct InstanceViewerView: View {
     let workspace: Workspace
+    /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
+    @Environment(\.toolLifetime) private var lifetime
     @State private var connection: UUID?
     @State private var snap: InstanceSnapshot?
     @State private var auto = true
@@ -166,7 +168,7 @@ struct InstanceViewerView: View {
             await refresh()
             while auto, !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(interval))
-                await refresh()
+                if lifetime?.isVisible ?? true { await refresh() }
             }
         }
     }

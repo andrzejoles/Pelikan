@@ -10,6 +10,8 @@ import SwiftUI
 struct GraphView: View {
     let workspace: Workspace
     let document: PelikanWorkspace.Document
+    /// Auto-odświeżanie pomija narzędzie niewidoczne (karta w tle, zwinięty panel, zminimalizowane okno).
+    @Environment(\.toolLifetime) private var lifetime
     @State var tab: ResultTab
     @State private var definition: ChartDefinition
     @State private var source: ExportData
@@ -56,7 +58,7 @@ struct GraphView: View {
             guard definition.refreshSeconds > 0 else { return }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(definition.refreshSeconds))
-                await refresh()
+                if lifetime?.isVisible ?? true { await refresh() }
             }
         }
     }
