@@ -55,6 +55,11 @@ struct OracleRawTests {
         #expect(spaced.host == "db.example.org" && spaced.port == 1530)
         #expect("\(spaced.service)".contains("ORCL") && "\(spaced.service)".lowercased().contains("sid"))
         #expect(throws: DatabaseError.self) { try ThinDriver.endpoint("(DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h)(PORT = 2484)))") }
+        // EZConnect Plus: parametry po `?` nie trafiają do nazwy usługi.
+        let plus = try ThinDriver.endpoint("db.example:1521/usluga?connect_timeout=5&retry_count=2")
+        #expect(plus.host == "db.example" && plus.port == 1521 && "\(plus.service)".contains("usluga") && !"\(plus.service)".contains("?"))
+        let server = try ThinDriver.endpoint("db.example/usluga:dedicated?connect_timeout=5")
+        #expect("\(server.service)".contains("usluga") && !"\(server.service)".contains("dedicated"))
     }
 
     @Test("Konfiguracja OracleNIO bez OOB (oracle-nio #124: 19c z OOB bez FastAuth), rola i limit czasu")

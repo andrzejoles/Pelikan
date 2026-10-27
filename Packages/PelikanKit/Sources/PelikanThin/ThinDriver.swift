@@ -48,7 +48,9 @@ public struct ThinDriver: DatabaseDriver {
             host = String(hostPort[..<colon])
             port = Int(hostPort[hostPort.index(after: colon)...]) ?? 1521
         }
-        let service = parts[1].split(separator: ":").first.map(String.init) ?? parts[1]
+        // EZConnect Plus: parametry `?connect_timeout=…&…` thin pomija (nie są częścią nazwy usługi), `:serwer` też.
+        let serviceAndServer = parts[1].split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? parts[1]
+        let service = serviceAndServer.split(separator: ":").first.map(String.init) ?? serviceAndServer
         return (host, port, .serviceName(service))
     }
 
