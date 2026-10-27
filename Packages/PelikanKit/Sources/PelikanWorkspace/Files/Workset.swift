@@ -139,6 +139,13 @@ public final class WorksetStore {
         names = files.filter { $0.hasSuffix(".json") && $0.lowercased() != "state.json" }.map { String($0.dropLast(5)) }.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
+    /// Nazwa istniejącego workseta bez względu na wielkość liter: na APFS „domyślny.json” to ten sam plik co
+    /// „Domyślny.json”, więc nazwy różniące się tylko wielkością liter wskazują ten sam workset.
+    public func existingName(_ name: String) -> String? {
+        let n = name.trimmingCharacters(in: .whitespaces)
+        return names.first { $0.caseInsensitiveCompare(n) == .orderedSame }
+    }
+
     /// Nazwa pliku workseta bez separatorów ścieżki.
     nonisolated static func fileName(_ name: String) throws -> String {
         let n = name.trimmingCharacters(in: .whitespaces)
@@ -170,7 +177,7 @@ public final class WorksetStore {
     /// Workset z dopisanymi oknami nieotwartymi w tej sesji (`unopened`): bez pustych okien bieżących i bez plików już
     /// otwartych.
     func merged(_ w: Workset) -> Workset {
-        guard let u = unopened, u.name == w.name else { return w }
+        guard let u = unopened, u.name.caseInsensitiveCompare(w.name) == .orderedSame else { return w }
         var m = w
         m.documents = []
         m.activeIndex = nil
@@ -190,7 +197,7 @@ public final class WorksetStore {
 
     /// Okna workseta zostały otwarte — dopisywanie przy zapisie niepotrzebne.
     func clearUnopened(_ name: String) {
-        if unopened?.name == name { unopened = nil }
+        if unopened?.name.caseInsensitiveCompare(name) == .orderedSame { unopened = nil }
     }
 
     /// Zapisany workset; nil — nie ma. Nieczytelny plik (uszkodzony albo z nowszej wersji) jest przenoszony do kopii
@@ -212,11 +219,12 @@ public final class WorksetStore {
         }
     }
 
-    public func delete(_ name: String) throws {
+    public func delete(_ requested: String) throws {
         guard let directory else { return }
+        let name = existingName(requested) ?? requested
         try? FileManager.default.removeItem(at: directory.appendingPathComponent(try Self.fileName(name)))
         clearUnopened(name)
-        if current == name { setCurrent(Self.defaultName) }
+        if current.caseInsensitiveCompare(name) == .orderedSame { setCurrent(Self.defaultName) }
         reloadNames()
         generation += 1
     }
@@ -362,8 +370,10 @@ extension Workspace {
     /// Przełącza na workset: bieżący zapisany, okna zastąpione oknami wskazanego (nowy — pusty). Anulowane pytanie
     /// o transakcję albo okno w trakcie wykonania — bez zmiany workseta (błąd).
     @discardableResult
-    public func switchWorkset(to name: String) async throws -> [String] {
-        _ = try WorksetStore.fileName(name)
+    public func switchWorkset(to requested: String) async throws -> [String] {
+        _ = try WorksetStore.fileName(requested)
+        // Istniejący workset pod nazwą z pliku — inna wielkość liter nie tworzy drugiej nazwy tego samego pliku.
+        let name = worksets.existingName(requested) ?? requested.trimmingCharacters(in: .whitespaces)
         try saveCurrentWorkset()
         let target = try worksets.load(name) ?? Workset(name: name)
         let missing = try await applyWorkset(target)

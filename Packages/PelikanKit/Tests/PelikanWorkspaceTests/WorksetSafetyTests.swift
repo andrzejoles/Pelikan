@@ -153,6 +153,25 @@ struct WorksetSafetyTests {
         #expect(store.names == ["Raporty"])
     }
 
+    @Test("nazwy worksetów bez rozróżniania wielkości liter: nowy o istniejącej nazwie odrzucony, otwarcie pod nazwą z pliku")
+    func caseInsensitiveNames() async throws {
+        let t = try TempDirectory()
+        let ws = Workspace(dataDirectory: t.url)
+        let doc = ws.newDocument(.sql, text: "select 'raporty' from dual")
+        doc.isModified = true
+        try await ws.invoke("workset.new", CommandArguments(["name": .string("Raporty")]))
+        try await ws.invoke("workset.close")
+        #expect(ws.worksets.existingName("rAPORTY") == "Raporty" && ws.worksets.existingName("Inne") == nil)
+        await #expect(throws: CommandError.self) { try await ws.invoke("workset.new", CommandArguments(["name": .string("raporty")])) }
+        await #expect(throws: CommandError.self) { try await ws.invoke("workset.new", CommandArguments(["name": .string("DOMYŚLNY")])) }
+        try await ws.invoke("workset.open", CommandArguments(["name": .string("RAPORTY")]))
+        #expect(ws.worksets.current == "Raporty" && ws.worksets.names.count == 2)
+        try await ws.switchWorkset(to: "domyślny")
+        #expect(ws.worksets.current == WorksetStore.defaultName)
+        try ws.worksets.delete("raporty")
+        #expect(ws.worksets.names == [WorksetStore.defaultName])
+    }
+
     @Test("migawka po awarii obejmuje zmieniony diagram i notatnik bez tekstu (R3-15)")
     func recoveryDiagramNotebook() throws {
         let t = try TempDirectory()
