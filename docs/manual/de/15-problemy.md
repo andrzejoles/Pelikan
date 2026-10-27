@@ -106,7 +106,9 @@ Die folgenden Funktionen arbeiten anders als im Vorbild, sind unvollständig ode
 geprüft:
 
 - Der **Thin-Treiber** unterstützt kein TCPS und keine Wallets, keine externe Authentifizierung, kein Ändern eines
-  abgelaufenen Passworts und kein Unterbrechen der Ausführung.
+  abgelaufenen Passworts und kein Unterbrechen der Ausführung. CLOB und DBMS_OUTPUT liest er bis 65 535 Zeichen
+  (längere mit Kürzungshinweis), und eine Abfrage mit einer Spalte INTERVAL YEAR TO MONTH oder BFILE beendet die App
+  (Fehler der Bibliothek OracleNIO) — für solche Daten den Instant-Client-Treiber verwenden.
 - **Kerberos** unter macOS: Wenn `sqlnet.ora` KERBEROS5 aktiviert, endet die Verbindung mit einer verständlichen
   Fehlermeldung (der Adapter des Instant Client kollidiert in der App mit dem Kerberos des Systems); unter Linux
   funktioniert die Anmeldung mit Ticket. **Microsoft Entra ID** und **TCPS-Verbindungen** sind nach der

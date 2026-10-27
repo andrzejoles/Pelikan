@@ -95,7 +95,9 @@ The following features work differently than in the reference product, are incom
 real environment:
 
 - The **Thin driver** does not support TCPS and wallets, external authentication, changing an expired password, or
-  interrupting execution.
+  interrupting execution. It reads CLOB and DBMS_OUTPUT up to 65,535 characters (longer ones with a truncation mark),
+  and a query with an INTERVAL YEAR TO MONTH or BFILE column closes the app (a bug in the OracleNIO library) — use the
+  Instant Client driver for such data.
 - **Kerberos** on macOS: when `sqlnet.ora` enables KERBEROS5, the connection ends with a clear error (the Instant
   Client adapter conflicts with the system Kerberos inside the app); on Linux, logging in with a ticket works.
   **Microsoft Entra ID** and **TCPS connections** are implemented according to the Oracle documentation but have not

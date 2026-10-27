@@ -96,7 +96,9 @@ możesz włączyć jawne nazwy — przydaje się, gdy szukasz przyczyny problemu
 Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zostały sprawdzone w prawdziwym środowisku:
 
 - **Sterownik Thin** nie obsługuje TCPS i portfeli, uwierzytelniania zewnętrznego, zmiany wygasłego hasła ani
-  przerywania wykonania.
+  przerywania wykonania. CLOB i DBMS_OUTPUT czyta do 65 535 znaków (dłuższe z oznaczeniem obcięcia), a zapytanie
+  z kolumną INTERVAL YEAR TO MONTH albo BFILE kończy aplikację (błąd biblioteki OracleNIO) — do takich danych używaj
+  sterownika Instant Client.
 - **Kerberos** na macOS: gdy `sqlnet.ora` włącza KERBEROS5, połączenie kończy się czytelnym błędem (adapter
   Instant Client koliduje z systemowym Kerberosem w aplikacji); na Linuksie logowanie biletem działa. **Microsoft
   Entra ID** i **połączenia TCPS** są zaimplementowane według dokumentacji Oracle, ale nie były sprawdzone na Azure ani
