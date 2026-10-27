@@ -20,8 +20,15 @@ Hauptverbindung festlegen**, **Neues SQL-Fenster auf dieser Verbindung**, **Aktu
 bearbeiten …** und **Trennen**. Die Hauptverbindung gilt nur dann, wenn sich aus dem Kontext keine andere ergibt — ein
 neues Fenster aus dem Menü, ein Werkzeug ohne aktives Fenster.
 
-- **Benutzerauswahl** über dem Baum: *Aktueller Benutzer*, *Alle Benutzer* oder ein bestimmtes Schema (Pelikan merkt
-  sich die Auswahl pro Verbindung).
+- **Benutzerauswahl** über dem Baum (für jede Verbindung getrennt):
+  - *Aktueller Benutzer* — Objekte Ihres Schemas sowie öffentliche Datenbank-Links und öffentliche Synonyme von
+    Anwendungsobjekten (ohne die Tausenden Synonyme auf Oracle-Systemschemas);
+  - *Zugängliche Objekte* — alles, was Sie verwenden können: eigene Objekte, Objekte anderer Schemas mit erteilten
+    Rechten und öffentliche (mit dem Eigentümer vor dem Namen);
+  - *Alle Benutzer* — Objekte aller Schemas (mit DBA-Views, wenn Sie Zugriff darauf haben, auch Oracle-Verzeichnisse
+    ohne erteilte Rechte);
+  - ein bestimmtes Schema.
+  Den Umfang nach dem Verbinden legen Sie unter **Einstellungen › Object Browser › Nach dem Verbinden anzeigen** fest.
 - **Filter** unter der Benutzerauswahl: ein Namensteil (an beliebiger Stelle — `emp` findet `EMP` und `T_EMP_HIST`),
   ein Muster mit `%` (z. B. `EMP%` — nur der Namensanfang; das Verhalten ohne `%` ändern Sie unter **Einstellungen ›
   Object Browser**), mehrere Muster durch Komma getrennt, `status=invalid`

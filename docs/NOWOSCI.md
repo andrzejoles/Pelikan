@@ -2,6 +2,13 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.2.2 — kompletne obiekty w przeglądarce
+
+- **Brakujące obiekty w przeglądarce** — tryb *Bieżący użytkownik* pokazuje też publiczne łącza bazy danych i publiczne
+  synonimy obiektów aplikacji; nowy tryb *Dostępne obiekty* pokazuje wszystko, czego możesz użyć, także obiekty innych
+  schematów z nadanymi uprawnieniami; *Wszyscy użytkownicy* z widokami DBA pokazuje wszystkie katalogi Oracle. Zakres
+  po połączeniu: **Preferencje › Object Browser › Po połączeniu pokazuj**.
+
 ## 1.2.0 — eksport i import połączeń z hasłami
 
 - **Połączenia z hasłami** — **Sesja › Połączenia › Eksportuj połączenia z hasłami…** zapisuje definicje razem

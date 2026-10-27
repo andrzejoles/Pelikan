@@ -1766,3 +1766,18 @@ hasła do Pęku kluczy pod nowymi identyfikatorami (konflikt id — nowe id, jak
 hasła); plik bez haseł zostaje jak dotąd. Dziennik — tylko liczby definicji i haseł. Ograniczenie: usunięcie pliku
 na dysku SSD nie gwarantuje zamazania danych — instrukcja i ostrzeżenie każą trzymać plik w bezpiecznym miejscu.
 
+### D187 · 2026-10-27 — Przeglądarka obiektów: obiekty własne, dostępne i publiczne
+Właściciel zgłosił, że w przeglądarce brakuje wielu łączy bazy danych, katalogów Oracle i synonimów — obiektów
+dostępnych w schemacie, choć jego właścicielem nie jest. Przyczyna: tryb *Bieżący użytkownik* filtrował każdy folder po
+właścicielu = schemat (publiczne łącza i synonimy mają właściciela PUBLIC, obiekty nadane — inny schemat), a katalogi
+(właściciel SYS) zawsze pochodziły z ALL_DIRECTORIES, także przy widokach DBA. Zakres folderu (`ObjectScope`):
+*Bieżący użytkownik* — własne obiekty, publiczne łącza bazy i publiczne synonimy obiektów aplikacji (cel spoza schematów
+utrzymywanych przez Oracle: ALL_USERS.ORACLE_MAINTAINED od 12c, na 11g lista schematów — bez ~8600 synonimów SYS);
+nowy *Dostępne obiekty* — widoki ALL_* bez filtra właściciela (własne, nadane, publiczne; synonimy publiczne jak wyżej);
+*Wszyscy użytkownicy* i wybrany schemat — jak dotąd, z widokami DBA, gdy dostępne, także katalogi (DBA_DIRECTORIES).
+Obiekty spoza własnego schematu mają w drzewie właściciela przed nazwą. Publiczne synonymy aplikacji pobiera osobne
+zapytanie do ALL_SYNONYMS: połączone z ALL_OBJECTS (`object_name in (…)`) trwało na bazie testowej 77 s, osobno —
+setne części sekundy; filtr nazw je obejmuje, filtr stanu, źródła i filtr nazwany — nie. Preferencja **Po połączeniu
+pokazuj** (Object Browser) wybiera tryb startowy gałęzi; domyślnie *Bieżący użytkownik*. Test na bazie: drugi schemat
+z tabelą nadaną i nienadaną, publiczny synonim, publiczne łącze, katalog z uprawnieniem; limit czasu folderów.
+

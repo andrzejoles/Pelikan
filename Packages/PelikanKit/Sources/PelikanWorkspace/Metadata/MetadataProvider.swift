@@ -255,12 +255,49 @@ public final class MetadataProvider {
         return rows.compactMap { $0.first?.displayText }
     }
 
-    /// Obiekty typu dla właściciela (nil — wszyscy użytkownicy) z filtrem.
+    /// Obiekty typu wybranego właściciela (nil — wszyscy użytkownicy) z filtrem.
     public func objects(_ type: DBObjectType, owner: String?, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
-        let key = "\(owner ?? "*")|\(type.rawValue)|\(filter.text)|\(filter.named?.id.uuidString ?? "")|\(filter.named?.whereClause ?? "")"
+        try await objects(type, scope: owner.map(ObjectScope.user) ?? .all, filter: filter)
+    }
+
+    /// Publiczne synonimy obiektów aplikacji: bez synonimów do schematów utrzymywanych przez Oracle (SYS, XDB, MDSYS…
+    /// — tysiące pozycji); na 11g bez kolumny ORACLE_MAINTAINED — lista schematów Oracle. Filtr: wzorce nazw; filtr
+    /// stanu albo źródła (status=, source=) i filtr nazwany ich nie obejmują.
+    private func applicationPublicSynonyms(_ filter: ObjectFilter, in s: any DatabaseSession) async throws -> [DBObject] {
+        let parsed = filter.parsed()
+        guard parsed.status == nil, parsed.source == nil, filter.named == nil else { return [] }
+        let oracleSchemas = try await dictionaryFeatures().major >= 12
+            ? "select username from all_users where oracle_maintained = 'Y'"
+            : "select username from all_users where username in (" + Self.oracleSchemas.map { "'\($0)'" }.joined(separator: ", ") + ")"
+        var binds: [BindVariable] = []
+        let sql = Self.applyNameFilter("select s.synonym_name from all_synonyms s where s.owner = 'PUBLIC' and nvl(s.table_owner, '-') not in (\(oracleSchemas))",
+                                       column: "s.synonym_name", filter: filter, binds: &binds)
+        let (_, rows) = try await s.queryAll(sql, binds: binds, limit: 1_000_000)
+        return rows.compactMap { $0.first?.displayText }.map { DBObject(owner: "PUBLIC", name: $0, type: .synonym) }
+    }
+
+    /// Schematy Oracle na bazach bez ALL_USERS.ORACLE_MAINTAINED (11g).
+    nonisolated static let oracleSchemas = ["SYS", "SYSTEM", "XDB", "MDSYS", "CTXSYS", "ORDSYS", "ORDDATA", "ORDPLUGINS", "OLAPSYS", "WMSYS",
+                                            "EXFSYS", "DBSNMP", "APPQOSSYS", "OUTLN", "LBACSYS", "DVSYS", "OJVMSYS", "SI_INFORMTN_SCHEMA",
+                                            "MDDATA", "FLOWS_FILES", "ANONYMOUS", "ORACLE_OCM", "SYSMAN", "MGMT_VIEW", "SPATIAL_CSW_ADMIN_USR",
+                                            "SPATIAL_WFS_ADMIN_USR", "APEX_PUBLIC_USER", "DIP", "XS$NULL"]
+
+    /// Obiekty typu w zakresie folderu (D187) z filtrem.
+    public func objects(_ type: DBObjectType, scope: ObjectScope, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
+        let key = "\(scope.cacheKey)|\(type.rawValue)|\(filter.text)|\(filter.named?.id.uuidString ?? "")|\(filter.named?.whereClause ?? "")"
         if let c = cache[key] { return c }
         let s = try await session()
-        let px = try await dictionaryPrefix()
+        // Własne i dostępne — widoki ALL_* (to, czego użytkownik może użyć); wszyscy i wybrany schemat — DBA_*, gdy dostępne.
+        let px: String
+        switch scope {
+        case .mine, .accessible: px = "all"
+        case .all, .user: px = try await dictionaryPrefix()
+        }
+        let owner: String?
+        switch scope {
+        case .mine(let o), .user(let o): owner = o
+        case .accessible, .all: owner = nil
+        }
         var binds: [BindVariable] = []
         var sql: String
         switch type {
@@ -275,7 +312,8 @@ public final class MetadataProvider {
                 : "select profile, profile, 'VALID', null, null from user_users o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "profile", filter: filter, binds: &binds) + " order by 1"
         case .directory:
-            sql = "select owner, directory_name, 'VALID', null, null from all_directories o where 1 = 1"
+            // Katalogi należą do SYS: dostępne (ALL_DIRECTORIES — z uprawnieniem READ/WRITE), wszystkie — DBA_DIRECTORIES.
+            sql = "select owner, directory_name, 'VALID', null, null from \(px)_directories o where 1 = 1"
             sql = Self.applyNameFilter(sql, column: "directory_name", filter: filter, binds: &binds) + " order by 2"
         case .annotation, .assertion:
             // Adnotacje (23ai) i asercje (23.26) nie mają wierszy w ALL_OBJECTS (asercja: typ UNDEFINED) — PD-OB-002.
@@ -294,9 +332,19 @@ public final class MetadataProvider {
             // Kolejki i zadania mają osobne typy; obiekty pomocnicze (BIN$ w koszu) pomijamy.
             sql += " and o.object_name not like 'BIN$%'"
             if type == .table { sql += " and o.secondary = 'N'" }
-            if let owner {
-                binds.append(BindVariable(name: "own", value: .text(owner)))
+            switch scope {
+            case .mine(let own):
+                // Własne i używane w schemacie bez kwalifikacji: publiczne łącza bazy i publiczne synonimy aplikacji.
+                binds.append(BindVariable(name: "own", value: .text(own)))
+                // Publiczne synonimy aplikacji — osobnym zapytaniem niżej (połączone z ALL_OBJECTS trwało ponad minutę).
+                sql += type == .databaseLink ? " and o.owner in (:own, 'PUBLIC')" : " and o.owner = :own"
+            case .accessible:
+                if type == .synonym { sql += " and o.owner <> 'PUBLIC'" }
+            case .user(let u):
+                binds.append(BindVariable(name: "own", value: .text(u)))
                 sql += " and o.owner = :own"
+            case .all:
+                break
             }
             // Filtr nazwany: z polem filtra jako &browser_filter tekst pola nie filtruje już nazw (wzorzec).
             let usesFilterText = filter.named?.whereClause.contains("&browser_filter") == true
@@ -312,9 +360,12 @@ public final class MetadataProvider {
             sql += order.isEmpty ? " order by o.object_name, o.owner" : " order by " + order
         }
         let (_, rows) = try await s.queryAll(sql, binds: binds, limit: 1_000_000)
-        let list = rows.map { r -> DBObject in
+        var list = rows.map { r -> DBObject in
             DBObject(owner: r[0].displayText ?? "", name: r[1].displayText ?? "", type: type, status: r[2].displayText ?? "VALID",
                      created: Self.timestamp(r[3]), lastDDL: Self.timestamp(r[4]))
+        }
+        if type == .synonym, scope.includesPublicSynonyms {
+            list = (list + (try await applicationPublicSynonyms(filter, in: s))).sorted { ($0.name, $0.owner) < ($1.name, $1.owner) }
         }
         cache[key] = list
         return list
@@ -545,5 +596,35 @@ extension Workspace {
         let m = MetadataProvider(workspace: self, connectionID: id)
         metadataProviders[id] = m
         return m
+    }
+}
+
+/// Zakres obiektów folderu Object Browsera (D187).
+public enum ObjectScope: Sendable, Hashable {
+    /// Schemat bieżącego użytkownika i to, czego używa bez kwalifikacji: publiczne łącza bazy i publiczne synonimy
+    /// obiektów aplikacji (bez schematów utrzymywanych przez Oracle).
+    case mine(String)
+    /// Wszystko dostępne dla użytkownika (widoki ALL_*): własne, nadane z innych schematów i publiczne (synonimy jak wyżej).
+    case accessible
+    /// Wszyscy użytkownicy (widoki DBA_*, gdy dostępne).
+    case all
+    /// Wybrany schemat.
+    case user(String)
+
+    /// Publiczne synonimy aplikacji dołączane do folderu Synonimy.
+    var includesPublicSynonyms: Bool {
+        switch self {
+        case .mine, .accessible: true
+        case .all, .user: false
+        }
+    }
+
+    var cacheKey: String {
+        switch self {
+        case .mine(let o): "mine:" + o
+        case .accessible: "accessible"
+        case .all: "*"
+        case .user(let o): o
+        }
     }
 }

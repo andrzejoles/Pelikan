@@ -136,7 +136,7 @@ public enum PreferenceSets {
         (L10n.tr("Oracle"), ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
                              "confirmCommitRollback", "confirmProductionChanges", "plsqlWarnings", "compiler", "useDBAViews",
                              "debugInfoOnCompile", "debugInfoNever", "debugInfoAlways", "debuggerSkipPackageInit", "debuggerSkipSys", "selectedStatistics", "profilerTimeUnit", "profilerMinShare"]),
-        (L10n.tr("Object Browser"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserDoubleClick",
+        (L10n.tr("Object Browser"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserShowAccessible", "browserDoubleClick",
                                      "browserDropAction", "browserWorkspaceDrop"]),
         (L10n.tr("Agenci"), ["agent"]),
         (L10n.tr("Narzędzia"), ["sessionQueries", "schedulerReports", "userTools"]),

@@ -18,8 +18,15 @@ The connection menu in the tree: **Set as Main Connection**, **New SQL Window on
 **Edit Connection…** and **Disconnect**. The main connection is the default only when the context does not tell
 otherwise — a new window from the menu, a tool without an active window.
 
-- **User selection** above the tree: *Current user*, *All users* or a specific schema (Pelikan remembers the choice for
-  the connection).
+- **User selection** above the tree (separately for each connection):
+  - *Current user* — objects of your schema plus public database links and public synonyms of application objects
+    (without the thousands of synonyms to Oracle's system schemas);
+  - *Accessible objects* — everything you can use: your own objects, objects of other schemas you have privileges on
+    and public ones (with the owner before the name);
+  - *All users* — objects of all schemas (with DBA views when you have access to them, also Oracle directories without
+    granted privileges);
+  - a specific schema.
+  Set the scope after connecting in **Preferences › Object Browser › After connecting, show**.
 - **Filter** below the user selection: part of a name (matched anywhere in the name — `emp` finds `EMP` and
   `T_EMP_HIST`), a pattern with `%` (e.g. `EMP%` — only the start of the name; change the behaviour without `%` in
   **Preferences › Object Browser**), several comma-separated patterns, `status=invalid`
