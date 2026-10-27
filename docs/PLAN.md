@@ -116,7 +116,7 @@ Explain Plan, Session Browser, porównania obiektów i danych, eksport/import (S
 Importer, Data Generator, Event Monitor, DBMS Scheduler, raporty, Query Builder, diagramy, projekty, worksets, układy,
 makra, Test Manager, Load Tester. Kryterium: każde narzędzie z macierzy ma test lub zrzut ekranu.
 
-## Etap P — Pro*C: zdalny build przez SSH (zadanie właściciela `zadanie-pelikan-proc-ssh.md`, D54) ✅ po stronie Pelikana (PR #47, #49–#51; D86) — akceptacja na AIX: właściciel
+## Etap P — Pro*C: zdalny build przez SSH (zadanie właściciela `docs/tasks/proc-ssh.md`, D54) ✅ po stronie Pelikana (PR #47, #49–#51; D86) — akceptacja na AIX: właściciel
 1. **etap-p/ssh** — kopia warstwy SSH z Bifolda (`Spawn`, `NameEncoding`, `SSHSession`, katalog gniazd, parser `ls -la`)
    z testami na lokalnym `sshd`; rozbudowa: strumieniowanie, stdin, pty i Stop (`@@PID`), timeouty, prolog środowiska.
 2. **etap-p/kodowanie** — pliki `.pc`/`.h`/makefile w kodowaniu projektu (ISO-8859-2), blokada zapisu niekodowalnych
