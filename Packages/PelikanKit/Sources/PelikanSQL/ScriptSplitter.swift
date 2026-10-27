@@ -34,7 +34,8 @@ public enum ScriptSplitter {
     public static func split(_ script: String, mode: SplitMode = .sqlWindow) -> [ScriptStatement] {
         let lexer = Lexer(script)
         let text = lexer.text
-        var tokens = lexer.tokenize()
+        var tokens: [Token] = []
+        tokens.reserveCapacity(text.count / 4)
         var out: [ScriptStatement] = []
         var ti = 0
         let lineStarts = Self.lineStarts(text)
@@ -58,6 +59,34 @@ public enum ScriptSplitter {
             if i < text.count, text[i] == 0x0A { i += 1 }
             return i
         }
+        // Tokeny leksowane leniwie, całymi liniami, tylko tyle, ile podział potrzebuje. Po poleceniu SQL*Plus (np. PROMPT
+        // z apostrofem) tokeny za nim odrzucamy i leksujemy od następnej linii — koszt liniowy (R8-03: wcześniej
+        // ponowne leksowanie całej reszty i przeszukiwanie tokenów od początku po każdym poleceniu SQL*Plus).
+        var lexPos = 0
+        var lexState = LexState.normal
+        /// Czy token `k` istnieje (w razie potrzeby leksuje kolejne linie).
+        func has(_ k: Int) -> Bool {
+            while k >= tokens.count, lexPos < text.count {
+                let stop = nextLineStart(lexPos)
+                // Konstrukcja z poprzedniej linii (komentarz, tekst) — jeden token, jak przy leksowaniu całości.
+                var merge = lexState != .normal
+                lexState = lexer.scan(range: lexPos..<stop, state: lexState) { t in
+                    if merge, let last = tokens.last {
+                        tokens[tokens.count - 1].length = t.end - last.start
+                    } else {
+                        tokens.append(t)
+                    }
+                    merge = false
+                }
+                lexPos = stop
+            }
+            return k < tokens.count
+        }
+        func firstSignificant(from i: Int) -> Token {
+            var k = i
+            while has(k), tokens[k].isTrivia { k += 1 }
+            return k < tokens.count ? tokens[k] : tokens[i]
+        }
         /// Czy token `/` stoi sam w linii (tylko białe znaki przed i po).
         func isLoneSlash(_ k: Int) -> Bool {
             guard tokens[k].kind == .slash else { return false }
@@ -65,15 +94,15 @@ public enum ScriptSplitter {
             while j >= 0, tokens[j].kind == .whitespace { j -= 1 }
             if j >= 0, tokens[j].kind != .newline { return false }
             j = k + 1
-            while j < tokens.count, tokens[j].kind == .whitespace { j += 1 }
+            while has(j), tokens[j].kind == .whitespace { j += 1 }
             return j >= tokens.count || tokens[j].kind == .newline
         }
         var lastWasSemicolonTerminated = false
 
-        while ti < tokens.count {
+        while has(ti) {
             // Pomiń białe znaki i puste linie między poleceniami.
-            while ti < tokens.count, tokens[ti].kind == .whitespace || tokens[ti].kind == .newline { ti += 1 }
-            guard ti < tokens.count else { break }
+            while has(ti), tokens[ti].kind == .whitespace || tokens[ti].kind == .newline { ti += 1 }
+            guard has(ti) else { break }
 
             // Samotny `/` po poleceniu zakończonym `;` — tylko separator. W Command Window w innym miejscu (na początku,
             // po poleceniu SQL*Plus, po bloku) wykonuje bufor SQL, jak w SQL*Plus (np. GET plik, potem `/`).
@@ -95,7 +124,7 @@ public enum ScriptSplitter {
             // Pierwsze znaczące słowa (po komentarzach) do rozpoznania rodzaju polecenia.
             var words: [String] = []
             var k = ti
-            while k < tokens.count, words.count < 8 {
+            while has(k), words.count < 8 {
                 let t = tokens[k]
                 if !t.isTrivia {
                     words.append(t.kind == .identifier || t.kind == .keyword ? lexer.upper(t) : lexer.string(t))
@@ -105,8 +134,8 @@ public enum ScriptSplitter {
             guard !words.isEmpty else { break }   // same komentarze do końca
 
             // Polecenie SQL*Plus (Command Window): cała linia z kontynuacjami `-`.
-            if mode == .commandWindow, let cmd = SQLPlus.command(words: words, firstTokenText: lexer.string(firstSignificant(tokens, from: ti))) {
-                let cmdStart = firstSignificant(tokens, from: ti).start
+            if mode == .commandWindow, let cmd = SQLPlus.command(words: words, firstTokenText: lexer.string(firstSignificant(from: ti))) {
+                let cmdStart = firstSignificant(from: ti).start
                 var e = lineEnd(cmdStart)
                 while e > cmdStart, Self.endsWithContinuation(text, cmdStart, e) {
                     let n = nextLineStart(e)
@@ -119,19 +148,17 @@ public enum ScriptSplitter {
                                            category: .sqlplus))
                 lastWasSemicolonTerminated = false
                 let resume = nextLineStart(e)
-                // Treść linii (np. PROMPT z apostrofem) mogła zaburzyć tokeny — leksuj resztę od nowa, jeśli trzeba.
-                ti = tokens.firstIndex { $0.start >= resume } ?? tokens.count
-                if ti < tokens.count, tokens[ti].start != resume || (ti > 0 && tokens[ti - 1].end > resume) {
-                    var rest: [Token] = []
-                    lexer.scan(range: resume..<text.count, state: .normal) { rest.append($0) }
-                    tokens = Array(tokens[..<ti].filter { $0.end <= resume }) + rest
-                    ti = tokens.firstIndex { $0.start >= resume } ?? tokens.count
-                } else if ti == tokens.count, resume < text.count, let last = tokens.last, last.end > resume {
-                    var rest: [Token] = []
-                    lexer.scan(range: resume..<text.count, state: .normal) { rest.append($0) }
-                    tokens = Array(tokens.filter { $0.end <= resume }) + rest
-                    ti = tokens.firstIndex { $0.start >= resume } ?? tokens.count
+                // Treść linii (np. PROMPT z apostrofem) mogła zaburzyć tokeny — od końca linii polecenia leksujemy od nowa
+                // (od znaku nowej linii: `/` w następnej linii widzi przed sobą nową linię).
+                var cut = ti
+                while has(cut), tokens[cut].end <= e { cut += 1 }
+                if has(cut), tokens[cut].start < e || tokens[cut].kind != .newline {
+                    tokens.removeSubrange(cut...)
+                    lexPos = e
+                    lexState = .normal
                 }
+                ti = cut
+                while has(ti), tokens[ti].start < resume { ti += 1 }
                 continue
             }
 
@@ -141,7 +168,7 @@ public enum ScriptSplitter {
             var terminator = ScriptStatement.Terminator.endOfText
             var depth = 0
             k = stmtStartToken
-            while k < tokens.count {
+            while has(k) {
                 let t = tokens[k]
                 if t.kind == .leftParen { depth += 1 }
                 else if t.kind == .rightParen { depth = max(0, depth - 1) }
@@ -174,12 +201,6 @@ public enum ScriptSplitter {
     public static func statement(at offset: Int, in statements: [ScriptStatement]) -> ScriptStatement? {
         if let s = statements.first(where: { offset >= $0.start && offset <= $0.fullEnd }) { return s }
         return statements.last { $0.fullEnd <= offset } ?? statements.first
-    }
-
-    static func firstSignificant(_ tokens: [Token], from i: Int) -> Token {
-        var k = i
-        while k < tokens.count, tokens[k].isTrivia { k += 1 }
-        return k < tokens.count ? tokens[k] : tokens[i]
     }
 
     static func endsWithContinuation(_ text: [UInt16], _ start: Int, _ end: Int) -> Bool {
