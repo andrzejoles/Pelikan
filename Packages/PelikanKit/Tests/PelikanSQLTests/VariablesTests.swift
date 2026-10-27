@@ -68,6 +68,14 @@ struct VariablesTests {
         #expect(Variables.prepare("where $X{GREATER, sal, X}", values: [:]).sql == "where 0 = 0")
     }
 
+    @Test("$X{} z nieznaną funkcją zostaje bez zmian — nie warunek zawsze prawdziwy")
+    func jasperUnknownFunction() {
+        let p = Variables.prepare("delete from t where $X{EQUALS, id, p}", values: ["p": .text("1")])
+        #expect(p.sql == "delete from t where $X{EQUALS, id, p}")
+        #expect(p.binds.isEmpty)
+        #expect(Variables.prepare("delete from t where $X{INN, id, p}", values: [:]).sql == "delete from t where $X{INN, id, p}")
+    }
+
     @Test("Zmienna :bind bez wartości zostaje w tekście, z wartością NULL")
     func bindKept() {
         let p = Variables.prepare("select * from emp where empno = :id", values: [:])

@@ -55,6 +55,11 @@ struct OracleRawTests {
         #expect(spaced.host == "db.example.org" && spaced.port == 1530)
         #expect("\(spaced.service)".contains("ORCL") && "\(spaced.service)".lowercased().contains("sid"))
         #expect(throws: DatabaseError.self) { try ThinDriver.endpoint("(DESCRIPTION = (ADDRESS = (PROTOCOL = TCPS)(HOST = h)(PORT = 2484)))") }
+        // EZConnect Plus: parametry po `?` nie trafiają do nazwy usługi.
+        let plus = try ThinDriver.endpoint("db.example:1521/usluga?connect_timeout=5&retry_count=2")
+        #expect(plus.host == "db.example" && plus.port == 1521 && "\(plus.service)".contains("usluga") && !"\(plus.service)".contains("?"))
+        let server = try ThinDriver.endpoint("db.example/usluga:dedicated?connect_timeout=5")
+        #expect("\(server.service)".contains("usluga") && !"\(server.service)".contains("dedicated"))
     }
 
     @Test("Konfiguracja OracleNIO bez OOB (oracle-nio #124: 19c z OOB bez FastAuth), rola i limit czasu")
@@ -219,6 +224,49 @@ struct ThinSessionTests {
         _ = try await s.execute("begin dbms_output.put_line('Pelikan thin ✓'); dbms_output.put_line('druga'); end;")
         #expect(try await SessionUtilities.readOutput(s) == ["Pelikan thin ✓", "druga"])
         await s.close()
+    }
+
+    @Test("DBMS_OUTPUT ponad 65 535 znaków: obcięty ze znacznikiem zamiast awarii OracleNIO (odpowiedź z 3-bajtową długością)")
+    func largeOutput() async throws {
+        let s = try await connect()
+        try await LargeOutputCheck.run(s, complete: false)
+        await s.close()
+    }
+
+    @Test("VECTOR (23ai) dekodowany jak w Instant Client")
+    func vector() async throws {
+        let s = try await connect()
+        if s.info.server.major >= 23 {
+            let (_, v) = try await s.queryAll("""
+                SELECT TO_VECTOR('[1.5,2,3]', 3, FLOAT32), TO_VECTOR('[1.25,-2]', 2, FLOAT64), TO_VECTOR('[1,-2,3]', 3, INT8) FROM dual
+                """)
+            #expect(v.first == [.vector([1.5, 2, 3]), .vector([1.25, -2]), .vector([1, -2, 3])])
+        }
+        await s.close()
+    }
+}
+
+
+/// Wyjście DBMS_OUTPUT większe niż domyślny limit LOB (1 Mi znaków): całe (liczba linii i ostatnia linia się zgadzają)
+/// albo — w sterowniku thin — ucięte z jawną informacją w ostatniej linii.
+enum LargeOutputCheck {
+    static func run(_ s: any DatabaseSession, complete: Bool = true) async throws {
+        try await SessionUtilities.enableOutput(s, bufferSize: 0)
+        _ = try await s.execute("""
+            begin
+              for i in 1 .. 1200 loop dbms_output.put_line(lpad(to_char(i), 1000, 'x')); end loop;
+              dbms_output.put_line('koniec');
+            end;
+            """)
+        let lines = try await SessionUtilities.readOutput(s)
+        #expect(lines.first == String(repeating: "x", count: 999) + "1")
+        guard complete else {
+            #expect(lines.last == "*** DBMS_OUTPUT: \(ThinSession.maxCLOBRead) / \(1200 * 1001 + 6) ***")
+            return
+        }
+        #expect(lines.count == 1201)
+        #expect(lines[1199] == String(repeating: "x", count: 996) + "1200")
+        #expect(lines.last == "koniec")
     }
 }
 

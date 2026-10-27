@@ -70,9 +70,19 @@ public struct LOBValue: Sendable, Hashable {
     public var bytes: Data?           // BLOB/BFILE
     public var length: UInt64
     public var truncated: Bool
+    /// Błąd odczytu treści (BFILE do nieistniejącego pliku albo katalogu bez uprawnienia) — komórka zamiast przerwania
+    /// pobierania wszystkich wierszy.
+    public var readError: String?
 
-    public init(kind: Kind, text: String? = nil, bytes: Data? = nil, length: UInt64, truncated: Bool) {
+    public init(kind: Kind, text: String? = nil, bytes: Data? = nil, length: UInt64, truncated: Bool, readError: String? = nil) {
         self.kind = kind; self.text = text; self.bytes = bytes; self.length = length; self.truncated = truncated
+        self.readError = readError
+    }
+
+    /// Pierwsza linia komunikatu błędu odczytu (np. „ORA-22288: file or LOB operation FILEOPEN failed”).
+    public static func errorText(_ error: any Error) -> String {
+        let message = (error as? OracleError)?.message ?? String(describing: error)
+        return message.split(whereSeparator: \.isNewline).first.map(String.init) ?? message
     }
 }
 

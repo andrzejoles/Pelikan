@@ -11,7 +11,9 @@ public enum SessionUtilities {
         }
     }
 
-    /// Odczytuje cały bufor DBMS_OUTPUT jednym wywołaniem (linie sklejone w CLOB po stronie serwera).
+    /// Odczytuje cały bufor DBMS_OUTPUT jednym wywołaniem (linie sklejone w CLOB po stronie serwera). CLOB pobierany
+    /// w całości (bez limitu LOB z opcji połączenia) — GET_LINE zdjął już linie z bufora, więc ucięcie byłoby utratą;
+    /// gdyby sterownik mimo to uciął tekst, ostatnia linia to jawna informacja o obcięciu.
     public static func readOutput(_ s: any DatabaseSession) async throws -> [String] {
         let r = try await s.execute("""
             DECLARE
@@ -32,12 +34,24 @@ public enum SessionUtilities {
               :buf := l_buf;
             END;
             """, binds: [BindVariable(name: "cnt", type: .number, direction: .output),
-                         BindVariable(name: "buf", type: .clob, direction: .output)])
+                         BindVariable(name: "buf", type: .clob, direction: .output)],
+            options: ExecuteOptions(lobLimit: Int.max))
         guard case .number(let n)? = r.outBinds["cnt"], let count = Int(n), count > 0 else { return [] }
         var text = ""
-        if case .lob(let l)? = r.outBinds["buf"] { text = l.text ?? "" }
+        var truncatedOf: UInt64?
+        if case .lob(let l)? = r.outBinds["buf"] {
+            text = l.text ?? ""
+            if l.truncated { truncatedOf = l.length }
+        }
         // Bez ucinania do liczby linii: PUT_LINE z osadzonym LF to jedna linia bufora, a dwie linie tekstu.
-        return text.components(separatedBy: "\n")
+        var lines = text.components(separatedBy: "\n")
+        if let total = truncatedOf { lines.append(truncationNote(shown: text.utf16.count, total: total)) }
+        return lines
+    }
+
+    /// Ostatnia linia wyjścia, gdy sterownik uciął CLOB z DBMS_OUTPUT (PelikanDB nie ma katalogu tekstów interfejsu).
+    static func truncationNote(shown: Int, total: UInt64) -> String {
+        "*** DBMS_OUTPUT: \(shown) / \(total) ***"
     }
 
     /// Czy sesja ma otwartą transakcję (DBMS_TRANSACTION.LOCAL_TRANSACTION_ID nie jest NULL).

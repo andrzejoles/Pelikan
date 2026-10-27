@@ -1,6 +1,6 @@
 import Foundation
 import PelikanDB
-import PelikanODPI
+@testable import PelikanODPI
 @testable import PelikanWorkspace
 import Testing
 
@@ -67,4 +67,22 @@ struct DirectoryNamingConfigTests {
         #expect(!DirectoryNaming.isBareAlias("127.0.0.1:1521/FREEPDB1") && !DirectoryNaming.isBareAlias("(DESCRIPTION=)")
                 && !DirectoryNaming.isBareAlias("host/svc"))
     }
+
+#if os(macOS)
+    @Test("Metoda hostname/EZConnect przed LDAP: sama nazwa hosta zostaje klientowi zamiast ORA-12154")
+    func hostnameMethod() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("ldap-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        // Serwer LDAP pod portem bez nasłuchu — wyszukiwanie kończy się od razu błędem połączenia.
+        try "DIRECTORY_SERVERS = (127.0.0.1:1:2)\nDEFAULT_ADMIN_CONTEXT = \"dc=example,dc=test\"\n"
+            .write(to: dir.appendingPathComponent("ldap.ora"), atomically: true, encoding: .utf8)
+        try "NAMES.DIRECTORY_PATH = (TNSNAMES, HOSTNAME, LDAP)\n".write(to: dir.appendingPathComponent("sqlnet.ora"), atomically: true, encoding: .utf8)
+        #expect(try DirectoryLookup.resolve("localhost", directories: [dir.path]) == nil)
+        #expect(throws: (any Error).self) { try DirectoryLookup.resolve("pelikan-nie-ma-takiego-hosta.invalid", directories: [dir.path]) }
+        // LDAP przed EZConnect: klient użyłby najpierw własnego adaptera LDAP (D158) — Pelikan nie zostawia mu nazwy.
+        try "NAMES.DIRECTORY_PATH = (LDAP, EZCONNECT)\n".write(to: dir.appendingPathComponent("sqlnet.ora"), atomically: true, encoding: .utf8)
+        #expect(throws: (any Error).self) { try DirectoryLookup.resolve("localhost", directories: [dir.path]) }
+    }
+#endif
 }

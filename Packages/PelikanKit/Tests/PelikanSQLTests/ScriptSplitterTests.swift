@@ -54,6 +54,15 @@ struct ScriptSplitterTests {
         #expect(s[4].text == "create table x (a number)")
     }
 
+    @Test("CREATE MLE ENV to zwykłe DDL kończone średnikiem (szablon nowego środowiska)")
+    func createMLEEnv() {
+        let s = ScriptSplitter.split("create or replace mle env NOWE_SRODOWISKO;\nselect 1 from dual;\n")
+        #expect(s.map(\.text) == ["create or replace mle env NOWE_SRODOWISKO", "select 1 from dual"])
+        #expect(s.map(\.isPLSQL) == [false, false])
+        #expect(!ScriptSplitter.isPLSQLBlock(["CREATE", "MLE", "ENV", "E", "IMPORTS"]))
+        #expect(ScriptSplitter.isPLSQLBlock(["CREATE", "OR", "REPLACE", "MLE", "MODULE", "M"]))
+    }
+
     @Test("/ po poleceniu zakończonym ; nie tworzy pustego polecenia")
     func slashAfterSemicolon() {
         let s = ScriptSplitter.split("create table a (x number);\n/\nselect 1 from dual\n/\n")
