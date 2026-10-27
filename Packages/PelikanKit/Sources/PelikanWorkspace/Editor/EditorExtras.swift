@@ -195,12 +195,17 @@ public enum MultiCursor {
 
 // MARK: - AutoReplace (PD-EDIT-017)
 
-/// Skrót zastępowany tekstem po wpisaniu znaku kończącego; `|` w zamianie wskazuje kursor.
+/// Skrót zastępowany tekstem po wpisaniu znaku kończącego; `|` w zamianie wskazuje kursor. `id` tylko do wierszy
+/// Preferencji (stały przy edycji skrótu) — nie trafia do pliku ani do porównań.
 public struct AutoReplaceRule: Sendable, Hashable, Codable, Identifiable {
+    public var id = UUID()
     public var abbreviation: String
     public var replacement: String
-    public var id: String { abbreviation }
     public init(abbreviation: String, replacement: String) { self.abbreviation = abbreviation; self.replacement = replacement }
+
+    private enum CodingKeys: String, CodingKey { case abbreviation, replacement }
+    public static func == (a: Self, b: Self) -> Bool { a.abbreviation == b.abbreviation && a.replacement == b.replacement }
+    public func hash(into h: inout Hasher) { h.combine(abbreviation); h.combine(replacement) }
 
     public static let defaults: [AutoReplaceRule] = [
         AutoReplaceRule(abbreviation: "sf", replacement: "SELECT * FROM "),

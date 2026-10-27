@@ -96,6 +96,17 @@ func setting<T>(_ ws: Workspace, _ key: WritableKeyPath<PelikanWorkspace.Setting
     Binding(get: { ws.settings[keyPath: key] }, set: { ws.settings[keyPath: key] = $0 })
 }
 
+/// Wiązanie do pola elementu listy ustawień wskazanego identyfikatorem (nie indeksem): usunięcie wiersza w trakcie
+/// edycji pola nie zapisze wartości do sąsiedniego elementu ani poza zakres; elementu już nie ma — zapis pominięty.
+@MainActor
+func setting<E: Identifiable, T>(_ ws: Workspace, _ list: WritableKeyPath<PelikanWorkspace.Settings, [E]>, _ id: E.ID,
+                                 _ key: WritableKeyPath<E, T>, fallback: T) -> Binding<T> {
+    Binding(get: { ws.settings[keyPath: list].first { $0.id == id }?[keyPath: key] ?? fallback },
+            set: { v in
+                if let i = ws.settings[keyPath: list].firstIndex(where: { $0.id == id }) { ws.settings[keyPath: list][i][keyPath: key] = v }
+            })
+}
+
 struct GeneralPane: View {
     let workspace: Workspace
     var body: some View {
@@ -120,18 +131,18 @@ struct GeneralPane: View {
                 Toggle(L10n.tr("Tło edytora w kolorze połączenia"), isOn: setting(workspace, \.colorWindowBackground))
                 Text(L10n.tr("Reguły user@baza (* i ?) mają pierwszeństwo przed kolorem połączenia i środowiska; dotyczą kart, listy okien i tła."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
-                ForEach(workspace.settings.connectionIndicators.indices, id: \.self) { i in
+                ForEach(workspace.settings.connectionIndicators) { r in
                     HStack {
-                        TextField(L10n.tr("Wzorzec, np. sys@*"), text: Binding(get: { workspace.settings.connectionIndicators[i].pattern },
-                                                                          set: { workspace.settings.connectionIndicators[i].pattern = $0 }))
+                        TextField(L10n.tr("Wzorzec, np. sys@*"), text: setting(workspace, \.connectionIndicators, r.id, \.pattern, fallback: ""))
                         ColorPicker("", selection: Binding(get: {
-                            let c = workspace.settings.connectionIndicators[i].color
+                            let c = r.color
                             return Color(red: c.red, green: c.green, blue: c.blue)
                         }, set: { c in
                             let n = NSColor(c).usingColorSpace(.sRGB) ?? .systemRed
-                            workspace.settings.connectionIndicators[i].color = RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent)
+                            setting(workspace, \.connectionIndicators, r.id, \.color, fallback: r.color).wrappedValue =
+                                RGBColor(red: n.redComponent, green: n.greenComponent, blue: n.blueComponent)
                         }), supportsOpacity: false).labelsHidden()
-                        Button { workspace.settings.connectionIndicators.remove(at: i) } label: { Image(systemName: "minus.circle") }
+                        Button { workspace.settings.connectionIndicators.removeAll { $0.id == r.id } } label: { Image(systemName: "minus.circle") }
                             .buttonStyle(.borderless).iconLabel(L10n.tr("Usuń regułę"))
                     }
                 }
@@ -194,6 +205,7 @@ struct GeneralPane: View {
             }
             Section(L10n.tr("Pliki")) {
                 Toggle(L10n.tr("Przywracaj okna po ponownym uruchomieniu (także niezapisane)"), isOn: setting(workspace, \.worksetAutosave))
+                Toggle(L10n.tr("Autozapis układu okna"), isOn: setting(workspace, \.autosaveLayout))
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
             }
             Section(L10n.tr("Dziennik aplikacji")) {
@@ -245,6 +257,7 @@ struct SQLWindowPane: View {
                 Picker(L10n.tr("Układ liczb"), selection: setting(workspace, \.gridNumberLayout)) {
                     ForEach(NumberLayout.allCases, id: \.self) { Text($0.displayName).tag($0) }
                 }
+                Toggle(L10n.tr("Numer wiersza w kopiowaniu i eksporcie"), isOn: setting(workspace, \.rowNumbersInCopyExport))
                 Toggle(L10n.tr("Pobieraj LOB-y na żądanie (podgląd pierwszych 4000 bajtów)"), isOn: setting(workspace, \.fetchLOBsOnDemand))
                 Toggle(L10n.tr("Wyrównuj kolumny wg zapisanego szablonu zapytania"), isOn: setting(workspace, \.autoAlign))
                 Stepper(value: setting(workspace, \.notifyLongQuerySeconds), in: 0...3600, step: 5) {
@@ -348,20 +361,22 @@ struct EditorPane: View {
                     .disabled(!workspace.settings.codeAssistantAllPerLine)
             }
             Section(L10n.tr("AutoReplace")) {
-                ForEach(workspace.settings.autoReplace.indices, id: \.self) { i in
+                ForEach(workspace.settings.autoReplace) { r in
                     HStack {
-                        TextField(L10n.tr("Skrót"), text: Binding(get: { workspace.settings.autoReplace[i].abbreviation },
-                                                                 set: { workspace.settings.autoReplace[i].abbreviation = $0 }))
+                        TextField(L10n.tr("Skrót"), text: setting(workspace, \.autoReplace, r.id, \.abbreviation, fallback: ""))
                             .frame(width: 90)
-                        TextField(L10n.tr("Zamiana (| — kursor)"), text: Binding(get: { workspace.settings.autoReplace[i].replacement },
-                                                                                set: { workspace.settings.autoReplace[i].replacement = $0 }))
-                        Button { workspace.settings.autoReplace.remove(at: i) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                        TextField(L10n.tr("Zamiana (| — kursor)"), text: setting(workspace, \.autoReplace, r.id, \.replacement, fallback: ""))
+                        Button { workspace.settings.autoReplace.removeAll { $0.id == r.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
                             .iconLabel(L10n.tr("Usuń skrót"))
                     }
                 }
                 Button(L10n.tr("Dodaj skrót")) { workspace.settings.autoReplace.append(AutoReplaceRule(abbreviation: "", replacement: "")) }
             }
             Section(L10n.tr("Analiza i okna")) {
+                Toggle(L10n.tr("Analiza kodu w czasie pisania"), isOn: Binding(get: { workspace.settings.liveCodeAnalysis }, set: { on in
+                    workspace.settings.liveCodeAnalysis = on
+                    if !on { workspace.diagnostics = [:] }   // jak komenda edit.toggleCodeAnalysis
+                }))
                 Stepper(value: setting(workspace, \.identifierLengthWarning), in: 0...128, step: 1) {
                     Text(workspace.settings.identifierLengthWarning == 0 ? L10n.tr("Ostrzeżenie o długich identyfikatorach: wyłączone")
                          : L10n.tr("Ostrzegaj o identyfikatorach dłuższych niż \(workspace.settings.identifierLengthWarning) bajtów"))
@@ -389,6 +404,7 @@ struct EditorPane: View {
                          : L10n.tr("Pionowy margines w kolumnie \(workspace.settings.rightMarginColumn)"))
                 }
                 Toggle(L10n.tr("Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"), isOn: setting(workspace, \.showSpecialCharacters))
+                Toggle(L10n.tr("Zawartość kodu"), isOn: setting(workspace, \.showCodeContents))
                 Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
                     Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
                     Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)
