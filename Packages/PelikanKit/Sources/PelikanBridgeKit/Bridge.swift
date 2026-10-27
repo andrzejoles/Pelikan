@@ -52,6 +52,15 @@ public enum Bridge {
         throw Failure.missingToken
     }
 
+    /// Opis błędu odczytu ramki z aplikacji (stderr mostu).
+    static func describe(_ error: any Swift.Error) -> String {
+        switch error as? Wire.Error {
+        case .frameTooLarge(let n): "wiadomość z aplikacji ma \(n) bajtów — więcej niż limit \(Wire.maxFrame); połączenie z aplikacją przerwane"
+        case .io(let e): "błąd odczytu z gniazda aplikacji (errno \(e))"
+        default: "błąd odczytu z gniazda aplikacji (\(error))"
+        }
+    }
+
     /// Łączy się, przechodzi uzgadnianie i przekazuje dane do końca jednego ze strumieni. Po EOF na wejściu czeka
     /// (najwyżej `drainTimeout`), aż aplikacja zamknie swoją stronę — odpowiedzi w drodze trafiają jeszcze na wyjście
     /// (R8-11: `echo … | pelikan-mcp` kończył się przed odpowiedzią). `exitWhenClosed` — zamknięcie gniazda przez
@@ -82,15 +91,25 @@ public enum Bridge {
         // gniazdo → stdout
         let drained = DispatchSemaphore(value: 0)
         let socketToStdout = Thread {
+            var failure: String?
             while true {
-                guard let frame = try? Wire.readFrame(from: fd) else { break }
+                let frame: Data
+                do {
+                    frame = try Wire.readFrame(from: fd)
+                } catch {
+                    // Koniec strumienia — aplikacja zamknęła sesję. Inny błąd (np. za duża ramka — strumień jest wtedy
+                    // rozsynchronizowany) kończy most z komunikatem i kodem ≠ 0, żeby CLI agenta i użytkownik znali przyczynę.
+                    if error as? Wire.Error != .closed { failure = Self.describe(error) }
+                    break
+                }
                 var line = frame
                 line.append(0x0A)
                 if (try? Wire.writeAll(line, to: output)) == nil { break }
             }
+            if let failure { FileHandle.standardError.write(Data("pelikan-mcp: \(failure)\n".utf8)) }
             drained.signal()
             // Aplikacja zamknęła sesję — kończymy proces mostu.
-            if exitWhenClosed { exit(0) }
+            if exitWhenClosed { exit(failure == nil ? 0 : 1) }
         }
         socketToStdout.start()
 
