@@ -71,7 +71,7 @@ extension SQLPlusEngine {
             p.currentDirectoryURL = currentDirectory
             p.arguments = ["-q", "-j", resolve(args[0], baseDirectory: nil).path] + args.dropFirst().map { resolve($0, baseDirectory: nil).path }
             try p.run()
-            p.waitUntilExit()
+            await p.waitForExitAsync()
             guard p.terminationStatus == 0 else { throw SQLPlusError(L10n.tr("ZIP zakończył się błędem \(p.terminationStatus)")) }
             emit(L10n.tr("Utworzono: \(args[0])"))
         case "EXPORT":

@@ -162,7 +162,7 @@ public enum UserTools {
                     }
                     let o = Result { try out.fileHandleForReading.readToEnd() ?? Data() }
                     group.wait()
-                    p.waitUntilExit()
+                    p.waitForExit()
                     c.resume(returning: RunResult(status: p.terminationStatus, output: String(decoding: try o.get(), as: UTF8.self),
                                                   errors: String(decoding: e.data, as: UTF8.self)))
                 } catch {

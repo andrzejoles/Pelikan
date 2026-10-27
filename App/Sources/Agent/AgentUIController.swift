@@ -162,38 +162,23 @@ final class AgentUIController: ApprovalPresenter {
     static func which(_ name: String) async -> String? {
         guard name.allSatisfy({ $0.isLetter || $0.isNumber || "-_./".contains($0) }) else { return nil }
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        return await Task.detached { () -> String? in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: shell)
-            p.arguments = ["-l", "-c", "command -v \(name)"]
-            let out = Pipe()
-            p.standardOutput = out
-            p.standardError = FileHandle.nullDevice
-            guard (try? p.run()) != nil else { return nil }
-            // Wyjście przed czekaniem na koniec procesu (pełny potok — 64 KiB — zatrzymałby oba); readToEnd zamiast
-            // readDataToEndOfFile — błąd odczytu bez wyjątku ObjC.
-            let data = (try? out.fileHandleForReading.readToEnd()) ?? Data()
-            p.waitUntilExit()
-            let path = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
-            return p.terminationStatus == 0 && path.hasPrefix("/") ? path : nil
-        }.value
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: shell)
+        p.arguments = ["-l", "-c", "command -v \(name)"]
+        // Wyjście czytane równolegle z czekaniem; limit — powłoka logowania, która utknęła (np. pytanie w profilu).
+        guard let r = try? await p.runCapturingOutput(timeout: 15), !r.timedOut, r.status == 0 else { return nil }
+        let path = String(decoding: r.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.hasPrefix("/") ? path : nil
     }
 
     /// Antigravity nie ma konfiguracji MCP na sesję — jednorazowa rejestracja tylko za zgodą (PROMPT §7.1, §13).
     private func ensureAntigravityRegistration(executable: String) async throws {
         let bridge = bridgePath
-        let list = await Task.detached { () -> String in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: executable)
-            p.arguments = ["mcp", "list"]
-            let out = Pipe()
-            p.standardOutput = out
-            p.standardError = out
-            guard (try? p.run()) != nil else { return "" }
-            let data = (try? out.fileHandleForReading.readToEnd()) ?? Data()   // przed czekaniem — jak wyżej
-            p.waitUntilExit()
-            return String(decoding: data, as: UTF8.self)
-        }.value
+        let lister = Process()
+        lister.executableURL = URL(fileURLWithPath: executable)
+        lister.arguments = ["mcp", "list"]
+        let listed = try? await lister.runCapturingOutput(includeErrors: true, timeout: 30)
+        let list = listed.map { String(decoding: $0.output, as: UTF8.self) } ?? ""
         if list.contains(bridge) { return }
         let answer = await workspace.ui?.ask(
             L10n.tr("Zarejestrować serwer MCP w Antigravity?"),
@@ -203,14 +188,11 @@ final class AgentUIController: ApprovalPresenter {
         let profile = workspace.settings.agent.profiles.first { $0.flavor == .antigravity } ?? AgentProfile.builtIn[3]
         let args = AgentLauncher.spec(profile: profile, bridge: bridge, socket: controller.socketURL.path, token: "", directory: "/",
                                       strict: true, sessionDirectory: "/").persistentRegistration ?? []
-        let status = await Task.detached { () -> Int32 in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: executable)
-            p.arguments = args
-            guard (try? p.run()) != nil else { return -1 }
-            p.waitUntilExit()
-            return p.terminationStatus
-        }.value
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: executable)
+        p.arguments = args
+        var status: Int32 = -1
+        if (try? p.run()) != nil, await p.waitForExitAsync(timeout: 60) { status = p.terminationStatus }
         guard status == 0 else { throw CommandError.notAvailable(L10n.tr("agy mcp add zakończył się błędem (\(status))")) }
     }
 

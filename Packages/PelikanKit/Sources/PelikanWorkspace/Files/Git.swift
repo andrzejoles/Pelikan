@@ -163,7 +163,7 @@ public struct GitRepository: Sendable, Hashable {
         }
         let data = Result { try out.fileHandleForReading.readToEnd() ?? Data() }
         group.wait()
-        p.waitUntilExit()
+        p.waitForExit()
         guard p.terminationStatus == 0 else {
             throw Failure.failed(String(decoding: errData.withLock { $0 }, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
         }
