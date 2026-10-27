@@ -133,7 +133,7 @@ struct MLEModulesView: View {
                 TextField(L10n.tr("Linie punktów (po przecinku)"), text: $debugLines)
                 TextField(L10n.tr("Obserwowane zmienne (puste — wszystkie lokalne)"), text: $debugWatch)
                 Text(L10n.tr("Instrukcje PL/SQL wywołujące kod modułu")).font(.uiSecondary)
-                TextEditor(text: $debugCall).font(.system(size: 12, design: .monospaced)).frame(minHeight: 90)
+                CodeTextEditor(text: $debugCall).frame(minHeight: 90)
                 HStack {
                     Spacer()
                     Button(L10n.tr("Anuluj"), role: .cancel) { debugging = false }.keyboardShortcut(.cancelAction)

@@ -4,7 +4,7 @@ import SwiftUI
 import WebKit
 
 /// Okno raportu (UG 12, PD-REP-002..004): karty Zapytanie / Układ / Opcje / Wynik; wynik HTML w WebKit.
-final class ReportWindowViewController: NSViewController {
+final class ReportWindowViewController: NSViewController, DocumentContentController {
     private let document: PelikanWorkspace.Document
     private let workspace: Workspace
     private var editor: CodeEditorView!

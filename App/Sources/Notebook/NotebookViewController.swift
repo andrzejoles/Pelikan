@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Okno notatnika SQL (SD-NB-001/002): komórki Markdown i SQL, wykonanie komórki i Run All, wyniki i wykresy
 /// zapisywane w pliku notatnika.
-final class NotebookViewController: NSViewController {
+final class NotebookViewController: NSViewController, DocumentContentController {
     private let document: PelikanWorkspace.Document
     private let workspace: Workspace
 
@@ -18,6 +18,9 @@ final class NotebookViewController: NSViewController {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    /// Fokus po zamknięciu arkusza (logowanie, zmienne) — widok notatnika (R4-20).
+    var preferredFirstResponder: NSView { view }
 
     override func loadView() {
         view = NSHostingView(rootView: NotebookView(document: document, workspace: workspace).interfaceFont())
@@ -129,8 +132,7 @@ struct NotebookCellView: View {
                     .textSelection(.enabled)
                     .onTapGesture(count: 2) { editing = true }
             } else {
-                TextEditor(text: cell.text)
-                    .font(.system(.body, design: .monospaced))
+                CodeTextEditor(text: cell.text, size: NSFont.systemFontSize)
                     .frame(minHeight: 60, maxHeight: 220)
                     .overlay(RoundedRectangle(cornerRadius: 4).stroke(.separator))
             }

@@ -230,6 +230,13 @@ final class FileDropView: NSView {
     }
 }
 
+/// Kontroler zawartości okna dokumentu (SQL, program, test, polecenia, plan, diagram, raport, notatnik).
+@MainActor
+protocol DocumentContentController: NSViewController {
+    /// Widok, który dostaje fokus po aktywacji okna albo zamknięciu arkusza.
+    var preferredFirstResponder: NSView { get }
+}
+
 final class DocumentAreaViewController: NSViewController {
     private let workspace: Workspace
     private let tabBar = NSStackView()
@@ -243,15 +250,11 @@ final class DocumentAreaViewController: NSViewController {
     private var controllers: [DocumentID: NSViewController] = [:]
     private var installedID: DocumentID?
 
-    /// Fokus do edytora aktywnego okna (np. po zamknięciu arkusza logowania albo zmiennych).
+    /// Fokus do edytora aktywnego okna (np. po zamknięciu arkusza logowania albo zmiennych) — każdy rodzaj okna,
+    /// także notatnik (wspólny protokół zamiast łańcucha rzutowań, R4-20).
     func focusActiveDocument() {
         guard let id = installedID, let vc = controllers[id] else { return }
-        let responder = (vc as? SQLWindowViewController)?.preferredFirstResponder ?? (vc as? CommandWindowViewController)?.preferredFirstResponder
-            ?? (vc as? ProgramWindowViewController)?.preferredFirstResponder ?? (vc as? TestWindowViewController)?.preferredFirstResponder
-            ?? (vc as? DiagramViewController)?.preferredFirstResponder
-            ?? (vc as? ExplainPlanViewController)?.preferredFirstResponder
-            ?? (vc as? ReportWindowViewController)?.preferredFirstResponder
-        view.window?.makeFirstResponder(responder)
+        view.window?.makeFirstResponder((vc as? any DocumentContentController)?.preferredFirstResponder)
     }
 
     init(workspace: Workspace) {

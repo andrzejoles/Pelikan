@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Okno planu (UG 17, PD-OPT-001): polecenie u góry, pod nim plan w drzewie z kosztem, liczbą wierszy, bajtami i czasem,
 /// cel optymalizatora, nawigacja w kolejności wykonania, predykaty wybranego kroku, zapis jako tekst/HTML/XML.
-final class ExplainPlanViewController: NSViewController {
+final class ExplainPlanViewController: NSViewController, DocumentContentController {
     private let document: PelikanWorkspace.Document
     private let workspace: Workspace
     private var editor: CodeEditorView!

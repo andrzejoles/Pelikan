@@ -3,7 +3,7 @@ import PelikanWorkspace
 
 /// SQL Window (UG 7): edytor u góry, wyniki na dole (karty wyników + Output), pasek okna (pozycja kursora,
 /// przycisk `&`, stan). Polecenia wykonuje `SQLExecutor` przez komendy rejestru (F8, Ctrl+F8…).
-final class SQLWindowViewController: NSViewController, NSSplitViewDelegate {
+final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, DocumentContentController {
     private let document: Document
     private let workspace: Workspace
     private let split = NSSplitView()

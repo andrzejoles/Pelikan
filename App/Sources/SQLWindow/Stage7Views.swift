@@ -193,7 +193,7 @@ struct SnippetEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             TextField(L10n.tr("Kategoria"), text: $snippet.category)
             TextField(L10n.tr("Nazwa"), text: $snippet.name)
-            TextEditor(text: $snippet.text).font(.system(size: 12, design: .monospaced)).frame(minHeight: 160)
+            CodeTextEditor(text: $snippet.text).frame(minHeight: 160)
             HStack {
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { done(nil) }.keyboardShortcut(.cancelAction)

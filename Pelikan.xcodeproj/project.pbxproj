@@ -43,6 +43,7 @@
 		44FC3C39ECA1E51A77292931 /* SyntaxHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF4EFE32B1009CDC04DF3D83 /* SyntaxHighlighter.swift */; };
 		4B2E4E88BF993838C0CB2BB9 /* PelikanQuickLook.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F146BB88877192EE38E4B80D /* PelikanQuickLook.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		52F2D804F4606A58BA0B1F2C /* Observe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26AA9CEDE79921F45A0500AB /* Observe.swift */; };
+		53A071441267FB1A65FE9E57 /* CodeTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C474097D823409ADBB63C09 /* CodeTextEditor.swift */; };
 		53BDE5324DF28EA6708C99AE /* MonitorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */; };
 		53C7CAA6E29623995902B17B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3429C3E6085A0A6E4E4B0843 /* main.swift */; };
 		5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */; };
@@ -191,6 +192,7 @@
 		62611D2986EABAD106F9D86C /* DebuggerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebuggerPanel.swift; sourceTree = "<group>"; };
 		683515088F140833D5EF9EE2 /* Pelikan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pelikan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AD33F1F7E853AABD5258B43 /* SQLWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLWindowViewController.swift; sourceTree = "<group>"; };
+		6C474097D823409ADBB63C09 /* CodeTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeTextEditor.swift; sourceTree = "<group>"; };
 		6D7056F4E355029FE5D90B7C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeFoldingSupport.swift; sourceTree = "<group>"; };
 		7224E809D72537BD3EF62A08 /* Stage7ToolViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stage7ToolViews.swift; sourceTree = "<group>"; };
@@ -619,6 +621,7 @@
 			children = (
 				8580E4F4A9A5261D9E690365 /* CodeEditorView.swift */,
 				71A93BFA3BAE9508B78ABFC7 /* CodeFoldingSupport.swift */,
+				6C474097D823409ADBB63C09 /* CodeTextEditor.swift */,
 				A7048E3E041B381E86A22B88 /* CompletionPopup.swift */,
 				72FFE2A47AC0EDD7845C019C /* EditorToolViews.swift */,
 				30AC5B65748821B89AD44D29 /* FindReplacePanel.swift */,
@@ -834,6 +837,7 @@
 				EE11F913DD40CDB8A04190E5 /* CodeContentsView.swift in Sources */,
 				CA1BA78FE035A178C92ED818 /* CodeEditorView.swift in Sources */,
 				5983D4FC3EFFF6C793EDD06C /* CodeFoldingSupport.swift in Sources */,
+				53A071441267FB1A65FE9E57 /* CodeTextEditor.swift in Sources */,
 				A3E61CC8AF2B22C31ECA4161 /* CommandPalette.swift in Sources */,
 				E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */,
 				E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */,
