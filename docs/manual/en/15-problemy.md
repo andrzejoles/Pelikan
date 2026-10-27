@@ -107,8 +107,7 @@ real environment:
 - **Command Window**: the `COPY` and `SET ENVVAR` commands are not supported.
 - The **Event Monitor** does not read the DBMS_OUTPUT of other sessions (Oracle does not provide it).
 - **Tools in the left column** are tabs of one panel (Connections, Objects, Windows, Templates, Files); they cannot be
-  docked freely or hidden automatically. To-Do items, the project, the clipboard history and other tools open in
-  separate windows. Documents are tabs of one main window, not native macOS tabs.
+  docked freely or hidden automatically. Documents are tabs of one main window, not native macOS tabs.
 - **Quick Look** for SQL files (preview in the Finder) may not work — macOS may reject an extension signed with a
   self-signed certificate.
 - The **Pro*C remote build** has been tested on a local SSH server with the ksh93 shell; the parsers for `proc` and

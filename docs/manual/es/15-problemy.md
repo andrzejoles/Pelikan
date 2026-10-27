@@ -113,8 +113,7 @@ comprobado en un entorno real:
 - **Command Window**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
 - El **Event Monitor** no lee el DBMS_OUTPUT de otras sesiones (Oracle no lo ofrece).
 - Las **herramientas de la columna izquierda** son pestañas de un único panel (Conexiones, Objetos, Ventanas, Templates,
-  Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Las tareas To-Do, el proyecto, el historial del
-  portapapeles y otras herramientas se abren en ventanas aparte. Los documentos son pestañas de una única ventana
+  Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Los documentos son pestañas de una única ventana
   principal, no pestañas nativas de macOS.
 - **Quick Look** para archivos SQL (vista previa en el Finder) puede no funcionar: macOS puede rechazar una extensión
   firmada con un certificado propio.

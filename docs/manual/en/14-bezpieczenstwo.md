@@ -7,9 +7,12 @@ AI agents.
 
 - Database passwords, SSH passwords (tunnels and Pro*C targets) and SSH key passphrases are stored **only in the macOS
   Keychain** — in the login keychain, without iCloud synchronization, available only while the Mac is unlocked.
-- Passwords **never** go to Pelikan's files (connection definitions, preferences, worksets, exports), logs, command
+- Passwords **never** go to Pelikan's files (connection definitions, preferences, worksets), logs, command
   history, process arguments or environment variables. Commands with passwords (`CONNECT`, `ALTER USER … IDENTIFIED BY`,
   `CREATE DATABASE LINK`) are not saved in the command history.
+- The one exception, only on your explicit request: **Export Connections with Passwords…** writes the passwords to a
+  file (encrypted with a passphrase or as plain text) after confirmation with Touch ID or your Mac password — see
+  **Connections**, “Exporting and importing definitions”. The AI agent does not have this command.
 - A password not remembered in the Keychain is kept only in memory until the application quits.
 - The **Require Touch ID or Mac password before using a saved password** option (**Preferences › Oracle › Connection
   passwords**) requires confirmation once per connection while the application is running — also when the connection is

@@ -7,9 +7,12 @@ AI.
 
 - Hasła baz danych, hasła SSH (tunele i cele Pro*C) i hasła kluczy SSH są przechowywane **wyłącznie w Pęku kluczy
   macOS** — w pęku logowania, bez synchronizacji z iCloud, dostępne tylko przy odblokowanym Macu.
-- Hasła **nigdy** nie trafiają do plików Pelikana (definicji połączeń, preferencji, worksetów, eksportów), dzienników,
+- Hasła **nigdy** nie trafiają do plików Pelikana (definicji połączeń, preferencji, worksetów), dzienników,
   historii poleceń, argumentów procesów ani zmiennych środowiska. Polecenia z hasłami (`CONNECT`, `ALTER USER …
   IDENTIFIED BY`, `CREATE DATABASE LINK`) nie są zapisywane w historii poleceń.
+- Wyjątek, tylko na Twoje wyraźne polecenie: **Eksportuj połączenia z hasłami…** zapisuje hasła do pliku (zaszyfrowane
+  frazą albo jawnym tekstem) po potwierdzeniu Touch ID albo hasłem Maca — zobacz rozdział **Połączenia**, „Eksport
+  i import definicji”. Agent AI nie ma tej komendy.
 - Hasło niezapamiętane w Pęku kluczy jest trzymane tylko w pamięci do zamknięcia aplikacji.
 - Opcja **Wymagaj Touch ID albo hasła Maca przed użyciem zapisanego hasła** (**Preferencje › Oracle › Hasła
   połączeń**) wymaga potwierdzenia raz na połączenie w czasie działania aplikacji — także gdy połączenia używa agent

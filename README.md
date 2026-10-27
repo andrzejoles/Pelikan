@@ -7,8 +7,9 @@ dla PL/SQL, z wbudowanymi testami jednostkowymi utPLSQL, wybranymi funkcjami z i
 w zakresie Oracle) i bezpiecznym API dla agentów AI (Claude Code, Codex CLI, Grok CLI, Antigravity) przez lokalny
 serwer MCP.
 
-> **Wersja 1.0.** Pierwsze wydanie stabilne, po becie na prawdziwych bazach (wersje 7.9–10.5). Jak przy każdym IDE
-> pracującym na bazie: zmiany na produkcji zatwierdzaj świadomie. Błędy zgłaszaj w
+> **Wersje 1.x** — wydania stabilne po becie na prawdziwych bazach (wersje 7.9–10.5); najnowsza w
+> [Wydaniach](https://github.com/andrzejoles/Pelikan/releases). Jak przy każdym IDE pracującym na bazie: zmiany na
+> produkcji zatwierdzaj świadomie. Błędy zgłaszaj w
 > [Issues](https://github.com/andrzejoles/Pelikan/issues).
 
 ![Okno programu: pakiet ze specyfikacją i ciałem, konspekt jednostek](docs/screenshots/04-program-1.png)
@@ -16,7 +17,7 @@ serwer MCP.
 ## Co potrafi
 
 - **Połączenia** — EZConnect, TNS, Oracle Wallet i magazyn haseł (SEPS), tunel SSH (klucz albo hasło), proxy, edycje
-  (EBR), środowiska z kolorami (produkcja tylko do odczytu), hasła wyłącznie w Pęku kluczy, opcjonalnie Touch ID.
+  (EBR), środowiska z kolorami (produkcja tylko do odczytu), hasła w Pęku kluczy, opcjonalnie Touch ID.
   Dwa sterowniki: Oracle Instant Client (ODPI-C, domyślny) i thin (bez Instant Client).
 - **Okno SQL i siatka wyników** — wykonywanie poleceń i skryptów, edycja wyników z zatwierdzaniem, Query By Example,
   eksport (CSV, TSV, Excel, HTML, XML, SQL), wykresy, plan wykonania jako drzewo, diagram i flame graph.
@@ -55,8 +56,9 @@ Pełna instrukcja jest w aplikacji (Pomoc › Instrukcja Pelikana) i w [`docs/ma
 
 ## Bezpieczeństwo i prywatność
 
-- Hasła baz, SSH i kluczy tylko w Pęku kluczy macOS — nigdy w plikach, logach, argumentach procesów ani zmiennych
-  środowiskowych. Szczegóły: [`docs/SECURITY.md`](docs/SECURITY.md).
+- Hasła baz, SSH i kluczy tylko w Pęku kluczy macOS — nigdy w logach, argumentach procesów ani zmiennych
+  środowiskowych, a w plikach tylko w świadomym eksporcie połączeń z hasłami (po Touch ID albo haśle Maca, zwykle
+  zaszyfrowane frazą). Szczegóły: [`docs/SECURITY.md`](docs/SECURITY.md).
 - Pelikan nie wysyła niczego poza połączeniami, które sam skonfigurujesz (bazy, SSH, aktualizacje z GitHuba).
 - Agent AI widzi połączenia tylko przez alias, pracuje we własnej sesji i nie zatwierdza zmian bez Twojej zgody.
 

@@ -8,10 +8,13 @@ frente a errores y frente a los agentes de IA.
 - Las contraseñas de bases de datos, las contraseñas SSH (túneles y destinos Pro*C) y las frases de paso de claves SSH
   se guardan **únicamente en el Llavero de macOS**: en el llavero de inicio de sesión, sin sincronización con iCloud y
   solo disponibles con el Mac desbloqueado.
-- Las contraseñas **nunca** van a los archivos de Pelikan (definiciones de conexiones, preferencias, worksets,
-  exportaciones), a los registros, al historial de comandos, a los argumentos de procesos ni a las variables de entorno.
+- Las contraseñas **nunca** van a los archivos de Pelikan (definiciones de conexiones, preferencias, worksets),
+  a los registros, al historial de comandos, a los argumentos de procesos ni a las variables de entorno.
   Los comandos con contraseñas (`CONNECT`, `ALTER USER … IDENTIFIED BY`, `CREATE DATABASE LINK`) no se guardan en el
   historial de comandos.
+- La única excepción, solo a petición expresa tuya: **Exportar conexiones con contraseñas…** escribe las contraseñas
+  en un archivo (cifradas con una frase o en texto plano) tras confirmar con Touch ID o la contraseña del Mac; consulta
+  **Conexiones**, «Exportar e importar definiciones». El agente de IA no tiene este comando.
 - Una contraseña que no se recuerda en el Llavero se mantiene solo en memoria hasta cerrar la aplicación.
 - La opción **Requerir Touch ID o la contraseña del Mac antes de usar una contraseña guardada** (**Preferencias › Oracle
   › Contraseñas de conexiones**) exige confirmación una vez por conexión mientras la aplicación está en marcha, también
