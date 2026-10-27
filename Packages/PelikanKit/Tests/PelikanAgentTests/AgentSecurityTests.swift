@@ -1,8 +1,10 @@
 #if canImport(Darwin)
 import Darwin
 import Foundation
+import MCP
 import PelikanBridgeKit
 import PelikanDB
+import PelikanLog
 import Testing
 @testable import PelikanAgent
 @testable import PelikanWorkspace
@@ -244,6 +246,102 @@ struct AgentUnitTests {
         // Samo słowo PASSWORD (kolumna, parametr) nie ukrywa całego tekstu — dziennik zachowuje ślad.
         let plain = AgentController.summarize(CommandArguments(["sql": "select password_versions from dba_users"]))
         #expect(plain.contains("password_versions"))
+    }
+
+    @Test("R7-01: połączenie tymczasowe Okna poleceń (CONNECT … AS SYSDBA) poza zasięgiem agenta, bez aliasu w get_state")
+    func temporaryConnectionHidden() async throws {
+        let ws = Workspace()
+        let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
+        let approver = MockApprover()
+        controller.approvals = approver
+        let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
+        var target = ConnectionTarget(user: "sys", connectString: "//prod-host.example:1521/svc")
+        target.role = .sysdba
+        let temp = ConnectionDefinition(name: "sys@//prod-host.example:1521/svc", target: target, savePassword: false)
+        ws.connections.registerTemporary(temp, password: UUID().uuidString)
+        let cmd = ws.newDocument(.command, text: "")
+        cmd.connectionID = temp.id
+        ws.activate(cmd.id)
+        // Bez połączenia głównego: odmowa; jawne wskazanie przypiętym kluczem też nie przejdzie.
+        #expect(throws: CommandError.self) { try ws.agentConnection(alias: nil) }
+        #expect(throws: CommandError.self) { try ws.agentConnection(CommandArguments([Workspace.agentConnectionKey: .string(temp.id.uuidString)])) }
+        let query = await controller.callTool("run_query", arguments: ["sql": "select 1 from dual"], sessionID: session.id)
+        #expect(query.isError == true)
+        let state = await controller.callTool("get_state", arguments: [:], sessionID: session.id)
+        let text = state.content.map { "\($0)" }.joined()
+        #expect(!text.contains("prod-host") && !text.contains("sys@"))
+        // Z połączeniem głównym z listy: agent dostaje główne, nie połączenie okna poleceń.
+        let dev = ConnectionDefinition(name: "dev_test", target: ConnectionTarget(user: "u", connectString: "localhost:1521/x"))
+        try ws.connections.upsert(dev)
+        ws.sessions.setMainConnection(dev.id)
+        #expect(try ws.agentConnection(alias: nil).id == dev.id)
+    }
+
+    @Test("R7-07: historia kodu rozpoznaje modyfikatory w dowolnej kolejności (DDL z DBMS_METADATA)")
+    func codeTargetModifiers() {
+        let cases: [(String, DBObjectType, String, Bool)] = [
+            ("\n  CREATE OR REPLACE FORCE EDITIONABLE VIEW \"SCOTT\".\"EMP_V\" (\"A\") AS select 1 a from dual", .view, "SCOTT.EMP_V", false),
+            ("create or replace editionable force view v as select 1 x from dual", .view, "S.V", false),
+            ("create or replace noneditionable no force view v2 as select 1 x from dual", .view, "S.V2", false),
+            ("create editioning view ev as select a from t", .view, "S.EV", false),
+            ("CREATE OR REPLACE EDITIONABLE PACKAGE BODY \"SCOTT\".\"P\" AS end;", .packageBody, "SCOTT.P", false),
+            ("drop view v", .view, "S.V", true),
+        ]
+        for (sql, type, name, drop) in cases {
+            let t = AgentChanges.codeTarget(sql, defaultOwner: "S")
+            #expect(t?.object.type == type && "\(t?.object.owner ?? "").\(t?.object.name ?? "")" == name && t?.drop == drop, "\(sql)")
+        }
+        #expect(AgentChanges.codeTarget("create table t (a number)", defaultOwner: "S") == nil)
+    }
+
+    @Test("R7-14: pokrycie dla agenta jako untrusted_content, filtr pełnym członem nazwy")
+    func coverageUntrustedAndFilter() async throws {
+        #expect(AgentDatabaseCommands.coverageKey("PACKAGE BODY S.EMP", matches: "EMP"))
+        #expect(AgentDatabaseCommands.coverageKey("PACKAGE BODY S.EMP", matches: "S.EMP"))
+        #expect(!AgentDatabaseCommands.coverageKey("PACKAGE BODY S.XEMP", matches: "EMP"))
+        #expect(!AgentDatabaseCommands.coverageKey("PACKAGE BODY T.EMP", matches: "S.EMP"))
+        #expect(!AgentDatabaseCommands.coverageKey("PACKAGE BODY S.EMP_API", matches: "EMP"))
+        let ws = Workspace()
+        let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
+        let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
+        let run = UtplsqlRun(paths: ["S"])
+        run.coverage = ["PACKAGE BODY S.EMP": CoverageLines(covered: [1], uncovered: [2]), "PACKAGE BODY S.XEMP": CoverageLines(covered: [1], uncovered: [])]
+        ws.lastUtplsqlRun = run
+        let r = await controller.callTool("get_coverage", arguments: ["object": "emp"], sessionID: session.id)
+        let text = r.content.map { "\($0)" }.joined()
+        #expect(r.isError == false && text.contains("untrusted_content") && text.contains("S.EMP") && !text.contains("XEMP"))
+    }
+
+    @Test("R8-10: identyfikator nieznanej komendy od agenta nie trafia jawnie do dziennika aplikacji")
+    func unknownCommandIDNotLogged() async {
+        // Zwykłe ujście (poziom domyślny, nazwy ukryte): komunikat błędu z tekstem agenta jest prywatny.
+        let sink = MemoryLogSink()
+        let sinkID = Log.addSink(sink)
+        defer { Log.removeSink(sinkID) }
+        let ws = Workspace()
+        let dir = URL(fileURLWithPath: "/tmp/pat-\(UUID().uuidString.prefix(8))", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let controller = AgentController(workspace: ws, socketURL: dir.appendingPathComponent("a.sock"), logDirectory: dir.appendingPathComponent("logs"))
+        let (session, _) = controller.createSession(profile: AgentProfile.builtIn[0], directory: dir.path)
+        let unknownID = "select_karta_\(UUID().uuidString.prefix(8))"
+        let r = await controller.callTool("run_command", arguments: ["command": .string(unknownID)], sessionID: session.id)
+        #expect(r.isError == true)
+        #expect(!sink.text.contains(unknownID) && sink.text.contains("<nieznana>"), "\(sink.text)")
+        _ = await controller.callTool("get_state", arguments: [:], sessionID: session.id)
+        #expect(sink.text.contains("agent.state"))
+    }
+
+    @Test("R5-21: katalog domowy i / nie są katalogiem projektu agenta")
+    func projectDirectory() {
+        #expect(AgentLauncher.projectDirectory("/Users/u", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/Users/u/", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/", home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory(nil, home: "/Users/u") == nil)
+        #expect(AgentLauncher.projectDirectory("/Users/u/projekt/sql", home: "/Users/u") == "/Users/u/projekt/sql")
     }
 
     @Test("Porównanie stałoczasowe, base64url, tokeny 256 bit i unikalne")

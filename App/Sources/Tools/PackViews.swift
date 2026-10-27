@@ -29,9 +29,11 @@ struct HTMLReportView: View {
     }
 }
 
-/// SQL Monitor (SD-MON-001): monitorowane zapytania, dwuklik — raport.
+/// SQL Monitor (SD-MON-001): monitorowane zapytania, dwuklik — raport. Lista i raporty z połączenia, dla którego
+/// komenda sprawdziła licencję Tuning Pack (stałe dla okna).
 struct SQLMonitorView: View {
     let workspace: Workspace
+    @State private var connection: UUID?
     @State private var data: (columns: [String], rows: [[String]]) = ([], [])
     @State private var selection: Int?
     @State private var message = ""
@@ -41,6 +43,7 @@ struct SQLMonitorView: View {
             HStack {
                 Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.iconLabel(L10n.tr("Odśwież"))
                 Button(L10n.tr("Raport")) { open(selection) }.disabled(selection == nil)
+                ToolConnectionPicker(workspace: workspace, connection: $connection, editable: false)
                 Spacer()
                 Text(message).font(.uiSecondary).foregroundStyle(.secondary)
             }
@@ -56,17 +59,21 @@ struct SQLMonitorView: View {
         .task { await reload() }
     }
 
+    init(workspace: Workspace, connection: UUID) {
+        self.workspace = workspace
+        _connection = State(initialValue: connection)
+    }
+
     private func reload() async {
-        guard let conn = workspace.sessions.mainConnectionID else { return }
         do {
-            let s = try await workspace.sessions.session(SessionKey(connectionID: conn, purpose: .tool("packs")))
+            let s = try await workspace.toolSession("packs", connection: connection)
             data = try await ManagementPacks.monitoredSQL(s)
             message = L10n.tr("Zapytania: \(data.rows.count)")
         } catch { message = error.localizedDescription }
     }
 
     private func open(_ row: Int?) {
-        guard let row, row < data.rows.count, let id = data.rows[row].first else { return }
-        workspace.perform("tools.sqlMonitorReport", CommandArguments(["sqlId": .string(id)]))
+        guard let row, row < data.rows.count, let id = data.rows[row].first, let connection else { return }
+        workspace.perform("tools.sqlMonitorReport", CommandArguments(["sqlId": .string(id), "connection": .string(connection.uuidString)]))
     }
 }

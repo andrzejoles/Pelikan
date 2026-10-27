@@ -4,7 +4,7 @@ import SwiftUI
 import WebKit
 
 /// Okno raportu (UG 12, PD-REP-002..004): karty Zapytanie / Układ / Opcje / Wynik; wynik HTML w WebKit.
-final class ReportWindowViewController: NSViewController {
+final class ReportWindowViewController: NSViewController, DocumentContentController {
     private let document: PelikanWorkspace.Document
     private let workspace: Workspace
     private var editor: CodeEditorView!
@@ -166,7 +166,7 @@ struct ReportLayoutView: View {
                     TextField(L10n.tr("Nagłówek (#title, #date, #user, #connection, #zmienna)"), text: $document.report.header)
                     Toggle(L10n.tr("Nowa strona po każdej grupie"), isOn: $document.report.pageBreakOnGroup)
                     TextField(L10n.tr("Tło (kolor CSS)"), text: $document.report.background)
-                    TextField(L10n.tr("Dodatkowy CSS"), text: $document.report.extraCSS, axis: .vertical).font(.system(size: 12, design: .monospaced)).lineLimit(2...6)
+                    TextField(L10n.tr("Dodatkowy CSS"), text: $document.report.extraCSS, axis: .vertical).font(.code).lineLimit(2...6)
                 }
                 Section(L10n.tr("Kolumny (po wykonaniu raportu)")) {
                     if columnNames.isEmpty { Text(L10n.tr("Wykonaj raport, żeby ustawić formaty kolumn.")).foregroundStyle(.secondary) }
@@ -183,7 +183,7 @@ struct ReportColumnRow: View {
 
     var body: some View {
         HStack {
-            Text(format.column).font(.system(.body, design: .monospaced)).frame(width: 140, alignment: .leading)
+            Text(format.column).font(.code).frame(width: 140, alignment: .leading)
             TextField(L10n.tr("Nagłówek"), text: Binding(get: { format.heading ?? "" }, set: { format.heading = $0.isEmpty ? nil : $0 })).frame(width: 140)
             Picker("", selection: $format.alignment) {
                 Text(L10n.tr("auto")).tag(ReportColumnFormat.Alignment.automatic)

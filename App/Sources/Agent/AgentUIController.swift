@@ -35,7 +35,11 @@ final class AgentUIController: ApprovalPresenter {
         profilesToken = trackChanges { [weak self] in
             guard let self else { return }
             let profiles = self.workspace.settings.agent.profiles
-            if profiles != self.registeredProfiles { self.workspace.register(self.launchCommands(profiles)) }
+            guard profiles != self.registeredProfiles else { return }
+            // Usunięty profil znika z menu i palety od razu (domknięcie komendy trzyma kopię profilu).
+            let removed = self.registeredProfiles.filter { old in !profiles.contains { $0.id == old.id } }
+            self.workspace.unregister(removed.map { CommandID(rawValue: "agent.launch.\($0.id)") })
+            self.workspace.register(self.launchCommands(profiles))
         }
         do {
             try controller.start()
@@ -121,12 +125,15 @@ final class AgentUIController: ApprovalPresenter {
         guard let executable = await Self.which(profile.executable) else {
             throw CommandError.notAvailable(L10n.tr("Nie znaleziono polecenia „\(profile.executable)” w PATH powłoki logowania."))
         }
-        guard let overrides = await askPermissions(profile) else { throw CommandError.cancelledByUser }
+        // Katalog roboczy: folder pliku aktywnego okna (projekt) albo katalog tymczasowy sesji — ustalony przed macierzą
+        // uprawnień, która go pokazuje (z wyborem katalogu tymczasowego); katalog domowy i `/` — zawsze tymczasowy.
+        let candidate = AgentLauncher.projectDirectory(workspace.activeDocument?.fileURL?.deletingLastPathComponent().path)
+        guard let choice = await askPermissions(profile, projectDirectory: candidate) else { throw CommandError.cancelledByUser }
+        let overrides = choice.overrides
         if profile.flavor == .antigravity { try await ensureAntigravityRegistration(executable: executable) }
         let settings = workspace.settings.agent
 
-        // Katalog roboczy: folder pliku aktywnego okna (projekt) albo katalog tymczasowy sesji.
-        let projectDirectory = workspace.activeDocument?.fileURL?.deletingLastPathComponent().path
+        let projectDirectory = choice.useProjectDirectory ? candidate : nil
         let (session, token) = controller.createSession(profile: profile, directory: projectDirectory ?? "", accessOverrides: overrides)
         let sessionDir = runDirectory.appendingPathComponent("session-\(session.id)", isDirectory: true)
         try FileManager.default.createDirectory(at: sessionDir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
@@ -162,34 +169,23 @@ final class AgentUIController: ApprovalPresenter {
     static func which(_ name: String) async -> String? {
         guard name.allSatisfy({ $0.isLetter || $0.isNumber || "-_./".contains($0) }) else { return nil }
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        return await Task.detached { () -> String? in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: shell)
-            p.arguments = ["-l", "-c", "command -v \(name)"]
-            let out = Pipe()
-            p.standardOutput = out
-            p.standardError = FileHandle.nullDevice
-            guard (try? p.run()) != nil else { return nil }
-            p.waitUntilExit()
-            let path = String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
-            return p.terminationStatus == 0 && path.hasPrefix("/") ? path : nil
-        }.value
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: shell)
+        p.arguments = ["-l", "-c", "command -v \(name)"]
+        // Wyjście czytane równolegle z czekaniem; limit — powłoka logowania, która utknęła (np. pytanie w profilu).
+        guard let r = try? await p.runCapturingOutput(timeout: 15), !r.timedOut, r.status == 0 else { return nil }
+        let path = String(decoding: r.output, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.hasPrefix("/") ? path : nil
     }
 
     /// Antigravity nie ma konfiguracji MCP na sesję — jednorazowa rejestracja tylko za zgodą (PROMPT §7.1, §13).
     private func ensureAntigravityRegistration(executable: String) async throws {
         let bridge = bridgePath
-        let list = await Task.detached { () -> String in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: executable)
-            p.arguments = ["mcp", "list"]
-            let out = Pipe()
-            p.standardOutput = out
-            p.standardError = out
-            guard (try? p.run()) != nil else { return "" }
-            p.waitUntilExit()
-            return String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-        }.value
+        let lister = Process()
+        lister.executableURL = URL(fileURLWithPath: executable)
+        lister.arguments = ["mcp", "list"]
+        let listed = try? await lister.runCapturingOutput(includeErrors: true, timeout: 30)
+        let list = listed.map { String(decoding: $0.output, as: UTF8.self) } ?? ""
         if list.contains(bridge) { return }
         let answer = await workspace.ui?.ask(
             L10n.tr("Zarejestrować serwer MCP w Antigravity?"),
@@ -199,23 +195,20 @@ final class AgentUIController: ApprovalPresenter {
         let profile = workspace.settings.agent.profiles.first { $0.flavor == .antigravity } ?? AgentProfile.builtIn[3]
         let args = AgentLauncher.spec(profile: profile, bridge: bridge, socket: controller.socketURL.path, token: "", directory: "/",
                                       strict: true, sessionDirectory: "/").persistentRegistration ?? []
-        let status = await Task.detached { () -> Int32 in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: executable)
-            p.arguments = args
-            guard (try? p.run()) != nil else { return -1 }
-            p.waitUntilExit()
-            return p.terminationStatus
-        }.value
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: executable)
+        p.arguments = args
+        var status: Int32 = -1
+        if (try? p.run()) != nil, await p.waitForExitAsync(timeout: 60) { status = p.terminationStatus }
         guard status == 0 else { throw CommandError.notAvailable(L10n.tr("agy mcp add zakończył się błędem (\(status))")) }
     }
 
     // MARK: Macierz uprawnień
 
-    private func askPermissions(_ profile: AgentProfile) async -> [CommandID: AgentAccess]? {
+    private func askPermissions(_ profile: AgentProfile, projectDirectory: String?) async -> PermissionChoice? {
         let rows = PermissionMatrix.rows(registry: workspace.registry, settings: workspace.settings.agent)
         return await presentSheet { finish in
-            PermissionMatrixView(profileName: profile.name, rows: rows) { finish($0) }
+            PermissionMatrixView(profileName: profile.name, rows: rows, projectDirectory: projectDirectory) { finish($0) }
         } ?? nil
     }
 

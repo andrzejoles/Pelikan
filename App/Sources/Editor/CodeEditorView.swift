@@ -157,7 +157,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private let pane = NSView()
     private var splitView: NSSplitView?
     private var ligatures = true
-    private var colorMarkRanges: [NSTextRange] = []
+    private var colorMarkRanges: [(range: NSTextRange, color: NSColor)] = []
     private var lineStatusEnabled = true
     private var lineStatusWork: DispatchWorkItem?
     private var wordWrap = false
@@ -208,16 +208,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     private func showColorMarks(_ marks: [ColorMark]) {
         guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return }
-        for r in colorMarkRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
+        for r in colorMarkRanges { tlm.removeRenderingAttribute(.backgroundColor, for: r.range) }
         let len = (textView.string as NSString).length
         colorMarkRanges = []
         for m in marks where m.range.upperBound <= len {
             guard let a = content.location(content.documentRange.location, offsetBy: m.range.lowerBound),
                   let b = content.location(a, offsetBy: m.range.count), let r = NSTextRange(location: a, end: b) else { continue }
             let color = Self.colorMarkPalette[max(0, min(Self.colorMarkPalette.count - 1, m.color - 1))].withAlphaComponent(0.3)
-            tlm.addRenderingAttribute(.backgroundColor, value: color, for: r)
-            colorMarkRanges.append(r)
+            colorMarkRanges.append((r, color))
         }
+        applyBackgrounds()
     }
 
     /// Zaznaczenia z modelu → zaznaczenia widoku (pierwsze — główne).
@@ -385,6 +385,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         textView.keyInterceptor = { [weak self] event in self?.completion.handle(event) ?? false }
         textView.onMouseDown = { [weak self] in self?.completion.close() }
+        textView.onFocusLost = { [weak self] in self?.completion.close() }
         NotificationCenter.default.addObserver(self, selector: #selector(showCompletion(_:)), name: Self.showCompletionNotification, object: document)
     }
 
@@ -426,19 +427,17 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let transactions = transactionsOn ? PairMatcher.transactionStatements(text) : []
             await MainActor.run { [weak self] in
                 guard let self, self.pairGeneration == generation, self.textView.string == text else { return }
-                self.showPairs(pairs)
-                self.occurrenceRanges = self.show(occurrences, replacing: self.occurrenceRanges, color: NSColor.systemYellow.withAlphaComponent(0.22))
-                self.transactionRanges = self.show(transactions, replacing: self.transactionRanges, color: NSColor.systemOrange.withAlphaComponent(0.18))
+                self.pairRanges = self.show(pairs, replacing: self.pairRanges)
+                self.occurrenceRanges = self.show(occurrences, replacing: self.occurrenceRanges)
+                self.transactionRanges = self.show(transactions, replacing: self.transactionRanges)
+                self.applyBackgrounds()
             }
         }
     }
 
-    private func showPairs(_ ranges: [Range<Int>]) {
-        pairRanges = show(ranges, replacing: pairRanges, color: NSColor.findHighlightColor.withAlphaComponent(0.35))
-    }
-
-    /// Tło dla zakresów (atrybut renderowania — bez zmiany tekstu); zwraca nowe zakresy do późniejszego usunięcia.
-    private func show(_ ranges: [Range<Int>], replacing old: [NSTextRange], color: NSColor) -> [NSTextRange] {
+    /// Zakresy tła warstwy (atrybut renderowania — bez zmiany tekstu): usuwa tło starych, zwraca nowe — tło nakłada
+    /// `applyBackgrounds`.
+    private func show(_ ranges: [Range<Int>], replacing old: [NSTextRange]) -> [NSTextRange] {
         guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager else { return [] }
         for r in old { tlm.removeRenderingAttribute(.backgroundColor, for: r) }
         let new = ranges.compactMap { r -> NSTextRange? in
@@ -446,8 +445,20 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
                   let b = content.location(a, offsetBy: r.count) else { return nil }
             return NSTextRange(location: a, end: b)
         }
-        for r in new { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
         return new
+    }
+
+    /// Wszystkie warstwy tła (znaczniki kolorów, polecenia transakcyjne, wystąpienia nazwy, pary) używają tego samego
+    /// atrybutu `.backgroundColor` — usunięcie jednej wycina tło pozostałych w tych miejscach. Dlatego po każdej zmianie
+    /// warstwy nakładane są wszystkie, od spodu (R4-08).
+    private func applyBackgrounds() {
+        guard let tlm = textView.textLayoutManager else { return }
+        for m in colorMarkRanges { tlm.addRenderingAttribute(.backgroundColor, value: m.color, for: m.range) }
+        for (ranges, color) in [(transactionRanges, NSColor.systemOrange.withAlphaComponent(0.18)),
+                                (occurrenceRanges, NSColor.systemYellow.withAlphaComponent(0.22)),
+                                (pairRanges, NSColor.findHighlightColor.withAlphaComponent(0.35))] {
+            for r in ranges { tlm.addRenderingAttribute(.backgroundColor, value: color, for: r) }
+        }
     }
 
     // MARK: Analiza kodu w czasie pisania (DG-RES-001, DG-INSP-001)
@@ -633,6 +644,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             load(text)
             return
         }
+        // Model jest źródłem prawdy: zmiana z modelu trafia do widoku także w oknie chwilowo nieedytowalnym (wykonanie,
+        // tylko do odczytu) — inaczej widok pokazywałby stary tekst, a ⌘S zapisał niewidoczny (R4-06).
+        let editable = textView.isEditable
+        textView.isEditable = true
+        defer { textView.isEditable = editable }
         if textView.shouldChangeText(in: range, replacementString: replacement) {
             textView.textStorage?.replaceCharacters(in: range, with: replacement)
             textView.didChangeText()
@@ -1014,6 +1030,19 @@ final class CodeTextView: NSTextView {
     /// Klawisze przechwytywane przez listę podpowiedzi (↑↓, Enter, Tab, Esc), zanim trafią do edytora.
     var keyInterceptor: ((NSEvent) -> Bool)?
     var onMouseDown: (() -> Void)?
+    /// Edytor traci fokus albo znika z okna (inna karta, siatka) — zamknięcie listy podpowiedzi (R4-13).
+    var onFocusLost: (() -> Void)?
+
+    override func resignFirstResponder() -> Bool {
+        let resigned = super.resignFirstResponder()
+        if resigned { onFocusLost?() }
+        return resigned
+    }
+
+    override func viewWillMove(toWindow newWindow: NSWindow?) {
+        if newWindow == nil { onFocusLost?() }
+        super.viewWillMove(toWindow: newWindow)
+    }
 
     override func keyDown(with event: NSEvent) {
         if keyInterceptor?(event) == true { return }

@@ -4,9 +4,11 @@ import Foundation
 public enum LogPrivacy: Sendable {
     /// Zawsze w jawnej postaci — liczby, kody błędów, identyfikatory komend, nazwy sterowników.
     case `public`
-    /// Ukryta (`<private>`), chyba że w Preferencjach włączono nazwy w dzienniku.
+    /// Treść (komunikat błędu, tekst pokazany użytkownikowi, dane) — zawsze ukryta (`<private>`); jawna tylko w ujściu
+    /// diagnostycznym testów. Przełącznik nazw w Preferencjach jej nie odsłania.
     case `private`
-    /// Krótki skrót z kluczem instalacji — te same nazwy dają ten sam skrót, ale nie da się ich odtworzyć.
+    /// Nazwa (połączenia, profilu, katalogu): krótki skrót z kluczem instalacji — te same nazwy dają ten sam skrót, ale
+    /// nie da się ich odtworzyć. Jawna, gdy w Preferencjach włączono nazwy w dzienniku.
     case hash
 }
 
@@ -76,15 +78,16 @@ public struct LogMessage: ExpressibleByStringInterpolation, Sendable {
         }
     }
 
-    /// Tekst wpisu: wartości prywatne jawne tylko przy `revealPrivate`; każda wartość przechodzi przez `LogRedactor`.
-    func render(revealPrivate: Bool, hash: (String) -> String) -> String {
+    /// Tekst wpisu: nazwy (`.hash`) jawne przy `revealNames`, wartości prywatne — tylko przy `revealPrivate` (ujście
+    /// diagnostyczne); każda wartość przechodzi przez `LogRedactor`.
+    func render(revealNames: Bool, revealPrivate: Bool = false, hash: (String) -> String) -> String {
         var out = ""
         for s in segments {
             switch s {
             case .literal(let t): out += t
             case .value(let v, .public): out += LogRedactor.redact(v)
             case .value(let v, .private): out += revealPrivate ? LogRedactor.redact(v) : "<private>"
-            case .value(let v, .hash): out += revealPrivate ? LogRedactor.redact(v) : "<#" + hash(v) + ">"
+            case .value(let v, .hash): out += revealNames || revealPrivate ? LogRedactor.redact(v) : "<#" + hash(v) + ">"
             }
         }
         return out

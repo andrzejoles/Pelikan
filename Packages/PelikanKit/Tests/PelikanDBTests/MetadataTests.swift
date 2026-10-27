@@ -125,6 +125,14 @@ struct ObjectCommandTests {
         #expect(type.text.components(separatedBy: "CREATE OR REPLACE").count == 2)
         #expect(ProgramCompiler.units(in: type.text).count == 1)
         _ = try await s.execute("drop type pelikan_bez_ciala_t")
+        // Ciało bez specyfikacji (INVALID, PLS-00304): samo ciało zamiast błędu „Brak źródła” (R3-06).
+        _ = try? await s.execute("create or replace package body pelikan_sierota_pkg as end;")
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("pelikan_sierota_pkg"), "type": .string("PACKAGE BODY")]))
+        let orphan = try #require(ws.activeDocument)
+        #expect(orphan.text.uppercased().components(separatedBy: "CREATE OR REPLACE").count == 2 && orphan.text.uppercased().contains("PACKAGE BODY"),
+                "\(orphan.text)")
+        #expect(orphan.selectedRange.lowerBound == 0)
+        _ = try await s.execute("drop package body pelikan_sierota_pkg")
         await ws.sessions.disconnectAll()
     }
 

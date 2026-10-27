@@ -12,6 +12,9 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   junto a las pestañas o **Archivo › Program Window › Añadir unidad…** añade una unidad a partir de una plantilla
   (procedimiento, función, paquete, tipo, disparador, fuente Java, módulo MLE) con un formulario de nombres y
   parámetros. **Eliminar unidad** quita la pestaña del texto (el objeto de la base de datos se mantiene).
+- **Editar** sobre un paquete o tipo — también sobre su cuerpo desde las carpetas «Cuerpos de paquete» y «Cuerpos de
+  tipo» — abre la especificación y el cuerpo en una ventana con dos pestañas (abierto desde el cuerpo: la pestaña del
+  cuerpo queda activa). Un objeto sin cuerpo tiene una sola pestaña.
 - **F8** (⌘↩) compila todas las unidades una tras otra y se detiene en la primera con un error. La compilación se hace
   en una sesión aparte en segundo plano, así que no bloquea las SQL Windows.
 - Los errores y advertencias del compilador aparecen bajo el editor. Un clic lleva a la línea; un doble clic abre la
@@ -85,6 +88,8 @@ de varias decenas de miles de líneas.
 | Añadir cursor encima / debajo | ⌃⇧↑ / ⌃⇧↓ | Edición › Varios cursores |
 | Aumentar / reducir fuente | ⌘= / ⌘− | Vista |
 
+- **Plegado de código**: la flecha del margen junto a los números de línea pliega y despliega un bloque (bloque
+  plegado: flecha en el color de acento y «⋯» en el texto con el código plegado en la información emergente).
 - **Varios cursores**: ⌥+clic añade un cursor y Esc deja uno. **Selección en columna**: arrastra con ⌥; escribir, borrar
   y pegar funcionan en todas las líneas a la vez.
 - **Buscar y reemplazar** admite expresiones regulares (con `$1`), palabras completas, distinción de mayúsculas,

@@ -77,7 +77,7 @@ struct ClipboardHistoryView: View {
             VSplitView {
                 List(entries, selection: $selection) { e in
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(e.title).lineLimit(1).font(.system(size: 12, design: .monospaced))
+                        Text(e.title).lineLimit(1).font(.code)
                         Text(e.date.formatted(date: .omitted, time: .standard)).font(.uiSecondary).foregroundStyle(.secondary)
                     }
                     .tag(e.id)
@@ -88,7 +88,7 @@ struct ClipboardHistoryView: View {
                 .frame(minHeight: 160)
                 ScrollView {
                     Text(entries.first { $0.id == selection }?.text ?? "")
-                        .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                        .font(.code).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading).padding(6)
                 }
                 .frame(minHeight: 100)
@@ -177,9 +177,9 @@ struct TodoItemsView: View {
         NSApp.mainWindow?.makeKeyAndOrderFront(nil)
     }
 
+    /// Przez komendę `edit.todoToggle` w oknie zadania — tylko do odczytu i trwające wykonanie jak w menu (R4-06).
     private func toggle(_ r: Row) {
-        let sel = r.document.selectedRange
-        r.document.text = TodoItems.toggle(r.item, in: r.document.text)
-        r.document.selectedRange = sel
+        workspace.activate(r.document.id)
+        workspace.perform("edit.todoToggle", CommandArguments(["line": .int(Int64(r.item.line))]))
     }
 }

@@ -46,12 +46,13 @@ public enum LocalGit {
 
     /// Stan repo względem `<remote>/<gałąź>` (bez `fetch`).
     public static func status(repo: URL, remote: String, branch: String) throws -> LocalGitStatus {
+        try checkNames(remote, branch)
         let b = try run(repo, ["rev-parse", "--abbrev-ref", "HEAD"])
         guard b.status == 0 else { throw CommandError.notAvailable(L10n.tr("To nie jest repozytorium git: \(b.errorText)")) }
         let porcelain = text(try run(repo, ["status", "--porcelain"]))
         var s = LocalGitStatus(branch: text(b), uncommitted: porcelain.isEmpty ? [] : porcelain.components(separatedBy: "\n"))
         let ref = "\(remote)/\(branch)"
-        let head = try run(repo, ["rev-parse", "--verify", "--quiet", ref])
+        let head = try run(repo, ["rev-parse", "--verify", "--quiet", "--end-of-options", ref])
         if head.status == 0 {
             s.remoteHead = text(head)
             let counts = text(try run(repo, ["rev-list", "--left-right", "--count", "HEAD...\(ref)"])).split(whereSeparator: \.isWhitespace)
@@ -62,24 +63,30 @@ public enum LocalGit {
 
     /// `git fetch <remote>` (dane logowania z konfiguracji gita użytkownika; bez pytań w terminalu).
     public static func fetch(repo: URL, remote: String) throws {
-        let r = try run(repo, ["fetch", "--quiet", remote], timeout: 180)
+        try checkNames(remote)
+        let r = try run(repo, ["fetch", "--quiet", "--", remote], timeout: 180)
         guard r.status == 0 else { throw CommandError.notAvailable(L10n.tr("git fetch: \(r.errorText)")) }
+    }
+
+    /// Nazwy remote i gałęzi z celu (także zaimportowanego) — nigdy jako opcje gita (R8-09).
+    static func checkNames(_ names: String...) throws {
+        for n in names where !PelikanSSHTarget.isSafeGitName(n) { throw DeployScriptError.invalidGitName(n) }
     }
 
     /// Czy commit jest w lokalnym repo.
     public static func hasCommit(repo: URL, _ commit: String) -> Bool {
-        (try? run(repo, ["cat-file", "-e", commit + "^{commit}"]).status) == 0
+        (try? run(repo, ["cat-file", "-e", "--end-of-options", commit + "^{commit}"]).status) == 0
     }
 
-    /// Commity `from..to` (`krótki-hash temat`).
+    /// Commity `from..to` (`krótki-hash temat`). Hasze pochodzą z serwera — `--end-of-options` przed rewizjami.
     public static func commits(repo: URL, from: String, to: String) throws -> [String] {
-        let out = text(try run(repo, ["log", "--oneline", "--no-decorate", "\(from)..\(to)"]))
+        let out = text(try run(repo, ["log", "--oneline", "--no-decorate", "--end-of-options", "\(from)..\(to)"]))
         return out.isEmpty ? [] : out.components(separatedBy: "\n")
     }
 
     /// `git diff --stat from to`.
     public static func diffStat(repo: URL, from: String, to: String) throws -> String {
-        text(try run(repo, ["diff", "--stat", from, to]))
+        text(try run(repo, ["diff", "--stat", "--end-of-options", from, to]))
     }
 }
 #endif

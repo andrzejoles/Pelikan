@@ -102,7 +102,7 @@ struct AutotraceView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(sql).font(.system(size: 12, design: .monospaced)).lineLimit(3).textSelection(.enabled)
+            Text(sql).font(.code).lineLimit(3).textSelection(.enabled)
             Text(L10n.tr("SQL_ID \(result.sqlID) · wierszy \(result.rowsFetched) · \(String(format: "%.3f", result.elapsedSeconds)) s")).font(.uiSecondary).foregroundStyle(.secondary)
             Picker("", selection: $tab) {
                 Text(L10n.tr("Plan rzeczywisty")).tag(0)
@@ -113,7 +113,7 @@ struct AutotraceView: View {
             switch tab {
             case 0:
                 Table(result.lines) {
-                    TableColumn(L10n.tr("Operacja")) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.system(size: 12, design: .monospaced)) }
+                    TableColumn(L10n.tr("Operacja")) { l in Text(String(repeating: "  ", count: l.depth) + l.title).font(.code) }
                         .width(min: 220, ideal: 300)
                     TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }
                     TableColumn("Starts") { l in Text(l.starts.map(String.init) ?? "").monospacedDigit() }.width(55)
@@ -133,7 +133,7 @@ struct AutotraceView: View {
                 }
             default:
                 ScrollView([.horizontal, .vertical]) {
-                    Text(result.planText).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).padding(4)
+                    Text(result.planText).font(.code).textSelection(.enabled).padding(4)
                 }
             }
         }
@@ -158,8 +158,8 @@ struct PlanComparisonView: View {
             }
             Table(comparison.rows.filter { !onlyDifferent || $0.status != .same }) {
                 TableColumn("") { r in Image(systemName: icon(r.status)).foregroundStyle(color(r.status)) }.width(24)
-                TableColumn(leftTitle) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 12, design: .monospaced)) }
-                TableColumn(rightTitle) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.system(size: 12, design: .monospaced)) }
+                TableColumn(leftTitle) { r in Text(r.left.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
+                TableColumn(rightTitle) { r in Text(r.right.map { "\(String(repeating: "  ", count: $0.depth))\($0.title) \($0.object)" } ?? "").font(.code) }
                 TableColumn(L10n.tr("Różnice")) { r in Text(r.differences.joined(separator: ", ")).font(.uiSecondary) }
             }
         }

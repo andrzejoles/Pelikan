@@ -217,13 +217,13 @@ struct P1DataDBTests {
         try await run(["drop table pelikan_p1_st purge"])
     }
 
-    @Test("Recreate table: dane, wyzwalacz i klucz obcy innej tabeli zachowane; zmiana kolejności kolumn (PD-OED-001)")
+    @Test("Recreate table: dane (także kolumny INVISIBLE), wyzwalacz i klucz obcy innej tabeli zachowane; zmiana kolejności kolumn (PD-OED-001)")
     func recreateTable() async throws {
         try await run(["drop table pelikan_p1_child purge", "drop table pelikan_p1_rc purge",
-                       "create table pelikan_p1_rc (id number constraint pelikan_p1_rc_pk primary key, a varchar2(10), b number)",
+                       "create table pelikan_p1_rc (id number constraint pelikan_p1_rc_pk primary key, a varchar2(10), b number, h number invisible)",
                        "create table pelikan_p1_child (id number, rc_id number constraint pelikan_p1_child_fk references pelikan_p1_rc)",
                        "create or replace trigger pelikan_p1_rc_bi before insert on pelikan_p1_rc for each row begin :new.b := nvl(:new.b, 0); end;",
-                       "insert into pelikan_p1_rc (id, a) values (1, 'x')", "insert into pelikan_p1_rc (id, a, b) values (2, 'y', 5)",
+                       "insert into pelikan_p1_rc (id, a, h) values (1, 'x', 7)", "insert into pelikan_p1_rc (id, a, b) values (2, 'y', 5)",
                        "insert into pelikan_p1_child values (1, 2)", "commit"])
         let (ws, _) = try workspace()
         let m = try #require(ws.metadata())
@@ -231,15 +231,17 @@ struct P1DataDBTests {
         let old = try await TableDDL.load(owner: schema, name: "PELIKAN_P1_RC", metadata: m)
         #expect(old.referencingForeignKeys.count == 1 && old.referencingForeignKeys[0].contains("PELIKAN_P1_CHILD_FK"))
         var new = old
-        new.columns = [old.columns[0], old.columns[2], old.columns[1]]
+        #expect(old.columns.map(\.name) == ["ID", "A", "B", "H"] && old.columns[3].invisible)
+        new.columns = [old.columns[0], old.columns[2], old.columns[1], old.columns[3]]
         new.columns[2].name = "A_TXT"
         new.storage.initial = "128K"
         new.recreate = true
         let r = try await TableDDL.apply(from: old, to: new, in: ws, connectionID: m.connectionID)
         #expect(r.error == nil, "\(r.failed ?? ""): \(r.error ?? "")")
-        #expect(try await scalar("select listagg(column_name, ',') within group (order by column_id) from user_tab_columns where table_name = 'PELIKAN_P1_RC'")
+        #expect(try await scalar("select listagg(column_name, ',') within group (order by column_id) from user_tab_columns where table_name = 'PELIKAN_P1_RC' and column_id is not null")
                 == "ID,B,A_TXT")
-        #expect(try await scalar("select a_txt || b from pelikan_p1_rc where id = 1") == "x0")
+        #expect(try await scalar("select a_txt || b || '/' || h from pelikan_p1_rc where id = 1") == "x0/7")
+        #expect(try await scalar("select hidden_column from user_tab_cols where table_name = 'PELIKAN_P1_RC' and column_name = 'H'") == "YES")
         #expect(try await scalar("select status from user_triggers where trigger_name = 'PELIKAN_P1_RC_BI'") == "ENABLED")
         #expect(try await scalar("select count(*) from user_constraints where constraint_name = 'PELIKAN_P1_CHILD_FK'") == "1")
         #expect(try await scalar("select count(*) from user_tables where table_name = 'PLK$PELIKAN_P1_RC'") == "0")

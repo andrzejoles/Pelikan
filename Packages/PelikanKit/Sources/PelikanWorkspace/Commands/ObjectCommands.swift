@@ -129,12 +129,21 @@ public enum ObjectCommands {
                     validate: hasSelection) { ctx in
                 let (picked, m) = try await target(ctx)
                 m.touch(picked)
-                // Ciało pakietu/typu otwierane razem ze specyfikacją — jedno okno, karta ciała aktywna.
-                let openBody = picked.type == .packageBody || picked.type == .typeBody
-                let o = openBody ? DBObject(owner: picked.owner, name: picked.name, type: picked.type == .packageBody ? .package : .type) : picked
+                // Ciało pakietu/typu otwierane razem ze specyfikacją — jedno okno, karta ciała aktywna. Bez źródła
+                // specyfikacji (osierocone ciało, brak uprawnień do specyfikacji) — samo ciało, jak przed D181.
+                var openBody = picked.type == .packageBody || picked.type == .typeBody
+                var o = picked
+                var specSource: String?
+                if openBody {
+                    let spec = DBObject(owner: picked.owner, name: picked.name, type: picked.type == .packageBody ? .package : .type)
+                    specSource = try? await m.source(of: spec)
+                    if specSource != nil { o = spec } else { openBody = false }
+                }
                 if o.type.isProgram {
                     // Specyfikacja i ciało pakietu/typu w jednym oknie (karty jednostek — Program Window).
-                    var text = try await m.source(of: o) + "\n/\n"
+                    var text: String
+                    if let specSource { text = specSource } else { text = try await m.source(of: o) }
+                    text += "\n/\n"
                     // Ciało jest dołączane tylko, gdy istnieje — typ bez metod, kolekcja i pakiet bez ciała mają jedną kartę.
                     if o.type == .package || o.type == .type {
                         let bodyType: DBObjectType = o.type == .package ? .packageBody : .typeBody
@@ -239,7 +248,7 @@ public enum ObjectCommands {
                     validate: hasSelection) { ctx in
                 let (o, m) = try await target(ctx)
                 let schema = (try? await m.currentSchema()) ?? ""
-                let name = o.owner == schema ? ResultExporter.identifier(o.name).lowercased() : o.qualifiedName.lowercased()
+                let name = o.owner == schema ? ResultExporter.displayIdentifier(o.name) : ResultExporter.displayQualified(owner: o.owner, name: o.name)
                 ctx.workspace.ui?.copyToClipboard(name, html: nil)
                 return CommandResult(message: name)
             },

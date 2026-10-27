@@ -100,6 +100,35 @@ struct FileBrowserTests {
         let loc = try await ws.invoke("fb.addLocation", CommandArguments(["path": .string(t.url.path), "filter": "*.prc"]))
         #expect(ws.fileBrowser.locations.first?.id.uuidString == loc.value?.stringValue)
     }
+
+    @Test("Przenieś do Kosza katalogu: okna plików z jego wnętrza zostają oknami bez pliku (R6-17)")
+    func trashDetachesNested() throws {
+        let t = try TempDirectory()
+        let ws = Workspace()
+        let inner = try ws.openFile(try t.file("dir/sub/a.sql", "select 1 from dual"))
+        let sibling = try ws.openFile(try t.file("dir2/b.sql", "select 2 from dual"))
+        FileCommands.detachDocuments(under: t.url.appendingPathComponent("dir").standardizedFileURL, in: ws)
+        #expect(inner.fileURL == nil && inner.isModified)
+        #expect(sibling.fileURL != nil && !sibling.isModified)
+    }
+
+    @Test("Zapis okna przez dowiązanie symboliczne: dowiązanie zostaje, plik docelowy ma nowy tekst i dawne uprawnienia (R6-19)")
+    func saveKeepsSymlinkAndPermissions() throws {
+        let t = try TempDirectory()
+        let fm = FileManager.default
+        let real = try t.file("real/deploy.sql", "select 1 from dual;\n")
+        try fm.setAttributes([.posixPermissions: 0o750], ofItemAtPath: real.path)
+        let link = t.url.appendingPathComponent("link.sql")
+        try fm.createSymbolicLink(at: link, withDestinationURL: real)
+        let ws = Workspace()
+        let doc = try ws.openFile(link)
+        doc.text = "select 2 from dual;\n"
+        try ws.save(doc, to: link)
+        #expect(try fm.destinationOfSymbolicLink(atPath: link.path) == real.path)
+        #expect(try String(contentsOf: real, encoding: .utf8) == "select 2 from dual;\n")
+        #expect((try fm.attributesOfItem(atPath: real.path)[.posixPermissions] as? NSNumber)?.intValue == 0o750)
+        #expect(doc.fileURL == link.standardizedFileURL)
+    }
 }
 
 @Suite("Git: parser stanu")
@@ -254,7 +283,7 @@ struct WorksetTests {
         let attrs = try FileManager.default.attributesOfItem(atPath: t.url.appendingPathComponent("Worksets/Domyślny.json").path)
         #expect((attrs[.posixPermissions] as? Int) == 0o600)
         try FileManager.default.removeItem(at: f)
-        let missing = ws.applyWorkset(try #require(try ws.worksets.load(WorksetStore.defaultName)))
+        let missing = try await ws.applyWorkset(try #require(try ws.worksets.load(WorksetStore.defaultName)))
         #expect(missing.count == 1 && ws.documents.isEmpty)
         let layout = WindowLayout(frame: "{{10, 20}, {1200, 800}}", sidebarWidth: 260, sidebarPane: 4, agentPaneVisible: true)
         ws.worksets.saveLayout(layout)

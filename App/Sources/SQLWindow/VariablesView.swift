@@ -137,7 +137,7 @@ struct VariablesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title).font(.title3.bold())
+            Text(title).font(.uiHeadline)
             Form {
                 ForEach($model.fields) { $f in
                     if !f.request.options.hidden { row($f) }
@@ -154,7 +154,7 @@ struct VariablesView: View {
             }
         }
         .padding(18)
-        .frame(width: 560, height: min(620, CGFloat(160 + model.fields.count * 64)))
+        .windowSize(width: 560, height: min(620, CGFloat(160 + model.fields.count * 64)))
         .task { await model.loadQueries() }
     }
 
@@ -194,7 +194,7 @@ struct VariablesView: View {
                 }
             } else if o.lines > 1 {
                 Text(label)
-                TextEditor(text: f.text).font(.system(.body, design: o.editor == "sql" ? .monospaced : .default))
+                CodeTextEditor(text: f.text, monospaced: o.editor == "sql")
                     .frame(height: CGFloat(o.lines) * 18)
             } else {
                 TextField(label, text: f.text).disabled(o.readOnly)

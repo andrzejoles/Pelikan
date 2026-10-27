@@ -113,6 +113,12 @@ enum AgentDatabaseCommands {
         .array(rows.map { r in .object(Dictionary(uniqueKeysWithValues: zip(columns.map { $0.name.lowercased() }, r.map { text($0, ws) }))) })
     }
 
+    /// Klucz pokrycia (`PACKAGE BODY SCHEMAT.NAZWA`) pasuje do filtra `NAZWA` albo `SCHEMAT.NAZWA` (wielkimi literami)
+    /// tylko pełnym członem — `EMP` nie wybiera `XEMP`.
+    nonisolated static func coverageKey(_ key: String, matches filter: String) -> Bool {
+        key == filter || key.hasSuffix(" " + filter) || (!filter.contains(".") && key.hasSuffix("." + filter))
+    }
+
     /// Obiekt ze słownika: `NAZWA` (bieżący schemat sesji agenta, potem synonim prywatny i publiczny) albo `SCHEMAT.NAZWA`.
     static func resolve(_ raw: String, type: String?, in s: any DatabaseSession) async throws -> DBObject {
         let parts = raw.split(separator: ".", maxSplits: 1).map { String($0).replacingOccurrences(of: "\"", with: "") }
@@ -356,11 +362,11 @@ enum AgentDatabaseCommands {
                                       inMenu: false, feature: "AI-TOOL-001")) { ctx in
                 let cov = ctx.workspace.lastUtplsqlRun?.coverage ?? [:]
                 let filter = ctx.arguments.string("object")?.uppercased()
-                let items: [JSONValue] = cov.filter { filter == nil || $0.key.hasSuffix(filter!) }.sorted { $0.key < $1.key }.map { k, v in
+                let items: [JSONValue] = cov.filter { filter == nil || coverageKey($0.key, matches: filter!) }.sorted { $0.key < $1.key }.map { k, v in
                     .object(["object": .string(k), "percent": .double((v.percent * 10).rounded() / 10),
                              "covered": .array(v.covered.sorted().map { .int(Int64($0)) }), "uncovered": .array(v.uncovered.sorted().map { .int(Int64($0)) })])
                 }
-                return CommandResult(value: .array(items))
+                return CommandResult(value: untrusted(.array(items)))
             },
             Command(CommandDescriptor(id: "agent.sessions", title: L10n.tr("Sesje bazy (agent)"), category: .help,
                                       parameters: [connectionParam], agent: .read, effect: .none,

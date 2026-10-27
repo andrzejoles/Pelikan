@@ -156,13 +156,14 @@ public enum UserTools {
                     let errHandle = err.fileHandleForReading
                     group.enter()
                     DispatchQueue.global(qos: .userInitiated).async {
-                        e.data = errHandle.readDataToEndOfFile()
+                        // readToEnd: błąd odczytu jako błąd Swift (readDataToEndOfFile rzuca wyjątek ObjC — awaria).
+                        e.data = (try? errHandle.readToEnd()) ?? Data()
                         group.leave()
                     }
-                    let o = out.fileHandleForReading.readDataToEndOfFile()
+                    let o = Result { try out.fileHandleForReading.readToEnd() ?? Data() }
                     group.wait()
-                    p.waitUntilExit()
-                    c.resume(returning: RunResult(status: p.terminationStatus, output: String(decoding: o, as: UTF8.self),
+                    p.waitForExit()
+                    c.resume(returning: RunResult(status: p.terminationStatus, output: String(decoding: try o.get(), as: UTF8.self),
                                                   errors: String(decoding: e.data, as: UTF8.self)))
                 } catch {
                     c.resume(throwing: error)

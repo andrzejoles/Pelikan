@@ -83,8 +83,9 @@ extension ConnectionPrompter {
 public final class SessionManager {
     public private(set) var mainConnectionID: UUID?
     private var sessions: [SessionKey: any DatabaseSession] = [:]
-    /// SID i numer instancji sesji (SYS_CONTEXT przy otwarciu) — do zakończenia sesji okna z innej sesji (PD-CONN-027).
-    public private(set) var serverSessionIDs: [SessionKey: (sid: String, instance: String)] = [:]
+    /// SID, numer seryjny i numer instancji sesji (przy otwarciu) — do zakończenia sesji okna z innej sesji (PD-CONN-027).
+    /// Numer seryjny z chwili otwarcia: SID utraconej sesji serwer mógł już przydzielić innej (nil — brak DBMS_DEBUG_JDWP).
+    public private(set) var serverSessionIDs: [SessionKey: (sid: String, serial: String?, instance: String)] = [:]
     /// Sesje okien z włączonym SQL Trace (PD-OPT-008).
     public var sqlTraceEnabled: Set<SessionKey> = []
     /// Ostatnie użycie sesji (zamykanie bezczynnych, PD-CONN-026).
@@ -110,10 +111,13 @@ public final class SessionManager {
     public func touch(_ key: SessionKey, at date: Date = Date()) { lastActivity[key] = date }
 
     /// Zamyka sesje okien bezczynne dłużej niż `minutes` minut, bez otwartej transakcji; zwraca liczbę zamkniętych.
+    /// `busy` — sesje okien, które wykonują polecenie albo mają otwarty kursor wyniku: nie są bezczynne (ich czas
+    /// ostatniego użycia przesuwa się na `now`, więc odliczanie zaczyna się dopiero po zakończeniu).
     @discardableResult
-    public func closeIdleSessions(olderThan minutes: Int, now: Date = Date()) async -> Int {
+    public func closeIdleSessions(olderThan minutes: Int, busy: Set<SessionKey> = [], now: Date = Date()) async -> Int {
         guard minutes > 0 else { return 0 }
         var closed = 0
+        for key in busy where sessions[key] != nil { lastActivity[key] = now }
         for (key, s) in sessions {
             guard case .document = key.purpose, now.timeIntervalSince(lastActivity[key] ?? .distantPast) > Double(minutes * 60) else { continue }
             // Zamykamy tylko sesję, która odpowiada i nie ma otwartej transakcji (decyzję o transakcji podejmuje użytkownik).
@@ -136,6 +140,13 @@ public final class SessionManager {
     @ObservationIgnored private var sessionPasswords: [UUID: String] = [:]
     /// Tunele SSH połączeń (współdzielone przez sesje połączenia).
     @ObservationIgnored public let tunnels = SSHTunnelManager()
+    /// Tunel, przez który połączyła się sesja — zwalniany dokładnie ten (nie wg bieżącej definicji ani nowszego tunelu).
+    @ObservationIgnored private var sessionTunnels: [SessionKey: SSHTunnelManager.Tunnel] = [:]
+    /// Połączenia, dla których właściciel Maca potwierdził w tym uruchomieniu użycie zapisanych haseł (bazy i SSH, D56).
+    @ObservationIgnored private var ownerConfirmed: Set<UUID> = []
+    /// Sprawdzanie połączeń w toku (kolejny przebieg czeka na koniec poprzedniego) i czas ostatniego przebiegu.
+    @ObservationIgnored var connectionCheckRunning = false
+    @ObservationIgnored var lastConnectionCheck = Date()
 
     public init(store: ConnectionStore, drivers: [DriverKind: any DatabaseDriver], settings: @escaping () -> Settings) {
         self.store = store
@@ -260,11 +271,7 @@ public final class SessionManager {
         var password = sessionPasswords[def.id] ?? store.sessionPassword(for: def.id)
         if password == nil, store.hasStoredPassword(for: def.id) {
             // Zapisane hasło: przy włączonej ochronie najpierw Touch ID / hasło Maca (raz na połączenie w sesji aplikacji).
-            if settings().requireOwnerForSavedPasswords {
-                guard await prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
-                    throw CommandError.cancelledByUser
-                }
-            }
+            try await confirmOwner(def)
             password = store.password(for: def.id)
         }
         // Hasło zapisujemy dopiero po udanym połączeniu i tylko gdy użytkownik zaznaczył „Zapamiętaj”.
@@ -284,19 +291,19 @@ public final class SessionManager {
             tags.clientInfo = "Pelikan agent \(id)"
             if let u = def.agent.agentUser?.trimmingCharacters(in: .whitespaces), !u.isEmpty { target.proxyClient = u }
         }
-        var tunnelOpened = false
+        var tunnel: SSHTunnelManager.Tunnel?
         if def.sshTunnel != nil {
-            let tns = TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory))
-            let tunnel = try await tunnels.open(for: def, tns: tns, secret: def.sshTunnel?.usesPassword == true ? store.sshPassword(for: def.id) : nil)
-            tunnelOpened = true
-            guard let rewritten = ConnectStringRewriter.rewrite(def.target.connectString, localPort: tunnel.localPort, tns: tns) else {
-                tunnels.release(def.id)
+            let tns = tnsEntries(for: def)
+            let opened = try await tunnels.open(for: def, tns: tns, secret: try await tunnelSecret(for: def))
+            tunnel = opened
+            guard let rewritten = ConnectStringRewriter.rewrite(def.target.connectString, localPort: opened.localPort, tns: tns) else {
+                tunnels.release(opened, of: def.id)
                 throw DatabaseError.driverUnavailable(L10n.tr("Nie można przepisać connect stringu dla tunelu SSH"))
             }
             target.connectString = rewritten
         }
         var connected = false
-        defer { if tunnelOpened, !connected { tunnels.release(def.id) } }
+        defer { if let tunnel, !connected { tunnels.release(tunnel, of: def.id) } }
         for attempt in 0..<3 {
             do {
                 let s = try await driver.connect(target: target, credentials: credentials, options: ConnectOptions(tags: tags))
@@ -310,6 +317,7 @@ public final class SessionManager {
                 // Nieudana inicjalizacja (skrypt startowy, NLS, Workspace Manager) — sesja zamknięta, tunel zwolniony.
                 do { try await initialize(s, def) } catch { await s.close(); throw error }
                 connected = true
+                if let tunnel { sessionTunnels[key] = tunnel }
                 if credentials.newPassword == nil, let p = password {
                     if rememberOnSuccess { try? store.rememberPassword(p, for: def.id) }
                     sessionPasswords[def.id] = p
@@ -332,10 +340,35 @@ public final class SessionManager {
         throw CommandError.notConnected
     }
 
-    /// Zapamiętuje SID i instancję sesji (bez uprawnień do V$SESSION).
+    /// Zapamiętuje SID, numer seryjny i instancję sesji (bez uprawnień do V$SESSION).
     func recordServerSessionID(_ s: any DatabaseSession, key: SessionKey) async {
         let (_, rows) = (try? await s.queryAll("select sys_context('userenv', 'sid'), sys_context('userenv', 'instance') from dual", limit: 1)) ?? ([], [])
-        if let r = rows.first, let sid = r[0].displayText { serverSessionIDs[key] = (sid, r[1].displayText ?? "1") }
+        guard let r = rows.first, let sid = r[0].displayText else { return }
+        let serial = (try? await s.scalar("select dbms_debug_jdwp.current_session_serial from dual")) ?? nil
+        serverSessionIDs[key] = (sid, serial, r[1].displayText ?? "1")
+    }
+
+    /// Potwierdzenie właściciela Maca przed użyciem zapisanego hasła bazy albo tunelu SSH (D56) — gdy ochrona jest
+    /// włączona, raz na połączenie w tym uruchomieniu (do rozłączenia).
+    private func confirmOwner(_ def: ConnectionDefinition) async throws {
+        guard settings().requireOwnerForSavedPasswords, !ownerConfirmed.contains(def.id) else { return }
+        guard await prompter?.authenticateOwner(reason: L10n.tr("użyć zapisanego hasła połączenia „\(def.displayName)”")) == true else {
+            throw CommandError.cancelledByUser
+        }
+        ownerConfirmed.insert(def.id)
+    }
+
+    /// Hasło tunelu SSH z Pęku kluczy (po potwierdzeniu właściciela, D56); nil — tunel na klucz albo agenta SSH.
+    public func tunnelSecret(for def: ConnectionDefinition) async throws -> String? {
+        guard def.sshTunnel?.usesPassword == true, let secret = store.sshPassword(for: def.id) else { return nil }
+        try await confirmOwner(def)
+        return secret
+    }
+
+    /// Wpisy tnsnames.ora dla połączenia — te same katalogi co lista aliasów w oknie definicji połączenia.
+    public func tnsEntries(for def: ConnectionDefinition) -> [TNSEntry] {
+        TNSNames.load(directories: TNSNames.searchDirectories(configured: def.target.configDirectory,
+                                                              instantClientDirectory: settings().instantClientDirectory))
     }
 
     /// Po połączeniu: Workspace Manager, bieżący schemat, skrypt inicjalizacji połączenia (UG 19.2).
@@ -367,7 +400,7 @@ public final class SessionManager {
         guard let s = sessions.removeValue(forKey: key) else { return }
         Log.connection.debug("Zamknięto sesję \(key.purpose.logLabel, privacy: .public) połączenia \(store.connection(key.connectionID)?.displayName, privacy: .hash)")
         await s.close()
-        if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
+        if let t = sessionTunnels.removeValue(forKey: key) { tunnels.release(t, of: key.connectionID) }
     }
 
     /// Rozłącza wszystkie sesje połączenia (UG 19.1 Disconnect).
@@ -377,11 +410,13 @@ public final class SessionManager {
             await close(key)
         }
         sessionPasswords[connectionID] = nil
+        ownerConfirmed.remove(connectionID)
     }
 
     public func disconnectAll() async {
         for key in Array(sessions.keys) { await close(key) }
         sessionPasswords.removeAll()
+        ownerConfirmed.removeAll()
     }
 
     /// Stan połączenia na liście.
@@ -399,14 +434,19 @@ public final class SessionManager {
     public func dropLost(_ key: SessionKey) -> Bool {
         guard sessions.removeValue(forKey: key) != nil else { return false }
         Log.connection.notice("Utracono połączenie \(store.connection(key.connectionID)?.displayName, privacy: .hash) (sesja \(key.purpose.logLabel, privacy: .public))")
-        if store.connection(key.connectionID)?.sshTunnel != nil { tunnels.release(key.connectionID) }
+        // SID utraconej sesji może dostać inna sesja — „Zakończ sesję okna” nie może jej wskazać.
+        serverSessionIDs[key] = nil
+        sqlTraceEnabled.remove(key)
+        lastActivity[key] = nil
+        if let t = sessionTunnels.removeValue(forKey: key) { tunnels.release(t, of: key.connectionID) }
         return true
     }
 
-    /// Sprawdzenie połączeń (UG 23.1 Check connection): ping sesji głównych; utracone usuwane.
-    public func checkConnections() async -> [SessionKey] {
+    /// Sprawdzenie połączeń (UG 23.1 Check connection): ping sesji głównych i sesji z `also` (okna z otwartą
+    /// transakcją); sesje zajęte (`busy` — ping czekałby w kolejce sesji na koniec polecenia) pomijane; utracone usuwane.
+    public func checkConnections(also: Set<SessionKey> = [], busy: Set<SessionKey> = []) async -> [SessionKey] {
         var lost: [SessionKey] = []
-        for (key, s) in sessions where key.purpose == .main {
+        for (key, s) in sessions where (key.purpose == .main || also.contains(key)) && !busy.contains(key) {
             do { try await s.ping() } catch let e as OracleError where e.isConnectionLost {
                 lost.append(key)
             } catch {}

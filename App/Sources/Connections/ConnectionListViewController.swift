@@ -9,12 +9,25 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
     private let workspace: Workspace
     private let outline = NSOutlineView()
     private var roots: [Node] = []
+    /// Korzenie już pokazane — nowe (np. pierwszy raz „Ostatnie”) są rozwijane, znane zachowują stan użytkownika.
+    private var seenRoots = Set<String>()
 
     final class Node {
         enum Kind { case folder(ConnectionFolder), recent, connection(ConnectionDefinition), window(Document) }
         let kind: Kind
         var children: [Node] = []
+        /// Ścieżka identyfikatorów od korzenia (to samo połączenie bywa w folderze i w „Ostatnich”).
+        var key = ""
         init(_ kind: Kind) { self.kind = kind }
+
+        var localKey: String {
+            switch kind {
+            case .folder(let f): "f:" + f.id.uuidString
+            case .recent: "recent"
+            case .connection(let c): "c:" + c.id.uuidString
+            case .window(let d): "w:" + d.id.description
+            }
+        }
 
         var connectionID: UUID? {
             if case .connection(let c) = kind { return c.id }
@@ -38,7 +51,6 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
         outline.style = .plain
         outline.indentationPerLevel = 16
-        outline.rowHeight = 22
         outline.dataSource = self
         outline.delegate = self
         outline.target = self
@@ -103,9 +115,31 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             n.children = recent.map(connectionNode)
             r.append(n)
         }
+        func assignKeys(_ nodes: [Node], _ prefix: String) {
+            for n in nodes { n.key = prefix + "/" + n.localKey; assignKeys(n.children, n.key) }
+        }
+        assignKeys(r, "")
+        // Nowe węzły przy każdej zmianie okien i sesji — rozwinięcie i zaznaczenie przenoszone po ścieżce (R4-11).
+        var expanded = Set<String>()
+        func collect(_ nodes: [Node]) {
+            for n in nodes where outline.isItemExpanded(n) { expanded.insert(n.key); collect(n.children) }
+        }
+        collect(roots)
+        let selected = Set(outline.selectedRowIndexes.compactMap { (outline.item(atRow: $0) as? Node)?.key })
         roots = r
         outline.reloadData()
-        for n in roots { outline.expandItem(n) }
+        func restore(_ nodes: [Node], root: Bool) {
+            for n in nodes where expanded.contains(n.key) || (root && !seenRoots.contains(n.key)) {
+                outline.expandItem(n)
+                restore(n.children, root: false)
+            }
+        }
+        restore(roots, root: true)
+        seenRoots.formUnion(roots.map(\.key))
+        if !selected.isEmpty {
+            let rows = (0..<outline.numberOfRows).filter { (outline.item(atRow: $0) as? Node).map { selected.contains($0.key) } ?? false }
+            outline.selectRowIndexes(IndexSet(rows), byExtendingSelection: false)
+        }
     }
 
     private func connectionNode(_ c: ConnectionDefinition) -> Node {
@@ -135,6 +169,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         let image = NSImageView()
         let text = NSTextField(labelWithString: "")
         text.lineBreakMode = .byTruncatingTail
+        text.font = InterfaceFonts.shared.body
         cell.imageView = image
         cell.textField = text
         for v in [image, text] {

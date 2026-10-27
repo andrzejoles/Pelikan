@@ -15,6 +15,10 @@ public final class ConnectionStore {
     @ObservationIgnored private var temporary: [UUID: ConnectionDefinition] = [:]
     @ObservationIgnored private let secrets: any SecretStore
     @ObservationIgnored private let fileURL: URL?
+    /// Komunikat o nieczytelnym pliku przy odczycie (plik przeniesiony do kopii `.bad-…`, R6-11) — aplikacja go pokazuje.
+    @ObservationIgnored public private(set) var loadProblem: String?
+    /// Kopia nieczytelnego pliku się nie udała — zapis zablokowany, żeby nie nadpisać oryginału.
+    @ObservationIgnored private var saveBlocked = false
 
     private struct Snapshot: Codable {
         var version = 1
@@ -26,15 +30,22 @@ public final class ConnectionStore {
     public init(fileURL: URL?, secrets: any SecretStore) {
         self.fileURL = fileURL
         self.secrets = secrets
-        if let fileURL, let data = try? Data(contentsOf: fileURL),
-           let snap = try? JSONDecoder.pelikan.decode(Snapshot.self, from: data) {
-            folders = snap.folders
-            connections = snap.connections
+        if let fileURL, let data = try? Data(contentsOf: fileURL) {
+            if let snap = try? JSONDecoder.pelikan.decode(Snapshot.self, from: data) {
+                folders = snap.folders
+                connections = snap.connections
+            } else {
+                // Uszkodzony albo nowszy plik: zachowany obok, zanim pierwszy zapis nadpisze go pustą listą.
+                let (message, preserved) = DamagedFile.preserve(fileURL)
+                loadProblem = message
+                saveBlocked = !preserved
+            }
         }
     }
 
     public func save() throws {
         guard let fileURL else { return }
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         let data = try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections))
         try data.write(to: fileURL, options: [.atomic])
@@ -59,6 +70,7 @@ public final class ConnectionStore {
 
     /// Dodaje lub aktualizuje definicję; hasło (opcjonalne) trafia do Pęku kluczy albo do pamięci sesji.
     public func upsert(_ def: ConnectionDefinition, password: String? = nil) throws {
+        try def.sshTunnel?.validate()
         if let i = connections.firstIndex(where: { $0.id == def.id }) {
             connections[i] = def
         } else {
@@ -164,9 +176,19 @@ public final class ConnectionStore {
         try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections))
     }
 
-    /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie.
+    /// Definicje z pliku importu, które coś uruchamiają przy połączeniu (tunel SSH — proces `ssh`, skrypt
+    /// inicjalizacji — polecenia w bazie): nazwy do ostrzeżenia przed importem z niezaufanego źródła.
+    public static func definitionsRunningCode(in data: Data) throws -> [String] {
+        try JSONDecoder.pelikan.decode(Snapshot.self, from: data).connections
+            .filter { $0.sshTunnel != nil || !$0.initScript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map(\.displayName)
+    }
+
+    /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie. Tunel z hostem albo
+    /// użytkownikiem wyglądającym jak opcja `ssh` odrzuca cały plik.
     public func importDefinitions(_ data: Data) throws -> Int {
         let snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: data)
+        for c in snap.connections { try c.sshTunnel?.validate() }
         var folderMap: [UUID: UUID] = [:]
         let firstImported = folders.count
         for var f in snap.folders {

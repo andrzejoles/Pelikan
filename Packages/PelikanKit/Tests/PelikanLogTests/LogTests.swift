@@ -4,8 +4,8 @@ import Testing
 
 /// Dziennik aplikacji (PL-INFRA-011, D170).
 @Suite struct LogMessageTests {
-    func render(_ m: LogMessage, reveal: Bool = false) -> String {
-        m.render(revealPrivate: reveal) { Log.hash($0, key: [1, 2, 3]) }
+    func render(_ m: LogMessage, names: Bool = false, reveal: Bool = false) -> String {
+        m.render(revealNames: names, revealPrivate: reveal) { Log.hash($0, key: [1, 2, 3]) }
     }
 
     @Test("tekst domyślnie prywatny, liczby i wartości logiczne jawne")
@@ -14,6 +14,28 @@ import Testing
         let m: LogMessage = "Połączono z \(alias) w \(42) ms, ponowienie: \(false)"
         #expect(render(m) == "Połączono z <private> w 42 ms, ponowienie: nie")
         #expect(render(m, reveal: true) == "Połączono z PROD_DB w 42 ms, ponowienie: nie")
+    }
+
+    @Test("R3-02: jawne nazwy odsłaniają tylko skróty nazw, nie treści prywatne (komunikaty ORA-20xxx)")
+    func namesDoNotRevealPrivate() {
+        struct Failure: LogDescribableError {
+            var logPublicDescription: String { "ORA-20001" }
+            var logPrivateDescription: String? { "ORA-20001: Klient Jan Kowalski nie ma limitu" }
+        }
+        let alias = "PROD_DB", shown = "Klient Jan Kowalski"
+        let m: LogMessage = "Polecenie na \(alias, privacy: .hash): \(Failure() as any Error); komunikat: \(shown)"
+        let text = render(m, names: true)
+        #expect(text == "Polecenie na PROD_DB: ORA-20001: <private>; komunikat: <private>")
+        #expect(render(m, names: true, reveal: true).contains("Jan Kowalski"))
+        // Przez ujścia: zwykłe z jawnymi nazwami bez treści, diagnostyczne — wszystko.
+        let regular = MemoryLogSink(), diagnostic = MemoryLogSink(everything: true)
+        var c = Log.Configuration()
+        c.level = .debug
+        c.revealNames = true
+        c.sinks = [regular, diagnostic]
+        Log.emit(.info, LogCategory("test"), { m }, c)
+        #expect(regular.text.contains("PROD_DB") && !regular.text.contains("Kowalski"))
+        #expect(diagnostic.text.contains("Kowalski"))
     }
 
     @Test("jawna, skrót i brak wartości")
@@ -78,7 +100,7 @@ import Testing
     @Test("poziom: niższe wpisy pomijane, treść nie jest budowana")
     func levels() {
         let sink = MemoryLogSink()
-        let c = Log.Configuration(level: .notice, revealPrivate: false, hashKey: [], sinks: [sink])
+        let c = Log.Configuration(level: .notice, revealNames: false, hashKey: [], sinks: [sink])
         var built = 0
         func message(_ t: String) -> LogMessage { built += 1; return "\(t, privacy: .public)" }
         Log.emit(.info, LogCategory("t"), { message("pominięty") }, c)
@@ -91,7 +113,7 @@ import Testing
     @Test("ujście diagnostyczne dostaje wszystko z jawnymi wartościami, zwykłe — według ustawień")
     func diagnosticSink() {
         let regular = MemoryLogSink(), everything = MemoryLogSink(everything: true)
-        let c = Log.Configuration(level: .info, revealPrivate: false, hashKey: [], sinks: [regular, everything])
+        let c = Log.Configuration(level: .info, revealNames: false, hashKey: [], sinks: [regular, everything])
         let name = "HR"
         Log.emit(.debug, LogCategory("t"), { "schemat \(name)" }, c)
         Log.emit(.info, LogCategory("t"), { "schemat \(name)" }, c)
@@ -151,11 +173,6 @@ import Testing
         }
         let current = try String(contentsOf: sink.currentFile, encoding: .utf8)
         #expect(current.contains("wpis 39 "))
-        sink.clear()
-        #expect(sink.files.isEmpty)
-        sink.write(LogEntry(date: Date(), level: .info, category: "t", text: "po wyczyszczeniu"))
-        sink.flush()
-        #expect(sink.files.map(\.lastPathComponent) == ["Test.log"])
     }
 
     @Test("zapis z wielu wątków bez utraty i przeplotu linii")

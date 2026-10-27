@@ -16,7 +16,8 @@ a kompilacja i CI nie zgłaszają ostrzeżeń (D166).
 
 ## Jak sprawdzić
 
-- `make test-unit` — testy bez bazy: pakiet, agent, SSH na lokalnym `sshd`, Pro\*C.
+- `make test-unit` — testy bez bazy i bez SSH: pakiet, agent.
+- `make test-ssh` — testy SSH na lokalnym `sshd` i Pro\*C (każdy zestaw osobno, z limitem czasu — jak w CI).
 - `make testdb && make test` — testy z bazą testową w kontenerze (Oracle Free 26ai + utPLSQL).
 - Dodatkowe środowiska w kontenerach (D156–D159):
   - `scripts/testdb.sh owm` — Workspace Manager;

@@ -63,7 +63,7 @@ struct TestManagerView: View {
         if let i = index {
             Form {
                 TextField(L10n.tr("Nazwa"), text: $testSet.cases[i].name)
-                TextEditor(text: $testSet.cases[i].block).font(.system(size: 12, design: .monospaced)).frame(minHeight: 120)
+                CodeTextEditor(text: $testSet.cases[i].block).frame(minHeight: 120)
                 Section(L10n.tr("Zmienne")) {
                     ForEach($testSet.cases[i].variables) { $v in
                         HStack {
@@ -86,7 +86,7 @@ struct TestManagerView: View {
                     Section(L10n.tr("Wynik")) {
                         Text(r.passed ? L10n.tr("Udany (\(String(format: "%.2f", r.seconds)) s)") : r.failures.joined(separator: "\n"))
                             .foregroundStyle(r.passed ? .green : .red).textSelection(.enabled)
-                        if !r.output.isEmpty { Text(r.output.joined(separator: "\n")).font(.subheadline.monospaced()) }
+                        if !r.output.isEmpty { Text(r.output.joined(separator: "\n")).font(.code) }
                     }
                 }
             }

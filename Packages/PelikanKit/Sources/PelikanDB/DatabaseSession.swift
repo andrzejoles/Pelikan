@@ -75,7 +75,7 @@ public struct ConnectOptions: Sendable {
     /// Rozmiar porcji pobieranej z serwera w jednym przejściu (nie mylić z liczbą wierszy pokazywanych w siatce).
     public var fetchArraySize: UInt32
     public var statementCacheSize: UInt32
-    /// Maksymalna długość LOB pobierana do wartości (reszta na żądanie).
+    /// Maksymalna długość LOB pobierana do wartości (CLOB w znakach, BLOB w bajtach; reszta na żądanie).
     public var lobPrefetchLimit: Int
 
     public init(tags: SessionTags = SessionTags(), fetchArraySize: UInt32 = 500, statementCacheSize: UInt32 = 40,
@@ -221,8 +221,8 @@ public struct ExecuteOptions: Sendable {
     public var autoCommit: Bool
     /// Limit czasu wywołania (ms), 0 = bez limitu (przerwanie ręczne przez `breakExecution`).
     public var callTimeoutMs: UInt32
-    /// Limit pobierania treści LOB (bajty) dla wyników tego polecenia; nil — z opcji połączenia (Large Data Editor
-    /// pobiera całość).
+    /// Limit pobierania treści LOB dla wyników tego polecenia: CLOB/NCLOB w znakach, BLOB/BFILE w bajtach; nil — z opcji
+    /// połączenia (Large Data Editor pobiera całość).
     public var lobLimit: Int?
     /// Liczba wierszy pobieranych naraz dla wyników tego polecenia (także kursorów OUT); nil — z opcji połączenia.
     /// 1 — wiersze potokowe dostępne od razu (zdarzenia reportera utPLSQL czasu rzeczywistego).

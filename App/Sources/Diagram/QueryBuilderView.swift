@@ -174,7 +174,7 @@ struct QueryBuilderView: View {
 
     private var preview: some View {
         ScrollView {
-            Text(model.sql()).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+            Text(model.sql()).font(.code).textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading).padding(6)
         }
         .background(Color(nsColor: .textBackgroundColor))

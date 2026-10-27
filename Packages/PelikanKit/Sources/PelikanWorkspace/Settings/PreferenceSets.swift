@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Zestaw preferencji (UG 23.35, PD-PREF-002): częściowe wartości preferencji (klucz = nazwa pola `Settings`,
 /// wartość = JSON) dla wszystkich połączeń albo dla połączeń pasujących do wzorca.
@@ -125,7 +126,7 @@ public enum PreferenceSets {
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
-        (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
+        (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontSize", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
                              "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeAssistantAutomatic", "codeAssistantDelay",
                              "codeAssistantMatch", "codeAssistantCase", "codeAssistantMinChars", "codeAssistantStandardFunctions",
                              "codeAssistantAllPerLine", "codeAssistantCommaFirst", "autoReplace", "identifierLengthWarning", "editorLigatures",
@@ -135,6 +136,8 @@ public enum PreferenceSets {
         (L10n.tr("Oracle"), ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
                              "confirmCommitRollback", "confirmProductionChanges", "plsqlWarnings", "compiler", "useDBAViews",
                              "debugInfoOnCompile", "debugInfoNever", "debugInfoAlways", "debuggerSkipPackageInit", "debuggerSkipSys", "selectedStatistics", "profilerTimeUnit", "profilerMinShare"]),
+        (L10n.tr("Object Browser"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserDoubleClick",
+                                     "browserDropAction", "browserWorkspaceDrop"]),
         (L10n.tr("Agenci"), ["agent"]),
         (L10n.tr("Narzędzia"), ["sessionQueries", "schedulerReports", "userTools"]),
     ]

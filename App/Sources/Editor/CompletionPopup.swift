@@ -12,6 +12,9 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     private var result: CompletionResult?
     /// Ponowne pobranie podpowiedzi dla bieżącego tekstu i kursora (wynik nil — zamknięcie).
     var requery: (() async -> CompletionResult?)?
+    /// Numer zapytania — odpowiedź dla starszego prefiksu (wolniejsza) nie nadpisze nowszej ani nie otworzy zamkniętej listy.
+    private var generation = 0
+    private var resignObserver: (any NSObjectProtocol)?
 
     var isVisible: Bool { panel.isVisible }
 
@@ -23,9 +26,8 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         panel.hasShadow = true
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        let background = NSVisualEffectView()
-        background.material = .menu
-        background.state = .active
+        // Tło bez vibrancy (D179): tekst listy rysowany zwykłym trybem także w aktywnym oknie.
+        let background = SolidBackgroundView(material: .menu)
         background.wantsLayer = true
         background.layer?.cornerRadius = 6
         background.layer?.masksToBounds = true
@@ -33,7 +35,7 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         c.resizingMask = .autoresizingMask
         table.addTableColumn(c)
         table.headerView = nil
-        table.rowSizeStyle = .small
+        table.rowSizeStyle = .custom
         table.backgroundColor = .clear
         table.dataSource = self
         table.delegate = self
@@ -52,6 +54,8 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     func show(_ r: CompletionResult) {
         guard let tv = textView, let window = tv.window else { return }
         result = r
+        let fonts = InterfaceFonts.shared
+        table.rowHeight = max(AppFonts.rowHeight(for: fonts.code), AppFonts.rowHeight(for: fonts.small)) - 4
         table.reloadData()
         table.selectRowIndexes([0], byExtendingSelection: false)
         table.scrollRowToVisible(0)
@@ -66,9 +70,20 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         panel.setFrame(frame, display: true)
         if panel.parent == nil { window.addChildWindow(panel, ordered: .above) }
         panel.orderFront(nil)
+        // Inne okno aplikacji albo inna aplikacja — lista znika (klawisze trafiałyby już gdzie indziej, R4-13).
+        if resignObserver == nil {
+            resignObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in
+                MainActor.assumeIsolated { self?.close() }
+            }
+        }
     }
 
     func close() {
+        generation += 1
+        if let o = resignObserver {
+            NotificationCenter.default.removeObserver(o)
+            resignObserver = nil
+        }
         guard panel.isVisible else { return }
         panel.parent?.removeChildWindow(panel)
         panel.orderOut(nil)
@@ -93,8 +108,12 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
     /// Po zmianie tekstu przy otwartej liście — nowe zapytanie (zawężenie albo zamknięcie).
     func textChanged() {
         guard panel.isVisible, let requery else { return }
+        generation += 1
+        let current = generation
         Task { @MainActor in
-            if let r = await requery() { self.show(r) } else { self.close() }
+            let r = await requery()
+            guard current == self.generation else { return }
+            if let r { self.show(r) } else { self.close() }
         }
     }
 
@@ -126,7 +145,7 @@ final class CompletionPopup: NSObject, NSTableViewDataSource, NSTableViewDelegat
         let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(item.kind), accessibilityDescription: item.kind.rawValue) ?? NSImage())
         icon.contentTintColor = Self.tint(item.kind)
         let label = NSTextField(labelWithString: item.insertText)
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        label.font = InterfaceFonts.shared.code
         label.lineBreakMode = .byTruncatingTail
         let detail = NSTextField(labelWithString: item.detail)
         detail.font = InterfaceFonts.shared.small

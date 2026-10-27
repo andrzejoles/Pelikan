@@ -48,6 +48,10 @@
 	<string>$(PELIKAN_UPDATE_FEED_URL)</string>
 	<key>SUPublicEDKey</key>
 	<string>$(PELIKAN_SPARKLE_PUBLIC_KEY)</string>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SURequireSignedFeed</key>
+	<true/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUScheduledCheckInterval</key>
@@ -183,7 +187,8 @@
 			<dict/>
 		</dict>
 	</array>
-	<key>UTExportedTypeDeclarations</key>
+	<!-- Rozszerzenia wspólne z innymi narzędziami SQL (.sql, pakiety, programy) — import według zaleceń Apple; eksport tylko dla typów wyłącznie tej aplikacji (.tst, .sqlnb). -->
+	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
@@ -245,6 +250,9 @@
 				</array>
 			</dict>
 		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
 			<string>$(PELIKAN_BUNDLE_ID).test</string>

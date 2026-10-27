@@ -48,7 +48,7 @@ struct TemplatePane: View {
                     }
                 }
             }
-            .listStyle(.sidebar)
+            .listStyle(.plain)
             .contextMenu(forSelectionType: String.self) { ids in
                 if let id = ids.first, !id.hasPrefix("#folder:"), let t = workspace.templates.template(id) {
                     Button(L10n.tr("Wstaw")) { insert(id) }

@@ -256,7 +256,7 @@ struct ToolOutputView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(L10n.tr("Kod wyjścia: \(status)")).font(.uiSecondary).foregroundStyle(status == 0 ? Color.secondary : Color.red)
             ScrollView {
-                Text(text.isEmpty ? L10n.tr("(brak wyjścia)") : text).font(.system(size: 12, design: .monospaced))
+                Text(text.isEmpty ? L10n.tr("(brak wyjścia)") : text).font(.code)
                     .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading).padding(4)
             }
         }
@@ -313,10 +313,10 @@ struct UserToolsView: View {
                 Text(L10n.tr("Blok SQL dla sesji")).tag(UserTool.Kind.session)
             }
             if t.wrappedValue.kind == .external {
-                TextField(L10n.tr("Program (ścieżka albo nazwa)"), text: t.program).font(.system(.body, design: .monospaced))
+                TextField(L10n.tr("Program (ścieżka albo nazwa)"), text: t.program).font(.code)
                 TextField(L10n.tr("Argumenty (każdy w osobnej linii)"), text: Binding(get: { t.wrappedValue.arguments.joined(separator: "\n") },
                                                                                    set: { t.wrappedValue.arguments = $0.components(separatedBy: "\n") }),
-                          axis: .vertical).font(.system(.body, design: .monospaced)).lineLimit(2...8)
+                          axis: .vertical).font(.code).lineLimit(2...8)
                 TextField(L10n.tr("Katalog roboczy"), text: t.workingDirectory)
                 Picker(L10n.tr("Wyjście"), selection: t.output) {
                     Text(L10n.tr("Pomiń")).tag(UserTool.Output.none)
@@ -326,7 +326,7 @@ struct UserToolsView: View {
                 Text(L10n.tr("Program uruchamiany bez powłoki; argumenty nie są cytowane ani interpretowane. Do programu nie trafiają hasła ani dane połączenia — tylko alias."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
             } else {
-                TextField(L10n.tr("Blok SQL"), text: t.sql, axis: .vertical).font(.system(.body, design: .monospaced)).lineLimit(4...12)
+                TextField(L10n.tr("Blok SQL"), text: t.sql, axis: .vertical).font(.code).lineLimit(4...12)
                 Toggle(L10n.tr("Wykonaj od razu"), isOn: t.executeImmediately)
             }
             Toggle(L10n.tr("Zapisz plik okna przed uruchomieniem"), isOn: t.saveBeforeRun)

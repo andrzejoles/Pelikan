@@ -151,6 +151,7 @@ public enum RibbonModel {
                 .small("edit.searchBar", label: L10n.tr("Szukaj w plikach")),
                 .small("project.find", label: L10n.tr("Szukaj w projekcie")),
                 .small("edit.findNext"), .small("edit.findPrevious"),
+                .small("edit.replace"), .small("edit.replaceAll"),
             ]),
             RibbonGroup(L10n.tr("Historia"), [
                 .small("sql.historyBack", label: L10n.tr("Poprzednie polecenie")),

@@ -32,7 +32,8 @@ decyzje, zanim cokolwiek zmienisz.**
 ```sh
 make testdb                 # baza testowa (Colima musi działać: colima start)
 make test                   # wszystkie testy pakietu (integracyjne wymagają bazy)
-make test-unit              # bez bazy
+make test-unit              # bez bazy i bez SSH
+make test-ssh               # SSH na lokalnym sshd i Pro*C, z limitem czasu (jak CI)
 make generate build run     # aplikacja (XcodeGen + xcodebuild)
 scripts/status.py done "…"  # wpis do raportu + regeneracja
 scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze

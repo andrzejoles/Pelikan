@@ -42,6 +42,28 @@ final class ToolWindowController: NSWindowController, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) { Self.open[key] = nil }
 }
 
+/// Połączenie okna narzędzia: ustalone przy otwarciu (`Workspace.toolConnection()` — aktywne okno albo główne),
+/// widoczne w oknie i zmieniane tylko tutaj; wszystkie operacje okna używają go zamiast aktywnego okna z chwili kliknięcia.
+/// `editable: false` — tylko nazwa (okno związane ze sprawdzoną licencją, np. SQL Monitor).
+struct ToolConnectionPicker: View {
+    let workspace: Workspace
+    @Binding var connection: UUID?
+    var editable = true
+
+    var body: some View {
+        if editable {
+            Picker(L10n.tr("Połączenie"), selection: $connection) {
+                if connection == nil { Text(L10n.tr("(brak)")).tag(UUID?.none) }
+                ForEach(workspace.connections.connections) { Text($0.displayName).tag(UUID?.some($0.id)) }
+            }
+            .fixedSize()
+        } else {
+            Text(L10n.tr("Połączenie: \(connection.flatMap { workspace.connections.connection($0)?.displayName } ?? L10n.tr("(brak)"))"))
+                .font(.uiSecondary).foregroundStyle(.secondary)
+        }
+    }
+}
+
 /// Find Database Objects (UG 24.2): kryteria, wyszukiwanie w tle, wyniki z przejściem do linii źródła.
 struct FindObjectsView: View {
     let workspace: Workspace
@@ -66,12 +88,14 @@ struct FindObjectsView: View {
             owner = criteria.owners.joined(separator: ", ")
             textFocused = true
         }
+        // Zamknięcie okna przerywa wyszukiwanie (inaczej zajmowałoby sesję metadanych nawet przez minuty).
+        .onDisappear { task?.cancel() }
     }
 
     private var criteriaForm: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                TextField(L10n.tr("Szukany tekst"), text: $criteria.text).onSubmit { run() }.focused($textFocused)
+                TextField(L10n.tr("Szukany tekst"), text: $criteria.text).onSubmit { if !running { run() } }.focused($textFocused)
                 Button(running ? L10n.tr("Przerwij") : L10n.tr("Szukaj")) { if running { cancel() } else { run() } }
                     .keyboardShortcut(.defaultAction)
                     .disabled(!running && criteria.text.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -147,7 +171,7 @@ struct FindObjectsView: View {
             TableColumn(L10n.tr("Obiekt")) { (h: DatabaseSearchHit) in Text(h.object.owner + "." + h.object.name) }.width(min: 140, ideal: 200)
             TableColumn(L10n.tr("Typ")) { (h: DatabaseSearchHit) in Text(h.object.type.rawValue.lowercased()) }.width(min: 70, ideal: 100)
             TableColumn(L10n.tr("Linia")) { (h: DatabaseSearchHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
-            TableColumn(L10n.tr("Tekst")) { (h: DatabaseSearchHit) in Text(h.text).font(.system(size: 12, design: .monospaced)).lineLimit(1) }
+            TableColumn(L10n.tr("Tekst")) { (h: DatabaseSearchHit) in Text(h.text).font(.code).lineLimit(1) }
         }
         .contextMenu(forSelectionType: DatabaseSearchHit.ID.self) { _ in } primaryAction: { ids in
             if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
@@ -165,19 +189,24 @@ struct FindObjectsView: View {
     }
 
     private func run() {
+        // Jedno wyszukiwanie naraz: Enter w polu w trakcie wyszukiwania nie uruchamia drugiego.
+        guard !running else { return }
         guard let m = workspace.metadata() else { message = L10n.tr("Brak połączenia głównego"); return }
         var c = criteria
         c.owners = owner.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty }
         running = true
         message = L10n.tr("Wyszukiwanie…")
+        task?.cancel()
         task = Task {
             do {
                 let r = try await DatabaseSearch.search(c, metadata: m)
+                guard !Task.isCancelled else { return }
                 hits = r
                 message = L10n.tr("Znaleziono: \(r.count)")
             } catch is CancellationError {
                 message = L10n.tr("Przerwano")
             } catch {
+                guard !Task.isCancelled else { return }
                 message = error.localizedDescription
             }
             running = false

@@ -76,16 +76,16 @@ public enum BuiltinCommands {
     }
 
     /// Zamknięcie okna (UG 23.20, PD-SQLW-024): pytanie o zapis zmian i o otwartą transakcję, zamknięcie sesji okna.
-    /// false — użytkownik anulował.
+    /// false — użytkownik anulował. `askToSave: false` — zmiana workseta: tekst okna jest już w zapisanym worksecie (R6-01).
     @MainActor
-    static func closeDocument(_ doc: Document, in ws: Workspace) async throws -> Bool {
+    static func closeDocument(_ doc: Document, in ws: Workspace, askToSave: Bool = true) async throws -> Bool {
         // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
         // zwykłe wykonanie trzeba najpierw przerwać.
         let debugger = ws.debuggers[doc.id]
         if doc.isExecuting, debugger.map({ [.running, .paused].contains($0.state) }) != true {
             throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” wykonuje polecenie — przerwij wykonanie przed zamknięciem."))
         }
-        let needsSave = doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+        let needsSave = askToSave && doc.isModified && doc.consoleConnectionID == nil && (doc.fileURL != nil || (ws.settings.confirmSaveNewWindows && !doc.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
         if needsSave {
             let choice = await ws.ui?.ask(L10n.tr("Zapisać zmiany w „\(doc.title)”?"), message: L10n.tr("Niezapisane zmiany zostaną utracone."),
                                           buttons: [L10n.tr("Zapisz"), L10n.tr("Nie zapisuj"), L10n.tr("Anuluj")]) ?? 2
@@ -144,6 +144,12 @@ public enum BuiltinCommands {
                     throw CommandError.invalidArgument("path", L10n.tr("plik spoza listy ostatnich"))
                 }
                 try ctx.workspace.openFile(URL(fileURLWithPath: path))
+                return .ok
+            },
+            Command(CommandDescriptor(id: "file.clearRecent", title: L10n.tr("Wyczyść listę ostatnich plików"), category: .file,
+                                      agent: .none, effect: .settings, summary: L10n.tr("Czyści listę ostatnio używanych plików (menu Plik › Ostatnie)."),
+                                      inMenu: false, feature: "PD-SQLW-012")) { ctx in
+                ctx.workspace.settings.recentFiles = []
                 return .ok
             },
             Command(CommandDescriptor(id: "file.save", title: L10n.tr("Zapisz"), category: .file, mac: ["cmd+s"],
@@ -231,13 +237,21 @@ public enum BuiltinCommands {
         return d
     }
 
-    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu — błąd (PD-FILE-003); dla agenta (`run_command`)
+    /// Tekst okna może zmienić komenda: tylko do odczytu (PD-FILE-003) i okno w trakcie wykonania (edytor jest wtedy
+    /// nieedytowalny, jak we wzorcu) — błąd.
+    @MainActor
+    static func checkWritable(_ doc: Document) throws {
+        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        if doc.isExecuting { throw CommandError.notAvailable(L10n.tr("Okno już wykonuje polecenie")) }
+    }
+
+    /// Okno, którego tekst zmienia komenda edycji: tylko do odczytu i w trakcie wykonania — błąd (`checkWritable`); dla agenta (`run_command`)
     /// także bez okna poleceń, jak w narzędziach edytora (PROMPT §7.3). Zmianę agenta zapisuje `recordAgentEdit`.
     @MainActor
     static func editTarget(_ ctx: CommandContext) throws -> Document? {
         guard let doc = editable(ctx.workspace) else { return nil }
         if ctx.invoker.isAgent { _ = try ctx.workspace.agentDocument(nil) }
-        if doc.isReadOnly { throw CommandError.notAvailable(L10n.tr("Okno jest tylko do odczytu")) }
+        try BuiltinCommands.checkWritable(doc)
         return doc
     }
 
@@ -277,6 +291,28 @@ public enum BuiltinCommands {
         return w.isEmpty ? nil : (w.replacingOccurrences(of: "\"", with: ""), a..<b)
     }
 
+    static var replaceParameters: [CommandParameter] {
+        [
+            CommandParameter("pattern", .string, L10n.tr("Szukany tekst (domyślnie ostatnio szukany)")),
+            CommandParameter("replacement", .string, L10n.tr("Tekst zamiany (domyślnie ostatnio użyty)")),
+            CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne")),
+        ]
+    }
+
+    /// Okno i wyszukiwanie dla Zamień / Zamień wszystko (PD-EDIT-008): argumenty nadpisują ostatnie wyszukiwanie, które
+    /// zostaje zapamiętane (F3). Okno tylko do odczytu i okno w trakcie wykonania — błąd (`editTarget`, R4-06).
+    @MainActor
+    static func replaceTarget(_ ctx: CommandContext) throws -> (Document, TextSearch)? {
+        guard let doc = try editTarget(ctx) else { return nil }
+        var search = ctx.workspace.lastSearch ?? TextSearch(pattern: "")
+        if let p = ctx.arguments.string("pattern") { search.pattern = p }
+        if let r = ctx.arguments.string("replacement") { search.replacement = r }
+        if let x = ctx.arguments.bool("regex") { search.regex = x }
+        guard !search.pattern.isEmpty else { throw CommandError.missingArgument("pattern") }
+        ctx.workspace.lastSearch = search
+        return (doc, search)
+    }
+
     @MainActor
     static func findNext(_ ctx: CommandContext, backwards: Bool) throws -> CommandResult {
         guard let doc = editable(ctx.workspace), let search = ctx.workspace.lastSearch else { return .ok }
@@ -305,6 +341,34 @@ public enum BuiltinCommands {
                                       agent: .full, effect: .uiState, summary: L10n.tr("Zaznacza poprzednie wystąpienie ostatnio szukanego tekstu."),
                                       feature: "PD-EDIT-008"),
                     validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in try findNext(ctx, backwards: true) },
+            Command(CommandDescriptor(id: "edit.replace", title: L10n.tr("Zamień"), category: .edit, parameters: replaceParameters,
+                                      agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Zamienia zaznaczone wystąpienie szukanego tekstu i zaznacza następne."), feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
+                guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
+                let before = doc.text
+                if let r = try search.replace(in: doc.text, selection: doc.selectedRange) {
+                    doc.text = r.text
+                    doc.selectedRange = r.range.upperBound..<r.range.upperBound
+                    ctx.workspace.recordAgentEdit(ctx, doc, before: before)
+                }
+                return try findNext(ctx, backwards: false)
+            },
+            Command(CommandDescriptor(id: "edit.replaceAll", title: L10n.tr("Zamień wszystko"), category: .edit,
+                                      parameters: replaceParameters + [CommandParameter("inSelection", .boolean, L10n.tr("Tylko w zaznaczeniu"))],
+                                      agent: .full, effect: .modifiesEditor,
+                                      summary: L10n.tr("Zamienia wszystkie wystąpienia szukanego tekstu w oknie albo w zaznaczeniu."), feature: "PD-EDIT-008"),
+                    validate: { editable($0) != nil && $0.lastSearch != nil }) { ctx in
+                guard let (doc, search) = try replaceTarget(ctx) else { return .ok }
+                let before = doc.text
+                let scope = ctx.arguments.bool("inSelection") == true && !doc.selectedRange.isEmpty ? doc.selectedRange : nil
+                let r = try search.replaceAll(in: doc.text, within: scope)
+                if r.count > 0 {
+                    doc.text = r.text
+                    ctx.workspace.recordAgentEdit(ctx, doc, before: before)
+                }
+                return CommandResult(message: L10n.tr("Zamieniono: \(r.count)"), value: .int(Int64(r.count)))
+            },
             Command(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
                                       parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1)"))],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."), feature: "PD-EDIT-010"),
@@ -520,16 +584,21 @@ public enum BuiltinCommands {
                 guard let doc = ws.activeDocument, let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
                 let key = ws.sessions.key(forDocument: doc.id, connection: conn)
                 guard let id = ws.sessions.serverSessionIDs[key] else { throw CommandError.notAvailable(L10n.tr("Okno nie ma sesji")) }
+                // Tryb Dual/Single: sesja wspólna wszystkich okien połączenia i Object Browsera — pytanie je wymienia.
+                let sharing = ws.documents.filter { ws.sessionKey(for: $0) == key }
                 if let ui = ctx.ui {
-                    guard await ui.ask(L10n.tr("Zakończyć sesję okna?"),
-                                       message: L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną."),
+                    let message = key.purpose == .main
+                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Object Browsera. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
+                        : L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną.")
+                    guard await ui.ask(L10n.tr("Zakończyć sesję okna?"), message: message,
                                        buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 let toolKey = SessionKey(connectionID: conn, purpose: .tool("kill"))
                 let tool = try await ws.sessions.session(toolKey)
                 defer { Task { await ws.sessions.close(toolKey) } }
-                try await SessionKiller.kill(sid: id.sid, instance: id.instance, using: tool)
+                try await SessionKiller.kill(sid: id.sid, serial: id.serial, instance: id.instance, using: tool)
                 doc.isExecuting = false
+                for d in sharing { d.transactionOpen = false }
                 await ws.sessions.close(key)
                 return CommandResult(message: L10n.tr("Sesja \(id.sid) zakończona"))
             },
@@ -673,7 +742,7 @@ public enum BuiltinCommands {
                                       summary: L10n.tr("Zapisuje dziennik aplikacji z opisem środowiska do pliku tekstowego — do zgłoszenia błędu."),
                                       feature: "PL-INFRA-011")) { ctx in
                 let text = ctx.workspace.logExport()
-                let name = "Pelikan-dziennik-" + Date().formatted(.iso8601.year().month().day())
+                let name = AppBrand.name + "-dziennik-" + Date().formatted(.iso8601.year().month().day())
                 if let path = ctx.arguments.string("path") {
                     try Data(text.utf8).write(to: URL(fileURLWithPath: (path as NSString).expandingTildeInPath), options: .atomic)
                     return CommandResult(value: .string(path))

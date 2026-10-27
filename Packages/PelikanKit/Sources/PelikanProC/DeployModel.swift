@@ -268,17 +268,28 @@ public struct ServerHistoryEntry: Sendable, Hashable, Identifiable {
 public final class DeployHistoryStore {
     public private(set) var records: [DeployRecord] = []
     @ObservationIgnored public let directory: URL?
+    /// Komunikat o nieczytelnej historii (przeniesiona do kopii `.bad-…`, R8-08) — aplikacja go pokazuje. Bez niej
+    /// ostrzeżenie „commit nie był wdrożony na UAT” przed PROD nie ma podstaw.
+    @ObservationIgnored public private(set) var loadProblem: String?
+    @ObservationIgnored private var saveBlocked = false
 
     public init(directory: URL?) {
         self.directory = directory
         if let d = directory, let data = try? Data(contentsOf: d.appendingPathComponent("history.json")) {
             let dec = JSONDecoder()
             dec.dateDecodingStrategy = .iso8601
-            records = (try? dec.decode([DeployRecord].self, from: data)) ?? []
+            if let r = try? dec.decode([DeployRecord].self, from: data) {
+                records = r
+            } else {
+                let (message, preserved) = DamagedFile.preserve(d.appendingPathComponent("history.json"))
+                loadProblem = message
+                saveBlocked = !preserved
+            }
         }
     }
 
     public func save(_ r: DeployRecord, log: String?) throws {
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         if let i = records.firstIndex(where: { $0.id == r.id }) { records[i] = r } else { records.insert(r, at: 0) }
         guard let d = directory else { return }
         try FileManager.default.createDirectory(at: d, withIntermediateDirectories: true)

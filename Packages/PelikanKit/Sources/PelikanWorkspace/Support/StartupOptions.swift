@@ -1,4 +1,5 @@
 import Foundation
+import PelikanDB
 
 /// Parametry startowe (UG 37.4, PD-CLI-001): `klucz=wartość` jak we wzorcu, `--klucz[=wartość]`, ścieżki plików
 /// i URL `pelikan://open?…`. Hasła w argumentach nie są obsługiwane (PROMPT §4.2 p.6) — `userid=u/hasło@baza` jest
@@ -144,7 +145,7 @@ extension Workspace {
         if let p = o.project { await step(L10n.tr("Projekt")) { try await invoke("project.open", CommandArguments(["file": .string(p)])) } }
         if let w = o.workset {
             await step(L10n.tr("Workset")) {
-                if worksets.names.contains(w) { try await invoke("workset.open", CommandArguments(["name": .string(w)])) }
+                if worksets.existingName(w) != nil { try await invoke("workset.open", CommandArguments(["name": .string(w)])) }
                 else { try await invoke("workset.new", CommandArguments(["name": .string(w)])) }
             }
         }

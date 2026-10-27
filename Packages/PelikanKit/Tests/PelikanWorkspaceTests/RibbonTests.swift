@@ -93,8 +93,22 @@ struct RibbonTests {
     }
 
     func top(_ query: String, _ n: Int = 3, alternates: [String: [String]] = [:]) -> [String] {
-        let all = ws.registry.descriptors.filter { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") }
+        let all = CommandSearch.userCommands(ws.registry.descriptors)
         return CommandSearch.search(query, in: all, limit: n) { alternates[$0.id.rawValue] ?? [] }.map(\.descriptor.id.rawValue)
+    }
+
+    @Test("wyszukiwanie czynności i paleta: bez komend pomocniczych i agenta; start od pierwszej dostępnej")
+    func userCommandsAndFirstAvailable() {
+        let user = CommandSearch.userCommands(ws.registry.descriptors)
+        #expect(!user.isEmpty)
+        #expect(user.allSatisfy { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") })
+        #expect(ws.registry.descriptors.contains { $0.id.rawValue.hasPrefix("agent.") })
+        #expect(!user.contains { $0.id == "view.addToQuickAccess" })
+        let items = user.filter { ["session.commit", "sql.execute", "file.newIndex"].contains($0.id.rawValue) }
+        #expect(items.count == 3)
+        #expect(CommandSearch.firstAvailable(items) { $0 != items[0].id } == 1)
+        #expect(CommandSearch.firstAvailable(items) { _ in true } == 0)
+        #expect(CommandSearch.firstAvailable(items) { _ in false } == nil)
     }
 
     @Test("wyszukiwanie: bez polskich znaków, po początkach słów, synonimach i nazwach wzorca")

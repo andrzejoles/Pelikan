@@ -164,6 +164,25 @@ enum DebugP2Commands {
                 let n = try ctx.workspace.importBreakpoints(try Data(contentsOf: url), replace: ctx.arguments.bool("replace") ?? false)
                 return CommandResult(message: L10n.tr("Wczytano punkty przerwania: \(n)"), value: .int(Int64(n)))
             },
+            // Przyciski listy punktów przerwania (R4-18) — komendy rejestru (skróty, makra).
+            Command(CommandDescriptor(id: "debug.enableAllBreakpoints", title: L10n.tr("Włącz wszystkie punkty przerwania"), category: .debug,
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Włącza wszystkie punkty przerwania."),
+                                      inMenu: false, feature: "PD-DBG-008")) { ctx in
+                for i in ctx.workspace.breakpoints.indices where !ctx.workspace.breakpoints[i].enabled { ctx.workspace.breakpoints[i].enabled = true }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.disableAllBreakpoints", title: L10n.tr("Wyłącz wszystkie punkty przerwania"), category: .debug,
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Wyłącza wszystkie punkty przerwania (zostają na liście)."),
+                                      inMenu: false, feature: "PD-DBG-008")) { ctx in
+                for i in ctx.workspace.breakpoints.indices where ctx.workspace.breakpoints[i].enabled { ctx.workspace.breakpoints[i].enabled = false }
+                return .ok
+            },
+            Command(CommandDescriptor(id: "debug.removeAllBreakpoints", title: L10n.tr("Usuń wszystkie punkty przerwania"), category: .debug,
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Usuwa wszystkie punkty przerwania."),
+                                      inMenu: false, feature: "PD-DBG-008")) { ctx in
+                ctx.workspace.breakpoints.removeAll()
+                return .ok
+            },
         ]
     }
 }

@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Workflow tylko czyta repozytorium — token bez uprawnień zapisu (repozytorium publiczne).
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -18,6 +22,10 @@ jobs:
     runs-on: xcode-27
     # Zawieszony test nie może blokować runnera godzinami.
     timeout-minutes: 60
+    # Wersja Xcode przypięta: obraz ma kilka (27.0, 27.1, 27.2 RC), a domyślna zmienia się bez zmiany w repo.
+    # Podnosić świadomie, z wpisem w DECISIONS.
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
     steps:
       - uses: actions/checkout@v7
         with:
@@ -38,6 +46,8 @@ jobs:
         # shell: bash = -eo pipefail — inaczej `| tee` ukrywa błąd kompilacji testów.
         shell: bash
         run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
+      - name: Kompilacja pakietu bez ostrzeżeń
+        run: scripts/ci-no-warnings.sh /tmp/swift-test.log
       # Testy SSH na lokalnym sshd: każdy zestaw osobno, z limitem i diagnostyką przy zawieszeniu.
       - name: Testy SSH na lokalnym sshd
         timeout-minutes: 25
@@ -61,7 +71,9 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq libcurl4-openssl-dev >/dev/null
           cd /tmp
-          curl -fsSL -o /tmp/swiftly.tar.gz "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+          # Wersja swiftly i suma SHA-256 przypięte (podnosić razem).
+          curl -fsSL -o /tmp/swiftly.tar.gz https://download.swift.org/swiftly/linux/swiftly-1.2.0-x86_64.tar.gz
+          echo "0b26b568811404374c7d7f07276b6aad4145db5d1893a45f307de6a94ca8d9c3  /tmp/swiftly.tar.gz" | sha256sum -c -
           tar -xzf /tmp/swiftly.tar.gz -C /tmp
           /tmp/swiftly init --quiet-shell-followup --assume-yes --skip-install
           . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
@@ -73,6 +85,7 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq libaio1t64 unzip >/dev/null
           sudo ln -sf /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
           curl -fsSL -o /tmp/ic.zip https://download.oracle.com/otn_software/linux/instantclient/2326400/instantclient-basiclite-linux.x64-23.26.4.0.0.zip
+          echo "d049e593bba0041feb15c14ea894e2f1a437377462b99d9bdb6b7ab30b2dd660  /tmp/ic.zip" | sha256sum -c -
           sudo mkdir -p /opt/oracle && sudo unzip -q /tmp/ic.zip -d /opt/oracle
           sudo ln -sfn "$(ls -d /opt/oracle/instantclient_* | head -1)" /opt/oracle/instantclient
           ls /opt/oracle/instantclient | head
@@ -83,7 +96,11 @@ jobs:
           scripts/testdb.sh owm
       - name: Testy warstwy SQL i bazy
         working-directory: Packages/PelikanKit
+        shell: bash
         run: |
           export LD_LIBRARY_PATH=/opt/oracle/instantclient
           # Testy bazy dzielą jeden schemat — bez równoległości między zestawami.
-          swift test --no-parallel --filter 'PelikanSQLTests|PelikanDBTests'
+          swift test --no-parallel --filter 'PelikanSQLTests|PelikanDBTests' 2>&1 | tee /tmp/swift-test.log
+      # Foundation na Linuksie ma inne adnotacje (np. brak @discardableResult) — ostrzeżenia tylko stąd (D166).
+      - name: Kompilacja pakietu bez ostrzeżeń (Linux)
+        run: scripts/ci-no-warnings.sh /tmp/swift-test.log

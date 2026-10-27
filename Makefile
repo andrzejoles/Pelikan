@@ -4,7 +4,7 @@ DERIVED = build/DerivedData.noindex
 APP = $(DERIVED)/Build/Products/Debug/Pelikan.app
 PKG = Packages/PelikanKit
 
-.PHONY: installer draft-release beta-release generate build release run test test-unit test-integration test-release test-ui testdb report version clean strings
+.PHONY: installer draft-release beta-release generate build release run test test-unit test-ssh test-integration test-release testdb report version clean strings
 
 generate:
 	xcodegen generate --quiet
@@ -20,12 +20,17 @@ release:
 run: build
 	open $(APP)
 
-# Wszystkie testy pakietu: jednostkowe + integracyjne (te drugie wymagają bazy: make testdb).
-test:
-	cd $(PKG) && swift test --skip PelikanDBTests && swift test --no-parallel --filter PelikanDBTests
+# Wszystkie testy pakietu: jednostkowe, SSH i integracyjne (te ostatnie wymagają bazy: make testdb).
+test: test-unit test-ssh test-integration
 
+# Bez bazy i bez SSH — tak jak krok „Testy jednostkowe” w CI.
 test-unit:
-	cd $(PKG) && swift test --skip PelikanDBTests
+	cd $(PKG) && swift test --skip 'PelikanDBTests|PelikanRemoteTests|PelikanProCTests'
+
+# Testy SSH na lokalnym sshd (PelikanRemote, Pro*C): każdy zestaw osobno, z limitem czasu — jak w CI.
+test-ssh:
+	cd $(PKG) && swift build --build-tests
+	scripts/ci-ssh-tests.sh
 
 test-integration:
 	cd $(PKG) && swift test --no-parallel --filter PelikanDBTests
@@ -33,9 +38,6 @@ test-integration:
 # Testy wydajności w konfiguracji Release.
 test-release:
 	cd $(PKG) && PELIKAN_PERF_STRICT=1 swift test -c release -Xswiftc -enable-testing --filter PerformanceTests
-
-test-ui:
-	xcodebuild -project Pelikan.xcodeproj -scheme PelikanUITests -destination 'platform=macOS,arch=arm64' -derivedDataPath $(DERIVED) test -quiet
 
 # Lokalna baza testowa (Oracle Free 26ai w kontenerze) ze schematami i utPLSQL.
 testdb:
@@ -48,8 +50,9 @@ report:
 version:
 	@./scripts/version.sh
 
+# Teksty interfejsu z kodu do String Catalog (potem tłumaczenia: scripts/l10n.py check --strict).
 strings:
-	python3 scripts/gen-strings.py
+	python3 scripts/l10n.py extract
 
 clean:
 	rm -rf build $(PKG)/.build

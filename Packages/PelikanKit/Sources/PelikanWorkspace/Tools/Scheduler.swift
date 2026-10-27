@@ -222,6 +222,21 @@ public enum Scheduler {
         public var id: String { name }
         public init(name: String, condition: String, colors: [ColorRule] = []) { self.name = name; self.condition = condition; self.colors = colors }
 
+        /// Raporty z edytora (PD-SCHED-003): bez pustych i powtórzonych nazw (nazwa wybiera raport), warunek i pola reguł
+        /// przycięte, reguły bez kolumny pominięte.
+        public static func normalized(_ reports: [RunReport]) -> [RunReport] {
+            var seen = Set<String>()
+            return reports.compactMap { r in
+                let name = r.name.trimmingCharacters(in: .whitespaces)
+                guard !name.isEmpty, seen.insert(name).inserted else { return nil }
+                let colors = r.colors.compactMap { c -> ColorRule? in
+                    let column = c.column.trimmingCharacters(in: .whitespaces)
+                    return column.isEmpty ? nil : ColorRule(column: column, value: c.value.trimmingCharacters(in: .whitespaces), color: c.color)
+                }
+                return RunReport(name: name, condition: r.condition.trimmingCharacters(in: .whitespacesAndNewlines), colors: colors)
+            }
+        }
+
         public static var standard: [RunReport] {
             let failed = ColorRule(column: "STATUS", value: "FAILED", color: RGBColor(red: 0.85, green: 0.2, blue: 0.2))
             return [
@@ -266,14 +281,15 @@ public enum Scheduler {
 /// Komendy schedulera.
 @MainActor
 public enum SchedulerCommands {
-    public static func session(_ ws: Workspace) async throws -> (UUID, any DatabaseSession) {
-        guard let conn = ws.activeDocument.flatMap({ ws.effectiveConnection(of: $0) }) ?? ws.sessions.mainConnectionID else { throw CommandError.notConnected }
-        return (conn, try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("scheduler"))))
+    /// Sesja schedulera na wskazanym połączeniu (bez wskazanego — połączenie narzędzia).
+    public static func session(_ ws: Workspace, connection: UUID? = nil) async throws -> (UUID, any DatabaseSession) {
+        guard let conn = connection ?? ws.toolConnection() else { throw CommandError.notConnected }
+        return (conn, try await ws.toolSession("scheduler", connection: conn))
     }
 
     /// Wykonuje polecenie schedulera po strażniku zmian (prod — potwierdzenie, tylko do odczytu — blokada).
-    public static func execute(_ sql: String, in ws: Workspace) async throws {
-        let (conn, s) = try await session(ws)
+    public static func execute(_ sql: String, connection: UUID? = nil, in ws: Workspace) async throws {
+        let (conn, s) = try await session(ws, connection: connection)
         try await ws.guardModification([sql], connectionID: conn)
         _ = try await s.execute(sql)
     }

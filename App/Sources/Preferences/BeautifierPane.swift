@@ -37,7 +37,7 @@ struct BeautifierPane: View {
                 Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.uiSecondary).foregroundStyle(.secondary)
                 ScrollView([.vertical, .horizontal]) {
                     Text(highlighted)
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(.code)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(8)
@@ -51,7 +51,11 @@ struct BeautifierPane: View {
             specialCase = options.specialCase.joined(separator: ", ")
             preview = format(BeautifierExamples.preview, options)
         }
-        .onDisappear(perform: saveSpecialCase)
+        // Pole zapisywane przy każdej zmianie (jak reszta Preferencji), a zmiana z zestawu lub importu odświeża pole.
+        .onChange(of: specialCase) { saveSpecialCase() }
+        .onChange(of: options.specialCase) { _, new in
+            if Self.parseSpecialCase(specialCase) != new { specialCase = new.joined(separator: ", ") }
+        }
         .onChange(of: options) { old, new in
             if let id = Self.changedOption(old, new) { focused = id }
             let next = format(BeautifierExamples.preview, new)
@@ -190,7 +194,6 @@ struct BeautifierPane: View {
             }
             row("specialCase") {
                 TextField(L10n.tr("Pisownia specjalna (po przecinku)"), text: $specialCase, prompt: Text("DBMS_Output, UTL_File"))
-                    .onSubmit(saveSpecialCase)
             }
             Text(L10n.tr("Literały, identyfikatory w cudzysłowie i komentarze nigdy nie są zmieniane."))
                 .font(.uiSecondary).foregroundStyle(.secondary)
@@ -217,7 +220,7 @@ struct BeautifierPane: View {
             Text(title).font(.uiSecondary.bold())
             ScrollView([.vertical, .horizontal]) {
                 Text(text)
-                    .font(.system(size: 12, design: .monospaced))
+                    .font(.code)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .padding(6)
             }
@@ -277,7 +280,13 @@ struct BeautifierPane: View {
         Text(L10n.tr("Pierwsza wielka")).tag(BeautifierOptions.WordCase?.some(.initCap))
     }
 
+    private static func parseSpecialCase(_ text: String) -> [String] {
+        text.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    }
+
+    /// Tekst pola zostaje taki, jak wpisany (spacja po przecinku w trakcie pisania); do ustawień trafia lista.
     private func saveSpecialCase() {
-        workspace.settings.beautifier.specialCase = specialCase.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let list = Self.parseSpecialCase(specialCase)
+        if list != options.specialCase { workspace.settings.beautifier.specialCase = list }
     }
 }

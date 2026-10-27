@@ -105,7 +105,7 @@ enum DebugCommands {
         case .test: return Breakpoint(document: doc.id.raw, line: line)
         case .program:
             // Linia 1 źródła jednostki = linia nagłówka CREATE (unit.line od 0).
-            guard let u = ProgramCompiler.units(in: doc.text).last(where: { $0.line < line }) else { return nil }
+            guard let u = doc.programUnits.last(where: { $0.line < line }) else { return nil }
             return Breakpoint(owner: u.owner, unit: u.name, type: u.type, line: line - u.line)
         default: return nil
         }
@@ -128,8 +128,10 @@ extension Workspace {
         case .test:
             return onlyUnapplied ? [] : Set(breakpoints.filter { $0.document == doc.id.raw }.map(\.line))
         case .program:
+            // Bez punktów przerwania jednostek — bez podziału tekstu (margines rysowany przy każdym klawiszu, R4-01).
+            guard breakpoints.contains(where: { $0.unit != nil && (!onlyUnapplied || unappliedBreakpoints.contains($0.id)) }) else { return [] }
             var out = Set<Int>()
-            for u in ProgramCompiler.units(in: doc.text) {
+            for u in doc.programUnits {
                 for bp in breakpoints where bp.unit == u.name && bp.type == u.type && (!onlyUnapplied || unappliedBreakpoints.contains(bp.id)) {
                     out.insert(u.line + bp.line)
                 }
@@ -151,8 +153,8 @@ extension Workspace {
             return
         }
         guard let type = l.objectType else { return }
-        if let doc = documents.first(where: { $0.kind == .program && ProgramCompiler.units(in: $0.text).contains { $0.name == l.name && $0.type == type } }),
-           let u = ProgramCompiler.units(in: doc.text).first(where: { $0.name == l.name && $0.type == type }) {
+        if let doc = documents.first(where: { $0.kind == .program && $0.programUnits.contains { $0.name == l.name && $0.type == type } }),
+           let u = doc.programUnits.first(where: { $0.name == l.name && $0.type == type }) {
             doc.executionLine = u.line + l.line
             let o = ProgramCompiler.offset(line: u.line + l.line, column: 1, in: doc.text)
             doc.selectedRange = o..<o
@@ -161,7 +163,7 @@ extension Workspace {
         }
         Task {
             try? await openObject(DBObject(owner: l.owner, name: l.name, type: type), line: l.line)
-            if let doc = activeDocument, doc.kind == .program, let u = ProgramCompiler.units(in: doc.text).first(where: { $0.name == l.name && $0.type == type }) {
+            if let doc = activeDocument, doc.kind == .program, let u = doc.programUnits.first(where: { $0.name == l.name && $0.type == type }) {
                 doc.executionLine = u.line + l.line
             }
         }

@@ -89,11 +89,41 @@ struct SSHTargetTests {
         #expect(other.targets.allSatisfy { $0.id != t.id } && other.folders.count == 1)
         #expect(other.targets.allSatisfy { $0.folderID == other.folders[0].id })
         #expect(throws: (any Error).self) { try other.importData(Data("{\"format\":\"x\",\"version\":1,\"folders\":[],\"targets\":[]}".utf8)) }
+        // Cel z cudzego pliku z opcją gita w polu remote — import odrzucony w całości (R8-09).
+        var bad = t
+        bad.remote = "--upload-pack=x"
+        let badFile = SSHTargetStore(fileURL: nil, secrets: MemorySecretStore())
+        try badFile.upsert(bad, secret: nil)
+        let before = other.targets.count
+        #expect(throws: (any Error).self) { try other.importData(try badFile.exportData()) }
+        #expect(other.targets.count == before)
 
         try store.remove(folder: folder.id)
         #expect(store.target(t.id)?.folderID == nil)
         try store.remove(t.id)
         #expect(try secrets.password(for: t.id.uuidString) == nil)
+    }
+
+    @Test("Nieczytelny plik celów i historii wdrożeń: kopia .bad, komunikat, zapis nie nadpisuje oryginału (R8-08)")
+    func damagedFiles() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-ssh-bad-\(UUID().uuidString.prefix(8))")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appendingPathComponent(SSHTargetStore.fileName)
+        try Data(#"{"format":"pelikan-ssh-targets","version":1,"folders":[],"targets":[{"name":"stary"}]}"#.utf8).write(to: file)
+        let store = SSHTargetStore(fileURL: file, secrets: MemorySecretStore())
+        #expect(store.targets.isEmpty && store.loadProblem != nil)
+        try store.upsert(target())
+        let files = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+        let bad = try #require(files.first { $0.hasPrefix(SSHTargetStore.fileName + ".bad-") })
+        #expect(try String(contentsOf: dir.appendingPathComponent(bad), encoding: .utf8).contains("stary"))
+
+        let hist = dir.appendingPathComponent("proc-deploys", isDirectory: true)
+        try FileManager.default.createDirectory(at: hist, withIntermediateDirectories: true)
+        try Data("[{\"id\":".utf8).write(to: hist.appendingPathComponent("history.json"))
+        let history = DeployHistoryStore(directory: hist)
+        #expect(history.records.isEmpty && history.loadProblem != nil)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: hist.path).contains { $0.hasPrefix("history.json.bad-") })
     }
 
     @Test("Sekret bez zapamiętania tylko w pamięci; ochrona D56: bez potwierdzenia właściciela zapisany sekret nie jest użyty")

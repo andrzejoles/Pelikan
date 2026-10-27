@@ -412,7 +412,7 @@ w plikach generowanych są tylko ścieżki. Test na bazie testowej używa portfe
 potwierdził działanie na własnym aliasie (jednorazowa próba `select 'OK' from dual`, bez zapisu danych).
 
 ### D54 · 2026-10-23 — Pro*C przez SSH: założenia do pytań otwartych
-Zakres z `zadanie-pelikan-proc-ssh.md`. Do czasu odpowiedzi właściciela (D1 — bez pytań w trakcie pracy):
+Zakres z `docs/tasks/proc-ssh.md` (dawniej `zadanie-pelikan-proc-ssh.md` w katalogu głównym). Do czasu odpowiedzi właściciela (D1 — bez pytań w trakcie pracy):
 1. Wersja gita na AIX nieznana — skrypty używają `cd` zamiast `git -C` i tylko opcji z gita 1.7; „Testuj” pokazuje
    `git --version`, a skrypty sprawdzają wersję przed użyciem nowszych opcji.
 2. Korzeń repo: osobne pole „katalog working copy” (domyślnie `<baza>/src`); kontrola czystości dotyczy tylko jego,
@@ -1595,7 +1595,7 @@ Właściciel: czcionki w drzewie obiektów są „nierówne, poszarpane”, ład
 po aktywacji. Przyczyna: lewa kolumna (pasek boczny) i wstążka (akcesorium paska tytułu) leżały na półprzezroczystym
 tle `NSVisualEffectView`; w aktywnym oknie tekst na nim jest rysowany trybem vibrancy (mieszanie z tłem bez zwykłego
 wygładzania), co na monitorach bez Retina daje kanciaste, nierówne litery. W nieaktywnym oknie tło staje się jednolite i
-tekst wygląda dobrze. Sprawdzone zrzutem okna przeniesionego na monitor 1× (krok skryptu `debug.moveToScreen`): z
+tekst wygląda dobrze. Sprawdzone zrzutem okna przeniesionego na monitor 1× (krok skryptu `debug.moveToScreen`, usunięty w D182): z
 wymuszonym efektem litery kanciaste, bez — gładkie. Teraz lewa kolumna i wstążka mają własne tło
 (`SolidBackgroundView` — efekt w stałym stanie „nieaktywnym”, materiał paska bocznego i paska tytułu, jasny i ciemny
 tryb bez zmian w kolorach), więc tekst jest zawsze rysowany zwykłym trybem. Antyaliasing i skalowanie były poprawne:
@@ -1623,3 +1623,59 @@ Uwagi właściciela:
 - **Znacznik zwijania kodu:** znak „▸/▾” małą czcionką numerów i bladym kolorem był niemal niewidoczny. Teraz symbol
   strzałki (do 12 pt, pogrubiony, kolor tekstu pomocniczego; zwinięty — kolor akcentu), margines szerszy o 6 pt, obszar
   kliknięcia 16 pt.
+
+### D182 · 2026-10-27 — Trzecia runda przeglądu kodu: stos, ostrzeżenia, spójność i poprawki
+
+Właściciel poprosił o kolejną rundę dogłębnego przeglądu z podziałem na subagentów: najpierw recenzenci (tylko odczyt),
+potem poprawiający. Ośmiu recenzentów: aktualność stosu i zależności, ostrzeżenia budowania i testów (także CI),
+zmiany D170–D181, aplikacja (dwie części), PelikanWorkspace (dwie części), pozostałe moduły i skrypty. Ok. 150
+zgłoszeń, bez krytycznych; dziewięciu poprawiających w osobnych gałęziach, scalonych w jeden PR. Pominięte: 1
+(ostrzeżenia Xcode w akcji wstępnej schematu — kosmetyka z ryzykiem dla numeru wersji), częściowe: kilka (niżej).
+
+- **Stos:** wszystkie zależności SPM, ODPI-C, utPLSQL, Instant Client, XcodeGen i akcje CI w najnowszych wersjach (jak
+  D167). Budowanie aplikacji i pakietu (debug, release, strict concurrency) bez ostrzeżeń; jedyne ostrzeżenie było na
+  Linuksie (ProblemReport) — poprawione, a CI ma bramkę zatrzymującą na każdym ostrzeżeniu kompilatora w pakiecie.
+  Włączone cechy Swift `InferIsolatedConformances`, `ImmutableWeakCaptures`, `MemberImportVisibility`;
+  `NonisolatedNonsendingByDefault` odłożone (przeniosłoby ok. 460 funkcji `nonisolated async` na wątek główny —
+  wymaga audytu z `@concurrent`). swift-tools 6.3, Xcode w CI przypięty (27.1), token CI tylko do odczytu, sumy SHA-256
+  pobrań, środowisko testowe na Alpine 3.24 i Swift 6.4. Sparkle wymaga podpisanego kanału i weryfikuje aktualizację
+  przed rozpakowaniem (generate_appcast podpisuje kanał sam). Dependabot — nie (otwierałby PR-y samodzielnie).
+- **Testy SSH:** zawieszanie w `TestSSHD.deinit` (`waitUntilExit` na wątku puli) było przyczyną czerwonych przebiegów CI;
+  serwery testowe kończą się teraz z limitem czasu, `make test` uruchamia testy jak CI, a skrypt testów SSH nie dotyka
+  procesów testów innych projektów.
+- **Worksety (D176):** okna workseta nieotwartego przy starcie (`noloaddesktop`, `workset=`) nie są nadpisywane
+  autozapisem, pliki z Findera otwierane przy starcie czekają na przywrócenie workseta; zmiana workseta zamyka okna
+  drogą Zamknij (transakcja, wykonanie, debuger; Anuluj przerywa); format pliku (kodowanie, BOM, CRLF) w worksecie;
+  nazwy bez rozróżniania wielkości liter. Nieczytelne pliki danych (połączenia, worksety, cele SSH, historia wdrożeń) są
+  odkładane jako `<plik>.bad-<data>` z komunikatem zamiast cichego nadpisania.
+- **Sesje i transakcje:** flaga „transakcja otwarta” odczytywana z sesji po oknie testu, debugerze i notatniku; utrata
+  sesji zeruje ją tylko w oknach tej sesji; polecenia z niejawnym COMMIT w sesji kompilacji; test linku bazy w osobnej
+  sesji. Tunel SSH: host i użytkownik walidowane jak w Pro*C, cel po `--` (wcześniej `-oProxyCommand=…` w polu hosta
+  uruchamiał polecenie), hasło SSH z Touch ID (D56). „Zakończ sesję okna” zabija parę SID+SERIAL# z chwili połączenia,
+  Kill i akcje przeglądarki sesji przez strażnika zmian. Okno jest „wykonujące” od F8, przed pytaniami i łączeniem.
+- **Agent AI i prywatność:** połączenia tymczasowe z CONNECT w Oknie poleceń (także AS SYSDBA) poza zasięgiem agenta;
+  raport, źródło przenoszenia i eksport zadania lokalnego wykonują tylko zapytanie, sprawdzane przed wykonaniem.
+  Dziennik (D170): przełącznik odsłania tylko nazwy (`.hash`), nigdy treści komunikatów; zgłoszenie usterki (D173)
+  pokazuje komunikat błędu do edycji albo pominięcia. Raport pokrycia utPLSQL w oknie aplikacji bez JavaScriptu
+  i zasobów z sieci (eksport do pliku dla przeglądarki — świadomie z zasobami utPLSQL).
+- **Dane:** format własny i Kopiowanie schematu zachowują strefę TIMESTAMP WITH TIME ZONE, wartości nieprzenoszalne
+  przerywają z błędem (zasada D168); kolumny wirtualne, INVISIBLE i identity ALWAYS obsłużone w eksporcie, imporcie,
+  porównaniu i przenoszeniu; Recreate table sprawdza liczbę wierszy kopii przed DROP; import z „Utwórz” wykonuje tylko
+  DDL tej tabeli, w schemacie docelowym; nazwy w cudzysłowie bez zmiany wielkości liter; JAVA SOURCE z poprawnym
+  nagłówkiem; filtr `%nazwa%` (D175) we wszystkich folderach; zapis okna zachowuje dowiązanie i uprawnienia.
+- **Sterowniki:** thin czytał CLOB tylko do ok. 32 600 znaków bez znacznika obcięcia (OracleNIO przesuwa pozycję
+  w bajtach, a CLOB liczy znaki) — teraz jednym żądaniem do limitu w znakach; thin bez OOB (oracle-nio #124: 19c z OOB
+  bez FastAuth zrywał połączenie; przerwania thin i tak nie ma); TSTZ ze strefą nazwaną jako UTC z oznaczeniem (tablica
+  regionów Oracle nie jest dostępna — częściowo). ODPI: kursory zagnieżdżone `CURSOR(…)` bez ORA-01000. Podział skryptu
+  w Command Window liniowy (8000 poleceń: 7,2 s → 0,26 s). Most MCP i serwer agenta nie gubią odpowiedzi po EOF.
+- **Edytor i interfejs:** okno programu dzieli tekst na jednostki raz na zmianę (wcześniej przy każdym rysowaniu
+  marginesu); Znajdź i zamień, To-Do, historia i komendy edycji odmawiają w oknie tylko do odczytu i w trakcie
+  wykonania; pola kodu bez „inteligentnych” cudzysłowów (`'abc'` → `‘abc’` dawało ORA-00911). Wysokości wierszy drzew,
+  list i wstążki z czcionki (D178), pozostałe listy bez vibrancy (D179), jedna czcionka kodu w podglądach; paleta
+  komend i „Szukaj czynności” z tymi samymi kandydatami, bez wykonywania niedostępnych; czynności dostępne tylko
+  z jednego miejsca interfejsu są komendami rejestru. Okna narzędzi ustalają połączenie przy otwarciu i je pokazują.
+
+Częściowo / świadomie bez zmian: sortowanie siatki kliknięciem nagłówka nie jest komendą; etykiety kanwy Query
+Buildera stałe jak w diagramie; File Browser listuje katalogi synchronicznie; przeglądarka różnic nie przewija sama do
+zmiany w linii; wspólny pasek stanu okien SQL/Program/Test — refaktoryzacja poza zakresem; ORDS i XcodeGen w CI bez
+przypięcia wersji (brak wersjonowanych adresów).

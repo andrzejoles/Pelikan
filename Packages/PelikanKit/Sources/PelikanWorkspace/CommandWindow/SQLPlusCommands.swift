@@ -5,7 +5,9 @@ import PelikanSQL
 /// Błąd polecenia SQL*Plus (komunikat w stylu SP2-…).
 public struct SQLPlusError: Error, LocalizedError, Sendable {
     public var message: String
-    public init(_ message: String) { self.message = message }
+    /// Błąd systemu operacyjnego (plik skryptu, SPOOL) — działanie wg WHENEVER OSERROR, nie SQLERROR.
+    public var isOSError: Bool
+    public init(_ message: String, osError: Bool = false) { self.message = message; self.isOSError = osError }
     public var errorDescription: String? { message }
 }
 
@@ -101,11 +103,10 @@ extension SQLPlusEngine {
             try await describe(name)
         case "WHENEVER":
             guard upper.first == "SQLERROR" || upper.first == "OSERROR" else { throw SQLPlusError(L10n.tr("SP2-0591: Nieznane polecenie WHENEVER.")) }
-            if upper.dropFirst().first == "EXIT" {
-                state.whenever = .exit(commit: upper.contains("COMMIT"))
-            } else {
-                state.whenever = .continue
-            }
+            // Osobno dla błędów SQL i systemu operacyjnego (R7-15): `whenever oserror continue` nie wyłącza przerywania
+            // na błędach SQL, a `whenever oserror exit` nie zaczyna przerywać na nich.
+            let action: SQLPlusState.Whenever = upper.dropFirst().first == "EXIT" ? .exit(commit: upper.contains("COMMIT")) : .continue
+            if upper.first == "OSERROR" { state.wheneverOS = action } else { state.whenever = action }
         case "CONNECT":
             try await connect(args)
         case "DISCONNECT":
@@ -423,7 +424,7 @@ extension SQLPlusEngine {
         if (path as NSString).pathExtension.isEmpty { path += ".sql" }
         let url = resolve(path, baseDirectory: cmd == "@@" ? baseDirectory : nil)
         guard let data = FileManager.default.contents(atPath: url.path) else {
-            throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(url.lastPathComponent)”."))
+            throw SQLPlusError(L10n.tr("SP2-0310: Nie można otworzyć pliku „\(url.lastPathComponent)”."), osError: true)
         }
         guard depth < 20 else { throw SQLPlusError(L10n.tr("SP2-0309: Zbyt głębokie zagnieżdżenie skryptów.")) }
         let script = String(decoding: data, as: UTF8.self)
@@ -449,7 +450,7 @@ extension SQLPlusEngine {
             let append = args.dropFirst().contains { $0.uppercased() == "APPEND" || $0.uppercased() == "APP" }
             if !append || !FileManager.default.fileExists(atPath: url.path) {
                 guard FileManager.default.createFile(atPath: url.path, contents: Data()) else {
-                    throw SQLPlusError(L10n.tr("SP2-0606: Nie można utworzyć pliku SPOOL „\(url.path)”."))
+                    throw SQLPlusError(L10n.tr("SP2-0606: Nie można utworzyć pliku SPOOL „\(url.path)”."), osError: true)
                 }
             }
             state.spoolURL = url

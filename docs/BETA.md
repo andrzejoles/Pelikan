@@ -1,11 +1,35 @@
 # Pelikan — wydanie beta
 
-Siódma beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0, 9.7.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
+Kolejna beta do testów na prawdziwych bazach (poprzednie: 7.9.0, 8.4.0, 8.7.0, 9.0.0, 9.2.0, 9.7.0, 10.0.0–10.3.0). Wszystkie etapy planu (0–8 i Pro\*C) są zrobione, macierz funkcji
 ma ponad 400 pozycji potwierdzonych testami albo zrzutami ekranu, a Pelikan przeszedł próbę tylko do odczytu na dużej
 bazie produkcyjnej (Oracle 19c, dziesiątki tysięcy obiektów, setki tysięcy linii PL/SQL). To nadal beta: zachowania
 mogą się zmieniać, a nieznane błędy — zdarzać.
 
-## Co nowego od 9.7.0
+## Co nowego po trzecim przeglądzie kodu (D182)
+
+- **Bezpieczniejsze okna po ponownym uruchomieniu** — otwarcie pliku z Findera przy starcie nie gubi już niezapisanych
+  okien poprzedniej sesji; zmiana workseta pyta o niezatwierdzoną transakcję.
+- **Transakcje** — Zatwierdź/Wycofaj i pytanie przy zamykaniu działają też po oknie testu, debugerze i notatniku.
+- **Dane** — kopiowanie tabel zachowuje strefę czasową, za duży LOB przerywa operację zamiast cicho uciąć wartość,
+  kolumny wirtualne, niewidoczne i identity są obsłużone; sterownik thin czyta duże CLOB-y w całości.
+- **Edytor** — szybsze okno programu przy dużych pakietach; pola kodu w oknach dialogowych nie zamieniają apostrofów
+  na „inteligentne” cudzysłowy.
+- **Spójny wygląd** — wysokość wierszy drzew, list i wstążki rośnie z czcionką interfejsu; pozostałe listy bez efektu
+  przezroczystości; okna narzędzi pokazują, na którym połączeniu działają.
+- **Bezpieczeństwo** — agent AI nie korzysta z tymczasowych połączeń Okna poleceń, dziennik nie odsłania treści
+  komunikatów, aktualizacje wymagają podpisanego kanału.
+
+## Co nowego w 10.1.0–10.3.0
+
+- **Gładki tekst na monitorach bez Retina** — lewy panel i wstążka bez efektu przezroczystości i „płynnego szkła”;
+  wstążka biegnie przez całą szerokość okna, a lewy panel zaczyna się pod nią, jak w PL/SQL Developerze (D179, D180).
+- **Pakiety i typy w jednym oknie** — Edytuj na ciele pakietu albo typu otwiera je razem ze specyfikacją (karta ciała
+  aktywna); obiekt bez ciała ma jedną kartę (D181).
+- **Wyraźniejsze drzewa** — zawartość kodu, przeglądarka obiektów i lista połączeń wcinają kolejne poziomy o 16 pt (D181).
+- **Widoczny znacznik zwijania kodu** — większa strzałka w marginesie, zwinięty blok w kolorze akcentu, większy obszar
+  kliknięcia (D181).
+
+## Co nowego w 10.0.0
 
 - **Okna wracają po ponownym uruchomieniu** — wszystkie rodzaje (także plan, diagram, notatnik, raport i konsole); okno
   bez pliku wraca z tekstem jako okno bez pliku, oznaczone jako niezapisane. Włącznik: Preferencje › Ogólne › Pliki (D176).

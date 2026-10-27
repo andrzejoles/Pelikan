@@ -1,10 +1,17 @@
 import Foundation
+import PelikanDB
 
 /// Reguła wskaźnika połączenia (Connection Indicators, PD-CONN-005): wzorzec `user@baza` (`*`, `?`) i kolor.
-public struct ConnectionIndicator: Sendable, Codable, Hashable {
+/// `id` tylko do wierszy Preferencji (wiązanie po identyfikatorze, nie indeksie) — nie trafia do pliku ani do porównań.
+public struct ConnectionIndicator: Sendable, Codable, Hashable, Identifiable {
+    public var id = UUID()
     public var pattern: String
     public var color: RGBColor
     public init(pattern: String, color: RGBColor) { self.pattern = pattern; self.color = color }
+
+    private enum CodingKeys: String, CodingKey { case pattern, color }
+    public static func == (a: Self, b: Self) -> Bool { a.pattern == b.pattern && a.color == b.color }
+    public func hash(into h: inout Hasher) { h.combine(pattern); h.combine(color) }
 }
 
 /// Kolejność listy okien (PD-UI-002).

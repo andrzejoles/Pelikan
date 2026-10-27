@@ -13,7 +13,7 @@ struct AgentsPane: View {
                 ForEach(profiles) { $p in
                     HStack {
                         TextField(L10n.tr("Nazwa"), text: $p.name).frame(width: 150)
-                        TextField(L10n.tr("Polecenie"), text: $p.executable).font(.system(.body, design: .monospaced)).frame(width: 130)
+                        TextField(L10n.tr("Polecenie"), text: $p.executable).font(.code).frame(width: 130)
                         Picker(L10n.tr("Konfiguracja MCP jak"), selection: $p.flavor) {
                             ForEach(AgentFlavor.allCases, id: \.self) { Text(flavorName($0)).tag($0) }
                         }

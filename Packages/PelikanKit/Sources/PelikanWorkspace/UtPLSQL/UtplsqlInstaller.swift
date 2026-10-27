@@ -51,7 +51,7 @@ public enum UtplsqlInstaller {
         tar.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
         tar.arguments = ["-xzf", file.path, "-C", dir.path]
         try tar.run()
-        tar.waitUntilExit()
+        await tar.waitForExitAsync(timeout: 300)
         guard tar.terminationStatus == 0, FileManager.default.fileExists(atPath: source.appendingPathComponent("install.sql").path) else {
             throw CommandError.notAvailable(L10n.tr("Nie udało się rozpakować archiwum utPLSQL"))
         }

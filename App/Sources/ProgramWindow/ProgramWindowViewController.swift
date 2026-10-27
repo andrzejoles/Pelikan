@@ -5,7 +5,7 @@ import PelikanWorkspace
 /// Program Window (UG 4): karty jednostek (specyfikacja, ciało…) nad edytorem — przejście do jednostki, edytor kodu,
 /// lista błędów i ostrzeżeń kompilacji (klik = przejście do linii), wskaźniki: niebieski — zmieniony niezapisany,
 /// żółty — zmieniony nieskompilowany (UG 4.3). F8 kompiluje wszystkie jednostki.
-final class ProgramWindowViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate {
+final class ProgramWindowViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, DocumentContentController {
     private let document: Document
     private let workspace: Workspace
     private var editor: CodeEditorView!
@@ -50,7 +50,6 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
             self.view.window?.makeFirstResponder(self.editor.textView)
         }
-        hierarchyLabel.font = InterfaceFonts.shared.small
         hierarchyLabel.textColor = .secondaryLabelColor
         hierarchyLabel.lineBreakMode = .byTruncatingHead
         hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -67,7 +66,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             messages.addTableColumn(c)
         }
         messages.usesAlternatingRowBackgroundColors = true
-        messages.rowSizeStyle = .small
+        messages.rowSizeStyle = .custom
         messages.dataSource = self
         messages.delegate = self
         messages.target = self
@@ -76,7 +75,6 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         messagesScroll.documentView = messages
         messagesScroll.hasVerticalScroller = true
 
-        caretLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .regular)
         caretLabel.textColor = .secondaryLabelColor
         modifiedDot.textColor = .systemBlue
         modifiedDot.toolTip = L10n.tr("Zmieniony, niezapisany")
@@ -100,7 +98,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             barContainer.topAnchor.constraint(equalTo: editorPane.topAnchor),
             barContainer.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
             barContainer.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
-            barContainer.heightAnchor.constraint(equalToConstant: 26),
+            barContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 26),
+            { let c = barContainer.heightAnchor.constraint(equalTo: unitBar.heightAnchor); c.priority = .defaultHigh; return c }(),
             unitBar.leadingAnchor.constraint(equalTo: barContainer.leadingAnchor),
             unitBar.centerYAnchor.constraint(equalTo: barContainer.centerYAnchor),
             editor.topAnchor.constraint(equalTo: barContainer.bottomAnchor),
@@ -135,6 +134,17 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
         tokens.append(trackChanges { [weak self] in self?.refreshMessages() })
         tokens.append(trackChanges { [weak self] in self?.refreshIndicators() })
+        tokens.append(trackChanges { [weak self] in self?.applyInterfaceFont() })
+    }
+
+    /// Czcionka interfejsu z Preferencji (D178): pasek okna, karty jednostek i lista komunikatów — także po zmianie.
+    private func applyInterfaceFont() {
+        let small = InterfaceFonts.shared.small
+        hierarchyLabel.font = small
+        caretLabel.font = .monospacedDigitSystemFont(ofSize: small.pointSize, weight: .regular)
+        for case let b as NSButton in unitBar.arrangedSubviews { b.font = small }
+        messages.rowHeight = AppFonts.rowHeight(for: small)
+        messages.reloadData()
     }
 
     private var didPositionContents = false
@@ -171,6 +181,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             let units = ProgramCompiler.units(in: text)
             await MainActor.run { [weak self] in
                 guard let self, self.document.text == text else { return }
+                // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
+                self.document.cacheProgramUnits(units, forText: text)
                 self.apply(outline: outline, units: units)
             }
         }

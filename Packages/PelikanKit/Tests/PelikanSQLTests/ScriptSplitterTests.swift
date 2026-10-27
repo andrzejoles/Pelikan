@@ -1,3 +1,4 @@
+import Foundation
 import PelikanSQL
 import Testing
 
@@ -105,6 +106,56 @@ struct ScriptSplitterTests {
         #expect(s[2].text.contains("FORMAT A20"))
         #expect(s[4].text == "select 1 from dual")
         #expect(s[5].category == .transactionControl)
+    }
+
+    @Test("Command Window: po linii SQL*Plus z apostrofem reszta dzielona jak osobny skrypt (komentarze, teksty, q'…', bloki)")
+    func commandWindowRelex() {
+        let tail = """
+        /* komentarz z apostrofem ' w
+           dwóch liniach */
+        insert into t values ('wiele
+        linii; z średnikiem', q'[it's]');
+        PROMPT It's me
+        begin
+          null; -- don't
+        end;
+        /
+        select 'x' from dual;
+        PROMPT a 'b
+        PROMPT c' d
+        select 2 from dual;
+        """
+        for head in ["PROMPT Don't panic\n", "set feedback off\nPROMPT Ala's\n", "REM it's\nPROMPT q'[\n"] {
+            let all = ScriptSplitter.split(head + tail, mode: .commandWindow)
+            let firstLines = head.filter { $0 == "\n" }.count
+            let rest = ScriptSplitter.split(tail, mode: .commandWindow)
+            let shift = head.utf16.count
+            #expect(all.count == firstLines + rest.count || all.count == firstLines - 1 + rest.count)
+            let tailPart = Array(all.suffix(rest.count))
+            #expect(tailPart.map(\.text) == rest.map(\.text))
+            #expect(tailPart.map(\.sqlplusCommand) == rest.map(\.sqlplusCommand))
+            #expect(tailPart.map(\.isPLSQL) == rest.map(\.isPLSQL))
+            #expect(tailPart.map { $0.start - shift } == rest.map(\.start))
+            #expect(tailPart.map { $0.line - firstLines } == rest.map(\.line))
+        }
+        let s = ScriptSplitter.split("PROMPT Don't panic\n" + tail, mode: .commandWindow)
+        #expect(s.map(\.sqlplusCommand) == ["PROMPT", nil, "PROMPT", nil, nil, "PROMPT", "PROMPT", nil])
+        #expect(s[1].text.hasPrefix("/* komentarz") && s[1].text.hasSuffix("q'[it's]')"))
+        #expect(s[3].isPLSQL && s[3].text.hasSuffix("end;"))
+    }
+
+    @Test("Command Window: 8000 poleceń (PROMPT + INSERT) dzielone liniowo, także z apostrofami w PROMPT")
+    func commandWindowPerformance() {
+        let strict = ProcessInfo.processInfo.environment["PELIKAN_PERF_STRICT"] == "1"
+        for prompt in ["Tabela", "Don't"] {
+            var script = ""
+            for i in 0..<4000 { script += "PROMPT \(prompt) \(i)\ninsert into log_tab (id, txt) values (\(i), 'wiersz \(i)');\n" }
+            let clock = ContinuousClock()
+            var count = 0
+            let t = clock.measure { count = ScriptSplitter.split(script, mode: .commandWindow).count }
+            #expect(count == 8000)
+            #expect(t < (strict ? .milliseconds(300) : .seconds(3)), "\(prompt): \(t)")
+        }
     }
 
     @Test("Polecenie pod kursorem")

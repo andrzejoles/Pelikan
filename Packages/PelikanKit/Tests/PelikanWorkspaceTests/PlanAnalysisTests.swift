@@ -82,6 +82,11 @@ struct PlanAnalysisTests {
     @Test("Dokumentacja: znaki HTML i nazwy plików")
     func docHelpers() {
         #expect(SchemaDoc.esc("<a & \"b\">") == "&lt;a &amp; &quot;b&quot;&gt;")
-        #expect(SchemaDoc.fileName("PACKAGE BODY", "Emp$Api") == "package_body-emp_api.html")
+        #expect(SchemaDoc.fileName("PACKAGE BODY", "EMP_API") == "package_body-emp_api.html")
+        let special = SchemaDoc.fileName("PACKAGE BODY", "Emp$Api")
+        #expect(special.hasPrefix("package_body-emp_api-") && special.hasSuffix(".html"))
+        // Nazwy różniące się wielkością liter albo znakiem specjalnym — różne pliki (R7-20).
+        let names = ["EMP", "Emp", "emp", "A$B", "A#B", "A_B"].map { SchemaDoc.fileName("TABLE", $0) }
+        #expect(Set(names).count == names.count)
     }
 }

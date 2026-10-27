@@ -11,6 +11,9 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
 - Każda jednostka pliku ma własną kartę (np. specyfikacja i ciało pakietu). Przycisk **+** obok kart albo **Plik ›
   Okno programu › Dodaj jednostkę…** dodaje jednostkę z szablonu (procedura, funkcja, pakiet, typ, wyzwalacz, źródło
   Java, moduł MLE) z formularzem nazw i parametrów. **Usuń jednostkę** usuwa kartę z tekstu (obiekt w bazie zostaje).
+- **Edytuj** na pakiecie albo typie — także na jego ciele z folderów „Ciała pakietów” i „Ciała typów” — otwiera
+  specyfikację i ciało w jednym oknie na dwóch kartach (otwarte z ciała: aktywna karta ciała). Obiekt bez ciała ma
+  jedną kartę.
 - **F8** (⌘↩) kompiluje wszystkie jednostki po kolei i zatrzymuje się na pierwszej z błędem. Kompilacja odbywa się w
   osobnej sesji w tle, więc nie blokuje okien SQL.
 - Błędy i ostrzeżenia kompilatora pojawiają się pod edytorem. Kliknięcie przenosi do linii, dwuklik otwiera opis błędu
@@ -79,6 +82,8 @@ kilkadziesiąt tysięcy linii.
 | Dodaj kursor powyżej / poniżej | ⌃⇧↑ / ⌃⇧↓ | Edycja › Wiele kursorów |
 | Powiększ / pomniejsz czcionkę | ⌘= / ⌘− | Widok |
 
+- **Zwijanie kodu**: strzałka w marginesie obok numerów linii zwija i rozwija blok (zwinięty blok — strzałka
+  w kolorze akcentu, a w tekście „⋯” z podglądem zwiniętego kodu w podpowiedzi).
 - **Wiele kursorów**: ⌥+klik dodaje kursor, Esc zostawia jeden. **Zaznaczenie kolumnowe**: przeciągnij z ⌥ — pisanie,
   Backspace i wklejanie działają we wszystkich liniach naraz.
 - **Znajdź i zamień** obsługuje wyrażenia regularne (z `$1`), całe słowa, wielkość liter, zachowanie wielkości liter i

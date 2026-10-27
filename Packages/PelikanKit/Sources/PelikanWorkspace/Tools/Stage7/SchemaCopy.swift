@@ -137,7 +137,15 @@ public enum SchemaCopy {
             switch step.phase {
             case .data:
                 guard !skippedTables.contains(o.name) else { continue }
-                let data = try await TableTransfer.exportNative([o.name], owner: sourceOwner, whereClause: options.whereClause, includeDDL: false, in: source)
+                // Wartość nieprzenoszalna (LOB ponad limit odczytu, obiekt, BFILE): błąd tabeli w raporcie, bez żadnego
+                // wiersza w celu — nigdy obcięta albo zmieniona wartość.
+                let data: Data
+                do {
+                    data = try await TableTransfer.exportNative([o.name], owner: sourceOwner, whereClause: options.whereClause, includeDDL: false, in: source)
+                } catch let error as CommandError {
+                    report.errors.append("\(o.name): \(error.localizedDescription)")
+                    continue
+                }
                 var io = TableImportOptions()
                 io.create = false
                 io.commitEvery = options.commitEvery

@@ -28,7 +28,7 @@ struct UsagesView: View {
                 TableColumn(L10n.tr("Rodzaj")) { (h: UsageHit) in Text(Self.kindText(h.kind)) }.width(min: 70, ideal: 90)
                 TableColumn(L10n.tr("Miejsce")) { (h: UsageHit) in Text(h.title + (h.type.map { " (\($0.lowercased()))" } ?? "")) }.width(min: 140, ideal: 220)
                 TableColumn(L10n.tr("Linia")) { (h: UsageHit) in Text(h.line > 0 ? String(h.line) : "") }.width(min: 40, ideal: 50)
-                TableColumn(L10n.tr("Tekst")) { (h: UsageHit) in Text(h.text).font(.system(size: 12, design: .monospaced)).lineLimit(1) }
+                TableColumn(L10n.tr("Tekst")) { (h: UsageHit) in Text(h.text).font(.code).lineLimit(1) }
             }
             .contextMenu(forSelectionType: UsageHit.ID.self) { _ in } primaryAction: { ids in
                 if let id = ids.first, let h = hits.first(where: { $0.id == id }) { open(h) }
@@ -88,7 +88,7 @@ struct RefactoringPreviewView: View {
             }
             if let ddl = plan.ddl {
                 Text(L10n.tr("DDL zmiany w bazie (nowe okno SQL, bez wykonania):")).font(.ui)
-                Text(ddl).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                Text(ddl).font(.code).textSelection(.enabled)
             }
             HStack {
                 Spacer()
@@ -130,7 +130,7 @@ struct LocalHistoryView: View {
                     if let e = list.first(where: { $0.id == selection }) {
                         ScrollView {
                             Text(e.text)
-                                .font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                                .font(.code).textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(6)
                         }
                     } else {

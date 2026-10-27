@@ -44,6 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     private var logToken: ObservationToken?
     /// Katalog Oracle Net zarządzany przez aplikację (D53) — także dla sterownika z katalogiem wskazanym później.
     private var oracleNetDirectory: String?
+    /// Pliki i adresy otwierane przed końcem startu (Finder, `open`) — otwierane po przywróceniu workseta (R4-02).
+    private var launchURLs: [URL]? = []
 
     override init() {
         // Katalog danych: ~/Library/Application Support/<nazwa>; PELIKAN_DATA_DIR nadpisuje (testy interfejsu).
@@ -167,11 +169,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         NSUpdateDynamicServices()
         // Parametry startowe (PD-CLI-001), np. `open -a Pelikan --args connection=Dev editobject=APP.PKG`.
         let startup = StartupOptions.parse(Array(ProcessInfo.processInfo.arguments.dropFirst()))
-        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10).
-        if workspace.settings.worksetAutosave, !startup.noLoadDesktop, startup.workset == nil, workspace.documents.isEmpty,
-           let saved = try? workspace.worksets.load(workspace.worksets.current), !saved.documents.isEmpty {
-            workspace.applyWorkset(saved)
+        // Workset i układ okna z poprzedniego uruchomienia (UG 15, UG 23.10). Pominięty (`noloaddesktop`, `workset=…`)
+        // zostaje w zapisanym worksecie — autozapis dopisuje jego okna zamiast je nadpisać (R3-01).
+        var problems = [workspace.connections.loadProblem].compactMap(\.self)
+        if workspace.settings.worksetAutosave {
+            do {
+                if let saved = try workspace.worksets.load(workspace.worksets.current) {
+                    if !startup.noLoadDesktop, startup.workset == nil { workspace.appendWorksetDocuments(saved) }
+                    else { workspace.worksets.keepUnopened(saved) }
+                }
+            } catch {
+                problems.append(error.localizedDescription)
+            }
         }
+        // Pliki z Findera, które uruchomiły aplikację — obok okien workseta (R4-02).
+        let pending = launchURLs ?? []
+        launchURLs = nil
+        if !pending.isEmpty { application(NSApp, open: pending) }
         if workspace.settings.autosaveLayout, let layout = workspace.worksets.loadLayout() { window.apply(layout) }
         // Pierwsze okno SQL jak we wzorcu po zalogowaniu (bez połączenia do Etapu 1).
         if workspace.documents.isEmpty {
@@ -184,6 +198,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
         if Self.uiScriptURL == nil { NSApp.activate() }
         startConnectionCheck()
+        if !problems.isEmpty { showError(problems.joined(separator: "\n")) }
         if let script = Self.uiScriptURL {
             runUIScript(script)
             return
@@ -224,6 +239,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     /// Pliki otwierane z Findera, Docka albo `open -a` (typy z Info.plist) i URL schematu Pelikana (PD-CLI-001).
     func application(_ application: NSApplication, open urls: [URL]) {
+        // Przed końcem startu (AppKit dostarcza pliki przed `applicationDidFinishLaunching`) — po przywróceniu workseta.
+        if launchURLs != nil {
+            launchURLs?.append(contentsOf: urls)
+            return
+        }
         let scheme = Bundle.main.object(forInfoDictionaryKey: "PelikanURLScheme") as? String ?? ""
         var files: [URL] = []
         for url in urls {
@@ -295,6 +315,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         Log.app.info("Zamknięcie aplikacji")
         defer { Log.fileSink?.flush() }
         workspace.persistConsoles()
+        workspace.localHistory.flush()
         crashMonitor?.end()
         // Czyste zamknięcie: bez migawki do odzyskania (PD-FILE-001).
         workspace.recovery.end()
@@ -392,6 +413,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let dir = workspace.dataDirectory
         let store = SSHTargetStore(fileURL: dir?.appendingPathComponent(SSHTargetStore.fileName),
                                    secrets: KeychainSecretStore(service: SSHTargetStore.keychainService(bundleIdentifier: bundle)))
+        if let problem = store.loadProblem { Task { @MainActor in self.showError(problem) } }
         let preferred = (dir ?? FileManager.default.temporaryDirectory).appendingPathComponent("run", isDirectory: true)
         let run = (try? SocketDirectory.make(preferred: preferred)) ?? FileManager.default.temporaryDirectory
         return SSHTargetManagerModel(store: store, workspace: workspace, runDirectory: run)
@@ -876,7 +898,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         name.setAccessibilityLabel(L10n.tr("Nazwa szablonu"))
         let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 520, height: 260))
         text.string = template.text
-        text.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        text.font = InterfaceFonts.shared.editor
         text.isAutomaticQuoteSubstitutionEnabled = false
         text.isAutomaticDashSubstitutionEnabled = false
         text.isRichText = false
@@ -905,8 +927,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                             text: text.string)
     }
 
-    func showSQLMonitor() {
-        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) { SQLMonitorView(workspace: workspace) }
+    func showSQLMonitor(connection: UUID) {
+        // Okno związane z połączeniem sprawdzonej licencji — przy innym połączeniu otwierane od nowa.
+        ToolWindowController.close(key: "sqlMonitor")
+        ToolWindowController.show(key: "sqlMonitor", title: L10n.tr("SQL Monitor"), size: NSSize(width: 940, height: 480)) {
+            SQLMonitorView(workspace: workspace, connection: connection)
+        }
     }
 
     func showTestManager() {
@@ -969,23 +995,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         palette?.show(relativeTo: mainWindow?.window)
     }
 
-    /// Sprawdzanie połączeń co n s (UG 23.1 „Check connection”); utracone — komunikat o wycofanej transakcji.
+    /// Sprawdzanie połączeń (UG 23.1 „Check connection”): timer co 15 s, przebieg wg interwału z Preferencji
+    /// (`Workspace.connectionCheckTick` — 0 wyłącza ping, zmiana interwału bez restartu, bez nakładania przebiegów).
     private func startConnectionCheck() {
-        let interval = TimeInterval(max(15, workspace.settings.checkConnectionIntervalSeconds))
-        connectionCheck = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        connectionCheck = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                guard let self else { return }
-                // Bezczynne sesje okien bez transakcji (Preferencje › Oracle, PD-CONN-026).
-                await self.workspace.sessions.closeIdleSessions(olderThan: self.workspace.settings.closeIdleSessionsMinutes)
-                // Okna programu: obiekty zmienione w bazie przez innych od wczytania (PD-PROG-011) — ostrzeżenie na pasku stanu.
-                await self.workspace.checkProgramWindowChanges()
-                let lost = await self.workspace.sessions.checkConnections()
-                guard !lost.isEmpty else { return }
-                let names = Set(lost.compactMap { self.workspace.connections.connection($0.connectionID)?.displayName })
-                for d in self.workspace.documents where d.transactionOpen && lost.contains(where: { $0.connectionID == self.workspace.effectiveConnection(of: d) }) {
-                    d.transactionOpen = false
-                }
-                self.showError(L10n.tr("Połączenie utracone: \(names.sorted().joined(separator: ", ")). Niezatwierdzone zmiany zostały wycofane przez serwer. Kolejne polecenie połączy się ponownie."))
+                guard let self, let message = await self.workspace.connectionCheckTick() else { return }
+                self.showError(message)
             }
         }
     }
@@ -1240,15 +1256,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                         workspace.settings = updated
                     }
                     log("ok debug.settings \(values.keys.sorted().joined(separator: ","))")
-                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
-                    continue
-                }
-                // Okno główne na wskazanym ekranie (zrzut na monitorze bez Retina — rysowanie tekstu w skali 1×).
-                if s.command == "debug.moveToScreen", case .int(let i)? = s.args?["screen"], NSScreen.screens.indices.contains(Int(i)),
-                   let w = mainWindow?.window {
-                    let f = NSScreen.screens[Int(i)].visibleFrame
-                    w.setFrame(NSRect(x: f.minX + 40, y: f.maxY - 860, width: 1300, height: 820), display: true)
-                    log("ok debug.moveToScreen \(i) skala \(w.backingScaleFactor)")
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }

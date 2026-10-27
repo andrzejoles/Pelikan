@@ -13,17 +13,19 @@
 #         scripts/testdb.sh ords-up  ORDS (tylko testy) w kontenerze z JRE, HTTP 127.0.0.1:8181 (SD-ORDS-001); ords-down
 #         scripts/testdb.sh ldap-up  OpenLDAP z aliasem dev_pelikan_ldap, ldap.ora i sqlnet.ora w .testdb/oracle-net-user (PD-CONN-013); ldap-down
 #         scripts/testdb.sh kdc-up   KDC MIT, Kerberos w bazie testowej, bilety w .testdb/kerberos (PD-CONN-014); kdc-down
-#         scripts/testdb.sh kdc-linux test Kerberos przez Instant Client dla Linuksa w kontenerze swift:6.3-noble
+#         scripts/testdb.sh kdc-linux test Kerberos przez Instant Client dla Linuksa w kontenerze swift:6.4-noble
 #
 # Hasła: losowe przy pierwszym `up`, w .testdb/env (poza repozytorium, 0600). Port tylko na 127.0.0.1.
 # Testy łączą się WYŁĄCZNIE z tą bazą (PELIKAN_TESTDB_*); żadnych innych baz (docs/PROMPT.md §9, §13).
-# W CI (Linux) kontener uruchamia workflow jako usługę, a hasła podaje przez zmienne środowiskowe.
+# CI (Linux) uruchamia ten sam skrypt (`up`, `seed`, `owm`) — hasła też losowe w .testdb/env.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STATE="$ROOT/.testdb"
 ENVFILE="$STATE/env"
 NAME="${PELIKAN_TESTDB_CONTAINER:-pelikan-testdb}"
-IMAGE="${PELIKAN_TESTDB_IMAGE:-gvenzl/oracle-free:latest}"
+# Wersja obrazu przypięta (23.26.3 = „latest” z 2026-08-30): nowa RU nie zmienia środowiska testów bez śladu w repo.
+# Istniejący kontener zostaje przy swoim obrazie — nowa wersja dopiero po `reset`.
+IMAGE="${PELIKAN_TESTDB_IMAGE:-gvenzl/oracle-free:23.26.3}"
 PORT="${PELIKAN_TESTDB_PORT:-1531}"
 UTPLSQL_VERSION="${UTPLSQL_VERSION:-v.3.2.3}"
 
@@ -55,13 +57,6 @@ ENV
     set -a; . "$ENVFILE"; set +a
 }
 
-in_ci() { [ -n "${CI:-}" ] && [ -n "${PELIKAN_TESTDB_SYSTEM_PASSWORD:-}" ]; }
-
-load_env() {
-    if in_ci; then return; fi
-    ensure_env
-}
-
 container_exists() { docker container inspect "$NAME" >/dev/null 2>&1; }
 
 wait_ready() {
@@ -78,7 +73,7 @@ wait_ready() {
 }
 
 up() {
-    load_env
+    ensure_env
     if container_exists; then
         docker start "$NAME" >/dev/null
     else
@@ -159,7 +154,7 @@ install_utplsql() {
 }
 
 seed() {
-    load_env
+    ensure_env
     sql_sys <<SQL
 DECLARE
   PROCEDURE mk(u VARCHAR2, p VARCHAR2) IS
@@ -283,14 +278,14 @@ NET="${PELIKAN_TESTDB_NETWORK:-pelikan-testnet}"
 
 # Serwer SSH (bastion) w tej samej sieci Docker co baza: tunel ssh -L … pelikan-testdb:1521.
 ssh_up() {
-    load_env
+    ensure_env
     mkdir -p "$STATE/ssh"
     chmod 700 "$STATE/ssh"
     [ -f "$STATE/ssh/id_ed25519" ] || ssh-keygen -q -t ed25519 -N "" -C "pelikan-test" -f "$STATE/ssh/id_ed25519"
     docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
     docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
-    # Obraz w wersji 2 (użytkownik z hasłem); kontener ze starszego obrazu jest tworzony od nowa.
-    local image=pelikan-test-sshd:2
+    # Obraz w wersji 3 (Alpine 3.24; od wersji 2 — użytkownik z hasłem); kontener ze starszego obrazu jest tworzony od nowa.
+    local image=pelikan-test-sshd:3
     docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/ssh" >/dev/null
     if docker container inspect "$SSH_NAME" >/dev/null 2>&1 \
        && [ "$(docker container inspect -f '{{.Config.Image}}' "$SSH_NAME")" != "$image" ]; then
@@ -303,7 +298,7 @@ ssh_up() {
     fi
     # Hasło użytkownika `haslo` (test tunelu z hasłem): losowe, tylko w .testdb/env jak hasła bazy testowej.
     grep -q '^PELIKAN_TESTDB_SSH_PASSWORD=' "$ENVFILE" || echo "PELIKAN_TESTDB_SSH_PASSWORD=S$(rand)" >> "$ENVFILE"
-    load_env
+    ensure_env
     printf 'haslo:%s\n' "$PELIKAN_TESTDB_SSH_PASSWORD" | docker exec -i "$SSH_NAME" chpasswd >/dev/null 2>&1
     docker cp "$STATE/ssh/id_ed25519.pub" "$SSH_NAME:/home/tunnel/.ssh/authorized_keys"
     docker exec "$SSH_NAME" sh -c 'chown tunnel:tunnel /home/tunnel/.ssh/authorized_keys && chmod 600 /home/tunnel/.ssh/authorized_keys'
@@ -326,7 +321,7 @@ ssh_up() {
 # oraz .testdb/oracle-net-user/tnsnames.ora. mkstore z bibliotek PKI Oracle (Maven Central) i lokalnej Javy; hasła
 # (portfela — losowe, nigdzie niezapisywane, i bazy testowej) przekazywane przez stdin, nie w argumentach.
 wallet() {
-    load_env
+    ensure_env
     local java_home java pki="$STATE/pki" w="$STATE/wallet" net="$STATE/oracle-net-user" v=21.23.0.0
     java_home="${JAVA_HOME:-$(/usr/libexec/java_home 2>/dev/null || true)}"
     java="$java_home/bin/java"
@@ -348,7 +343,7 @@ wallet() {
 # Workspace Manager (PD-CONN-009): obraz Oracle Free ma skrypty OWM w ORACLE_HOME, ale bez zainstalowanego WMSYS.
 # owminst.plb w PDB testowej (kilka minut, raz), potem przestrzeń robocza DEV_PELIKAN_WS dla użytkownika testowego.
 install_owm() {
-    load_env
+    ensure_env
     local n log="$STATE/owm-install.log"
     n=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_registry WHERE comp_id = 'OWM' AND status = 'VALID';\n" | sql_sys | tr -dc '0-9')
     if [ "${n:-0}" = "0" ]; then
@@ -390,7 +385,7 @@ docker_net() {
 # w kontenerze z JRE, w sieci Docker bazy testowej; instalacja schematu ORDS w PDB testowej (hasło SYS i nowe
 # losowe hasło ORDS_PUBLIC_USER przez stdin), konfiguracja w wolumenie Dockera. HTTP tylko na 127.0.0.1.
 ords_up() {
-    load_env
+    ensure_env
     local dist="$STATE/ords" zip="$STATE/ords-dist/ords-latest.zip" vol="${ORDS_NAME}-config"
     if [ ! -x "$dist/bin/ords" ]; then
         mkdir -p "$STATE/ords-dist"
@@ -400,7 +395,7 @@ ords_up() {
     fi
     docker_net
     grep -q '^PELIKAN_TESTDB_ORDS_PASSWORD=' "$ENVFILE" || echo "PELIKAN_TESTDB_ORDS_PASSWORD=O$(rand)" >> "$ENVFILE"
-    load_env
+    ensure_env
     local have
     have=$(printf "SET HEADING OFF\nSELECT COUNT(*) FROM dba_users WHERE username = 'ORDS_METADATA';\n" | sql_sys | tr -dc '0-9')
     if [ "${have:-0}" = "0" ] || ! docker volume inspect "$vol" >/dev/null 2>&1; then
@@ -457,8 +452,8 @@ LDAP_PORT="${PELIKAN_TESTDB_LDAP_PORT:-1389}"
 # w .testdb/oracle-net-user — katalogu użytkownika, który Pelikan dołącza do swojego katalogu Oracle Net. Bez haseł:
 # odczyt anonimowy, wpisy ładowane przez slapadd przy starcie kontenera.
 ldap_up() {
-    load_env
-    local image=pelikan-test-ldap:1 dir="$STATE/ldap" net="$STATE/oracle-net-user"
+    ensure_env
+    local image=pelikan-test-ldap:2 dir="$STATE/ldap" net="$STATE/oracle-net-user"
     docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/ldap" >/dev/null
     mkdir -p "$dir" "$net"
     cat > "$dir/pelikan.ldif" <<LDIF
@@ -527,10 +522,15 @@ krb_server_off() {
 }
 
 kdc_up() {
-    load_env
-    local image=pelikan-test-kdc:1 k="$STATE/kerberos"
+    ensure_env
+    local image=pelikan-test-kdc:2 k="$STATE/kerberos"
     docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/kdc" >/dev/null
     docker_net
+    # Kontener ze starszego obrazu (np. Alpine 3.20) — od nowa (nowe klucze principali; bilety niżej i tak od nowa).
+    if docker container inspect "$KDC_NAME" >/dev/null 2>&1 \
+       && [ "$(docker container inspect -f '{{.Config.Image}}' "$KDC_NAME")" != "$image" ]; then
+        docker rm -f "$KDC_NAME" >/dev/null
+    fi
     if docker container inspect "$KDC_NAME" >/dev/null 2>&1; then
         docker start "$KDC_NAME" >/dev/null
     else
@@ -588,18 +588,23 @@ krb_client_sqlnet() {
     printf 'SQLNET.KERBEROS5_CONF=%s/krb5.conf\nSQLNET.KERBEROS5_CONF_MIT=TRUE\nSQLNET.KERBEROS5_CC_NAME=%s/ccache\n' "$1" "$1"
 }
 
-# Test Kerberos przez Instant Client dla Linuksa (ścieżka CI): pakiet w .linux-build, kontener swift:6.3-noble w sieci
+# Test Kerberos przez Instant Client dla Linuksa (ścieżka CI): pakiet w .linux-build, kontener swift:6.4-noble w sieci
 # Docker bazy testowej, Instant Client Basic Light w .testdb/instantclient-linux. Konfiguracja testów w
-# .linux-build/.testdb (poza repozytorium, 0600); baza pod nazwą kontenera, więc CI=1 (TestDatabase dopuszcza wtedy
-# host spoza 127.0.0.1). Bilety z kdc-up — klient nie kontaktuje się z KDC.
+# .linux-build/.testdb (poza repozytorium, 0600); baza pod nazwą kontenera (TestDatabase dopuszcza poza 127.0.0.1
+# tylko tę nazwę). Bilety z kdc-up — klient nie kontaktuje się z KDC.
 kdc_linux() {
-    load_env
+    ensure_env
     [ -s "$STATE/kerberos/ccache" ] || { echo "Najpierw: scripts/testdb.sh kdc-up" >&2; exit 1; }
-    local ic="$STATE/instantclient-linux" lb="$ROOT/.linux-build" arch
-    case "$(docker info --format '{{.Architecture}}' 2>/dev/null)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
+    local ic="$STATE/instantclient-linux" lb="$ROOT/.linux-build" arch sum
+    # Instant Client 23.26.4 jak w CI, z sumą SHA-256 (podnosić razem z .github/workflows/ci.yml).
+    case "$(docker info --format '{{.Architecture}}' 2>/dev/null)" in
+        aarch64|arm64) arch=arm64; sum=61d55b028e9ba5792fbf497e9bcb8f2f14116ed81fc7a8625afc3dd5d0f28c27 ;;
+        *) arch=x64; sum=d049e593bba0041feb15c14ea894e2f1a437377462b99d9bdb6b7ab30b2dd660 ;;
+    esac
     if [ ! -f "$ic/libclntsh.so" ]; then
         rm -rf "$ic" "$ic.tmp"; mkdir -p "$ic.tmp"
-        curl -fsSL -o "$ic.tmp/ic.zip" "https://download.oracle.com/otn_software/linux/instantclient/instantclient-basiclite-linux-${arch}.zip"
+        curl -fsSL -o "$ic.tmp/ic.zip" "https://download.oracle.com/otn_software/linux/instantclient/2326400/instantclient-basiclite-linux.${arch}-23.26.4.0.0.zip"
+        echo "$sum  $ic.tmp/ic.zip" | shasum -a 256 -c - >/dev/null || { echo "Instant Client: zła suma SHA-256" >&2; rm -rf "$ic.tmp"; exit 1; }
         unzip -q "$ic.tmp/ic.zip" -d "$ic.tmp"
         mv "$ic.tmp"/instantclient_* "$ic"
         rm -rf "$ic.tmp"
@@ -616,8 +621,8 @@ kdc_linux() {
     krb_server_on
     trap krb_server_off EXIT
     docker run --rm --network "$NET" -v "$lb:/src" -v "$ic:/opt/oracle/instantclient:ro" -w /src \
-        -e CI=1 -e PELIKAN_OCI_LIB_DIR=/opt/oracle/instantclient -e LD_LIBRARY_PATH=/opt/oracle/instantclient \
-        swift:6.3-noble bash -c 'apt-get update -qq >/dev/null && apt-get install -y -qq libaio1t64 >/dev/null \
+        -e PELIKAN_TESTDB_CONTAINER="$NAME" -e PELIKAN_OCI_LIB_DIR=/opt/oracle/instantclient -e LD_LIBRARY_PATH=/opt/oracle/instantclient \
+        swift:6.4-noble bash -c 'apt-get update -qq >/dev/null && apt-get install -y -qq libaio1t64 >/dev/null \
             && a=$(ls /usr/lib/*-linux-gnu/libaio.so.1t64) && ln -sf "$a" "${a%t64}" \
             && swift test --filter "KerberosTests|KerberosGuardTests" 2>&1 | grep -E "✔|✘|error:|passed|failed|recorded"'
 }
@@ -650,11 +655,11 @@ case "${1:-}" in
         seed
         ;;
     env)
-        load_env
+        ensure_env
         env | grep '^PELIKAN_TESTDB_' | sed 's/^/export /'
         ;;
     sql)
-        load_env
+        ensure_env
         u="${2:-SYSTEM}"
         case "$u" in
             SYSTEM) sql_as SYSTEM "$PELIKAN_TESTDB_SYSTEM_PASSWORD" ;;

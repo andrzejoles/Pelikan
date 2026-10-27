@@ -157,16 +157,17 @@ public struct GitRepository: Sendable, Hashable {
         // stderr czytany równolegle — pełny bufor potoku stderr zatrzymałby gita przed końcem stdout.
         let errHandle = err.fileHandleForReading, errData = Mutex(Data()), group = DispatchGroup()
         DispatchQueue.global().async(group: group) {
-            let d = errHandle.readDataToEndOfFile()
+            // readToEnd: błąd odczytu jako błąd Swift (readDataToEndOfFile rzuca wyjątek ObjC — awaria).
+            let d = (try? errHandle.readToEnd()) ?? Data()
             errData.withLock { $0 = d }
         }
-        let data = out.fileHandleForReading.readDataToEndOfFile()
+        let data = Result { try out.fileHandleForReading.readToEnd() ?? Data() }
         group.wait()
-        p.waitUntilExit()
+        p.waitForExit()
         guard p.terminationStatus == 0 else {
             throw Failure.failed(String(decoding: errData.withLock { $0 }, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
         }
-        return data
+        return try data.get()
     }
 
     /// Repozytorium zawierające plik albo katalog (nil — poza repozytorium albo brak gita).

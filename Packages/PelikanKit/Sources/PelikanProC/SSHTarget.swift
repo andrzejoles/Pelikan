@@ -113,6 +113,20 @@ public struct PelikanSSHTarget: Sendable, Codable, Hashable, Identifiable {
         }
         if auth == .keyFile, keyFile.isEmpty { e.append(L10n.tr("Wskaż plik klucza")) }
         if !(1...65535).contains(port) { e.append(L10n.tr("Port spoza zakresu 1–65535")) }
+        return e + gitNameErrors
+    }
+
+    /// Nazwa remote albo gałęzi przekazywana do gita: litery, cyfry, `._/-`, bez wiodącego `-` — cel z cudzego pliku
+    /// z `remote = "--upload-pack=…"` zamieniałby argument w opcję gita (R8-09).
+    public static func isSafeGitName(_ s: String) -> Bool {
+        !s.isEmpty && !s.hasPrefix("-") && s.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "._/-".contains($0)) }
+    }
+
+    /// Błędy nazw remote i gałęzi (walidacja celu i import).
+    public var gitNameErrors: [String] {
+        var e: [String] = []
+        if !Self.isSafeGitName(remote) { e.append(L10n.tr("Nieprawidłowa nazwa remote gita (dozwolone litery, cyfry, . _ / -)")) }
+        if !Self.isSafeGitName(branch) { e.append(L10n.tr("Nieprawidłowa nazwa gałęzi gita (dozwolone litery, cyfry, . _ / -)")) }
         return e
     }
 
@@ -166,6 +180,9 @@ public final class SSHTargetStore {
     @ObservationIgnored let secrets: any SecretStore
     /// Sekrety podane bez zapamiętania — tylko w pamięci do zamknięcia aplikacji.
     @ObservationIgnored private var sessionSecrets: [UUID: String] = [:]
+    /// Komunikat o nieczytelnym pliku celów (przeniesiony do kopii `.bad-…`, R8-08) — aplikacja go pokazuje.
+    @ObservationIgnored public private(set) var loadProblem: String?
+    @ObservationIgnored private var saveBlocked = false
 
     /// Nazwa pliku celów w katalogu danych.
     public static let fileName = "ssh-targets.json"
@@ -177,10 +194,16 @@ public final class SSHTargetStore {
     public init(fileURL: URL?, secrets: any SecretStore) {
         self.fileURL = fileURL
         self.secrets = secrets
-        if let url = fileURL, let data = try? Data(contentsOf: url), let f = try? JSONDecoder().decode(SSHTargetsFile.self, from: data),
-           f.format == "pelikan-ssh-targets" {
-            folders = f.folders
-            targets = f.targets
+        if let url = fileURL, let data = try? Data(contentsOf: url) {
+            if let f = try? JSONDecoder().decode(SSHTargetsFile.self, from: data), f.format == "pelikan-ssh-targets" {
+                folders = f.folders
+                targets = f.targets
+            } else {
+                // Uszkodzony albo nowszy plik: zachowany obok, zanim pierwszy zapis nadpisze go pustą listą.
+                let (message, preserved) = DamagedFile.preserve(url)
+                loadProblem = message
+                saveBlocked = !preserved
+            }
         }
     }
 
@@ -193,6 +216,7 @@ public final class SSHTargetStore {
 
     public func save() throws {
         guard let url = fileURL else { return }
+        guard !saveBlocked else { throw CommandError.notAvailable(loadProblem ?? "") }
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         let e = JSONEncoder()
         e.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -278,6 +302,9 @@ public final class SSHTargetStore {
     public func importData(_ data: Data) throws -> Int {
         let f = try JSONDecoder().decode(SSHTargetsFile.self, from: data)
         guard f.format == "pelikan-ssh-targets" else { throw CommandError.notAvailable(L10n.tr("To nie jest plik celów SSH Pelikana")) }
+        if let bad = f.targets.first(where: { !$0.gitNameErrors.isEmpty }) {
+            throw CommandError.notAvailable("\(bad.name): " + bad.gitNameErrors.joined(separator: "\n"))
+        }
         var folderMap: [UUID: UUID] = [:]
         var added: [SSHTargetFolder] = []
         for var folder in f.folders {

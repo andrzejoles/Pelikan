@@ -34,6 +34,11 @@ scripts/sparkle-tools.sh generate_keys -f ~/Bezpieczne/pelikan-eddsa.txt    # od
 ```
 Utrata klucza prywatnego = zainstalowane kopie nie przyjmą kolejnych aktualizacji.
 
+Aplikacja wymaga podpisanego kanału i sprawdza podpis archiwum przed rozpakowaniem (`SURequireSignedFeed`,
+`SUVerifyUpdateBeforeExtraction` w `App/Info.plist`). `generate_appcast` podpisuje `appcast.xml` sam, bo archiwum ma
+`SURequireSignedFeed` (komentarz `sparkle-signatures` na końcu pliku). Nie edytować `appcast.xml` ręcznie — zmiana
+unieważnia podpis i zainstalowane kopie odrzucą kanał.
+
 ## Instalatory i szkic wydania
 
 ```sh

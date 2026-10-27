@@ -127,6 +127,46 @@ struct SQLPlusHostStepTests {
         #expect(doc.console.map(\.text).contains("Polecenie systemu przerwane"))
     }
 
+    @Test("WHENEVER SQLERROR i OSERROR niezależne: OSERROR CONTINUE nie wyłącza przerywania na błędach SQL i odwrotnie")
+    func wheneverKinds() async {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        // Bez połączenia SELECT kończy się błędem — jak błąd SQL.
+        var o = await engine.run("whenever sqlerror exit failure rollback\nwhenever oserror continue\nselect 1 from dual;\nprompt dalej")
+        #expect(o == .exit && !doc.console.map(\.text).contains("dalej"))
+        #expect(engine.state.whenever == .exit(commit: false) && engine.state.wheneverOS == .continue)
+        doc.console.removeAll()
+        o = await engine.run("@/nie/ma/takiego/skryptu.sql\nprompt po pliku")
+        #expect(o == .finished && doc.console.map(\.text).contains("po pliku"))
+        doc.console.removeAll()
+        engine.state.whenever = .continue
+        o = await engine.run("whenever oserror exit\nselect 1 from dual;\nprompt po sql\n@/nie/ma/takiego/skryptu.sql\nprompt koniec")
+        #expect(o == .exit && doc.console.map(\.text).contains("po sql") && !doc.console.map(\.text).contains("koniec"))
+        #expect(doc.console.map(\.text).contains("WHENEVER OSERROR: przerwano skrypt"))
+    }
+
+    @Test("ZIP poza głównym aktorem: archiwum z plikami, błąd zip z kodem wyjścia")
+    func zip() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let doc = ws.newDocument(.command)
+        let engine = ws.sqlplusEngine(for: doc)
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("zip-\(UUID().uuidString.prefix(6))")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try Data("select 1 from dual;\n".utf8).write(to: dir.appendingPathComponent("a.sql"))
+        engine.state.directory = dir
+        _ = await engine.run("zip \(dir.path)/paczka.zip \(dir.path)/a.sql")
+        #expect(FileManager.default.fileExists(atPath: dir.appendingPathComponent("paczka.zip").path), "\(doc.console.map(\.text))")
+        #expect(engine.hostTask == nil)
+        _ = await engine.run("zip \(dir.path)/b.zip \(dir.path)/brak.sql")
+        #expect(doc.console.map(\.text).contains { $0.hasPrefix("ZIP zakończył się błędem") })
+    }
+
     @Test("DISCONNECT: pytanie o otwartą transakcję (Anuluj zostawia połączenie), potem bez cichego przejścia na połączenie główne")
     func disconnect() async {
         let ws = Workspace()

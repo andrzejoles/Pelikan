@@ -20,6 +20,27 @@ public enum CommandSearch {
         s.split { !$0.isLetter && !$0.isNumber && $0 != "_" && $0 != "$" }
     }
 
+    /// Komendy, których szuka użytkownik (wstążka, paleta komend): pozycje menu — bez komend pomocniczych okien i API
+    /// agenta (`agent.*`), które poza agentem nie mają sensu.
+    public static func userCommands(_ descriptors: [CommandDescriptor]) -> [CommandDescriptor] {
+        descriptors.filter { $0.inMenu && !$0.id.rawValue.hasPrefix("agent.") }
+    }
+
+    /// Nazwy komend w innym języku (tytuł i podmenu, np. angielskie przy interfejsie po polsku) — dla `alternateTitles`.
+    public static func alternateTitles(_ descriptors: [CommandDescriptor], language: String = "en") -> [CommandID: [String]] {
+        var out: [CommandID: [String]] = [:]
+        for d in descriptors {
+            let names = [L10n.translation(of: d.title, language: language), d.submenu.flatMap { L10n.translation(of: $0, language: language) }].compactMap { $0 }
+            if !names.isEmpty { out[d.id] = names }
+        }
+        return out
+    }
+
+    /// Wiersz zaznaczany na starcie listy wyników: pierwsza komenda dostępna teraz (Enter nie wykonuje niedostępnych).
+    public static func firstAvailable(_ items: [CommandDescriptor], isEnabled: (CommandID) -> Bool) -> Int? {
+        items.firstIndex { isEnabled($0.id) }
+    }
+
     /// Komendy pasujące do zapytania (wszystkie słowa zapytania muszą się znaleźć), najlepsze pierwsze.
     /// - Parameter alternateTitles: dodatkowe nazwy komendy (np. tytuł w innym języku interfejsu).
     public static func search(_ query: String, in descriptors: [CommandDescriptor], limit: Int = 50,

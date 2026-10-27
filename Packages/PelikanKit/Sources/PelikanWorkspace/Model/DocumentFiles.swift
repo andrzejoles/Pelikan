@@ -223,28 +223,28 @@ extension Workspace {
         if doc.kind == .report {
             var def = doc.report
             def.sql = doc.text
-            try def.encoded().write(to: url, options: .atomic)
+            try Self.writeKeepingFile(def.encoded(), to: url)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .diagram {
-            try doc.diagram.encoded().write(to: url, options: .atomic)
+            try Self.writeKeepingFile(doc.diagram.encoded(), to: url)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .notebook {
-            try doc.notebook.encoded().write(to: url, options: .atomic)
+            try Self.writeKeepingFile(doc.notebook.encoded(), to: url)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
-            try TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded().write(to: url, options: .atomic)
+            try Self.writeKeepingFile(TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded(), to: url)
             doc.fileURL = url.standardizedFileURL
             doc.isModified = false
             rememberRecentFile(url)
@@ -258,12 +258,21 @@ extension Workspace {
                                             encoding: format.displayName.components(separatedBy: " ").first ?? "")
         }
         backupBeforeSave(url)
-        try data.write(to: url, options: .atomic)
+        try Self.writeKeepingFile(data, to: url)
         localHistory.record(key: LocalHistory.key(file: url), title: url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))
         doc.fileURL = url.standardizedFileURL
         doc.fileFormat = format
         doc.isModified = false
         rememberRecentFile(url)
+    }
+
+    /// Zapis atomowy, który nie zmienia rodzaju pliku: przez dowiązanie symboliczne zapisuje plik docelowy (dowiązanie
+    /// zostaje) i przywraca uprawnienia istniejącego pliku (0600, bit wykonywania) — zapis `.atomic` podmienia plik nowym.
+    nonisolated static func writeKeepingFile(_ data: Data, to url: URL) throws {
+        let target = url.resolvingSymlinksInPath()
+        let permissions = (try? FileManager.default.attributesOfItem(atPath: target.path))?[.posixPermissions] as? NSNumber
+        try data.write(to: target, options: .atomic)
+        if let permissions { try? FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: target.path) }
     }
 
     func rememberRecentFile(_ url: URL) {

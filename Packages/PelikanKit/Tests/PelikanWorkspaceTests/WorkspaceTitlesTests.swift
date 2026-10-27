@@ -7,7 +7,7 @@ import Testing
 @Suite("Tytuł okna, katalogi startowe i rozszerzenia plików")
 struct WorkspaceTitlesTests {
     @Test("Tytuł z połączeniem głównym i worksetem; podtytuł z połączeniem okna, gdy inne niż główne")
-    func titles() throws {
+    func titles() async throws {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("titles-\(UUID().uuidString.prefix(6))")
         defer { try? FileManager.default.removeItem(at: dir) }
         let ws = Workspace(dataDirectory: dir)
@@ -18,7 +18,7 @@ struct WorkspaceTitlesTests {
         try ws.connections.upsert(b)
         ws.sessions.setMainConnection(a.id)
         #expect(ws.windowTitle(appName: "Pelikan") == "Pelikan — dev")
-        try ws.switchWorkset(to: "Raporty")
+        try await ws.switchWorkset(to: "Raporty")
         #expect(ws.windowTitle(appName: "Pelikan") == "Pelikan — dev — Raporty")
         let d = ws.newDocument(.sql)
         #expect(ws.windowSubtitle() == d.fullTitle)

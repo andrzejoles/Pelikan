@@ -19,7 +19,7 @@ public enum ConnectStringRewriter {
 
     /// Host i port bazy z EZConnect (`host[:port]/usługa`, `//host…`, `tcps://…`, `[IPv6]`) albo deskryptora.
     public static func endpoint(of connect: String) -> Endpoint? {
-        let s = connect.trimmingCharacters(in: .whitespaces)
+        let s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if s.hasPrefix("(") {
             guard let h = TNSNames.value("HOST", in: s) else { return nil }
             return Endpoint(host: h, port: TNSNames.value("PORT", in: s).flatMap(Int.init) ?? 1521)
@@ -40,7 +40,7 @@ public enum ConnectStringRewriter {
 
     /// Connect string z adresem zastąpionym przez `127.0.0.1:localPort` (alias TNS — rozwinięty do deskryptora).
     public static func rewrite(_ connect: String, localPort: Int, tns: [TNSEntry] = []) -> String? {
-        var s = connect.trimmingCharacters(in: .whitespaces)
+        var s = connect.trimmingCharacters(in: .whitespacesAndNewlines)
         if !s.hasPrefix("("), !s.contains("/"), !s.contains(":"),
            let entry = tns.first(where: { $0.aliases.contains { $0.caseInsensitiveCompare(s) == .orderedSame } }) {
             s = entry.descriptor
@@ -71,9 +71,11 @@ public final class SSHTunnelManager {
     public struct Tunnel: Sendable {
         public let localPort: Int
         public let remote: ConnectStringRewriter.Endpoint
+        /// Przebieg procesu ssh: po jego śmierci i ponownym otwarciu stare sesje zwalniają swój tunel, nie nowy.
+        let run = UUID()
     }
 
-    private final class Running {
+    final class Running {
         let process: Process
         let tunnel: Tunnel
         var users = 1
@@ -126,7 +128,7 @@ public final class SSHTunnelManager {
         func set() { value.withLock { $0 = true } }
     }
 
-    private var running: [UUID: Running] = [:]
+    var running: [UUID: Running] = [:]
     /// Otwierane tunele: równoległe otwarcia tego samego połączenia czekają na jeden proces ssh.
     private var opening: [UUID: Task<Tunnel, any Error>] = [:]
     /// Dodatkowe opcje ssh (testy: własny plik known_hosts).
@@ -175,7 +177,8 @@ public final class SSHTunnelManager {
         if let id = t.identityFile, !id.isEmpty { a += ["-i", (id as NSString).expandingTildeInPath, "-o", "IdentitiesOnly=yes"] }
         if let j = t.jumpHost, !j.isEmpty { a += ["-J", j] }
         a += extra
-        a.append(t.user.isEmpty ? t.host : "\(t.user)@\(t.host)")
+        // „--”: cel nie może być wzięty za opcję (host/użytkownik sprawdzane też w `SSHTunnel.validate`).
+        a += ["--", t.user.isEmpty ? t.host : "\(t.user)@\(t.host)"]
         return a
     }
 
@@ -208,6 +211,7 @@ public final class SSHTunnelManager {
 
     private func start(for def: ConnectionDefinition, tns: [TNSEntry], secret: String?) async throws -> Tunnel {
         guard let t = def.sshTunnel else { throw DatabaseError.driverUnavailable(L10n.tr("Połączenie nie ma tunelu SSH")) }
+        try t.validate()
         if t.usesPassword, (secret ?? "").isEmpty {
             throw DatabaseError.driverUnavailable(L10n.tr("Brak hasła SSH tunelu w Pęku kluczy — wpisz je w definicji połączenia."))
         }
@@ -239,7 +243,7 @@ public final class SSHTunnelManager {
         let deadline = ContinuousClock.now + .seconds(20)
         while ContinuousClock.now < deadline {
             if !p.isRunning {
-                let msg = String(decoding: err.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                let msg = String(decoding: (try? err.fileHandleForReading.readToEnd()) ?? Data(), as: UTF8.self)
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 throw DatabaseError.driverUnavailable(L10n.tr("Tunel SSH nie powstał: \(msg.isEmpty ? "ssh zakończył się kodem \(p.terminationStatus)" : msg)"))
             }
@@ -255,9 +259,10 @@ public final class SSHTunnelManager {
         return tunnel
     }
 
-    /// Zwalnia tunel (zamyka, gdy nikt go nie używa).
-    public func release(_ id: UUID) {
-        guard let r = running[id] else { return }
+    /// Zwalnia tunel (zamyka, gdy nikt go nie używa). Tunel z wcześniejszego przebiegu ssh (proces padł, otwarto nowy)
+    /// jest pomijany — licznik nowego tunelu należy do sesji, które go otworzyły.
+    public func release(_ tunnel: Tunnel, of id: UUID) {
+        guard let r = running[id], r.tunnel.run == tunnel.run else { return }
         r.users -= 1
         if r.users <= 0 {
             r.process.terminate()

@@ -46,7 +46,7 @@ final class TestSSHD: @unchecked Sendable {
             p.arguments = ["-q"] + args
             p.detachStandardIO()
             try p.run()
-            p.waitUntilExit()
+            p.waitForExit(timeout: 30)
         }
         try keygen(["-t", "rsa", "-b", "2048", "-N", "", "-f", d + "/host_rsa"])
         try keygen(["-t", "ed25519", "-N", Self.passphrase, "-f", d + "/client_key"])
@@ -90,7 +90,7 @@ final class TestSSHD: @unchecked Sendable {
                 }
                 usleep(50_000)
             }
-            p.terminate()
+            p.terminateAndWait()
             lastError = (try? String(contentsOfFile: d + "/sshd.log", encoding: .utf8)) ?? ""
         }
         throw SSHError.io(code: 0, detail: "sshd: \(lastError)")
@@ -107,8 +107,7 @@ final class TestSSHD: @unchecked Sendable {
     }
 
     deinit {
-        process.terminate()
-        process.waitUntilExit()
+        process.terminateAndWait()
     }
 }
 
@@ -118,6 +117,29 @@ extension Process {
         standardInput = FileHandle.nullDevice
         standardOutput = FileHandle.nullDevice
         standardError = FileHandle.nullDevice
+    }
+
+    /// Czeka na zakończenie najwyżej `timeout` sekund; `true` — proces się zakończył. Bez `waitUntilExit()`: ten kręci
+    /// pętlą zdarzeń bieżącego wątku i potrafił nie wrócić wcale (wątek puli zadań w `deinit` po teście — zawieszenie
+    /// całego przebiegu, którego `.timeLimit` nie przerywa). `isRunning` odświeża Foundation bez pętli zdarzeń.
+    @discardableResult
+    func waitForExit(timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while isRunning {
+            if Date() > deadline { return false }
+            usleep(20_000)
+        }
+        return true
+    }
+
+    /// SIGTERM, po 5 s SIGKILL — w ograniczonym czasie, nawet gdy proces nie reaguje.
+    func terminateAndWait() {
+        guard isRunning else { return }
+        terminate()
+        if !waitForExit(timeout: 5) {
+            kill(processIdentifier, SIGKILL)
+            waitForExit(timeout: 5)
+        }
     }
 }
 

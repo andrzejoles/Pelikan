@@ -66,6 +66,22 @@ public struct SSHTunnel: Sendable, Codable, Hashable {
         self.host = host; self.port = port; self.user = user
         self.identityFile = identityFile; self.jumpHost = jumpHost; self.usesPassword = usesPassword
     }
+
+    /// Host, użytkownik i host pośredni bez znaków, które `ssh` wziąłby za opcję albo rozdzielił (wstrzyknięcie opcji,
+    /// np. `-oProxyCommand=…` z importowanego pliku połączeń) — ta sama reguła co Pro*C (`SSHSession`).
+    public func validate() throws {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_:[]"))
+        func safe(_ s: String, extra: String = "") -> Bool {
+            !s.hasPrefix("-") && s.unicodeScalars.allSatisfy { allowed.contains($0) || extra.unicodeScalars.contains($0) }
+        }
+        func reject(_ value: String) -> CommandError { .notAvailable(L10n.tr("Niedozwolone znaki w polu tunelu SSH: „\(value)”")) }
+        guard !host.isEmpty, safe(host) else { throw reject(host) }
+        guard safe(user, extra: "$") else { throw reject(user) }
+        // ProxyJump: lista `[użytkownik@]host[:port]` po przecinku — żaden element nie może zaczynać się od „-”.
+        if let j = jumpHost, !j.isEmpty, !j.split(separator: ",", omittingEmptySubsequences: false).allSatisfy({ !$0.isEmpty && safe(String($0), extra: "@$") }) {
+            throw reject(j)
+        }
+    }
 }
 
 /// Ustawienia agenta AI dla połączenia (PROMPT §7.3).

@@ -12,6 +12,9 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   den Tabs oder **Datei › Program Window › Einheit hinzufügen…** fügt eine Einheit aus einer Vorlage hinzu (Prozedur,
   Funktion, Paket, Typ, Trigger, Java-Quelle, MLE-Modul), mit einem Formular für Namen und Parameter. **Einheit
   entfernen** entfernt den Tab aus dem Text (das Objekt in der Datenbank bleibt bestehen).
+- **Bearbeiten** auf einem Paket oder Typ — auch auf seinem Body aus den Ordnern „Package Bodies“ und „Type Bodies“ —
+  öffnet Spezifikation und Body in einem Fenster auf zwei Tabs (vom Body aus geöffnet: der Body-Tab ist aktiv). Ein
+  Objekt ohne Body hat einen Tab.
 - **F8** (⌘↩) kompiliert alle Einheiten nacheinander und hält bei der ersten mit einem Fehler an. Die Kompilierung läuft
   in einer separaten Sitzung im Hintergrund und blockiert daher keine SQL Windows.
 - Fehler und Warnungen des Compilers erscheinen unter dem Editor. Ein Klick springt zur Zeile, ein Doppelklick öffnet
@@ -85,6 +88,8 @@ von Zeilen ohne Verzögerung.
 | Cursor darüber / darunter hinzufügen | ⌃⇧↑ / ⌃⇧↓ | Bearbeiten › Mehrere Cursor |
 | Schrift vergrößern / verkleinern | ⌘= / ⌘− | Ansicht |
 
+- **Code einklappen**: Der Pfeil im Rand neben den Zeilennummern klappt einen Block ein und aus (eingeklappter Block —
+  Pfeil in Akzentfarbe, im Text „⋯“ mit dem eingeklappten Code im Tooltip).
 - **Mehrere Cursor**: ⌥+Klick fügt einen Cursor hinzu, Esc lässt einen übrig. **Spaltenauswahl**: mit ⌥ ziehen — Tippen,
   Rückschritt und Einsetzen wirken in allen Zeilen gleichzeitig.
 - **Suchen und Ersetzen** unterstützt reguläre Ausdrücke (mit `$1`), ganze Wörter, Groß-/Kleinschreibung, Beibehaltung

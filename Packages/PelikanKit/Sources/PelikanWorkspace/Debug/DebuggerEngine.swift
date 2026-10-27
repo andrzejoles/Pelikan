@@ -113,9 +113,10 @@ public final class DebuggerEngine {
     /// PLSQL_OPTIMIZE_LEVEL sesji okna sprzed startu — przywracany w `cleanUp()`.
     @ObservationIgnored var previousOptimizeLevel: Int?
 
-    /// Śledzenie wywołań DBMS_DEBUG w dzienniku aplikacji (poziom Szczegóły; nazwy jednostek — jak wartości prywatne).
-    nonisolated static func trace(_ s: String) {
-        Log.debugger.debug("\(s)")
+    /// Śledzenie wywołań DBMS_DEBUG w dzienniku aplikacji (poziom Szczegóły, D170): kody, statusy i numery linii jawne,
+    /// nazwy jednostek i zmiennych jako skrót (`.hash`) — ślad jest użyteczny bez jawnych nazw i bez wartości zmiennych.
+    nonisolated static func trace(_ m: @autoclosure () -> LogMessage) {
+        Log.debugger.debug(m())
     }
 
     init(workspace: Workspace, document: Document) {
@@ -136,7 +137,7 @@ public final class DebuggerEngine {
         try await workspace.guardModification([sql], connectionID: conn)
         let binds = try document.testVariables.map { v -> BindVariable in
             let (t, size) = v.type.bind
-            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try TestRunner.value(v), maxSize: size)
+            return BindVariable(name: v.name, type: t, direction: v.type == .cursor ? .output : .inputOutput, value: try TestRunner.value(v, format: workspace.settings.valueFormat), maxSize: size)
         }
         let target = try await workspace.session(for: document)
         let debug = try await workspace.sessions.session(workspace.sessions.debuggerKey(document: document.id, connection: conn))
@@ -175,7 +176,7 @@ public final class DebuggerEngine {
             guard let id = initResult.outBinds["id"]?.displayText ?? initResult.outBinds["ID"]?.displayText else {
                 throw CommandError.notAvailable(L10n.tr("DBMS_DEBUG nie zwrócił identyfikatora sesji"))
             }
-            Self.trace("initialize -> \(id)")
+            Self.trace("initialize -> \(id, privacy: .hash)")
             _ = try await debug.execute("begin dbms_debug.attach_session(:id); end;", binds: [BindVariable(name: "id", value: .text(id))])
             attached = true
             Self.trace("attached")
@@ -304,7 +305,7 @@ public final class DebuggerEngine {
     /// Wywołanie SYNCHRONIZE / CONTINUE w bloku rozpakowującym RUNTIME_INFO do zmiennych skalarnych.
     func runtimeCall(_ call: String) async throws -> RuntimeInfo {
         guard let debug else { throw CommandError.notAvailable(L10n.tr("Debuger nie jest uruchomiony")) }
-        Self.trace("call \(call.prefix(40))")
+        Self.trace("call \(call.prefix(40), privacy: .public)")
         defer { Self.trace("call done") }
         let names = ["ret", "line", "term", "bp", "reason", "owner", "name", "utype"]
         let binds = names.map { n in BindVariable(name: n, type: ["owner", "name"].contains(n) ? .varchar2 : .number, direction: .output, maxSize: 200) }
@@ -330,7 +331,7 @@ public final class DebuggerEngine {
             let info = try await runtimeCall("dbms_debug.continue(ri, \(flags), dbms_debug.info_getstackdepth + dbms_debug.info_getbreakpoint + dbms_debug.info_getlineinfo)")
             flags = breakflags
             lastReason = info.reason
-            Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner).\(info.name)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
+            Self.trace("event status=\(info.status) reason=\(info.reason) term=\(info.terminated) unit=\(info.owner, privacy: .hash).\(info.name, privacy: .hash)/\(info.unitType) line=\(info.line) bp=\(info.breakpoint)")
             // reason_exit (15) / reason_knl_exit (25) / zakończony program.
             if info.terminated || info.reason == 15 || info.reason == 25 { return await finish() }
             // Stop w trakcie kroku — program czeka na debuger, przerwie go stop().
@@ -603,7 +604,7 @@ public final class DebuggerEngine {
                 var n = v
                 if case .cursor = out { n.value = L10n.tr("(kursor)"); n.isNull = false } else {
                     n.isNull = out.isNull
-                    n.value = out.isNull ? "" : out.format(workspace.settings.valueFormat)
+                    n.value = out.isNull ? "" : TestRunner.outputText(out, format: workspace.settings.valueFormat)
                 }
                 n.changed = n.value != v.value || n.isNull != v.isNull
                 document.testVariables[i] = n
@@ -641,6 +642,9 @@ public final class DebuggerEngine {
             _ = try? await debug.execute("begin dbms_debug.detach_session; end;")
         }
         await restoreOptimizeLevel()
+        // Program mógł zmienić dane bez COMMIT — stan transakcji sesji okna jak po wykonaniu w oknie testu (po DEBUG_OFF,
+        // inaczej zapytanie czekałoby na debuger).
+        if let target { document.transactionOpen = (try? await SessionUtilities.transactionOpen(target)) ?? document.transactionOpen }
         execution = nil
         document.isExecuting = false
     }
@@ -692,7 +696,7 @@ public final class DebuggerEngine {
     func loadVariables() async {
         guard stack.indices.contains(selectedFrame) else { variables = []; return }
         let frame = stack[selectedFrame]
-        Self.trace("vars: source \(frame.name)")
+        Self.trace("vars: source \(frame.name, privacy: .hash)")
         let text = await source(of: frame)
         Self.trace("vars: source done \(text.count)")
         let offset = ProgramCompiler.offset(line: frame.line, column: 1, in: text)
@@ -799,7 +803,7 @@ public final class DebuggerEngine {
                          BindVariable(name: "st", type: .number, direction: .output), BindVariable(name: "val", direction: .output, maxSize: 4000)])
         let st = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
         let v = r?.outBinds["val"] ?? r?.outBinds["VAL"]
-        Self.trace("get_value pkg \(p.name).\(variable) ns=\(p.namespace) status=\(st)")
+        Self.trace("get_value pkg \(p.name, privacy: .hash).\(variable, privacy: .hash) ns=\(p.namespace) status=\(st)")
         return (st, v.flatMap { $0.isNull ? nil : $0.displayText })
     }
 
@@ -817,7 +821,7 @@ public final class DebuggerEngine {
         ])
         let st = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1
         let v = r?.outBinds["v"] ?? r?.outBinds["V"]
-        Self.trace("get_value \(path) frame=\(frame) status=\(st)")
+        Self.trace("get_value \(path, privacy: .hash) frame=\(frame) status=\(st)")
         return (st, v.flatMap { $0.isNull ? nil : $0.displayText })
     }
 
@@ -977,7 +981,7 @@ public final class DebuggerEngine {
                              BindVariable(name: "l", type: .number, value: .number(String(bp.line))),
                              BindVariable(name: "st", type: .number, direction: .output),
                              BindVariable(name: "bp", type: .number, direction: .output)])
-            Self.trace("breakpoint \(bp.unit ?? "<blok>"):\(bp.line) status=\(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "?") nr=\(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? "?")")
+            Self.trace("breakpoint \(bp.unit ?? "<blok>", privacy: .hash):\(bp.line) status=\(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "?", privacy: .public) nr=\(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? "?", privacy: .public)")
             if let n = Int(r?.outBinds["bp"]?.displayText ?? r?.outBinds["BP"]?.displayText ?? ""), n > 0 { bpNumbers[n] = bp.id }
             // Niezastosowany (brak jednostki, brak informacji debugowania, linia bez kodu): pusty znacznik na marginesie.
             let status = Int(r?.outBinds["st"]?.displayText ?? r?.outBinds["ST"]?.displayText ?? "") ?? -1

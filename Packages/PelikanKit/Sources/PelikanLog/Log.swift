@@ -69,8 +69,6 @@ public struct Logger: Sendable {
     public func notice(_ message: @autoclosure () -> LogMessage) { Log.emit(.notice, category, message) }
     public func error(_ message: @autoclosure () -> LogMessage) { Log.emit(.error, category, message) }
     public func fault(_ message: @autoclosure () -> LogMessage) { Log.emit(.fault, category, message) }
-
-    public func isEnabled(_ level: LogLevel) -> Bool { Log.isEnabled(level) }
 }
 
 /// Dziennik aplikacji (PL-INFRA-011, D170). Bez konfiguracji wpisy nigdzie nie trafiają (biblioteka, testy, Linux).
@@ -91,7 +89,7 @@ public enum Log {
 
     struct Configuration: Sendable {
         var level: LogLevel = .info
-        var revealPrivate = false
+        var revealNames = false
         var hashKey: [UInt8] = []
         var sinks: [any LogSink] = []
         var extraSinks: [UUID: any LogSink] = [:]
@@ -118,9 +116,10 @@ public enum Log {
         configuration.withLock { $0.extraSinks[id] = nil }
     }
 
-    /// Poziom i widoczność wartości prywatnych (Preferencje › Ogólne › Dziennik aplikacji).
-    public static func configure(level: LogLevel, revealPrivate: Bool) {
-        configuration.withLock { $0.level = level; $0.revealPrivate = revealPrivate }
+    /// Poziom i jawne nazwy (`LogPrivacy.hash`; Preferencje › Ogólne › Dziennik aplikacji). Wartości prywatne
+    /// (komunikaty błędów, treści) zostają ukryte także przy jawnych nazwach.
+    public static func configure(level: LogLevel, revealNames: Bool) {
+        configuration.withLock { $0.level = level; $0.revealNames = revealNames }
     }
 
     /// Klucz skrótów `LogPrivacy.hash` — losowy dla instalacji; bez niego skrót byłby odwracalny słownikiem nazw.
@@ -145,16 +144,16 @@ public enum Log {
         guard !regular.isEmpty || !diagnostic.isEmpty else { return }
         let m = message()
         let date = Date()
-        func entry(_ reveal: Bool) -> LogEntry {
+        func entry(names: Bool, everything: Bool) -> LogEntry {
             LogEntry(date: date, level: level, category: category.name,
-                     text: m.render(revealPrivate: reveal) { hash($0, key: c.hashKey) })
+                     text: m.render(revealNames: names, revealPrivate: everything) { hash($0, key: c.hashKey) })
         }
         if !regular.isEmpty {
-            let e = entry(c.revealPrivate)
+            let e = entry(names: c.revealNames, everything: false)
             for s in regular { s.write(e) }
         }
         if !diagnostic.isEmpty {
-            let e = entry(true)
+            let e = entry(names: true, everything: true)
             for s in diagnostic { s.write(e) }
         }
     }

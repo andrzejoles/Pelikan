@@ -57,7 +57,7 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         mode.target = self
         mode.action = #selector(modeChanged)
         let tv = textView.documentView as! NSTextView
-        tv.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        tv.font = InterfaceFonts.shared.editor
         tv.isRichText = false
         tv.allowsUndo = true
         tv.isAutomaticQuoteSubstitutionEnabled = false
@@ -157,10 +157,19 @@ final class LargeDataEditorController: NSWindowController, NSWindowDelegate, NST
         info.stringValue = parts.joined(separator: "  ·  ")
         applyButton.isEnabled = model.isEditable
         (textView.documentView as? NSTextView)?.isEditable = model.isEditable && mode.selectedSegment == 0
-        if !updating { modeChanged() }
+        // Edycja w widoku zmienia model, a śledzenie ponawia `refresh` asynchronicznie — już po zdjęciu `updating`.
+        // Widok, który pokazuje dokładnie treść modelu, zostaje bez przebudowy (fokus, kursor, cofanie — R4-03).
+        if !updating, !textViewShowsModel { modeChanged() }
         mode.setEnabled(format.isImage, forSegment: 2)
         mode.setEnabled(format == .pdf, forSegment: 3)
         mode.setEnabled(format.isText, forSegment: 4)
+    }
+
+    /// Widok tekstu jest w oknie i ma tę samą treść co model (np. właśnie wpisaną).
+    private var textViewShowsModel: Bool {
+        guard mode.selectedSegment == 0, textView.superview === content, let tv = textView.documentView as? NSTextView else { return false }
+        if let text = model.text { return tv.string == text }
+        return model.bytes == Data(tv.string.utf8)
     }
 
     @objc private func modeChanged() {

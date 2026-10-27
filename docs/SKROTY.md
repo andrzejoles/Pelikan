@@ -26,6 +26,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Notatnik SQL | `file.new.notebook` |  |  | Brak | SD-NB-001 |
 | Otwórz… | `file.open` | ⌘O | ⌘O | Brak | PD-SQLW-012 |
 | Otwórz ponownie | `file.reopen` |  |  | Brak | PD-SQLW-012 |
+| Wyczyść listę ostatnich plików | `file.clearRecent` |  |  | Brak | PD-SQLW-012 |
 | Zapisz | `file.save` | ⌘S | ⌘S | Brak | PD-SQLW-012 |
 | Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | PD-SQLW-012 |
 | Kodowanie pliku… | `file.encoding` |  |  | Brak | PC-ENC-001 |
@@ -115,6 +116,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Znajdź i zamień… | `edit.find` | ⌃F, ⌘F | ⌘F | Brak | PD-EDIT-008 |
 | Znajdź następne | `edit.findNext` | F3 †, ⌘G | ⌘G, F3 | Za zgodą | PD-EDIT-008 |
 | Znajdź poprzednie | `edit.findPrevious` | ⇧F3 †, ⇧⌘G | ⇧⌘G, ⇧F3 | Za zgodą | PD-EDIT-008 |
+| Zamień | `edit.replace` |  |  | Brak | PD-EDIT-008 |
+| Zamień wszystko | `edit.replaceAll` |  |  | Brak | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Za zgodą | PD-EDIT-010 |
 | Formatuj kod PL/SQL | `edit.beautify` | ⇧⌘F | ⇧⌘F | Za zgodą | PD-BEAU-002 |
 | Podpowiedź kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Brak | PD-CA-001 |
@@ -282,6 +285,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Połącz ponownie okna połączenia | `connection.reconnectWindows` |  |  | Brak | PD-CONN-022 |
 | Połączenia › Ustaw bieżący schemat… | `connection.setCurrentSchema` |  |  | Brak | PD-CONN-022 |
 | Połączenia › Rozłącz | `connection.disconnect` |  |  | Brak | PD-CONN-022 |
+| Przypnij połączenie okna | `session.pinWindowConnection` |  |  | Brak | PD-CONN-019 |
 | Połączenie okna… | `session.windowConnection` |  |  | Brak | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | PD-CONN-003 |
 
@@ -293,6 +297,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Otwórz przebieg profilera… | `test.profilerOpenRun` |  |  | Brak | PD-OPT-005 |
 | Zapisz punkty przerwania… | `debug.saveBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Wczytaj punkty przerwania… | `debug.loadBreakpoints` |  |  | Brak | PD-DBG-008 |
+| Włącz wszystkie punkty przerwania | `debug.enableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
+| Wyłącz wszystkie punkty przerwania | `debug.disableAllBreakpoints` |  |  | Brak | PD-DBG-008 |
+| Usuń wszystkie punkty przerwania | `debug.removeAllBreakpoints` |  |  | Brak | PD-DBG-008 |
 | Zapisz jako test standardowy… | `test.saveAsStandard` |  |  | Brak | PD-TEST-009 |
 | Ślad DBMS_TRACE przy wykonaniu | `test.trace` |  |  | Brak | PD-OPT-007 |
 | Historia przebiegów DBMS_TRACE | `test.traceRuns` |  |  | Brak | PD-OPT-007 |
@@ -444,6 +451,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | PD-TOOL-007 |
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | PD-TOOL-012 |
 | Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | PD-TOOL-015 |
+| Sesje › Akcja sesji | `sessions.action` |  |  | Brak | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Brak | PD-SCHED-001 |
 | Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | PD-DIAG-001 |
 | Diagram › Dodaj powiązane tabele | `diagram.addRelated` |  |  | Brak | PD-DIAG-001 |

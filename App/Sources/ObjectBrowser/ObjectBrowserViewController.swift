@@ -60,7 +60,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         // Drzewo z wyraźnym wcięciem poziomów (styl listy paska bocznego macOS prawie nie wcina dzieci).
         outline.style = .plain
         outline.indentationPerLevel = 16
-        outline.rowSizeStyle = .small
+        // Wysokość wiersza z czcionki drzewa (przy stylu innym niż `.custom` AppKit ignoruje `rowHeight`).
+        outline.rowSizeStyle = .custom
         outline.dataSource = self
         outline.delegate = self
         outline.target = self
@@ -130,7 +131,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     var browserFont: NSFont {
         let s = workspace.settings, ui = InterfaceFonts.shared
         return AppFonts.font(family: s.browserFontName.isEmpty ? ui.family : s.browserFontName,
-                             size: s.browserFontSize > 0 ? s.browserFontSize : max(9, ui.size - 1), weight: s.browserFontWeight)
+                             size: s.browserFontSize > 0 ? s.browserFontSize : AppFonts.reduced(ui.size, by: 1), weight: s.browserFontWeight)
     }
 
     private func modelChanged() {
@@ -157,20 +158,37 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 
     // MARK: Ładowanie
 
+    /// Numer przeładowania: zmiana połączenia, metadanych, użytkownika i filtra uruchamiają osobne przeładowania —
+    /// wynik starszego (np. wolniejszej bazy poprzedniego połączenia) nie nadpisuje drzewa ani listy użytkowników (R4-21).
+    private var reloadGeneration = 0
+    /// Lista użytkowników do wczytania — także gdy przeładowanie z nią zastąpi nowsze bez niej.
+    private var usersPending = false
+
     private func reloadAll(users: Bool) async {
+        reloadGeneration += 1
+        let generation = reloadGeneration
+        if users { usersPending = true }
+        func current() -> Bool { generation == reloadGeneration }
         guard let m = workspace.metadata() else {
+            usersPending = false
             roots = [Node(.message(L10n.tr("Zaloguj się, aby przeglądać obiekty")))]
             userPopup.removeAllItems()
             outline.reloadData()
             return
         }
+        let withUsers = usersPending
         do {
             let types = try await m.availableTypes()
-            if users { try await loadUsers(m) }
-            if ownerMode == 0 { owner = try await m.currentSchema() }
+            let userList = withUsers ? try await (m.currentSchema(), m.users()) : nil
+            let schema = ownerMode == 0 ? try await m.currentSchema() : nil
+            guard current() else { return }
+            if let userList { showUsers(current: userList.0, list: userList.1) }
+            usersPending = false
+            if let schema { owner = schema }
             // Filtr domyślny dla użytkownika (PD-OB-007) — przy pierwszym wczytaniu połączenia.
-            if users, workspace.browserFilter == nil, let user = try? await m.currentSchema(),
+            if withUsers, workspace.browserFilter == nil, let user = try? await m.currentSchema(),
                let f = workspace.browserCustomization.defaultFilter(user: user) { workspace.browserFilter = f }
+            guard current() else { return }
             // Foldery użytkownika widoczne dla połączenia (PD-OB-008) i foldery typów wg preferencji (PD-OB-025).
             let def = workspace.sessions.mainConnectionID.flatMap { workspace.connections.connection($0) }
             let userFolders = workspace.browserCustomization.folders.filter { $0.parentID == nil && $0.visible(for: def) }
@@ -178,14 +196,13 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             outline.reloadData()
             status.stringValue = ""
         } catch {
+            guard current() else { return }
             roots = [Node(.message(error.localizedDescription))]
             outline.reloadData()
         }
     }
 
-    private func loadUsers(_ m: MetadataProvider) async throws {
-        let current = try await m.currentSchema()
-        let list = try await m.users()
+    private func showUsers(current: String, list: [String]) {
         userPopup.removeAllItems()
         userPopup.addItem(withTitle: L10n.tr("<Bieżący użytkownik> \(current)"))
         userPopup.addItem(withTitle: L10n.tr("<Wszyscy użytkownicy>"))
@@ -587,6 +604,9 @@ final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NS
         }
         table.usesAlternatingRowBackgroundColors = true
         table.allowsMultipleSelection = true
+        // Wysokość wiersza z czcionki interfejsu i kodu (D178).
+        table.rowSizeStyle = .custom
+        table.rowHeight = max(AppFonts.rowHeight(for: InterfaceFonts.shared.body), AppFonts.rowHeight(for: InterfaceFonts.shared.code)) - 4
         table.dataSource = self
         table.delegate = self
         let scroll = NSScrollView()
@@ -610,7 +630,8 @@ final class ObjectInfoWindowController: NSWindowController, NSWindowDelegate, NS
         guard let id = tableColumn?.identifier.rawValue, let i = Int(id.dropFirst()) else { return nil }
         let tf = NSTextField(labelWithString: i < rows[row].count ? rows[row][i] : "")
         tf.isSelectable = true
-        tf.font = i == 0 ? .systemFont(ofSize: 12, weight: .medium) : .monospacedSystemFont(ofSize: 12, weight: .regular)
+        let fonts = InterfaceFonts.shared
+        tf.font = i == 0 ? AppFonts.font(family: fonts.family, size: fonts.size, weight: .medium) : fonts.code
         tf.lineBreakMode = .byTruncatingTail
         return tf
     }

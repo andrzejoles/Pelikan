@@ -158,6 +158,8 @@ public enum LocalTaskRunner {
                                  at date: Date = Date()) async throws -> URL {
         var sql = query.trimmingCharacters(in: .whitespacesAndNewlines)
         while sql.hasSuffix(";") { sql.removeLast() }
+        // Przed wykonaniem: eksport tylko czyta (bez strażnika zmian, w długotrwałej sesji zadania).
+        guard StatementClassifier.isPlainQuery(sql) else { throw CommandError.notAvailable(L10n.tr("Eksport wymaga zapytania (SELECT)")) }
         let (cols, rows) = try await s.queryAll(sql, limit: 5_000_000)
         let data = ExportData(title: pattern, columns: cols, rows: rows, sql: sql)
         var name = fileName(pattern, at: date)

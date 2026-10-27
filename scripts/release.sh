@@ -19,7 +19,7 @@ VERSION="$(scripts/version.sh)"
 TAG="v$VERSION"
 REPO="$(awk -F' = ' '/^PELIKAN_REPOSITORY/{print $2}' Config/Brand.xcconfig)"
 APP_NAME="$(awk -F' = ' '/^PELIKAN_APP_NAME/{print $2}' Config/Brand.xcconfig)"
-if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || gh release view "$TAG" >/dev/null 2>&1; then
     echo "Wydanie $TAG już istnieje" >&2
     exit 1
 fi
@@ -69,6 +69,14 @@ NOTES
 
 git tag "$TAG"
 git push origin "$TAG"
-gh release create "$TAG" --draft --title "$TITLE" --notes-file "$RELEASE_DIR/notes.md" \
-    "$RELEASE_DIR/$APP_NAME-$VERSION.zip" "$RELEASE_DIR/appcast.xml" "dist/$APP_NAME-$VERSION.dmg" "dist/$APP_NAME-$VERSION.pkg"
+# Nieudane utworzenie wydania (sieć, uprawnienia, plik) nie może zostawić samego tagu — ponowne uruchomienie
+# odmówiłoby wtedy („już istnieje”), a tag trzeba by usuwać ręcznie lokalnie i na GitHubie.
+if ! gh release create "$TAG" --draft --title "$TITLE" --notes-file "$RELEASE_DIR/notes.md" \
+    "$RELEASE_DIR/$APP_NAME-$VERSION.zip" "$RELEASE_DIR/appcast.xml" "dist/$APP_NAME-$VERSION.dmg" "dist/$APP_NAME-$VERSION.pkg"; then
+    echo "Nie udało się utworzyć wydania $TAG — usuwam tag (lokalnie i na GitHubie)" >&2
+    gh release delete "$TAG" --yes >/dev/null 2>&1 || true   # częściowo utworzony szkic
+    git push -q origin ":refs/tags/$TAG" || true
+    git tag -d "$TAG" >/dev/null
+    exit 1
+fi
 echo "Szkic wydania $TAG gotowy. Sprawdź go na GitHubie i opublikuj: gh release edit $TAG --draft=false"

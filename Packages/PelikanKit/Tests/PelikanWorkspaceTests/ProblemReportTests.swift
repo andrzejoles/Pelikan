@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanLog
 @testable import PelikanWorkspace
 import Testing
 
@@ -31,6 +32,19 @@ struct ProblemReportTests {
         #expect(!r.body().contains("### Środowisko") && !r.body().contains("### Ostatnie wpisy"))
         #expect(ProblemReport(origin: .manual, title: "Coś", environment: "", logTail: []).title == "Coś")
         #expect(ProblemReport(origin: .crash(nil), environment: "", logTail: []).title == "Awaria: nieoczekiwane zamknięcie")
+    }
+
+    @Test("R3-05: tytuł z samego kodu błędu, komunikat do edycji albo pominięcia")
+    func errorMessageOptional() {
+        var r = ProblemReport(origin: .error("ORA-20001: Klient Jan Kowalski nie ma limitu\nORA-06512: at \"HR.LIMITY\", line 7"),
+                              environment: "", logTail: [])
+        #expect(r.title == "Błąd: ORA-20001")
+        #expect(r.body().contains("Jan Kowalski"))
+        r.errorMessage = "ORA-20001: (dane usunięte)"
+        #expect(!r.body().contains("Kowalski") && r.body().contains("(dane usunięte)"))
+        r.includeErrorMessage = false
+        #expect(!r.body().contains("### Komunikat błędu") && !r.body().contains("ORA-20001"))
+        #expect(ProblemReport(origin: .error("Nie można otworzyć pliku /Volumes/Klient/umowa.sql"), environment: "", logTail: []).title == "Błąd w aplikacji")
     }
 
     @Test("adres nowego zgłoszenia: repozytorium, tytuł, treść, znak +")
@@ -106,6 +120,19 @@ struct ProblemReportTests {
         #expect(CrashMonitor.latestReport(appName: "Pelikan", since: started, in: reports) == nil)
         try Self.ips.write(to: reports.appendingPathComponent("Pelikan-2026-10-26-101500.ips"), atomically: true, encoding: .utf8)
         #expect(CrashMonitor.latestReport(appName: "Pelikan", since: started, in: reports)?.exceptionType == "EXC_BREAKPOINT")
+    }
+
+    @Test("znacznik pracy: nieudany zapis zostawia ślad w dzienniku")
+    func monitorMarkerNotWritten() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-crash-\(UUID().uuidString)")
+        try Data().write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let sink = MemoryLogSink(everything: true)
+        let id = Log.addSink(sink)
+        defer { Log.removeSink(id) }
+        // Katalog danych jest zwykłym plikiem — znacznika nie da się utworzyć.
+        #expect(CrashMonitor(dataDirectory: file).begin() == nil)
+        #expect(sink.all.contains { $0.level == .error && $0.category == "app" && $0.text.hasPrefix("Znacznik pracy aplikacji nie zapisany") })
     }
 
     @Test("komenda Zgłoś problem: tylko dla użytkownika, z opisem środowiska bez nazw połączeń")

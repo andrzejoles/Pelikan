@@ -33,7 +33,7 @@ struct ApprovalView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     if !preview.statements.isEmpty {
                         section(L10n.tr("Polecenia")) {
-                            Text(preview.statements.joined(separator: "\n\n")).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            Text(preview.statements.joined(separator: "\n\n")).font(.code).textSelection(.enabled)
                         }
                     }
                     if !preview.affectedObjects.isEmpty {
@@ -48,14 +48,14 @@ struct ApprovalView: View {
                         section(L10n.tr("Plan wykonania")) {
                             // Wiersze DBMS_XPLAN są szersze niż okno — przewijanie w poziomie zamiast zawijania.
                             ScrollView(.horizontal) {
-                                Text(plan).font(.system(size: 12, design: .monospaced)).textSelection(.enabled).fixedSize()
+                                Text(plan).font(.code).textSelection(.enabled).fixedSize()
                             }
                         }
                     }
                     let args = request.arguments.values.filter { !$0.key.hasPrefix("__") }
                     if !args.isEmpty {
                         section(L10n.tr("Argumenty")) {
-                            Text(JSONValue.object(args).description).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                            Text(JSONValue.object(args).description).font(.code).textSelection(.enabled)
                         }
                     }
                 }
@@ -90,11 +90,21 @@ struct ApprovalView: View {
     }
 }
 
-/// Macierz uprawnień przy starcie sesji agenta (PROMPT §7.4): poziom każdego narzędzia można obniżyć dla tej sesji.
+/// Wybór z macierzy uprawnień: obniżone poziomy narzędzi i katalog roboczy CLI.
+struct PermissionChoice: Sendable {
+    var overrides: [CommandID: AgentAccess]
+    /// Folder pliku aktywnego okna jako katalog roboczy (false — katalog tymczasowy sesji).
+    var useProjectDirectory: Bool
+}
+
+/// Macierz uprawnień przy starcie sesji agenta (PROMPT §7.4): poziom każdego narzędzia można obniżyć dla tej sesji;
+/// widać katalog roboczy CLI (folder pliku aktywnego okna — pliki, które agent może czytać poza Pelikanem).
 struct PermissionMatrixView: View {
     let profileName: String
     @State var rows: [PermissionRow]
-    let onFinish: ([CommandID: AgentAccess]?) -> Void
+    let projectDirectory: String?
+    @State private var useProjectDirectory = true
+    let onFinish: (PermissionChoice?) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -105,7 +115,7 @@ struct PermissionMatrixView: View {
                 ForEach($rows) { $row in
                     HStack {
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(row.tool).font(.system(size: 12, design: .monospaced))
+                            Text(row.tool).font(.code)
                             Text(row.title).font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -118,6 +128,17 @@ struct PermissionMatrixView: View {
                 }
             }
             .frame(minHeight: 320)
+            if let projectDirectory {
+                Toggle(isOn: $useProjectDirectory) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(L10n.tr("Katalog roboczy agenta: folder pliku aktywnego okna")).font(.ui)
+                        Text(projectDirectory).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary)
+                            .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
+                    }
+                }
+            } else {
+                Text(L10n.tr("Katalog roboczy agenta: katalog tymczasowy sesji")).font(.ui).foregroundStyle(.secondary)
+            }
             HStack {
                 Button(L10n.tr("Wszystko tylko do odczytu")) {
                     rows = PermissionMatrix.readOnly(rows)
@@ -128,12 +149,12 @@ struct PermissionMatrixView: View {
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { onFinish(nil) }.keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Uruchom")) {
-                    onFinish(PermissionMatrix.overrides(rows))
+                    onFinish(PermissionChoice(overrides: PermissionMatrix.overrides(rows), useProjectDirectory: useProjectDirectory))
                 }
                 .keyboardShortcut(.defaultAction)
             }
         }
         .padding(16)
-        .windowSize(width: 560, height: 520)
+        .windowSize(width: 560, height: 560)
     }
 }
