@@ -47,7 +47,7 @@ struct QueryByExampleView: View {
         let obj = criteria.filter { !$0.value.trimmingCharacters(in: .whitespaces).isEmpty }.mapValues { JSONValue.string($0) }
         Task {
             do {
-                try await workspace.invoke("grid.queryByExample", CommandArguments(["criteria": .object(obj)]))
+                try await workspace.invoke("grid.queryByExample", CommandArguments(["criteria": .object(obj), "tab": .string(tab.id.uuidString)]))
                 close()
             } catch { message = error.localizedDescription }
         }
@@ -78,7 +78,7 @@ struct ColumnFilterView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.tr("Fragmenty nazw kolumn (po przecinku albo w liniach — można wkleić listę)")).font(.uiSecondary)
-            TextEditor(text: $names).font(.system(size: 12, design: .monospaced)).frame(minHeight: 70)
+            CodeTextEditor(text: $names).frame(minHeight: 70)
             if !workspace.settings.columnFilterHistory.isEmpty {
                 Menu(L10n.tr("Historia")) {
                     ForEach(workspace.settings.columnFilterHistory, id: \.self) { h in Button(h.replacingOccurrences(of: "\n", with: ", ")) { names = h } }
@@ -97,7 +97,10 @@ struct ColumnFilterView: View {
             }
             if !message.isEmpty { Text(message).font(.uiSecondary).foregroundStyle(.red) }
             HStack {
-                Button(L10n.tr("Pokaż wszystkie kolumny")) { workspace.perform("grid.clearColumnFilter"); close() }
+                Button(L10n.tr("Pokaż wszystkie kolumny")) {
+                    workspace.perform("grid.clearColumnFilter", CommandArguments(["tab": .string(tab.id.uuidString)]))
+                    close()
+                }
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { close() }.keyboardShortcut(.cancelAction)
                 Button(L10n.tr("Filtruj")) { apply() }.keyboardShortcut(.defaultAction)
@@ -113,7 +116,8 @@ struct ColumnFilterView: View {
 
     private func apply() {
         let args = CommandArguments(["names": .string(names), "types": .string(types.map(\.rawValue).joined(separator: ",")),
-                                     "mandatory": .bool(mandatory), "keys": .string(keys.map(\.rawValue).joined(separator: ","))])
+                                     "mandatory": .bool(mandatory), "keys": .string(keys.map(\.rawValue).joined(separator: ",")),
+                                     "tab": .string(tab.id.uuidString)])
         Task {
             do {
                 try await workspace.invoke("grid.columnFilter", args)
