@@ -9,8 +9,9 @@ import Synchronization
 /// funkcje spoza `capabilities` są w interfejsie wyszarzone z podpowiedzią „przełącz na Instant Client”.
 public struct ThinDriver: DatabaseDriver {
     public let kind = DriverKind.thin
-    // Bez debugowania: DBMS_DEBUG wymaga Instant Client, JDWP pominięte (D106).
-    public static let capabilitySet: DriverCapabilities = [.lobs, .proxyUser, .sysdba, .json, .tnsNames]
+    // Bez debugowania: DBMS_DEBUG wymaga Instant Client, JDWP pominięte (D106). Bez `.json`: natywny JSON (21c+)
+    // OracleNIO dekoduje tylko stratnie (słownik bez kolejności pól, NUMBER jako Double) — komórka zostaje `<JSON>`.
+    public static let capabilitySet: DriverCapabilities = [.lobs, .proxyUser, .sysdba, .tnsNames]
     public var capabilities: DriverCapabilities { Self.capabilitySet }
 
     public init() {}
@@ -299,6 +300,15 @@ public final class ThinSession: DatabaseSession, @unchecked Sendable {
             let i = try cell.decode(IntervalDS.self, context: .default)
             return .intervalDS(days: Int32(i.days), hours: Int32(i.hours), minutes: Int32(i.minutes), seconds: Int32(i.seconds),
                                fseconds: Int32(i.fractionalSeconds))
+        case .intervalYM:
+            return OracleRaw.intervalYM(buf.readBytes(length: buf.readableBytes) ?? []).map { .intervalYM(years: $0.years, months: $0.months) } ?? .null
+        case .vector:
+            // Format wektora jest w nagłówku wartości — dekoder OracleNIO odrzuca inny format (typeMismatch).
+            if let v = try? cell.decode(OracleVectorFloat32.self, context: .default) { return .vector(v.map(Double.init)) }
+            if let v = try? cell.decode(OracleVectorFloat64.self, context: .default) { return .vector(Array(v)) }
+            if let v = try? cell.decode(OracleVectorInt8.self, context: .default) { return .vector(v.map(Double.init)) }
+            if let v = try? cell.decode(OracleVectorBinary.self, context: .default) { return .vector(v.map(Double.init)) }
+            return .object(typeName: Self.oracleType(t).rawValue, description: "")
         case .varchar, .long, .nVarchar, .longNVarchar, .char, .nChar:
             return .text(try cell.decode(String.self, context: .default))
         default:

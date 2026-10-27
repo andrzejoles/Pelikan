@@ -31,6 +31,13 @@ struct OracleRawTests {
         #expect(ThinSession.compiledObject("alter package p compile") == nil)
     }
 
+    @Test("INTERVAL YEAR TO MONTH z surowych bajtów")
+    func intervalYM() {
+        #expect(OracleRaw.intervalYM([0x80, 0, 0, 2, 63])! == (2, 3))
+        #expect(OracleRaw.intervalYM([0x7F, 0xFF, 0xFF, 0xFF, 54])! == (-1, -6))
+        #expect(OracleRaw.intervalYM([0x80, 0]) == nil)
+    }
+
     @Test("DATE i TIMESTAMP z ułamkiem sekund")
     func dates() {
         let d = OracleRaw.timestamp([120, 124, 10, 23, 14, 31, 60])

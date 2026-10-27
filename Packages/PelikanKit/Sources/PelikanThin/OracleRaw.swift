@@ -38,6 +38,13 @@ enum OracleRaw {
         return (positive || text == "0" ? "" : "-") + text
     }
 
+    /// INTERVAL YEAR TO MONTH (5 bajtów): lata jako UInt32 big-endian z przesunięciem 0x80000000, miesiące + 60.
+    static func intervalYM(_ b: [UInt8]) -> (years: Int32, months: Int32)? {
+        guard b.count >= 5 else { return nil }
+        let raw = (UInt32(b[0]) << 24) | (UInt32(b[1]) << 16) | (UInt32(b[2]) << 8) | UInt32(b[3])
+        return (Int32(truncatingIfNeeded: Int64(raw) - 0x8000_0000), Int32(b[4]) - 60)
+    }
+
     /// DATE (7 bajtów) / TIMESTAMP (11) / TIMESTAMP WITH TIME ZONE (13).
     static func timestamp(_ b: [UInt8]) -> OracleTimestamp? {
         guard b.count >= 7 else { return nil }
