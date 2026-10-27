@@ -97,17 +97,6 @@ public final class FileLogSink: LogSink {
         }
         try? fm.moveItem(at: currentFile, to: name(1))
     }
-
-    /// Czyści pliki dziennika (Preferencje); następny wpis tworzy nowy plik.
-    public func clear() {
-        queue.sync {
-            handle.withLock { h in
-                try? h?.close()
-                h = nil
-                for f in files { try? FileManager.default.removeItem(at: f) }
-            }
-        }
-    }
 }
 
 #if canImport(os)
