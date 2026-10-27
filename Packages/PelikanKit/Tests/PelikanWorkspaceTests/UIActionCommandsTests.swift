@@ -211,4 +211,12 @@ struct UIActionCommandsTests {
         try await ws.invoke("diagram.setColor", CommandArguments(["color": ""]))
         #expect(doc.diagram.item(noteID)?.color == nil)
     }
+
+    @Test("kolejność Code Contents komendą (ustawienie Preferencji)")
+    func codeContentsSort() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        try await ws.invoke("codeContents.sort", CommandArguments(["order": "name"]))
+        #expect(ws.settings.codeContentsOrder == .name)
+        await #expect(throws: CommandError.self) { try await ws.invoke("codeContents.sort", CommandArguments(["order": "x"])) }
+    }
 }

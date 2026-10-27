@@ -87,6 +87,17 @@ enum CodeContentsCommands {
 
     @MainActor static var all: [Command] {
         [
+            Command(CommandDescriptor(id: "codeContents.sort", title: L10n.tr("Kolejność Code Contents"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
+                                      parameters: [CommandParameter("order", .string, required: true, L10n.tr("Kolejność: source (jak w źródle), name (alfabetycznie), kind (według rodzaju)"),
+                                                                    allowed: CodeContents.Order.allCases.map(\.rawValue))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Ustawia kolejność elementów w panelu Code Contents (zapamiętana w Preferencjach)."),
+                                      inMenu: false, feature: "PD-CA-010")) { ctx in
+                let raw = ctx.arguments.string("order") ?? ""
+                guard let order = CodeContents.Order(rawValue: raw) else { throw CommandError.invalidArgument("order", raw) }
+                ctx.workspace.settings.codeContentsOrder = order
+                return .ok
+            },
             Command(CommandDescriptor(id: "codeContents.select", title: L10n.tr("Zaznacz element"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .full, effect: .uiState,
                                       summary: L10n.tr("Zaznacza w edytorze cały element Code Contents (podprogram, deklarację, jednostkę)."),

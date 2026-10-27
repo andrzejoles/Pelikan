@@ -190,6 +190,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Znajdź użycia | `edit.findUsages` |  | ⌥F7 | Brak | DG-USE-001 |
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Brak | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Brak | PD-TPL-002 |
+| Zawartość kodu › Kolejność Code Contents | `codeContents.sort` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Brak | PD-CA-010 |
