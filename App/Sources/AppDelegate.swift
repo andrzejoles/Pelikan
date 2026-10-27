@@ -1118,6 +1118,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return r == .alertFirstButtonReturn ? field.stringValue : nil
     }
 
+    /// Fraza (D186): pola bez podglądu (NSSecureTextField); przy `confirm` drugie pole — różne wpisy pytają ponownie.
+    func askSecret(_ title: String, message: String, confirm: Bool) async -> String? {
+        if Self.scriptSkipsDialog(title) { return nil }
+        var note = message
+        while true {
+            let alert = NSAlert()
+            alert.messageText = title
+            alert.informativeText = note
+            let first = NSSecureTextField(frame: NSRect(x: 0, y: confirm ? 30 : 0, width: 260, height: 24))
+            first.placeholderString = L10n.tr("Fraza")
+            let second = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+            second.placeholderString = L10n.tr("Powtórz frazę")
+            let box = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: confirm ? 54 : 24))
+            box.addSubview(first)
+            if confirm {
+                box.addSubview(second)
+                first.nextKeyView = second
+            }
+            alert.accessoryView = box
+            alert.addButton(withTitle: L10n.tr("OK"))
+            alert.addButton(withTitle: L10n.tr("Anuluj"))
+            alert.window.initialFirstResponder = first
+            let r: NSApplication.ModalResponse
+            if let window = mainWindow?.window { r = await alert.beginSheetModal(for: window) } else { r = alert.runModal() }
+            guard r == .alertFirstButtonReturn else { return nil }
+            if confirm, first.stringValue != second.stringValue {
+                note = L10n.tr("Wpisane frazy się różnią. Wpisz je ponownie.")
+                continue
+            }
+            return first.stringValue
+        }
+    }
+
     private var findPanel: NSPanel?
     func showFindReplace() {
         if findPanel == nil {

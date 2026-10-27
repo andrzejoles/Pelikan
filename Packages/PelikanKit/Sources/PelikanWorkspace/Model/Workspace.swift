@@ -73,6 +73,9 @@ public protocol UIServices: AnyObject {
     func showProblemReport(_ report: ProblemReport)
     /// Pole „Szukaj czynności” na wstążce (PD-UI-012).
     func focusRibbonSearch()
+    /// Tekst tajny (fraza szyfrująca eksportu połączeń, D186) w polu bez podglądu; `confirm` — drugie pole do powtórzenia.
+    /// nil — anulowano. Nigdy nie trafia do dziennika ani historii.
+    func askSecret(_ title: String, message: String, confirm: Bool) async -> String?
     /// Panele narzędzi okna głównego (PD-UI-003): pokazanie albo ukrycie panelu.
     func toggleToolDock(_ placement: ToolPlacement)
     /// Przeniesienie narzędzia (nil — bieżącego) do panelu albo osobnego okna; zwraca klucz narzędzia (nil — brak narzędzia).
@@ -206,6 +209,7 @@ extension UIServices {
     public func customizeToolbar() {}
     public func showProblemReport(_ report: ProblemReport) {}
     public func focusRibbonSearch() {}
+    public func askSecret(_ title: String, message: String, confirm: Bool) async -> String? { nil }
     public func toggleToolDock(_ placement: ToolPlacement) {}
     public func placeTool(_ key: String?, at placement: ToolPlacement) -> String? { nil }
     public func closeTool(_ key: String?) -> String? { nil }

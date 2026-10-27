@@ -274,6 +274,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wyloguj połączenie główne | `session.logoff` |  |  | Brak | PD-CONN-018 |
 | Połączenia › Eksportuj definicje połączeń… | `connection.export` |  |  | Brak | PD-CONN-010 |
 | Połączenia › Importuj definicje połączeń… | `connection.import` |  |  | Brak | PD-CONN-010 |
+| Połączenia › Eksportuj połączenia z hasłami… | `connection.exportWithPasswords` |  |  | Brak | PD-CONN-010 |
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Usuń połączenie | `connection.delete` |  |  | Brak | PD-CONN-004 |

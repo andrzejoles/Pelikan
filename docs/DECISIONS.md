@@ -1747,3 +1747,22 @@ Poprawione przy okazji: „Wczytaj ponownie z bazy” czytał źródło z połą
 brał alias połączenia głównego. Pierwsze zbudowanie drzewa po wczytaniu widoku (synchronicznie z loadView kolumna
 zostawała wąska i nazwy były obcinane). Komendy połączeń przyjmują też nazwę definicji (skrypty, scenariusze zrzutów).
 
+### D186 · 2026-10-27 — Eksport i import połączeń z hasłami (wyjątek od „hasła tylko w Pęku kluczy”)
+Właściciel poprosił o eksport i import połączeń wraz z zapisanymi hasłami, z wyborem haseł zaszyfrowanych albo jawnych,
+eksport po dodatkowym uwierzytelnieniu, plik importu usuwany po imporcie. Wariant jawny łamie zasadę z PROMPT
+(„hasła tylko w Pęku kluczy, nigdy w plikach”) — zgłoszone właścicielowi; potwierdził go wprost: po latach hasło może
+nie być zapisane nigdzie poza Pelikanem, a bywa potrzebne do konfiguracji innego narzędzia.
+
+Komenda `connection.exportWithPasswords` (Sesja › Połączenia, wstążka; agent — brak dostępu, wywołanie przez agenta
+odrzucone także w kodzie): wybór trybu (argument `mode` albo pytanie), dla jawnego osobne ostrzeżenie, zawsze
+uwierzytelnienie właściciela Maca (`authenticateOwner` — Touch ID albo hasło, niezależnie od ustawienia z D56),
+fraza tylko z okna z polami NSSecureTextField (z powtórzeniem, min. 8 znaków), plik 0600. Format: zwykły eksport
+definicji (starszy import wczyta same definicje) + sekcja `secrets` — `plain` (hasło bazy i tunelu SSH dla
+identyfikatora definicji z pliku) albo `encrypted`: AES-256-GCM, klucz PBKDF2-HMAC-SHA256 (600 000 iteracji, sól 16
+bajtów; CommonCrypto na macOS, implementacja w Swifcie z HMAC na Linuksie, zgodna z wektorami RFC 7914). Import
+(`connection.import`): plik z hasłami — fraza dla zaszyfrowanego (zła fraza: nic nie zaimportowano, plik zostaje),
+hasła do Pęku kluczy pod nowymi identyfikatorami (konflikt id — nowe id, jak dotąd), definicja z hasłem bazy dostaje
+„zapisz hasło”; po udanym imporcie plik z hasłami jest usuwany (`removeItem`, bez Kosza — kopia w Koszu zostawiałaby
+hasła); plik bez haseł zostaje jak dotąd. Dziennik — tylko liczby definicji i haseł. Ograniczenie: usunięcie pliku
+na dysku SSD nie gwarantuje zamazania danych — instrukcja i ostrzeżenie każą trzymać plik w bezpiecznym miejscu.
+

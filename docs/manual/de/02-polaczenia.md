@@ -174,6 +174,14 @@ für griffbereite Abfragen.
 Passwörter in einer JSON-Datei. **Verbindungsdefinitionen importieren …** lädt sie auf einem anderen Mac; die Passwörter
 geben Sie beim ersten Verbinden ein.
 
+**Sitzung › Verbindungen › Verbindungen mit Passwörtern exportieren …** speichert die Definitionen zusammen mit den
+Passwörtern der Datenbanken und SSH-Tunnel — etwa um Verbindungen auf einen neuen Mac zu übertragen oder ein Jahre altes
+Passwort für ein anderes Werkzeug abzulesen. Der Export erfordert die Bestätigung durch den Mac-Besitzer (Touch ID oder
+Passwort). Passwörter können **mit einer Passphrase verschlüsselt** (ohne Passphrase nicht wiederherstellbar) oder im
+**Klartext** gespeichert werden — dann warnt Pelikan zusätzlich, und jeder mit der Datei kann sie lesen. **Definitionen
+importieren …** erkennt eine Datei mit Passwörtern, fragt bei Verschlüsselung nach der Passphrase, speichert die
+Passwörter im Schlüsselbund und **löscht die Datei**.
+
 ## Lizenzen der Oracle-Packs
 
 AWR-, ASH- und ADDM-Berichte erfordern das kostenpflichtige Oracle Diagnostics Pack, SQL Monitor und SQL Tuning Advisor

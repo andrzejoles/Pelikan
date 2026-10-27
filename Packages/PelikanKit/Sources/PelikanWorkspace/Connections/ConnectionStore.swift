@@ -24,6 +24,8 @@ public final class ConnectionStore {
         var version = 1
         var folders: [ConnectionFolder]
         var connections: [ConnectionDefinition]
+        /// Hasła w pliku eksportu (D186) — tylko eksport z hasłami; plik `connections.json` nigdy ich nie ma.
+        var secrets: ConnectionTransfer.Envelope?
     }
 
     /// - Parameter fileURL: nil = bez zapisu (testy, `Workspace(persists: false)`).
@@ -172,8 +174,8 @@ public final class ConnectionStore {
 
     // MARK: Eksport / import (bez haseł)
 
-    public func exportDefinitions() throws -> Data {
-        try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections))
+    public func exportDefinitions(secrets: ConnectionTransfer.Envelope? = nil) throws -> Data {
+        try JSONEncoder.pelikan.encode(Snapshot(folders: folders, connections: connections, secrets: secrets))
     }
 
     /// Definicje z pliku importu, które coś uruchamiają przy połączeniu (tunel SSH — proces `ssh`, skrypt
@@ -186,7 +188,9 @@ public final class ConnectionStore {
 
     /// Import dopisuje definicje (nowe id przy konflikcie), hasła trzeba podać ponownie. Tunel z hostem albo
     /// użytkownikiem wyglądającym jak opcja `ssh` odrzuca cały plik.
-    public func importDefinitions(_ data: Data) throws -> Int {
+    /// - Parameter secrets: hasła z pliku (identyfikatory z pliku) — zapisywane w Pęku kluczy; definicja z hasłem bazy
+    ///   dostaje „zapisz hasło” (D186).
+    public func importDefinitions(_ data: Data, secrets: [String: ConnectionSecrets] = [:]) throws -> Int {
         let snap = try JSONDecoder.pelikan.decode(Snapshot.self, from: data)
         for c in snap.connections { try c.sshTunnel?.validate() }
         var folderMap: [UUID: UUID] = [:]
@@ -200,14 +204,24 @@ public final class ConnectionStore {
         // Tylko foldery z importu: istniejący folder o id kolidującym z importowanym zachowuje swoje podfoldery.
         for i in firstImported..<folders.count { if let p = folders[i].parentID, let m = folderMap[p] { folders[i].parentID = m } }
         var count = 0
+        var stored: [(UUID, ConnectionSecrets)] = []
         for var c in snap.connections {
+            let fileID = c.id
             if connections.contains(where: { $0.id == c.id }) { c.id = UUID() }
             if let f = c.folderID { c.folderID = folderMap[f] ?? f }
             c.lastUsed = nil
+            if let s = secrets[fileID.uuidString] {
+                if s.password != nil { c.savePassword = true }
+                stored.append((c.id, s))
+            }
             connections.append(c)
             count += 1
         }
         try save()
+        for (id, s) in stored {
+            if let p = s.password { try self.secrets.setPassword(p, for: id.uuidString) }
+            if let p = s.sshPassword { try setSSHPassword(p, for: id) }
+        }
         return count
     }
 }

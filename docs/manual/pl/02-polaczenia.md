@@ -160,6 +160,13 @@ podręczne zapytania.
 **Sesja › Połączenia › Eksportuj definicje połączeń…** zapisuje definicje z folderami do pliku JSON bez haseł.
 **Importuj definicje połączeń…** wczytuje je na innym Macu; hasła podasz przy pierwszym połączeniu.
 
+**Sesja › Połączenia › Eksportuj połączenia z hasłami…** zapisuje definicje razem z hasłami baz i tuneli SSH — na
+przykład żeby przenieść połączenia na nowego Maca albo odczytać hasło sprzed lat do konfiguracji innego narzędzia.
+Eksport wymaga potwierdzenia właściciela Maca (Touch ID albo hasło). Hasła mogą być **zaszyfrowane frazą** (bez frazy
+nie da się ich odzyskać) albo **jawnym tekstem** — wtedy Pelikan dodatkowo ostrzega, a plik może odczytać każdy, kto
+go ma. **Importuj definicje połączeń…** rozpoznaje plik z hasłami, przy zaszyfrowanym pyta o frazę, zapisuje hasła
+w Pęku kluczy i **usuwa plik**.
+
 ## Licencje pakietów Oracle
 
 Raporty AWR, ASH i ADDM wymagają płatnego Oracle Diagnostics Pack, a SQL Monitor i SQL Tuning Advisor — Tuning Pack.

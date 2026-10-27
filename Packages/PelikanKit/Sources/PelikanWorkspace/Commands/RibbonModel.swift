@@ -142,7 +142,7 @@ public enum RibbonModel {
                     "connection.new", "connection.edit", "connection.delete", "connection.newFolder", separator,
                     "connection.connect", "connection.connectAsMain", "connection.disconnect", "connection.setCurrentSchema", separator,
                     "connection.openWindow", "connection.showWindows", "connection.closeWindows", "connection.reconnectWindows", separator,
-                    "connection.import", "connection.export", separator, "session.console",
+                    "connection.import", "connection.export", "connection.exportWithPasswords", separator, "session.console",
                 ]),
             ]),
             RibbonGroup(L10n.tr("Szukaj"), [
