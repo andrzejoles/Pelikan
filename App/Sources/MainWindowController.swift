@@ -327,8 +327,8 @@ final class FileDropView: NSView {
     var onDrop: (([URL]) -> Void)?
     /// Wklejenie tekstu na pusty obszar okien tworzy SQL Window (PD-SQLW-025).
     var onPaste: (() -> Void)?
-    /// Obiekt z Object Browsera upuszczony poza edytorem (PD-OB-010): właściciel, nazwa, typ.
-    var onObjectDrop: (([String]) -> Void)?
+    /// Obiekt z Object Browsera upuszczony poza edytorem (PD-OB-010): właściciel, nazwa, typ, połączenie gałęzi.
+    var onObjectDrop: ((BrowserObjectDrag) -> Void)?
 
     override var acceptsFirstResponder: Bool { onPaste != nil }
     @objc func paste(_ sender: Any?) { onPaste?() }
@@ -342,10 +342,8 @@ final class FileDropView: NSView {
         registerForDraggedTypes([.fileURL, ObjectBrowserViewController.objectPasteboardType])
     }
 
-    private func object(_ info: any NSDraggingInfo) -> [String]? {
-        guard let raw = info.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType) else { return nil }
-        let parts = raw.components(separatedBy: "\u{1}")
-        return parts.count == 3 ? parts : nil
+    private func object(_ info: any NSDraggingInfo) -> BrowserObjectDrag? {
+        info.draggingPasteboard.string(forType: ObjectBrowserViewController.objectPasteboardType).flatMap(BrowserObjectDrag.init)
     }
 
     @available(*, unavailable)
@@ -414,8 +412,8 @@ final class DocumentAreaViewController: NSViewController {
                 do { try self.workspace.openFile(u) } catch { self.workspace.ui?.showError(error.localizedDescription) }
             }
         }
-        root.onObjectDrop = { [weak self] parts in
-            self?.workspace.perform("ob.dropOnWorkspace", CommandArguments(["object": .string("\"\(parts[0])\".\"\(parts[1])\""), "type": .string(parts[2])]))
+        root.onObjectDrop = { [weak self] drag in
+            self?.workspace.perform("ob.dropOnWorkspace", drag.arguments())
         }
         root.onPaste = { [weak self] in
             guard let self, self.workspace.documents.isEmpty else { return }

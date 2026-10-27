@@ -10977,30 +10977,30 @@
         }
       }
     },
-    "Czyści pamięć podręczną słownika i przeładowuje drzewo." : {
+    "Czyści pamięć podręczną słownika i przeładowuje drzewo (wszystkie otwarte połączenia albo wskazane)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clears the dictionary cache and reloads the tree."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Очищає кеш словника й перезавантажує дерево."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vacía la caché del diccionario y vuelve a cargar el árbol."
+            "value" : "Clears the data dictionary cache and reloads the tree (all open connections or the given one)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leert den Data-Dictionary-Cache und lädt den Baum neu."
+            "value" : "Leert den Cache des Datenwörterbuchs und lädt den Baum neu (alle geöffneten Verbindungen oder die angegebene)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vacía la caché del diccionario de datos y recarga el árbol (todas las conexiones abiertas o la indicada)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очищує кеш словника даних і перезавантажує дерево (усі відкриті з'єднання або вказане)."
           }
         }
       }
@@ -23521,6 +23521,34 @@
         }
       }
     },
+    "Identyfikator albo nazwa połączenia (domyślnie połączenie główne)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection identifier or name (default: main connection)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kennung oder Name der Verbindung (Standard: Hauptverbindung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre de la conexión (por omisión, la conexión principal)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва з'єднання (типово — головне з'єднання)"
+          }
+        }
+      }
+    },
     "Identyfikator aplikacji klienta" : {
       "localizations" : {
         "en" : {
@@ -23853,34 +23881,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ідентифікатор з’єднання (типово — з’єднання активного вікна або головне)"
-          }
-        }
-      }
-    },
-    "Identyfikator połączenia (domyślnie połączenie główne)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection identifier (default: main connection)"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindungskennung (Standard: Hauptverbindung)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identificador de la conexión (por defecto, la conexión principal)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ідентифікатор з’єднання (типово — головне з’єднання)"
           }
         }
       }
@@ -42193,6 +42193,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neues SQL Window"
+          }
+        }
+      }
+    },
+    "Nowe okno SQL na tym połączeniu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New SQL Window on This Connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues SQL-Fenster auf dieser Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva ventana SQL en esta conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нове вікно SQL на цьому з'єднанні"
           }
         }
       }
@@ -60981,6 +61009,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hauptverbindung: "
+          }
+        }
+      }
+    },
+    "Połączenie główne: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main connection: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hauptverbindung: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexión principal: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Головне з'єднання: %@"
           }
         }
       }
@@ -81705,6 +81761,34 @@
         }
       }
     },
+    "Ustaw jako połączenie główne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set as Main Connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als Hauptverbindung festlegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Establecer como conexión principal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зробити головним з'єднанням"
+          }
+        }
+      }
+    },
     "Ustaw kursor na poleceniu w oknie SQL" : {
       "localizations" : {
         "en" : {
@@ -84865,6 +84949,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Користувач бази даних (порожньо — усі)"
+          }
+        }
+      }
+    },
+    "Użytkownik w gałęzi zaznaczonego połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "User in the branch of the selected connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzer im Zweig der ausgewählten Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario en la rama de la conexión seleccionada"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач у гілці вибраного з'єднання"
           }
         }
       }
@@ -110373,6 +110485,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gruppe"
+          }
+        }
+      }
+    },
+    "główne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "main"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haupt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "principal"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "головне"
           }
         }
       }

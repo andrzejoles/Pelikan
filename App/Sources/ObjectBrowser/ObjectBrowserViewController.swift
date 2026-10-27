@@ -2,8 +2,10 @@ import AppKit
 import PelikanDB
 import PelikanWorkspace
 
-/// Object Browser (UG 21): obiekty połączenia głównego w folderach typów, wybór użytkownika i filtr, elementy obiektu
-/// (kolumny, indeksy, więzy, wyzwalacze, podprogramy, zależności), Ostatnie, menu kontekstowe z komend `ob.*`.
+/// Object Browser (UG 21, PD-OB-001, D185): jak w DBeaverze — na najwyższym poziomie otwarte połączenia (główne
+/// pierwsze i wyróżnione), pod każdym foldery typów, Ostatnie i foldery użytkownika; elementy obiektu (kolumny, indeksy,
+/// więzy, wyzwalacze, podprogramy, zależności), menu kontekstowe z komend `ob.*` na połączeniu gałęzi. Rozłączone
+/// połączenie znika z drzewa. Wybór użytkownika dotyczy połączenia zaznaczonej gałęzi, filtr — wszystkich.
 final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
     private let workspace: Workspace
     private let outline = NSOutlineView()
@@ -12,15 +14,14 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     private let status = NSTextField(labelWithString: "")
     private var roots: [Node] = []
     private var tokens: [ObservationToken] = []
-    private var lastConnection: UUID?
-    private var lastGeneration = -1
-    private var lastRecent: [DBObject] = []
-    private var owner: String?          // nil — wszyscy użytkownicy
-    private var ownerMode = 0           // 0 bieżący, 1 wszyscy, 2 wybrany
+    /// Stan gałęzi połączeń (użytkownik, lista użytkowników, generacja metadanych) — trwa, dopóki połączenie jest otwarte.
+    private var branches: [UUID: Branch] = [:]
+    private var lastMain: UUID?
 
-    /// Węzeł drzewa (klasa — NSOutlineView porównuje elementy przez tożsamość).
+    /// Węzeł drzewa (klasa — NSOutlineView porównuje elementy przez tożsamość). `connection` — połączenie gałęzi.
     final class Node {
         enum Kind {
+            case connection
             case folder(DBObjectType)
             case recent
             case userFolder(BrowserFolder)
@@ -30,9 +31,10 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             case message(String)
         }
         let kind: Kind
+        let connection: UUID
         var children: [Node]?
         var loading = false
-        init(_ kind: Kind, children: [Node]? = nil) { self.kind = kind; self.children = children }
+        init(_ kind: Kind, connection: UUID, children: [Node]? = nil) { self.kind = kind; self.connection = connection; self.children = children }
 
         var object: DBObject? {
             switch kind {
@@ -41,6 +43,21 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             default: nil
             }
         }
+    }
+
+    /// Gałąź połączenia: węzeł, wybór użytkownika i stan wczytania (osobno dla każdego połączenia).
+    final class Branch {
+        let node: Node
+        var owner: String?          // nil — wszyscy użytkownicy
+        var ownerMode = 0           // 0 bieżący, 1 wszyscy, 2 wybrany
+        var users: (current: String, list: [String])?
+        var generation = -1
+        var recent: [DBObject] = []
+        /// Numer przeładowania: wynik starszego (np. wolniejszej bazy) nie nadpisuje gałęzi ani listy użytkowników (R4-21).
+        var reloadGeneration = 0
+        /// Lista użytkowników do wczytania — także gdy przeładowanie z nią zastąpi nowsze bez niej.
+        var usersPending = false
+        init(_ connection: UUID) { node = Node(.connection, connection: connection) }
     }
 
     init(workspace: Workspace) {
@@ -81,6 +98,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         userPopup.font = InterfaceFonts.shared.small
         userPopup.target = self
         userPopup.action = #selector(userChanged)
+        userPopup.toolTip = L10n.tr("Użytkownik w gałęzi zaznaczonego połączenia")
         filterField.controlSize = .small
         filterField.placeholderString = L10n.tr("Filtr: część nazwy, NAZWA%, status=invalid, source=tekst")
         filterField.target = self
@@ -134,116 +152,169 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                              size: s.browserFontSize > 0 ? s.browserFontSize : AppFonts.reduced(ui.size, by: 1), weight: s.browserFontWeight)
     }
 
+    /// Otwarte połączenia w kolejności drzewa: główne pierwsze, pozostałe w kolejności połączenia.
+    private var orderedConnections: [UUID] {
+        let open = workspace.sessions.openConnections
+        guard let main = workspace.sessions.mainConnectionID else { return open }
+        return [main] + open.filter { $0 != main }
+    }
+
     private func modelChanged() {
-        let conn = workspace.sessions.mainConnectionID
-        let generation = workspace.metadata()?.generation ?? 0
-        let recent = workspace.metadata()?.recent ?? []
-        defer { lastRecent = recent }
-        if conn != lastConnection {
-            lastConnection = conn
-            owner = nil
-            ownerMode = 0
-            lastGeneration = generation
-            Task { await reloadAll(users: true) }
-        } else if generation != lastGeneration {
-            lastGeneration = generation
-            Task { await reloadAll(users: false) }
-        } else if recent != lastRecent, let node = roots.first(where: { if case .recent = $0.kind { true } else { false } }),
-                  node.children != nil {
-            // Folder „Ostatnie” już wczytany — `touch` nie zmienia generacji, więc lista odświeżana tutaj.
-            node.children = recent.map { Node(.object($0)) }
-            outline.reloadItem(node, reloadChildren: true)
+        let ids = orderedConnections
+        let main = workspace.sessions.mainConnectionID
+        // Odczyt śledzony: generacja i Ostatnie każdego otwartego połączenia.
+        let state = ids.map { id in (id, workspace.metadata(for: id)?.generation ?? 0, workspace.metadata(for: id)?.recent ?? []) }
+        _ = workspace.connections.connections.count   // zmiana nazwy albo koloru połączenia — przerysowanie gałęzi
+        // Drzewo przebudowywane po bieżącym obiegu pętli: pierwsze wywołanie przychodzi z loadView, zanim widok ma
+        // szerokość — reloadData i rozwinięcie wtedy zostawiały kolumnę wąską (obcięte nazwy).
+        Task { @MainActor [weak self] in self?.apply(ids: ids, main: main, state: state) }
+    }
+
+    private func apply(ids: [UUID], main: UUID?, state: [(UUID, Int, [DBObject])]) {
+        if ids != roots.map(\.connection) || main != lastMain {
+            rebuildRoots(ids, main: main)
+        } else {
+            outline.reloadData()
+        }
+        for (id, generation, recent) in state {
+            guard let b = branches[id] else { continue }
+            if b.generation != generation {
+                let first = b.generation < 0
+                b.generation = generation
+                Task { await reload(b, users: first) }
+            } else if recent != b.recent, let node = b.node.children?.first(where: { if case .recent = $0.kind { true } else { false } }),
+                      node.children != nil {
+                // Folder „Ostatnie” już wczytany — `touch` nie zmienia generacji, więc lista odświeżana tutaj.
+                node.children = recent.map { Node(.object($0), connection: id) }
+                outline.reloadItem(node, reloadChildren: true)
+            }
+            b.recent = recent
+        }
+        if roots.isEmpty { status.stringValue = L10n.tr("Zaloguj się, aby przeglądać obiekty") }
+        refreshUserPopup()
+    }
+
+    /// Gałęzie otwartych połączeń; istniejące zachowują stan i rozwinięcie, nowe połączenie główne jest rozwinięte.
+    private func rebuildRoots(_ ids: [UUID], main: UUID?) {
+        let expanded = Set(roots.filter { outline.isItemExpanded($0) }.map(\.connection))
+        for id in branches.keys where !ids.contains(id) { branches[id] = nil }
+        let newMain = main != lastMain
+        lastMain = main
+        roots = ids.map { id in
+            if let b = branches[id] { return b.node }
+            let b = Branch(id)
+            branches[id] = b
+            return b.node
+        }
+        if let selected = workspace.selectedObjectConnection, !ids.contains(selected) {
+            workspace.selectedObject = nil
+            workspace.selectedObjects = []
+            workspace.selectedObjectConnection = nil
+        }
+        outline.reloadData()
+        for node in roots where expanded.contains(node.connection) || (newMain && node.connection == main) || roots.count == 1 {
+            outline.expandItem(node)
         }
     }
 
     // MARK: Ładowanie
 
-    /// Numer przeładowania: zmiana połączenia, metadanych, użytkownika i filtra uruchamiają osobne przeładowania —
-    /// wynik starszego (np. wolniejszej bazy poprzedniego połączenia) nie nadpisuje drzewa ani listy użytkowników (R4-21).
-    private var reloadGeneration = 0
-    /// Lista użytkowników do wczytania — także gdy przeładowanie z nią zastąpi nowsze bez niej.
-    private var usersPending = false
+    /// Gałąź połączenia zaznaczonego wiersza (bez zaznaczenia — połączenie główne).
+    private var currentBranch: Branch? {
+        let row = outline.selectedRow
+        if row >= 0, let n = outline.item(atRow: row) as? Node, let b = branches[n.connection] { return b }
+        return workspace.sessions.mainConnectionID.flatMap { branches[$0] } ?? roots.first.flatMap { branches[$0.connection] }
+    }
 
-    private func reloadAll(users: Bool) async {
-        reloadGeneration += 1
-        let generation = reloadGeneration
-        if users { usersPending = true }
-        func current() -> Bool { generation == reloadGeneration }
-        guard let m = workspace.metadata() else {
-            usersPending = false
-            roots = [Node(.message(L10n.tr("Zaloguj się, aby przeglądać obiekty")))]
-            userPopup.removeAllItems()
-            outline.reloadData()
-            return
-        }
-        let withUsers = usersPending
+    private func reload(_ b: Branch, users: Bool) async {
+        b.reloadGeneration += 1
+        let generation = b.reloadGeneration
+        if users { b.usersPending = true }
+        func current() -> Bool { generation == b.reloadGeneration && branches[b.node.connection] === b }
+        let id = b.node.connection
+        guard let m = workspace.metadata(for: id) else { return }
+        let withUsers = b.usersPending
         do {
             let types = try await m.availableTypes()
             let userList = withUsers ? try await (m.currentSchema(), m.users()) : nil
-            let schema = ownerMode == 0 ? try await m.currentSchema() : nil
+            let schema = b.ownerMode == 0 ? try await m.currentSchema() : nil
             guard current() else { return }
-            if let userList { showUsers(current: userList.0, list: userList.1) }
-            usersPending = false
-            if let schema { owner = schema }
+            if let userList { b.users = (userList.0, userList.1) }
+            b.usersPending = false
+            if let schema { b.owner = schema }
             // Filtr domyślny dla użytkownika (PD-OB-007) — przy pierwszym wczytaniu połączenia.
             if withUsers, workspace.browserFilter == nil, let user = try? await m.currentSchema(),
                let f = workspace.browserCustomization.defaultFilter(user: user) { workspace.browserFilter = f }
             guard current() else { return }
             // Foldery użytkownika widoczne dla połączenia (PD-OB-008) i foldery typów wg preferencji (PD-OB-025).
-            let def = workspace.sessions.mainConnectionID.flatMap { workspace.connections.connection($0) }
+            let def = workspace.connections.connection(id)
             let userFolders = workspace.browserCustomization.folders.filter { $0.parentID == nil && $0.visible(for: def) }
-            roots = [Node(.recent)] + userFolders.map { Node(.userFolder($0)) } + workspace.browserFolderTypes(available: types).map { Node(.folder($0)) }
-            outline.reloadData()
+            b.node.children = [Node(.recent, connection: id)] + userFolders.map { Node(.userFolder($0), connection: id) }
+                + workspace.browserFolderTypes(available: types).map { Node(.folder($0), connection: id) }
+            outline.reloadItem(b.node, reloadChildren: true)
+            refreshUserPopup()
             status.stringValue = ""
         } catch {
             guard current() else { return }
-            roots = [Node(.message(error.localizedDescription))]
-            outline.reloadData()
+            b.node.children = [Node(.message(error.localizedDescription), connection: id)]
+            outline.reloadItem(b.node, reloadChildren: true)
         }
     }
 
-    private func showUsers(current: String, list: [String]) {
+    /// Lista użytkowników gałęzi zaznaczonego połączenia.
+    private func refreshUserPopup() {
         userPopup.removeAllItems()
-        userPopup.addItem(withTitle: L10n.tr("<Bieżący użytkownik> \(current)"))
+        guard let b = currentBranch, let users = b.users else { userPopup.isEnabled = false; return }
+        userPopup.isEnabled = true
+        userPopup.addItem(withTitle: L10n.tr("<Bieżący użytkownik> \(users.current)"))
         userPopup.addItem(withTitle: L10n.tr("<Wszyscy użytkownicy>"))
         userPopup.menu?.addItem(.separator())
-        for u in list { userPopup.addItem(withTitle: u) }
-        userPopup.selectItem(at: 0)
+        for u in users.list { userPopup.addItem(withTitle: u) }
+        switch b.ownerMode {
+        case 0: userPopup.selectItem(at: 0)
+        case 1: userPopup.selectItem(at: 1)
+        default: userPopup.selectItem(withTitle: b.owner ?? "")
+        }
     }
 
     private func load(_ node: Node) {
-        guard node.children == nil, !node.loading, let m = workspace.metadata() else { return }
+        guard node.children == nil, !node.loading, let m = workspace.metadata(for: node.connection) else { return }
+        let id = node.connection
+        if case .connection = node.kind {
+            if let b = branches[id] { Task { await reload(b, users: b.users == nil) } }
+            return
+        }
         node.loading = true
         let filter = ObjectFilter(filterField.stringValue, named: workspace.browserFilter, contains: workspace.settings.browserFilterContains)
-        let owner = self.owner
+        let owner = branches[id]?.owner
         Task {
             defer { node.loading = false }
             do {
                 switch node.kind {
                 case .folder(let t):
                     let objects = try await m.objects(t, owner: t.isGlobal ? nil : owner, filter: filter)
-                    node.children = objects.isEmpty ? [Node(.message(L10n.tr("(brak)")))] : objects.map { Node(.object($0)) }
+                    node.children = objects.isEmpty ? [Node(.message(L10n.tr("(brak)")), connection: id)] : objects.map { Node(.object($0), connection: id) }
                     status.stringValue = L10n.tr("\(t.folderName): \(objects.count)")
                 case .recent:
-                    node.children = m.recent.map { Node(.object($0)) }
+                    node.children = m.recent.map { Node(.object($0), connection: id) }
                 case .userFolder(let f):
-                    let subfolders = workspace.browserCustomization.folders.filter { $0.parentID == f.id }.map { Node(.userFolder($0)) }
-                    let objects = try await m.objects(in: f).map { Node(.object($0)) }
+                    let subfolders = workspace.browserCustomization.folders.filter { $0.parentID == f.id }.map { Node(.userFolder($0), connection: id) }
+                    let objects = try await m.objects(in: f).map { Node(.object($0), connection: id) }
                     node.children = subfolders + objects
-                    if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak)")))] }
+                    if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak)")), connection: id)] }
                 case .object(let o):
                     let items = try await m.children(of: o)
                     let order: [DBObjectChild.Kind] = [.column, .attribute, .subprogram, .index, .constraint, .trigger, .usage, .dependency, .referencedBy]
                     node.children = order.compactMap { k in
                         let list = items.filter { $0.kind == k }
-                        return list.isEmpty ? nil : Node(.group(k, list), children: list.map { Node(.child($0)) })
+                        return list.isEmpty ? nil : Node(.group(k, list), connection: id, children: list.map { Node(.child($0), connection: id) })
                     }
-                    if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak elementów)")))] }
+                    if node.children?.isEmpty == true { node.children = [Node(.message(L10n.tr("(brak elementów)")), connection: id)] }
                 default:
                     node.children = []
                 }
             } catch {
-                node.children = [Node(.message(error.localizedDescription))]
+                node.children = [Node(.message(error.localizedDescription), connection: id)]
             }
             outline.reloadItem(node, reloadChildren: true)
             if outline.isItemExpanded(node) == false { outline.expandItem(node) }
@@ -251,16 +322,19 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     }
 
     @objc private func userChanged() {
+        guard let b = currentBranch else { return }
         let i = userPopup.indexOfSelectedItem
         switch i {
-        case 0: ownerMode = 0
-        case 1: ownerMode = 1; owner = nil
-        default: ownerMode = 2; owner = userPopup.titleOfSelectedItem
+        case 0: b.ownerMode = 0
+        case 1: b.ownerMode = 1; b.owner = nil
+        default: b.ownerMode = 2; b.owner = userPopup.titleOfSelectedItem
         }
-        Task { await reloadAll(users: false) }
+        Task { await reload(b, users: false) }
     }
 
-    @objc private func filterChanged() { Task { await reloadAll(users: false) } }
+    @objc private func filterChanged() {
+        for b in branches.values { Task { await reload(b, users: false) } }
+    }
 
     @objc private func refreshAll() { workspace.perform("ob.refresh") }
 
@@ -279,7 +353,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         guard let n = item as? Node else { return false }
         switch n.kind {
-        case .folder, .recent, .group, .userFolder: return true
+        case .connection, .folder, .recent, .group, .userFolder: return true
         case .object(let o): return !o.type.isGlobal
         default: return false
         }
@@ -317,7 +391,19 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         var symbol = "folder"
         var color: NSColor = .secondaryLabelColor
         var textColor: NSColor = .labelColor
+        var font = browserFont
+        let ownerMode = branches[n.connection]?.ownerMode ?? 0
         switch n.kind {
+        case .connection:
+            // Połączenie główne wyróżnione: gwiazdka, pogrubienie, dopisek; kolor połączenia albo środowiska.
+            let def = workspace.connections.connection(n.connection)
+            let isMain = n.connection == workspace.sessions.mainConnectionID
+            title = (def?.displayName ?? "?") + (def.map { $0.environment != .other ? " (\($0.environment.shortName))" : "" } ?? "")
+            if isMain { title = "★ " + title + " — " + L10n.tr("główne") }
+            symbol = "cylinder.split.1x2"
+            color = workspace.indicatorColor(forConnection: n.connection).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .systemGray
+            font = AppFonts.font(family: font.familyName ?? "", size: font.pointSize, weight: isMain ? .bold : .semibold)
+            cell.setAccessibilityLabel(isMain ? L10n.tr("Połączenie główne: \(def?.displayName ?? "")") : L10n.tr("Połączenie: \(def?.displayName ?? "")"))
         case .folder(let t): title = t.folderName
         case .recent: title = L10n.tr("Ostatnie"); symbol = "clock"
         case .userFolder(let f):
@@ -335,6 +421,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             symbol = Self.childSymbol(c.kind)
         case .message(let m): title = m; symbol = "info.circle"; textColor = .secondaryLabelColor
         }
+        if case .connection = n.kind {} else { cell.setAccessibilityLabel(nil) }
         cell.textField?.stringValue = title
         // Własne kolory Object Browsera (PD-PREF-005): tekst zwykłych pozycji i tło listy.
         let colors = workspace.settings.browserColors
@@ -345,19 +432,32 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             outline.enclosingScrollView?.drawsBackground = background != nil
         }
         cell.textField?.textColor = textColor
-        cell.textField?.font = browserFont
+        cell.textField?.font = font
         cell.imageView?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
         cell.imageView?.contentTintColor = color
         return cell
     }
 
     func outlineViewSelectionDidChange(_ notification: Notification) {
-        // Wiele obiektów (PD-OB-011): wszystkie zaznaczone obiekty; bieżący — kliknięty albo pierwszy.
-        let objs = outline.selectedRowIndexes.compactMap { (outline.item(atRow: $0) as? Node)?.object }
+        // Wiele obiektów (PD-OB-011): zaznaczone obiekty połączenia bieżącego wiersza (kliknięty albo pierwszy) — komendy
+        // działają na jednym połączeniu.
+        let rows = outline.selectedRowIndexes.compactMap { outline.item(atRow: $0) as? Node }
+        let clickedNode = outline.clickedRow >= 0 ? outline.item(atRow: outline.clickedRow) as? Node : nil
+        let anchor = clickedNode.flatMap { c in rows.contains { $0 === c } ? c : nil } ?? rows.first
+        let connection = anchor?.connection
+        let objs = rows.filter { $0.connection == connection }.compactMap(\.object)
+        workspace.selectedObjectConnection = connection
         workspace.selectedObjects = objs
-        let clicked = outline.clickedRow >= 0 ? (outline.item(atRow: outline.clickedRow) as? Node)?.object : nil
-        workspace.selectedObject = clicked.flatMap { c in objs.contains(c) ? c : nil } ?? objs.first
-            ?? (outline.item(atRow: outline.selectedRow) as? Node)?.object
+        workspace.selectedObject = anchor?.object.flatMap { c in objs.contains(c) ? c : nil } ?? objs.first
+        refreshUserPopup()
+    }
+
+    /// Argumenty komendy dla obiektu z drzewa: nazwa, typ i połączenie gałęzi.
+    private func objectArguments(_ o: DBObject, connection: UUID?, _ extra: [String: JSONValue] = [:]) -> CommandArguments {
+        var a: [String: JSONValue] = ["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue)]
+        if let connection { a["connection"] = .string(connection.uuidString) }
+        for (k, v) in extra { a[k] = v }
+        return CommandArguments(a)
     }
 
     /// Cmd+C: nazwy zaznaczonych obiektów po przecinku.
@@ -375,7 +475,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .object(let o):
             let p = NSPasteboardItem()
             p.setString(o.name.lowercased(), forType: .string)
-            p.setString([o.owner, o.name, o.type.rawValue].joined(separator: "\u{1}"), forType: Self.objectPasteboardType)
+            p.setString(BrowserObjectDrag(object: o, connection: n.connection).pasteboardString, forType: Self.objectPasteboardType)
             return p
         case .child(let c): return c.name.lowercased() as NSString
         case .group(_, let items):
@@ -391,9 +491,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     @objc private func doubleClicked() {
         guard let n = outline.item(atRow: outline.clickedRow) as? Node else { return }
         if let o = n.object, o.type.isProgram || workspace.settings.browserDoubleClick[o.type.rawValue] != nil {
-            // Akcja dwukliku według typu z Preferencji (PD-OB-025); domyślnie Edytuj dla programów.
-            workspace.selectedObject = o
-            workspace.perform(workspace.browserDoubleClickCommand(for: o.type))
+            // Akcja dwukliku według typu z Preferencji (PD-OB-025); domyślnie Edytuj dla programów — na połączeniu gałęzi.
+            workspace.perform(workspace.browserDoubleClickCommand(for: o.type), objectArguments(o, connection: n.connection))
         } else if outline.isExpandable(n) {
             outline.isItemExpanded(n) ? outline.collapseItem(n) : outline.expandItem(n)
         }
@@ -416,13 +515,20 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             return
         }
         if row >= 0, let n = outline.item(atRow: row) as? Node {
-            workspace.selectedObject = n.object
             outline.selectRowIndexes([row], byExtendingSelection: false)
+            workspace.selectedObjectConnection = n.connection
+            workspace.selectedObject = n.object
+            workspace.selectedObjects = n.object.map { [$0] } ?? []
+            if case .connection = n.kind {
+                connectionMenu(menu, n.connection)
+                return
+            }
             // Kolumna albo więz tabeli: zmiana nazwy elementu (PD-OB-016).
             if case .child(let c) = n.kind, [.column, .constraint].contains(c.kind), let table = parentObject(of: n), table.type == .table {
                 let item = ClosureMenuItem(title: L10n.tr("Zmień nazwę elementu…")) { [weak self] in
-                    self?.workspace.perform("ob.renameChild", CommandArguments(["object": .string("\"\(table.owner)\".\"\(table.name)\""), "type": "TABLE",
-                                                                                "kind": .string(c.kind.rawValue), "name": .string(c.name)]))
+                    guard let self else { return }
+                    self.workspace.perform("ob.renameChild", self.objectArguments(table, connection: n.connection,
+                                                                                  ["kind": .string(c.kind.rawValue), "name": .string(c.name)]))
                 }
                 menu.addItem(item)
                 if n.object == nil { return }
@@ -483,18 +589,30 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
 
     @objc private func generateCode(_ sender: NSMenuItem) {
         guard let kind = sender.representedObject as? String, let o = workspace.selectedObject else { return }
-        workspace.perform("ob.generateCode", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue),
-                                                              "kind": .string(kind)]))
+        workspace.perform("ob.generateCode", objectArguments(o, connection: workspace.selectedObjectConnection, ["kind": .string(kind)]))
     }
 
     @objc private func runStandardQuery(_ sender: NSMenuItem) {
         guard let name = sender.representedObject as? String, let o = workspace.selectedObject else { return }
-        workspace.perform("ob.standardQuery", CommandArguments(["object": .string("\"\(o.owner)\".\"\(o.name)\""), "type": .string(o.type.rawValue), "name": .string(name)]))
+        workspace.perform("ob.standardQuery", objectArguments(o, connection: workspace.selectedObjectConnection, ["name": .string(name)]))
     }
 
     @objc private func runCommand(_ sender: NSMenuItem) {
         guard let id = sender.representedObject as? String else { return }
         workspace.perform(CommandID(rawValue: id))
+    }
+
+    /// Menu gałęzi połączenia: główne, nowe okno, odświeżenie, rozłączenie, edycja definicji.
+    private func connectionMenu(_ menu: NSMenu, _ id: UUID) {
+        let arg = CommandArguments(["connection": .string(id.uuidString)])
+        var entries: [(String, CommandID)] = []
+        if id != workspace.sessions.mainConnectionID { entries.append((L10n.tr("Ustaw jako połączenie główne"), "connection.connectAsMain")) }
+        entries += [(L10n.tr("Nowe okno SQL na tym połączeniu"), "connection.openWindow"), (L10n.tr("Odśwież"), "ob.refresh"),
+                    (L10n.tr("Edytuj połączenie…"), "connection.edit"), (L10n.tr("Rozłącz"), "connection.disconnect")]
+        for (title, command) in entries {
+            if command == "connection.edit" || command == "connection.disconnect" { menu.addItem(.separator()) }
+            menu.addItem(ClosureMenuItem(title: title) { [weak self] in self?.workspace.perform(command, arg) })
+        }
     }
 
     /// Obiekt nadrzędny elementu drzewa (element → grupa → obiekt).
@@ -630,5 +748,34 @@ final class ObjectInfoViewController: NSViewController, NSTableViewDataSource, N
         let sel = table.selectedRowIndexes.isEmpty ? IndexSet(integersIn: 0..<rows.count) : table.selectedRowIndexes
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(sel.map { rows[$0].joined(separator: "\t") }.joined(separator: "\n"), forType: .string)
+    }
+}
+
+/// Obiekt przeciągany z Object Browsera (schowek `objectPasteboardType`): właściciel, nazwa, typ i połączenie gałęzi
+/// (D185; starszy format bez połączenia — trzy części).
+struct BrowserObjectDrag {
+    let owner: String
+    let name: String
+    let type: String
+    let connection: String?
+
+    init(object o: DBObject, connection: UUID) {
+        owner = o.owner; name = o.name; type = o.type.rawValue; self.connection = connection.uuidString
+    }
+
+    init?(_ raw: String) {
+        let p = raw.components(separatedBy: "\u{1}")
+        guard p.count == 3 || p.count == 4 else { return nil }
+        owner = p[0]; name = p[1]; type = p[2]; connection = p.count == 4 ? p[3] : nil
+    }
+
+    var pasteboardString: String { ([owner, name, type] + (connection.map { [$0] } ?? [])).joined(separator: "\u{1}") }
+
+    /// Argumenty komendy obiektu (`object`, `type`, `connection`) z dodatkowymi.
+    func arguments(_ extra: [String: JSONValue] = [:]) -> CommandArguments {
+        var a: [String: JSONValue] = ["object": .string("\"\(owner)\".\"\(name)\""), "type": .string(type)]
+        if let connection { a["connection"] = .string(connection) }
+        for (k, v) in extra { a[k] = v }
+        return CommandArguments(a)
     }
 }
