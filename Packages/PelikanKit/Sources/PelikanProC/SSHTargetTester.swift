@@ -26,8 +26,10 @@ public enum SSHTargetTester {
                           legacyAlgorithms: t.legacyAlgorithms, encoding: t.nameEncoding, configFile: configFile, knownHostsFile: knownHostsFile)
     }
 
-    /// Baner serwera SSH (`SSH-2.0-OpenSSH_5.8…`) z gniazda TCP — przed logowaniem, bez sekretów.
+    /// Baner serwera SSH (`SSH-2.0-OpenSSH_5.8…`) z gniazda TCP — przed logowaniem, bez sekretów. `timeout` — łączny
+    /// limit na połączenie (wszystkie adresy z `getaddrinfo`) i osobno na odczyt baneru.
     public static func serverBanner(host: String, port: Int, timeout: TimeInterval = 5) -> String? {
+        let deadline = Date().addingTimeInterval(timeout)
         var hints = addrinfo(ai_flags: 0, ai_family: AF_UNSPEC, ai_socktype: SOCK_STREAM, ai_protocol: 0, ai_addrlen: 0,
                              ai_canonname: nil, ai_addr: nil, ai_next: nil)
         var res: UnsafeMutablePointer<addrinfo>?
@@ -37,12 +39,12 @@ public enum SSHTargetTester {
         while let a = ai {
             let fd = socket(a.pointee.ai_family, a.pointee.ai_socktype, a.pointee.ai_protocol)
             if fd >= 0 {
-                var tv = timeval(tv_sec: Int(timeout), tv_usec: 0)
+                var tv = timeval(tv_sec: Int(timeout), tv_usec: Int32((timeout - timeout.rounded(.down)) * 1_000_000))
                 setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
                 setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
                 var on: Int32 = 1
                 setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))
-                if connect(fd, a.pointee.ai_addr, a.pointee.ai_addrlen) == 0 {
+                if connect(fd, a.pointee.ai_addr, a.pointee.ai_addrlen, until: deadline) {
                     var buf = [UInt8](repeating: 0, count: 512)
                     let n = read(fd, &buf, buf.count)
                     close(fd)
@@ -55,6 +57,27 @@ public enum SSHTargetTester {
             ai = a.pointee.ai_next
         }
         return nil
+    }
+
+    /// `connect` z limitem: gniazdo nieblokujące i `poll` — SO_SNDTIMEO na Darwinie nie ogranicza blokującego `connect`
+    /// (host „czarna dziura” za zaporą bez RST: ok. 75 s na adres). Po połączeniu gniazdo wraca do trybu blokującego.
+    static func connect(_ fd: Int32, _ address: UnsafeMutablePointer<sockaddr>?, _ length: socklen_t, until deadline: Date) -> Bool {
+        let flags = fcntl(fd, F_GETFL)
+        guard flags >= 0, fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0 else { return false }
+        defer { _ = fcntl(fd, F_SETFL, flags) }
+        if Darwin.connect(fd, address, length) == 0 { return true }
+        guard errno == EINPROGRESS || errno == EINTR else { return false }
+        var p = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
+        while true {
+            let ms = Int32(min(max(deadline.timeIntervalSinceNow * 1000, 0), Double(Int32.max)))
+            guard ms > 0 else { return false }
+            let r = poll(&p, 1, ms)
+            if r < 0, errno == EINTR { continue }
+            guard r > 0 else { return false }
+            var error: Int32 = 0
+            var size = socklen_t(MemoryLayout<Int32>.size)
+            return getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &size) == 0 && error == 0
+        }
     }
 
     static func q(_ s: String) -> String { SSHSession.shellQuote(s) }
