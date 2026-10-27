@@ -60,7 +60,7 @@ struct CellValuePanelView: View {
             HTMLPreview(html: p.text)
         default:
             ScrollView([.vertical, .horizontal]) {
-                Text(p.rendered(m)).font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                Text(p.rendered(m)).font(.code).textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
         }
@@ -108,7 +108,8 @@ struct GroupCountsView: View {
         let name = grid.columns[column].name
         let quoted = "'" + g.value.replacingOccurrences(of: "'", with: "''") + "'"
         let expr = g.isNull ? "\"\(name)\" IS NULL" : "\"\(name)\" = \(quoted)"
-        if let f = try? GridFilter.parse(expr, columns: grid.columns.map(\.name)) { grid.setFilter(f) }
+        // Przez komendę filtra wyrażeniem (R4-18) — ta sama walidacja, dziennik komend i makra.
+        workspace.perform("grid.filterExpression", CommandArguments(["expression": .string(expr)]))
     }
 }
 
@@ -138,7 +139,7 @@ struct SnippetsView: View {
                         ForEach(visible.filter { $0.category == cat }) { s in
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(s.name)
-                                Text(s.text.components(separatedBy: "\n").first ?? "").font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+                                Text(s.text.components(separatedBy: "\n").first ?? "").font(.code).foregroundStyle(.secondary).lineLimit(1)
                             }
                             .tag(s.id)
                             .draggable(s.text)
@@ -193,7 +194,7 @@ struct SnippetEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             TextField(L10n.tr("Kategoria"), text: $snippet.category)
             TextField(L10n.tr("Nazwa"), text: $snippet.name)
-            TextEditor(text: $snippet.text).font(.system(size: 12, design: .monospaced)).frame(minHeight: 160)
+            TextEditor(text: $snippet.text).font(.code).frame(minHeight: 160)
             HStack {
                 Spacer()
                 Button(L10n.tr("Anuluj"), role: .cancel) { done(nil) }.keyboardShortcut(.cancelAction)

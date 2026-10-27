@@ -493,9 +493,7 @@ extension DocumentAreaViewController {
     }
 
     @objc func togglePin() {
-        guard let doc = workspace.activeDocument else { return }
-        doc.connectionPinned.toggle()
-        if doc.connectionPinned, doc.connectionID == nil { doc.connectionID = workspace.sessions.mainConnectionID }
+        workspace.perform("session.pinWindowConnection")
     }
 
     /// Połączenie okna na pasku stanu (UG 20.2): opis, środowisko, przypięcie.
@@ -523,12 +521,12 @@ final class DocumentTabButton: NSView {
         wantsLayer = true
         layer?.cornerRadius = 6
         layer?.backgroundColor = isActive ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor : NSColor.clear.cgColor
+        let fonts = InterfaceFonts.shared
         let marker = NSTextField(labelWithString: document.kind.shortName)
-        marker.font = .monospacedSystemFont(ofSize: 12, weight: .bold)
+        marker.font = .monospacedSystemFont(ofSize: fonts.label.pointSize, weight: .bold)
         marker.textColor = Self.color(for: document.kind)
         let title = NSTextField(labelWithString: (document.isModified ? "● " : "") + document.title)
-        let fonts = InterfaceFonts.shared
-        title.font = AppFonts.font(family: fonts.family, size: max(9, fonts.size - 1), weight: isActive ? .semibold : fonts.weight)
+        title.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 1), weight: isActive ? .semibold : fonts.weight)
         title.lineBreakMode = .byTruncatingMiddle
         let close = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: L10n.tr("Zamknij"))!,
                              target: nil, action: nil)
@@ -550,8 +548,20 @@ final class DocumentTabButton: NSView {
             close.widthAnchor.constraint(equalToConstant: 14),
         ])
         toolTip = document.fullTitle
+        // Karta jako element dostępności (VoiceOver): przycisk wyboru z akcją „naciśnij” i akcją zamknięcia (R4-15).
+        setAccessibilityElement(true)
         setAccessibilityRole(.radioButton)
         setAccessibilityLabel(document.fullTitle)
+        setAccessibilityValue(NSNumber(value: isActive ? 1 : 0))
+        setAccessibilityCustomActions([NSAccessibilityCustomAction(name: L10n.tr("Zamknij")) { [weak self] in
+            self?.onClose()
+            return true
+        }])
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        onSelect()
+        return true
     }
 
     @available(*, unavailable)

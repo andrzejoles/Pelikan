@@ -182,6 +182,16 @@ public enum ConnectionCommands {
                 try await disconnect(ctx, try connectionID(ctx))
                 return .ok
             },
+            Command(CommandDescriptor(id: "session.pinWindowConnection", title: L10n.tr("Przypnij połączenie okna"), category: .session,
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Przypina połączenie bieżącego okna albo odpina je (UG 20.2); przypięte okno bez własnego połączenia dostaje połączenie główne."),
+                                      inMenu: false, feature: "PD-CONN-019"),
+                    validate: { $0.activeDocument != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument else { return .ok }
+                doc.connectionPinned.toggle()
+                if doc.connectionPinned, doc.connectionID == nil { doc.connectionID = ctx.workspace.sessions.mainConnectionID }
+                return CommandResult(value: .bool(doc.connectionPinned))
+            },
             Command(CommandDescriptor(id: "session.windowConnection", title: L10n.tr("Połączenie okna…"), category: .session,
                                       parameters: [CommandParameter("connection", .string, required: true,
                                                                     L10n.tr("Nazwa połączenia albo pusty tekst — połączenie główne"))],

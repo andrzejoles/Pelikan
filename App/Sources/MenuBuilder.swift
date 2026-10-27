@@ -131,7 +131,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
         workspace.perform("file.reopen", CommandArguments(["path": .string(path)]))
     }
 
-    @objc private func clearRecent() { workspace.settings.recentFiles = [] }
+    @objc private func clearRecent() { workspace.perform("file.clearRecent") }
 
     @objc func performCommand(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String else { return }

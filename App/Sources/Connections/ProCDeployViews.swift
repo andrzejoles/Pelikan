@@ -156,11 +156,11 @@ struct DeployStartView: View {
                 GroupBox(L10n.tr("Podsumowanie")) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(L10n.tr("Na serwerze: \(s.serverHead.map { String($0.prefix(12)) } ?? "?")  →  remote: \(s.remoteHead.map { String($0.prefix(12)) } ?? "?")"))
-                            .font(.system(size: 12, design: .monospaced))
+                            .font(.code)
                         if s.isUpToDate { Text(L10n.tr("Serwer ma już ten commit — wdrożenie przebuduje i zainstaluje binarki")).font(.uiSecondary) }
                         ScrollView {
                             Text((s.commits + (s.diffStat.isEmpty ? [] : ["", s.diffStat])).joined(separator: "\n"))
-                                .font(.system(size: 12, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                                .font(.code).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(minHeight: 120)
                         ForEach(s.warnings, id: \.self) { w in Label(w, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.uiSecondary) }
@@ -308,12 +308,14 @@ struct DeployRunView: View {
         case .step:
             Text(line.text).font(.system(size: 12, weight: .bold)).padding(.top, 6).padding(.bottom, 2)
         case .info:
-            Text(line.text).font(.system(size: 12, design: .monospaced)).foregroundStyle(.secondary)
+            Text(line.text).font(.code).foregroundStyle(.secondary)
         case .output, .error:
-            let text = Text(line.text).font(.system(size: 12, design: .monospaced))
+            let text = Text(line.text).font(.code)
                 .foregroundStyle(message.map { $0.isError ? Color.red : Color.orange } ?? (line.kind == .error ? .red : .primary))
             if let message {
-                text.underline().onTapGesture { model.open(message, target: pipeline.target) }
+                // Przycisk zamiast gestu — dostępny dla VoiceOver i klawiatury (R4-15).
+                Button { model.open(message, target: pipeline.target) } label: { text.underline() }
+                    .buttonStyle(.plain)
                     .help(L10n.tr("Otwórz plik w miejscu błędu"))
             } else {
                 text.textSelection(.enabled)
@@ -422,12 +424,12 @@ struct DeployHistoryView: View {
                     TableColumn(L10n.tr("Rodzaj")) { r in Text(r.kind == .deploy ? L10n.tr("wdrożenie") : L10n.tr("wycofanie")) }.width(90)
                     TableColumn(L10n.tr("Kto"), value: \.owner)
                     TableColumn(L10n.tr("Commit przed → po")) { r in
-                        Text("\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")").font(.system(size: 12, design: .monospaced))
+                        Text("\(r.headBefore.map { String($0.prefix(8)) } ?? "—") → \(r.headAfter.map { String($0.prefix(8)) } ?? "—")").font(.code)
                     }
                     TableColumn(L10n.tr("Wynik")) { r in Text(r.outcome?.title ?? "—").foregroundStyle(r.outcome == .success ? .green : .red) }
                 }
                 ScrollView {
-                    Text(selection.flatMap { model.history.log($0) } ?? "").font(.system(size: 12, design: .monospaced)).textSelection(.enabled)
+                    Text(selection.flatMap { model.history.log($0) } ?? "").font(.code).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(minHeight: 120)
@@ -445,7 +447,7 @@ struct DeployHistoryView: View {
                     TableColumn(L10n.tr("Czas"), value: \.timestamp).width(130)
                     TableColumn(L10n.tr("Rodzaj"), value: \.kind).width(80)
                     TableColumn(L10n.tr("Kto"), value: \.owner)
-                    TableColumn(L10n.tr("Przed → po")) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.system(size: 12, design: .monospaced)) }
+                    TableColumn(L10n.tr("Przed → po")) { e in Text("\(e.headBefore.prefix(8)) → \(e.headAfter.prefix(8))").font(.code) }
                     TableColumn(L10n.tr("Wynik")) { e in Text(e.succeeded ? L10n.tr("powodzenie") : "\(e.step) \(e.code)").foregroundStyle(e.succeeded ? .green : .red) }
                 }
             }
@@ -485,10 +487,10 @@ struct GitDeployStatusView: View {
             Table(model.store.targets) {
                 TableColumn(L10n.tr("Cel")) { t in Text("\(t.name) · \(t.environment.rawValue)").foregroundStyle(t.environment.color) }
                 TableColumn(L10n.tr("Ostatnie wdrożenie (historia)")) { t in
-                    Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced))
+                    Text(model.history.lastSuccess(target: t.id)?.headAfter.map { String($0.prefix(12)) } ?? "—").font(.code)
                 }
-                TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
-                TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.system(size: 12, design: .monospaced)) }
+                TableColumn(L10n.tr("HEAD na serwerze")) { t in Text(serverHeads[t.id].map { String($0.prefix(12)) } ?? "—").font(.code) }
+                TableColumn(L10n.tr("HEAD zdalnej gałęzi")) { t in Text(local?.remoteHead.map { String($0.prefix(12)) } ?? "—").font(.code) }
             }
             if let message { Text(message).font(.uiSecondary).foregroundStyle(.red) }
         }
