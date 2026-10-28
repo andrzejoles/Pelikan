@@ -70,6 +70,7 @@ enum P1BrowserCommands {
                 }
                 let name = try await newName(ctx, title: L10n.tr("Zmień nazwę \(o.qualifiedName)"), current: o.name)
                 let sql = try ObjectRename.statement(o, to: name, currentSchema: try await m.currentSchema())
+                try await ctx.workspace.confirmOracleMaintained([o.owner])
                 try await execute(sql, ctx, m)
                 var renamed = o
                 renamed.name = name
@@ -90,6 +91,7 @@ enum P1BrowserCommands {
                 guard let child = ctx.arguments.string("name") else { throw CommandError.missingArgument("name") }
                 let name = try await newName(ctx, title: L10n.tr("Zmień nazwę \(child)"), current: child)
                 let sql = try ObjectRename.childStatement(table: o, kind: kind, name: child, to: name)
+                try await ctx.workspace.confirmOracleMaintained([o.owner])
                 try await execute(sql, ctx, m)
                 m.refresh(o)
                 return CommandResult(message: L10n.tr("Zmieniono nazwę na \(name)"), value: .string(sql))

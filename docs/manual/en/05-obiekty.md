@@ -21,7 +21,10 @@ context does not tell otherwise — a new window from the menu, a tool without a
 At the end of each connection's folders are **DBA** — dictionary objects prefixed `DBA_` — and **DBMS** — objects
 prefixed `DBMS_`, mostly Oracle packages. They show only objects you have privileges on (granted directly, through a
 role or to PUBLIC); public synonyms are left out, and objects of the SYS schema are shown without the “SYS.” prefix.
-The objects expand and open as in the other folders, and the name filter applies too.
+The objects expand and open as in the other folders, and the name filter applies too. Changing an object of an
+Oracle-maintained schema (SYS, XDB…) — recompiling, adding debug information, dropping, renaming, enabling or
+compiling in a program window — always requires a separate confirmation (**Cancel** by default), because it can
+invalidate objects across the whole database.
 
 - **User selection** above the tree (separately for each connection):
   - *Current user* — objects of your schema plus public database links and public synonyms of application objects

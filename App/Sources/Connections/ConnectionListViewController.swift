@@ -342,7 +342,8 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
     }
 
     /// Folder docelowy upuszczenia: folder pod kursorem, folder połączenia pod kursorem albo poziom główny (wolne
-    /// miejsce, połączenie na poziomie głównym). „Ostatnie” i okna nie są celem. `nil` w wyniku — upuszczenie odrzucone.
+    /// miejsce, połączenie na poziomie głównym; okno — jak jego połączenie). „Ostatnie” nie jest celem. `nil` w wyniku —
+    /// upuszczenie odrzucone.
     private func dropFolder(for item: Any?) -> UUID?? {
         guard let node = item as? Node else { return .some(nil) }
         switch node.kind {
@@ -351,7 +352,10 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             guard let parent = outline.parent(forItem: node) as? Node else { return .some(nil) }
             if case .folder(let f) = parent.kind { return .some(f.id) }
             return nil
-        case .recent, .window: return nil
+        case .window:
+            // Wiersz okna pod połączeniem — jak upuszczenie na to połączenie (tak samo jak między wiersze okien).
+            return dropFolder(for: outline.parent(forItem: node))
+        case .recent: return nil
         }
     }
 

@@ -21,7 +21,10 @@ wynika inne — nowe okno z menu, narzędzie bez aktywnego okna.
 Na końcu folderów każdego połączenia są **DBA** — obiekty słownika z przedrostkiem `DBA_` — i **DBMS** — obiekty z
 przedrostkiem `DBMS_`, głównie pakiety Oracle. Widać w nich tylko obiekty, do których masz uprawnienia (nadane wprost,
 przez rolę albo PUBLIC); publiczne synonimy są pominięte, a obiekty schematu SYS pokazane bez przedrostka „SYS.”.
-Obiekty rozwijają się i otwierają jak w pozostałych folderach, filtr nazw też działa.
+Obiekty rozwijają się i otwierają jak w pozostałych folderach, filtr nazw też działa. Zmiana obiektu schematu
+utrzymywanego przez Oracle (SYS, XDB…) — rekompilacja, informacja debugowania, usunięcie, zmiana nazwy, włączenie albo
+kompilacja w oknie programu — zawsze wymaga osobnego potwierdzenia (domyślnie **Anuluj**), bo może unieważnić obiekty
+w całej bazie.
 
 - **Wybór użytkownika** nad drzewem (osobno dla każdego połączenia):
   - *Bieżący użytkownik* — obiekty Twojego schematu oraz publiczne łącza bazy danych i publiczne synonimy obiektów

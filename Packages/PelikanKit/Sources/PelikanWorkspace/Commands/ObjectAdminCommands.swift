@@ -36,6 +36,7 @@ enum ObjectAdminCommands {
                     validate: { ws in ws.selectedObject.map { [.trigger, .table].contains($0.type) } ?? false }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let sql = try ObjectAdmin.setEnabled(o, enabled: enabled, constraint: ctx.arguments.string("constraint"))
+                try await ctx.workspace.confirmOracleMaintained([o.owner])
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await changeSession(ctx).execute(sql)
                 m.refresh()

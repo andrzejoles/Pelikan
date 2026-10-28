@@ -10,11 +10,11 @@ usadas recientemente. Bajo cada conexión se ven sus ventanas abiertas.
 
 - Un doble clic en una conexión la conecta como **conexión principal** (en negrita en la lista). Las ventanas nuevas se
   abren en la conexión principal.
-- Menú contextual de la conexión: **Conectar como principal**, **Conectar** (sin cambiar la principal), **Desconectar**,
-  **Ventana nueva** (SQL, de programa, de prueba o de comandos en esta conexión), **Mostrar ventanas de la conexión**,
-  **Cerrar ventanas de la conexión**, **Reconectar ventanas de la conexión**, **Establecer esquema actual…**,
-  **Editar…**, **Copiar con otro nombre…** (copia en la misma carpeta, con las contraseñas guardadas), **Mover a la
-  carpeta** y **Eliminar…**.
+- Menú contextual de la conexión: **Conectar como principal**, **Conectar** (sin cambiar la principal),
+  **Desconectar**, **Ventana nueva** (SQL, de programa, de prueba o de comandos en esta conexión), **Mostrar ventanas
+  de la conexión**, **Cerrar ventanas de la conexión**, **Reconectar ventanas de la conexión**, **Establecer esquema
+  actual…**, **Editar…**, **Copiar con otro nombre…** (copia en la misma carpeta, con las contraseñas guardadas),
+  **Mover a la carpeta** y **Eliminar…**.
 - Las carpetas y las conexiones se ordenan alfabéticamente. Arrastra una conexión con el ratón a una carpeta para
   moverla allí, o a un espacio libre de la lista para llevarla al nivel superior.
 - Los botones sobre la lista crean una conexión nueva (**+**) y una carpeta, y actualizan la lista.

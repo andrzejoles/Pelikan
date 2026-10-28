@@ -46089,6 +46089,62 @@
         }
       }
     },
+    "Obiekty schematu Oracle (%@) można zmienić tylko po potwierdzeniu w oknie aplikacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects of the Oracle schema (%@) can only be changed after confirmation in the app window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte des Oracle-Schemas (%@) können nur nach Bestätigung im App-Fenster geändert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los objetos del esquema de Oracle (%@) solo se pueden cambiar tras confirmarlo en la ventana de la aplicación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти схеми Oracle (%@) можна змінити лише після підтвердження у вікні застосунку"
+          }
+        }
+      }
+    },
+    "Obiekty schematów utrzymywanych przez Oracle zmienia się zwykle tylko na polecenie Oracle Support. Zmiana może unieważnić obiekty zależne w całej bazie i przerwać pracę innych sesji (ORA-04068)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects of Oracle-maintained schemas are usually changed only when Oracle Support asks for it. The change can invalidate dependent objects across the whole database and disrupt other sessions (ORA-04068)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte von Oracle verwalteter Schemas ändert man in der Regel nur auf Anweisung des Oracle Supports. Die Änderung kann abhängige Objekte in der gesamten Datenbank ungültig machen und andere Sitzungen unterbrechen (ORA-04068)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los objetos de los esquemas mantenidos por Oracle normalmente solo se cambian por indicación de Oracle Support. El cambio puede invalidar objetos dependientes en toda la base de datos e interrumpir otras sesiones (ORA-04068)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти схем, які обслуговує Oracle, зазвичай змінюють лише на вимогу Oracle Support. Зміна може зробити недійсними залежні об'єкти в усій базі даних і перервати роботу інших сеансів (ORA-04068)."
+          }
+        }
+      }
+    },
     "Obiekty typu" : {
       "localizations" : {
         "en" : {
@@ -62941,6 +62997,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "З'єднання (шаблон, порожньо — усі)"
+          }
+        }
+      }
+    },
+    "Połączenia tymczasowego (CONNECT w oknie poleceń) nie można skopiować ani przenieść" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A temporary connection (CONNECT in the command window) cannot be copied or moved"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine temporäre Verbindung (CONNECT im Befehlsfenster) kann weder kopiert noch verschoben werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una conexión temporal (CONNECT en la ventana de comandos) no se puede copiar ni mover"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тимчасове з'єднання (CONNECT у вікні команд) не можна скопіювати чи перемістити"
           }
         }
       }
@@ -111217,6 +111301,34 @@
         }
       }
     },
+    "Zmienić obiekt schematu Oracle %@?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change an object of the Oracle schema %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt des Oracle-Schemas %@ ändern?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cambiar un objeto del esquema de Oracle %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити об'єкт схеми Oracle %@?"
+          }
+        }
+      }
+    },
     "Zmienić parametr instancji?" : {
       "localizations" : {
         "en" : {
@@ -111717,6 +111829,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort ändern …"
+          }
+        }
+      }
+    },
+    "Zmień mimo to" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Anyway"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar de todos modos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе одно змінити"
           }
         }
       }
@@ -117457,6 +117597,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erfolg"
+          }
+        }
+      }
+    },
+    "połączenie o nazwie „%@” już istnieje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a connection named “%@” already exists"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine Verbindung namens „%@“ existiert bereits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ya existe una conexión llamada «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "з'єднання з назвою «%@» уже існує"
           }
         }
       }

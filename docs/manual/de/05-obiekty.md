@@ -24,7 +24,9 @@ Am Ende der Ordner jeder Verbindung stehen **DBA** — Data-Dictionary-Objekte m
 Objekte mit dem Präfix `DBMS_`, vor allem Oracle-Pakete. Sie zeigen nur Objekte, für die Sie Berechtigungen haben
 (direkt, über eine Rolle oder an PUBLIC erteilt); öffentliche Synonyme werden ausgelassen, Objekte des Schemas SYS
 ohne das Präfix „SYS.“ angezeigt. Die Objekte lassen sich wie in den anderen Ordnern aufklappen und öffnen, auch der
-Namensfilter gilt.
+Namensfilter gilt. Das Ändern eines Objekts eines von Oracle verwalteten Schemas (SYS, XDB …) — Neukompilieren,
+Debug-Information hinzufügen, Löschen, Umbenennen, Aktivieren oder Kompilieren im Programmfenster — erfordert immer
+eine eigene Bestätigung (standardmäßig **Abbrechen**), weil es Objekte in der gesamten Datenbank ungültig machen kann.
 
 - **Benutzerauswahl** über dem Baum (für jede Verbindung getrennt):
   - *Aktueller Benutzer* — Objekte Ihres Schemas sowie öffentliche Datenbank-Links und öffentliche Synonyme von

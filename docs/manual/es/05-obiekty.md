@@ -24,7 +24,9 @@ Al final de las carpetas de cada conexión están **DBA** —objetos del diccion
 —objetos con el prefijo `DBMS_`, sobre todo paquetes de Oracle—. Muestran solo los objetos sobre los que tienes
 privilegios (concedidos directamente, mediante un rol o a PUBLIC); se omiten los sinónimos públicos y los objetos del
 esquema SYS aparecen sin el prefijo «SYS.». Los objetos se despliegan y se abren como en las demás carpetas, y el
-filtro de nombres también se aplica.
+filtro de nombres también se aplica. Cambiar un objeto de un esquema mantenido por Oracle (SYS, XDB…) —recompilar,
+añadir información de depuración, eliminar, renombrar, habilitar o compilar en una ventana de programa— siempre
+requiere una confirmación aparte (**Cancelar** por defecto), porque puede invalidar objetos en toda la base de datos.
 
 - **Selección de usuario** sobre el árbol (por separado para cada conexión):
   - *Usuario actual*: objetos de tu esquema más los enlaces de base de datos públicos y los sinónimos públicos de

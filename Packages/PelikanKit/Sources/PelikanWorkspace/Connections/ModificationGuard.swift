@@ -41,4 +41,20 @@ extension Workspace {
             guard choice == 0 else { throw CommandError.cancelledByUser }
         }
     }
+
+    /// Obiekty schematów utrzymywanych przez Oracle (SYS, XDB…; pod ręką w folderach DBA i DBMS, D190): kompilacja,
+    /// DEBUG, DROP, zmiana nazwy albo włączenie może unieważnić obiekty zależne w całej bazie (ORA-04068 w innych
+    /// sesjach) — zawsze osobne pytanie z domyślnym Anuluj, niezależnie od preferencji; bez interfejsu — odmowa.
+    public func confirmOracleMaintained(_ owners: [String?]) async throws {
+        let oracle = Set(owners.compactMap { $0?.uppercased() }).filter(MetadataProvider.oracleMaintainedSchemas.contains).sorted()
+        guard !oracle.isEmpty else { return }
+        let list = oracle.joined(separator: ", ")
+        guard let ui else {
+            throw CommandError.notAvailable(L10n.tr("Obiekty schematu Oracle (\(list)) można zmienić tylko po potwierdzeniu w oknie aplikacji"))
+        }
+        let choice = await ui.ask(L10n.tr("Zmienić obiekt schematu Oracle \(list)?"),
+                                  message: L10n.tr("Obiekty schematów utrzymywanych przez Oracle zmienia się zwykle tylko na polecenie Oracle Support. Zmiana może unieważnić obiekty zależne w całej bazie i przerwać pracę innych sesji (ORA-04068)."),
+                                  buttons: [L10n.tr("Anuluj"), L10n.tr("Zmień mimo to")])
+        guard choice == 1 else { throw CommandError.cancelledByUser }
+    }
 }

@@ -167,6 +167,7 @@ public enum ProgramCompiler {
            !FileManager.default.isWritableFile(atPath: url.path) {
             throw CommandError.notAvailable(L10n.tr("Plik „\(url.lastPathComponent)” jest tylko do odczytu — kompilacja wyłączona (Preferencje › Oracle)"))
         }
+        try await ws.confirmOracleMaintained(units.map(\.owner))
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
         try await ws.ensureStillOpen(doc, wasOpen: wasOpen)

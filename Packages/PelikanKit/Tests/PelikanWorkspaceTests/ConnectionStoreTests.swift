@@ -77,10 +77,13 @@ struct ConnectionStoreTests {
         try store.upsert(folder: f)
         var def = ConnectionDefinition(name: "Dev", folderID: f.id, target: ConnectionTarget(user: "scott", connectString: "db"))
         def.lastUsed = Date()
+        def.connectOnStartup = true
         try store.upsert(def, password: "Tajne-1")
         try store.setSSHPassword("ssh-2", for: def.id)
         let copy = try store.duplicate(def.id, name: "Dev 2")
         #expect(copy.id != def.id && copy.name == "Dev 2" && copy.folderID == f.id && copy.lastUsed == nil)
+        #expect(!copy.connectOnStartup)   // bez drugiego połączenia z tą samą bazą przy starcie
+        #expect(throws: CommandError.self) { try store.duplicate(def.id, name: "dev 2") }   // nazwa zajęta (bez wielkości liter)
         #expect(copy.target == def.target)
         #expect(store.password(for: copy.id) == "Tajne-1")
         #expect(store.sshPassword(for: copy.id) == "ssh-2")
@@ -91,6 +94,26 @@ struct ConnectionStoreTests {
         let sessionCopy = try store.duplicate(session.id, name: "S2")
         #expect(store.password(for: sessionCopy.id) == "p")
         #expect(try secrets.password(for: sessionCopy.id.uuidString) == nil)
+        // Połączenie tymczasowe (CONNECT w oknie poleceń) — czytelny błąd zamiast „nieznane połączenie” i cichego OK.
+        let temp = ConnectionDefinition(name: "", target: ConnectionTarget(user: "u", connectString: "x"))
+        store.registerTemporary(temp, password: "t")
+        for attempt in [{ _ = try store.duplicate(temp.id, name: "T") }, { try store.move(temp.id, to: f.id) }] {
+            do { try attempt(); Issue.record("bez błędu") } catch let CommandError.notAvailable(m) { #expect(m.contains("tymczasow")) } catch { Issue.record("\(error)") }
+        }
+    }
+
+    @Test("Obiekty schematów Oracle: zmiana tylko po osobnym potwierdzeniu; bez interfejsu — odmowa; inne schematy bez pytania")
+    func oracleMaintainedConfirmation() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        try await ws.confirmOracleMaintained(["SCOTT", nil])
+        await #expect(throws: CommandError.self) { try await ws.confirmOracleMaintained(["SYS"]) }
+        let ui = FakeUI()
+        ws.ui = ui
+        ui.answers = [0]   // Anuluj (domyślny)
+        await #expect(throws: CommandError.self) { try await ws.confirmOracleMaintained(["sys", "SCOTT"]) }
+        ui.answers = [1]   // Zmień mimo to
+        try await ws.confirmOracleMaintained(["XDB"])
+        #expect(ui.asked.count == 2)
     }
 
     @Test("Komendy connection.duplicate i connection.moveToFolder (nazwa folderu bez wielkości liter)")
