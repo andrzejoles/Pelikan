@@ -24221,6 +24221,62 @@
         }
       }
     },
+    "Identyfikator albo nazwa folderu (bez argumentu — poziom główny listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder ID or name (no argument — top level of the list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner-ID oder -Name (ohne Argument — oberste Ebene der Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre de la carpeta (sin argumento: nivel superior de la lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва папки (без аргументу — верхній рівень списку)"
+          }
+        }
+      }
+    },
+    "Identyfikator albo nazwa połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection ID or name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungs-ID oder -Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва з'єднання"
+          }
+        }
+      }
+    },
     "Identyfikator albo nazwa połączenia (domyślnie połączenie główne)" : {
       "localizations" : {
         "en" : {
@@ -32453,6 +32509,90 @@
         }
       }
     },
+    "Kopiuj pod inną nazwą…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Under Another Name…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unter anderem Namen kopieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar con otro nombre…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати під іншою назвою…"
+          }
+        }
+      }
+    },
+    "Kopiuj połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати з'єднання"
+          }
+        }
+      }
+    },
+    "Kopiuj połączenie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Connection…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung kopieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar conexión…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати з'єднання…"
+          }
+        }
+      }
+    },
     "Kopiuj schemat" : {
       "localizations" : {
         "en" : {
@@ -39113,6 +39253,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Назва копії"
+          }
+        }
+      }
+    },
+    "Nazwa kopii (bez argumentu — pytanie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the copy (no argument — ask)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Kopie (ohne Argument — Abfrage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la copia (sin argumento: se pregunta)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва копії (без аргументу — запит)"
+          }
+        }
+      }
+    },
+    "Nazwa kopii połączenia „%@”:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the copy of connection “%@”:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Kopie der Verbindung „%@“:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la copia de la conexión «%@»:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва копії з'єднання «%@»:"
           }
         }
       }
@@ -62133,6 +62329,34 @@
         }
       }
     },
+    "Poziom główny listy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top level of the list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oberste Ebene der Liste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel superior de la lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Верхній рівень списку"
+          }
+        }
+      }
+    },
     "Poziom narzędzia można tylko obniżyć. Poziom połączenia (np. produkcja — Odczyt) nadal obowiązuje." : {
       "localizations" : {
         "en" : {
@@ -65241,6 +65465,34 @@
         }
       }
     },
+    "Przenieś do folderu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to Folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Ordner verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover a la carpeta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити до папки"
+          }
+        }
+      }
+    },
     "Przenieś narzędzie na dół" : {
       "localizations" : {
         "en" : {
@@ -65297,6 +65549,34 @@
         }
       }
     },
+    "Przenieś połączenie do folderu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Connection to Folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung in Ordner verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover la conexión a una carpeta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити з'єднання до папки"
+          }
+        }
+      }
+    },
     "Przenieść do Kosza?" : {
       "localizations" : {
         "en" : {
@@ -65321,6 +65601,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In den Papierkorb legen?"
+          }
+        }
+      }
+    },
+    "Przenosi definicję połączenia do folderu listy połączeń (także przeciągnięciem myszą)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the connection definition to a folder of the connection list (also by dragging with the mouse)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt die Verbindungsdefinition in einen Ordner der Verbindungsliste (auch per Ziehen mit der Maus)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la definición de la conexión a una carpeta de la lista de conexiones (también arrastrando con el ratón)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує визначення з'єднання до папки списку з'єднань (також перетягуванням мишею)."
           }
         }
       }
@@ -81309,6 +81617,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstellt ein Verzeichnis im File Browser."
+          }
+        }
+      }
+    },
+    "Tworzy kopię definicji połączenia pod inną nazwą, w tym samym folderze, z zapisanymi hasłami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates a copy of the connection definition under another name, in the same folder, with the saved passwords."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt eine Kopie der Verbindungsdefinition unter anderem Namen im selben Ordner, mit den gespeicherten Passwörtern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una copia de la definición de la conexión con otro nombre, en la misma carpeta, con las contraseñas guardadas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює копію визначення з'єднання під іншою назвою в тій самій папці, зі збереженими паролями."
           }
         }
       }
@@ -115805,6 +116141,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "unbekannte Verbindung „%@“"
+          }
+        }
+      }
+    },
+    "nieznany folder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unknown folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unbekannter Ordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "carpeta desconocida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "невідома папка"
           }
         }
       }
