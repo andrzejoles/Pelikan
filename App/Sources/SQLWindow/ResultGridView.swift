@@ -560,9 +560,9 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         workspace.perform("grid.export", CommandArguments(["format": .string(raw)]))
     }
 
-    /// Przycisk w pasku siatki — ta sama komenda co „Rekord” na wstążce; widok idzie za stanem karty (`applyRecordMode`).
+    /// Przycisk w pasku siatki — ta sama komenda co „Rekord” na wstążce; widok i stan przycisku idą za stanem karty
+    /// (`applyRecordMode` po zmianie `ResultTab.showsRecord`).
     @objc private func toggleRecord() {
-        recordButton.state = tab.showsRecord ? .on : .off   // do czasu przełączenia przez komendę
         workspace.perform("grid.toggleRecordView")
     }
 

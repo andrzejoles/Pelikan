@@ -124,8 +124,8 @@ enum P1DataCommands {
             Command(CommandDescriptor(id: "grid.recordView", title: L10n.tr("Rekord z komentarzami kolumn"), category: .session,
                                       submenu: GridStage8Commands.resultMenu,
                                       parameters: [CommandParameter("row", .integer, L10n.tr("Wiersz (od 1); brak — zaznaczony"))],
-                                      agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu — widok pojedynczego rekordu."),
+                                      agent: .none, effect: .none,
+                                      summary: L10n.tr("Dane rekordu bez zmiany widoku: kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu."),
                                       inMenu: false, feature: "PD-GRID-010"), validate: hasGrid) { ctx in
                 let (tab, grid) = try GridStage8Commands.grid(ctx)
                 let row = ctx.arguments.int("row").map { Int($0) - 1 } ?? tab.selectedRows?.first ?? 0
