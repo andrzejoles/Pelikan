@@ -305,7 +305,7 @@ struct RibbonChoiceTests {
         ws.settings.suppressedDialogs[SuppressibleDialog.moveToTrash.rawValue] = 0
         await #expect(throws: CommandError.cancelledByUser) { _ = try await run(ws, "fb.trash") }
         #expect(ui.asked == [L10n.tr("Przenieść do Kosza?")])
-        #expect(ui.messages == [(f.standardizedFileURL.path as NSString).abbreviatingWithTildeInPath])
+        #expect(ui.messages == [tildePath(f.standardizedFileURL.path)])
         #expect(FileManager.default.fileExists(atPath: f.path))
     }
 

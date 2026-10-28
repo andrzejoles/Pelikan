@@ -446,7 +446,7 @@ enum FileCommands {
 }
 
 /// Ścieżka z katalogiem domowym skróconym do „~” (`abbreviatingWithTildeInPath` nie ma w Foundation na Linuksie).
-private func tildePath(_ path: String) -> String {
+func tildePath(_ path: String) -> String {
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     guard !home.isEmpty, path == home || path.hasPrefix(home + "/") else { return path }
     return "~" + path.dropFirst(home.count)
