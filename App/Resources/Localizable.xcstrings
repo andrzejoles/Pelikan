@@ -533,6 +533,34 @@
         }
       }
     },
+    "%@ wymaga uprawnienia EXECUTE do pakietu %@ (zwykle przez rolę DBA) i licencji Oracle Diagnostics Pack. Administrator bazy może je nadać: GRANT EXECUTE ON SYS.%@ TO %@;" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ requires the EXECUTE privilege on package %@ (usually through the DBA role) and an Oracle Diagnostics Pack license. A database administrator can grant it: GRANT EXECUTE ON SYS.%@ TO %@;"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ erfordert das Recht EXECUTE für das Paket %@ (meist über die Rolle DBA) und eine Lizenz für das Oracle Diagnostics Pack. Ein Datenbankadministrator kann es erteilen: GRANT EXECUTE ON SYS.%@ TO %@;"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ requiere el privilegio EXECUTE sobre el paquete %@ (normalmente mediante el rol DBA) y una licencia de Oracle Diagnostics Pack. Un administrador de la base de datos puede concederlo: GRANT EXECUTE ON SYS.%@ TO %@;"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ потребує привілею EXECUTE на пакет %@ (зазвичай через роль DBA) і ліцензії Oracle Diagnostics Pack. Адміністратор бази даних може його надати: GRANT EXECUTE ON SYS.%@ TO %@;"
+          }
+        }
+      }
+    },
     "%@ wyw." : {
       "localizations" : {
         "en" : {
@@ -24921,6 +24949,34 @@
         }
       }
     },
+    "Identyfikator: kategoria/nazwa (bez argumentu — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identifier: category/name (no argument — choose from a list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kennung: Kategorie/Name (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador: categoría/nombre (sin argumento: elegir de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор: категорія/назва (без аргументу — вибір зі списку)"
+          }
+        }
+      }
+    },
     "Identyfikatory" : {
       "localizations" : {
         "en" : {
@@ -44461,6 +44517,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Neue Datei …"
+          }
+        }
+      }
+    },
+    "Nowy program z szablonu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Program from Template"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neues Programm aus Vorlage"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Programa nuevo desde plantilla"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова програма з шаблону"
           }
         }
       }
@@ -66949,6 +67033,34 @@
         }
       }
     },
+    "Przełącza wynik między tabelą a widokiem pojedynczego rekordu (kolumny, wartości, typy i komentarze kolumn)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switches the result between the table and the single-record view (columns, values, types and column comments)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schaltet das Ergebnis zwischen Tabelle und Einzeldatensatzansicht um (Spalten, Werte, Typen und Spaltenkommentare)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterna el resultado entre la tabla y la vista de un solo registro (columnas, valores, tipos y comentarios de columnas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемикає результат між таблицею та поданням одного запису (стовпці, значення, типи й коментарі стовпців)."
+          }
+        }
+      }
+    },
     "Przyczyna: %@" : {
       "localizations" : {
         "en" : {
@@ -76693,30 +76805,30 @@
         }
       }
     },
-    "Szablon: folder/nazwa albo nazwa" : {
+    "Szablon: folder/nazwa albo nazwa (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Template: folder/name or name"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шаблон: папка/назва або назва"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plantilla: carpeta/nombre o nombre"
+            "value" : "Template: folder/name or name (no argument — choose from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vorlage: ordner/name oder name"
+            "value" : "Vorlage: Ordner/Name oder Name (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantilla: carpeta/nombre o nombre (sin argumento: elegir de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон: папка/назва або назва (без аргументу — вибір зі списку)"
           }
         }
       }
