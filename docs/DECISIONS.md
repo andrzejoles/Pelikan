@@ -2092,4 +2092,8 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   inne niż CREATE); inne polecenia SQL*Plus (`EXIT`, `SET`, `PROMPT` — także słowa PL/SQL) za jednostką bez „/”
   trafiają do jej tekstu (w konwencji właściciela nie występują). Opis narzędzia `agent.source`: źródło bez „/”, do
   wykonania jako skrypt SQL*Plus każdą jednostkę trzeba zakończyć „/” albo kompilować osobno.
+- **Java i MLE bez „/”:** źródło kończy się przed komentarzami PL/SQL i pustymi liniami poprzedzającymi następną
+  jednostkę. Ograniczenie: w źródle Java/MLE bez „/” linia zaczynająca się od `CREATE …` z nagłówkiem jednostki (np.
+  w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
+  takie jednostki kończ „/”.
 

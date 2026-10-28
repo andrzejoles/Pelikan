@@ -105,6 +105,34 @@ public enum ProgramCompiler {
             while e > lower, let u = Unicode.Scalar(body.character(at: e - 1)), CharacterSet.whitespacesAndNewlines.contains(u) { e -= 1 }
             return e
         }
+        /// Koniec źródła Java/JS przed następnym nagłówkiem: bez pustych linii i komentarzy PL/SQL między jednostkami
+        /// (linie zaczynające się od `--`, blok `/* … */` zaczęty w osobnej linii) — nie trafiają do kodu Java/JS.
+        func foreignEnd(before limit: Int, from lower: Int) -> Int {
+            var end = limit
+            while end > lower {
+                let line = body.lineRange(for: NSRange(location: end - 1, length: 0))
+                guard line.location > lower else { break }
+                let t = body.substring(with: NSRange(location: line.location, length: end - line.location)).trimmingCharacters(in: .whitespacesAndNewlines)
+                if t.isEmpty || t.hasPrefix("--") {
+                    end = line.location
+                } else if t.hasSuffix("*/") {
+                    // Blok komentarza: cofnij do linii, która go zaczyna (`/*` na początku linii); inaczej to kod Java/JS.
+                    var start = line.location
+                    var found = false
+                    while start > lower {
+                        let l = body.lineRange(for: NSRange(location: start, length: 0))
+                        if body.substring(with: l).trimmingCharacters(in: .whitespaces).hasPrefix("/*") { start = l.location; found = true; break }
+                        guard l.location > lower else { break }
+                        start = body.lineRange(for: NSRange(location: l.location - 1, length: 0)).location
+                    }
+                    guard found, start > lower else { break }
+                    end = start
+                } else {
+                    break
+                }
+            }
+            return trimmedEnd(before: end, from: lower)
+        }
         while true {
             if isForeign(pieceStart) {
                 // Java / JavaScript: następny nagłówek tekstowo — CREATE na początku linii z nagłówkiem jednostki.
@@ -121,7 +149,7 @@ public enum ProgramCompiler {
                     lineStart = NSMaxRange(line)
                 }
                 guard let next else { out.append((pieceStart, body.length)); return out }
-                out.append((pieceStart, trimmedEnd(before: next, from: pieceStart)))
+                out.append((pieceStart, foreignEnd(before: next, from: pieceStart)))
                 pieceStart = next
                 lexFrom = next
                 continue

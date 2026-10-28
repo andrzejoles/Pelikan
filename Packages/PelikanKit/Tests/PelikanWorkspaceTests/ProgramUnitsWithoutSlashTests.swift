@@ -90,6 +90,9 @@ struct ProgramUnitsWithoutSlashTests {
         #expect(ProgramCompiler.units(in: java).map(\.type) == [.javaSource, .procedure])
         let mle = "create or replace mle module m language javascript as\nexport function f() { return `don't`; }\ncreate or replace function g return number is begin return 1; end;\n"
         #expect(ProgramCompiler.units(in: mle).map(\.type) == [.mleModule, .function])
+        // Komentarze PL/SQL między jednostkami nie trafiają do źródła Java/JS.
+        let commented = "create or replace and compile java source named \"A\" as\npublic class A {\n  /* metoda */\n  int x;\n}\n\n-- procedura\n/* opis\n   wielu linii */\ncreate or replace procedure p is begin null; end;\n"
+        #expect(ProgramCompiler.units(in: commented).first?.text.hasSuffix("int x;\n}") == true)
         let grants = "create procedure p is begin null; end;\ngrant execute on p to scott;\nshow errors\ncreate procedure q is begin null; end;\n"
         let units = ProgramCompiler.units(in: grants)
         #expect(units.map(\.name) == ["P", "Q"])
