@@ -87,6 +87,10 @@ public struct FileBrowserState: Sendable, Codable, Hashable {
 public final class FileBrowser {
     public private(set) var state = FileBrowserState()
     @ObservationIgnored let fileURL: URL?
+    /// Lokalizacja pokazana i element zaznaczony w panelu (bez zapisu) — domyślne argumenty komend `fb.*` wywołanych
+    /// przez użytkownika bez argumentów (wstążka, paleta), jak obiekty biorą zaznaczenie Object Browsera.
+    public var currentLocationID: UUID?
+    public var selectedURL: URL?
 
     public init(fileURL: URL?) {
         self.fileURL = fileURL

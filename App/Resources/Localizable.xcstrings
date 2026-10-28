@@ -6581,6 +6581,34 @@
         }
       }
     },
+    "Brak folderów szablonów użytkownika" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No user template folders"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Benutzervorlagenordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay carpetas de plantillas de usuario"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає тек шаблонів користувача"
+          }
+        }
+      }
+    },
     "Brak gałęzi remote w lokalnym repo — wykonaj git fetch" : {
       "localizations" : {
         "en" : {
@@ -7757,6 +7785,34 @@
         }
       }
     },
+    "Brak szablonów użytkownika do usunięcia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No user templates to delete"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Benutzervorlagen zum Löschen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay plantillas de usuario para eliminar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає шаблонів користувача для видалення"
+          }
+        }
+      }
+    },
     "Brak tabel DBMS_TRACE — administrator instaluje je skryptem ?/rdbms/admin/tracetab.sql" : {
       "localizations" : {
         "en" : {
@@ -8289,6 +8345,34 @@
         }
       }
     },
+    "Brak zapisanych definicji przeniesienia danych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No saved data transfer definitions"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine gespeicherten Datenübertragungsdefinitionen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay definiciones de traslado de datos guardadas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає збережених визначень перенесення даних"
+          }
+        }
+      }
+    },
     "Brak zapisanych przebiegów" : {
       "localizations" : {
         "en" : {
@@ -8369,6 +8453,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Немає запиту до словника"
+          }
+        }
+      }
+    },
+    "Brak zdefiniowanych połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connections defined"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Verbindungen definiert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay conexiones definidas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає визначених з'єднань"
           }
         }
       }
@@ -20413,6 +20525,34 @@
         }
       }
     },
+    "Folder (bez argumentu — wybór z listy folderów użytkownika)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder (without an argument — choice from the user folders)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner (ohne Argument — Auswahl aus den Benutzerordnern)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carpeta (sin argumento — elección entre las carpetas de usuario)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тека (без аргументу — вибір зі списку тек користувача)"
+          }
+        }
+      }
+    },
     "Folder nadrzędny" : {
       "localizations" : {
         "en" : {
@@ -20661,6 +20801,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Format"
+          }
+        }
+      }
+    },
+    "Format (bez argumentu — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format (without an argument — choice from a list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato (sin argumento — elección de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -24249,6 +24417,34 @@
         }
       }
     },
+    "ISO-8859-2 (Latin-2, Europa Środkowa)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO-8859-2 (Latin-2, Central European)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO-8859-2 (Latin-2, Mitteleuropa)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO-8859-2 (Latin-2, Europa Central)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO-8859-2 (Latin-2, Центральна Європа)"
+          }
+        }
+      }
+    },
     "Identity" : {
       "localizations" : {
         "en" : {
@@ -24613,30 +24809,30 @@
         }
       }
     },
-    "Identyfikator lokalizacji" : {
+    "Identyfikator lokalizacji (bez argumentu — pokazana w panelu, po potwierdzeniu)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Location identifier"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ідентифікатор розташування"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identificador de la ubicación"
+            "value" : "Location identifier (without an argument — the one shown in the pane, after confirmation)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Speicherort-ID"
+            "value" : "Standort-ID (ohne Argument — der im Bereich angezeigte, nach Bestätigung)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador de la ubicación (sin argumento — la mostrada en el panel, tras confirmar)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор розташування (без аргументу — показане на панелі, після підтвердження)"
           }
         }
       }
@@ -25617,6 +25813,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Імпортувати визначення з'єднань…"
+          }
+        }
+      }
+    },
+    "Importuj moduł JavaScript" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import JavaScript module"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript-Modul importieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importar módulo JavaScript"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Імпортувати модуль JavaScript"
           }
         }
       }
@@ -27581,6 +27805,34 @@
         }
       }
     },
+    "Katalog (bez argumentu — zaznaczony w Przeglądarce plików albo wybór katalogu)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directory (without an argument — the one selected in the File Browser or a directory choice)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzeichnis (ohne Argument — das im File Browser markierte oder eine Verzeichnisauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directorio (sin argumento — el seleccionado en el Explorador de archivos o elección de directorio)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каталог (без аргументу — позначений у Переглядачі файлів або вибір каталогу)"
+          }
+        }
+      }
+    },
     "Katalog backupów" : {
       "localizations" : {
         "en" : {
@@ -27805,30 +28057,30 @@
         }
       }
     },
-    "Katalog nadrzędny" : {
+    "Katalog nadrzędny (bez argumentu — zaznaczony w Przeglądarce plików albo wybór katalogu)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Parent directory"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Батьківський каталог"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Directorio superior"
+            "value" : "Parent directory (without an argument — the one selected in the File Browser or a directory choice)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Übergeordnetes Verzeichnis"
+            "value" : "Übergeordnetes Verzeichnis (ohne Argument — das im File Browser markierte oder eine Verzeichnisauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directorio superior (sin argumento — el seleccionado en el Explorador de archivos o elección de directorio)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Батьківський каталог (без аргументу — позначений у Переглядачі файлів або вибір каталогу)"
           }
         }
       }
@@ -28645,6 +28897,34 @@
         }
       }
     },
+    "Kod generuje się dla tabeli, widoku, procedury, funkcji albo pakietu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code is generated for a table, view, procedure, function or package"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code wird für eine Tabelle, View, Prozedur, Funktion oder ein Package erzeugt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El código se genera para una tabla, vista, procedimiento, función o paquete"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Код генерується для таблиці, представлення, процедури, функції або пакета"
+          }
+        }
+      }
+    },
     "Kod nieosiągalny — wcześniej %@" : {
       "localizations" : {
         "en" : {
@@ -28897,6 +29177,34 @@
         }
       }
     },
+    "Kodowanie (bez argumentu — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encoding (without an argument — choice from a list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kodierung (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codificación (sin argumento — elección de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кодування (без аргументу — вибір зі списку)"
+          }
+        }
+      }
+    },
     "Kodowanie konsoli" : {
       "localizations" : {
         "en" : {
@@ -28949,6 +29257,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Namenskodierung"
+          }
+        }
+      }
+    },
+    "Kodowanie pliku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File encoding"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dateikodierung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codificación del archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кодування файлу"
           }
         }
       }
@@ -36121,6 +36457,34 @@
         }
       }
     },
+    "Lokalizacja „%@” zniknie z Przeglądarki plików; pliki zostają." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The location “%@” will disappear from the File Browser; the files stay."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Standort „%@“ verschwindet aus dem File Browser; die Dateien bleiben erhalten."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ubicación «%@» desaparecerá del Explorador de archivos; los archivos se conservan."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розташування «%@» зникне з Переглядача файлів; файли залишаться."
+          }
+        }
+      }
+    },
     "Lokalne" : {
       "localizations" : {
         "en" : {
@@ -39173,6 +39537,34 @@
         }
       }
     },
+    "Nazwa definicji (bez argumentu — wybór z listy zapisanych)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Definition name (without an argument — choice from the saved ones)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Definition (ohne Argument — Auswahl aus den gespeicherten)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la definición (sin argumento — elección entre las guardadas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва визначення (без аргументу — вибір зі збережених)"
+          }
+        }
+      }
+    },
     "Nazwa filtra (puste — bez filtra)" : {
       "localizations" : {
         "en" : {
@@ -39225,6 +39617,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ordnername"
+          }
+        }
+      }
+    },
+    "Nazwa folderu (bez argumentu — pytanie o nazwę)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder name (without an argument — asks for the name)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordnername (ohne Argument — Abfrage des Namens)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la carpeta (sin argumento — se pide el nombre)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва теки (без аргументу — запит назви)"
+          }
+        }
+      }
+    },
+    "Nazwa folderu na liście połączeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder name in the connection list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordnername in der Verbindungsliste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la carpeta en la lista de conexiones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва теки у списку з'єднань"
           }
         }
       }
@@ -39761,30 +40209,30 @@
         }
       }
     },
-    "Nazwa połączenia okna" : {
+    "Nazwa połączenia okna (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Window connection name"
+            "value" : "Window connection name (without an argument — choice from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Name der Fensterverbindung"
+            "value" : "Name der Fensterverbindung (ohne Argument — Auswahl aus einer Liste)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nombre de la conexión de la ventana"
+            "value" : "Nombre de la conexión de la ventana (sin argumento — elección de una lista)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Назва з'єднання вікна"
+            "value" : "Назва з'єднання вікна (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -52725,6 +53173,34 @@
         }
       }
     },
+    "Otwórz projekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open project"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir proyecto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити проєкт"
+          }
+        }
+      }
+    },
     "Otwórz projekt…" : {
       "localizations" : {
         "en" : {
@@ -53057,6 +53533,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Workset öffnen …"
+          }
+        }
+      }
+    },
+    "Otwórz z połączeniem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open with connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Verbindung öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir con conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити зі з'єднанням"
           }
         }
       }
@@ -53505,6 +54009,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пакет має --%%test, але немає --%%suite — utPLSQL його не запустить"
+          }
+        }
+      }
+    },
+    "Pakiet nie ma podprogramów do wywołania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The package has no subprograms to call"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Package hat keine aufrufbaren Unterprogramme"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El paquete no tiene subprogramas que llamar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пакет не має підпрограм для виклику"
           }
         }
       }
@@ -55245,30 +55777,30 @@
         }
       }
     },
-    "Plik .js / .mjs" : {
+    "Plik .js / .mjs (bez argumentu — wybór pliku)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ".js / .mjs file"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Файл .js / .mjs"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archivo .js / .mjs"
+            "value" : ".js / .mjs file (without an argument — file choice)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ".js-/.mjs-Datei"
+            "value" : ".js-/.mjs-Datei (ohne Argument — Dateiauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo .js / .mjs (sin argumento — elección de archivo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл .js / .mjs (без аргументу — вибір файлу)"
           }
         }
       }
@@ -55357,30 +55889,30 @@
         }
       }
     },
-    "Plik albo katalog" : {
+    "Plik albo katalog (bez argumentu — wybór plików)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File or directory"
+            "value" : "File or directory (without an argument — file choice)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Datei oder Verzeichnis"
+            "value" : "Datei oder Verzeichnis (ohne Argument — Dateiauswahl)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Archivo o directorio"
+            "value" : "Archivo o directorio (sin argumento — elección de archivos)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Файл або каталог"
+            "value" : "Файл або каталог (без аргументу — вибір файлів)"
           }
         }
       }
@@ -55665,30 +56197,58 @@
         }
       }
     },
-    "Plik projektu (.prj)" : {
+    "Plik projektu (.prj; bez argumentu — okno zapisu)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Project file (.prj)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Файл проєкту (.prj)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archivo de proyecto (.prj)"
+            "value" : "Project file (.prj; without an argument — save dialog)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Projektdatei (.prj)"
+            "value" : "Projektdatei (.prj; ohne Argument — Speicherdialog)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de proyecto (.prj; sin argumento — diálogo de guardado)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл проєкту (.prj; без аргументу — вікно збереження)"
+          }
+        }
+      }
+    },
+    "Plik projektu (.prj; bez argumentu — wybór pliku)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Project file (.prj; without an argument — file choice)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projektdatei (.prj; ohne Argument — Dateiauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo de proyecto (.prj; sin argumento — elección de archivo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл проєкту (.prj; без аргументу — вибір файлу)"
           }
         }
       }
@@ -55777,30 +56337,30 @@
         }
       }
     },
-    "Plik zestawu testów (.pts)" : {
+    "Plik zestawu testów (.pts; bez argumentu — wybór pliku)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Test set file (.pts)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Файл набору тестів (.pts)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archivo de conjunto de pruebas (.pts)"
+            "value" : "Test set file (.pts; without an argument — file choice)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Testset-Datei (.pts)"
+            "value" : "Testsatzdatei (.pts; ohne Argument — Dateiauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivo del conjunto de pruebas (.pts; sin argumento — elección de archivo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл набору тестів (.pts; без аргументу — вибір файлу)"
           }
         }
       }
@@ -57401,30 +57961,30 @@
         }
       }
     },
-    "Podprogram pakietu (wywołanie)" : {
+    "Podprogram pakietu (wywołanie; bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Package subprogram (call)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Підпрограма пакета (виклик)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Subprograma del paquete (llamada)"
+            "value" : "Package subprogram (call; without an argument — choice from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paket-Unterprogramm (Aufruf)"
+            "value" : "Package-Unterprogramm (Aufruf; ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subprograma del paquete (llamada; sin argumento — elección de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Підпрограма пакета (виклик; без аргументу — вибір зі списку)"
           }
         }
       }
@@ -65157,6 +65717,34 @@
         }
       }
     },
+    "Przeglądarka plików nie ma lokalizacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The File Browser has no locations"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der File Browser hat keine Standorte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Explorador de archivos no tiene ubicaciones"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переглядач файлів не має розташувань"
+          }
+        }
+      }
+    },
     "Przeglądarka różnic: wersja pliku z ostatniego zatwierdzenia (HEAD) i bieżąca (także niezapisana w oknie)." : {
       "localizations" : {
         "en" : {
@@ -70057,30 +70645,30 @@
         }
       }
     },
-    "Rodzaj kodu" : {
+    "Rodzaj kodu (bez argumentu — wybór z listy rodzajów dla obiektu)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Code kind"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Тип коду"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tipo de código"
+            "value" : "Code kind (without an argument — choice from the kinds for the object)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Codeart"
+            "value" : "Codeart (ohne Argument — Auswahl aus den Arten für das Objekt)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tipo de código (sin argumento — elección entre los tipos para el objeto)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вид коду (без аргументу — вибір із видів для об'єкта)"
           }
         }
       }
@@ -76777,30 +77365,30 @@
         }
       }
     },
-    "Szablon użytkownika: folder/nazwa" : {
+    "Szablon użytkownika: folder/nazwa (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "User template: folder/name"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шаблон користувача: папка/назва"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plantilla de usuario: carpeta/nombre"
+            "value" : "User template: folder/name (without an argument — choice from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Benutzervorlage: ordner/name"
+            "value" : "Benutzervorlage: Ordner/Name (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plantilla de usuario: carpeta/nombre (sin argumento — elección de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шаблон користувача: тека/назва (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -83161,6 +83749,34 @@
         }
       }
     },
+    "UTF-8 (Unicode)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UTF-8 (Unicode)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UTF-8 (Unicode)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UTF-8 (Unicode)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UTF-8 (Unicode)"
+          }
+        }
+      }
+    },
     "UWAGA: części wartości (duże LOB-y, obiekty) nie da się zapisać literałem — w skrypcie są jako NULL; wyrównaj je bezpośrednio na bazie" : {
       "localizations" : {
         "en" : {
@@ -85649,6 +86265,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Видалити одиницю %@ з вікна?"
+          }
+        }
+      }
+    },
+    "Usunąć lokalizację?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove the location?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standort entfernen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar la ubicación?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видалити розташування?"
           }
         }
       }
@@ -91001,6 +91645,34 @@
         }
       }
     },
+    "Wg rozszerzenia pliku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By file extension"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Dateierweiterung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Según la extensión del archivo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "За розширенням файлу"
+          }
+        }
+      }
+    },
     "Widoczne kolumny: %@ z %@" : {
       "localizations" : {
         "en" : {
@@ -91781,6 +92453,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeilen: %@, Kodierung: %@"
+          }
+        }
+      }
+    },
+    "Windows-1250 (Europa Środkowa, Windows)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-1250 (Central European, Windows)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-1250 (Mitteleuropa, Windows)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-1250 (Europa Central, Windows)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows-1250 (Центральна Європа, Windows)"
           }
         }
       }
@@ -108725,6 +109425,62 @@
         }
       }
     },
+    "Zaznacz plik albo katalog w Przeglądarce plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a file or directory in the File Browser"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markieren Sie eine Datei oder ein Verzeichnis im File Browser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione un archivo o directorio en el Explorador de archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначте файл або каталог у Переглядачі файлів"
+          }
+        }
+      }
+    },
+    "Zaznacz plik w Przeglądarce plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a file in the File Browser"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markieren Sie eine Datei im File Browser"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccione un archivo en el Explorador de archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позначте файл у Переглядачі файлів"
+          }
+        }
+      }
+    },
     "Zaznacz poziom hierarchii kodu" : {
       "localizations" : {
         "en" : {
@@ -118217,30 +118973,30 @@
         }
       }
     },
-    "right, left, formatted albo thousands" : {
+    "right, left, formatted albo thousands (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "right, left, formatted or thousands"
+            "value" : "right, left, formatted or thousands (without an argument — choice from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "right, left, formatted oder thousands"
+            "value" : "right, left, formatted oder thousands (ohne Argument — Auswahl aus einer Liste)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "right, left, formatted o thousands"
+            "value" : "right, left, formatted o thousands (sin argumento — elección de una lista)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "right, left, formatted або thousands"
+            "value" : "right, left, formatted або thousands (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -121325,30 +122081,30 @@
         }
       }
     },
-    "Ścieżka" : {
+    "Ścieżka (bez argumentu — zaznaczenie w Przeglądarce plików)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Path"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шлях"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ruta"
+            "value" : "Path (without an argument — the selection in the File Browser)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pfad"
+            "value" : "Pfad (ohne Argument — die Markierung im File Browser)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta (sin argumento — la selección del Explorador de archivos)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шлях (без аргументу — позначене в Переглядачі файлів)"
           }
         }
       }
@@ -121437,30 +122193,30 @@
         }
       }
     },
-    "Ścieżka pliku" : {
+    "Ścieżka pliku (bez argumentu — plik zaznaczony w Przeglądarce plików albo wybór pliku)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File path"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Шлях до файлу"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ruta del archivo"
+            "value" : "File path (without an argument — the file selected in the File Browser or a file choice)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dateipfad"
+            "value" : "Dateipfad (ohne Argument — die im File Browser markierte Datei oder eine Dateiauswahl)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruta del archivo (sin argumento — el archivo seleccionado en el Explorador de archivos o elección de archivo)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Шлях до файлу (без аргументу — файл, позначений у Переглядачі файлів, або вибір файлу)"
           }
         }
       }

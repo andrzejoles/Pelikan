@@ -124,24 +124,39 @@ enum Stage7Commands {
             // MARK: Kod z obiektu (SD-GEN-001)
             Command(CommandDescriptor(id: "ob.generateCode", title: L10n.tr("Generuj kod…"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams + [
-                                          CommandParameter("kind", .string, required: true, L10n.tr("Rodzaj kodu"), allowed: CodeGenerator.Kind.allCases.map(\.rawValue)),
-                                          CommandParameter("member", .string, L10n.tr("Podprogram pakietu (wywołanie)")),
+                                          CommandParameter("kind", .string, L10n.tr("Rodzaj kodu (bez argumentu — wybór z listy rodzajów dla obiektu)"), allowed: CodeGenerator.Kind.allCases.map(\.rawValue)),
+                                          CommandParameter("member", .string, L10n.tr("Podprogram pakietu (wywołanie; bez argumentu — wybór z listy)")),
                                           CommandParameter("newWindow", .boolean, L10n.tr("W nowym oknie zamiast w miejscu kursora")),
                                           CommandParameter("returnOnly", .boolean, L10n.tr("Tylko zwróć kod (bez wstawiania)"))],
                                       agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("SELECT/INSERT/UPDATE/DELETE z kolumnami tabeli, wywołanie procedury z parametrami albo fragment Java JDBC / Python — w miejscu kursora albo w nowym oknie."),
                                       feature: "SD-GEN-001")) { ctx in
                 let ws = ctx.workspace
-                guard let kind = CodeGenerator.Kind(rawValue: ctx.arguments.string("kind") ?? "") else { throw CommandError.missingArgument("kind") }
+                var kind = CodeGenerator.Kind(rawValue: ctx.arguments.string("kind") ?? "")
+                if kind == nil, ctx.arguments.string("kind") != nil || ctx.askingUI == nil { throw CommandError.missingArgument("kind") }
                 let (o, m) = try await ObjectCommands.target(ctx)
+                // Ze wstążki bez argumentu — rodzaje kodu dla zaznaczonego obiektu (jak menu Object Browsera).
+                if kind == nil {
+                    let kinds = CodeGenerator.Kind.kinds(for: o.type)
+                    guard !kinds.isEmpty else {
+                        throw CommandError.notAvailable(L10n.tr("Kod generuje się dla tabeli, widoku, procedury, funkcji albo pakietu"))
+                    }
+                    kind = kinds.count == 1 ? kinds[0] : try await ctx.choose(L10n.tr("Generuj kod"), kinds.map { (label: $0.displayName, value: $0) })
+                }
+                guard let kind else { throw CommandError.missingArgument("kind") }
                 let code: String
                 if kind == .call {
                     guard [.procedure, .function, .package, .packageBody].contains(o.type) else {
                         throw CommandError.notAvailable(L10n.tr("Wywołanie generuje się dla procedury, funkcji albo podprogramu pakietu"))
                     }
-                    let member = ctx.arguments.string("member")
+                    var member = ctx.arguments.string("member")
                     if o.type == .package || o.type == .packageBody, member == nil {
-                        throw CommandError.missingArgument("member")
+                        // Ze wstążki — wybór podprogramu pakietu.
+                        guard ctx.askingUI != nil else { throw CommandError.missingArgument("member") }
+                        let spec = DBObject(owner: o.owner, name: o.name, type: .package)
+                        let names = Array(Set(try await m.children(of: spec).filter { $0.kind == .subprogram }.map(\.name))).sorted()
+                        guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Pakiet nie ma podprogramów do wywołania")) }
+                        member = try await ctx.choose(L10n.tr("Podprogram pakietu"), names.map { (label: $0, value: $0) })
                     }
                     code = try await TestRunner.script(for: o, member: member, metadata: m).0
                 } else {

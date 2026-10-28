@@ -170,12 +170,16 @@ public enum BuiltinCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "file.encoding", title: L10n.tr("Kodowanie pliku…"), category: .file,
-                                      parameters: [CommandParameter("encoding", .string, required: true, L10n.tr("Kodowanie"), allowed: TextFileCodec.encodingNames)],
+                                      parameters: [CommandParameter("encoding", .string, L10n.tr("Kodowanie (bez argumentu — wybór z listy)"), allowed: TextFileCodec.encodingNames)],
                                       agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Jawnie zmienia kodowanie, w którym okno zostanie zapisane (UTF-8, ISO-8859-2, Windows-1250); znaki spoza kodowania są wskazywane."),
                                       feature: "PC-ENC-001"),
                     validate: { $0.activeDocument != nil }) { ctx in
-                guard let doc = ctx.workspace.activeDocument, let name = ctx.arguments.string("encoding"), let enc = TextFileCodec.encoding(named: name) else {
+                var name = ctx.arguments.string("encoding")
+                if name == nil, ctx.workspace.activeDocument != nil {
+                    name = try await ctx.choose(L10n.tr("Kodowanie pliku"), TextFileCodec.encodingNames.map { (label: TextFileCodec.encodingLabel($0), value: $0) })
+                }
+                guard let doc = ctx.workspace.activeDocument, let name, let enc = TextFileCodec.encoding(named: name) else {
                     throw CommandError.invalidArgument("encoding", TextFileCodec.encodingNames.joined(separator: ", "))
                 }
                 doc.fileFormat.encoding = enc

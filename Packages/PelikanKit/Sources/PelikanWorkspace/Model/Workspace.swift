@@ -43,6 +43,8 @@ public protocol UIServices: AnyObject {
     func showRecallStatement()
     /// Okno wyboru plików do otwarcia.
     func chooseFilesToOpen() async -> [URL]
+    /// Okno wyboru jednego pliku o podanych rozszerzeniach (projekt, zestaw testów, moduł JavaScript); nil — anulowano.
+    func chooseFile(_ title: String, extensions: [String]) async -> URL?
     /// Okno wyboru nazwy pliku do zapisu; nil — anulowano.
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL?
     /// Lista podpowiedzi Code Assistant w edytorze dokumentu (UG 25.4).
@@ -270,6 +272,7 @@ extension UIServices {
     public func showFileBrowser() {}
     public func showObjectBrowser() {}
     public func chooseDirectory() async -> URL? { nil }
+    public func chooseFile(_ title: String, extensions: [String]) async -> URL? { await chooseFilesToOpen().first }
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
     public func showSSHTargets(_ action: SSHTargetAction) {}
