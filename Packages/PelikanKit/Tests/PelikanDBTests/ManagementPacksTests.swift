@@ -53,4 +53,21 @@ struct ManagementPacksTests {
         #expect(tune.uppercased().contains("GENERAL INFORMATION"))
         await ws.sessions.disconnectAll()
     }
+
+    @Test("Bez EXECUTE do DBMS_WORKLOAD_REPOSITORY: czytelny komunikat z poleceniem GRANT zamiast ORA-00904 (#113, #114)")
+    func reportsWithoutPrivilege() async throws {
+        let c = TestDatabase.config!
+        let s = try await ODPISession.connect(target: ConnectionTarget(user: c.agentUser, connectString: c.connectString),
+                                              credentials: Credentials(password: c.agentPassword), options: ConnectOptions())
+        defer { Task { await s.close() } }
+        for report in [{ _ = try await ManagementPacks.ashReport(s, minutes: 5) },
+                       { _ = try await ManagementPacks.awrReport(s, dbid: "1", instance: "1", begin: "1", end: "2") }] {
+            do {
+                try await report()
+                Issue.record("raport bez uprawnień")
+            } catch let CommandError.notAvailable(m) {
+                #expect(m.contains("DBMS_WORKLOAD_REPOSITORY") && m.contains("GRANT EXECUTE"), "\(m)")
+            }
+        }
+    }
 }

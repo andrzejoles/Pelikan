@@ -82,15 +82,26 @@ public enum ManagementPacks {
         return rows.map { $0.first?.displayText ?? "" }.joined(separator: "\n")
     }
 
+    /// Uprawnienie EXECUTE do pakietu SYS (zgłoszenia #113, #114): bez niego Oracle odpowiada w SQL mylącym
+    /// ORA-00904 „invalid identifier”. Pakiet SYS jest w ALL_OBJECTS tylko z uprawnieniem (wprost, przez rolę, PUBLIC).
+    static func requireExecute(_ package: String, in s: any DatabaseSession, report: String) async throws {
+        let n = try await s.scalar("select count(*) from all_objects where owner = 'SYS' and object_name = :p and object_type = 'PACKAGE'",
+                                   binds: [BindVariable(name: "p", value: .text(package))])
+        guard n == "0" else { return }
+        throw CommandError.notAvailable(L10n.tr("\(report) wymaga uprawnienia EXECUTE do pakietu \(package) (zwykle przez rolę DBA) i licencji Oracle Diagnostics Pack. Administrator bazy może je nadać: GRANT EXECUTE ON SYS.\(package) TO \(s.info.sessionUser);"))
+    }
+
     /// Raport AWR (HTML) między migawkami.
     public static func awrReport(_ s: any DatabaseSession, dbid: String, instance: String, begin: String, end: String) async throws -> String {
-        try await joined(s, "select output from table(dbms_workload_repository.awr_report_html(:d, :i, :b, :e))",
+        try await requireExecute("DBMS_WORKLOAD_REPOSITORY", in: s, report: L10n.tr("Raport AWR"))
+        return try await joined(s, "select output from table(dbms_workload_repository.awr_report_html(:d, :i, :b, :e))",
                          [num("d", dbid), num("i", instance), num("b", begin), num("e", end)])
     }
 
     /// Raport ASH (HTML) z ostatnich `minutes` minut.
     public static func ashReport(_ s: any DatabaseSession, minutes: Int) async throws -> String {
-        try await joined(s, """
+        try await requireExecute("DBMS_WORKLOAD_REPOSITORY", in: s, report: L10n.tr("Raport ASH"))
+        return try await joined(s, """
             select output from table(dbms_workload_repository.ash_report_html(
               to_number(sys_context('userenv', 'con_dbid')), (select instance_number from v$instance), sysdate - :m / 1440, sysdate))
             """, [num("m", String(minutes))])
@@ -98,6 +109,7 @@ public enum ManagementPacks {
 
     /// Raport ADDM dla przedziału migawek (zadanie doradcy tworzone i usuwane).
     public static func addmReport(_ s: any DatabaseSession, begin: String, end: String) async throws -> String {
+        try await requireExecute("DBMS_ADDM", in: s, report: L10n.tr("Raport ADDM"))
         let task = "PELIKAN_ADDM_\(UUID().uuidString.prefix(8))"
         // Sprzątanie także po błędzie analizy (zadanie mogło już powstać).
         defer { Task { _ = try? await s.execute("begin dbms_addm.delete(:t); end;", binds: [BindVariable(name: "t", value: .text(task))]) } }
