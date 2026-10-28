@@ -475,6 +475,23 @@ public enum CodeInspections {
     /// Zmienne, stałe i parametry bez użycia w swoim zakresie (podprogram albo blok).
     static func unusedDeclarations(_ text: String, _ t: [SQLToken], _ outline: [OutlineNode]) -> [EditorDiagnostic] {
         var out: [EditorDiagnostic] = []
+        // Pozycje słów według nazwy (rosnąco) — wyszukiwanie użycia w zakresie bez przeglądania wszystkich tokenów dla
+        // każdej deklaracji (pakiet 60 000 linii z tysiącami podprogramów blokował główny wątek na minuty, D192).
+        var positions: [String: [Int]] = [:]
+        for tok in t where tok.isWord { positions[tok.name, default: []].append(tok.start) }
+        func used(_ name: String, in scope: Range<Int>, except: Int) -> Bool {
+            guard let list = positions[name] else { return false }
+            var lo = 0, hi = list.count
+            while lo < hi {
+                let mid = (lo + hi) / 2
+                if list[mid] < scope.lowerBound { lo = mid + 1 } else { hi = mid }
+            }
+            while lo < list.count, list[lo] < scope.upperBound {
+                if list[lo] != except { return true }
+                lo += 1
+            }
+            return false
+        }
         func visit(_ nodes: [OutlineNode], scope: Range<Int>?, inSpec: Bool) {
             for n in nodes {
                 let spec = inSpec || n.kind == .package || n.kind == .type
@@ -483,11 +500,7 @@ public enum CodeInspections {
                     continue
                 }
                 guard !spec, let scope, [.variable, .constant, .parameter].contains(n.kind), !n.name.isEmpty else { continue }
-                let up = n.name.uppercased()
-                let uses = t.filter { tok in
-                    scope.contains(tok.start) && tok.start != n.nameOffset && tok.isWord && tok.name == up
-                }
-                if uses.isEmpty {
+                if !used(n.name.uppercased(), in: scope, except: n.nameOffset) {
                     let r = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
                     let what = n.kind == .parameter ? L10n.tr("Parametr") : n.kind == .constant ? L10n.tr("Stała") : L10n.tr("Zmienna")
                     out.append(EditorDiagnostic(range: r, severity: .warning, source: .inspection, code: n.kind == .parameter ? "unused-parameter" : "unused-variable",
