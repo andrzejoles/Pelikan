@@ -247,6 +247,8 @@ public final class ResultTab: Identifiable {
     public var statementText: String?
     /// Informacje słownika o kolumnach tabeli wyniku (PD-GRID-022), wczytywane przy pierwszym użyciu.
     public var columnInfo: [Int: ColumnDictionaryInfo]?
+    /// Widok pojedynczego rekordu zamiast tabeli (PD-GRID-010) — przełącza `grid.toggleRecordView`.
+    public var showsRecord = false
 
     public init(title: String, statementRange: Range<Int>, grid: ResultGridModel? = nil, message: String? = nil) {
         self.title = title

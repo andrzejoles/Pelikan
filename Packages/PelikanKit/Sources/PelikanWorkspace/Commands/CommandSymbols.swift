@@ -87,7 +87,7 @@ public enum CommandSymbols {
         "grid.filterExpression": "function", "grid.clearFilter": "line.3.horizontal.decrease.circle.fill", "grid.queryByExample": "rectangle.and.pencil.and.ellipsis",
         "grid.groupBy": "square.stack.3d.down.right", "grid.export": "square.and.arrow.up", "grid.copyWithHeader": "doc.on.clipboard",
         "grid.copyToExcel": "tablecells", "grid.copyAs": "doc.on.doc", "grid.graph": "chart.xyaxis.line", "grid.totals": "sum",
-        "grid.recordView": "list.bullet.rectangle", "sql.pinResult": "pin", "sql.pinAllResults": "pin.fill", "sql.clearResults": "xmark.bin",
+        "grid.toggleRecordView": "list.bullet.rectangle", "sql.pinResult": "pin", "sql.pinAllResults": "pin.fill", "sql.clearResults": "xmark.bin",
         // Program
         "prog.addUnit": "plus.square", "prog.removeUnit": "minus.square", "prog.reloadFromDatabase": "arrow.down.circle",
         "prog.checkChanges": "exclamationmark.arrow.triangle.2.circlepath", "prog.revert": "arrow.uturn.backward.square",

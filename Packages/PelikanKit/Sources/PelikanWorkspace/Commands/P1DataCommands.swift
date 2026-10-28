@@ -109,10 +109,20 @@ enum P1DataCommands {
                 return .ok
             },
             // MARK: Rekord z komentarzami kolumn (PD-GRID-010)
-            command("grid.recordView", L10n.tr("Rekord z komentarzami kolumn"),
-                    params: [CommandParameter("row", .integer, L10n.tr("Wiersz (od 1); brak — zaznaczony"))],
-                    summary: L10n.tr("Kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu — widok pojedynczego rekordu."),
+            command("grid.toggleRecordView", L10n.tr("Widok pojedynczego rekordu"),
+                    summary: L10n.tr("Przełącza wynik między tabelą a widokiem pojedynczego rekordu (kolumny, wartości, typy i komentarze kolumn)."),
                     feature: "PD-GRID-010", validate: hasGrid) { ctx in
+                let (tab, _) = try GridStage8Commands.grid(ctx)
+                tab.showsRecord.toggle()
+                return .ok
+            },
+            // Dane rekordu bez zmiany widoku (agent, skrypty; komentarze kolumn dla widoku rekordu) — poza menu i wstążką.
+            Command(CommandDescriptor(id: "grid.recordView", title: L10n.tr("Rekord z komentarzami kolumn"), category: .session,
+                                      submenu: GridStage8Commands.resultMenu,
+                                      parameters: [CommandParameter("row", .integer, L10n.tr("Wiersz (od 1); brak — zaznaczony"))],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu — widok pojedynczego rekordu."),
+                                      inMenu: false, feature: "PD-GRID-010"), validate: hasGrid) { ctx in
                 let (tab, grid) = try GridStage8Commands.grid(ctx)
                 let row = ctx.arguments.int("row").map { Int($0) - 1 } ?? tab.selectedRows?.first ?? 0
                 guard row >= 0, row < grid.rowCount else { throw CommandError.invalidArgument("row", String(row + 1)) }

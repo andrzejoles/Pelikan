@@ -297,6 +297,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
 
     private func modelChanged() {
         applyLayout()
+        applyRecordMode()
         let showPanel = workspace.valuePanelVisible
         if valuePanel?.isHidden == showPanel {
             valuePanel?.isHidden = !showPanel
@@ -559,10 +560,19 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         workspace.perform("grid.export", CommandArguments(["format": .string(raw)]))
     }
 
+    /// Przycisk w pasku siatki — ta sama komenda co „Rekord” na wstążce; widok idzie za stanem karty (`applyRecordMode`).
     @objc private func toggleRecord() {
-        record.isHidden = recordButton.state == .off
-        scroll.isHidden = !record.isHidden
-        if !record.isHidden {
+        recordButton.state = tab.showsRecord ? .on : .off   // do czasu przełączenia przez komendę
+        workspace.perform("grid.toggleRecordView")
+    }
+
+    private func applyRecordMode() {
+        let show = tab.showsRecord
+        recordButton.state = show ? .on : .off
+        guard record.isHidden == show else { return }
+        record.isHidden = !show
+        scroll.isHidden = show
+        if show {
             if table.selectedRow < 0, grid.rowCount > 0 { table.selectRowIndexes([0], byExtendingSelection: false) }
             showRecord()
             // Komentarze kolumn ze słownika (PD-GRID-010) — wczytywane raz na kartę.
