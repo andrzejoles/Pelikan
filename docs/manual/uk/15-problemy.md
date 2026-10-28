@@ -64,6 +64,12 @@ Pelikan не нотаризовано Apple. Під час першого зап
 Перевірте заявлену ліцензію у визначенні з'єднання (вкладка **Додатково**) і параметр бази
 `CONTROL_MANAGEMENT_PACK_ACCESS`. Функції Tuning Pack потребують значення `DIAGNOSTIC+TUNING`.
 
+Помилка ORA-00904 «DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier» означає відсутність привілею EXECUTE
+на пакет `SYS.DBMS_WORKLOAD_REPOSITORY` (звіт ADDM — також `SYS.DBMS_ADDM`): у SQL Oracle тоді відповідає «invalid identifier»,
+а не повідомленням про брак привілеїв. Привілей зазвичай дає роль DBA; потрібна також ліцензія Oracle Diagnostics Pack.
+Pelikan перевіряє привілей перед звітами AWR, ASH і ADDM і подає команду GRANT для адміністратора бази, напр.
+`GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
+
 ### Агент не запускається
 
 - Pelikan шукає програму агента в `PATH` вашої оболонки входу — перевірте в Терміналі, чи працює команда (напр.

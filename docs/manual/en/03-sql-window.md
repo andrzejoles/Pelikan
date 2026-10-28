@@ -78,7 +78,8 @@ results Pelikan asks before the size limit from Preferences is exceeded.
   large data editor with text, XML, JSON, HTML, image, PDF and hex views, JSON/XML formatting and saving to a file.
 - The **Value panel** (**View › Value panel**, ⌥⌘V) shows the current cell next to the grid as text, JSON, XML, HTML, an
   image or hex.
-- **Single record view** shows the current row vertically with the column types and comments.
+- **Single record view** shows the current row vertically with the column types and comments. The button in the bar
+  above the grid or **Record** on the **Result** ribbon tab turns it on and off; each result tab keeps its own state.
 - A **nested cursor** (`CURSOR(…)` in a query) opens in a new result tab.
 - **Column Filter…** hides columns by name, type, nullability and keys; hidden columns are skipped when copying and
   exporting.

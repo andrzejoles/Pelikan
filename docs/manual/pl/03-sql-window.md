@@ -77,7 +77,8 @@ wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Preferencji.
   edytor dużych danych z widokami tekst, XML, JSON, HTML, obraz, PDF i hex, formatowaniem JSON/XML i zapisem do pliku.
 - **Panel wartości** (**Widok › Panel wartości**, ⌥⌘V) pokazuje obok siatki bieżącą komórkę jako tekst, JSON, XML,
   HTML, obraz albo hex.
-- **Widok pojedynczego rekordu** pokazuje bieżący wiersz w pionie z typami i komentarzami kolumn.
+- **Widok pojedynczego rekordu** pokazuje bieżący wiersz w pionie z typami i komentarzami kolumn. Włącza go i wyłącza
+  przycisk w pasku nad siatką albo **Rekord** na karcie wstążki **Wynik**; stan zapamiętuje każda karta wyniku osobno.
 - **Kursor zagnieżdżony** (`CURSOR(…)` w zapytaniu) otwiera się w nowej karcie wyniku.
 - **Filtr kolumn…** ukrywa kolumny według nazwy, typu, obowiązkowości i kluczy; ukryte kolumny są pomijane przy
   kopiowaniu i eksporcie.

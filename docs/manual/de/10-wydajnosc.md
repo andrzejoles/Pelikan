@@ -29,6 +29,10 @@ zeigt den tatsächlichen Plan: Starts, geschätzte (E-Rows) und tatsächliche (A
 Abweichungen, Zeiten, Puffer und Lesevorgänge sowie die Änderung der Sitzungsstatistiken vor und nach der Ausführung.
 DML-Befehle werden nach der Messung zurückgerollt. Autotrace erfordert kein Tuning Pack.
 
+Nach Variablen im Befehl fragt Autotrace wie das SQL-Fenster: Bindevariablen (`:name`) erhalten Werte aus dem Fenster
+**Variablen** (im Fenster gespeichert), Substitutionsvariablen (`&name`) nur bei eingeschalteter Substitution des
+Fensters; bei ausgeschalteter bleibt `&` ohne Nachfrage im Text.
+
 ## Oracle Diagnostics und Tuning Pack
 
 Das Menü **Werkzeuge › Performance (Oracle-Packs)** enthält Werkzeuge, die kostenpflichtige Oracle-Packs nutzen:

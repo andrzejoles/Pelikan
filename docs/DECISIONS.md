@@ -1939,19 +1939,31 @@ a część komend wymagała argumentu (podawanego przez panel, agenta albo skryp
 
 - **Rekord:** `grid.recordView` zwracała dane rekordu bez zmiany widoku. Nowa `grid.toggleRecordView` przełącza stan
   karty wyniku (`ResultTab.showsRecord`); przycisk w pasku siatki i „Rekord” na wstążce wywołują ją, widok idzie za
-  stanem. `grid.recordView` zostaje komendą danych (agent, skrypty, komentarze kolumn dla widoku) poza menu.
+  stanem. `grid.recordView` zostaje komendą danych bez zmiany widoku (agent, skrypty, komentarze kolumn dla widoku)
+  poza menu, ze skutkiem „brak” — nie nagrywa się w makrach.
 - **Komendy wstążki bez argumentów (#111 „Wstaw snippet”, #112 „Wstaw szablon” i 20 kolejnych):** wywołane przez
   użytkownika bez argumentu pytają (lista z etykietami, pole tekstowe, wybór pliku lub katalogu) albo biorą
   zaznaczenie — przeglądarka plików udostępnia zaznaczony plik i pokazaną lokalizację (`FileBrowser.selectedURL`,
-  `currentLocationID`); gdy nie ma czego wybrać — odmowa z komunikatem, co zrobić. Agent i skrypty bez argumentu
-  dostają błąd argumentu jak dotąd. Test `RibbonArgumentTests` wywołuje każdą komendę wstążki z parametrami bez
-  argumentów i zawodzi, gdy kończy się błędem argumentu bez pytania (lista `askWhenMissing` pilnuje komend już
-  poprawionych); nowa komenda na wstążce z wymaganym argumentem bez pytania czerwieni test.
+  `currentLocationID`, synchronizowane z panelem w obie strony), ale tylko gdy panel jest naprawdę widoczny
+  (`FileBrowser.isPaneVisible` — zwinięta lewa kolumna jest ukryta, a nie odpięta); gdy nie ma czego wybrać — odmowa
+  z komunikatem, co zrobić. Przeniesienie do Kosza elementu z zaznaczenia pyta zawsze (pełna ścieżka), także przy
+  wyłączonym potwierdzeniu. Błąd argumentu bez argumentu dostaje tylko agent; skrypty interfejsu i makra działają jako
+  użytkownik i pytają jak przycisk. Argumenty wybrane w oknie komenda zwraca w `CommandResult.resolvedArguments`,
+  a makro nagrywa je zamiast pustych — odtworzenie nie otwiera okna ponownie. Lista wyboru ma etykiety bez powtórzeń
+  (dopisek „(2)”). Test `RibbonArgumentTests` wywołuje każdą komendę wstążki z jakimikolwiek parametrami (wymaganymi
+  albo nie) bez argumentów i zawodzi, gdy kończy się błędem argumentu bez pytania — parametry opcjonalne z wartością
+  domyślną przechodzą same (komenda bierze domyślną albo odmawia z komunikatem); lista `askWhenMissing` pilnuje, żeby
+  komendy już poprawione zostały na wstążce.
 - **AWR, ASH, ADDM (#113, #114):** ORA-00904 „DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier” to brak
   uprawnienia EXECUTE do pakietu (Oracle odpowiada w SQL „invalid identifier”, nie ORA-01031 — sprawdzone na bazie).
   Prawidłowe użycie: EXECUTE do SYS.DBMS_WORKLOAD_REPOSITORY (raport ADDM — DBMS_ADDM), zwykle przez rolę DBA,
   i licencja Oracle Diagnostics Pack. Pelikan sprawdza uprawnienie przed raportem (pakiet SYS jest w ALL_OBJECTS tylko
-  z uprawnieniem) i podaje komunikat z poleceniem GRANT.
+  z uprawnieniem) — w komendach AWR i ADDM przed odczytem migawek (bez uprawnienia DBA_HIST_SNAPSHOT dawałby
+  ORA-00942) — i podaje komunikat z poleceniem GRANT (nazwa użytkownika spoza `A–Z 0–9 _ $ #` w cudzysłowach). ADDM
+  sprawdza najpierw DBMS_WORKLOAD_REPOSITORY: DBMS_ADDM bywa nadany PUBLIC (baza testowa 23ai), więc sam nie mówi nic
+  o dostępie do migawek. Uprawnienie do pakietu bez dostępu do słownika (np. tylko rola OEM_MONITOR) — komunikat
+  z GRANT SELECT_CATALOG_ROLE zamiast ORA-00942.
 - **Autotrace:** polecenie ze zmiennymi wiązanymi (`:nazwa`, także zmienne PL/SQL zamienione przy zaznaczeniu
   w oknie programu) kończyło się ORA-01008 (dziennik z #113). Autotrace pyta o zmienne jak okno SQL (wartości
-  zapamiętane w oknie) i wykonuje polecenie z wiązaniem.
+  zapamiętane w oknie) i wykonuje polecenie z wiązaniem; przy wyłączonym podstawianiu okna `&` zostaje w tekście bez
+  pytania, a o zmienne wiązane pyta zawsze.

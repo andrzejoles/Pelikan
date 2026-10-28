@@ -63,6 +63,12 @@ data** from the table's menu in the Object Browser. A read-only connection block
 Check the license declaration in the connection definition (the **Advanced** tab) and the database parameter
 `CONTROL_MANAGEMENT_PACK_ACCESS`. Tuning Pack features require the value `DIAGNOSTIC+TUNING`.
 
+The error ORA-00904 "DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier" means a missing EXECUTE privilege on
+the `SYS.DBMS_WORKLOAD_REPOSITORY` package (ADDM report — also `SYS.DBMS_ADDM`): in SQL, Oracle then answers "invalid
+identifier" rather than reporting missing privileges. The privilege usually comes with the DBA role; an Oracle
+Diagnostics Pack license is required as well. Pelikan checks the privilege before the AWR, ASH and ADDM reports and
+gives the GRANT statement for the database administrator, e.g. `GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
+
 ### The agent does not start
 
 - Pelikan looks for the agent program in the `PATH` of your login shell — check in Terminal whether the command (e.g.

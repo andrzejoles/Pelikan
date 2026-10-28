@@ -72,6 +72,12 @@ Speichern.
 Prüfen Sie die Lizenzangabe in der Verbindungsdefinition (Tab **Erweitert**) und den Datenbankparameter
 `CONTROL_MANAGEMENT_PACK_ACCESS`. Funktionen des Tuning Pack erfordern den Wert `DIAGNOSTIC+TUNING`.
 
+Der Fehler ORA-00904 „DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier“ bedeutet ein fehlendes
+EXECUTE-Recht auf das Paket `SYS.DBMS_WORKLOAD_REPOSITORY` (ADDM-Bericht — auch `SYS.DBMS_ADDM`): In SQL antwortet Oracle dann
+mit „invalid identifier“ statt mit fehlenden Rechten. Das Recht kommt meist über die Rolle DBA; außerdem ist eine Lizenz
+für Oracle Diagnostics Pack nötig. Pelikan prüft das Recht vor dem AWR-, ASH- und ADDM-Bericht und nennt den
+GRANT-Befehl für den Datenbankadministrator, z. B. `GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
+
 ### Der Agent startet nicht
 
 - Pelikan sucht das Agentenprogramm im `PATH` Ihrer Login-Shell — prüfen Sie im Terminal, ob der Befehl (z. B. `claude`)

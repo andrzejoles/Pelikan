@@ -28,6 +28,10 @@ rzeczywisty: Starts, szacowane (E-Rows) i rzeczywiste (A-Rows) liczby wierszy z 
 czasy, bufory i odczyty, a także zmianę statystyk sesji przed i po wykonaniu. Polecenia DML są po pomiarze wycofywane.
 Autotrace nie wymaga Tuning Pack.
 
+O zmienne w poleceniu Autotrace pyta jak okno SQL: zmienne wiązane (`:nazwa`) dostają wartości
+z okna **Zmienne** (zapamiętane w oknie), a zmienne podstawiania (`&nazwa`) — tylko przy włączonym podstawianiu okna;
+przy wyłączonym `&` zostaje w tekście bez pytania.
+
 ## Pakiety Oracle Diagnostics i Tuning
 
 Menu **Narzędzia › Wydajność (pakiety Oracle)** zawiera narzędzia korzystające z płatnych pakietów Oracle:

@@ -83,7 +83,9 @@ sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de supe
   en archivo.
 - El **Panel de valores** (**Vista › Panel de valores**, ⌥⌘V) muestra junto a la cuadrícula la celda actual como texto,
   JSON, XML, HTML, imagen o hexadecimal.
-- La **Vista de registro único** muestra la fila actual en vertical con los tipos y comentarios de las columnas.
+- La **Vista de registro único** muestra la fila actual en vertical con los tipos y comentarios de las columnas. La
+  activa y desactiva el botón de la barra sobre la cuadrícula o **Registro** en la pestaña **Resultado** de la cinta;
+  cada pestaña de resultado recuerda su estado.
 - Un **cursor anidado** (`CURSOR(…)` en una consulta) se abre en una pestaña de resultados nueva.
 - **Filtro de columnas…** oculta columnas por nombre, tipo, obligatoriedad y claves; las columnas ocultas se omiten al
   copiar y exportar.

@@ -65,6 +65,12 @@ menu tabeli w Przeglądarce obiektów. Połączenie tylko do odczytu blokuje zap
 Sprawdź deklarację licencji w definicji połączenia (karta **Zaawansowane**) i parametr bazy
 `CONTROL_MANAGEMENT_PACK_ACCESS`. Funkcje Tuning Pack wymagają wartości `DIAGNOSTIC+TUNING`.
 
+Błąd ORA-00904 „DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier” oznacza brak uprawnienia EXECUTE do pakietu
+`SYS.DBMS_WORKLOAD_REPOSITORY` (raport ADDM — także `SYS.DBMS_ADDM`): Oracle odpowiada wtedy w SQL „invalid identifier”,
+a nie brakiem uprawnień. Uprawnienie daje zwykle rola DBA; potrzebna jest też licencja Oracle Diagnostics Pack.
+Pelikan sprawdza uprawnienie przed raportem AWR, ASH i ADDM i podaje polecenie GRANT do wykonania przez administratora
+bazy, np. `GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
+
 ### Agent nie startuje
 
 - Pelikan szuka programu agenta w `PATH` Twojej powłoki logowania — sprawdź w Terminalu, czy polecenie (np. `claude`)

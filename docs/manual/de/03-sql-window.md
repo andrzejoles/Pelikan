@@ -82,7 +82,9 @@ Einstellungen überschritten wird.
   JSON/XML-Formatierung und Speichern in eine Datei.
 - Der **Wertebereich** (**Ansicht › Wertebereich**, ⌥⌘V) zeigt neben dem Raster die aktuelle Zelle als Text, JSON, XML,
   HTML, Bild oder Hex.
-- Die **Einzeldatensatzansicht** zeigt die aktuelle Zeile senkrecht mit den Typen und Kommentaren der Spalten.
+- Die **Einzeldatensatzansicht** zeigt die aktuelle Zeile senkrecht mit den Typen und Kommentaren der Spalten. Die
+  Schaltfläche in der Leiste über dem Raster oder **Datensatz** auf dem Menüband-Tab **Ergebnis** schaltet sie ein und
+  aus; jeder Ergebnis-Tab merkt sich seinen Zustand.
 - Ein **verschachtelter Cursor** (`CURSOR(…)` in einer Abfrage) öffnet sich in einem neuen Ergebnis-Tab.
 - **Spaltenfilter …** blendet Spalten nach Name, Typ, Pflichtangabe und Schlüsseln aus; ausgeblendete Spalten werden
   beim Kopieren und Exportieren übergangen.
