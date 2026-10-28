@@ -180,8 +180,9 @@ public enum MultiCursor {
         }
     }
 
-    /// Dodatkowy kursor w linii powyżej najwyższego / poniżej najniższego kursora, w tej samej kolumnie.
-    public static func addCursor(in text: String, ranges: [Range<Int>], below: Bool) -> [Range<Int>] {
+    /// Dodatkowy kursor w linii powyżej najwyższego / poniżej najniższego kursora, w tej samej kolumnie; `within` —
+    /// zakres karty jednostki okna programu (kursor nie trafia do ukrytego tekstu innej jednostki).
+    public static func addCursor(in text: String, ranges: [Range<Int>], below: Bool, within: ClosedRange<Int>? = nil) -> [Range<Int>] {
         guard !ranges.isEmpty else { return ranges }
         let ls = lines(text)
         let edge = below ? ranges.map(\.upperBound).max()! : ranges.map(\.lowerBound).min()!
@@ -189,6 +190,7 @@ public enum MultiCursor {
         let target = below ? p.line + 1 : p.line - 1
         guard target >= 0, target < ls.count else { return ranges }
         let o = min(ls[target].lowerBound + p.column, ls[target].upperBound)
+        if let within, !within.contains(o) { return ranges }
         return sorted(ranges + [o..<o])
     }
 }

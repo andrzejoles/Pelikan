@@ -45865,30 +45865,30 @@
         }
       }
     },
-    "Numer linii (od 1)" : {
+    "Numer linii (od 1); w oknie programu z kartami — linia jednostki bieżącej karty, dla agenta zawsze linia dokumentu" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Line number (from 1)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Номер рядка (від 1)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Número de línea (desde 1)"
+            "value" : "Line number (from 1); in a program window with tabs — the line of the current tab's unit, for the agent always the document line"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Zeilennummer (ab 1)"
+            "value" : "Zeilennummer (ab 1); im Programmfenster mit Registerkarten — Zeile der Einheit der aktuellen Registerkarte, für den Agenten immer die Dokumentzeile"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de línea (desde 1); en una ventana de programa con pestañas, la línea de la unidad de la pestaña actual; para el agente, siempre la línea del documento"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер рядка (від 1); у вікні програми з вкладками — рядок одиниці поточної вкладки, для агента завжди рядок документа"
           }
         }
       }
@@ -112081,6 +112081,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зміна користувача або бази зв’язку потребує пароля"
+          }
+        }
+      }
+    },
+    "Zmiana wykracza poza kartę jednostki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The change goes beyond the unit tab"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Änderung reicht über die Registerkarte der Einheit hinaus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El cambio sobrepasa la pestaña de la unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зміна виходить за межі вкладки одиниці"
           }
         }
       }

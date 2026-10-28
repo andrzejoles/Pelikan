@@ -116,7 +116,7 @@ enum EditorExtraCommands {
             command("edit.addCursorAbove", L10n.tr("Dodaj kursor powyżej"), submenu: L10n.tr("Wiele kursorów"), pd: ["ctrl+shift+up"], mac: ["ctrl+shift+up"],
                     summary: L10n.tr("Dodaje kursor w linii powyżej (w tej samej kolumnie); pisanie trafia do wszystkich kursorów."), feature: "PD-EDIT-023") { ctx in
                 guard let doc = editor(ctx.workspace) else { return .ok }
-                let all = MultiCursor.addCursor(in: doc.text, ranges: [doc.selectedRange] + doc.additionalSelections, below: false)
+                let all = MultiCursor.addCursor(in: doc.text, ranges: [doc.selectedRange] + doc.additionalSelections, below: false, within: doc.unitEditBounds)
                 doc.selectedRange = all.first ?? doc.selectedRange
                 doc.additionalSelections = Array(all.dropFirst())
                 return .ok
@@ -124,7 +124,7 @@ enum EditorExtraCommands {
             command("edit.addCursorBelow", L10n.tr("Dodaj kursor poniżej"), submenu: L10n.tr("Wiele kursorów"), pd: ["ctrl+shift+down"], mac: ["ctrl+shift+down"],
                     summary: L10n.tr("Dodaje kursor w linii poniżej (w tej samej kolumnie); pisanie trafia do wszystkich kursorów."), feature: "PD-EDIT-023") { ctx in
                 guard let doc = editor(ctx.workspace) else { return .ok }
-                let all = MultiCursor.addCursor(in: doc.text, ranges: [doc.selectedRange] + doc.additionalSelections, below: true)
+                let all = MultiCursor.addCursor(in: doc.text, ranges: [doc.selectedRange] + doc.additionalSelections, below: true, within: doc.unitEditBounds)
                 doc.selectedRange = all.first ?? doc.selectedRange
                 doc.additionalSelections = Array(all.dropFirst())
                 return .ok

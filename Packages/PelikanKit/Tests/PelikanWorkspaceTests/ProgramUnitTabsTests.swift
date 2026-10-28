@@ -29,18 +29,20 @@ struct ProgramUnitTabsTests {
 
     func line(_ n: Int, _ text: String = Self.text) -> Int { TextEditing.offset(ofLine: n, in: text) }
 
-    @Test("odcinki: pełne linie bez przerw; „/” i puste linie przy poprzedniej karcie, komentarz przed CREATE — przy następnej")
+    @Test("odcinki: pełne linie bez przerw; „/” przy poprzedniej karcie, puste linie i komentarz przed CREATE — przy następnej")
     func segments() throws {
         let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
         #expect(tabs.map(\.title) == ["kadry (" + L10n.tr("specyfikacja") + ")", "kadry (" + L10n.tr("ciało") + ")"])
         #expect(tabs.map(\.key) == ["KADRY", "KADRY body"])
-        #expect(tabs[0].segment == 0..<line(7))
-        #expect(tabs[1].segment == line(7)..<(Self.text as NSString).length)
+        #expect(tabs[0].segment == 0..<line(6))
+        #expect(tabs[1].segment == line(6)..<(Self.text as NSString).length)
         // Linia 1 jednostki ciała = linia „PACKAGE BODY” (CREATE OR REPLACE w osobnej linii), jak ALL_ERRORS (D189).
         #expect(TextEditing.line(containing: tabs[1].sourceOffset, in: Self.text) == 8)
-        #expect(ProgramUnitTabs.index(of: line(7) - 1, in: tabs) == 0)
-        #expect(ProgramUnitTabs.index(of: line(7), in: tabs) == 1)
-        #expect(ProgramUnitTabs.caretLimit(tabs[0], isLast: false, in: Self.text as NSString) == line(7) - 1)
+        #expect(ProgramUnitTabs.index(of: line(6) - 1, in: tabs) == 0)
+        #expect(ProgramUnitTabs.index(of: line(6), in: tabs) == 1)
+        #expect(ProgramUnitTabs.caretLimit(tabs[0], isLast: false, in: Self.text as NSString) == line(6) - 1)
+        // Pozycja słowa typu bez liczenia linii całego dokumentu.
+        #expect(tabs[1].sourceOffset == (Self.text as NSString).range(of: "PACKAGE BODY").location)
         #expect(ProgramUnitTabs.find("2", in: tabs) == 1)
         #expect(ProgramUnitTabs.find("KADRY BODY", in: tabs) == 1)
         #expect(ProgramUnitTabs.find("kadry", in: tabs) == 0)
@@ -51,16 +53,55 @@ struct ProgramUnitTabsTests {
         #expect(ProgramUnitTabs.tabs(ProgramCompiler.units(in: "create procedure p is begin null; end;\n/\n"), in: "x").isEmpty)
     }
 
-    @Test("granice przesuwane przy pisaniu: zmiana w specyfikacji przesuwa kartę ciała, tekst na granicy należy do wcześniejszej")
+    @Test("granice przy pisaniu: zmiana w specyfikacji przesuwa kartę ciała; wstawienie na granicy należy do karty późniejszej")
     func shift() {
         let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
         let b = tabs[1].segment.lowerBound
+        let len = (Self.text as NSString).length
         let s = ProgramUnitTabs.shift(tabs, edited: 5..<8, delta: 3)
-        #expect(s[0].segment == 0..<(b + 3) && s[1].segment.lowerBound == b + 3 && s[1].sourceOffset == tabs[1].sourceOffset + 3)
+        #expect(s[0].segment == 0..<(b + 3) && s[1].segment == (b + 3)..<(len + 3) && s[1].sourceOffset == tabs[1].sourceOffset + 3)
+        // Enter albo wklejenie w pierwszej kolumnie pierwszej linii ciała (kursor na granicy) — tekst zostaje w ciele.
         let atBoundary = ProgramUnitTabs.shift(tabs, edited: b..<(b + 2), delta: 2)
-        #expect(atBoundary[0].segment.upperBound == b + 2 && atBoundary[1].segment.lowerBound == b + 2)
+        #expect(atBoundary[0].segment.upperBound == b && atBoundary[1].segment == b..<(len + 2))
+        // Usunięcie fragmentu obejmującego granicę — granica na końcu wstawionego (tu: pustego) tekstu.
         let deleted = ProgramUnitTabs.shift(tabs, edited: (b - 3)..<(b - 3), delta: -6)
         #expect(deleted[0].segment.upperBound == b - 3 && deleted[1].segment.lowerBound == b - 3)
+        // Dopisanie na końcu tekstu — ostatnia karta.
+        let appended = ProgramUnitTabs.shift(tabs, edited: len..<(len + 4), delta: 4)
+        #expect(appended[1].segment == b..<(len + 4))
+    }
+
+    @Test("komendy edycji i dodatkowe kursory nie wychodzą poza kartę; walidacja z pamięci kart; Usuń jednostkę — jednostka karty")
+    func editBounds() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.program, text: Self.text)
+        ws.activate(doc.id)
+        let tabs = doc.programUnitTabs
+        let limit = ProgramUnitTabs.caretLimit(tabs[0], isLast: false, in: Self.text as NSString)
+        doc.unitEditBounds = 0...limit
+        // „Usuń następne słowo” na końcu karty specyfikacji usunęłoby znak nowej linii przed ciałem.
+        doc.selectedRange = limit..<limit
+        await #expect(throws: CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))) {
+            try await ws.invoke("edit.deleteNextWord")
+        }
+        #expect(doc.text == Self.text)
+        // Kursor poniżej ostatniej linii karty — nie dodany.
+        try await ws.invoke("edit.addCursorBelow")
+        #expect(doc.additionalSelections.isEmpty)
+        doc.selectedRange = line(2)..<line(2)
+        try await ws.invoke("edit.addCursorBelow")
+        #expect(doc.additionalSelections == [line(3)..<line(3)])
+        doc.additionalSelections = []
+        doc.unitEditBounds = nil
+        // Pamięć kart: liczba kart bez dzielenia tekstu po zmianie (walidacja wstążki przy każdym znaku).
+        #expect(doc.unitTabCount == 2)
+        doc.text = "x" + doc.text
+        #expect(doc.unitTabCount == 2)
+        doc.text = String(doc.text.dropFirst())
+        // Kursor na komentarzu „-- ciało” przed CREATE jest na karcie ciała — Usuń jednostkę usuwa ciało.
+        doc.selectedRange = line(7)..<line(7)
+        try await ws.invoke("prog.removeUnit")
+        #expect(!doc.text.contains("PACKAGE BODY") && doc.text.contains("PACKAGE kadry"))
     }
 
     @Test("komendy kart: wybór nazwą, numerem i z listy, następna/poprzednia w kółko, powrót w zapamiętane miejsce, historia skoków")
@@ -114,6 +155,11 @@ struct ProgramUnitTabsTests {
         doc.selectedRange = line(2)..<line(2)
         try await ws.invoke("edit.gotoLine", CommandArguments(["line": .int(50)]))
         #expect(doc.activeUnitTab == 0)
+        // Agent: zawsze linia dokumentu.
+        doc.selectedRange = line(12)..<line(12)
+        let goto = try #require(ws.registry.command("edit.gotoLine"))
+        _ = try await goto.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "a"), arguments: CommandArguments(["line": .int(3)])))
+        #expect(doc.selectedRange == line(3)..<line(3))
         let plain = ws.newDocument(.sql, text: "a\nb\nc")
         ws.activate(plain.id)
         try await ws.invoke("edit.gotoLine", CommandArguments(["line": .int(3)]))
@@ -129,6 +175,11 @@ struct ProgramUnitTabsTests {
         #expect(f[0].children.filter { $0.kind != .parameter }.map(\.name) == ["podwyzka"])
         #expect(f[0].children[0].children.filter { $0.kind != .parameter }.map(\.name) == ["oblicz"])
         #expect(CodeContents.filtered(nodes, matching: " ").count == nodes.count)
+        // Sortowanie po nazwie i rodzaju nie zmienia kolejności parametrów (tytuł i podpowiedź podprogramu).
+        let two = PLSQLOutline.parse("create procedure p(z number, a number) is b number; begin null; end;\n/")
+        for order in CodeContents.Order.allCases {
+            #expect(CodeContents.sorted(two, order: order)[0].children.filter { $0.kind == .parameter }.map(\.name) == ["z", "a"])
+        }
         let pensja = try #require(nodes[0].children.first { $0.name == "pensja" })
         #expect(CodeContents.signature(of: pensja) == "FUNCTION pensja(p_empno in number) RETURN number — " + L10n.tr("publiczny"))
         let priv = try #require(nodes[1].children.first { $0.name == "g_x" })

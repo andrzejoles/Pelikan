@@ -108,24 +108,34 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     required init?(coder: NSCoder) { fatalError() }
 
     /// Nowy zarys; zachowuje rozwinięcie węzłów o tej samej ścieżce nazw.
-    func update(_ nodes: [OutlineNode]) {
+    /// Klucz rozwinięcia: ścieżka rodzajów i nazw — specyfikacja i ciało o tej samej nazwie mają osobny stan.
+    private static func key(_ prefix: String, _ n: OutlineNode) -> String { prefix + "/" + n.kind.rawValue + ":" + n.name }
+
+    /// Rozwinięcie sprzed filtrowania — przywracane po wyczyszczeniu filtra (przy filtrze drzewo jest rozwinięte całe).
+    private var expandedBeforeFilter: Set<String>?
+
+    private func expandedKeys() -> Set<String> {
         var expanded = Set<String>()
         func collect(_ items: [Item], _ prefix: String) {
             for i in items where outline.isItemExpanded(i) {
-                let key = prefix + "/" + i.node.name
+                let key = Self.key(prefix, i.node)
                 expanded.insert(key)
                 collect(i.children, key)
             }
         }
-        let first = roots.isEmpty
         collect(roots, "")
-        // Korzenie (specyfikacja, ciało) mają tę samą nazwę — klucz z rodzajem, żeby rozwinięcie jednego nie rozwijało drugiego.
+        return expanded
+    }
+
+    func update(_ nodes: [OutlineNode], restoring saved: Set<String>? = nil) {
+        let first = roots.isEmpty
+        let expanded = saved ?? expandedKeys()
         rawNodes = nodes
         roots = CodeContents.sorted(CodeContents.filtered(nodes, matching: filter), order: order).map(Item.init)
         outline.reloadData()
         func restore(_ items: [Item], _ prefix: String, depth: Int) {
             for i in items {
-                let key = prefix + "/" + i.node.name
+                let key = Self.key(prefix, i.node)
                 // Przy filtrze — wszystko rozwinięte (widać pasujące elementy).
                 if expanded.contains(key) || (first && depth == 0) || !filter.isEmpty { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
             }
@@ -133,21 +143,43 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         restore(roots, "", depth: 0)
     }
 
+    private var filterWork: DispatchWorkItem?
+
+    /// Filtr z opóźnieniem (pakiet z tysiącami elementów — bez przebudowy drzewa przy każdym znaku).
     @objc private func filterChanged() {
-        filter = filterField.stringValue
-        update(rawNodes)
+        filterWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.applyFilter() }
+        filterWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
+    }
+
+    private func applyFilter() {
+        let new = filterField.stringValue.trimmingCharacters(in: .whitespaces)
+        guard new != filter else { return }
+        if filter.isEmpty { expandedBeforeFilter = expandedKeys() }
+        filter = new
+        if new.isEmpty {
+            let saved = expandedBeforeFilter
+            expandedBeforeFilter = nil
+            update(rawNodes, restoring: saved ?? [])
+        } else {
+            update(rawNodes)
+        }
     }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         // Strzałka w dół z pola filtru — do drzewa; Esc — czyści filtr.
         if commandSelector == #selector(NSResponder.moveDown(_:)) {
+            filterWork?.perform()
+            filterWork = nil
             window?.makeFirstResponder(outline)
             if outline.selectedRow < 0, outline.numberOfRows > 0 { outline.selectRowIndexes([0], byExtendingSelection: false) }
             return true
         }
         if commandSelector == #selector(NSResponder.cancelOperation(_:)), !filterField.stringValue.isEmpty {
             filterField.stringValue = ""
-            filterChanged()
+            filterWork?.cancel()
+            applyFilter()
             return true
         }
         return false

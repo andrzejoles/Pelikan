@@ -11,7 +11,8 @@ public enum CodeContents {
     public static func sorted(_ nodes: [OutlineNode], order: Order) -> [OutlineNode] {
         let children = nodes.map { n -> OutlineNode in
             var n = n
-            n.children = sorted(n.children, order: order)
+            // Parametry zostają w kolejności nagłówka (tytuł i podpowiedź podprogramu), sortowane są tylko elementy.
+            n.children = n.children.filter { $0.kind == .parameter } + sorted(n.children.filter { $0.kind != .parameter }, order: order)
             return n
         }
         switch order {

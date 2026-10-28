@@ -86,14 +86,17 @@ public enum PLSQLOutline {
                 guard let spec = specs[r.name.uppercased()] else { break }
                 let exact = Set(spec.children.map(signature))
                 // Inne nazwy parametrów w ciele niż w specyfikacji (błąd kompilacji) — dopasowanie po samej nazwie, gdy
-                // w specyfikacji jest jedna wersja podprogramu.
+                // i specyfikacja, i ciało mają jedną wersję podprogramu (inaczej prywatne przeciążenie byłoby publiczne).
                 var counts: [String: Int] = [:]
                 for c in spec.children { counts[c.kind.rawValue + "|" + c.name.uppercased(), default: 0] += 1 }
+                var bodyCounts: [String: Int] = [:]
+                for c in r.children { bodyCounts[c.kind.rawValue + "|" + c.name.uppercased(), default: 0] += 1 }
                 r.children = r.children.map { c in
                     var c = c
                     guard !skipped.contains(c.kind) else { return c }
                     let key = c.kind.rawValue + "|" + c.name.uppercased()
-                    c.isPublic = exact.contains(signature(c)) || (counts[key] == 1 && [.procedure, .function, .cursor].contains(c.kind))
+                    c.isPublic = exact.contains(signature(c))
+                        || (counts[key] == 1 && bodyCounts[key] == 1 && [.procedure, .function, .cursor].contains(c.kind))
                     return c
                 }
             default: break
@@ -118,12 +121,12 @@ public enum PLSQLOutline {
         let up = name.uppercased()
         let scopes = path(at: offset, in: nodes)
         for scope in scopes.reversed() {
-            if let d = scope.children.first(where: { $0.name.uppercased() == up && !$0.isContainer }) { return d }
-            if let d = scope.children.first(where: { $0.name.uppercased() == up }) { return d }
+            if let d = scope.children.first(where: { $0.name.uppercased() == up && !$0.isContainer && $0.kind != .pragma }) { return d }
+            if let d = scope.children.first(where: { $0.name.uppercased() == up && $0.kind != .pragma }) { return d }
         }
         func search(_ list: [OutlineNode]) -> OutlineNode? {
             for n in list {
-                if n.name.uppercased() == up { return n }
+                if n.name.uppercased() == up, n.kind != .pragma { return n }
                 if let d = search(n.children) { return d }
             }
             return nil
@@ -491,9 +494,10 @@ public enum PLSQLOutline {
                     let start = k.start
                     i += 1
                     guard let p = peek() else { continue }
+                    let first = i
                     let end = skipStatement()
                     var args = ""
-                    if let open = t[..<i].firstIndex(where: { $0.start > p.start && $0.kind == .leftParen }), t[open].start < end {
+                    if let open = t[first..<i].firstIndex(where: { $0.kind == .leftParen }), t[open].start < end {
                         args = source.substring(with: NSRange(location: t[open].start, length: max(0, end - t[open].start)))
                             .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
                         if args.hasSuffix(";") { args.removeLast() }

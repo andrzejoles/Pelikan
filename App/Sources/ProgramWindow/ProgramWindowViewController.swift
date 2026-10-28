@@ -27,6 +27,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private var tabs: [ProgramUnitTab] = []
     private var unitButtons: [NSButton] = []
     private var shownMessages: [CompileMessage] = []
+    /// Numery linii komunikatów do pokazania (linie jednostki w oknie z kartami).
+    private var shownLines: [String] = []
     private var lastUnitSignature = ""
     private var messagesVisible = false
 
@@ -193,6 +195,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
                 // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
                 self.document.cacheProgramUnits(units, forText: text)
                 self.tabs = tabs
+                self.document.cacheProgramUnitTabs(tabs, forText: text)
                 self.editor.unitTabs = tabs
                 self.apply(outline: outline, units: units)
             }
@@ -246,7 +249,9 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             b.font = on ? NSFontManager.shared.convert(InterfaceFonts.shared.small, toHaveTrait: .boldFontMask) : InterfaceFonts.shared.small
             b.setAccessibilityValue(on ? L10n.tr("karta aktywna") : nil)
         }
-        contents.activeRange = shown.flatMap { tabs.indices.contains($0) ? tabs[$0].segment : nil }
+        // Granice z edytora (przesuwane przy pisaniu), nie z ostatniej analizy.
+        let current = editor.unitTabs
+        contents.activeRange = shown.flatMap { current.indices.contains($0) ? current[$0].segment : nil }
     }
 
     private weak var addButton: NSButton?
@@ -306,7 +311,25 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
 
     private func refreshMessages() {
         shownMessages = document.compileMessages
+        shownLines = shownMessages.map { "\($0.line)" }
         messages.reloadData()
+        // Linie na liście liczone raz na listę (nie przy rysowaniu komórki): linia jednostki karty jak ALL_ERRORS.
+        // Poza śledzeniem zmian — odczyt tekstu tutaj odświeżałby listę przy każdym znaku.
+        if !shownMessages.isEmpty {
+            let list = shownMessages
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.shownMessages == list else { return }
+                let text = self.document.text
+                let tabs = self.document.programUnitTabs
+                guard tabs.count > 1 else { return }
+                let firstLines = tabs.map { TextEditing.line(containing: $0.sourceOffset, in: text) }
+                self.shownLines = list.map { m in
+                    guard let i = ProgramUnitTabs.index(of: TextEditing.offset(ofLine: m.line, in: text), in: tabs) else { return "\(m.line)" }
+                    return ProgramUnitTabs.unitLine(documentLine: m.line - 1, sourceLine: firstLines[i]).map(String.init) ?? "–"
+                }
+                self.messages.reloadData()
+            }
+        }
         let show = !shownMessages.isEmpty
         if show != messagesVisible {
             messagesVisible = show
@@ -337,20 +360,10 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             tf.stringValue = m.severity == .error ? L10n.tr("Błąd") : m.severity == .warning ? L10n.tr("Ostrzeżenie") : L10n.tr("Podpowiedź")
             tf.textColor = m.severity == .error ? .systemRed : m.severity == .warning ? .systemOrange : .secondaryLabelColor
         case "unit": tf.stringValue = m.unit
-        case "line": tf.stringValue = "\(unitLine(m.line)):\(m.column)"
+        case "line": tf.stringValue = (shownLines.indices.contains(row) ? shownLines[row] : "\(m.line)") + ":\(m.column)"
         default: tf.stringValue = m.text; tf.toolTip = m.text
         }
         return tf
-    }
-
-    /// Linia komunikatu na liście: w oknie z kartami — linia jednostki (jak ALL_ERRORS), inaczej linia dokumentu.
-    private func unitLine(_ documentLine: Int) -> Int {
-        guard tabs.count > 1 else { return documentLine }
-        let text = document.text
-        let o = TextEditing.offset(ofLine: documentLine, in: text)
-        guard let i = ProgramUnitTabs.index(of: o, in: tabs) else { return documentLine }
-        let first = TextEditing.line(containing: tabs[i].sourceOffset, in: text)
-        return ProgramUnitTabs.unitLine(documentLine: documentLine - 1, sourceLine: first) ?? documentLine
     }
 
     @objc private func messageClicked() {

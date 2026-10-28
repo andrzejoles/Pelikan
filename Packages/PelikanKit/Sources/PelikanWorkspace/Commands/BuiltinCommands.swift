@@ -276,6 +276,14 @@ public enum BuiltinCommands {
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
+            // Okno programu z kartami: zmiana tylko w widocznej karcie (np. „Usuń następne słowo” na końcu karty nie
+            // usuwa znaku nowej linii przed następną jednostką).
+            if let b = doc.unitEditBounds {
+                let c = EditorShift.Change(old: doc.text, new: e.text)
+                guard c.prefix >= b.lowerBound, c.oldEnd <= b.upperBound else {
+                    throw CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))
+                }
+            }
             doc.text = e.text
             doc.selectedRange = e.selection
             ctx.workspace.recordAgentEdit(ctx, doc, before: before)
@@ -379,7 +387,7 @@ public enum BuiltinCommands {
                 return CommandResult(message: L10n.tr("Zamieniono: \(r.count)"), value: .int(Int64(r.count)))
             },
             Command(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
-                                      parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1)"))],
+                                      parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1); w oknie programu z kartami — linia jednostki bieżącej karty, dla agenta zawsze linia dokumentu"))],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."), feature: "PD-EDIT-010"),
                     validate: { editable($0) != nil }) { ctx in
                 guard let doc = editable(ctx.workspace) else { return .ok }
@@ -391,7 +399,8 @@ public enum BuiltinCommands {
                 if line == nil, ctx.invoker.isAgent { throw CommandError.missingArgument("line") }
                 // Okno programu z kartami (D192): linia jednostki bieżącej karty — jak numeracja marginesu, ALL_SOURCE
                 // i ALL_ERRORS (linia 1 = linia słowa typu, D189).
-                let tabs = doc.programUnitTabs
+                // Agent liczy linie dokumentu (jak `agent.editor` i `agent.replaceRange`).
+                let tabs = ctx.invoker.isAgent ? [] : doc.programUnitTabs
                 let tab = ProgramUnitTabs.index(of: doc.selectedRange.lowerBound, in: tabs).map { tabs[$0] }
                 let firstLine = tab.map { TextEditing.line(containing: $0.sourceOffset, in: doc.text) } ?? 0
                 if line == nil {

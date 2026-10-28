@@ -64,7 +64,11 @@ enum ProgramUnitCommands {
                     unit = u
                 } else {
                     let caret = doc.selectedRange.lowerBound
-                    guard let u = units.last(where: { $0.range.lowerBound <= caret }) ?? units.first else {
+                    // Okno z kartami: jednostka karty z kursorem (kursor na komentarzu przed CREATE jest już na karcie
+                    // następnej jednostki, choć przed jej poleceniem).
+                    let sorted = units.sorted { $0.range.lowerBound < $1.range.lowerBound }
+                    let tabbed = doc.activeUnitTab.flatMap { sorted.indices.contains($0) && doc.programUnitTabs.count == sorted.count ? sorted[$0] : nil }
+                    guard let u = tabbed ?? units.last(where: { $0.range.lowerBound <= caret }) ?? units.first else {
                         throw CommandError.notAvailable(L10n.tr("Brak jednostki"))
                     }
                     unit = u
@@ -161,7 +165,7 @@ enum ProgramUnitCommands {
     /// Aktywne okno programu z kartami jednostek (także tylko do odczytu — przełączanie kart nie zmienia tekstu).
     @MainActor
     static func tabbedDocument(_ ws: Workspace) -> Document? {
-        guard let d = ws.activeDocument, d.kind == .program, d.programUnitTabs.count > 1 else { return nil }
+        guard let d = ws.activeDocument, d.kind == .program, d.unitTabCount > 1 else { return nil }
         return d
     }
 

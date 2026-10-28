@@ -112,6 +112,24 @@ public final class Document: Identifiable {
         return tabs
     }
 
+    /// Liczba kart z ostatniego podziału (także sprzed ostatniej zmiany tekstu) — do walidacji menu i wstążki bez
+    /// dzielenia tekstu na wątku głównym przy każdym znaku (R4-01); pierwszy raz liczona.
+    public var unitTabCount: Int {
+        guard kind == .program else { return 0 }
+        if let c = tabsCache { return c.tabs.count }
+        return programUnitTabs.count
+    }
+
+    /// Zapisuje karty policzone w tle dla tekstu `forText` (okno programu po analizie).
+    public func cacheProgramUnitTabs(_ tabs: [ProgramUnitTab], forText: String) {
+        guard text == forText else { return }
+        tabsCache = (textRevision, tabs)
+    }
+
+    /// Zakres pozycji kursora na karcie widocznej w edytorze (ustawia edytor okna programu z kartami; nil — bez kart).
+    /// Komendy edycji i dodatkowe kursory nie wychodzą poza niego — tekst innych jednostek jest ukryty.
+    @ObservationIgnored public var unitEditBounds: ClosedRange<Int>?
+
     /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
     public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
 

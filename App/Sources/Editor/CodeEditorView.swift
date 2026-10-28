@@ -46,7 +46,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         set {
             tabs = newValue
             secondary?.unitTabs = newValue
+            let before = shownTab
             showTab(containing: textView.selectedRange().location, force: true)
+            // Karta zmieniona po analizie w tle (okno otwarte na linii, debuger, usunięcie jednostki) — `showTab`
+            // przewinął na początek karty, a `syncFromModel` nie przewinie (zaznaczenie już ustawione): do kursora.
+            if shownTab != before {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.scrollToSelection(self.textView.selectedRange())
+                }
+            }
         }
     }
     private var tabs: [ProgramUnitTab] = []
@@ -306,7 +315,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         textView.textContentStorage?.delegate = folding
         configureCompletion()
         // Numery linii karty jednostki jak w ALL_SOURCE/ALL_ERRORS (linia 1 = linia słowa typu, D189/D192).
-        ruler.displayNumber = { [weak self] line in self?.displayLine(line) ?? line + 1 }
+        ruler.displayNumber = { [weak self] line in
+            guard let self else { return line + 1 }
+            return self.displayLine(line)
+        }
         ruler.showsLastLine = { [weak self] in
             guard let self, let t = self.shownTab else { return true }
             return t == self.unitTabs.count - 1
@@ -687,10 +699,25 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Nowa karta od początku (stare przesunięcie dotyczyło innego odcinka); cel przewija potem `scrollToSelection`.
         if changed { scrollView.contentView.scroll(to: NSPoint(x: scrollView.contentView.bounds.minX, y: 0)) }
         updateHidden()
+        publishEditBounds()
         if changed {
             ruler.needsDisplay = true
             onShownTabChange?(t)
         }
+    }
+
+    /// Zakres karty dla komend edycji i dodatkowych kursorów (`Document.unitEditBounds`) — publikuje edytor główny.
+    private func publishEditBounds() {
+        guard !isSecondary else { return }
+        document.unitEditBounds = visibleBounds().map { $0.lower...$0.upper }
+    }
+
+    /// Karty policzone od razu (zmiana obejmująca granicę kart: Zamień wszystko, formatowanie całości, Przywróć,
+    /// cofnięcie takich zmian) — przesunięte granice nie odpowiadałyby jednostkom do analizy w tle.
+    private func recomputeTabsNow() {
+        guard document.kind == .program else { return }
+        let text = textView.string
+        unitTabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: text), in: text)
     }
 
     /// Najdalsza pozycja kursora na widocznej karcie i jej początek.
@@ -835,11 +862,18 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // TextKit 2 robi sam, a analiza jednostek w tle poprawi granice po chwili.
         if !unitTabs.isEmpty || !foldHidden.isEmpty {
             let edited = editedRange.location..<(editedRange.location + editedRange.length)
-            if !tabs.isEmpty { tabs = ProgramUnitTabs.shift(tabs, edited: edited, delta: delta) }
             let oldEnd = edited.upperBound - delta
-            func move(_ o: Int) -> Int { o < edited.lowerBound ? o : o >= oldEnd ? o + delta : edited.upperBound }
-            foldHidden = Self.merged(foldHidden.map { move($0.lowerBound)..<move($0.upperBound) })
+            // Zmiana obejmująca granicę kart (w starym tekście granica wewnątrz zastąpionego fragmentu).
+            let spansBoundary = tabs.dropFirst().contains { $0.segment.lowerBound > edited.lowerBound && $0.segment.lowerBound < oldEnd }
+            if !tabs.isEmpty { tabs = ProgramUnitTabs.shift(tabs, edited: edited, delta: delta) }
+            // Wstawienie na początku ukrytego zakresu jest przed nim (widoczne), na jego końcu — za nim.
+            let pure = oldEnd == edited.lowerBound
+            func moveLower(_ o: Int) -> Int { o < edited.lowerBound ? o : o >= oldEnd ? o + delta : edited.upperBound }
+            func moveUpper(_ o: Int) -> Int { o < edited.lowerBound || (pure && o == edited.lowerBound) ? o : o >= oldEnd ? o + delta : edited.upperBound }
+            foldHidden = Self.merged(foldHidden.map { moveLower($0.lowerBound)..<max(moveLower($0.lowerBound), moveUpper($0.upperBound)) })
             updateHidden(invalidate: false)
+            publishEditBounds()
+            if spansBoundary { DispatchQueue.main.async { [weak self] in self?.recomputeTabsNow() } }
         }
         guard !updatingFromModel else { return }
         // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).
@@ -878,8 +912,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let hi = min(max(r.location + r.length, b.lower), b.upper)
             return NSValue(range: NSRange(location: lo, length: hi - lo))
         }
-        // Przycięte (np. ⌘↓ do końca karty): widok przewijał do ukrytego końca tekstu — przewinięcie do kursora.
-        if clamped != newSelectedCharRanges, let first = clamped.first?.rangeValue {
+        // Przycięte ruchem kursora z klawiatury (⌘↓, ⇧⌘↓): widok przewijał do ukrytego końca tekstu — przewinięcie do
+        // kursora. ⌘A i przeciąganie myszą — bez przewijania.
+        let proposed = newSelectedCharRanges.first?.rangeValue
+        let selectAll = proposed.map { $0.location == 0 && $0.length == textView.textStorage?.length } ?? false
+        if clamped != newSelectedCharRanges, NSApp.currentEvent?.type == .keyDown, !selectAll, let first = clamped.first?.rangeValue {
             DispatchQueue.main.async { [weak self] in self?.scrollToSelection(NSRange(location: first.location + first.length, length: 0)) }
         }
         return clamped

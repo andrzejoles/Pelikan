@@ -151,3 +151,32 @@ enum CodeContentsLikeSignature {
         return n.name + "(" + p.joined(separator: ", ") + ")" + (n.detail.isEmpty ? "" : " RETURN " + n.detail)
     }
 }
+
+@Suite("Parser strukturalny PL/SQL — przeciążenia prywatne i pragmy")
+struct PLSQLOutlineOverloadTests {
+    @Test("jedna wersja w specyfikacji i dwie w ciele — prywatne przeciążenie zostaje prywatne; pragma nie jest deklaracją nazwy")
+    func privateOverload() throws {
+        let text = """
+        create or replace package p as
+          function f(a number) return number;
+        end;
+        /
+        create or replace package body p as
+          function f(a number) return number is begin return a; end;
+          function f(a varchar2, b number) return number is begin return b; end;
+          procedure q is
+            pragma autonomous_transaction;
+          begin null; end;
+        end;
+        /
+        """
+        let nodes = PLSQLOutline.parse(text)
+        let body = nodes[1]
+        #expect(body.children.filter { $0.name == "f" }.map(\.isPublic) == [true, false])
+        let q = try #require(body.children.first { $0.name == "q" })
+        #expect(q.children.contains { $0.kind == .pragma })
+        let inQ = (text as NSString).range(of: "begin null").location + 6
+        #expect(PLSQLOutline.declaration(of: "autonomous_transaction", at: inQ, in: nodes) == nil)
+        #expect(!CompletionContext.analyze(text, offset: inQ).declarations.contains { $0.kind == .pragma })
+    }
+}

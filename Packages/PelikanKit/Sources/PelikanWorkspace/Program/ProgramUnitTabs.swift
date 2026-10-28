@@ -6,6 +6,7 @@ import Foundation
 /// (komunikat kompilacji, Code Contents, wyszukiwanie, deklaracja, debuger) przełącza ją samo.
 public struct ProgramUnitTab: Sendable, Hashable {
     /// Odcinek tekstu karty (UTF-16): od początku linii do początku linii następnej karty; ostatnia — do końca tekstu.
+    /// Kończący „/” w osobnej linii należy do jednostki przed nim, puste linie i komentarz przed CREATE — do następnej.
     public var segment: Range<Int>
     /// Pozycja słowa typu (`PACKAGE BODY …`) — linia 1 jednostki w ALL_SOURCE i ALL_ERRORS (D189).
     public var sourceOffset: Int
@@ -30,23 +31,16 @@ public enum ProgramUnitTabs {
         var starts = [0]
         for i in 1..<units.count {
             let unitLine = lineStart(units[i].range.lowerBound)
-            // Za poprzednią jednostką: kończący „/” w osobnej linii i puste linie należą do niej; komentarz przed CREATE
-            // — już do następnej karty.
-            var k = min(units[i - 1].range.upperBound, length)
+            // Za poprzednią jednostką: kończący „/” w osobnej linii należy do niej; puste linie i komentarz przed CREATE
+            // — już do następnej karty (Enter w pierwszej linii karty zostaje na tej karcie także po ponownej analizie).
             var boundary = unitLine
-            var p = k
+            var p = min(units[i - 1].range.upperBound, length)
             while p < length, [0x20, 0x09, 0x0D, 0x0A].contains(ns.character(at: p)) { p += 1 }
             if p < length, ns.character(at: p) == 0x2F {
                 let line = ns.lineRange(for: NSRange(location: p, length: 0))
                 if isBlank(NSRange(location: line.location, length: p - line.location)),
                    ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" {
-                    k = line.upperBound
-                    while k < unitLine {
-                        let next = ns.lineRange(for: NSRange(location: k, length: 0))
-                        guard next.length > 0, isBlank(next) else { break }
-                        k = next.upperBound
-                    }
-                    boundary = min(k, unitLine)
+                    boundary = min(line.upperBound, unitLine)
                 }
             }
             // Odcinki niepuste i rosnące (tekst niepoprawny: dwie jednostki w jednej linii — linia należy do pierwszej).
@@ -54,11 +48,22 @@ public enum ProgramUnitTabs {
         }
         return units.enumerated().map { i, u in
             let end = i + 1 < starts.count ? starts[i + 1] : length
-            let lineOffset = TextEditing.offset(ofLine: u.sourceLine + 1, in: text)
             let body = [.packageBody, .typeBody].contains(u.type)
-            return ProgramUnitTab(segment: min(starts[i], end)..<max(starts[i], end), sourceOffset: min(lineOffset + u.sourceColumn, length),
+            return ProgramUnitTab(segment: min(starts[i], end)..<max(starts[i], end), sourceOffset: min(sourceOffset(u), length),
                                   title: u.tabTitle, key: u.name + (body ? " body" : ""))
         }
+    }
+
+    /// Pozycja słowa typu w tekście okna: od początku polecenia jednostki (linie nagłówka w jej tekście), bez liczenia
+    /// linii całego dokumentu (pakiet 50 000 linii).
+    static func sourceOffset(_ u: ProgramUnit) -> Int {
+        let ns = u.text as NSString
+        var line = u.line, o = 0
+        while line < u.sourceLine, o < ns.length {
+            if ns.character(at: o) == 0x0A { line += 1 }
+            o += 1
+        }
+        return u.range.lowerBound + o + u.sourceColumn
     }
 
     /// Karta odcinka zawierającego pozycję (pozycja na granicy — karta, która się w niej zaczyna).
@@ -103,19 +108,21 @@ public enum ProgramUnitTabs {
 
     /// Granice kart po zmianie tekstu (`edited` — zakres wstawionego tekstu w nowym tekście, `delta` — zmiana długości):
     /// granica za zmianą przesuwa się o `delta`, granica w usuniętym fragmencie — na koniec wstawionego tekstu;
-    /// tekst wstawiony dokładnie na granicy należy do karty wcześniejszej.
+    /// tekst wstawiony dokładnie na granicy należy do karty późniejszej (kursor na początku karty stoi na granicy —
+    /// Enter albo wklejenie w pierwszej kolumnie zostaje na tej karcie).
     public static func shift(_ tabs: [ProgramUnitTab], edited: Range<Int>, delta: Int) -> [ProgramUnitTab] {
         let oldEnd = edited.upperBound - delta
+        let pureInsertion = oldEnd == edited.lowerBound
         func move(_ o: Int) -> Int {
-            if o < edited.lowerBound { return o }
+            if o < edited.lowerBound || (pureInsertion && o == edited.lowerBound) { return o }
             if o >= oldEnd { return o + delta }
             return edited.upperBound
         }
         return tabs.enumerated().map { i, t in
             var t = t
-            // Początek pierwszej karty zawsze 0; koniec karty = początek następnej (odcinki bez przerw).
+            // Początek pierwszej karty zawsze 0, koniec ostatniej — koniec tekstu; koniec karty = początek następnej.
             let lower = i == 0 ? 0 : move(t.segment.lowerBound)
-            let upper = max(lower, move(t.segment.upperBound))
+            let upper = max(lower, i == tabs.count - 1 ? t.segment.upperBound + delta : move(t.segment.upperBound))
             t.segment = lower..<upper
             t.sourceOffset = move(t.sourceOffset)
             return t
