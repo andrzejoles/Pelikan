@@ -4,8 +4,10 @@ import PelikanWorkspace
 
 /// Lista połączeń (UG 19.1): foldery użytkownika (połączenia jawne i z reguł), folder „Ostatnie”, pod połączeniem okna
 /// z jego sesjami. Ikona klucza: hasło nieznane / znane / połączone. Połączenie główne pogrubione. Dwuklik = Połącz jako
-/// główne.
+/// główne. Foldery i połączenia alfabetycznie (kolejność z `ConnectionStore`); połączenie przeciągnięte na folder albo
+/// na wolne miejsce listy (poziom główny) jest przenoszone komendą `connection.moveToFolder`.
 final class ConnectionListViewController: NSViewController, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
+    static let connectionPasteboardType = NSPasteboard.PasteboardType("local.pelikan.connection")
     private let workspace: Workspace
     private let outline = NSOutlineView()
     private var roots: [Node] = []
@@ -59,6 +61,8 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
         let menu = NSMenu()
         menu.delegate = self
         outline.menu = menu
+        outline.registerForDraggedTypes([Self.connectionPasteboardType])
+        outline.setDraggingSourceOperationMask(.move, forLocal: true)
 
         let scroll = NSScrollView()
         scroll.documentView = outline
@@ -279,6 +283,8 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             menu.addItem(item(L10n.tr("Ustaw bieżący schemat…"), "connection.setCurrentSchema", arg))
             menu.addItem(.separator())
             menu.addItem(item(L10n.tr("Edytuj…"), "connection.edit", arg))
+            menu.addItem(item(L10n.tr("Kopiuj pod inną nazwą…"), "connection.duplicate", arg))
+            menu.addItem(moveMenu(c))
             menu.addItem(item(L10n.tr("Usuń…"), "connection.delete", arg))
         case .folder, .recent:
             menu.addItem(item(L10n.tr("Nowe połączenie…"), "connection.new", nil))
@@ -289,6 +295,83 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             menu.addItem(activate)
         }
     }
+
+    /// Podmenu „Przenieś do folderu” — to samo co przeciągnięcie, dostępne z klawiatury i VoiceOver.
+    private func moveMenu(_ c: ConnectionDefinition) -> NSMenuItem {
+        let move = NSMenuItem(title: L10n.tr("Przenieś do folderu"), action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        let store = workspace.connections
+        func add(_ title: String, _ folder: UUID?, depth: Int) {
+            let i = NSMenuItem(title: title, action: #selector(moveToFolder(_:)), keyEquivalent: "")
+            i.target = self
+            i.indentationLevel = depth
+            i.representedObject = [c.id.uuidString, folder?.uuidString ?? ""]
+            i.state = c.folderID == folder ? .on : .off
+            sub.addItem(i)
+        }
+        add(L10n.tr("Poziom główny listy"), nil, depth: 0)
+        func addFolders(_ parent: UUID?, depth: Int) {
+            for f in store.subfolders(of: parent) {
+                add(f.name, f.id, depth: depth)
+                addFolders(f.id, depth: depth + 1)
+            }
+        }
+        addFolders(nil, depth: 0)
+        move.submenu = sub
+        return move
+    }
+
+    @objc private func moveToFolder(_ sender: NSMenuItem) {
+        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
+        move(connection: pair[0], to: pair[1].isEmpty ? nil : pair[1])
+    }
+
+    private func move(connection: String, to folder: String?) {
+        var args: [String: PelikanWorkspace.JSONValue] = ["connection": .string(connection)]
+        if let folder { args["folder"] = .string(folder) }
+        workspace.perform("connection.moveToFolder", CommandArguments(args))
+    }
+
+    // MARK: Przeciąganie połączeń między folderami
+
+    func outlineView(_ outlineView: NSOutlineView, pasteboardWriterForItem item: Any) -> (any NSPasteboardWriting)? {
+        guard let node = item as? Node, let id = node.connectionID else { return nil }
+        let p = NSPasteboardItem()
+        p.setString(id.uuidString, forType: Self.connectionPasteboardType)
+        return p
+    }
+
+    /// Folder docelowy upuszczenia: folder pod kursorem, folder połączenia pod kursorem albo poziom główny (wolne
+    /// miejsce, połączenie na poziomie głównym). „Ostatnie” i okna nie są celem. `nil` w wyniku — upuszczenie odrzucone.
+    private func dropFolder(for item: Any?) -> UUID?? {
+        guard let node = item as? Node else { return .some(nil) }
+        switch node.kind {
+        case .folder(let f): return .some(f.id)
+        case .connection:
+            guard let parent = outline.parent(forItem: node) as? Node else { return .some(nil) }
+            if case .folder(let f) = parent.kind { return .some(f.id) }
+            return nil
+        case .recent, .window: return nil
+        }
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, validateDrop info: any NSDraggingInfo, proposedItem item: Any?,
+                     proposedChildIndex index: Int) -> NSDragOperation {
+        guard let s = info.draggingPasteboard.string(forType: Self.connectionPasteboardType), let id = UUID(uuidString: s),
+              let def = workspace.connections.connection(id), let target = dropFolder(for: item) else { return [] }
+        // Podświetlenie całego folderu docelowego (kolejność w folderze jest alfabetyczna — bez wstawiania między wiersze).
+        let folderNode = target.flatMap { t in allNodes(roots).first { if case .folder(let f) = $0.kind { f.id == t } else { false } } }
+        outlineView.setDropItem(folderNode, dropChildIndex: NSOutlineViewDropOnItemIndex)
+        return def.folderID == target ? [] : .move
+    }
+
+    func outlineView(_ outlineView: NSOutlineView, acceptDrop info: any NSDraggingInfo, item: Any?, childIndex index: Int) -> Bool {
+        guard let s = info.draggingPasteboard.string(forType: Self.connectionPasteboardType), let target = dropFolder(for: item) else { return false }
+        move(connection: s, to: target?.uuidString)
+        return true
+    }
+
+    private func allNodes(_ nodes: [Node]) -> [Node] { nodes.flatMap { [$0] + allNodes($0.children) } }
 
     private func item(_ title: String, _ command: String, _ connection: String?) -> NSMenuItem {
         let i = NSMenuItem(title: title, action: #selector(runCommand(_:)), keyEquivalent: "")

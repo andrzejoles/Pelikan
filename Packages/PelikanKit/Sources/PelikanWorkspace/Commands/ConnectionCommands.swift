@@ -124,6 +124,46 @@ public enum ConnectionCommands {
                 try ctx.workspace.connections.remove(id)
                 return .ok
             },
+            Command(CommandDescriptor(id: "connection.duplicate", title: L10n.tr("Kopiuj połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [connectionParam, CommandParameter("name", .string, L10n.tr("Nazwa kopii (bez argumentu — pytanie)"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Tworzy kopię definicji połączenia pod inną nazwą, w tym samym folderze, z zapisanymi hasłami."),
+                                      feature: "PD-CONN-004"),
+                    validate: { $0.sessions.mainConnectionID != nil }) { ctx in
+                let id = try connectionID(ctx)
+                guard let def = ctx.workspace.connections.connection(id) else { return .ok }
+                var name = ctx.arguments.string("name")
+                if name == nil {
+                    name = await ctx.ui?.askText(L10n.tr("Kopiuj połączenie"), message: L10n.tr("Nazwa kopii połączenia „\(def.displayName)”:"),
+                                                 defaultValue: L10n.tr("\(def.displayName) (kopia)"))
+                    guard name != nil else { throw CommandError.cancelledByUser }
+                }
+                let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { throw CommandError.invalidArgument("name", L10n.tr("pusta nazwa")) }
+                let copy = try ctx.workspace.connections.duplicate(id, name: trimmed)
+                Log.connection.info("Skopiowano połączenie \(def.displayName, privacy: .hash) jako \(copy.displayName, privacy: .hash)")
+                return CommandResult(value: .string(copy.id.uuidString))
+            },
+            Command(CommandDescriptor(id: "connection.moveToFolder", title: L10n.tr("Przenieś połączenie do folderu"), category: .session,
+                                      submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("connection", .string, required: true, L10n.tr("Identyfikator albo nazwa połączenia")),
+                                                   CommandParameter("folder", .string, L10n.tr("Identyfikator albo nazwa folderu (bez argumentu — poziom główny listy)"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Przenosi definicję połączenia do folderu listy połączeń (także przeciągnięciem myszą)."),
+                                      inMenu: false, feature: "PD-CONN-003")) { ctx in
+                let id = try connectionID(ctx)
+                var folder: UUID?
+                if let f = ctx.arguments.string("folder"), !f.isEmpty {
+                    let folders = ctx.workspace.connections.folders
+                    guard let match = UUID(uuidString: f).flatMap({ u in folders.first { $0.id == u } })
+                            ?? folders.first(where: { $0.name.caseInsensitiveCompare(f) == .orderedSame }) else {
+                        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
+                    }
+                    folder = match.id
+                }
+                try ctx.workspace.connections.move(id, to: folder)
+                return .ok
+            },
             Command(CommandDescriptor(id: "connection.connectAsMain", title: L10n.tr("Połącz jako główne"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam], agent: .none, effect: .settings,
                                       summary: L10n.tr("Łączy się i ustawia połączenie jako główne."), inMenu: false, feature: "PD-CONN-018")) { ctx in
