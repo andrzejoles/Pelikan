@@ -17,6 +17,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   prywatne ciała są pochylone. Pojedyncze kliknięcie albo Enter przenosi do elementu, strzałki w drzewie przesuwają
   kursor w edytorze, a pole nad drzewem filtruje nazwy.
 - Duże pakiety z tysiącami podprogramów nie blokują już okna podczas analizy kodu.
+- **Pliki bez „/”:** okno programu rozpoznaje specyfikację, ciało i inne jednostki po nagłówkach `CREATE …`, także
+  gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
+  tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
+  (preferencja **Kończ jednostki okna programu znakiem „/”** w Preferencje › Oracle przywraca dawny układ).
 
 ## 1.3.1 — poprawki zgłoszeń
 

@@ -436,12 +436,13 @@ enum AgentDatabaseCommands {
                 let o = try await resolve(ctx.arguments.string("object") ?? "", type: ctx.arguments.string("type"), in: s)
                 let doc: Document
                 if o.type.isProgram {
-                    var text = try await MetadataProvider.source(of: o, in: s) + "\n/\n"
+                    var sources = [try await MetadataProvider.source(of: o, in: s)]
                     if o.type == .package || o.type == .type,
                        let b = try? await MetadataProvider.source(of: DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody), in: s) {
-                        text += "\n" + b + "\n/\n"
+                        sources.append(b)
                     }
-                    doc = ws.newDocument(.program, text: text)
+                    // Okno programu bez „/” (D192), chyba że preferencja.
+                    doc = ws.newDocument(.program, text: ProgramText.join(sources, slash: ws.settings.programUnitSlash))
                 } else {
                     doc = ws.newDocument(.sql, text: try await MetadataProvider.ddl(of: o, in: s))
                 }

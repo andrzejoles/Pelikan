@@ -2065,3 +2065,21 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   z komendy edytor układa obszar widoku jeszcze raz w następnym obiegu pętli — dolne linie (numery w marginesie bez
   tekstu) były puste do kliknięcia. Odtworzone w oknie programu z kartami (zmiana kart, dopisanie tekstu z komendy
   i z klawiatury za „/”); w oknie bez kart przy pisaniu z klawiatury nie występowało.
+- **Pliki jednostek bez „/” (wymaganie właściciela):** „W repozytoriach specyfikację i body zapisujemy w osobnych
+  plikach i bez znaku / na końcu” — „/” psuje proces wdrożenia. Okno programu rozpoznaje jednostki po nagłówkach
+  `CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|PACKAGE BODY|TYPE|TYPE BODY|PROCEDURE|FUNCTION|TRIGGER|
+  LIBRARY|JAVA SOURCE|MLE MODULE …` na początku linii (lekser — nie w komentarzu ani literale; `ProgramCompiler.
+  programStatements`), z „/” i bez; „/” w osobnej linii, jeśli jest, należy do jednostki przed nim (podział jak
+  w SQL*Plus). Dotyczy kart, Code Contents, kompilacji F8 (każda jednostka osobnym poleceniem), numeracji linii
+  i błędów ALL_ERRORS, debugera i punktów przerwania, Dodaj/Usuń jednostkę, porównania z bazą, historii lokalnej.
+  Tekst za kończącym „/” nie skleja już jednostek — wycofanie `keepingTabs` zostaje.
+  Bez „/” domyślnie: tekst z bazy w oknie programu (Edytuj, Wczytaj ponownie z bazy, Dodaj źródło do edytora,
+  otwarcie z debugera, agent otwierający obiekt, szkielet testu utPLSQL, import modułu MLE) — jednostki rozdzielone
+  pustą linią; szablony jednostek programów bez „/”; Dodaj jednostkę zachowuje konwencję pliku (okno z „/” — nowa
+  jednostka z „/”, bez — bez). **Zapis nigdy nie dopisuje „/”** (dotąd dopisywał kończący „/”, UG 4.2) — tekst okna
+  zapisywany bez zmian, plik z „/” zapisuje się tak, jak jest (bez cichego usuwania). Preferencja „Kończ jednostki okna
+  programu znakiem /” (Preferencje › Oracle, domyślnie wyłączona) przywraca „/” w tekście z bazy i w nowych jednostkach.
+  Bez zmian (tam „/” wykonuje blok): okno SQL, okno poleceń, okno testu, Duplikuj obiekt (skrypt w oknie SQL),
+  skrypt wdrożenia koszyka, kopia schematu, eksport obiektów do plików (DBMS_METADATA z SQLTERMINATOR — następny PR
+  razem z osobnymi plikami specyfikacji i ciała), źródło dla agenta (`agent.source`).
+

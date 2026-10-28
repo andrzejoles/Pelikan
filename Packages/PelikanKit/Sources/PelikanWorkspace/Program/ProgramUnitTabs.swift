@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 
 /// Karty jednostek okna programu (PD-PROG-001, D192): tekst okna dzielony na rozłączne odcinki pełnych linii — jeden
 /// na jednostkę — a edytor pokazuje tylko odcinek wybranej karty. Dokument zostaje jeden (zapis, kompilacja F8,
@@ -19,6 +20,26 @@ public struct ProgramUnitTab: Sendable, Hashable {
     }
 }
 
+/// Tekst okna programu z jednostek (D192): domyślnie bez „/” — jednostki rozdzielone pustą linią i rozpoznawane po
+/// nagłówkach CREATE; z preferencją (albo w pliku, który już używa „/”) — każda jednostka zakończona „/”.
+public enum ProgramText {
+    public static func join(_ sources: [String], slash: Bool) -> String {
+        let parts = sources.map { s -> String in
+            var t = s
+            while let c = t.last, c.isWhitespace { t.removeLast() }
+            if slash, t.hasSuffix("\n/") || t == "/" { t.removeLast(); while let c = t.last, c.isWhitespace { t.removeLast() } }
+            return t
+        }.filter { !$0.isEmpty }
+        guard !parts.isEmpty else { return "" }
+        return slash ? parts.map { $0 + "\n/\n" }.joined(separator: "\n") : parts.joined(separator: "\n\n") + "\n"
+    }
+
+    /// Czy tekst okna kończy jednostki „/” (konwencja pliku — nowa jednostka dopisywana tak samo).
+    public static func usesSlash(_ text: String) -> Bool {
+        ScriptSplitter.split(text).contains { $0.terminator == .slash && ProgramCompiler.header($0.text) != nil }
+    }
+}
+
 public enum ProgramUnitTabs {
     /// Karty jednostek w kolejności tekstu; mniej niż dwie jednostki — brak kart (okno bez zmian zachowania).
     public static func tabs(_ units: [ProgramUnit], in text: String) -> [ProgramUnitTab] {
@@ -33,8 +54,10 @@ public enum ProgramUnitTabs {
             let unitLine = lineStart(units[i].range.lowerBound)
             // Za poprzednią jednostką: kończący „/” w osobnej linii należy do niej; puste linie i komentarz przed CREATE
             // — już do następnej karty (Enter w pierwszej linii karty zostaje na tej karcie także po ponownej analizie).
-            var boundary = unitLine
-            var p = min(units[i - 1].range.upperBound, length)
+            // Bez „/” (pliki właściciela, D192): granica za ostatnią linią poprzedniej jednostki.
+            let prevEnd = min(units[i - 1].range.upperBound, length)
+            var boundary = min(unitLine, prevEnd > 0 ? NSMaxRange(ns.lineRange(for: NSRange(location: prevEnd - 1, length: 0))) : unitLine)
+            var p = prevEnd
             while p < length, [0x20, 0x09, 0x0D, 0x0A].contains(ns.character(at: p)) { p += 1 }
             if p < length, ns.character(at: p) == 0x2F {
                 let line = ns.lineRange(for: NSRange(location: p, length: 0))

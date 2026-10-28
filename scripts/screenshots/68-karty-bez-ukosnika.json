@@ -1,0 +1,4 @@
+[
+  {"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/kadry_api_bez_ukosnika.pck"}, "delay": 3},
+  {"command": "prog.selectUnit", "args": {"unit": "kadry_api body"}, "delay": 2}
+]

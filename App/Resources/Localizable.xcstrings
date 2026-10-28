@@ -6833,30 +6833,30 @@
         }
       }
     },
-    "Brak jednostek do kompilacji (CREATE … zakończone /)" : {
+    "Brak jednostek do kompilacji (polecenia CREATE …)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No units to compile (CREATE … terminated with /)"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Немає одиниць для компіляції (CREATE … завершене /)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No hay unidades que compilar (CREATE … terminadas en /)"
+            "value" : "No units to compile (CREATE … statements)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Einheiten zum Kompilieren (CREATE … abgeschlossen mit /)"
+            "value" : "Keine Einheiten zum Kompilieren (CREATE-…-Anweisungen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay unidades que compilar (sentencias CREATE …)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає одиниць для компіляції (команди CREATE …)"
           }
         }
       }
@@ -33933,6 +33933,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kreis"
+          }
+        }
+      }
+    },
+    "Kończ jednostki okna programu znakiem „/” (tekst z bazy, nowe jednostki)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End program window units with “/” (text from the database, new units)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheiten im Programmfenster mit „/“ abschließen (Text aus der Datenbank, neue Einheiten)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminar las unidades de la ventana de programa con «/» (texto de la base de datos, unidades nuevas)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершувати одиниці вікна програми знаком «/» (текст із бази, нові одиниці)"
           }
         }
       }

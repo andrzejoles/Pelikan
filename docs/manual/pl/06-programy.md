@@ -21,13 +21,17 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   debuger, Wstecz/Naprzód, Cofnij) samo przełącza kartę. Strzałki i ⌘A nie wychodzą poza kartę. Numery linii na
   karcie, lista błędów i **Przejdź do linii** liczą linie jednostki jak Oracle (ALL_SOURCE, ALL_ERRORS) — linia 1 to
   linia `PACKAGE BODY …`. **Zamień wszystko** zamienia w całym oknie (wszystkich jednostkach).
+- Jednostki rozpoznawane są po nagłówkach `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`,
+  `TRIGGER` na początku linii — plik nie musi mieć „/” po jednostkach. Pelikan nie dopisuje „/” przy zapisie, a kod
+  wczytany z bazy i nowe jednostki są bez „/” (chyba że włączysz **Preferencje › Oracle › Kończ jednostki okna
+  programu znakiem „/”**). Plik z „/” zapisuje się bez zmian.
 - **F8** (⌘↩) kompiluje wszystkie jednostki po kolei i zatrzymuje się na pierwszej z błędem. Kompilacja odbywa się w
   osobnej sesji w tle, więc nie blokuje okien SQL.
 - Błędy i ostrzeżenia kompilatora pojawiają się pod edytorem. Kliknięcie przenosi do linii, dwuklik otwiera opis błędu
   w dokumentacji Oracle.
 - Pasek stanu pokazuje, czy tekst jest zmieniony i niezapisany oraz czy jest nieskompilowany.
-- **Plik › Zapisz** (⌘S) zapisuje plik zgodny z SQL*Plus (z końcowym `/`), z nazwą i rozszerzeniem według jednostki
-  (np. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+- **Plik › Zapisz** (⌘S) zapisuje tekst okna bez zmian (bez dopisywania `/`), z nazwą i rozszerzeniem według
+  jednostki (np. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Bezpieczna praca z kodem w bazie
 

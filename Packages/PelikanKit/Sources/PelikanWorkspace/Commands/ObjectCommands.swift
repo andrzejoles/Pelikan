@@ -145,14 +145,16 @@ public enum ObjectCommands {
                 }
                 if o.type.isProgram {
                     // Specyfikacja i ciało pakietu/typu w jednym oknie (karty jednostek — Program Window).
-                    var text: String
-                    if let specSource { text = specSource } else { text = try await m.source(of: o) }
-                    text += "\n/\n"
+                    let first: String
+                    if let specSource { first = specSource } else { first = try await m.source(of: o) }
+                    var sources: [String] = [first]
                     // Ciało jest dołączane tylko, gdy istnieje — typ bez metod, kolekcja i pakiet bez ciała mają jedną kartę.
                     if o.type == .package || o.type == .type {
                         let bodyType: DBObjectType = o.type == .package ? .packageBody : .typeBody
-                        if let body = try? await m.source(of: DBObject(owner: o.owner, name: o.name, type: bodyType)) { text += "\n" + body + "\n/\n" }
+                        if let body = try? await m.source(of: DBObject(owner: o.owner, name: o.name, type: bodyType)) { sources.append(body) }
                     }
+                    // Bez „/” (D192), chyba że preferencja każe kończyć nim jednostki.
+                    var text = ProgramText.join(sources, slash: ctx.workspace.settings.programUnitSlash)
                     if ctx.workspace.settings.beautifier.afterLoad, let f = try? Beautifier.format(text, options: ctx.workspace.settings.beautifier) {
                         text = f
                     }
@@ -160,13 +162,14 @@ public enum ObjectCommands {
                     ctx.workspace.bind(doc, to: m.connectionID)
                     doc.customTitle = o.name.lowercased() + "." + Self.fileExtension(o.type)
                     doc.isModified = false
-                    // Ciało wskazane w przeglądarce: kursor na początku drugiej jednostki (karta ciała); po formatowaniu
-                    // granicą nadal jest „/” sam w linii.
+                    // Ciało wskazane w przeglądarce: kursor na początku drugiej jednostki (karta ciała), także po
+                    // formatowaniu (jednostki rozpoznawane po nagłówkach CREATE).
                     var caret = 0
-                    if openBody, let r = doc.text.range(of: "\n/\n") {
-                        caret = doc.text.utf16.distance(from: doc.text.startIndex, to: r.upperBound)
-                        while caret < (doc.text as NSString).length, (doc.text as NSString).character(at: caret) == 0x0A { caret += 1 }
-                        if caret >= (doc.text as NSString).length { caret = 0 }
+                    if openBody {
+                        let units = doc.programUnits.sorted { $0.range.lowerBound < $1.range.lowerBound }
+                        if units.count > 1 {
+                            caret = (doc.text as NSString).lineRange(for: NSRange(location: units[1].range.lowerBound, length: 0)).location
+                        }
                     }
                     doc.selectedRange = caret..<caret
                     // Znaczniki czasu (PD-PROG-011): późniejsza zmiana obiektu w bazie przez kogoś innego jest wykrywana.

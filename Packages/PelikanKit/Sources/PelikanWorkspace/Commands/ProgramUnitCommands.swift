@@ -17,15 +17,18 @@ enum ProgramUnitCommands {
                     validate: { programDocument($0) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu")) }
                 let original = doc.text
+                // Konwencja pliku (D192): „/” po jednostkach tylko, gdy okno już go używa albo (puste okno) każe preferencja.
+                let slash = doc.programUnits.isEmpty ? ctx.workspace.settings.programUnitSlash : ProgramText.usesSlash(doc.text)
                 var t = doc.text
                 while let c = t.last, c.isWhitespace { t.removeLast() }
                 if !t.isEmpty {
-                    if t.last != "/" { t += "\n/" }
+                    if slash, t.last != "/" { t += "\n/" }
                     t += "\n\n"
                 }
                 if let text = ctx.arguments.string("text"), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     var unit = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if unit.last != "/" { unit += "\n/" }
+                    if slash, unit.last != "/" { unit += "\n/" }
+                    if !slash, unit.hasSuffix("\n/") { unit.removeLast(2); while let c = unit.last, c.isWhitespace { unit.removeLast() } }
                     let start = (t as NSString).length
                     doc.text = t + unit + "\n"
                     doc.selectedRange = start..<start
@@ -37,7 +40,16 @@ enum ProgramUnitCommands {
                 var args: [String: JSONValue] = ["template": .string(ctx.arguments.string("template") ?? TemplateLibrary.programFolder + "/" + L10n.tr("Procedura"))]
                 if let v = ctx.arguments.values["values"] { args["values"] = v }
                 do {
-                    return try await ctx.workspace.invoke("edit.insertTemplate", CommandArguments(args), invoker: ctx.invoker)
+                    let r = try await ctx.workspace.invoke("edit.insertTemplate", CommandArguments(args), invoker: ctx.invoker)
+                    // Szablony jednostek są bez „/” (D192); okno z „/” (albo preferencja) — jednostki szablonu z „/”.
+                    if slash {
+                        let ns = doc.text as NSString
+                        let inserted = ns.substring(from: min(end, ns.length))
+                        let parts = ProgramCompiler.programStatements(inserted).map(\.text)
+                        if !parts.isEmpty { doc.text = ns.substring(to: min(end, ns.length)) + ProgramText.join(parts, slash: true) }
+                        doc.selectedRange = end..<end
+                    }
+                    return r
                 } catch {
                     doc.text = original
                     throw error

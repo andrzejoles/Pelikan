@@ -46,9 +46,10 @@ public struct CompileMessage: Sendable, Hashable, Identifiable {
 }
 
 public enum ProgramCompiler {
-    /// Jednostki programu w tekście (polecenia CREATE PL/SQL zakończone `/`).
+    /// Jednostki programu w tekście (D192): polecenia CREATE PL/SQL — zakończone `/` w osobnej linii albo bez niego
+    /// (następna jednostka zaczyna się od nagłówka CREATE na początku linii).
     public static func units(in text: String) -> [ProgramUnit] {
-        ScriptSplitter.split(text).compactMap { s in
+        programStatements(text).compactMap { s in
             guard let h = headerTokens(s.text) else { return nil }
             var u = ProgramUnit(type: h.type, owner: h.owner, name: h.name, range: s.start..<s.end, line: s.line, text: s.text)
             u.sourceLine = s.line
@@ -61,6 +62,55 @@ public enum ProgramCompiler {
             }
             return u
         }
+    }
+
+    /// Polecenia okna programu: podział skryptu (`/` w osobnej linii kończy blok PL/SQL, jak w SQL*Plus), a w poleceniu
+    /// także na każdym nagłówku jednostki (`CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|TYPE|PROCEDURE|
+    /// FUNCTION|TRIGGER|LIBRARY|JAVA|MLE MODULE …`) na początku linii — pliki jednostek bez `/` (konwencja właściciela,
+    /// D192). Komentarze i literały nie są nagłówkami (lekser). Polecenie kończy się na ostatnim znaczącym znaku przed
+    /// następnym nagłówkiem (komentarz przed CREATE należy do następnej jednostki).
+    static func programStatements(_ text: String) -> [(start: Int, end: Int, line: Int, text: String)] {
+        let ns = text as NSString
+        let trivia: Set<TokenKind> = [.whitespace, .newline, .lineComment, .blockComment]
+        var out: [(start: Int, end: Int, line: Int, text: String)] = []
+        for s in ScriptSplitter.split(text) {
+            let start = min(s.start, ns.length), end = min(max(s.end, start), ns.length)
+            let body = ns.substring(with: NSRange(location: start, length: end - start)) as NSString
+            let tokens = Lexer(body as String).tokenize()
+            // Kandydaci: CREATE jako pierwszy znaczący token linii (nie pierwszy w poleceniu) z nagłówkiem jednostki.
+            var cuts: [Int] = [0]
+            var lineStart = true
+            var firstSignificant = true
+            for t in tokens {
+                if t.kind == .newline { lineStart = true; continue }
+                if t.kind == .whitespace { continue }
+                defer { lineStart = false; firstSignificant = false }
+                guard lineStart, !firstSignificant, t.kind == .keyword || t.kind == .identifier,
+                      body.substring(with: NSRange(location: t.start, length: t.length)).uppercased() == "CREATE" else { continue }
+                let probe = body.substring(with: NSRange(location: t.start, length: min(600, body.length - t.start)))
+                if headerTokens(probe) != nil { cuts.append(t.start) }
+            }
+            for (k, cut) in cuts.enumerated() {
+                let limit = k + 1 < cuts.count ? cuts[k + 1] : body.length
+                // Koniec: ostatni znaczący token przed następnym nagłówkiem (ostatnie polecenie — koniec jak w podziale).
+                var pieceEnd = cut
+                if k + 1 < cuts.count {
+                    for t in tokens where t.start >= cut && t.start < limit && !trivia.contains(t.kind) { pieceEnd = t.start + t.length }
+                } else {
+                    pieceEnd = body.length
+                }
+                guard pieceEnd > cut else { continue }
+                var line = s.line
+                if cut > 0 {
+                    let before = body.substring(to: cut) as NSString
+                    var n = 0
+                    for i in 0..<before.length where before.character(at: i) == 0x0A { n += 1 }
+                    line += n
+                }
+                out.append((start + cut, start + pieceEnd, line, body.substring(with: NSRange(location: cut, length: pieceEnd - cut))))
+            }
+        }
+        return out
     }
 
     /// Tekst bez jednostki (PD-PROG-001): od początku jej linii przez kończący „/” i następujące puste linie.
@@ -160,7 +210,7 @@ public enum ProgramCompiler {
         let wasOpen = ws.documents.contains { $0 === doc }
         if ws.settings.beautifier.beforeCompile { ws.autoBeautify(doc) }
         let units = units(in: doc.text)
-        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
+        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (polecenia CREATE …)")) }
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
         // Plik tylko do odczytu (np. z systemu kontroli wersji) — kompilacja wyłączona preferencją (PD-PROG-017).
         if let url = doc.fileURL, !ws.settings.compileReadOnlyFiles, FileManager.default.fileExists(atPath: url.path),

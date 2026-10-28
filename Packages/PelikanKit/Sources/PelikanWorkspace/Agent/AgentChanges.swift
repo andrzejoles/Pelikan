@@ -441,7 +441,9 @@ enum AgentChangeCommands {
                 let pinned = ctx.arguments[Workspace.agentStatementsKey]?.arrayValue?.compactMap(\.stringValue)
                 let (text, statements) = if let pinned { (pinned.map { $0 + "\n/\n" }.joined(separator: "\n"), pinned) } else { try await skeletonStatements(ctx, s) }
                 let result = try await ctx.workspace.runAgentStatements(ctx, statements, def: def, s: s)
-                let doc = ctx.workspace.newDocument(.program, text: text)
+                // Okno programu bez „/” (D192): te same jednostki, rozpoznawane po nagłówkach CREATE.
+                let shown = ctx.workspace.settings.programUnitSlash ? text : ProgramText.join(statements, slash: false)
+                let doc = ctx.workspace.newDocument(.program, text: shown)
                 doc.connectionID = def.id
                 doc.isModified = false
                 ctx.workspace.recordAgentEdit(ctx, doc, before: "", created: true)
@@ -476,7 +478,7 @@ enum AgentChangeCommands {
         }
         let d = try ctx.workspace.agentDocument(ctx.arguments.string("window"))
         let units = ProgramCompiler.units(in: d.text)
-        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
+        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (polecenia CREATE …)")) }
         return units.map(\.text)
     }
 

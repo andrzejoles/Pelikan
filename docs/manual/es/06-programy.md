@@ -23,12 +23,16 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   números de línea de la pestaña, la lista de errores e **Ir a la línea** cuentan las líneas de la unidad como Oracle
   (ALL_SOURCE, ALL_ERRORS): la línea 1 es la de `PACKAGE BODY …`. **Reemplazar todo** reemplaza en toda la ventana
   (todas las unidades).
+- Las unidades se reconocen por las cabeceras `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`,
+  `TRIGGER` al principio de una línea: el archivo no necesita «/» tras las unidades. Pelikan no añade «/» al guardar,
+  y el código cargado de la base de datos y las unidades nuevas llegan sin «/» (salvo que active **Preferencias ›
+  Oracle › Terminar las unidades de la ventana de programa con «/»**). Un archivo con «/» se guarda sin cambios.
 - **F8** (⌘↩) compila todas las unidades una tras otra y se detiene en la primera con un error. La compilación se hace
   en una sesión aparte en segundo plano, así que no bloquea las SQL Windows.
 - Los errores y advertencias del compilador aparecen bajo el editor. Un clic lleva a la línea; un doble clic abre la
   descripción del error en la documentación de Oracle.
 - La barra de estado muestra si el texto se ha modificado y no se ha guardado, y si está sin compilar.
-- **Archivo › Guardar** (⌘S) guarda un archivo compatible con SQL*Plus (con `/` final), con el nombre y la extensión
+- **Archivo › Guardar** (⌘S) guarda el texto de la ventana sin cambios (sin añadir `/`), con el nombre y la extensión
   según la unidad (p. ej., `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Trabajar con seguridad con el código de la base de datos

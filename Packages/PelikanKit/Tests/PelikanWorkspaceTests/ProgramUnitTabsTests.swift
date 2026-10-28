@@ -86,12 +86,14 @@ struct ProgramUnitTabsTests {
         #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b - 1, inserted: "/\n", characterBefore: 0x2F, selectionAfter: b))
     }
 
-    @Test("tekst wpisany za „/” specyfikacji skleja ciało w podziale poleceń (jak SQL*Plus) — karty znikają do poprawienia tekstu")
-    func tabsVanishWhileTextAfterSlash() {
+    @Test("tekst wpisany za „/” specyfikacji nie skleja jednostek — ciało rozpoznane po nagłówku CREATE, tekst na karcie ciała")
+    func textAfterSlashKeepsUnits() {
         let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
         let b = tabs[1].segment.lowerBound
         let typed = (Self.text as NSString).replacingCharacters(in: NSRange(location: b - 1, length: 0), with: "\nabc")
-        #expect(ProgramUnitTabs.tabs(ProgramCompiler.units(in: typed), in: typed).isEmpty)
+        let after = ProgramUnitTabs.tabs(ProgramCompiler.units(in: typed), in: typed)
+        #expect(after.count == 2)
+        #expect(ProgramUnitTabs.index(of: (typed as NSString).range(of: "abc").location, in: after) == 1)
     }
 
     @Test("Usuń jednostkę „nazwa body” bez ciała w tekście — błąd argumentu, specyfikacja zostaje")

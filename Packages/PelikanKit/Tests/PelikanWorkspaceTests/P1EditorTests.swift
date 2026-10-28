@@ -107,7 +107,8 @@ struct ProgramP1Tests {
         try await ws.invoke("prog.addUnit", CommandArguments(["text": .string("create or replace procedure log_it is\nbegin\n  null;\nend;")]))
         let units = ProgramCompiler.units(in: doc.text)
         #expect(units.map(\.name) == ["KADRY", "KADRY", "PREMIA", "LOG_IT"])
-        #expect(doc.text.hasSuffix("end;\n/\n"))
+        // Bez „/” (D192): szablony i dodana jednostka bez kończącego ukośnika.
+        #expect(doc.text.hasSuffix("end;\n") && !doc.text.contains("\n/\n"))
         try await ws.invoke("prog.removeUnit", CommandArguments(["unit": .string("kadry body")]))
         #expect(ProgramCompiler.units(in: doc.text).map(\.type) == [.package, .function, .procedure])
         #expect(!doc.text.contains("package body"))

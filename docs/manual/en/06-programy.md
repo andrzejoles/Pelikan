@@ -22,12 +22,16 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   tab by itself. Arrow keys and ⌘A stay within the tab. Line numbers on the tab, the error list and **Go to Line**
   count unit lines like Oracle (ALL_SOURCE, ALL_ERRORS) — line 1 is the `PACKAGE BODY …` line. **Replace All**
   replaces in the whole window (all units).
+- Units are recognised by `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`, `TRIGGER` headers at
+  the start of a line — the file does not need a “/” after units. Pelikan never adds “/” when saving, and code loaded
+  from the database and new units come without “/” (unless you turn on **Preferences › Oracle › End program window
+  units with “/”**). A file with “/” is saved unchanged.
 - **F8** (⌘↩) compiles all units one by one and stops at the first one with an error. Compilation takes place in a
   separate session in the background, so it does not block SQL Windows.
 - Compiler errors and warnings appear below the editor. A click moves to the line, a double-click opens the error
   description in the Oracle documentation.
 - The status bar shows whether the text has been changed and not saved, and whether it is not compiled.
-- **File › Save** (⌘S) saves a SQL*Plus-compatible file (with a trailing `/`), with a name and extension according to
+- **File › Save** (⌘S) saves the window text unchanged (no `/` is added), with a name and extension according to
   the unit (e.g. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Working safely with code in the database

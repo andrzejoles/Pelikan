@@ -22,12 +22,16 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   Lesezeichen, Debugger, Zurück/Vor, Widerrufen) wechselt den Tab selbst. Pfeiltasten und ⌘A bleiben im Tab.
   Zeilennummern im Tab, die Fehlerliste und **Gehe zu Zeile** zählen Zeilen der Einheit wie Oracle (ALL_SOURCE,
   ALL_ERRORS) — Zeile 1 ist die Zeile `PACKAGE BODY …`. **Alle ersetzen** ersetzt im ganzen Fenster (allen Einheiten).
+- Einheiten werden an den Köpfen `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`, `TRIGGER` am
+  Zeilenanfang erkannt — die Datei braucht kein „/“ nach den Einheiten. Pelikan fügt beim Speichern kein „/“ hinzu,
+  und Code aus der Datenbank sowie neue Einheiten kommen ohne „/“ (außer Sie aktivieren **Einstellungen › Oracle ›
+  Einheiten im Programmfenster mit „/“ abschließen**). Eine Datei mit „/“ wird unverändert gespeichert.
 - **F8** (⌘↩) kompiliert alle Einheiten nacheinander und hält bei der ersten mit einem Fehler an. Die Kompilierung läuft
   in einer separaten Sitzung im Hintergrund und blockiert daher keine SQL Windows.
 - Fehler und Warnungen des Compilers erscheinen unter dem Editor. Ein Klick springt zur Zeile, ein Doppelklick öffnet
   die Fehlerbeschreibung in der Oracle-Dokumentation.
 - Die Statusleiste zeigt, ob der Text geändert und nicht gespeichert und ob er nicht kompiliert ist.
-- **Datei › Speichern** (⌘S) speichert eine SQL*Plus-kompatible Datei (mit abschließendem `/`), mit Namen und Endung
+- **Datei › Speichern** (⌘S) speichert den Fenstertext unverändert (ohne angehängtes `/`), mit Namen und Endung
   entsprechend der Einheit (z. B. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Sicheres Arbeiten mit Code in der Datenbank

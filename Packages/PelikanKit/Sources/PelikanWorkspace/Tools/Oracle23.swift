@@ -318,7 +318,7 @@ public enum Oracle23Commands {
                 let source = TextFileCodec.decode(try Data(contentsOf: url)).text
                 let ddl = MLE.createModuleDDL(name: ctx.arguments.string("name") ?? url.deletingPathExtension().lastPathComponent,
                                               source: source, version: ctx.arguments.string("version"))
-                ctx.workspace.newDocument(.program, text: ddl + (ddl.hasSuffix("\n") ? "" : "\n") + "/\n")
+                ctx.workspace.newDocument(.program, text: ProgramText.join([ddl], slash: ctx.workspace.settings.programUnitSlash))
                 return CommandResult(value: .string(ddl)).resolving(ctx.arguments.string("file") == nil ? ["file": .string(url.path)] : [:])
             },
             Command(CommandDescriptor(id: "tools.debugMLE", title: L10n.tr("Debuguj moduł MLE po wykonaniu…"), category: .tools,

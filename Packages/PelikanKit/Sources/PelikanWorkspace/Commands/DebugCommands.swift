@@ -185,7 +185,7 @@ extension Workspace {
                 // przez Object Browser (MetadataProvider) czekałoby do końca programu. Źródło z sesji nadzorującej (WS2-02).
                 let source = await d.source(of: DBObject(owner: l.owner, name: l.name, type: type))
                 guard !source.isEmpty else { return }
-                let doc = newDocument(.program, text: source + "\n/\n")
+                let doc = newDocument(.program, text: ProgramText.join([source], slash: settings.programUnitSlash))
                 bind(doc, to: key.connectionID)
                 doc.customTitle = l.name.lowercased() + "." + ObjectCommands.fileExtension(type)
                 doc.isModified = false

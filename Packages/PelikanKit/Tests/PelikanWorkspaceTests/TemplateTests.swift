@@ -49,7 +49,7 @@ struct TemplateCommandTests {
 @MainActor
 @Suite("Zapis okna programu")
 struct ProgramSaveTests {
-    @Test("Nazwa i rozszerzenie z jednostki, końcowy ukośnik")
+    @Test("Nazwa i rozszerzenie z jednostki, zapis bez dopisanego ukośnika")
     func save() throws {
         let ws = Workspace()
         let doc = ws.newDocument(.program, text: "create or replace function Licz return number is begin return 1; end;")
@@ -57,7 +57,8 @@ struct ProgramSaveTests {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-save-\(UUID().uuidString).fnc")
         defer { try? FileManager.default.removeItem(at: url) }
         try ws.save(doc, to: url)
-        #expect(try String(contentsOf: url, encoding: .utf8).hasSuffix("end;\n/\n"))
+        // Tekst zapisany bez zmian — Pelikan nie dopisuje „/” (D192).
+        #expect(try String(contentsOf: url, encoding: .utf8) == "create or replace function Licz return number is begin return 1; end;")
         let pkg = ws.newDocument(.program, text: "create package p as end;\n/\ncreate package body p as end;\n/\n")
         #expect(BuiltinCommands.suggestedFileName(pkg) == ("p", "pck"))
     }
