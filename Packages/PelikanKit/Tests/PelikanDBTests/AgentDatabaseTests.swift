@@ -86,6 +86,8 @@ struct AgentDatabaseTests {
         #expect(pkg["arguments"]?.arrayValue?.isEmpty == false)
         let src = content(try await call(ws, "agent.source", ["object": "emp_api"]))
         #expect(src["source"]?.stringValue?.contains("CREATE OR REPLACE PACKAGE BODY") == true)
+        // Bez „/” domyślnie (D192) — agent może zapisać źródło do pliku w repozytorium.
+        #expect(src["source"]?.stringValue?.components(separatedBy: "\n").contains("/") == false)
         let ddl = content(try await call(ws, "agent.ddl", ["object": "dept"]))
         #expect(ddl["ddl"]?.stringValue?.uppercased().contains("CREATE TABLE") == true)
         let deps = content(try await call(ws, "agent.dependencies", ["object": "emp_api"]))

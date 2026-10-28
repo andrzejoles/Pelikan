@@ -123,6 +123,9 @@ struct UtplsqlOfflineTests {
         let sk = UtplsqlExplorer.skeleton(for: "EMP_API", owner: "SCOTT", specification: "create package emp_api as procedure a(x number); function b return number; procedure a(y date); end;")
         #expect(sk.contains("--%suite(") && sk.contains("procedure a;") && sk.contains("procedure a_2;") && sk.contains("procedure b;"))
         #expect(sk.contains("scott.emp_api.a") && sk.contains("ut.fail("))
+        // Szkielet bez „/” (D192), dwie jednostki rozpoznane po nagłówkach CREATE.
+        #expect(!sk.components(separatedBy: "\n").contains("/"))
+        #expect(ProgramCompiler.units(in: sk).map(\.type) == [.package, .packageBody])
         #expect(UtplsqlExplorer.unknownAnnotations(in: "--%suite\n--%tset(x)\n--%test").map(\.name) == ["tset"])
         let items = [UtSuiteItem(owner: "S", object: "P", name: "P", description: "", kind: .logicalSuite, line: 0, path: "a", disabled: false, disabledReason: "", tags: "", children: []),
                      UtSuiteItem(owner: "S", object: "T", name: "T", description: "", kind: .suite, line: 2, path: "a.t", disabled: false, disabledReason: "", tags: "", children: []),

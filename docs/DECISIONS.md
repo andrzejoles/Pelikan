@@ -2081,5 +2081,7 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   programu znakiem /” (Preferencje › Oracle, domyślnie wyłączona) przywraca „/” w tekście z bazy i w nowych jednostkach.
   Bez zmian (tam „/” wykonuje blok): okno SQL, okno poleceń, okno testu, Duplikuj obiekt (skrypt w oknie SQL),
   skrypt wdrożenia koszyka, kopia schematu, eksport obiektów do plików (DBMS_METADATA z SQLTERMINATOR — następny PR
-  razem z osobnymi plikami specyfikacji i ciała), źródło dla agenta (`agent.source`).
+  razem z osobnymi plikami specyfikacji i ciała).
+- **Źródło dla agenta i szkielet testu:** `agent.source` i szkielet testu utPLSQL (okno programu i narzędzie agenta)
+  stosują tę samą preferencję co okno programu — domyślnie bez „/” (agent może zapisać źródło do pliku w repozytorium).
 

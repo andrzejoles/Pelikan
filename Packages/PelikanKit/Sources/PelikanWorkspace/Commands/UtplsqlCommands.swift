@@ -269,7 +269,9 @@ enum UtplsqlCommands {
                     spec = try await m.source(of: DBObject(owner: o.owner, name: o.name, type: .package))
                 }
                 guard let name, let spec else { throw CommandError.notAvailable(L10n.tr("Brak specyfikacji pakietu")) }
-                let text = UtplsqlExplorer.skeleton(for: name, owner: owner, specification: spec)
+                // Bez „/”, chyba że preferencja „Kończ jednostki okna programu znakiem /” (D192).
+                let skeleton = UtplsqlExplorer.skeleton(for: name, owner: owner, specification: spec)
+                let text = ws.settings.programUnitSlash ? ProgramText.join(ProgramCompiler.units(in: skeleton).map(\.text), slash: true) : skeleton
                 let doc = ws.newDocument(.program, text: text)
                 ws.bind(doc, to: connection)
                 return CommandResult(message: doc.fullTitle, value: .string(text))

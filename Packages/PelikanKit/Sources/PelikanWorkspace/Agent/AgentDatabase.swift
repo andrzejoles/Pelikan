@@ -250,11 +250,13 @@ enum AgentDatabaseCommands {
                                       inMenu: false, feature: "AI-TOOL-001")) { ctx in
                 let (_, s) = try await ctx.workspace.agentDatabase(ctx, action: "get_source")
                 let o = try await resolve(ctx.arguments.string("object") ?? "", type: ctx.arguments.string("type"), in: s)
-                var text = try await MetadataProvider.source(of: o, in: s) + "\n/\n"
+                var sources = [try await MetadataProvider.source(of: o, in: s)]
                 if ctx.arguments.string("type") == nil, o.type == .package || o.type == .type {
                     let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody)
-                    if let b = try? await MetadataProvider.source(of: body, in: s) { text += "\n" + b + "\n/\n" }
+                    if let b = try? await MetadataProvider.source(of: body, in: s) { sources.append(b) }
                 }
+                // Agent może zapisać źródło do pliku w repozytorium — bez „/”, chyba że preferencja (D192).
+                let text = ProgramText.join(sources, slash: ctx.workspace.settings.programUnitSlash)
                 return CommandResult(value: untrusted(.object(["owner": .string(o.owner), "name": .string(o.name), "type": .string(o.type.rawValue), "source": .string(text)])))
             },
             Command(CommandDescriptor(id: "agent.ddl", title: L10n.tr("DDL obiektu (agent)"), category: .help,
