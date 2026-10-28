@@ -14,6 +14,13 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
 - **Edytuj** na pakiecie albo typie — także na jego ciele z folderów „Ciała pakietów” i „Ciała typów” — otwiera
   specyfikację i ciało w jednym oknie na dwóch kartach (otwarte z ciała: aktywna karta ciała). Obiekt bez ciała ma
   jedną kartę.
+- Edytor pokazuje tylko jednostkę wybranej karty; aktywna karta jest wciśnięta i pogrubiona. Kartę zmienisz
+  kliknięciem, przez **Plik › Okno programu › Pokaż jednostkę…**, **Następna jednostka** (⌥⌘], w profilu PL/SQL
+  Developer też ⌃⇟) i **Poprzednia jednostka** (⌥⌘[, ⌃⇞) — kursor wraca tam, gdzie był na tej karcie. Każde przejście
+  do miejsca w innej jednostce (błąd kompilacji, Zawartość kodu, Znajdź następne, Przejdź do deklaracji, zakładka,
+  debuger, Wstecz/Naprzód, Cofnij) samo przełącza kartę. Strzałki i ⌘A nie wychodzą poza kartę. Numery linii na
+  karcie, lista błędów i **Przejdź do linii** liczą linie jednostki jak Oracle (ALL_SOURCE, ALL_ERRORS) — linia 1 to
+  linia `PACKAGE BODY …`. **Zamień wszystko** zamienia w całym oknie (wszystkich jednostkach).
 - **F8** (⌘↩) kompiluje wszystkie jednostki po kolei i zatrzymuje się na pierwszej z błędem. Kompilacja odbywa się w
   osobnej sesji w tle, więc nie blokuje okien SQL.
 - Błędy i ostrzeżenia kompilatora pojawiają się pod edytorem. Kliknięcie przenosi do linii, dwuklik otwiera opis błędu
@@ -58,8 +65,12 @@ kilkadziesiąt tysięcy linii.
 - **⌘+klik** na nazwie albo **Edycja › Przejdź do deklaracji** (⌃⌘J) przenosi do deklaracji — w tym samym źródle, w
   innym otwartym oknie albo w obiekcie z bazy (w nowym oknie). **Edycja › Nawigacja › Wstecz** (⌃⌘←) i **Naprzód**
   (⌃⌘→) wracają po skokach.
-- **Widok › Zawartość kodu** pokazuje drzewo struktury jednostki ze śledzeniem kursora, sortowaniem i menu (zaznacz,
-  kopiuj, wytnij, testuj podprogram). Pod edytorem **hierarchia kodu** pokazuje ścieżkę od kursora (pakiet › procedura
+- **Widok › Zawartość kodu** pokazuje drzewo struktury: osobno specyfikację i ciało pakietu (typu), w nich podprogramy
+  z parametrami i typem zwracanym (pełny nagłówek w podpowiedzi), typy (rekord, tabela, REF CURSOR, podtyp), kursory,
+  zmienne, stałe, wyjątki, pragmy i podprogramy zagnieżdżone. Elementy prywatne ciała (niezadeklarowane w
+  specyfikacji) są pochylone. Klik albo Enter przenosi kursor do elementu (także na innej karcie), strzałki w drzewie
+  przesuwają kursor bez opuszczania drzewa. Pole nad drzewem filtruje nazwy. Drzewo śledzi kursor, ma sortowanie i menu
+  (zaznacz, kopiuj, wytnij, testuj podprogram, rozwiń/zwiń wszystko). Pod edytorem **hierarchia kodu** pokazuje ścieżkę od kursora (pakiet › procedura
   › blok); kliknięcie poziomu zaznacza go albo przenosi do nazwy.
 - Menu kontekstowe na nazwie obiektu bazy w edytorze oferuje te same czynności co Przeglądarka obiektów.
 - **F1** otwiera dokumentację Oracle dla słowa pod kursorem.

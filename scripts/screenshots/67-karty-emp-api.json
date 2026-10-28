@@ -1,0 +1,4 @@
+[
+  {"command": "ob.edit", "args": {"object": "EMP_API"}, "delay": 3},
+  {"command": "prog.selectUnit", "args": {"unit": "2"}, "delay": 2}
+]

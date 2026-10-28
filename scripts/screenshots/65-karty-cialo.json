@@ -1,0 +1,5 @@
+[
+  {"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/kadry_api.pck"}, "delay": 3},
+  {"command": "prog.selectUnit", "args": {"unit": "kadry_api body"}, "delay": 1},
+  {"command": "debug.select", "args": {"from": 7193, "to": 7199}, "delay": 2}
+]
