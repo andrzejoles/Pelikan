@@ -177,8 +177,8 @@ enum EditorExtraCommands {
                 var resolved: [String: JSONValue] = [:]
                 // Ze wstążki bez argumentów — wybór plików, potem połączenia z listy.
                 if let ui = ctx.askingUI, sources == nil || name == nil {
-                    let names = ws.connections.connections.map(\.displayName).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-                    guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak zdefiniowanych połączeń")) }
+                    let defs = ws.connections.connections.sorted(by: ConnectionStore.alphabetical)
+                    guard !defs.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak zdefiniowanych połączeń")) }
                     if sources == nil {
                         let chosen = await ui.chooseFilesToOpen()
                         guard !chosen.isEmpty else { throw CommandError.cancelledByUser }
@@ -186,12 +186,14 @@ enum EditorExtraCommands {
                         resolved["path"] = .array(chosen.map { .string($0.path) })
                     }
                     if name == nil {
-                        name = try await ctx.choose(L10n.tr("Otwórz z połączeniem"), names.map { (label: $0, value: $0) })
+                        // Wartość — identyfikator: dwa połączenia o tej samej nazwie da się rozróżnić („X”, „X (2)”).
+                        name = try await ctx.choose(L10n.tr("Otwórz z połączeniem"), defs.map { (label: $0.displayName, value: $0.id.uuidString) })
                         if let name { resolved["connection"] = .string(name) }
                     }
                 }
                 guard let sources, let name else { throw CommandError.invalidArgument("path", "") }
-                guard let def = ws.connections.connections.first(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
+                guard let def = UUID(uuidString: name).flatMap(ws.connections.connection)
+                        ?? ws.connections.connections.first(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
                     throw CommandError.invalidArgument("connection", name)
                 }
                 let files = FileOpening.files(from: sources)
