@@ -866,11 +866,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         alert.messageText = title
         alert.informativeText = L10n.tr("Wybierz wartość")
         let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 260, height: 26), pullsDown: false)
-        popup.addItems(withTitles: values)
+        // Pozycje pojedynczo: `addItems(withTitles:)` pomija powtórzone tytuły, a wynik to wartość z listy wg indeksu.
+        for v in values { popup.menu?.addItem(NSMenuItem(title: v, action: nil, keyEquivalent: "")) }
         alert.accessoryView = popup
         alert.addButton(withTitle: L10n.tr("Wybierz"))
         alert.addButton(withTitle: L10n.tr("Anuluj"))
-        return alert.runModal() == .alertFirstButtonReturn ? popup.titleOfSelectedItem : nil
+        guard alert.runModal() == .alertFirstButtonReturn, values.indices.contains(popup.indexOfSelectedItem) else { return nil }
+        return values[popup.indexOfSelectedItem]
     }
 
     /// Kalendarz przy edycji daty (PD-GRID-005): graficzny wybór dnia, z czasem — pole godziny.

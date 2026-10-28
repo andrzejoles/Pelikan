@@ -198,6 +198,14 @@ enum EditorCommands {
                 let ws = ctx.workspace
                 var user = ctx.arguments.string("user")
                 if user == nil, let m = ws.metadata(for: ws.toolConnection()) { user = try? await m.currentSchema() }
+                // Bez połączenia (wstążka) — pytanie o użytkownika; pusta nazwa to rezygnacja.
+                if user == nil, let ui = ctx.askingUI {
+                    guard let u = await ui.askText(L10n.tr("Uprawnienia debugera"), message: L10n.tr("Użytkownik bazy, który ma debugować PL/SQL"),
+                                                   defaultValue: "")?.trimmingCharacters(in: .whitespaces), !u.isEmpty else {
+                        throw CommandError.cancelledByUser
+                    }
+                    user = u
+                }
                 guard let user, SessionManager.isSafeIdentifier(user) else { throw CommandError.invalidArgument("user", user ?? "") }
                 let script = """
                     -- Uprawnienia debugera PL/SQL dla \(user.uppercased()) — wykonuje administrator (DBA).

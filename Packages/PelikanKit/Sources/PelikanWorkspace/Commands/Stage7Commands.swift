@@ -135,6 +135,8 @@ enum Stage7Commands {
                 var kind = CodeGenerator.Kind(rawValue: ctx.arguments.string("kind") ?? "")
                 if kind == nil, ctx.arguments.string("kind") != nil || ctx.askingUI == nil { throw CommandError.missingArgument("kind") }
                 let (o, m) = try await ObjectCommands.target(ctx)
+                // Wybrane w oknie — do nagrania w makrze (odtworzenie bez pytania).
+                var resolved: [String: JSONValue] = [:]
                 // Ze wstążki bez argumentu — rodzaje kodu dla zaznaczonego obiektu (jak menu Object Browsera).
                 if kind == nil {
                     let kinds = CodeGenerator.Kind.kinds(for: o.type)
@@ -144,6 +146,7 @@ enum Stage7Commands {
                     kind = kinds.count == 1 ? kinds[0] : try await ctx.choose(L10n.tr("Generuj kod"), kinds.map { (label: $0.displayName, value: $0) })
                 }
                 guard let kind else { throw CommandError.missingArgument("kind") }
+                if ctx.arguments.string("kind") == nil { resolved["kind"] = .string(kind.rawValue) }
                 let code: String
                 if kind == .call {
                     guard [.procedure, .function, .package, .packageBody].contains(o.type) else {
@@ -157,6 +160,7 @@ enum Stage7Commands {
                         let names = Array(Set(try await m.children(of: spec).filter { $0.kind == .subprogram }.map(\.name))).sorted()
                         guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Pakiet nie ma podprogramów do wywołania")) }
                         member = try await ctx.choose(L10n.tr("Podprogram pakietu"), names.map { (label: $0, value: $0) })
+                        if let member { resolved["member"] = .string(member) }
                     }
                     code = try await TestRunner.script(for: o, member: member, metadata: m).0
                 } else {
@@ -180,7 +184,7 @@ enum Stage7Commands {
                     ws.bind(doc, to: m.connectionID)
                     doc.isModified = false
                 }
-                return CommandResult(value: .string(code))
+                return CommandResult(value: .string(code)).resolving(resolved)
             },
             // MARK: Snippety (SC-SNIP-001)
             Command(CommandDescriptor(id: "view.snippets", title: L10n.tr("Snippety"), category: .view,
@@ -199,17 +203,16 @@ enum Stage7Commands {
                 guard let doc = editor(ctx.workspace) else { return .ok }
                 var id = ctx.arguments.string("id")
                 // Ze wstążki, menu i palety — bez argumentu: wybór z listy biblioteki.
-                if id == nil, ctx.invoker == .user, let ui = ctx.ui {
-                    guard let chosen = await ui.chooseValue(L10n.tr("Wstaw snippet"), values: ctx.workspace.snippets.all.map(\.id).sorted()) else {
-                        throw CommandError.cancelledByUser
-                    }
-                    id = chosen
+                if id == nil, ctx.askingUI != nil {
+                    let ids = ctx.workspace.snippets.all.map(\.id).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+                    guard !ids.isEmpty else { throw CommandError.notAvailable(L10n.tr("Biblioteka snippetów jest pusta")) }
+                    id = try await ctx.choose(L10n.tr("Wstaw snippet"), ids.map { (label: $0, value: $0) })
                 }
                 guard let s = ctx.workspace.snippets.all.first(where: { $0.id == id }) else {
                     throw CommandError.invalidArgument("id", id ?? "")
                 }
                 try insert(s.text, into: doc)
-                return .ok
+                return ctx.arguments.string("id") == nil ? CommandResult().resolving(["id": .string(s.id)]) : .ok
             },
             Command(CommandDescriptor(id: "snippets.save", title: L10n.tr("Zapisz snippet"), category: .edit,
                                       parameters: [CommandParameter("category", .string, required: true, L10n.tr("Kategoria")),

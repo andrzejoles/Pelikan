@@ -775,7 +775,8 @@ public final class Workspace {
             } else {
                 try await command.run(context)
             }
-            notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))
+            notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)),
+                   resolved: result.resolvedArguments)
             Log.command.debug("Komenda \(id.rawValue, privacy: .public)\(invoker.isAgent ? " (agent)" : "", privacy: .public): \(ms: clock)")
             return result
         } catch {
@@ -816,8 +817,8 @@ public final class Workspace {
         }
     }
 
-    private func notify(_ record: CommandInvocationRecord) {
-        recordMacroInvocation(record)
+    private func notify(_ record: CommandInvocationRecord, resolved: CommandArguments? = nil) {
+        recordMacroInvocation(record, resolved: resolved)
         for o in invocationObservers { o(record) }
     }
 }

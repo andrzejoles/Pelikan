@@ -170,16 +170,25 @@ struct FileBrowserPane: View {
         .onChange(of: workspace.fileBrowser.locations) {
             if model.location == nil { model.locationID = workspace.fileBrowser.locations.first?.id }
         }
-        // Zaznaczenie i pokazana lokalizacja są domyślnymi argumentami komend fb.* ze wstążki (tylko przy widocznym panelu).
-        .onChange(of: selection) { workspace.fileBrowser.selectedURL = selection.map { URL(fileURLWithPath: $0) } }
+        // Zaznaczenie i pokazana lokalizacja są domyślnymi argumentami komend fb.* ze wstążki (tylko przy widocznym panelu,
+        // `FileBrowser.isPaneVisible`). Zaznaczenie synchronizowane w obie strony: komenda (zmiana nazwy, Kosz) ustawia
+        // nowe zaznaczenie modelu, a panel je podświetla po odświeżeniu drzewa.
+        .onChange(of: selection) {
+            let url = selection.map { URL(fileURLWithPath: $0) }
+            if workspace.fileBrowser.selectedURL?.standardizedFileURL.path != url?.standardizedFileURL.path {
+                workspace.fileBrowser.selectedURL = url
+            }
+        }
+        .onChange(of: workspace.fileBrowser.selectedURL) {
+            let path = workspace.fileBrowser.selectedURL?.standardizedFileURL.path
+            guard path != selection.map({ URL(fileURLWithPath: $0).standardizedFileURL.path }) else { return }
+            selection = path
+            model.reload()
+        }
         .onAppear {
             workspace.fileBrowser.currentLocationID = model.locationID
             workspace.fileBrowser.selectedURL = selection.map { URL(fileURLWithPath: $0) }
             model.reload()
-        }
-        .onDisappear {
-            workspace.fileBrowser.currentLocationID = nil
-            workspace.fileBrowser.selectedURL = nil
         }
         // Odświeżanie co 5 s (git status, daty katalogów) tylko przy widocznej karcie Pliki (zadanie kończy się, gdy
         // karta znika z okna) i aktywnej aplikacji — wcześniej zegar odpytywał git przez cały czas działania aplikacji.
@@ -360,5 +369,13 @@ final class FileBrowserPaneController: NSViewController {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    override func loadView() { view = NSHostingView(rootView: FileBrowserPane(workspace: workspace).interfaceFont()) }
+    override func loadView() {
+        view = NSHostingView(rootView: FileBrowserPane(workspace: workspace).interfaceFont())
+        // Zwinięta lewa kolumna jest ukryta (nie odpięta) — SwiftUI nie zgłasza wtedy zniknięcia panelu, więc komendy
+        // fb.* sprawdzają widoczność widoku przy każdym użyciu zaznaczenia.
+        workspace.fileBrowser.isPaneVisible = { [weak self] in
+            guard let self, self.isViewLoaded, let window = self.view.window, window.isVisible, !window.isMiniaturized else { return false }
+            return !self.view.isHiddenOrHasHiddenAncestor && self.view.visibleRect.width > 1 && self.view.visibleRect.height > 1
+        }
+    }
 }

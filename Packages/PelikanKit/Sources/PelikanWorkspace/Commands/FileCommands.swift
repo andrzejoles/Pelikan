@@ -41,11 +41,16 @@ enum FileCommands {
         return FileManager.default.fileExists(atPath: u.path, isDirectory: &isDir) && isDir.boolValue
     }
 
-    /// Ścieżka z argumentu albo — gdy wywołuje użytkownik (wstążka, paleta) — istniejący element zaznaczony w panelu
-    /// Przeglądarki plików (jak obiekty biorą zaznaczenie Object Browsera).
+    /// Ścieżka z argumentu albo — gdy wywołuje użytkownik (wstążka, paleta) — istniejący element zaznaczony w widocznym
+    /// panelu Przeglądarki plików (jak obiekty biorą zaznaczenie Object Browsera).
     static func pathOrSelection(_ ctx: CommandContext) -> URL? {
         if let u = url(ctx) { return u }
-        guard ctx.invoker == .user, let s = ctx.workspace.fileBrowser.selectedURL?.standardizedFileURL,
+        return selection(ctx)
+    }
+
+    /// Istniejący element zaznaczony w widocznym panelu Przeglądarki plików (tylko dla użytkownika).
+    static func selection(_ ctx: CommandContext) -> URL? {
+        guard ctx.invoker == .user, let s = ctx.workspace.fileBrowser.visibleSelection?.standardizedFileURL,
               FileManager.default.fileExists(atPath: s.path) else { return nil }
         return s
     }
@@ -57,7 +62,7 @@ enum FileCommands {
         guard let ui = ctx.askingUI else { throw CommandError.missingArgument("directory") }
         let fb = ctx.workspace.fileBrowser
         if let s = pathOrSelection(ctx) { return isDirectory(s) ? s : s.deletingLastPathComponent() }
-        if let loc = fb.locations.first(where: { $0.id == fb.currentLocationID }), isDirectory(loc.url) { return loc.url.standardizedFileURL }
+        if let loc = fb.locations.first(where: { $0.id == fb.visibleLocationID }), isDirectory(loc.url) { return loc.url.standardizedFileURL }
         guard let d = await ui.chooseDirectory() else { throw CommandError.cancelledByUser }
         return d.standardizedFileURL
     }
@@ -118,7 +123,7 @@ enum FileCommands {
                 // Ze wstążki — lokalizacja pokazana w panelu (po potwierdzeniu), a bez niej wybór z listy lokalizacji.
                 if ctx.arguments.string("location") == nil, let ui = ctx.askingUI {
                     guard !browser.locations.isEmpty else { throw CommandError.notAvailable(L10n.tr("Przeglądarka plików nie ma lokalizacji")) }
-                    if let loc = browser.locations.first(where: { $0.id == browser.currentLocationID }) {
+                    if let loc = browser.locations.first(where: { $0.id == browser.visibleLocationID }) {
                         guard await ui.ask(L10n.tr("Usunąć lokalizację?"),
                                            message: L10n.tr("Lokalizacja „\(loc.name)” zniknie z Przeglądarki plików; pliki zostają."),
                                            buttons: [L10n.tr("Usuń lokalizację"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
@@ -138,10 +143,13 @@ enum FileCommands {
                              CommandParameter("kind", .string, L10n.tr("Rodzaj okna (domyślnie wg rozszerzenia)"), allowed: ["sql", "program", "test", "command"])],
                     effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo poleceń (domyślnie wg rozszerzenia)."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
+                // Ścieżka albo lista ścieżek (makro nagrywa pliki wybrane w oknie).
+                let given = (ctx.arguments.strings("path") ?? []).filter { !$0.isEmpty }
+                    .map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath).standardizedFileURL }
                 let files: [URL]
-                if let u = url(ctx) {
-                    files = [u]
-                } else if let u = pathOrSelection(ctx) {
+                if !given.isEmpty {
+                    files = given
+                } else if let u = selection(ctx) {
                     guard !isDirectory(u) else { throw CommandError.notAvailable(L10n.tr("Zaznacz plik w Przeglądarce plików")) }
                     files = [u]
                 } else {
@@ -152,7 +160,7 @@ enum FileCommands {
                 }
                 var kind = ctx.arguments.string("kind").flatMap(DocumentKind.init(rawValue:))
                 // „Otwórz jako…” ze wstążki — pytanie o rodzaj okna (menu panelu podaje ścieżkę, a rodzaj w argumencie).
-                if url(ctx) == nil, ctx.arguments.string("kind") == nil {
+                if given.isEmpty, ctx.arguments.string("kind") == nil {
                     let options: [(label: String, value: DocumentKind?)] = [
                         (L10n.tr("Wg rozszerzenia pliku"), nil), (L10n.tr("Okno SQL"), .sql), (L10n.tr("Okno programu"), .program),
                         (L10n.tr("Okno testu"), .test), (L10n.tr("Okno poleceń"), .command)]
@@ -160,7 +168,13 @@ enum FileCommands {
                 }
                 var title = ""
                 for f in files { title = try ctx.workspace.openFile(f, as: kind).fullTitle }
-                return CommandResult(message: title)
+                // Pliki i rodzaj okna wybrane w oknach albo z zaznaczenia — do nagrania w makrze (odtworzenie bez pytań).
+                var resolved: [String: JSONValue] = [:]
+                if given.isEmpty {
+                    resolved["path"] = files.count == 1 ? .string(files[0].path) : .array(files.map { .string($0.path) })
+                    if let kind, ctx.arguments.string("kind") == nil { resolved["kind"] = .string(kind.rawValue) }
+                }
+                return CommandResult(message: title).resolving(resolved)
             },
             command("fb.rename", L10n.tr("Zmień nazwę…"), submenu: fb,
                     params: [CommandParameter("path", .string, L10n.tr("Ścieżka (bez argumentu — zaznaczenie w Przeglądarce plików)")),
@@ -207,8 +221,16 @@ enum FileCommands {
                     effect: .external, summary: L10n.tr("Przenosi plik albo katalog do Kosza (po potwierdzeniu); otwarte okno pliku zostaje jako okno bez pliku."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
                 let u = try requiredPath(ctx)
-                if ctx.ui != nil {
-                    guard await ctx.workspace.askSuppressible(.moveToTrash, title: L10n.tr("Przenieść do Kosza?"), message: u.lastPathComponent,
+                let shown = (u.path as NSString).abbreviatingWithTildeInPath
+                if url(ctx) == nil, let ui = ctx.ui {
+                    // Element z zaznaczenia panelu (wstążka, paleta) — pytanie zawsze, także przy wyłączonym potwierdzeniu:
+                    // użytkownik mógł nie zauważyć, co jest zaznaczone.
+                    guard await ui.ask(L10n.tr("Przenieść do Kosza?"), message: shown,
+                                       buttons: [L10n.tr("Przenieś do Kosza"), L10n.tr("Anuluj")]) == 0 else {
+                        throw CommandError.cancelledByUser
+                    }
+                } else if ctx.ui != nil {
+                    guard await ctx.workspace.askSuppressible(.moveToTrash, title: L10n.tr("Przenieść do Kosza?"), message: shown,
                                                               buttons: [L10n.tr("Przenieś do Kosza")]) == 0 else {
                         throw CommandError.cancelledByUser
                     }

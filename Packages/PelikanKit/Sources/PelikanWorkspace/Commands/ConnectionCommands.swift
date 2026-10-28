@@ -320,10 +320,12 @@ public enum ConnectionCommands {
                                       summary: L10n.tr("Tworzy folder na liście połączeń."), inMenu: false, feature: "PD-CONN-003")) { ctx in
                 var name = ctx.arguments.string("name")
                 if name == nil, let ui = ctx.askingUI {
-                    guard let n = await ui.askText(L10n.tr("Nowy folder"), message: L10n.tr("Nazwa folderu na liście połączeń"), defaultValue: "") else {
+                    // Pusta nazwa w oknie — rezygnacja (jak Anuluj).
+                    guard let n = await ui.askText(L10n.tr("Nowy folder"), message: L10n.tr("Nazwa folderu na liście połączeń"), defaultValue: "")?
+                        .trimmingCharacters(in: .whitespaces), !n.isEmpty else {
                         throw CommandError.cancelledByUser
                     }
-                    name = n.trimmingCharacters(in: .whitespaces)
+                    name = n
                 }
                 guard let name, !name.isEmpty else { throw CommandError.missingArgument("name") }
                 let parent = ctx.arguments.string("parent").flatMap(UUID.init(uuidString:))

@@ -168,10 +168,22 @@ public struct CommandDescriptor: Sendable {
 public struct CommandResult: Sendable {
     public var message: String?
     public var value: JSONValue?
+    /// Argumenty wybrane przez użytkownika w oknie pytania (komenda wywołana bez nich, np. ze wstążki) — nagrywane
+    /// w makrze zamiast pustych, żeby odtworzenie nie otwierało znowu okna (D191).
+    public var resolvedArguments: CommandArguments?
 
-    public init(message: String? = nil, value: JSONValue? = nil) {
+    public init(message: String? = nil, value: JSONValue? = nil, resolvedArguments: CommandArguments? = nil) {
         self.message = message
         self.value = value
+        self.resolvedArguments = resolvedArguments
+    }
+
+    /// Ten sam wynik z argumentami wybranymi w oknie pytania (puste — bez zmian).
+    public func resolving(_ arguments: [String: JSONValue]) -> CommandResult {
+        guard !arguments.isEmpty else { return self }
+        var r = self
+        r.resolvedArguments = CommandArguments((resolvedArguments?.values ?? [:]).merging(arguments) { $1 })
+        return r
     }
 
     public static let ok = CommandResult()
@@ -248,8 +260,23 @@ public struct CommandContext {
     /// brak okna); anulowanie — `CommandError.cancelledByUser`.
     func choose<T>(_ title: String, _ options: [(label: String, value: T)]) async throws -> T? {
         guard let ui = askingUI else { return nil }
-        guard let label = await ui.chooseValue(title, values: options.map(\.label)) else { throw CommandError.cancelledByUser }
-        return options.first { $0.label == label }?.value
+        let labels = Self.uniqueLabels(options.map(\.label))
+        guard let label = await ui.chooseValue(title, values: labels) else { throw CommandError.cancelledByUser }
+        return labels.firstIndex(of: label).map { options[$0].value }
+    }
+
+    /// Etykiety listy wyboru bez powtórzeń (wynik wyboru to etykieta): kolejne takie same dostają dopisek „(2)”, „(3)”…
+    static func uniqueLabels(_ labels: [String]) -> [String] {
+        var used = Set<String>()
+        return labels.map { label in
+            var l = label
+            var n = 1
+            while !used.insert(l).inserted {
+                n += 1
+                l = "\(label) (\(n))"
+            }
+            return l
+        }
     }
 }
 

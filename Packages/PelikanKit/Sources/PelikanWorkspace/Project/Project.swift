@@ -411,7 +411,7 @@ enum ProjectCommands {
                 guard let url else { throw CommandError.missingArgument("file") }
                 ctx.workspace.project = try Project.decode(Data(contentsOf: url))
                 ctx.workspace.projectURL = url
-                return .ok
+                return CommandResult().resolving(ctx.arguments.string("file") == nil ? ["file": .string(url.path)] : [:])
             },
             Command(CommandDescriptor(id: "project.close", title: L10n.tr("Zamknij projekt"), category: .project,
                                       agent: .none, effect: .uiState, summary: L10n.tr("Zapisuje i zamyka projekt."), feature: "PD-PROJ-001"),

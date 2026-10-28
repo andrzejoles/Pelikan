@@ -319,7 +319,7 @@ public enum Oracle23Commands {
                 let ddl = MLE.createModuleDDL(name: ctx.arguments.string("name") ?? url.deletingPathExtension().lastPathComponent,
                                               source: source, version: ctx.arguments.string("version"))
                 ctx.workspace.newDocument(.program, text: ddl + (ddl.hasSuffix("\n") ? "" : "\n") + "/\n")
-                return CommandResult(value: .string(ddl))
+                return CommandResult(value: .string(ddl)).resolving(ctx.arguments.string("file") == nil ? ["file": .string(url.path)] : [:])
             },
             Command(CommandDescriptor(id: "tools.debugMLE", title: L10n.tr("Debuguj moduł MLE po wykonaniu…"), category: .tools,
                                       parameters: [CommandParameter("module", .string, required: true, L10n.tr("Moduł")),

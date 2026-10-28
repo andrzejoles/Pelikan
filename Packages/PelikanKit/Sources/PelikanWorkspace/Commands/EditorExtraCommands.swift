@@ -170,8 +170,11 @@ enum EditorExtraCommands {
                     effect: .uiState, summary: L10n.tr("Otwiera plik (z katalogu — wszystkie skrypty) i przypina do okien wskazane połączenie."),
                     feature: "PD-FILE-004", validate: { _ in true }) { ctx in
                 let ws = ctx.workspace
-                var sources = ctx.arguments.string("path").map { [URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath)] }
+                // Ścieżka albo lista ścieżek (makro nagrywa pliki wybrane w oknie).
+                var sources = ctx.arguments.strings("path")?.filter { !$0.isEmpty }.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if sources?.isEmpty == true { sources = nil }
                 var name = ctx.arguments.string("connection")
+                var resolved: [String: JSONValue] = [:]
                 // Ze wstążki bez argumentów — wybór plików, potem połączenia z listy.
                 if let ui = ctx.askingUI, sources == nil || name == nil {
                     let names = ws.connections.connections.map(\.displayName).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
@@ -180,10 +183,11 @@ enum EditorExtraCommands {
                         let chosen = await ui.chooseFilesToOpen()
                         guard !chosen.isEmpty else { throw CommandError.cancelledByUser }
                         sources = chosen
+                        resolved["path"] = .array(chosen.map { .string($0.path) })
                     }
                     if name == nil {
-                        guard let n = await ui.chooseValue(L10n.tr("Otwórz z połączeniem"), values: names) else { throw CommandError.cancelledByUser }
-                        name = n
+                        name = try await ctx.choose(L10n.tr("Otwórz z połączeniem"), names.map { (label: $0, value: $0) })
+                        if let name { resolved["connection"] = .string(name) }
                     }
                 }
                 guard let sources, let name else { throw CommandError.invalidArgument("path", "") }
@@ -199,7 +203,7 @@ enum EditorExtraCommands {
                     d.connectionPinned = true
                     opened.append(f.lastPathComponent)
                 }
-                return CommandResult(value: .array(opened.map { .string($0) }))
+                return CommandResult(value: .array(opened.map { .string($0) })).resolving(resolved)
             },
             // MARK: Refaktoryzacja (PD-CA-014)
             refactoring("edit.extractLocalConstant", L10n.tr("Wydziel stałą lokalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną w podprogramie albo bloku."),

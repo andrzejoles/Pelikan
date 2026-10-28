@@ -182,13 +182,16 @@ public enum BuiltinCommands {
                 guard let doc = ctx.workspace.activeDocument, let name, let enc = TextFileCodec.encoding(named: name) else {
                     throw CommandError.invalidArgument("encoding", TextFileCodec.encodingNames.joined(separator: ", "))
                 }
+                // Wybrane w oknie — do nagrania w makrze.
+                let resolved: [String: JSONValue] = ctx.arguments.string("encoding") == nil ? ["encoding": .string(name)] : [:]
                 doc.fileFormat.encoding = enc
                 doc.fileFormat.hasBOM = false
                 doc.isModified = true
                 if let bad = TextFileCodec.firstUnencodable(doc.text, encoding: enc) {
                     return CommandResult(message: L10n.tr("Kodowanie \(name); znak „\(bad.character)” (linia \(bad.line), kolumna \(bad.column)) trzeba zmienić przed zapisem"))
+                        .resolving(resolved)
                 }
-                return CommandResult(message: L10n.tr("Kodowanie \(name)"))
+                return CommandResult(message: L10n.tr("Kodowanie \(name)")).resolving(resolved)
             },
             Command(CommandDescriptor(id: "file.close", title: L10n.tr("Zamknij okno"), category: .file, mac: ["cmd+w"],
                                       agent: .none, effect: .transaction, summary: L10n.tr("Zamyka bieżące okno."), feature: "PD-UI-004"),

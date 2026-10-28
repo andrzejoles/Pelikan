@@ -158,7 +158,11 @@ enum EditorToolCommands {
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let ws = ctx.workspace
                 let code = ctx.arguments.string("text") ?? (ctx.invoker == .user ? ctx.ui?.clipboardText() : nil) ?? ""
-                guard !code.isEmpty else { throw CommandError.missingArgument("text") }
+                guard !code.isEmpty else {
+                    // Ze wstążki — pusty schowek to brak danych, nie błąd argumentu.
+                    if ctx.arguments.string("text") == nil, ctx.askingUI != nil { throw CommandError.notAvailable(L10n.tr("Schowek nie zawiera tekstu")) }
+                    throw CommandError.missingArgument("text")
+                }
                 let format = ctx.arguments.string("format").flatMap { id in CopyFormat.all(dataDirectory: ws.dataDirectory).first { $0.id == id } }
                 let sql = format.map { $0.paste(code) } ?? CopyFormat.pasteDetecting(code)
                 try ws.insertInEditor(sql)
@@ -178,6 +182,7 @@ enum EditorToolCommands {
                     validate: { BuiltinCommands.editable($0) != nil && !$0.clipboardHistory.entries.isEmpty }) { ctx in
                 let ws = ctx.workspace
                 let i = Int(ctx.arguments.int("index") ?? 0)
+                guard !ws.clipboardHistory.entries.isEmpty else { throw CommandError.notAvailable(L10n.tr("Historia schowka jest pusta")) }
                 guard ws.clipboardHistory.entries.indices.contains(i) else { throw CommandError.invalidArgument("index", L10n.tr("brak wpisu")) }
                 let text = ws.clipboardHistory.entries[i].text
                 try ws.insertInEditor(text)

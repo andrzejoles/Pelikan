@@ -91,6 +91,13 @@ public final class FileBrowser {
     /// przez użytkownika bez argumentów (wstążka, paleta), jak obiekty biorą zaznaczenie Object Browsera.
     public var currentLocationID: UUID?
     public var selectedURL: URL?
+    /// Czy panel jest naprawdę widoczny (karta Pliki wybrana, lewa kolumna rozwinięta, okno na ekranie) — ustawia panel
+    /// aplikacji. NSSplitView zwija lewą kolumnę, ukrywając ją, a nie odpinając, więc sam stan panelu nie wystarcza.
+    @ObservationIgnored public var isPaneVisible: @MainActor () -> Bool = { true }
+
+    /// Zaznaczenie i lokalizacja panelu jako domyślne argumenty komend — tylko gdy użytkownik je widzi.
+    public var visibleSelection: URL? { isPaneVisible() ? selectedURL : nil }
+    public var visibleLocationID: UUID? { isPaneVisible() ? currentLocationID : nil }
 
     public init(fileURL: URL?) {
         self.fileURL = fileURL

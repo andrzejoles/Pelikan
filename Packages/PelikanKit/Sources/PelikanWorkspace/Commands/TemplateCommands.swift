@@ -161,11 +161,14 @@ enum TemplateCommands {
     static func insert(_ ctx: CommandContext, newWindow: Bool) async throws -> CommandResult {
         let ws = ctx.workspace
         var id = ctx.arguments.string("template")
+        // Wybrane w oknach (szablon, wartości zmiennych) — do nagrania w makrze (odtworzenie bez pytania).
+        var resolved: [String: JSONValue] = [:]
         // Ze wstążki, menu i palety — bez argumentu: wybór z listy szablonów (jak w panelu Szablony).
-        if id == nil, ctx.invoker == .user, let ui = ctx.ui {
-            guard let chosen = await ui.chooseValue(newWindow ? L10n.tr("Nowy program z szablonu") : L10n.tr("Wstaw szablon"),
-                                                    values: ws.templates.all.map(\.id).sorted()) else { throw CommandError.cancelledByUser }
-            id = chosen
+        if id == nil, ctx.askingUI != nil {
+            let ids = ws.templates.all.map(\.id).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+            guard !ids.isEmpty else { throw CommandError.notAvailable(L10n.tr("Biblioteka szablonów jest pusta")) }
+            id = try await ctx.choose(newWindow ? L10n.tr("Nowy program z szablonu") : L10n.tr("Wstaw szablon"), ids.map { (label: $0, value: $0) })
+            if let id { resolved["template"] = .string(id) }
         }
         guard let id, let t = ws.templates.template(id) else {
             throw CommandError.invalidArgument("template", L10n.tr("nie znaleziono szablonu"))
@@ -185,14 +188,15 @@ enum TemplateCommands {
             }
             guard let host = ws.activeDocument ?? ws.documents.last else {
                 // Bez okien formularz nie ma okna nadrzędnego — wartości domyślne.
-                return try await finish(ws, t, values: values, newWindow: newWindow)
+                return try await finish(ws, t, values: values, newWindow: newWindow).resolving(resolved)
             }
             guard let answers = await ui.askTemplateValues(requests, document: host) else { throw CommandError.cancelledByUser }
             for (k, v) in answers {
                 if case .text(let s) = v { values[k] = s } else if case .list(let l) = v { values[k] = l.joined(separator: ", ") }
             }
+            resolved["values"] = .object(values.mapValues { .string($0) })
         }
-        return try await finish(ws, t, values: values, newWindow: newWindow)
+        return try await finish(ws, t, values: values, newWindow: newWindow).resolving(resolved)
     }
 
     @MainActor
