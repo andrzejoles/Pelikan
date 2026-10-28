@@ -126,9 +126,15 @@ public final class Document: Identifiable {
         tabsCache = (textRevision, tabs)
     }
 
-    /// Zakres pozycji kursora na karcie widocznej w edytorze (ustawia edytor okna programu z kartami; nil — bez kart).
-    /// Komendy edycji i dodatkowe kursory nie wychodzą poza niego — tekst innych jednostek jest ukryty.
-    @ObservationIgnored public var unitEditBounds: ClosedRange<Int>?
+    /// Zakres pozycji kursora na karcie z kursorem (okno programu z kartami; nil — bez kart), liczony z modelu w chwili
+    /// wywołania — nie z widoku, który przełącza kartę dopiero po zmianie zaznaczenia (agent albo makro zmienia
+    /// zaznaczenie i od razu wywołuje komendę edycji). Komendy edycji i dodatkowe kursory nie wychodzą poza niego.
+    public var unitEditBounds: ClosedRange<Int>? {
+        let tabs = programUnitTabs
+        guard let i = ProgramUnitTabs.index(of: selectedRange.lowerBound, in: tabs) else { return nil }
+        let ns = text as NSString
+        return min(tabs[i].segment.lowerBound, ns.length)...ProgramUnitTabs.caretLimit(tabs[i], isLast: i == tabs.count - 1, in: ns)
+    }
 
     /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
     public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }

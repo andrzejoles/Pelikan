@@ -699,17 +699,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Nowa karta od początku (stare przesunięcie dotyczyło innego odcinka); cel przewija potem `scrollToSelection`.
         if changed { scrollView.contentView.scroll(to: NSPoint(x: scrollView.contentView.bounds.minX, y: 0)) }
         updateHidden()
-        publishEditBounds()
         if changed {
             ruler.needsDisplay = true
             onShownTabChange?(t)
         }
-    }
-
-    /// Zakres karty dla komend edycji i dodatkowych kursorów (`Document.unitEditBounds`) — publikuje edytor główny.
-    private func publishEditBounds() {
-        guard !isSecondary else { return }
-        document.unitEditBounds = visibleBounds().map { $0.lower...$0.upper }
     }
 
     /// Karty policzone od razu (zmiana obejmująca granicę kart: Zamień wszystko, formatowanie całości, Przywróć,
@@ -872,7 +865,6 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             func moveUpper(_ o: Int) -> Int { o < edited.lowerBound || (pure && o == edited.lowerBound) ? o : o >= oldEnd ? o + delta : edited.upperBound }
             foldHidden = Self.merged(foldHidden.map { moveLower($0.lowerBound)..<max(moveLower($0.lowerBound), moveUpper($0.upperBound)) })
             updateHidden(invalidate: false)
-            publishEditBounds()
             if spansBoundary { DispatchQueue.main.async { [weak self] in self?.recomputeTabsNow() } }
         }
         guard !updatingFromModel else { return }

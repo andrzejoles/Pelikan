@@ -78,7 +78,6 @@ struct ProgramUnitTabsTests {
         ws.activate(doc.id)
         let tabs = doc.programUnitTabs
         let limit = ProgramUnitTabs.caretLimit(tabs[0], isLast: false, in: Self.text as NSString)
-        doc.unitEditBounds = 0...limit
         // „Usuń następne słowo” na końcu karty specyfikacji usunęłoby znak nowej linii przed ciałem.
         doc.selectedRange = limit..<limit
         await #expect(throws: CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))) {
@@ -92,7 +91,19 @@ struct ProgramUnitTabsTests {
         try await ws.invoke("edit.addCursorBelow")
         #expect(doc.additionalSelections == [line(3)..<line(3)])
         doc.additionalSelections = []
-        doc.unitEditBounds = nil
+        // Granice z modelu w chwili wywołania: zaznaczenie przeniesione na kartę ciała i od razu komenda edycji
+        // (bez pętli zdarzeń, w której widok przełączyłby kartę) — zmiana w ciele dozwolona.
+        doc.selectedRange = line(10)..<line(11)
+        #expect(doc.unitEditBounds?.lowerBound == tabs[1].segment.lowerBound)
+        try await ws.invoke("edit.uppercase")
+        #expect(doc.text.contains("  PROCEDURE A IS\n"))
+        try await ws.invoke("edit.lowercase")
+        doc.text = Self.text
+        // Powiel linię w ostatniej linii karty specyfikacji — czyste wstawienie na granicy, dozwolone.
+        doc.selectedRange = limit..<limit
+        try await ws.invoke("edit.duplicateLine")
+        #expect((doc.text as NSString).length == (Self.text as NSString).length + 2)
+        doc.text = Self.text
         // Pamięć kart: liczba kart bez dzielenia tekstu po zmianie (walidacja wstążki przy każdym znaku).
         #expect(doc.unitTabCount == 2)
         doc.text = "x" + doc.text

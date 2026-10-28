@@ -2035,8 +2035,10 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   zawsze do końca tekstu. Zmiana obejmująca granicę (Zamień wszystko, formatowanie całości, Przywróć, historia
   lokalna, cofnięcie takich zmian) dzieli tekst na karty od razu, bez czekania na analizę w tle. Po analizie w tle,
   która zmieniła kartę (okno otwarte na linii, debuger, usunięcie jednostki), edytor przewija do kursora. Komendy
-  edycji z modelu nie zmieniają tekstu poza kartą (`Document.unitEditBounds` publikowane przez edytor — np. „Usuń
-  następne słowo” na końcu karty odmawia), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
+  edycji użytkownika i makr nie zmieniają tekstu poza kartą z kursorem (`Document.unitEditBounds` liczone z modelu
+  w chwili wywołania, nie z widoku — makro może zmienić kartę i od razu edytować; np. „Usuń następne słowo” na końcu
+  karty odmawia, „Powiel linię” w ostatniej linii karty jest dozwolone; agent działa na dokumencie bez tego
+  ograniczenia), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
   bez argumentu usuwa jednostkę karty z kursorem. Walidacja menu i wstążki komend kart korzysta z liczby kart z
   ostatniego podziału (`Document.unitTabCount`), bez dzielenia tekstu przy każdym znaku (R4-01); pozycja słowa typu
   liczona w tekście jednostki, nie w całym dokumencie. Numery linii listy komunikatów liczone raz na listę. ⌘A

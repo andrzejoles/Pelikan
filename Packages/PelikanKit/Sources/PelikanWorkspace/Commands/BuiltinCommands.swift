@@ -276,11 +276,15 @@ public enum BuiltinCommands {
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
-            // Okno programu z kartami: zmiana tylko w widocznej karcie (np. „Usuń następne słowo” na końcu karty nie
-            // usuwa znaku nowej linii przed następną jednostką).
-            if let b = doc.unitEditBounds {
+            // Okno programu z kartami: zmiana tylko w karcie z kursorem (np. „Usuń następne słowo” na końcu karty nie
+            // usuwa znaku nowej linii przed następną jednostką). Agent działa na dokumencie (D192).
+            if !ctx.invoker.isAgent, let b = doc.unitEditBounds {
                 let c = EditorShift.Change(old: doc.text, new: e.text)
-                guard c.prefix >= b.lowerBound, c.oldEnd <= b.upperBound else {
+                // Czyste wstawienie tuż za końcem karty (np. Powiel linię w ostatniej linii) — najmniejsza różnica
+                // wskazuje początek linii następnej karty, choć tekst wstawiono na końcu tej karty.
+                let pureInsertAtEnd = c.prefix == c.oldEnd && c.prefix == b.upperBound + 1
+                    && (doc.text as NSString).length > b.upperBound && (doc.text as NSString).character(at: b.upperBound) == 0x0A
+                guard c.prefix >= b.lowerBound, c.oldEnd <= b.upperBound || pureInsertAtEnd else {
                     throw CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))
                 }
             }
