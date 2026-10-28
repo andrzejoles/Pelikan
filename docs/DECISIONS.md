@@ -2084,4 +2084,12 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   razem z osobnymi plikami specyfikacji i ciała).
 - **Źródło dla agenta i szkielet testu:** `agent.source` i szkielet testu utPLSQL (okno programu i narzędzie agenta)
   stosują tę samą preferencję co okno programu — domyślnie bez „/” (agent może zapisać źródło do pliku w repozytorium).
+- **Szóste przejście przeglądu:** szablon jednostek wstawiany do okna SQL, poleceń albo testu (i do okna programu
+  z konwencją „/”) dostaje „/” po każdej jednostce — tam „/” kończy blok PL/SQL; w oknie programu bez „/”. Podział na
+  jednostki to jedno przejście po tokenach polecenia (pliki z setkami jednostek bez „/”). Treść źródła Java i modułu
+  MLE nie jest leksowana jak PL/SQL — następny nagłówek CREATE szukany tekstowo. `GRANT`, `REVOKE` i `SHOW ERRORS` na
+  początku linii za jednostką bez „/” nie doklejają się do niej (nie są wykonywane przy F8 — jak dotąd polecenia
+  inne niż CREATE); inne polecenia SQL*Plus (`EXIT`, `SET`, `PROMPT` — także słowa PL/SQL) za jednostką bez „/”
+  trafiają do jej tekstu (w konwencji właściciela nie występują). Opis narzędzia `agent.source`: źródło bez „/”, do
+  wykonania jako skrypt SQL*Plus każdą jednostkę trzeba zakończyć „/” albo kompilować osobno.
 

@@ -68,49 +68,101 @@ public enum ProgramCompiler {
     /// także na każdym nagłówku jednostki (`CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|TYPE|PROCEDURE|
     /// FUNCTION|TRIGGER|LIBRARY|JAVA|MLE MODULE …`) na początku linii — pliki jednostek bez `/` (konwencja właściciela,
     /// D192). Komentarze i literały nie są nagłówkami (lekser). Polecenie kończy się na ostatnim znaczącym znaku przed
-    /// następnym nagłówkiem (komentarz przed CREATE należy do następnej jednostki).
+    /// następnym nagłówkiem (komentarz przed CREATE należy do następnej jednostki). Na początku linii tnie też `GRANT`,
+    /// `REVOKE` i `SHOW ERRORS` (nie są poleceniami PL/SQL) — nie doklejają się do jednostki bez `/` przed nimi.
+    /// Treść źródła Java i modułu MLE nie jest leksowana jak PL/SQL (apostrof w `// don't` otwierałby literał) —
+    /// następny nagłówek szukany tekstowo. Jedno przejście po tokenach na polecenie (pliki z setkami jednostek).
     static func programStatements(_ text: String) -> [(start: Int, end: Int, line: Int, text: String)] {
         let ns = text as NSString
-        let trivia: Set<TokenKind> = [.whitespace, .newline, .lineComment, .blockComment]
         var out: [(start: Int, end: Int, line: Int, text: String)] = []
         for s in ScriptSplitter.split(text) {
             let start = min(s.start, ns.length), end = min(max(s.end, start), ns.length)
             let body = ns.substring(with: NSRange(location: start, length: end - start)) as NSString
-            let tokens = Lexer(body as String).tokenize()
-            // Kandydaci: CREATE jako pierwszy znaczący token linii (nie pierwszy w poleceniu) z nagłówkiem jednostki.
-            var cuts: [Int] = [0]
-            var lineStart = true
-            var firstSignificant = true
-            for t in tokens {
-                if t.kind == .newline { lineStart = true; continue }
-                if t.kind == .whitespace { continue }
-                defer { lineStart = false; firstSignificant = false }
-                guard lineStart, !firstSignificant, t.kind == .keyword || t.kind == .identifier,
-                      body.substring(with: NSRange(location: t.start, length: t.length)).uppercased() == "CREATE" else { continue }
-                let probe = body.substring(with: NSRange(location: t.start, length: min(600, body.length - t.start)))
-                if headerTokens(probe) != nil { cuts.append(t.start) }
-            }
-            for (k, cut) in cuts.enumerated() {
-                let limit = k + 1 < cuts.count ? cuts[k + 1] : body.length
-                // Koniec: ostatni znaczący token przed następnym nagłówkiem (ostatnie polecenie — koniec jak w podziale).
-                var pieceEnd = cut
-                if k + 1 < cuts.count {
-                    for t in tokens where t.start >= cut && t.start < limit && !trivia.contains(t.kind) { pieceEnd = t.start + t.length }
-                } else {
-                    pieceEnd = body.length
-                }
-                guard pieceEnd > cut else { continue }
-                var line = s.line
-                if cut > 0 {
-                    let before = body.substring(to: cut) as NSString
-                    var n = 0
-                    for i in 0..<before.length where before.character(at: i) == 0x0A { n += 1 }
-                    line += n
-                }
-                out.append((start + cut, start + pieceEnd, line, body.substring(with: NSRange(location: cut, length: pieceEnd - cut))))
+            // Linie liczone przyrostowo od początku polecenia (cięcia rosną).
+            var scanned = 0, newlines = 0
+            for piece in pieces(body) where piece.end > piece.start {
+                while scanned < piece.start { if body.character(at: scanned) == 0x0A { newlines += 1 }; scanned += 1 }
+                out.append((start + piece.start, start + piece.end, s.line + newlines,
+                            body.substring(with: NSRange(location: piece.start, length: piece.end - piece.start))))
             }
         }
         return out
+    }
+
+    /// Kawałki polecenia (zakresy w `body`): od cięcia do ostatniego znaczącego znaku przed następnym cięciem.
+    static func pieces(_ body: NSString) -> [(start: Int, end: Int)] {
+        let trivia: Set<TokenKind> = [.whitespace, .newline, .lineComment, .blockComment]
+        var out: [(start: Int, end: Int)] = []
+        var pieceStart = 0
+        var lexFrom = 0
+        func header(at o: Int) -> (type: DBObjectType, owner: String?, name: String, nameStart: Int, typeStart: Int)? {
+            headerTokens(body.substring(with: NSRange(location: o, length: min(600, body.length - o))))
+        }
+        func isForeign(_ o: Int) -> Bool { header(at: o).map { [.javaSource, .mleModule].contains($0.type) } ?? false }
+        /// Koniec znaczącego tekstu przed pozycją (bez białych znaków).
+        func trimmedEnd(before limit: Int, from lower: Int) -> Int {
+            var e = limit
+            while e > lower, let u = Unicode.Scalar(body.character(at: e - 1)), CharacterSet.whitespacesAndNewlines.contains(u) { e -= 1 }
+            return e
+        }
+        while true {
+            if isForeign(pieceStart) {
+                // Java / JavaScript: następny nagłówek tekstowo — CREATE na początku linii z nagłówkiem jednostki.
+                var next: Int?
+                var lineStart = NSMaxRange(body.lineRange(for: NSRange(location: pieceStart, length: 0)))
+                while lineStart < body.length {
+                    let line = body.lineRange(for: NSRange(location: lineStart, length: 0))
+                    var k = line.location
+                    while k < NSMaxRange(line), body.character(at: k) == 0x20 || body.character(at: k) == 0x09 { k += 1 }
+                    if k + 6 <= body.length, body.substring(with: NSRange(location: k, length: 6)).uppercased() == "CREATE", header(at: k) != nil {
+                        next = k
+                        break
+                    }
+                    lineStart = NSMaxRange(line)
+                }
+                guard let next else { out.append((pieceStart, body.length)); return out }
+                out.append((pieceStart, trimmedEnd(before: next, from: pieceStart)))
+                pieceStart = next
+                lexFrom = next
+                continue
+            }
+            let region = body.substring(from: lexFrom)
+            let tokens = Lexer(region).tokenize()
+            var lineStart = true
+            var lastSignificantEnd = pieceStart
+            var restart = false
+            var i = 0
+            while i < tokens.count {
+                let t = tokens[i]
+                let at = lexFrom + t.start
+                i += 1
+                if t.kind == .newline { lineStart = true; continue }
+                if t.kind == .whitespace { continue }
+                let wasLineStart = lineStart
+                lineStart = false
+                if wasLineStart, at > pieceStart, t.kind == .keyword || t.kind == .identifier {
+                    let word = body.substring(with: NSRange(location: at, length: t.length)).uppercased()
+                    var cut = false
+                    if word == "CREATE" {
+                        cut = header(at: at) != nil
+                    } else if word == "GRANT" || word == "REVOKE" {
+                        cut = true
+                    } else if word == "SHOW", let n = tokens[i...].first(where: { !trivia.contains($0.kind) }) {
+                        cut = ["ERRORS", "ERR", "ERROR"].contains((region as NSString).substring(with: NSRange(location: n.start, length: n.length)).uppercased())
+                    }
+                    if cut {
+                        out.append((pieceStart, lastSignificantEnd))
+                        pieceStart = at
+                        lastSignificantEnd = at
+                        if isForeign(at) { lexFrom = at; restart = true; break }
+                    }
+                }
+                if !trivia.contains(t.kind) { lastSignificantEnd = at + t.length }
+            }
+            if restart { continue }
+            out.append((pieceStart, body.length))
+            return out
+        }
     }
 
     /// Tekst bez jednostki (PD-PROG-001): od początku jej linii przez kończący „/” i następujące puste linie.

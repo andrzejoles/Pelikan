@@ -246,7 +246,7 @@ enum AgentDatabaseCommands {
             },
             Command(CommandDescriptor(id: "agent.source", title: L10n.tr("Źródło programu (agent)"), category: .help,
                                       parameters: [connectionParam, objectParam, typeParam], agent: .read, effect: .none,
-                                      summary: L10n.tr("Kod źródłowy programu z ALL_SOURCE (pakiet: specyfikacja i ciało) jako CREATE OR REPLACE."),
+                                      summary: L10n.tr("Kod źródłowy programu z ALL_SOURCE (pakiet: specyfikacja i ciało) jako CREATE OR REPLACE, jednostki bez „/” (preferencja okna programu); do wykonania jako skrypt SQL*Plus zakończ każdą jednostkę „/” albo kompiluj je osobno."),
                                       inMenu: false, feature: "AI-TOOL-001")) { ctx in
                 let (_, s) = try await ctx.workspace.agentDatabase(ctx, action: "get_source")
                 let o = try await resolve(ctx.arguments.string("object") ?? "", type: ctx.arguments.string("type"), in: s)

@@ -29261,30 +29261,30 @@
         }
       }
     },
-    "Kod źródłowy programu z ALL_SOURCE (pakiet: specyfikacja i ciało) jako CREATE OR REPLACE." : {
+    "Kod źródłowy programu z ALL_SOURCE (pakiet: specyfikacja i ciało) jako CREATE OR REPLACE, jednostki bez „/” (preferencja okna programu); do wykonania jako skrypt SQL*Plus zakończ każdą jednostkę „/” albo kompiluj je osobno." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Program source code from ALL_SOURCE (package: specification and body) as CREATE OR REPLACE."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вихідний код програми з ALL_SOURCE (пакет: специфікація й тіло) як CREATE OR REPLACE."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Código fuente del programa desde ALL_SOURCE (paquete: especificación y cuerpo) como CREATE OR REPLACE."
+            "value" : "Program source code from ALL_SOURCE (package: specification and body) as CREATE OR REPLACE, units without “/” (program window preference); to run it as a SQL*Plus script, end each unit with “/” or compile the units separately."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quellcode des Programms aus ALL_SOURCE (Paket: Spezifikation und Body) als CREATE OR REPLACE."
+            "value" : "Quellcode des Programms aus ALL_SOURCE (Paket: Spezifikation und Body) als CREATE OR REPLACE, Einheiten ohne „/“ (Einstellung des Programmfensters); zum Ausführen als SQL*Plus-Skript jede Einheit mit „/“ abschließen oder die Einheiten einzeln kompilieren."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código fuente del programa de ALL_SOURCE (paquete: especificación y cuerpo) como CREATE OR REPLACE, unidades sin «/» (preferencia de la ventana de programa); para ejecutarlo como script de SQL*Plus, termine cada unidad con «/» o compile las unidades por separado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вихідний код програми з ALL_SOURCE (пакет: специфікація й тіло) як CREATE OR REPLACE, одиниці без «/» (параметр вікна програми); щоб виконати як скрипт SQL*Plus, завершіть кожну одиницю «/» або компілюйте одиниці окремо."
           }
         }
       }

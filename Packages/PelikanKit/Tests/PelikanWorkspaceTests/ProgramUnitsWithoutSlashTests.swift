@@ -83,4 +83,48 @@ struct ProgramUnitsWithoutSlashTests {
         try await ws.invoke("prog.addUnit", CommandArguments(["text": .string("create procedure b is begin null; end;")]))
         #expect(withSlash.text == "create procedure a is begin null; end;\n/\n\ncreate procedure b is begin null; end;\n/\n")
     }
+
+    @Test("Java i MLE bez „/”: treść nie jest leksowana jak PL/SQL; GRANT i SHOW ERRORS za jednostką nie doklejają się")
+    func foreignAndNonUnits() {
+        let java = "create or replace and compile java source named \"A\" as\npublic class A {\n  // don't stop\n  String s = \"it's\";\n}\ncreate or replace procedure p is begin null; end;\n"
+        #expect(ProgramCompiler.units(in: java).map(\.type) == [.javaSource, .procedure])
+        let mle = "create or replace mle module m language javascript as\nexport function f() { return `don't`; }\ncreate or replace function g return number is begin return 1; end;\n"
+        #expect(ProgramCompiler.units(in: mle).map(\.type) == [.mleModule, .function])
+        let grants = "create procedure p is begin null; end;\ngrant execute on p to scott;\nshow errors\ncreate procedure q is begin null; end;\n"
+        let units = ProgramCompiler.units(in: grants)
+        #expect(units.map(\.name) == ["P", "Q"])
+        #expect(units.first?.text == "create procedure p is begin null; end;")
+        // Zmienna „show” w PL/SQL to nie SHOW ERRORS.
+        let body = "create procedure p is\n  show number;\nbegin\n  show := 1;\nend;\n"
+        #expect(ProgramCompiler.units(in: body).first?.text.hasSuffix("end;") == true)
+    }
+
+    @Test("wydajność: plik bez „/” z 600 jednostkami — podział liniowy, linie i teksty jednostek")
+    func manyUnits() {
+        var text = ""
+        for i in 0..<600 { text += "create or replace procedure p\(i) is\nbegin\n  null;\nend p\(i);\n\n" }
+        let start = Date()
+        let units = ProgramCompiler.units(in: text)
+        let elapsed = Date().timeIntervalSince(start)
+        #expect(units.count == 600)
+        #expect(units.last?.line == 599 * 5 && units.last?.text.hasSuffix("end p599;") == true)
+        #expect(elapsed < 3, "\(elapsed) s")
+    }
+
+    @Test("szablon jednostek w oknie SQL: jednostki zakończone „/” (blok PL/SQL), kursor przesunięty; w oknie programu bez „/”")
+    func templateInSQLWindow() async throws {
+        let ws = Workspace()
+        let sql = ws.newDocument(.sql, text: "")
+        ws.activate(sql.id)
+        let pkg = TemplateLibrary.programFolder + "/" + L10n.tr("Pakiet")
+        try await ws.invoke("edit.insertTemplate", CommandArguments(["template": .string(pkg), "values": .object(["Nazwa": .string("kadry")])]))
+        #expect(sql.text.components(separatedBy: "\n").filter { $0 == "/" }.count == 2)
+        #expect(ScriptSplitter.split(sql.text).count == 2)
+        #expect((sql.text as NSString).substring(from: sql.selectedRange.lowerBound).hasPrefix("null;"))
+        let prog = ws.newDocument(.program, text: "")
+        ws.activate(prog.id)
+        try await ws.invoke("edit.insertTemplate", CommandArguments(["template": .string(pkg), "values": .object(["Nazwa": .string("kadry")])]))
+        #expect(!prog.text.components(separatedBy: "\n").contains("/"))
+        #expect(ProgramCompiler.units(in: prog.text).count == 2)
+    }
 }

@@ -34,6 +34,27 @@ public enum ProgramText {
         return slash ? parts.map { $0 + "\n/\n" }.joined(separator: "\n") : parts.joined(separator: "\n\n") + "\n"
     }
 
+    /// Tekst z „/” w osobnej linii po każdej jednostce, która go nie ma (szablon jednostek wstawiany do okna SQL, okna
+    /// poleceń albo okna programu z konwencją „/”) — reszta tekstu bez zmian. `inserted` — pozycje (w tekście
+    /// wejściowym), za którymi dopisano „\n/”, do przesunięcia kursora.
+    public static func terminatingUnits(_ text: String) -> (text: String, inserted: [Int]) {
+        let ns = text as NSString
+        var out = text as NSString
+        var inserted: [Int] = []
+        for u in ProgramCompiler.units(in: text).sorted(by: { $0.range.upperBound > $1.range.upperBound }) {
+            let end = min(u.range.upperBound, ns.length)
+            var k = end
+            while k < ns.length, [0x20, 0x09, 0x0D, 0x0A].contains(ns.character(at: k)) { k += 1 }
+            if k < ns.length, ns.character(at: k) == 0x2F {
+                let line = ns.lineRange(for: NSRange(location: k, length: 0))
+                if ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" { continue }
+            }
+            out = out.replacingCharacters(in: NSRange(location: end, length: 0), with: "\n/") as NSString
+            inserted.append(end)
+        }
+        return (out as String, inserted.sorted())
+    }
+
     /// Czy tekst okna kończy jednostki „/” (konwencja pliku — nowa jednostka dopisywana tak samo).
     public static func usesSlash(_ text: String) -> Bool {
         ScriptSplitter.split(text).contains { $0.terminator == .slash && ProgramCompiler.header($0.text) != nil }
