@@ -160,17 +160,84 @@ public final class ConnectionStore {
         try save()
     }
 
-    /// Połączenia widoczne w folderze: jawnie przypisane + pasujące do reguły (UG 19.2).
+    /// Połączenia widoczne w folderze: jawnie przypisane + pasujące do reguły (UG 19.2), alfabetycznie.
     public func connections(in folderID: UUID?) -> [ConnectionDefinition] {
         let explicit = connections.filter { $0.folderID == folderID }
-        // W korzeniu bez połączeń pokazanych już w folderze z regułą (inaczej byłyby dwa razy).
-        guard let folderID else { return explicit.filter { c in !folders.contains { $0.matches(c) } } }
-        guard let folder = folders.first(where: { $0.id == folderID }), folder.hasRule else { return explicit }
-        let matched = connections.filter { $0.folderID != folderID && folder.matches($0) }
-        return explicit + matched
+        let visible: [ConnectionDefinition]
+        if let folderID {
+            if let folder = folders.first(where: { $0.id == folderID }), folder.hasRule {
+                visible = explicit + connections.filter { $0.folderID != folderID && folder.matches($0) }
+            } else {
+                visible = explicit
+            }
+        } else {
+            // W korzeniu bez połączeń pokazanych już w folderze z regułą (inaczej byłyby dwa razy).
+            visible = explicit.filter { c in !folders.contains { $0.matches(c) } }
+        }
+        return visible.sorted(by: Self.alphabetical)
     }
 
-    public func subfolders(of parentID: UUID?) -> [ConnectionFolder] { folders.filter { $0.parentID == parentID } }
+    /// Podfoldery alfabetycznie (jak w Finderze: bez wielkości liter, liczby w nazwach naturalnie).
+    public func subfolders(of parentID: UUID?) -> [ConnectionFolder] {
+        folders.filter { $0.parentID == parentID }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// Kolejność połączeń na liście, w Object Browserze i w menu: alfabetycznie po nazwie wyświetlanej.
+    nonisolated public static func alphabetical(_ a: ConnectionDefinition, _ b: ConnectionDefinition) -> Bool {
+        switch a.displayName.localizedStandardCompare(b.displayName) {
+        case .orderedAscending: true
+        case .orderedDescending: false
+        case .orderedSame: a.id.uuidString < b.id.uuidString
+        }
+    }
+
+    /// Przenosi połączenie do folderu (nil — poziom główny listy).
+    public func move(_ id: UUID, to folderID: UUID?) throws {
+        guard let i = connections.firstIndex(where: { $0.id == id }) else { throw Self.notOnList(id, temporary: temporary[id] != nil) }
+        if let folderID, !folders.contains(where: { $0.id == folderID }) {
+            throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
+        }
+        guard connections[i].folderID != folderID else { return }
+        connections[i].folderID = folderID
+        try save()
+    }
+
+    /// Kopia definicji pod inną nazwą (nowy identyfikator, unikalna nazwa) razem z zapisanymi hasłami bazy i tunelu SSH;
+    /// bez historii użycia i bez łączenia przy starcie (dwa połączenia z tą samą bazą). Hasło podane tylko w tej sesji też
+    /// przechodzi — tylko do pamięci, jak w oryginale. Każdy błąd wycofuje kopię razem z jej hasłami.
+    @discardableResult
+    public func duplicate(_ id: UUID, name: String) throws -> ConnectionDefinition {
+        guard var copy = connections.first(where: { $0.id == id }) else { throw Self.notOnList(id, temporary: temporary[id] != nil) }
+        guard !connections.contains(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
+            throw CommandError.invalidArgument("name", L10n.tr("połączenie o nazwie „\(name)” już istnieje"))
+        }
+        copy.id = UUID()
+        copy.name = name
+        copy.lastUsed = nil
+        copy.connectOnStartup = false
+        do {
+            if copy.savePassword, let p = try? secrets.password(for: id.uuidString) {
+                try secrets.setPassword(p, for: copy.id.uuidString)
+            }
+            if let p = sessionPasswords[id] { sessionPasswords[copy.id] = p }
+            if let p = sshPassword(for: id) { try secrets.setPassword(p, for: Self.sshAccount(copy.id)) }
+            connections.append(copy)
+            try save()
+        } catch {
+            // Bez osieroconych haseł w Pęku kluczy, gdy kopii nie udało się zapisać w całości.
+            connections.removeAll { $0.id == copy.id }
+            sessionPasswords[copy.id] = nil
+            try? secrets.deletePassword(for: copy.id.uuidString)
+            try? secrets.deletePassword(for: Self.sshAccount(copy.id))
+            throw error
+        }
+        return copy
+    }
+
+    private static func notOnList(_ id: UUID, temporary: Bool) -> CommandError {
+        temporary ? .notAvailable(L10n.tr("Połączenia tymczasowego (CONNECT w oknie poleceń) nie można skopiować ani przenieść"))
+            : .invalidArgument("connection", L10n.tr("nieznane połączenie"))
+    }
 
     // MARK: Eksport / import (hasła tylko w pliku eksportu z hasłami, D186)
 

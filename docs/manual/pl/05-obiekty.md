@@ -9,14 +9,22 @@ Karta **Obiekty** w lewej kolumnie pokazuje obiekty baz otwartych połączeń w 
 **Moduły MLE**, **Środowiska MLE**, **Domeny**, **Grafy właściwości**, **Adnotacje** i **Asercje**. Foldery pojawiają
 się tylko wtedy, gdy wersja bazy i Twoje uprawnienia na to pozwalają.
 
-Na najwyższym poziomie drzewa są **otwarte połączenia** — jak w DBeaverze. Połączenie główne jest pierwsze,
-oznaczone gwiazdką, pogrubione i opisane „główne”; pozostałe pojawiają się po połączeniu (np. przez okno na innym
+Na najwyższym poziomie drzewa są **otwarte połączenia** — jak w DBeaverze. Połączenia są ułożone alfabetycznie; główne
+jest oznaczone gwiazdką, pogrubione i opisane „główne”; pozostałe pojawiają się po połączeniu (np. przez okno na innym
 połączeniu albo **Połącz** na liście połączeń) i znikają po rozłączeniu. Każde połączenie ma pod sobą własne foldery,
 **Ostatnie** i wybór użytkownika. Czynności na obiekcie (Pokaż dane, Edytuj, DDL, Rekompiluj, przeciągnięcie do
 edytora…) działają na połączeniu gałęzi, a okna otwarte dla obiektu innego połączenia niż główne są do niego
 przypięte. Menu połączenia w drzewie: **Ustaw jako połączenie główne**, **Nowe okno SQL na tym połączeniu**,
 **Odśwież**, **Edytuj połączenie…** i **Rozłącz**. Połączenie główne jest domyślne tylko wtedy, gdy z kontekstu nie
 wynika inne — nowe okno z menu, narzędzie bez aktywnego okna.
+
+Na końcu folderów każdego połączenia są **DBA** — obiekty słownika z przedrostkiem `DBA_` — i **DBMS** — obiekty z
+przedrostkiem `DBMS_`, głównie pakiety Oracle. Widać w nich tylko obiekty, do których masz uprawnienia (nadane wprost,
+przez rolę albo PUBLIC); publiczne synonimy są pominięte, a obiekty schematu SYS pokazane bez przedrostka „SYS.”.
+Obiekty rozwijają się i otwierają jak w pozostałych folderach, filtr nazw też działa. Zmiana obiektu schematu
+utrzymywanego przez Oracle (SYS, XDB…) — rekompilacja, informacja debugowania, usunięcie, zmiana nazwy, włączenie albo
+kompilacja w oknie programu — zawsze wymaga osobnego potwierdzenia (domyślnie **Anuluj**), bo może unieważnić obiekty
+w całej bazie.
 
 - **Wybór użytkownika** nad drzewem (osobno dla każdego połączenia):
   - *Bieżący użytkownik* — obiekty Twojego schematu oraz publiczne łącza bazy danych i publiczne synonimy obiektów

@@ -1,0 +1,4 @@
+[
+  {"command": "connection.connect", "args": {"connection": "dev_baza_druga"}, "delay": 3},
+  {"command": "view.objectBrowser", "delay": 3}
+]

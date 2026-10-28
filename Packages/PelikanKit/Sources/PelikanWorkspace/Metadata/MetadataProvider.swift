@@ -107,6 +107,16 @@ public struct DBObjectChild: Sendable, Hashable, Identifiable {
     public var id: String { "\(kind.rawValue):\(name):\(detail)" }
 }
 
+/// Foldery DBA i DBMS na końcu gałęzi połączenia w Object Browserze: obiekty słownika (`DBA_…`) i pakiety Oracle
+/// (`DBMS_…`), do których użytkownik ma uprawnienia.
+public enum SystemObjectFolder: String, CaseIterable, Sendable {
+    case dba = "DBA"
+    case dbms = "DBMS"
+
+    /// Przedrostek nazw obiektów folderu.
+    public var prefix: String { rawValue + "_" }
+}
+
 /// Filtr Object Browsera (UG 21.1): nazwy z `%`, wiele po przecinku; Status=, Source= (tekst w źródle PL/SQL).
 public struct ObjectFilter: Sendable, Hashable {
     public var text = ""
@@ -301,6 +311,13 @@ public final class MetadataProvider {
                                             "MDDATA", "FLOWS_FILES", "ANONYMOUS", "ORACLE_OCM", "SYSMAN", "MGMT_VIEW", "SPATIAL_CSW_ADMIN_USR",
                                             "SPATIAL_WFS_ADMIN_USR", "APEX_PUBLIC_USER", "DIP", "XS$NULL"]
 
+    /// Schematy utrzymywane przez Oracle (zmiany ich obiektów — tylko po osobnym potwierdzeniu, D190): lista 11g
+    /// i schematy nowszych wersji (12c–26ai).
+    nonisolated static let oracleMaintainedSchemas: Set<String> = Set(oracleSchemas + [
+        "AUDSYS", "DBSFWUSER", "DVF", "GGSYS", "GSMADMIN_INTERNAL", "GSMCATUSER", "GSMROOTUSER", "GSMUSER",
+        "REMOTE_SCHEDULER_AGENT", "SYSBACKUP", "SYSDG", "SYSKM", "SYSRAC", "SYS$UMF", "VECSYS", "PDBADMIN",
+    ])
+
     /// Obiekty typu w zakresie folderu (D187) z filtrem.
     public func objects(_ type: DBObjectType, scope: ObjectScope, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
         let key = "\(scope.cacheKey)|\(type.rawValue)|\(filter.text)|\(filter.named?.id.uuidString ?? "")|\(filter.named?.whereClause ?? "")"
@@ -411,6 +428,32 @@ public final class MetadataProvider {
             // Sortowanie tylko po dołączeniu publicznych (z filtrem nazwanym ich nie ma — zostaje jego ORDER BY).
             let publicSynonyms = try await applicationPublicSynonyms(filter, in: s)
             if !publicSynonyms.isEmpty { list = (list + publicSynonyms).sorted { ($0.name, $0.owner) < ($1.name, $1.owner) } }
+        }
+        cache[key] = list
+        return list
+    }
+
+    /// Obiekty folderu DBA albo DBMS na końcu gałęzi połączenia: nazwa z przedrostkiem `DBA_` albo `DBMS_`, wszyscy
+    /// właściciele, tylko to, do czego użytkownik ma uprawnienia — ALL_OBJECTS pokazuje obiekt innego schematu dopiero
+    /// z nadanym uprawnieniem (wprost, przez rolę albo PUBLIC). Bez synonimów (publiczny synonim każdego widoku DBA_
+    /// i pakietu DBMS_ widzi każdy, także bez uprawnień do obiektu) i bez ciał pakietów i typów — tylko typy, które
+    /// przeglądarka zna. Filtr pola jak w folderach typów (nazwy, status=, source=, daty); filtr nazwany — nie.
+    public func systemObjects(_ folder: SystemObjectFolder, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
+        let key = "system|\(folder.rawValue)|\(filter.text)"
+        if let c = cache[key] { return c }
+        let s = try await session()
+        var binds = [BindVariable(name: "px", value: .text(folder.prefix.replacingOccurrences(of: "_", with: "\\_") + "%"))]
+        let types = DBObjectType.allCases.filter { ![.synonym, .packageBody, .typeBody].contains($0) }.map { "'\($0.rawValue)'" }
+        var sql = "select o.owner, o.object_name, o.object_type, o.status, o.created, o.last_ddl_time from all_objects o"
+            + " where o.object_name like :px escape '\\' and o.object_type in (\(types.joined(separator: ", ")))"
+        let w = filter.whereClause(binds: &binds)
+        if !w.isEmpty { sql += " and " + w }
+        sql += " order by o.object_name, o.owner"
+        let (_, rows) = try await s.queryAll(sql, binds: binds, limit: 1_000_000)
+        let list = rows.compactMap { r -> DBObject? in
+            guard let type = r[2].displayText.flatMap(DBObjectType.init(rawValue:)) else { return nil }
+            return DBObject(owner: r[0].displayText ?? "", name: r[1].displayText ?? "", type: type, status: r[3].displayText ?? "VALID",
+                            created: Self.timestamp(r[4]), lastDDL: Self.timestamp(r[5]))
         }
         cache[key] = list
         return list

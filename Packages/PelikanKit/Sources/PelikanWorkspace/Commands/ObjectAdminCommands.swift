@@ -36,6 +36,7 @@ enum ObjectAdminCommands {
                     validate: { ws in ws.selectedObject.map { [.trigger, .table].contains($0.type) } ?? false }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let sql = try ObjectAdmin.setEnabled(o, enabled: enabled, constraint: ctx.arguments.string("constraint"))
+                try await ctx.workspace.confirmOracleMaintained(objects: [o])
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await changeSession(ctx).execute(sql)
                 m.refresh()
@@ -193,6 +194,7 @@ enum ObjectAdminCommands {
                 // Agent nie ma tej komendy (poziom Brak); sprawdzenie zostaje jako druga linia obrony.
                 guard ctx.invoker == .user else { throw AgentDenial.permissionDenied(L10n.tr("Zmiana flag kompilacji tylko przez użytkownika")) }
                 let sql = try ObjectAdmin.ccflagsStatement(o, flags: flags)
+                try await ctx.workspace.confirmOracleMaintained(objects: [o])   // rekompilacja jak ob.recompile
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 _ = try await s.execute(sql)
                 m.refresh()

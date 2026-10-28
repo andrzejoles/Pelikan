@@ -170,6 +170,10 @@ public enum ProgramCompiler {
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))
         try await ws.ensureStillOpen(doc, wasOpen: wasOpen)
+        // Jednostka bez właściciela w nagłówku trafia do bieżącego schematu sesji (np. SYS po zalogowaniu jako SYS) —
+        // pytanie przed pierwszym poleceniem w bazie (także przed parametrami kompilatora).
+        try await ws.confirmOracleMaintained(units.map { $0.owner ?? s.info.currentSchema })
+        try await ws.ensureStillOpen(doc, wasOpen: wasOpen)
         // Ostrzeżenia i parametry kompilatora z Preferencji (PD-PROG-013); błąd parametru (np. NATIVE bez uprawnień)
         // nie zatrzymuje kompilacji — obowiązuje ustawienie serwera.
         for statement in ws.settings.compiler.statements(warnings: ws.settings.plsqlWarnings) {

@@ -13,7 +13,10 @@ verwendeten. Unter einer Verbindung sind ihre offenen Fenster zu sehen.
 - Kontextmenü der Verbindung: **Als Hauptverbindung verbinden**, **Verbinden** (ohne die Hauptverbindung zu ändern),
   **Trennen**, **Neues Fenster** (SQL-, Programm-, Test- oder Befehlsfenster auf dieser Verbindung), **Fenster der
   Verbindung zeigen**, **Fenster der Verbindung schließen**, **Fenster der Verbindung neu verbinden**, **Aktuelles
-  Schema festlegen …**, **Bearbeiten …** und **Löschen …**.
+  Schema festlegen …**, **Bearbeiten …**, **Unter anderem Namen kopieren …** (Kopie im selben Ordner, mit den
+  gespeicherten Passwörtern), **In Ordner verschieben** und **Löschen …**.
+- Ordner und Verbindungen sind alphabetisch sortiert. Eine Verbindung, die mit der Maus auf einen Ordner gezogen wird,
+  landet darin, auf freiem Platz der Liste — auf der obersten Ebene.
 - Die Schaltflächen über der Liste legen eine neue Verbindung (**+**) und einen Ordner an und aktualisieren die Liste.
 
 Sie können auch das Anmeldefenster verwenden: **Sitzung › Anmelden …** (⇧⌘L). Es zeigt alle Definitionen mit einem

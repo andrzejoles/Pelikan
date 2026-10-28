@@ -194,6 +194,7 @@ public enum ObjectCommands {
                     validate: { ws in ws.selectedObject.flatMap { compileStatement($0) } != nil }) { ctx in
                 let (o, m) = try await target(ctx)
                 guard let sql = compileStatement(o) else { throw CommandError.notAvailable(L10n.tr("Tego obiektu nie da się kompilować")) }
+                try await ctx.workspace.confirmOracleMaintained(objects: [o])
                 // Potwierdzanie rekompilacji (Preferencje › Object Browser, PD-OB-025).
                 if ctx.workspace.settings.confirmRecompile, ctx.invoker == .user, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Rekompilować \(o.name)?"), message: sql, buttons: [L10n.tr("Rekompiluj"), L10n.tr("Anuluj")]) == 0 else {
@@ -223,6 +224,7 @@ public enum ObjectCommands {
                 if o.type == .type { objs.append(DBObject(owner: o.owner, name: o.name, type: .typeBody)) }
                 let sql = objs.compactMap(debugCompileStatement)
                 guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Ten obiekt nie jest jednostką PL/SQL")) }
+                try await ctx.workspace.confirmOracleMaintained(objects: [o])
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
                 // Jednostka: błąd kompilacji to ostrzeżenie ORA-24344, inne błędy zgłaszane; ciało pakietu/typu — może nie istnieć.
@@ -238,6 +240,7 @@ public enum ObjectCommands {
                 let (o, m) = try await target(ctx)
                 if o.type == .databaseLink { try MultiObjectCommands.requireOwnLink(o, sessionUser: try await m.session().info.sessionUser) }
                 let sql = try MultiObjectCommands.dropStatement(o, cascadeConstraints: false)
+                try await ctx.workspace.confirmOracleMaintained(objects: [o])
                 try await ctx.workspace.guardModification([sql], connectionID: m.connectionID)
                 let choice = await ctx.ui?.ask(L10n.tr("Usunąć \(o.type.rawValue) \(o.qualifiedName)?"), message: L10n.tr("Tej operacji nie da się cofnąć (poza koszem dla tabel)."),
                                                buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")])

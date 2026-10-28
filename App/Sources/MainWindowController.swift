@@ -681,7 +681,7 @@ extension DocumentAreaViewController {
         main.target = self
         main.state = doc.connectionID == nil ? .on : .off
         menu.addItem(.separator())
-        for c in workspace.connections.connections.sorted(by: { $0.displayName.localizedCompare($1.displayName) == .orderedAscending }) {
+        for c in workspace.connections.connections.sorted(by: ConnectionStore.alphabetical) {
             let item = menu.addItem(withTitle: c.displayName + " (\(c.environment.shortName))", action: #selector(selectConnection(_:)), keyEquivalent: "")
             item.representedObject = c.id.uuidString
             item.target = self

@@ -1891,3 +1891,42 @@ sesji); eksport danych strumieniowo do pliku; zamknięcie okna z niezatwierdzony
 luka); ostrzeżenie o utracie uprawnień przy zmianie nazwy widoku; parser `ls -la` i `scp(download:)` zostają jako
 PC-SSH-004/002; upuszczenie narzędzia w oknie głównym poza panelami nadal je odłącza (D183); Xcode 27.2 w CI i 27.1
 lokalnie oraz odtworzenie lokalnego kontenera bazy z przypiętego obrazu (`testdb.sh reset`) — do decyzji właściciela.
+
+### D190 · 2026-10-28 — Kolejność alfabetyczna połączeń, kopia i przenoszenie połączeń, foldery DBA i DBMS (zmienia D185)
+
+Właściciel poprosił: foldery i połączenia na liście połączeń alfabetycznie, kopia połączenia pod inną nazwą,
+przenoszenie połączeń między folderami myszą, połączenia w zakładce Obiekty też alfabetycznie, a w Obiektach na końcu
+folderów DBA i DBMS z obiektami `DBA_…` i `DBMS_…`, do których użytkownik ma uprawnienia.
+
+- **Kolejność:** `ConnectionStore.subfolders(of:)` i `connections(in:)` zwracają foldery i połączenia alfabetycznie
+  (`localizedStandardCompare` — bez wielkości liter, liczby naturalnie: „baza 2” przed „Baza 10”), także połączenia
+  dopasowane regułą folderu; folder „Ostatnie” zostaje w kolejności użycia. Gałęzie Object Browsera alfabetycznie tą
+  samą regułą (`ConnectionStore.alphabetical`) — **zmiana D185** („główne pierwsze”): połączenie główne nie jest już
+  przesuwane na początek, wyróżniają je nadal ★, pogrubienie i dopisek „główne”.
+- **Kopia:** komenda `connection.duplicate` (Sesja › Połączenia, wstążka, menu kontekstowe „Kopiuj pod inną nazwą…”;
+  agent — Brak): pyta o nazwę (domyślnie „<nazwa> (kopia)”), kopia w tym samym folderze z nowym identyfikatorem, bez
+  historii użycia i bez łączenia przy starcie; nazwa musi być unikalna (bez wielkości liter — komendy i parametry
+  startowe wskazują połączenie nazwą); zapisane hasło bazy i hasło SSH tunelu kopiowane w Pęku kluczy pod nowe konto,
+  hasło tylko z tej sesji — tylko do pamięci (jak oryginał). Każdy błąd wycofuje kopię z jej hasłami. Połączenia
+  tymczasowego (CONNECT w oknie poleceń) nie da się skopiować ani przenieść — czytelny błąd.
+- **Przenoszenie:** komenda `connection.moveToFolder` (argumenty `connection` i `folder` — id albo nazwa, bez folderu —
+  poziom główny; `inMenu: false`), wywoływana przez przeciągnięcie połączenia na folder albo wolne miejsce listy
+  (upuszczenie na połączenie albo jego okno — do folderu połączenia; „Ostatnie” nie jest celem) i przez podmenu „Przenieś do folderu”
+  (dostęp z klawiatury i VoiceOver). Przeciągane są tylko połączenia, nie foldery.
+- **Foldery DBA i DBMS** (na końcu gałęzi każdego połączenia, po folderach typów): `MetadataProvider.systemObjects`
+  czyta ALL_OBJECTS z nazwą `DBA\_%` / `DBMS\_%` (podkreślenie dosłownie), wszyscy właściciele — ALL_OBJECTS pokazuje
+  obiekt innego schematu tylko z uprawnieniem (wprost, przez rolę, PUBLIC), więc lista odpowiada uprawnieniom.
+  Pominięte synonimy (publiczne synonimy `DBA_…` i `DBMS_…` widzi każdy, także bez uprawnień do obiektu — sprawdzone
+  na użytkowniku agenta testów: synonim DBA_USERS widoczny, widok nie), ciała pakietów i typów oraz klasy Java.
+  Tylko typy znane przeglądarce. Obiekty schematu SYS bez przedrostka „SYS.”; filtr pola jak w folderach typów (nazwy,
+  `status=`, `source=`, daty), filtr nazwany — nie. Wynik w pamięci podręcznej do odświeżenia. Użytkownik z samym
+  SELECT ANY DICTIONARY widzi widoki DBA_ w ALL_OBJECTS (sprawdzone na 26ai) — folder nie jest pusty.
+- **Obiekty schematów Oracle** (przegląd kodu przed scaleniem): foldery DBA i DBMS stawiają pakiety SYS pod ręką
+  w każdym trybie, a np. „Dodaj informację debugowania” na `SYS.DBMS_OUTPUT` wykonywała się bez pytania i mogła
+  unieważnić obiekty w całej bazie. `Workspace.confirmOracleMaintained`: rekompilacja (także zaznaczonych), DEBUG,
+  DROP (także zaznaczonych), zmiana nazwy obiektu i elementu, włączanie/wyłączanie, flagi kompilacji warunkowej
+  oraz kompilacja okna programu z jednostką schematu utrzymywanego przez Oracle (SYS, XDB, GSMADMIN_INTERNAL… — lista
+  11g i nowszych wersji; jednostka bez właściciela w nagłówku — bieżący schemat sesji, więc także SYS zalogowany jako
+  SYS) — zawsze osobne pytanie z domyślnym **Anuluj**, niezależnie od preferencji potwierdzania; bez interfejsu
+  (skrypt) — odmowa. Typy globalne (katalogi, użytkownicy, role, profile) pomijane — katalog ma zawsze właściciela
+  SYS. Domyślna nazwa kopii połączenia — pierwsza wolna („… (kopia)”, „… (kopia 2)”…).

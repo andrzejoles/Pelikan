@@ -36,6 +36,117 @@ struct ConnectionStoreTests {
         #expect(try secrets.password(for: def.id.uuidString) == nil)
     }
 
+    @Test("Foldery i połączenia alfabetycznie: bez wielkości liter, liczby naturalnie, także w folderze z regułą")
+    func alphabetical() throws {
+        let store = ConnectionStore(fileURL: nil, secrets: MemorySecretStore())
+        for name in ["zeta", "Alfa", "beta"] { try store.upsert(folder: ConnectionFolder(name: name)) }
+        #expect(store.subfolders(of: nil).map(\.name) == ["Alfa", "beta", "zeta"])
+        let rule = ConnectionFolder(name: "Prod", databasePattern: "prod*")
+        try store.upsert(folder: rule)
+        for (name, db) in [("Baza 10", "dev"), ("baza 2", "dev"), ("Archiwum", "dev"), ("prod-b", "PROD1"), ("Prod-A", "PROD2")] {
+            try store.upsert(ConnectionDefinition(name: name, target: ConnectionTarget(user: "u", connectString: db)))
+        }
+        try store.upsert(ConnectionDefinition(name: "prod-c", folderID: rule.id, target: ConnectionTarget(user: "u", connectString: "x")))
+        #expect(store.connections(in: nil).map(\.name) == ["Archiwum", "baza 2", "Baza 10"])
+        #expect(store.connections(in: rule.id).map(\.name) == ["Prod-A", "prod-b", "prod-c"])   // jawne i z reguły razem
+    }
+
+    @Test("Przeniesienie połączenia do folderu i na poziom główny; nieznany folder — błąd")
+    func moveToFolder() throws {
+        let url = tempFile()
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let store = ConnectionStore(fileURL: url, secrets: MemorySecretStore())
+        let f = ConnectionFolder(name: "Test")
+        try store.upsert(folder: f)
+        let def = ConnectionDefinition(name: "Dev", target: ConnectionTarget(user: "scott", connectString: "db"))
+        try store.upsert(def)
+        try store.move(def.id, to: f.id)
+        #expect(store.connections(in: f.id).map(\.id) == [def.id])
+        #expect(ConnectionStore(fileURL: url, secrets: MemorySecretStore()).connection(def.id)?.folderID == f.id)   // zapisane
+        try store.move(def.id, to: nil)
+        #expect(store.connections(in: nil).map(\.id) == [def.id])
+        #expect(throws: CommandError.self) { try store.move(def.id, to: UUID()) }
+        #expect(store.connection(def.id)?.folderID == nil)
+    }
+
+    @Test("Kopia połączenia: nowa nazwa i id, ten sam folder, hasła bazy i SSH skopiowane, bez historii użycia")
+    func duplicate() throws {
+        let secrets = MemorySecretStore()
+        let store = ConnectionStore(fileURL: nil, secrets: secrets)
+        let f = ConnectionFolder(name: "Test")
+        try store.upsert(folder: f)
+        var def = ConnectionDefinition(name: "Dev", folderID: f.id, target: ConnectionTarget(user: "scott", connectString: "db"))
+        def.lastUsed = Date()
+        def.connectOnStartup = true
+        try store.upsert(def, password: "Tajne-1")
+        try store.setSSHPassword("ssh-2", for: def.id)
+        let copy = try store.duplicate(def.id, name: "Dev 2")
+        #expect(copy.id != def.id && copy.name == "Dev 2" && copy.folderID == f.id && copy.lastUsed == nil)
+        #expect(!copy.connectOnStartup)   // bez drugiego połączenia z tą samą bazą przy starcie
+        #expect(throws: CommandError.self) { try store.duplicate(def.id, name: "dev 2") }   // nazwa zajęta (bez wielkości liter)
+        #expect(copy.target == def.target)
+        #expect(store.password(for: copy.id) == "Tajne-1")
+        #expect(store.sshPassword(for: copy.id) == "ssh-2")
+        #expect(store.connections(in: f.id).map(\.name) == ["Dev", "Dev 2"])
+        // Hasło tylko z tej sesji (bez zapisu) — kopia też tylko w pamięci.
+        let session = ConnectionDefinition(name: "S", target: ConnectionTarget(user: "a", connectString: "x"), savePassword: false)
+        try store.upsert(session, password: "p")
+        let sessionCopy = try store.duplicate(session.id, name: "S2")
+        #expect(store.password(for: sessionCopy.id) == "p")
+        #expect(try secrets.password(for: sessionCopy.id.uuidString) == nil)
+        // Połączenie tymczasowe (CONNECT w oknie poleceń) — czytelny błąd zamiast „nieznane połączenie” i cichego OK.
+        let temp = ConnectionDefinition(name: "", target: ConnectionTarget(user: "u", connectString: "x"))
+        store.registerTemporary(temp, password: "t")
+        for attempt in [{ _ = try store.duplicate(temp.id, name: "T") }, { try store.move(temp.id, to: f.id) }] {
+            do { try attempt(); Issue.record("bez błędu") } catch let CommandError.notAvailable(m) { #expect(m.contains("tymczasow")) } catch { Issue.record("\(error)") }
+        }
+    }
+
+    @Test("Obiekty schematów Oracle: zmiana tylko po osobnym potwierdzeniu; bez interfejsu — odmowa; inne schematy bez pytania")
+    func oracleMaintainedConfirmation() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        try await ws.confirmOracleMaintained(["SCOTT", nil])
+        await #expect(throws: CommandError.self) { try await ws.confirmOracleMaintained(["SYS"]) }
+        let ui = FakeUI()
+        ws.ui = ui
+        ui.answers = [0]   // Anuluj (domyślny)
+        await #expect(throws: CommandError.self) { try await ws.confirmOracleMaintained(["sys", "SCOTT"]) }
+        ui.answers = [1]   // Zmień mimo to
+        try await ws.confirmOracleMaintained(["XDB"])
+        #expect(ui.asked.count == 2)
+        // Katalog ma zawsze właściciela SYS — bez pytania; pakiet SYS — z pytaniem.
+        try await ws.confirmOracleMaintained(objects: [DBObject(owner: "SYS", name: "DATA_DIR", type: .directory)])
+        #expect(ui.asked.count == 2)
+        ui.answers = [0]
+        await #expect(throws: CommandError.self) {
+            try await ws.confirmOracleMaintained(objects: [DBObject(owner: "SYS", name: "DBMS_OUTPUT", type: .package)])
+        }
+        #expect(ui.asked.count == 3)
+    }
+
+    @Test("Komendy connection.duplicate i connection.moveToFolder (nazwa folderu bez wielkości liter)")
+    func duplicateAndMoveCommands() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let f = ConnectionFolder(name: "Testowe")
+        try ws.connections.upsert(folder: f)
+        let def = ConnectionDefinition(name: "Dev", target: ConnectionTarget(user: "scott", connectString: "db"))
+        try ws.connections.upsert(def)
+        let r = try await ws.invoke("connection.duplicate", CommandArguments(["connection": .string(def.id.uuidString),
+                                                                                        "name": .string("  Dev kopia  ")]))
+        guard case .string(let s)? = r.value, let copyID = UUID(uuidString: s) else { Issue.record("brak id kopii"); return }
+        #expect(ws.connections.connection(copyID)?.name == "Dev kopia")
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("connection.duplicate", CommandArguments(["connection": .string(def.id.uuidString), "name": .string(" ")]))
+        }
+        _ = try await ws.invoke("connection.moveToFolder", CommandArguments(["connection": .string("dev kopia"), "folder": .string("TESTOWE")]))
+        #expect(ws.connections.connection(copyID)?.folderID == f.id)
+        _ = try await ws.invoke("connection.moveToFolder", CommandArguments(["connection": .string(copyID.uuidString)]))
+        #expect(ws.connections.connection(copyID)?.folderID == nil)
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("connection.moveToFolder", CommandArguments(["connection": .string(copyID.uuidString), "folder": .string("brak")]))
+        }
+    }
+
     @Test("Folder z regułą dopasowania (sys*, *@prod*) i połączenia jawne")
     func folderRules() throws {
         let store = ConnectionStore(fileURL: nil, secrets: MemorySecretStore())

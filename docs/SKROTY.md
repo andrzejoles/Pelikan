@@ -295,6 +295,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Usuń połączenie | `connection.delete` |  |  | Brak | PD-CONN-004 |
+| Połączenia › Kopiuj połączenie… | `connection.duplicate` |  |  | Brak | PD-CONN-004 |
+| Połączenia › Przenieś połączenie do folderu | `connection.moveToFolder` |  |  | Brak | PD-CONN-003 |
 | Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | PD-CONN-018 |
 | Połączenia › Połącz | `connection.connect` |  |  | Brak | PD-CONN-022 |
 | Połączenia › Nowe okno na połączeniu | `connection.openWindow` |  |  | Brak | PD-CONN-022 |

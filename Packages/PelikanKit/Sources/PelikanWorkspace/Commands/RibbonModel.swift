@@ -139,7 +139,7 @@ public enum RibbonModel {
                 .small("session.windowConnection", label: L10n.tr("Połączenie okna")),
                 .small("window.reconnect"), .small("session.logoff", label: L10n.tr("Wyloguj")),
                 .menu(L10n.tr("Połączenia"), symbol: "cylinder.split.1x2", commands: [
-                    "connection.new", "connection.edit", "connection.delete", "connection.newFolder", separator,
+                    "connection.new", "connection.edit", "connection.duplicate", "connection.delete", "connection.newFolder", separator,
                     "connection.connect", "connection.connectAsMain", "connection.disconnect", "connection.setCurrentSchema", separator,
                     "connection.openWindow", "connection.showWindows", "connection.closeWindows", "connection.reconnectWindows", separator,
                     "connection.import", "connection.export", "connection.exportWithPasswords", separator, "session.console",

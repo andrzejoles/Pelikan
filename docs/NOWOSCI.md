@@ -2,6 +2,16 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.3.0 — porządek na liście połączeń, foldery DBA i DBMS
+
+- **Lista połączeń** — foldery i połączenia są ułożone alfabetycznie. Połączenie można skopiować pod inną nazwą
+  (menu kontekstowe **Kopiuj pod inną nazwą…** albo **Sesja › Połączenia › Kopiuj połączenie…**) — kopia trafia do
+  tego samego folderu razem z zapisanymi hasłami. Połączenia przenosisz między folderami, przeciągając je myszą (na
+  wolne miejsce listy — na poziom główny), albo z menu **Przenieś do folderu**.
+- **Obiekty** — połączenia w drzewie też są alfabetycznie (główne wyróżnia gwiazdka). Na końcu folderów każdego
+  połączenia są nowe foldery **DBA** (obiekty słownika `DBA_…`) i **DBMS** (głównie pakiety Oracle `DBMS_…`) — tylko
+  obiekty, do których masz uprawnienia.
+
 ## 1.2.5 — poprawka budowania wydania
 
 - Wydanie zawiera wszystkie poprawki z 1.2.4 (niżej), które nie miały osobnego wydania: sprawdzenie podpisu z Hardened

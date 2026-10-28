@@ -225,6 +225,34 @@
         }
       }
     },
+    "%@ (kopia %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (copy %@)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Kopie %@)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (copia %@)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (копія %@)"
+          }
+        }
+      }
+    },
     "%@ (kopia)" : {
       "localizations" : {
         "en" : {
@@ -24221,6 +24249,62 @@
         }
       }
     },
+    "Identyfikator albo nazwa folderu (bez argumentu — poziom główny listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder ID or name (no argument — top level of the list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner-ID oder -Name (ohne Argument — oberste Ebene der Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre de la carpeta (sin argumento: nivel superior de la lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва папки (без аргументу — верхній рівень списку)"
+          }
+        }
+      }
+    },
+    "Identyfikator albo nazwa połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection ID or name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindungs-ID oder -Name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identificador o nombre de la conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ідентифікатор або назва з'єднання"
+          }
+        }
+      }
+    },
     "Identyfikator albo nazwa połączenia (domyślnie połączenie główne)" : {
       "localizations" : {
         "en" : {
@@ -32453,6 +32537,90 @@
         }
       }
     },
+    "Kopiuj pod inną nazwą…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Under Another Name…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unter anderem Namen kopieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar con otro nombre…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати під іншою назвою…"
+          }
+        }
+      }
+    },
+    "Kopiuj połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung kopieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати з'єднання"
+          }
+        }
+      }
+    },
+    "Kopiuj połączenie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Connection…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung kopieren …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar conexión…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Копіювати з'єднання…"
+          }
+        }
+      }
+    },
     "Kopiuj schemat" : {
       "localizations" : {
         "en" : {
@@ -39113,6 +39281,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Назва копії"
+          }
+        }
+      }
+    },
+    "Nazwa kopii (bez argumentu — pytanie)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the copy (no argument — ask)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Kopie (ohne Argument — Abfrage)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la copia (sin argumento: se pregunta)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва копії (без аргументу — запит)"
+          }
+        }
+      }
+    },
+    "Nazwa kopii połączenia „%@”:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of the copy of connection “%@”:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name der Kopie der Verbindung „%@“:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de la copia de la conexión «%@»:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва копії з'єднання «%@»:"
           }
         }
       }
@@ -45889,6 +46113,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Об’єкти, виключені з покриття, через кому"
+          }
+        }
+      }
+    },
+    "Obiekty schematu Oracle (%@) można zmienić tylko po potwierdzeniu w oknie aplikacji" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects of the Oracle schema (%@) can only be changed after confirmation in the app window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte des Oracle-Schemas (%@) können nur nach Bestätigung im App-Fenster geändert werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los objetos del esquema de Oracle (%@) solo se pueden cambiar tras confirmarlo en la ventana de la aplicación"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти схеми Oracle (%@) можна змінити лише після підтвердження у вікні застосунку"
+          }
+        }
+      }
+    },
+    "Obiekty schematów utrzymywanych przez Oracle zmienia się zwykle tylko na polecenie Oracle Support. Zmiana może unieważnić obiekty zależne w całej bazie i przerwać pracę innych sesji (ORA-04068)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objects of Oracle-maintained schemas are usually changed only when Oracle Support asks for it. The change can invalidate dependent objects across the whole database and disrupt other sessions (ORA-04068)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekte von Oracle verwalteter Schemas ändert man in der Regel nur auf Anweisung des Oracle Supports. Die Änderung kann abhängige Objekte in der gesamten Datenbank ungültig machen und andere Sitzungen unterbrechen (ORA-04068)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los objetos de los esquemas mantenidos por Oracle normalmente solo se cambian por indicación de Oracle Support. El cambio puede invalidar objetos dependientes en toda la base de datos e interrumpir otras sesiones (ORA-04068)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Об'єкти схем, які обслуговує Oracle, зазвичай змінюють лише на вимогу Oracle Support. Зміна може зробити недійсними залежні об'єкти в усій базі даних і перервати роботу інших сеансів (ORA-04068)."
           }
         }
       }
@@ -62133,6 +62413,34 @@
         }
       }
     },
+    "Poziom główny listy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top level of the list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Oberste Ebene der Liste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel superior de la lista"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Верхній рівень списку"
+          }
+        }
+      }
+    },
     "Poziom narzędzia można tylko obniżyć. Poziom połączenia (np. produkcja — Odczyt) nadal obowiązuje." : {
       "localizations" : {
         "en" : {
@@ -62717,6 +63025,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "З'єднання (шаблон, порожньо — усі)"
+          }
+        }
+      }
+    },
+    "Połączenia tymczasowego (CONNECT w oknie poleceń) nie można skopiować ani przenieść" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A temporary connection (CONNECT in the command window) cannot be copied or moved"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine temporäre Verbindung (CONNECT im Befehlsfenster) kann weder kopiert noch verschoben werden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una conexión temporal (CONNECT en la ventana de comandos) no se puede copiar ni mover"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тимчасове з'єднання (CONNECT у вікні команд) не можна скопіювати чи перемістити"
           }
         }
       }
@@ -65241,6 +65577,34 @@
         }
       }
     },
+    "Przenieś do folderu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to Folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Ordner verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover a la carpeta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити до папки"
+          }
+        }
+      }
+    },
     "Przenieś narzędzie na dół" : {
       "localizations" : {
         "en" : {
@@ -65297,6 +65661,34 @@
         }
       }
     },
+    "Przenieś połączenie do folderu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Connection to Folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbindung in Ordner verschieben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover la conexión a una carpeta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити з'єднання до папки"
+          }
+        }
+      }
+    },
     "Przenieść do Kosza?" : {
       "localizations" : {
         "en" : {
@@ -65321,6 +65713,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In den Papierkorb legen?"
+          }
+        }
+      }
+    },
+    "Przenosi definicję połączenia do folderu listy połączeń (także przeciągnięciem myszą)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the connection definition to a folder of the connection list (also by dragging with the mouse)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verschiebt die Verbindungsdefinition in einen Ordner der Verbindungsliste (auch per Ziehen mit der Maus)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la definición de la conexión a una carpeta de la lista de conexiones (también arrastrando con el ratón)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує визначення з'єднання до папки списку з'єднань (також перетягуванням мишею)."
           }
         }
       }
@@ -81309,6 +81729,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erstellt ein Verzeichnis im File Browser."
+          }
+        }
+      }
+    },
+    "Tworzy kopię definicji połączenia pod inną nazwą, w tym samym folderze, z zapisanymi hasłami." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Creates a copy of the connection definition under another name, in the same folder, with the saved passwords."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erstellt eine Kopie der Verbindungsdefinition unter anderem Namen im selben Ordner, mit den gespeicherten Passwörtern."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crea una copia de la definición de la conexión con otro nombre, en la misma carpeta, con las contraseñas guardadas."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Створює копію визначення з'єднання під іншою назвою в тій самій папці, зі збереженими паролями."
           }
         }
       }
@@ -110881,6 +111329,34 @@
         }
       }
     },
+    "Zmienić obiekt schematu Oracle %@?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change an object of the Oracle schema %@?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Objekt des Oracle-Schemas %@ ändern?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cambiar un objeto del esquema de Oracle %@?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінити об'єкт схеми Oracle %@?"
+          }
+        }
+      }
+    },
     "Zmienić parametr instancji?" : {
       "localizations" : {
         "en" : {
@@ -111381,6 +111857,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Passwort ändern …"
+          }
+        }
+      }
+    },
+    "Zmień mimo to" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change Anyway"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem ändern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar de todos modos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усе одно змінити"
           }
         }
       }
@@ -115809,6 +116313,34 @@
         }
       }
     },
+    "nieznany folder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unknown folder"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unbekannter Ordner"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "carpeta desconocida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "невідома папка"
+          }
+        }
+      }
+    },
     "nieznany operator %@" : {
       "localizations" : {
         "en" : {
@@ -117093,6 +117625,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erfolg"
+          }
+        }
+      }
+    },
+    "połączenie o nazwie „%@” już istnieje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a connection named “%@” already exists"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "eine Verbindung namens „%@“ existiert bereits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ya existe una conexión llamada «%@»"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "з'єднання з назвою «%@» уже існує"
           }
         }
       }

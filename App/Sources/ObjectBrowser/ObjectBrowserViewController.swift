@@ -29,6 +29,8 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             case folder(DBObjectType)
             case recent
             case userFolder(BrowserFolder)
+            /// Folder DBA albo DBMS na końcu gałęzi (obiekty z przedrostkiem, do których użytkownik ma uprawnienia).
+            case systemFolder(SystemObjectFolder)
             case object(DBObject)
             case group(DBObjectChild.Kind, [DBObjectChild])
             case child(DBObjectChild)
@@ -172,12 +174,11 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                              size: s.browserFontSize > 0 ? s.browserFontSize : AppFonts.reduced(ui.size, by: 1), weight: s.browserFontWeight)
     }
 
-    /// Otwarte połączenia w kolejności drzewa: główne pierwsze, pozostałe w kolejności połączenia.
+    /// Otwarte połączenia w kolejności drzewa: alfabetycznie, jak na liście połączeń (główne wyróżnia ★ i pogrubienie).
     private var orderedConnections: [UUID] {
         // Bez połączeń, których definicji już nie ma (np. tymczasowe okna poleceń po DISCONNECT).
-        let open = workspace.sessions.openConnections.filter { workspace.connections.connection($0) != nil }
-        guard let main = workspace.sessions.mainConnectionID else { return open }
-        return [main] + open.filter { $0 != main }
+        workspace.sessions.openConnections.compactMap { workspace.connections.connection($0) }
+            .sorted(by: ConnectionStore.alphabetical).map(\.id)
     }
 
     private func modelChanged() {
@@ -287,6 +288,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             rememberState(b)
             b.node.children = [Node(.recent, connection: id)] + userFolders.map { Node(.userFolder($0), connection: id) }
                 + workspace.browserFolderTypes(available: types).map { Node(.folder($0), connection: id) }
+                + SystemObjectFolder.allCases.map { Node(.systemFolder($0), connection: id) }
             outline.reloadItem(b.node, reloadChildren: true)
             if outline.isItemExpanded(b.node) { restoreState(b.node, path: Self.rootKey, b) }
             refreshUserPopup()
@@ -309,6 +311,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .folder(let t): "f:" + t.rawValue
         case .recent: "r"
         case .userFolder(let f): "u:" + f.id.uuidString
+        case .systemFolder(let f): "s:" + f.rawValue
         case .object(let o): "o:" + o.id
         case .group(let k, _): "g:" + k.rawValue
         default: nil
@@ -410,6 +413,10 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
                     status.stringValue = L10n.tr("\(t.folderName): \(objects.count)")
                 case .recent:
                     node.children = m.recent.map { Node(.object($0), connection: id) }
+                case .systemFolder(let f):
+                    let objects = try await m.systemObjects(f, filter: filter)
+                    node.children = objects.isEmpty ? [Node(.message(L10n.tr("(brak)")), connection: id)] : objects.map { Node(.object($0), connection: id) }
+                    status.stringValue = L10n.tr("\(f.rawValue): \(objects.count)")
                 case .userFolder(let f):
                     let subfolders = workspace.browserCustomization.folders.filter { $0.parentID == f.id }.map { Node(.userFolder($0), connection: id) }
                     let objects = try await m.objects(in: f).map { Node(.object($0), connection: id) }
@@ -468,7 +475,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
     func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool {
         guard let n = item as? Node else { return false }
         switch n.kind {
-        case .connection, .folder, .recent, .group, .userFolder: return true
+        case .connection, .folder, .recent, .group, .userFolder, .systemFolder: return true
         case .object(let o): return !o.type.isGlobal
         default: return false
         }
@@ -523,12 +530,18 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
             cell.setAccessibilityLabel(isMain ? L10n.tr("Połączenie główne: \(def?.displayName ?? "")") : L10n.tr("Połączenie: \(def?.displayName ?? "")"))
         case .folder(let t): title = t.folderName
         case .recent: title = L10n.tr("Ostatnie"); symbol = "clock"
+        case .systemFolder(let f):
+            title = f.rawValue
+            symbol = "folder.badge.gearshape"
+            color = .systemTeal
         case .userFolder(let f):
             title = f.name
             symbol = "folder.fill"
             color = f.color.flatMap(Self.namedColor) ?? .systemBlue
         case .object(let o):
-            title = o.type.isGlobal || o.owner == ownSchema ? o.name : "\(o.owner).\(o.name)"
+            // W folderach DBA i DBMS bez „SYS.” przy każdej pozycji (inni właściciele, np. XDB — z nazwą schematu).
+            let inSystemFolder = (outline.parent(forItem: n) as? Node).map { if case .systemFolder = $0.kind { true } else { false } } ?? false
+            title = o.type.isGlobal || o.owner == ownSchema || (inSystemFolder && o.owner == "SYS") ? o.name : "\(o.owner).\(o.name)"
             symbol = ObjectSymbols.symbol(for: o.type)
             color = o.isValid ? Self.color(o.type) : .systemRed
             if !o.isValid { textColor = .systemRed }
@@ -600,7 +613,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         case .group(_, let items):
             // Folder elementów (np. Kolumny) → nazwy po przecinku (UG 21.1).
             return BrowserDrop.namesList(items.map(\.name)) as NSString
-        case .folder, .userFolder:
+        case .folder, .userFolder, .systemFolder:
             let names = (n.children ?? []).compactMap(\.object).map(\.name)
             return names.isEmpty ? nil : BrowserDrop.namesList(names) as NSString
         default: return nil

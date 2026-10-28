@@ -90,6 +90,7 @@ enum MultiObjectCommands {
                 guard let m = ctx.workspace.metadata(for: try ctx.objectConnection()) else { throw CommandError.notConnected }
                 let sql = objs.compactMap(ObjectCommands.compileStatement)
                 guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Żadnego z zaznaczonych obiektów nie da się kompilować")) }
+                try await ctx.workspace.confirmOracleMaintained(objects: objs)
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: m.connectionID))
                 var invalid: [String] = []
@@ -135,6 +136,7 @@ enum MultiObjectCommands {
                     for o in objs { try requireOwnLink(o, sessionUser: user) }
                 }
                 let sql = try objs.map { try dropStatement($0) }
+                try await ctx.workspace.confirmOracleMaintained(objects: objs)
                 try await ctx.workspace.guardModification(sql, connectionID: m.connectionID)
                 if ctx.invoker == .user, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Usunąć \(objs.count) obiektów?"), message: objs.map(\.qualifiedName).joined(separator: "\n"),
