@@ -67,12 +67,18 @@ public enum ManagementPacks {
     /// Dwa ostatnie migawki AWR bieżącej instancji (początek, koniec) albo nil, gdy jest ich mniej niż dwie.
     public static func lastSnapshots(in s: any DatabaseSession) async throws -> (dbid: String, instance: String, begin: String, end: String)? {
         // W PDB migawki mają DBID kontenera (CON_DBID), nie CDB z V$DATABASE.
-        let (_, rows) = try await s.queryAll("""
-            select dbid, instance_number, snap_id from (
-              select dbid, instance_number, snap_id from dba_hist_snapshot
-               where dbid = to_number(sys_context('userenv', 'con_dbid')) and instance_number = (select instance_number from v$instance)
-               order by snap_id desc fetch first 2 rows only) order by snap_id
-            """, limit: 2)
+        let rows: [[OracleValue]]
+        do {
+            rows = try await s.queryAll("""
+                select dbid, instance_number, snap_id from (
+                  select dbid, instance_number, snap_id from dba_hist_snapshot
+                   where dbid = to_number(sys_context('userenv', 'con_dbid')) and instance_number = (select instance_number from v$instance)
+                   order by snap_id desc fetch first 2 rows only) order by snap_id
+                """, limit: 2).1
+        } catch let e as OracleError where [942, 1031].contains(e.code) {
+            // Uprawnienie do pakietu bez dostępu do słownika (np. tylko rola OEM_MONITOR) — komunikat zamiast ORA-00942.
+            throw CommandError.notAvailable(L10n.tr("Odczyt migawek AWR wymaga uprawnienia do widoków DBA_HIST_SNAPSHOT i V$INSTANCE (zwykle przez rolę DBA albo SELECT_CATALOG_ROLE). Administrator bazy może je nadać: GRANT SELECT_CATALOG_ROLE TO \(grantee(s.info.sessionUser));"))
+        }
         guard rows.count == 2 else { return nil }
         return (rows[0][0].displayText ?? "", rows[0][1].displayText ?? "", rows[0][2].displayText ?? "", rows[1][2].displayText ?? "")
     }
@@ -88,7 +94,23 @@ public enum ManagementPacks {
         let n = try await s.scalar("select count(*) from all_objects where owner = 'SYS' and object_name = :p and object_type = 'PACKAGE'",
                                    binds: [BindVariable(name: "p", value: .text(package))])
         guard n == "0" else { return }
-        throw CommandError.notAvailable(L10n.tr("\(report) wymaga uprawnienia EXECUTE do pakietu \(package) (zwykle przez rolę DBA) i licencji Oracle Diagnostics Pack. Administrator bazy może je nadać: GRANT EXECUTE ON SYS.\(package) TO \(s.info.sessionUser);"))
+        let user = grantee(s.info.sessionUser)
+        throw CommandError.notAvailable(L10n.tr("\(report) wymaga uprawnienia EXECUTE do pakietu \(package) (zwykle przez rolę DBA) i licencji Oracle Diagnostics Pack. Administrator bazy może je nadać: GRANT EXECUTE ON SYS.\(package) TO \(user);"))
+    }
+
+    /// Użytkownik w poleceniu GRANT: nazwa zwykła bez cudzysłowów, inna (małe litery, spacje, znaki spoza
+    /// `A–Z 0–9 _ $ #`) w cudzysłowach; nieznana — zamiennik do uzupełnienia.
+    static func grantee(_ user: String) -> String {
+        guard !user.isEmpty else { return L10n.tr("<użytkownik>") }
+        if user.range(of: "^[A-Z][A-Z0-9_$#]*$", options: .regularExpression) != nil { return user }
+        return "\"" + user.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+    }
+
+    /// ADDM analizuje migawki repozytorium AWR: potrzebny DBMS_WORKLOAD_REPOSITORY (DBMS_ADDM bywa nadany PUBLIC,
+    /// więc sam nie wystarcza do oceny) i DBMS_ADDM.
+    static func requireADDM(_ s: any DatabaseSession) async throws {
+        try await requireExecute("DBMS_WORKLOAD_REPOSITORY", in: s, report: L10n.tr("Raport ADDM"))
+        try await requireExecute("DBMS_ADDM", in: s, report: L10n.tr("Raport ADDM"))
     }
 
     /// Raport AWR (HTML) między migawkami.
@@ -109,7 +131,7 @@ public enum ManagementPacks {
 
     /// Raport ADDM dla przedziału migawek (zadanie doradcy tworzone i usuwane).
     public static func addmReport(_ s: any DatabaseSession, begin: String, end: String) async throws -> String {
-        try await requireExecute("DBMS_ADDM", in: s, report: L10n.tr("Raport ADDM"))
+        try await requireADDM(s)
         let task = "PELIKAN_ADDM_\(UUID().uuidString.prefix(8))"
         // Sprzątanie także po błędzie analizy (zadanie mogło już powstać).
         defer { Task { _ = try? await s.execute("begin dbms_addm.delete(:t); end;", binds: [BindVariable(name: "t", value: .text(task))]) } }
@@ -189,6 +211,8 @@ enum PackCommands {
         [
             report("tools.awrReport", L10n.tr("Raport AWR"), L10n.tr("Raport AWR (HTML) między dwiema ostatnimi migawkami albo wskazanymi; wymaga Diagnostics Pack."), "SD-DBA-002",
                    need: .diagnostics, params: [CommandParameter("begin", .integer, L10n.tr("Migawka początkowa")), CommandParameter("end", .integer, L10n.tr("Migawka końcowa"))]) { ctx, s in
+                // Uprawnienie przed migawkami: bez niego DBA_HIST_SNAPSHOT kończy się ORA-00942 zamiast komunikatu z GRANT.
+                try await ManagementPacks.requireExecute("DBMS_WORKLOAD_REPOSITORY", in: s, report: L10n.tr("Raport AWR"))
                 guard let snaps = try await ManagementPacks.lastSnapshots(in: s) else {
                     throw CommandError.notAvailable(L10n.tr("W repozytorium AWR są mniej niż dwie migawki tej bazy"))
                 }
@@ -200,6 +224,7 @@ enum PackCommands {
                 try await ManagementPacks.ashReport(s, minutes: Int(ctx.arguments.int("minutes") ?? 30))
             },
             report("tools.addmReport", L10n.tr("Raport ADDM"), L10n.tr("Analiza ADDM dwóch ostatnich migawek AWR; wymaga Diagnostics Pack."), "SD-DBA-002", need: .diagnostics) { _, s in
+                try await ManagementPacks.requireADDM(s)
                 guard let snaps = try await ManagementPacks.lastSnapshots(in: s) else {
                     throw CommandError.notAvailable(L10n.tr("W repozytorium AWR są mniej niż dwie migawki tej bazy"))
                 }

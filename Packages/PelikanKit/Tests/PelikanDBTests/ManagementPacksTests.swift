@@ -15,6 +15,16 @@ struct ManagementPacksOfflineTests {
         if case .failure = ManagementPacks.evaluate(parameter: "DIAGNOSTIC+TUNING", declared: .diagnostics, need: .tuning)! {} else { Issue.record("tuning bez licencji") }
         if case .failure = ManagementPacks.evaluate(parameter: "DIAGNOSTIC+TUNING", declared: ManagementPackLicense.none, need: .diagnostics)! {} else { Issue.record("brak licencji") }
     }
+
+    @Test("Użytkownik w poleceniu GRANT: zwykła nazwa bez cudzysłowów, inna w cudzysłowach, pusta — zamiennik")
+    func grantee() {
+        #expect(ManagementPacks.grantee("SCOTT") == "SCOTT")
+        #expect(ManagementPacks.grantee("APP_USER$1#") == "APP_USER$1#")
+        #expect(ManagementPacks.grantee("scott") == "\"scott\"")
+        #expect(ManagementPacks.grantee("C##ADMIN") == "C##ADMIN" && ManagementPacks.grantee("1ABC") == "\"1ABC\"")
+        #expect(ManagementPacks.grantee("A\"B") == "\"A\"\"B\"")
+        #expect(ManagementPacks.grantee("") == L10n.tr("<użytkownik>"))
+    }
 }
 
 @MainActor
@@ -69,5 +79,29 @@ struct ManagementPacksTests {
                 #expect(m.contains("DBMS_WORKLOAD_REPOSITORY") && m.contains("GRANT EXECUTE"), "\(m)")
             }
         }
+    }
+
+    @Test("Komendy AWR i ADDM bez uprawnień: komunikat z GRANT przed odczytem migawek (nie ORA-00942)")
+    func reportCommandsWithoutPrivilege() async throws {
+        let c = TestDatabase.config!
+        let ws = Workspace(drivers: [.instantClient: ODPIDriver()])
+        let ui = TestUI()
+        ws.ui = ui
+        var def = ConnectionDefinition(name: "dev_agent_test", target: ConnectionTarget(user: c.agentUser, connectString: c.connectString))
+        def.managementPacks = .diagnosticsAndTuning
+        try ws.connections.upsert(def, password: c.agentPassword)
+        ws.sessions.setMainConnection(def.id)
+        // DBMS_ADDM bywa nadany PUBLIC — ADDM sprawdza najpierw dostęp do repozytorium AWR.
+        for (id, package) in [("tools.awrReport", "DBMS_WORKLOAD_REPOSITORY"), ("tools.addmReport", "DBMS_WORKLOAD_REPOSITORY")] {
+            do {
+                try await ws.invoke(CommandID(rawValue: id))
+                Issue.record("\(id) bez uprawnień")
+            } catch let CommandError.notAvailable(m) {
+                #expect(m.contains("GRANT EXECUTE ON SYS.\(package) TO \(c.agentUser.uppercased());") && !m.contains("ORA-"), "\(id): \(m)")
+            } catch {
+                Issue.record("\(id): \(error)")
+            }
+        }
+        await ws.sessions.disconnectAll()
     }
 }
