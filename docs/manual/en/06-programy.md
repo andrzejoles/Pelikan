@@ -73,8 +73,9 @@ thousands of lines.
   subtype), cursors, variables, constants, exceptions, pragmas and nested subprograms. Private body elements (not
   declared in the specification) are italic. A click or Enter moves the cursor to the element (also on another tab),
   arrow keys in the tree move the cursor without leaving the tree. The field above the tree filters names. The tree
-  tracks the cursor and has sorting and a menu (select, copy, cut, test subprogram, expand/collapse all). Below the editor, the **code hierarchy** shows the path from the cursor (package › procedure ›
-  block); clicking a level selects it or moves to its name.
+  tracks the cursor and has sorting and a menu (select, copy, cut, test subprogram, expand/collapse all). Below the
+  editor, the **code hierarchy** shows the path from the cursor (package › procedure › block); clicking a level
+  selects it or moves to its name.
 - The context menu on a database object name in the editor offers the same actions as the Object Browser.
 - **F1** opens the Oracle documentation for the word under the cursor.
 

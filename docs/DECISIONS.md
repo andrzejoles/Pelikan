@@ -1985,8 +1985,8 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   (`scrollToSelection`) sprawdza ramkę fragmentu po układzie widocznego obszaru i poprawia położenie (do czterech
   razy, bez układu całego tekstu).
 - **Karty:** dokument zostaje jeden (zapis, F8 — wszystkie jednostki, worksety, historia lokalna, agent bez zmian).
-  Tekst dzieli się na rozłączne odcinki pełnych linii (`ProgramUnitTabs`): kończący `/` i puste linie należą do
-  jednostki przed nimi, komentarz przed `CREATE` — do następnej. Edytor ukrywa odcinki innych kart tym samym
+  Tekst dzieli się na rozłączne odcinki pełnych linii (`ProgramUnitTabs`): kończący `/` należy do jednostki przed
+  nim, puste linie i komentarz przed `CREATE` — do następnej. Edytor ukrywa odcinki innych kart tym samym
   mechanizmem co zwijanie (`FoldingContentDelegate` pomija akapity, zakresy zwinięć i kart scalone). Karta aktywna to
   zawsze karta odcinka z kursorem (`Document.activeUnitTab`) — dlatego każde przejście z modelu w inne miejsce tekstu
   przełącza kartę samo: komunikat kompilacji, Zawartość kodu, Znajdź następne/poprzednie, Przejdź do deklaracji, Idź do
@@ -2008,7 +2008,9 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   tak jak ALL_SOURCE i ALL_ERRORS oraz jak w oknie programu wzorca (każda jednostka ma własny edytor numerowany od 1).
   Linie przed słowem typu (komentarz nagłówka, `CREATE OR REPLACE` w osobnej linii) są bez numeru („–” na pasku).
   Idź do linii poza końcem jednostki zostaje na jej ostatniej linii. Okno bez kart — linie dokumentu jak dotąd.
-  Agent i komendy z pozycją w tekście (offsety, `executionLine`, punkty przerwania) dalej działają na dokumencie.
+  Agent (także `edit.gotoLine` wywołane przez agenta) i komendy z pozycją w tekście (offsety, `executionLine`,
+  punkty przerwania) dalej działają na liniach dokumentu. Wydruk i lista To-Do (także `edit.todoToggle` z numerem
+  linii) też — drukowany jest cały tekst okna, wszystkie jednostki, z numeracją dokumentu.
 - **Wyszukiwanie:** Znajdź następne/poprzednie przeszukuje cały dokument i przełącza kartę na trafienie w innej
   jednostce (Pelikan nie ma osobnych edytorów kart; zakres „cały tekst” zamiast „bieżąca karta” — mniej klikania przy
   szukaniu użycia w specyfikacji i ciele). **Zamień wszystko** działa na całym dokumencie (wszystkie jednostki),
@@ -2028,3 +2030,20 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   60 000 linii 0,5–1 s na przełączenie (Debug). Przy okazji: inspekcja nieużywanych deklaracji przeglądała wszystkie
   tokeny dla każdej deklaracji (pakiet 60 000 linii z 5 000 funkcji blokował główny wątek na minuty) — teraz indeks
   pozycji słów i wyszukiwanie binarne.
+- **Poprawki po przeglądzie kodu:** wstawienie dokładnie na granicy kart należy do karty późniejszej (kursor na
+  początku karty stoi na granicy — Enter, wklejenie, To-Do w pierwszej kolumnie zostają na karcie); ostatnia karta
+  zawsze do końca tekstu. Zmiana obejmująca granicę (Zamień wszystko, formatowanie całości, Przywróć, historia
+  lokalna, cofnięcie takich zmian) dzieli tekst na karty od razu, bez czekania na analizę w tle. Po analizie w tle,
+  która zmieniła kartę (okno otwarte na linii, debuger, usunięcie jednostki), edytor przewija do kursora. Komendy
+  edycji z modelu nie zmieniają tekstu poza kartą (`Document.unitEditBounds` publikowane przez edytor — np. „Usuń
+  następne słowo” na końcu karty odmawia), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
+  bez argumentu usuwa jednostkę karty z kursorem. Walidacja menu i wstążki komend kart korzysta z liczby kart z
+  ostatniego podziału (`Document.unitTabCount`), bez dzielenia tekstu przy każdym znaku (R4-01); pozycja słowa typu
+  liczona w tekście jednostki, nie w całym dokumencie. Numery linii listy komunikatów liczone raz na listę. ⌘A
+  i przeciąganie myszą nie przewijają na koniec karty. Code Contents: stan rozwinięcia z rodzajem węzła
+  (specyfikacja i ciało osobno), rozwinięcie sprzed filtra przywracane, filtr z opóźnieniem 180 ms, sortowanie nie
+  zmienia kolejności parametrów; prywatne przeciążenie (jedna wersja w specyfikacji, dwie w ciele) zostaje
+  prywatne; pragmy nie trafiają do podpowiedzi kodu ani do „Przejdź do deklaracji”.
+- **Podzielony edytor:** bez dodatkowych kursorów zaznaczenie główne stosuje tylko `syncFromModel`, który pomija
+  panel, gdy pisze się w drugim (`peerActive`) — pasywny panel podziału (okna SQL, programu, testu) nie przesuwa
+  kursora za aktywnym, tak jak dotąd przy wpisywaniu tekstu.

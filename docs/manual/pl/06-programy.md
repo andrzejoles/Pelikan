@@ -70,8 +70,8 @@ kilkadziesiąt tysięcy linii.
   zmienne, stałe, wyjątki, pragmy i podprogramy zagnieżdżone. Elementy prywatne ciała (niezadeklarowane w
   specyfikacji) są pochylone. Klik albo Enter przenosi kursor do elementu (także na innej karcie), strzałki w drzewie
   przesuwają kursor bez opuszczania drzewa. Pole nad drzewem filtruje nazwy. Drzewo śledzi kursor, ma sortowanie i menu
-  (zaznacz, kopiuj, wytnij, testuj podprogram, rozwiń/zwiń wszystko). Pod edytorem **hierarchia kodu** pokazuje ścieżkę od kursora (pakiet › procedura
-  › blok); kliknięcie poziomu zaznacza go albo przenosi do nazwy.
+  (zaznacz, kopiuj, wytnij, testuj podprogram, rozwiń/zwiń wszystko). Pod edytorem **hierarchia kodu** pokazuje
+  ścieżkę od kursora (pakiet › procedura › blok); kliknięcie poziomu zaznacza go albo przenosi do nazwy.
 - Menu kontekstowe na nazwie obiektu bazy w edytorze oferuje te same czynności co Przeglądarka obiektów.
 - **F1** otwiera dokumentację Oracle dla słowa pod kursorem.
 
