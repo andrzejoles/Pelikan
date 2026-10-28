@@ -107,6 +107,16 @@ public struct DBObjectChild: Sendable, Hashable, Identifiable {
     public var id: String { "\(kind.rawValue):\(name):\(detail)" }
 }
 
+/// Foldery DBA i DBMS na końcu gałęzi połączenia w Object Browserze: obiekty słownika (`DBA_…`) i pakiety Oracle
+/// (`DBMS_…`), do których użytkownik ma uprawnienia.
+public enum SystemObjectFolder: String, CaseIterable, Sendable {
+    case dba = "DBA"
+    case dbms = "DBMS"
+
+    /// Przedrostek nazw obiektów folderu.
+    public var prefix: String { rawValue + "_" }
+}
+
 /// Filtr Object Browsera (UG 21.1): nazwy z `%`, wiele po przecinku; Status=, Source= (tekst w źródle PL/SQL).
 public struct ObjectFilter: Sendable, Hashable {
     public var text = ""
@@ -411,6 +421,29 @@ public final class MetadataProvider {
             // Sortowanie tylko po dołączeniu publicznych (z filtrem nazwanym ich nie ma — zostaje jego ORDER BY).
             let publicSynonyms = try await applicationPublicSynonyms(filter, in: s)
             if !publicSynonyms.isEmpty { list = (list + publicSynonyms).sorted { ($0.name, $0.owner) < ($1.name, $1.owner) } }
+        }
+        cache[key] = list
+        return list
+    }
+
+    /// Obiekty folderu DBA albo DBMS na końcu gałęzi połączenia: nazwa z przedrostkiem `DBA_` albo `DBMS_`, wszyscy
+    /// właściciele, tylko to, do czego użytkownik ma uprawnienia — ALL_OBJECTS pokazuje obiekt innego schematu dopiero
+    /// z nadanym uprawnieniem (wprost, przez rolę albo PUBLIC). Bez synonimów (publiczny synonim każdego widoku DBA_
+    /// i pakietu DBMS_ widzi każdy, także bez uprawnień do obiektu) i bez ciał pakietów i typów. Filtr: wzorce nazw.
+    public func systemObjects(_ folder: SystemObjectFolder, filter: ObjectFilter = ObjectFilter()) async throws -> [DBObject] {
+        let key = "system|\(folder.rawValue)|\(filter.text)"
+        if let c = cache[key] { return c }
+        let s = try await session()
+        var binds = [BindVariable(name: "px", value: .text(folder.prefix.replacingOccurrences(of: "_", with: "\\_") + "%"))]
+        var sql = "select o.owner, o.object_name, o.object_type, o.status, o.created, o.last_ddl_time from all_objects o"
+            + " where o.object_name like :px escape '\\'"
+            + " and o.object_type not in ('SYNONYM', 'PACKAGE BODY', 'TYPE BODY', 'JAVA CLASS', 'JAVA RESOURCE')"
+        sql = Self.applyNameFilter(sql, column: "o.object_name", filter: filter, binds: &binds) + " order by o.object_name, o.owner"
+        let (_, rows) = try await s.queryAll(sql, binds: binds, limit: 1_000_000)
+        let list = rows.compactMap { r -> DBObject? in
+            guard let type = r[2].displayText.flatMap(DBObjectType.init(rawValue:)) else { return nil }
+            return DBObject(owner: r[0].displayText ?? "", name: r[1].displayText ?? "", type: type, status: r[3].displayText ?? "VALID",
+                            created: Self.timestamp(r[4]), lastDDL: Self.timestamp(r[5]))
         }
         cache[key] = list
         return list
