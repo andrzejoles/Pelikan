@@ -2037,8 +2037,9 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   która zmieniła kartę (okno otwarte na linii, debuger, usunięcie jednostki), edytor przewija do kursora. Komendy
   edycji użytkownika i makr nie zmieniają tekstu poza kartą z kursorem (`Document.unitEditBounds` liczone z modelu
   w chwili wywołania, nie z widoku — makro może zmienić kartę i od razu edytować; np. „Usuń następne słowo” na końcu
-  karty odmawia, „Powiel linię” w ostatniej linii karty jest dozwolone; agent działa na dokumencie bez tego
-  ograniczenia), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
+  karty odmawia, „Powiel linię” w ostatniej linii karty jest dozwolone, a edytor wstawia kopię przed kończącym
+  znakiem nowej linii, więc zostaje na tej karcie; kolejne linie z samym „/” należą do jednostki przed nimi; agent
+  działa na dokumencie bez tego ograniczenia; okno z jedną jednostką — bez dzielenia tekstu przy komendzie), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
   bez argumentu usuwa jednostkę karty z kursorem. Walidacja menu i wstążki komend kart korzysta z liczby kart z
   ostatniego podziału (`Document.unitTabCount`), bez dzielenia tekstu przy każdym znaku (R4-01); pozycja słowa typu
   liczona w tekście jednostki, nie w całym dokumencie. Numery linii listy komunikatów liczone raz na listę. ⌘A

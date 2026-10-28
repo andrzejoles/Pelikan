@@ -130,6 +130,8 @@ public final class Document: Identifiable {
     /// wywołania — nie z widoku, który przełącza kartę dopiero po zmianie zaznaczenia (agent albo makro zmienia
     /// zaznaczenie i od razu wywołuje komendę edycji). Komendy edycji i dodatkowe kursory nie wychodzą poza niego.
     public var unitEditBounds: ClosedRange<Int>? {
+        // Okno z jedną jednostką (według pamięci kart) — bez dzielenia tekstu przy każdej komendzie edycji.
+        guard unitTabCount > 1 else { return nil }
         let tabs = programUnitTabs
         guard let i = ProgramUnitTabs.index(of: selectedRange.lowerBound, in: tabs) else { return nil }
         let ns = text as NSString

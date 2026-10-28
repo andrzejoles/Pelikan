@@ -40,7 +40,14 @@ public enum ProgramUnitTabs {
                 let line = ns.lineRange(for: NSRange(location: p, length: 0))
                 if isBlank(NSRange(location: line.location, length: p - line.location)),
                    ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" {
-                    boundary = min(line.upperBound, unitLine)
+                    // Kolejne linie z samym „/” (np. powielona linia) — też przy jednostce przed nimi.
+                    var end = line.upperBound
+                    while end < unitLine {
+                        let next = ns.lineRange(for: NSRange(location: end, length: 0))
+                        guard next.length > 0, ns.substring(with: next).trimmingCharacters(in: .whitespacesAndNewlines) == "/" else { break }
+                        end = next.upperBound
+                    }
+                    boundary = min(end, unitLine)
                 }
             }
             // Odcinki niepuste i rosnące (tekst niepoprawny: dwie jednostki w jednej linii — linia należy do pierwszej).

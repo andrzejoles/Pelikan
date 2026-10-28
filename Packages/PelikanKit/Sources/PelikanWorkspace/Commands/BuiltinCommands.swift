@@ -281,9 +281,11 @@ public enum BuiltinCommands {
             if !ctx.invoker.isAgent, let b = doc.unitEditBounds {
                 let c = EditorShift.Change(old: doc.text, new: e.text)
                 // Czyste wstawienie tuż za końcem karty (np. Powiel linię w ostatniej linii) — najmniejsza różnica
-                // wskazuje początek linii następnej karty, choć tekst wstawiono na końcu tej karty.
-                let pureInsertAtEnd = c.prefix == c.oldEnd && c.prefix == b.upperBound + 1
-                    && (doc.text as NSString).length > b.upperBound && (doc.text as NSString).character(at: b.upperBound) == 0x0A
+                // wskazuje początek linii następnej karty, choć tekst wstawiono na końcu tej karty; edytor przesuwa
+                // takie wstawienie o znak w lewo, gdy wstawiony tekst kończy się znakiem nowej linii (zostaje na karcie).
+                let ns = doc.text as NSString, nn = e.text as NSString
+                let pureInsertAtEnd = c.prefix == c.oldEnd && c.prefix == b.upperBound + 1 && ns.length > b.upperBound
+                    && ns.character(at: b.upperBound) == 0x0A && c.delta > 0 && nn.character(at: c.prefix + c.delta - 1) == 0x0A
                 guard c.prefix >= b.lowerBound, c.oldEnd <= b.upperBound || pureInsertAtEnd else {
                     throw CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))
                 }

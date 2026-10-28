@@ -311,6 +311,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Delegatem NSTextStorage w TextKit 2 jest NSTextContentStorage — nie podmieniamy go, tylko słuchamy powiadomień.
         NotificationCenter.default.addObserver(self, selector: #selector(storageDidProcessEditing(_:)),
                                                name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
+        NotificationCenter.default.addObserver(self, selector: #selector(storageWillProcessEditing(_:)),
+                                               name: NSTextStorage.willProcessEditingNotification, object: textView.textStorage)
         textView.setAccessibilityLabel(document.fullTitle)
         textView.textContentStorage?.delegate = folding
         configureCompletion()
@@ -762,9 +764,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let selection = document.selectedRange
         let error = document.errorRange
         // Sama zmiana zaznaczenia nie zmienia wersji tekstu — bez porównania całego dokumentu.
+        var textApplied = false
         if document.textRevision != syncedRevision, text != textView.string {
             applyExternal(text)
             scheduleAnalysis()
+            textApplied = true
         } else {
             syncedRevision = document.textRevision
         }
@@ -780,6 +784,11 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             textView.setSelectedRange(wanted)
             applyingModelSelection = false
             scrollToSelection(wanted)
+            selectionDidChange()
+        } else if textApplied, current == wanted {
+            // Zmiana tekstu z komendy (np. Powiel linię): widok sam przesunął kursor tam, gdzie chce model — bez
+            // zmiany zaznaczenia nie było przewinięcia do kursora ani odświeżenia pozycji na pasku.
+            DispatchQueue.main.async { [weak self] in self?.scrollToSelection(wanted) }
             selectionDidChange()
         }
         if let error {
@@ -810,8 +819,17 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         while prefix < minLen, old.character(at: prefix) == new.character(at: prefix) { prefix += 1 }
         var suffix = 0
         while suffix < minLen - prefix, old.character(at: old.length - 1 - suffix) == new.character(at: new.length - 1 - suffix) { suffix += 1 }
-        let range = NSRange(location: prefix, length: old.length - prefix - suffix)
-        let replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        var range = NSRange(location: prefix, length: old.length - prefix - suffix)
+        var replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        // Czyste wstawienie wypadające na granicy kart, gdy można je przesunąć o znak w lewo (tekst kończy się tym samym
+        // znakiem co ten przed granicą — zwykle „\n”): np. Powiel linię w ostatniej linii karty wstawia kopię na końcu
+        // tej karty, a najmniejsza różnica wskazuje początek następnej (tekst na granicy należy do karty późniejszej).
+        let rep = replacement as NSString
+        if range.length == 0, rep.length > 0, range.location > 0, tabs.dropFirst().contains(where: { $0.segment.lowerBound == range.location }),
+           old.character(at: range.location - 1) == rep.character(at: rep.length - 1) {
+            replacement = old.substring(with: NSRange(location: range.location - 1, length: 1)) + rep.substring(to: rep.length - 1)
+            range.location -= 1
+        }
         updatingFromModel = true
         defer { updatingFromModel = false }
         // Także wstawienie do pustego okna i pełna zamiana dużego tekstu idą przez shouldChangeText — jedna operacja
@@ -831,7 +849,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             if whole {
                 highlighter.highlightAll(storage, font: font)
             } else {
-                highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
+                highlighter.highlight(storage, editedRange: NSRange(location: range.location, length: (replacement as NSString).length),
                                       delta: (replacement as NSString).length - range.length, font: font)
             }
         }
@@ -840,6 +858,30 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
+
+    /// Zmiana obejmująca granicę kart wykryta przed przetworzeniem edycji (karty liczone potem od razu).
+    private var pendingSpansBoundary = false
+
+    /// Granice kart i ukryte zakresy przesuwane przed przetworzeniem edycji: magazyn treści tworzy akapity zmienionego
+    /// fragmentu w trakcie przetwarzania i może wtedy pytać delegata, czy je pokazać — zakresy mają już odpowiadać
+    /// nowemu tekstowi. Bez ponownego układu całości.
+    @objc private func storageWillProcessEditing(_ note: Notification) {
+        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters),
+              !unitTabs.isEmpty || !foldHidden.isEmpty else { return }
+        let editedRange = storage.editedRange
+        let delta = storage.changeInLength
+        let edited = editedRange.location..<(editedRange.location + editedRange.length)
+        let oldEnd = edited.upperBound - delta
+        // Zmiana obejmująca granicę kart (w starym tekście granica wewnątrz zastąpionego fragmentu).
+        pendingSpansBoundary = tabs.dropFirst().contains { $0.segment.lowerBound > edited.lowerBound && $0.segment.lowerBound < oldEnd }
+        if !tabs.isEmpty { tabs = ProgramUnitTabs.shift(tabs, edited: edited, delta: delta) }
+        // Wstawienie na początku ukrytego zakresu jest przed nim (widoczne), na jego końcu — za nim.
+        let pure = oldEnd == edited.lowerBound
+        func moveLower(_ o: Int) -> Int { o < edited.lowerBound ? o : o >= oldEnd ? o + delta : edited.upperBound }
+        func moveUpper(_ o: Int) -> Int { o < edited.lowerBound || (pure && o == edited.lowerBound) ? o : o >= oldEnd ? o + delta : edited.upperBound }
+        foldHidden = Self.merged(foldHidden.map { moveLower($0.lowerBound)..<max(moveLower($0.lowerBound), moveUpper($0.upperBound)) })
+        updateHidden(invalidate: false)
+    }
 
     @objc private func storageDidProcessEditing(_ note: Notification) {
         guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters) else { return }
@@ -851,21 +893,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if !regions.isEmpty {
             regions = CodeFolding.shift(regions, edited: editedRange.location..<(editedRange.location + editedRange.length), delta: delta)
         }
-        // Granice kart i ukryte zakresy przesuwane od razu (bez ponownego układu całości) — układ edytowanego akapitu
-        // TextKit 2 robi sam, a analiza jednostek w tle poprawi granice po chwili.
-        if !unitTabs.isEmpty || !foldHidden.isEmpty {
-            let edited = editedRange.location..<(editedRange.location + editedRange.length)
-            let oldEnd = edited.upperBound - delta
-            // Zmiana obejmująca granicę kart (w starym tekście granica wewnątrz zastąpionego fragmentu).
-            let spansBoundary = tabs.dropFirst().contains { $0.segment.lowerBound > edited.lowerBound && $0.segment.lowerBound < oldEnd }
-            if !tabs.isEmpty { tabs = ProgramUnitTabs.shift(tabs, edited: edited, delta: delta) }
-            // Wstawienie na początku ukrytego zakresu jest przed nim (widoczne), na jego końcu — za nim.
-            let pure = oldEnd == edited.lowerBound
-            func moveLower(_ o: Int) -> Int { o < edited.lowerBound ? o : o >= oldEnd ? o + delta : edited.upperBound }
-            func moveUpper(_ o: Int) -> Int { o < edited.lowerBound || (pure && o == edited.lowerBound) ? o : o >= oldEnd ? o + delta : edited.upperBound }
-            foldHidden = Self.merged(foldHidden.map { moveLower($0.lowerBound)..<max(moveLower($0.lowerBound), moveUpper($0.upperBound)) })
-            updateHidden(invalidate: false)
-            if spansBoundary { DispatchQueue.main.async { [weak self] in self?.recomputeTabsNow() } }
+        if pendingSpansBoundary {
+            pendingSpansBoundary = false
+            DispatchQueue.main.async { [weak self] in self?.recomputeTabsNow() }
         }
         guard !updatingFromModel else { return }
         // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).

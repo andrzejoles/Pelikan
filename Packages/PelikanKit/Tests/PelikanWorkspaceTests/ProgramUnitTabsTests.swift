@@ -99,11 +99,18 @@ struct ProgramUnitTabsTests {
         #expect(doc.text.contains("  PROCEDURE A IS\n"))
         try await ws.invoke("edit.lowercase")
         doc.text = Self.text
-        // Powiel linię w ostatniej linii karty specyfikacji — czyste wstawienie na granicy, dozwolone.
+        // Powiel linię w ostatniej linii karty specyfikacji (linia „/”) — dozwolone; kopia i kursor zostają na karcie
+        // specyfikacji, także po ponownym podziale (kolejne linie z samym „/” należą do jednostki przed nimi).
         doc.selectedRange = limit..<limit
         try await ws.invoke("edit.duplicateLine")
         #expect((doc.text as NSString).length == (Self.text as NSString).length + 2)
+        #expect(doc.activeUnitTab == 0)
+        #expect(doc.programUnitTabs[0].segment.upperBound == line(6) + 2)
         doc.text = Self.text
+        // Okno z jedną jednostką — bez granic karty (i bez dzielenia tekstu przy komendzie).
+        let single = ws.newDocument(.program, text: "create procedure p is begin null; end;\n/\n")
+        #expect(single.unitEditBounds == nil)
+        ws.activate(doc.id)
         // Pamięć kart: liczba kart bez dzielenia tekstu po zmianie (walidacja wstążki przy każdym znaku).
         #expect(doc.unitTabCount == 2)
         doc.text = "x" + doc.text
