@@ -1,4 +1,5 @@
 import Foundation
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -89,5 +90,18 @@ struct PlanAnalysisTests {
         // Nazwy różniące się wielkością liter albo znakiem specjalnym — różne pliki (R7-20).
         let names = ["EMP", "Emp", "emp", "A$B", "A#B", "A_B"].map { SchemaDoc.fileName("TABLE", $0) }
         #expect(Set(names).count == names.count)
+    }
+
+    @Test("Autotrace przy wyłączonym podstawianiu: `&` bez pytania i bez zmian, zmienne wiązane z wartościami (jak okno SQL)")
+    func autotraceVariables() {
+        let sql = "select 'R&D', '&&x' from emp where deptno = :d and ename = :D"
+        let off = Stage7PlanCommands.autotraceRequests(sql, substitution: false, remembered: ["d": .text("10")])
+        #expect(off.map(\.name) == ["d"] && off.first?.kind == .bind && off.first?.value == .text("10"))
+        let prepared = Stage7PlanCommands.autotracePrepared(sql, substitution: false, values: ["D": .text("10")])
+        #expect(prepared.sql == sql)
+        #expect(prepared.binds.map(\.name) == ["d"] && prepared.binds.first?.value == .text("10"))
+        // Włączone podstawianie — pytanie także o `&` (jak dotąd).
+        let on = Stage7PlanCommands.autotraceRequests(sql, substitution: true, remembered: [:])
+        #expect(on.contains { $0.kind == .substitution })
     }
 }

@@ -52,6 +52,14 @@ struct Stage7PlanDBTests {
         let rb = try await ws.invoke("tools.autotrace")
         #expect(rb.value?.stringValue?.contains("A-Rows") == true)
         #expect(ui.askedVariables.map(\.name) == ["d"])
+        // Wyłączone podstawianie: `&` zostaje w tekście bez pytania, o zmienną wiązaną pyta dalej (jak okno SQL).
+        doc.substitutionEnabled = false
+        ui.askedVariables = []
+        doc.text = "select 'R&D' x from emp where deptno = :d"
+        let rs = try await ws.invoke("tools.autotrace")
+        #expect(rs.value?.stringValue?.contains("A-Rows") == true)
+        #expect(ui.askedVariables.map(\.name) == ["d"])
+        doc.substitutionEnabled = true
         doc.text = "select * from emp where deptno = 10"
         try await ws.invoke("tools.explainPlan")
         let plan = try #require(ws.activeDocument)

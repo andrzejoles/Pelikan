@@ -11,6 +11,31 @@ enum Stage7PlanCommands {
         try await ws.toolSession(name, connection: ws.toolConnection())
     }
 
+    /// Zmienne Autotrace jak w oknie SQL (`SQLExecutor.execute`): przy wyłączonym podstawianiu `&` zostaje w tekście
+    /// bez pytania, ale o zmienne wiązane `:nazwa` pyta zawsze — bez wartości wykonanie kończy się ORA-01008.
+    static func autotraceRequests(_ sql: String, substitution: Bool, remembered: [String: VariableValue]) -> [VariableRequest] {
+        if substitution { return SQLExecutor.variableRequests(ScriptSplitter.split(sql), remembered: remembered) }
+        // Same zmienne wiązane — filtr przed usunięciem powtórzeń (`'R&D'` i `:d` to ta sama nazwa).
+        return bindOccurrences(sql).map {
+            VariableRequest(name: $0.name, kind: .bind, options: $0.options ?? VariableOptions(name: $0.name), value: remembered[$0.name])
+        }
+    }
+
+    /// Pierwsze wystąpienia zmiennych wiązanych `:nazwa` (bez powtórzeń, bez rozróżniania wielkości liter).
+    static func bindOccurrences(_ sql: String) -> [VariableOccurrence] {
+        var seen = Set<String>()
+        return Variables.find(in: sql).filter { $0.kind == .bind && seen.insert($0.name.uppercased()).inserted }
+    }
+
+    /// Polecenie Autotrace z wartościami: przy wyłączonym podstawianiu tekst bez zmian (także `&&`), tylko zmienne wiązane.
+    static func autotracePrepared(_ sql: String, substitution: Bool, values: [String: VariableValue]) -> Variables.Prepared {
+        if substitution { return Variables.prepare(sql, values: values) }
+        let binds = bindOccurrences(sql).map { o in
+            (name: o.name, value: values[o.name] ?? values.first { $0.key.caseInsensitiveCompare(o.name) == .orderedSame }?.value ?? .null)
+        }
+        return Variables.Prepared(sql: sql, binds: binds)
+    }
+
     static var all: [Command] {
         let connected: @MainActor (Workspace) -> Bool = { connection($0) != nil }
         return [
@@ -27,13 +52,13 @@ enum Stage7PlanCommands {
                 // Zmienne wiązane (:nazwa — także zmienne PL/SQL zamienione przez ExplainPlan.prepare) i podstawienia (&) —
                 // jak w oknie SQL; bez wartości wykonanie kończyło się ORA-01008.
                 var values = doc.variableValues
-                let requests = SQLExecutor.variableRequests(ScriptSplitter.split(sql), remembered: values)
+                let requests = autotraceRequests(sql, substitution: doc.substitutionEnabled, remembered: values)
                 if !requests.isEmpty {
                     guard let answers = await ctx.ui?.askVariables(requests, document: doc) else { throw CommandError.cancelledByUser }
                     values.merge(answers) { $1 }
                     doc.variableValues = values
                 }
-                let prepared = Variables.prepare(sql, values: values)
+                let prepared = autotracePrepared(sql, substitution: doc.substitutionEnabled, values: values)
                 let binds = SQLExecutor.bindVariables(prepared)
                 let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("autotrace")))
                 var result: AutotraceResult?
