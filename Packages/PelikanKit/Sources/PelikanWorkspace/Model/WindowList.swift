@@ -17,6 +17,14 @@ public struct ConnectionIndicator: Sendable, Codable, Hashable, Identifiable {
 /// Kolejność listy okien (PD-UI-002).
 public enum WindowListSort: String, Sendable, Codable, CaseIterable {
     case opening, name, type
+
+    public var displayName: String {
+        switch self {
+        case .opening: L10n.tr("Kolejność otwarcia")
+        case .name: L10n.tr("Nazwa")
+        case .type: L10n.tr("Typ okna")
+        }
+    }
 }
 
 extension Workspace {
@@ -117,11 +125,17 @@ enum WindowListCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "window.listSort", title: L10n.tr("Sortuj listę okien…"), category: .window,
-                                      parameters: [CommandParameter("order", .string, L10n.tr("opening, name albo type"))],
+                                      parameters: [CommandParameter("order", .string, L10n.tr("opening, name albo type (bez argumentu — wybór z listy)"),
+                                                                    allowed: WindowListSort.allCases.map(\.rawValue))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Kolejność listy okien: otwarcia, nazwa albo typ okna."),
                                       inMenu: false, feature: "PD-UI-002")) { ctx in
-                guard let o = ctx.arguments.string("order").flatMap(WindowListSort.init(rawValue:)) else {
+                var order = ctx.arguments.string("order")
+                // Ze wstążki bez argumentu — wybór kolejności z listy.
+                if order == nil {
+                    order = try await ctx.choose(L10n.tr("Sortuj listę okien"), WindowListSort.allCases.map { (label: $0.displayName, value: $0.rawValue) })
+                }
+                guard let o = order.flatMap(WindowListSort.init(rawValue:)) else {
                     throw CommandError.invalidArgument("order", L10n.tr("Dozwolone: opening, name, type"))
                 }
                 ctx.workspace.settings.windowListSort = o

@@ -85,10 +85,12 @@ extension Workspace {
     static func isMacroCommand(_ id: CommandID) -> Bool { id.rawValue.hasPrefix("edit.macro") }
 
     /// Rejestracja wywołania w nagrywanym makrze (tylko komendy użytkownika zmieniające edytor albo interfejs — D-EDYTOR-1).
-    func recordMacroInvocation(_ record: CommandInvocationRecord) {
+    /// Argumenty wybrane w oknie pytania (`CommandResult.resolvedArguments`) uzupełniają podane — odtworzenie nie pyta.
+    func recordMacroInvocation(_ record: CommandInvocationRecord, resolved: CommandArguments? = nil) {
         guard let r = macroRecorder, !isPlayingMacro, record.invoker == .user, case .success = record.outcome, !Self.isMacroCommand(record.command),
               let c = registry.command(record.command), [.modifiesEditor, .uiState].contains(c.descriptor.effect) else { return }
-        r.record(.command(record.command, record.arguments))
+        let arguments = resolved.map { CommandArguments(record.arguments.values.merging($0.values) { $1 }) } ?? record.arguments
+        r.record(.command(record.command, arguments))
     }
 
     /// Tekst wpisany w edytorze (wywołuje edytor aplikacji).

@@ -124,10 +124,20 @@ public enum GridCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "grid.copyAs", title: L10n.tr("Kopiuj jako…"), category: .edit, submenu: L10n.tr("Wynik"),
-                                      parameters: [CommandParameter("format", .string, required: true, L10n.tr("Format"), allowed: ["csv", "tsv", "html", "xml", "sql", "expressionList"])],
+                                      parameters: [CommandParameter("format", .string, L10n.tr("Format (bez argumentu — wybór z listy)"), allowed: ["csv", "tsv", "html", "xml", "sql", "expressionList"])],
                                       agent: .none, effect: .none,
                                       summary: L10n.tr("Kopiuje zaznaczenie do schowka w wybranym formacie."), inMenu: false, feature: "PD-GRID-013"),
-                    validate: hasGrid) { ctx in try copy(ctx, try formatArgument(ctx), header: true) },
+                    validate: hasGrid) { ctx in
+                // Ze wstążki bez argumentu — wybór formatu (gdy jest wynik do skopiowania).
+                if ctx.arguments.string("format") == nil, ctx.askingUI != nil {
+                    _ = try requireSelection(ctx)
+                    if let f = try await ctx.choose(L10n.tr("Kopiuj jako"),
+                                                    [ExportFormat.csv, .tsv, .html, .xml, .sql, .expressionList].map { (label: $0.displayName, value: $0) }) {
+                        return try copy(ctx, f, header: true)
+                    }
+                }
+                return try copy(ctx, try formatArgument(ctx), header: true)
+            },
             Command(CommandDescriptor(id: "grid.export", title: L10n.tr("Eksportuj wynik…"), category: .file,
                                       parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: ["csv", "tsv", "html", "xml", "sql", "xlsx"])],
                                       agent: .none, effect: .external,

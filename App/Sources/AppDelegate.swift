@@ -866,11 +866,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         alert.messageText = title
         alert.informativeText = L10n.tr("Wybierz wartość")
         let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 260, height: 26), pullsDown: false)
-        popup.addItems(withTitles: values)
+        // Pozycje pojedynczo: `addItems(withTitles:)` pomija powtórzone tytuły, a wynik to wartość z listy wg indeksu.
+        for v in values { popup.menu?.addItem(NSMenuItem(title: v, action: nil, keyEquivalent: "")) }
         alert.accessoryView = popup
         alert.addButton(withTitle: L10n.tr("Wybierz"))
         alert.addButton(withTitle: L10n.tr("Anuluj"))
-        return alert.runModal() == .alertFirstButtonReturn ? popup.titleOfSelectedItem : nil
+        guard alert.runModal() == .alertFirstButtonReturn, values.indices.contains(popup.indexOfSelectedItem) else { return nil }
+        return values[popup.indexOfSelectedItem]
     }
 
     /// Kalendarz przy edycji daty (PD-GRID-005): graficzny wybór dnia, z czasem — pole godziny.
@@ -1411,6 +1413,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
         guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.urls : [] }
         return await panel.beginSheetModal(for: window) == .OK ? panel.urls : []
+    }
+
+    func chooseFile(_ title: String, extensions: [String]) async -> URL? {
+        if Self.scriptSkipsDialog(title) { return nil }
+        let panel = NSOpenPanel()
+        panel.message = title
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = extensions.compactMap { UTType(filenameExtension: $0) }
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
     }
 
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? {

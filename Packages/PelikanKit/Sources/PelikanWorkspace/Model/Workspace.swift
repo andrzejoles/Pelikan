@@ -43,6 +43,8 @@ public protocol UIServices: AnyObject {
     func showRecallStatement()
     /// Okno wyboru plików do otwarcia.
     func chooseFilesToOpen() async -> [URL]
+    /// Okno wyboru jednego pliku o podanych rozszerzeniach (projekt, zestaw testów, moduł JavaScript); nil — anulowano.
+    func chooseFile(_ title: String, extensions: [String]) async -> URL?
     /// Okno wyboru nazwy pliku do zapisu; nil — anulowano.
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL?
     /// Lista podpowiedzi Code Assistant w edytorze dokumentu (UG 25.4).
@@ -270,6 +272,7 @@ extension UIServices {
     public func showFileBrowser() {}
     public func showObjectBrowser() {}
     public func chooseDirectory() async -> URL? { nil }
+    public func chooseFile(_ title: String, extensions: [String]) async -> URL? { await chooseFilesToOpen().first }
     public func currentLayout() -> WindowLayout? { nil }
     public func applyLayout(_ layout: WindowLayout) {}
     public func showSSHTargets(_ action: SSHTargetAction) {}
@@ -772,7 +775,8 @@ public final class Workspace {
             } else {
                 try await command.run(context)
             }
-            notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)))
+            notify(CommandInvocationRecord(command: id, arguments: arguments, invoker: invoker, started: started, outcome: .success(result.message)),
+                   resolved: result.resolvedArguments)
             Log.command.debug("Komenda \(id.rawValue, privacy: .public)\(invoker.isAgent ? " (agent)" : "", privacy: .public): \(ms: clock)")
             return result
         } catch {
@@ -813,8 +817,8 @@ public final class Workspace {
         }
     }
 
-    private func notify(_ record: CommandInvocationRecord) {
-        recordMacroInvocation(record)
+    private func notify(_ record: CommandInvocationRecord, resolved: CommandArguments? = nil) {
+        recordMacroInvocation(record, resolved: resolved)
         for o in invocationObservers { o(record) }
     }
 }

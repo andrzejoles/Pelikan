@@ -314,11 +314,20 @@ public enum ConnectionCommands {
                 return CommandResult(message: target.flatMap { ctx.workspace.connections.connection($0)?.displayName } ?? L10n.tr("Połączenie główne"))
             },
             Command(CommandDescriptor(id: "connection.newFolder", title: L10n.tr("Nowy folder…"), category: .session, submenu: L10n.tr("Połączenia"),
-                                      parameters: [CommandParameter("name", .string, required: true, L10n.tr("Nazwa folderu")),
+                                      parameters: [CommandParameter("name", .string, L10n.tr("Nazwa folderu (bez argumentu — pytanie o nazwę)")),
                                                    CommandParameter("parent", .string, L10n.tr("Folder nadrzędny"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Tworzy folder na liście połączeń."), inMenu: false, feature: "PD-CONN-003")) { ctx in
-                guard let name = ctx.arguments.string("name"), !name.isEmpty else { throw CommandError.missingArgument("name") }
+                var name = ctx.arguments.string("name")
+                if name == nil, let ui = ctx.askingUI {
+                    // Pusta nazwa w oknie — rezygnacja (jak Anuluj).
+                    guard let n = await ui.askText(L10n.tr("Nowy folder"), message: L10n.tr("Nazwa folderu na liście połączeń"), defaultValue: "")?
+                        .trimmingCharacters(in: .whitespaces), !n.isEmpty else {
+                        throw CommandError.cancelledByUser
+                    }
+                    name = n
+                }
+                guard let name, !name.isEmpty else { throw CommandError.missingArgument("name") }
                 let parent = ctx.arguments.string("parent").flatMap(UUID.init(uuidString:))
                 try ctx.workspace.connections.upsert(folder: ConnectionFolder(name: name, parentID: parent))
                 return .ok

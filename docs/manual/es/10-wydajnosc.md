@@ -28,6 +28,10 @@ muestra el plan real: Starts, el número de filas estimado (E-Rows) y real (A-Ro
 resaltadas, tiempos, búferes y lecturas, así como la variación de las estadísticas de la sesión antes y después de la
 ejecución. Las sentencias DML se revierten tras la medición. Autotrace no requiere el Tuning Pack.
 
+Autotrace pregunta por las variables de la sentencia como la ventana SQL: las variables de enlace (`:nombre`) reciben
+valores de la ventana **Variables** (recordados en la ventana) y las variables de sustitución (`&nombre`), solo con la
+sustitución de la ventana activada; si está desactivada, `&` se queda en el texto sin preguntar.
+
 ## Paquetes Oracle Diagnostics y Tuning
 
 El menú **Herramientas › Rendimiento (paquetes de Oracle)** contiene herramientas que usan paquetes de pago de Oracle:

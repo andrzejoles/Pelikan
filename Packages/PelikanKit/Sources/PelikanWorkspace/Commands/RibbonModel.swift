@@ -484,7 +484,7 @@ public enum RibbonModel {
                 ]),
             ]),
             RibbonGroup(L10n.tr("Analiza"), [
-                .small("grid.graph", label: L10n.tr("Wykres")), .small("grid.totals", label: L10n.tr("Sumy")), .small("grid.recordView", label: L10n.tr("Rekord")),
+                .small("grid.graph", label: L10n.tr("Wykres")), .small("grid.totals", label: L10n.tr("Sumy")), .small("grid.toggleRecordView", label: L10n.tr("Rekord")),
                 .menu(L10n.tr("Więcej"), symbol: "ellipsis.circle", commands: [
                     "grid.compareRecords", "grid.compareResults", "grid.clearTotals", separator, "grid.columnInfo", "grid.valueList",
                     "grid.linkedQueries", "grid.openCursor", "grid.spatialPreview",

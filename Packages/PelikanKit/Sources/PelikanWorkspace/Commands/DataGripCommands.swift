@@ -34,7 +34,13 @@ enum DataGripCommands {
         let doc = editor(ctx.workspace)
         var spec = ctx.arguments.string("name")
         if spec == nil, let doc { spec = BuiltinCommands.identifier(at: doc.selectedRange.lowerBound, in: doc.text)?.0 }
-        guard let spec, !spec.isEmpty else { throw CommandError.missingArgument("name") }
+        guard let spec, !spec.isEmpty else {
+            // Ze wstążki bez nazwy pod kursorem — wskazówka zamiast błędu argumentu.
+            if ctx.arguments.string("name") == nil, ctx.askingUI != nil {
+                throw CommandError.notAvailable(L10n.tr("Ustaw kursor na nazwie obiektu albo kolumny"))
+            }
+            throw CommandError.missingArgument("name")
+        }
         let parts = spec.split(separator: ".").map { $0.hasPrefix("\"") ? String($0.dropFirst().dropLast()) : $0.uppercased() }
         var column = ctx.arguments.string("column")?.uppercased()
         if column == nil, parts.count == 2, let doc,

@@ -1,10 +1,10 @@
 {
-  "heartbeat": "2026-10-26T15:37:14+01:00",
+  "heartbeat": "2026-10-28T11:49:39+01:00",
   "stage": {
     "id": "po 8",
     "name": "Etapy 0–8 i P zakończone — dopracowanie: zrzuty w tle, poprawki z zrzutów, szkice wydań"
   },
-  "task": "Notatki bety 9.2.0 i szkic wydania",
+  "task": "Po wydaniu 1.3.0 — czekam na kolejne zgłoszenie właściciela",
   "stages": [
     {
       "id": 0,
@@ -58,6 +58,34 @@
     }
   ],
   "done": [
+    "Wydanie 1.3.0 opublikowane (Latest, kanał aktualizacji 1.3.0): połączenia alfabetycznie, kopia i przenoszenie, foldery DBA i DBMS, ochrona obiektów Oracle; lustro GitLab wyrównane",
+    "PR #110 (D190) scalony — połączenia alfabetycznie, kopia i przenoszenie połączeń, foldery DBA i DBMS, potwierdzanie zmian obiektów schematów Oracle; trzy przejścia przeglądu kodu, CI zielone",
+    "PR #110: przegląd kodu (1 średnie, 9 niskich zgłoszeń) — poprawione: potwierdzanie zmian obiektów schematów Oracle (SYS, XDB…), unikalna nazwa kopii, filtr folderów DBA/DBMS",
+    "D190: kolejność alfabetyczna połączeń, kopia i przenoszenie połączeń (przeciąganie), foldery DBA i DBMS w Obiektach — PR #110",
+    "Wydanie 1.2.5 opublikowane (Latest, kanał aktualizacji 1.2.5; zawiera poprawki D189 z 1.2.4 i poprawkę sprawdzania podpisu, PR #109); lustro GitLab wyrównane",
+    "PR #108 (D189) scalony — czwarta runda przeglądu: 153 zgłoszenia, 12 gałęzi poprawek; CI zielone",
+    "PR #108 — czwarta runda przeglądu (D189) otwarty; czekam na CI",
+    "D189: pełne testy na p3/przeglad-4 zielone — 683 jednostkowe, 50 SSH, 260 na bazie",
+    "D189: 11 z 12 gałęzi scalonych w p3/przeglad-4 (debuger w trybach Dwie/Jedna sesja bez zawieszeń, słownik tabel i widoków zgodny z 11g–26ai)",
+    "D189: gotowe także gałęzie zdalne/podpis (Hardened Runtime), infrastruktura (testdb, CI, bramka ostrzeżeń) i narzędzia danych (9 z 12)",
+    "D189: gotowe gałęzie połączeń, edytora, narzędzi, Command Window, agenta i przeglądarki obiektów (6 z 12)",
+    "D189: poprawki edytora/siatki i narzędzi gotowe (połączenie narzędzi i otwieranych obiektów, wiersze przy sortowaniu, różnice z emoji)",
+    "D189: poprawki połączeń i haseł gotowe (15 zgłoszeń: plik 0600 od utworzenia, brak awarii przy pustej frazie, wycofanie importu, AAD definicji)",
+    "Przegląd D189: 8 raportów — 153 zgłoszenia (11 wysokich, 52 średnie, 90 niskich); stos aktualny poza 2 łatkami, budowanie bez ostrzeżeń, testy 618 + 49 SSH + 240 na bazie zielone",
+    "Czwarta runda przeglądu (D189): uruchomiono 8 recenzentów (stos, ostrzeżenia i testy, zmiany D183–D188, aplikacja ×2, PelikanWorkspace ×2, moduły/skrypty/spójność)",
+    "Właściciel potwierdził w 1.2.3: łącza bazy (w tym publiczne) i katalogi Oracle widoczne w przeglądarce obiektów",
+    "PR #107 (D188, łącza z *_DB_LINKS, katalogi z DBA) scalony; wydanie 1.2.3 opublikowane na słowo właściciela",
+    "Wydanie 1.2.2 opublikowane (Latest) na słowo właściciela",
+    "PR #106 (D187, obiekty dostępne i publiczne) scalony; szkic 1.2.2 zbudowany i sprawdzony",
+    "Szkic i znacznik 10.5.0 usunięte (właściciel)",
+    "Wydanie 1.2.0 opublikowane (Latest) na słowo właściciela",
+    "PR #105 (notatki wydań z wersjami pośrednimi) scalony; main 1.2.1; szkic 1.2.0 czeka na publikację",
+    "PR #103 (D185, drzewo połączeń) i #104 (D186, eksport/import z hasłami) scalone; szkic 1.2.0 zbudowany i sprawdzony",
+    "Wyjście z bety: PR #102 (D184, numeracja od 1.0.0) scalony; wydanie 1.0.0 opublikowane (Latest) na słowo właściciela",
+    "PR #101 (D183, dokowanie narzędzi) scalony; szkic wydania 10.5.0 zbudowany i sprawdzony",
+    "Tag v10.2.0 usunięty na prośbę właściciela",
+    "Szkic wydania 10.2.0 usunięty na prośbę właściciela (tag v10.2.0 pozostaje)",
+    "Wydanie 10.4.0 opublikowane (Latest) na słowo właściciela",
     "Ciało pakietu/typu otwiera się ze specyfikacją, wcięcia drzewek, widoczne znaczniki zwijania (D181)",
     "Lewy panel bez Liquid Glass — gładkie czcionki całego panelu w aktywnym oknie (D180)",
     "Lewa kolumna i wstążka bez przezroczystości — gładkie czcionki w aktywnym oknie na monitorach 1× (D179)",
@@ -69,38 +97,12 @@
     "Dziennik aplikacji z prywatnością wpisów (PL-INFRA-011, D170)",
     "Logo aplikacji: ikona pelikana we wszystkich rozmiarach (PL-INFRA-012, D172)",
     "Wstążka z kartami kontekstowymi i polem „Szukaj czynności” (PD-UI-012, D171)",
-    "Scalono #87 — drugie przejście przeglądu kodu (D169)",
-    "Drugie przejście przeglądu kodu (ok. 60 poprawek, D169): formater, refaktoryzacje, Test Manager, debuger, regresje z D168; wersje pakietów aplikacji przypięte",
-    "Dogłębny przegląd kodu (7 obszarów, ok. 130 poprawek z testami, D168); zależności aktualne (D167, #85)",
-    "Porządki: checkout@v7 w CI, kompilacja bez ostrzeżeń (aplikacja, pakiet, testy), 27 testów z faktycznym TestUI (D166)",
-    "Opublikowano Pelikan 8.7.0 beta (diagram ER dużego schematu, definicje tabel); kanał aktualizacji wskazuje 8.7.0",
-    "Scalono #82 (diagram ER dużego schematu, definicje tabel — D165)",
-    "Diagram ER 2000 tabel 98 → 6,6 s, wyszukiwanie w definicjach tabel 16 → 4,9 s (D165); usunięte stare tagi v1.9.0–v7.7.0",
-    "Opublikowano Pelikan 8.4.0 beta (Latest, kanał aktualizacji Sparkle wskazuje 8.4.0); scalono #81",
-    "Scalone #79 (wydajność narzędzi) i #80 (notatki bety); szkic Pelikan 8.4.0 beta gotowy — podpis, wersja i brak ścieżek domowych sprawdzone",
-    "Druga próba na kopii dużej bazy: wyszukiwanie 31–85 s → 2–3 s, diagram ER 263 → 4,7 s, eksport DDL 2 → 0,2 s/obiekt, dokumentacja schematu >20 min → 15 s (D164)",
-    "Przegląd bezpieczeństwa: 10 znalezisk (3 wysokie) poprawionych — przypięte połączenie agenta, link bez skryptów, PL/SQL nie zatwierdzi DML agenta, potwierdzanie kluczy SSH (D163)",
-    "Próba opublikowanej bety: podpisy i aktualizacje OK; usunięte ścieżki budowania z binarek (strip, mapa prefiksów), nazwy usług macOS przetłumaczone (D162); test Stop 120/120 lokalnie",
-    "Kerberos na macOS odłożony decyzją właściciela (D161)",
-    "Opublikowano Pelikan 7.9.0 beta (pierwsze publiczne wydanie); usunięto 11 starych szkiców wydań (tagi zostają)",
-    "Instrukcja w en/de/es/uk (#74), okno zgody Zezwól/Odmów i spójność katalogu (#75); szkic v7.9.0 beta zastępuje v7.7.0 beta",
-    "Beta: README dla testerów, docs/BETA.md, make beta-release (D153)",
-    "Próba na dużej bazie właściciela (tylko odczyt): pobieranie hurtowe 4,9× szybsze (D151); program z innego schematu z właścicielem w nagłówku — kompilacja nie trafia już do schematu sesji; analiza nazw hurtowo 34 s → 1,8 s, fałszywe alarmy na poprawnym kodzie 478 → 1 (D152)",
-    "Szkic wydania v7.1.0 (poprawki z zrzutów #63–#66) — do publikacji przez właściciela",
-    "Scalone #66 (raport z grupami w jednej tabeli, D150)",
-    "Raport z grupami: jedna tabela, „Razem” pod kolumnami (D150); zrzut raportu ze stylem, Break i sumami",
-    "Scalone #65 (ostatnia linia edytora, okno zgody agenta, wyszukiwania w sieci; stan etapów w raporcie)",
-    "Zrzuty: okno zgody agenta (plan przewijany w poziomie, podsumowanie bez „polecenie/a”), status linii, Preferencje › Narzędzia (pola wyszukiwań bez uciętych etykiet); numer pustej ostatniej linii i podświetlenie na końcu pliku o linię za nisko — poprawione (D149); stan etapów w raporcie",
-    "Scalone #64 (notatnik z wykresem, historia lokalna, diagram i flame graph planu; kroki pomocnicze zrzutów D148)",
-    "Zrzuty: notatnik z wykresem, historia lokalna (domyślnie najnowsza wersja), plan jako diagram i flame graph; kroki debug.openFile/preferences/planMode (D148)",
-    "Scalone #63 (koszyk z ciałem pakietu, tytuł wyników wyszukiwania, 7 zrzutów)",
-    "Koszyk wdrożenia: pakiet i typ dodawane razem z ciałem (skrypt miał samą specyfikację) — wykryte zrzutem; zrzuty QBE, Użyć, raportów predefiniowanych, zapytań standardowych",
-    "Scalone #62 (edytor po ustawieniu kursora z modelu; ograniczony odczyt potoków ssh — zawieszenia Stop); szkic wydania v6.7.0 do publikacji przez właściciela",
-    "Scalone #60 (P2) i #61 (zrzuty: podkreślenia analizy kodu, panel agenta); #62 w CI (odświeżanie edytora po ustawieniu kursora z modelu)",
-    "Przebieg zrzutów: podkreślenia analizy kodu były niewidoczne (TextKit 2) — naprawione (D146); nagłówek panelu agenta pod paskiem narzędzi — naprawiony"
+    "Scalono #87 — drugie przejście przeglądu kodu (D169)"
   ],
   "next": [
-    "Logo aplikacji (ikona)"
+    "Zgłoszenia OracleNIO (pliki gotowe, wysyła właściciel)",
+    "Xcode 27.2 w CI po wydaniu stabilnym",
+    "NOWOSCI 1.3.0: punkt o ochronie obiektów Oracle; zawinięcie linii w D190"
   ],
   "blockers": [],
   "questions": [],
@@ -110,22 +112,23 @@
     "Ctrl+F8 przechwytuje macOS (fokus do menu statusu) — działa odpowiednik ⇧⌘↩; skrót systemowy można wyłączyć w Ustawieniach (D17)",
     "Instant Client w Pobranych: przy pierwszym połączeniu macOS pyta o dostęp do folderu Pobrane — zgoda należy do użytkownika; można wskazać inny katalog w ustawieniach (D18)",
     "Tunel SSH tylko z kluczem/agentem — hasło SSH nieobsługiwane (wymagałoby hasła w środowisku procesu; D19)",
-    "Sterownik thin: bez TCPS/wallet, uwierzytelniania zewnętrznego, zmiany wygasłego hasła i przerwania wykonania (D20)"
+    "Sterownik thin: bez TCPS/wallet, uwierzytelniania zewnętrznego, zmiany wygasłego hasła i przerwania wykonania (D20)",
+    "Sterownik thin (OracleNIO): CLOB do 65 535 znaków ze znacznikiem obcięcia; kolumny INTERVAL YEAR TO MONTH i BFILE kończą aplikację w dekoderze OracleNIO — dla nich Instant Client (D189)"
   ],
   "tests": {
     "unit": {
-      "total": 218,
-      "passed": 218,
+      "total": 683,
+      "passed": 683,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T14:09:42+02:00"
+      "at": "2026-10-28T00:08:10+01:00"
     },
     "integration": {
-      "total": 110,
-      "passed": 110,
+      "total": 260,
+      "passed": 260,
       "failed": 0,
       "skipped": 0,
-      "at": "2026-10-23T14:09:45+02:00"
+      "at": "2026-10-28T00:08:13+01:00"
     },
     "perf": {
       "total": 9,

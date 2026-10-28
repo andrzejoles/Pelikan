@@ -21,11 +21,15 @@ enum P1DataCommands {
         return [
             // MARK: Układ liczb (PD-GRID-004)
             command("grid.numberLayout", L10n.tr("Układ liczb w siatce"), .view, submenu: L10n.tr("Siatka"),
-                    params: [CommandParameter("layout", .string, required: true, L10n.tr("right, left, formatted albo thousands"))],
+                    params: [CommandParameter("layout", .string, L10n.tr("right, left, formatted albo thousands (bez argumentu — wybór z listy)"))],
                     effect: .settings,
                     summary: L10n.tr("Wyrównanie i format liczb w siatce: do prawej, do lewej, z separatorem regionalnym, z separatorem tysięcy."),
                     feature: "PD-GRID-004") { ctx in
-                guard let raw = ctx.arguments.string("layout") else { throw CommandError.missingArgument("layout") }
+                var raw = ctx.arguments.string("layout")
+                if raw == nil {
+                    raw = try await ctx.choose(L10n.tr("Układ liczb w siatce"), NumberLayout.allCases.map { (label: $0.displayName, value: $0.rawValue) })
+                }
+                guard let raw else { throw CommandError.missingArgument("layout") }
                 guard let layout = NumberLayout(rawValue: raw) else { throw CommandError.invalidArgument("layout", raw) }
                 ctx.workspace.settings.gridNumberLayout = layout
                 return CommandResult(message: layout.displayName, value: .string(layout.rawValue))
@@ -109,10 +113,20 @@ enum P1DataCommands {
                 return .ok
             },
             // MARK: Rekord z komentarzami kolumn (PD-GRID-010)
-            command("grid.recordView", L10n.tr("Rekord z komentarzami kolumn"),
-                    params: [CommandParameter("row", .integer, L10n.tr("Wiersz (od 1); brak — zaznaczony"))],
-                    summary: L10n.tr("Kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu — widok pojedynczego rekordu."),
+            command("grid.toggleRecordView", L10n.tr("Widok pojedynczego rekordu"),
+                    summary: L10n.tr("Przełącza wynik między tabelą a widokiem pojedynczego rekordu (kolumny, wartości, typy i komentarze kolumn)."),
                     feature: "PD-GRID-010", validate: hasGrid) { ctx in
+                let (tab, _) = try GridStage8Commands.grid(ctx)
+                tab.showsRecord.toggle()
+                return .ok
+            },
+            // Dane rekordu bez zmiany widoku (agent, skrypty; komentarze kolumn dla widoku rekordu) — poza menu i wstążką.
+            Command(CommandDescriptor(id: "grid.recordView", title: L10n.tr("Rekord z komentarzami kolumn"), category: .session,
+                                      submenu: GridStage8Commands.resultMenu,
+                                      parameters: [CommandParameter("row", .integer, L10n.tr("Wiersz (od 1); brak — zaznaczony"))],
+                                      agent: .none, effect: .none,
+                                      summary: L10n.tr("Dane rekordu bez zmiany widoku: kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu."),
+                                      inMenu: false, feature: "PD-GRID-010"), validate: hasGrid) { ctx in
                 let (tab, grid) = try GridStage8Commands.grid(ctx)
                 let row = ctx.arguments.int("row").map { Int($0) - 1 } ?? tab.selectedRows?.first ?? 0
                 guard row >= 0, row < grid.rowCount else { throw CommandError.invalidArgument("row", String(row + 1)) }

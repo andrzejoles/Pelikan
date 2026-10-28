@@ -28,6 +28,10 @@ the actual plan: Starts, estimated (E-Rows) and actual (A-Rows) row counts with 
 buffers and reads, as well as the change in session statistics before and after execution. DML statements are rolled
 back after the measurement. Autotrace does not require the Tuning Pack.
 
+Autotrace asks for variables in the statement like the SQL Window: bind variables (`:name`) get values from the
+**Variables** window (remembered in the window), and substitution variables (`&name`) only when substitution is enabled
+in the window; when it is disabled, `&` stays in the text without a question.
+
 ## Oracle Diagnostics and Tuning Packs
 
 The **Tools › Performance (Oracle packs)** menu contains tools that use paid Oracle packs:

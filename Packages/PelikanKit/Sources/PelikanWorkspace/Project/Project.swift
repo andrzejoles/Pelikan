@@ -387,23 +387,31 @@ enum ProjectCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "project.new", title: L10n.tr("Nowy projekt…"), category: .project,
-                                      parameters: [CommandParameter("file", .string, required: true, L10n.tr("Plik projektu (.prj)"))],
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik projektu (.prj; bez argumentu — okno zapisu)"))],
                                       agent: .none, effect: .external, summary: L10n.tr("Tworzy nowy plik projektu i otwiera go."), feature: "PD-PROJ-001")) { ctx in
-                guard let path = ctx.arguments.string("file") else { throw CommandError.missingArgument("file") }
-                let url = URL(fileURLWithPath: path)
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: $0) }
+                if url == nil, let ui = ctx.askingUI {
+                    guard let u = await ui.chooseSaveURL(suggestedName: L10n.tr("Projekt"), fileExtension: "prj") else { throw CommandError.cancelledByUser }
+                    url = u
+                }
+                guard let url else { throw CommandError.missingArgument("file") }
                 ctx.workspace.project = Project(name: url.deletingPathExtension().lastPathComponent)
                 ctx.workspace.projectURL = url
                 try save(ctx.workspace)
                 return .ok
             },
             Command(CommandDescriptor(id: "project.open", title: L10n.tr("Otwórz projekt…"), category: .project,
-                                      parameters: [CommandParameter("file", .string, required: true, L10n.tr("Plik projektu (.prj)"))],
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik projektu (.prj; bez argumentu — wybór pliku)"))],
                                       agent: .none, effect: .uiState, summary: L10n.tr("Otwiera projekt z pliku."), feature: "PD-PROJ-001")) { ctx in
-                guard let path = ctx.arguments.string("file") else { throw CommandError.missingArgument("file") }
-                let url = URL(fileURLWithPath: path)
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: $0) }
+                if url == nil, let ui = ctx.askingUI {
+                    guard let u = await ui.chooseFile(L10n.tr("Otwórz projekt"), extensions: ["prj"]) else { throw CommandError.cancelledByUser }
+                    url = u
+                }
+                guard let url else { throw CommandError.missingArgument("file") }
                 ctx.workspace.project = try Project.decode(Data(contentsOf: url))
                 ctx.workspace.projectURL = url
-                return .ok
+                return CommandResult().resolving(ctx.arguments.string("file") == nil ? ["file": .string(url.path)] : [:])
             },
             Command(CommandDescriptor(id: "project.close", title: L10n.tr("Zamknij projekt"), category: .project,
                                       agent: .none, effect: .uiState, summary: L10n.tr("Zapisuje i zamyka projekt."), feature: "PD-PROJ-001"),

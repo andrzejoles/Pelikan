@@ -165,16 +165,38 @@ enum EditorExtraCommands {
             },
             // MARK: Otwarcie pliku z połączeniem (PD-FILE-004)
             command("file.openWithConnection", L10n.tr("Otwórz z połączeniem…"), .file,
-                    params: [CommandParameter("path", .string, required: true, L10n.tr("Plik albo katalog")),
-                             CommandParameter("connection", .string, required: true, L10n.tr("Nazwa połączenia okna"))],
+                    params: [CommandParameter("path", .string, L10n.tr("Plik albo katalog (bez argumentu — wybór plików)")),
+                             CommandParameter("connection", .string, L10n.tr("Nazwa połączenia okna (bez argumentu — wybór z listy)"))],
                     effect: .uiState, summary: L10n.tr("Otwiera plik (z katalogu — wszystkie skrypty) i przypina do okien wskazane połączenie."),
                     feature: "PD-FILE-004", validate: { _ in true }) { ctx in
                 let ws = ctx.workspace
-                guard let path = ctx.arguments.string("path"), let name = ctx.arguments.string("connection") else { throw CommandError.invalidArgument("path", "") }
-                guard let def = ws.connections.connections.first(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
+                // Ścieżka albo lista ścieżek (makro nagrywa pliki wybrane w oknie).
+                var sources = ctx.arguments.strings("path")?.filter { !$0.isEmpty }.map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if sources?.isEmpty == true { sources = nil }
+                var name = ctx.arguments.string("connection")
+                var resolved: [String: JSONValue] = [:]
+                // Ze wstążki bez argumentów — wybór plików, potem połączenia z listy.
+                if let ui = ctx.askingUI, sources == nil || name == nil {
+                    let defs = ws.connections.connections.sorted(by: ConnectionStore.alphabetical)
+                    guard !defs.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak zdefiniowanych połączeń")) }
+                    if sources == nil {
+                        let chosen = await ui.chooseFilesToOpen()
+                        guard !chosen.isEmpty else { throw CommandError.cancelledByUser }
+                        sources = chosen
+                        resolved["path"] = .array(chosen.map { .string($0.path) })
+                    }
+                    if name == nil {
+                        // Wartość — identyfikator: dwa połączenia o tej samej nazwie da się rozróżnić („X”, „X (2)”).
+                        name = try await ctx.choose(L10n.tr("Otwórz z połączeniem"), defs.map { (label: $0.displayName, value: $0.id.uuidString) })
+                        if let name { resolved["connection"] = .string(name) }
+                    }
+                }
+                guard let sources, let name else { throw CommandError.invalidArgument("path", "") }
+                guard let def = UUID(uuidString: name).flatMap(ws.connections.connection)
+                        ?? ws.connections.connections.first(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
                     throw CommandError.invalidArgument("connection", name)
                 }
-                let files = FileOpening.files(from: [URL(fileURLWithPath: (path as NSString).expandingTildeInPath)])
+                let files = FileOpening.files(from: sources)
                 guard !files.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak plików do otwarcia")) }
                 var opened: [String] = []
                 for f in files {
@@ -183,7 +205,7 @@ enum EditorExtraCommands {
                     d.connectionPinned = true
                     opened.append(f.lastPathComponent)
                 }
-                return CommandResult(value: .array(opened.map { .string($0) }))
+                return CommandResult(value: .array(opened.map { .string($0) })).resolving(resolved)
             },
             // MARK: Refaktoryzacja (PD-CA-014)
             refactoring("edit.extractLocalConstant", L10n.tr("Wydziel stałą lokalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną w podprogramie albo bloku."),

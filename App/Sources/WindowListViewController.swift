@@ -121,8 +121,8 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         menu.addItem(new)
         let sort = NSMenuItem(title: L10n.tr("Sortuj"), action: nil, keyEquivalent: "")
         sort.submenu = NSMenu()
-        for (t, o) in [(L10n.tr("Kolejność otwarcia"), WindowListSort.opening), (L10n.tr("Nazwa"), .name), (L10n.tr("Typ okna"), .type)] {
-            let i = item(t, "window.listSort", ["order": .string(o.rawValue)])
+        for o in WindowListSort.allCases {
+            let i = item(o.displayName, "window.listSort", ["order": .string(o.rawValue)])
             i.state = workspace.settings.windowListSort == o ? .on : .off
             sort.submenu?.addItem(i)
         }

@@ -2,6 +2,19 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.3.1 — poprawki zgłoszeń
+
+- **Rekord** na karcie **Wynik** i przycisk w pasku nad siatką przełączają wynik między tabelą a widokiem pojedynczego
+  rekordu (wcześniej przycisk na wstążce nic nie robił).
+- **Wstaw snippet**, **Wstaw szablon** i inne przyciski wstążki, które potrzebują wartości (kodowanie pliku, układ
+  liczb, kopiowanie w formacie, generowanie kodu, otwarcie projektu, operacje Przeglądarki plików…), pytają o nią
+  albo biorą zaznaczenie zamiast kończyć się komunikatem „Nieprawidłowy argument” (#111, #112). Makro nagrywa
+  wybraną wartość, więc odtworzenie nie pyta ponownie.
+- **Raporty AWR, ASH i ADDM** bez uprawnienia do pakietu Oracle pokazują czytelny komunikat z poleceniem GRANT dla
+  administratora zamiast błędu ORA-00904 (#113, #114).
+- **Autotrace** pyta o zmienne wiązane i podstawiania jak okno SQL — polecenie ze zmienną `:nazwa` nie kończy się już
+  błędem ORA-01008.
+
 ## 1.3.0 — porządek na liście połączeń, foldery DBA i DBMS
 
 - **Lista połączeń** — foldery i połączenia są ułożone alfabetycznie. Połączenie można skopiować pod inną nazwą

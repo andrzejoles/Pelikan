@@ -67,6 +67,13 @@ La consulta debe devolver la columna `ROWID` (p. ej., `select t.*, t.rowid from 
 Comprueba la declaración de licencia en la definición de la conexión (pestaña **Avanzado**) y el parámetro de la base de
 datos `CONTROL_MANAGEMENT_PACK_ACCESS`. Las funciones del Tuning Pack requieren el valor `DIAGNOSTIC+TUNING`.
 
+El error ORA-00904 «DBMS_WORKLOAD_REPOSITORY.AWR_REPORT_HTML: invalid identifier» significa que falta el privilegio
+EXECUTE sobre el paquete `SYS.DBMS_WORKLOAD_REPOSITORY` (informe ADDM — también `SYS.DBMS_ADDM`): en SQL, Oracle responde entonces
+«invalid identifier» en lugar de indicar la falta de privilegios. El privilegio suele llegar con el rol DBA; también se
+necesita la licencia de Oracle Diagnostics Pack. Pelikan comprueba el privilegio antes de los informes AWR, ASH y ADDM e
+indica la sentencia GRANT para el administrador de la base de datos, p. ej.
+`GRANT EXECUTE ON SYS.DBMS_WORKLOAD_REPOSITORY TO SCOTT;`.
+
 ### El agente no se inicia
 
 - Pelikan busca el programa del agente en el `PATH` de tu shell de inicio de sesión: comprueba en el Terminal si el

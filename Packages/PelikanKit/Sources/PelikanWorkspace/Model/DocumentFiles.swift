@@ -76,6 +76,16 @@ public enum TextFileCodec {
     /// Kodowania wybieralne dla plików i projektów.
     public static let encodingNames = ["UTF-8", "ISO-8859-2", "Windows-1250"]
 
+    /// Etykieta kodowania na liście wyboru (Kodowanie pliku… ze wstążki).
+    public static func encodingLabel(_ name: String) -> String {
+        switch name {
+        case "UTF-8": L10n.tr("UTF-8 (Unicode)")
+        case "ISO-8859-2": L10n.tr("ISO-8859-2 (Latin-2, Europa Środkowa)")
+        case "Windows-1250": L10n.tr("Windows-1250 (Europa Środkowa, Windows)")
+        default: name
+        }
+    }
+
     public static func encoding(named name: String) -> String.Encoding? {
         switch name.uppercased() {
         case "UTF-8", "UTF8": .utf8
