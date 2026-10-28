@@ -678,6 +678,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.viewportRefreshScheduled = false
+            // Układ potrafi zgłosić zmianę zaznaczenia ze starym zaznaczeniem widoku — bez zapisu do modelu (jak w updateHidden).
+            let wasUpdating = self.updatingFromModel
+            self.updatingFromModel = true
+            defer { self.updatingFromModel = wasUpdating }
             self.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
             self.textView.needsDisplay = true
             self.ruler.needsDisplay = true

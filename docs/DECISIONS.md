@@ -2055,9 +2055,13 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   wstawki (Powiel linię) — To-Do w pierwszej linii ciała albo komentarz agenta przed CREATE zostają na karcie
   późniejszej. Po zmianie tekstu z modelu edytor przewija do kursora tylko, gdy kursor był widoczny albo zmiana go
   obejmuje (edycja agenta gdzie indziej, Zamień wszystko, formatowanie nie odrywają od czytanego miejsca). Tekst
-  wpisany za kończącym „/” specyfikacji skleja się w podziale poleceń z ciałem (jak w SQL*Plus — ciało przestaje być
-  rozpoznawane); dopóki nagłówki CREATE są w tekście, karty zostają (przesuwane przy pisaniu) zamiast nagłego
-  pokazania całego tekstu, a pasek kart pokazuje karty edytora. Po zmianie ukrytego tekstu i po zmianie tekstu
+  wpisany za kończącym „/” specyfikacji należy — jak w SQL*Plus — do następnego polecenia i skleja się z ciałem, które
+  przestaje być rozpoznawane jako jednostka: karty znikają i widać cały tekst (edytor, komendy, kompilacja i punkty
+  przerwania widzą wtedy ten sam podział), a wracają po poprawieniu tekstu (świadome zachowanie; wcześniejsze
+  zachowywanie kart przy takim tekście dawało rozbieżność edytora z modelem). „Usuń jednostkę” z argumentem
+  „nazwa body” usuwa tylko ciało — bez ciała w tekście odmawia, zamiast usuwać specyfikację. Znane ograniczenie: po
+  zniknięciu kart (odsłonięcie całego tekstu) linie poniżej dotychczasowej wysokości widoku bywają puste do
+  przewinięcia albo kliknięcia (TextKit 2 nie powiększa od razu widoku tekstu). Po zmianie ukrytego tekstu i po zmianie tekstu
   z komendy edytor układa obszar widoku jeszcze raz w następnym obiegu pętli — dolne linie (numery w marginesie bez
   tekstu) były puste do kliknięcia. Odtworzone w oknie programu z kartami (zmiana kart, dopisanie tekstu z komendy
   i z klawiatury za „/”); w oknie bez kart przy pisaniu z klawiatury nie występowało.

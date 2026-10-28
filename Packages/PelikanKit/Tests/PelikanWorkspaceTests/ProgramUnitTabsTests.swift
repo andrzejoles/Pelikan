@@ -86,17 +86,26 @@ struct ProgramUnitTabsTests {
         #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b - 1, inserted: "/\n", characterBefore: 0x2F, selectionAfter: b))
     }
 
-    @Test("tekst wpisany za „/” specyfikacji skleja ciało w podziale poleceń — karty zostają, dopóki nagłówki CREATE są w tekście")
-    func keepTabsWhileTyping() {
+    @Test("tekst wpisany za „/” specyfikacji skleja ciało w podziale poleceń (jak SQL*Plus) — karty znikają do poprawienia tekstu")
+    func tabsVanishWhileTextAfterSlash() {
         let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
         let b = tabs[1].segment.lowerBound
         let typed = (Self.text as NSString).replacingCharacters(in: NSRange(location: b - 1, length: 0), with: "\nabc")
-        let parsed = ProgramUnitTabs.tabs(ProgramCompiler.units(in: typed), in: typed)
-        #expect(parsed.isEmpty)
-        #expect(ProgramUnitTabs.headerCount(in: typed) == 2)
-        #expect(ProgramUnitTabs.keepingTabs(previous: tabs, parsed: parsed, headers: 2) == tabs)
-        // Jednostka usunięta (nagłówka już nie ma) — karty znikają.
-        #expect(ProgramUnitTabs.keepingTabs(previous: tabs, parsed: [], headers: 1).isEmpty)
+        #expect(ProgramUnitTabs.tabs(ProgramCompiler.units(in: typed), in: typed).isEmpty)
+    }
+
+    @Test("Usuń jednostkę „nazwa body” bez ciała w tekście — błąd argumentu, specyfikacja zostaje")
+    func removeBodyDoesNotRemoveSpec() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let spec = "create or replace package kadry as\n  procedure a;\nend;\n/\n"
+        let doc = ws.newDocument(.program, text: spec)
+        ws.activate(doc.id)
+        let c = try #require(ws.registry.command("prog.removeUnit"))
+        await #expect(throws: CommandError.invalidArgument("unit", L10n.tr("nie ma takiej jednostki"))) {
+            _ = try await c.run(CommandContext(workspace: ws, invoker: .agent(sessionID: "s", agentName: "a"),
+                                               arguments: CommandArguments(["unit": .string("kadry body")])))
+        }
+        #expect(doc.text == spec)
     }
 
     @Test("komendy edycji i dodatkowe kursory nie wychodzą poza kartę; walidacja z pamięci kart; Usuń jednostkę — jednostka karty")

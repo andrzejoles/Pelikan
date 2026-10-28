@@ -57,8 +57,10 @@ enum ProgramUnitCommands {
                 if let spec = ctx.arguments.string("unit") {
                     let words = spec.uppercased().split(separator: " ").map(String.init)
                     let body = words.count > 1 && words[1] == "BODY"
+                    // „nazwa body” — tylko ciało (nigdy specyfikacja w zastępstwie); sama nazwa — specyfikacja albo
+                    // jedyna jednostka o tej nazwie.
                     guard let u = units.first(where: { $0.name == words.first && [.packageBody, .typeBody].contains($0.type) == body })
-                            ?? units.first(where: { $0.name == words.first }) else {
+                            ?? (body ? nil : units.first(where: { $0.name == words.first })) else {
                         throw CommandError.invalidArgument("unit", L10n.tr("nie ma takiej jednostki"))
                     }
                     unit = u

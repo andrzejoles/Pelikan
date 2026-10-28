@@ -77,21 +77,6 @@ public enum ProgramUnitTabs {
         return selectionAfter > location && selectionAfter < location + ins.length
     }
 
-    /// Liczba nagłówków jednostek na początku linii (`CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|TYPE|…`),
-    /// także tych, których podział poleceń nie rozpoznaje jako jednostek (tekst bez „/” przed CREATE).
-    public static func headerCount(in text: String) -> Int {
-        let pattern = #"(?im)^[ \t]*create\s+(or\s+replace\s+)?((editionable|noneditionable)\s+)?(and\s+(resolve|compile)\s+)?(no)?(force\s+)?(package|type|procedure|function|trigger|java|mle)\b"#
-        guard let re = try? NSRegularExpression(pattern: pattern) else { return 0 }
-        return re.numberOfMatches(in: text, range: NSRange(location: 0, length: (text as NSString).length))
-    }
-
-    /// Karty po analizie w tle: gdy jednostek rozpoznano mniej niż kart dotąd, a nagłówków CREATE w tekście jest wciąż
-    /// co najmniej tyle co kart (np. pisany tekst za kończącym „/” specyfikacji skleja się w podziale poleceń z ciałem
-    /// — jak w SQL*Plus), zostają dotychczasowe karty (przesuwane przy pisaniu) zamiast nagłego pokazania całego tekstu.
-    public static func keepingTabs(previous: [ProgramUnitTab], parsed: [ProgramUnitTab], headers: Int) -> [ProgramUnitTab] {
-        previous.count > 1 && parsed.count < previous.count && headers >= previous.count ? previous : parsed
-    }
-
     /// Pozycja słowa typu w tekście okna: od początku polecenia jednostki (linie nagłówka w jej tekście), bez liczenia
     /// linii całego dokumentu (pakiet 50 000 linii).
     static func sourceOffset(_ u: ProgramUnit) -> Int {

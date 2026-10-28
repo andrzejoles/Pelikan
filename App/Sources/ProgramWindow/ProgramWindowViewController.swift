@@ -189,13 +189,11 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         Task.detached(priority: .userInitiated) {
             let outline = PLSQLOutline.parse(text)
             let units = ProgramCompiler.units(in: text)
-            let parsed = ProgramUnitTabs.tabs(units, in: text)
-            let headers = ProgramUnitTabs.headerCount(in: text)
+            let tabs = ProgramUnitTabs.tabs(units, in: text)
             await MainActor.run { [weak self] in
                 guard let self, self.document.text == text else { return }
                 // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
                 self.document.cacheProgramUnits(units, forText: text)
-                let tabs = ProgramUnitTabs.keepingTabs(previous: self.editor.unitTabs, parsed: parsed, headers: headers)
                 self.tabs = tabs
                 self.document.cacheProgramUnitTabs(tabs, forText: text)
                 self.editor.unitTabs = tabs
@@ -208,8 +206,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         outlineNodes = outline
         contents.update(outlineNodes)
         caretMoved()
-        // Karty z podziału edytora (także zachowane przy tekście chwilowo nierozpoznawanym jako jednostka — D192),
-        // okno z jedną jednostką — jej przycisk.
+        // Karty z podziału na jednostki; okno z jedną jednostką — jej przycisk.
         let entries: [(title: String, key: String, tip: String)] = tabs.count > 1
             ? tabs.map { ($0.title, $0.key, $0.title) }
             : u.map { unit in
