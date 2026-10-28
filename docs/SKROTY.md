@@ -53,6 +53,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Nowy program z szablonu… | `file.newFromTemplate` |  |  | Brak | PD-PROG-002 |
 | Okno programu › Dodaj jednostkę… | `prog.addUnit` |  |  | Brak | PD-PROG-001 |
 | Okno programu › Usuń jednostkę | `prog.removeUnit` |  |  | Brak | PD-PROG-001 |
+| Okno programu › Pokaż jednostkę… | `prog.selectUnit` |  |  | Brak | PD-PROG-001 |
+| Okno programu › Następna jednostka | `prog.nextUnit` | ⌃⇟ †, ⌥⌘] | ⌥⌘] | Brak | PD-PROG-001 |
+| Okno programu › Poprzednia jednostka | `prog.previousUnit` | ⌃⇞ †, ⌥⌘[ | ⌥⌘[ | Brak | PD-PROG-001 |
 | Przywróć | `prog.revert` |  |  | Brak | PD-PROG-009 |
 | Porównaj › Porównaj ze źródłem w bazie | `prog.compareWithDatabase` |  |  | Brak | PD-PROG-008 |
 | Porównaj › Porównaj z plikiem… | `prog.compareWithFile` |  |  | Brak | PD-PROG-008 |

@@ -30,6 +30,47 @@ public enum CodeContents {
         }
     }
 
+    /// Filtr nazw panelu (pole nad drzewem): elementy, których nazwa zawiera tekst (bez wielkości liter), z przodkami;
+    /// pasujący przodek nie pokazuje przez to wszystkich dzieci. Pusty filtr — drzewo bez zmian.
+    public static func filtered(_ nodes: [OutlineNode], matching filter: String) -> [OutlineNode] {
+        let f = filter.trimmingCharacters(in: .whitespaces)
+        guard !f.isEmpty else { return nodes }
+        return nodes.compactMap { n in
+            var n = n
+            let kids = filtered(n.children.filter { $0.kind != .parameter }, matching: f)
+            let matches = n.name.range(of: f, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+            guard matches || !kids.isEmpty else { return nil }
+            n.children = n.children.filter { $0.kind == .parameter } + kids
+            return n
+        }
+    }
+
+    /// Pełny opis elementu do podpowiedzi panelu: nagłówek podprogramu z parametrami (tryb i typ) i typem zwracanym,
+    /// deklaracja typu, kursora, zmiennej; dopisek „publiczny”/„prywatny” dla elementów pakietu.
+    public static func signature(of n: OutlineNode) -> String {
+        var s: String
+        switch n.kind {
+        case .procedure, .function:
+            let params = n.children.filter { $0.kind == .parameter }.map { ($0.name + " " + $0.detail).trimmingCharacters(in: .whitespaces) }
+            s = (n.kind == .procedure ? "PROCEDURE " : "FUNCTION ") + n.name + (params.isEmpty ? "" : "(" + params.joined(separator: ", ") + ")")
+            if !n.detail.isEmpty { s += " RETURN " + n.detail }
+        case .package: s = "PACKAGE " + n.name
+        case .packageBody: s = "PACKAGE BODY " + n.name
+        case .type: s = "TYPE " + n.name
+        case .typeBody: s = "TYPE BODY " + n.name
+        case .trigger: s = "TRIGGER " + n.name
+        case .cursor: s = "CURSOR " + n.name + (n.detail.isEmpty ? "" : (n.detail.hasPrefix("(") ? "" : " ") + n.detail)
+        case .typeDeclaration:
+            s = n.detail.hasPrefix("SUBTYPE ") ? "SUBTYPE " + n.name + " IS " + n.detail.dropFirst(8) : "TYPE " + n.name + (n.detail.isEmpty ? "" : " IS " + n.detail)
+        case .exception: s = n.name + " EXCEPTION"
+        case .constant: s = n.name + " CONSTANT " + n.detail
+        case .pragma: s = "PRAGMA " + n.name + n.detail
+        default: s = n.detail.isEmpty ? n.name : n.name + " " + n.detail
+        }
+        if let p = n.isPublic { s += " — " + (p ? L10n.tr("publiczny") : L10n.tr("prywatny")) }
+        return s
+    }
+
     static func rank(_ k: OutlineNode.Kind) -> Int {
         switch k {
         case .package, .type, .packageBody, .typeBody, .trigger: 0
@@ -38,7 +79,7 @@ public enum CodeContents {
         case .typeDeclaration: 3
         case .variable: 4
         case .cursor: 5
-        case .exception: 6
+        case .exception, .pragma: 6
         case .function: 7
         case .procedure: 8
         case .declareSection, .beginSection, .exceptionSection, .block: 9

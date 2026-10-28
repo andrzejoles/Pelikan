@@ -389,16 +389,27 @@ public enum BuiltinCommands {
                 }
                 // Agent podaje linię — okno dialogowe aktywowałoby aplikację.
                 if line == nil, ctx.invoker.isAgent { throw CommandError.missingArgument("line") }
+                // Okno programu z kartami (D192): linia jednostki bieżącej karty — jak numeracja marginesu, ALL_SOURCE
+                // i ALL_ERRORS (linia 1 = linia słowa typu, D189).
+                let tabs = doc.programUnitTabs
+                let tab = ProgramUnitTabs.index(of: doc.selectedRange.lowerBound, in: tabs).map { tabs[$0] }
+                let firstLine = tab.map { TextEditing.line(containing: $0.sourceOffset, in: doc.text) } ?? 0
                 if line == nil {
                     let current = (doc.text as NSString).substring(to: min(doc.selectedRange.lowerBound, (doc.text as NSString).length))
                         .components(separatedBy: "\n").count
-                    guard let answer = await ctx.workspace.ui?.askText(L10n.tr("Przejdź do linii"), message: L10n.tr("Numer linii:"), defaultValue: String(current)) else {
+                    let message = tab.map { L10n.tr("Numer linii jednostki \($0.title):") } ?? L10n.tr("Numer linii:")
+                    guard let answer = await ctx.workspace.ui?.askText(L10n.tr("Przejdź do linii"), message: message,
+                                                                       defaultValue: String(max(1, current - firstLine))) else {
                         return .ok
                     }
                     line = Int(answer.trimmingCharacters(in: .whitespaces))
                 }
                 guard let l = line, l > 0 else { throw CommandError.invalidArgument("line", L10n.tr("liczba od 1")) }
-                let o = TextEditing.offset(ofLine: l, in: doc.text)
+                var o = TextEditing.offset(ofLine: firstLine + l, in: doc.text)
+                if let tab, let i = tabs.firstIndex(of: tab) {
+                    o = min(o, ProgramUnitTabs.caretLimit(tab, isLast: i == tabs.count - 1, in: doc.text as NSString))
+                    o = ProgramUnitTabs.lineStart(o, in: doc.text as NSString)
+                }
                 doc.selectedRange = o..<o
                 return .ok
             },

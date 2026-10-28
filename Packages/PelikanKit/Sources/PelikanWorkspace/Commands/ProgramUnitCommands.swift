@@ -81,6 +81,48 @@ enum ProgramUnitCommands {
                 doc.selectedRange = c..<c
                 return CommandResult(message: L10n.tr("Usunięto jednostkę \(unit.tabTitle)"))
             },
+            Command(CommandDescriptor(id: "prog.selectUnit", title: L10n.tr("Pokaż jednostkę…"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      parameters: [
+                                          CommandParameter("unit", .string, L10n.tr("Karta: numer od 1, nazwa jednostki albo „nazwa body” (bez argumentu — wybór z listy)")),
+                                      ],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje w oknie programu kartę wskazanej jednostki (specyfikacji, ciała…); kursor wraca w miejsce, w którym był na tej karcie."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                let target: Int
+                if let v = ctx.arguments.values["unit"] {
+                    let spec: String
+                    if case .int(let n) = v { spec = String(n) } else { spec = v.stringValue ?? "" }
+                    guard let i = ProgramUnitTabs.find(spec, in: tabs) else {
+                        throw CommandError.invalidArgument("unit", L10n.tr("nie ma takiej jednostki"))
+                    }
+                    target = i
+                } else if let i = try await ctx.choose(L10n.tr("Pokaż jednostkę"), tabs.enumerated().map { ($0.element.title, $0.offset) }) {
+                    return showUnit(target: i, doc, tabs, ctx).resolving(["unit": .string(tabs[i].key)])
+                } else {
+                    throw CommandError.missingArgument("unit")
+                }
+                return showUnit(target: target, doc, tabs, ctx)
+            },
+            Command(CommandDescriptor(id: "prog.nextUnit", title: L10n.tr("Następna jednostka"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      pd: ["ctrl+pagedown"], mac: ["alt+cmd+]"],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje kartę następnej jednostki okna programu (po ostatniej — pierwszą)."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                return showUnit(target: ((doc.activeUnitTab ?? 0) + 1) % tabs.count, doc, tabs, ctx)
+            },
+            Command(CommandDescriptor(id: "prog.previousUnit", title: L10n.tr("Poprzednia jednostka"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      pd: ["ctrl+pageup"], mac: ["alt+cmd+["],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje kartę poprzedniej jednostki okna programu (przed pierwszą — ostatnią)."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                return showUnit(target: ((doc.activeUnitTab ?? 0) + tabs.count - 1) % tabs.count, doc, tabs, ctx)
+            },
             Command(CommandDescriptor(id: "prog.revert", title: L10n.tr("Przywróć"), category: .file,
                                       parameters: [
                                           CommandParameter("source", .string, L10n.tr("Skąd: baseline — stan z otwarcia lub zapisu (domyślnie), database — źródło z bazy"),
@@ -114,6 +156,44 @@ enum ProgramUnitCommands {
                 return CommandResult(message: L10n.tr("Przywrócono tekst okna"))
             },
         ]
+    }
+
+    /// Aktywne okno programu z kartami jednostek (także tylko do odczytu — przełączanie kart nie zmienia tekstu).
+    @MainActor
+    static func tabbedDocument(_ ws: Workspace) -> Document? {
+        guard let d = ws.activeDocument, d.kind == .program, d.programUnitTabs.count > 1 else { return nil }
+        return d
+    }
+
+    @MainActor
+    static func tabbed(_ ctx: CommandContext) throws -> (Document, [ProgramUnitTab]) {
+        guard let d = ctx.workspace.activeDocument, d.kind == .program else {
+            throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu"))
+        }
+        let tabs = d.programUnitTabs
+        guard tabs.count > 1 else { throw CommandError.notAvailable(L10n.tr("Okno programu ma jedną jednostkę")) }
+        return (d, tabs)
+    }
+
+    /// Przejście na kartę: zapamiętuje kursor bieżącej karty i stawia go tam, gdzie był na karcie docelowej (pierwszy
+    /// raz — na początku linii nagłówka jednostki). Karta aktywna wynika z kursora (`Document.activeUnitTab`).
+    @MainActor
+    static func showUnit(target: Int, _ doc: Document, _ tabs: [ProgramUnitTab], _ ctx: CommandContext) -> CommandResult {
+        let ns = doc.text as NSString
+        let current = doc.activeUnitTab
+        if let c = current {
+            doc.unitCarets[tabs[c].key] = max(0, doc.selectedRange.lowerBound - tabs[c].segment.lowerBound)
+        }
+        let tab = tabs[target]
+        if current != target {
+            let header = ns.lineRange(for: NSRange(location: min(tab.sourceOffset, ns.length), length: 0)).location
+            let wanted = doc.unitCarets[tab.key].map { tab.segment.lowerBound + $0 } ?? header
+            let limit = ProgramUnitTabs.caretLimit(tab, isLast: target == tabs.count - 1, in: ns)
+            let o = min(max(wanted, tab.segment.lowerBound), limit)
+            ctx.workspace.recordJump()
+            doc.selectedRange = o..<o
+        }
+        return CommandResult(message: tab.title, value: .int(Int64(target + 1)))
     }
 
     @MainActor

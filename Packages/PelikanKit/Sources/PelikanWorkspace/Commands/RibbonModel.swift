@@ -509,6 +509,8 @@ public enum RibbonModel {
                 .small("edit.beautify", label: L10n.tr("Formatuj kod")),
             ]),
             RibbonGroup(L10n.tr("Jednostki"), [
+                .small("prog.selectUnit", label: L10n.tr("Pokaż jednostkę")), .small("prog.previousUnit", label: L10n.tr("Poprzednia")),
+                .small("prog.nextUnit", label: L10n.tr("Następna")),
                 .small("prog.addUnit", label: L10n.tr("Dodaj jednostkę")), .small("prog.removeUnit", label: L10n.tr("Usuń jednostkę")),
                 .small("view.codeContents"),
             ]),

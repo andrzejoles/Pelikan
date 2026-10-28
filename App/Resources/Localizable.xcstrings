@@ -19965,6 +19965,34 @@
         }
       }
     },
+    "Filtr nazw zawartości kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code contents name filter"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Namensfilter des Code-Inhalts"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtro de nombres del contenido del código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фільтр назв вмісту коду"
+          }
+        }
+      }
+    },
     "Filtr nazwany" : {
       "localizations" : {
         "en" : {
@@ -27829,6 +27857,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ця вкладка не є результатом запиту"
+          }
+        }
+      }
+    },
+    "Karta: numer od 1, nazwa jednostki albo „nazwa body” (bez argumentu — wybór z listy)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tab: number from 1, unit name or “name body” (without an argument — choose from a list)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registerkarte: Nummer ab 1, Name der Einheit oder „Name body“ (ohne Argument — Auswahl aus einer Liste)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestaña: número desde 1, nombre de la unidad o «nombre body» (sin argumento: elección de una lista)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладка: номер від 1, назва одиниці або «назва body» (без аргументу — вибір зі списку)"
           }
         }
       }
@@ -39033,6 +39089,62 @@
         }
       }
     },
+    "Następna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна"
+          }
+        }
+      }
+    },
+    "Następna jednostka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Einheit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна одиниця"
+          }
+        }
+      }
+    },
     "Następna różnica" : {
       "localizations" : {
         "en" : {
@@ -45781,6 +45893,34 @@
         }
       }
     },
+    "Numer linii jednostki %@:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line number in unit %@:"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilennummer in der Einheit %@:"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Número de línea en la unidad %@:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Номер рядка в одиниці %@:"
+          }
+        }
+      }
+    },
     "Numer linii:" : {
       "localizations" : {
         "en" : {
@@ -49809,6 +49949,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Program Window"
+          }
+        }
+      }
+    },
+    "Okno programu ma jedną jednostkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The program window has a single unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Programmfenster hat nur eine Einheit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana de programa tiene una sola unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно програми має лише одну одиницю"
           }
         }
       }
@@ -58801,6 +58969,62 @@
         }
       }
     },
+    "Pokazuje kartę następnej jednostki okna programu (po ostatniej — pierwszą)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tab of the next unit in the program window (after the last one — the first)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Registerkarte der nächsten Einheit des Programmfensters (nach der letzten — die erste)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la pestaña de la siguiente unidad de la ventana de programa (tras la última, la primera)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує вкладку наступної одиниці вікна програми (після останньої — першу)."
+          }
+        }
+      }
+    },
+    "Pokazuje kartę poprzedniej jednostki okna programu (przed pierwszą — ostatnią)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tab of the previous unit in the program window (before the first one — the last)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Registerkarte der vorherigen Einheit des Programmfensters (vor der ersten — die letzte)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la pestaña de la unidad anterior de la ventana de programa (antes de la primera, la última)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує вкладку попередньої одиниці вікна програми (перед першою — останню)."
+          }
+        }
+      }
+    },
     "Pokazuje lub ukrywa na marginesie znaczniki linii zmienionych i nowych od otwarcia albo zapisu." : {
       "localizations" : {
         "en" : {
@@ -59109,6 +59333,34 @@
         }
       }
     },
+    "Pokazuje w oknie programu kartę wskazanej jednostki (specyfikacji, ciała…); kursor wraca w miejsce, w którym był na tej karcie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tab of the given unit (specification, body…) in the program window; the cursor returns to where it was on that tab."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt im Programmfenster die Registerkarte der angegebenen Einheit (Spezifikation, Rumpf…); der Cursor kehrt an die Stelle zurück, an der er auf dieser Registerkarte war."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra en la ventana de programa la pestaña de la unidad indicada (especificación, cuerpo…); el cursor vuelve al lugar donde estaba en esa pestaña."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує у вікні програми вкладку вказаної одиниці (специфікації, тіла…); курсор повертається туди, де він був на цій вкладці."
+          }
+        }
+      }
+    },
     "Pokazuje wykres z wyniku komórki SQL (propozycja z kolumn liczbowych) albo go usuwa." : {
       "localizations" : {
         "en" : {
@@ -59217,6 +59469,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати журнал"
+          }
+        }
+      }
+    },
+    "Pokaż jednostkę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit anzeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar unidad"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати одиницю"
+          }
+        }
+      }
+    },
+    "Pokaż jednostkę…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Unit…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einheit anzeigen…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar unidad…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати одиницю…"
           }
         }
       }
@@ -60897,6 +61205,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vorheriger Datensatz"
+          }
+        }
+      }
+    },
+    "Poprzednia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня"
+          }
+        }
+      }
+    },
+    "Poprzednia jednostka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous Unit"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Einheit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unidad anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня одиниця"
           }
         }
       }
@@ -116061,6 +116425,34 @@
         }
       }
     },
+    "karta aktywna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "active tab"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aktive Registerkarte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "pestaña activa"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "активна вкладка"
+          }
+        }
+      }
+    },
     "katalog" : {
       "localizations" : {
         "en" : {
@@ -118861,6 +119253,34 @@
         }
       }
     },
+    "prywatny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "private"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "privat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "privado"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "приватний"
+          }
+        }
+      }
+    },
     "przed przywróceniem" : {
       "localizations" : {
         "en" : {
@@ -119053,6 +119473,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Datenvorbereitung"
+          }
+        }
+      }
+    },
+    "publiczny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "public"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "öffentlich"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "público"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "публічний"
           }
         }
       }

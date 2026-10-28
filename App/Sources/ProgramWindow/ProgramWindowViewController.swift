@@ -2,7 +2,8 @@ import AppKit
 import PelikanSQL
 import PelikanWorkspace
 
-/// Program Window (UG 4): karty jednostek (specyfikacja, ciało…) nad edytorem — przejście do jednostki, edytor kodu,
+/// Program Window (UG 4): karty jednostek (specyfikacja, ciało…) nad edytorem — edytor pokazuje tylko jednostkę
+/// wybranej karty (D192), edytor kodu,
 /// lista błędów i ostrzeżeń kompilacji (klik = przejście do linii), wskaźniki: niebieski — zmieniony niezapisany,
 /// żółty — zmieniony nieskompilowany (UG 4.3). F8 kompiluje wszystkie jednostki.
 final class ProgramWindowViewController: NSViewController, NSTableViewDataSource, NSTableViewDelegate, DocumentContentController {
@@ -23,6 +24,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private let executing = NSProgressIndicator()
     private var tokens: [ObservationToken] = []
     private var units: [ProgramUnit] = []
+    private var tabs: [ProgramUnitTab] = []
+    private var unitButtons: [NSButton] = []
     private var shownMessages: [CompileMessage] = []
     private var lastUnitSignature = ""
     private var messagesVisible = false
@@ -44,11 +47,15 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             self?.caretLabel.stringValue = s
             self?.caretMoved()
         }
-        contents.onSelect = { [weak self] n in
+        // Karta jednostki widoczna w edytorze — wyróżniona na pasku kart.
+        editor.onShownTabChange = { [weak self] _ in self?.updateUnitButtons() }
+        // Code Contents: klik albo Enter — kursor na nazwie elementu i fokus w edytorze; strzałki w drzewie — kursor
+        // idzie za zaznaczeniem, fokus zostaje w drzewie. Element innej jednostki przełącza kartę (D192).
+        contents.onSelect = { [weak self] n, focus in
             guard let self else { return }
             self.workspace.recordJump()
             self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
-            self.view.window?.makeFirstResponder(self.editor.textView)
+            if focus { self.view.window?.makeFirstResponder(self.editor.textView) }
         }
         hierarchyLabel.textColor = .secondaryLabelColor
         hierarchyLabel.lineBreakMode = .byTruncatingHead
@@ -143,6 +150,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         hierarchyLabel.font = small
         caretLabel.font = .monospacedDigitSystemFont(ofSize: small.pointSize, weight: .regular)
         for case let b as NSButton in unitBar.arrangedSubviews { b.font = small }
+        updateUnitButtons()
         messages.rowHeight = AppFonts.rowHeight(for: small)
         messages.reloadData()
     }
@@ -179,10 +187,13 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         Task.detached(priority: .userInitiated) {
             let outline = PLSQLOutline.parse(text)
             let units = ProgramCompiler.units(in: text)
+            let tabs = ProgramUnitTabs.tabs(units, in: text)
             await MainActor.run { [weak self] in
                 guard let self, self.document.text == text else { return }
                 // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
                 self.document.cacheProgramUnits(units, forText: text)
+                self.tabs = tabs
+                self.editor.unitTabs = tabs
                 self.apply(outline: outline, units: units)
             }
         }
@@ -197,10 +208,14 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         guard signature != lastUnitSignature else { return }
         lastUnitSignature = signature
         unitBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for unit in u {
-            let b = ClosureButton(title: unit.tabTitle) { [weak self] in self?.select(unit.id) }
-            b.bezelStyle = .accessoryBarAction
+        unitButtons = []
+        for (index, unit) in u.enumerated() {
+            // Klik karty — komenda rejestru (makra, skróty i agent widzą to samo przejście, D192).
+            let b = ClosureButton(title: unit.tabTitle) { [weak self] in self?.select(index) }
+            b.bezelStyle = .accessoryBar
+            b.setButtonType(.pushOnPushOff)
             b.font = InterfaceFonts.shared.small
+            unitButtons.append(b)
             b.toolTip = "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)"
             // Menu karty: usunięcie jednostki z okna (PD-PROG-001).
             let menu = NSMenu()
@@ -219,6 +234,19 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         add.toolTip = L10n.tr("Dodaj jednostkę")
         addButton = add
         unitBar.addArrangedSubview(add)
+        updateUnitButtons()
+    }
+
+    /// Karta aktywna wyraźnie zaznaczona (wciśnięta, pogrubiona); okno z jedną jednostką — bez wyróżnienia.
+    private func updateUnitButtons() {
+        let shown = editor.shownTab
+        for (i, b) in unitButtons.enumerated() {
+            let on = shown == i
+            b.state = on ? .on : .off
+            b.font = on ? NSFontManager.shared.convert(InterfaceFonts.shared.small, toHaveTrait: .boldFontMask) : InterfaceFonts.shared.small
+            b.setAccessibilityValue(on ? L10n.tr("karta aktywna") : nil)
+        }
+        contents.activeRange = shown.flatMap { tabs.indices.contains($0) ? tabs[$0].segment : nil }
     }
 
     private weak var addButton: NSButton?
@@ -262,9 +290,15 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         if !contents.isHidden { contents.track(offset: o) }
     }
 
-    private func select(_ id: String) {
-        guard let u = units.first(where: { $0.id.components(separatedBy: "@")[0] == id.components(separatedBy: "@")[0] }) else { return }
-        document.selectedRange = u.range.lowerBound..<u.range.lowerBound
+    /// Klik karty: okno z kartami — `prog.selectUnit`; jedna jednostka — kursor na jej początku (jak dotąd).
+    private func select(_ index: Int) {
+        updateUnitButtons()
+        if tabs.count > 1 {
+            workspace.perform("prog.selectUnit", CommandArguments(["unit": .int(Int64(index + 1))]))
+        } else if units.indices.contains(index) {
+            let o = units[index].range.lowerBound
+            document.selectedRange = o..<o
+        }
         view.window?.makeFirstResponder(editor.textView)
     }
 
@@ -303,10 +337,20 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             tf.stringValue = m.severity == .error ? L10n.tr("Błąd") : m.severity == .warning ? L10n.tr("Ostrzeżenie") : L10n.tr("Podpowiedź")
             tf.textColor = m.severity == .error ? .systemRed : m.severity == .warning ? .systemOrange : .secondaryLabelColor
         case "unit": tf.stringValue = m.unit
-        case "line": tf.stringValue = "\(m.line):\(m.column)"
+        case "line": tf.stringValue = "\(unitLine(m.line)):\(m.column)"
         default: tf.stringValue = m.text; tf.toolTip = m.text
         }
         return tf
+    }
+
+    /// Linia komunikatu na liście: w oknie z kartami — linia jednostki (jak ALL_ERRORS), inaczej linia dokumentu.
+    private func unitLine(_ documentLine: Int) -> Int {
+        guard tabs.count > 1 else { return documentLine }
+        let text = document.text
+        let o = TextEditing.offset(ofLine: documentLine, in: text)
+        guard let i = ProgramUnitTabs.index(of: o, in: tabs) else { return documentLine }
+        let first = TextEditing.line(containing: tabs[i].sourceOffset, in: text)
+        return ProgramUnitTabs.unitLine(documentLine: documentLine - 1, sourceLine: first) ?? documentLine
     }
 
     @objc private func messageClicked() {

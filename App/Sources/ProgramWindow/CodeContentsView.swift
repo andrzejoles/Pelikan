@@ -2,9 +2,12 @@ import AppKit
 import PelikanSQL
 import PelikanWorkspace
 
-/// Code Contents (UG 25.15): drzewo struktury kodu — jednostki, podprogramy, deklaracje; śledzi kursor (zaznacza
-/// element zawierający pozycję), klik przenosi do nazwy elementu; sortowanie i menu elementu (PD-CA-010).
-final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate {
+/// Code Contents (UG 25.15): drzewo struktury kodu — specyfikacja i ciało osobno, podprogramy (parametry i typ zwracany),
+/// typy, kursory, zmienne, stałe, wyjątki, pragmy, podprogramy zagnieżdżone; elementy prywatne ciała pochylone
+/// i przygaszone. Śledzi kursor (zaznacza element zawierający pozycję), klik albo Enter przenosi do nazwy elementu
+/// (także na innej karcie jednostki — D192), strzałki w drzewie przesuwają kursor bez zmiany fokusu; filtr nazw nad
+/// drzewem, sortowanie i menu elementu (PD-CA-010).
+final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate, NSSearchFieldDelegate {
     /// Węzeł drzewa (NSOutlineView wymaga obiektów o stałej tożsamości).
     final class Item {
         let node: OutlineNode
@@ -16,12 +19,31 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         }
     }
 
-    private let outline = NSOutlineView()
+    /// Drzewo z Enter jako „przejdź” (NSOutlineView sam nie wysyła akcji klawiszem).
+    final class Tree: NSOutlineView {
+        var onEnter: (() -> Void)?
+        override func keyDown(with event: NSEvent) {
+            if event.keyCode == 36 || event.keyCode == 76 { onEnter?(); return }
+            super.keyDown(with: event)
+        }
+    }
+
+    private let outline = Tree()
     private let scroll = NSScrollView()
+    private let filterField = NSSearchField()
     private var roots: [Item] = []
     private var selecting = false
     private var rawNodes: [OutlineNode] = []
-    var onSelect: ((OutlineNode) -> Void)?
+    private var filter = ""
+    /// Przejście do elementu; `focus` — fokus do edytora (klik, Enter), bez — zostaje w drzewie (strzałki).
+    var onSelect: ((OutlineNode, _ focus: Bool) -> Void)?
+    /// Odcinek karty jednostki widocznej w edytorze — jej korzeń pogrubiony (D192).
+    var activeRange: Range<Int>? {
+        didSet {
+            guard activeRange != oldValue else { return }
+            for r in roots { reloadRow(r) }
+        }
+    }
     /// Kolejność elementów (Preferencje › Edytor, menu panelu).
     var order: CodeContents.Order = .source {
         didSet { if order != oldValue { update(rawNodes) } }
@@ -45,6 +67,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         outline.delegate = self
         outline.target = self
         outline.action = #selector(clicked)
+        outline.onEnter = { [weak self] in self?.activateSelected() }
         outline.setAccessibilityLabel(L10n.tr("Zawartość kodu"))
         outline.menu = NSMenu()
         outline.menu?.delegate = self
@@ -52,15 +75,28 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         scroll.hasVerticalScroller = true
         scroll.drawsBackground = false
         scroll.translatesAutoresizingMaskIntoConstraints = false
+        filterField.placeholderString = L10n.tr("Filtr nazw")
+        filterField.setAccessibilityLabel(L10n.tr("Filtr nazw zawartości kodu"))
+        filterField.controlSize = .small
+        filterField.sendsSearchStringImmediately = true
+        filterField.delegate = self
+        filterField.target = self
+        filterField.action = #selector(filterChanged)
+        filterField.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(filterField)
         addSubview(scroll)
         NSLayoutConstraint.activate([
-            scroll.topAnchor.constraint(equalTo: topAnchor), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
+            filterField.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+            filterField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
+            filterField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            scroll.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 4), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor), scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         fontToken = trackChanges { [weak self] in
             guard let self else { return }
             let font = InterfaceFonts.shared.small
             outline.rowHeight = AppFonts.rowHeight(for: font)
+            filterField.font = font
             // Bez `reloadData` — zachowuje rozwinięcie i zaznaczenie.
             for row in 0..<outline.numberOfRows {
                 (outline.view(atColumn: 0, row: row, makeIfNecessary: false) as? NSTableCellView)?.textField?.font = font
@@ -83,16 +119,43 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         }
         let first = roots.isEmpty
         collect(roots, "")
+        // Korzenie (specyfikacja, ciało) mają tę samą nazwę — klucz z rodzajem, żeby rozwinięcie jednego nie rozwijało drugiego.
         rawNodes = nodes
-        roots = CodeContents.sorted(nodes, order: order).map(Item.init)
+        roots = CodeContents.sorted(CodeContents.filtered(nodes, matching: filter), order: order).map(Item.init)
         outline.reloadData()
         func restore(_ items: [Item], _ prefix: String, depth: Int) {
             for i in items {
                 let key = prefix + "/" + i.node.name
-                if expanded.contains(key) || (first && depth == 0) { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
+                // Przy filtrze — wszystko rozwinięte (widać pasujące elementy).
+                if expanded.contains(key) || (first && depth == 0) || !filter.isEmpty { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
             }
         }
         restore(roots, "", depth: 0)
+    }
+
+    @objc private func filterChanged() {
+        filter = filterField.stringValue
+        update(rawNodes)
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        // Strzałka w dół z pola filtru — do drzewa; Esc — czyści filtr.
+        if commandSelector == #selector(NSResponder.moveDown(_:)) {
+            window?.makeFirstResponder(outline)
+            if outline.selectedRow < 0, outline.numberOfRows > 0 { outline.selectRowIndexes([0], byExtendingSelection: false) }
+            return true
+        }
+        if commandSelector == #selector(NSResponder.cancelOperation(_:)), !filterField.stringValue.isEmpty {
+            filterField.stringValue = ""
+            filterChanged()
+            return true
+        }
+        return false
+    }
+
+    private func reloadRow(_ item: Item) {
+        let row = outline.row(forItem: item)
+        if row >= 0 { outline.reloadData(forRowIndexes: [row], columnIndexes: [0]) }
     }
 
     /// Śledzenie kursora: zaznacza najgłębszy element zawierający pozycję.
@@ -122,7 +185,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         if let item = outline.item(atRow: outline.clickedRow) as? Item {
             let n = item.node
             let args = CommandArguments(["offset": .int(Int64(n.nameOffset))])
-            menu.addItem(ClosureMenuItem(title: L10n.tr("Przejdź")) { [weak self] in self?.onSelect?(n) })
+            menu.addItem(ClosureMenuItem(title: L10n.tr("Przejdź")) { [weak self] in self?.onSelect?(n, true) })
             menu.addItem(ClosureMenuItem(title: L10n.tr("Zaznacz")) { ws.perform("codeContents.select", args) })
             menu.addItem(ClosureMenuItem(title: L10n.tr("Kopiuj")) { ws.perform("codeContents.copy", args) })
             menu.addItem(ClosureMenuItem(title: L10n.tr("Wytnij")) { ws.perform("codeContents.cut", args) })
@@ -140,11 +203,25 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         }
         sort.submenu = sub
         menu.addItem(sort)
+        menu.addItem(ClosureMenuItem(title: L10n.tr("Rozwiń wszystko")) { [weak self] in self?.outline.expandItem(nil, expandChildren: true) })
+        menu.addItem(ClosureMenuItem(title: L10n.tr("Zwiń wszystko")) { [weak self] in self?.outline.collapseItem(nil, collapseChildren: true) })
     }
 
     @objc private func clicked() {
         guard let i = outline.item(atRow: outline.clickedRow) as? Item else { return }
-        onSelect?(i.node)
+        onSelect?(i.node, true)
+    }
+
+    private func activateSelected() {
+        guard let i = outline.item(atRow: outline.selectedRow) as? Item else { return }
+        onSelect?(i.node, true)
+    }
+
+    /// Zaznaczenie zmienione klawiaturą w drzewie — kursor edytora idzie za nim (fokus zostaje w drzewie).
+    func outlineViewSelectionDidChange(_ notification: Notification) {
+        guard !selecting, NSApp.currentEvent?.type == .keyDown, window?.firstResponder === outline,
+              let i = outline.item(atRow: outline.selectedRow) as? Item else { return }
+        onSelect?(i.node, false)
     }
 
     func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int {
@@ -162,12 +239,22 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView? {
         guard let n = (item as? Item)?.node else { return nil }
         let cell = NSTableCellView()
-        let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(n.kind), accessibilityDescription: nil) ?? NSImage())
+        let icon = NSImageView(image: NSImage(systemSymbolName: Self.symbol(n), accessibilityDescription: nil) ?? NSImage())
         icon.contentTintColor = Self.tint(n.kind)
         let label = NSTextField(labelWithString: Self.title(n))
-        label.font = InterfaceFonts.shared.small
+        var font = InterfaceFonts.shared.small
+        // Prywatne elementy ciała — pochylone i przygaszone; korzeń widocznej karty — pogrubiony.
+        if n.isPublic == false {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+            label.textColor = .secondaryLabelColor
+        }
+        if let a = activeRange, outlineView.parent(forItem: item) == nil, a.contains(n.nameOffset) {
+            font = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+        }
+        label.font = font
         label.lineBreakMode = .byTruncatingTail
-        label.toolTip = Self.title(n)
+        label.toolTip = CodeContents.signature(of: n)
+        label.setAccessibilityLabel(CodeContents.signature(of: n))
         for v in [icon, label] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false; cell.addSubview(v) }
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: cell.leadingAnchor), icon.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
@@ -187,10 +274,29 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             var s = n.name + (params.isEmpty ? "" : "(" + params.joined(separator: ", ") + ")")
             if !n.detail.isEmpty { s += " return " + n.detail }
             return s
-        case .package: return n.name + " (" + L10n.tr("specyfikacja") + ")"
+        case .package, .type: return n.name + " (" + L10n.tr("specyfikacja") + ")"
         case .packageBody, .typeBody: return n.name + " (" + L10n.tr("ciało") + ")"
+        case .typeDeclaration:
+            // Rodzaj typu krótko (szczegóły w podpowiedzi).
+            return n.typeShape.isEmpty ? n.name : n.name + " " + n.typeShape.lowercased()
+        case .cursor:
+            let params = n.detail.hasPrefix("(") ? String(n.detail[..<(n.detail.firstIndex(of: ")").map { n.detail.index(after: $0) } ?? n.detail.endIndex)]) : ""
+            return n.name + params
+        case .pragma: return "pragma " + n.name.lowercased()
         case .block: return n.name
         default: return n.detail.isEmpty ? n.name : n.name + " " + n.detail
+        }
+    }
+
+    static func symbol(_ n: OutlineNode) -> String {
+        // Deklaracje typów wg rodzaju: rekord, kolekcja, kursor referencyjny, podtyp.
+        guard n.kind == .typeDeclaration else { return symbol(n.kind) }
+        switch n.typeShape {
+        case "RECORD": return "rectangle.split.3x1"
+        case "TABLE", "VARRAY": return "tablecells"
+        case "REF CURSOR": return "arrow.right.circle"
+        case "SUBTYPE": return "t.square"
+        default: return symbol(n.kind)
         }
     }
 
@@ -207,6 +313,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .exception: "exclamationmark.triangle"
         case .constant: "c.square"
         case .variable, .parameter: "v.square"
+        case .pragma: "p.square"
         }
     }
 
@@ -215,6 +322,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .package, .packageBody, .type, .typeBody: .systemOrange
         case .procedure, .function, .trigger: .systemBlue
         case .exception: .systemRed
+        case .typeDeclaration, .cursor: .systemPurple
+        case .constant: .systemTeal
         default: .secondaryLabelColor
         }
     }

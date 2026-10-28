@@ -100,6 +100,25 @@ public final class Document: Identifiable {
         unitsCache = (textRevision, units)
     }
 
+    @ObservationIgnored private var tabsCache: (revision: Int, tabs: [ProgramUnitTab])?
+
+    /// Karty jednostek okna programu (D192): odcinki tekstu jednostek; mniej niż dwie jednostki — pusto.
+    public var programUnitTabs: [ProgramUnitTab] {
+        guard kind == .program else { return [] }
+        let units = programUnits
+        if let c = tabsCache, c.revision == textRevision { return c.tabs }
+        let tabs = ProgramUnitTabs.tabs(units, in: text)
+        tabsCache = (textRevision, tabs)
+        return tabs
+    }
+
+    /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
+    public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
+
+    /// Ostatnia pozycja kursora na karcie (klucz karty → odległość od początku odcinka) — powrót na kartę wraca w to
+    /// samo miejsce, jak w oknie programu wzorca.
+    @ObservationIgnored public var unitCarets: [String: Int] = [:]
+
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false {
         didSet { if !isModified { baselineText = text } }
