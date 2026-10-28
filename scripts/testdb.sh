@@ -126,8 +126,11 @@ up() {
     wait_ready
     check_pdb
     # Serwer SSH testów tunelu (ssh-up) startuje razem z bazą — po restarcie maszyny zestaw tunelu inaczej by padał.
+    # Baza utworzona od nowa (reset) nie jest w sieci bastionu — bez dołączenia tunel kończy się ORA-12547.
     if docker container inspect "$SSH_NAME" >/dev/null 2>&1; then
         docker start "$SSH_NAME" >/dev/null
+        docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
+        grep -q "\"$NAME\"" <<<"$(docker network inspect "$NET")" || docker network connect "$NET" "$NAME"
     fi
 }
 
