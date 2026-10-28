@@ -1821,6 +1821,34 @@
         }
       }
     },
+    "<użytkownik>" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<user>"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<Benutzer>"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<usuario>"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<користувач>"
+          }
+        }
+      }
+    },
     "ALIAS nazwa=polecenie" : {
       "localizations" : {
         "en" : {
@@ -5513,6 +5541,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Makrobibliothek …"
+          }
+        }
+      }
+    },
+    "Biblioteka snippetów jest pusta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The snippet library is empty"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Snippet-Bibliothek ist leer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca de fragmentos está vacía"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бібліотека фрагментів порожня"
+          }
+        }
+      }
+    },
+    "Biblioteka szablonów jest pusta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The template library is empty"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Vorlagenbibliothek ist leer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca de plantillas está vacía"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Бібліотека шаблонів порожня"
           }
         }
       }
@@ -11953,6 +12037,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Daten %@"
+          }
+        }
+      }
+    },
+    "Dane rekordu bez zmiany widoku: kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record data without changing the view: columns, values, types and column comments (from the data dictionary) of one record."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datensatzdaten ohne Änderung der Ansicht: Spalten, Werte, Typen und Spaltenkommentare (aus dem Data Dictionary) eines Datensatzes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datos del registro sin cambiar la vista: columnas, valores, tipos y comentarios de columnas (del diccionario) de un registro."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дані запису без зміни подання: стовпці, значення, типи й коментарі стовпців (зі словника) одного запису."
           }
         }
       }
@@ -24053,6 +24165,34 @@
         }
       }
     },
+    "Historia schowka jest pusta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The clipboard history is empty"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Zwischenablageverlauf ist leer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El historial del portapapeles está vacío"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Історія буфера обміну порожня"
+          }
+        }
+      }
+    },
     "Historia tylko w pamięci — znika po zamknięciu Pelikana." : {
       "localizations" : {
         "en" : {
@@ -30741,34 +30881,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spalten, Parameter, Paketelemente oder Typattribute (UG 21.1 Describe)."
-          }
-        }
-      }
-    },
-    "Kolumny, wartości, typy i komentarze kolumn (ze słownika) jednego rekordu — widok pojedynczego rekordu." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Columns, values, types and column comments (from the dictionary) of one record — single record view."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spalten, Werte, Typen und Spaltenkommentare (aus dem Data Dictionary) eines Datensatzes — Einzelsatzansicht."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Columnas, valores, tipos y comentarios de columnas (del diccionario) de un registro — vista de registro único."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Стовпці, значення, типи й коментарі стовпців (зі словника) одного запису — перегляд одного запису."
           }
         }
       }
@@ -47765,6 +47877,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lesen"
+          }
+        }
+      }
+    },
+    "Odczyt migawek AWR wymaga uprawnienia do widoków DBA_HIST_SNAPSHOT i V$INSTANCE (zwykle przez rolę DBA albo SELECT_CATALOG_ROLE). Administrator bazy może je nadać: GRANT SELECT_CATALOG_ROLE TO %@;" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading AWR snapshots requires privileges on the DBA_HIST_SNAPSHOT and V$INSTANCE views (usually through the DBA role or SELECT_CATALOG_ROLE). The database administrator can grant them: GRANT SELECT_CATALOG_ROLE TO %@;"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Lesen von AWR-Snapshots erfordert Rechte auf die Views DBA_HIST_SNAPSHOT und V$INSTANCE (meist über die Rolle DBA oder SELECT_CATALOG_ROLE). Der Datenbankadministrator kann sie erteilen: GRANT SELECT_CATALOG_ROLE TO %@;"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer las instantáneas de AWR requiere privilegios sobre las vistas DBA_HIST_SNAPSHOT y V$INSTANCE (normalmente mediante el rol DBA o SELECT_CATALOG_ROLE). El administrador de la base de datos puede concederlos: GRANT SELECT_CATALOG_ROLE TO %@;"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читання знімків AWR потребує привілеїв на подання DBA_HIST_SNAPSHOT і V$INSTANCE (зазвичай через роль DBA або SELECT_CATALOG_ROLE). Адміністратор бази може їх надати: GRANT SELECT_CATALOG_ROLE TO %@;"
           }
         }
       }
@@ -75713,6 +75853,34 @@
         }
       }
     },
+    "Sortuj listę okien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort window list"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fensterliste sortieren"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordenar lista de ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сортувати список вікон"
+          }
+        }
+      }
+    },
     "Sortuj listę okien…" : {
       "localizations" : {
         "en" : {
@@ -84337,6 +84505,34 @@
         }
       }
     },
+    "Uprawnienia debugera" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger Privileges"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debugger-Privilegien"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privilegios del depurador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Привілеї налагоджувача"
+          }
+        }
+      }
+    },
     "Uprawnienia debugera…" : {
       "localizations" : {
         "en" : {
@@ -85509,6 +85705,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зробити головним з'єднанням"
+          }
+        }
+      }
+    },
+    "Ustaw kursor na nazwie obiektu albo kolumny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place the cursor on an object or column name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setzen Sie den Cursor auf einen Objekt- oder Spaltennamen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coloca el cursor sobre el nombre de un objeto o una columna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поставте курсор на назву об'єкта або стовпця"
           }
         }
       }
@@ -89233,6 +89457,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Користувач бази даних (порожньо — усі)"
+          }
+        }
+      }
+    },
+    "Użytkownik bazy, który ma debugować PL/SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database user who will debug PL/SQL"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datenbankbenutzer, der PL/SQL debuggen soll"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuario de la base de datos que va a depurar PL/SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Користувач бази, який налагоджуватиме PL/SQL"
           }
         }
       }
@@ -117965,30 +118217,30 @@
         }
       }
     },
-    "opening, name albo type" : {
+    "opening, name albo type (bez argumentu — wybór z listy)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "opening, name or type"
+            "value" : "opening, name or type (without an argument — choose from a list)"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "opening, name oder type"
+            "value" : "opening, name oder type (ohne Argument — Auswahl aus einer Liste)"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "opening, name o type"
+            "value" : "opening, name o type (sin argumento: elegir de una lista)"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "opening, name або type"
+            "value" : "opening, name або type (без аргументу — вибір зі списку)"
           }
         }
       }
