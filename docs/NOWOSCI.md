@@ -2,6 +2,11 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.2.5 — poprawka budowania wydania
+
+- Wydanie zawiera wszystkie poprawki z 1.2.4 (niżej), które nie miały osobnego wydania: sprawdzenie podpisu z Hardened
+  Runtime w skrypcie wydania odrzucało poprawnie podpisaną aplikację.
+
 ## 1.2.4 — poprawki z przeglądu kodu
 
 - **Bezpieczeństwo** — aplikacja jest podpisana z Hardened Runtime. Plik eksportu połączeń z hasłami od początku ma
