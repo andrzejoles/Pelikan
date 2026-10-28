@@ -2,6 +2,26 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.4.0 — karty jednostek w oknie programu, bogatsza Zawartość kodu
+
+- **Okno programu** z pakietem (albo typem) pokazuje naraz tylko specyfikację albo tylko ciało — tę jednostkę, której
+  karta jest wybrana; aktywna karta jest wyraźnie zaznaczona. Kartę zmienisz kliknięciem, przez **Plik › Okno
+  programu › Pokaż jednostkę…** albo skrótami ⌥⌘] / ⌥⌘[ (w profilu PL/SQL Developer także ⌃⇟ / ⌃⇞). Przejście do
+  miejsca w drugiej jednostce — z listy błędów kompilacji, Zawartości kodu, wyszukiwania, deklaracji, zakładki czy
+  debugera — przełącza kartę samo. Numery linii i **Przejdź do linii** liczą linie jednostki, tak jak Oracle w
+  komunikatach o błędach.
+- Przejścia z kart, Zawartości kodu i **Przejdź do linii** zawsze przewijają edytor do celu (wcześniej czasem kursor
+  przesuwał się bez przewinięcia).
+- **Zawartość kodu** pokazuje osobno specyfikację i ciało, podprogramy z parametrami i typem zwracanym, typy (rekordy,
+  tabele, REF CURSOR, podtypy), kursory, stałe, zmienne, wyjątki, pragmy i podprogramy zagnieżdżone; elementy
+  prywatne ciała są pochylone. Pojedyncze kliknięcie albo Enter przenosi do elementu, strzałki w drzewie przesuwają
+  kursor w edytorze, a pole nad drzewem filtruje nazwy.
+- Duże pakiety z tysiącami podprogramów nie blokują już okna podczas analizy kodu.
+- **Pliki bez „/”:** okno programu rozpoznaje specyfikację, ciało i inne jednostki po nagłówkach `CREATE …`, także
+  gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
+  tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
+  (preferencja **Kończ jednostki okna programu znakiem „/”** w Preferencje › Oracle przywraca dawny układ).
+
 ## 1.3.1 — poprawki zgłoszeń
 
 - **Rekord** na karcie **Wynik** i przycisk w pasku nad siatką przełączają wynik między tabelą a widokiem pojedynczego

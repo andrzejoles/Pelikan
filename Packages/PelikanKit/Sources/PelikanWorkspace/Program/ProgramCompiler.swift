@@ -46,9 +46,10 @@ public struct CompileMessage: Sendable, Hashable, Identifiable {
 }
 
 public enum ProgramCompiler {
-    /// Jednostki programu w tekście (polecenia CREATE PL/SQL zakończone `/`).
+    /// Jednostki programu w tekście (D192): polecenia CREATE PL/SQL — zakończone `/` w osobnej linii albo bez niego
+    /// (następna jednostka zaczyna się od nagłówka CREATE na początku linii).
     public static func units(in text: String) -> [ProgramUnit] {
-        ScriptSplitter.split(text).compactMap { s in
+        programStatements(text).compactMap { s in
             guard let h = headerTokens(s.text) else { return nil }
             var u = ProgramUnit(type: h.type, owner: h.owner, name: h.name, range: s.start..<s.end, line: s.line, text: s.text)
             u.sourceLine = s.line
@@ -60,6 +61,135 @@ public enum ProgramCompiler {
                 u.sourceColumn = (lines.last ?? "").utf16.count
             }
             return u
+        }
+    }
+
+    /// Polecenia okna programu: podział skryptu (`/` w osobnej linii kończy blok PL/SQL, jak w SQL*Plus), a w poleceniu
+    /// także na każdym nagłówku jednostki (`CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|TYPE|PROCEDURE|
+    /// FUNCTION|TRIGGER|LIBRARY|JAVA|MLE MODULE …`) na początku linii — pliki jednostek bez `/` (konwencja właściciela,
+    /// D192). Komentarze i literały nie są nagłówkami (lekser). Polecenie kończy się na ostatnim znaczącym znaku przed
+    /// następnym nagłówkiem (komentarz przed CREATE należy do następnej jednostki). Na początku linii tnie też `GRANT`,
+    /// `REVOKE` i `SHOW ERRORS` (nie są poleceniami PL/SQL) — nie doklejają się do jednostki bez `/` przed nimi.
+    /// Treść źródła Java i modułu MLE nie jest leksowana jak PL/SQL (apostrof w `// don't` otwierałby literał) —
+    /// następny nagłówek szukany tekstowo. Jedno przejście po tokenach na polecenie (pliki z setkami jednostek).
+    static func programStatements(_ text: String) -> [(start: Int, end: Int, line: Int, text: String)] {
+        let ns = text as NSString
+        var out: [(start: Int, end: Int, line: Int, text: String)] = []
+        for s in ScriptSplitter.split(text) {
+            let start = min(s.start, ns.length), end = min(max(s.end, start), ns.length)
+            let body = ns.substring(with: NSRange(location: start, length: end - start)) as NSString
+            // Linie liczone przyrostowo od początku polecenia (cięcia rosną).
+            var scanned = 0, newlines = 0
+            for piece in pieces(body) where piece.end > piece.start {
+                while scanned < piece.start { if body.character(at: scanned) == 0x0A { newlines += 1 }; scanned += 1 }
+                out.append((start + piece.start, start + piece.end, s.line + newlines,
+                            body.substring(with: NSRange(location: piece.start, length: piece.end - piece.start))))
+            }
+        }
+        return out
+    }
+
+    /// Kawałki polecenia (zakresy w `body`): od cięcia do ostatniego znaczącego znaku przed następnym cięciem.
+    static func pieces(_ body: NSString) -> [(start: Int, end: Int)] {
+        let trivia: Set<TokenKind> = [.whitespace, .newline, .lineComment, .blockComment]
+        var out: [(start: Int, end: Int)] = []
+        var pieceStart = 0
+        var lexFrom = 0
+        func header(at o: Int) -> (type: DBObjectType, owner: String?, name: String, nameStart: Int, typeStart: Int)? {
+            headerTokens(body.substring(with: NSRange(location: o, length: min(600, body.length - o))))
+        }
+        func isForeign(_ o: Int) -> Bool { header(at: o).map { [.javaSource, .mleModule].contains($0.type) } ?? false }
+        /// Koniec znaczącego tekstu przed pozycją (bez białych znaków).
+        func trimmedEnd(before limit: Int, from lower: Int) -> Int {
+            var e = limit
+            while e > lower, let u = Unicode.Scalar(body.character(at: e - 1)), CharacterSet.whitespacesAndNewlines.contains(u) { e -= 1 }
+            return e
+        }
+        /// Koniec źródła Java/JS przed następnym nagłówkiem: bez pustych linii i komentarzy PL/SQL między jednostkami
+        /// (linie zaczynające się od `--`, blok `/* … */` zaczęty w osobnej linii) — nie trafiają do kodu Java/JS.
+        func foreignEnd(before limit: Int, from lower: Int) -> Int {
+            var end = limit
+            while end > lower {
+                let line = body.lineRange(for: NSRange(location: end - 1, length: 0))
+                guard line.location > lower else { break }
+                let t = body.substring(with: NSRange(location: line.location, length: end - line.location)).trimmingCharacters(in: .whitespacesAndNewlines)
+                if t.isEmpty || t.hasPrefix("--") {
+                    end = line.location
+                } else if t.hasSuffix("*/") {
+                    // Blok komentarza: cofnij do linii, która go zaczyna (`/*` na początku linii); inaczej to kod Java/JS.
+                    var start = line.location
+                    var found = false
+                    while start > lower {
+                        let l = body.lineRange(for: NSRange(location: start, length: 0))
+                        if body.substring(with: l).trimmingCharacters(in: .whitespaces).hasPrefix("/*") { start = l.location; found = true; break }
+                        guard l.location > lower else { break }
+                        start = body.lineRange(for: NSRange(location: l.location - 1, length: 0)).location
+                    }
+                    guard found, start > lower else { break }
+                    end = start
+                } else {
+                    break
+                }
+            }
+            return trimmedEnd(before: end, from: lower)
+        }
+        while true {
+            if isForeign(pieceStart) {
+                // Java / JavaScript: następny nagłówek tekstowo — CREATE na początku linii z nagłówkiem jednostki.
+                var next: Int?
+                var lineStart = NSMaxRange(body.lineRange(for: NSRange(location: pieceStart, length: 0)))
+                while lineStart < body.length {
+                    let line = body.lineRange(for: NSRange(location: lineStart, length: 0))
+                    var k = line.location
+                    while k < NSMaxRange(line), body.character(at: k) == 0x20 || body.character(at: k) == 0x09 { k += 1 }
+                    if k + 6 <= body.length, body.substring(with: NSRange(location: k, length: 6)).uppercased() == "CREATE", header(at: k) != nil {
+                        next = k
+                        break
+                    }
+                    lineStart = NSMaxRange(line)
+                }
+                guard let next else { out.append((pieceStart, body.length)); return out }
+                out.append((pieceStart, foreignEnd(before: next, from: pieceStart)))
+                pieceStart = next
+                lexFrom = next
+                continue
+            }
+            let region = body.substring(from: lexFrom)
+            let tokens = Lexer(region).tokenize()
+            var lineStart = true
+            var lastSignificantEnd = pieceStart
+            var restart = false
+            var i = 0
+            while i < tokens.count {
+                let t = tokens[i]
+                let at = lexFrom + t.start
+                i += 1
+                if t.kind == .newline { lineStart = true; continue }
+                if t.kind == .whitespace { continue }
+                let wasLineStart = lineStart
+                lineStart = false
+                if wasLineStart, at > pieceStart, t.kind == .keyword || t.kind == .identifier {
+                    let word = body.substring(with: NSRange(location: at, length: t.length)).uppercased()
+                    var cut = false
+                    if word == "CREATE" {
+                        cut = header(at: at) != nil
+                    } else if word == "GRANT" || word == "REVOKE" {
+                        cut = true
+                    } else if word == "SHOW", let n = tokens[i...].first(where: { !trivia.contains($0.kind) }) {
+                        cut = ["ERRORS", "ERR", "ERROR"].contains((region as NSString).substring(with: NSRange(location: n.start, length: n.length)).uppercased())
+                    }
+                    if cut {
+                        out.append((pieceStart, lastSignificantEnd))
+                        pieceStart = at
+                        lastSignificantEnd = at
+                        if isForeign(at) { lexFrom = at; restart = true; break }
+                    }
+                }
+                if !trivia.contains(t.kind) { lastSignificantEnd = at + t.length }
+            }
+            if restart { continue }
+            out.append((pieceStart, body.length))
+            return out
         }
     }
 
@@ -160,7 +290,7 @@ public enum ProgramCompiler {
         let wasOpen = ws.documents.contains { $0 === doc }
         if ws.settings.beautifier.beforeCompile { ws.autoBeautify(doc) }
         let units = units(in: doc.text)
-        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
+        guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (polecenia CREATE …)")) }
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
         // Plik tylko do odczytu (np. z systemu kontroli wersji) — kompilacja wyłączona preferencją (PD-PROG-017).
         if let url = doc.fileURL, !ws.settings.compileReadOnlyFiles, FileManager.default.fileExists(atPath: url.path),

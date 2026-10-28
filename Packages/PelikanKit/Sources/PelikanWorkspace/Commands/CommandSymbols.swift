@@ -89,7 +89,8 @@ public enum CommandSymbols {
         "grid.copyToExcel": "tablecells", "grid.copyAs": "doc.on.doc", "grid.graph": "chart.xyaxis.line", "grid.totals": "sum",
         "grid.toggleRecordView": "list.bullet.rectangle", "sql.pinResult": "pin", "sql.pinAllResults": "pin.fill", "sql.clearResults": "xmark.bin",
         // Program
-        "prog.addUnit": "plus.square", "prog.removeUnit": "minus.square", "prog.reloadFromDatabase": "arrow.down.circle",
+        "prog.addUnit": "plus.square", "prog.removeUnit": "minus.square", "prog.selectUnit": "rectangle.stack", "prog.nextUnit": "chevron.right.square",
+        "prog.previousUnit": "chevron.left.square", "prog.reloadFromDatabase": "arrow.down.circle",
         "prog.checkChanges": "exclamationmark.arrow.triangle.2.circlepath", "prog.revert": "arrow.uturn.backward.square",
         "prog.compareWithDatabase": "arrow.left.arrow.right.square", "prog.compareWithFile": "doc.on.doc", "prog.compareWithConnection": "cylinder.split.1x2",
         // Kontekstowe: plan, diagram, raport, notatnik

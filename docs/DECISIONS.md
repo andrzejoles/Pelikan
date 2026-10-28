@@ -1967,3 +1967,133 @@ a część komend wymagała argumentu (podawanego przez panel, agenta albo skryp
   w oknie programu) kończyło się ORA-01008 (dziennik z #113). Autotrace pyta o zmienne jak okno SQL (wartości
   zapamiętane w oknie) i wykonuje polecenie z wiązaniem; przy wyłączonym podstawianiu okna `&` zostaje w tekście bez
   pytania, a o zmienne wiązane pyta zawsze.
+
+### D192 · 2026-10-28 — Okno programu: karty jednostek pokazują jedną jednostkę, nawigacja i bogatsza Zawartość kodu
+
+Zgłoszenie właściciela: specyfikacja i ciało pakietu są w jednym oknie mimo kart u góry, klik karty nic nie daje,
+a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programach.
+
+- **Przyczyna braku nawigacji** (ustalona w działającej aplikacji Debug — zrzuty i dziennik kolejności obserwatorów):
+  (1) karty i Zawartość kodu ustawiały tylko kursor w jednym długim tekście; w małym pakiecie (EMP_API) cel był już
+  na ekranie, więc nic się nie zmieniało, a aktywnej karty nie było; (2) skok do miejsca poza ekranem często w ogóle
+  nie przewijał edytora: zaznaczenie z modelu stosowały dwa obserwatory śledzące `Document.selectedRange` —
+  `syncFromModel` (zaznaczenie i przewinięcie) oraz `applyAdditionalSelections` (dodatkowe kursory, także zaznaczenie
+  główne, bez przewinięcia i z wyłączonym powiadomieniem widoku). Kolejność ich wywołania nie jest stała; gdy pierwszy
+  był drugi, `syncFromModel` zastawał zaznaczenie już ustawione i nie przewijał, a pasek pozycji pokazywał stare
+  „1:1”. Teraz bez dodatkowych kursorów zaznaczenie główne stosuje tylko `syncFromModel`. (3) TextKit 2 szacuje
+  położenie nieułożonego tekstu — po zmianie ukrytych akapitów `scrollRangeToVisible` trafia obok celu; przewinięcie
+  (`scrollToSelection`) sprawdza ramkę fragmentu po układzie widocznego obszaru i poprawia położenie (do czterech
+  razy, bez układu całego tekstu).
+- **Karty:** dokument zostaje jeden (zapis, F8 — wszystkie jednostki, worksety, historia lokalna, agent bez zmian).
+  Tekst dzieli się na rozłączne odcinki pełnych linii (`ProgramUnitTabs`): kończący `/` należy do jednostki przed
+  nim, puste linie i komentarz przed `CREATE` — do następnej. Edytor ukrywa odcinki innych kart tym samym
+  mechanizmem co zwijanie (`FoldingContentDelegate` pomija akapity, zakresy zwinięć i kart scalone). Karta aktywna to
+  zawsze karta odcinka z kursorem (`Document.activeUnitTab`) — dlatego każde przejście z modelu w inne miejsce tekstu
+  przełącza kartę samo: komunikat kompilacji, Zawartość kodu, Znajdź następne/poprzednie, Przejdź do deklaracji, Idź do
+  linii, zakładki, linia debugera (zatrzymanie w innej jednostce), Wstecz/Naprzód, Search Bar, agent
+  (`replace_range`, przejście do linii — linie dokumentu), Cofnij/Ponów zmiany w innej jednostce. Punkty przerwania
+  stawia się kliknięciem w margines widocznej karty. Kursor i zaznaczenie z klawiatury i myszy zostają na karcie
+  (strzałki, ⌘A, ⇧⌘↓ przycinane do odcinka, przycięcie przewija do kursora), a edycja z klawiatury nie usuwa znaku
+  nowej linii oddzielającego następną kartę. Karta aktywna: wciśnięta i pogrubiona (w aktywnym oknie — kolor akcentu);
+  w Zawartości kodu pogrubiony jej korzeń. Okno z jedną jednostką — bez zmian.
+- **Komendy** (agent: Brak, jak pozostałe `prog.*`): `prog.selectUnit` (argument `unit`: numer od 1, nazwa, „nazwa
+  body” albo tytuł karty; bez argumentu — wybór z listy jak w D191, makro nagrywa wybór), `prog.nextUnit` /
+  `prog.previousUnit` (w kółko). Skróty: wzorzec nie ma domyślnych (docs/research/keys.md) — ⌃⇟/⌃⇞ w profilu PL/SQL
+  Developer (jak przełączanie kart w programach Windows) i ⌥⌘] / ⌥⌘[ w obu profilach (MacBook bez klawiszy stron);
+  bez kolizji w rejestrze. Klik karty wywołuje `prog.selectUnit`; przejście na kartę wraca kursorem w miejsce, w którym
+  był na niej ostatnio (pierwszy raz — linia nagłówka jednostki) i zapisuje skok w historii nawigacji. Wstążka:
+  karta kontekstowa **Program**, grupa **Jednostki** (Pokaż jednostkę, Poprzednia, Następna).
+- **Numery linii:** na karcie jednostki margines, pasek pozycji, lista komunikatów kompilacji i **Idź do linii**
+  liczą linie jednostki jak Oracle — linia 1 to linia słowa typu (`PACKAGE BODY …`, `ProgramUnit.sourceLine`, D189),
+  tak jak ALL_SOURCE i ALL_ERRORS oraz jak w oknie programu wzorca (każda jednostka ma własny edytor numerowany od 1).
+  Linie przed słowem typu (komentarz nagłówka, `CREATE OR REPLACE` w osobnej linii) są bez numeru („–” na pasku).
+  Idź do linii poza końcem jednostki zostaje na jej ostatniej linii. Okno bez kart — linie dokumentu jak dotąd.
+  Agent (także `edit.gotoLine` wywołane przez agenta) i komendy z pozycją w tekście (offsety, `executionLine`,
+  punkty przerwania) dalej działają na liniach dokumentu. Wydruk i lista To-Do (także `edit.todoToggle` z numerem
+  linii) też — drukowany jest cały tekst okna, wszystkie jednostki, z numeracją dokumentu.
+- **Wyszukiwanie:** Znajdź następne/poprzednie przeszukuje cały dokument i przełącza kartę na trafienie w innej
+  jednostce (Pelikan nie ma osobnych edytorów kart; zakres „cały tekst” zamiast „bieżąca karta” — mniej klikania przy
+  szukaniu użycia w specyfikacji i ciele). **Zamień wszystko** działa na całym dokumencie (wszystkie jednostki),
+  z opcją „W zaznaczeniu” — tylko w zaznaczeniu; liczba zamian w komunikacie; jedno Cofnij.
+- **Zawartość kodu:** pojedynczy klik i Enter przenoszą kursor do nazwy elementu i fokus do edytora (z przełączeniem
+  karty); strzałki w drzewie przesuwają kursor bez zmiany fokusu; śledzenie kursora jak dotąd. Treść: osobno
+  specyfikacja i ciało pakietu i typu; podprogramy z parametrami i typem zwracanym (pełny nagłówek z trybami i typami
+  w podpowiedzi), przeciążenia, podprogramy zagnieżdżone; typy wg rodzaju (rekord, tabela, VARRAY, REF CURSOR,
+  podtyp — ikona i dopisek), kursory z parametrami i RETURN, zmienne, stałe, wyjątki, pragmy (EXCEPTION_INIT,
+  AUTONOMOUS_TRANSACTION…); typ obiektowy — atrybuty z typami i metody (MEMBER, STATIC, CONSTRUCTOR … RETURN SELF AS
+  RESULT). Elementy ciała niezadeklarowane w specyfikacji z tego samego tekstu są prywatne (pochylone, przygaszone,
+  „prywatny” w podpowiedzi); przeciążenia dopasowane po nazwach parametrów. Pole filtru nad drzewem (nazwy, bez
+  wielkości liter; zostają przodkowie pasujących, drzewo rozwinięte; ↓ — do drzewa, Esc — czyści), menu: Rozwiń
+  wszystko, Zwiń wszystko; sortowanie bez zmian.
+- **Wydajność:** parsowanie jak dotąd w tle; przy pisaniu granice kart i ukryte zakresy przesuwane bez ponownego
+  układu całości. Przełączenie karty wymaga ponownego układu odcinka nowej karty (jak „Zwiń wszystko”): w pakiecie
+  60 000 linii 0,5–1 s na przełączenie (Debug). Przy okazji: inspekcja nieużywanych deklaracji przeglądała wszystkie
+  tokeny dla każdej deklaracji (pakiet 60 000 linii z 5 000 funkcji blokował główny wątek na minuty) — teraz indeks
+  pozycji słów i wyszukiwanie binarne.
+- **Poprawki po przeglądzie kodu:** wstawienie dokładnie na granicy kart należy do karty późniejszej (kursor na
+  początku karty stoi na granicy — Enter, wklejenie, To-Do w pierwszej kolumnie zostają na karcie); ostatnia karta
+  zawsze do końca tekstu. Zmiana obejmująca granicę (Zamień wszystko, formatowanie całości, Przywróć, historia
+  lokalna, cofnięcie takich zmian) dzieli tekst na karty od razu, bez czekania na analizę w tle. Po analizie w tle,
+  która zmieniła kartę (okno otwarte na linii, debuger, usunięcie jednostki), edytor przewija do kursora. Komendy
+  edycji użytkownika i makr nie zmieniają tekstu poza kartą z kursorem (`Document.unitEditBounds` liczone z modelu
+  w chwili wywołania, nie z widoku — makro może zmienić kartę i od razu edytować; np. „Usuń następne słowo” na końcu
+  karty odmawia, „Powiel linię” w ostatniej linii karty jest dozwolone, a edytor wstawia kopię przed kończącym
+  znakiem nowej linii, więc zostaje na tej karcie; kolejne linie z samym „/” należą do jednostki przed nimi; agent
+  działa na dokumencie bez tego ograniczenia; okno z jedną jednostką — bez dzielenia tekstu przy komendzie), dodatkowe kursory nie trafiają do ukrytej jednostki, a Usuń jednostkę
+  bez argumentu usuwa jednostkę karty z kursorem. Walidacja menu i wstążki komend kart korzysta z liczby kart z
+  ostatniego podziału (`Document.unitTabCount`), bez dzielenia tekstu przy każdym znaku (R4-01); pozycja słowa typu
+  liczona w tekście jednostki, nie w całym dokumencie. Numery linii listy komunikatów liczone raz na listę. ⌘A
+  i przeciąganie myszą nie przewijają na koniec karty. Code Contents: stan rozwinięcia z rodzajem węzła
+  (specyfikacja i ciało osobno), rozwinięcie sprzed filtra przywracane, filtr z opóźnieniem 180 ms, sortowanie nie
+  zmienia kolejności parametrów; prywatne przeciążenie (jedna wersja w specyfikacji, dwie w ciele) zostaje
+  prywatne; pragmy nie trafiają do podpowiedzi kodu ani do „Przejdź do deklaracji”.
+- **Podzielony edytor:** bez dodatkowych kursorów zaznaczenie główne stosuje tylko `syncFromModel`, który pomija
+  panel, gdy pisze się w drugim (`peerActive`) — pasywny panel podziału (okna SQL, programu, testu) nie przesuwa
+  kursora za aktywnym, tak jak dotąd przy wpisywaniu tekstu.
+- **Wstawienie na granicy i rysowanie (czwarte przejście przeglądu):** wstawienie z modelu w granicy kart edytor
+  stosuje o znak wcześniej tylko dla tekstu dopisanego na końcu widocznej karty, gdy kursor po zmianie jest wewnątrz
+  wstawki (Powiel linię) — To-Do w pierwszej linii ciała albo komentarz agenta przed CREATE zostają na karcie
+  późniejszej. Po zmianie tekstu z modelu edytor przewija do kursora tylko, gdy kursor był widoczny albo zmiana go
+  obejmuje (edycja agenta gdzie indziej, Zamień wszystko, formatowanie nie odrywają od czytanego miejsca). Tekst
+  wpisany za kończącym „/” specyfikacji należy — jak w SQL*Plus — do następnego polecenia i skleja się z ciałem, które
+  przestaje być rozpoznawane jako jednostka: karty znikają i widać cały tekst (edytor, komendy, kompilacja i punkty
+  przerwania widzą wtedy ten sam podział), a wracają po poprawieniu tekstu (świadome zachowanie; wcześniejsze
+  zachowywanie kart przy takim tekście dawało rozbieżność edytora z modelem). „Usuń jednostkę” z argumentem
+  „nazwa body” usuwa tylko ciało — bez ciała w tekście odmawia, zamiast usuwać specyfikację. Znane ograniczenie: po
+  zniknięciu kart (odsłonięcie całego tekstu) linie poniżej dotychczasowej wysokości widoku bywają puste do
+  przewinięcia albo kliknięcia (TextKit 2 nie powiększa od razu widoku tekstu). Po zmianie ukrytego tekstu i po zmianie tekstu
+  z komendy edytor układa obszar widoku jeszcze raz w następnym obiegu pętli — dolne linie (numery w marginesie bez
+  tekstu) były puste do kliknięcia. Odtworzone w oknie programu z kartami (zmiana kart, dopisanie tekstu z komendy
+  i z klawiatury za „/”); w oknie bez kart przy pisaniu z klawiatury nie występowało.
+- **Pliki jednostek bez „/” (wymaganie właściciela):** „W repozytoriach specyfikację i body zapisujemy w osobnych
+  plikach i bez znaku / na końcu” — „/” psuje proces wdrożenia. Okno programu rozpoznaje jednostki po nagłówkach
+  `CREATE [OR REPLACE] [EDITIONABLE|NONEDITIONABLE] PACKAGE|PACKAGE BODY|TYPE|TYPE BODY|PROCEDURE|FUNCTION|TRIGGER|
+  LIBRARY|JAVA SOURCE|MLE MODULE …` na początku linii (lekser — nie w komentarzu ani literale; `ProgramCompiler.
+  programStatements`), z „/” i bez; „/” w osobnej linii, jeśli jest, należy do jednostki przed nim (podział jak
+  w SQL*Plus). Dotyczy kart, Code Contents, kompilacji F8 (każda jednostka osobnym poleceniem), numeracji linii
+  i błędów ALL_ERRORS, debugera i punktów przerwania, Dodaj/Usuń jednostkę, porównania z bazą, historii lokalnej.
+  Tekst za kończącym „/” nie skleja już jednostek — wycofanie `keepingTabs` zostaje.
+  Bez „/” domyślnie: tekst z bazy w oknie programu (Edytuj, Wczytaj ponownie z bazy, Dodaj źródło do edytora,
+  otwarcie z debugera, agent otwierający obiekt, szkielet testu utPLSQL, import modułu MLE) — jednostki rozdzielone
+  pustą linią; szablony jednostek programów bez „/”; Dodaj jednostkę zachowuje konwencję pliku (okno z „/” — nowa
+  jednostka z „/”, bez — bez). **Zapis nigdy nie dopisuje „/”** (dotąd dopisywał kończący „/”, UG 4.2) — tekst okna
+  zapisywany bez zmian, plik z „/” zapisuje się tak, jak jest (bez cichego usuwania). Preferencja „Kończ jednostki okna
+  programu znakiem /” (Preferencje › Oracle, domyślnie wyłączona) przywraca „/” w tekście z bazy i w nowych jednostkach.
+  Bez zmian (tam „/” wykonuje blok): okno SQL, okno poleceń, okno testu, Duplikuj obiekt (skrypt w oknie SQL),
+  skrypt wdrożenia koszyka, kopia schematu, eksport obiektów do plików (DBMS_METADATA z SQLTERMINATOR — następny PR
+  razem z osobnymi plikami specyfikacji i ciała).
+- **Źródło dla agenta i szkielet testu:** `agent.source` i szkielet testu utPLSQL (okno programu i narzędzie agenta)
+  stosują tę samą preferencję co okno programu — domyślnie bez „/” (agent może zapisać źródło do pliku w repozytorium).
+- **Szóste przejście przeglądu:** szablon jednostek wstawiany do okna SQL, poleceń albo testu (i do okna programu
+  z konwencją „/”) dostaje „/” po każdej jednostce — tam „/” kończy blok PL/SQL; w oknie programu bez „/”. Podział na
+  jednostki to jedno przejście po tokenach polecenia (pliki z setkami jednostek bez „/”). Treść źródła Java i modułu
+  MLE nie jest leksowana jak PL/SQL — następny nagłówek CREATE szukany tekstowo. `GRANT`, `REVOKE` i `SHOW ERRORS` na
+  początku linii za jednostką bez „/” nie doklejają się do niej (nie są wykonywane przy F8 — jak dotąd polecenia
+  inne niż CREATE); inne polecenia SQL*Plus (`EXIT`, `SET`, `PROMPT` — także słowa PL/SQL) za jednostką bez „/”
+  trafiają do jej tekstu (w konwencji właściciela nie występują). Opis narzędzia `agent.source`: źródło bez „/”, do
+  wykonania jako skrypt SQL*Plus każdą jednostkę trzeba zakończyć „/” albo kompilować osobno.
+- **Java i MLE bez „/”:** źródło kończy się przed komentarzami PL/SQL i pustymi liniami poprzedzającymi następną
+  jednostkę. Ograniczenie: w źródle Java/MLE bez „/” linia zaczynająca się od `CREATE …` z nagłówkiem jednostki (np.
+  w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
+  takie jednostki kończ „/”.
+

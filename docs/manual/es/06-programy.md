@@ -15,12 +15,24 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
 - **Editar** sobre un paquete o tipo — también sobre su cuerpo desde las carpetas «Cuerpos de paquete» y «Cuerpos de
   tipo» — abre la especificación y el cuerpo en una ventana con dos pestañas (abierto desde el cuerpo: la pestaña del
   cuerpo queda activa). Un objeto sin cuerpo tiene una sola pestaña.
+- El editor muestra solo la unidad de la pestaña elegida; la pestaña activa aparece pulsada y en negrita. Cambie de
+  pestaña con un clic, con **Archivo › Program Window › Mostrar unidad…**, **Unidad siguiente** (⌥⌘], en el perfil
+  PL/SQL Developer también ⌃⇟) y **Unidad anterior** (⌥⌘[, ⌃⇞): el cursor vuelve a donde estaba en esa pestaña. Todo
+  salto a un lugar de otra unidad (error de compilación, Contenido del código, Buscar siguiente, Ir a la declaración,
+  marcador, depurador, Atrás/Adelante, Deshacer) cambia la pestaña solo. Las flechas y ⌘A no salen de la pestaña. Los
+  números de línea de la pestaña, la lista de errores e **Ir a la línea** cuentan las líneas de la unidad como Oracle
+  (ALL_SOURCE, ALL_ERRORS): la línea 1 es la de `PACKAGE BODY …`. **Reemplazar todo** reemplaza en toda la ventana
+  (todas las unidades).
+- Las unidades se reconocen por las cabeceras `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`,
+  `TRIGGER` al principio de una línea: el archivo no necesita «/» tras las unidades. Pelikan no añade «/» al guardar,
+  y el código cargado de la base de datos y las unidades nuevas llegan sin «/» (salvo que active **Preferencias ›
+  Oracle › Terminar las unidades de la ventana de programa con «/»**). Un archivo con «/» se guarda sin cambios.
 - **F8** (⌘↩) compila todas las unidades una tras otra y se detiene en la primera con un error. La compilación se hace
   en una sesión aparte en segundo plano, así que no bloquea las SQL Windows.
 - Los errores y advertencias del compilador aparecen bajo el editor. Un clic lleva a la línea; un doble clic abre la
   descripción del error en la documentación de Oracle.
 - La barra de estado muestra si el texto se ha modificado y no se ha guardado, y si está sin compilar.
-- **Archivo › Guardar** (⌘S) guarda un archivo compatible con SQL*Plus (con `/` final), con el nombre y la extensión
+- **Archivo › Guardar** (⌘S) guarda el texto de la ventana sin cambios (sin añadir `/`), con el nombre y la extensión
   según la unidad (p. ej., `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Trabajar con seguridad con el código de la base de datos
@@ -63,8 +75,13 @@ de varias decenas de miles de líneas.
 - **⌘+clic** sobre un nombre o **Edición › Ir a la declaración** (⌃⌘J) lleva a la declaración: en el mismo código
   fuente, en otra ventana abierta o en un objeto de la base de datos (en una ventana nueva). **Edición › Navegación ›
   Atrás** (⌃⌘←) y **Adelante** (⌃⌘→) vuelven tras los saltos.
-- **Vista › Contenido del código** muestra el árbol de estructura de la unidad con seguimiento del cursor, ordenación y
-  menú (seleccionar, copiar, cortar, probar subprograma). Bajo el editor, la **jerarquía de código** muestra la ruta
+- **Vista › Contenido del código** muestra el árbol de estructura: la especificación y el cuerpo del paquete (tipo) por
+  separado, con subprogramas con parámetros y tipo de retorno (la cabecera completa en la ayuda emergente), tipos
+  (registro, tabla, REF CURSOR, subtipo), cursores, variables, constantes, excepciones, pragmas y subprogramas anidados.
+  Los elementos privados del cuerpo (no declarados en la especificación) aparecen en cursiva. Un clic o Intro lleva el
+  cursor al elemento (también en otra pestaña); las flechas en el árbol mueven el cursor sin salir del árbol. El campo
+  sobre el árbol filtra nombres. El árbol sigue el cursor y tiene ordenación y menú (seleccionar, copiar, cortar,
+  probar subprograma, expandir/contraer todo). Bajo el editor, la **jerarquía de código** muestra la ruta
   desde el cursor (paquete › procedimiento › bloque); un clic en un nivel lo selecciona o lleva a su nombre.
 - El menú contextual sobre el nombre de un objeto de la base de datos en el editor ofrece las mismas acciones que el
   Object Browser.

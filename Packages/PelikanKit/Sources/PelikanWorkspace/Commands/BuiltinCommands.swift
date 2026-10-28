@@ -276,6 +276,20 @@ public enum BuiltinCommands {
             let len = (doc.text as NSString).length
             let sel = min(doc.selectedRange.lowerBound, len)..<min(doc.selectedRange.upperBound, len)
             let e = transform(doc.text, sel)
+            // Okno programu z kartami: zmiana tylko w karcie z kursorem (np. „Usuń następne słowo” na końcu karty nie
+            // usuwa znaku nowej linii przed następną jednostką). Agent działa na dokumencie (D192).
+            if !ctx.invoker.isAgent, let b = doc.unitEditBounds {
+                let c = EditorShift.Change(old: doc.text, new: e.text)
+                // Czyste wstawienie tuż za końcem karty (np. Powiel linię w ostatniej linii) — najmniejsza różnica
+                // wskazuje początek linii następnej karty, choć tekst wstawiono na końcu tej karty; edytor przesuwa
+                // takie wstawienie o znak w lewo, gdy wstawiony tekst kończy się znakiem nowej linii (zostaje na karcie).
+                let ns = doc.text as NSString, nn = e.text as NSString
+                let pureInsertAtEnd = c.prefix == c.oldEnd && c.prefix == b.upperBound + 1 && ns.length > b.upperBound
+                    && ns.character(at: b.upperBound) == 0x0A && c.delta > 0 && nn.character(at: c.prefix + c.delta - 1) == 0x0A
+                guard c.prefix >= b.lowerBound, c.oldEnd <= b.upperBound || pureInsertAtEnd else {
+                    throw CommandError.notAvailable(L10n.tr("Zmiana wykracza poza kartę jednostki"))
+                }
+            }
             doc.text = e.text
             doc.selectedRange = e.selection
             ctx.workspace.recordAgentEdit(ctx, doc, before: before)
@@ -379,7 +393,7 @@ public enum BuiltinCommands {
                 return CommandResult(message: L10n.tr("Zamieniono: \(r.count)"), value: .int(Int64(r.count)))
             },
             Command(CommandDescriptor(id: "edit.gotoLine", title: L10n.tr("Przejdź do linii…"), category: .edit, pd: ["ctrl+g"], mac: ["cmd+l"],
-                                      parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1)"))],
+                                      parameters: [CommandParameter("line", .integer, L10n.tr("Numer linii (od 1); w oknie programu z kartami — linia jednostki bieżącej karty, dla agenta zawsze linia dokumentu"))],
                                       agent: .full, effect: .uiState, summary: L10n.tr("Przenosi kursor do linii."), feature: "PD-EDIT-010"),
                     validate: { editable($0) != nil }) { ctx in
                 guard let doc = editable(ctx.workspace) else { return .ok }
@@ -389,16 +403,28 @@ public enum BuiltinCommands {
                 }
                 // Agent podaje linię — okno dialogowe aktywowałoby aplikację.
                 if line == nil, ctx.invoker.isAgent { throw CommandError.missingArgument("line") }
+                // Okno programu z kartami (D192): linia jednostki bieżącej karty — jak numeracja marginesu, ALL_SOURCE
+                // i ALL_ERRORS (linia 1 = linia słowa typu, D189).
+                // Agent liczy linie dokumentu (jak `agent.editor` i `agent.replaceRange`).
+                let tabs = ctx.invoker.isAgent ? [] : doc.programUnitTabs
+                let tab = ProgramUnitTabs.index(of: doc.selectedRange.lowerBound, in: tabs).map { tabs[$0] }
+                let firstLine = tab.map { TextEditing.line(containing: $0.sourceOffset, in: doc.text) } ?? 0
                 if line == nil {
                     let current = (doc.text as NSString).substring(to: min(doc.selectedRange.lowerBound, (doc.text as NSString).length))
                         .components(separatedBy: "\n").count
-                    guard let answer = await ctx.workspace.ui?.askText(L10n.tr("Przejdź do linii"), message: L10n.tr("Numer linii:"), defaultValue: String(current)) else {
+                    let message = tab.map { L10n.tr("Numer linii jednostki \($0.title):") } ?? L10n.tr("Numer linii:")
+                    guard let answer = await ctx.workspace.ui?.askText(L10n.tr("Przejdź do linii"), message: message,
+                                                                       defaultValue: String(max(1, current - firstLine))) else {
                         return .ok
                     }
                     line = Int(answer.trimmingCharacters(in: .whitespaces))
                 }
                 guard let l = line, l > 0 else { throw CommandError.invalidArgument("line", L10n.tr("liczba od 1")) }
-                let o = TextEditing.offset(ofLine: l, in: doc.text)
+                var o = TextEditing.offset(ofLine: firstLine + l, in: doc.text)
+                if let tab, let i = tabs.firstIndex(of: tab) {
+                    o = min(o, ProgramUnitTabs.caretLimit(tab, isLast: i == tabs.count - 1, in: doc.text as NSString))
+                    o = ProgramUnitTabs.lineStart(o, in: doc.text as NSString)
+                }
                 doc.selectedRange = o..<o
                 return .ok
             },

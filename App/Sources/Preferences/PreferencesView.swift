@@ -543,6 +543,7 @@ struct OraclePane: View {
                     set: { workspace.settings.debugInfoNever = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }),
                           prompt: Text(L10n.tr("np. *@prod*")))
                 Toggle(L10n.tr("Kompilacja tylko do odczytu plików"), isOn: setting(workspace, \.compileReadOnlyFiles))
+                Toggle(L10n.tr("Kończ jednostki okna programu znakiem „/” (tekst z bazy, nowe jednostki)"), isOn: setting(workspace, \.programUnitSlash))
                 Toggle(L10n.tr("Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"), isOn: setting(workspace, \.compilerHints))
                 Toggle(L10n.tr("Sprawdzaj konwencje nazw"), isOn: setting(workspace, \.namingConventions.enabled))
                 if workspace.settings.namingConventions.enabled {

@@ -137,6 +137,37 @@ struct Review4DebugEditorsDBTests {
         await ws.sessions.disconnectAll()
     }
 
+    @Test("Pakiet bez „/” (D192): F8 kompiluje specyfikację i ciało osobno — oba VALID; ob.edit bez „/”")
+    func compileWithoutSlash() async throws {
+        let (ws, id) = try workspace()
+        let doc = ws.newDocument(.program, text: """
+            CREATE OR REPLACE PACKAGE pelikan_noslash_pkg AS
+              FUNCTION f RETURN NUMBER;
+            END pelikan_noslash_pkg;
+
+            CREATE OR REPLACE PACKAGE BODY pelikan_noslash_pkg AS
+              FUNCTION f RETURN NUMBER IS
+              BEGIN
+                RETURN 1;
+              END f;
+            END pelikan_noslash_pkg;
+            """)
+        ws.bind(doc, to: id)
+        let r = try await ProgramCompiler.compile(doc, in: ws)
+        #expect(r.ok && r.compiled == 2, "\(r.messages)")
+        let s = try await ws.sessions.session(ws.sessions.compileKey(connection: id))
+        let (_, rows) = try await s.queryAll("select object_type, status from user_objects where object_name = 'PELIKAN_NOSLASH_PKG' order by object_type", limit: 10)
+        #expect(rows.map { $0.map(\.displayText) } == [["PACKAGE", "VALID"], ["PACKAGE BODY", "VALID"]])
+        // Otwarcie z bazy: specyfikacja i ciało w jednym oknie, bez „/” (domyślnie).
+        ws.activate(doc.id)
+        try await ws.invoke("ob.edit", CommandArguments(["object": .string("PELIKAN_NOSLASH_PKG")]))
+        let opened = try #require(ws.activeDocument)
+        #expect(opened !== doc && !opened.text.components(separatedBy: "\n").contains("/"))
+        #expect(opened.programUnitTabs.count == 2)
+        _ = try? await s.execute("drop package pelikan_noslash_pkg")
+        await ws.sessions.disconnectAll()
+    }
+
     @Test("Widok dłuższy niż 4000 znaków: pełny tekst, zapis komentarza bez CREATE (WS2-04)")
     func longView() async throws {
         let (ws, id) = try workspace()

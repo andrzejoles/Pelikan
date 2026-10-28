@@ -4,7 +4,7 @@ import Foundation
 public struct OutlineNode: Sendable, Hashable {
     public enum Kind: String, Sendable, Hashable {
         case package, packageBody, type, typeBody, procedure, function, trigger, block
-        case variable, constant, cursor, typeDeclaration, exception, parameter
+        case variable, constant, cursor, typeDeclaration, exception, parameter, pragma
         case declareSection, beginSection, exceptionSection
     }
     public var kind: Kind
@@ -15,9 +15,20 @@ public struct OutlineNode: Sendable, Hashable {
     public var range: Range<Int>
     public var nameOffset: Int
     public var children: [OutlineNode]
+    /// Element pakietu albo typu: true — publiczny (w specyfikacji; w ciele — zadeklarowany w specyfikacji), false —
+    /// prywatny (tylko w ciele), nil — nie dotyczy albo nieznane (ciało bez specyfikacji w tekście).
+    public var isPublic: Bool?
 
     public init(kind: Kind, name: String, detail: String = "", range: Range<Int>, nameOffset: Int, children: [OutlineNode] = []) {
         self.kind = kind; self.name = name; self.detail = detail; self.range = range; self.nameOffset = nameOffset; self.children = children
+    }
+
+    /// Rodzaj typu z deklaracji `TYPE`/`SUBTYPE` (szczegóły zaczynają się od słów po IS/AS): RECORD, TABLE, VARRAY,
+    /// REF CURSOR, OBJECT, SUBTYPE albo pusto.
+    public var typeShape: String {
+        let up = detail.uppercased()
+        for shape in ["RECORD", "REF CURSOR", "TABLE", "VARRAY", "OBJECT", "SUBTYPE"] where up.hasPrefix(shape) { return shape }
+        return up.hasPrefix("VARYING") ? "VARRAY" : ""
     }
 
     /// Czy element jest podprogramem lub jednostką (zwijany, w Code Contents).
@@ -27,6 +38,11 @@ public struct OutlineNode: Sendable, Hashable {
 /// Parser strukturalny PL/SQL (ADR 0002): tolerancyjny, na tokenach leksera — rozpoznaje jednostki, podprogramy,
 /// deklaracje i bloki BEGIN…END (z IF/LOOP/CASE), nie wymaga poprawnego kodu.
 public enum PLSQLOutline {
+    /// Słowa przed PROCEDURE/FUNCTION w metodach typów obiektowych.
+    static let methodModifiers: Set<String> = ["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL", "INSTANTIABLE", "NOT"]
+    /// Opcje funkcji po typie zwracanym (koniec typu).
+    static let functionOptions = ["PIPELINED", "DETERMINISTIC", "RESULT_CACHE", "PARALLEL_ENABLE", "AGGREGATE", "SQL_MACRO"]
+
     struct Tok {
         let kind: TokenKind
         let start: Int
@@ -47,7 +63,46 @@ public enum PLSQLOutline {
     public static func parse(_ text: String) -> [OutlineNode] {
         let t = tokens(text)
         var p = Parser(t: t, i: 0, length: (text as NSString).length, source: text as NSString)
-        return p.parseTop()
+        return markVisibility(p.parseTop())
+    }
+
+    /// Klucz podprogramu do porównania specyfikacji z ciałem: rodzaj, nazwa i nazwy parametrów (przeciążenia).
+    static func signature(_ n: OutlineNode) -> String {
+        ([n.kind.rawValue, n.name.uppercased()] + n.children.filter { $0.kind == .parameter }.map { $0.name.uppercased() }).joined(separator: "|")
+    }
+
+    /// Elementy publiczne i prywatne (Code Contents): wszystko w specyfikacji pakietu/typu jest publiczne; w ciele
+    /// publiczne są podprogramy i kursory zadeklarowane w specyfikacji z tego samego tekstu, pozostałe — prywatne.
+    static func markVisibility(_ roots: [OutlineNode]) -> [OutlineNode] {
+        var specs: [String: OutlineNode] = [:]
+        for r in roots where [.package, .type].contains(r.kind) { specs[r.name.uppercased()] = r }
+        let skipped: Set<OutlineNode.Kind> = [.block, .declareSection, .beginSection, .exceptionSection, .pragma, .parameter]
+        return roots.map { r in
+            var r = r
+            switch r.kind {
+            case .package, .type:
+                r.children = r.children.map { var c = $0; if !skipped.contains(c.kind) { c.isPublic = true }; return c }
+            case .packageBody, .typeBody:
+                guard let spec = specs[r.name.uppercased()] else { break }
+                let exact = Set(spec.children.map(signature))
+                // Inne nazwy parametrów w ciele niż w specyfikacji (błąd kompilacji) — dopasowanie po samej nazwie, gdy
+                // i specyfikacja, i ciało mają jedną wersję podprogramu (inaczej prywatne przeciążenie byłoby publiczne).
+                var counts: [String: Int] = [:]
+                for c in spec.children { counts[c.kind.rawValue + "|" + c.name.uppercased(), default: 0] += 1 }
+                var bodyCounts: [String: Int] = [:]
+                for c in r.children { bodyCounts[c.kind.rawValue + "|" + c.name.uppercased(), default: 0] += 1 }
+                r.children = r.children.map { c in
+                    var c = c
+                    guard !skipped.contains(c.kind) else { return c }
+                    let key = c.kind.rawValue + "|" + c.name.uppercased()
+                    c.isPublic = exact.contains(signature(c))
+                        || (counts[key] == 1 && bodyCounts[key] == 1 && [.procedure, .function, .cursor].contains(c.kind))
+                    return c
+                }
+            default: break
+            }
+            return r
+        }
     }
 
     /// Ścieżka elementów zawierających pozycję (Code Hierarchy): od jednostki do najgłębszego podprogramu/bloku.
@@ -66,12 +121,12 @@ public enum PLSQLOutline {
         let up = name.uppercased()
         let scopes = path(at: offset, in: nodes)
         for scope in scopes.reversed() {
-            if let d = scope.children.first(where: { $0.name.uppercased() == up && !$0.isContainer }) { return d }
-            if let d = scope.children.first(where: { $0.name.uppercased() == up }) { return d }
+            if let d = scope.children.first(where: { $0.name.uppercased() == up && !$0.isContainer && $0.kind != .pragma }) { return d }
+            if let d = scope.children.first(where: { $0.name.uppercased() == up && $0.kind != .pragma }) { return d }
         }
         func search(_ list: [OutlineNode]) -> OutlineNode? {
             for n in list {
-                if n.name.uppercased() == up { return n }
+                if n.name.uppercased() == up, n.kind != .pragma { return n }
                 if let d = search(n.children) { return d }
             }
             return nil
@@ -217,10 +272,38 @@ public enum PLSQLOutline {
             if isWord(0, "AS") || isWord(0, "IS") { i += 1 }
             var node = OutlineNode(kind: kind, name: name, range: start..<length, nameOffset: nameOffset)
             if kind == .type, isWord(0, "OBJECT") || isWord(0, "TABLE") || isWord(0, "VARRAY") || isWord(0, "VARYING") {
-                // Typ obiektowy / kolekcja — do końca polecenia (atrybuty jako zmienne).
+                // Typ obiektowy / kolekcja — do końca polecenia: atrybuty jako zmienne, metody jako podprogramy.
+                let isObject = isWord(0, "OBJECT")
+                var depth = 0
                 while let k = peek(), k.kind != .semicolon, k.kind != .slash {
-                    if k.kind == .identifier, let prev = i > 0 ? t[i - 1] : nil, prev.kind == .leftParen || prev.kind == .comma {
-                        node.children.append(OutlineNode(kind: .variable, name: k.text, range: k.start..<k.end, nameOffset: k.start))
+                    if k.kind == .leftParen { depth += 1; i += 1; continue }
+                    if k.kind == .rightParen { depth -= 1; i += 1; continue }
+                    let prev = i > 0 ? t[i - 1] : nil
+                    let elementStart = depth == 1 && (prev?.kind == .leftParen || prev?.kind == .comma)
+                    if isObject, elementStart, PLSQLOutline.methodModifiers.contains(k.upper) || ["PROCEDURE", "FUNCTION"].contains(k.upper) {
+                        let mStart = k.start
+                        while let m = peek(), PLSQLOutline.methodModifiers.contains(m.upper) { i += 1 }
+                        guard let w = peek(), ["PROCEDURE", "FUNCTION"].contains(w.upper) else { continue }
+                        i += 1
+                        guard let (n, off) = self.name() else { continue }
+                        node.children.append(parseMethodSpec(kind: w.upper == "PROCEDURE" ? .procedure : .function, name: n, nameOffset: off, start: mStart))
+                        continue
+                    }
+                    if elementStart, k.kind == .identifier || k.kind == .quotedIdentifier {
+                        // Atrybut: nazwa i typ do przecinka albo nawiasu zamykającego listę.
+                        i += 1
+                        var first: Tok?, last: Tok?
+                        var d = 0
+                        while let a = peek(), !(d == 0 && (a.kind == .comma || a.kind == .rightParen)), a.kind != .semicolon, a.kind != .slash {
+                            if a.kind == .leftParen { d += 1 } else if a.kind == .rightParen { d -= 1 }
+                            if first == nil { first = a }
+                            last = a
+                            i += 1
+                        }
+                        let n = k.kind == .quotedIdentifier ? String(k.text.dropFirst().dropLast()) : k.text
+                        node.children.append(OutlineNode(kind: .variable, name: n, detail: first.flatMap { a in last.map { text(from: a, to: $0) } } ?? "",
+                                                         range: k.start..<(last?.end ?? k.end), nameOffset: k.start))
+                        continue
                     }
                     i += 1
                 }
@@ -246,48 +329,83 @@ public enum PLSQLOutline {
             return node
         }
 
+        /// Metoda w specyfikacji typu obiektowego: parametry i typ zwracany, do przecinka albo nawiasu kończącego listę.
+        mutating func parseMethodSpec(kind: OutlineNode.Kind, name: String, nameOffset: Int, start: Int) -> OutlineNode {
+            var node = OutlineNode(kind: kind, name: name, range: start..<length, nameOffset: nameOffset)
+            if peek()?.kind == .leftParen { node.children = parseParameters() }
+            var first: Tok?, last: Tok?
+            var returns = false
+            var d = 0
+            while let k = peek(), !(d == 0 && (k.kind == .comma || k.kind == .rightParen)), k.kind != .semicolon, k.kind != .slash {
+                if k.kind == .leftParen { d += 1 } else if k.kind == .rightParen { d -= 1 }
+                if d == 0, k.upper == "RETURN" {
+                    returns = true
+                } else if d == 0, PLSQLOutline.functionOptions.contains(k.upper) {
+                    returns = false
+                } else if returns {
+                    if first == nil { first = k }
+                    last = k
+                }
+                i += 1
+            }
+            if let a = first, let b = last { node.detail = text(from: a, to: b) }
+            node.range = start..<(i > 0 ? t[i - 1].end : start)
+            return node
+        }
+
+        /// Lista parametrów w nawiasach: nazwa, tryb i typ (bez wartości domyślnej).
+        mutating func parseParameters() -> [OutlineNode] {
+            var params: [OutlineNode] = []
+            var depth = 0
+            var expectName = true
+            var detailStart: Tok?
+            var detailEnd: Tok?
+            func flush() {
+                if let a = detailStart, let b = detailEnd, let last = params.indices.last {
+                    // Typ parametru bez wartości domyślnej.
+                    var d = text(from: a, to: b)
+                    for marker in [" DEFAULT ", " default ", " := "] { if let r = d.range(of: marker) { d = String(d[..<r.lowerBound]) } }
+                    params[last].detail = d.trimmingCharacters(in: .whitespaces)
+                }
+                detailStart = nil
+                detailEnd = nil
+            }
+            while let k = peek() {
+                if k.kind == .leftParen { depth += 1; i += 1; if depth == 1 { expectName = true } else { detailEnd = k }; continue }
+                if k.kind == .rightParen { depth -= 1; i += 1; if depth == 0 { flush(); break }; detailEnd = k; continue }
+                if k.kind == .semicolon || k.kind == .slash { flush(); break }
+                if depth == 1, k.kind == .comma { flush(); expectName = true; i += 1; continue }
+                if depth == 1, expectName, k.kind == .identifier || k.kind == .quotedIdentifier || k.kind == .keyword {
+                    params.append(OutlineNode(kind: .parameter, name: k.text, range: k.start..<k.end, nameOffset: k.start))
+                    expectName = false
+                } else if !expectName {
+                    if detailStart == nil { detailStart = k }
+                    detailEnd = k
+                }
+                i += 1
+            }
+            return params
+        }
+
         /// Podprogram: parametry, RETURN, deklaracja (;) albo IS/AS + deklaracje + blok.
         mutating func parseSubprogram(kind: OutlineNode.Kind, name: String, nameOffset: Int, start: Int) -> OutlineNode {
             var node = OutlineNode(kind: kind, name: name, range: start..<length, nameOffset: nameOffset)
-            if peek()?.kind == .leftParen {
-                var depth = 0
-                var expectName = true
-                var detailStart: Tok?
-                var detailEnd: Tok?
-                func flush() {
-                    if let a = detailStart, let b = detailEnd, let last = node.children.indices.last {
-                        // Typ parametru bez wartości domyślnej.
-                        var d = text(from: a, to: b)
-                        for marker in [" DEFAULT ", " default ", " := "] { if let r = d.range(of: marker) { d = String(d[..<r.lowerBound]) } }
-                        node.children[last].detail = d.trimmingCharacters(in: .whitespaces)
-                    }
-                    detailStart = nil
-                    detailEnd = nil
-                }
-                while let k = peek() {
-                    if k.kind == .leftParen { depth += 1; i += 1; if depth == 1 { expectName = true } else { detailEnd = k }; continue }
-                    if k.kind == .rightParen { depth -= 1; i += 1; if depth == 0 { flush(); break }; detailEnd = k; continue }
-                    if depth == 1, k.kind == .comma { flush(); expectName = true; i += 1; continue }
-                    if depth == 1, expectName, k.kind == .identifier || k.kind == .quotedIdentifier || k.kind == .keyword {
-                        node.children.append(OutlineNode(kind: .parameter, name: k.text, range: k.start..<k.end, nameOffset: k.start))
-                        expectName = false
-                    } else if !expectName {
-                        if detailStart == nil { detailStart = k }
-                        detailEnd = k
-                    }
-                    i += 1
-                }
-            }
+            if peek()?.kind == .leftParen { node.children = parseParameters() }
             if isWord(0, "RETURN") {
                 i += 1
                 var first: Tok?
                 var last: Tok?
-                while let k = peek(), k.kind != .semicolon, !["IS", "AS", "PIPELINED", "DETERMINISTIC", "RESULT_CACHE", "PARALLEL_ENABLE", "AUTHID", "ACCESSIBLE"].contains(k.upper) {
-                    if first == nil { first = k }
-                    last = k
-                    i += 1
+                if isWord(0, "SELF"), isWord(1, "AS"), isWord(2, "RESULT") {
+                    node.detail = text(from: t[i], to: t[i + 2])
+                    i += 3
+                } else {
+                    while let k = peek(), k.kind != .semicolon, !(["IS", "AS", "AUTHID", "ACCESSIBLE"] + PLSQLOutline.functionOptions).contains(k.upper) {
+                        if first == nil { first = k }
+                        last = k
+                        i += 1
+                    }
+                    if let a = first, let b = last { node.detail = text(from: a, to: b) }
                 }
-                if let a = first, let b = last { node.detail = text(from: a, to: b) }
             }
             while let k = peek(), k.kind != .semicolon, !["IS", "AS"].contains(k.upper) { i += 1 }
             if let k = peek(), k.kind == .semicolon {
@@ -319,6 +437,19 @@ public enum PLSQLOutline {
                 if k.upper == "END" { break }
                 if k.kind == .slash { break }
                 if timingPoints, ["BEFORE", "AFTER", "INSTEAD"].contains(k.upper) { break }
+                // Metody w ciele typu: MEMBER, STATIC, CONSTRUCTOR, MAP/ORDER, OVERRIDING, FINAL… przed PROCEDURE/FUNCTION.
+                if PLSQLOutline.methodModifiers.contains(k.upper) {
+                    var j = i
+                    while j < t.count, PLSQLOutline.methodModifiers.contains(t[j].upper) { j += 1 }
+                    if j < t.count, ["PROCEDURE", "FUNCTION"].contains(t[j].upper) {
+                        let start = k.start
+                        let kw = t[j]
+                        i = j + 1
+                        guard let (n, off) = name() else { continue }
+                        out.append(parseSubprogram(kind: kw.upper == "PROCEDURE" ? .procedure : .function, name: n, nameOffset: off, start: start))
+                        continue
+                    }
+                }
                 switch k.upper {
                 case "PROCEDURE", "FUNCTION":
                     let start = k.start
@@ -329,16 +460,49 @@ public enum PLSQLOutline {
                     let start = k.start
                     i += 1
                     guard let (n, off) = name() else { continue }
+                    // Szczegóły: parametry i typ zwracany (bez zapytania po IS).
+                    let first = peek()
+                    var last: Tok?
+                    var d = 0
+                    while let c = peek(), c.kind != .semicolon, !(d == 0 && c.upper == "IS") {
+                        if c.kind == .leftParen { d += 1 } else if c.kind == .rightParen { d -= 1 }
+                        last = c
+                        i += 1
+                    }
+                    let detail = last.flatMap { l in first.map { text(from: $0, to: l) } } ?? ""
                     let end = skipStatement()
-                    out.append(OutlineNode(kind: .cursor, name: n, range: start..<end, nameOffset: off))
+                    out.append(OutlineNode(kind: .cursor, name: n, detail: detail, range: start..<end, nameOffset: off))
                 case "TYPE", "SUBTYPE":
                     let start = k.start
+                    let sub = k.upper == "SUBTYPE"
                     i += 1
                     guard let (n, off) = name() else { continue }
+                    // Szczegóły: definicja po IS/AS (RECORD (…), TABLE OF …, REF CURSOR…); podtyp — „SUBTYPE typ bazowy”.
+                    if isWord(0, "IS") || isWord(0, "AS") { i += 1 }
+                    let first = peek()
                     let end = skipStatement()
-                    out.append(OutlineNode(kind: .typeDeclaration, name: n, range: start..<end, nameOffset: off))
+                    var detail = ""
+                    if let a = first, a.start < end {
+                        detail = source.substring(with: NSRange(location: a.start, length: max(0, end - a.start)))
+                            .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
+                        if detail.hasSuffix(";") { detail.removeLast() }
+                        if sub { detail = "SUBTYPE " + detail }
+                    }
+                    out.append(OutlineNode(kind: .typeDeclaration, name: n, detail: detail, range: start..<end, nameOffset: off))
                 case "PRAGMA":
-                    _ = skipStatement()
+                    // PRAGMA AUTONOMOUS_TRANSACTION, EXCEPTION_INIT(…), SERIALLY_REUSABLE, RESTRICT_REFERENCES(…), INLINE…
+                    let start = k.start
+                    i += 1
+                    guard let p = peek() else { continue }
+                    let first = i
+                    let end = skipStatement()
+                    var args = ""
+                    if let open = t[first..<i].firstIndex(where: { $0.kind == .leftParen }), t[open].start < end {
+                        args = source.substring(with: NSRange(location: t[open].start, length: max(0, end - t[open].start)))
+                            .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
+                        if args.hasSuffix(";") { args.removeLast() }
+                    }
+                    out.append(OutlineNode(kind: .pragma, name: p.text, detail: args, range: start..<end, nameOffset: p.start))
                 default:
                     if k.kind == .identifier || k.kind == .quotedIdentifier {
                         let start = k.start

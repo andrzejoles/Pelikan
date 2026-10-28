@@ -17,15 +17,18 @@ enum ProgramUnitCommands {
                     validate: { programDocument($0) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu")) }
                 let original = doc.text
+                // Konwencja pliku (D192): „/” po jednostkach tylko, gdy okno już go używa albo (puste okno) każe preferencja.
+                let slash = doc.programUnits.isEmpty ? ctx.workspace.settings.programUnitSlash : ProgramText.usesSlash(doc.text)
                 var t = doc.text
                 while let c = t.last, c.isWhitespace { t.removeLast() }
                 if !t.isEmpty {
-                    if t.last != "/" { t += "\n/" }
+                    if slash, t.last != "/" { t += "\n/" }
                     t += "\n\n"
                 }
                 if let text = ctx.arguments.string("text"), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     var unit = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if unit.last != "/" { unit += "\n/" }
+                    if slash, unit.last != "/" { unit += "\n/" }
+                    if !slash, unit.hasSuffix("\n/") { unit.removeLast(2); while let c = unit.last, c.isWhitespace { unit.removeLast() } }
                     let start = (t as NSString).length
                     doc.text = t + unit + "\n"
                     doc.selectedRange = start..<start
@@ -37,7 +40,16 @@ enum ProgramUnitCommands {
                 var args: [String: JSONValue] = ["template": .string(ctx.arguments.string("template") ?? TemplateLibrary.programFolder + "/" + L10n.tr("Procedura"))]
                 if let v = ctx.arguments.values["values"] { args["values"] = v }
                 do {
-                    return try await ctx.workspace.invoke("edit.insertTemplate", CommandArguments(args), invoker: ctx.invoker)
+                    let r = try await ctx.workspace.invoke("edit.insertTemplate", CommandArguments(args), invoker: ctx.invoker)
+                    // Szablony jednostek są bez „/” (D192); okno z „/” (albo preferencja) — jednostki szablonu z „/”.
+                    if slash {
+                        let ns = doc.text as NSString
+                        let inserted = ns.substring(from: min(end, ns.length))
+                        let parts = ProgramCompiler.programStatements(inserted).map(\.text)
+                        if !parts.isEmpty { doc.text = ns.substring(to: min(end, ns.length)) + ProgramText.join(parts, slash: true) }
+                        doc.selectedRange = end..<end
+                    }
+                    return r
                 } catch {
                     doc.text = original
                     throw error
@@ -57,14 +69,20 @@ enum ProgramUnitCommands {
                 if let spec = ctx.arguments.string("unit") {
                     let words = spec.uppercased().split(separator: " ").map(String.init)
                     let body = words.count > 1 && words[1] == "BODY"
+                    // „nazwa body” — tylko ciało (nigdy specyfikacja w zastępstwie); sama nazwa — specyfikacja albo
+                    // jedyna jednostka o tej nazwie.
                     guard let u = units.first(where: { $0.name == words.first && [.packageBody, .typeBody].contains($0.type) == body })
-                            ?? units.first(where: { $0.name == words.first }) else {
+                            ?? (body ? nil : units.first(where: { $0.name == words.first })) else {
                         throw CommandError.invalidArgument("unit", L10n.tr("nie ma takiej jednostki"))
                     }
                     unit = u
                 } else {
                     let caret = doc.selectedRange.lowerBound
-                    guard let u = units.last(where: { $0.range.lowerBound <= caret }) ?? units.first else {
+                    // Okno z kartami: jednostka karty z kursorem (kursor na komentarzu przed CREATE jest już na karcie
+                    // następnej jednostki, choć przed jej poleceniem).
+                    let sorted = units.sorted { $0.range.lowerBound < $1.range.lowerBound }
+                    let tabbed = doc.activeUnitTab.flatMap { sorted.indices.contains($0) && doc.programUnitTabs.count == sorted.count ? sorted[$0] : nil }
+                    guard let u = tabbed ?? units.last(where: { $0.range.lowerBound <= caret }) ?? units.first else {
                         throw CommandError.notAvailable(L10n.tr("Brak jednostki"))
                     }
                     unit = u
@@ -80,6 +98,48 @@ enum ProgramUnitCommands {
                 let c = min(start, (doc.text as NSString).length)
                 doc.selectedRange = c..<c
                 return CommandResult(message: L10n.tr("Usunięto jednostkę \(unit.tabTitle)"))
+            },
+            Command(CommandDescriptor(id: "prog.selectUnit", title: L10n.tr("Pokaż jednostkę…"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      parameters: [
+                                          CommandParameter("unit", .string, L10n.tr("Karta: numer od 1, nazwa jednostki albo „nazwa body” (bez argumentu — wybór z listy)")),
+                                      ],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje w oknie programu kartę wskazanej jednostki (specyfikacji, ciała…); kursor wraca w miejsce, w którym był na tej karcie."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                let target: Int
+                if let v = ctx.arguments.values["unit"] {
+                    let spec: String
+                    if case .int(let n) = v { spec = String(n) } else { spec = v.stringValue ?? "" }
+                    guard let i = ProgramUnitTabs.find(spec, in: tabs) else {
+                        throw CommandError.invalidArgument("unit", L10n.tr("nie ma takiej jednostki"))
+                    }
+                    target = i
+                } else if let i = try await ctx.choose(L10n.tr("Pokaż jednostkę"), tabs.enumerated().map { ($0.element.title, $0.offset) }) {
+                    return showUnit(target: i, doc, tabs, ctx).resolving(["unit": .string(tabs[i].key)])
+                } else {
+                    throw CommandError.missingArgument("unit")
+                }
+                return showUnit(target: target, doc, tabs, ctx)
+            },
+            Command(CommandDescriptor(id: "prog.nextUnit", title: L10n.tr("Następna jednostka"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      pd: ["ctrl+pagedown"], mac: ["alt+cmd+]"],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje kartę następnej jednostki okna programu (po ostatniej — pierwszą)."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                return showUnit(target: ((doc.activeUnitTab ?? 0) + 1) % tabs.count, doc, tabs, ctx)
+            },
+            Command(CommandDescriptor(id: "prog.previousUnit", title: L10n.tr("Poprzednia jednostka"), category: .file, submenu: L10n.tr("Okno programu"),
+                                      pd: ["ctrl+pageup"], mac: ["alt+cmd+["],
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Pokazuje kartę poprzedniej jednostki okna programu (przed pierwszą — ostatnią)."),
+                                      feature: "PD-PROG-001"),
+                    validate: { tabbedDocument($0) != nil }) { ctx in
+                let (doc, tabs) = try tabbed(ctx)
+                return showUnit(target: ((doc.activeUnitTab ?? 0) + tabs.count - 1) % tabs.count, doc, tabs, ctx)
             },
             Command(CommandDescriptor(id: "prog.revert", title: L10n.tr("Przywróć"), category: .file,
                                       parameters: [
@@ -114,6 +174,44 @@ enum ProgramUnitCommands {
                 return CommandResult(message: L10n.tr("Przywrócono tekst okna"))
             },
         ]
+    }
+
+    /// Aktywne okno programu z kartami jednostek (także tylko do odczytu — przełączanie kart nie zmienia tekstu).
+    @MainActor
+    static func tabbedDocument(_ ws: Workspace) -> Document? {
+        guard let d = ws.activeDocument, d.kind == .program, d.unitTabCount > 1 else { return nil }
+        return d
+    }
+
+    @MainActor
+    static func tabbed(_ ctx: CommandContext) throws -> (Document, [ProgramUnitTab]) {
+        guard let d = ctx.workspace.activeDocument, d.kind == .program else {
+            throw CommandError.notAvailable(L10n.tr("Aktywne okno nie jest oknem programu"))
+        }
+        let tabs = d.programUnitTabs
+        guard tabs.count > 1 else { throw CommandError.notAvailable(L10n.tr("Okno programu ma jedną jednostkę")) }
+        return (d, tabs)
+    }
+
+    /// Przejście na kartę: zapamiętuje kursor bieżącej karty i stawia go tam, gdzie był na karcie docelowej (pierwszy
+    /// raz — na początku linii nagłówka jednostki). Karta aktywna wynika z kursora (`Document.activeUnitTab`).
+    @MainActor
+    static func showUnit(target: Int, _ doc: Document, _ tabs: [ProgramUnitTab], _ ctx: CommandContext) -> CommandResult {
+        let ns = doc.text as NSString
+        let current = doc.activeUnitTab
+        if let c = current {
+            doc.unitCarets[tabs[c].key] = max(0, doc.selectedRange.lowerBound - tabs[c].segment.lowerBound)
+        }
+        let tab = tabs[target]
+        if current != target {
+            let header = ns.lineRange(for: NSRange(location: min(tab.sourceOffset, ns.length), length: 0)).location
+            let wanted = doc.unitCarets[tab.key].map { tab.segment.lowerBound + $0 } ?? header
+            let limit = ProgramUnitTabs.caretLimit(tab, isLast: target == tabs.count - 1, in: ns)
+            let o = min(max(wanted, tab.segment.lowerBound), limit)
+            ctx.workspace.recordJump()
+            doc.selectedRange = o..<o
+        }
+        return CommandResult(message: tab.title, value: .int(Int64(target + 1)))
     }
 
     @MainActor

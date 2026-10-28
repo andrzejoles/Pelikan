@@ -15,12 +15,23 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
 - **Bearbeiten** auf einem Paket oder Typ — auch auf seinem Body aus den Ordnern „Package Bodies“ und „Type Bodies“ —
   öffnet Spezifikation und Body in einem Fenster auf zwei Tabs (vom Body aus geöffnet: der Body-Tab ist aktiv). Ein
   Objekt ohne Body hat einen Tab.
+- Der Editor zeigt nur die Einheit des gewählten Tabs; der aktive Tab ist gedrückt und fett. Den Tab wechseln Sie per
+  Klick, mit **Datei › Program Window › Einheit anzeigen…**, **Nächste Einheit** (⌥⌘], im Profil PL/SQL Developer
+  auch ⌃⇟) und **Vorherige Einheit** (⌥⌘[, ⌃⇞) — der Cursor kehrt an seine letzte Stelle auf diesem Tab zurück. Jeder
+  Sprung an eine Stelle in einer anderen Einheit (Kompilierfehler, Codeinhalt, Weitersuchen, Gehe zu Deklaration,
+  Lesezeichen, Debugger, Zurück/Vor, Widerrufen) wechselt den Tab selbst. Pfeiltasten und ⌘A bleiben im Tab.
+  Zeilennummern im Tab, die Fehlerliste und **Gehe zu Zeile** zählen Zeilen der Einheit wie Oracle (ALL_SOURCE,
+  ALL_ERRORS) — Zeile 1 ist die Zeile `PACKAGE BODY …`. **Alle ersetzen** ersetzt im ganzen Fenster (allen Einheiten).
+- Einheiten werden an den Köpfen `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`, `TRIGGER` am
+  Zeilenanfang erkannt — die Datei braucht kein „/“ nach den Einheiten. Pelikan fügt beim Speichern kein „/“ hinzu,
+  und Code aus der Datenbank sowie neue Einheiten kommen ohne „/“ (außer Sie aktivieren **Einstellungen › Oracle ›
+  Einheiten im Programmfenster mit „/“ abschließen**). Eine Datei mit „/“ wird unverändert gespeichert.
 - **F8** (⌘↩) kompiliert alle Einheiten nacheinander und hält bei der ersten mit einem Fehler an. Die Kompilierung läuft
   in einer separaten Sitzung im Hintergrund und blockiert daher keine SQL Windows.
 - Fehler und Warnungen des Compilers erscheinen unter dem Editor. Ein Klick springt zur Zeile, ein Doppelklick öffnet
   die Fehlerbeschreibung in der Oracle-Dokumentation.
 - Die Statusleiste zeigt, ob der Text geändert und nicht gespeichert und ob er nicht kompiliert ist.
-- **Datei › Speichern** (⌘S) speichert eine SQL*Plus-kompatible Datei (mit abschließendem `/`), mit Namen und Endung
+- **Datei › Speichern** (⌘S) speichert den Fenstertext unverändert (ohne angehängtes `/`), mit Namen und Endung
   entsprechend der Einheit (z. B. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Sicheres Arbeiten mit Code in der Datenbank
@@ -64,8 +75,13 @@ von Zeilen ohne Verzögerung.
 - **⌘+Klick** auf einen Namen oder **Bearbeiten › Zur Deklaration springen** (⌃⌘J) springt zur Deklaration — in
   derselben Quelle, in einem anderen offenen Fenster oder in einem Objekt aus der Datenbank (in einem neuen Fenster).
   **Bearbeiten › Navigation › Zurück** (⌃⌘←) und **Vorwärts** (⌃⌘→) kehren nach Sprüngen zurück.
-- **Ansicht › Codeinhalt** zeigt den Strukturbaum der Einheit mit Cursorverfolgung, Sortierung und Menü (auswählen,
-  kopieren, ausschneiden, Unterprogramm testen). Unter dem Editor zeigt die **Codehierarchie** den Pfad vom Cursor aus
+- **Ansicht › Codeinhalt** zeigt den Strukturbaum: Spezifikation und Body des Pakets (Typs) getrennt, darin
+  Unterprogramme mit Parametern und Rückgabetyp (vollständiger Kopf im Tooltip), Typen (Record, Tabelle, REF CURSOR,
+  Subtyp), Cursor, Variablen, Konstanten, Exceptions, Pragmas und verschachtelte Unterprogramme. Private Elemente des
+  Bodys (nicht in der Spezifikation deklariert) sind kursiv. Klick oder Enter setzt den Cursor auf das Element (auch
+  auf einem anderen Tab), Pfeiltasten im Baum bewegen den Cursor, ohne den Baum zu verlassen. Das Feld über dem Baum
+  filtert Namen. Der Baum verfolgt den Cursor und hat Sortierung und Menü (auswählen, kopieren, ausschneiden,
+  Unterprogramm testen, alles auf-/zuklappen). Unter dem Editor zeigt die **Codehierarchie** den Pfad vom Cursor aus
   (Paket › Prozedur › Block); ein Klick auf eine Ebene wählt sie aus oder springt zu ihrem Namen.
 - Das Kontextmenü auf dem Namen eines Datenbankobjekts im Editor bietet dieselben Aktionen wie der Object Browser.
 - **F1** öffnet die Oracle-Dokumentation zum Wort unter dem Cursor.

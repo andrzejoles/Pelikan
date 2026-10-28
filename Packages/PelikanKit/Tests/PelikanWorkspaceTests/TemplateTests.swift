@@ -49,7 +49,7 @@ struct TemplateCommandTests {
 @MainActor
 @Suite("Zapis okna programu")
 struct ProgramSaveTests {
-    @Test("Nazwa i rozszerzenie z jednostki, końcowy ukośnik")
+    @Test("Nazwa i rozszerzenie z jednostki, zapis bez dopisanego ukośnika")
     func save() throws {
         let ws = Workspace()
         let doc = ws.newDocument(.program, text: "create or replace function Licz return number is begin return 1; end;")
@@ -57,7 +57,8 @@ struct ProgramSaveTests {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("pelikan-save-\(UUID().uuidString).fnc")
         defer { try? FileManager.default.removeItem(at: url) }
         try ws.save(doc, to: url)
-        #expect(try String(contentsOf: url, encoding: .utf8).hasSuffix("end;\n/\n"))
+        // Tekst zapisany bez zmian — Pelikan nie dopisuje „/” (D192).
+        #expect(try String(contentsOf: url, encoding: .utf8) == "create or replace function Licz return number is begin return 1; end;")
         let pkg = ws.newDocument(.program, text: "create package p as end;\n/\ncreate package body p as end;\n/\n")
         #expect(BuiltinCommands.suggestedFileName(pkg) == ("p", "pck"))
     }
@@ -122,6 +123,9 @@ struct UtplsqlOfflineTests {
         let sk = UtplsqlExplorer.skeleton(for: "EMP_API", owner: "SCOTT", specification: "create package emp_api as procedure a(x number); function b return number; procedure a(y date); end;")
         #expect(sk.contains("--%suite(") && sk.contains("procedure a;") && sk.contains("procedure a_2;") && sk.contains("procedure b;"))
         #expect(sk.contains("scott.emp_api.a") && sk.contains("ut.fail("))
+        // Szkielet bez „/” (D192), dwie jednostki rozpoznane po nagłówkach CREATE.
+        #expect(!sk.components(separatedBy: "\n").contains("/"))
+        #expect(ProgramCompiler.units(in: sk).map(\.type) == [.package, .packageBody])
         #expect(UtplsqlExplorer.unknownAnnotations(in: "--%suite\n--%tset(x)\n--%test").map(\.name) == ["tset"])
         let items = [UtSuiteItem(owner: "S", object: "P", name: "P", description: "", kind: .logicalSuite, line: 0, path: "a", disabled: false, disabledReason: "", tags: "", children: []),
                      UtSuiteItem(owner: "S", object: "T", name: "T", description: "", kind: .suite, line: 2, path: "a.t", disabled: false, disabledReason: "", tags: "", children: []),

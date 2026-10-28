@@ -143,7 +143,8 @@ public struct CompletionContext: Sendable, Hashable {
         var types: [String: String] = [:]
         var cursors: [String: String] = [:]
         func addScope(_ n: OutlineNode) {
-            for c in n.children where !(c.isContainer && c.kind == .block) {
+            // Pragmy (AUTONOMOUS_TRANSACTION, EXCEPTION_INIT…) nie są deklaracjami nazw.
+            for c in n.children where !(c.isContainer && c.kind == .block) && c.kind != .pragma {
                 decls.append(c)
                 let source = ns.substring(with: NSRange(location: c.range.lowerBound, length: c.range.count))
                 if c.kind == .typeDeclaration, types[c.name.uppercased()] == nil { types[c.name.uppercased()] = source }

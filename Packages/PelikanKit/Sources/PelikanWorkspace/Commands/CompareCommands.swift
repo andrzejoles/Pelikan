@@ -34,9 +34,11 @@ enum CompareCommands {
                     validate: { ws in ws.selectedObject != nil && BuiltinCommands.editable(ws) != nil }) { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
-                let text = try await objectText(o, metadata: m)
+                // Konwencja aktywnego okna („/” albo nie, D192) — porównanie bez sztucznych różnic.
+                let slash = doc.kind != .program || ProgramText.usesSlash(doc.text)
+                let text = try await objectText(o, metadata: m, slash: slash)
                 return show(ctx, left: text, right: doc.text, leftTitle: "\(o.owner).\(o.name)", rightTitle: doc.title) {
-                    (try await objectText(o, metadata: m), doc.text)
+                    (try await objectText(o, metadata: m, slash: slash), doc.text)
                 }
             },
             Command(CommandDescriptor(id: "prog.compareWithConnection", title: L10n.tr("Porównaj z obiektami w innej bazie…"), category: .file,
@@ -107,13 +109,15 @@ enum CompareCommands {
 
     /// Źródło (z ciałem pakietu/typu) albo DDL obiektu do porównania.
     @MainActor
-    static func objectText(_ o: DBObject, metadata m: MetadataProvider) async throws -> String {
-        var text = o.type.isProgram ? try await m.source(of: o) + "\n/\n" : try await m.ddl(of: o)
+    static func objectText(_ o: DBObject, metadata m: MetadataProvider, slash: Bool = false) async throws -> String {
+        guard o.type.isProgram else { return try await m.ddl(of: o) }
+        var sources = [try await m.source(of: o)]
         if o.type == .package || o.type == .type {
             let body = DBObject(owner: o.owner, name: o.name, type: o.type == .package ? .packageBody : .typeBody)
-            if let b = try? await m.source(of: body) { text += "\n" + b + "\n/\n" }
+            if let b = try? await m.source(of: body) { sources.append(b) }
         }
-        return text
+        // Jak tekst okna otwartego z bazy (ob.edit) — bez „/”, chyba że preferencja (D192).
+        return ProgramText.join(sources, slash: slash)
     }
 
     /// Użytkownik: przeglądarka różnic (z Reload — ponownym wczytaniem obu stron); agent: różnica unified w wyniku.
@@ -143,10 +147,10 @@ enum CompareCommands {
         var out: [String] = []
         for u in ProgramCompiler.units(in: text) {
             let o = DBObject(owner: override?.uppercased() ?? u.owner ?? schema, name: u.name, type: u.type)
-            if let src = try? await m.source(of: o), !src.isEmpty { out.append(src + "\n/") }
+            if let src = try? await m.source(of: o), !src.isEmpty { out.append(src) }
         }
-        // Układ jak przy otwarciu z bazy (ob.edit): jednostki rozdzielone pustą linią.
-        return out.joined(separator: "\n\n") + "\n"
+        // Układ jak przy otwarciu z bazy (ob.edit), w konwencji tekstu okna: z „/” tylko, gdy okno go używa (D192).
+        return ProgramText.join(out, slash: ProgramText.usesSlash(text))
     }
 
     /// Drugie połączenie: z argumentu `connection` (nazwa) albo wybór z listy pozostałych połączeń.

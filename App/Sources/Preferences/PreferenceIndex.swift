@@ -194,6 +194,7 @@ enum PreferenceIndex {
         ("OraclePane", "Zawsze z informacją debugowania"),
         ("OraclePane", "Nigdy z informacją debugowania"),
         ("OraclePane", "Kompilacja tylko do odczytu plików"),
+        ("OraclePane", "Kończ jednostki okna programu znakiem „/” (tekst z bazy, nowe jednostki)"),
         ("OraclePane", "Podpowiedzi kompilatora (inspekcje kodu po kompilacji; „-- Ignore” wycisza linię)"),
         ("OraclePane", "Sprawdzaj konwencje nazw"),
         ("OraclePane", "Parametry"),

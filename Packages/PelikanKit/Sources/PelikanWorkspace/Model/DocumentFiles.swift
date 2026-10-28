@@ -224,11 +224,8 @@ extension Workspace {
     /// Zapis dokumentu do pliku (w formacie, w jakim go otwarto; znaki spoza kodowania — UTF-8).
     public func save(_ doc: Document, to url: URL) throws {
         if settings.beautifier.beforeSave { autoBeautify(doc) }
-        // Plik okna programu zgodny z SQL*Plus: ostatnia jednostka zakończona „/” (UG 4.2).
-        if doc.kind == .program, !ProgramCompiler.units(in: doc.text).isEmpty,
-           doc.text.trimmingCharacters(in: .whitespacesAndNewlines).last != "/" {
-            doc.text = doc.text.trimmingCharacters(in: .whitespacesAndNewlines) + "\n/\n"
-        }
+        // Tekst okna zapisywany bez zmian — Pelikan nie dopisuje „/” (D192: „/” w plikach z kodem psuje wdrożenie;
+        // jednostki rozpoznawane są po nagłówkach CREATE). Plik z „/” zapisuje się tak, jak jest.
         let format = doc.fileFormat
         if doc.kind == .report {
             var def = doc.report

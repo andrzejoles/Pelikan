@@ -202,10 +202,23 @@ enum TemplateCommands {
     @MainActor
     static func finish(_ ws: Workspace, _ t: CodeTemplate, values: [String: String], newWindow: Bool) async throws -> CommandResult {
         let user = (ws.activeDocument.flatMap { ws.effectiveConnection(of: $0) } ?? ws.sessions.mainConnectionID).flatMap { ws.connections.connection($0)?.target.user }
-        let (text, cursor) = TemplateEngine.apply(t.text, values: values, builtins: TemplateEngine.builtins(databaseUser: user))
+        var (text, cursor) = TemplateEngine.apply(t.text, values: values, builtins: TemplateEngine.builtins(databaseUser: user))
+        // Szablony jednostek są bez „/” (D192). W oknie SQL, poleceń i testu „/” kończy blok PL/SQL — bez niego jednostka
+        // skleiłaby się z następnymi poleceniami; w oknie programu z konwencją „/” (albo z preferencją) — jak w pliku.
+        let host = newWindow ? nil : BuiltinCommands.editable(ws)
+        let needsSlash: Bool = if let host {
+            host.kind != .program || ws.settings.programUnitSlash || ProgramText.usesSlash(host.text)
+        } else {
+            t.folder == TemplateLibrary.programFolder ? ws.settings.programUnitSlash : true
+        }
+        if needsSlash, !ProgramCompiler.units(in: text).isEmpty {
+            let r = ProgramText.terminatingUnits(text)
+            if let c = cursor { cursor = c + 2 * r.inserted.filter { $0 < c }.count }
+            text = r.text
+        }
         let target: Document
         let base: Int
-        if !newWindow, let doc = BuiltinCommands.editable(ws) {
+        if !newWindow, let doc = host {
             try BuiltinCommands.checkWritable(doc)
             let ns = doc.text as NSString
             let r = doc.selectedRange.clamped(to: 0..<ns.length)

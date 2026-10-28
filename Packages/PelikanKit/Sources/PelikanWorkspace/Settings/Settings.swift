@@ -58,6 +58,9 @@ public struct Settings: Sendable, Codable, Hashable {
     public var sqlWindowStatistics = false
     /// Kompilacja okna programu z pliku tylko do odczytu (domyślnie zablokowana, PD-PROG-017).
     public var compileReadOnlyFiles = false
+    /// Okno programu: jednostki kończone „/” w osobnej linii (tekst z bazy, nowa jednostka z szablonu). Domyślnie bez
+    /// „/” — konwencja plików z kodem właściciela; „/” psuje proces wdrożenia (D192).
+    public var programUnitSlash = false
     /// Object Browser (PD-OB-025): widoczne foldery typów w kolejności (puste — wszystkie, kolejność domyślna), limit
     /// ostatnio używanych, akcja dwukliku według typu (edit, queryData, describe, ddl), potwierdzanie rekompilacji.
     public var browserFolders: [String] = []
@@ -333,6 +336,7 @@ public struct Settings: Sendable, Codable, Hashable {
         closeIdleSessionsMinutes = v(.closeIdleSessionsMinutes, closeIdleSessionsMinutes)
         sqlWindowStatistics = v(.sqlWindowStatistics, sqlWindowStatistics)
         compileReadOnlyFiles = v(.compileReadOnlyFiles, compileReadOnlyFiles)
+        programUnitSlash = v(.programUnitSlash, programUnitSlash)
         browserFolders = v(.browserFolders, browserFolders)
         browserRecentLimit = v(.browserRecentLimit, browserRecentLimit)
         browserFilterContains = v(.browserFilterContains, browserFilterContains)

@@ -84,7 +84,7 @@ public enum UtplsqlExplorer {
             spec += "  --%test(\(s.name.lowercased()))\n  procedure \(n);\n\n"
         }
         if names.isEmpty { spec += "  --%test(" + L10n.tr("pierwszy test") + ")\n  procedure pierwszy_test;\n\n" }
-        spec += "end \(testName);\n/\n"
+        spec += "end \(testName);\n"
         var body = "create or replace package body \(testName) as\n\n"
         for (n, s) in names.isEmpty ? [("pierwszy_test", OutlineNode(kind: .procedure, name: "", range: 0..<0, nameOffset: 0))] : names {
             let call = s.name.isEmpty ? "" : "\(target).\(s.name.lowercased())"
@@ -94,7 +94,7 @@ public enum UtplsqlExplorer {
             body += "    -- " + L10n.tr("sprawdzenie: ut.expect(wynik).to_equal(oczekiwany);") + "\n"
             body += "    ut.fail('" + L10n.tr("Test do napisania") + "');\n  end \(n);\n\n"
         }
-        body += "end \(testName);\n/\n"
+        body += "end \(testName);\n"
         return spec + "\n" + body
     }
 

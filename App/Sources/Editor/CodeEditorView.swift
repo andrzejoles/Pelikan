@@ -36,6 +36,41 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     /// Krój i grubość czcionki, z którymi zbudowano `font` (zmiana w Preferencjach — przebudowa).
     private var fontKey = ""
 
+    // MARK: Karty jednostek okna programu (D192)
+
+    /// Odcinki jednostek (okno programu z co najmniej dwiema jednostkami): edytor pokazuje tylko odcinek karty z kursorem,
+    /// resztę tekstu ukrywa tym samym mechanizmem co zwijanie (`FoldingContentDelegate`). Ustawia okno programu po
+    /// analizie w tle; przy pisaniu edytor sam przesuwa granice.
+    var unitTabs: [ProgramUnitTab] {
+        get { tabs }
+        set {
+            tabs = newValue
+            secondary?.unitTabs = newValue
+            let before = shownTab
+            showTab(containing: textView.selectedRange().location, force: true)
+            // Karta zmieniona po analizie w tle (okno otwarte na linii, debuger, usunięcie jednostki) — `showTab`
+            // przewinął na początek karty, a `syncFromModel` nie przewinie (zaznaczenie już ustawione): do kursora.
+            if shownTab != before {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.scrollToSelection(self.textView.selectedRange())
+                }
+            }
+        }
+    }
+    private var tabs: [ProgramUnitTab] = []
+    /// Karta, której odcinek jest widoczny (nil — okno bez kart).
+    private(set) var shownTab: Int?
+    /// Zmiana karty widocznej (pasek kart okna programu, Code Contents).
+    var onShownTabChange: ((Int?) -> Void)?
+    /// Ukryte zakresy zwinięć (bez odcinków innych kart).
+    private var foldHidden: [Range<Int>] = []
+    /// Zaznaczenie z modelu (komenda, nawigacja) — może przejść na inną kartę; zaznaczenie z klawiatury i myszy
+    /// zostaje na karcie widocznej.
+    private var applyingModelSelection = false
+    /// Widok ma dodatkowe kursory z modelu (do zdjęcia, gdy model je wyczyści).
+    private var appliedExtraSelections = false
+
     init(document: Document, fontSize: CGFloat = 13, secondary: Bool = false) {
         self.document = document
         let ws0 = (NSApp.delegate as? AppDelegate)?.workspace
@@ -177,6 +212,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         if on, secondary == nil {
             let s = CodeEditorView(secondaryOf: self, document: document, fontSize: font.pointSize)
             secondary = s
+            s.unitTabs = unitTabs
             peer = s
             let split = NSSplitView()
             split.isVertical = false
@@ -228,6 +264,12 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     /// Zaznaczenia z modelu → zaznaczenia widoku (pierwsze — główne).
     private func applyAdditionalSelections(_ extra: [Range<Int>]) {
+        // Bez dodatkowych kursorów zaznaczenie główne stosuje tylko `syncFromModel` (przewinięcie, zwinięcia, karta
+        // jednostki). Wcześniej ten obserwator — także śledzący `selectedRange` — wyprzedzał go i ustawiał zaznaczenie
+        // widoku bez przewinięcia, a `syncFromModel` widział je już ustawione i nie przewijał: przejścia z kart, Code
+        // Contents, Idź do linii zostawiały widok w miejscu (D192).
+        guard !extra.isEmpty || appliedExtraSelections else { return }
+        appliedExtraSelections = !extra.isEmpty
         let len = textView.textLength
         let main = document.selectedRange
         let all = ([main] + extra).map { NSRange(location: min($0.lowerBound, len), length: max(0, min($0.upperBound, len) - min($0.lowerBound, len))) }
@@ -269,9 +311,20 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // Delegatem NSTextStorage w TextKit 2 jest NSTextContentStorage — nie podmieniamy go, tylko słuchamy powiadomień.
         NotificationCenter.default.addObserver(self, selector: #selector(storageDidProcessEditing(_:)),
                                                name: NSTextStorage.didProcessEditingNotification, object: textView.textStorage)
+        NotificationCenter.default.addObserver(self, selector: #selector(storageWillProcessEditing(_:)),
+                                               name: NSTextStorage.willProcessEditingNotification, object: textView.textStorage)
         textView.setAccessibilityLabel(document.fullTitle)
         textView.textContentStorage?.delegate = folding
         configureCompletion()
+        // Numery linii karty jednostki jak w ALL_SOURCE/ALL_ERRORS (linia 1 = linia słowa typu, D189/D192).
+        ruler.displayNumber = { [weak self] line in
+            guard let self else { return line + 1 }
+            return self.displayLine(line)
+        }
+        ruler.showsLastLine = { [weak self] in
+            guard let self, let t = self.shownTab else { return true }
+            return t == self.unitTabs.count - 1
+        }
         ruler.foldState = { [weak self] line in
             guard let self, let r = self.regions.first(where: { $0.startLine == line }) else { return nil }
             return self.document.foldedStarts.contains(r.start)
@@ -588,16 +641,135 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private func applyFolds() {
         let folded = document.foldedStarts
         let hidden = CodeFolding.hiddenRanges(regions, folded: folded)
-        guard hidden != folding.hidden else { return }
-        folding.hidden = hidden
+        foldHidden = hidden
         // Znacznik „⋯” tylko przy zwinięciach widocznych (nie wewnątrz innego zwiniętego obszaru).
         textView.foldedLines = regions.filter { r in folded.contains(r.start) && !hidden.contains { $0.contains(r.start) } }.map(\.start)
+        updateHidden()
+    }
+
+    /// Ukryte akapity: zwinięcia i odcinki kart innych niż widoczna (posortowane, rozłączne). Zmiana — ponowny układ.
+    private func updateHidden(invalidate: Bool = true) {
+        let combined = Self.merged(foldHidden + unitHidden())
+        guard combined != folding.hidden else { return }
+        folding.hidden = combined
+        guard invalidate else { return }
+        // Ponowny układ potrafi zgłosić zmianę zaznaczenia ze starym zaznaczeniem widoku — bez zapisu do modelu
+        // (inaczej nadpisałoby właśnie ustawione zaznaczenie z komendy i skok „nic nie robił”).
+        let wasUpdating = updatingFromModel
+        updatingFromModel = true
+        defer { updatingFromModel = wasUpdating }
         if let tlm = textView.textLayoutManager {
             tlm.invalidateLayout(for: tlm.documentRange)
             tlm.textViewportLayoutController.layoutViewport()
         }
         textView.needsDisplay = true
         ruler.needsDisplay = true
+        scheduleViewportRefresh()
+    }
+
+    private var viewportRefreshScheduled = false
+
+    /// Drugi układ obszaru widoku po bieżącym obiegu pętli: widok tekstu zmienia wysokość dopiero po układzie, a fragmenty
+    /// poza poprzednią wysokością (dolne linie po zmianie karty, po dopisaniu tekstu z komendy) zostawały puste — numery
+    /// w marginesie były, tekstu nie — do kliknięcia albo przewinięcia.
+    private func scheduleViewportRefresh() {
+        guard !viewportRefreshScheduled else { return }
+        viewportRefreshScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.viewportRefreshScheduled = false
+            // Układ potrafi zgłosić zmianę zaznaczenia ze starym zaznaczeniem widoku — bez zapisu do modelu (jak w updateHidden).
+            let wasUpdating = self.updatingFromModel
+            self.updatingFromModel = true
+            defer { self.updatingFromModel = wasUpdating }
+            self.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+            self.textView.needsDisplay = true
+            self.ruler.needsDisplay = true
+        }
+    }
+
+    private func unitHidden() -> [Range<Int>] {
+        guard let t = shownTab, unitTabs.indices.contains(t) else { return [] }
+        let seg = unitTabs[t].segment, len = textView.textLength
+        var out: [Range<Int>] = []
+        if seg.lowerBound > 0 { out.append(0..<min(seg.lowerBound, len)) }
+        if seg.upperBound < len { out.append(seg.upperBound..<len) }
+        return out
+    }
+
+    static func merged(_ ranges: [Range<Int>]) -> [Range<Int>] {
+        var out: [Range<Int>] = []
+        for r in ranges.filter({ !$0.isEmpty }).sorted(by: { $0.lowerBound < $1.lowerBound }) {
+            if let last = out.last, r.lowerBound <= last.upperBound {
+                out[out.count - 1] = last.lowerBound..<max(last.upperBound, r.upperBound)
+            } else {
+                out.append(r)
+            }
+        }
+        return out
+    }
+
+    /// Karta odcinka z pozycją (okno z kartami).
+    private func tab(containing offset: Int) -> Int? {
+        unitTabs.count > 1 ? ProgramUnitTabs.index(of: offset, in: unitTabs) : nil
+    }
+
+    /// Pokazuje kartę odcinka z pozycją (przejście w inne miejsce tekstu przełącza kartę samo).
+    private func showTab(containing offset: Int, force: Bool = false) {
+        let t = tab(containing: offset)
+        guard t != shownTab || force else { return }
+        let changed = t != shownTab
+        shownTab = t
+        // Nowa karta od początku (stare przesunięcie dotyczyło innego odcinka); cel przewija potem `scrollToSelection`.
+        if changed { scrollView.contentView.scroll(to: NSPoint(x: scrollView.contentView.bounds.minX, y: 0)) }
+        updateHidden()
+        if changed {
+            ruler.needsDisplay = true
+            onShownTabChange?(t)
+        }
+    }
+
+    /// Karty policzone od razu (zmiana obejmująca granicę kart: Zamień wszystko, formatowanie całości, Przywróć,
+    /// cofnięcie takich zmian) — przesunięte granice nie odpowiadałyby jednostkom do analizy w tle.
+    private func recomputeTabsNow() {
+        guard document.kind == .program else { return }
+        let text = textView.string
+        unitTabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: text), in: text)
+    }
+
+    /// Najdalsza pozycja kursora na widocznej karcie i jej początek.
+    private func visibleBounds() -> (lower: Int, upper: Int)? {
+        guard let t = shownTab, unitTabs.indices.contains(t), let ns = textView.textStorage?.mutableString else { return nil }
+        let tab = unitTabs[t]
+        return (min(tab.segment.lowerBound, ns.length), ProgramUnitTabs.caretLimit(tab, isLast: t == unitTabs.count - 1, in: ns))
+    }
+
+    /// Numer linii w marginesie i na pasku: na karcie jednostki — linia jednostki (Oracle), przed słowem typu — nil.
+    func displayLine(_ line: Int) -> Int? {
+        guard let t = shownTab, unitTabs.indices.contains(t) else { return line + 1 }
+        return ProgramUnitTabs.unitLine(documentLine: line, sourceLine: highlighter.line(containing: unitTabs[t].sourceOffset))
+    }
+
+    /// Przewinięcie do zaznaczenia po zmianie karty albo skoku. TextKit 2 układa tylko widoczny fragment, a położenie
+    /// reszty szacuje — po zmianie ukrytych akapitów (inna karta) szacunek bywa daleki od celu i `scrollRangeToVisible`
+    /// trafia obok. Po przewinięciu układ widocznego obszaru poprawia szacunek; gdy cel nadal jest poza widokiem —
+    /// przewinięcie do jego (już dokładniejszej) ramki, kilka razy. Bez układu całego tekstu od początku karty (pakiet
+    /// 50 000 linii — sekundy). Cel w jednej trzeciej wysokości widoku, nie przy krawędzi.
+    private func scrollToSelection(_ r: NSRange) {
+        textView.scrollRangeToVisible(r)
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager,
+              let b = content.location(content.documentRange.location, offsetBy: r.location) else { return }
+        for _ in 0..<4 {
+            tlm.textViewportLayoutController.layoutViewport()
+            tlm.ensureLayout(for: NSTextRange(location: b))
+            guard let f = tlm.textLayoutFragment(for: b)?.layoutFragmentFrame else { return }
+            let rect = NSRect(x: 0, y: f.minY + textView.textContainerInset.height, width: 1, height: f.height)
+            let visible = scrollView.contentView.bounds
+            if rect.minY >= visible.minY, rect.maxY <= visible.maxY { break }
+            scrollView.contentView.scroll(to: NSPoint(x: visible.minX, y: max(0, rect.minY - visible.height / 3)))
+            scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
+        textView.scrollRangeToVisible(r)
     }
 
     /// Zaznaczenie w ukrytym tekście (przejście do deklaracji, wyszukiwanie, błąd) rozwija obejmujące zwinięcia.
@@ -614,9 +786,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let selection = document.selectedRange
         let error = document.errorRange
         // Sama zmiana zaznaczenia nie zmienia wersji tekstu — bez porównania całego dokumentu.
+        // Przewinięcie do kursora po zmianie tekstu z modelu tylko, gdy kursor był widoczny albo zmiana go obejmuje —
+        // edycja agenta w innym miejscu, Zamień wszystko czy formatowanie nie odrywają od czytanego fragmentu.
+        var followCaret = false
         if document.textRevision != syncedRevision, text != textView.string {
-            applyExternal(text)
+            let caret = textView.selectedRange().location
+            let wasVisible = isVisible(caret)
+            let changed = applyExternal(text)
             scheduleAnalysis()
+            followCaret = wasVisible || (caret >= changed.location && caret <= NSMaxRange(changed))
         } else {
             syncedRevision = document.textRevision
         }
@@ -627,14 +805,28 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let peerActive = peer.map { $0.window?.firstResponder === $0.textView } ?? false
         if !updatingFromModel, current != wanted, !peerActive, document.additionalSelections.isEmpty {
             revealSelection(wanted.location)
+            showTab(containing: wanted.location)
+            applyingModelSelection = true
             textView.setSelectedRange(wanted)
-            textView.scrollRangeToVisible(wanted)
+            applyingModelSelection = false
+            scrollToSelection(wanted)
+            selectionDidChange()
+        } else if followCaret, current == wanted {
+            // Zmiana tekstu z komendy (np. Powiel linię): widok sam przesunął kursor tam, gdzie chce model — bez
+            // zmiany zaznaczenia nie było przewinięcia do kursora ani odświeżenia pozycji na pasku.
+            DispatchQueue.main.async { [weak self] in
+                self?.scrollToSelection(wanted)
+                self?.scheduleViewportRefresh()
+            }
             selectionDidChange()
         }
         if let error {
             let r = NSRange(location: min(error.lowerBound, len), length: 0)
+            showTab(containing: r.location)
+            applyingModelSelection = true
             textView.setSelectedRange(r)
-            textView.scrollRangeToVisible(r)
+            applyingModelSelection = false
+            scrollToSelection(r)
             // Zaznacz słowo z błędem (NF15: podkreślenie całego słowa).
             let word = textView.selectionRange(forProposedRange: r, granularity: .selectByWord)
             if word.length > 0 { textView.showFindIndicator(for: word) }
@@ -647,7 +839,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
     }
 
-    private func applyExternal(_ text: String) {
+    /// Zwraca zakres zmienionego fragmentu w starym tekście.
+    @discardableResult
+    private func applyExternal(_ text: String) -> NSRange {
         let old = textView.string as NSString
         let new = text as NSString
         // Wspólny początek i koniec — zamieniamy tylko środek.
@@ -656,8 +850,19 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         while prefix < minLen, old.character(at: prefix) == new.character(at: prefix) { prefix += 1 }
         var suffix = 0
         while suffix < minLen - prefix, old.character(at: old.length - 1 - suffix) == new.character(at: new.length - 1 - suffix) { suffix += 1 }
-        let range = NSRange(location: prefix, length: old.length - prefix - suffix)
-        let replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        var range = NSRange(location: prefix, length: old.length - prefix - suffix)
+        var replacement = new.substring(with: NSRange(location: prefix, length: new.length - prefix - suffix))
+        // Czyste wstawienie wypadające na granicy kart, gdy można je przesunąć o znak w lewo (tekst kończy się tym samym
+        // znakiem co ten przed granicą — zwykle „\n”): np. Powiel linię w ostatniej linii karty wstawia kopię na końcu
+        // tej karty, a najmniejsza różnica wskazuje początek następnej (tekst na granicy należy do karty późniejszej).
+        let rep = replacement as NSString
+        if range.length == 0, range.location > 0,
+           ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: shownTab, location: range.location, inserted: replacement,
+                                                 characterBefore: old.character(at: range.location - 1),
+                                                 selectionAfter: document.selectedRange.lowerBound) {
+            replacement = old.substring(with: NSRange(location: range.location - 1, length: 1)) + rep.substring(to: rep.length - 1)
+            range.location -= 1
+        }
         updatingFromModel = true
         defer { updatingFromModel = false }
         // Także wstawienie do pustego okna i pełna zamiana dużego tekstu idą przez shouldChangeText — jedna operacja
@@ -677,15 +882,49 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             if whole {
                 highlighter.highlightAll(storage, font: font)
             } else {
-                highlighter.highlight(storage, editedRange: NSRange(location: prefix, length: (replacement as NSString).length),
+                highlighter.highlight(storage, editedRange: NSRange(location: range.location, length: (replacement as NSString).length),
                                       delta: (replacement as NSString).length - range.length, font: font)
             }
         }
         ruler.needsDisplay = true
         scheduleRegions()
+        return NSRange(location: prefix, length: old.length - prefix - suffix)
+    }
+
+    /// Czy pozycja jest w widocznym obszarze edytora (przed zmianą tekstu — czy przewijać potem do kursora).
+    private func isVisible(_ offset: Int) -> Bool {
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager,
+              let loc = content.location(content.documentRange.location, offsetBy: min(offset, textView.textLength)),
+              let f = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame else { return false }
+        let line = f.offsetBy(dx: 0, dy: textView.textContainerInset.height)
+        return line.maxY > textView.visibleRect.minY && line.minY < textView.visibleRect.maxY
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
+
+    /// Zmiana obejmująca granicę kart wykryta przed przetworzeniem edycji (karty liczone potem od razu).
+    private var pendingSpansBoundary = false
+
+    /// Granice kart i ukryte zakresy przesuwane przed przetworzeniem edycji: magazyn treści tworzy akapity zmienionego
+    /// fragmentu w trakcie przetwarzania i może wtedy pytać delegata, czy je pokazać — zakresy mają już odpowiadać
+    /// nowemu tekstowi. Bez ponownego układu całości.
+    @objc private func storageWillProcessEditing(_ note: Notification) {
+        guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters),
+              !unitTabs.isEmpty || !foldHidden.isEmpty else { return }
+        let editedRange = storage.editedRange
+        let delta = storage.changeInLength
+        let edited = editedRange.location..<(editedRange.location + editedRange.length)
+        let oldEnd = edited.upperBound - delta
+        // Zmiana obejmująca granicę kart (w starym tekście granica wewnątrz zastąpionego fragmentu).
+        pendingSpansBoundary = tabs.dropFirst().contains { $0.segment.lowerBound > edited.lowerBound && $0.segment.lowerBound < oldEnd }
+        if !tabs.isEmpty { tabs = ProgramUnitTabs.shift(tabs, edited: edited, delta: delta) }
+        // Wstawienie na początku ukrytego zakresu jest przed nim (widoczne), na jego końcu — za nim.
+        let pure = oldEnd == edited.lowerBound
+        func moveLower(_ o: Int) -> Int { o < edited.lowerBound ? o : o >= oldEnd ? o + delta : edited.upperBound }
+        func moveUpper(_ o: Int) -> Int { o < edited.lowerBound || (pure && o == edited.lowerBound) ? o : o >= oldEnd ? o + delta : edited.upperBound }
+        foldHidden = Self.merged(foldHidden.map { moveLower($0.lowerBound)..<max(moveLower($0.lowerBound), moveUpper($0.upperBound)) })
+        updateHidden(invalidate: false)
+    }
 
     @objc private func storageDidProcessEditing(_ note: Notification) {
         guard let storage = note.object as? NSTextStorage, storage.editedMask.contains(.editedCharacters) else { return }
@@ -696,6 +935,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // w tle `applyFolds` dopasowuje przesunięte klucze do przesuniętych obszarów, bez rozwijania i zwijania.
         if !regions.isEmpty {
             regions = CodeFolding.shift(regions, edited: editedRange.location..<(editedRange.location + editedRange.length), delta: delta)
+        }
+        if pendingSpansBoundary {
+            pendingSpansBoundary = false
+            DispatchQueue.main.async { [weak self] in self?.recomputeTabsNow() }
         }
         guard !updatingFromModel else { return }
         // Atrybuty zmieniamy po zakończeniu przetwarzania edycji (nie w trakcie).
@@ -722,9 +965,43 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         scheduleAnalysis()
     }
 
+    /// Kursor i zaznaczenie z klawiatury i myszy zostają na karcie widocznej (strzałki, ⌘A, ⇧⌘↓ nie wchodzą w ukryty
+    /// tekst innych jednostek); zaznaczenie z modelu, cofanie i ponawianie — bez ograniczenia (przełączają kartę).
+    func textView(_ textView: NSTextView, willChangeSelectionFromCharacterRanges oldSelectedCharRanges: [NSValue],
+                  toCharacterRanges newSelectedCharRanges: [NSValue]) -> [NSValue] {
+        guard !updatingFromModel, !applyingModelSelection, let b = visibleBounds(),
+              !(textView.undoManager?.isUndoing ?? false), !(textView.undoManager?.isRedoing ?? false) else { return newSelectedCharRanges }
+        let clamped = newSelectedCharRanges.map { v in
+            let r = v.rangeValue
+            let lo = min(max(r.location, b.lower), b.upper)
+            let hi = min(max(r.location + r.length, b.lower), b.upper)
+            return NSValue(range: NSRange(location: lo, length: hi - lo))
+        }
+        // Przycięte ruchem kursora z klawiatury (⌘↓, ⇧⌘↓): widok przewijał do ukrytego końca tekstu — przewinięcie do
+        // kursora. ⌘A i przeciąganie myszą — bez przewijania.
+        let proposed = newSelectedCharRanges.first?.rangeValue
+        let selectAll = proposed.map { $0.location == 0 && $0.length == textView.textStorage?.length } ?? false
+        if clamped != newSelectedCharRanges, NSApp.currentEvent?.type == .keyDown, !selectAll, let first = clamped.first?.rangeValue {
+            DispatchQueue.main.async { [weak self] in self?.scrollToSelection(NSRange(location: first.location + first.length, length: 0)) }
+        }
+        return clamped
+    }
+
+    /// Edycja z klawiatury tylko w widocznej karcie — także usunięcie znaku nowej linii oddzielającego następną kartę.
+    func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        guard !updatingFromModel, let b = visibleBounds(),
+              !(textView.undoManager?.isUndoing ?? false), !(textView.undoManager?.isRedoing ?? false) else { return true }
+        return affectedCharRange.location >= b.lower && affectedCharRange.location + affectedCharRange.length <= b.upper
+    }
+
     func textViewDidChangeSelection(_ notification: Notification) {
         guard !updatingFromModel else { return }
         let r = textView.selectedRange()
+        // Cofanie zmiany w innej jednostce — karta tej jednostki.
+        if !applyingModelSelection, tab(containing: r.location) != shownTab {
+            showTab(containing: r.location)
+            DispatchQueue.main.async { [weak self] in self?.scrollToSelection(r) }
+        }
         document.selectedRange = r.location..<(r.location + r.length)
         // Zaznaczenie kolumnowe (Option+przeciąganie) i dodatkowe kursory → model (PD-EDIT-007, PD-EDIT-023).
         let extra = textView.selectedRanges.dropFirst().map { $0.rangeValue }.map { $0.location..<($0.location + $0.length) }
@@ -749,7 +1026,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             let ns: NSString = self.textView.textStorage?.mutableString ?? ""
             let col = TextEditing.characterCount(ns, range: NSRange(location: start, length: r.location - start))
             let length = TextEditing.characterCount(ns, range: r)
-            self.onCaretChange?(r.length > 0 ? "\(line + 1):\(col + 1) [\(length)]" : "\(line + 1):\(col + 1)")
+            let shown = self.displayLine(line).map(String.init) ?? "–"
+            self.onCaretChange?(r.length > 0 ? "\(shown):\(col + 1) [\(length)]" : "\(shown):\(col + 1)")
             self.ruler.needsDisplay = true
             self.updatePairs()
             self.updateDiagnosticTip()
@@ -1293,6 +1571,10 @@ final class LineNumberRulerView: NSView {
     var lineStatus: [Int: LineChange] = [:]
     /// Numer co n-tą linię (pierwsza i bieżąca zawsze).
     var interval = 1
+    /// Numer pokazywany przy linii dokumentu (od 0); nil — bez numeru (karta jednostki: linie przed słowem typu).
+    var displayNumber: ((Int) -> Int?)?
+    /// Czy ostatnia, pusta linia dokumentu jest widoczna (karta jednostki inna niż ostatnia — nie).
+    var showsLastLine: (() -> Bool)?
     /// Linie widocznych fragmentów (y w układzie marginesu) — do trafienia kliknięciem.
     private var drawnLines: [(line: Int, minY: CGFloat, maxY: CGFloat)] = []
 
@@ -1364,11 +1646,14 @@ final class LineNumberRulerView: NSView {
                 NSBezierPath(roundedRect: box, xRadius: 3, yRadius: 3).fill()
                 badge.draw(at: NSPoint(x: box.midX - badge.size().width / 2, y: box.midY - badge.size().height / 2))
             }
-            if LineNumbering.shows(line: line, caretLine: caretLine, interval: interval) {
-                let s = NSAttributedString(string: "\(line + 1)", attributes: attrs)
+            let number: Int? = displayNumber.map { $0(line) } ?? (line + 1)
+            if number == nil {
+                // Linia przed nagłówkiem jednostki — bez numeru.
+            } else if let number, LineNumbering.shows(line: number - 1, caretLine: line == caretLine ? number - 1 : -1, interval: interval) {
+                let s = NSAttributedString(string: "\(number)", attributes: attrs)
                 let size = s.size()
                 s.draw(at: NSPoint(x: bounds.width - size.width - 8, y: y + (min(height, lineHeight) - size.height) / 2))
-            } else if (line + 1) % max(1, interval / 2) == 0 {
+            } else if let number, number % max(1, interval / 2) == 0 {
                 // Kreska między numerami (jak w edytorach z interwałem numeracji).
                 NSColor.quaternaryLabelColor.setFill()
                 NSRect(x: bounds.width - 14, y: y + min(height, lineHeight) / 2, width: 6, height: 1).fill()
@@ -1410,7 +1695,7 @@ final class LineNumberRulerView: NSView {
             return true
         }
         // Pusta ostatnia linia po końcowym znaku nowej linii nie ma własnego fragmentu.
-        if tv.endsWithNewline, lastFrame.maxY < visible.maxY {
+        if tv.endsWithNewline, lastFrame.maxY < visible.maxY, showsLastLine?() ?? true {
             let y = lastFragment.map(trailingEmptyLineY) ?? lastFrame.maxY
             label(highlighter.lineStarts.count - 1, y: y + inset - visible.minY, height: lineHeight)
         }

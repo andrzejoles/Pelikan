@@ -123,8 +123,10 @@ enum ObjectAdminCommands {
                     guard p.count == 3, let t = DBObjectType(rawValue: p[2]) else { return nil }
                     return DBObject(owner: p[0], name: p[1], type: t)
                 }.sorted { (order.firstIndex(of: $0.type) ?? 9) < (order.firstIndex(of: $1.type) ?? 9) }
-                var text = ""
-                for o in objects { if let src = try? await m.source(of: o) { text += (text.isEmpty ? "" : "\n") + src + "\n/\n" } }
+                var sources: [String] = []
+                for o in objects { if let src = try? await m.source(of: o) { sources.append(src) } }
+                // Konwencja okna: „/” tylko, gdy tekst już go używał albo każe preferencja (D192).
+                let text = ProgramText.join(sources, slash: ctx.workspace.settings.programUnitSlash || ProgramText.usesSlash(doc.text))
                 guard !text.isEmpty else { throw CommandError.notAvailable(L10n.tr("Nie znaleziono źródła w bazie")) }
                 doc.text = text
                 doc.isModified = false
@@ -206,7 +208,9 @@ enum ObjectAdminCommands {
                 guard let doc = ctx.workspace.activeDocument, [.program, .test, .sql].contains(doc.kind) else { throw CommandError.notAvailable(L10n.tr("Brak okna edytora")) }
                 try BuiltinCommands.checkWritable(doc)
                 let (o, m) = try await ObjectCommands.target(ctx)
-                let source = o.type.isProgram ? try await m.source(of: o) + "\n/\n" : try await m.ddl(of: o)
+                // Okno programu — konwencja okna (bez „/”, D192); okno SQL i testu — „/” do wykonania.
+                let slash = doc.kind != .program || ctx.workspace.settings.programUnitSlash || ProgramText.usesSlash(doc.text)
+                let source = o.type.isProgram ? (slash ? try await m.source(of: o) + "\n/\n" : try await m.source(of: o) + "\n") : try await m.ddl(of: o)
                 let ns = doc.text as NSString
                 let at = min(doc.selectedRange.lowerBound, ns.length), end = min(doc.selectedRange.upperBound, ns.length)
                 doc.text = ns.replacingCharacters(in: NSRange(location: at, length: end - at), with: source)
@@ -219,7 +223,7 @@ enum ObjectAdminCommands {
                     validate: { programDocument($0) != nil }) { ctx in
                 guard let doc = programDocument(ctx.workspace), let conn = ctx.workspace.effectiveConnection(of: doc) else { throw CommandError.notConnected }
                 let units = ProgramCompiler.units(in: doc.text)
-                guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (CREATE … zakończone /)")) }
+                guard !units.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak jednostek do kompilacji (polecenia CREATE …)")) }
                 // Obiekty tymczasowe PELIKAN$SAFE_… to CREATE/DROP w bazie — strażnik jak przy zwykłej kompilacji.
                 try await ctx.workspace.guardModification(units.map(\.text), connectionID: conn)
                 let s = try await ctx.workspace.sessions.session(ctx.workspace.sessions.compileKey(connection: conn))

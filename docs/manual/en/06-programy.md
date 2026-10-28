@@ -15,12 +15,23 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
 - **Edit** on a package or type — also on its body from the “Package bodies” and “Type bodies” folders — opens the
   specification and the body in one window on two tabs (opened from the body: the body tab is active). An object
   without a body has a single tab.
+- The editor shows only the unit of the selected tab; the active tab is pressed and bold. Switch tabs by clicking,
+  with **File › Program Window › Show Unit…**, **Next Unit** (⌥⌘], in the PL/SQL Developer profile also ⌃⇟) and
+  **Previous Unit** (⌥⌘[, ⌃⇞) — the cursor returns to where it was on that tab. Every jump to a place in another unit
+  (compilation error, Code Contents, Find Next, Go to Declaration, bookmark, debugger, Back/Forward, Undo) switches the
+  tab by itself. Arrow keys and ⌘A stay within the tab. Line numbers on the tab, the error list and **Go to Line**
+  count unit lines like Oracle (ALL_SOURCE, ALL_ERRORS) — line 1 is the `PACKAGE BODY …` line. **Replace All**
+  replaces in the whole window (all units).
+- Units are recognised by `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`, `TRIGGER` headers at
+  the start of a line — the file does not need a “/” after units. Pelikan never adds “/” when saving, and code loaded
+  from the database and new units come without “/” (unless you turn on **Preferences › Oracle › End program window
+  units with “/”**). A file with “/” is saved unchanged.
 - **F8** (⌘↩) compiles all units one by one and stops at the first one with an error. Compilation takes place in a
   separate session in the background, so it does not block SQL Windows.
 - Compiler errors and warnings appear below the editor. A click moves to the line, a double-click opens the error
   description in the Oracle documentation.
 - The status bar shows whether the text has been changed and not saved, and whether it is not compiled.
-- **File › Save** (⌘S) saves a SQL*Plus-compatible file (with a trailing `/`), with a name and extension according to
+- **File › Save** (⌘S) saves the window text unchanged (no `/` is added), with a name and extension according to
   the unit (e.g. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
 
 ### Working safely with code in the database
@@ -61,9 +72,14 @@ thousands of lines.
 - **⌘+click** on a name or **Edit › Go to declaration** (⌃⌘J) moves to the declaration — in the same source, in another
   open window or in an object from the database (in a new window). **Edit › Navigation › Back** (⌃⌘←) and **Forward**
   (⌃⌘→) return after jumps.
-- **View › Code Contents** shows the structure tree of the unit with cursor tracking, sorting and a menu (select, copy,
-  cut, test subprogram). Below the editor, the **code hierarchy** shows the path from the cursor (package › procedure ›
-  block); clicking a level selects it or moves to its name.
+- **View › Code Contents** shows the structure tree: the package (type) specification and body separately, with
+  subprograms with parameters and return type (the full header in the tooltip), types (record, table, REF CURSOR,
+  subtype), cursors, variables, constants, exceptions, pragmas and nested subprograms. Private body elements (not
+  declared in the specification) are italic. A click or Enter moves the cursor to the element (also on another tab),
+  arrow keys in the tree move the cursor without leaving the tree. The field above the tree filters names. The tree
+  tracks the cursor and has sorting and a menu (select, copy, cut, test subprogram, expand/collapse all). Below the
+  editor, the **code hierarchy** shows the path from the cursor (package › procedure › block); clicking a level
+  selects it or moves to its name.
 - The context menu on a database object name in the editor offers the same actions as the Object Browser.
 - **F1** opens the Oracle documentation for the word under the cursor.
 

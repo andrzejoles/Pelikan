@@ -100,6 +100,51 @@ public final class Document: Identifiable {
         unitsCache = (textRevision, units)
     }
 
+    @ObservationIgnored private var tabsCache: (revision: Int, tabs: [ProgramUnitTab])?
+
+    /// Karty jednostek okna programu (D192): odcinki tekstu jednostek; mniej niż dwie jednostki — pusto.
+    public var programUnitTabs: [ProgramUnitTab] {
+        guard kind == .program else { return [] }
+        let units = programUnits
+        if let c = tabsCache, c.revision == textRevision { return c.tabs }
+        let tabs = ProgramUnitTabs.tabs(units, in: text)
+        tabsCache = (textRevision, tabs)
+        return tabs
+    }
+
+    /// Liczba kart z ostatniego podziału (także sprzed ostatniej zmiany tekstu) — do walidacji menu i wstążki bez
+    /// dzielenia tekstu na wątku głównym przy każdym znaku (R4-01); pierwszy raz liczona.
+    public var unitTabCount: Int {
+        guard kind == .program else { return 0 }
+        if let c = tabsCache { return c.tabs.count }
+        return programUnitTabs.count
+    }
+
+    /// Zapisuje karty policzone w tle dla tekstu `forText` (okno programu po analizie).
+    public func cacheProgramUnitTabs(_ tabs: [ProgramUnitTab], forText: String) {
+        guard text == forText else { return }
+        tabsCache = (textRevision, tabs)
+    }
+
+    /// Zakres pozycji kursora na karcie z kursorem (okno programu z kartami; nil — bez kart), liczony z modelu w chwili
+    /// wywołania — nie z widoku, który przełącza kartę dopiero po zmianie zaznaczenia (agent albo makro zmienia
+    /// zaznaczenie i od razu wywołuje komendę edycji). Komendy edycji i dodatkowe kursory nie wychodzą poza niego.
+    public var unitEditBounds: ClosedRange<Int>? {
+        // Okno z jedną jednostką (według pamięci kart) — bez dzielenia tekstu przy każdej komendzie edycji.
+        guard unitTabCount > 1 else { return nil }
+        let tabs = programUnitTabs
+        guard let i = ProgramUnitTabs.index(of: selectedRange.lowerBound, in: tabs) else { return nil }
+        let ns = text as NSString
+        return min(tabs[i].segment.lowerBound, ns.length)...ProgramUnitTabs.caretLimit(tabs[i], isLast: i == tabs.count - 1, in: ns)
+    }
+
+    /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
+    public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
+
+    /// Ostatnia pozycja kursora na karcie (klucz karty → odległość od początku odcinka) — powrót na kartę wraca w to
+    /// samo miejsce, jak w oknie programu wzorca.
+    @ObservationIgnored public var unitCarets: [String: Int] = [:]
+
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false {
         didSet { if !isModified { baselineText = text } }

@@ -20,7 +20,6 @@ extension TemplateLibrary {
                 begin
                   [#]null;
                 end [Nazwa];
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Funkcja"), text: """
                 create or replace function [Nazwa=nowa_funkcja](
@@ -31,35 +30,32 @@ extension TemplateLibrary {
                   [#]
                   return l_wynik;
                 end [Nazwa];
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Pakiet"), text: """
                 create or replace package [Nazwa=nowy_pakiet] as
                   -- Autor: $DBUSER, $DATE
                   procedure [Procedura=wykonaj];
                 end [Nazwa];
-                /
+
                 create or replace package body [Nazwa] as
                   procedure [Procedura] is
                   begin
                     [#]null;
                   end [Procedura];
                 end [Nazwa];
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Typ obiektowy"), text: """
                 create or replace type [Nazwa=nowy_t] as object (
                   [Atrybut=id] number,
                   member function opis return varchar2
                 );
-                /
+
                 create or replace type body [Nazwa] as
                   member function opis return varchar2 is
                   begin
                     return [#]to_char([Atrybut]);
                   end opis;
                 end;
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Wyzwalacz"), text: """
                 create or replace trigger [Nazwa=nowy_trg]
@@ -68,7 +64,6 @@ extension TemplateLibrary {
                 begin
                   [#]null;
                 end [Nazwa];
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Źródło Java"), text: """
                 create or replace and compile java source named "[Klasa=NowaKlasa]" as
@@ -77,14 +72,12 @@ extension TemplateLibrary {
                         [#]return s;
                     }
                 }
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: units, name: L10n.tr("Moduł MLE (JavaScript)"), text: """
                 create or replace mle module [Nazwa=nowy_modul] language javascript as
                 export function [Funkcja=hello](s) {
                   [#]return s;
                 }
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: "utPLSQL", name: L10n.tr("Pakiet testowy"), text: """
                 create or replace package test_[Pakiet] as
@@ -96,7 +89,7 @@ extension TemplateLibrary {
                   --%test([Opis testu])
                   procedure [Nazwa testu=pierwszy_test];
                 end;
-                /
+
                 create or replace package body test_[Pakiet] as
                   procedure przygotuj is
                   begin
@@ -108,7 +101,6 @@ extension TemplateLibrary {
                     [#]ut.expect(1).to_equal(1);
                   end;
                 end;
-                /
                 """, isBuiltIn: true),
             CodeTemplate(folder: "utPLSQL", name: L10n.tr("Test (specyfikacja)"), text: """
                 --%test([Opis])
