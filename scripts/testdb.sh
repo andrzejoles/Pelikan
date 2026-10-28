@@ -349,7 +349,7 @@ ssh_up() {
     chmod 700 "$STATE/ssh"
     [ -f "$STATE/ssh/id_ed25519" ] || ssh-keygen -q -t ed25519 -N "" -C "pelikan-test" -f "$STATE/ssh/id_ed25519"
     docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
-    docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
+    grep -q "\"$NAME\"" <<<"$(docker network inspect "$NET")" || docker network connect "$NET" "$NAME"
     # Obraz w wersji 3 (Alpine 3.24; od wersji 2 — użytkownik z hasłem); kontener ze starszego obrazu jest tworzony od nowa.
     local image=pelikan-test-sshd:3
     docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$ROOT/scripts/testdb/ssh" >/dev/null
@@ -461,7 +461,7 @@ ORDS_IMAGE="${PELIKAN_TESTDB_ORDS_IMAGE:-eclipse-temurin:21-jre}"
 
 docker_net() {
     docker network inspect "$NET" >/dev/null 2>&1 || docker network create "$NET" >/dev/null
-    docker network inspect "$NET" | grep -q "\"$NAME\"" || docker network connect "$NET" "$NAME"
+    grep -q "\"$NAME\"" <<<"$(docker network inspect "$NET")" || docker network connect "$NET" "$NAME"
 }
 
 # ORDS tylko do testów (SD-ORDS-001, nigdy w Pelikanie): publiczne ords-latest.zip w .testdb/ords, samodzielny ORDS
@@ -558,8 +558,8 @@ LDIF
     docker rm -f "$LDAP_NAME" >/dev/null 2>&1 || true
     docker run -d --name "$LDAP_NAME" -p "127.0.0.1:${LDAP_PORT}:389" -v "$dir:/ldif:ro" "$image" >/dev/null
     for _ in $(seq 1 30); do
-        docker exec "$LDAP_NAME" ldapsearch -x -H ldap://127.0.0.1 -b "cn=OracleContext,dc=pelikan,dc=test" "(cn=dev_pelikan_ldap)" cn 2>/dev/null \
-            | grep -q '^cn: dev_pelikan_ldap' && break
+        grep -q '^cn: dev_pelikan_ldap' <<<"$(docker exec "$LDAP_NAME" ldapsearch -x -H ldap://127.0.0.1 \
+            -b "cn=OracleContext,dc=pelikan,dc=test" "(cn=dev_pelikan_ldap)" cn 2>/dev/null)" && break
         sleep 1
     done
     printf 'DIRECTORY_SERVERS=(127.0.0.1:%s)\nDEFAULT_ADMIN_CONTEXT="dc=pelikan,dc=test"\nDIRECTORY_SERVER_TYPE=OID\n' "$LDAP_PORT" > "$net/ldap.ora"

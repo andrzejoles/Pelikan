@@ -42,7 +42,7 @@ LEAKED="$(find "$APP" \( -name "connections.json" -o -name "settings.json" -o -n
 # Symbole debugowania (tablica STABS z ścieżkami plików .o i źródeł) zostają w kompilacji Release bez instalacji — usuwamy
 # je z naszych plików wykonywalnych przed podpisem (Sparkle ma już własny, podpisany i ostrzyżony).
 find "$APP/Contents/MacOS" "$APP/Contents/PlugIns" -type f -perm -u+x -print0 | while IFS= read -r -d '' f; do
-    if file -b "$f" | grep -q Mach-O; then strip -S -x "$f" 2>/dev/null; fi
+    if [[ "$(file -b "$f")" == *Mach-O* ]]; then strip -S -x "$f" 2>/dev/null; fi
 done
 # Ani ścieżek budowania, ani katalogu domowego w plikach wykonywalnych i zasobach.
 PATHS="$(grep -rlF -e "$ROOT" -e "$HOME/" "$APP" || true)"

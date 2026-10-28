@@ -74,7 +74,8 @@ jobs:
         # Bez runtime proces użytkownika mógłby wstrzyknąć bibliotekę przez DYLD_INSERT_LIBRARIES (D189).
         run: |
           app=build/DerivedData.noindex/Build/Products/Debug/Pelikan.app
-          codesign -d --verbose=4 "$app" 2>&1 | grep -q 'flags=.*runtime' || { echo "::error::$app bez Hardened Runtime"; exit 1; }
+          # Bez potoku do `grep -q` (bash w Actions ma pipefail — SIGPIPE codesign dałby fałszywy błąd).
+          grep -q 'flags=.*runtime' <<<"$(codesign -d --verbose=4 "$app" 2>&1)" || { echo "::error::$app bez Hardened Runtime"; exit 1; }
       # Release (optymalizacja, kod spoza #if DEBUG) tylko po scaleniu na main — w PR dodawałby ok. 10 minut.
       - name: Aplikacja w konfiguracji Release
         if: hashFiles('project.yml') != '' && github.event_name != 'pull_request'

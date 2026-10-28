@@ -118,7 +118,8 @@ case "${1:-}" in
         done
         sign_one "$APP"
         codesign --verify --deep --strict "$APP"
-        codesign -d --verbose=2 "$APP" 2>&1 | grep -q 'flags=.*runtime' || { echo "Brak Hardened Runtime w podpisie $APP" >&2; exit 1; }
+        # Bez potoku do `grep -q`: przy pipefail codesign dostaje SIGPIPE po pierwszym dopasowaniu i warunek zawodzi.
+        grep -q 'flags=.*runtime' <<<"$(codesign -d --verbose=2 "$APP" 2>&1)" || { echo "Brak Hardened Runtime w podpisie $APP" >&2; exit 1; }
         codesign -d -r- "$APP" 2>&1 | grep designated
         ;;
     export)

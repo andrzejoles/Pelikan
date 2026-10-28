@@ -42,8 +42,9 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
 ```
 
 ## Pułapki
-- `scripts/testdb.sh`: `set -o pipefail` + `tr </dev/urandom | head` zabija skrypt po cichu (SIGPIPE) — losowanie przez
-  `openssl rand`. `docker cp` tworzy pliki jako root — `chown` przed użyciem przez oracle.
+- Skrypty z `set -o pipefail`: `tr </dev/urandom | head` i każdy `polecenie | grep -q` dają SIGPIPE (kod 141) — fałszywy
+  błąd albo ciche zakończenie. Losowanie przez `openssl rand`, dopasowanie przez `grep -q wzorzec <<<"$(polecenie)"`.
+- `scripts/testdb.sh`: `docker cp` tworzy pliki jako root — `chown` przed użyciem przez oracle.
 - `DBMS_SESSION.SLEEP` nie reaguje na Break do końca uśpienia (tak samo w SQL*Plus) — testy przerwania na długim zapytaniu.
 - Komunikaty SourceKit „No such module”/„Cannot find type” w edytorze to nieaktualny indeks — liczy się `swift build`.
 - Runner CI macOS to obraz `xcode-27` (macOS 27, Xcode 27 — wersja próbna GitHuba, D166); przy kłopotach z kolejką
