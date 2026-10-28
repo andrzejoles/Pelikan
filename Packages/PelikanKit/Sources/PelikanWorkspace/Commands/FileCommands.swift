@@ -130,7 +130,7 @@ enum FileCommands {
                         id = loc.id
                     } else {
                         id = try await ctx.choose(L10n.tr("Usuń lokalizację"), browser.locations.map {
-                            (label: "\($0.name) — \(($0.path as NSString).abbreviatingWithTildeInPath)", value: $0.id)
+                            (label: "\($0.name) — \(tildePath($0.path))", value: $0.id)
                         })
                     }
                 }
@@ -221,7 +221,7 @@ enum FileCommands {
                     effect: .external, summary: L10n.tr("Przenosi plik albo katalog do Kosza (po potwierdzeniu); otwarte okno pliku zostaje jako okno bez pliku."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
                 let u = try requiredPath(ctx)
-                let shown = (u.path as NSString).abbreviatingWithTildeInPath
+                let shown = tildePath(u.path)
                 if url(ctx) == nil, let ui = ctx.ui {
                     // Element z zaznaczenia panelu (wstążka, paleta) — pytanie zawsze, także przy wyłączonym potwierdzeniu:
                     // użytkownik mógł nie zauważyć, co jest zaznaczone.
@@ -443,4 +443,11 @@ enum FileCommands {
             },
         ]
     }
+}
+
+/// Ścieżka z katalogiem domowym skróconym do „~” (`abbreviatingWithTildeInPath` nie ma w Foundation na Linuksie).
+private func tildePath(_ path: String) -> String {
+    let home = FileManager.default.homeDirectoryForCurrentUser.path
+    guard !home.isEmpty, path == home || path.hasPrefix(home + "/") else { return path }
+    return "~" + path.dropFirst(home.count)
 }
