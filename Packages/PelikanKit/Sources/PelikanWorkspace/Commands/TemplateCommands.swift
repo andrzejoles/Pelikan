@@ -5,7 +5,7 @@ import PelikanSQL
 /// Szablony kodu (UG 31, PD-TPL-001…003) i nowy program z szablonu (PD-PROG-002).
 enum TemplateCommands {
     static let insertParams = [
-        CommandParameter("template", .string, required: true, L10n.tr("Szablon: folder/nazwa albo nazwa")),
+        CommandParameter("template", .string, L10n.tr("Szablon: folder/nazwa albo nazwa (bez argumentu — wybór z listy)")),
         CommandParameter("values", .object, L10n.tr("Wartości zmiennych szablonu (nazwa → tekst); brakujące — domyślne")),
     ]
 
@@ -142,7 +142,14 @@ enum TemplateCommands {
     @MainActor
     static func insert(_ ctx: CommandContext, newWindow: Bool) async throws -> CommandResult {
         let ws = ctx.workspace
-        guard let id = ctx.arguments.string("template"), let t = ws.templates.template(id) else {
+        var id = ctx.arguments.string("template")
+        // Ze wstążki, menu i palety — bez argumentu: wybór z listy szablonów (jak w panelu Szablony).
+        if id == nil, ctx.invoker == .user, let ui = ctx.ui {
+            guard let chosen = await ui.chooseValue(newWindow ? L10n.tr("Nowy program z szablonu") : L10n.tr("Wstaw szablon"),
+                                                    values: ws.templates.all.map(\.id).sorted()) else { throw CommandError.cancelledByUser }
+            id = chosen
+        }
+        guard let id, let t = ws.templates.template(id) else {
             throw CommandError.invalidArgument("template", L10n.tr("nie znaleziono szablonu"))
         }
         var values: [String: String] = [:]

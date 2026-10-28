@@ -176,14 +176,22 @@ enum Stage7Commands {
                 return .ok
             },
             Command(CommandDescriptor(id: "edit.insertSnippet", title: L10n.tr("Wstaw snippet"), category: .edit,
-                                      parameters: [CommandParameter("id", .string, required: true, L10n.tr("Identyfikator: kategoria/nazwa"))],
+                                      parameters: [CommandParameter("id", .string, L10n.tr("Identyfikator: kategoria/nazwa (bez argumentu — wybór z listy)"))],
                                       agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia fragment kodu z biblioteki w miejscu kursora aktywnego edytora."), inMenu: false,
                                       feature: "SC-SNIP-001"),
                     validate: { editor($0) != nil }) { ctx in
                 guard let doc = editor(ctx.workspace) else { return .ok }
-                guard let s = ctx.workspace.snippets.all.first(where: { $0.id == ctx.arguments.string("id") }) else {
-                    throw CommandError.invalidArgument("id", ctx.arguments.string("id") ?? "")
+                var id = ctx.arguments.string("id")
+                // Ze wstążki, menu i palety — bez argumentu: wybór z listy biblioteki.
+                if id == nil, ctx.invoker == .user, let ui = ctx.ui {
+                    guard let chosen = await ui.chooseValue(L10n.tr("Wstaw snippet"), values: ctx.workspace.snippets.all.map(\.id).sorted()) else {
+                        throw CommandError.cancelledByUser
+                    }
+                    id = chosen
+                }
+                guard let s = ctx.workspace.snippets.all.first(where: { $0.id == id }) else {
+                    throw CommandError.invalidArgument("id", id ?? "")
                 }
                 try insert(s.text, into: doc)
                 return .ok
