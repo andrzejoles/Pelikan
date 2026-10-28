@@ -57,4 +57,10 @@ extension Workspace {
                                   buttons: [L10n.tr("Anuluj"), L10n.tr("Zmień mimo to")])
         guard choice == 1 else { throw CommandError.cancelledByUser }
     }
+
+    /// Jak wyżej dla obiektów; typy globalne (katalogi, użytkownicy, role, profile) pomijane — katalog ma zawsze
+    /// właściciela SYS, a jego usunięcie nie dotyka obiektów schematu.
+    public func confirmOracleMaintained(objects: [DBObject]) async throws {
+        try await confirmOracleMaintained(objects.filter { !$0.type.isGlobal }.map(\.owner))
+    }
 }

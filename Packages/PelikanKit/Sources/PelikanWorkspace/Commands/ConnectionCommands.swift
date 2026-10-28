@@ -134,8 +134,10 @@ public enum ConnectionCommands {
                 guard let def = ctx.workspace.connections.connection(id) else { return .ok }
                 var name = ctx.arguments.string("name")
                 if name == nil {
+                    let taken = Set(ctx.workspace.connections.connections.map { $0.displayName.lowercased() })
+                    let candidates = [L10n.tr("\(def.displayName) (kopia)")] + (2...99).map { L10n.tr("\(def.displayName) (kopia \($0))") }
                     name = await ctx.ui?.askText(L10n.tr("Kopiuj połączenie"), message: L10n.tr("Nazwa kopii połączenia „\(def.displayName)”:"),
-                                                 defaultValue: L10n.tr("\(def.displayName) (kopia)"))
+                                                 defaultValue: candidates.first { !taken.contains($0.lowercased()) } ?? "")
                     guard name != nil else { throw CommandError.cancelledByUser }
                 }
                 let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)

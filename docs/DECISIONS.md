@@ -1911,7 +1911,7 @@ folderów DBA i DBMS z obiektami `DBA_…` i `DBMS_…`, do których użytkownik
   tymczasowego (CONNECT w oknie poleceń) nie da się skopiować ani przenieść — czytelny błąd.
 - **Przenoszenie:** komenda `connection.moveToFolder` (argumenty `connection` i `folder` — id albo nazwa, bez folderu —
   poziom główny; `inMenu: false`), wywoływana przez przeciągnięcie połączenia na folder albo wolne miejsce listy
-  (upuszczenie na połączenie — do jego folderu; „Ostatnie” i okna nie są celem) i przez podmenu „Przenieś do folderu”
+  (upuszczenie na połączenie albo jego okno — do folderu połączenia; „Ostatnie” nie jest celem) i przez podmenu „Przenieś do folderu”
   (dostęp z klawiatury i VoiceOver). Przeciągane są tylko połączenia, nie foldery.
 - **Foldery DBA i DBMS** (na końcu gałęzi każdego połączenia, po folderach typów): `MetadataProvider.systemObjects`
   czyta ALL_OBJECTS z nazwą `DBA\_%` / `DBMS\_%` (podkreślenie dosłownie), wszyscy właściciele — ALL_OBJECTS pokazuje
@@ -1924,7 +1924,9 @@ folderów DBA i DBMS z obiektami `DBA_…` i `DBMS_…`, do których użytkownik
 - **Obiekty schematów Oracle** (przegląd kodu przed scaleniem): foldery DBA i DBMS stawiają pakiety SYS pod ręką
   w każdym trybie, a np. „Dodaj informację debugowania” na `SYS.DBMS_OUTPUT` wykonywała się bez pytania i mogła
   unieważnić obiekty w całej bazie. `Workspace.confirmOracleMaintained`: rekompilacja (także zaznaczonych), DEBUG,
-  DROP (także zaznaczonych), zmiana nazwy obiektu i elementu, włączanie/wyłączanie oraz kompilacja okna programu
-  z jednostką schematu utrzymywanego przez Oracle (SYS, XDB, GSMADMIN_INTERNAL… — lista 11g i nowszych wersji) —
-  zawsze osobne pytanie z domyślnym **Anuluj**, niezależnie od preferencji potwierdzania; bez interfejsu (skrypt)
-  — odmowa. Jednostka bez właściciela w nagłówku kompilowana przez użytkownika SYS nie jest rozpoznawana.
+  DROP (także zaznaczonych), zmiana nazwy obiektu i elementu, włączanie/wyłączanie, flagi kompilacji warunkowej
+  oraz kompilacja okna programu z jednostką schematu utrzymywanego przez Oracle (SYS, XDB, GSMADMIN_INTERNAL… — lista
+  11g i nowszych wersji; jednostka bez właściciela w nagłówku — bieżący schemat sesji, więc także SYS zalogowany jako
+  SYS) — zawsze osobne pytanie z domyślnym **Anuluj**, niezależnie od preferencji potwierdzania; bez interfejsu
+  (skrypt) — odmowa. Typy globalne (katalogi, użytkownicy, role, profile) pomijane — katalog ma zawsze właściciela
+  SYS. Domyślna nazwa kopii połączenia — pierwsza wolna („… (kopia)”, „… (kopia 2)”…).

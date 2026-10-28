@@ -114,6 +114,14 @@ struct ConnectionStoreTests {
         ui.answers = [1]   // Zmień mimo to
         try await ws.confirmOracleMaintained(["XDB"])
         #expect(ui.asked.count == 2)
+        // Katalog ma zawsze właściciela SYS — bez pytania; pakiet SYS — z pytaniem.
+        try await ws.confirmOracleMaintained(objects: [DBObject(owner: "SYS", name: "DATA_DIR", type: .directory)])
+        #expect(ui.asked.count == 2)
+        ui.answers = [0]
+        await #expect(throws: CommandError.self) {
+            try await ws.confirmOracleMaintained(objects: [DBObject(owner: "SYS", name: "DBMS_OUTPUT", type: .package)])
+        }
+        #expect(ui.asked.count == 3)
     }
 
     @Test("Komendy connection.duplicate i connection.moveToFolder (nazwa folderu bez wielkości liter)")
