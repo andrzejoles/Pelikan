@@ -303,14 +303,18 @@ public enum Oracle23Commands {
                 return .ok
             },
             Command(CommandDescriptor(id: "tools.importMLEModule", title: L10n.tr("Importuj moduł JavaScript…"), category: .tools,
-                                      parameters: [CommandParameter("file", .string, required: true, L10n.tr("Plik .js / .mjs")),
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik .js / .mjs (bez argumentu — wybór pliku)")),
                                                    CommandParameter("name", .string, L10n.tr("Nazwa modułu (domyślnie z nazwy pliku)")),
                                                    CommandParameter("version", .string, L10n.tr("Wersja"))],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Tworzy z pliku JavaScript DDL modułu MLE w nowym oknie programu (kompilacja jak innych obiektów)."),
                                       feature: "SD-MLE-001")) { ctx in
-                guard let path = ctx.arguments.string("file") else { throw CommandError.invalidArgument("file", "") }
-                let url = URL(fileURLWithPath: (path as NSString).expandingTildeInPath)
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil, let ui = ctx.askingUI {
+                    guard let u = await ui.chooseFile(L10n.tr("Importuj moduł JavaScript"), extensions: ["js", "mjs"]) else { throw CommandError.cancelledByUser }
+                    url = u
+                }
+                guard let url else { throw CommandError.invalidArgument("file", "") }
                 let source = TextFileCodec.decode(try Data(contentsOf: url)).text
                 let ddl = MLE.createModuleDDL(name: ctx.arguments.string("name") ?? url.deletingPathExtension().lastPathComponent,
                                               source: source, version: ctx.arguments.string("version"))

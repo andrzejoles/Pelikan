@@ -165,16 +165,32 @@ enum EditorExtraCommands {
             },
             // MARK: Otwarcie pliku z połączeniem (PD-FILE-004)
             command("file.openWithConnection", L10n.tr("Otwórz z połączeniem…"), .file,
-                    params: [CommandParameter("path", .string, required: true, L10n.tr("Plik albo katalog")),
-                             CommandParameter("connection", .string, required: true, L10n.tr("Nazwa połączenia okna"))],
+                    params: [CommandParameter("path", .string, L10n.tr("Plik albo katalog (bez argumentu — wybór plików)")),
+                             CommandParameter("connection", .string, L10n.tr("Nazwa połączenia okna (bez argumentu — wybór z listy)"))],
                     effect: .uiState, summary: L10n.tr("Otwiera plik (z katalogu — wszystkie skrypty) i przypina do okien wskazane połączenie."),
                     feature: "PD-FILE-004", validate: { _ in true }) { ctx in
                 let ws = ctx.workspace
-                guard let path = ctx.arguments.string("path"), let name = ctx.arguments.string("connection") else { throw CommandError.invalidArgument("path", "") }
+                var sources = ctx.arguments.string("path").map { [URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath)] }
+                var name = ctx.arguments.string("connection")
+                // Ze wstążki bez argumentów — wybór plików, potem połączenia z listy.
+                if let ui = ctx.askingUI, sources == nil || name == nil {
+                    let names = ws.connections.connections.map(\.displayName).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+                    guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak zdefiniowanych połączeń")) }
+                    if sources == nil {
+                        let chosen = await ui.chooseFilesToOpen()
+                        guard !chosen.isEmpty else { throw CommandError.cancelledByUser }
+                        sources = chosen
+                    }
+                    if name == nil {
+                        guard let n = await ui.chooseValue(L10n.tr("Otwórz z połączeniem"), values: names) else { throw CommandError.cancelledByUser }
+                        name = n
+                    }
+                }
+                guard let sources, let name else { throw CommandError.invalidArgument("path", "") }
                 guard let def = ws.connections.connections.first(where: { $0.displayName.caseInsensitiveCompare(name) == .orderedSame }) else {
                     throw CommandError.invalidArgument("connection", name)
                 }
-                let files = FileOpening.files(from: [URL(fileURLWithPath: (path as NSString).expandingTildeInPath)])
+                let files = FileOpening.files(from: sources)
                 guard !files.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak plików do otwarcia")) }
                 var opened: [String] = []
                 for f in files {

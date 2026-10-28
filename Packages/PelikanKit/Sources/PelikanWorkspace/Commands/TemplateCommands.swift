@@ -53,10 +53,16 @@ enum TemplateCommands {
                 return CommandResult(message: L10n.tr("Zapisano szablon \(folder)/\(name)"))
             },
             Command(CommandDescriptor(id: "templates.delete", title: L10n.tr("Usuń szablon"), category: .tools, submenu: L10n.tr("Szablony"),
-                                      parameters: [CommandParameter("template", .string, required: true, L10n.tr("Szablon użytkownika: folder/nazwa"))],
+                                      parameters: [CommandParameter("template", .string, L10n.tr("Szablon użytkownika: folder/nazwa (bez argumentu — wybór z listy)"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Usuwa szablon użytkownika (szablony wbudowane zostają)."), inMenu: false, feature: "PD-TPL-003")) { ctx in
-                guard let id = ctx.arguments.string("template"), let t = ctx.workspace.templates.template(id), !t.isBuiltIn else {
+                var id = ctx.arguments.string("template")
+                if id == nil, ctx.askingUI != nil {
+                    let own = ctx.workspace.templates.all.filter { !$0.isBuiltIn }.map(\.id).sorted()
+                    guard !own.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak szablonów użytkownika do usunięcia")) }
+                    id = try await ctx.choose(L10n.tr("Usuń szablon"), own.map { (label: $0, value: $0) })
+                }
+                guard let id, let t = ctx.workspace.templates.template(id), !t.isBuiltIn else {
                     throw CommandError.invalidArgument("template", L10n.tr("brak szablonu użytkownika"))
                 }
                 try ctx.workspace.templates.delete(t)
@@ -106,11 +112,11 @@ enum TemplateCommands {
             },
             Command(CommandDescriptor(id: "templates.renameFolder", title: L10n.tr("Zmień nazwę folderu szablonów…"), category: .tools,
                                       submenu: L10n.tr("Szablony"),
-                                      parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder")),
+                                      parameters: [CommandParameter("folder", .string, L10n.tr("Folder (bez argumentu — wybór z listy folderów użytkownika)")),
                                                    CommandParameter("name", .string, L10n.tr("Nowa nazwa"))],
                                       agent: .none, effect: .settings, summary: L10n.tr("Zmienia nazwę folderu szablonów użytkownika (z szablonami)."),
                                       inMenu: false, feature: "PD-TPL-003")) { ctx in
-                guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }
+                let folder = try await userFolder(ctx, title: L10n.tr("Zmień nazwę folderu szablonów"))
                 var name = ctx.arguments.string("name") ?? ""
                 if name.isEmpty {
                     guard let n = await ctx.ui?.askText(L10n.tr("Zmień nazwę folderu szablonów"), message: "", defaultValue: folder), !n.isEmpty else {
@@ -123,11 +129,11 @@ enum TemplateCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "templates.deleteFolder", title: L10n.tr("Usuń folder szablonów"), category: .tools, submenu: L10n.tr("Szablony"),
-                                      parameters: [CommandParameter("folder", .string, required: true, L10n.tr("Folder"))],
+                                      parameters: [CommandParameter("folder", .string, L10n.tr("Folder (bez argumentu — wybór z listy folderów użytkownika)"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Usuwa folder szablonów użytkownika z jego szablonami (wbudowane zostają)."),
                                       inMenu: false, feature: "PD-TPL-003")) { ctx in
-                guard let folder = ctx.arguments.string("folder") else { throw CommandError.missingArgument("folder") }
+                let folder = try await userFolder(ctx, title: L10n.tr("Usuń folder szablonów"))
                 if ctx.invoker == .user, let ui = ctx.ui {
                     guard await ui.ask(L10n.tr("Usuń folder szablonów"), message: L10n.tr("Usunąć folder „\(folder)” razem z jego szablonami użytkownika?"),
                                        buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
@@ -137,6 +143,18 @@ enum TemplateCommands {
                 return .ok
             },
         ]
+    }
+
+    /// Folder z argumentu, a dla użytkownika bez argumentu — wybór z folderów szablonów użytkownika.
+    @MainActor
+    static func userFolder(_ ctx: CommandContext, title: String) async throws -> String {
+        if let f = ctx.arguments.string("folder") { return f }
+        if ctx.askingUI != nil {
+            let folders = ctx.workspace.templates.userFolders
+            guard !folders.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak folderów szablonów użytkownika")) }
+            if let f = try await ctx.choose(title, folders.map { (label: $0, value: $0) }) { return f }
+        }
+        throw CommandError.missingArgument("folder")
     }
 
     @MainActor

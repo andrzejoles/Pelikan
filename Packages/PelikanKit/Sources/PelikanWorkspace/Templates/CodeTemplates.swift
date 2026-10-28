@@ -167,6 +167,15 @@ public final class TemplateLibrary {
     }
 
     /// Nowy (pusty) folder użytkownika.
+    /// Foldery szablonów użytkownika (katalogi w katalogu szablonów) — można zmienić ich nazwę albo je usunąć.
+    public var userFolders: [String] {
+        guard let dir = directory, let items = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.isDirectoryKey]) else {
+            return []
+        }
+        return items.filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }.map(\.lastPathComponent)
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
     public func createFolder(_ name: String) throws {
         guard let dir = directory else { throw CommandError.notAvailable(L10n.tr("Brak katalogu danych")) }
         let n = Self.safe(name)

@@ -161,8 +161,26 @@ struct FileBrowserPane: View {
             }
         }
         .padding(.bottom, 6)
-        .onChange(of: model.locationID) { model.reload() }
-        .onAppear { model.reload() }
+        .onChange(of: model.locationID) {
+            selection = nil
+            workspace.fileBrowser.currentLocationID = model.locationID
+            model.reload()
+        }
+        // Lokalizacja usunięta komendą (wstążka) — panel przechodzi do pierwszej pozostałej.
+        .onChange(of: workspace.fileBrowser.locations) {
+            if model.location == nil { model.locationID = workspace.fileBrowser.locations.first?.id }
+        }
+        // Zaznaczenie i pokazana lokalizacja są domyślnymi argumentami komend fb.* ze wstążki (tylko przy widocznym panelu).
+        .onChange(of: selection) { workspace.fileBrowser.selectedURL = selection.map { URL(fileURLWithPath: $0) } }
+        .onAppear {
+            workspace.fileBrowser.currentLocationID = model.locationID
+            workspace.fileBrowser.selectedURL = selection.map { URL(fileURLWithPath: $0) }
+            model.reload()
+        }
+        .onDisappear {
+            workspace.fileBrowser.currentLocationID = nil
+            workspace.fileBrowser.selectedURL = nil
+        }
         // Odświeżanie co 5 s (git status, daty katalogów) tylko przy widocznej karcie Pliki (zadanie kończy się, gdy
         // karta znika z okna) i aktywnej aplikacji — wcześniej zegar odpytywał git przez cały czas działania aplikacji.
         .task(id: activeState == .inactive) {

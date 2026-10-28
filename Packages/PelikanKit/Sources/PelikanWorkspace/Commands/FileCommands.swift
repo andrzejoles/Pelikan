@@ -36,6 +36,39 @@ enum FileCommands {
 
     static func hasActiveFile(_ ws: Workspace) -> Bool { ws.activeDocument?.fileURL != nil }
 
+    static func isDirectory(_ u: URL) -> Bool {
+        var isDir: ObjCBool = false
+        return FileManager.default.fileExists(atPath: u.path, isDirectory: &isDir) && isDir.boolValue
+    }
+
+    /// Ścieżka z argumentu albo — gdy wywołuje użytkownik (wstążka, paleta) — istniejący element zaznaczony w panelu
+    /// Przeglądarki plików (jak obiekty biorą zaznaczenie Object Browsera).
+    static func pathOrSelection(_ ctx: CommandContext) -> URL? {
+        if let u = url(ctx) { return u }
+        guard ctx.invoker == .user, let s = ctx.workspace.fileBrowser.selectedURL?.standardizedFileURL,
+              FileManager.default.fileExists(atPath: s.path) else { return nil }
+        return s
+    }
+
+    /// Katalog z argumentu `directory`, a dla użytkownika: zaznaczony katalog (albo katalog zaznaczonego pliku),
+    /// katalog pokazanej lokalizacji, a bez nich — okno wyboru katalogu.
+    static func directoryOrSelection(_ ctx: CommandContext) async throws -> URL {
+        if let u = url(ctx, "directory") { return u }
+        guard let ui = ctx.askingUI else { throw CommandError.missingArgument("directory") }
+        let fb = ctx.workspace.fileBrowser
+        if let s = pathOrSelection(ctx) { return isDirectory(s) ? s : s.deletingLastPathComponent() }
+        if let loc = fb.locations.first(where: { $0.id == fb.currentLocationID }), isDirectory(loc.url) { return loc.url.standardizedFileURL }
+        guard let d = await ui.chooseDirectory() else { throw CommandError.cancelledByUser }
+        return d.standardizedFileURL
+    }
+
+    /// Ścieżka z argumentu albo zaznaczenie; bez obu — dla użytkownika komunikat, co zaznaczyć.
+    static func requiredPath(_ ctx: CommandContext) throws -> URL {
+        if let u = pathOrSelection(ctx) { return u }
+        if ctx.askingUI != nil { throw CommandError.notAvailable(L10n.tr("Zaznacz plik albo katalog w Przeglądarce plików")) }
+        throw CommandError.missingArgument("path")
+    }
+
     static func command(_ id: CommandID, _ title: String, _ category: CommandCategory = .file, submenu: String? = nil,
                         params: [CommandParameter] = [], pd: [String] = [], mac: [String]? = nil, effect: CommandEffect,
                         summary: String, feature: String, validate: ValidationHandler? = nil, inMenu: Bool = true,
@@ -77,27 +110,64 @@ enum FileCommands {
                 return CommandResult(value: .string(loc.id.uuidString))
             },
             command("fb.removeLocation", L10n.tr("Usuń lokalizację"), submenu: fb,
-                    params: [CommandParameter("location", .string, required: true, L10n.tr("Identyfikator lokalizacji"))],
+                    params: [CommandParameter("location", .string, L10n.tr("Identyfikator lokalizacji (bez argumentu — pokazana w panelu, po potwierdzeniu)"))],
                     effect: .settings, summary: L10n.tr("Usuwa lokalizację z Przeglądarki plików (pliki zostają; lokalizacje podrzędne przechodzą wyżej)."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let id = ctx.arguments.string("location").flatMap(UUID.init(uuidString:)) else { throw CommandError.missingArgument("location") }
-                ctx.workspace.fileBrowser.remove(id)
+                let browser = ctx.workspace.fileBrowser
+                var id = ctx.arguments.string("location").flatMap(UUID.init(uuidString:))
+                // Ze wstążki — lokalizacja pokazana w panelu (po potwierdzeniu), a bez niej wybór z listy lokalizacji.
+                if ctx.arguments.string("location") == nil, let ui = ctx.askingUI {
+                    guard !browser.locations.isEmpty else { throw CommandError.notAvailable(L10n.tr("Przeglądarka plików nie ma lokalizacji")) }
+                    if let loc = browser.locations.first(where: { $0.id == browser.currentLocationID }) {
+                        guard await ui.ask(L10n.tr("Usunąć lokalizację?"),
+                                           message: L10n.tr("Lokalizacja „\(loc.name)” zniknie z Przeglądarki plików; pliki zostają."),
+                                           buttons: [L10n.tr("Usuń lokalizację"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                        id = loc.id
+                    } else {
+                        id = try await ctx.choose(L10n.tr("Usuń lokalizację"), browser.locations.map {
+                            (label: "\($0.name) — \(($0.path as NSString).abbreviatingWithTildeInPath)", value: $0.id)
+                        })
+                    }
+                }
+                guard let id else { throw CommandError.missingArgument("location") }
+                browser.remove(id)
                 return .ok
             },
             command("fb.open", L10n.tr("Otwórz jako…"), submenu: fb,
-                    params: [CommandParameter("path", .string, required: true, L10n.tr("Ścieżka pliku")),
+                    params: [CommandParameter("path", .string, L10n.tr("Ścieżka pliku (bez argumentu — plik zaznaczony w Przeglądarce plików albo wybór pliku)")),
                              CommandParameter("kind", .string, L10n.tr("Rodzaj okna (domyślnie wg rozszerzenia)"), allowed: ["sql", "program", "test", "command"])],
                     effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo poleceń (domyślnie wg rozszerzenia)."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let u = url(ctx) else { throw CommandError.missingArgument("path") }
-                let doc = try ctx.workspace.openFile(u, as: ctx.arguments.string("kind").flatMap(DocumentKind.init(rawValue:)))
-                return CommandResult(message: doc.fullTitle)
+                let files: [URL]
+                if let u = url(ctx) {
+                    files = [u]
+                } else if let u = pathOrSelection(ctx) {
+                    guard !isDirectory(u) else { throw CommandError.notAvailable(L10n.tr("Zaznacz plik w Przeglądarce plików")) }
+                    files = [u]
+                } else {
+                    // Ze wstążki bez zaznaczenia — okno wyboru plików.
+                    guard let ui = ctx.askingUI else { throw CommandError.missingArgument("path") }
+                    files = await ui.chooseFilesToOpen()
+                    guard !files.isEmpty else { throw CommandError.cancelledByUser }
+                }
+                var kind = ctx.arguments.string("kind").flatMap(DocumentKind.init(rawValue:))
+                // „Otwórz jako…” ze wstążki — pytanie o rodzaj okna (menu panelu podaje ścieżkę, a rodzaj w argumencie).
+                if url(ctx) == nil, ctx.arguments.string("kind") == nil {
+                    let options: [(label: String, value: DocumentKind?)] = [
+                        (L10n.tr("Wg rozszerzenia pliku"), nil), (L10n.tr("Okno SQL"), .sql), (L10n.tr("Okno programu"), .program),
+                        (L10n.tr("Okno testu"), .test), (L10n.tr("Okno poleceń"), .command)]
+                    kind = try await ctx.choose(L10n.tr("Otwórz jako"), options) ?? nil
+                }
+                var title = ""
+                for f in files { title = try ctx.workspace.openFile(f, as: kind).fullTitle }
+                return CommandResult(message: title)
             },
             command("fb.rename", L10n.tr("Zmień nazwę…"), submenu: fb,
-                    params: [CommandParameter("path", .string, required: true, L10n.tr("Ścieżka")), CommandParameter("name", .string, L10n.tr("Nowa nazwa"))],
+                    params: [CommandParameter("path", .string, L10n.tr("Ścieżka (bez argumentu — zaznaczenie w Przeglądarce plików)")),
+                             CommandParameter("name", .string, L10n.tr("Nowa nazwa"))],
                     effect: .external, summary: L10n.tr("Zmienia nazwę pliku albo katalogu; otwarte okno pliku wskazuje nową nazwę."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let u = url(ctx) else { throw CommandError.missingArgument("path") }
+                let u = try requiredPath(ctx)
                 var name = ctx.arguments.string("name")
                 if name == nil { name = await ctx.ui?.askText(L10n.tr("Zmień nazwę"), message: u.lastPathComponent, defaultValue: u.lastPathComponent) }
                 guard let name else { throw CommandError.cancelledByUser }
@@ -107,21 +177,24 @@ enum FileCommands {
                     if f == u { d.fileURL = target.standardizedFileURL }
                     else if f.path.hasPrefix(u.path + "/") { d.fileURL = URL(fileURLWithPath: target.path + f.path.dropFirst(u.path.count)) }
                 }
+                if ctx.workspace.fileBrowser.selectedURL?.standardizedFileURL == u { ctx.workspace.fileBrowser.selectedURL = target }
                 return CommandResult(value: .string(target.path))
             },
             command("fb.newFolder", L10n.tr("Nowy katalog…"), submenu: fb,
-                    params: [CommandParameter("directory", .string, required: true, L10n.tr("Katalog nadrzędny")), CommandParameter("name", .string, L10n.tr("Nazwa"))],
+                    params: [CommandParameter("directory", .string, L10n.tr("Katalog nadrzędny (bez argumentu — zaznaczony w Przeglądarce plików albo wybór katalogu)")),
+                             CommandParameter("name", .string, L10n.tr("Nazwa"))],
                     effect: .external, summary: L10n.tr("Tworzy katalog w Przeglądarce plików."), feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let dir = url(ctx, "directory") else { throw CommandError.missingArgument("directory") }
+                let dir = try await directoryOrSelection(ctx)
                 var name = ctx.arguments.string("name")
                 if name == nil { name = await ctx.ui?.askText(L10n.tr("Nowy katalog"), message: dir.lastPathComponent, defaultValue: "") }
                 guard let name else { throw CommandError.cancelledByUser }
                 return CommandResult(value: .string(try FileBrowser.createFolder(in: dir, name: name).path))
             },
             command("fb.newFile", L10n.tr("Nowy plik…"), submenu: fb,
-                    params: [CommandParameter("directory", .string, required: true, L10n.tr("Katalog")), CommandParameter("name", .string, L10n.tr("Nazwa pliku z rozszerzeniem"))],
+                    params: [CommandParameter("directory", .string, L10n.tr("Katalog (bez argumentu — zaznaczony w Przeglądarce plików albo wybór katalogu)")),
+                             CommandParameter("name", .string, L10n.tr("Nazwa pliku z rozszerzeniem"))],
                     effect: .external, summary: L10n.tr("Tworzy pusty plik i otwiera go w oknie odpowiednim dla rozszerzenia."), feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let dir = url(ctx, "directory") else { throw CommandError.missingArgument("directory") }
+                let dir = try await directoryOrSelection(ctx)
                 var name = ctx.arguments.string("name")
                 if name == nil { name = await ctx.ui?.askText(L10n.tr("Nowy plik"), message: dir.lastPathComponent, defaultValue: "nowy.sql") }
                 guard let name else { throw CommandError.cancelledByUser }
@@ -130,10 +203,10 @@ enum FileCommands {
                 return CommandResult(value: .string(f.path))
             },
             command("fb.trash", L10n.tr("Przenieś do Kosza"), submenu: fb,
-                    params: [CommandParameter("path", .string, required: true, L10n.tr("Ścieżka"))],
+                    params: [CommandParameter("path", .string, L10n.tr("Ścieżka (bez argumentu — zaznaczenie w Przeglądarce plików)"))],
                     effect: .external, summary: L10n.tr("Przenosi plik albo katalog do Kosza (po potwierdzeniu); otwarte okno pliku zostaje jako okno bez pliku."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
-                guard let u = url(ctx) else { throw CommandError.missingArgument("path") }
+                let u = try requiredPath(ctx)
                 if ctx.ui != nil {
                     guard await ctx.workspace.askSuppressible(.moveToTrash, title: L10n.tr("Przenieść do Kosza?"), message: u.lastPathComponent,
                                                               buttons: [L10n.tr("Przenieś do Kosza")]) == 0 else {
@@ -142,6 +215,9 @@ enum FileCommands {
                 }
                 try FileBrowser.trash(u)
                 detachDocuments(under: u, in: ctx.workspace)
+                if let s = ctx.workspace.fileBrowser.selectedURL?.standardizedFileURL, s == u || s.path.hasPrefix(u.path + "/") {
+                    ctx.workspace.fileBrowser.selectedURL = nil
+                }
                 return .ok
             },
             command("fb.showInFinder", L10n.tr("Pokaż w Finderze"), submenu: fb,

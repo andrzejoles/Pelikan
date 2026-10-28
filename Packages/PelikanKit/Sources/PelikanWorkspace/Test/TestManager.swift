@@ -157,12 +157,18 @@ enum TestManagerCommands {
                 return .ok
             },
             Command(CommandDescriptor(id: "testManager.run", title: L10n.tr("Uruchom zestaw testów"), category: .tools, submenu: L10n.tr("Test Manager"),
-                                      parameters: [CommandParameter("file", .string, required: true, L10n.tr("Plik zestawu testów (.pts)"))],
+                                      parameters: [CommandParameter("file", .string, L10n.tr("Plik zestawu testów (.pts; bez argumentu — wybór pliku)"))],
                                       agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Uruchamia zestaw testów z pliku i zwraca wynik każdego testu (zmiany testów są wycofywane)."), inMenu: false,
                                       feature: "PD-TOOL-018")) { ctx in
-                guard let path = ctx.arguments.string("file"), let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.missingArgument("file") }
-                let set = try TestSet.decode(Data(contentsOf: URL(fileURLWithPath: path)))
+                guard let conn = ctx.workspace.sessions.mainConnectionID else { throw CommandError.notConnected }
+                var url = ctx.arguments.string("file").map { URL(fileURLWithPath: ($0 as NSString).expandingTildeInPath) }
+                if url == nil, let ui = ctx.askingUI {
+                    guard let u = await ui.chooseFile(L10n.tr("Uruchom zestaw testów"), extensions: ["pts"]) else { throw CommandError.cancelledByUser }
+                    url = u
+                }
+                guard let url else { throw CommandError.missingArgument("file") }
+                let set = try TestSet.decode(Data(contentsOf: url))
                 let results = await TestManager.run(set, connectionID: conn, in: ctx.workspace)
                 return CommandResult(message: L10n.tr("Udane: \(results.filter(\.passed).count) z \(results.count)"),
                                      value: .array(results.map { .object(["name": .string($0.name), "passed": .bool($0.passed), "failures": .array($0.failures.map { .string($0) })]) }))

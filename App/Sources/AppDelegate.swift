@@ -1413,6 +1413,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         return await panel.beginSheetModal(for: window) == .OK ? panel.urls : []
     }
 
+    func chooseFile(_ title: String, extensions: [String]) async -> URL? {
+        if Self.scriptSkipsDialog(title) { return nil }
+        let panel = NSOpenPanel()
+        panel.message = title
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = extensions.compactMap { UTType(filenameExtension: $0) }
+        panel.directoryURL = workspace.startDirectory(for: Self.startDirectoryKey(workspace.activeDocument?.kind))
+        guard let window = mainWindow?.window else { return panel.runModal() == .OK ? panel.url : nil }
+        return await panel.beginSheetModal(for: window) == .OK ? panel.url : nil
+    }
+
     func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? {
         if Self.scriptSkipsDialog("chooseSaveURL") { return nil }
         let panel = NSSavePanel()

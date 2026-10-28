@@ -43,6 +43,15 @@ struct RibbonArgumentTests {
     /// elemencie listy, wiersz siatki) — z uzasadnieniem.
     static let contextOnly: [String: String] = [:]
 
+    /// Komendy wstążki, które miały parametr wymagany, a teraz bez argumentu pytają albo biorą zaznaczenie (#111, #112
+    /// i następne) — sprawdzane dalej, choć parametr nie jest już `required`.
+    static let askWhenMissing: Set<String> = [
+        "edit.insertSnippet", "edit.insertTemplate", "connection.newFolder", "fb.newFile", "fb.newFolder", "fb.open", "fb.rename",
+        "fb.trash", "fb.removeLocation", "file.encoding", "file.openWithConnection", "grid.copyAs", "grid.numberLayout",
+        "ob.generateCode", "project.new", "project.open", "templates.delete", "templates.deleteFolder", "templates.renameFolder",
+        "testManager.run", "tools.importMLEModule", "transfer.run",
+    ]
+
     @Test("komenda wstążki bez wymaganego argumentu pyta użytkownika zamiast kończyć się błędem argumentu")
     func missingArgumentsAsk() async throws {
         let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
@@ -52,8 +61,10 @@ struct RibbonArgumentTests {
         ws.activate(doc.id)
         var failures: [String] = []
         let ids = Set(RibbonModel.expand(RibbonModel.tabs.flatMap(\.commands), in: ws.registry))
+        #expect(Self.askWhenMissing.subtracting(ids).isEmpty, "poza wstążką: \(Self.askWhenMissing.subtracting(ids).sorted())")
         for id in ids.sorted() where Self.contextOnly[id] == nil {
-            guard let c = ws.registry.command(CommandID(rawValue: id)), c.descriptor.parameters.contains(where: \.required) else { continue }
+            guard let c = ws.registry.command(CommandID(rawValue: id)),
+                  Self.askWhenMissing.contains(id) || c.descriptor.parameters.contains(where: \.required) else { continue }
             ui.asked = []
             do {
                 _ = try await c.run(CommandContext(workspace: ws, invoker: .user, arguments: .empty))
@@ -66,5 +77,109 @@ struct RibbonArgumentTests {
             } catch {}
         }
         #expect(failures.isEmpty, "\(failures.joined(separator: "\n"))")
+    }
+}
+
+/// Interfejs testu z odpowiedziami: wybiera etykietę zawierającą `choice`, wpisuje `text`.
+@MainActor
+private final class AnsweringUI: UIServices {
+    var choice = ""
+    var text: String?
+    var offered: [String] = []
+    func showError(_ message: String) {}
+    func showCommandPalette() {}
+    func ask(_ title: String, message: String, buttons: [String]) async -> Int? { 0 }
+    func showConnectionEditor(connectionID: UUID?) {}
+    func showLogon() {}
+    func askVariables(_ requests: [VariableRequest], document: Document) async -> [String: VariableValue]? { nil }
+    func copyToClipboard(_ text: String, html: String?) {}
+    func saveFile(suggestedName: String, fileExtension: String, data: Data) async -> Bool { false }
+    func showLargeDataEditor(_ model: LargeDataModel) {}
+    func chooseFilesToOpen() async -> [URL] { [] }
+    func askText(_ title: String, message: String, defaultValue: String) async -> String? { text }
+    func showFindReplace() {}
+    func showObjectInfo(title: String, columns: [String], rows: [[String]]) {}
+    func showClientMissingHelp(_ message: String) {}
+    func showRecallStatement() {}
+    func chooseSaveURL(suggestedName: String, fileExtension: String) async -> URL? { nil }
+    func printHTML(title: String, html: String) {}
+    func chooseValue(_ title: String, values: [String]) async -> String? {
+        offered = values
+        return values.first { $0.contains(choice) }
+    }
+}
+
+@MainActor
+@Suite("Wstążka: argumenty z wyboru i zaznaczenia")
+struct RibbonChoiceTests {
+    func run(_ ws: Workspace, _ id: String, invoker: Invoker = .user) async throws -> CommandResult {
+        let c = try #require(ws.registry.command(CommandID(rawValue: id)))
+        return try await c.run(CommandContext(workspace: ws, invoker: invoker, arguments: .empty))
+    }
+
+    @Test("wybór etykiety z listy daje wartość; agent bez argumentu nadal dostaje błąd argumentu")
+    func labelsMapToValues() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let ui = AnsweringUI()
+        ws.ui = ui
+        ui.choice = NumberLayout.thousands.displayName
+        _ = try await run(ws, "grid.numberLayout")
+        #expect(ws.settings.gridNumberLayout == .thousands)
+        #expect(ui.offered == NumberLayout.allCases.map(\.displayName))
+
+        let doc = ws.newDocument(.sql, text: "select 1 from dual")
+        ws.activate(doc.id)
+        ui.choice = "Windows-1250"
+        _ = try await run(ws, "file.encoding")
+        #expect(doc.fileFormat.encoding == TextFileCodec.encoding(named: "Windows-1250"))
+
+        await #expect(throws: CommandError.missingArgument("layout")) {
+            _ = try await run(ws, "grid.numberLayout", invoker: .agent(sessionID: "s", agentName: "a"))
+        }
+    }
+
+    @Test("Przeglądarka plików: zaznaczenie jest domyślnym argumentem, bez zaznaczenia — komunikat, co zaznaczyć")
+    func fileBrowserSelection() async throws {
+        let t = try TempDirectory()
+        let f = try t.file("a.sql", "select 1 from dual;")
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let ui = AnsweringUI()
+        ws.ui = ui
+
+        await #expect(throws: CommandError.notAvailable(L10n.tr("Zaznacz plik albo katalog w Przeglądarce plików"))) {
+            _ = try await run(ws, "fb.trash")
+        }
+
+        ws.fileBrowser.selectedURL = f
+        ui.text = "nowy"
+        let made = try await run(ws, "fb.newFolder")
+        #expect(made.value == .string(t.url.appendingPathComponent("nowy").standardizedFileURL.path))
+
+        ui.text = "b.sql"
+        _ = try await run(ws, "fb.rename")
+        let renamed = t.url.appendingPathComponent("b.sql").standardizedFileURL
+        #expect(FileManager.default.fileExists(atPath: renamed.path))
+        #expect(ws.fileBrowser.selectedURL?.standardizedFileURL == renamed)
+
+        // Agent i skrypty nie korzystają z zaznaczenia panelu.
+        await #expect(throws: CommandError.missingArgument("path")) {
+            _ = try await run(ws, "fb.rename", invoker: .agent(sessionID: "s", agentName: "a"))
+        }
+    }
+
+    @Test("szablony użytkownika i ich foldery: wybór z listy; bez nich — odmowa zamiast błędu argumentu")
+    func templateChoices() async throws {
+        let t = try TempDirectory()
+        let ws = Workspace(dataDirectory: t.url, secrets: MemorySecretStore(), drivers: [:])
+        let ui = AnsweringUI()
+        ws.ui = ui
+        await #expect(throws: CommandError.notAvailable(L10n.tr("Brak folderów szablonów użytkownika"))) {
+            _ = try await run(ws, "templates.deleteFolder")
+        }
+        try ws.templates.save(CodeTemplate(folder: "Moje", name: "pętla", text: "loop null; end loop;"))
+        ui.choice = "Moje/pętla"
+        _ = try await run(ws, "templates.delete")
+        #expect(ws.templates.template("Moje/pętla") == nil)
+        #expect(ws.templates.userFolders == ["Moje"])
     }
 }

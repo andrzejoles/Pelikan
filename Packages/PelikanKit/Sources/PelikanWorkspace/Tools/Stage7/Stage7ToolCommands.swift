@@ -123,10 +123,16 @@ enum Stage7ToolCommands {
                  summary: L10n.tr("Przenoszenie danych z tabeli lub zapytania do tabeli w tym samym albo innym połączeniu z mapowaniem kolumn; zapis definicji."),
                  feature: "DB-XFER-001"),
             Command(CommandDescriptor(id: "transfer.run", title: L10n.tr("Wykonaj zapisane przeniesienie danych"), category: .tools,
-                                      parameters: [CommandParameter("name", .string, required: true, L10n.tr("Nazwa definicji"))],
+                                      parameters: [CommandParameter("name", .string, L10n.tr("Nazwa definicji (bez argumentu — wybór z listy zapisanych)"))],
                                       agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Wykonuje zapisaną definicję przeniesienia danych jako zadanie w tle."),
                                       inMenu: false, feature: "DB-XFER-001")) { ctx in
-                guard let name = ctx.arguments.string("name") else { throw CommandError.missingArgument("name") }
+                var name = ctx.arguments.string("name")
+                if name == nil, ctx.askingUI != nil {
+                    let names = DataTransferStore.names(in: ctx.workspace.dataDirectory)
+                    guard !names.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak zapisanych definicji przeniesienia danych")) }
+                    name = try await ctx.choose(L10n.tr("Wykonaj zapisane przeniesienie danych"), names.map { (label: $0, value: $0) })
+                }
+                guard let name else { throw CommandError.missingArgument("name") }
                 let job = try DataTransferStore.load(name, in: ctx.workspace.dataDirectory)
                 let ws = ctx.workspace
                 ws.tasks.run(L10n.tr("Przeniesienie danych: \(name)"), kind: "transfer") { t in

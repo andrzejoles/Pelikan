@@ -239,6 +239,18 @@ public struct CommandContext {
 
     public var ui: (any UIServices)? { workspace.ui }
     public var isAgent: Bool { invoker.isAgent }
+
+    /// Okno pytań, gdy komendę bez argumentu wywołał użytkownik (wstążka, menu, paleta); agent i skrypty — nil
+    /// (podają argumenty).
+    var askingUI: (any UIServices)? { invoker == .user ? ui : nil }
+
+    /// Wybór z listy z czytelnymi etykietami (L10n), zwraca wartość wybranej etykiety. nil — nie pyta (agent, skrypt,
+    /// brak okna); anulowanie — `CommandError.cancelledByUser`.
+    func choose<T>(_ title: String, _ options: [(label: String, value: T)]) async throws -> T? {
+        guard let ui = askingUI else { return nil }
+        guard let label = await ui.chooseValue(title, values: options.map(\.label)) else { throw CommandError.cancelledByUser }
+        return options.first { $0.label == label }?.value
+    }
 }
 
 public typealias CommandHandler = @MainActor @Sendable (CommandContext) async throws -> CommandResult

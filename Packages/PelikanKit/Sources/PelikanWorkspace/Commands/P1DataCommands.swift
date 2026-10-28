@@ -21,11 +21,15 @@ enum P1DataCommands {
         return [
             // MARK: Układ liczb (PD-GRID-004)
             command("grid.numberLayout", L10n.tr("Układ liczb w siatce"), .view, submenu: L10n.tr("Siatka"),
-                    params: [CommandParameter("layout", .string, required: true, L10n.tr("right, left, formatted albo thousands"))],
+                    params: [CommandParameter("layout", .string, L10n.tr("right, left, formatted albo thousands (bez argumentu — wybór z listy)"))],
                     effect: .settings,
                     summary: L10n.tr("Wyrównanie i format liczb w siatce: do prawej, do lewej, z separatorem regionalnym, z separatorem tysięcy."),
                     feature: "PD-GRID-004") { ctx in
-                guard let raw = ctx.arguments.string("layout") else { throw CommandError.missingArgument("layout") }
+                var raw = ctx.arguments.string("layout")
+                if raw == nil {
+                    raw = try await ctx.choose(L10n.tr("Układ liczb w siatce"), NumberLayout.allCases.map { (label: $0.displayName, value: $0.rawValue) })
+                }
+                guard let raw else { throw CommandError.missingArgument("layout") }
                 guard let layout = NumberLayout(rawValue: raw) else { throw CommandError.invalidArgument("layout", raw) }
                 ctx.workspace.settings.gridNumberLayout = layout
                 return CommandResult(message: layout.displayName, value: .string(layout.rawValue))

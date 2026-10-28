@@ -24,6 +24,15 @@ public enum CodeGenerator {
         }
 
         public var needsColumns: Bool { self != .call }
+
+        /// Rodzaje kodu dla typu obiektu: SQL i fragmenty dla tabel i widoków, wywołanie dla programów.
+        public static func kinds(for type: DBObjectType) -> [Kind] {
+            switch type {
+            case .table, .view, .materializedView, .synonym: allCases.filter { $0 != .call }
+            case .procedure, .function, .package, .packageBody: [.call]
+            default: []
+            }
+        }
     }
 
     public struct Column: Sendable, Hashable {
