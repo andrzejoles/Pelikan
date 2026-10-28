@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 import PelikanODPI
+import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
 
@@ -43,6 +44,15 @@ struct Stage7PlanDBTests {
         let r = try await ws.invoke("tools.autotrace")
         #expect(r.value?.stringValue?.contains("A-Rows") == true)
         #expect(ws.tasks.tasks.first?.kind == "autotrace" && ws.tasks.tasks.first?.status == .succeeded)
+        // Zmienna wiązana — wartość z okna zmiennych jak w oknie SQL (wcześniej ORA-01008).
+        let ui = TestUI()   // Workspace.ui jest słabe — test trzyma interfejs sam
+        ws.ui = ui
+        ui.variables = ["d": .text("10")]
+        doc.text = "select * from emp where deptno = :d"
+        let rb = try await ws.invoke("tools.autotrace")
+        #expect(rb.value?.stringValue?.contains("A-Rows") == true)
+        #expect(ui.askedVariables.map(\.name) == ["d"])
+        doc.text = "select * from emp where deptno = 10"
         try await ws.invoke("tools.explainPlan")
         let plan = try #require(ws.activeDocument)
         #expect(plan.kind == .explainPlan && plan.previousPlan == nil)

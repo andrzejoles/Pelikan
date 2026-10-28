@@ -133,7 +133,7 @@ public enum Autotrace {
     }
 
     /// Wykonuje polecenie z pomiarem planu rzeczywistego (zapytanie — wszystkie wiersze do `maxRows`; DML — wycofywane).
-    public static func run(_ sql: String, in s: any DatabaseSession, maxRows: Int = 100_000) async throws -> AutotraceResult {
+    public static func run(_ sql: String, binds: [BindVariable] = [], in s: any DatabaseSession, maxRows: Int = 100_000) async throws -> AutotraceResult {
         let parts = ScriptSplitter.split(sql)
         guard parts.count == 1, let only = parts.first, [.query, .dml].contains(only.category) else {
             throw CommandError.invalidArgument("sql", L10n.tr("Autotrace dla jednego zapytania albo polecenia DML"))
@@ -146,7 +146,7 @@ public enum Autotrace {
         let started = Date()
         var rows = 0
         do {
-            let r = try await s.execute(instrumented)
+            let r = try await s.execute(instrumented, binds: binds)
             if let rs = r.resultSet {
                 while rows < maxRows {
                     let b = try await s.fetch(rs.id, maxRows: 1000)

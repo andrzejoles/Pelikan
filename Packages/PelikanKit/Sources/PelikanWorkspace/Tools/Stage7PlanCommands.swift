@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 
 /// Komendy Etapu 7 (plany, DBA, zadania w tle, dokumentacja).
 @MainActor
@@ -23,9 +24,20 @@ enum Stage7PlanCommands {
                 let sql = PlanCommands.statement(of: doc)
                 guard !sql.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak polecenia")) }
                 try await ws.guardModification([sql], connectionID: conn)
+                // Zmienne wiązane (:nazwa — także zmienne PL/SQL zamienione przez ExplainPlan.prepare) i podstawienia (&) —
+                // jak w oknie SQL; bez wartości wykonanie kończyło się ORA-01008.
+                var values = doc.variableValues
+                let requests = SQLExecutor.variableRequests(ScriptSplitter.split(sql), remembered: values)
+                if !requests.isEmpty {
+                    guard let answers = await ctx.ui?.askVariables(requests, document: doc) else { throw CommandError.cancelledByUser }
+                    values.merge(answers) { $1 }
+                    doc.variableValues = values
+                }
+                let prepared = Variables.prepare(sql, values: values)
+                let binds = SQLExecutor.bindVariables(prepared)
                 let s = try await ws.sessions.session(SessionKey(connectionID: conn, purpose: .tool("autotrace")))
                 var result: AutotraceResult?
-                let task = ws.tasks.run(L10n.tr("Autotrace"), kind: "autotrace") { _ in result = try await Autotrace.run(sql, in: s) }
+                let task = ws.tasks.run(L10n.tr("Autotrace"), kind: "autotrace") { _ in result = try await Autotrace.run(prepared.sql, binds: binds, in: s) }
                 await ws.tasks.wait(task)
                 if case .failed(let m) = task.status { throw CommandError.notAvailable(m) }
                 guard let r = result else { throw CommandError.cancelledByUser }
