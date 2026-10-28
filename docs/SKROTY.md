@@ -256,6 +256,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | DB-GRID-002 |
+| Wynik › Widok pojedynczego rekordu | `grid.toggleRecordView` |  |  | Brak | PD-GRID-010 |
 | Wynik › Rekord z komentarzami kolumn | `grid.recordView` |  |  | Brak | PD-GRID-010 |
 | Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | PD-GRID-006 |
 | Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | PD-GRID-011 |
