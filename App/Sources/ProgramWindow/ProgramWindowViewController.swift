@@ -189,11 +189,13 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         Task.detached(priority: .userInitiated) {
             let outline = PLSQLOutline.parse(text)
             let units = ProgramCompiler.units(in: text)
-            let tabs = ProgramUnitTabs.tabs(units, in: text)
+            let parsed = ProgramUnitTabs.tabs(units, in: text)
+            let headers = ProgramUnitTabs.headerCount(in: text)
             await MainActor.run { [weak self] in
                 guard let self, self.document.text == text else { return }
                 // Wynik z tła także dla marginesu i komend (bez ponownego podziału na głównym wątku, R4-01).
                 self.document.cacheProgramUnits(units, forText: text)
+                let tabs = ProgramUnitTabs.keepingTabs(previous: self.editor.unitTabs, parsed: parsed, headers: headers)
                 self.tabs = tabs
                 self.document.cacheProgramUnitTabs(tabs, forText: text)
                 self.editor.unitTabs = tabs
@@ -206,23 +208,31 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         outlineNodes = outline
         contents.update(outlineNodes)
         caretMoved()
-        let signature = u.map(\.id).map { $0.components(separatedBy: "@")[0] }.joined(separator: "|")
+        // Karty z podziału edytora (także zachowane przy tekście chwilowo nierozpoznawanym jako jednostka — D192),
+        // okno z jedną jednostką — jej przycisk.
+        let entries: [(title: String, key: String, tip: String)] = tabs.count > 1
+            ? tabs.map { ($0.title, $0.key, $0.title) }
+            : u.map { unit in
+                (unit.tabTitle, unit.name + ([.packageBody, .typeBody].contains(unit.type) ? " body" : ""),
+                 "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)")
+            }
+        let signature = entries.map(\.key).joined(separator: "|")
         units = u
         guard signature != lastUnitSignature else { return }
         lastUnitSignature = signature
         unitBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
         unitButtons = []
-        for (index, unit) in u.enumerated() {
+        for (index, entry) in entries.enumerated() {
             // Klik karty — komenda rejestru (makra, skróty i agent widzą to samo przejście, D192).
-            let b = ClosureButton(title: unit.tabTitle) { [weak self] in self?.select(index) }
+            let b = ClosureButton(title: entry.title) { [weak self] in self?.select(index) }
             b.bezelStyle = .accessoryBar
             b.setButtonType(.pushOnPushOff)
             b.font = InterfaceFonts.shared.small
             unitButtons.append(b)
-            b.toolTip = "\(unit.type.rawValue) \(unit.owner.map { "\($0)." } ?? "")\(unit.name)"
+            b.toolTip = entry.tip
             // Menu karty: usunięcie jednostki z okna (PD-PROG-001).
             let menu = NSMenu()
-            let spec = unit.name + ([.packageBody, .typeBody].contains(unit.type) ? " body" : "")
+            let spec = entry.key
             menu.addItem(ClosureMenuItem(title: L10n.tr("Usuń jednostkę")) { [weak self] in
                 self?.workspace.perform("prog.removeUnit", CommandArguments(["unit": .string(spec)]))
             })

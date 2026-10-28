@@ -71,6 +71,34 @@ struct ProgramUnitTabsTests {
         #expect(appended[1].segment == b..<(len + 4))
     }
 
+    @Test("wstawienie na granicy: Powiel linię z karty przed granicą — o znak wcześniej; To-Do z karty ciała i agent — na karcie ciała")
+    func insertionAtBoundary() {
+        let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
+        let b = tabs[1].segment.lowerBound
+        // Powiel linię „/” (ostatnia linia specyfikacji): najmniejsza różnica — „/\n” w granicy, kursor w kopii.
+        #expect(ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b, inserted: "/\n", characterBefore: 0x0A, selectionAfter: b + 1))
+        // To-Do w pierwszej kolumnie pierwszej linii ciała (widoczna karta ciała).
+        #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 1, location: b, inserted: "-- TODO\n", characterBefore: 0x0A, selectionAfter: b + 7))
+        // Agent dopisuje komentarz przed CREATE ciała, gdy widoczna jest specyfikacja — kursor na początku wstawki.
+        #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b, inserted: "-- x\n", characterBefore: 0x0A, selectionAfter: b))
+        // Tekst niekończący się znakiem sprzed granicy albo wstawienie poza granicą — bez przesunięcia.
+        #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b, inserted: "x", characterBefore: 0x0A, selectionAfter: b + 1))
+        #expect(!ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: 0, location: b - 1, inserted: "/\n", characterBefore: 0x2F, selectionAfter: b))
+    }
+
+    @Test("tekst wpisany za „/” specyfikacji skleja ciało w podziale poleceń — karty zostają, dopóki nagłówki CREATE są w tekście")
+    func keepTabsWhileTyping() {
+        let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: Self.text), in: Self.text)
+        let b = tabs[1].segment.lowerBound
+        let typed = (Self.text as NSString).replacingCharacters(in: NSRange(location: b - 1, length: 0), with: "\nabc")
+        let parsed = ProgramUnitTabs.tabs(ProgramCompiler.units(in: typed), in: typed)
+        #expect(parsed.isEmpty)
+        #expect(ProgramUnitTabs.headerCount(in: typed) == 2)
+        #expect(ProgramUnitTabs.keepingTabs(previous: tabs, parsed: parsed, headers: 2) == tabs)
+        // Jednostka usunięta (nagłówka już nie ma) — karty znikają.
+        #expect(ProgramUnitTabs.keepingTabs(previous: tabs, parsed: [], headers: 1).isEmpty)
+    }
+
     @Test("komendy edycji i dodatkowe kursory nie wychodzą poza kartę; walidacja z pamięci kart; Usuń jednostkę — jednostka karty")
     func editBounds() async throws {
         let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])

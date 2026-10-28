@@ -2050,3 +2050,14 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
 - **Podzielony edytor:** bez dodatkowych kursorów zaznaczenie główne stosuje tylko `syncFromModel`, który pomija
   panel, gdy pisze się w drugim (`peerActive`) — pasywny panel podziału (okna SQL, programu, testu) nie przesuwa
   kursora za aktywnym, tak jak dotąd przy wpisywaniu tekstu.
+- **Wstawienie na granicy i rysowanie (czwarte przejście przeglądu):** wstawienie z modelu w granicy kart edytor
+  stosuje o znak wcześniej tylko dla tekstu dopisanego na końcu widocznej karty, gdy kursor po zmianie jest wewnątrz
+  wstawki (Powiel linię) — To-Do w pierwszej linii ciała albo komentarz agenta przed CREATE zostają na karcie
+  późniejszej. Po zmianie tekstu z modelu edytor przewija do kursora tylko, gdy kursor był widoczny albo zmiana go
+  obejmuje (edycja agenta gdzie indziej, Zamień wszystko, formatowanie nie odrywają od czytanego miejsca). Tekst
+  wpisany za kończącym „/” specyfikacji skleja się w podziale poleceń z ciałem (jak w SQL*Plus — ciało przestaje być
+  rozpoznawane); dopóki nagłówki CREATE są w tekście, karty zostają (przesuwane przy pisaniu) zamiast nagłego
+  pokazania całego tekstu, a pasek kart pokazuje karty edytora. Po zmianie ukrytego tekstu i po zmianie tekstu
+  z komendy edytor układa obszar widoku jeszcze raz w następnym obiegu pętli — dolne linie (numery w marginesie bez
+  tekstu) były puste do kliknięcia. Odtworzone w oknie programu z kartami (zmiana kart, dopisanie tekstu z komendy
+  i z klawiatury za „/”); w oknie bez kart przy pisaniu z klawiatury nie występowało.

@@ -664,6 +664,24 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         textView.needsDisplay = true
         ruler.needsDisplay = true
+        scheduleViewportRefresh()
+    }
+
+    private var viewportRefreshScheduled = false
+
+    /// Drugi układ obszaru widoku po bieżącym obiegu pętli: widok tekstu zmienia wysokość dopiero po układzie, a fragmenty
+    /// poza poprzednią wysokością (dolne linie po zmianie karty, po dopisaniu tekstu z komendy) zostawały puste — numery
+    /// w marginesie były, tekstu nie — do kliknięcia albo przewinięcia.
+    private func scheduleViewportRefresh() {
+        guard !viewportRefreshScheduled else { return }
+        viewportRefreshScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.viewportRefreshScheduled = false
+            self.textView.textLayoutManager?.textViewportLayoutController.layoutViewport()
+            self.textView.needsDisplay = true
+            self.ruler.needsDisplay = true
+        }
     }
 
     private func unitHidden() -> [Range<Int>] {
@@ -764,11 +782,15 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let selection = document.selectedRange
         let error = document.errorRange
         // Sama zmiana zaznaczenia nie zmienia wersji tekstu — bez porównania całego dokumentu.
-        var textApplied = false
+        // Przewinięcie do kursora po zmianie tekstu z modelu tylko, gdy kursor był widoczny albo zmiana go obejmuje —
+        // edycja agenta w innym miejscu, Zamień wszystko czy formatowanie nie odrywają od czytanego fragmentu.
+        var followCaret = false
         if document.textRevision != syncedRevision, text != textView.string {
-            applyExternal(text)
+            let caret = textView.selectedRange().location
+            let wasVisible = isVisible(caret)
+            let changed = applyExternal(text)
             scheduleAnalysis()
-            textApplied = true
+            followCaret = wasVisible || (caret >= changed.location && caret <= NSMaxRange(changed))
         } else {
             syncedRevision = document.textRevision
         }
@@ -785,10 +807,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             applyingModelSelection = false
             scrollToSelection(wanted)
             selectionDidChange()
-        } else if textApplied, current == wanted {
+        } else if followCaret, current == wanted {
             // Zmiana tekstu z komendy (np. Powiel linię): widok sam przesunął kursor tam, gdzie chce model — bez
             // zmiany zaznaczenia nie było przewinięcia do kursora ani odświeżenia pozycji na pasku.
-            DispatchQueue.main.async { [weak self] in self?.scrollToSelection(wanted) }
+            DispatchQueue.main.async { [weak self] in
+                self?.scrollToSelection(wanted)
+                self?.scheduleViewportRefresh()
+            }
             selectionDidChange()
         }
         if let error {
@@ -810,7 +835,9 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
     }
 
-    private func applyExternal(_ text: String) {
+    /// Zwraca zakres zmienionego fragmentu w starym tekście.
+    @discardableResult
+    private func applyExternal(_ text: String) -> NSRange {
         let old = textView.string as NSString
         let new = text as NSString
         // Wspólny początek i koniec — zamieniamy tylko środek.
@@ -825,8 +852,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         // znakiem co ten przed granicą — zwykle „\n”): np. Powiel linię w ostatniej linii karty wstawia kopię na końcu
         // tej karty, a najmniejsza różnica wskazuje początek następnej (tekst na granicy należy do karty późniejszej).
         let rep = replacement as NSString
-        if range.length == 0, rep.length > 0, range.location > 0, tabs.dropFirst().contains(where: { $0.segment.lowerBound == range.location }),
-           old.character(at: range.location - 1) == rep.character(at: rep.length - 1) {
+        if range.length == 0, range.location > 0,
+           ProgramUnitTabs.appliesBeforeBoundary(tabs, shownTab: shownTab, location: range.location, inserted: replacement,
+                                                 characterBefore: old.character(at: range.location - 1),
+                                                 selectionAfter: document.selectedRange.lowerBound) {
             replacement = old.substring(with: NSRange(location: range.location - 1, length: 1)) + rep.substring(to: rep.length - 1)
             range.location -= 1
         }
@@ -855,6 +884,16 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         }
         ruler.needsDisplay = true
         scheduleRegions()
+        return NSRange(location: prefix, length: old.length - prefix - suffix)
+    }
+
+    /// Czy pozycja jest w widocznym obszarze edytora (przed zmianą tekstu — czy przewijać potem do kursora).
+    private func isVisible(_ offset: Int) -> Bool {
+        guard let tlm = textView.textLayoutManager, let content = tlm.textContentManager,
+              let loc = content.location(content.documentRange.location, offsetBy: min(offset, textView.textLength)),
+              let f = tlm.textLayoutFragment(for: loc)?.layoutFragmentFrame else { return false }
+        let line = f.offsetBy(dx: 0, dy: textView.textContainerInset.height)
+        return line.maxY > textView.visibleRect.minY && line.minY < textView.visibleRect.maxY
     }
 
     // MARK: Podświetlanie przyrostowe (po każdej edycji magazynu tekstu)
