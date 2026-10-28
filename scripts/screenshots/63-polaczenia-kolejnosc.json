@@ -1,0 +1,7 @@
+[
+  {"command": "connection.newFolder", "args": {"name": "Zeta"}, "delay": 1},
+  {"command": "connection.newFolder", "args": {"name": "alfa"}, "delay": 1},
+  {"command": "connection.duplicate", "args": {"connection": "dev_baza_testowa", "name": "dev_aaa_kopia"}, "delay": 1},
+  {"command": "connection.moveToFolder", "args": {"connection": "dev_aaa_kopia", "folder": "alfa"}, "delay": 1},
+  {"command": "connection.moveToFolder", "args": {"connection": "dev_baza_druga", "folder": "Zeta"}, "delay": 2}
+]

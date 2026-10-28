@@ -12,7 +12,10 @@ Pod połączeniem widać jego otwarte okna.
   połączeniu głównym.
 - Menu kontekstowe połączenia: **Połącz jako główne**, **Połącz** (bez zmiany głównego), **Rozłącz**, **Nowe okno**
   (okno SQL, programu, testu albo poleceń na tym połączeniu), **Pokaż okna połączenia**, **Zamknij okna połączenia**,
-  **Połącz ponownie okna połączenia**, **Ustaw bieżący schemat…**, **Edytuj…** i **Usuń…**.
+  **Połącz ponownie okna połączenia**, **Ustaw bieżący schemat…**, **Edytuj…**, **Kopiuj pod inną nazwą…** (kopia w tym samym folderze, z zapisanymi
+  hasłami), **Przenieś do folderu** i **Usuń…**.
+- Foldery i połączenia są ułożone alfabetycznie. Połączenie przeciągnięte myszą na folder trafia do niego, a na wolne
+  miejsce listy — na poziom główny.
 - Przyciski nad listą tworzą nowe połączenie (**+**) i folder oraz odświeżają listę.
 
 Możesz też użyć okna logowania: **Sesja › Zaloguj…** (⇧⌘L). Pokazuje ono wszystkie definicje z wyszukiwarką i pozwala

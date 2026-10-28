@@ -12,7 +12,10 @@ used ones. The connection's open windows are listed under it.
   connection.
 - The connection's context menu: **Connect as main**, **Connect** (without changing the main connection),
   **Disconnect**, **New window** (SQL, program, test or command window on this connection), **Show Connection Windows**,
-  **Close Connection Windows**, **Reconnect Connection Windows**, **Set Current Schema…**, **Edit…** and **Delete…**.
+  **Close Connection Windows**, **Reconnect Connection Windows**, **Set Current Schema…**, **Edit…**, **Copy Under Another Name…** (a copy in the same folder, with the saved
+  passwords), **Move to Folder** and **Delete…**.
+- Folders and connections are sorted alphabetically. Drag a connection onto a folder to move it there, or onto empty
+  space in the list to move it to the top level.
 - The buttons above the list create a new connection (**+**) and a folder, and refresh the list.
 
 You can also use the logon window: **Session › Log on…** (⇧⌘L). It shows all definitions with a search field and lets

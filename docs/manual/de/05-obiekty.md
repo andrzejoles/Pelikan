@@ -10,15 +10,21 @@ weitere. Auf Datenbanken 23ai und 26ai kommen **MLE-Module**, **MLE-Umgebungen**
 **Annotationen** und **Assertions** hinzu. Ordner erscheinen nur, wenn die Datenbankversion und Ihre Berechtigungen es
 zulassen.
 
-Auf der obersten Ebene des Baums stehen die **geöffneten Verbindungen** — wie in DBeaver. Die Hauptverbindung steht
-zuerst, mit Stern, fett und mit „Haupt“ beschriftet; die anderen erscheinen nach dem Verbinden (z. B. über ein Fenster
-auf einer anderen Verbindung oder **Verbinden** in der Verbindungsliste) und verschwinden nach dem Trennen. Jede
-Verbindung hat eigene Ordner, **Zuletzt** und eine eigene Benutzerauswahl. Aktionen an einem Objekt (Daten anzeigen,
-Bearbeiten, DDL, Neu kompilieren, Ziehen in den Editor …) wirken auf die Verbindung des Zweigs, und Fenster für ein
-Objekt einer anderen als der Hauptverbindung sind an sie angeheftet. Das Verbindungsmenü im Baum: **Als
-Hauptverbindung festlegen**, **Neues SQL-Fenster auf dieser Verbindung**, **Aktualisieren**, **Verbindung
-bearbeiten …** und **Trennen**. Die Hauptverbindung gilt nur dann, wenn sich aus dem Kontext keine andere ergibt — ein
-neues Fenster aus dem Menü, ein Werkzeug ohne aktives Fenster.
+Auf der obersten Ebene des Baums stehen die **geöffneten Verbindungen** — wie in DBeaver. Die Verbindungen sind
+alphabetisch sortiert; die Hauptverbindung ist mit Stern markiert, fett und mit „Haupt“ beschriftet; die anderen
+erscheinen nach dem Verbinden (z. B. über ein Fenster auf einer anderen Verbindung oder **Verbinden** in der
+Verbindungsliste) und verschwinden nach dem Trennen. Jede Verbindung hat eigene Ordner, **Zuletzt** und eine eigene
+Benutzerauswahl. Aktionen an einem Objekt (Daten anzeigen, Bearbeiten, DDL, Neu kompilieren, Ziehen in den Editor …)
+wirken auf die Verbindung des Zweigs, und Fenster für ein Objekt einer anderen als der Hauptverbindung sind an sie
+angeheftet. Das Verbindungsmenü im Baum: **Als Hauptverbindung festlegen**, **Neues SQL-Fenster auf dieser
+Verbindung**, **Aktualisieren**, **Verbindung bearbeiten …** und **Trennen**. Die Hauptverbindung gilt nur dann, wenn
+sich aus dem Kontext keine andere ergibt — ein neues Fenster aus dem Menü, ein Werkzeug ohne aktives Fenster.
+
+Am Ende der Ordner jeder Verbindung stehen **DBA** — Data-Dictionary-Objekte mit dem Präfix `DBA_` — und **DBMS** —
+Objekte mit dem Präfix `DBMS_`, vor allem Oracle-Pakete. Sie zeigen nur Objekte, für die Sie Berechtigungen haben
+(direkt, über eine Rolle oder an PUBLIC erteilt); öffentliche Synonyme werden ausgelassen, Objekte des Schemas SYS
+ohne das Präfix „SYS.“ angezeigt. Die Objekte lassen sich wie in den anderen Ordnern aufklappen und öffnen, auch der
+Namensfilter gilt.
 
 - **Benutzerauswahl** über dem Baum (für jede Verbindung getrennt):
   - *Aktueller Benutzer* — Objekte Ihres Schemas sowie öffentliche Datenbank-Links und öffentliche Synonyme von

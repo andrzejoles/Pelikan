@@ -10,15 +10,21 @@ carpetas por tipo: **Funciones**, **Procedimientos**, **Paquetes**, **Cuerpos de
 **Grafos de propiedades**, **Anotaciones** y **Aserciones**. Las carpetas solo aparecen si la versión de la base de
 datos y tus privilegios lo permiten.
 
-En el nivel superior del árbol están las **conexiones abiertas**, como en DBeaver. La conexión principal va primero,
-marcada con una estrella, en negrita y con la etiqueta «principal»; las demás aparecen al conectarse (por ejemplo, con
-una ventana en otra conexión o **Conectar** en la lista de conexiones) y desaparecen al desconectarse. Cada conexión
-tiene sus propias carpetas, **Recientes** y selección de usuario. Las acciones sobre un objeto (Mostrar datos, Editar,
-DDL, Recompilar, arrastrar al editor…) actúan sobre la conexión de la rama, y las ventanas abiertas para un objeto de
-una conexión distinta de la principal quedan fijadas a ella. El menú de la conexión en el árbol: **Establecer como
-conexión principal**, **Nueva ventana SQL en esta conexión**, **Actualizar**, **Editar conexión…** y **Desconectar**.
-La conexión principal es la predeterminada solo cuando el contexto no indica otra: una ventana nueva desde el menú, una
-herramienta sin ventana activa.
+En el nivel superior del árbol están las **conexiones abiertas**, como en DBeaver. Las conexiones se ordenan
+alfabéticamente; la principal está marcada con una estrella, en negrita y con la etiqueta «principal»; las demás
+aparecen al conectarse (por ejemplo, con una ventana en otra conexión o **Conectar** en la lista de conexiones) y
+desaparecen al desconectarse. Cada conexión tiene sus propias carpetas, **Recientes** y selección de usuario. Las
+acciones sobre un objeto (Mostrar datos, Editar, DDL, Recompilar, arrastrar al editor…) actúan sobre la conexión de la
+rama, y las ventanas abiertas para un objeto de una conexión distinta de la principal quedan fijadas a ella. El menú
+de la conexión en el árbol: **Establecer como conexión principal**, **Nueva ventana SQL en esta conexión**,
+**Actualizar**, **Editar conexión…** y **Desconectar**. La conexión principal es la predeterminada solo cuando el
+contexto no indica otra: una ventana nueva desde el menú, una herramienta sin ventana activa.
+
+Al final de las carpetas de cada conexión están **DBA** —objetos del diccionario con el prefijo `DBA_`— y **DBMS**
+—objetos con el prefijo `DBMS_`, sobre todo paquetes de Oracle—. Muestran solo los objetos sobre los que tienes
+privilegios (concedidos directamente, mediante un rol o a PUBLIC); se omiten los sinónimos públicos y los objetos del
+esquema SYS aparecen sin el prefijo «SYS.». Los objetos se despliegan y se abren como en las demás carpetas, y el
+filtro de nombres también se aplica.
 
 - **Selección de usuario** sobre el árbol (por separado para cada conexión):
   - *Usuario actual*: objetos de tu esquema más los enlaces de base de datos públicos y los sinónimos públicos de

@@ -1891,3 +1891,30 @@ sesji); eksport danych strumieniowo do pliku; zamknięcie okna z niezatwierdzony
 luka); ostrzeżenie o utracie uprawnień przy zmianie nazwy widoku; parser `ls -la` i `scp(download:)` zostają jako
 PC-SSH-004/002; upuszczenie narzędzia w oknie głównym poza panelami nadal je odłącza (D183); Xcode 27.2 w CI i 27.1
 lokalnie oraz odtworzenie lokalnego kontenera bazy z przypiętego obrazu (`testdb.sh reset`) — do decyzji właściciela.
+
+### D190 · 2026-10-28 — Kolejność alfabetyczna połączeń, kopia i przenoszenie połączeń, foldery DBA i DBMS (zmienia D185)
+
+Właściciel poprosił: foldery i połączenia na liście połączeń alfabetycznie, kopia połączenia pod inną nazwą,
+przenoszenie połączeń między folderami myszą, połączenia w zakładce Obiekty też alfabetycznie, a w Obiektach na końcu
+folderów DBA i DBMS z obiektami `DBA_…` i `DBMS_…`, do których użytkownik ma uprawnienia.
+
+- **Kolejność:** `ConnectionStore.subfolders(of:)` i `connections(in:)` zwracają foldery i połączenia alfabetycznie
+  (`localizedStandardCompare` — bez wielkości liter, liczby naturalnie: „baza 2” przed „Baza 10”), także połączenia
+  dopasowane regułą folderu; folder „Ostatnie” zostaje w kolejności użycia. Gałęzie Object Browsera alfabetycznie tą
+  samą regułą (`ConnectionStore.alphabetical`) — **zmiana D185** („główne pierwsze”): połączenie główne nie jest już
+  przesuwane na początek, wyróżniają je nadal ★, pogrubienie i dopisek „główne”.
+- **Kopia:** komenda `connection.duplicate` (Sesja › Połączenia, wstążka, menu kontekstowe „Kopiuj pod inną nazwą…”;
+  agent — Brak): pyta o nazwę (domyślnie „<nazwa> (kopia)”), kopia w tym samym folderze z nowym identyfikatorem, bez
+  historii użycia; zapisane hasło bazy i hasło SSH tunelu kopiowane w Pęku kluczy pod nowe konto, hasło tylko z tej
+  sesji — tylko do pamięci (jak oryginał). Błąd zapisu listy usuwa skopiowane hasła.
+- **Przenoszenie:** komenda `connection.moveToFolder` (argumenty `connection` i `folder` — id albo nazwa, bez folderu —
+  poziom główny; `inMenu: false`), wywoływana przez przeciągnięcie połączenia na folder albo wolne miejsce listy
+  (upuszczenie na połączenie — do jego folderu; „Ostatnie” i okna nie są celem) i przez podmenu „Przenieś do folderu”
+  (dostęp z klawiatury i VoiceOver). Przeciągane są tylko połączenia, nie foldery.
+- **Foldery DBA i DBMS** (na końcu gałęzi każdego połączenia, po folderach typów): `MetadataProvider.systemObjects`
+  czyta ALL_OBJECTS z nazwą `DBA\_%` / `DBMS\_%` (podkreślenie dosłownie), wszyscy właściciele — ALL_OBJECTS pokazuje
+  obiekt innego schematu tylko z uprawnieniem (wprost, przez rolę, PUBLIC), więc lista odpowiada uprawnieniom.
+  Pominięte synonimy (publiczne synonimy `DBA_…` i `DBMS_…` widzi każdy, także bez uprawnień do obiektu — sprawdzone
+  na użytkowniku agenta testów: synonim DBA_USERS widoczny, widok nie), ciała pakietów i typów oraz klasy Java.
+  Obiekty schematu SYS bez przedrostka „SYS.”; filtr nazw działa jak w innych folderach, filtr nazwany i filtry
+  stanu/źródła — nie (jak katalogi). Wynik w pamięci podręcznej do odświeżenia.
