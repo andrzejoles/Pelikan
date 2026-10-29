@@ -157,17 +157,22 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private lazy var sidebarToggle = SidebarToggleAccessory(workspace: workspace) { [weak self] in self?.isSidebarVisible ?? true }
     private var sidebarResizeObserver: (any NSObjectProtocol)?
     private static let splitAutosaveName = "PelikanMainSplit"
-    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie. Aktualna po
-    /// każdej zmianie podziału przy widocznej kolumnie poza przeciąganiem podziału i animacją zwijania (zwinięcie
-    /// przeciągnięciem zostawia szerokość z początku ruchu); przy chowaniu komendą — szerokość z tej chwili; na starcie
-    /// z autozapisu podziału, gdy kolumna była schowana.
+    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie: przy chowaniu
+    /// komendą — szerokość z tej chwili, przy zwinięciu przeciągnięciem — ostatnia szerokość ≥ minimum przed zwinięciem;
+    /// na starcie z autozapisu podziału, gdy kolumna była schowana.
     private var sidebarWidthBeforeCollapse: CGFloat = 260
-    /// Trwa animacja pokazania/schowania — pośrednie szerokości nie są zapamiętywane.
-    private var sidebarAnimating = false
+    /// Ostatnia szerokość widocznej kolumny (≥ minimum) z każdej zmiany podziału — także przy przeciąganiu podziału
+    /// i zmianie rozmiaru okna. Przy zwinięciu przeciągnięciem staje się szerokością sprzed schowania.
+    private var lastSidebarWidth: CGFloat = 260
+    private var sidebarWasCollapsed = false
+    /// Trwające animacje pokazania/schowania (szybkie przełączenia nakładają się) — pośrednie szerokości pomijane.
+    private var sidebarAnimations = 0
 
     /// Śledzi szerokość i widoczność lewej kolumny (przycisk na pasku tytułu, VoiceOver).
     private func observeSidebar() {
         if let width = Self.autosavedSidebarWidth(), width >= (sidebarItem?.minimumThickness ?? 220) { sidebarWidthBeforeCollapse = width }
+        lastSidebarWidth = sidebarWidthBeforeCollapse
+        sidebarWasCollapsed = sidebarItem?.isCollapsed ?? false
         sidebarResizeObserver = NotificationCenter.default.addObserver(forName: NSSplitView.didResizeSubviewsNotification,
                                                                        object: split.splitView, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.sidebarDidResize() }
@@ -175,12 +180,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     private func sidebarDidResize() {
-        // Przeciąganie podziału (mysz wciśnięta) — szerokość z początku ruchu zostaje; po puszczeniu zapisze ją następna
-        // zmiana podziału, schowanie komendą albo odczyt układu (widoczna kolumna — bieżąca szerokość).
-        let dragging = [.leftMouseDragged, .leftMouseDown].contains(NSApp.currentEvent?.type)
-        if !sidebarAnimating, !dragging, let item = sidebarItem, !item.isCollapsed {
-            let width = item.viewController.view.frame.width
-            if width >= item.minimumThickness { sidebarWidthBeforeCollapse = width }
+        if let item = sidebarItem {
+            if !item.isCollapsed, sidebarAnimations == 0 {
+                let width = item.viewController.view.frame.width
+                if width >= item.minimumThickness { lastSidebarWidth = width }
+            }
+            // Zwinięcie (przeciągnięciem; komenda zapisała już szerokość sama) — ostatnia szerokość przed zwinięciem.
+            if item.isCollapsed, !sidebarWasCollapsed, sidebarAnimations == 0 { sidebarWidthBeforeCollapse = lastSidebarWidth }
+            sidebarWasCollapsed = item.isCollapsed
         }
         sidebarToggle.refresh()
     }
@@ -214,11 +221,13 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             sidebarToggle.refresh()
             return
         }
-        sidebarAnimating = true
+        sidebarAnimations += 1
         NSAnimationContext.runAnimationGroup({ _ in item.animator().isCollapsed = !visible }, completionHandler: { [weak self] in
             MainActor.assumeIsolated {
-                self?.sidebarAnimating = false
-                self?.sidebarToggle.refresh()
+                guard let self else { return }
+                self.sidebarAnimations -= 1
+                self.sidebarWasCollapsed = self.sidebarItem?.isCollapsed ?? false
+                self.sidebarToggle.refresh()
             }
         })
         sidebarToggle.refresh()

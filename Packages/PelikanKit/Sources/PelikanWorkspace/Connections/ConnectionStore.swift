@@ -179,15 +179,15 @@ public final class ConnectionStore {
         return names.joined(separator: " / ")
     }
 
-    /// Folder z argumentu komendy, bez wielkości liter:
+    /// Folder z argumentu komendy (odstępy na brzegach pomijane), bez wielkości liter:
     /// - identyfikator;
     /// - nazwa bez „/” — folder o tej nazwie na dowolnym poziomie; kilka takich — błąd z prośbą o identyfikator albo ścieżkę;
     /// - ścieżka („Zespół / Archiwum”): odstępy wokół „/” dowolne, puste człony pomijane („Zespół//Archiwum”,
     ///   „/Zespół/Archiwum/” — to samo); kilka pasujących (folder z importu z „/” w nazwie) — błąd jak wyżej; żadna —
     ///   jeszcze cały tekst jako nazwa (folder z „/” w nazwie).
     public func resolveFolder(_ spec: String) throws -> UUID {
-        if let id = UUID(uuidString: spec), folders.contains(where: { $0.id == id }) { return id }
         let trimmed = spec.trimmingCharacters(in: .whitespaces)
+        if let id = UUID(uuidString: trimmed), folders.contains(where: { $0.id == id }) { return id }
         func ambiguous(_ found: [ConnectionFolder]) -> CommandError {
             let examples = found.compactMap { path(of: $0.id) }.sorted().map { "„\($0)”" }.joined(separator: ", ")
             return CommandError.invalidArgument("folder", L10n.tr("niejednoznaczna nazwa folderu „\(trimmed)” — podaj identyfikator albo ścieżkę (\(examples))"))

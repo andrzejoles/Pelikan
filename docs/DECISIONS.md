@@ -2317,7 +2317,9 @@ sprzątania (właściciel z `owner.pid` już nie działa) są usuwane przy nast�
 kończy skrypt błędem; okna modalne i arkusze w trybie skryptu trafiają do dziennika `.log`, a zrzut treści WKWebView ma
 limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz). **Zmiana D204:** klon ma
 osobny identyfikator `<id>.screenshots` (osobna domena UserDefaults i usługa pęku kluczy), ustawienia czyszczone przed
-każdym scenariuszem i w sprzątaniu; w trybie skryptu bez autozapisu ramki okna, układu paska i podziału.
+każdym scenariuszem i w sprzątaniu (także „Saved Application State” i pamięć podręczna klonu); w trybie skryptu bez
+autozapisu ramki okna, układu paska i podziału. Język: wyczyszczona domena nie ma nadpisania języka aplikacji, więc
+klon dostaje `-AppleLanguages (pl)` w argumentach uruchomienia — zrzuty po polsku niezależnie od języka systemu.
 
 ### D197 · 2026-10-29 — Pliki zmienione przez inny program: wykrywanie przy aktywacji i wczytanie ponowne
 
@@ -2491,9 +2493,11 @@ Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/poka
 - **Układ okna:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna widoczna, widoczna
   kolumna nie zapisuje pola); **Widok › Zapisz układ okna** i autozapis układu (opis komendy wymienia schowanie
   kolumny). Worksety nie zapisują układu okna. Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania:
-  aktualizowana po każdej zmianie podziału przy widocznej kolumnie, ale nie w trakcie animacji pokazania/schowania
-  (flaga do `completionHandler` z `NSAnimationContext.runAnimationGroup`) ani przeciągania podziału myszą (zwinięcie
-  przeciągnięciem zostawia szerokość z początku ruchu); przy chowaniu komendą — szerokość z tej chwili; na starcie
+  ostatnia szerokość widocznej kolumny (≥ minimum) jest zapamiętywana po każdej zmianie podziału — także przy
+  przeciąganiu podziału i zmianie rozmiaru okna — poza animacją pokazania/schowania (licznik trwających animacji,
+  zmniejszany w `completionHandler` z `NSAnimationContext.runAnimationGroup`; szybkie przełączenia się nakładają);
+  przy zwinięciu przeciągnięciem szerokością sprzed schowania staje się ta ostatnia szerokość ≥ minimum przed
+  zwinięciem; przy chowaniu komendą — szerokość z tej chwili; na starcie
   z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit” — format wewnętrzny AppKit, nieudokumentowany:
   nieczytelny daje szerokość domyślną 260 pt); po przywróceniu układu ze schowaną kolumną — szerokość z układu, nie
   mniej niż minimum kolumny (220 pt).
@@ -2519,6 +2523,10 @@ Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/poka
   dozwolone). Wynik (`resolvedArguments`, `ConnectionStore.argument(for:)`) podaje ścieżkę folderu — przenośną między
   instalacjami — a identyfikator, gdy ścieżka nie wskazuje jednoznacznie tego folderu (folder z „/” w nazwie, powtórzona
   ścieżka). Dziś makra nie nagrywają komend ze skutkiem „ustawienia”, więc dotyczy to dziennika i przyszłych makr.
+  Odstępy na brzegach argumentu są pomijane przed rozpoznaniem identyfikatora. **Znane ograniczenie:** folder z „/”
+  w nazwie (tylko z importu) nie da się wskazać ścieżką, gdy ta sama ścieżka pasuje do innego folderu (np. „Dev/Test”
+  i „Dev” › „Test”) — wtedy tylko identyfikatorem albo z listy wyboru; nazwy takiego folderu nie zmienia się
+  automatycznie.
 - **Zabezpieczenie:** `ConnectionStore.deletionBlocker` — usuwany jest tylko folder bez połączeń przypisanych jawnie
   i bez podfolderów (nic nie znika razem z nim, więc **bez pytania potwierdzającego**). Niepusty: komunikat „Folder
   „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”.

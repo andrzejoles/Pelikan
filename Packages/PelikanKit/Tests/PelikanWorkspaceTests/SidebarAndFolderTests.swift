@@ -193,6 +193,7 @@ struct SidebarAndFolderTests {
         #expect(try store.resolveFolder("projekty/archiwum") == a2.id)
         #expect(try store.resolveFolder(" Zespół /  ARCHIWUM ") == a1.id)
         #expect(try store.resolveFolder(a1.id.uuidString) == a1.id)
+        #expect(try store.resolveFolder("  \(a1.id.uuidString) ") == a1.id)
         #expect(try store.resolveFolder("zespół") == team.id)
         do {
             _ = try store.resolveFolder("Archiwum")
