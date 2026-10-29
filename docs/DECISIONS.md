@@ -2315,7 +2315,11 @@ okna); każdy przebieg ma własny katalog `mktemp` (klon, dane — równoległe 
 sprzątany w `trap` razem z niewidocznymi instancjami (sesje w bazie testowej); katalogi przebiegów przerwanych bez
 sprzątania (właściciel z `owner.pid` już nie działa) są usuwane przy następnym starcie. Scenariusz bez żadnego zrzutu
 kończy skrypt błędem; okna modalne i arkusze w trybie skryptu trafiają do dziennika `.log`, a zrzut treści WKWebView ma
-limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz).
+limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz). **Zmiana D204:** klon ma
+osobny identyfikator `<id>.screenshots` (osobna domena UserDefaults i usługa pęku kluczy), ustawienia czyszczone przed
+każdym scenariuszem i w sprzątaniu (także „Saved Application State” i pamięć podręczna klonu); w trybie skryptu bez
+autozapisu ramki okna, układu paska i podziału. Język: wyczyszczona domena nie ma nadpisania języka aplikacji, więc
+klon dostaje `-AppleLanguages (pl)` w argumentach uruchomienia — zrzuty po polsku niezależnie od języka systemu.
 
 ### D197 · 2026-10-29 — Pliki zmienione przez inny program: wykrywanie przy aktywacji i wczytanie ponowne
 
@@ -2738,6 +2742,168 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   opcji (i wybór miejsca warunku) pokazuje jej przykład. Test pilnuje, że **każda wartość każdej opcji** (i każdej
   reguły AND/OR każdego miejsca) zmienia przypisany przykład i zmiana jest zaznaczona.
 
+### D203 · 2026-10-29 — Struktury sterujące w Zawartości kodu
+
+Prośba właściciela: „W drzewku struktury kodu brakuje mi jeszcze wszystkich tych elementów/bloków, które kończą się END
+(IF .. END IF, LOOP .. END LOOP, każde BEGIN .. END, CASE .. END, jeżeli jest instrukcją PL/SQL, a nie w SQL itd.)”.
+
+- **Parser** (`PLSQLOutline.parse(_:controlFlow:)`, `parseScriptOutline(…controlFlow:)`): blok czytany instrukcja po
+  instrukcji — nowe rodzaje elementów `ifStatement` (dzieci: struktury gałęzi THEN oraz gałęzie `elsifBranch`
+  i `elseBranch` jako węzły podrzędne — skok do ELSE jednym kliknięciem), `loop` (LOOP, FOR liczbowa i kursorowa, także
+  `FOR r IN (SELECT …) LOOP`, WHILE — nazwa to słowo otwierające), `forall` (bez END — element do średnika),
+  `caseStatement` z `whenBranch`/`elseBranch`, `exceptionSection` z `exceptionHandler` (WHEN wyjątek [OR …]),
+  `beginSection` (inicjalizacja ciała pakietu), `timingPoint` (punkty czasowe wyzwalacza złożonego). Bloki zagnieżdżone
+  (`block`, także z DECLARE) jak dotąd. Etykieta `<<nazwa>>` w nowym polu `OutlineNode.label`. Nazwa węzła to słowo
+  otwierające wielkimi literami, szczegóły — dalszy nagłówek z białymi znakami zwiniętymi (do 1000 znaków). Zakres: od
+  słowa otwierającego do `END …;` (z etykietą); struktura i blok z etykietą — od `<<` etykiety (Wytnij, Zaznacz i Kopiuj
+  biorą też linię etykiety), przejście dalej do słowa otwierającego; gałąź — do następnej gałęzi.
+- **Instrukcja CASE a wyrażenie:** strukturą jest tylko CASE na początku instrukcji (po `;`, THEN, ELSE, LOOP, BEGIN,
+  etykiecie), zamykana `END CASE`. Wewnątrz instrukcji (przypisanie, RETURN, SQL, nagłówek pętli, warunek IF) wyrażenia
+  `CASE … END` są liczone i ich END nie zamyka bloku.
+- **Odporność:** stos otwartych struktur — słowo, którego bieżąca struktura nie obsługuje, a obsługuje zewnętrzna
+  (np. `END` bloku przy braku `END IF`, ELSE przy bloku bez END w gałęzi IF), kończy bieżącą jako niedokończoną
+  (zakres do poprzedniego tokenu); słowo bez żadnej struktury (`END IF` bez IF) jest pomijane. Na początku instrukcji
+  granica jednostki — `/`, `CREATE`, nagłówek `PROCEDURE`/`FUNCTION` (także z MEMBER, STATIC…) — kończy wszystkie
+  struktury i blok, więc niedokończony podprogram nie zabiera następnych (także w zarysie bez struktur — poprawa
+  dotychczasowego zachowania; deklaracje kończą się też na `CREATE`). IF bez THEN i FOR/WHILE bez LOOP (pisany kod) to
+  zwykła instrukcja. Instrukcja bez średnika kończy się przed END, BEGIN, DECLARE, IF, ELSIF, EXCEPTION, CREATE, a także
+  przed ELSE i WHEN gałęzi struktury — poza instrukcjami, w których te słowa są częścią składni: ELSE w INSERT ALL/FIRST,
+  WHEN w INSERT ALL/FIRST, MERGE, EXIT WHEN, CONTINUE WHEN (wyrażenia CASE liczone osobno). Nagłówek struktury nie
+  przechodzi przez ELSE/WHEN poza nawiasami. Deklaracja (zmienna, kursor, typ, pragma, nagłówek podprogramu w
+  specyfikacji) bez średnika kończy się przed PROCEDURE, FUNCTION, BEGIN, CREATE — w nagłówku podprogramu tylko poza
+  nawiasami (`ACCESSIBLE BY (FUNCTION f, PROCEDURE p)`). Pusta instrukcja (sam „;”) nie pochłania następnej.
+  Kompilacja warunkowa: dyrektywy `$IF … $THEN`, `$ELSIF … $THEN`, `$ELSE`, `$END`, `$ERROR … $END` są usuwane z tokenów
+  przed parsowaniem (kod obu gałęzi zostaje); obsłużone oba zapisy — `$` sklejony ze słowem (dzisiejszy lekser) i jeden
+  token `$IF` (równoległa zmiana leksera formatera) — Lekser bez zmian. Dotąd `$END` kończył blok w każdym zarysie.
+  Niedomknięta dyrektywa (`$IF` bez `$THEN`, literówka `$THN`, `$ERROR` bez `$END`) nie pochłania reszty: pomijanie
+  kończy się przed średnikiem, inną dyrektywą albo słowem, którego nie ma w warunku statycznym (BEGIN, END, DECLARE,
+  LOOP, IF, THEN, ELSIF, ELSE, PROCEDURE, FUNCTION, CREATE, EXCEPTION; IS zostaje — `$IF $$x IS NULL`).
+- **Zgodność:** bez `controlFlow` (domyślnie — analiza kodu, podpowiedzi, refaktoryzacja, Przejdź do deklaracji,
+  hierarchia kodu) zarys jest dokładnie `withoutControlFlow` zarysu ze strukturami: struktura zastąpiona swoimi dziećmi,
+  bloki zagnieżdżone należą do podprogramu jak dotąd (test na wszystkich przykładach). `PLSQLOutline.path` (Code
+  Hierarchy) przechodzi przez struktury bez dodawania ich do ścieżki — ścieżka i poziomy komend `codeHierarchy.*` bez
+  zmian. Struktury nie mają znacznika publiczny/prywatny.
+- **Panel:** zarys zawsze liczony ze strukturami (okno programu razem z kartami, okna SQL i testu w tle jak w D199);
+  przełącznik tylko przycina gotowe drzewo (`withoutControlFlow`, ok. 1 ms dla 50 000 linii) — bez ponownej analizy.
+  Tytuł (`CodeContents.controlTitle`): „IF warunek…” (warunek w jednej linii, do 60 znaków z „…”), „ELSIF …”, „ELSE”,
+  „FOR r in c LOOP”, „WHILE warunek LOOP”, „LOOP”, „FORALL i in 1..n”, „CASE wybór”, „WHEN NO_DATA_FOUND”,
+  „EXCEPTION”, „BEGIN”, z „<<etykieta>> ” na początku; podpowiedź — pełny nagłówek z THEN/LOOP (VoiceOver czyta tytuł).
+  Ikony i kolory: rozgałęzienia (`arrow.triangle.branch`, gałęzie `arrow.turn.down.right`) — indygo, pętle (`repeat`,
+  FORALL `square.stack.3d.up`) — róż, EXCEPTION (`exclamationmark.octagon`) i obsługi — czerwień, punkt czasowy
+  (`clock`) — niebieski, bloki jak dotąd. Klik/Enter zaznacza słowo otwierające (`CodeContents.selection`; przy okazji
+  blok z DECLARE zaznacza całe „DECLARE”, nie pięć liter); śledzenie kursora schodzi przez struktury do najgłębszej
+  zawierającej kursor. Filtr nazw dopasowuje też warunek/nagłówek i etykietę; przy filtrze z ponad 3000 trafień drzewo
+  rozwinięte tylko do poziomu podprogramów (np. „if” w dużym pakiecie). Sortowanie alfabetyczne i według rodzaju nie
+  przestawia struktur ani bloków — zostają w kolejności źródła za deklaracjami i podprogramami. Opóźnienie filtra liczone
+  od łącznej liczby węzłów (z strukturami), nie od liczby korzeni; po przełączeniu struktur albo kolejności zaznaczenie
+  wraca do elementu z kursorem. Rozwinięcie domyślne bez zmian
+  (rozwinięte tylko korzenie, więc struktury są zwinięte; klucze z numerem kolejnym wśród rodzeństwa — D199).
+- **Przełącznik — globalnie, nie w oknie:** ustawienie `codeContentsControlFlow` (**Ustawienia › Edytor › Struktury
+  sterujące w Zawartości kodu**, domyślnie włączone, w zestawie preferencji Edytor), przycisk z symbolem rozgałęzienia
+  obok filtra panelu i **Pokaż struktury sterujące** w menu panelu — jak kolejność sortowania (też w Ustawieniach
+  i menu panelu). Prościej niż stan w oknie i worksecie (D199), a wybór „mniej szczegółów” dotyczy raczej stylu pracy niż
+  jednego okna. Komenda `codeContents.controlFlow` (argument `visible`, bez niego przełącza; makro zapisuje stan; agent:
+  Brak; skutek: ustawienia — jak `codeContents.sort`, bo zmienia Ustawienia, a nie tylko interfejs). Przełącznik ukrywa
+  struktury sterujące, nie bloki `BEGIN … END` (te są w drzewie zawsze, jak przed D203).
+- **Komendy elementu** (`codeContents.select`, `copy`, `cut`): z argumentem `offset` (menu panelu) — węzeł w tym miejscu,
+  także struktura sterująca (gdy pokazywane); bez argumentu (paleta, skrót, makro) — jak dotąd element pod kursorem
+  z zarysu bez struktur: podprogram, deklaracja, blok albo jednostka (decyzja przeglądu). `codeContents.test` bierze
+  najbliższą procedurę albo funkcję obejmującą pozycję (`CodeContents.testTarget(at:in:kind:)`) — działa też z kursorem
+  w bloku zagnieżdżonym albo strukturze (dotąd z bloku zagnieżdżonego odmawiał).
+- **Wydajność (R4-01), Release, `PELIKAN_PERF_STRICT=1 swift test -c release --filter "SQLPerformanceTests|PLSQLOutlineTests"`:**
+  pakiet 50 000 linii gęsto wypełniony strukturami (2500 procedur, 13 struktur i blok w każdej — 32 500 elementów
+  sterujących): zarys ze strukturami 72,7 ms (cel < 400 ms), ukrycie struktur 1,25 ms (< 30 ms), w oknie SQL 104,7 ms
+  (< 600 ms), zarys bez struktur 73,2 ms (< 400 ms); dotychczasowe pomiary bez zmian (skrypt 50 000 poleceń 164 ms,
+  pakiet 50 000 linii w oknie SQL 183 ms). Drzewo panelu (`CodeContentsPerformanceTests`, Release): sortowanie
+  alfabetyczne całego drzewa ze strukturami 7,9 ms (< 100 ms), filtr z 2500 trafieniami w warunkach 46,2 ms (< 150 ms),
+  filtr z jednym trafieniem 46,9 ms (< 100 ms). Drzewo z dziesiątkami tysięcy węzłów: zwinięte struktury nie są rozwijane
+  przy odświeżeniu, filtr z wieloma trafieniami nie rozwija wszystkiego.
+- **Zrzut:** `docs/screenshots/74-zawartosc-sterowanie-glowne.png` (scenariusz `74-zawartosc-sterowanie.json`, przebieg
+  ukryty D196, przykład `fixtures/zamowienia_api.pkb`).
+- **Pominięte:** instrukcje bez END (EXIT, RETURN, GOTO, RAISE) nie są węzłami; etykieta przed zwykłą instrukcją (cel
+  GOTO) nie jest pokazywana; struktury w kodzie Java/MLE — nie dotyczy. Kompilacja warunkowa z niezrównoważonymi
+  strukturami w gałęziach (np. `$IF … $THEN IF a THEN $ELSE IF b THEN $END … END IF;`) daje mylące zagnieżdżenie — kod
+  obu gałęzi jest czytany jak jeden.
+
+### D204 · 2026-10-29 — Pokaż/ukryj panel po lewej, usuwanie pustych folderów połączeń
+
+Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/pokazywania (gdzieś na wierzchu)” oraz
+„W połączeniach nie ma usuwania folderu (najlepiej z zabezpieczeniem, że tylko pusty można usunąć)”.
+
+- **Komenda `view.toggleSidebar`** „Pokaż lub ukryj panel po lewej” (Widok; agent: brak dostępu, skutek: stan
+  interfejsu; opcjonalny argument `visible`, makro nagrywa stan — jak `view.codeContents`, D199). Skrót **⌃⌘S** w obu
+  profilach — jak „Pokaż pasek boczny” w macOS, wolny w rejestrze. Wstążka: Widok › Panele narzędzi „Panel po lewej”
+  (obok paneli po prawej i na dole). Lewa kolumna zwija się z animacją (`animator().isCollapsed`); fokus z chowanej
+  kolumny przechodzi do edytora aktywnego okna. Bez okna głównego — czytelny błąd.
+- **Przycisk na wierzchu:** dodatek paska tytułu `NSTitlebarAccessoryViewController` z `layoutAttribute = .leading`
+  (`SidebarToggleAccessory`) — symbol `sidebar.left` tuż za przyciskami okna, przed tytułem, jak w Mailu i Notatkach,
+  w tym samym miejscu także przy schowanej kolumnie. Sprawdzony najpierw element paska narzędzi z separatorem
+  śledzącym (`NSTrackingSeparatorToolbarItem`): tytuł okna zostawał na lewym końcu, przycisk stał przy prawej krawędzi
+  lewej kolumny, a po jej schowaniu przeskakiwał na prawą stronę paska — odrzucony (lewa kolumna nie jest paskiem
+  bocznym macOS, D180, więc tytuł nie przechodzi za separator). Domyślny układ paska narzędzi bez zmian (bez migracji
+  zapamiętanego układu); komenda jest w palecie Dostosuj pasek.
+  - Wygląd: sam symbol bez ramki (szklany przycisk dodatku nie rysuje się w zrzutach w tle, D196); wysokość dodatku
+    28 pt, przycisk 30×24 pt — nie wyższy niż pasek tytułu przy ukrytym pasku narzędzi (zrzut 77), więc go nie podnosi.
+  - Pełny ekran: dodatki paska tytułu są częścią paska, który macOS chowa w pełnym ekranie i pokazuje po najechaniu na
+    górną krawędź — przycisk jest wtedy razem z paskiem narzędzi; menu Widok i ⌃⌘S działają zawsze.
+  - Kliknięcie przełącza stan przycisku od razu, właściwy stan ustawia komenda (odświeżenie po zmianie podziału
+    i po animacji).
+  - VoiceOver: przełącznik (`pushOnPushOff`) „Panel po lewej” z wartością „widoczny”/„ukryty”, stan odświeżany po
+    każdej zmianie podziału (także zwinięciu przeciągnięciem); podpowiedź ze skrótem z bieżącej mapy klawiszy
+    (zmiana skrótu w Ustawieniach odświeża ją od razu).
+- **Przycisk Zawartości kodu** (D199) dostał symbol `list.bullet.indent` — `sidebar.left` przy dwóch różnych panelach
+  po lewej mylił.
+- **Układ okna:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna widoczna, widoczna
+  kolumna nie zapisuje pola); **Widok › Zapisz układ okna** i autozapis układu (opis komendy wymienia schowanie
+  kolumny). Worksety nie zapisują układu okna. Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania:
+  ostatnia szerokość widocznej kolumny (≥ minimum) jest zapamiętywana po każdej zmianie podziału — także przy
+  przeciąganiu podziału i zmianie rozmiaru okna — poza animacją pokazania/schowania (licznik trwających animacji,
+  zmniejszany w `completionHandler` z `NSAnimationContext.runAnimationGroup`; szybkie przełączenia się nakładają);
+  przy zwinięciu przeciągnięciem szerokością sprzed schowania staje się ta ostatnia szerokość ≥ minimum przed
+  zwinięciem; przy chowaniu komendą — szerokość z tej chwili; na starcie
+  z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit” — format wewnętrzny AppKit, nieudokumentowany:
+  nieczytelny daje szerokość domyślną 260 pt); po przywróceniu układu ze schowaną kolumną — szerokość z układu, nie
+  mniej niż minimum kolumny (220 pt).
+- **Zrzuty (zmiana D196):** przebieg zrzutów zmieniał UserDefaults aplikacji Debug właściciela (ten sam identyfikator
+  klonu: ramka okna, układ paska i podziału — stąd zrzuty w rozmiarze okna właściciela). Klon dostaje identyfikator
+  `<id>.screenshots` (PlistBuddy przed podpisem), jego domena jest czyszczona przed każdym scenariuszem i w sprzątaniu;
+  od identyfikatora zależą jeszcze usługi pęku kluczy (`<id>.screenshots.connection`/`.ssh` — przebieg łączy się
+  portfelem SEPS z katalogu `PELIKAN_DATA_DIR`, więc bez haseł) i podsystem dziennika; Sparkle w Debug wyłączony,
+  schemat URL — klon wyrejestrowywany po przebiegu. W trybie skryptu dodatkowo bez autozapisu ramki okna, układu paska
+  i podziału. Krok `debug.hideToolbar` chowa pasek narzędzi przez `toggleToolbarShown` (jak menu — hak widoczności
+  paska z grup kart). Okno zrzutów ma rozmiar domyślny 1280×820.
+- **Komenda `connection.deleteFolder`** „Usuń folder” (Sesja › Połączenia w palecie, `inMenu: false` jak „Nowy
+  folder…”; wstążka Start › Połączenia; agent: brak dostępu i skutek „ustawienia” — jak pozostałe komendy definicji
+  połączeń i folderów). Wywołania: menu podręczne folderu na liście połączeń, klawisz Delete (⌫/⌦) na zaznaczonym
+  folderze. Bez argumentu użytkownik wybiera z listy **tylko folderów, które da się usunąć** (ścieżki „Zespół /
+  Archiwum”); brak takich — komunikat. Skrypt i agent bez argumentu — błąd argumentu.
+- **Wskazanie folderu** (`ConnectionStore.resolveFolder`, także `connection.moveToFolder`), bez wielkości liter:
+  identyfikator; nazwa bez „/” — folder o tej nazwie na dowolnym poziomie (kilka — błąd argumentu „niejednoznaczna
+  nazwa folderu … — podaj identyfikator albo ścieżkę” z listą ścieżek); ścieżka („Zespół / Archiwum”) — odstępy wokół
+  „/” dowolne, puste człony pomijane („Zespół//Archiwum”, „/Zespół/Archiwum/” to ta sama ścieżka), kilka pasujących —
+  ten sam błąd, żadna — jeszcze cały tekst jako nazwa. **„/” w nazwie** nowego folderu (i przy zmianie nazwy przez
+  `upsert(folder:)`) jest odrzucany z komunikatem; folder z „/” z importu działa dalej (zmiany bez zmiany nazwy
+  dozwolone). Wynik (`resolvedArguments`, `ConnectionStore.argument(for:)`) podaje ścieżkę folderu — przenośną między
+  instalacjami — a identyfikator, gdy ścieżka nie wskazuje jednoznacznie tego folderu (folder z „/” w nazwie, powtórzona
+  ścieżka). Dziś makra nie nagrywają komend ze skutkiem „ustawienia”, więc dotyczy to dziennika i przyszłych makr.
+  Odstępy na brzegach argumentu są pomijane przed rozpoznaniem identyfikatora. **Znane ograniczenie:** folder z „/”
+  w nazwie (tylko z importu) nie da się wskazać ścieżką, gdy ta sama ścieżka pasuje do innego folderu (np. „Dev/Test”
+  i „Dev” › „Test”) — wtedy tylko identyfikatorem albo z listy wyboru; nazwy takiego folderu nie zmienia się
+  automatycznie.
+- **Zabezpieczenie:** `ConnectionStore.deletionBlocker` — usuwany jest tylko folder bez połączeń przypisanych jawnie
+  i bez podfolderów (nic nie znika razem z nim, więc **bez pytania potwierdzającego**). Niepusty: komunikat „Folder
+  „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”.
+  W menu podręcznym pozycja zostaje **włączona** (dostępna dla VoiceOver i klawiatury), ten tekst jest w podpowiedzi,
+  a wybranie pokazuje komunikat. **Folder z regułą dopasowania** (UG 19.2; decyzja koordynatora): pusty użytkownik
+  usuwa po potwierdzeniu — reguły nie da się odtworzyć w Pelikanie (przychodzi z importu definicji); skrypt z argumentem
+  usuwa go bez pytania (agent nie ma dostępu do komendy). Połączenia pasujące do reguły wracają na poziom główny listy
+  albo do innego folderu z pasującą regułą. **Folder „Ostatnie”** jest tworzony automatycznie — nieusuwalny (argument
+  „Ostatnie”/„recent”, chyba że użytkownik ma folder o tej nazwie); Delete na jego wierszu i na wierszu okna — tylko
+  sygnał dźwiękowy. Foldery DBA i DBMS (D190) są gałęziami Przeglądarki obiektów, nie folderami połączeń. Zapis
+  `connections.json` od razu; błąd zapisu przywraca folder na liście. Dawne `ConnectionStore.remove(folder:)` (przenosi
+  zawartość do rodzica) zostaje dla importu i testów, interfejs go nie używa.
+- **Delete na połączeniu** — `connection.delete` z jego pytaniem (definicja i zapisane hasło).
+
 ### D205 · 2026-10-29 — Formatowanie podczas pisania: linia przy Enter i przełącznik na pasku narzędzi
 
 Prośby właściciela: „Formater dla istniejącego kodu tylko na życzenie, ale podczas pisania powinien na bieżąco
@@ -2803,9 +2969,10 @@ przeszkadzać).” (PD-BEAU-003)
   u góry po prawej (przed logowaniem): różdżka `wand.and.stars`, włączony — wciśnięty, wyłączony — przekreślony;
   podpowiedź ze stanem i skrótem, VoiceOver — wartość „włączone/wyłączone”; w menu przepełnienia — pozycja z
   zaznaczeniem. Zapamiętany układ paska sprzed D205 dostaje przełącznik raz (`ensureFormatOnEnterItem`, jak grupy kart).
-- **Zrzut w tle:** `scripts/screenshots/76-formatowanie-enter.json`; krok `debug.showToolbar` pokazuje pasek narzędzi na
+- **Zrzut w tle:** `scripts/screenshots/78-formatowanie-enter.json`; krok `debug.showToolbar` pokazuje pasek narzędzi na
   czas zrzutu bez zapisu (ustawienia paska są wspólne z aplikacją Debug właściciela — jego ukryty pasek zostaje ukryty).
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
   (krótki CASE — formater nie łamie, więc linia `ELSE` zostaje); po komentarzu `--` na końcu linii w SQL nowa linia
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
   wstążka i paleta (tylko menu i pasek narzędzi).
+

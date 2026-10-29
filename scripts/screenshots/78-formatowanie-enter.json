@@ -2,6 +2,6 @@
   {"command": "debug.showToolbar", "delay": 0.5},
   {"command": "debug.openFile", "args": {"path": "@REPO@/skrypt-zawartosc.sql"}, "delay": 1},
   {"command": "edit.formatOnEnter", "args": {"enabled": true}, "delay": 1},
-  {"command": "debug.snapshotWindows", "args": {"prefix": "@OUT@/76-formatowanie-enter-wlaczone"}, "delay": 1.5},
+  {"command": "debug.snapshotWindows", "args": {"prefix": "@OUT@/78-formatowanie-enter-wlaczone"}, "delay": 1.5},
   {"command": "edit.formatOnEnter", "args": {"enabled": false}, "delay": 1.5}
 ]

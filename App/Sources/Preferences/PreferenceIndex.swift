@@ -121,6 +121,7 @@ enum PreferenceIndex {
         ("EditorPane", "Pionowy margines w kolumnie %@"),
         ("EditorPane", "Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"),
         ("EditorPane", "Zawartość kodu domyślnie widoczna"),
+        ("EditorPane", "Struktury sterujące w Zawartości kodu"),
         ("EditorPane", "Kolejność w Zawartości kodu"),
         ("EditorPane", "Wcięcia"),
         ("EditorPane", "Wcięcie nowej linii"),

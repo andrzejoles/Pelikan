@@ -46,6 +46,39 @@ enum Perf {
         }
         return s + "end big_pkg;\n/\n"
     }()
+
+    /// Pakiet z ok. 50 000 linii gęsto wypełniony strukturami sterującymi (D203): w każdej procedurze IF z ELSIF
+    /// i ELSE, pętle FOR (kursorowa z zapytaniem i liczbowa), WHILE z etykietą, instrukcja CASE, FORALL, blok
+    /// zagnieżdżony z obsługą wyjątków — 13 struktur i blok na 20 linii.
+    static let controlFlow50k: String = {
+        var s = "create or replace package body flow_pkg as\n"
+        for n in 1...2500 {
+            s += """
+              procedure proc_\(n)(p_id in number) is
+                v number := 0;
+              begin
+                if p_id > \(n) then
+                  for r in (select case when e.sal > 0 then 1 end s from emp e where e.deptno = p_id) loop
+                    v := v + r.s;
+                  end loop;
+                elsif p_id < 0 then
+                  <<petla>> while v < 10 loop v := v + 1; end loop petla;
+                else
+                  case p_id when 1 then forall i in 1..10 insert into t values (i); else null; end case;
+                end if;
+                for i in 1..p_id loop v := v + case when i > 2 then 1 else 0 end; end loop;
+                begin
+                  v := v / p_id;
+                exception
+                  when zero_divide then v := 0;
+                  when others then raise;
+                end;
+              end proc_\(n);
+
+            """
+        }
+        return s + "end flow_pkg;\n/\n"
+    }()
 }
 
 @Suite("PerformanceTests — edytor i lekser", .serialized)
@@ -120,5 +153,36 @@ struct SQLPerformanceTests {
         Perf.report("Zawartość kodu pakietu 50 000 linii w oknie SQL", t3, .milliseconds(600))
         #expect(pkg.count == 1)
         #expect(t3 < Perf.target(.milliseconds(600)), "\(Perf.ms(t3))")
+    }
+
+    @Test("Zawartość kodu ze strukturami sterującymi: pakiet 50 000 linii gęsto wypełniony strukturami (D203)")
+    func controlFlowOutline() {
+        let lines = Perf.controlFlow50k.utf16.reduce(0) { $1 == 0x0A ? $0 + 1 : $0 }
+        #expect(lines >= 50_000)
+        var nodes: [OutlineNode] = []
+        let t = Perf.measure(3) { nodes = PLSQLOutline.parse(Perf.controlFlow50k, controlFlow: true) }
+        Perf.report("Zawartość kodu ze strukturami sterującymi, pakiet 50 000 linii", t, .milliseconds(400))
+        #expect(t < Perf.target(.milliseconds(400)), "\(Perf.ms(t))")
+        func count(_ list: [OutlineNode]) -> Int { list.reduce(0) { $0 + 1 + count($1.children) } }
+        func controls(_ list: [OutlineNode]) -> Int { list.reduce(0) { $0 + ($1.kind.isControlFlow ? 1 : 0) + controls($1.children) } }
+        // 13 struktur (w tym gałęzie i obsługi) i blok na procedurę — 32 500 elementów sterujących.
+        #expect(nodes.first?.children.count == 2500)
+        #expect(controls(nodes) == 2500 * 13)
+        // Bez struktur (przełącznik panelu) — przycięcie gotowego drzewa, bez ponownej analizy.
+        var plain: [OutlineNode] = []
+        let t2 = Perf.measure(3) { plain = PLSQLOutline.withoutControlFlow(nodes) }
+        Perf.report("Zawartość kodu: ukrycie struktur sterujących (50 000 linii)", t2, .milliseconds(30))
+        #expect(t2 < Perf.target(.milliseconds(30)), "\(Perf.ms(t2))")
+        #expect(controls(plain) == 0 && count(plain) < count(nodes))
+        // Ten sam pakiet w oknie SQL (skrypt) i bez struktur (inne analizy edytora) — bez dużego narzutu.
+        var script: [OutlineNode] = []
+        let t3 = Perf.measure(3) { script = PLSQLOutline.parseScript(Perf.controlFlow50k, controlFlow: true) }
+        Perf.report("Zawartość kodu ze strukturami sterującymi w oknie SQL (50 000 linii)", t3, .milliseconds(600))
+        #expect(t3 < Perf.target(.milliseconds(600)), "\(Perf.ms(t3))")
+        #expect(controls(script) == 2500 * 13)
+        let t4 = Perf.measure(3) { plain = PLSQLOutline.parse(Perf.controlFlow50k) }
+        Perf.report("Zarys bez struktur sterujących, pakiet 50 000 linii ze strukturami", t4, .milliseconds(400))
+        #expect(t4 < Perf.target(.milliseconds(400)), "\(Perf.ms(t4))")
+        #expect(plain == PLSQLOutline.withoutControlFlow(nodes))
     }
 }

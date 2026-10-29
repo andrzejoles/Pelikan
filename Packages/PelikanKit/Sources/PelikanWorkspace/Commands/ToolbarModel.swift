@@ -26,7 +26,7 @@ public enum ToolbarModel {
         "edit.find", "edit.beautify", "edit.formatOnEnter", "edit.commentLine",
         "tools.explainPlan", "tools.findObjects", "tools.sessions",
         "debug.start", "debug.stepInto", "debug.stepOver", "debug.stepOut", "debug.stop", "debug.toggleBreakpoint",
-        "view.commandPalette", "view.objectBrowser", "view.snippets",
+        "view.commandPalette", "view.objectBrowser", "view.snippets", "view.toggleSidebar",
     ]
 
     /// Symbol SF dla komendy (znane komendy; inne — wspólny symbol).

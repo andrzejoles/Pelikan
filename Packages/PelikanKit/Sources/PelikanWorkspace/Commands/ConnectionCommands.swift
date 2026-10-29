@@ -149,22 +149,18 @@ public enum ConnectionCommands {
             Command(CommandDescriptor(id: "connection.moveToFolder", title: L10n.tr("Przenieś połączenie do folderu"), category: .session,
                                       submenu: L10n.tr("Połączenia"),
                                       parameters: [CommandParameter("connection", .string, required: true, L10n.tr("Identyfikator albo nazwa połączenia")),
-                                                   CommandParameter("folder", .string, L10n.tr("Identyfikator albo nazwa folderu (bez argumentu — poziom główny listy)"))],
+                                                   CommandParameter("folder", .string, L10n.tr("Identyfikator, ścieżka („Zespół / Archiwum”) albo nazwa folderu (bez argumentu — poziom główny listy)"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Przenosi definicję połączenia do folderu listy połączeń (także przeciągnięciem myszą)."),
                                       inMenu: false, feature: "PD-CONN-003")) { ctx in
                 let id = try connectionID(ctx)
+                let store = ctx.workspace.connections
                 var folder: UUID?
-                if let f = ctx.arguments.string("folder"), !f.isEmpty {
-                    let folders = ctx.workspace.connections.folders
-                    guard let match = UUID(uuidString: f).flatMap({ u in folders.first { $0.id == u } })
-                            ?? folders.first(where: { $0.name.caseInsensitiveCompare(f) == .orderedSame }) else {
-                        throw CommandError.invalidArgument("folder", L10n.tr("nieznany folder"))
-                    }
-                    folder = match.id
-                }
-                try ctx.workspace.connections.move(id, to: folder)
-                return .ok
+                if let f = ctx.arguments.string("folder"), !f.isEmpty { folder = try store.resolveFolder(f) }
+                try store.move(id, to: folder)
+                // Makro i dziennik dostają ścieżkę folderu (przenośną), nie identyfikator z przeciągnięcia (D204).
+                guard let folder else { return .ok }
+                return CommandResult(resolvedArguments: CommandArguments(["folder": .string(store.argument(for: folder))]))
             },
             Command(CommandDescriptor(id: "connection.connectAsMain", title: L10n.tr("Połącz jako główne"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam], agent: .none, effect: .settings,
@@ -331,6 +327,47 @@ public enum ConnectionCommands {
                 let parent = ctx.arguments.string("parent").flatMap(UUID.init(uuidString:))
                 try ctx.workspace.connections.upsert(folder: ConnectionFolder(name: name, parentID: parent))
                 return .ok
+            },
+            // Tylko pusty folder (D204): bez połączeń i podfolderów nic nie znika, więc bez pytania potwierdzającego — poza
+            // folderem z regułą dopasowania (reguły nie da się odtworzyć w Pelikanie).
+            Command(CommandDescriptor(id: "connection.deleteFolder", title: L10n.tr("Usuń folder"), category: .session, submenu: L10n.tr("Połączenia"),
+                                      parameters: [CommandParameter("folder", .string, L10n.tr("Identyfikator, ścieżka („Zespół / Archiwum”) albo nazwa folderu (bez argumentu — wybór z listy pustych folderów)"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Usuwa pusty folder z listy połączeń; folder z połączeniami albo podfolderami zostaje — najpierw je przenieś albo usuń."),
+                                      inMenu: false, feature: "PD-CONN-003")) { ctx in
+                let store = ctx.workspace.connections
+                var spec = ctx.arguments.string("folder")
+                if spec == nil, ctx.askingUI != nil {
+                    guard !store.folders.isEmpty else { throw CommandError.notAvailable(L10n.tr("Lista połączeń nie ma folderów")) }
+                    // Tylko foldery, które da się usunąć.
+                    let options = store.folders.filter { store.deletionBlocker(folder: $0.id) == nil }
+                        .compactMap { f in store.path(of: f.id).map { (label: $0, value: f.id.uuidString) } }
+                        .sorted { $0.label.localizedStandardCompare($1.label) == .orderedAscending }
+                    guard !options.isEmpty else {
+                        throw CommandError.notAvailable(L10n.tr("Żaden folder nie jest pusty — usunąć można tylko folder bez połączeń i podfolderów."))
+                    }
+                    spec = try await ctx.choose(L10n.tr("Usuń folder"), options)
+                }
+                guard let spec, !spec.isEmpty else { throw CommandError.missingArgument("folder") }
+                // „Ostatnie” to folder tworzony automatycznie, nie folder użytkownika (chyba że użytkownik ma folder o tej nazwie).
+                let isRecent = [L10n.tr("Ostatnie"), "recent"].contains { $0.caseInsensitiveCompare(spec) == .orderedSame }
+                if isRecent, !store.folders.contains(where: { $0.name.caseInsensitiveCompare(spec) == .orderedSame }) {
+                    throw CommandError.notAvailable(L10n.tr("Folder „Ostatnie” jest tworzony automatycznie z ostatnio używanych połączeń — nie można go usunąć."))
+                }
+                let id = try store.resolveFolder(spec)
+                guard let folder = store.folders.first(where: { $0.id == id }) else { return .ok }
+                let argument = store.argument(for: id)
+                if let reason = store.deletionBlocker(folder: id) { throw CommandError.notAvailable(reason) }
+                if folder.hasRule, ctx.invoker == .user, let ui = ctx.ui {
+                    let matched = store.connections(in: id).count
+                    guard await ui.ask(L10n.tr("Usuń folder z regułą"),
+                                       message: L10n.tr("Folder „\(folder.name)” dobiera połączenia regułą (użytkownik, baza, rola) — reguły nie da się odtworzyć w Pelikanie. Połączenia pasujące do reguły (\(matched)) wrócą na poziom główny listy albo do innego folderu z pasującą regułą."),
+                                       buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                try store.removeEmpty(folder: id)
+                Log.connection.info("Usunięto pusty folder połączeń \(folder.name, privacy: .hash)")
+                // Makro dostaje ścieżkę (przenośną między instalacjami), nie identyfikator.
+                return CommandResult(message: L10n.tr("Usunięto folder „\(folder.name)”"), resolvedArguments: CommandArguments(["folder": .string(argument)]))
             },
         ]
     }

@@ -197,6 +197,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Brak | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Brak | PD-TPL-002 |
 | Zawartość kodu › Kolejność w Zawartości kodu | `codeContents.sort` |  |  | Brak | PD-CA-010 |
+| Zawartość kodu › Struktury sterujące w Zawartości kodu | `codeContents.controlFlow` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Brak | PD-CA-010 |
@@ -315,6 +316,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Przypnij połączenie okna | `session.pinWindowConnection` |  |  | Brak | PD-CONN-019 |
 | Połączenie okna… | `session.windowConnection` |  |  | Brak | PD-CONN-019 |
 | Połączenia › Nowy folder… | `connection.newFolder` |  |  | Brak | PD-CONN-003 |
+| Połączenia › Usuń folder | `connection.deleteFolder` |  |  | Brak | PD-CONN-003 |
 
 ## Debugowanie
 
@@ -583,6 +585,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Przywróć układ okna | `view.restoreLayout` |  |  | Brak | PD-WSET-002 |
 | Autozapis układu okna | `view.autosaveLayout` |  |  | Brak | PD-WSET-002 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | PD-UI-007 |
+| Pokaż lub ukryj panel po lewej | `view.toggleSidebar` | ⌃⌘S | ⌃⌘S | Brak | PD-UI-001 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | PD-CA-010 |
 | Lista okien | `view.windowList` |  |  | Brak | PD-UI-002 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | PD-OB-001 |

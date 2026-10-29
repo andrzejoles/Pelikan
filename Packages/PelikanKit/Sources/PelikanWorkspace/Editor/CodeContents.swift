@@ -8,22 +8,68 @@ public enum CodeContents {
     public enum Order: String, Sendable, Codable, Hashable, CaseIterable { case source, name, kind }
 
     /// Zarys tekstu okna (D199): okno SQL — skrypt (polecenia SQL obok jednostek i bloków PL/SQL), okno programu
-    /// i testu — PL/SQL. Ten sam zarys dla panelu i komend menu elementu.
-    public static func outline(_ text: String, kind: DocumentKind) -> [OutlineNode] { analyze(text, kind: kind).nodes }
-
-    /// Zarys z liczbą poleceń SQL pominiętych ponad limit (panel pokazuje dopisek); `isCancelled` — analiza w tle.
-    public static func analyze(_ text: String, kind: DocumentKind, isCancelled: () -> Bool = { false }) -> PLSQLOutline.ScriptOutline {
-        kind == .sql ? PLSQLOutline.parseScriptOutline(text, isCancelled: isCancelled) : PLSQLOutline.ScriptOutline(nodes: PLSQLOutline.parse(text))
+    /// i testu — PL/SQL. Ten sam zarys dla panelu i komend menu elementu; `controlFlow` — ze strukturami sterującymi
+    /// (D203, ustawienie `codeContentsControlFlow`).
+    public static func outline(_ text: String, kind: DocumentKind, controlFlow: Bool = false) -> [OutlineNode] {
+        analyze(text, kind: kind, controlFlow: controlFlow).nodes
     }
 
-    /// Drzewo posortowane na każdym poziomie; sekcje i bloki zostają na swoich miejscach względem siebie.
+    /// Zarys z liczbą poleceń SQL pominiętych ponad limit (panel pokazuje dopisek); `isCancelled` — analiza w tle.
+    public static func analyze(_ text: String, kind: DocumentKind, controlFlow: Bool = false,
+                               isCancelled: () -> Bool = { false }) -> PLSQLOutline.ScriptOutline {
+        kind == .sql ? PLSQLOutline.parseScriptOutline(text, controlFlow: controlFlow, isCancelled: isCancelled)
+            : PLSQLOutline.ScriptOutline(nodes: PLSQLOutline.parse(text, controlFlow: controlFlow))
+    }
+
+    /// Najwięcej znaków nagłówka struktury sterującej w tytule węzła (pełny nagłówek w podpowiedzi).
+    public static let controlTitleLimit = 60
+
+    /// Tytuł struktury sterującej w drzewie (D203): słowo otwierające z etykietą i skróconym do jednej linii
+    /// nagłówkiem — „IF warunek…”, „FOR r IN cur LOOP”, „WHILE warunek LOOP”, „CASE wybór”, „WHEN NO_DATA_FOUND”.
+    public static func controlTitle(_ n: OutlineNode) -> String {
+        var d = n.detail.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        if d.count > controlTitleLimit || d.hasSuffix("…") {
+            d = String(d.prefix(controlTitleLimit)).trimmingCharacters(in: .whitespaces)
+            if !d.hasSuffix("…") { d += "…" }
+        }
+        let s: String
+        switch n.kind {
+        case .loop: s = n.name == "LOOP" ? "LOOP" : n.name + (d.isEmpty ? "" : " " + d) + " LOOP"
+        case .elseBranch, .exceptionSection, .beginSection, .block: s = n.kind == .block ? "BEGIN" : n.name
+        default: s = d.isEmpty ? n.name : n.name + " " + d
+        }
+        return (n.label.map { "<<\($0)>> " } ?? "") + s
+    }
+
+    /// Zakres zaznaczany po przejściu do elementu (klik, Enter w panelu): nazwa elementu, a w bloku — słowo
+    /// otwierające (DECLARE albo BEGIN); struktura sterująca — słowo otwierające.
+    public static func selection(of n: OutlineNode, in text: String) -> Range<Int> {
+        guard n.kind == .block else { return n.nameOffset..<(n.nameOffset + (n.name as NSString).length) }
+        let ns = text as NSString
+        var e = n.nameOffset
+        while e < ns.length, let u = Unicode.Scalar(ns.character(at: e)), CharacterSet.letters.contains(u) { e += 1 }
+        return n.nameOffset..<e
+    }
+
+    /// Drzewo posortowane na każdym poziomie; sekcje i bloki zostają na swoich miejscach względem siebie. Struktury
+    /// sterujące zawsze w kolejności źródła — za elementami sortowanymi (deklaracje, podprogramy).
     public static func sorted(_ nodes: [OutlineNode], order: Order) -> [OutlineNode] {
         let children = nodes.map { n -> OutlineNode in
+            guard !n.children.isEmpty else { return n }
             var n = n
             // Parametry zostają w kolejności nagłówka (tytuł i podpowiedź podprogramu), sortowane są tylko elementy.
             n.children = n.children.filter { $0.kind == .parameter } + sorted(n.children.filter { $0.kind != .parameter }, order: order)
             return n
         }
+        // Bloki jak struktury — w kolejności źródła.
+        func inSourceOrder(_ n: OutlineNode) -> Bool { n.kind.isControlFlow || n.kind == .block }
+        if order != .source, children.contains(where: inSourceOrder) {
+            return sorted(children.filter { !inSourceOrder($0) }, order: order, sortedChildren: true) + children.filter(inSourceOrder)
+        }
+        return sorted(children, order: order, sortedChildren: true)
+    }
+
+    private static func sorted(_ children: [OutlineNode], order: Order, sortedChildren: Bool) -> [OutlineNode] {
         switch order {
         case .source:
             return children
@@ -48,9 +94,12 @@ public enum CodeContents {
         return nodes.compactMap { n in
             var n = n
             let kids = filtered(n.children.filter { $0.kind != .parameter }, matching: f)
-            // Polecenie SQL — także po tekście za pierwszym słowem (nazwa tabeli, widoku).
-            let matches = n.name.range(of: f, options: [.caseInsensitive, .diacriticInsensitive]) != nil
-                || (n.kind == .statement && n.detail.range(of: f, options: [.caseInsensitive, .diacriticInsensitive]) != nil)
+            // Polecenie SQL i struktura sterująca — także po tekście za pierwszym słowem (nazwa tabeli, warunek,
+            // zakres pętli) i po etykiecie.
+            let opts: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive]
+            let matches = n.name.range(of: f, options: opts) != nil
+                || ((n.kind == .statement || n.kind.isControlFlow) && n.detail.range(of: f, options: opts) != nil)
+                || (n.label?.range(of: f, options: opts) != nil)
             guard matches || !kids.isEmpty else { return nil }
             n.children = n.children.filter { $0.kind == .parameter } + kids
             return n
@@ -77,6 +126,14 @@ public enum CodeContents {
         case .exception: s = n.name + " EXCEPTION"
         case .constant: s = n.name + " CONSTANT " + n.detail
         case .pragma: s = "PRAGMA " + n.name + n.detail
+        // Struktura sterująca — pełny nagłówek (do 1000 znaków) ze słowem kończącym nagłówek.
+        case .ifStatement, .elsifBranch, .whenBranch, .exceptionHandler:
+            s = (n.label.map { "<<\($0)>> " } ?? "") + n.name + (n.detail.isEmpty ? "" : " " + n.detail) + " THEN"
+        case .loop:
+            s = (n.label.map { "<<\($0)>> " } ?? "") + n.name + (n.detail.isEmpty || n.name == "LOOP" ? "" : " " + n.detail + " LOOP")
+        case .block: s = (n.label.map { "<<\($0)>> " } ?? "") + n.name
+        case .caseStatement, .forall, .elseBranch, .exceptionSection, .beginSection, .timingPoint:
+            s = (n.label.map { "<<\($0)>> " } ?? "") + (n.detail.isEmpty ? n.name : n.name + " " + n.detail)
         default: s = n.detail.isEmpty ? n.name : n.name + " " + n.detail
         }
         if let p = n.isPublic { s += " — " + (p ? L10n.tr("publiczny") : L10n.tr("prywatny")) }
@@ -95,6 +152,7 @@ public enum CodeContents {
         case .function: 7
         case .procedure: 8
         case .declareSection, .beginSection, .exceptionSection, .block, .statement: 9
+        case .ifStatement, .elsifBranch, .elseBranch, .loop, .forall, .caseStatement, .whenBranch, .exceptionHandler, .timingPoint: 9
         }
     }
 
@@ -122,6 +180,14 @@ public enum CodeContents {
         return start..<end
     }
 
+    /// Argumenty `ob.test` dla najbliższej procedury albo funkcji obejmującej pozycję (także z bloku zagnieżdżonego
+    /// albo struktury sterującej w jej ciele).
+    public static func testTarget(at offset: Int, in text: String, kind: DocumentKind) -> (object: String, member: String?)? {
+        let roots = outline(text, kind: kind)
+        guard let node = PLSQLOutline.path(at: offset, in: roots).last(where: { [.procedure, .function].contains($0.kind) }) else { return nil }
+        return testTarget(for: node, in: roots)
+    }
+
     /// Argumenty komendy `ob.test` dla podprogramu: samodzielny — obiekt; w pakiecie — pakiet i element.
     public static func testTarget(for node: OutlineNode, in roots: [OutlineNode]) -> (object: String, member: String?)? {
         guard [.procedure, .function].contains(node.kind) else { return nil }
@@ -144,7 +210,9 @@ extension Workspace {
 
 /// Komendy menu Code Contents (PD-CA-010) — element wskazany pozycją (`offset`, domyślnie kursor).
 enum CodeContentsCommands {
-    static let params = [CommandParameter("offset", .integer, L10n.tr("Pozycja elementu w tekście (domyślnie kursor)"))]
+    /// Pozycja wskazana (menu panelu) — element w tym miejscu, także struktura sterująca (gdy pokazywane); bez niej —
+    /// element pod kursorem z zarysu bez struktur: podprogram, deklaracja, blok albo jednostka (D203).
+    static let params = [CommandParameter("offset", .integer, L10n.tr("Pozycja elementu w tekście — element w tym miejscu, także struktura sterująca; bez argumentu — podprogram, deklaracja, blok albo jednostka pod kursorem"))]
 
     @MainActor static var all: [Command] {
         [
@@ -158,6 +226,17 @@ enum CodeContentsCommands {
                 guard let order = CodeContents.Order(rawValue: raw) else { throw CommandError.invalidArgument("order", raw) }
                 ctx.workspace.settings.codeContentsOrder = order
                 return .ok
+            },
+            Command(CommandDescriptor(id: "codeContents.controlFlow", title: L10n.tr("Struktury sterujące w Zawartości kodu"), category: .edit,
+                                      submenu: L10n.tr("Zawartość kodu"),
+                                      parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż (true) albo ukryj (false) struktury sterujące; bez argumentu — przełącza"))],
+                                      agent: .none, effect: .settings,
+                                      summary: L10n.tr("Pokazuje lub ukrywa w panelu Zawartość kodu struktury sterujące (IF, pętle, CASE, obsługę wyjątków; bloki BEGIN zostają) we wszystkich oknach (zapamiętane w Ustawieniach)."),
+                                      inMenu: false, feature: "PD-CA-010")) { ctx in
+                let show = ctx.arguments.bool("visible") ?? !ctx.workspace.settings.codeContentsControlFlow
+                ctx.workspace.settings.codeContentsControlFlow = show
+                // Makro odtwarza stan, a nie przełączenie (przycisk i menu panelu wywołują bez argumentu).
+                return CommandResult(value: .bool(show), resolvedArguments: CommandArguments(["visible": .bool(show)]))
             },
             Command(CommandDescriptor(id: "codeContents.select", title: L10n.tr("Zaznacz element"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .none, effect: .uiState,
@@ -195,8 +274,10 @@ enum CodeContentsCommands {
                                       summary: L10n.tr("Otwiera okno testu procedury lub funkcji wskazanej w Zawartości kodu (z pakietem jako obiektem)."),
                                       inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
-                let (doc, node) = try target(ctx)
-                guard let t = CodeContents.testTarget(for: node, in: PLSQLOutline.parse(doc.text)) else {
+                // Najbliższa procedura albo funkcja obejmująca pozycję (także z bloku zagnieżdżonego albo struktury).
+                guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
+                let offset = ctx.arguments.int("offset").map(Int.init) ?? doc.selectedRange.lowerBound
+                guard let t = CodeContents.testTarget(at: offset, in: doc.text, kind: doc.kind) else {
                     throw CommandError.notAvailable(L10n.tr("Element nie jest procedurą ani funkcją"))
                 }
                 var args: [String: JSONValue] = ["object": .string(t.object)]
@@ -241,8 +322,13 @@ enum CodeContentsCommands {
     @MainActor
     static func target(_ ctx: CommandContext) throws -> (Document, OutlineNode) {
         guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
-        let offset = ctx.arguments.int("offset").map(Int.init) ?? doc.selectedRange.lowerBound
-        guard let node = CodeContents.element(at: offset, in: CodeContents.outline(doc.text, kind: doc.kind)) else {
+        let given = ctx.arguments.int("offset").map(Int.init)
+        let offset = given ?? doc.selectedRange.lowerBound
+        // Z pozycją (menu panelu) — węzeł panelu, także struktura sterująca; bez niej (paleta, skrót, makro) — jak
+        // dotąd podprogram, deklaracja albo jednostka pod kursorem (D203).
+        let controlFlow = given != nil && ctx.workspace.settings.codeContentsControlFlow
+        let outline = CodeContents.outline(doc.text, kind: doc.kind, controlFlow: controlFlow)
+        guard let node = CodeContents.element(at: offset, in: outline) else {
             throw CommandError.notAvailable(L10n.tr("Brak elementu w tym miejscu"))
         }
         return (doc, node)

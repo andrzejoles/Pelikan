@@ -7,7 +7,8 @@ import PelikanWorkspace
 /// i przygaszone. Śledzi kursor (zaznacza element zawierający pozycję), klik albo Enter przenosi do nazwy elementu
 /// (także na innej karcie jednostki — D192), strzałki w drzewie przesuwają kursor bez zmiany fokusu; filtr nazw nad
 /// drzewem, sortowanie i menu elementu (PD-CA-010). Ten sam widok w oknie programu, SQL i testu (`CodeContentsPanel`,
-/// D199) — w oknie SQL także polecenia SQL skryptu.
+/// D199) — w oknie SQL także polecenia SQL skryptu. Struktury sterujące (IF, pętle, CASE, EXCEPTION, D203) — przełącznik
+/// obok filtra i w menu (ustawienie `codeContentsControlFlow`); domyślnie zwinięte (rozwinięte są tylko korzenie).
 final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate, NSSearchFieldDelegate {
     /// Węzeł drzewa (NSOutlineView wymaga obiektów o stałej tożsamości).
     final class Item {
@@ -32,6 +33,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     private let outline = Tree()
     private let scroll = NSScrollView()
     private let filterField = NSSearchField()
+    private let controlFlowButton = NSButton()
     private let noteLabel = NSTextField(wrappingLabelWithString: "")
     private var noteHidden: NSLayoutConstraint!
     private var roots: [Item] = []
@@ -45,6 +47,15 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         didSet {
             guard activeRange != oldValue else { return }
             for r in roots { reloadRow(r) }
+        }
+    }
+    /// Struktury sterujące w drzewie (Ustawienia › Edytor, przycisk i menu panelu) — bez nich ich dzieci (bloki
+    /// zagnieżdżone) należą do elementu nadrzędnego, jak w zarysie bez struktur. Zarys liczony zawsze z nimi.
+    var showsControlFlow = true {
+        didSet {
+            controlFlowButton.state = showsControlFlow ? .on : .off
+            controlFlowButton.setAccessibilityValue(showsControlFlow ? L10n.tr("widoczne") : L10n.tr("ukryte"))
+            if showsControlFlow != oldValue { update(rawNodes) }
         }
     }
     /// Kolejność elementów (Ustawienia › Edytor, menu panelu).
@@ -96,6 +107,18 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         filterField.target = self
         filterField.action = #selector(filterChanged)
         filterField.translatesAutoresizingMaskIntoConstraints = false
+        controlFlowButton.bezelStyle = .accessoryBarAction
+        controlFlowButton.setButtonType(.pushOnPushOff)
+        controlFlowButton.image = NSImage(systemSymbolName: "arrow.triangle.branch", accessibilityDescription: nil)
+        controlFlowButton.imagePosition = .imageOnly
+        controlFlowButton.controlSize = .small
+        controlFlowButton.state = .on
+        controlFlowButton.toolTip = L10n.tr("Pokaż struktury sterujące (IF, pętle, CASE, obsługę wyjątków)")
+        controlFlowButton.setAccessibilityLabel(L10n.tr("Struktury sterujące"))
+        controlFlowButton.setAccessibilityValue(L10n.tr("widoczne"))
+        controlFlowButton.target = self
+        controlFlowButton.action = #selector(toggleControlFlow)
+        controlFlowButton.translatesAutoresizingMaskIntoConstraints = false
         noteLabel.textColor = .secondaryLabelColor
         noteLabel.isHidden = true
         noteLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -103,12 +126,15 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         noteHidden = noteLabel.heightAnchor.constraint(equalToConstant: 0)
         noteHidden.isActive = true
         addSubview(filterField)
+        addSubview(controlFlowButton)
         addSubview(noteLabel)
         addSubview(scroll)
         NSLayoutConstraint.activate([
             filterField.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             filterField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
-            filterField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            controlFlowButton.leadingAnchor.constraint(equalTo: filterField.trailingAnchor, constant: 2),
+            controlFlowButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            controlFlowButton.centerYAnchor.constraint(equalTo: filterField.centerYAnchor),
             noteLabel.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 4),
             noteLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
             noteLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
@@ -176,16 +202,43 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         let first = roots.isEmpty
         let expanded = saved ?? expandedKeys()
         rawNodes = nodes
-        roots = CodeContents.sorted(CodeContents.filtered(nodes, matching: filter), order: order).map(Item.init)
+        let shown = showsControlFlow ? nodes : PLSQLOutline.withoutControlFlow(nodes)
+        let filtered = CodeContents.filtered(shown, matching: filter)
+        roots = CodeContents.sorted(filtered, order: order).map(Item.init)
         outline.reloadData()
         let expandRoots = first && roots.count <= Self.autoExpandLimit
+        // Przy filtrze drzewo rozwinięte całe (widać pasujące elementy) — przy bardzo wielu trafieniach (np. „IF”
+        // w pakiecie z tysiącami struktur) tylko do poziomu podprogramów, bez rozwijania dziesiątek tysięcy węzłów.
+        let filterDepth = filter.isEmpty ? -1 : (Self.count(filtered, limit: Self.filterExpandLimit) > Self.filterExpandLimit ? 2 : Int.max)
         func restore(_ items: [Item], _ prefix: String, depth: Int) {
             for (i, key) in zip(items, Self.keys(prefix, items)) where !i.children.isEmpty {
-                // Przy filtrze — wszystko rozwinięte (widać pasujące elementy).
-                if expanded.contains(key) || (expandRoots && depth == 0) || !filter.isEmpty { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
+                if expanded.contains(key) || (expandRoots && depth == 0) || depth < filterDepth { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
             }
         }
         restore(roots, "", depth: 0)
+    }
+
+    /// Najwięcej elementów rozwijanych w całości przy filtrze.
+    private static let filterExpandLimit = 3000
+
+    /// Liczba elementów drzewa (bez parametrów), liczona najwyżej do `limit` + 1.
+    private static func count(_ nodes: [OutlineNode], limit: Int) -> Int {
+        var n = 0
+        func walk(_ list: [OutlineNode]) {
+            for c in list where c.kind != .parameter {
+                n += 1
+                if n > limit { return }
+                walk(c.children)
+            }
+        }
+        walk(nodes)
+        return n
+    }
+
+    @objc private func toggleControlFlow() {
+        // Przycisk nie zmienia stanu sam — stan z ustawienia po wykonaniu komendy.
+        controlFlowButton.state = showsControlFlow ? .on : .off
+        (NSApp.delegate as? AppDelegate)?.workspace.perform("codeContents.controlFlow")
     }
 
     private var filterWork: DispatchWorkItem?
@@ -196,7 +249,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         filterWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.applyFilter() }
         filterWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + (rawNodes.count > 1000 ? 0.45 : 0.18), execute: work)
+        // Liczba wszystkich węzłów (także struktur sterujących), nie samych korzeni.
+        DispatchQueue.main.asyncAfter(deadline: .now() + (Self.count(rawNodes, limit: 1000) > 1000 ? 0.45 : 0.18), execute: work)
     }
 
     private func applyFilter() {
@@ -242,7 +296,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         var target: Item?
         while let i = level.first(where: { $0.node.range.contains(offset) || $0.node.range.upperBound == offset }) {
             target = i
-            if !i.node.isContainer { break }
+            if !i.node.isContainer, !i.node.kind.isControlFlow { break }
             if i.children.contains(where: { $0.node.range.contains(offset) }) { outline.expandItem(i) }
             level = i.children
         }
@@ -281,6 +335,9 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         }
         sort.submenu = sub
         menu.addItem(sort)
+        let flow = ClosureMenuItem(title: L10n.tr("Pokaż struktury sterujące")) { ws.perform("codeContents.controlFlow") }
+        flow.state = showsControlFlow ? .on : .off
+        menu.addItem(flow)
         menu.addItem(ClosureMenuItem(title: L10n.tr("Rozwiń wszystko")) { [weak self] in self?.outline.expandItem(nil, expandChildren: true) })
         menu.addItem(ClosureMenuItem(title: L10n.tr("Zwiń wszystko")) { [weak self] in self?.outline.collapseItem(nil, collapseChildren: true) })
     }
@@ -332,8 +389,9 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         label.font = font
         label.lineBreakMode = .byTruncatingTail
         label.toolTip = CodeContents.signature(of: n)
-        // Polecenie SQL: VoiceOver czyta jednoliniowy tytuł z drzewa (pełny początek polecenia tylko w podpowiedzi).
-        label.setAccessibilityLabel(n.kind == .statement ? Self.title(n) : CodeContents.signature(of: n))
+        // Polecenie SQL i struktura sterująca: VoiceOver czyta jednoliniowy tytuł z drzewa (pełny początek polecenia
+        // albo nagłówek tylko w podpowiedzi).
+        label.setAccessibilityLabel(n.kind == .statement || n.kind.isControlFlow ? Self.title(n) : CodeContents.signature(of: n))
         for v in [icon, label] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false; cell.addSubview(v) }
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: cell.leadingAnchor), icon.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
@@ -362,12 +420,14 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             let params = n.detail.hasPrefix("(") ? String(n.detail[..<(n.detail.firstIndex(of: ")").map { n.detail.index(after: $0) } ?? n.detail.endIndex)]) : ""
             return n.name + params
         case .pragma: return "pragma " + n.name.lowercased()
-        case .block: return n.name
+        case .block: return CodeContents.controlTitle(n)
         // Polecenie SQL skryptu: szczegóły wieloliniowe (do ok. 1000 znaków w podpowiedzi) — w drzewie jedna linia.
         case .statement:
             let line = n.detail.prefix(200).split(whereSeparator: \.isWhitespace).joined(separator: " ")
             return line.isEmpty ? n.name : n.name + " " + line
-        default: return n.detail.isEmpty ? n.name : n.name + " " + n.detail
+        default:
+            if n.kind.isControlFlow { return CodeContents.controlTitle(n) }
+            return n.detail.isEmpty ? n.name : n.name + " " + n.detail
         }
     }
 
@@ -391,13 +451,21 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .procedure: ObjectSymbols.symbol(for: .procedure)
         case .function: ObjectSymbols.symbol(for: .function)
         case .trigger: ObjectSymbols.symbol(for: .trigger)
-        case .block, .declareSection, .beginSection, .exceptionSection: "curlybraces"
+        case .block, .declareSection, .beginSection: "curlybraces"
+        case .exceptionSection: "exclamationmark.octagon"
         case .cursor: "list.bullet.rectangle"
         case .exception: "exclamationmark.triangle"
         case .constant: "c.square"
         case .variable, .parameter: "v.square"
         case .pragma: "p.square"
         case .statement: "text.alignleft"
+        // Struktury sterujące (D203): rozgałęzienia, pętle, obsługa wyjątków, punkty czasowe wyzwalacza.
+        case .ifStatement, .caseStatement: "arrow.triangle.branch"
+        case .elsifBranch, .elseBranch, .whenBranch: "arrow.turn.down.right"
+        case .loop: "repeat"
+        case .forall: "square.stack.3d.up"
+        case .exceptionHandler: "arrow.turn.down.right"
+        case .timingPoint: "clock"
         }
     }
 
@@ -409,6 +477,10 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .typeDeclaration, .cursor: .systemPurple
         case .statement: .systemGreen
         case .constant: .systemTeal
+        case .ifStatement, .elsifBranch, .elseBranch, .caseStatement, .whenBranch: .systemIndigo
+        case .loop, .forall: .systemPink
+        case .exceptionSection, .exceptionHandler: .systemRed
+        case .timingPoint: .systemBlue
         default: .secondaryLabelColor
         }
     }

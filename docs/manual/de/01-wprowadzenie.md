@@ -81,6 +81,9 @@ Pelikan hat ein Hauptfenster:
 
 - **Linke Spalte** mit den Tabs **Verbindungen** (Verbindungsliste mit Ordnern und zuletzt verwendeten Verbindungen),
   **Objekte** (Object Browser), **Fenster** (Liste der offenen Fenster), **Templates** und **Dateien** (File Browser).
+  Die Spalte (der linke Bereich) wird durch Ziehen ihres Rands breiter; ein- und ausblenden lässt sie sich mit der
+  Seitenleisten-Taste am linken Ende der Titelleiste (direkt nach den Fenstertasten), mit **Ansicht › Linken
+  Bereich ein-/ausblenden** oder mit **⌃⌘S**. Zustand und Breite bleiben im Fensterlayout (Fensterlayout speichern, automatisches Speichern des Layouts).
 - **Dokument-Tabs** in der Mitte — jedes SQL-, Programm-, Test- oder Planfenster hat einen eigenen Tab mit einem
   farbigen Typbuchstaben: S — SQL Window, P — Program Window, T — Test Window, C — SQL*Plus-Konsole, E — Explain Plan
   Window, R — Report Window, D — Diagrammfenster, N — SQL-Notizbuch. Ein Mittelklick auf einen Tab schließt das Fenster;
