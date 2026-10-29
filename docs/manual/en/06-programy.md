@@ -97,7 +97,7 @@ thousands of lines.
   selects it or moves to its name.
   You show and hide the panel in each window separately — **View › Code Contents** or the sidebar button at
   the left end of the window bar; the choice stays with the window (also in the workset). **Settings › Editor ›
-  Code Contents in new windows** decides for windows where the panel was not toggled.
+  Code Contents visible by default** decides for windows where the panel was not toggled.
 - The context menu on a database object name in the editor offers the same actions as the Object Browser.
 - **F1** opens the Oracle documentation for the word under the cursor.
 

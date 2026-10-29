@@ -49421,6 +49421,34 @@
         }
       }
     },
+    "Okna programu, SQL i testu bez własnego wyboru (Widok › Zawartość kodu) idą za tym ustawieniem." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Program, SQL and Test windows without their own choice (View › Code Contents) follow this setting."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Program Window, SQL Window und Test Window ohne eigene Auswahl (Ansicht › Codeinhalt) folgen dieser Einstellung."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las Program Window, SQL Window y Test Window sin elección propia (Vista › Contenido del código) siguen este ajuste."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Program Window, SQL Window і Test Window без власного вибору (Подання › Вміст коду) дотримуються цього налаштування."
+          }
+        }
+      }
+    },
     "Okna pulpitu: %@" : {
       "localizations" : {
         "en" : {
@@ -60953,6 +60981,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Der Diagrammbefehl wurde im Fenster geändert"
+          }
+        }
+      }
+    },
+    "Poleceń SQL w skrypcie: %@ — pokazane są tylko jednostki i bloki PL/SQL." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL statements in the script: %@ — only PL/SQL units and blocks are shown."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Anweisungen im Skript: %@ — angezeigt werden nur PL/SQL-Einheiten und -Blöcke."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentencias SQL en el script: %@ — solo se muestran las unidades y bloques PL/SQL."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Команд SQL у скрипті: %@ — показано лише одиниці й блоки PL/SQL."
           }
         }
       }
@@ -110741,6 +110797,34 @@
         }
       }
     },
+    "Zawartość kodu domyślnie widoczna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code Contents visible by default"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codeinhalt standardmäßig sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido del código visible por defecto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вміст коду типово видимий"
+          }
+        }
+      }
+    },
     "Zawartość kodu jest dostępna w oknie programu, SQL i testu" : {
       "localizations" : {
         "en" : {
@@ -110765,34 +110849,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Вміст коду доступний у Program Window, SQL Window і Test Window"
-          }
-        }
-      }
-    },
-    "Zawartość kodu w nowych oknach" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Code Contents in new windows"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Codeinhalt in neuen Fenstern"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contenido del código en ventanas nuevas"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вміст коду в нових вікнах"
           }
         }
       }
@@ -121913,6 +121969,34 @@
         }
       }
     },
+    "ukryta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hidden"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ausgeblendet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "oculto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "прихований"
+          }
+        }
+      }
+    },
     "uprawnienia debugera" : {
       "localizations" : {
         "en" : {
@@ -123029,6 +123113,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deployment"
+          }
+        }
+      }
+    },
+    "widoczna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visible"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sichtbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "visible"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "видимий"
           }
         }
       }

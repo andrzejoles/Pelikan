@@ -99,4 +99,26 @@ struct SQLPerformanceTests {
         #expect(count == 1)
         #expect(t < Perf.target(.milliseconds(400)), "\(Perf.ms(t))")
     }
+
+    @Test("Zawartość kodu skryptu 50 000 poleceń (okno SQL, w tle) i pakietu 50 000 linii")
+    func scriptOutline() {
+        let script = (1...50_000).map { "select e.empno, e.ename /* \($0) */ from emp e where e.deptno = :d_\($0);\n" }.joined()
+        var outline = PLSQLOutline.ScriptOutline(nodes: [])
+        let t = Perf.measure(3) { outline = PLSQLOutline.parseScriptOutline(script) }
+        Perf.report("Zawartość kodu skryptu 50 000 poleceń", t, .milliseconds(600))
+        #expect(outline.omittedStatements == 50_000 && outline.nodes.isEmpty)
+        #expect(t < Perf.target(.milliseconds(600)), "\(Perf.ms(t))")
+        // Do limitu — polecenia ze szczegółami.
+        let limit = (1...PLSQLOutline.scriptStatementLimit).map { "select e.empno, e.ename /* \($0) */ from emp e where e.deptno = :d_\($0);\n" }.joined()
+        var nodes: [OutlineNode] = []
+        let t2 = Perf.measure(3) { nodes = PLSQLOutline.parseScript(limit) }
+        #expect(nodes.count == PLSQLOutline.scriptStatementLimit)
+        Perf.report("Zawartość kodu skryptu 5000 poleceń ze szczegółami", t2, .milliseconds(100))
+        #expect(t2 < Perf.target(.milliseconds(100)), "\(Perf.ms(t2))")
+        var pkg: [OutlineNode] = []
+        let t3 = Perf.measure(3) { pkg = PLSQLOutline.parseScript(Perf.package50k) }
+        Perf.report("Zawartość kodu pakietu 50 000 linii w oknie SQL", t3, .milliseconds(600))
+        #expect(pkg.count == 1)
+        #expect(t3 < Perf.target(.milliseconds(600)), "\(Perf.ms(t3))")
+    }
 }

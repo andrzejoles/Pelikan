@@ -9,8 +9,11 @@ public enum CodeContents {
 
     /// Zarys tekstu okna (D199): okno SQL — skrypt (polecenia SQL obok jednostek i bloków PL/SQL), okno programu
     /// i testu — PL/SQL. Ten sam zarys dla panelu i komend menu elementu.
-    public static func outline(_ text: String, kind: DocumentKind) -> [OutlineNode] {
-        kind == .sql ? PLSQLOutline.parseScript(text) : PLSQLOutline.parse(text)
+    public static func outline(_ text: String, kind: DocumentKind) -> [OutlineNode] { analyze(text, kind: kind).nodes }
+
+    /// Zarys z liczbą poleceń SQL pominiętych ponad limit (panel pokazuje dopisek); `isCancelled` — analiza w tle.
+    public static func analyze(_ text: String, kind: DocumentKind, isCancelled: () -> Bool = { false }) -> PLSQLOutline.ScriptOutline {
+        kind == .sql ? PLSQLOutline.parseScriptOutline(text, isCancelled: isCancelled) : PLSQLOutline.ScriptOutline(nodes: PLSQLOutline.parse(text))
     }
 
     /// Drzewo posortowane na każdym poziomie; sekcje i bloki zostają na swoich miejscach względem siebie.

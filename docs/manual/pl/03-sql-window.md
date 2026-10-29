@@ -34,11 +34,11 @@ domyślnie wyłączona). Otwartą transakcję sygnalizuje pasek stanu („● tr
 ## Zawartość kodu
 
 Po lewej stronie edytora **Zawartość kodu** pokazuje strukturę całego skryptu: polecenia SQL (pierwsze słowo i
-początek polecenia, pełny tekst w podpowiedzi), procedury, funkcje, pakiety i wyzwalacze z `CREATE` oraz bloki
+początek polecenia, w podpowiedzi do ok. 1000 znaków z podziałem na linie), procedury, funkcje, pakiety i wyzwalacze z `CREATE` oraz bloki
 anonimowe z ich deklaracjami. Klik albo Enter przenosi kursor do polecenia, drzewo śledzi kursor, pole nad drzewem
 filtruje także po treści polecenia (np. nazwie tabeli). Panel pokażesz albo ukryjesz w tym oknie przez **Widok ›
 Zawartość kodu** albo przycisk z symbolem paska bocznego na lewym końcu paska okna; wybór zostaje w oknie, a
-domyślny stan nowych okien ustawisz w **Ustawienia › Edytor › Zawartość kodu w nowych oknach**. Konsola SQL*Plus nie
+domyślny stan nowych okien ustawisz w **Ustawienia › Edytor › Zawartość kodu domyślnie widoczna**. Konsola SQL*Plus nie
 ma tego panelu.
 
 ## Zmienne

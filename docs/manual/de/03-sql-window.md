@@ -36,12 +36,12 @@ Window** ist standardmäßig deaktiviert). Eine offene Transaktion zeigt die Sta
 ## Codeinhalt
 
 Links vom Editor zeigt der **Codeinhalt** die Struktur des ganzen Skripts: SQL-Anweisungen (erstes Wort und Anfang
-der Anweisung, vollständiger Text im Tooltip), Prozeduren, Funktionen, Pakete und Trigger aus `CREATE` sowie
+der Anweisung, bis etwa 1000 Zeichen mit Zeilenumbrüchen im Tooltip), Prozeduren, Funktionen, Pakete und Trigger aus `CREATE` sowie
 anonyme Blöcke mit ihren Deklarationen. Klick oder Enter setzt den Cursor auf die Anweisung, der Baum verfolgt den
 Cursor, und das Feld über dem Baum filtert auch nach dem Text der Anweisung (z. B. einem Tabellennamen). Den
 Bereich blenden Sie in diesem Fenster über **Ansicht › Codeinhalt** oder die Seitenleisten-Taste am linken Ende
 der Fensterleiste ein und aus; die Auswahl bleibt im Fenster, den Standard für neue Fenster legen Sie unter
-**Einstellungen › Editor › Codeinhalt in neuen Fenstern** fest. Die SQL*Plus-Konsole hat diesen Bereich nicht.
+**Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** fest. Die SQL*Plus-Konsole hat diesen Bereich nicht.
 
 ## Variablen
 

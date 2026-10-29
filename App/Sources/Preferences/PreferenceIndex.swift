@@ -120,7 +120,7 @@ enum PreferenceIndex {
         ("EditorPane", "Bez pionowego marginesu"),
         ("EditorPane", "Pionowy margines w kolumnie %@"),
         ("EditorPane", "Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"),
-        ("EditorPane", "Zawartość kodu w nowych oknach"),
+        ("EditorPane", "Zawartość kodu domyślnie widoczna"),
         ("EditorPane", "Kolejność w Zawartości kodu"),
         ("EditorPane", "Wcięcia"),
         ("EditorPane", "Wcięcie nowej linii"),

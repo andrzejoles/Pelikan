@@ -811,7 +811,8 @@ public enum BuiltinCommands {
                 }
                 let show = ctx.arguments.bool("visible") ?? !ctx.workspace.showsCodeContents(doc)
                 doc.codeContentsVisible = show
-                return CommandResult(value: .bool(show))
+                // Makro odtwarza stan, a nie przełączenie (przycisk paska okna i menu wywołują bez argumentu).
+                return CommandResult(value: .bool(show), resolvedArguments: CommandArguments(["visible": .bool(show)]))
             },
             Command(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
                                       agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje Przeglądarkę obiektów w lewej kolumnie."),

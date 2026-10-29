@@ -55,10 +55,17 @@ public enum PLSQLOutline {
 
     static func tokens(_ text: String) -> [Tok] {
         let ns = text as NSString
-        return Lexer(text).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment, .hint].contains($0.kind) }.map {
-            let s = ns.substring(with: NSRange(location: $0.start, length: $0.length))
-            return Tok(kind: $0.kind, start: $0.start, end: $0.start + $0.length, upper: s.uppercased(), text: s)
-        }
+        return significant(text).map { tok($0, ns) }
+    }
+
+    /// Tokeny bez odstępów, komentarzy i podpowiedzi optymalizatora — bez tekstu (tani przebieg przez cały skrypt).
+    static func significant(_ text: String) -> [Token] {
+        Lexer(text).tokenize().filter { ![.whitespace, .newline, .lineComment, .blockComment, .hint].contains($0.kind) }
+    }
+
+    static func tok(_ t: Token, _ ns: NSString) -> Tok {
+        let s = ns.substring(with: NSRange(location: t.start, length: t.length))
+        return Tok(kind: t.kind, start: t.start, end: t.start + t.length, upper: s.uppercased(), text: s)
     }
 
     /// Zarys całego tekstu (wiele jednostek w pliku).
@@ -68,35 +75,77 @@ public enum PLSQLOutline {
         return markVisibility(p.parseTop())
     }
 
-    /// Zarys skryptu okna SQL (D199): jednostki i bloki PL/SQL jak w `parse`, a między nimi polecenia SQL (zapytania,
-    /// DML, DDL, polecenia bez bloku) jako elementy `.statement` w kolejności tekstu. Nazwa to pierwsze słowo polecenia
-    /// (jak w tekście, po komentarzach), szczegóły — dalszy początek polecenia w jednej linii, skrócony.
-    public static func parseScript(_ text: String) -> [OutlineNode] {
-        let units = parse(text)
+    /// Zarys skryptu okna SQL: elementy i liczba poleceń SQL pominiętych ponad limit (bardzo duże skrypty).
+    public struct ScriptOutline: Sendable, Hashable {
+        public var nodes: [OutlineNode]
+        /// Polecenia SQL pominięte, bo skrypt ma ich więcej niż limit (0 — wszystkie w zarysie).
+        public var omittedStatements: Int
+        public init(nodes: [OutlineNode], omittedStatements: Int = 0) { self.nodes = nodes; self.omittedStatements = omittedStatements }
+    }
+
+    /// Najwięcej poleceń SQL w zarysie skryptu — powyżej tylko jednostki i bloki PL/SQL (panel i tak byłby nieczytelny).
+    public static let scriptStatementLimit = 5000
+    /// Najwięcej znaków początku polecenia w szczegółach (podpowiedź panelu).
+    public static let statementDetailLimit = 1000
+
+    /// Zarys skryptu okna SQL (D199) — elementy `parseScriptOutline`.
+    public static func parseScript(_ text: String) -> [OutlineNode] { parseScriptOutline(text).nodes }
+
+    /// Zarys skryptu okna SQL (D199) według podziału na polecenia (`ScriptSplitter`, jak przy wykonaniu): każde polecenie
+    /// PL/SQL (`CREATE` jednostki, blok anonimowy) parsowane osobno — niedokończony blok albo błąd składni nie zabiera
+    /// reszty skryptu; polecenia SQL (zapytania, DML, DDL) jako elementy `.statement`. Nazwa polecenia to pierwsze słowo
+    /// po komentarzach (jak w tekście — klik zaznacza je w edytorze), szczegóły — dalszy początek polecenia (najwyżej
+    /// `statementDetailLimit` znaków, z liniami i wcięciami, komentarze zastąpione odstępem). Tekst leksowany raz.
+    /// `isCancelled` — przerwanie analizy w tle (wynik wtedy niepełny, do odrzucenia).
+    public static func parseScriptOutline(_ text: String, statementLimit: Int = scriptStatementLimit,
+                                          isCancelled: () -> Bool = { false }) -> ScriptOutline {
         let ns = text as NSString
+        // Tekst tokenów tylko tam, gdzie potrzebny (polecenia PL/SQL, początek polecenia SQL) — skrypt z dziesiątkami
+        // tysięcy poleceń bez milionów podciągów.
+        let all = significant(text)
+        let statements = ScriptSplitter.split(text).filter { $0.end > $0.start }
+        let sqlCount = statements.reduce(0) { $0 + ($1.isPLSQL ? 0 : 1) }
+        let withSQL = sqlCount <= statementLimit
         var out: [OutlineNode] = []
-        var u = 0
-        for s in ScriptSplitter.split(text) where s.end > s.start {
-            // Początek polecenia bez komentarzy (wystarczy początek tekstu — szczegóły i tak są skracane).
-            let prefix = ns.substring(with: NSRange(location: s.start, length: min(s.end - s.start, 600)))
-            let toks = tokens(prefix)
-            guard let first = toks.first else { continue }
-            let at = s.start + first.start
-            // Jednostki przed poleceniem — do wyniku; polecenie wewnątrz jednostki (rozpoznanej przez parser) pomijane.
-            while u < units.count, units[u].range.lowerBound <= at {
-                out.append(units[u])
-                u += 1
+        var ti = 0
+        for (n, s) in statements.enumerated() {
+            if n % 256 == 0, isCancelled() { break }
+            // Pierwszy token znaczący polecenia (tokeny bez komentarzy, w kolejności tekstu — wskaźnik tylko rośnie).
+            while ti < all.count, all[ti].start < s.start { ti += 1 }
+            guard ti < all.count, all[ti].start < s.end, s.isPLSQL || withSQL else { continue }
+            let first = tok(all[ti], ns)
+            if s.isPLSQL {
+                var j = ti
+                while j < all.count, all[j].start < s.fullEnd { j += 1 }
+                var p = Parser(t: all[ti..<j].map { tok($0, ns) }, i: 0, length: min(s.end, ns.length), source: ns)
+                let units = p.parseTop()
+                if !units.isEmpty { out += units; continue }
             }
-            if let last = out.last, last.kind != .statement, last.range.contains(at) { continue }
-            var detail = (prefix as NSString).substring(from: first.end)
-                .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
-            if detail.count > 160 || (prefix as NSString).length < s.end - s.start {
-                detail = String(detail.prefix(160)).trimmingCharacters(in: .whitespaces) + "…"
+            // Szczegóły: tokeny za pierwszym słowem do końca polecenia (bez „;”) — odstępy jak w tekście, komentarz
+            // zastąpiony odstępem albo końcem linii.
+            var detail = ""
+            var length = 0
+            var prevEnd = first.end
+            var k = ti + 1
+            while k < all.count, all[k].start < s.end {
+                let t = all[k]
+                if length + (t.start - prevEnd) + t.length > statementDetailLimit { detail += "…"; break }
+                if length > 0, t.start > prevEnd {
+                    let gap = ns.substring(with: NSRange(location: prevEnd, length: t.start - prevEnd))
+                    // Komentarz w odstępie: koniec linii z wcięciem następnej linii albo spacja.
+                    let sep = gap.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? gap
+                        : gap.lastIndex(where: \.isNewline).map { "\n" + gap[gap.index(after: $0)...].prefix(while: { $0 == " " || $0 == "\t" }) } ?? " "
+                    detail += sep
+                    length += (sep as NSString).length
+                }
+                detail += ns.substring(with: NSRange(location: t.start, length: t.length))
+                length += t.length
+                prevEnd = t.start + t.length
+                k += 1
             }
-            out.append(OutlineNode(kind: .statement, name: first.text, detail: detail, range: s.start..<max(s.fullEnd, s.end), nameOffset: at))
+            out.append(OutlineNode(kind: .statement, name: first.text, detail: detail, range: s.start..<max(s.fullEnd, s.end), nameOffset: first.start))
         }
-        out.append(contentsOf: units[u...])
-        return out
+        return ScriptOutline(nodes: markVisibility(out), omittedStatements: withSQL ? 0 : sqlCount)
     }
 
     /// Klucz podprogramu do porównania specyfikacji z ciałem: rodzaj, nazwa i nazwy parametrów (przeciążenia).

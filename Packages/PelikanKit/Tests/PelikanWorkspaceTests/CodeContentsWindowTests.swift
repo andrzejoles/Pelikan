@@ -37,8 +37,10 @@ struct CodeContentsWindowTests {
             #expect(doc.codeContentsVisible == true && ws.showsCodeContents(doc))
         }
         ws.activate(sql.id)
-        try await ws.invoke("view.codeContents")
+        let hide = try await ws.invoke("view.codeContents")
         #expect(!ws.showsCodeContents(sql))
+        // Przełączenie bez argumentu zapisuje w makrze stan, nie przełączenie.
+        #expect(hide.resolvedArguments?.bool("visible") == false)
         // Inne okna i ustawienie domyślne bez zmian.
         #expect(ws.showsCodeContents(program) && ws.showsCodeContents(test))
         #expect(!ws.settings.showCodeContents)
