@@ -62,6 +62,9 @@ scripts/testdb.sh sql TEST <<< "select 1 from dual;"   # sqlplus w kontenerze
   szkło Liquid Glass wybranego segmentu `NSTabViewController` (pusta etykieta) — wtedy `--screen` (dawne `screencapture`,
   okna widoczne). Skrypt zawsze buduje aplikację i sprawdza haki; każdy przebieg w osobnym `mktemp`. `SCREENSHOTS_OUT` —
   inny katalog wyników (próby bez zmian w `docs/screenshots`). Aplikacja Debug nie może czytać `~/Downloads` (pytanie
-  macOS o dostęp przerywa właścicielowi) — skrypt używa kopii w `.testdb/instantclient`.
+  macOS o dostęp przerywa właścicielowi) — skrypt używa kopii w `.testdb/instantclient`. Klon ma osobny identyfikator
+  `<id>.screenshots` (D204): własne UserDefaults, czyszczone przed każdym scenariuszem i w sprzątaniu — przebieg nie
+  zmienia ramki okna, paska i podziału aplikacji Debug właściciela, a okno ma rozmiar domyślny (1280×820), nie z jego
+  ustawień; w trybie skryptu układ okna, paska i podziału nie jest też autozapisywany.
   Scenariusz musi podać wszystkie argumenty komend: brakujący argument otwiera okno dialogowe, które aktywuje aplikację.
   Pliki zrzutów nazywane są od tytułu okna (`NN-scenariusz-tytul.png`), bo kolejność okien między przebiegami się zmienia.
