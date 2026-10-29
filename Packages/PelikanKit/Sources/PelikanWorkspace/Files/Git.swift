@@ -218,6 +218,32 @@ public struct GitRepository: Sendable, Hashable {
         return GitRepository(root: URL(fileURLWithPath: top, isDirectory: true))
     }
 
+    /// Repozytorium katalogu dla grup kart (D200): katalog roboczy, nazwa (katalog głównego repozytorium — także dla
+    /// worktree), gałąź z pliku HEAD i czy repozytorium ma zdalne (`git remote`). nil — poza repozytorium albo brak gita.
+    public static func groupInfo(for directory: URL) -> RepositoryGroupInfo? {
+        guard let out = try? run(["rev-parse", "--show-toplevel", "--git-common-dir", "--git-dir"], in: directory, config: backgroundConfig) else { return nil }
+        let lines = out.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard lines.count >= 3, !lines[0].isEmpty else { return nil }
+        let top = URL(fileURLWithPath: lines[0], isDirectory: true)
+        func absolute(_ p: String) -> URL {
+            p.hasPrefix("/") ? URL(fileURLWithPath: p, isDirectory: true) : directory.appendingPathComponent(p, isDirectory: true).standardizedFileURL
+        }
+        let common = absolute(lines[1]), gitDir = absolute(lines[2])
+        var name = common.lastPathComponent == ".git" ? common.deletingLastPathComponent().lastPathComponent : common.lastPathComponent
+        if name.hasSuffix(".git"), name.count > 4 { name = String(name.dropLast(4)) }
+        let remotes = (try? run(["remote"], in: top, config: backgroundConfig))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return RepositoryGroupInfo(root: top.standardizedFileURL.path, name: name, branch: headBranch(gitDirectory: gitDir.path),
+                                   hasRemote: !remotes.isEmpty, gitDirectory: gitDir.path)
+    }
+
+    /// Gałąź z pliku `HEAD` katalogu gita („ref: refs/heads/…”); nil — odłączony HEAD albo brak pliku.
+    public static func headBranch(gitDirectory: String) -> String? {
+        guard let head = try? String(contentsOfFile: gitDirectory + "/HEAD", encoding: .utf8) else { return nil }
+        let line = head.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefix = "ref: refs/heads/"
+        return line.hasPrefix(prefix) ? String(line.dropFirst(prefix.count)) : nil
+    }
+
     /// Ścieżka względem katalogu głównego (dowiązania rozwiązane po obu stronach, np. /var → /private/var).
     static func relativePath(of url: URL, root: URL) -> String? {
         let r = root.resolvingSymlinksInPath().standardizedFileURL.path

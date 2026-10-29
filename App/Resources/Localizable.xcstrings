@@ -477,6 +477,90 @@
         }
       }
     },
+    "%@ okien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ вікон"
+          }
+        }
+      }
+    },
+    "%@ okna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ventanas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ вікна"
+          }
+        }
+      }
+    },
+    "%@ okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ вікно"
+          }
+        }
+      }
+    },
     "%@ wierszy" : {
       "localizations" : {
         "en" : {
@@ -2941,30 +3025,30 @@
         }
       }
     },
-    "Aktywuje następne okno z Listy okien." : {
+    "Aktywuje następne okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activates the next window in the Window List."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Активує наступне вікно зі Списку вікон."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa la siguiente ventana de la Lista de ventanas."
+            "value" : "Activates the next window of the current tab group (with all tabs shown — from the Window List)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktiviert das nächste Fenster der Fensterliste."
+            "value" : "Aktiviert das nächste Fenster der aktuellen Tabgruppe (bei allen Tabs — aus der Fensterliste)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la siguiente ventana del grupo de pestañas actual (con todas las pestañas — de la Lista de ventanas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активує наступне вікно поточної групи вкладок (у режимі всіх вкладок — зі Списку вікон)."
           }
         }
       }
@@ -3025,30 +3109,30 @@
         }
       }
     },
-    "Aktywuje poprzednie okno z Listy okien." : {
+    "Aktywuje poprzednie okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activates the previous window in the Window List."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Активує попереднє вікно зі Списку вікон."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa la ventana anterior de la Lista de ventanas."
+            "value" : "Activates the previous window of the current tab group (with all tabs shown — from the Window List)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktiviert das vorherige Fenster der Fensterliste."
+            "value" : "Aktiviert das vorherige Fenster der aktuellen Tabgruppe (bei allen Tabs — aus der Fensterliste)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa la ventana anterior del grupo de pestañas actual (con todas las pestañas — de la Lista de ventanas)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активує попереднє вікно поточної групи вкладок (у режимі всіх вкладок — зі Списку вікон)."
           }
         }
       }
@@ -5153,6 +5237,34 @@
         }
       }
     },
+    "Bez połączenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin conexión"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без з'єднання"
+          }
+        }
+      }
+    },
     "Bez rozróżniania wielkości liter" : {
       "localizations" : {
         "en" : {
@@ -6689,6 +6801,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remote-Branch fehlt im lokalen Repo — git fetch ausführen"
+          }
+        }
+      }
+    },
+    "Brak grup kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tab groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Tabgruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay grupos de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Немає груп вкладок"
           }
         }
       }
@@ -21841,6 +21981,34 @@
         }
       }
     },
+    "Gałąź Git: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git branch: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git-Branch: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rama Git: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Гілка Git: %@"
+          }
+        }
+      }
+    },
     "Gałąź repozytorium i stan pliku (zmieniony, dodany, nieśledzony…) — domyślnie plik aktywnego okna." : {
       "localizations" : {
         "en" : {
@@ -22429,30 +22597,30 @@
         }
       }
     },
-    "Git: gałąź i stan pliku" : {
+    "Git: gałąź i stan pliku — kliknij, aby otworzyć pozostałe pliki zmienione w gałęzi" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Git: branch and file status"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git: гілка й стан файлу"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Git: rama y estado del archivo"
+            "value" : "Git: branch and file status — click to open the other files changed in the branch"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Git: Branch und Dateistatus"
+            "value" : "Git: Branch und Dateistatus — klicken, um die übrigen im Branch geänderten Dateien zu öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git: rama y estado del archivo — haz clic para abrir los demás archivos modificados en la rama"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Git: гілка й стан файлу — клацніть, щоб відкрити інші файли, змінені в гілці"
           }
         }
       }
@@ -22877,6 +23045,118 @@
         }
       }
     },
+    "Grupa kart — kliknij, aby wybrać inną grupę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tab group — click to choose another group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe — klicken, um eine andere Gruppe zu wählen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de pestañas — haz clic para elegir otro grupo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група вкладок — клацніть, щоб вибрати іншу групу"
+          }
+        }
+      }
+    },
+    "Grupa kart: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tab group: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de pestañas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група вкладок: %@"
+          }
+        }
+      }
+    },
+    "Grupa: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група: %@"
+          }
+        }
+      }
+    },
+    "Grupa: nazwa, numer od 1 albo identyfikator" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group: name, number from 1 or identifier"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe: Name, Nummer ab 1 oder Kennung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo: nombre, número desde 1 o identificador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Група: назва, номер від 1 або ідентифікатор"
+          }
+        }
+      }
+    },
     "Grupowanie" : {
       "localizations" : {
         "en" : {
@@ -22989,6 +23269,34 @@
         }
       }
     },
+    "Grupy kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tab Groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupos de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Групи вкладок"
+          }
+        }
+      }
+    },
     "Grupy okien" : {
       "localizations" : {
         "en" : {
@@ -23013,6 +23321,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenstergruppen"
+          }
+        }
+      }
+    },
+    "Grupy ręczne" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual Groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manuelle Gruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupos manuales"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ручні групи"
           }
         }
       }
@@ -26797,6 +27133,34 @@
         }
       }
     },
+    "Istniejąca grupa ręczna: nazwa albo identyfikator" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Existing manual group: name or identifier"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorhandene manuelle Gruppe: Name oder Kennung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo manual existente: nombre o identificador"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наявна ручна група: назва або ідентифікатор"
+          }
+        }
+      }
+    },
     "Istniejące tabele" : {
       "localizations" : {
         "en" : {
@@ -27913,6 +28277,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Контекстні вкладки (Програма, Результат, Діаграма…) з’являються разом із вікном відповідного типу. Поле «Пошук дій» знаходить будь-яку команду за назвою, також без діакритики та за англійською назвою з PL/SQL Developer."
+          }
+        }
+      }
+    },
+    "Karty wszystkich grup" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs of All Groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs aller Gruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pestañas de todos los grupos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкладки всіх груп"
           }
         }
       }
@@ -32309,6 +32701,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deployment-Konsole: Schrittabschnitte mit Status und Zeit, Fehlerfilter, anklickbare proc/xlc-Fehler, Stopp, Protokoll speichern."
+          }
+        }
+      }
+    },
+    "Konsole SQL*Plus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL*Plus Consoles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL*Plus-Konsolen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consolas SQL*Plus"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Консолі SQL*Plus"
           }
         }
       }
@@ -37549,6 +37969,34 @@
         }
       }
     },
+    "Menu gałęzi: otwórz pozostałe pliki zmienione w gałęzi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Branch menu: open the other files changed in the branch"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Branch-Menü: übrige im Branch geänderte Dateien öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menú de la rama: abrir los demás archivos modificados en la rama"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Меню гілки: відкрити інші файли, змінені в гілці"
+          }
+        }
+      }
+    },
     "Metoda" : {
       "localizations" : {
         "en" : {
@@ -39201,6 +39649,62 @@
         }
       }
     },
+    "Następna grupa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Gruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна група"
+          }
+        }
+      }
+    },
+    "Następna grupa kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next Tab Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nächste Tabgruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de pestañas siguiente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наступна група вкладок"
+          }
+        }
+      }
+    },
     "Następna jednostka" : {
       "localizations" : {
         "en" : {
@@ -39985,6 +40489,34 @@
         }
       }
     },
+    "Nazwa grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppenname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del grupo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва групи"
+          }
+        }
+      }
+    },
     "Nazwa grupy (pusta — bez grupy)" : {
       "localizations" : {
         "en" : {
@@ -40317,6 +40849,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modulname (standardmäßig aus dem Dateinamen)"
+          }
+        }
+      }
+    },
+    "Nazwa nowej grupy ręcznej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name of a new manual group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name einer neuen manuellen Gruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de un nuevo grupo manual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва нової ручної групи"
           }
         }
       }
@@ -41245,6 +41805,62 @@
         }
       }
     },
+    "Nie ma takiej grupy kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such tab group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine solche Tabgruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No existe ese grupo de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такої групи вкладок немає"
+          }
+        }
+      }
+    },
+    "Nie ma takiej grupy ręcznej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No such manual group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine solche manuelle Gruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No existe ese grupo manual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Такої ручної групи немає"
+          }
+        }
+      }
+    },
     "Nie ma w koszu obiektu „%@”" : {
       "localizations" : {
         "en" : {
@@ -41913,6 +42529,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commit der Working Copy auf dem Server konnte nicht gelesen werden"
+          }
+        }
+      }
+    },
+    "Nie udało się otworzyć: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not open: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konnte nicht geöffnet werden: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo abrir: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не вдалося відкрити: %@"
           }
         }
       }
@@ -43765,6 +44409,34 @@
         }
       }
     },
+    "Nieznane połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown connection"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unbekannte Verbindung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conexión desconocida"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Невідоме з'єднання"
+          }
+        }
+      }
+    },
     "Nieznane połączenie celu „%@”" : {
       "localizations" : {
         "en" : {
@@ -44097,6 +44769,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL-Notizbuch"
+          }
+        }
+      }
+    },
+    "Nowa grupa kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tab Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Tabgruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo grupo de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова група вкладок"
+          }
+        }
+      }
+    },
+    "Nowa grupa…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Group…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Gruppe …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo grupo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова група…"
           }
         }
       }
@@ -49421,6 +50149,34 @@
         }
       }
     },
+    "Okna SQL" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL Windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL-Fenster"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventanas SQL"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікна SQL"
+          }
+        }
+      }
+    },
     "Okna programu, SQL i testu bez własnego wyboru (Widok › Zawartość kodu) idą za tym ustawieniem." : {
       "localizations" : {
         "en" : {
@@ -49953,6 +50709,34 @@
         }
       }
     },
+    "Okno nie należy do grupy ręcznej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window does not belong to a manual group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster gehört zu keiner manuellen Gruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana no pertenece a un grupo manual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно не належить до ручної групи"
+          }
+        }
+      }
+    },
     "Okno opcji przebiegu: ścieżki testów, pokrycie, schematy pokrycia oraz obiekty uwzględniane i pomijane." : {
       "localizations" : {
         "en" : {
@@ -50369,6 +51153,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Test Window „%@“"
+          }
+        }
+      }
+    },
+    "Okno wraca do grup automatycznych (projekt, repozytorium, połączenie albo rodzaj okna)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window returns to the automatic groups (project, repository, connection or window type)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster kehrt zu den automatischen Gruppen zurück (Projekt, Repository, Verbindung oder Fenstertyp)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana vuelve a los grupos automáticos (proyecto, repositorio, conexión o tipo de ventana)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно повертається до автоматичних груп (проєкт, репозиторій, з'єднання або тип вікна)."
           }
         }
       }
@@ -52137,6 +52949,34 @@
         }
       }
     },
+    "Otwarte okna: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Windows opened: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geöffnete Fenster: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ventanas abiertas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрито вікон: %@"
+          }
+        }
+      }
+    },
     "Otwarto okien: %@" : {
       "localizations" : {
         "en" : {
@@ -53089,6 +53929,34 @@
         }
       }
     },
+    "Otwiera pliki kodu zmienione w gałęzi repozytorium pliku aktywnego okna — od punktu rozgałęzienia z gałęzią domyślną zdalnego repozytorium (bez niej — z gałęzią śledzoną), a także niezatwierdzone i nieśledzone; bez usuniętych, binarnych i już otwartych. Para specyfikacji i ciała — jedno okno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens the code files changed in the branch of the active window's repository — since the fork point with the remote's default branch (without one — with the upstream branch), plus uncommitted and untracked files; skips deleted, binary and already open files. A spec and body pair opens as one window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet die im Branch des Repositorys des aktiven Fensters geänderten Code-Dateien — seit der Abzweigung vom Standard-Branch des Remotes (ohne ihn — vom Upstream-Branch), dazu nicht committete und nicht verfolgte Dateien; ohne gelöschte, binäre und bereits geöffnete. Ein Paar aus Spezifikation und Body öffnet sich als ein Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre los archivos de código modificados en la rama del repositorio de la ventana activa — desde el punto de bifurcación con la rama predeterminada del remoto (sin ella — con la rama upstream), además de los no confirmados y sin seguimiento; sin eliminados, binarios ni ya abiertos. Un par de especificación y cuerpo se abre en una sola ventana."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває файли коду, змінені в гілці репозиторію файлу активного вікна, — від точки розгалуження з типовою гілкою віддаленого репозиторію (без неї — з відстежуваною гілкою), а також незафіксовані й невідстежувані; без видалених, двійкових і вже відкритих. Пара специфікації й тіла — одне вікно."
+          }
+        }
+      }
+    },
     "Otwiera program w oknie programu; tabelę, sekwencję, synonim, indeks, użytkownika i rolę w edytorze; pozostałe obiekty jako DDL." : {
       "localizations" : {
         "en" : {
@@ -53425,6 +54293,34 @@
         }
       }
     },
+    "Otworzyć pliki zmienione w gałęzi?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the files changed in the branch?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Branch geänderte Dateien öffnen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Abrir los archivos modificados en la rama?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити файли, змінені в гілці?"
+          }
+        }
+      }
+    },
     "Otwórz" : {
       "localizations" : {
         "en" : {
@@ -53477,6 +54373,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SQL öffnen"
+          }
+        }
+      }
+    },
+    "Otwórz bez pytania także więcej niż %@ plików" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open without asking even more than %@ files"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auch mehr als %@ Dateien ohne Rückfrage öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir sin preguntar incluso más de %@ archivos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкривати без запитання навіть понад %@ файлів"
           }
         }
       }
@@ -53729,6 +54653,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erneut öffnen"
+          }
+        }
+      }
+    },
+    "Otwórz pozostałe pliki zmienione w gałęzi" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Other Files Changed in Branch"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übrige im Branch geänderte Dateien öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir los demás archivos modificados en la rama"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити інші файли, змінені в гілці"
           }
         }
       }
@@ -55609,6 +56561,34 @@
         }
       }
     },
+    "Pasek kart pokazuje karty wszystkich grup albo tylko bieżącej grupy." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The tab bar shows the tabs of all groups or only of the current group."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Tableiste zeigt die Tabs aller Gruppen oder nur der aktuellen Gruppe."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La barra de pestañas muestra las pestañas de todos los grupos o solo del grupo actual."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Панель вкладок показує вкладки всіх груп або лише поточної групи."
+          }
+        }
+      }
+    },
     "Pasek szybkiego dostępu" : {
       "localizations" : {
         "en" : {
@@ -57261,6 +58241,34 @@
         }
       }
     },
+    "Pliki zmienione w gałęzi, które nie są otwarte: %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files changed in the branch that are not open: %@."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Branch geänderte, nicht geöffnete Dateien: %@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos modificados en la rama que no están abiertos: %@."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінені в гілці файли, які не відкрито: %@."
+          }
+        }
+      }
+    },
     "Pliki zmieniły się na dysku: %@" : {
       "localizations" : {
         "en" : {
@@ -57901,6 +58909,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Введіть поточний пароль"
+          }
+        }
+      }
+    },
+    "Podaj grupę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specify a group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe angeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indica un grupo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкажіть групу"
+          }
+        }
+      }
+    },
+    "Podaj grupę albo nazwę nowej grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Specify a group or the name of a new group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe oder Namen einer neuen Gruppe angeben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indica un grupo o el nombre de un grupo nuevo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкажіть групу або назву нової групи"
           }
         }
       }
@@ -59109,6 +60173,34 @@
         }
       }
     },
+    "Pokazuje Listę okien (drzewo według grup kart) w lewej kolumnie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the Window List (a tree by tab groups) in the left column."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Fensterliste (Baum nach Tabgruppen) in der linken Spalte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra la Lista de ventanas (árbol por grupos de pestañas) en la columna izquierda."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує Список вікон (дерево за групами вкладок) у лівій колонці."
+          }
+        }
+      }
+    },
     "Pokazuje PLSQL_CCFLAGS jednostki albo ustawia nowe i rekompiluje ją (REUSE SETTINGS)." : {
       "localizations" : {
         "en" : {
@@ -59329,6 +60421,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blendet versteckte Dateien und Verzeichnisse im File Browser ein oder aus."
+          }
+        }
+      }
+    },
+    "Pokazuje karty następnej grupy i aktywuje jej ostatnio używane okno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tabs of the next group and activates its most recently used window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Tabs der nächsten Gruppe und aktiviert ihr zuletzt verwendetes Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra las pestañas del grupo siguiente y activa su ventana usada más recientemente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує вкладки наступної групи й активує її останнє використане вікно."
+          }
+        }
+      }
+    },
+    "Pokazuje karty poprzedniej grupy i aktywuje jej ostatnio używane okno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tabs of the previous group and activates its most recently used window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Tabs der vorherigen Gruppe und aktiviert ihr zuletzt verwendetes Fenster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra las pestañas del grupo anterior y activa su ventana usada más recientemente."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує вкладки попередньої групи й активує її останнє використане вікно."
+          }
+        }
+      }
+    },
+    "Pokazuje karty wskazanej grupy i aktywuje jej ostatnio używane okno; bez argumentu — wybór z listy grup." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the tabs of the given group and activates its most recently used window; without an argument — choose from the list of groups."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeigt die Tabs der angegebenen Gruppe und aktiviert ihr zuletzt verwendetes Fenster; ohne Argument — Auswahl aus der Gruppenliste."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra las pestañas del grupo indicado y activa su ventana usada más recientemente; sin argumento — elección de la lista de grupos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує вкладки вказаної групи й активує її останнє використане вікно; без аргументу — вибір зі списку груп."
           }
         }
       }
@@ -59865,6 +61041,90 @@
         }
       }
     },
+    "Pokaż grupę kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Tab Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe zeigen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar grupo de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати групу вкладок"
+          }
+        }
+      }
+    },
+    "Pokaż grupę kart…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Tab Group…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe zeigen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar grupo de pestañas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати групу вкладок…"
+          }
+        }
+      }
+    },
+    "Pokaż grupę…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Group…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppe zeigen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar grupo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати групу…"
+          }
+        }
+      }
+    },
     "Pokaż jednostkę" : {
       "localizations" : {
         "en" : {
@@ -59917,6 +61177,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показати одиницю…"
+          }
+        }
+      }
+    },
+    "Pokaż karty wszystkich grup (true) albo tylko bieżącej (false); bez argumentu — przełącza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show the tabs of all groups (true) or only of the current one (false); without an argument — toggles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs aller Gruppen (true) oder nur der aktuellen (false) zeigen; ohne Argument — umschalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar las pestañas de todos los grupos (true) o solo del actual (false); sin argumento — alterna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати вкладки всіх груп (true) або лише поточної (false); без аргументу — перемикає"
           }
         }
       }
@@ -61681,6 +62969,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Попередня"
+          }
+        }
+      }
+    },
+    "Poprzednia grupa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Gruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня група"
+          }
+        }
+      }
+    },
+    "Poprzednia grupa kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous Tab Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorherige Tabgruppe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo de pestañas anterior"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередня група вкладок"
           }
         }
       }
@@ -67285,6 +68629,34 @@
         }
       }
     },
+    "Przenieś do grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Gruppe bewegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover al grupo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити до групи"
+          }
+        }
+      }
+    },
     "Przenieś narzędzie na dół" : {
       "localizations" : {
         "en" : {
@@ -67337,6 +68709,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перемістити інструмент праворуч"
+          }
+        }
+      }
+    },
+    "Przenieś okno do grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Window to Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster in Gruppe bewegen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover ventana al grupo"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити вікно до групи"
+          }
+        }
+      }
+    },
+    "Przenieś okno do grupy…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move Window to Group…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster in Gruppe bewegen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover ventana al grupo…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемістити вікно до групи…"
           }
         }
       }
@@ -67701,6 +69129,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Переміщує інструмент з панелі в окреме вікно; інструменти цього виду відкриватимуться у вікні."
+          }
+        }
+      }
+    },
+    "Przenosi okno do grupy ręcznej (istniejącej albo nowej); grupy ręczne mają pierwszeństwo przed grupami automatycznymi i są zapisywane w worksecie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moves the window to a manual group (existing or new); manual groups take precedence over automatic groups and are saved in the workset."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bewegt das Fenster in eine manuelle Gruppe (vorhandene oder neue); manuelle Gruppen haben Vorrang vor automatischen und werden im Workset gespeichert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la ventana a un grupo manual (existente o nuevo); los grupos manuales tienen prioridad sobre los automáticos y se guardan en el workset."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переміщує вікно до ручної групи (наявної або нової); ручні групи мають перевагу над автоматичними й зберігаються у Workset."
           }
         }
       }
@@ -68513,6 +69969,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Veraltete Sperre (Prozess läuft nicht mehr)"
+          }
+        }
+      }
+    },
+    "Przewiń karty w lewo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll tabs left"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs nach links blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar pestañas a la izquierda"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити вкладки ліворуч"
+          }
+        }
+      }
+    },
+    "Przewiń karty w prawo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scroll tabs right"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs nach rechts blättern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazar pestañas a la derecha"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутити вкладки праворуч"
           }
         }
       }
@@ -69969,6 +71481,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Порожній список об’єктів"
+          }
+        }
+      }
+    },
+    "Pusta nazwa grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty group name"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerer Gruppenname"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre de grupo vacío"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Порожня назва групи"
           }
         }
       }
@@ -71929,6 +73469,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Getrennt (CSV)"
+          }
+        }
+      }
+    },
+    "Rozgrupuj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungroup"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gruppierung aufheben"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desagrupar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгрупувати"
           }
         }
       }
@@ -87921,6 +89489,34 @@
         }
       }
     },
+    "Usuwa grupę ręczną; jej okna wracają do grup automatycznych." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removes a manual group; its windows return to the automatic groups."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entfernt eine manuelle Gruppe; ihre Fenster kehren zu den automatischen Gruppen zurück."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina un grupo manual; sus ventanas vuelven a los grupos automáticos."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видаляє ручну групу; її вікна повертаються до автоматичних груп."
+          }
+        }
+      }
+    },
     "Usuwa jeden punkt przerwania z listy." : {
       "localizations" : {
         "en" : {
@@ -89153,6 +90749,34 @@
         }
       }
     },
+    "Usuń okno z grupy ręcznej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Window from Manual Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenster aus manueller Gruppe entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar ventana del grupo manual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити вікно з ручної групи"
+          }
+        }
+      }
+    },
     "Usuń ostatni" : {
       "localizations" : {
         "en" : {
@@ -89681,6 +91305,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aus Diagramm entfernen"
+          }
+        }
+      }
+    },
+    "Usuń z grupy ręcznej" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Manual Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aus manueller Gruppe entfernen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar del grupo manual"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вилучити з ручної групи"
           }
         }
       }
@@ -95845,6 +97497,62 @@
         }
       }
     },
+    "Wszystkie grupy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Gruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los grupos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі групи"
+          }
+        }
+      }
+    },
+    "Wszystkie grupy kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All tab groups"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Tabgruppen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los grupos de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі групи вкладок"
+          }
+        }
+      }
+    },
     "Wszystkie kolumny wymienione" : {
       "localizations" : {
         "en" : {
@@ -95897,6 +97605,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Усі об’єкти в кошику буде видалено без можливості відновлення."
+          }
+        }
+      }
+    },
+    "Wszystkie pliki zmienione w gałęzi są już otwarte" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All files changed in the branch are already open"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle im Branch geänderten Dateien sind bereits geöffnet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todos los archivos modificados en la rama ya están abiertos"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі файли, змінені в гілці, уже відкрито"
           }
         }
       }
@@ -113569,6 +115305,34 @@
         }
       }
     },
+    "Zmienia nazwę grupy ręcznej." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renames a manual group."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benennt eine manuelle Gruppe um."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia el nombre de un grupo manual."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменовує ручну групу."
+          }
+        }
+      }
+    },
     "Zmienia nazwę kolumny, więzu, indeksu albo wyzwalacza tabeli." : {
       "localizations" : {
         "en" : {
@@ -114741,6 +116505,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перейменувати теку «%@»…"
+          }
+        }
+      }
+    },
+    "Zmień nazwę grupy kart" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Tab Group"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe umbenennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar grupo de pestañas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати групу вкладок"
+          }
+        }
+      }
+    },
+    "Zmień nazwę grupy kart…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename Tab Group…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabgruppe umbenennen …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renombrar grupo de pestañas…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейменувати групу вкладок…"
           }
         }
       }
@@ -120565,6 +122385,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "процедура"
+          }
+        }
+      }
+    },
+    "projekt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "project"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projekt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "proyecto"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "проєкт"
           }
         }
       }

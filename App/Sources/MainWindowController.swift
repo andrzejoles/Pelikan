@@ -69,6 +69,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         toolbar.displayMode = .iconOnly
         toolbarController = MainToolbarController(workspace: workspace, toolbar: toolbar)
         window.toolbar = toolbar
+        // Kapsułki grup kart (D200): na pasku narzędzi; pasek ukryty, element usunięty albo pełny ekran — mała kapsułka
+        // na początku paska kart.
+        toolbarController?.ensureTabGroupsItem()
+        toolbarController?.onTabGroupsChange = { [weak self] in self?.updateGroupPill() }
+        toolbarVisibility = toolbar.observe(\.isVisible) { [weak self] _, _ in
+            MainActor.assumeIsolated { self?.updateGroupPill() }
+        }
+        updateGroupPill()
         window.addTitlebarAccessoryViewController(ribbon)
         window.onFirstResponderChange = { [weak self] in self?.autoHideDocks() }
         window.toolsWithoutFocus = { [weak self] in
@@ -87,6 +95,17 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
+
+    private var toolbarVisibility: NSKeyValueObservation?
+
+    /// Mała kapsułka bieżącej grupy na pasku kart, gdy pasek narzędzi nie pokazuje kapsułek grup (D200).
+    func updateGroupPill() {
+        let fullScreen = window?.styleMask.contains(.fullScreen) ?? false
+        documentArea.groupsOnToolbar = toolbarController?.showsTabGroups(fullScreen: fullScreen) ?? false
+    }
+
+    func windowDidEnterFullScreen(_ notification: Notification) { updateGroupPill() }
+    func windowDidExitFullScreen(_ notification: Notification) { updateGroupPill() }
 
     /// Zamknięcie okna głównego kończy aplikację drogą `applicationShouldTerminate` (pytania o zapis i transakcje).
     /// Okno zostaje, gdy użytkownik anuluje — inaczej przy innym otwartym oknie (Preferencje, narzędzie w osobnym oknie)
@@ -291,6 +310,7 @@ final class SidebarViewController: NSViewController {
     ]
     static let objectBrowserPane = 1
     static let fileBrowserPane = 4
+    static let windowListPane = 2
 
     /// Wybrana karta lewej kolumny (układ okna, PD-WSET-002).
     var selectedPane: Int { selector.selectedSegment }
@@ -405,7 +425,12 @@ protocol DocumentContentController: NSViewController {
 /// Pasek kart dokumentów (SDI wzorca) + widok aktywnego dokumentu + pasek stanu.
 final class DocumentAreaViewController: NSViewController {
     private let workspace: Workspace
-    private let tabBar = NSStackView()
+    private let tabStrip = TabStripView()
+    private var tabBar: NSStackView { tabStrip.stack }
+    /// Kapsułki grup są na pasku narzędzi — bez małej kapsułki na pasku kart (D200).
+    var groupsOnToolbar = true {
+        didSet { if groupsOnToolbar != oldValue, isViewLoaded { refresh() } }
+    }
     private var contrastObserver: (any NSObjectProtocol)?
     private let container = NSView()
     private let statusLabel = NSTextField(labelWithString: "")
@@ -413,6 +438,8 @@ final class DocumentAreaViewController: NSViewController {
     private let connectionButton = NSButton(title: "", target: nil, action: nil)
     /// Gałąź i stan Git pliku aktywnego okna (PD-VCS-001).
     private let gitLabel = NSTextField(labelWithString: "")
+    /// Kolor palety połączenia aktywnego okna (D200) — obok nazwy połączenia, jak tło karty.
+    private let paletteSwatch = NSImageView()
     /// Przyciski zwiniętych paneli narzędzi z liczbą narzędzi (D183).
     private let dockButtons = NSStackView()
     private var gitKey: String?
@@ -449,17 +476,12 @@ final class DocumentAreaViewController: NSViewController {
             guard let self, self.workspace.documents.isEmpty else { return }
             self.workspace.perform("file.pasteAsSQLWindow")
         }
-        tabBar.orientation = .horizontal
-        tabBar.spacing = 2
-        tabBar.alignment = .centerY
-        tabBar.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
-        let tabScroll = NSScrollView()
-        tabScroll.documentView = tabBar
-        tabScroll.hasHorizontalScroller = false
         // Pasek kart na własnym tle, odróżnionym od edytora i wstążki; aktywna karta wyróżniona tłem i kolorem.
-        tabScroll.drawsBackground = true
-        tabScroll.backgroundColor = DocumentTabButton.barBackground
-        tabBar.translatesAutoresizingMaskIntoConstraints = false
+        let tabScroll = TabBarBackground()
+        tabStrip.translatesAutoresizingMaskIntoConstraints = false
+        tabScroll.addSubview(tabStrip)
+        tabStrip.groupPill.target = self
+        tabStrip.groupPill.action = #selector(showGroupMenu(_:))
 
         statusLabel.font = InterfaceFonts.shared.small
         statusLabel.textColor = .secondaryLabelColor
@@ -483,6 +505,9 @@ final class DocumentAreaViewController: NSViewController {
         gitLabel.setContentHuggingPriority(.required, for: .horizontal)
         gitLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         status.addSubview(gitLabel)
+        paletteSwatch.translatesAutoresizingMaskIntoConstraints = false
+        paletteSwatch.setAccessibilityElement(false)
+        status.addSubview(paletteSwatch)
         dockButtons.spacing = 6
         dockButtons.translatesAutoresizingMaskIntoConstraints = false
         dockButtons.setContentHuggingPriority(.required, for: .horizontal)
@@ -498,10 +523,11 @@ final class DocumentAreaViewController: NSViewController {
             tabScroll.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor),
             tabScroll.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             tabScroll.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 32); c.priority = .defaultHigh; return c }(),
-            tabBar.topAnchor.constraint(equalTo: tabScroll.contentView.topAnchor),
-            tabBar.leadingAnchor.constraint(equalTo: tabScroll.contentView.leadingAnchor),
-            tabBar.heightAnchor.constraint(equalTo: tabScroll.contentView.heightAnchor),
+            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 46); c.priority = .defaultHigh; return c }(),
+            tabStrip.topAnchor.constraint(equalTo: tabScroll.topAnchor),
+            tabStrip.bottomAnchor.constraint(equalTo: tabScroll.bottomAnchor),
+            tabStrip.leadingAnchor.constraint(equalTo: tabScroll.leadingAnchor),
+            tabStrip.trailingAnchor.constraint(equalTo: tabScroll.trailingAnchor),
             topSeparator.topAnchor.constraint(equalTo: tabScroll.bottomAnchor),
             topSeparator.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             topSeparator.trailingAnchor.constraint(equalTo: root.trailingAnchor),
@@ -516,7 +542,11 @@ final class DocumentAreaViewController: NSViewController {
             status.trailingAnchor.constraint(equalTo: root.trailingAnchor),
             status.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             status.heightAnchor.constraint(equalToConstant: 24),
-            connectionButton.leadingAnchor.constraint(equalTo: status.leadingAnchor, constant: 8),
+            paletteSwatch.leadingAnchor.constraint(equalTo: status.leadingAnchor, constant: 8),
+            paletteSwatch.centerYAnchor.constraint(equalTo: status.centerYAnchor),
+            paletteSwatch.widthAnchor.constraint(equalToConstant: 10),
+            paletteSwatch.heightAnchor.constraint(equalToConstant: 10),
+            connectionButton.leadingAnchor.constraint(equalTo: paletteSwatch.trailingAnchor, constant: 4),
             connectionButton.centerYAnchor.constraint(equalTo: status.centerYAnchor),
             statusLabel.leadingAnchor.constraint(equalTo: connectionButton.trailingAnchor, constant: 6),
             statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: gitLabel.leadingAnchor, constant: -10),
@@ -567,23 +597,41 @@ final class DocumentAreaViewController: NSViewController {
     private func refresh() {
         // Czcionka interfejsu z Preferencji (D178) — odczyt w śledzonym odświeżeniu: zmiana od razu przebudowuje karty.
         let fonts = InterfaceFonts.shared
-        for l in [statusLabel, gitLabel] { l.font = fonts.small }
+        statusLabel.font = fonts.small
+        gitLabel.font = fonts.small
         connectionButton.font = fonts.small
         let docs = workspace.documents
         let active = workspace.activeDocumentID
+        // Grupy kart (D200): pasek pokazuje karty bieżącej grupy (grupy aktywnego okna) albo wszystkich.
+        let groups = workspace.tabGroups
+        let current = active.flatMap { id in groups.first { $0.documents.contains(id) } }
+        let shown = workspace.tabGroupState.showAll || groups.count < 2 ? Set(docs.map(\.id)) : Set(current?.documents ?? docs.map(\.id))
+        updateGroupPill(groups: groups, current: current)
         // Karty.
         tabBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        for doc in docs {
-            // Kolor połączenia (wskaźniki, PD-CONN-005) — kropka przed znacznikiem typu.
+        var activeTab: NSView?
+        for doc in docs where shown.contains(doc.id) {
+            // Kolor środowiska (wskaźniki, PD-CONN-005) — kropka przed znacznikiem typu; tło — kolor palety połączenia.
             let color = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            let group = groups.count > 1 ? groups.first { $0.documents.contains(doc.id) }?.name : nil
             let tab = DocumentTabButton(document: doc, isActive: doc.id == active, connectionColor: color,
-                                        connection: connectionDescription(for: doc)) { [weak self] in
+                                        paletteIndex: workspace.paletteIndex(for: doc),
+                                        connection: workspace.effectiveConnection(of: doc) == nil ? nil : connectionDescription(for: doc),
+                                        group: group) { [weak self] in
                 self?.workspace.activate(doc.id)
             } onClose: { [weak self] in
                 self?.workspace.perform("file.closeWindow", CommandArguments(["document": .string(doc.id.description)]))
             }
             tab.menu = tabMenu(for: doc)
             tabBar.addArrangedSubview(tab)
+            if doc.id == active { activeTab = tab }
+        }
+        // Aktywna karta zawsze w widoku (przełączenie okna albo grupy, D201) — po układzie paska.
+        if let activeTab {
+            DispatchQueue.main.async { [weak self, weak activeTab] in
+                guard let self, let activeTab, activeTab.superview != nil else { return }
+                self.tabStrip.reveal(activeTab)
+            }
         }
         // Widoki dokumentów (zachowywane dla otwartych okien).
         let alive = Set(docs.map(\.id))
@@ -624,6 +672,9 @@ final class DocumentAreaViewController: NSViewController {
             connectionButton.title = connectionDescription(for: doc) + " ▾"
             connectionButton.contentTintColor = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .labelColor
             connectionButton.isHidden = false
+            let palette = workspace.paletteIndex(for: doc)
+            paletteSwatch.image = palette.map { TabPaletteColors.swatch($0) }
+            paletteSwatch.isHidden = palette == nil
             statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
                                        doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
@@ -633,6 +684,7 @@ final class DocumentAreaViewController: NSViewController {
             installedID = nil
             refreshGit(file: nil, modified: false)
             connectionButton.isHidden = true
+            paletteSwatch.isHidden = true
             statusLabel.stringValue = L10n.tr("Brak otwartych okien — Plik › Nowy")
         }
     }
@@ -661,6 +713,35 @@ extension DocumentAreaViewController {
         }
     }
 
+    /// Mała kapsułka bieżącej grupy na początku paska kart (pełny ekran, pasek narzędzi ukryty albo bez kapsułek, D200).
+    func updateGroupPill(groups: [TabGroup], current: TabGroup?) {
+        let visible = !groupsOnToolbar && groups.count > 1
+        tabStrip.setGroupPillVisible(visible)
+        guard visible else { return }
+        let name = workspace.tabGroupState.showAll ? L10n.tr("Wszystkie grupy") : (current?.name ?? "")
+        tabStrip.groupPill.title = name + " ▾"
+        tabStrip.groupPill.image = TabPaletteColors.swatch(workspace.tabGroupState.showAll ? nil : current?.colorIndex)
+        tabStrip.groupPill.imagePosition = .imageLeading
+        tabStrip.groupPill.font = InterfaceFonts.shared.small
+        tabStrip.groupPill.toolTip = L10n.tr("Grupa kart — kliknij, aby wybrać inną grupę")
+        tabStrip.groupPill.setAccessibilityLabel(L10n.tr("Grupa kart: \(name)"))
+    }
+
+    @objc func showGroupMenu(_ sender: NSButton) {
+        let groups = workspace.tabGroups
+        let current = workspace.currentTabGroup?.id
+        let menu = TabGroupMenu.make(workspace, groups: groups, current: current, target: self, action: #selector(chooseTabGroup(_:)),
+                                     allAction: #selector(toggleAllTabs))
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
+    }
+
+    @objc func chooseTabGroup(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        workspace.perform("window.showGroup", CommandArguments(["group": .string(id)]))
+    }
+
+    @objc func toggleAllTabs() { workspace.perform("window.allTabs") }
+
     /// Menu karty (PD-UI-004): zamknij, zamknij pozostałe / z lewej / z prawej.
     func tabMenu(for doc: Document) -> NSMenu {
         let menu = NSMenu()
@@ -670,12 +751,47 @@ extension DocumentAreaViewController {
             item.target = self
             item.representedObject = [id, doc.id.description]
         }
+        // Grupy ręczne (D200): Przenieś do grupy › Nowa grupa… / istniejące grupy; Usuń z grupy ręcznej.
+        menu.addItem(.separator())
+        let move = menu.addItem(withTitle: L10n.tr("Przenieś do grupy"), action: nil, keyEquivalent: "")
+        let sub = NSMenu()
+        let new = sub.addItem(withTitle: L10n.tr("Nowa grupa…"), action: #selector(moveToNewGroup(_:)), keyEquivalent: "")
+        new.target = self
+        new.representedObject = doc.id.description
+        let assigned = workspace.tabGroupState.assignments[doc.id]
+        let manual = workspace.tabGroupState.manualGroups.filter { $0.id != assigned }
+        if !manual.isEmpty { sub.addItem(.separator()) }
+        for g in manual {
+            let item = sub.addItem(withTitle: g.name, action: #selector(moveToGroup(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = [doc.id.description, g.id.uuidString]
+        }
+        move.submenu = sub
+        if assigned != nil {
+            let remove = menu.addItem(withTitle: L10n.tr("Usuń z grupy ręcznej"), action: #selector(tabMenuAction(_:)), keyEquivalent: "")
+            remove.target = self
+            remove.representedObject = ["window.removeFromGroup", doc.id.description]
+        }
         return menu
+    }
+
+    @objc func moveToNewGroup(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        Task { @MainActor [workspace] in
+            guard let name = await workspace.ui?.askText(L10n.tr("Nowa grupa kart"), message: L10n.tr("Nazwa grupy"), defaultValue: ""),
+                  !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+            workspace.perform("window.moveToGroup", CommandArguments(["document": .string(id), "name": .string(name)]))
+        }
+    }
+
+    @objc func moveToGroup(_ sender: NSMenuItem) {
+        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
+        workspace.perform("window.moveToGroup", CommandArguments(["document": .string(pair[0]), "group": .string(pair[1])]))
     }
 
     @objc func tabMenuAction(_ sender: NSMenuItem) {
         guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
-        if pair[0] == "file.closeWindow" {
+        if pair[0] == "file.closeWindow" || pair[0] == "window.removeFromGroup" {
             workspace.perform("file.closeWindow", CommandArguments(["document": .string(pair[1])]))
         } else {
             if let d = workspace.documents.first(where: { $0.id.description == pair[1] }) { workspace.activate(d.id) }
@@ -726,14 +842,16 @@ extension DocumentAreaViewController {
     }
 }
 
-/// Karta dokumentu: kolorowy znacznik typu (NF12), tytuł, przycisk zamknięcia; środkowy klik zamyka (NF15).
-/// Aktywna karta: tło w kolorze akcentu, pasek akcentu u dołu i pogrubiony tytuł; pozostałe bez tła (podświetlenie
-/// pod kursorem). Kolor połączenia (PD-CONN-005) — kropka przed znacznikiem typu zamiast obramowania karty.
+/// Karta dokumentu (D200): dwa wiersze — kropka środowiska (kolor wskaźnika połączenia), kolorowy znacznik typu (NF12),
+/// tytuł i przycisk zamknięcia (kropka zmian, D198); niżej zawsze nazwa połączenia okna (bez połączenia — szare „Brak
+/// połączenia”). Tło w kolorze palety połączenia: aktywna karta — mocniejsze tło, grube podkreślenie w nasyconym kolorze
+/// połączenia i pogrubiony tytuł; nieaktywne — słabsze tło. Okno bez połączenia — tło neutralne. Środkowy klik zamyka (NF15).
 final class DocumentTabButton: NSView {
     private let onSelect: () -> Void
     private let onClose: () -> Void
     private let isActive: Bool
     private let isModified: Bool
+    private let paletteIndex: Int?
     private let close = NSButton(image: NSImage(), target: nil, action: nil)
     private var hovered = false {
         didSet {
@@ -750,20 +868,29 @@ final class DocumentTabButton: NSView {
         $0.isDark ? NSColor(srgbRed: 0.16, green: 0.16, blue: 0.17, alpha: 1) : NSColor(srgbRed: 0.91, green: 0.91, blue: 0.92, alpha: 1)
     }
 
-    init(document: Document, isActive: Bool, connectionColor: NSColor?, connection: String,
+    /// Przezroczystość tytułu nieaktywnej karty i wiersza połączenia (kontrast AA sprawdza `TabGroupsTests`).
+    static let inactiveTitleAlpha: CGFloat = 0.8
+    static let captionAlpha: CGFloat = 0.8
+
+    /// - Parameters:
+    ///   - connection: opis połączenia okna (nil — okno bez połączenia).
+    ///   - group: nazwa grupy kart (VoiceOver; nil — jedna grupa).
+    init(document: Document, isActive: Bool, connectionColor: NSColor?, paletteIndex: Int?, connection: String?, group: String?,
          onSelect: @escaping () -> Void, onClose: @escaping () -> Void) {
         self.onSelect = onSelect
         self.onClose = onClose
         self.isActive = isActive
         self.isModified = document.isModified
+        self.paletteIndex = paletteIndex
         super.init(frame: .zero)
         let fonts = InterfaceFonts.shared
-        let dim = isActive || NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? NSColor.labelColor
-                                                                                            : NSColor.labelColor.withAlphaComponent(0.7)
+        let increased = NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+        let dim = isActive || increased ? NSColor.labelColor : NSColor.labelColor.withAlphaComponent(Self.inactiveTitleAlpha)
         var views: [NSView] = []
         let dot = connectionColor.map(ConnectionDot.init(color:))
+        let connectionText = connection ?? L10n.tr("Brak połączenia")
         if let dot {
-            dot.toolTip = L10n.tr("Połączenie: \(connection)")
+            dot.toolTip = L10n.tr("Połączenie: \(connectionText)")
             views.append(dot)
         }
         let marker = NSTextField(labelWithString: document.kind.shortName)
@@ -781,10 +908,22 @@ final class DocumentTabButton: NSView {
         close.action = #selector(closeTapped)
         updateCloseImage()
         views += [marker, title, close]
-        let stack = NSStackView(views: views)
-        stack.spacing = 6
-        if let dot { stack.setCustomSpacing(5, after: dot) }
-        stack.edgeInsets = NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 4)
+        let top = NSStackView(views: views)
+        top.spacing = 6
+        if let dot { top.setCustomSpacing(5, after: dot) }
+        // Drugi wiersz: połączenie okna, mniejsza czcionka, skracanie (pełna nazwa w podpowiedzi).
+        let caption = NSTextField(labelWithString: connectionText)
+        caption.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 3), weight: fonts.weight)
+        caption.textColor = connection == nil ? .secondaryLabelColor
+            : (increased ? NSColor.labelColor : NSColor.labelColor.withAlphaComponent(Self.captionAlpha))
+        caption.lineBreakMode = .byTruncatingTail
+        caption.toolTip = L10n.tr("Połączenie: \(connectionText)")
+        caption.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        let stack = NSStackView(views: [top, caption])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.edgeInsets = NSEdgeInsets(top: 3, left: 8, bottom: 5, right: 4)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         // Podświetlenie pod kursorem: `.inVisibleRect` nie wymaga przebudowy obszaru przy zmianie rozmiaru.
@@ -796,14 +935,19 @@ final class DocumentTabButton: NSView {
             stack.topAnchor.constraint(equalTo: topAnchor),
             stack.bottomAnchor.constraint(equalTo: bottomAnchor),
             title.widthAnchor.constraint(lessThanOrEqualToConstant: 220),
+            caption.widthAnchor.constraint(lessThanOrEqualTo: top.widthAnchor),
             close.widthAnchor.constraint(equalToConstant: 14),
         ])
-        toolTip = document.fullTitle
-        // Karta jako element dostępności (VoiceOver): przycisk wyboru z akcją „naciśnij” i akcją zamknięcia (R4-15).
+        toolTip = document.fullTitle + "\n" + L10n.tr("Połączenie: \(connectionText)")
+        // Karta jako element dostępności (VoiceOver): przycisk wyboru z akcją „naciśnij” i akcją zamknięcia (R4-15);
+        // pomoc — połączenie, grupa kart, stan zmian.
         setAccessibilityElement(true)
         setAccessibilityRole(.radioButton)
         setAccessibilityLabel(document.fullTitle)
-        setAccessibilityHelp(L10n.tr("Połączenie: \(connection)") + (document.isModified ? " · " + L10n.tr("Zmieniony, niezapisany") : ""))
+        var help = [L10n.tr("Połączenie: \(connectionText)")]
+        if let group { help.append(L10n.tr("Grupa: \(group)")) }
+        if document.isModified { help.append(L10n.tr("Zmieniony, niezapisany")) }
+        setAccessibilityHelp(help.joined(separator: " · "))
         setAccessibilityValue(NSNumber(value: isActive ? 1 : 0))
         setAccessibilityCustomActions([NSAccessibilityCustomAction(name: L10n.tr("Zamknij")) { [weak self] in
             self?.onClose()
@@ -819,18 +963,23 @@ final class DocumentTabButton: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    // Rysowanie w draw(_:) — kolory dynamiczne (akcent, jasny/ciemny wygląd) bez ręcznej aktualizacji warstwy.
+    // Rysowanie w draw(_:) — kolory dynamiczne (paleta w jasnym/ciemnym wyglądzie) bez ręcznej aktualizacji warstwy.
     override func draw(_ dirtyRect: NSRect) {
         let shape = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 1), xRadius: 6, yRadius: 6)
-        if isActive {
-            NSColor.controlAccentColor.withAlphaComponent(0.22).setFill()
+        if let i = paletteIndex {
+            TabPaletteColors.color(i, isActive || hovered ? .activeBackground : .inactiveBackground).setFill()
             shape.fill()
-            NSColor.controlAccentColor.setFill()
-            NSBezierPath(roundedRect: NSRect(x: bounds.minX + 6, y: bounds.minY + 1, width: bounds.width - 12, height: 2.5),
-                         xRadius: 1.25, yRadius: 1.25).fill()
+        } else if isActive {
+            NSColor.labelColor.withAlphaComponent(0.10).setFill()
+            shape.fill()
         } else if hovered {
             NSColor.quaternaryLabelColor.setFill()
             shape.fill()
+        }
+        if isActive {
+            (paletteIndex.map { TabPaletteColors.color($0, .accent) } ?? NSColor.secondaryLabelColor).setFill()
+            NSBezierPath(roundedRect: NSRect(x: bounds.minX + 4, y: bounds.minY + 1, width: bounds.width - 8, height: 3.5),
+                         xRadius: 1.75, yRadius: 1.75).fill()
         }
     }
 
@@ -870,6 +1019,14 @@ final class DocumentTabButton: NSView {
     override func mouseDown(with event: NSEvent) { onSelect() }
     override func otherMouseUp(with event: NSEvent) { if event.buttonNumber == 2 { onClose() } }
     @objc private func closeTapped() { onClose() }
+}
+
+/// Tło paska kart (kolor dynamiczny rysowany w `draw`).
+final class TabBarBackground: NSView {
+    override func draw(_ dirtyRect: NSRect) {
+        DocumentTabButton.barBackground.setFill()
+        dirtyRect.fill()
+    }
 }
 
 /// Kropka w kolorze połączenia okna na karcie dokumentu (PD-CONN-005).

@@ -6,6 +6,7 @@ import PelikanWorkspace
 @MainActor
 final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemValidation {
     static let quickAccess = NSToolbarItem.Identifier(ToolbarModel.quickAccessItem)
+    static let tabGroups = NSToolbarItem.Identifier(ToolbarModel.tabGroupsItem)
     private let workspace: Workspace
     private weak var toolbar: NSToolbar?
     private var token: ObservationToken?
@@ -33,10 +34,26 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
-        ToolbarModel.paletteCommands.map(identifier) + [Self.quickAccess, .flexibleSpace, .space]
+        ToolbarModel.paletteCommands.map(identifier) + [Self.tabGroups, Self.quickAccess, .flexibleSpace, .space]
     }
 
     func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier id: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        if id == Self.tabGroups {
+            // Kapsułki grup kart (D200): bez grup (jedna grupa) element ukryty — pasek jak dotąd.
+            let item = NSToolbarItem(itemIdentifier: id)
+            let bar = TabGroupBar(workspace: workspace)
+            item.view = bar
+            item.label = L10n.tr("Grupy kart")
+            item.paletteLabel = L10n.tr("Grupy kart")
+            item.visibilityPriority = .high
+            item.autovalidates = false
+            item.isHidden = workspace.tabGroups.count < 2
+            bar.onGroupCountChange = { [weak item, weak self] count in
+                item?.isHidden = count < 2
+                self?.onTabGroupsChange?()
+            }
+            return item
+        }
         if id == Self.quickAccess {
             let group = NSToolbarItemGroup(itemIdentifier: id)
             group.label = L10n.tr("Szybki dostęp")
@@ -81,7 +98,37 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
     }
 
     func validateToolbarItem(_ item: NSToolbarItem) -> Bool {
-        workspace.isEnabled(CommandID(rawValue: command(of: item)))
+        // Kapsułki grup to nie komenda — zawsze dostępne (wyłączony element szarzałby nazwy grup).
+        if item.itemIdentifier == Self.tabGroups { return true }
+        return workspace.isEnabled(CommandID(rawValue: command(of: item)))
+    }
+
+    func toolbarWillAddItem(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in self?.onTabGroupsChange?() }
+    }
+
+    func toolbarDidRemoveItem(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in self?.onTabGroupsChange?() }
+    }
+
+    /// Zmiana widoczności kapsułek grup (mała kapsułka na pasku kart, gdy pasek narzędzi ich nie pokazuje).
+    var onTabGroupsChange: (() -> Void)?
+
+    /// Czy kapsułki grup są na widocznym pasku narzędzi (nie: pasek ukryty, element usunięty, pełny ekran).
+    func showsTabGroups(fullScreen: Bool) -> Bool {
+        guard let toolbar, toolbar.isVisible, !fullScreen else { return false }
+        return toolbar.items.contains { $0.itemIdentifier == Self.tabGroups }
+    }
+
+    /// Element grup dodany raz do zapamiętanego układu paska (układ sprzed wersji z grupami go nie ma); usunięty potem
+    /// przez użytkownika w dostosowaniu paska — zostaje usunięty.
+    func ensureTabGroupsItem() {
+        let key = "Pelikan.toolbar.tabGroupsAdded"
+        guard let toolbar, !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        if !toolbar.items.contains(where: { $0.itemIdentifier == Self.tabGroups }) {
+            toolbar.insertItem(withItemIdentifier: Self.tabGroups, at: 0)
+        }
     }
 
     /// Okno dostosowania paska (komenda `view.customizeToolbar`).

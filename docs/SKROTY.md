@@ -582,6 +582,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Autozapis układu okna | `view.autosaveLayout` |  |  | Brak | PD-WSET-002 |
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | PD-UI-007 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | PD-CA-010 |
+| Lista okien | `view.windowList` |  |  | Brak | PD-UI-002 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | PD-OB-001 |
 
 ## Okno
@@ -593,6 +594,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zmień nazwę okna… | `window.rename` |  |  | Brak | PD-UI-002 |
 | Krótkie nazwy na liście okien | `window.listShortTitles` |  |  | Brak | PD-UI-002 |
 | Sortuj listę okien… | `window.listSort` |  |  | Brak | PD-UI-002 |
+| Następna grupa kart | `window.nextGroup` | ⌃⌘] | ⌃⌘] | Za zgodą | PD-UI-013 |
+| Poprzednia grupa kart | `window.previousGroup` | ⌃⌘[ | ⌃⌘[ | Za zgodą | PD-UI-013 |
+| Pokaż grupę kart… | `window.showGroup` |  |  | Za zgodą | PD-UI-013 |
+| Karty wszystkich grup | `window.allTabs` |  |  | Brak | PD-UI-013 |
+| Przenieś okno do grupy… | `window.moveToGroup` |  |  | Brak | PD-UI-013 |
+| Usuń okno z grupy ręcznej | `window.removeFromGroup` |  |  | Brak | PD-UI-013 |
+| Zmień nazwę grupy kart… | `window.renameGroup` |  |  | Brak | PD-UI-013 |
+| Rozgrupuj | `window.ungroup` |  |  | Brak | PD-UI-013 |
 | Następne okno | `window.next` | ⌃⇥, ⇧⌘] | ⇧⌘], ⌃⇥ | Za zgodą | PD-UI-004 |
 | Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ | ⇧⌘[, ⌃⇧⇥ | Za zgodą | PD-UI-004 |
 

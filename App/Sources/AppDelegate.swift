@@ -354,6 +354,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     /// wierzchu zmieniony przez inny program (agent, git) — pytanie o wczytanie ponowne (D197).
     func applicationDidBecomeActive(_ notification: Notification) {
         workspace.checkExternalEdits()
+        // Grupy kart (D200): gałąź i zdalne repozytoria mogły się zmienić poza Pelikanem (checkout, nowe zdalne).
+        workspace.scheduleTabRepositoryRefresh(full: true)
         if let doc = workspace.activeDocument {
             Task { await workspace.checkExternalChanges(of: doc) }
         }
@@ -425,6 +427,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func showFileBrowser() {
         mainWindow?.sidebarController.select(pane: SidebarViewController.fileBrowserPane)
+    }
+
+    func showWindowList() {
+        mainWindow?.sidebarController.select(pane: SidebarViewController.windowListPane)
     }
 
     func chooseDirectory() async -> URL? {
