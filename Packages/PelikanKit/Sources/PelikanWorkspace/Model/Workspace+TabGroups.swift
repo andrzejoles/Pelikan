@@ -40,8 +40,10 @@ extension Workspace {
         }
         // Katalog jeszcze niesprawdzony (nowe okno, zapis pod nową nazwą) — sprawdzenie w tle, grupy uaktualnią się same.
         if unknown { scheduleTabRepositoryRefresh(full: false) }
-        return TabGroupInput(items: items, manualGroups: tabGroupState.manualGroups, projectName: project?.name,
-                             projectFiles: projectFiles, repositories: repos, connections: labels)
+        var input = TabGroupInput(items: items, manualGroups: tabGroupState.manualGroups, projectName: project?.name,
+                                  projectFiles: projectFiles, repositories: repos, connections: labels)
+        input.salt = tabGroupSalt
+        return input
     }
 
     /// Grupy kart w kolejności kapsułek (D200) z kolorami palety. Przydział kolorów i tryb histerezy uaktualniają się
@@ -257,45 +259,64 @@ public struct TabRepositoryProbe: Sendable {
     public var locate: @Sendable (String) -> RepositoryGroupInfo?
     /// Czy repozytorium (katalog roboczy) ma zdalne.
     public var hasRemote: @Sendable (String) -> Bool
-    /// Gałąź (katalog gita, katalog roboczy).
-    public var branch: @Sendable (String, String) -> String?
+    /// Gałąź (katalog gita, katalog roboczy, czy wolno uruchomić gita — HEAD w formacie reftable).
+    public var branch: @Sendable (String, String, Bool) -> GitRepository.BranchRead
 
     public init(locate: @escaping @Sendable (String) -> RepositoryGroupInfo?, hasRemote: @escaping @Sendable (String) -> Bool,
-                branch: @escaping @Sendable (String, String) -> String?) {
+                branch: @escaping @Sendable (String, String, Bool) -> GitRepository.BranchRead) {
         self.locate = locate; self.hasRemote = hasRemote; self.branch = branch
     }
 
     public static let git = TabRepositoryProbe(
         locate: { GitRepository.location(for: URL(fileURLWithPath: $0, isDirectory: true)) },
         hasRemote: { GitRepository.hasRemote(root: URL(fileURLWithPath: $0, isDirectory: true)) },
-        branch: { GitRepository.currentBranch(gitDirectory: $0, root: $1) })
+        branch: { GitRepository.readBranch(gitDirectory: $0, root: $1, allowProcess: $2) })
 
-    /// Jedno odświeżenie: znane repozytoria — gałąź; `git remote` najwyżej raz na katalog roboczy (katalogi jednego
-    /// repozytorium dzielą wynik), poza pełnym sprawdzeniem — ze znanych wyników.
+    /// Jedno odświeżenie: znane repozytoria — gałąź z pliku HEAD; `git remote` i gałąź z gita (reftable) najwyżej raz na
+    /// katalog roboczy, poza pełnym sprawdzeniem — ze znanych wyników. Pełne sprawdzenie położenia wszystkich katalogów
+    /// od nowa (usunięte repozytorium albo worktree, zagnieżdżone `git init`).
     static func refresh(dirs: Set<String>, known: [String: RepositoryGroupInfo], checked: Set<String>, full: Bool,
                         probe: TabRepositoryProbe) -> [String: RepositoryGroupInfo?] {
         var out: [String: RepositoryGroupInfo?] = [:]
         var remotes: [String: Bool] = [:]
-        if !full { for r in known.values { remotes[r.root] = r.hasRemote } }
+        var knownBranch: [String: String?] = [:]
+        for r in known.values {
+            if !full { remotes[r.root] = r.hasRemote }
+            knownBranch[r.root] = r.branch
+        }
         func remote(_ root: String) -> Bool {
             if let r = remotes[root] { return r }
             let r = probe.hasRemote(root)
             remotes[root] = r
             return r
         }
+        // Gałąź raz na katalog roboczy; HEAD reftable bez pełnego sprawdzenia — gałąź zapamiętana (bez procesu gita).
+        var branches: [String: String?] = [:]
+        func branch(_ r: RepositoryGroupInfo) -> String? {
+            if let b = branches[r.root] { return b }
+            guard let g = r.gitDirectory else { return r.branch }
+            let b: String? = switch probe.branch(g, r.root, full) {
+            case .branch(let name): name
+            case .detached: nil
+            case .unknown: knownBranch[r.root] ?? r.branch
+            }
+            branches[r.root] = b
+            return b
+        }
         for dir in dirs.sorted() {
-            if checked.contains(dir), var r = known[dir] {
-                if let g = r.gitDirectory { r.branch = probe.branch(g, r.root) }
+            if checked.contains(dir), !full {
+                // Katalog spoza repozytorium sprawdzony wcześniej — ponownie tylko przy pełnym sprawdzeniu.
+                guard var r = known[dir] else { continue }
+                r.branch = branch(r)
                 r.hasRemote = remote(r.root)
                 out[dir] = r
                 continue
             }
-            // Katalog spoza repozytorium sprawdzony wcześniej — ponownie tylko przy pełnym sprawdzeniu.
-            if checked.contains(dir), !full { continue }
             guard var r = probe.locate(dir) else {
                 out[dir] = .some(nil)
                 continue
             }
+            r.branch = branch(r)
             r.hasRemote = remote(r.root)
             out[dir] = r
         }

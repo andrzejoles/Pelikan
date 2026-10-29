@@ -428,39 +428,69 @@ struct TabGroupReviewTests {
         #expect(TabCapsuleLayout.fit(widths: w, available: 60, spacing: 6, overflowWidth: 28, current: 4).widths[4] == 60)
     }
 
-    @Test("Repozytoria: git remote raz na katalog roboczy, znane katalogi tylko gałąź, pełne sprawdzenie najwyżej co 30 s")
+    @Test("Repozytoria: remote i gałąź raz na repozytorium, znane katalogi tylko HEAD, pełne sprawdzenie od nowa najwyżej co 30 s")
     func probe() async throws {
         let calls = CallCounter()
         let probe = TabRepositoryProbe(
             locate: { dir in
                 calls.add("locate")
+                // „Usunięty worktree”: po przełączeniu flagi /repo/b przestaje być repozytorium.
+                if dir == "/repo/b", calls.count("removed") > 0 { return nil }
                 return dir.hasPrefix("/repo") ? RepositoryGroupInfo(root: "/repo", name: "kadry", branch: "main", hasRemote: false, gitDirectory: "/repo/.git") : nil
             },
             hasRemote: { _ in calls.add("remote"); return true },
-            branch: { _, _ in calls.add("branch"); return "main" })
+            branch: { _, _, allowProcess in
+                calls.add(allowProcess ? "branchProcess" : "branch")
+                // HEAD w formacie reftable: bez zgody na proces — nieznana (gałąź zapamiętana), z nią — z gita.
+                return allowProcess ? .branch("main") : .unknown
+            })
         let ws = Workspace()
         ws.tabRepositoryProbe = probe
         for p in ["/repo/a/x.sql", "/repo/b/y.sql", "/inne/z.sql"] { ws.newDocument(.sql, fileURL: URL(fileURLWithPath: p)) }
         ws.scheduleTabRepositoryRefresh(full: false)
         await ws.tabRepositoryRefresh?.value
-        #expect(calls.count("locate") == 3 && calls.count("remote") == 1)
+        // Położenie każdego katalogu, git remote i gałąź raz na repozytorium.
+        #expect(calls.count("locate") == 3 && calls.count("remote") == 1 && calls.count("branch") == 1)
         #expect(ws.tabRepositories.count == 2 && ws.tabRepositories["/repo/a"]?.hasRemote == true)
-        // Aktywacja aplikacji: pełne sprawdzenie — remote raz na repozytorium, gałąź z HEAD dla znanych.
+        // Zwykła aktywacja: znane katalogi — tylko gałąź (reftable: zapamiętana, bez procesu gita), bez remote i locate.
         calls.reset()
+        ws.activate(ws.documents[0].id)
+        ws.scheduleTabRepositoryRefresh(full: false)
+        await ws.tabRepositoryRefresh?.value
+        #expect(calls.count("remote") == 0 && calls.count("locate") == 0 && calls.count("branch") == 1 && calls.count("branchProcess") == 0)
+        #expect(ws.tabRepositories["/repo/a"]?.branch == "main")
+        // Aktywacja aplikacji: pełne sprawdzenie — położenie wszystkich katalogów od nowa (usunięty worktree znika),
+        // remote i gałąź z gita raz na repozytorium.
+        calls.reset()
+        calls.add("removed")
         ws.scheduleTabRepositoryRefresh(full: true)
         await ws.tabRepositoryRefresh?.value
-        #expect(calls.count("remote") == 1 && calls.count("branch") == 2 && calls.count("locate") == 1)
+        #expect(calls.count("locate") == 3 && calls.count("remote") == 1 && calls.count("branchProcess") == 1)
+        #expect(ws.tabRepositories["/repo/b"] == nil && ws.tabRepositories["/repo/a"] != nil)
         // Drugie pełne w ciągu 30 s — tylko gałęzie.
         calls.reset()
         ws.scheduleTabRepositoryRefresh(full: true)
         await ws.tabRepositoryRefresh?.value
-        #expect(calls.count("remote") == 0 && calls.count("locate") == 0 && calls.count("branch") == 2)
-        // Wyłączone sprawdzanie — nic się nie uruchamia.
+        #expect(calls.count("remote") == 0 && calls.count("locate") == 0 && calls.count("branch") == 1)
+        // Obszar roboczy bez katalogu danych (testy) — sprawdzanie domyślnie wyłączone.
         let off = Workspace()
-        off.tabRepositoryProbe = nil
+        #expect(off.tabRepositoryProbe == nil)
         off.newDocument(.sql, fileURL: URL(fileURLWithPath: "/repo/a/x.sql"))
         off.scheduleTabRepositoryRefresh(full: true)
         #expect(off.tabRepositoryRefresh == nil)
+    }
+
+    @Test("Identyfikator grupy repozytorium z solą: inna sól — inny identyfikator; ścieżki brak")
+    func salt() {
+        let item = TabGroupItem(id: DocumentID(), kind: .sql, files: ["/repo/a.sql"])
+        let repo = RepositoryGroupInfo(root: "/repo", name: "kadry", branch: "main", hasRemote: true)
+        func id(_ salt: String) -> String {
+            var input = TabGroupInput(items: [item], repositories: ["/repo/a.sql": repo])
+            input.salt = salt
+            var mode = TabGroupingMode.byKind
+            return TabGrouping.groups(input, mode: &mode)[0].id
+        }
+        #expect(id("a") == id("a") && id("a") != id("b") && !id("a").contains("repo/"))
     }
 
     @Test("Gałąź z HEAD: zwykła, reftable (.invalid — nieznana), rebase (head-name), odłączony")

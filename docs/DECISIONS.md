@@ -2582,6 +2582,16 @@ z dynamicznej palety.
   - **Pasek kart:** przewijanie do aktywnej karty tylko po zmianie aktywnego okna albo zbioru kart (ręcznie
     przewinięty pasek nie wraca przy każdym odświeżeniu); szerokość treści z ramki paska, zmiany ograniczeń poza
     `layout()`, kółko bez przepełnienia przekazywane dalej.
+- **Drugie przejście przeglądu:** pełne sprawdzenie repozytoriów (aktywacja aplikacji, najwyżej co 30 s) ustala
+  położenie wszystkich katalogów od nowa — usunięte repozytorium albo worktree i zagnieżdżone `git init` zmieniają
+  grupę; gałąź HEAD w formacie reftable odczytywana gitem tylko przy pełnym sprawdzeniu, raz na repozytorium, a między
+  nimi zapamiętana (jak wynik `git remote`). Skrót katalogu w identyfikatorze grupy ma losową sól zapamiętaną
+  w UserDefaults (`Pelikan.tabGroupSalt`) — identyfikator jest stały między uruchomieniami (klucze kolorów
+  w worksecie), ale nie pozwala potwierdzić zgadniętej ścieżki. Kapsułka mieści się w pasku narzędzi (najwyżej 36 pt):
+  przy dużej czcionce interfejsu oba wiersze są zmniejszane (szczegół do 9 pt, nazwa do 10 pt), a gdy to za mało —
+  jeden wiersz „nazwa · szczegół”. Obszar roboczy bez katalogu danych (testy pakietu) domyślnie nie sprawdza
+  repozytoriów (bez procesów gita w tle w innych zestawach testów; test wstrzykuje zaślepkę), aplikacja — tak.
+  Przygotowanie repozytorium zrzutu 72 usuwa `GIT_DIR`, `GIT_WORK_TREE` i `GIT_INDEX_FILE` z otoczenia.
 
 ### D201 · 2026-10-29 — Pliki zmienione w gałęzi z paska stanu; przewijanie paska kart przy przepełnieniu
 

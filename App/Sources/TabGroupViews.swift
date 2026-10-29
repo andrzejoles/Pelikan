@@ -16,8 +16,38 @@ enum TabMetrics {
     static var tabHeight: CGFloat { 3 + max(14, line(font(by: 1, weight: .semibold))) + line(font(by: 3)) + 5 }
     /// Pasek kart: karta i odstępy 3 pt nad i pod nią.
     static var tabBarHeight: CGFloat { tabHeight + 6 }
-    /// Kapsułka: 2 pt, nazwa, szczegół (wiersze zachodzą o 1 pt), 3 pt.
-    static var capsuleHeight: CGFloat { 2 + line(font(by: 2, weight: .semibold)) - 1 + line(font(by: 3)) + 3 }
+    /// Najwyższa kapsułka mieszcząca się w pasku narzędzi (element paska unified ma ok. 36 pt).
+    static let toolbarItemMaxHeight: CGFloat = 36
+
+    /// Czcionki kapsułki: nazwa (o 2 pt mniejsza) i szczegół (o 3 pt); przy dużej czcionce interfejsu oba wiersze
+    /// zmniejszane (szczegół najmniej 9 pt, nazwa 10 pt), aż kapsułka zmieści się w pasku; gdy i to za mało — jeden
+    /// wiersz „nazwa · szczegół” (bez przycinania kapsułki).
+    @MainActor struct CapsuleStyle {
+        var size: Double
+        var captionSize: Double
+        var singleLine: Bool
+        func name(_ weight: FontWeightChoice) -> NSFont { AppFonts.font(family: TabMetrics.fonts.family, size: size, weight: weight) }
+        var caption: NSFont { AppFonts.font(family: TabMetrics.fonts.family, size: captionSize, weight: TabMetrics.fonts.weight) }
+        var height: CGFloat {
+            singleLine ? 3 + TabMetrics.line(name(.semibold)) + 3 : 2 + TabMetrics.line(name(.semibold)) - 1 + TabMetrics.line(caption) + 3
+        }
+    }
+
+    static var capsuleStyle: CapsuleStyle {
+        var st = CapsuleStyle(size: AppFonts.reduced(fonts.size, by: 2), captionSize: AppFonts.reduced(fonts.size, by: 3), singleLine: false)
+        while st.height > toolbarItemMaxHeight, st.captionSize > 9 || st.size > 10 {
+            st.captionSize = max(9, st.captionSize - 1)
+            st.size = max(10, st.size - 1)
+        }
+        if st.height > toolbarItemMaxHeight {
+            st.singleLine = true
+            while st.height > toolbarItemMaxHeight, st.size > 9 { st.size -= 1 }
+        }
+        return st
+    }
+
+    /// Kapsułka (wysokość z czcionek, najwyżej `toolbarItemMaxHeight`).
+    static var capsuleHeight: CGFloat { capsuleStyle.height }
 }
 
 /// Kolory palety połączeń i grup kart (D200) jako kolory dynamiczne: jasny i ciemny wygląd, „Zwiększ kontrast”.
@@ -94,10 +124,13 @@ final class TabGroupCapsule: NSView {
         self.onSelect = onSelect
         super.init(frame: .zero)
         let fonts = InterfaceFonts.shared
-        name.stringValue = group.name
-        name.font = TabMetrics.font(by: 2, weight: isCurrent ? .semibold : fonts.weight)
+        let style = TabMetrics.capsuleStyle
+        // Jeden wiersz, gdy dwa nie mieszczą się w pasku narzędzi (duża czcionka interfejsu).
+        name.stringValue = style.singleLine ? group.name + " · " + group.caption : group.name
+        name.font = style.name(isCurrent ? .semibold : fonts.weight)
         caption.stringValue = group.caption
-        caption.font = TabMetrics.font(by: 3)
+        caption.font = style.caption
+        caption.isHidden = style.singleLine
         let increased = NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
         // Kolor z przezroczystością zamiast semantycznego: pasek narzędzi nieaktywnego okna szarzy kolor etykiet, a oba
         // wiersze kapsułki mają zostać czytelne na kolorowym tle.
@@ -114,7 +147,7 @@ final class TabGroupCapsule: NSView {
             name.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -10),
             caption.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
             caption.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -10),
-            name.topAnchor.constraint(equalTo: topAnchor, constant: 2),
+            name.topAnchor.constraint(equalTo: topAnchor, constant: style.singleLine ? 3 : 2),
             caption.topAnchor.constraint(equalTo: name.bottomAnchor, constant: -1),
         ])
         toolTip = group.name + " — " + group.caption

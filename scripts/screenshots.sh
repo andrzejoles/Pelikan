@@ -107,6 +107,8 @@ prepare_repo() {
         "$ROOT/scripts/screenshots/fixtures/skrypt-zawartosc.sql" "$REPO/"
     (
         export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+        # Zmienne gita z otoczenia (np. przebieg z hooka) wskazywałyby inne repozytorium.
+        unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
         cd "$REPO"
         git init -q -b main
         git config user.name "Pelikan"

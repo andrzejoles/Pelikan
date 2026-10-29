@@ -147,6 +147,9 @@ public struct TabGroupInput: Sendable {
     /// Repozytorium pliku (ścieżka standaryzowana → repozytorium); brak wpisu — poza repozytorium albo jeszcze nieznane.
     public var repositories: [String: RepositoryGroupInfo] = [:]
     public var connections: [UUID: TabGroupConnectionLabel] = [:]
+    /// Sól skrótu katalogu repozytorium (losowa per instalacja) — identyfikator grupy nie pozwala potwierdzić
+    /// zgadniętej ścieżki.
+    public var salt = ""
 
     public init(items: [TabGroupItem], manualGroups: [ManualTabGroup] = [], projectName: String? = nil, projectFiles: Set<String> = [],
                 repositories: [String: RepositoryGroupInfo] = [:], connections: [UUID: TabGroupConnectionLabel] = [:]) {
@@ -175,7 +178,7 @@ public enum TabGrouping {
                 project?.documents.append(item.id)
             } else if let repo = item.files.lazy.compactMap({ input.repositories[$0] }).first(where: \.hasRemote) {
                 // Identyfikator bez ścieżki (trafia do makr i do agenta): skrót katalogu roboczego i gałąź.
-                let rootKey = "repo:" + TabGrouping.stableHash(repo.root)
+                let rootKey = "repo:" + TabGrouping.stableHash(input.salt + "\u{0}" + repo.root)
                 let key = rootKey + ":" + (repo.branch ?? "")
                 if repos[key] == nil {
                     var g = TabGroup(id: key, kind: .repository, name: repo.name, detail: repo.branch ?? L10n.tr("(odłączony HEAD)"))

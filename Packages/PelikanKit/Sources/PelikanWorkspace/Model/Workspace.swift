@@ -359,7 +359,17 @@ public final class Workspace {
     @ObservationIgnored var tabRepositoryRefreshFull = false
     @ObservationIgnored var lastFullRepositoryCheck: Date?
     /// Sprawdzanie repozytoriów (testy: zaślepka albo nil — bez procesów gita, wyniki deterministyczne).
-    @ObservationIgnored public var tabRepositoryProbe: TabRepositoryProbe? = .git
+    @ObservationIgnored public var tabRepositoryProbe: TabRepositoryProbe?
+    /// Sól identyfikatorów grup repozytoriów: losowa, zapamiętana w UserDefaults (stała między uruchomieniami — klucze
+    /// kolorów w worksecie); obszar roboczy bez katalogu danych (testy) — pusta.
+    @ObservationIgnored public lazy var tabGroupSalt: String = {
+        guard dataDirectory != nil else { return "" }
+        let key = "Pelikan.tabGroupSalt"
+        if let s = UserDefaults.standard.string(forKey: key), !s.isEmpty { return s }
+        let s = (0..<4).map { _ in String(UInt32.random(in: .min ... .max), radix: 16) }.joined()
+        UserDefaults.standard.set(s, forKey: key)
+        return s
+    }()
     @ObservationIgnored var tabGroupingMode: TabGroupingMode = .byKind
     @ObservationIgnored public internal(set) var tabPalette = TabColorPalette()
     @ObservationIgnored var activationTicks: [DocumentID: Int] = [:]
@@ -545,6 +555,9 @@ public final class Workspace {
     public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
                 secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
         self.dataDirectory = dataDirectory
+        // Repozytoria grup kart sprawdzane gitem w tle tylko w aplikacji (z katalogiem danych); obszary robocze testów
+        // pakietu — bez procesów gita (test może wstrzyknąć zaślepkę).
+        tabRepositoryProbe = dataDirectory == nil ? nil : .git
         var setStore = PreferenceSetStore(directory: dataDirectory)
         let sets = setStore.load()
         preferenceStore = setStore

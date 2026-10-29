@@ -253,20 +253,29 @@ public struct GitRepository: Sendable, Hashable {
     /// `rebase-apply/head-name`; HEAD w formacie reftable (`refs/heads/.invalid`) — `git symbolic-ref` (wywołanie w tle).
     /// nil — odłączony HEAD.
     public static func currentBranch(gitDirectory: String, root: String) -> String? {
+        if case .branch(let b) = readBranch(gitDirectory: gitDirectory, root: root, allowProcess: true) { return b }
+        return nil
+    }
+
+    /// Odczyt gałęzi: gałąź, odłączony HEAD albo nieznana (reftable bez zgody na proces gita — wtedy gałąź zapamiętana).
+    public enum BranchRead: Sendable, Equatable { case branch(String), detached, unknown }
+
+    public static func readBranch(gitDirectory: String, root: String, allowProcess: Bool) -> BranchRead {
         switch headReference(gitDirectory: gitDirectory) {
-        case .branch(let b): return b
+        case .branch(let b): return .branch(b)
         case .unknown:
+            guard allowProcess else { return .unknown }
             let out = try? run(["symbolic-ref", "-q", "--short", "HEAD"], in: URL(fileURLWithPath: root, isDirectory: true), config: backgroundConfig)
             let b = out.map { $0.hasSuffix("\n") ? String($0.dropLast()) : $0 } ?? ""
-            return b.isEmpty ? nil : b
+            return b.isEmpty ? .detached : .branch(b)
         case .detached:
             for f in ["rebase-merge/head-name", "rebase-apply/head-name"] {
                 if let h = try? String(contentsOfFile: gitDirectory + "/" + f, encoding: .utf8) {
                     let line = h.hasSuffix("\n") ? String(h.dropLast()) : h
-                    if line.hasPrefix("refs/heads/") { return String(line.dropFirst("refs/heads/".count)) }
+                    if line.hasPrefix("refs/heads/") { return .branch(String(line.dropFirst("refs/heads/".count))) }
                 }
             }
-            return nil
+            return .detached
         }
     }
 
