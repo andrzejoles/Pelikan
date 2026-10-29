@@ -141,6 +141,11 @@ public struct GitRepository: Sendable, Hashable {
     /// w `.git/config` `core.fsmonitor` (git status uruchamia je zawsze), `log.showSignature` z `gpg.program` albo
     /// hooki. Filtry — osobno (`untrustedFilterConfig`). Dodawanie i zatwierdzanie (czynności jawne użytkownika)
     /// działają jak git w terminalu.
+    /// Każde wywołanie: bez porządkowania repozytorium i bez demona fsmonitor (procesy w tle trzymające potoki).
+    static let noBackgroundConfig: [(String, String)] = [
+        ("gc.auto", "0"), ("gc.autoDetach", "false"), ("maintenance.auto", "false"), ("core.fsmonitor", "false"),
+    ]
+
     static let backgroundConfig: [(String, String)] = [
         ("core.fsmonitor", "false"), ("core.hooksPath", "/dev/null"), ("log.showSignature", "false"),
     ]
@@ -179,12 +184,15 @@ public struct GitRepository: Sendable, Hashable {
         env["LC_ALL"] = "C"
         // Ustawienia przez GIT_CONFIG_KEY_n/VALUE_n — dowolne nazwy podsekcji (np. z „=”) bez rozbioru jak przy `-c`.
         var n = Int(env["GIT_CONFIG_COUNT"] ?? "") ?? 0
-        for (key, value) in config {
+        // Bez procesów w tle: `gc --auto --detach`, `maintenance run --auto` i demon fsmonitor dziedziczą potoki
+        // wyjścia i trzymają je otwarte po końcu gita — odczyt do końca strumienia czekałby na nie (zawieszenie testów
+        // w CI). Pelikan nie porządkuje repozytorium i nie potrzebuje fsmonitora do pojedynczych poleceń.
+        for (key, value) in Self.noBackgroundConfig + config {
             env["GIT_CONFIG_KEY_\(n)"] = key
             env["GIT_CONFIG_VALUE_\(n)"] = value
             n += 1
         }
-        if !config.isEmpty { env["GIT_CONFIG_COUNT"] = String(n) }
+        env["GIT_CONFIG_COUNT"] = String(n)
         p.environment = env
         let out = Pipe(), err = Pipe(), inp = Pipe()
         p.standardOutput = out
@@ -193,20 +201,22 @@ public struct GitRepository: Sendable, Hashable {
         try p.run()
         if let input { try? inp.fileHandleForWriting.write(contentsOf: Data(input.utf8)) }
         try? inp.fileHandleForWriting.close()
-        // stderr czytany równolegle — pełny bufor potoku stderr zatrzymałby gita przed końcem stdout.
-        let errHandle = err.fileHandleForReading, errData = Mutex(Data()), group = DispatchGroup()
-        DispatchQueue.global().async(group: group) {
-            // readToEnd: błąd odczytu jako błąd Swift (readDataToEndOfFile rzuca wyjątek ObjC — awaria).
-            let d = (try? errHandle.readToEnd()) ?? Data()
-            errData.withLock { $0 = d }
-        }
-        let data = Result { try out.fileHandleForReading.readToEnd() ?? Data() }
-        group.wait()
+        // stdout i stderr czytane równolegle — pełny bufor jednego potoku zatrzymałby gita przed końcem drugiego.
+        // Koniec wyznacza zakończenie gita, nie koniec strumieni: proces potomny gita (porządkowanie w tle, demon)
+        // może trzymać potok otwarty dłużej — po krótkim oczekiwaniu odczyt kończy się tym, co zebrano.
+        let group = DispatchGroup()
+        let outData = PipeCollector(out.fileHandleForReading, group: group)
+        let errData = PipeCollector(err.fileHandleForReading, group: group)
         p.waitForExit()
-        guard p.terminationStatus == 0 else {
-            throw Failure.failed(String(decoding: errData.withLock { $0 }, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
+        if group.wait(timeout: .now() + 5) == .timedOut {
+            // Potok trzymany przez proces potomny gita — koniec odczytu z tym, co zebrano.
+            outData.stop()
+            errData.stop()
         }
-        return try data.get()
+        guard p.terminationStatus == 0 else {
+            throw Failure.failed(String(decoding: errData.data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        return outData.data
     }
 
     /// Repozytorium zawierające plik albo katalog (nil — poza repozytorium albo brak gita).
@@ -430,5 +440,38 @@ public struct GitRepository: Sendable, Hashable {
             guard f.count == 4 else { return nil }
             return GitCommit(hash: f[0], author: f[1], date: iso.date(from: f[2]), subject: f[3])
         }
+    }
+}
+
+/// Odczyt potoku bez blokowania wątku (`readabilityHandler`): dane zbierane do bufora, pusty fragment = koniec
+/// strumienia (opuszcza grupę raz). `stop()` — koniec odczytu, gdy potok trzyma otwarty proces potomny.
+private final class PipeCollector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var buffer = Data()
+    private var ended = false
+    private let handle: FileHandle
+    private let group: DispatchGroup
+
+    init(_ handle: FileHandle, group: DispatchGroup) {
+        self.handle = handle
+        self.group = group
+        group.enter()
+        handle.readabilityHandler = { [self] h in
+            let chunk = h.availableData
+            if chunk.isEmpty { finish() } else { lock.withLock { buffer.append(chunk) } }
+        }
+    }
+
+    var data: Data { lock.withLock { buffer } }
+
+    func stop() { finish() }
+
+    private func finish() {
+        handle.readabilityHandler = nil
+        let first = lock.withLock { () -> Bool in
+            defer { ended = true }
+            return !ended
+        }
+        if first { group.leave() }
     }
 }

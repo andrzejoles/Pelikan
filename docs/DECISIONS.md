@@ -2638,3 +2638,10 @@ powinno działać).”
   `NSScrollView`. Aktywna karta po każdej przebudowie paska (przełączenie okna albo grupy) przewijana do widoku
   z marginesem 8 pt. Obliczenia w `TabStripScrolling` (pakiet, testy). Przyciski z etykietami VoiceOver „Przewiń karty
   w lewo / w prawo”.
+- **Zawieszenie testów w CI (git w tle):** testy z gitem czekały w nieskończoność na koniec strumienia błędów, który
+  trzymał otwarty proces potomny gita (`gc --auto --detach`, `maintenance run --auto`, demon fsmonitor) — zawieszony
+  cały zestaw testów na maszynie CI, a w aplikacji groziło to zawieszeniem operacji Git. Każde wywołanie gita
+  z Pelikana ma teraz `gc.auto=0`, `gc.autoDetach=false`, `maintenance.auto=false`, `core.fsmonitor=false`, a wyjście
+  czytane jest bez blokowania wątku (`readabilityHandler`): koniec wyznacza zakończenie gita, a strumień trzymany przez
+  proces potomny jest porzucany po 5 s. CI zapisuje stosy wątków zawieszonych testów po 20 min (strażnik w ci.yml).
+
