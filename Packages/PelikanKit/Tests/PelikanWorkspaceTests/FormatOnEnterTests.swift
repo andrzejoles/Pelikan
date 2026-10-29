@@ -179,6 +179,14 @@ struct FormatOnEnterTests {
         #expect(doc.editSessionMarks.suffix(2).map(\.range) == [3..<9, 12..<16])
         doc.isModified = false
         #expect(doc.editSessionMarks.count == 1 && doc.editSessionMarks[0].range == nil)
+        // Zakres usunięty w zmianie — znacznik pominięty; po zastosowaniu przez edytor znaczniki z zakresem znikają.
+        doc.markEditSession(0..<2)
+        doc.markEditSession(5..<9)
+        doc.text = (doc.text as NSString).replacingCharacters(in: NSRange(location: 0, length: 3), with: "")
+        #expect(doc.editSessionMarks.map(\.range) == [nil, 2..<6])
+        let serial = doc.editSessionSerial
+        doc.consumeEditSessionMarks(through: serial)
+        #expect(doc.editSessionMarks.map(\.range) == [nil] && doc.editSessionSerial == serial)
         #expect(SmartIndent.followsNewline("ab\n" as NSString, caret: 3) && !SmartIndent.followsNewline("put_line()" as NSString, caret: 9))
     }
 

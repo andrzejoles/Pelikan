@@ -940,6 +940,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             if let r = mark.range { editedRanges.clear(r) } else { editedRanges.reset() }
         }
         handledSessionMark = document.editSessionSerial
+        document.consumeEditSessionMarks(through: handledSessionMark)
     }
 
     /// Plan Entera z ustawień formatera (okno SQL, programu, testu; konsola i okna bez kodu — zwykły Enter).

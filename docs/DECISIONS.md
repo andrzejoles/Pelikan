@@ -3016,7 +3016,9 @@ przeszkadzać).” (PD-BEAU-003)
 - **Trzecie przejście przeglądu:** tekst wczytany do edytora przy otwarciu okna nie jest edycją (zakresy zerowane na
   końcu wczytania, a zmiana z modelu albo od agenta — liczy się); znaczniki nowej sesji w kolejce (`editSessionMarks`,
   zakresy przesuwane przy zmianach tekstu, znacznik całego tekstu zastępuje kolejkę) — dwa wczytania pary przed
-  synchronizacją edytora nie gubią pierwszego; edytor stosuje je po zsynchronizowaniu z bieżącą wersją tekstu. Znak
+  synchronizacją edytora nie gubią pierwszego; edytor stosuje je po zsynchronizowaniu z bieżącą wersją tekstu, a potem
+  znaczniki z zakresem znikają z kolejki (przesuwane tylko do pierwszej synchronizacji — bez porównywania tekstu przy
+  każdym znaku); zakres usunięty w zmianie — znacznik pominięty. Znak
   wstawionego tekstu czytany z magazynu bez kopiowania dokumentu. Test widoku: NSTextView poza ekranem z zapisem zmian
   jak w edytorze.
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
