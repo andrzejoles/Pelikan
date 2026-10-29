@@ -67,7 +67,7 @@ SELECT d.dname,
        ) max_sal
   FROM dept d;
 ### 06-cte-kilka
-WITH   dept_tot AS (
+  WITH dept_tot AS (
          SELECT deptno,
                 sum(sal) total
            FROM emp
@@ -92,7 +92,7 @@ SELECT b.deptno,
     ON dp.deptno = b.deptno
  ORDER BY b.total DESC;
 ### 07-cte-rekurencyjne
-WITH   hier (empno, ename, mgr, lvl, path) AS (
+  WITH hier (empno, ename, mgr, lvl, path) AS (
          SELECT empno,
                 ename,
                 mgr,
@@ -176,7 +176,7 @@ SELECT empno,
        sal
   FROM emp;
 ### 12-merge
-MERGE INTO emp t
+ MERGE INTO emp t
  USING (
          SELECT empno,
                 sal,
@@ -518,12 +518,12 @@ BEGIN
          v_max
     FROM emp
    WHERE deptno = p_dept;
-  UPDATE emp
-     SET sal = sal * 1.1
-   WHERE deptno = p_dept
+     UPDATE emp
+        SET sal = sal * 1.1
+      WHERE deptno = p_dept
   RETURNING count(*) INTO v_upd;
-  DELETE FROM emp_tmp
-   WHERE created < SYSDATE - 1
+     DELETE FROM emp_tmp
+      WHERE created < SYSDATE - 1
   RETURNING empno BULK COLLECT INTO l_ids;
 END;
 /
@@ -595,13 +595,13 @@ SELECT e.ename,
    AND e.job = 'CLERK';
 ### 44-update-plsql-zmienne
 BEGIN
-  UPDATE orders o
-     SET o.status = 'C',
-         o.closed_at = SYSTIMESTAMP,
-         o.closed_by = nvl(p_user, USER),
-         o.note = substr(o.note || chr(10) || p_reason, 1, 4000)
-   WHERE o.order_id = p_order_id
-     AND o.status <> 'C'
+     UPDATE orders o
+        SET o.status = 'C',
+            o.closed_at = SYSTIMESTAMP,
+            o.closed_by = nvl(p_user, USER),
+            o.note = substr(o.note || chr(10) || p_reason, 1, 4000)
+      WHERE o.order_id = p_order_id
+        AND o.status <> 'C'
   RETURNING o.customer_id INTO v_customer;
 END;
 /
@@ -813,16 +813,16 @@ CREATE OR REPLACE PACKAGE BODY pkg_items AS
                      p_price IN NUMBER DEFAULT NULL,
                      p_line_no OUT NUMBER) IS
   BEGIN
-    INSERT INTO order_items (order_id, line_no, product_id, qty, price)
-    VALUES (p_order_id,
-            (
-              SELECT nvl(max(line_no), 0) + 1
-                FROM order_items
-               WHERE order_id = p_order_id
-            ),
-            p_product_id,
-            p_qty,
-            p_price)
+       INSERT INTO order_items (order_id, line_no, product_id, qty, price)
+       VALUES (p_order_id,
+               (
+                 SELECT nvl(max(line_no), 0) + 1
+                   FROM order_items
+                  WHERE order_id = p_order_id
+               ),
+               p_product_id,
+               p_qty,
+               p_price)
     RETURNING line_no INTO p_line_no;
   END add_item;
 END pkg_items;
