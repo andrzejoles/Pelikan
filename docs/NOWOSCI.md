@@ -29,6 +29,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   **Kompiluj projekt** / **Kompiluj zmienione**, **Powtórz** (⇧⌘Z), **Zminimalizuj**; opisy mówią o Przeglądarce
   obiektów, Zawartości kodu i oknie SQL, a nie o ich angielskich nazwach. Szukaj czynności i paleta komend znajdują
   komendy także po dawnych nazwach.
+- **Plan wykonania:** nowy plan pojawia się rozwinięty w całości, a strzałki **Rozwiń wszystkie gałęzie** i **Zwiń
+  wszystkie gałęzie** obok wyboru widoku (także na karcie **Plan** wstążki) rozwijają naraz wszystkie gałęzie albo
+  zwijają drzewo do korzenia. Przejście do kroku przyciskami kolejności wykonania odsłania go w zwiniętej gałęzi.
 
 ## 1.3.1 — poprawki zgłoszeń
 

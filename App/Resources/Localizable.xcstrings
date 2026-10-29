@@ -71597,6 +71597,34 @@
         }
       }
     },
+    "Rozwija wszystkie gałęzie drzewa planu w aktywnym oknie planu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expands all branches of the plan tree in the active plan window."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klappt alle Zweige des Planbaums im aktiven Planfenster aus."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expande todas las ramas del árbol del plan en la ventana de plan activa."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгортає всі гілки дерева плану в активному вікні плану."
+          }
+        }
+      }
+    },
     "Rozwija wszystkie zwinięte bloki." : {
       "localizations" : {
         "en" : {
@@ -71705,6 +71733,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Розгорнути стрічку"
+          }
+        }
+      }
+    },
+    "Rozwiń wszystkie gałęzie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand all branches"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Zweige ausklappen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expandir todas las ramas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розгорнути всі гілки"
           }
         }
       }
@@ -114185,6 +114241,34 @@
         }
       }
     },
+    "Zwija wszystkie gałęzie drzewa planu w aktywnym oknie planu; widoczny zostaje korzeń planu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapses all branches of the plan tree in the active plan window; the plan root stays visible."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klappt alle Zweige des Planbaums im aktiven Planfenster ein; die Wurzel des Plans bleibt sichtbar."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrae todas las ramas del árbol del plan en la ventana de plan activa; la raíz del plan sigue visible."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згортає всі гілки дерева плану в активному вікні плану; корінь плану лишається видимим."
+          }
+        }
+      }
+    },
     "Zwijanie" : {
       "localizations" : {
         "en" : {
@@ -114377,6 +114461,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Згорнути стрічку лише до вкладок"
+          }
+        }
+      }
+    },
+    "Zwiń wszystkie gałęzie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse all branches"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Zweige einklappen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contraer todas las ramas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Згорнути всі гілки"
           }
         }
       }

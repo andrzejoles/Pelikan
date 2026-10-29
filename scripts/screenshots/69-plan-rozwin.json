@@ -1,0 +1,1 @@
+[{"command": "agent.openEditor", "args": {"kind": "sql", "text": "select e.ename, d.dname\n  from emp e join dept d on d.deptno = e.deptno\n where e.sal > (select avg(sal) from emp)\n order by e.ename"}, "delay": 2}, {"command": "tools.explainPlan", "delay": 6}, {"command": "plan.collapseAll", "delay": 1}, {"command": "plan.expandAll", "delay": 4}]

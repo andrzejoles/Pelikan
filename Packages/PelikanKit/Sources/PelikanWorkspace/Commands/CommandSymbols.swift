@@ -94,7 +94,8 @@ public enum CommandSymbols {
         "prog.checkChanges": "exclamationmark.arrow.triangle.2.circlepath", "prog.revert": "arrow.uturn.backward.square",
         "prog.compareWithDatabase": "arrow.left.arrow.right.square", "prog.compareWithFile": "doc.on.doc", "prog.compareWithConnection": "cylinder.split.1x2",
         // Kontekstowe: plan, diagram, raport, notatnik
-        "plan.compare": "arrow.left.arrow.right", "plan.export": "square.and.arrow.down", "diagram.addObject": "plus.app",
+        "plan.compare": "arrow.left.arrow.right", "plan.export": "square.and.arrow.down", "plan.expandAll": "chevron.down.2", "plan.collapseAll": "chevron.up.2",
+        "diagram.addObject": "plus.app",
         "diagram.addRelated": "link", "diagram.addReferences": "arrow.triangle.branch", "diagram.addNote": "note.text", "diagram.addGroup": "square.dashed",
         "diagram.delete": "trash", "diagram.updateFromDB": "arrow.clockwise", "diagram.showColumns": "list.bullet",
         "diagram.zoom": "plus.magnifyingglass", "diagram.toggleGrid": "grid", "diagram.export": "photo", "diagram.copyImage": "doc.on.clipboard",

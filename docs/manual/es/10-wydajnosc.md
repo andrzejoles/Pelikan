@@ -11,6 +11,9 @@ vacía con **Archivo › Nuevo › Explain Plan Window**; Pelikan puede crear la
 
 - **Actualizar plan** recalcula el plan del texto del editor de la ventana de plan, y **Objetivo del optimizador** (*Como en la
   sesión*, ALL_ROWS o FIRST_ROWS_n) añade una sugerencia (hint).
+- Un plan nuevo aparece totalmente expandido. Las flechas **Expandir todas las ramas** y **Contraer todas las ramas**
+  junto al selector de vista sobre el árbol del plan (también en la pestaña **Plan** de la cinta) expanden a la vez
+  todas las ramas o contraen el árbol hasta la raíz.
 - Vistas: **Árbol** (operaciones con coste, número de filas, bytes, tiempo, orden de ejecución y predicados de acceso y
   de filtro), **Diagrama** (un nodo por operación con coste, cardinalidad y número de paso), **Flame graph** (el coste
   de las operaciones en proporción al padre) y **Texto** (DBMS_XPLAN).

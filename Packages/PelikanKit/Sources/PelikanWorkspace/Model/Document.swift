@@ -216,10 +216,26 @@ public final class Document: Identifiable {
     /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
     public var plan: ExplainPlanResult? {
         willSet { if let p = plan, newValue?.statementID != p.statementID { previousPlan = p } }
+        didSet {
+            // Pierwszy plan okna albo plan innego polecenia — drzewo rozwinięte (jak we wzorcu); ponowny plan tego samego
+            // polecenia zachowuje rozwinięcie użytkownika (bez gałęzi, których nowy plan nie ma).
+            guard let p = plan else { return }
+            if let old = oldValue, old.sql == p.sql { planExpanded.formIntersection(p.branchIDs) } else { planExpanded = p.branchIDs }
+        }
     }
     /// Poprzedni plan okna (porównanie planów, SD-PLAN-003).
     public var previousPlan: ExplainPlanResult?
     public var planGoal: OptimizerGoal = .session
+    /// Rozwinięte gałęzie drzewa planu (PLAN_TABLE.ID): nowy plan rozwinięty w całości, ponowny plan tego samego polecenia
+    /// zachowuje rozwinięcie.
+    public var planExpanded: Set<Int> = []
+
+    /// Rozwija gałęzie nad krokiem planu, żeby zaznaczony krok był widoczny w drzewie (nawigacja, powrót z Diagramu).
+    public func revealPlanLine(_ id: Int) {
+        guard let p = plan else { return }
+        let missing = p.ancestors(of: id).filter { !planExpanded.contains($0) }
+        if !missing.isEmpty { planExpanded.formUnion(missing) }
+    }
     public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []

@@ -38,6 +38,56 @@ struct ExplainPlanOfflineTests {
         #expect(lines.sorted { $0.executionOrder < $1.executionOrder }.map(\.id) == [2, 3, 1, 0])
         #expect(ExplainPlan.tree(lines).first?.children?.first?.children?.map(\.id) == [2, 3])
     }
+
+    @Test("Rozwiń/Zwiń wszystkie gałęzie: nowy plan rozwinięty, ten sam tekst zachowuje rozwinięcie, nawigacja odsłania krok")
+    @MainActor func expandCollapse() async throws {
+        func line(_ id: Int, _ parent: Int?) -> PlanLine {
+            PlanLine(id: id, parentID: parent, depth: 0, position: id, operation: "OP\(id)", options: "", objectOwner: "", objectName: "", optimizer: "",
+                     accessPredicates: "", filterPredicates: "")
+        }
+        func plan(_ id: String, _ sql: String, _ lines: [PlanLine]) -> ExplainPlanResult {
+            let l = ExplainPlan.numberExecution(lines)
+            return ExplainPlanResult(statementID: id, roots: ExplainPlan.tree(l), lines: l, text: "", html: "", xml: "", sql: sql)
+        }
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let doc = ws.newDocument(.explainPlan, text: "select * from emp")
+        ws.activate(doc.id)
+        // Bez planu komendy niedostępne.
+        #expect(!ws.isEnabled("plan.expandAll") && !ws.isEnabled("plan.collapseAll"))
+        // Pierwszy plan okna — całe drzewo rozwinięte (jak we wzorcu). 0 ← 1 ← (2 ← 4, 3)
+        doc.plan = plan("a", "select * from emp", [line(0, nil), line(1, 0), line(2, 1), line(3, 1), line(4, 2)])
+        #expect(doc.planExpanded == [0, 1, 2])
+        #expect(ws.isEnabled("plan.expandAll") && ws.isEnabled("plan.collapseAll"))
+        _ = try await ws.invoke("plan.collapseAll")
+        #expect(doc.planExpanded.isEmpty)
+        _ = try await ws.invoke("plan.expandAll")
+        #expect(doc.planExpanded == [0, 1, 2])
+        // Ponowny plan tego samego polecenia zachowuje rozwinięcie użytkownika, bez gałęzi, których nowy plan nie ma.
+        doc.planExpanded = [0, 2]
+        doc.plan = plan("b", "select * from emp", [line(0, nil), line(1, 0), line(2, 1), line(3, 2)])
+        #expect(doc.planExpanded == [0, 2])
+        doc.plan = plan("c", "select * from emp", [line(0, nil), line(1, 0)])
+        #expect(doc.planExpanded == [0])
+        // Inne polecenie — nowy plan znów rozwinięty w całości.
+        doc.plan = plan("d", "select * from dept", [line(0, nil), line(1, 0), line(2, 1), line(3, 2)])
+        #expect(doc.planExpanded == [0, 1, 2])
+        // Nawigacja do kroku w zwiniętej gałęzi rozwija jego przodków (i tylko ich).
+        _ = try await ws.invoke("plan.collapseAll")
+        #expect(doc.plan?.ancestors(of: 3) == [2, 1, 0] && doc.plan?.ancestors(of: 0) == [])
+        doc.revealPlanLine(3)
+        #expect(doc.planExpanded == [0, 1, 2])
+        _ = try await ws.invoke("plan.collapseAll")
+        doc.revealPlanLine(1)
+        #expect(doc.planExpanded == [0])
+        // Plan bez gałęzi (jeden krok) — komendy wyłączone.
+        doc.plan = plan("e", "select 1 from dual", [line(0, nil)])
+        #expect(!ws.isEnabled("plan.expandAll") && !ws.isEnabled("plan.collapseAll"))
+        // Inne okno aktywne — komendy nie działają na oknie planu w tle.
+        doc.plan = plan("f", "select * from emp", [line(0, nil), line(1, 0)])
+        let sql = ws.newDocument(.sql, text: "select 1 from dual")
+        ws.activate(sql.id)
+        #expect(!ws.isEnabled("plan.expandAll"))
+    }
 }
 
 @Suite("Narzędzia siatki bez bazy")
