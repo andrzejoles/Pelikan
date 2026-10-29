@@ -7,6 +7,12 @@ public enum CodeContents {
     /// Kolejność elementów: jak w źródle, alfabetycznie, według rodzaju (deklaracje, potem podprogramy).
     public enum Order: String, Sendable, Codable, Hashable, CaseIterable { case source, name, kind }
 
+    /// Zarys tekstu okna (D199): okno SQL — skrypt (polecenia SQL obok jednostek i bloków PL/SQL), okno programu
+    /// i testu — PL/SQL. Ten sam zarys dla panelu i komend menu elementu.
+    public static func outline(_ text: String, kind: DocumentKind) -> [OutlineNode] {
+        kind == .sql ? PLSQLOutline.parseScript(text) : PLSQLOutline.parse(text)
+    }
+
     /// Drzewo posortowane na każdym poziomie; sekcje i bloki zostają na swoich miejscach względem siebie.
     public static func sorted(_ nodes: [OutlineNode], order: Order) -> [OutlineNode] {
         let children = nodes.map { n -> OutlineNode in
@@ -39,7 +45,9 @@ public enum CodeContents {
         return nodes.compactMap { n in
             var n = n
             let kids = filtered(n.children.filter { $0.kind != .parameter }, matching: f)
+            // Polecenie SQL — także po tekście za pierwszym słowem (nazwa tabeli, widoku).
             let matches = n.name.range(of: f, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+                || (n.kind == .statement && n.detail.range(of: f, options: [.caseInsensitive, .diacriticInsensitive]) != nil)
             guard matches || !kids.isEmpty else { return nil }
             n.children = n.children.filter { $0.kind == .parameter } + kids
             return n
@@ -83,7 +91,7 @@ public enum CodeContents {
         case .exception, .pragma: 6
         case .function: 7
         case .procedure: 8
-        case .declareSection, .beginSection, .exceptionSection, .block: 9
+        case .declareSection, .beginSection, .exceptionSection, .block, .statement: 9
         }
     }
 
@@ -120,6 +128,14 @@ public enum CodeContents {
         }
         if let unit = path.first, unit.range == node.range { return (node.name, nil) }
         return nil
+    }
+}
+
+extension Workspace {
+    /// Czy okno pokazuje panel Zawartość kodu (D199): wybór w oknie, a bez niego — ustawienie domyślne z Ustawień.
+    /// Okna bez panelu (konsola SQL*Plus, plan, raport, diagram, notatnik) — false.
+    public func showsCodeContents(_ doc: Document) -> Bool {
+        doc.kind.hasCodeContents && (doc.codeContentsVisible ?? settings.showCodeContents)
     }
 }
 
@@ -223,7 +239,7 @@ enum CodeContentsCommands {
     static func target(_ ctx: CommandContext) throws -> (Document, OutlineNode) {
         guard let doc = BuiltinCommands.editable(ctx.workspace) else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna z tekstem")) }
         let offset = ctx.arguments.int("offset").map(Int.init) ?? doc.selectedRange.lowerBound
-        guard let node = CodeContents.element(at: offset, in: PLSQLOutline.parse(doc.text)) else {
+        guard let node = CodeContents.element(at: offset, in: CodeContents.outline(doc.text, kind: doc.kind)) else {
             throw CommandError.notAvailable(L10n.tr("Brak elementu w tym miejscu"))
         }
         return (doc, node)

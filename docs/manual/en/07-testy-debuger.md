@@ -34,6 +34,10 @@ object menu.
 **Tools › Test Manager** (the *Tools* chapter) is used to run many tests with expected results, and utPLSQL (the
 *utPLSQL tests* chapter) for unit tests.
 
+Next to the block, as in the Program Window, there is **Code Contents** (declarations, local subprograms, blocks) —
+show or hide it in this window with **View › Code Contents** or the button at the left end of the bar below the
+block.
+
 ## Debugger
 
 The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai databases.

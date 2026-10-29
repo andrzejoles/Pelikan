@@ -194,7 +194,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var showSpecialCharacters = false
     /// Kolejność elementów Code Contents (PD-CA-010).
     public var codeContentsOrder: CodeContents.Order = .source
-    /// Panel Code Contents obok edytora Program Window (UG 25.15).
+    /// Panel Zawartość kodu obok edytora (UG 25.15): domyślny stan okien programu, SQL i testu, w których nie
+    /// przełączano panelu (`Document.codeContentsVisible`, D199).
     public var showCodeContents = true
     /// Code Assistant (UG 23.14): automatyczna aktywacja po kropce i jej opóźnienie w milisekundach.
     public var codeAssistantAutomatic = true

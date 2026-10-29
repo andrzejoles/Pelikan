@@ -6,6 +6,8 @@ public struct OutlineNode: Sendable, Hashable {
         case package, packageBody, type, typeBody, procedure, function, trigger, block
         case variable, constant, cursor, typeDeclaration, exception, parameter, pragma
         case declareSection, beginSection, exceptionSection
+        /// Polecenie SQL skryptu okna SQL (zapytanie, DML, DDL) — tylko w `parseScript` (D199).
+        case statement
     }
     public var kind: Kind
     public var name: String
@@ -64,6 +66,37 @@ public enum PLSQLOutline {
         let t = tokens(text)
         var p = Parser(t: t, i: 0, length: (text as NSString).length, source: text as NSString)
         return markVisibility(p.parseTop())
+    }
+
+    /// Zarys skryptu okna SQL (D199): jednostki i bloki PL/SQL jak w `parse`, a między nimi polecenia SQL (zapytania,
+    /// DML, DDL, polecenia bez bloku) jako elementy `.statement` w kolejności tekstu. Nazwa to pierwsze słowo polecenia
+    /// (jak w tekście, po komentarzach), szczegóły — dalszy początek polecenia w jednej linii, skrócony.
+    public static func parseScript(_ text: String) -> [OutlineNode] {
+        let units = parse(text)
+        let ns = text as NSString
+        var out: [OutlineNode] = []
+        var u = 0
+        for s in ScriptSplitter.split(text) where s.end > s.start {
+            // Początek polecenia bez komentarzy (wystarczy początek tekstu — szczegóły i tak są skracane).
+            let prefix = ns.substring(with: NSRange(location: s.start, length: min(s.end - s.start, 600)))
+            let toks = tokens(prefix)
+            guard let first = toks.first else { continue }
+            let at = s.start + first.start
+            // Jednostki przed poleceniem — do wyniku; polecenie wewnątrz jednostki (rozpoznanej przez parser) pomijane.
+            while u < units.count, units[u].range.lowerBound <= at {
+                out.append(units[u])
+                u += 1
+            }
+            if let last = out.last, last.kind != .statement, last.range.contains(at) { continue }
+            var detail = (prefix as NSString).substring(from: first.end)
+                .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
+            if detail.count > 160 || (prefix as NSString).length < s.end - s.start {
+                detail = String(detail.prefix(160)).trimmingCharacters(in: .whitespaces) + "…"
+            }
+            out.append(OutlineNode(kind: .statement, name: first.text, detail: detail, range: s.start..<max(s.fullEnd, s.end), nameOffset: at))
+        }
+        out.append(contentsOf: units[u...])
+        return out
     }
 
     /// Klucz podprogramu do porównania specyfikacji z ciałem: rodzaj, nazwa i nazwy parametrów (przeciążenia).

@@ -799,12 +799,19 @@ public enum BuiltinCommands {
                 ctx.ui?.showCommandPalette()
                 return .ok
             },
+            // Panel w aktywnym oknie (D199); ustawienie `showCodeContents` jest tylko domyślnym stanem okien.
             Command(CommandDescriptor(id: "view.codeContents", title: L10n.tr("Zawartość kodu"), category: .view,
+                                      parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż (true) albo ukryj (false) panel; bez argumentu — przełącza"))],
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Pokazuje lub ukrywa panel Zawartość kodu (struktura jednostek) obok edytora okna programu."),
-                                      feature: "PD-CA-010")) { ctx in
-                ctx.workspace.settings.showCodeContents.toggle()
-                return .ok
+                                      summary: L10n.tr("Pokazuje lub ukrywa panel Zawartość kodu (struktura kodu) obok edytora aktywnego okna programu, SQL albo testu; wybór zostaje w tym oknie (także w worksecie), inne okna bez zmian."),
+                                      feature: "PD-CA-010"),
+                    validate: { $0.activeDocument?.kind.hasCodeContents ?? false }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind.hasCodeContents else {
+                    throw CommandError.notAvailable(L10n.tr("Zawartość kodu jest dostępna w oknie programu, SQL i testu"))
+                }
+                let show = ctx.arguments.bool("visible") ?? !ctx.workspace.showsCodeContents(doc)
+                doc.codeContentsVisible = show
+                return CommandResult(value: .bool(show))
             },
             Command(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
                                       agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje Przeglądarkę obiektów w lewej kolumnie."),

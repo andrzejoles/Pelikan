@@ -45,6 +45,9 @@ public enum DocumentKind: String, Sendable, Codable, CaseIterable {
         case .notebook: "sqlnb"
         }
     }
+
+    /// Okno z panelem Zawartość kodu obok edytora (D199): okno programu, SQL i testu.
+    public var hasCodeContents: Bool { [.sql, .program, .test].contains(self) }
 }
 
 public struct DocumentID: Hashable, Sendable, Codable, CustomStringConvertible {
@@ -299,6 +302,9 @@ public final class Document: Identifiable {
     /// Okno tylko do odczytu (PD-FILE-003) i drugi widok tego samego tekstu (PD-EDIT-014).
     public var isReadOnly = false
     public var splitEditor = false
+    /// Panel Zawartość kodu w tym oknie (D199): nil — jak w Ustawieniach (`showCodeContents`), inaczej wybór
+    /// użytkownika w oknie (komenda `view.codeContents`), zapamiętany w worksecie.
+    public var codeContentsVisible: Bool?
     public var historyPosition: Int?
 
     public init(kind: DocumentKind, ordinal: Int, text: String = "", fileURL: URL? = nil) {

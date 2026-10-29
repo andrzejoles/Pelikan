@@ -99,6 +99,10 @@ von Zeilen ohne Verzögerung.
   filtert Namen. Der Baum verfolgt den Cursor und hat Sortierung und Menü (auswählen, kopieren, ausschneiden,
   Unterprogramm testen, alles auf-/zuklappen). Unter dem Editor zeigt die **Codehierarchie** den Pfad vom Cursor aus
   (Paket › Prozedur › Block); ein Klick auf eine Ebene wählt sie aus oder springt zu ihrem Namen.
+  Den Bereich blenden Sie in jedem Fenster einzeln ein und aus — **Ansicht › Codeinhalt** oder die
+  Seitenleisten-Taste am linken Ende der Fensterleiste; die Auswahl bleibt im Fenster (auch im Workset).
+  **Einstellungen › Editor › Codeinhalt in neuen Fenstern** gilt für Fenster, in denen der Bereich nicht
+  umgeschaltet wurde.
 - Das Kontextmenü auf dem Namen eines Datenbankobjekts im Editor bietet dieselben Aktionen wie der Object Browser.
 - **F1** öffnet die Oracle-Dokumentation zum Wort unter dem Cursor.
 

@@ -21,6 +21,8 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
     private var showingOutput = false
     private var showingStatistics = false
     private var resultsCollapsed = true
+    /// Zawartość kodu obok edytora (D199): polecenia, jednostki i bloki skryptu.
+    private var panel: CodeContentsPanel!
 
     var preferredFirstResponder: NSView { editor.textView }
 
@@ -35,7 +37,10 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
 
     override func loadView() {
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
-        editor.onCaretChange = { [weak self] s in self?.caretLabel.stringValue = s }
+        editor.onCaretChange = { [weak self] s in
+            self?.caretLabel.stringValue = s
+            self?.panel?.caretMoved()
+        }
 
         // Pasek okna (dół edytora): pozycja, &, wykonywanie.
         caretLabel.textColor = .secondaryLabelColor
@@ -46,10 +51,11 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
         executingIndicator.style = .spinning
         executingIndicator.controlSize = .small
         executingIndicator.isDisplayedWhenStopped = false
-        let windowBar = NSStackView(views: [substitutionButton, caretLabel, NSView(), executingIndicator])
-        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 6, bottom: 2, right: 8)
-
         let editorPane = NSView()
+        panel = CodeContentsPanel(document: document, workspace: workspace, editor: editor, content: editorPane, analyzesText: true)
+        let windowBar = NSStackView(views: [panel.makeToggleButton(), substitutionButton, caretLabel, NSView(), executingIndicator])
+        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 8)
+
         for v in [editor!, windowBar] as [NSView] {
             v.translatesAutoresizingMaskIntoConstraints = false
             editorPane.addSubview(v)
@@ -94,13 +100,18 @@ final class SQLWindowViewController: NSViewController, NSSplitViewDelegate, Docu
         split.isVertical = false
         split.dividerStyle = .thin
         split.delegate = self
-        split.addArrangedSubview(editorPane)
+        split.addArrangedSubview(panel.split)
         split.addArrangedSubview(resultsArea)
         // Wyniki ukryte do pierwszego wykonania (ukryty widok NSSplitView = zwinięty, bez przesuwania dzielnika w layout).
         resultsArea.isHidden = true
         view = split
         tokens.append(trackChanges { [weak self] in self?.refreshResults() })
         tokens.append(trackChanges { [weak self] in self?.refreshState() })
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        panel.viewDidAppear()
     }
 
     private func refreshState() {

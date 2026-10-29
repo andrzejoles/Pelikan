@@ -35,6 +35,10 @@ para cualquier procedimiento con **Prueba estándar…** en el menú del objeto.
 Para ejecutar muchas pruebas con resultados esperados sirve **Herramientas › Test Manager** (capítulo *Herramientas*), y
 para las pruebas unitarias, utPLSQL (capítulo *Pruebas utPLSQL*).
 
+Junto al bloque, como en la Program Window, está el **Contenido del código** (declaraciones, subprogramas locales,
+bloques); se muestra u oculta en esta ventana con **Vista › Contenido del código** o con el botón del extremo
+izquierdo de la barra bajo el bloque.
+
 ## Depurador
 
 El depurador usa el paquete de Oracle DBMS_DEBUG y funciona en bases de datos 19c–26ai.

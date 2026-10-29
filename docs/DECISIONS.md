@@ -2416,3 +2416,33 @@ przy obramowaniu wszystkich kart ginęło.
   „Połączenie: …” (także pomoc VoiceOver karty); tytuły nieaktywnych kart w kolorze tekstu z przezroczystością 70%
   (kontrast), przy „Zwiększ kontrast” — pełny kolor tekstu; podświetlenie pod kursorem ustawiane z położenia kursora
   po przebudowie paska.
+
+### D199 · 2026-10-29 — Zawartość kodu w każdym oknie z kodem, pokazywana i ukrywana w oknie
+
+Prośba właściciela: „Chciałbym, aby dla każdego okna z kodem można było wyświetlić / ukryć panel ze strukturą kodu
+(obecnie otwarłem tylko plik z body pakietu i paneli ze strukturą nie ma)”. Panel był tylko w oknie programu,
+a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłączone u właściciela ukrywało panel wszędzie.
+
+- **Stan w oknie:** `Document.codeContentsVisible` (nil — jak w Ustawieniach). Komenda `view.codeContents` przełącza
+  panel w aktywnym oknie (opcjonalny argument `visible`; agent: brak dostępu jak dotąd, skutek: stan interfejsu),
+  w oknach bez panelu jest wyłączona (wywołana — „Zawartość kodu jest dostępna w oknie programu, SQL i testu”).
+  Ustawienie **Ustawienia › Edytor › Zawartość kodu w nowych oknach** (`showCodeContents`, nazwa w pliku bez zmian) jest
+  stanem domyślnym: okna, w których panelu nie przełączano, idą za nim także po zmianie ustawienia.
+- **Workset i odzyskiwanie:** pole opcjonalne `codeContents` wpisu okna (tylko wybór w oknie); starsze worksety bez
+  pola — stan domyślny.
+- **Okna:** program, SQL i test — ten sam `CodeContentsView` po lewej stronie edytora (`CodeContentsPanel`, wspólny
+  podział, szerokość 220 pt, zapamiętana przy ukryciu). W oknach SQL i testu panel obejmuje tylko edytor z paskiem
+  okna — siatka wyników i karty testu zostają na całą szerokość. Konsola SQL*Plus, plan, raport, diagram i notatnik —
+  bez panelu.
+- **Zarys skryptu okna SQL:** `PLSQLOutline.parseScript` — jednostki `CREATE` i bloki anonimowe jak w oknie programu,
+  a między nimi polecenia SQL z `ScriptSplitter` (nowy rodzaj elementu `statement`: nazwa — pierwsze słowo polecenia
+  po komentarzach, jak w tekście, więc klik zaznacza je w edytorze; szczegóły — dalszy początek polecenia w jednej
+  linii, najwyżej 160 znaków). Polecenia wewnątrz rozpoznanych jednostek nie są osobnymi elementami. Filtr nazw
+  dopasowuje polecenie także po szczegółach (nazwa tabeli). Komendy menu elementu (zaznacz, kopiuj, wytnij) liczą ten
+  sam zarys (`CodeContents.outline`) — w oknie SQL działają też na poleceniach.
+- **Wydajność (R4-01):** w oknach SQL i testu zarys liczony w tle, 0,4 s po ostatniej zmianie tekstu (pierwszy raz od
+  razu) i tylko przy widocznym panelu; okno programu jak dotąd liczy go razem z kartami jednostek.
+- **Przełącznik w oknie:** przycisk z symbolem `sidebar.left` na lewym końcu paska okna (podpowiedź „Pokaż/ukryj
+  Zawartość kodu”, wciśnięty przy widocznym panelu); okno testu dostało pasek pod blokiem (przycisk i pozycja kursora).
+  Wstążka bez zmian — komenda już jest w Widok › Panele, Edycja › Zwijanie › Zawartość kodu i na karcie Program.
+  Bez skrótu (wzorzec nie ma domyślnego).

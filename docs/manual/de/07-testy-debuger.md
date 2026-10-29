@@ -35,6 +35,10 @@ für eine beliebige Prozedur über **Standardtest …** im Objektmenü wählen.
 Zum Ausführen vieler Tests mit erwarteten Ergebnissen dient **Werkzeuge › Test Manager** (Kapitel *Werkzeuge*), für
 Unit-Tests utPLSQL (Kapitel *utPLSQL-Tests*).
 
+Neben dem Block steht wie im Program Window der **Codeinhalt** (Deklarationen, lokale Unterprogramme, Blöcke) —
+Sie blenden ihn in diesem Fenster über **Ansicht › Codeinhalt** oder die Taste am linken Ende der Leiste unter dem
+Block ein und aus.
+
 ## Debugger
 
 Der Debugger verwendet das Oracle-Paket DBMS_DEBUG und arbeitet auf Datenbanken 19c–26ai.

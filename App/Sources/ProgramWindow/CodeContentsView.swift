@@ -6,7 +6,8 @@ import PelikanWorkspace
 /// typy, kursory, zmienne, stałe, wyjątki, pragmy, podprogramy zagnieżdżone; elementy prywatne ciała pochylone
 /// i przygaszone. Śledzi kursor (zaznacza element zawierający pozycję), klik albo Enter przenosi do nazwy elementu
 /// (także na innej karcie jednostki — D192), strzałki w drzewie przesuwają kursor bez zmiany fokusu; filtr nazw nad
-/// drzewem, sortowanie i menu elementu (PD-CA-010).
+/// drzewem, sortowanie i menu elementu (PD-CA-010). Ten sam widok w oknie programu, SQL i testu (`CodeContentsPanel`,
+/// D199) — w oknie SQL także polecenia SQL skryptu.
 final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate, NSSearchFieldDelegate {
     /// Węzeł drzewa (NSOutlineView wymaga obiektów o stałej tożsamości).
     final class Item {
@@ -316,6 +317,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             return n.name + params
         case .pragma: return "pragma " + n.name.lowercased()
         case .block: return n.name
+        // Polecenie SQL skryptu: pierwsze słowo i początek dalszego tekstu (pełny w podpowiedzi).
+        case .statement: return n.detail.isEmpty ? n.name : n.name + " " + n.detail
         default: return n.detail.isEmpty ? n.name : n.name + " " + n.detail
         }
     }
@@ -346,6 +349,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .constant: "c.square"
         case .variable, .parameter: "v.square"
         case .pragma: "p.square"
+        case .statement: "text.alignleft"
         }
     }
 
@@ -355,6 +359,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .procedure, .function, .trigger: .systemBlue
         case .exception: .systemRed
         case .typeDeclaration, .cursor: .systemPurple
+        case .statement: .systemGreen
         case .constant: .systemTeal
         default: .secondaryLabelColor
         }

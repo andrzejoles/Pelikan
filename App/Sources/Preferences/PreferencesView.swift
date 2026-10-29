@@ -436,7 +436,8 @@ struct EditorPane: View {
                          : L10n.tr("Pionowy margines w kolumnie \(workspace.settings.rightMarginColumn)"))
                 }
                 Toggle(L10n.tr("Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"), isOn: setting(workspace, \.showSpecialCharacters))
-                Toggle(L10n.tr("Zawartość kodu"), isOn: setting(workspace, \.showCodeContents))
+                // Domyślny stan okien programu, SQL i testu; przełącznik w oknie — Widok › Zawartość kodu (D199).
+                Toggle(L10n.tr("Zawartość kodu w nowych oknach"), isOn: setting(workspace, \.showCodeContents))
                 Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
                     Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
                     Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)

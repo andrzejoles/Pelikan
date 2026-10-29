@@ -2,6 +2,16 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
+
+- **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko
+  w oknie programu. W oknie SQL pokazuje cały skrypt — polecenia SQL (początek polecenia, pełny tekst w podpowiedzi),
+  procedury, funkcje, pakiety i wyzwalacze z `CREATE` oraz bloki anonimowe; klik przenosi kursor, filtr szuka także
+  w treści poleceń.
+- **Pokaż albo ukryj w oknie:** **Widok › Zawartość kodu** i nowy przycisk na lewym końcu paska okna przełączają panel
+  tylko w bieżącym oknie; wybór zostaje w oknie i w worksecie. **Ustawienia › Edytor › Zawartość kodu w nowych
+  oknach** ustala stan domyślny.
+
 ## 1.5.1 — wyraźniejsze karty okien
 
 - **Karty okien:** aktywna karta ma tło w kolorze akcentu, pasek akcentu u dołu i pogrubiony tytuł; pozostałe są bez

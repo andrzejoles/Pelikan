@@ -10,6 +10,9 @@ final class TestWindowViewController: NSViewController, DocumentContentControlle
     private let split = NSSplitView()
     private var tokens: [ObservationToken] = []
     private var scanWork: DispatchWorkItem?
+    /// Zawartość kodu obok edytora bloku testu (D199).
+    private var panel: CodeContentsPanel!
+    private let caretLabel = NSTextField(labelWithString: "1:1")
 
     var preferredFirstResponder: NSView { editor.textView }
 
@@ -25,9 +28,37 @@ final class TestWindowViewController: NSViewController, DocumentContentControlle
     override func loadView() {
         editor = CodeEditorView(document: document, fontSize: CGFloat(workspace.settings.editorFontSize))
         let bottom = NSHostingView(rootView: TestPanel(document: document, workspace: workspace).interfaceFont())
+        // Edytor z paskiem okna (przełącznik Zawartości kodu, pozycja kursora), obok — Zawartość kodu.
+        let editorPane = NSView()
+        panel = CodeContentsPanel(document: document, workspace: workspace, editor: editor, content: editorPane, analyzesText: true)
+        editor.onCaretChange = { [weak self] s in
+            self?.caretLabel.stringValue = s
+            self?.panel?.caretMoved()
+        }
+        caretLabel.textColor = .secondaryLabelColor
+        let windowBar = NSStackView(views: [panel.makeToggleButton(), caretLabel, NSView()])
+        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 8)
+        for v in [editor!, windowBar] as [NSView] {
+            v.translatesAutoresizingMaskIntoConstraints = false
+            editorPane.addSubview(v)
+        }
+        NSLayoutConstraint.activate([
+            editor.topAnchor.constraint(equalTo: editorPane.topAnchor),
+            editor.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
+            editor.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
+            windowBar.topAnchor.constraint(equalTo: editor.bottomAnchor),
+            windowBar.leadingAnchor.constraint(equalTo: editorPane.leadingAnchor),
+            windowBar.trailingAnchor.constraint(equalTo: editorPane.trailingAnchor),
+            windowBar.bottomAnchor.constraint(equalTo: editorPane.bottomAnchor),
+            { let c = windowBar.heightAnchor.constraint(equalToConstant: 22); c.priority = .defaultHigh; return c }(),
+        ])
+        tokens.append(trackChanges { [weak self] in
+            // Pasek okna czcionką interfejsu (D178).
+            self?.caretLabel.font = .monospacedDigitSystemFont(ofSize: InterfaceFonts.shared.small.pointSize, weight: .regular)
+        })
         split.isVertical = false
         split.dividerStyle = .thin
-        split.addArrangedSubview(editor)
+        split.addArrangedSubview(panel.split)
         split.addArrangedSubview(bottom)
         view = split
         TestRunner.synchronize(document)
@@ -46,6 +77,7 @@ final class TestWindowViewController: NSViewController, DocumentContentControlle
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        panel.viewDidAppear()
         guard !positioned else { return }
         positioned = true
         DispatchQueue.main.async { [weak self] in

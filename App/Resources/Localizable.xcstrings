@@ -59389,30 +59389,30 @@
         }
       }
     },
-    "Pokazuje lub ukrywa panel Zawartość kodu (struktura jednostek) obok edytora okna programu." : {
+    "Pokazuje lub ukrywa panel Zawartość kodu (struktura kodu) obok edytora aktywnego okna programu, SQL albo testu; wybór zostaje w tym oknie (także w worksecie), inne okna bez zmian." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shows or hides the Code Contents panel (unit structure) next to the Program Window editor."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показує або приховує панель «Вміст коду» (структура одиниць) біля редактора Program Window."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Muestra u oculta el panel Contenido del código (estructura de unidades) junto al editor de la Program Window."
+            "value" : "Shows or hides the Code Contents panel (code structure) next to the editor of the active Program, SQL or Test Window; the choice stays with that window (also in the workset), other windows are unchanged."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blendet den Bereich „Codeinhalt“ (Struktur der Einheiten) neben dem Editor des Program Window ein oder aus."
+            "value" : "Zeigt oder verbirgt den Bereich Codeinhalt (Codestruktur) neben dem Editor des aktiven Program Window, SQL Window oder Test Window; die Auswahl bleibt in diesem Fenster (auch im Workset), andere Fenster bleiben unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra u oculta el panel Contenido del código (estructura del código) junto al editor de la Program Window, SQL Window o Test Window activa; la elección se mantiene en esa ventana (también en el workset), las demás ventanas no cambian."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показує або приховує панель Вміст коду (структура коду) поруч із редактором активного Program Window, SQL Window або Test Window; вибір зберігається в цьому вікні (також у workset), інші вікна без змін."
           }
         }
       }
@@ -59749,6 +59749,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zeigt wieder alle abgerufenen Zeilen."
+          }
+        }
+      }
+    },
+    "Pokaż (true) albo ukryj (false) panel; bez argumentu — przełącza" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show (true) or hide (false) the panel; without an argument — toggles"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bereich anzeigen (true) oder ausblenden (false); ohne Argument — umschalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar (true) u ocultar (false) el panel; sin argumento, alterna"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати (true) або приховати (false) панель; без аргументу — перемикає"
           }
         }
       }
@@ -60281,6 +60309,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geschlossene anzeigen"
+          }
+        }
+      }
+    },
+    "Pokaż/ukryj Zawartość kodu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show/hide Code Contents"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codeinhalt ein-/ausblenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar/ocultar Contenido del código"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показати/приховати Вміст коду"
           }
         }
       }
@@ -110681,6 +110737,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Codeinhalt"
+          }
+        }
+      }
+    },
+    "Zawartość kodu jest dostępna w oknie programu, SQL i testu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code Contents is available in the Program, SQL and Test Window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codeinhalt ist im Program Window, SQL Window und Test Window verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido del código está disponible en la Program Window, SQL Window y Test Window"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вміст коду доступний у Program Window, SQL Window і Test Window"
+          }
+        }
+      }
+    },
+    "Zawartość kodu w nowych oknach" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code Contents in new windows"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codeinhalt in neuen Fenstern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenido del código en ventanas nuevas"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вміст коду в нових вікнах"
           }
         }
       }
