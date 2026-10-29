@@ -223,10 +223,12 @@ public struct GitRepository: Sendable, Hashable {
     public static func groupInfo(for directory: URL) -> RepositoryGroupInfo? {
         guard var info = location(for: directory) else { return nil }
         info.hasRemote = hasRemote(root: URL(fileURLWithPath: info.root, isDirectory: true))
+        if let g = info.gitDirectory { info.branch = currentBranch(gitDirectory: g, root: info.root) }
         return info
     }
 
-    /// Położenie repozytorium katalogu (bez sprawdzania zdalnego): katalog roboczy, nazwa, katalog gita, gałąź.
+    /// Położenie repozytorium katalogu (bez sprawdzania zdalnego): katalog roboczy, nazwa, katalog gita i gałąź z pliku
+    /// HEAD (bez procesu gita — HEAD reftable odczytuje wywołujący raz na repozytorium).
     public static func location(for directory: URL) -> RepositoryGroupInfo? {
         guard let out = try? run(["rev-parse", "--show-toplevel", "--git-common-dir", "--git-dir"], in: directory, config: backgroundConfig) else { return nil }
         // Ścieżki bez przycinania białych znaków (katalog może się nimi zaczynać albo kończyć) — tylko podział na linie.
@@ -240,7 +242,8 @@ public struct GitRepository: Sendable, Hashable {
         var name = common.lastPathComponent == ".git" ? common.deletingLastPathComponent().lastPathComponent : common.lastPathComponent
         if name.hasSuffix(".git"), name.count > 4 { name = String(name.dropLast(4)) }
         let root = top.standardizedFileURL.path
-        return RepositoryGroupInfo(root: root, name: name, branch: currentBranch(gitDirectory: gitDir.path, root: root),
+        let branch: String? = if case .branch(let b) = readBranch(gitDirectory: gitDir.path, root: root, allowProcess: false) { b } else { nil }
+        return RepositoryGroupInfo(root: root, name: name, branch: branch,
                                    hasRemote: false, gitDirectory: gitDir.path)
     }
 

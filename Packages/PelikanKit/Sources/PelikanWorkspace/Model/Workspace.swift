@@ -360,14 +360,21 @@ public final class Workspace {
     @ObservationIgnored var lastFullRepositoryCheck: Date?
     /// Sprawdzanie repozytoriów (testy: zaślepka albo nil — bez procesów gita, wyniki deterministyczne).
     @ObservationIgnored public var tabRepositoryProbe: TabRepositoryProbe?
-    /// Sól identyfikatorów grup repozytoriów: losowa, zapamiętana w UserDefaults (stała między uruchomieniami — klucze
-    /// kolorów w worksecie); obszar roboczy bez katalogu danych (testy) — pusta.
+    /// Sól identyfikatorów grup repozytoriów: losowa, w pliku `tab-group-salt` katalogu danych (0600; stała między
+    /// uruchomieniami — klucze kolorów w worksecie; osobna dla każdego katalogu danych, np. `PELIKAN_DATA_DIR`). Obszar
+    /// roboczy bez katalogu danych (testy) — pusta; plik nie do zapisu — losowa na czas sesji.
     @ObservationIgnored public lazy var tabGroupSalt: String = {
-        guard dataDirectory != nil else { return "" }
-        let key = "Pelikan.tabGroupSalt"
-        if let s = UserDefaults.standard.string(forKey: key), !s.isEmpty { return s }
+        guard let dir = dataDirectory else { return "" }
+        let url = dir.appendingPathComponent("tab-group-salt")
+        if let d = try? Data(contentsOf: url) {
+            let s = String(decoding: d, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !s.isEmpty { return s }
+        }
         let s = (0..<4).map { _ in String(UInt32.random(in: .min ... .max), radix: 16) }.joined()
-        UserDefaults.standard.set(s, forKey: key)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        if (try? Data(s.utf8).write(to: url, options: .atomic)) != nil {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
         return s
     }()
     @ObservationIgnored var tabGroupingMode: TabGroupingMode = .byKind

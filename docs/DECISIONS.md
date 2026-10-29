@@ -2585,11 +2585,16 @@ z dynamicznej palety.
 - **Drugie przejście przeglądu:** pełne sprawdzenie repozytoriów (aktywacja aplikacji, najwyżej co 30 s) ustala
   położenie wszystkich katalogów od nowa — usunięte repozytorium albo worktree i zagnieżdżone `git init` zmieniają
   grupę; gałąź HEAD w formacie reftable odczytywana gitem tylko przy pełnym sprawdzeniu, raz na repozytorium, a między
-  nimi zapamiętana (jak wynik `git remote`). Skrót katalogu w identyfikatorze grupy ma losową sól zapamiętaną
-  w UserDefaults (`Pelikan.tabGroupSalt`) — identyfikator jest stały między uruchomieniami (klucze kolorów
-  w worksecie), ale nie pozwala potwierdzić zgadniętej ścieżki. Kapsułka mieści się w pasku narzędzi (najwyżej 36 pt):
+  nimi zapamiętana (jak wynik `git remote`); położenie repozytorium czyta gałąź tylko z pliku HEAD, a gałąź z gita
+  (reftable) — raz na repozytorium przy pełnym sprawdzeniu albo przy pierwszym zobaczeniu repozytorium. Skrót katalogu
+  w identyfikatorze grupy ma losową sól w pliku `tab-group-salt` katalogu danych (0600; osobna dla każdego katalogu
+  danych, np. `PELIKAN_DATA_DIR`, bez skutków ubocznych testów; obszar roboczy bez katalogu danych — bez soli) —
+  identyfikator jest stały między uruchomieniami (klucze kolorów w worksecie), ale nie pozwala potwierdzić zgadniętej
+  ścieżki. Kapsułka mieści się w pasku narzędzi (najwyżej 36 pt):
   przy dużej czcionce interfejsu oba wiersze są zmniejszane (szczegół do 9 pt, nazwa do 10 pt), a gdy to za mało —
-  jeden wiersz „nazwa · szczegół”. Obszar roboczy bez katalogu danych (testy pakietu) domyślnie nie sprawdza
+  jeden wiersz „nazwa · szczegół”. **Świadomy kompromis:** przy bardzo dużej czcionce interfejsu kapsułka ma tekst
+  10/9 pt (albo jeden wiersz) — mniejszy niż wybrana czcionka, bo pasek narzędzi ma stałą wysokość; pełna nazwa
+  i liczba okien są w podpowiedzi, w VoiceOver i w liście „»”. Obszar roboczy bez katalogu danych (testy pakietu) domyślnie nie sprawdza
   repozytoriów (bez procesów gita w tle w innych zestawach testów; test wstrzykuje zaślepkę), aplikacja — tak.
   Przygotowanie repozytorium zrzutu 72 usuwa `GIT_DIR`, `GIT_WORK_TREE` i `GIT_INDEX_FILE` z otoczenia.
 

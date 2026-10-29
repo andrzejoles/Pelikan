@@ -449,8 +449,8 @@ struct TabGroupReviewTests {
         for p in ["/repo/a/x.sql", "/repo/b/y.sql", "/inne/z.sql"] { ws.newDocument(.sql, fileURL: URL(fileURLWithPath: p)) }
         ws.scheduleTabRepositoryRefresh(full: false)
         await ws.tabRepositoryRefresh?.value
-        // Położenie każdego katalogu, git remote i gałąź raz na repozytorium.
-        #expect(calls.count("locate") == 3 && calls.count("remote") == 1 && calls.count("branch") == 1)
+        // Położenie każdego katalogu, git remote i gałąź raz na repozytorium (nowe repozytorium — gałąź z gita).
+        #expect(calls.count("locate") == 3 && calls.count("remote") == 1 && calls.count("branchProcess") == 1 && calls.count("branch") == 0)
         #expect(ws.tabRepositories.count == 2 && ws.tabRepositories["/repo/a"]?.hasRemote == true)
         // Zwykła aktywacja: znane katalogi — tylko gałąź (reftable: zapamiętana, bez procesu gita), bez remote i locate.
         calls.reset()
@@ -491,6 +491,16 @@ struct TabGroupReviewTests {
             return TabGrouping.groups(input, mode: &mode)[0].id
         }
         #expect(id("a") == id("a") && id("a") != id("b") && !id("a").contains("repo/"))
+    }
+
+    @Test("Sól w pliku katalogu danych: stała dla katalogu, inna dla innego; bez katalogu danych — pusta")
+    func saltFile() throws {
+        let a = try TempDirectory(), b = try TempDirectory()
+        let s1 = Workspace(dataDirectory: a.url).tabGroupSalt
+        #expect(!s1.isEmpty && Workspace(dataDirectory: a.url).tabGroupSalt == s1)
+        #expect(FileManager.default.fileExists(atPath: a.url.appendingPathComponent("tab-group-salt").path))
+        #expect(Workspace(dataDirectory: b.url).tabGroupSalt != s1)
+        #expect(Workspace().tabGroupSalt.isEmpty)
     }
 
     @Test("Gałąź z HEAD: zwykła, reftable (.invalid — nieznana), rebase (head-name), odłączony")

@@ -295,7 +295,8 @@ public struct TabRepositoryProbe: Sendable {
         func branch(_ r: RepositoryGroupInfo) -> String? {
             if let b = branches[r.root] { return b }
             guard let g = r.gitDirectory else { return r.branch }
-            let b: String? = switch probe.branch(g, r.root, full) {
+            // Gita (HEAD reftable) — przy pełnym sprawdzeniu albo dla repozytorium widzianego pierwszy raz.
+            let b: String? = switch probe.branch(g, r.root, full || knownBranch[r.root] == nil) {
             case .branch(let name): name
             case .detached: nil
             case .unknown: knownBranch[r.root] ?? r.branch
