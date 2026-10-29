@@ -9,7 +9,7 @@ Plan Window**; Pelikan can create a missing PLAN_TABLE.
 
 ![Explain Plan Window — Diagram view](../img/plan-diagram.png)
 
-- **Refresh Plan** recalculates the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
+- **Refresh plan** recalculates the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
   ALL_ROWS or FIRST_ROWS_n) adds a hint.
 - A new plan opens fully expanded. The **Expand all branches** and **Collapse all branches** arrows next to the view
   selector above the plan tree (also on the **Plan** ribbon tab) expand every branch at once or collapse the tree to

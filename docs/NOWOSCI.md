@@ -2,7 +2,7 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.4.0 — karty jednostek w oknie programu, bogatsza Zawartość kodu
+## 1.4.0 — specyfikacja i ciało w osobnych plikach, karty jednostek, pliki zmienione przez inne programy
 
 - **Okno programu** z pakietem (albo typem) pokazuje naraz tylko specyfikację albo tylko ciało — tę jednostkę, której
   karta jest wybrana; aktywna karta jest wyraźnie zaznaczona. Kartę zmienisz kliknięciem, przez **Plik › Okno

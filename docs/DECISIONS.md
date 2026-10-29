@@ -2097,8 +2097,6 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
-
-
 ### D193 · 2026-10-29 — Plan wykonania: rozwinięcie i zwinięcie wszystkich gałęzi drzewa planu
 
 Zgłoszenie właściciela: w drzewie Explain Plan brakuje przycisku do rozwinięcia albo zwinięcia wszystkich gałęzi.
