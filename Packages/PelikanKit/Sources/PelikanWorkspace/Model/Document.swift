@@ -173,7 +173,25 @@ public final class Document: Identifiable {
 
     public var selectedRange: Range<Int> = 0..<0
     public var isModified = false {
-        didSet { if !isModified { baselineText = text } }
+        didSet {
+            if !isModified {
+                baselineText = text
+                markEditSession(nil)
+            }
+        }
+    }
+    /// Początek nowej sesji edycji (D205): tekst z otwarcia, zapisu albo wczytania (`range` nil — cały tekst, inaczej
+    /// zakres pliku wczytanego w oknie pary) przy wersji tekstu `revision` — edytor zapomina od niej zmiany w tym zakresie
+    /// (formatowanie przy Enter dotyczy tylko linii zmienionych w sesji).
+    public struct EditSessionMark: Sendable, Equatable {
+        public var serial = 0
+        public var range: Range<Int>?
+        public var revision = 0
+    }
+    public internal(set) var editSessionMark = EditSessionMark()
+
+    func markEditSession(_ range: Range<Int>?) {
+        editSessionMark = EditSessionMark(serial: editSessionMark.serial + 1, range: range, revision: textRevision)
     }
     /// Tekst z chwili otwarcia, wczytania z bazy albo zapisu — status linii (PD-EDIT-003) i Revert (PD-PROG-009).
     public internal(set) var baselineText = ""

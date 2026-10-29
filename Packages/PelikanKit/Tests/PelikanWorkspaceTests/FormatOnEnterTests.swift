@@ -110,6 +110,14 @@ struct FormatOnEnterTests {
         #expect(steps.prepare == FormatOnEnter.Edit(range: 6..<20, text: "  for r in (SELECT * FROM "))
         #expect(run(text, steps).final.hasPrefix("begin\n  FOR r IN (SELECT * FROM\n"))
         #expect(plan("begin\n  dbo|", autoReplace: rules).plan == nil)
+        // Krok 1 zaczyna się tam, gdzie kończy się krok 0 (edytor sprawdza zaznaczenie przed Enterem).
+        #expect(steps.enter.range.lowerBound == steps.prepare!.range.lowerBound + (steps.prepare!.text as NSString).length)
+        // Zamiana wieloliniowa — krok 0 i Enter, bez formatowania.
+        let multi = [AutoReplaceRule(abbreviation: "hdr", replacement: "-- autor\n-- data ")]
+        let (t3, p3) = plan("begin\n  hdr|", autoReplace: multi)
+        let m = try #require(p3)
+        #expect(m.prepare?.text == "  -- autor\n-- data " && m.format == nil)
+        #expect(run(t3, m).final == "begin\n  -- autor\n-- data \n")
         // Skrót w komentarzu — bez zamiany.
         #expect(try #require(plan("begin\n  x := 1; -- sf|", autoReplace: rules).plan).prepare == nil)
         // Wielkość liter słowa kluczowego przed kursorem (Ustawienia › Edytor) — w kroku 0, nie po drodze.
@@ -130,11 +138,37 @@ struct FormatOnEnterTests {
         r.record(edited: 10..<11, delta: 1)          // wpisany znak
         r.record(edited: 2..<5, delta: 3)            // wstawienie przed nim przesuwa zakres
         #expect(r.ranges == [2..<5, 13..<14])
-        #expect(r.touches(13...20) && r.touches(0...2) && !r.touches(6...12))
+        #expect(r.touches(line: 13..<20) && r.touches(line: 0..<3) && !r.touches(line: 6..<12))
         r.record(edited: 4..<4, delta: -2)           // usunięcie łączy nachodzące zakresy
-        #expect(r.touches(4...4))
+        #expect(r.touches(line: 4..<4))
         r.reset()
         #expect(r.ranges.isEmpty)
+        // Enter na końcu linii 0..<5 wstawia od jej końca (znak nowej linii i wcięcie) — linia nie jest edytowana,
+        // a usunięcie ostatniego znaku linii — jest.
+        var e = EditedRanges()
+        e.record(edited: 5..<8, delta: 3, newlineFirst: true)
+        #expect(!e.touches(line: 0..<5) && e.touches(line: 6..<8))
+        #expect(!e.touches(line: 9..<12))       // zmiana od początku następnej linii nie oznacza bieżącej
+        var w = EditedRanges()
+        w.record(edited: 4..<5, delta: 1)                       // wpisany ostatni znak linii 0..<5
+        w.record(edited: 5..<8, delta: 3, newlineFirst: true)   // Enter na jej końcu
+        #expect(w.ranges == [4..<5, 6..<8])
+        e.record(edited: 5..<5, delta: -1)
+        #expect(e.touches(line: 0..<5))
+        // Nowa sesja w zakresie (plik wczytany w oknie pary) — zmiany w nim zapomniane, poza nim zostają.
+        var c = EditedRanges()
+        c.record(edited: 2..<4, delta: 2)
+        c.record(edited: 20..<30, delta: 10)
+        c.clear(25..<100)
+        #expect(c.ranges == [2..<4, 20..<25])
+        // Dokument: zapis albo wczytanie — znacznik nowej sesji całego tekstu.
+        let doc = Document(kind: .sql, ordinal: 1, text: "select 1 from dual")
+        let mark = doc.editSessionMark.serial
+        doc.text = "select 2 from dual"
+        #expect(doc.editSessionMark.serial == mark)
+        doc.isModified = false
+        #expect(doc.editSessionMark.serial == mark + 1 && doc.editSessionMark.range == nil && doc.editSessionMark.revision == doc.textRevision)
+        #expect(SmartIndent.followsNewline("ab\n" as NSString, caret: 3) && !SmartIndent.followsNewline("put_line()" as NSString, caret: 9))
     }
 
     @Test("tryb Smart: END nieedytowanej linii wyrównany do struktury także z formatowaniem")

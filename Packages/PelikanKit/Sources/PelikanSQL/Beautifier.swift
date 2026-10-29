@@ -713,8 +713,15 @@ struct Formatter {
     /// Reguła wielkości liter słowa: funkcja wbudowana (przed „(”), pakiet z bazą (przed „.”), typ danych, słowo
     /// kluczowe, identyfikator.
     func rule(for t: Tok) -> BeautifierOptions.WordCase {
-        // Po kropce — nazwa (pole, kolumna, element pakietu): reguła identyfikatora, nie typu ani funkcji (`j.doc.date`).
-        if token(before: t)?.kind == .dot { return options.identifierCase }
+        // Po kropce — nazwa (pole, kolumna, element pakietu): reguła identyfikatora, nie typu ani słowa kluczowego
+        // (`j.doc.date`); znane nazwy — pakiet przed kropką, funkcja wbudowana przed nawiasem — jak bez kwalifikatora,
+        // a po `SYS.` (`sys.XMLTYPE`) wszystkie reguły jak bez kwalifikatora.
+        if let dot = token(before: t), dot.kind == .dot, token(before: dot)?.upper != "SYS" {
+            let next = token(after: t)
+            if let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
+            if let c = options.packageCase, next?.kind == .dot, SQLWords.isPackage(t.upper) { return c }
+            return options.identifierCase
+        }
         let keyword = t.kind == .keyword ? !keywordAsIdentifier(t) : contextualKeyword(t)
         let base = keyword ? options.keywordCase : options.identifierCase
         let next = token(after: t)

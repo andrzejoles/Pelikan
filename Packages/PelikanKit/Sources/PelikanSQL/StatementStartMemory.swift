@@ -176,6 +176,8 @@ public struct StatementStartMemory: Sendable, Equatable {
             var firstOnLine = true
             var lines = 0
             var header: [String]?
+            /// ORDER/MAP na początku linii w ciele typu — podprogram tylko, gdy następne słowo to MEMBER.
+            var pending: (position: Int, indent: Int)?
             var checkedFirst = !expectSubprogram
             for s in statementStarts where s == from { regionsAt[s] = region }
             let state = lexer.scan(range: 0..<utf.count, state: .normal) { t in
@@ -193,7 +195,13 @@ public struct StatementStartMemory: Sendable, Equatable {
                 }
                 if t.kind == .whitespace { return }
                 let pos = from + t.start
-                if statementStarts.contains(pos), regionsAt[pos] == nil { regionsAt[pos] = region }
+                if statementStarts.contains(pos) {
+                    if regionsAt[pos] == nil { regionsAt[pos] = region }
+                    // Nowe polecenie — jednostka poprzedniego się skończyła (nagłówek nowej ustawi ją od nowa).
+                    unit = nil
+                    header = nil
+                    pending = nil
+                }
                 let first = firstOnLine
                 firstOnLine = false
                 let word = t.kind == .keyword || t.kind == .identifier ? lexer.string(t).uppercased() : ""
@@ -243,12 +251,22 @@ public struct StatementStartMemory: Sendable, Equatable {
                     }
                 }
                 // Podprogram najwyższego poziomu ciała: punkt kontrolny na początku jego linii.
-                if first, plsql, var u = unit, u.body, (u.typeBody ? Self.typeStarters : Self.packageStarters).contains(word) {
-                    let indent = t.start - lineStart
+                func subprogram(at pos: Int, indent: Int) {
+                    guard var u = unit else { return }
                     if u.topIndent.map({ indent < $0 }) ?? true { u.topIndent = indent; unit = u }
-                    let pos = from + lineStart
                     if indent == u.topIndent, pos >= checkpointsFrom, pos < to {
                         checkpoints.append(Checkpoint(position: pos, statement: statement, region: region, unit: u, subprogram: true))
+                    }
+                }
+                if let p = pending {
+                    pending = nil
+                    if word == "MEMBER" { subprogram(at: p.position, indent: p.indent) }
+                }
+                if first, plsql, let u = unit, u.body, (u.typeBody ? Self.typeStarters : Self.packageStarters).contains(word) {
+                    if word == "ORDER" || word == "MAP" {
+                        pending = (from + lineStart, t.start - lineStart)
+                    } else {
+                        subprogram(at: from + lineStart, indent: t.start - lineStart)
                     }
                 }
             }

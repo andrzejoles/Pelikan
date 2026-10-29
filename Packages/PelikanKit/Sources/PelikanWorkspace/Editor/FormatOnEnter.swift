@@ -69,6 +69,12 @@ public enum FormatOnEnter {
             ns = working as NSString
             at = lineStart + (left as NSString).length
         }
+        // Zamiana wieloliniowa (AutoReplace z tekstem z wieloma liniami) — sam Enter z wcięciem, bez formatowania.
+        if left.contains(where: \.isNewline) {
+            let last = String(left.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).last ?? "")
+            let enter = Edit(range: at..<at, text: "\n" + SmartIndent.newlineIndent(lineBeforeCaret: last, mode: indentMode, unit: unit))
+            return Plan(prepare: prepare, enter: enter, format: nil, expected: "", caret: at + (enter.text as NSString).length)
+        }
         let context = memory.context(forLineAt: lineStart, in: ns)
         guard let result = Beautifier.formatOnEnter(working, caret: at, context: context, formatLine: lineEdited || prepare != nil,
                                                     options: options, tabWidth: tabWidth) else { return nil }
@@ -152,9 +158,13 @@ public struct EditedRanges: Sendable, Equatable {
 
     public init() {}
 
-    /// Zmiana tekstu: `edited` — zakres nowego tekstu w tekście po zmianie, `delta` — zmiana długości.
-    public mutating func record(edited: Range<Int>, delta: Int) {
-        let oldEnd = edited.upperBound - delta
+    /// Zmiana tekstu: `edited` — zakres nowego tekstu w tekście po zmianie, `delta` — zmiana długości;
+    /// `newlineFirst` — wstawiony tekst zaczyna się znakiem nowej linii (Enter na końcu linii): linia, za którą wstawiono,
+    /// nie jest zmieniona.
+    public mutating func record(edited input: Range<Int>, delta: Int, newlineFirst: Bool = false) {
+        var edited = input
+        if newlineFirst, delta == edited.count, !edited.isEmpty { edited = (edited.lowerBound + 1)..<edited.upperBound }
+        let oldEnd = input.upperBound - delta
         var out: [Range<Int>] = []
         var merged = edited
         for r in ranges {
@@ -173,9 +183,25 @@ public struct EditedRanges: Sendable, Equatable {
         ranges = out.sorted { $0.lowerBound < $1.lowerBound }
     }
 
-    /// Czy zakres (domknięty — zmiana na końcu linii też się liczy) był zmieniony.
-    public func touches(_ r: ClosedRange<Int>) -> Bool {
-        ranges.contains { $0.lowerBound <= r.upperBound && $0.upperBound >= r.lowerBound }
+    /// Czy treść linii (`line` — od początku linii do znaku nowej linii, bez niego) była zmieniona: zakres zmiany
+    /// nachodzi na nią albo styka się z nią (wpisanie albo usunięcie na jej końcu). Zmiana od początku następnej linii
+    /// jej nie oznacza, a Enter na jej końcu zapisany jest od następnej linii (`newlineFirst`).
+    public func touches(line: Range<Int>) -> Bool {
+        ranges.contains { $0.lowerBound <= line.upperBound && $0.upperBound >= line.lowerBound }
+    }
+
+    /// Nowa sesja edycji w zakresie (wczytany plik okna pary) — zmiany w nim zapomniane.
+    public mutating func clear(_ range: Range<Int>) {
+        var out: [Range<Int>] = []
+        for r in ranges {
+            if r.upperBound <= range.lowerBound || r.lowerBound >= range.upperBound {
+                if !(r.isEmpty && range.contains(r.lowerBound)) { out.append(r) }
+                continue
+            }
+            if r.lowerBound < range.lowerBound { out.append(r.lowerBound..<range.lowerBound) }
+            if r.upperBound > range.upperBound { out.append(range.upperBound..<r.upperBound) }
+        }
+        ranges = out
     }
 
     public mutating func reset() { ranges = [] }

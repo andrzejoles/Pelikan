@@ -199,6 +199,34 @@ struct BeautifierEnterTests {
         #expect(try Beautifier.format("x := straße;", options: o) == "X := straße;")
     }
 
+    @Test("po kropce: reguły pakietu i funkcji wbudowanej dla znanych nazw, po SYS. — jak bez kwalifikatora")
+    func qualifiedKnownNames() throws {
+        var o = BeautifierOptions()
+        o.identifierCase = .lower
+        o.packageCase = .upper
+        o.functionCase = .upper
+        o.dataTypeCase = .upper
+        #expect(try Beautifier.format("begin sys.dbms_output.put_line(1); end;", options: o) == "BEGIN\n  sys.DBMS_OUTPUT.put_line(1);\nEND;")
+        #expect(try Beautifier.format("declare l_x sys.xmltype; begin null; end;", options: o).contains("l_x sys.XMLTYPE;"))
+        #expect(try Beautifier.format("select j.doc.date, t.nvl(a, 0) from t j", options: o) == "SELECT j.doc.date,\n       t.NVL(a, 0)\n  FROM t j")
+    }
+
+    @Test("pamięć: jednostka kończy się z poleceniem; ORDER/MAP — podprogram tylko przed MEMBER")
+    func memoryUnits() {
+        var text = "create or replace package body p is\n  procedure a is\n  begin\n    null;\n  end;\nend;\n/\ndeclare\n"
+        for n in 0..<5 { text += "  procedure q\(n) is\n  begin\n    null;\n  end;\n" }
+        text += "begin\n  if a>0 then|"
+        // Blok anonimowy po ciele pakietu: lokalne procedury to nie podprogramy ciała — tylko wielkość liter.
+        #expect(enter(text, lineLimit: 5) == EnterFormatting(line: "  IF a>0 THEN", indent: nil))
+        var type = "create or replace type body t is\n  member function f return number is\n  begin\n    select 1 into x from dual\n  order by 1;\n"
+        type += "    return x;\n  end;\n  map member function m return number is\n  begin\n    return 1;\n  end;\nend;"
+        let ns = type as NSString
+        var memory = StatementStartMemory()
+        _ = memory.context(forLineAt: ns.length, in: ns, lineLimit: 2)
+        let positions = memory.checkpoints.filter(\.subprogram).map(\.position)
+        #expect(positions == [ns.range(of: "  member function f").location, ns.range(of: "  map member").location])
+    }
+
     @Test("regiony otwarte przed poleceniem: NoFormat i $IF obejmujące kilka poleceń albo podprogram")
     func regionsBeforeStatement() {
         #expect(enter("-- NoFormat Start\nselect 1 from dual;\nselect a,b from t|") == nil)

@@ -2701,6 +2701,10 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   najwyżej o 3 kolumny, a słowo otwierające je jest wyrównane w prawo (`   UPDATE`, `  WITH`, ` MERGE`) — gdy polecenie
   zaczyna linię; w środku linii (podzapytanie za nawiasem) rzeka zostaje 6. Dłuższe słowa (`MATCH_RECOGNIZE`) i
   przedrostki złączeń (`NATURAL`, `INNER`, `LEFT OUTER`…) rzeki nie poszerzają — „wiszą” w lewo od kolumny polecenia.
+- **Kwalifikowane nazwy (uzupełnienie z D205):** po kropce nie działa reguła typu danych ani słowa kluczowego, ale
+  znane nazwy zachowują reguły pakietu (przed kropką: `sys.DBMS_OUTPUT.put_line`) i funkcji wbudowanej (przed
+  nawiasem); po `SYS.` (`sys.XMLTYPE`) — wszystkie reguły jak bez kwalifikatora; pozostałe słowa po kropce — reguła
+  identyfikatora.
 - **Klucze JSON (uzupełnienie z D205):** słowo po kropce dostaje regułę identyfikatora — przy wielkich literach
   identyfikatorów klucze JSON w notacji z kropką (rozróżniające wielkość liter) zostaną podniesione; taki kod formatować z
   identyfikatorami „bez zmian” albo w regionie NoFormat.
@@ -3000,6 +3004,14 @@ przeszkadzać).” (PD-BEAU-003)
   paska sprzed D205 dostaje przełącznik raz (`ensureFormatOnEnterItem`, jak grupy kart).
 - **Zrzut w tle:** `scripts/screenshots/78-formatowanie-enter.json`; krok `debug.showToolbar` pokazuje pasek narzędzi na
   czas zrzutu bez zapisu stanu (zrzut nie zależy od zapamiętanego stanu paska w domenie ustawień klonu).
+- **Drugie przejście przeglądu:** zwykły Enter wstawia wcięcie tylko za znakiem nowej linii (AutoReplace z `|`, np.
+  `dbo`, zużywa Enter); zamiana wieloliniowa z AutoReplace — krok 0 i Enter bez formatowania; krok 0 odrzucony albo
+  zaznaczenie inne niż w planie — zwykły Enter (Enter nigdy nie znika). Sesja edycji: dokument wystawia znacznik
+  nowej sesji (`Document.editSessionMark` — zapis, otwarcie, wczytanie; w oknie pary z niezapisaną drugą kartą —
+  tylko zakres wczytanego pliku), edytor stosuje go dopiero po zsynchronizowaniu tekstu (niezależnie od kolejności
+  obserwacji), zmiana ustawienia statusu linii zakresów nie kasuje; Enter na końcu linii zapisany od następnej linii,
+  zmiana od początku następnej linii nie oznacza bieżącej. Pamięć podziału zeruje jednostkę CREATE … BODY na
+  początku każdego polecenia; w ciele typu ORDER/MAP to początek podprogramu tylko przed MEMBER.
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
   (krótki CASE — formater nie łamie, więc linia `ELSE` zostaje); po komentarzu `--` na końcu linii w SQL nowa linia
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują
