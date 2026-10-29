@@ -167,7 +167,8 @@ public enum ObjectExport {
 
     /// Pliki „plik na obiekt”: nazwa z bezpiecznych znaków (nazwa w cudzysłowie może mieć `/`, `..`). Nazwa bazowa jest
     /// wspólna dla obiektu (właściciel + nazwa) we wszystkich jego plikach — specyfikacja i ciało jednego pakietu dostają
-    /// tę samą; różne obiekty o tej samej nazwie bazowej (np. „Foo” i „FOO”, inny schemat) — przyrostek `_2`, `_3`…
+    /// tę samą; przy obiektach kilku schematów z przedrostkiem schematu (`s2.pkg.pks`); różne obiekty o tej samej nazwie
+    /// bazowej (np. „Foo” i „FOO”) — przyrostek `_2`, `_3`…
     /// we wszystkich swoich plikach. Specyfikacja i ciało w osobnych plikach (rozszerzenia z opcji, domyślnie
     /// `.pks`/`.pkb`, `.tps`/`.tpb`) bez „/” (chyba że `terminateUnits`), albo razem w `.pck`/`.typ` z „/”. Uprawnienia
     /// według `grantPlacement` — w osobnym pliku `nazwa.grants.sql` (polecenia z „;”) albo pominięte, nigdy w pliku DDL.
@@ -177,12 +178,16 @@ public enum ObjectExport {
         var slashKept: Set<String> = []
         var baseOf: [String: String] = [:]
         var usedBases: Set<String> = []
+        // Obiekty kilku schematów: przedrostek schematu w nazwie każdego pliku (`s2.pkg.pks`) — nazwy nie zależą od tego,
+        // które obiekty wybrano; jeden schemat — bez przedrostka.
+        let manyOwners = Set(parts.map(\.object.owner)).count > 1
+        func safe(_ s: String) -> String { String(s.lowercased().map { $0.isLetter || $0.isNumber || "_$#".contains($0) ? $0 : "_" }) }
         func base(_ o: DBObject) -> String {
             let key = "\(o.owner)\u{1F}\(o.name)"
             if let b = baseOf[key] { return b }
-            let safe = String(o.name.lowercased().map { $0.isLetter || $0.isNumber || "_$#".contains($0) ? $0 : "_" })
-            var candidate = safe, n = 2
-            while usedBases.contains(candidate) { candidate = "\(safe)_\(n)"; n += 1 }
+            let wanted = manyOwners ? safe(o.owner) + "." + safe(o.name) : safe(o.name)
+            var candidate = wanted, n = 2
+            while usedBases.contains(candidate) { candidate = "\(wanted)_\(n)"; n += 1 }
             usedBases.insert(candidate)
             baseOf[key] = candidate
             return candidate
@@ -271,12 +276,16 @@ public enum ObjectExport {
     }
 
     /// Miejsce klauzuli `ENABLE | DISABLE` w CREATE TRIGGER (pozycja w tekście polecenia): przed `WHEN (…)` albo
-    /// treścią wyzwalacza (`DECLARE`, `BEGIN`, `CALL`, `COMPOUND TRIGGER`) na poziomie zerowym nawiasów. nil — nie
+    /// treścią wyzwalacza (`DECLARE`, `BEGIN`, `<<etykieta>>`, `CALL`, `COMPOUND TRIGGER`) na poziomie zerowym nawiasów. nil — nie
     /// znaleziono albo stan jest już podany.
     static func triggerStateClauseOffset(_ sql: String) -> Int? {
         let ns = sql as NSString
         var depth = 0, afterTrigger = false
         for t in Lexer(sql).tokenize() where !t.isTrivia {
+            // Etykieta bloku (`<<nazwa>>`) przed DECLARE/BEGIN — początek treści wyzwalacza.
+            if afterTrigger, depth == 0, t.start + 2 <= ns.length, ns.substring(with: NSRange(location: t.start, length: 2)) == "<<" {
+                return t.start
+            }
             switch t.kind {
             case .leftParen: depth += 1; continue
             case .rightParen: depth -= 1; continue

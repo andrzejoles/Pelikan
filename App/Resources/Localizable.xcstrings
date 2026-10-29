@@ -71933,30 +71933,30 @@
         }
       }
     },
-    "Rozszerzenia muszą być cztery różne, z liter, cyfr albo „_”, inne niż sql, tst, pck, typ, rep, pdd, sqlnb i txt — do czasu poprawki używane są domyślne pks, pkb, tps i tpb." : {
+    "Rozszerzenia specyfikacji muszą różnić się od rozszerzeń ciała (pakiet i typ mogą mieć wspólne), składać się z liter, cyfr albo „_” i być inne niż sql, tst, pck, typ, rep, pdd, sqlnb i txt — do czasu poprawki używane są domyślne pks, pkb, tps i tpb." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The four extensions must differ, consist of letters, digits or “_” and must not be sql, tst, pck, typ, rep, pdd, sqlnb or txt — until corrected, the defaults pks, pkb, tps and tpb are used."
+            "value" : "Specification extensions must differ from body extensions (packages and types may share them), consist of letters, digits or “_” and must not be sql, tst, pck, typ, rep, pdd, sqlnb or txt — until corrected, the defaults pks, pkb, tps and tpb are used."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die vier Erweiterungen müssen verschieden sein, aus Buchstaben, Ziffern oder „_“ bestehen und dürfen nicht sql, tst, pck, typ, rep, pdd, sqlnb oder txt sein — bis zur Korrektur gelten die Standardwerte pks, pkb, tps und tpb."
+            "value" : "Erweiterungen der Spezifikation müssen sich von denen des Bodys unterscheiden (Pakete und Typen dürfen sie teilen), aus Buchstaben, Ziffern oder „_“ bestehen und dürfen nicht sql, tst, pck, typ, rep, pdd, sqlnb oder txt sein — bis zur Korrektur gelten die Standardwerte pks, pkb, tps und tpb."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las cuatro extensiones deben ser distintas, de letras, cifras o «_», y distintas de sql, tst, pck, typ, rep, pdd, sqlnb y txt; hasta corregirlas se usan las predeterminadas pks, pkb, tps y tpb."
+            "value" : "Las extensiones de la especificación deben ser distintas de las del cuerpo (paquetes y tipos pueden compartirlas), de letras, cifras o «_», y distintas de sql, tst, pck, typ, rep, pdd, sqlnb y txt; hasta corregirlas se usan las predeterminadas pks, pkb, tps y tpb."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Чотири розширення мають бути різними, складатися з літер, цифр або «_» і не бути sql, tst, pck, typ, rep, pdd, sqlnb чи txt — до виправлення використовуються типові pks, pkb, tps і tpb."
+            "value" : "Розширення специфікації мають відрізнятися від розширень тіла (пакет і тип можуть мати спільні), складатися з літер, цифр або «_» і не бути sql, tst, pck, typ, rep, pdd, sqlnb чи txt — до виправлення використовуються типові pks, pkb, tps і tpb."
           }
         }
       }

@@ -33,22 +33,22 @@ public struct SpecBodyExtensions: Sendable, Hashable, Codable {
         return t
     }
 
-    /// Rozszerzenia w użyciu: wpisane, gdy wszystkie cztery są poprawne i różne (specyfikacja ≠ ciało — inaczej zapis
-    /// ciała nadpisałby specyfikację), inaczej domyślne.
-    private var resolved: (ps: String, pb: String, ts: String, tb: String) {
-        let def = SpecBodyExtensions()
-        let values = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
-        guard let ps = values[0], let pb = values[1], let ts = values[2], let tb = values[3], Set([ps, pb, ts, tb]).count == 4 else {
-            return (def.packageSpec, def.packageBody, def.typeSpec, def.typeBody)
-        }
+    /// Wpisane rozszerzenia, gdy są poprawne: rozszerzenia specyfikacji różne od rozszerzeń ciała (inaczej zapis ciała
+    /// nadpisałby specyfikację, a plik nie wiedziałby, którą częścią jest); pakiet i typ mogą mieć wspólne (`.spc`/`.bdy`).
+    private var valid: (ps: String, pb: String, ts: String, tb: String)? {
+        let v = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
+        guard let ps = v[0], let pb = v[1], let ts = v[2], let tb = v[3], Set([ps, ts]).isDisjoint(with: [pb, tb]) else { return nil }
         return (ps, pb, ts, tb)
     }
 
-    /// Wpisane rozszerzenia są niepoprawne (Preferencje pokazują ostrzeżenie; używane są domyślne).
-    public var isInvalid: Bool {
-        let values = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
-        return values.contains(nil) || Set(values.compactMap { $0 }).count < 4
+    /// Rozszerzenia w użyciu: wpisane, gdy poprawne, inaczej domyślne.
+    private var resolved: (ps: String, pb: String, ts: String, tb: String) {
+        let def = SpecBodyExtensions()
+        return valid ?? (def.packageSpec, def.packageBody, def.typeSpec, def.typeBody)
     }
+
+    /// Wpisane rozszerzenia są niepoprawne (Preferencje pokazują ostrzeżenie; używane są domyślne).
+    public var isInvalid: Bool { valid == nil }
 
     /// Rozszerzenia pary dla typu obiektu (pakiet albo typ — specyfikacja lub ciało); inne typy — nil.
     public func pair(for type: DBObjectType) -> (spec: String, body: String)? {
@@ -67,7 +67,7 @@ public struct SpecBodyExtensions: Sendable, Hashable, Codable {
     public func partner(of ext: String) -> (partner: String, part: UnitFile.Part)? {
         let e = ext.lowercased()
         let r = resolved
-        for (s, b) in [(r.ps, r.pb), (r.ts, r.tb)] where s != b {
+        for (s, b) in [(r.ps, r.pb), (r.ts, r.tb)] {
             if e == s { return (b, .spec) }
             if e == b { return (s, .body) }
         }
@@ -301,7 +301,7 @@ extension Workspace {
     /// wybrany w oknie zapisu, którego zastąpienie okno zapisu już potwierdziło.
     public func filesToReplace(_ doc: Document, spec: URL, body: URL, chosen: URL) -> [URL] {
         [spec, body].filter {
-            FileManager.default.fileExists(atPath: $0.path) && !doc.fileURLs.contains($0) && $0 != chosen.standardizedFileURL
+            Self.pathExists($0) && !doc.fileURLs.contains($0) && $0 != chosen.standardizedFileURL
         }
     }
 
@@ -319,7 +319,8 @@ extension Workspace {
             if let f = previous.first(where: { $0.part == part }) { return UnitFile(part: part, url: url, format: f.format, ending: f.ending) }
             return UnitFile(part: part, url: url, format: format)
         }
-        let created = [spec, body].filter { !FileManager.default.fileExists(atPath: $0.path) }
+        // Bez wiszących dowiązań: usuwamy po nieudanym zapisie tylko pliki, których przed zapisem nie było wcale.
+        let created = [spec, body].filter { !Self.pathExists($0) }
         doc.unitFiles = [keep(.spec, spec), keep(.body, body)]
         do { try saveUnitFiles(doc) } catch {
             for u in created { try? FileManager.default.removeItem(at: u) }
@@ -328,13 +329,22 @@ extension Workspace {
         }
     }
 
-    /// Pliki pary zmienione na dysku od otwarcia albo ostatniego zapisu (inny program, git checkout) — pytanie przed
-    /// zapisem, żeby nie nadpisać cudzej zmiany.
+    /// Pliki pary, które ten zapis zapisze (jednostka zmieniona w oknie), a które zmieniły się na dysku od otwarcia albo
+    /// ostatniego zapisu (inny program, git checkout) — pytanie przed zapisem, żeby nie nadpisać cudzej zmiany. Plik,
+    /// którego jednostka w oknie się nie zmieniła, nie jest zapisywany, więc nie pyta (i jego `savedText` zostaje — gdy
+    /// jednostka zmieni się później, zapis zapyta wtedy). Treść z dysku dekodowana w formacie pliku z otwarcia, bez
+    /// zgadywania kodowania (pliki jednobajtowe bez fałszywych alarmów).
     public func externallyChangedUnitFiles(_ doc: Document) -> [URL] {
         doc.unitFiles.filter { f in
-            guard !f.savedText.isEmpty, let data = try? Data(contentsOf: f.url) else { return false }
-            return TextFileCodec.decode(data, preferred: projectEncoding(for: f.url)).text != f.savedText
+            guard !f.savedText.isEmpty, let current = doc.currentText(of: f.url), current != f.savedText,
+                  let data = try? Data(contentsOf: f.url) else { return false }
+            return TextFileCodec.decode(data, format: f.format) != f.savedText
         }.map(\.url)
+    }
+
+    /// Czy ścieżka istnieje (bez podążania za dowiązaniem — wiszące dowiązanie też istnieje).
+    nonisolated static func pathExists(_ url: URL) -> Bool {
+        (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
     }
 
     /// Zapis okna pary: każda jednostka do jej pliku, w formacie tego pliku, tylko zmienione (D194). Tekst karty

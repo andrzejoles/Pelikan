@@ -317,6 +317,11 @@ struct SpecBodyFilesTests {
         #expect(e.isInvalid)
         e.packageBody = ".BDY"
         #expect(!e.isInvalid && e.pair(for: .package)! == ("pks", "bdy"))
+        // Pakiet i typ ze wspólnymi rozszerzeniami (.spc/.bdy) — dozwolone; specyfikacja typu = ciało pakietu — nie.
+        e.packageSpec = "spc"; e.typeSpec = "spc"; e.typeBody = "bdy"
+        #expect(!e.isInvalid && e.pair(for: .type)! == ("spc", "bdy") && e.partner(of: "BDY")! == ("spc", .body))
+        e.typeSpec = "bdy"
+        #expect(e.isInvalid && e.pair(for: .type)! == ("tps", "tpb"))
         let ws = Workspace()
         let doc = ws.newDocument(.program, text: ProgramText.join([Self.spec, Self.body], slash: false))
         let same = dir.appendingPathComponent("x.pks")
@@ -370,6 +375,48 @@ struct SpecBodyFilesTests {
         ui.answers = [0]
         try await ws.invoke("file.save")
         #expect(try text(b).contains("NULL;\n") && !doc.isModified)
+    }
+
+    @Test("Zmiana na dysku pliku, którego jednostka w oknie się nie zmieniła — bez pytania i bez zapisu tego pliku; ISO-8859-2 bez fałszywego alarmu")
+    func externalChangeOfUnwrittenFile() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let (s, b) = try writePair()
+        let doc = try ws.openFile(s)
+        // git checkout zmienia ciało; użytkownik edytuje tylko specyfikację.
+        try Data("-- ciało z repozytorium\n".utf8).write(to: b)
+        doc.text = doc.text.replacingOccurrences(of: "VARCHAR2);\nEND kadry;", with: "VARCHAR2);\n  PROCEDURE p;\nEND kadry;")
+        try await ws.invoke("file.save")
+        #expect(ui.asked.isEmpty && !doc.isModified)
+        #expect(try text(b) == "-- ciało z repozytorium\n")
+        #expect(try text(s).contains("PROCEDURE p;"))
+        // Plik jednobajtowy (ISO-8859-2 — heurystyka bez BOM mogłaby wskazać inne kodowanie): zapis bez pytania.
+        let ws2 = Workspace()
+        let ui2 = FakeUI()
+        ws2.ui = ui2
+        let ls = dir.appendingPathComponent("latin.pks"), lb = dir.appendingPathComponent("latin.pkb")
+        let latinSpec = Self.spec.replacingOccurrences(of: "kadry", with: "latin").replacingOccurrences(of: "specyfikacja", with: "śćźżąę ŚĆŹŻ")
+        try latinSpec.data(using: .isoLatin2)!.write(to: ls)
+        try Self.body.replacingOccurrences(of: "kadry", with: "latin").data(using: .isoLatin2)!.write(to: lb)
+        let d2 = try ws2.openFile(ls)
+        #expect(d2.unitFiles.count == 2)
+        d2.text = d2.text.replacingOccurrences(of: "NULL; -- Zażółć", with: "NULL; -- zmiana")
+        try await ws2.invoke("file.save")
+        #expect(ui2.asked.isEmpty && !d2.isModified)
+        #expect(try Data(contentsOf: ls) == latinSpec.data(using: .isoLatin2)!)
+    }
+
+    @Test("Nieudane Zapisz jako nie usuwa wiszącego dowiązania w miejscu pliku ciała")
+    func failedSaveAsKeepsDanglingLink() throws {
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: ProgramText.join([Self.spec, Self.body], slash: false) + "-- 🐦\n")
+        doc.fileFormat.encoding = .windowsCP1250
+        let s = dir.appendingPathComponent("link.pks"), b = dir.appendingPathComponent("link.pkb")
+        try FileManager.default.createSymbolicLink(atPath: b.path, withDestinationPath: dir.appendingPathComponent("brak/cel.pkb").path)
+        #expect(throws: (any Error).self) { try ws.saveUnitFiles(doc, spec: s, body: b) }
+        #expect((try? FileManager.default.attributesOfItem(atPath: b.path)) != nil)
+        #expect(!FileManager.default.fileExists(atPath: s.path) && doc.unitFiles.isEmpty)
     }
 
     @Test("Nazwa pliku pary z dysku (APFS bez rozróżniania wielkości liter); plik karty widocznej i zmienione pliki bez czytania tekstu")

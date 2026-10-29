@@ -68,6 +68,25 @@ public enum TextFileCodec {
         return (text, format)
     }
 
+    /// Odczyt w znanym formacie pliku (kodowanie i BOM z otwarcia), bez zgadywania kodowania; końce linii jak przy
+    /// otwarciu (LF w edytorze). nil — dane nie dekodują się w tym kodowaniu.
+    public static func decode(_ data: Data, format f: TextFileFormat) -> String? {
+        var d = data
+        if f.hasBOM {
+            let bom: [UInt8] = switch f.encoding {
+            case .utf8: [0xEF, 0xBB, 0xBF]
+            case .utf16LittleEndian: [0xFF, 0xFE]
+            case .utf16BigEndian: [0xFE, 0xFF]
+            default: []
+            }
+            if d.starts(with: bom) { d = d.dropFirst(bom.count) }
+        }
+        guard var text = String(data: d, encoding: f.encoding) else { return nil }
+        if text.contains("\r\n") { text = text.replacingOccurrences(of: "\r\n", with: "\n") }
+        else if text.contains("\r") { text = text.replacingOccurrences(of: "\r", with: "\n") }
+        return text
+    }
+
     /// Kodowanie jednobajtowe pliku bez BOM i spoza UTF-8 (reguła wspólna z podglądem Quick Look: `CodeHTML`).
     public static func guessSingleByte(_ data: Data) -> String.Encoding? {
         CodeHTML.singleByteGuess(data)

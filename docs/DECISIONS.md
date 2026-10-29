@@ -2163,22 +2163,30 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
 - **Nagłówek z datą:** w plikach na obiekt domyślnie bez komentarza „-- Wygenerowane przez Pelikana — data” (data
   zmieniałaby każdy plik w repozytorium przy każdym eksporcie) — opcja **Nagłówek z datą eksportu**; jeden plik —
   z nagłówkiem jak dotąd.
-- **Nazwy plików eksportu:** nazwa bazowa nadawana obiektowi (właściciel + nazwa) wspólna dla wszystkich jego plików;
-  inny obiekt o tej samej nazwie bazowej (inny schemat, „Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich
-  plikach — specyfikacja drugiego schematu nie trafia w parę z ciałem pierwszego. Kolejność eksportu: typ, właściciel,
-  nazwa.
+- **Nazwy plików eksportu:** nazwa bazowa nadawana obiektowi (właściciel + nazwa) wspólna dla wszystkich jego plików.
+  Gdy eksport obejmuje obiekty kilku schematów, każdy plik ma przedrostek schematu (`s2.pkg.pks`, `s2.pkg.pkb`,
+  `s2.pkg.grants.sql`) — nazwy nie zależą od tego, które obiekty wybrano, a specyfikacja jednego schematu nie trafia
+  w parę z ciałem innego; jeden schemat — bez przedrostka jak dotąd. Inny obiekt o tej samej nazwie bazowej
+  („Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich plikach. Kolejność eksportu: typ, właściciel, nazwa.
 - **Poprawki po przeglądzie (zapis i otwieranie):** Zapisz jako z nazwą `.pck`, bez rozszerzenia albo `.pkb` pyta raz
   o wszystkie istniejące pliki pary spoza okna (plik wybrany w oknie zapisu potwierdza okno zapisu), zamiast nadpisać
   specyfikację bez pytania. Rozszerzenia z Preferencji: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
-  skryptów, testów, raportów i plików `.pck`/`.typ` — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie),
-  a zapis odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
+  skryptów, testów, raportów i plików `.pck`/`.typ`; rozszerzenia specyfikacji różne od rozszerzeń ciała (pakiet
+  i typ mogą mieć wspólne, np. `.spc`/`.bdy`) — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie), a zapis
+  odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
   jedną jednostkę o tym samym tekście co w oknie (dwie jednostki w jednej linii dzielą kartę w środku polecenia) —
-  inaczej odmowa z komunikatem. Plik pary zmieniony na dysku od otwarcia albo zapisu (inny program, `git checkout`) —
-  pytanie „Zapisz mimo to / Anuluj”. Treść zapisana każdego pliku aktualizowana od razu po jego zapisie; nieudane
-  Zapisz jako usuwa pliki, które samo utworzyło. Nowy plik pary przy Zapisz jako dostaje format dotychczasowego pliku
+  inaczej odmowa z komunikatem. Plik pary, który ten zapis zapisze (jego jednostka zmieniła się w oknie), a zmienił się
+  na dysku od otwarcia albo zapisu (inny program, `git checkout`) — pytanie „Zapisz mimo to / Anuluj”; treść z dysku
+  dekodowana w formacie pliku z otwarcia (bez zgadywania kodowania — pliki jednobajtowe bez fałszywych alarmów). Plik
+  zmieniony na dysku, którego jednostka w oknie się nie zmieniła, nie jest zapisywany ani nie wywołuje pytania; jego
+  treść zapisana zostaje dawna (świadomie — przyjęcie treści z dysku sprawiłoby, że następny zapis po cichu nadpisałby
+  zmianę z repozytorium starą kartą okna), więc gdy jednostka zmieni się później, zapis zapyta wtedy. Treść zapisana
+  każdego pliku aktualizowana od razu po jego zapisie; nieudane Zapisz jako usuwa tylko pliki, których przed zapisem nie
+  było wcale (sprawdzenie bez podążania za dowiązaniem — wiszące dowiązanie zostaje). Nowy plik pary przy Zapisz jako dostaje format dotychczasowego pliku
   tej samej części. Okno z samą specyfikacją albo samym ciałem proponuje rozszerzenie `.pks`/`.pkb` (`.tps`/`.tpb`).
   Plik pary szukany po rzeczywistej nazwie z katalogu (APFS bez rozróżniania wielkości liter), nieczytelny plik pary —
-  otwarcie samego pliku; jednostki i karty z otwarcia trafiają do pamięci okna. Pasek okna (stan repozytorium) bierze
+  otwarcie samego pliku; jednostki i karty z otwarcia trafiają do pamięci okna. Klauzula `DISABLE` wyzwalacza w eksporcie
+  stawiana także przed etykietą bloku (`<<etykieta>>`). Pasek okna (stan repozytorium) bierze
   plik karty widocznej z pamięci kart (`Document.shownUnitTab`/`shownFileURL`) — bez dzielenia tekstu przy każdym
   znaku (R4-01). Przeglądarka plików oznacza jako zmieniony tylko plik, którego jednostka się zmieniła. **git add** bez
   argumentu w oknie pary dodaje oba pliki; pulpit projektu, **Dodaj plik okna do projektu**, zmienna `#file` narzędzi

@@ -74,11 +74,14 @@ struct SpecBodyExportTests {
         let when = "CREATE OR REPLACE TRIGGER t BEFORE UPDATE OF a ON x FOR EACH ROW\nWHEN (new.a > 0)\nBEGIN NULL; END;"
         #expect(ObjectExport.triggerStateClauseOffset(when) == (when as NSString).range(of: "WHEN").location)
         #expect(ObjectExport.triggerStateClauseOffset("CREATE TRIGGER t AFTER LOGON ON DATABASE DISABLE BEGIN NULL; END;") == nil)
+        // Etykieta bloku przed BEGIN — klauzula przed etykietą.
+        let label = "CREATE TRIGGER t BEFORE INSERT ON x FOR EACH ROW\n<<blk>>\nBEGIN NULL; END blk;"
+        #expect(ObjectExport.triggerStateClauseOffset(label) == (label as NSString).range(of: "<<").location)
         let compound = "CREATE TRIGGER t FOR UPDATE ON x COMPOUND TRIGGER\n  AFTER STATEMENT IS BEGIN NULL; END AFTER STATEMENT;\nEND t;"
         #expect(ObjectExport.triggerStateClauseOffset(compound) == (compound as NSString).range(of: "COMPOUND").location)
     }
 
-    @Test("Eksport kilku schematów: ta sama nazwa — wspólna nazwa bazowa specyfikacji i ciała jednego schematu, _2 dla drugiego")
+    @Test("Eksport kilku schematów: przedrostek schematu w nazwie każdego pliku; jeden schemat — bez przedrostka")
     func exportManySchemas() {
         func p(_ owner: String, _ t: DBObjectType) -> ExportPart {
             let kind = t == .package ? "PACKAGE" : "PACKAGE BODY"
@@ -88,10 +91,20 @@ struct SpecBodyExportTests {
         o.layout = .filePerObject
         // Kolejność jak po sortowaniu eksportu (typ, właściciel, nazwa): specyfikacje obu schematów, potem ciała.
         let files = ObjectExport.files([p("S1", .package), p("S2", .package), p("S1", .packageBody), p("S2", .packageBody)], options: o, header: "")
-        #expect(files.map(\.name) == ["pkg.pks", "pkg_2.pks", "pkg.pkb", "pkg_2.pkb"])
-        #expect(files.first { $0.name == "pkg_2.pks" }?.content.contains("\"S2\"") == true)
-        #expect(files.first { $0.name == "pkg_2.pkb" }?.content.contains("\"S2\"") == true)
-        #expect(files.first { $0.name == "pkg.pkb" }?.content.contains("\"S1\"") == true)
+        #expect(files.map(\.name) == ["s1.pkg.pks", "s2.pkg.pks", "s1.pkg.pkb", "s2.pkg.pkb"])
+        #expect(files.first { $0.name == "s2.pkg.pks" }?.content.contains("\"S2\"") == true)
+        #expect(files.first { $0.name == "s2.pkg.pkb" }?.content.contains("\"S2\"") == true)
+        #expect(files.first { $0.name == "s1.pkg.pkb" }?.content.contains("\"S1\"") == true)
+        // Uprawnienia też z przedrostkiem; nazwy niezależne od wyboru obiektów innego schematu.
+        var g = p("S2", .package)
+        g.grants = "GRANT EXECUTE ON \"S2\".\"PKG\" TO \"A\";"
+        #expect(ObjectExport.files([p("S1", .package), g], options: o, header: "").map(\.name) == ["s1.pkg.pks", "s2.pkg.pks", "s2.pkg.grants.sql"])
+        #expect(ObjectExport.files([p("S2", .package), p("S2", .packageBody)], options: o, header: "").map(\.name) == ["pkg.pks", "pkg.pkb"])
+        // Para z przedrostkiem schematu otwiera się w jednym oknie (nazwa bazowa z kropką).
+        for f in files { try? Data(f.content.utf8).write(to: dir.appendingPathComponent(f.name)) }
+        let ws = Workspace()
+        let doc = try? ws.openFile(dir.appendingPathComponent("s2.pkg.pkb"))
+        #expect(doc?.unitFiles.map { $0.url.lastPathComponent } == ["s2.pkg.pks", "s2.pkg.pkb"])
     }
 
     @Test("Eksport plik na obiekt: para .pks/.pkb otwiera się w jednym oknie i zapisuje bez zmian")
