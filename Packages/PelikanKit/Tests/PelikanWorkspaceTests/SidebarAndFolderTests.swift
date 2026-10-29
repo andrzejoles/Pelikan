@@ -210,8 +210,49 @@ struct SidebarAndFolderTests {
         let r = try await ws.invoke("connection.moveToFolder", CommandArguments(["connection": .string("dev"), "folder": .string(a2.id.uuidString)]))
         #expect(store.connection(def.id)?.folderID == a2.id)
         #expect(r.resolvedArguments?.string("folder") == "Projekty / Archiwum")
+        // Nazwa bez „/” na dowolnym poziomie: „Zespół” też w „Projekty” — niejednoznaczna; ścieżka nadal działa.
+        let team2 = ConnectionFolder(name: "zespół", parentID: projects.id)
+        try store.upsert(folder: team2)
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("connection.deleteFolder", CommandArguments(["folder": .string("Zespół")]))
+        }
+        #expect(try store.resolveFolder("Projekty / Zespół") == team2.id)
+        #expect(try store.resolveFolder("/zespół//archiwum/") == a1.id)   // puste człony pomijane
+        #expect(store.argument(for: a1.id) == "Zespół / Archiwum")
         // Usunięcie po ścieżce.
         _ = try await ws.invoke("connection.deleteFolder", CommandArguments(["folder": .string("Zespół / Archiwum")]))
         #expect(!store.folders.contains { $0.id == a1.id })
+    }
+
+    @Test("„/” w nazwie folderu: nowy odrzucony; folder z importu — wskazany nazwą, w wyniku identyfikator")
+    func slashInName() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        let store = ws.connections
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("connection.newFolder", CommandArguments(["name": .string("A/B")]))
+        }
+        #expect(store.folders.isEmpty)
+        // Import (np. z innej instalacji) może przynieść folder z „/” w nazwie.
+        let imported = ConnectionFolder(name: "Dev/Test")
+        let folderJSON = String(decoding: try JSONEncoder.pelikan.encode(imported), as: UTF8.self)
+        _ = try store.importDefinitions(Data(#"{"version":1,"folders":[\#(folderJSON)],"connections":[]}"#.utf8))
+        let id = try #require(store.folders.first?.id)
+        #expect(try store.resolveFolder("dev/test") == id)
+        #expect(store.argument(for: id) == "Dev/Test")   // ścieżka wskazuje go jednoznacznie
+        // Folder „Dev” z podfolderem „Test” — ścieżka „Dev/Test” pasuje do obu: niejednoznaczna, wynik to identyfikatory.
+        let dev = ConnectionFolder(name: "Dev")
+        let test = ConnectionFolder(name: "Test", parentID: dev.id)
+        try store.upsert(folder: dev)
+        try store.upsert(folder: test)
+        #expect(throws: CommandError.self) { try store.resolveFolder("Dev/Test") }
+        #expect(store.argument(for: id) == id.uuidString)
+        #expect(store.argument(for: test.id) == test.id.uuidString)
+        // Zmiana bez zmiany nazwy — dozwolona.
+        var f = try #require(store.folders.first)
+        f.color = .production
+        try store.upsert(folder: f)
+        let r = try await ws.invoke("connection.deleteFolder", CommandArguments(["folder": .string(id.uuidString)]))
+        #expect(r.resolvedArguments?.string("folder") == id.uuidString)
+        #expect(!store.folders.contains { $0.id == id })
     }
 }

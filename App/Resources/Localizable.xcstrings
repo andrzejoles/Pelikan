@@ -20749,30 +20749,30 @@
         }
       }
     },
-    "Folder „%@” dobiera połączenia regułą (użytkownik, baza, rola) — reguły nie da się odtworzyć w Pelikanie. Połączenia pasujące do reguły (%@) wrócą na poziom główny listy." : {
+    "Folder „%@” dobiera połączenia regułą (użytkownik, baza, rola) — reguły nie da się odtworzyć w Pelikanie. Połączenia pasujące do reguły (%@) wrócą na poziom główny listy albo do innego folderu z pasującą regułą." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Folder “%@” picks connections by a rule (user, database, role) — the rule cannot be recreated in Pelikan. Connections matching the rule (%@) will go back to the top level of the list."
+            "value" : "Folder “%@” picks connections by a rule (user, database, role) — the rule cannot be recreated in Pelikan. Connections matching the rule (%@) will go back to the top level of the list or to another folder with a matching rule."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Ordner „%@“ wählt Verbindungen per Regel aus (Benutzer, Datenbank, Rolle) — die Regel lässt sich in Pelikan nicht neu anlegen. Zur Regel passende Verbindungen (%@) kehren auf die oberste Ebene der Liste zurück."
+            "value" : "Der Ordner „%@“ wählt Verbindungen per Regel aus (Benutzer, Datenbank, Rolle) — die Regel lässt sich in Pelikan nicht neu anlegen. Zur Regel passende Verbindungen (%@) kehren auf die oberste Ebene der Liste oder in einen anderen Ordner mit passender Regel zurück."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La carpeta «%@» elige conexiones mediante una regla (usuario, base de datos, rol): la regla no se puede volver a crear en Pelikan. Las conexiones que cumplen la regla (%@) volverán al nivel superior de la lista."
+            "value" : "La carpeta «%@» elige conexiones mediante una regla (usuario, base de datos, rol): la regla no se puede volver a crear en Pelikan. Las conexiones que cumplen la regla (%@) volverán al nivel superior de la lista o a otra carpeta con una regla que coincida."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Тека «%@» добирає з'єднання за правилом (користувач, база, роль) — правило не можна відтворити в Pelikan. З'єднання, що відповідають правилу (%@), повернуться на верхній рівень списку."
+            "value" : "Тека «%@» добирає з'єднання за правилом (користувач, база, роль) — правило не можна відтворити в Pelikan. З'єднання, що відповідають правилу (%@), повернуться на верхній рівень списку або до іншої теки з відповідним правилом."
           }
         }
       }
@@ -118913,6 +118913,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "наступний індекс"
+          }
+        }
+      }
+    },
+    "nazwa folderu nie może zawierać „/” — ukośnik oddziela foldery w ścieżce („Zespół / Archiwum”)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "a folder name cannot contain “/” — the slash separates folders in a path (“Team / Archive”)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ein Ordnername darf kein „/“ enthalten — der Schrägstrich trennt Ordner in einem Pfad („Team / Archiv“)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "el nombre de una carpeta no puede contener «/»: la barra separa las carpetas en una ruta («Equipo / Archivo»)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "назва теки не може містити «/» — скісна риска розділяє теки у шляху («Команда / Архів»)"
           }
         }
       }
