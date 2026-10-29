@@ -549,7 +549,8 @@ public enum RibbonModel {
                 .small("plan.export", label: L10n.tr("Zapisz plan")), .small("tools.autotrace"),
             ]),
             RibbonGroup(L10n.tr("Drzewo"), [
-                .small("plan.expandAll", label: L10n.tr("Rozwiń wszystko")), .small("plan.collapseAll", label: L10n.tr("Zwiń wszystko")),
+                .small("plan.expandAll", label: L10n.tr("Rozwiń wszystkie gałęzie")),
+                .small("plan.collapseAll", label: L10n.tr("Zwiń wszystkie gałęzie")),
             ]),
         ])
     }

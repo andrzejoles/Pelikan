@@ -11,8 +11,9 @@ Planfenster öffnen Sie über **Datei › Neu › Explain Plan Window**; eine fe
 
 - **Erklären** aktualisiert den Plan für den Text im Editor des Planfensters, **Optimizer-Ziel** (*Wie in der Sitzung*,
   ALL_ROWS oder FIRST_ROWS_n) fügt einen Hint hinzu.
-- Die Schaltflächen **Alle ausklappen** und **Alle einklappen** über dem Planbaum (auch auf der Menüband-Registerkarte
-  **Plan**) klappen alle Zweige des Baums auf einmal aus oder bis auf die Wurzel ein.
+- Ein neuer Plan erscheint vollständig ausgeklappt. Die Pfeile **Alle Zweige ausklappen** und **Alle Zweige
+  einklappen** neben der Ansichtsauswahl über dem Planbaum (auch auf der Menüband-Registerkarte **Plan**) klappen alle
+  Zweige auf einmal aus oder bis auf die Wurzel ein.
 - Ansichten: **Baum** (Operationen mit Kosten, Zeilenzahl, Bytes, Zeit, Ausführungsreihenfolge sowie Zugriffs- und
   Filterprädikaten), **Diagramm** (ein Knoten je Operation mit Kosten, Kardinalität und Schrittnummer), **Flame Graph**
   (Kosten der Operationen im Verhältnis zum Elternknoten) und **Text** (DBMS_XPLAN).

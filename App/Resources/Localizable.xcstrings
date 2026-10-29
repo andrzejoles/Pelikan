@@ -71849,30 +71849,30 @@
         }
       }
     },
-    "Rozwiń wszystkie kroki planu" : {
+    "Rozwiń wszystkie gałęzie" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Expand All Plan Steps"
+            "value" : "Expand all branches"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Planschritte ausklappen"
+            "value" : "Alle Zweige ausklappen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Expandir todos los pasos del plan"
+            "value" : "Expandir todas las ramas"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Розгорнути всі кроки плану"
+            "value" : "Розгорнути всі гілки"
           }
         }
       }
@@ -114633,30 +114633,30 @@
         }
       }
     },
-    "Zwiń wszystkie kroki planu" : {
+    "Zwiń wszystkie gałęzie" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Collapse All Plan Steps"
+            "value" : "Collapse all branches"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Alle Planschritte einklappen"
+            "value" : "Alle Zweige einklappen"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Contraer todos los pasos del plan"
+            "value" : "Contraer todas las ramas"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Згорнути всі кроки плану"
+            "value" : "Згорнути всі гілки"
           }
         }
       }

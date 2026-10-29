@@ -476,8 +476,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Git › Zatwierdź (git commit)… | `vcs.commit` |  |  | Brak | PD-VCS-001 |
 | Git › Historia Git pliku | `vcs.log` |  |  | Brak | PD-VCS-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | PD-OPT-002 |
-| Plan › Rozwiń wszystkie kroki planu | `plan.expandAll` |  |  | Brak | PD-OPT-001 |
-| Plan › Zwiń wszystkie kroki planu | `plan.collapseAll` |  |  | Brak | PD-OPT-001 |
+| Plan › Rozwiń wszystkie gałęzie | `plan.expandAll` |  |  | Brak | PD-OPT-001 |
+| Plan › Zwiń wszystkie gałęzie | `plan.collapseAll` |  |  | Brak | PD-OPT-001 |
 | Plan › Zapisz plan jako… | `plan.export` |  |  | Brak | PD-OPT-003 |
 | Sesje | `tools.sessions` |  |  | Brak | PD-TOOL-015 |
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | PD-TOOL-007 |

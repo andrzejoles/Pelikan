@@ -82,11 +82,11 @@ struct PlanPanel: View {
                 }
                 .pickerStyle(.segmented).fixedSize()
                 Button { workspace.perform("plan.expandAll") } label: { Image(systemName: "chevron.down.2") }
-                    .iconLabel(L10n.tr("Rozwiń wszystko"))
-                    .disabled(document.plan == nil || mode != 0)
+                    .iconLabel(L10n.tr("Rozwiń wszystkie gałęzie"))
+                    .disabled(document.plan?.branchIDs.isEmpty ?? true || mode != 0)
                 Button { workspace.perform("plan.collapseAll") } label: { Image(systemName: "chevron.up.2") }
-                    .iconLabel(L10n.tr("Zwiń wszystko"))
-                    .disabled(document.plan == nil || mode != 0)
+                    .iconLabel(L10n.tr("Zwiń wszystkie gałęzie"))
+                    .disabled(document.plan?.branchIDs.isEmpty ?? true || mode != 0)
                 Spacer()
                 Button(L10n.tr("Porównaj")) { workspace.perform("plan.compare") }.disabled(document.previousPlan == nil)
                     .help(L10n.tr("Porównaj z poprzednim planem okna"))
@@ -110,19 +110,27 @@ struct PlanPanel: View {
                 }
             } else {
                 // Rozwinięcie gałęzi w modelu okna (`planExpanded`) — komendy Rozwiń/Zwiń wszystko (PD-OPT-001).
-                Table(of: PlanLine.self, selection: $selection) {
-                    TableColumn(L10n.tr("Opis")) { l in
-                        Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
+                ScrollViewReader { proxy in
+                    Table(of: PlanLine.self, selection: $selection) {
+                        TableColumn(L10n.tr("Opis")) { l in
+                            Text(l.title).fontWeight(l.id == selection ? .semibold : .regular)
+                        }
+                        .width(min: 200, ideal: 280)
+                        TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }.width(min: 80, ideal: 160)
+                        TableColumn(L10n.tr("Koszt")) { l in Text(l.cost.map(String.init) ?? "").monospacedDigit() }.width(60)
+                        TableColumn(L10n.tr("Wiersze")) { l in Text(l.cardinality.map(String.init) ?? "").monospacedDigit() }.width(70)
+                        TableColumn(L10n.tr("Bajty")) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
+                        TableColumn(L10n.tr("Czas")) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
+                        TableColumn(L10n.tr("Kolejność")) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
+                    } rows: {
+                        ForEach(document.plan?.roots ?? []) { PlanTreeRows(line: $0, expanded: $document.planExpanded) }
                     }
-                    .width(min: 200, ideal: 280)
-                    TableColumn(L10n.tr("Obiekt")) { l in Text(l.object) }.width(min: 80, ideal: 160)
-                    TableColumn(L10n.tr("Koszt")) { l in Text(l.cost.map(String.init) ?? "").monospacedDigit() }.width(60)
-                    TableColumn(L10n.tr("Wiersze")) { l in Text(l.cardinality.map(String.init) ?? "").monospacedDigit() }.width(70)
-                    TableColumn(L10n.tr("Bajty")) { l in Text(l.bytes.map(String.init) ?? "").monospacedDigit() }.width(70)
-                    TableColumn(L10n.tr("Czas")) { l in Text(l.time.map(String.init) ?? "").monospacedDigit() }.width(50)
-                    TableColumn(L10n.tr("Kolejność")) { l in Text("\(l.executionOrder)").monospacedDigit() }.width(60)
-                } rows: {
-                    ForEach(document.plan?.roots ?? []) { PlanTreeRows(line: $0, expanded: $document.planExpanded) }
+                    // Krok zaznaczony nawigacją albo w Diagramie/Flame graph: rozwinięte gałęzie nad nim i przewinięcie do niego.
+                    .onChange(of: selection, initial: true) { _, id in
+                        guard let id else { return }
+                        document.revealPlanLine(id)
+                        DispatchQueue.main.async { proxy.scrollTo(id) }
+                    }
                 }
                 if let line = document.plan?.lines.first(where: { $0.id == selection }), !(line.accessPredicates.isEmpty && line.filterPredicates.isEmpty) {
                     VStack(alignment: .leading, spacing: 2) {

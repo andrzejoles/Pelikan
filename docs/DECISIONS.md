@@ -2097,17 +2097,28 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
-### D193 · 2026-10-29 — Plan wykonania: Rozwiń wszystko / Zwiń wszystko w drzewie planu
+### D193 · 2026-10-29 — Plan wykonania: rozwinięcie i zwinięcie wszystkich gałęzi drzewa planu
 
 Zgłoszenie właściciela: w drzewie Explain Plan brakuje przycisku do rozwinięcia albo zwinięcia wszystkich gałęzi.
 
-- Komendy `plan.expandAll` i `plan.collapseAll` (agent: Brak, skutek: stan interfejsu, PD-OPT-001) działają na
-  aktywnym oknie planu z wyznaczonym planem; przyciski nad drzewem (obok wyboru widoku, aktywne w widoku Drzewo),
-  grupa „Drzewo” na karcie kontekstowej „Plan” wstążki i menu Narzędzia › Plan. Wzorzec nie ma dla tego skrótów —
-  bez skrótów.
-- Stan rozwinięcia przeniesiony z widoku do modelu okna (`Document.planExpanded`, zbiór PLAN_TABLE.ID gałęzi);
-  drzewo to `Table` z `DisclosureTableRow` sterowanym tym zbiorem (`Table(children:)` nie daje dostępu do
-  rozwinięcia). Ponowne wyznaczenie planu zachowuje rozwinięte gałęzie o tych samych identyfikatorach, nowe są
-  zwinięte — jak dotąd. Zwiń wszystko czyści zbiór: widoczny zostaje sam korzeń (SELECT STATEMENT).
+- Komendy `plan.expandAll` „Rozwiń wszystkie gałęzie” i `plan.collapseAll` „Zwiń wszystkie gałęzie” (agent: Brak,
+  skutek: stan interfejsu, PD-OPT-001) działają na aktywnym oknie planu, gdy plan ma gałęzie (plan jednokrokowy —
+  wyłączone). Strzałki nad drzewem obok wyboru widoku (aktywne w widoku Drzewo), grupa „Drzewo” na karcie
+  kontekstowej „Plan” wstążki, menu Narzędzia › Plan. Osobne teksty zamiast „Rozwiń wszystko”/„Zwiń wszystko” —
+  te klucze należą do zwijania kodu edytora (en „Fold all”). Wzorzec nie ma dla tego skrótów — bez skrótów.
+- Stan rozwinięcia w modelu okna (`Document.planExpanded`, zbiór PLAN_TABLE.ID gałęzi), a nie w widoku: drzewo to
+  `Table` z `DisclosureTableRow` sterowanym tym zbiorem (`Table(children:)` nie daje dostępu do rozwinięcia). Wybór
+  widoku (Drzewo/Diagram/Flame graph/Tekst) jest stanem widoku, więc komendy ze wstążki i menu zmieniają rozwinięcie
+  także przy innym widoku — widać je po powrocie do Drzewa.
+- Nowy plan rozwinięty w całości (jak we wzorcu): pierwszy plan okna i plan innego polecenia (`ExplainPlanResult.sql`,
+  tekst bez wskazówki celu) dostają wszystkie gałęzie. Ponowne wyznaczenie planu tego samego polecenia (także z innym
+  celem optymalizatora) zachowuje rozwinięcie użytkownika, przycięte do gałęzi nowego planu. Zwiń wszystkie gałęzie
+  czyści zbiór — widoczny zostaje sam korzeń (SELECT STATEMENT).
+- Krok zaznaczony nawigacją w kolejności wykonania albo w Diagramie/Flame graph (po powrocie do Drzewa) rozwija swoich
+  przodków (`Document.revealPlanLine`), a tabela przewija się do niego.
+- Ograniczenie: rozwinięcie całego poddrzewa ⌥-kliknięciem trójkąta (⌥→) to zachowanie NSOutlineView pod tabelą
+  SwiftUI; przy rozwinięciu sterowanym bindingiem SwiftUI może nie przenieść go na podgałęzie (API nie daje do tego
+  dostępu, a sprawdzenie wymaga sterowania interfejsem — nie sprawdzone). Całe drzewo rozwija przycisk „Rozwiń
+  wszystkie gałęzie”.
 - Inne widoki planu nie są drzewami: Autotrace (plan rzeczywisty) i porównanie planów to płaskie tabele z wcięciem,
   SQL Monitor — lista i raport HTML; komendy ich nie dotyczą.
