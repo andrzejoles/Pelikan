@@ -108,6 +108,61 @@ Pelikan hat ein Hauptfenster:
 
 Der Fenstertitel zeigt die Hauptverbindung und das aktive Workset, der Untertitel das aktuelle Fenster.
 
+**Branch in der Statusleiste:** Ein Klick auf den Git-Branch (rechte untere Ecke) öffnet ein Menü mit **Übrige im Branch
+geänderte Dateien öffnen** (auch **Werkzeuge › Git** und Menüband **Werkzeuge › Git**). Pelikan öffnet die im Branch des
+Repositorys des aktiven Fensters geänderten Code-Dateien: committet seit der Abzweigung vom Standard-Branch des Remotes
+(`origin/HEAD`, ohne ihn `origin/main` oder `master`; ohne Remote — seit dem Upstream-Branch), nicht committet und nicht
+verfolgt. Gelöschte, binäre, ignorierte und bereits geöffnete Dateien werden übersprungen; ein Paar `.pks`/`.pkb` öffnet
+sich als ein Fenster. Bei mehr als 30 Dateien fragt Pelikan nach; das aktuelle Fenster bleibt aktiv.
+
+## Tabgruppen
+
+Bei vielen offenen Fenstern teilt Pelikan die Tabs in **Gruppen** auf, und die Tableiste zeigt nur die Tabs der
+aktuellen Gruppe. Die Gruppen erscheinen als **Kapseln** in der Titelleiste, zwischen Fenstertitel und Schaltflächen:
+in der ersten Zeile der Gruppenname, in der zweiten ein Detail und die Anzahl der Fenster (z. B. „main · 7“,
+„5 Fenster“). Ein Klick auf eine Kapsel zeigt die Tabs der Gruppe und aktiviert ihr zuletzt verwendetes Fenster; die
+aktuelle Gruppe ist umrandet. Passen die Kapseln nicht, öffnet die letzte — **»** — eine Liste aller Gruppen. Bei nur
+einer Gruppe gibt es keine Kapseln. Ist die Symbolleiste ausgeblendet oder das Fenster im Vollbild, steht eine kleine
+Kapsel der aktuellen Gruppe am Anfang der Tableiste.
+
+Ein Fenster kommt nach diesen Regeln in eine Gruppe, der Reihe nach:
+
+1. **Manuelle Gruppe** — wenn du das Fenster in eine verschoben hast (Vorrang vor den übrigen Regeln).
+2. **Projekt** — ein Fenster mit einer Datei des geöffneten Pelikan-Projekts.
+3. **Repository · Branch** — eine Datei in einem Git-Repository mit Remote; ein Worktree mit anderem Branch ist eine
+   eigene Gruppe, und nach einem Branchwechsel (z. B. `git checkout`) wandern die Fenster in die Gruppe des neuen
+   Branches, sobald du zu Pelikan zurückkehrst. Repositorys ohne Remote — weiter nach Verbindung.
+4. Die **Verbindung** des Fensters; Fenster ohne Verbindung — die Gruppe **Ohne Verbindung** am Ende.
+5. Verwenden alle übrigen Fenster **eine Datenbank**, ersetzen Gruppen nach Fenstertyp die Verbindungsgruppen:
+   **SQL-Fenster**, **Programme**, **Tests**, **SQL*Plus-Konsolen** und **Weitere Fenster**. Zu Verbindungsgruppen wechselt
+   Pelikan erst, wenn die zweite Datenbank mehr als ein Fenster hat — ein einzelnes Fenster auf einer anderen Datenbank
+   ordnet nicht die ganze Leiste um.
+
+Die Reihenfolge der Kapseln ist fest: manuelle Gruppen (in Erstellungsreihenfolge), Projekt, Repositorys und
+Verbindungen alphabetisch (oder Fenstertypen), „Ohne Verbindung“ am Ende. Tabs in einer Gruppe stehen in
+Öffnungsreihenfolge.
+
+Ein von irgendwoher aktiviertes Fenster (Object Browser, Fehlerliste, Fensterliste, Debugger, Öffnen einer Datei, Agent)
+wechselt die Gruppe von selbst. **⌃Tab** und **⌃⇧Tab** (Nächstes / Vorheriges Fenster) gehen durch die Fenster der
+aktuellen Gruppe und nach dem letzten zum ersten Fenster der nächsten Gruppe (jedes Fenster ist erreichbar),
+**⌃⌘]** und **⌃⌘[** — **Nächste Tabgruppe** / **Vorherige Tabgruppe**, und **Fenster › Tabgruppe
+zeigen …** wählt eine Gruppe aus einer Liste. **Fenster › Tabs aller Gruppen** (auch im Kapselmenü und in der
+**»**-Liste) zeigt die Tabs aller Gruppen in der Leiste. Die Fensterliste (Tab **Fenster** der linken Spalte,
+**Ansicht › Fensterliste**) zeigt die Fenster in einem Baum nach Gruppen; ein Klick auf eine Gruppe zeigt sie.
+
+**Manuelle Gruppen:** Tabmenü › **In Gruppe bewegen › Neue Gruppe …** oder eine vorhandene Gruppe; **Aus manueller
+Gruppe entfernen** gibt das Fenster an die automatischen Gruppen zurück. Das Kapselmenü einer manuellen Gruppe hat
+**Umbenennen …** und **Gruppierung aufheben**. Manuelle Gruppen und Verbindungsfarben werden im Workset gespeichert.
+Tabs werden nicht auf Kapseln gezogen — dafür gibt es das Tabmenü.
+
+**Tabs** haben zwei Zeilen: den Punkt der Umgebungsfarbe, den Typbuchstaben, den Titel und die Schließen-Taste (ein
+Punkt — ungesicherte Änderungen), darunter immer die Verbindung des Fensters (Fenster ohne Verbindung — graues „Keine
+Verbindung“); der volle Name steht im Tooltip. Der Tabhintergrund hat die Palettenfarbe der Verbindung (siehe
+*Verbindungen › Umgebungen und Schutz vor Fehlern*): der aktive Tab hat einen kräftigeren Hintergrund, eine dicke
+Unterstreichung in der Verbindungsfarbe und einen fetten Titel. Passen die Tabs nicht in eine Zeile, erscheinen an den
+Seiten der Leiste die Tasten **‹** und **›**; die Leiste blätterst du auch mit dem Mausrad oder einer Trackpad-Geste,
+und der aktive Tab ist immer sichtbar.
+
 ## Menüband und „Aktionen suchen“
 
 Unter der Symbolleiste liegt das **Menüband** — jede Aktion mit einem Klick, ohne Suchen in Menüs und ohne Tastenkürzel

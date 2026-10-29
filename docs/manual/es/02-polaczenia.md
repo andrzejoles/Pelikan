@@ -102,6 +102,11 @@ capítulo *Agentes de IA*.
   barra de estado. La opción **Fondo del editor con el color de la conexión** (**Ajustes › General**) colorea
   también el fondo del editor. En la misma pestaña puedes añadir reglas de color según el patrón `usuario@base` (p. ej.,
   `sys@*`); tienen prioridad sobre el color del entorno.
+- Además del color del entorno, cada conexión con ventanas abiertas recibe un color de una **paleta de 10 tonos
+  claramente distintos**: es el fondo de las pestañas de sus ventanas, la cápsula del grupo de la conexión y la marca en
+  la Lista de ventanas y en la barra de estado (ver *Introducción › Grupos de pestañas*). El color se mantiene mientras
+  la conexión tiene ventanas abiertas y vuelve al reabrir el workset; al cerrar la última ventana vuelve al conjunto. Con
+  más de 10 conexiones a la vez los colores se repiten.
 - En una conexión de **producción**, las sentencias que modifican datos u objetos (DML, DDL, bloques PL/SQL) requieren
   confirmación en la ventana «Cambios en la conexión de producción».
 - Una conexión de **solo lectura** rechaza, antes de enviarlo a la base de datos, todo lo que no sean consultas y

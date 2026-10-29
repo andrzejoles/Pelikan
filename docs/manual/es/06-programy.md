@@ -103,6 +103,19 @@ de varias decenas de miles de líneas.
   lista con sangría en el extremo izquierdo de la barra de la ventana; la elección se mantiene en la ventana (también
   en el workset). **Ajustes › Editor › Contenido del código visible por defecto** decide para las ventanas en las
   que no se ha alternado el panel.
+- **Estructuras de control** en Contenido del código: `IF` con las ramas `ELSIF` y `ELSE`, bucles `LOOP`, `FOR`
+  (numéricos y de cursor, también `FOR r IN (SELECT …) LOOP`) y `WHILE`, `FORALL`, la sentencia `CASE` con sus ramas
+  `WHEN` (una expresión `CASE … END` en SQL o en una asignación no es un nodo), la sección `EXCEPTION` con los manejadores `WHEN excepción`, la sección de inicialización del cuerpo del
+  paquete y los puntos de tiempo de un disparador compuesto. Un nodo muestra la palabra de apertura, la etiqueta
+  `<<nombre>>` y la condición abreviada (p. ej. «IF v_importe > 0…», «FOR r IN c_emp LOOP»); la cabecera completa
+  está en la ayuda emergente. Las estructuras están contraídas por defecto; un clic lleva el cursor a la palabra de
+  apertura y el árbol selecciona la estructura más interna que contiene el cursor. El filtro de nombres también busca
+  en condiciones y etiquetas. Una estructura sin terminar (p. ej. aún sin `END IF` mientras se escribe) termina en el
+  `END` del bloque o antes del siguiente subprograma, y `$IF … $END` (compilación condicional) no es una sentencia
+  `IF`. El botón de bifurcación junto al filtro o **Mostrar estructuras de control** en el menú del panel las oculta
+  en todas las ventanas (p. ej. en un paquete grande); los bloques `BEGIN … END` (también con `DECLARE`) se muestran
+  siempre; el mismo ajuste: **Ajustes › Editor › Estructuras de control
+  en Contenido del código** (activado por defecto).
 - El menú contextual sobre el nombre de un objeto de la base de datos en el editor ofrece las mismas acciones que el
   Object Browser.
 - **F1** abre la documentación de Oracle de la palabra bajo el cursor.
@@ -150,15 +163,27 @@ identificadores, grafía especial). El formateador puede actuar automáticamente
 datos, antes de compilar y antes de guardar. Un fragmento entre los comentarios `-- NoFormat Start` y `-- NoFormat End`
 se mantiene sin cambios. El formato nunca cambia el significado del código.
 
-La pestaña **Ajustes › Formateador** tiene los grupos **Disposición**, **Listas y comas**, **Cláusulas SQL y condiciones**
-(palabras de cláusula a la izquierda, a la derecha o en su propia línea; AND/OR al principio o al final de la línea; la
-condición JOIN … ON; THEN en una línea nueva; CASE en varias líneas), **Alineación en columnas** (declaraciones,
-parámetros con modo y tipo, parámetros con nombre `=>`, asignaciones `:=`, alias en SELECT y FROM, `=` en UPDATE … SET,
-comentarios al final de línea), **Espaciado** y **Mayúsculas/minúsculas**, por separado para palabras clave,
-identificadores, tipos de datos, funciones integradas y paquetes de Oracle. A la derecha hay una vista previa: un paquete
-de ejemplo en el que se ve cada opción, con las líneas modificadas por el último cambio resaltadas, y encima un ejemplo
-de la opción señalada o de la última cambiada: **Ahora** y **Tras cambiar esta opción**. Una región sin formato también
-se puede marcar con los comentarios `-- @formatter:off` y `-- @formatter:on`.
+La pestaña **Ajustes › Formateador** tiene los grupos **Disposición**, **Listas y comas** (por separado listas
+SELECT/INTO/FROM, UPDATE … SET, GROUP BY y ORDER BY, declaraciones de parámetros, parámetros de llamadas, listas INSERT,
+listas entre paréntesis —IN, argumentos de funciones— y columnas de tablas, campos de registros y tipos: un elemento por
+línea, en una línea si cabe o hasta el margen), **Cláusulas SQL y condiciones** (palabras de cláusula a la derecha —el
+«río», por defecto—, a la izquierda o en su propia línea; AND/OR al principio o al final de la línea; la condición
+JOIN … ON; THEN en una línea nueva; CASE en líneas separadas —los muy cortos, con una rama WHEN, en una línea hasta un
+número de caracteres—; subconsultas y CTE con sangría y `)` en su propia línea o tras el paréntesis; posición del
+operador en expresiones largas), **Condiciones AND / OR** (por separado para cada lugar —WHERE, HAVING, JOIN … ON,
+MERGE … ON, START WITH / CONNECT BY, CASE … WHEN, IF / ELSIF, WHILE, EXIT / CONTINUE WHEN, WHEN del disparador, CHECK,
+paréntesis anidados—: salto —cada uno en su propia línea, solo cuando la condición no cabe, no dividir—; posición de
+AND/OR; alineación a la palabra clave —«río»—, bajo la primera condición o bajo ella con sangría), **Alineación en
+columnas** (declaraciones, parámetros con modo y tipo, parámetros con nombre `=>`, asignaciones `:=`, alias en SELECT y
+FROM, `=` en UPDATE … SET, columnas de tablas y campos de registros —tipo, DEFAULT, NOT NULL—, comentarios al final de
+línea), **Espaciado** y **Mayúsculas/minúsculas**, por separado para palabras clave, identificadores, tipos de datos,
+funciones integradas y paquetes de Oracle; la grafía especial admite también patrones con `%` o `*` (p. ej. `DBMS_%`). A
+la derecha hay una vista previa con colores de sintaxis, números de línea y una línea vertical del margen derecho; el
+selector de encima elige el ejemplo: **PL/SQL**, **Consultas**, **DML** o **DDL**. Las líneas modificadas por el último
+cambio se resaltan durante 5 s (o hasta el siguiente cambio) y una barra roja marca dónde se eliminaron líneas; al
+cambiar una opción se pasa al ejemplo en el que se ve y se desplaza hasta el cambio, y al hacer clic en una opción se
+muestra su ejemplo. Una región sin formato también se puede marcar con los comentarios `-- @formatter:off` y
+`-- @formatter:on`; el formateador deja sin cambios la compilación condicional `$IF … $END`.
 
 ### Plantillas, fragmentos y macros
 

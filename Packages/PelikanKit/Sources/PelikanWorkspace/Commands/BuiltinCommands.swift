@@ -7,7 +7,7 @@ import PelikanSQL
 public enum BuiltinCommands {
     @MainActor
     public static var all: [Command] {
-        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
+        file + edit + session + SQLCommands.all + GridCommands.all + GridToolCommands.all + Stage7Commands.all + Stage7PlanCommands.all + PackCommands.all + MultiObjectCommands.all + ProfilerCommands.all + DebugP2Commands.all + P1DataCommands.all + WindowListCommands.all + TabGroupCommands.all + GridStage8Commands.all + BrowserCommands.all + EditorExtraCommands.all + ObjectAdminCommands.all + PreferenceCommands.all + ToolDockCommands.all + EditorExternalCommands.all + RemoteTargetCommands.all + Stage7ToolCommands.all + DataGripCommands.all + Oracle23Commands.all + ORDSCommands.all + TestManagerCommands.all + ProjectCommands.all + MonitorCommands.all + ObjectCommands.all + ToolCommands.all + TemplateCommands.all + ProgramUnitCommands.all + CodeContentsCommands.all + EditorViewCommands.all + CompareCommands.all + NavigationCommands.all + EditorCommands.all + UtplsqlCommands.all + EditorToolCommands.all + ConnectionCommands.all + FileCommands.all + AgentCommands.all + AgentDatabaseCommands.all + AgentChangeCommands.all + PlanCommands.all + SessionCommands.all + SchedulerCommands.all + DiagramCommands.all + DataTransferCommands.all + UserToolCommands.all + ReportCommands.all + debug + view + window + help
     }
 
     /// Połączenie aktywnego okna, inaczej główne — dla zmiany hasła.
@@ -828,6 +828,12 @@ public enum BuiltinCommands {
                 // Makro odtwarza stan, a nie przełączenie (przycisk paska okna i menu wywołują bez argumentu).
                 return CommandResult(value: .bool(show), resolvedArguments: CommandArguments(["visible": .bool(show)]))
             },
+            Command(CommandDescriptor(id: "view.windowList", title: L10n.tr("Lista okien"), category: .view,
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje Listę okien (drzewo według grup kart) w lewej kolumnie."),
+                                      feature: "PD-UI-002")) { ctx in
+                ctx.ui?.showWindowList()
+                return .ok
+            },
             Command(CommandDescriptor(id: "view.objectBrowser", title: L10n.tr("Przeglądarka obiektów"), category: .view,
                                       agent: .none, effect: .uiState, summary: L10n.tr("Pokazuje Przeglądarkę obiektów w lewej kolumnie."),
                                       feature: "PD-OB-001")) { ctx in
@@ -843,14 +849,14 @@ public enum BuiltinCommands {
         [
             Command(CommandDescriptor(id: "window.next", title: L10n.tr("Następne okno"), category: .window,
                                       pd: ["ctrl+tab"], mac: ["cmd+shift+]", "ctrl+tab"], agent: .full, effect: .uiState,
-                                      summary: L10n.tr("Aktywuje następne okno z Listy okien."), feature: "PD-UI-004"),
+                                      summary: L10n.tr("Aktywuje następne okno bieżącej grupy kart, a za ostatnim — pierwsze okno następnej grupy."), feature: "PD-UI-004"),
                     validate: { $0.documents.count > 1 }) { ctx in
                 ctx.workspace.cycleDocuments(forward: true)
                 return .ok
             },
             Command(CommandDescriptor(id: "window.previous", title: L10n.tr("Poprzednie okno"), category: .window,
                                       pd: ["ctrl+shift+tab"], mac: ["cmd+shift+[", "ctrl+shift+tab"], agent: .full, effect: .uiState,
-                                      summary: L10n.tr("Aktywuje poprzednie okno z Listy okien."), feature: "PD-UI-004"),
+                                      summary: L10n.tr("Aktywuje poprzednie okno bieżącej grupy kart, a przed pierwszym — ostatnie okno poprzedniej grupy."), feature: "PD-UI-004"),
                     validate: { $0.documents.count > 1 }) { ctx in
                 ctx.workspace.cycleDocuments(forward: false)
                 return .ok

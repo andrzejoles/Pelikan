@@ -103,6 +103,19 @@ von Zeilen ohne Verzögerung.
   Taste mit der eingerückten Liste am linken Ende der Fensterleiste; die Auswahl bleibt im Fenster (auch im Workset).
   **Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** gilt für Fenster, in denen der Bereich nicht
   umgeschaltet wurde.
+- **Kontrollstrukturen** im Codeinhalt: `IF` mit den Zweigen `ELSIF` und `ELSE`, Schleifen `LOOP`, `FOR` (Zähl-
+  und Cursorschleifen, auch `FOR r IN (SELECT …) LOOP`) und `WHILE`, `FORALL`, die `CASE`-Anweisung mit ihren
+  `WHEN`-Zweigen (ein `CASE … END`-Ausdruck in SQL oder in einer Zuweisung ist kein Knoten), der `EXCEPTION`-Abschnitt mit den Behandlungen `WHEN Ausnahme`, der Initialisierungsabschnitt
+  des Package Body und die Zeitpunkte eines Compound Triggers. Ein Knoten zeigt das öffnende Schlüsselwort, das Label
+  `<<name>>` und eine gekürzte Bedingung (z. B. „IF v_betrag > 0…“, „FOR r IN c_emp LOOP“); der vollständige Kopf
+  steht im Tooltip. Strukturen sind standardmäßig eingeklappt; ein Klick setzt den Cursor auf das öffnende
+  Schlüsselwort, und der Baum markiert die innerste Struktur mit dem Cursor. Der Namensfilter sucht auch in
+  Bedingungen und Labels. Eine unvollständige Struktur (z. B. noch ohne `END IF` beim Tippen) endet am `END` des
+  Blocks oder vor dem nächsten Unterprogramm, und `$IF … $END` (bedingte Kompilierung) ist keine `IF`-Anweisung. Die
+  Verzweigungs-Taste neben dem Filter oder **Kontrollstrukturen anzeigen** im Menü des Bereichs blendet sie in allen
+  Fenstern aus (z. B. in einem großen Package); `BEGIN … END`-Blöcke (auch mit `DECLARE`) bleiben immer sichtbar;
+  dieselbe Einstellung: **Einstellungen › Editor › Kontrollstrukturen
+  im Codeinhalt** (standardmäßig eingeschaltet).
 - Das Kontextmenü auf dem Namen eines Datenbankobjekts im Editor bietet dieselben Aktionen wie der Object Browser.
 - **F1** öffnet die Oracle-Dokumentation zum Wort unter dem Cursor.
 
@@ -147,15 +160,27 @@ Bezeichnern, Sonderschreibweisen). Der Formatierer kann automatisch nach dem Öf
 dem Kompilieren und vor dem Speichern laufen. Ein Abschnitt zwischen den Kommentaren `-- NoFormat Start` und `--
 NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des Codes.
 
-Die Registerkarte **Einstellungen › Formatierer** hat die Gruppen **Layout**, **Listen und Kommas**, **SQL-Klauseln und
-Bedingungen** (Klauselwörter links, rechts oder in eigener Zeile; AND/OR am Zeilenanfang oder -ende; die Bedingung JOIN
-… ON; THEN in neuer Zeile; mehrzeiliges CASE), **Spaltenausrichtung** (Deklarationen, Parameter mit Modus und Typ,
-benannte Parameter `=>`, Zuweisungen `:=`, Aliasse in SELECT und FROM, `=` in UPDATE … SET, Kommentare am Zeilenende),
-**Abstände** und **Groß-/Kleinschreibung** — getrennt für Schlüsselwörter, Bezeichner, Datentypen, integrierte
-Funktionen und Oracle-Pakete. Rechts ist eine Vorschau: ein Beispielpaket, an dem jede Option sichtbar ist, mit
-hervorgehobenen Zeilen der letzten Änderung, darüber ein Beispiel der Option unter dem Zeiger oder der zuletzt
-geänderten — **Jetzt** und **Nach Änderung dieser Option**. Ein Bereich ohne Formatierung lässt sich auch mit den
-Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren.
+Die Registerkarte **Einstellungen › Formatierer** hat die Gruppen **Layout**, **Listen und Kommas** (getrennt
+SELECT-/INTO-/FROM-Listen, UPDATE … SET, GROUP BY und ORDER BY, Parameterdeklarationen, Aufrufparameter, INSERT-Listen,
+Listen in Klammern — IN, Funktionsargumente — sowie Tabellenspalten, Record- und Typfelder: ein Element pro Zeile, in
+einer Zeile, wenn es passt, oder bis zum Rand), **SQL-Klauseln und Bedingungen** (Klauselwörter rechts — der „Fluss“,
+Standard — links oder in eigener Zeile; AND/OR am Zeilenanfang oder -ende; die Bedingung JOIN … ON; THEN in neuer Zeile;
+CASE in eigenen Zeilen — sehr kurze mit einem WHEN-Zweig bis zu einer festgelegten Zeichenzahl in einer Zeile;
+Unterabfragen und CTEs eingerückt mit `)` in eigener Zeile oder nach der Klammer; Position des Operators in langen
+Ausdrücken), **AND-/OR-Bedingungen** (für jeden Ort getrennt — WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH /
+CONNECT BY, CASE … WHEN, IF / ELSIF, WHILE, EXIT / CONTINUE WHEN, Trigger-WHEN, CHECK, verschachtelte Klammern:
+Umbruch — jeweils in eigener Zeile, nur wenn die Bedingung nicht passt, nicht umbrechen; Position von AND/OR;
+Ausrichtung am Schlüsselwort — „Fluss“, unter der ersten Bedingung oder darunter eingerückt), **Spaltenausrichtung**
+(Deklarationen, Parameter mit Modus und Typ, benannte Parameter `=>`, Zuweisungen `:=`, Aliasse in SELECT und FROM, `=`
+in UPDATE … SET, Tabellenspalten und Recordfelder — Typ, DEFAULT, NOT NULL, Kommentare am Zeilenende), **Abstände** und
+**Groß-/Kleinschreibung** — getrennt für Schlüsselwörter, Bezeichner, Datentypen, integrierte Funktionen und
+Oracle-Pakete; Sonderschreibweisen akzeptieren auch Muster mit `%` oder `*` (z. B. `DBMS_%`). Rechts ist eine Vorschau
+mit Syntaxfarben, Zeilennummern und einer senkrechten Linie am rechten Rand; der Umschalter darüber wählt das Beispiel:
+**PL/SQL**, **Abfragen**, **DML** oder **DDL**. Durch die letzte Änderung geänderte Zeilen werden 5 s lang (oder bis zur
+nächsten Änderung) hervorgehoben, ein roter Strich markiert entfernte Zeilen; eine Optionsänderung wechselt zum
+Beispiel, in dem sie sichtbar ist, und scrollt dorthin, ein Klick auf eine Option zeigt ihr Beispiel. Ein Bereich ohne
+Formatierung lässt sich auch mit den Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren; bedingte
+Kompilierung `$IF … $END` lässt der Formatierer unverändert.
 
 ### Vorlagen, Snippets und Makros
 

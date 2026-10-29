@@ -109,6 +109,61 @@ Pelikan tiene una única ventana principal:
 El título de la ventana muestra la conexión principal y el conjunto de trabajo (workset) activo, y el subtítulo, la
 ventana actual.
 
+**Rama en la barra de estado:** un clic en la rama Git (esquina inferior derecha) abre un menú con **Abrir los demás
+archivos modificados en la rama** (también **Herramientas › Git** y la cinta **Herramientas › Git**). Pelikan abre los
+archivos de código modificados en la rama del repositorio de la ventana activa: confirmados desde el punto de bifurcación
+con la rama predeterminada del remoto (`origin/HEAD`, sin ella `origin/main` o `master`; sin remoto — desde la rama
+upstream), no confirmados y sin seguimiento. Omite los eliminados, binarios, ignorados y ya abiertos; un par
+`.pks`/`.pkb` se abre en una sola ventana. Con más de 30 archivos pregunta antes; la ventana actual sigue activa.
+
+## Grupos de pestañas
+
+Con muchas ventanas abiertas, Pelikan divide las pestañas en **grupos** y la barra de pestañas muestra solo las del
+grupo actual. Los grupos aparecen como **cápsulas** en la barra de título, entre el título de la ventana y los botones:
+en la primera línea el nombre del grupo y en la segunda un detalle y el número de ventanas (p. ej. «main · 7»,
+«5 ventanas»). Un clic en una cápsula muestra las pestañas del grupo y activa su ventana usada más recientemente; el
+grupo actual aparece con contorno. Si las cápsulas no caben, la última — **»** — despliega la lista de todos los grupos.
+Con un solo grupo no hay cápsulas. Si la barra de herramientas está oculta o la ventana está a pantalla completa, una
+pequeña cápsula del grupo actual aparece al principio de la barra de pestañas.
+
+Una ventana entra en un grupo según estas reglas, por orden:
+
+1. **Grupo manual** — si moviste la ventana a uno (tiene prioridad sobre las demás reglas).
+2. **Proyecto** — una ventana con un archivo del proyecto de Pelikan abierto.
+3. **Repositorio · rama** — un archivo en un repositorio git con remoto; un worktree con otra rama es un grupo aparte,
+   y tras un cambio de rama (p. ej. `git checkout`) las ventanas pasan al grupo de la nueva rama cuando vuelves a
+   Pelikan. Los repositorios sin remoto — por conexión, como sigue.
+4. La **conexión** de la ventana; las ventanas sin conexión — el grupo **Sin conexión** al final.
+5. Si todas las demás ventanas usan **una sola base de datos**, en lugar de grupos de conexión hay grupos por tipo de
+   ventana: **Ventanas SQL**, **Programas**, **Pruebas**, **Consolas SQL*Plus** y **Otras ventanas**. Pelikan pasa a los
+   grupos de conexión solo cuando la segunda base de datos tiene más de una ventana: una sola ventana en otra base no
+   reordena toda la barra.
+
+El orden de las cápsulas es fijo: grupos manuales (en orden de creación), proyecto, repositorios y conexiones por orden
+alfabético (o tipos de ventana), «Sin conexión» al final. Las pestañas de un grupo siguen el orden de apertura.
+
+Una ventana activada desde cualquier sitio (Object Browser, lista de errores, Lista de ventanas, depurador,
+apertura de un archivo, un agente) cambia de grupo por sí sola. **⌃Tab** y **⌃⇧Tab** (Ventana siguiente / anterior)
+recorren las ventanas del grupo actual y, tras la última, pasan a la primera ventana del grupo siguiente (todas las
+ventanas son accesibles), **⌃⌘]** y **⌃⌘[** — **Grupo de pestañas siguiente** / **Grupo de pestañas
+anterior**, y **Ventana › Mostrar grupo de pestañas…** elige un grupo de una lista. **Ventana › Pestañas de todos los
+grupos** (también en el menú de la cápsula y en la lista **»**) muestra en la barra las pestañas de todos los grupos. La
+Lista de ventanas (pestaña **Ventanas** de la columna izquierda, **Vista › Lista de ventanas**) muestra las
+ventanas en un árbol por grupos; un clic en un grupo lo muestra.
+
+**Grupos manuales:** menú de la pestaña › **Mover al grupo › Nuevo grupo…** o un grupo existente; **Quitar del grupo
+manual** devuelve la ventana a los grupos automáticos. El menú de la cápsula de un grupo manual tiene **Cambiar nombre…**
+y **Desagrupar**. Los grupos manuales y los colores de las conexiones se guardan en el workset. Las pestañas no se
+arrastran a las cápsulas: para eso está el menú de la pestaña.
+
+**Las pestañas** tienen dos líneas: el punto del color del entorno, la letra del tipo, el título y el botón de cierre
+(un punto — cambios sin guardar), y debajo siempre la conexión de la ventana (ventana sin conexión — «Sin conexión» en
+gris); el nombre completo está en la ayuda emergente. El fondo de la pestaña tiene el color de la conexión de la paleta
+(ver *Conexiones › Entornos y protección contra errores*): la pestaña activa tiene un fondo más intenso, un subrayado
+grueso del color de la conexión y el título en negrita. Si las pestañas no caben en una fila, aparecen los botones
+**‹** y **›** a los lados de la barra; también puedes desplazarla con la rueda del ratón o con un gesto del trackpad, y
+la pestaña activa siempre queda visible.
+
 ## Cinta y «Buscar acciones»
 
 Bajo la barra de herramientas está la **cinta**: cada acción con un clic, sin buscar en menús ni recordar atajos. Las

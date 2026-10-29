@@ -105,13 +105,40 @@ fi
 sed_escape() { printf '%s' "$1" | sed -e 's/[\\|&]/\\&/g'; }
 OUT_SED=$(sed_escape "$OUT")
 ROOT_SED=$(sed_escape "$ROOT")
+# @REPO@ w scenariuszu — tymczasowe repozytorium gita „kadry” (gałąź feature/pensje, zdalne „origin” — repozytorium
+# bare obok) z plikami z fixtures: zrzut grup kart (72) nie zależy od miejsca uruchomienia ani od repozytorium Pelikana.
+# Bez konfiguracji globalnej i systemowej gita (hooki, podpisy właściciela albo CI).
+REPO="$WORK/repo/kadry"
+prepare_repo() {
+    [ -d "$REPO/.git" ] && return 0
+    mkdir -p "$REPO"
+    cp "$ROOT/scripts/screenshots/fixtures/pensje_api.pks" "$ROOT/scripts/screenshots/fixtures/pensje_api.pkb" \
+        "$ROOT/scripts/screenshots/fixtures/skrypt-zawartosc.sql" "$REPO/"
+    (
+        export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+        # Zmienne gita z otoczenia (np. przebieg z hooka) wskazywałyby inne repozytorium.
+        unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+        cd "$REPO"
+        git init -q -b main
+        git config user.name "Pelikan"
+        git config user.email "pelikan@example.invalid"
+        git add -A
+        git commit -q -m "start"
+        git init -q --bare "$WORK/repo/origin.git"
+        git remote add origin "$WORK/repo/origin.git"
+        git push -q origin main
+        git checkout -q -b feature/pensje
+    )
+}
+REPO_SED=$(sed_escape "$REPO")
 failed=0
 for name in "${scenarios[@]}"; do
     script="$ROOT/scripts/screenshots/$name.json"
     [ -f "$script" ] || { echo "Brak scenariusza $name" >&2; failed=1; continue; }
     run="$WORK/$name.json"
     # @OUT@ w scenariuszu — katalog zrzutów (bez ścieżek domowych w repozytorium).
-    sed -e "s|@OUT@|$OUT_SED|g" -e "s|@ROOT@|$ROOT_SED|g" "$script" > "$run"
+    if grep -q '@REPO@' "$script"; then prepare_repo; fi
+    sed -e "s|@OUT@|$OUT_SED|g" -e "s|@ROOT@|$ROOT_SED|g" -e "s|@REPO@|$REPO_SED|g" "$script" > "$run"
     rm -f "$run.done" "$run.log"
     rm -rf "$DATA/Recovery"
     started=$(date +%s)

@@ -1,5 +1,6 @@
 import Foundation
 import PelikanDB
+import PelikanSQL
 
 /// Zestaw preferencji (UG 23.35, PD-PREF-002): częściowe wartości preferencji (klucz = nazwa pola `Settings`,
 /// wartość = JSON) dla wszystkich połączeń albo dla połączeń pasujących do wzorca.
@@ -132,7 +133,7 @@ public enum PreferenceSets {
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
         (L10n.tr("Edytor"), "Edytor", ["Editor"], ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontSize", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
-                             "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeAssistantAutomatic", "codeAssistantDelay",
+                             "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeContentsControlFlow", "codeAssistantAutomatic", "codeAssistantDelay",
                              "codeAssistantMatch", "codeAssistantCase", "codeAssistantMinChars", "codeAssistantStandardFunctions",
                              "codeAssistantAllPerLine", "codeAssistantCommaFirst", "autoReplace", "identifierLengthWarning", "editorLigatures",
                              "rememberWindowState"]),
@@ -182,7 +183,7 @@ public enum PreferenceSets {
     public static func export(_ s: Settings, sections chosen: Set<String>?) throws -> Data {
         let chosen = try chosen.map { try sectionNames($0) }
         let all = values(of: s).filter { !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
-        let file = ExportFile(format: ExportFile.formatName, version: 1, values: all)
+        let file = ExportFile(format: ExportFile.formatName, version: ExportFile.currentVersion, values: all)
         let enc = JSONEncoder()
         enc.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try enc.encode(file)
@@ -194,7 +195,27 @@ public enum PreferenceSets {
         guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik ustawień Pelikana")) }
         let known = values(of: Settings())
         let chosen = try chosen.map { try sectionNames($0) }
-        return file.values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
+        // Plik w starszej wersji formatu (sprzed D202) — migracja ustawień formatera.
+        let values = file.version < 2 ? migratingLegacyBeautifier(file.values) : file.values
+        return values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
+    }
+
+    /// Migracja ustawień formatera zapisanych przed D202 — tylko przy odczycie plików: settings.json, sets.json i
+    /// eksportu w wersji formatu 1. Zapis bez znacznika `defaultsVersion` (albo ze starszym) dostaje nowe domyślne tam,
+    /// gdzie miał dawne (słowa klauzul do lewej → rzeka, CASE w jednej linii → wieloliniowo, wyrównanie deklaracji
+    /// i przypisań → włączone); zmienione przez użytkownika zostają; dopisany znacznik. Częściowy JSON z komendy, agenta
+    /// albo makra (bez znacznika) to wartości bieżące — nie przechodzi tędy.
+    public static func migratingLegacyBeautifier(_ values: [String: JSONValue]) -> [String: JSONValue] {
+        guard case .object(var o)? = values["beautifier"] else { return values }
+        if case .int(let v)? = o["defaultsVersion"], v >= Int64(BeautifierOptions.currentDefaultsVersion) { return values }
+        typealias O = BeautifierOptions
+        if o["clauseLayout"] == .string(O.ClauseLayout.leftAligned.rawValue) { o["clauseLayout"] = .string(O.ClauseLayout.rightAligned.rawValue) }
+        if o["caseLayout"] == .string(O.CaseLayout.inline.rawValue) { o["caseLayout"] = .string(O.CaseLayout.auto.rawValue) }
+        for key in ["alignDeclarations", "alignAssignments"] where o[key] == .bool(false) { o[key] = .bool(true) }
+        o["defaultsVersion"] = .int(Int64(BeautifierOptions.currentDefaultsVersion))
+        var out = values
+        out["beautifier"] = .object(o)
+        return out
     }
 
     /// Pola, które uruchamiają programy albo ładują kod: narzędzia użytkownika (program i argumenty), polecenia CLI
@@ -225,6 +246,8 @@ public enum PreferenceSets {
 
     struct ExportFile: Codable {
         static let formatName = "pelikan-preferences"
+        /// 2 — od D202 (ustawienia formatera ze znacznikiem `defaultsVersion`; plik w wersji 1 migrowany przy imporcie).
+        static let currentVersion = 2
         var format: String
         var version: Int
         var values: [String: JSONValue]
@@ -254,7 +277,12 @@ public struct PreferenceSetStore: Sendable {
             saveBlocked = !preserved
             return []
         }
-        return sets.filter { $0.kind != .personalUser }
+        // Zestawy zapisane przed D202 — migracja ustawień formatera (bez znacznika `defaultsVersion`).
+        return sets.filter { $0.kind != .personalUser }.map { set in
+            var set = set
+            set.values = PreferenceSets.migratingLegacyBeautifier(set.values)
+            return set
+        }
     }
 
     public func save(_ sets: [PreferenceSet]) throws {

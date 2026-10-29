@@ -196,6 +196,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Brak | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Brak | PD-TPL-002 |
 | Zawartość kodu › Kolejność w Zawartości kodu | `codeContents.sort` |  |  | Brak | PD-CA-010 |
+| Zawartość kodu › Struktury sterujące w Zawartości kodu | `codeContents.controlFlow` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Brak | PD-CA-010 |
@@ -477,6 +478,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Git › Porównaj z HEAD | `vcs.diff` |  |  | Brak | PD-VCS-001 |
 | Git › Dodaj do zatwierdzenia (git add) | `vcs.add` |  |  | Brak | PD-VCS-001 |
 | Git › Zatwierdź (git commit)… | `vcs.commit` |  |  | Brak | PD-VCS-001 |
+| Git › Otwórz pozostałe pliki zmienione w gałęzi | `vcs.openBranchChanges` |  |  | Brak | PD-VCS-002 |
 | Git › Historia Git pliku | `vcs.log` |  |  | Brak | PD-VCS-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | PD-OPT-002 |
 | Plan › Rozwiń wszystkie gałęzie | `plan.expandAll` |  |  | Brak | PD-OPT-001 |
@@ -584,6 +586,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Paleta komend… | `view.commandPalette` | ⇧⌘P | ⇧⌘P | Brak | PD-UI-007 |
 | Pokaż lub ukryj panel po lewej | `view.toggleSidebar` | ⌃⌘S | ⌃⌘S | Brak | PD-UI-001 |
 | Zawartość kodu | `view.codeContents` |  |  | Brak | PD-CA-010 |
+| Lista okien | `view.windowList` |  |  | Brak | PD-UI-002 |
 | Przeglądarka obiektów | `view.objectBrowser` |  |  | Brak | PD-OB-001 |
 
 ## Okno
@@ -595,6 +598,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zmień nazwę okna… | `window.rename` |  |  | Brak | PD-UI-002 |
 | Krótkie nazwy na liście okien | `window.listShortTitles` |  |  | Brak | PD-UI-002 |
 | Sortuj listę okien… | `window.listSort` |  |  | Brak | PD-UI-002 |
+| Następna grupa kart | `window.nextGroup` | ⌃⌘] | ⌃⌘] | Za zgodą | PD-UI-013 |
+| Poprzednia grupa kart | `window.previousGroup` | ⌃⌘[ | ⌃⌘[ | Za zgodą | PD-UI-013 |
+| Pokaż grupę kart… | `window.showGroup` |  |  | Za zgodą | PD-UI-013 |
+| Karty wszystkich grup | `window.allTabs` |  |  | Brak | PD-UI-013 |
+| Przenieś okno do grupy… | `window.moveToGroup` |  |  | Brak | PD-UI-013 |
+| Usuń okno z grupy ręcznej | `window.removeFromGroup` |  |  | Brak | PD-UI-013 |
+| Zmień nazwę grupy kart… | `window.renameGroup` |  |  | Brak | PD-UI-013 |
+| Rozgrupuj | `window.ungroup` |  |  | Brak | PD-UI-013 |
 | Następne okno | `window.next` | ⌃⇥, ⇧⌘] | ⇧⌘], ⌃⇥ | Za zgodą | PD-UI-004 |
 | Poprzednie okno | `window.previous` | ⌃⇧⇥, ⇧⌘[ | ⇧⌘[, ⌃⇧⇥ | Za zgodą | PD-UI-004 |
 

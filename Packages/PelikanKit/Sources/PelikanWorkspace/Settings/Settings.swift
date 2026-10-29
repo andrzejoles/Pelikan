@@ -194,6 +194,8 @@ public struct Settings: Sendable, Codable, Hashable {
     public var showSpecialCharacters = false
     /// Kolejność elementów Code Contents (PD-CA-010).
     public var codeContentsOrder: CodeContents.Order = .source
+    /// Struktury sterujące w Zawartości kodu (IF, pętle, CASE, sekcje EXCEPTION z obsługami wyjątków — D203).
+    public var codeContentsControlFlow = true
     /// Panel Zawartość kodu obok edytora (UG 25.15): domyślny stan okien programu, SQL i testu, w których nie
     /// przełączano panelu (`Document.codeContentsVisible`, D199).
     public var showCodeContents = true
@@ -312,6 +314,7 @@ public struct Settings: Sendable, Codable, Hashable {
         rightMarginColumn = v(.rightMarginColumn, rightMarginColumn)
         showSpecialCharacters = v(.showSpecialCharacters, showSpecialCharacters)
         codeContentsOrder = v(.codeContentsOrder, codeContentsOrder)
+        codeContentsControlFlow = v(.codeContentsControlFlow, codeContentsControlFlow)
         codeAssistantAutomatic = v(.codeAssistantAutomatic, codeAssistantAutomatic)
         codeAssistantDelay = v(.codeAssistantDelay, codeAssistantDelay)
         codeAssistantMatch = v(.codeAssistantMatch, codeAssistantMatch)

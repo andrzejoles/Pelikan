@@ -6,10 +6,12 @@ public enum ToolbarModel {
     /// Identyfikator grupy szybkiego dostępu i odstępu elastycznego w układzie paska.
     public static let quickAccessItem = "quickAccess"
     public static let flexibleSpaceItem = "-"
+    /// Kapsułki grup kart (D200) — na początku paska, w wolnym miejscu obok tytułu okna.
+    public static let tabGroupsItem = "tabGroups"
 
     /// Domyślny układ paska (identyfikatory komend, `-` — elastyczny odstęp, `quickAccess` — grupa szybkiego dostępu).
     public static let defaultItems: [String] = [
-        "file.new.sql", "file.open", "file.save", "-", "sql.execute", "sql.break", "session.commit", "session.rollback", "-",
+        "tabGroups", "file.new.sql", "file.open", "file.save", "-", "sql.execute", "sql.break", "session.commit", "session.rollback", "-",
         "quickAccess", "-", "session.logon",
     ]
 
