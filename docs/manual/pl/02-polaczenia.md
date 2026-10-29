@@ -88,6 +88,10 @@ zgodą), osobny użytkownik bazy dla agenta i kolumny maskowane. Opisuje je rozd
 - Kolor połączenia widać na liście połączeń, na karcie okna (kropka przed nazwą), na liście okien i na pasku stanu. Opcja **Tło edytora w
   kolorze połączenia** (**Ustawienia › Ogólne**) barwi też tło edytora. W tej samej karcie możesz dodać reguły
   kolorów według wzorca `użytkownik@baza` (np. `sys@*`) — mają pierwszeństwo przed kolorem środowiska.
+- Oprócz koloru środowiska każde połączenie z otwartymi oknami dostaje kolor z **palety 10 wyraźnie różnych barw**:
+  w nim jest tło kart jego okien, kapsułka grupy połączenia, znak na Liście okien i na pasku stanu (zobacz *Wprowadzenie ›
+  Grupy kart*). Kolor trzyma się połączenia, dopóki ma otwarte okna, i wraca po ponownym otwarciu workseta; po zamknięciu
+  ostatniego okna wraca do puli. Przy ponad 10 połączeniach naraz kolory się powtarzają.
 - Na połączeniu **produkcyjnym** polecenia zmieniające dane lub obiekty (DML, DDL, bloki PL/SQL) wymagają
   potwierdzenia w oknie „Zmiany na połączeniu produkcyjnym”.
 - Połączenie **tylko do odczytu** odrzuca przed wysłaniem do bazy wszystko poza zapytaniami i sterowaniem sesją —

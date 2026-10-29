@@ -148,14 +148,25 @@ specjalna). Formater może działać automatycznie po otwarciu źródła z bazy,
 między komentarzami `-- NoFormat Start` i `-- NoFormat End` zostaje bez zmian. Formatowanie nigdy nie zmienia
 znaczenia kodu.
 
-Karta **Ustawienia › Formater** ma grupy **Układ**, **Listy i przecinki**, **Klauzule SQL i warunki** (słowa klauzul do
-lewej, do prawej albo w osobnej linii; AND/OR na początku albo końcu linii; warunek JOIN … ON; THEN w nowej linii;
-wieloliniowe CASE), **Wyrównanie w kolumnach** (deklaracje, parametry z trybem i typem, parametry nazwane `=>`,
-przypisania `:=`, aliasy w SELECT i FROM, `=` w UPDATE … SET, komentarze na końcu linii), **Odstępy** i **Wielkość
-liter** — osobno dla słów kluczowych, identyfikatorów, typów danych, funkcji wbudowanych i pakietów Oracle. Po prawej
-jest podgląd: przykładowy pakiet, na którym widać każdą opcję, z podświetlonymi liniami zmienionymi ostatnią zmianą, a
-nad nim przykład opcji wskazanej kursorem albo ostatnio zmienionej — **Teraz** i **Po zmianie tej opcji**. Region bez
-formatowania można też oznaczyć komentarzami `-- @formatter:off` i `-- @formatter:on`.
+Karta **Ustawienia › Formater** ma grupy **Układ**, **Listy i przecinki** (osobno listy SELECT/INTO/FROM, UPDATE …
+SET, GROUP BY i ORDER BY, deklaracje parametrów, parametry wywołań, listy INSERT, listy w nawiasach — IN, argumenty
+funkcji — oraz kolumny tabel, pola rekordów i typów: element w linii, w jednej linii, jeśli się mieści, albo do
+marginesu), **Klauzule SQL i warunki** (słowa klauzul do prawej — „rzeka”, domyślnie — do lewej albo w osobnej linii;
+AND/OR na początku albo końcu linii; warunek JOIN … ON; THEN w nowej linii; CASE w osobnych liniach — bardzo krótkie,
+z jedną gałęzią WHEN, w jednej linii do zadanej liczby znaków; podzapytania i CTE wcięte z `)` w osobnej linii albo
+za nawiasem; położenie operatora w długich wyrażeniach), **Warunki AND / OR** (dla każdego miejsca osobno — WHERE,
+HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY, CASE … WHEN, IF / ELSIF, WHILE, EXIT / CONTINUE WHEN, WHEN
+wyzwalacza, CHECK, nawiasy zagnieżdżone: łamanie — każdy w osobnej linii, tylko gdy warunek się nie mieści, nie łam;
+położenie AND/OR; wyrównanie do słowa kluczowego — „rzeka”, pod pierwszym warunkiem albo pod nim z wcięciem),
+**Wyrównanie w kolumnach** (deklaracje, parametry z trybem i typem, parametry nazwane `=>`, przypisania `:=`, aliasy w
+SELECT i FROM, `=` w UPDATE … SET, kolumny tabel i pola rekordów — typ, DEFAULT, NOT NULL, komentarze na końcu linii),
+**Odstępy** i **Wielkość liter** — osobno dla słów kluczowych, identyfikatorów, typów danych, funkcji wbudowanych i
+pakietów Oracle; pisownia specjalna przyjmuje też wzorce z `%` albo `*` (np. `DBMS_%`). Po prawej jest podgląd z
+kolorami składni, numerami linii i pionową linią prawego marginesu; przełącznik nad nim wybiera przykład: **PL/SQL**,
+**Zapytania**, **DML** albo **DDL**. Linie zmienione ostatnią zmianą są podświetlone przez 5 s (albo do następnej
+zmiany), miejsce usuniętych linii oznacza czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i
+przewija do niej, a kliknięcie opcji pokazuje jej przykład. Region bez formatowania można też oznaczyć komentarzami
+`-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian.
 
 ### Szablony, fragmenty kodu i makra
 

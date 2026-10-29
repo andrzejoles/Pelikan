@@ -1,0 +1,67 @@
+import Foundation
+@testable import PelikanSQL
+import Testing
+
+// TYMCZASOWE — rozpoznanie formatera, nie commitować.
+@Suite("TMP korpus formatera")
+struct ZZTmpFormatterCorpus {
+    @Test func run() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("docs/research/formater")
+        let text = try String(contentsOf: root.appendingPathComponent("korpus.txt"), encoding: .utf8)
+        var cases: [(String, String)] = []
+        for chunk in text.components(separatedBy: "### ").dropFirst() {
+            let nl = chunk.firstIndex(of: "\n")!
+            cases.append((String(chunk[..<nl]), String(chunk[chunk.index(after: nl)...])))
+        }
+        var profiles: [(String, BeautifierOptions)] = [("domyslne", BeautifierOptions())]
+        var a = BeautifierOptions()
+        a.commaBefore = true; a.alignAliases = true; a.alignSetValues = true; a.insertLists = .onePerLine
+        a.callParameters = .onePerLine; a.parameterDeclarations = .onePerLine; a.alignNamedArguments = true
+        a.alignParameters = true; a.alignDeclarations = true; a.caseLayout = .multiline
+        profiles.append(("przecinek-z-przodu-wyrownania", a))
+        var b = BeautifierOptions()
+        b.clauseLayout = .ownLine; b.caseLayout = .multiline; b.keywordCase = .lower
+        profiles.append(("klauzule-w-osobnej-linii", b))
+        for (name, o) in profiles {
+            var out = "# Wynik formatera Pelikana — profil: \(name)\n\n"
+            for (id, src) in cases {
+                out += "### \(id)\n"
+                do {
+                    let r = try Beautifier.format(src, options: o)
+                    out += r
+                    let again = try Beautifier.format(r, options: o)
+                    if again != r { out += "!!! NIEIDEMPOTENTNE — drugi przebieg:\n" + again }
+                } catch {
+                    out += "!!! BŁĄD: \(error)\n"
+                }
+                if !out.hasSuffix("\n") { out += "\n" }
+            }
+            try out.write(to: root.appendingPathComponent("wynik-\(name).txt"), atomically: true, encoding: .utf8)
+        }
+        // Podgląd: wynik domyślny każdego przykładu i pokrycie obecnych opcji (który przykład zmienia każda opcja).
+        let dir = root.appendingPathComponent("podglad")
+        let files = try FileManager.default.contentsOfDirectory(atPath: dir.path).filter { $0.hasSuffix(".sql") }.sorted()
+        var report = "# Podgląd — wynik przy ustawieniach domyślnych i pokrycie obecnych opcji\n\n"
+        var samples: [(String, String)] = []
+        for f in files { samples.append((f, try String(contentsOf: dir.appendingPathComponent(f), encoding: .utf8))) }
+        for (f, s) in samples {
+            report += "## \(f)\n\n```sql\n" + ((try? Beautifier.format(s)) ?? "!!! BŁĄD") + "```\n\n"
+        }
+        report += "## Pokrycie: opcja (wartość po zmianie z domyślnej) → przykłady, w których zmienia wynik, liczba zmienionych linii\n\n"
+        for e in BeautifierExamples.all {
+            var hits: [String] = []
+            for (f, s) in samples {
+                let a = (try? Beautifier.format(s)) ?? "ERR"
+                let b = (try? Beautifier.format(s, options: e.variant(BeautifierOptions()))) ?? "ERR"
+                if a != b {
+                    let n = TextDiff.lineStatus(baseline: a, current: b).count
+                    hits.append("\(f) (\(n))")
+                }
+            }
+            report += "- `\(e.id)`: " + (hits.isEmpty ? "**BRAK ZMIANY**" : hits.joined(separator: ", ")) + "\n"
+        }
+        try report.write(to: root.appendingPathComponent("podglad-wynik.md"), atomically: true, encoding: .utf8)
+    }
+}

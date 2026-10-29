@@ -14,6 +14,55 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   Struktury sterujące w Zawartości kodu** (domyślnie włączone) — w dużych pakietach drzewo może pokazywać same
   podprogramy (i bloki `BEGIN … END`, widoczne zawsze).
 
+## 1.8.0 — formater: bezpieczeństwo, układ, „rzeka”, podgląd
+
+- **Bezpieczeństwo:** formater nie psuje już kompilacji warunkowej (`$IF … $END`, `$$PLSQL_UNIT`) ani operatorów
+  odległości wektorów (`<=>`, `<->`, `<#>`); kontrola po formatowaniu wykrywa rozdzielenie znaków, które Oracle czyta
+  jako całość.
+- **Poprawki układu:** wcięcie wszystkich instrukcji w gałęzi `WHEN … THEN` obsługi wyjątków i CASE, zapytania
+  kursorów i widoków od nowej linii, UNION/MINUS w osobnej linii, MERGE (`ON`, `DELETE WHERE`), INSERT ALL, długie
+  wyrażenia łamane przed `||`, długie nagłówki wyzwalaczy i opcje tabel w osobnych liniach, COMPOUND TRIGGER, FORALL,
+  komentarze w listach, `RETURN SELF AS RESULT`, etykiety `<<nazwa>>`, wielkość liter słów kluczowych użytych jako
+  nazwy, wzorce `%` i `*` w pisowni specjalnej.
+- **Nowy domyślny wygląd:** słowa klauzul i AND/OR wyrównane „rzeką” (`  FROM`, ` WHERE`, `   AND`, ` ORDER BY`;
+  kolumna rzeki według najdłuższego słowa polecenia, np. `RETURNING`, najwyżej 9 znaków), CASE w osobnych liniach (bardzo krótkie w
+  jednej), podzapytania i CTE wcięte z `)` w osobnej linii, `INSERT INTO emp (…)`, `DELETE FROM` w jednej linii,
+  kolumny tabel po jednej w linii z wyrównanymi typami, DEFAULT i NOT NULL, wyrównane deklaracje i przypisania.
+  Domyślny wynik formatowania się zmienia — także u dotychczasowych użytkowników: opcje z wartością równą dawnej
+  domyślnej (słowa klauzul do lewej, CASE w jednej linii, bez wyrównania deklaracji i przypisań) dostają nową domyślną;
+  wartości zmienione samodzielnie zostają (także w zestawach preferencji i w plikach ustawień wyeksportowanych przez
+  starszą wersję). Przycisk **Przywróć domyślne** w Ustawieniach › Formater ustawia reguły na domyślne — po potwierdzeniu,
+  z wyborem, czy zachować pisownię specjalną (formatowanie automatyczne zostaje).
+- **AND / OR osobno dla każdego miejsca:** WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY,
+  CASE … WHEN, IF / ELSIF, WHILE, EXIT WHEN, WHEN wyzwalacza, CHECK i nawiasy zagnieżdżone — łamanie (każdy w osobnej
+  linii, tylko gdy się nie mieści, nigdy), położenie (początek albo koniec linii) i wyrównanie (rzeka, pod pierwszym
+  warunkiem, z wcięciem).
+- **Nowe opcje list:** UPDATE … SET, GROUP BY / ORDER BY, listy w nawiasach (IN, argumenty) i kolumny tabel — także
+  „do marginesu”; próg krótkiego CASE; położenie operatora w długich wyrażeniach.
+- **Podgląd w Ustawieniach › Formater:** cztery przykłady (PL/SQL, Zapytania, DML, DDL) z kolorami składni, numerami
+  linii i linią prawego marginesu; zmienione linie podświetlone przez 5 s, usunięte zaznaczone czerwoną kreską; zmiana
+  opcji pokazuje przykład, w którym ją widać, i przewija do zmiany; VoiceOver ogłasza liczbę zmienionych linii.
+
+## 1.7.0 — grupy kart okien
+
+- **Grupy kart:** przy wielu oknach pasek kart pokazuje tylko karty bieżącej grupy, a grupy widać jako dwuwierszowe
+  kapsułki na pasku tytułu (nazwa, szczegół i liczba okien, np. „main · 7”, „5 okien”). Pelikan grupuje okna sam:
+  pliki otwartego projektu, pliki repozytorium gita ze zdalnym (osobno dla każdej gałęzi i worktree), dalej według
+  połączenia — a gdy wszystkie okna są na jednej bazie, według rodzaju okna (okna SQL, programy, testy, konsole). Okno
+  aktywowane skądkolwiek przełącza grupę samo; kapsułka przenosi do ostatnio używanego okna grupy, „»” rozwija listę
+  wszystkich grup. ⌃Tab przechodzi po oknach grupy (za ostatnim — do następnej grupy), ⌃⌘] / ⌃⌘[ — po grupach,
+  **Okno › Pokaż grupę kart…** wybiera z listy, **Okno › Karty wszystkich grup** pokazuje wszystkie karty. Własne grupy: menu karty › **Przenieś do grupy**;
+  zapisują się w worksecie. Lista okien pokazuje drzewo według grup.
+- **Karty z połączeniem i kolorem:** każda karta ma drugi wiersz z połączeniem okna, a tło w kolorze połączenia
+  z palety 10 wyraźnie różnych barw (ten sam kolor na kapsułce grupy, Liście okien i pasku stanu). Aktywna karta —
+  mocniejsze tło, grube podkreślenie w kolorze połączenia i pogrubiony tytuł. Kolor trzyma się połączenia, dopóki ma
+  okna, i wraca z worksetem.
+- **Przewijanie kart:** gdy karty nie mieszczą się w wierszu, po bokach paska pojawiają się przyciski ‹ ›; pasek
+  przewija się też kółkiem myszy i gestem gładzika, a aktywna karta jest zawsze widoczna.
+- **Pliki zmienione w gałęzi:** kliknięcie gałęzi na pasku stanu › **Otwórz pozostałe pliki zmienione w gałęzi** otwiera
+  pliki kodu zmienione w gałęzi (od rozgałęzienia z gałęzią domyślną zdalnego repozytorium) oraz niezatwierdzone
+  i nieśledzone — bez usuniętych, binarnych i już otwartych; specyfikacja i ciało pakietu w jednym oknie.
+
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 
 - **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko

@@ -166,6 +166,8 @@ public protocol UIServices: AnyObject {
     func showFileBrowser()
     /// Karta Obiekty lewej kolumny (Przeglądarka obiektów, PD-OB-001).
     func showObjectBrowser()
+    /// Karta Okna lewej kolumny (Lista okien z grupami kart, PD-UI-002, D200).
+    func showWindowList()
     /// Wybór katalogu (lokalizacja File Browsera); nil — anulowano.
     func chooseDirectory() async -> URL?
     /// Bieżący układ okna głównego (nil — brak okna).
@@ -280,6 +282,7 @@ extension UIServices {
     public func showTemplateWindow() {}
     public func showFileBrowser() {}
     public func showObjectBrowser() {}
+    public func showWindowList() {}
     public func chooseDirectory() async -> URL? { nil }
     public func chooseFile(_ title: String, extensions: [String]) async -> URL? { await chooseFilesToOpen().first }
     public func currentLayout() -> WindowLayout? { nil }
@@ -338,7 +341,46 @@ public struct CommandInvocationRecord: Sendable {
 @Observable
 public final class Workspace {
     public private(set) var documents: [Document] = []
-    public var activeDocumentID: DocumentID?
+    public var activeDocumentID: DocumentID? {
+        didSet {
+            // Kolejność użycia okien — kapsułka grupy aktywuje ostatnio używane okno grupy (D200).
+            guard let id = activeDocumentID, id != oldValue else { return }
+            activationCounter += 1
+            activationTicks[id] = activationCounter
+            scheduleTabRepositoryRefresh(full: false)
+        }
+    }
+    /// Grupy kart (D200): grupy ręczne, przydziały okien, tryb „wszystkie karty”.
+    public var tabGroupState = TabGroupState()
+    /// Repozytoria plików okien (grupy „repozytorium · gałąź”) — wyliczane w tle, z pamięcią per katalog.
+    public internal(set) var tabRepositories: [String: RepositoryGroupInfo] = [:]
+    @ObservationIgnored var tabRepositoryDirectories: Set<String> = []
+    @ObservationIgnored var tabRepositoryRefresh: Task<Void, Never>?
+    @ObservationIgnored var tabRepositoryRefreshFull = false
+    @ObservationIgnored var lastFullRepositoryCheck: Date?
+    /// Sprawdzanie repozytoriów (testy: zaślepka albo nil — bez procesów gita, wyniki deterministyczne).
+    @ObservationIgnored public var tabRepositoryProbe: TabRepositoryProbe?
+    /// Sól identyfikatorów grup repozytoriów: losowa, w pliku `tab-group-salt` katalogu danych (0600; stała między
+    /// uruchomieniami — klucze kolorów w worksecie; osobna dla każdego katalogu danych, np. `PELIKAN_DATA_DIR`). Obszar
+    /// roboczy bez katalogu danych (testy) — pusta; plik nie do zapisu — losowa na czas sesji.
+    @ObservationIgnored public lazy var tabGroupSalt: String = {
+        guard let dir = dataDirectory else { return "" }
+        let url = dir.appendingPathComponent("tab-group-salt")
+        if let d = try? Data(contentsOf: url) {
+            let s = String(decoding: d, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !s.isEmpty { return s }
+        }
+        let s = (0..<4).map { _ in String(UInt32.random(in: .min ... .max), radix: 16) }.joined()
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        if (try? Data(s.utf8).write(to: url, options: .atomic)) != nil {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        }
+        return s
+    }()
+    @ObservationIgnored var tabGroupingMode: TabGroupingMode = .byKind
+    @ObservationIgnored public internal(set) var tabPalette = TabColorPalette()
+    @ObservationIgnored var activationTicks: [DocumentID: Int] = [:]
+    @ObservationIgnored var activationCounter = 0
     public private(set) var registry: CommandRegistry
     public private(set) var keymap: Keymap
     public var shortcutProfile: ShortcutProfile {
@@ -520,6 +562,9 @@ public final class Workspace {
     public init(profile: ShortcutProfile? = nil, commands: [Command]? = nil, dataDirectory: URL? = nil,
                 secrets: any SecretStore = MemorySecretStore(), drivers: [DriverKind: any DatabaseDriver] = [:]) {
         self.dataDirectory = dataDirectory
+        // Repozytoria grup kart sprawdzane gitem w tle tylko w aplikacji (z katalogiem danych); obszary robocze testów
+        // pakietu — bez procesów gita (test może wstrzyknąć zaślepkę).
+        tabRepositoryProbe = dataDirectory == nil ? nil : .git
         var setStore = PreferenceSetStore(directory: dataDirectory)
         let sets = setStore.load()
         preferenceStore = setStore
@@ -530,7 +575,8 @@ public final class Workspace {
         var blocked: (settings: Bool, history: Bool) = (false, false)
         if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")) {
             if case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
-                personal = o
+                // Ustawienia zapisane przed D202 — migracja formatera (wartości równe dawnym domyślnym → nowe domyślne).
+                personal = PreferenceSets.migratingLegacyBeautifier(o)
             } else {
                 let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("settings.json"))
                 problems.append(message)
@@ -719,23 +765,30 @@ public final class Workspace {
 
     public func close(_ id: DocumentID) {
         guard let i = documents.firstIndex(where: { $0.id == id }) else { return }
+        // Następne okno tej samej grupy kart (D200): z prawej, inaczej z lewej; grupa bez okien — ostatnio używane.
+        let next = activeDocumentID == id ? nextAfterClosing(id) : nil
         saveWindowState(documents[i])
         consoles.persist(documents[i])
         documents.remove(at: i)
         sqlplusEngines[id] = nil
         diagnostics[id] = nil
         debuggers[id] = nil
+        activationTicks[id] = nil
+        releaseTabGroupAssignment(id)
         if activeDocumentID == id {
-            activeDocumentID = documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id
+            activeDocumentID = next.flatMap { n in documents.contains { $0.id == n } ? n : nil }
+                ?? (documents.isEmpty ? nil : documents[min(i, documents.count - 1)].id)
         }
     }
 
-    /// Następne / poprzednie okno w kolejności Window List (Ctrl+Tab / Ctrl+Shift+Tab, NF11).
+    /// Następne / poprzednie okno (Ctrl+Tab / Ctrl+Shift+Tab, NF11): po oknach bieżącej grupy kart, a na jej końcu —
+    /// pierwsze okno następnej grupy (na początku — ostatnie poprzedniej); każde okno osiągalne (D200).
     public func cycleDocuments(forward: Bool) {
-        guard !documents.isEmpty else { return }
-        let i = documents.firstIndex { $0.id == activeDocumentID } ?? 0
-        let j = (i + (forward ? 1 : documents.count - 1)) % documents.count
-        activeDocumentID = documents[j].id
+        let ids = tabCycleOrder
+        guard !ids.isEmpty else { return }
+        let i = ids.firstIndex { $0 == activeDocumentID } ?? 0
+        let j = (i + (forward ? 1 : ids.count - 1)) % ids.count
+        activeDocumentID = ids[j]
     }
 
     // MARK: Komendy
