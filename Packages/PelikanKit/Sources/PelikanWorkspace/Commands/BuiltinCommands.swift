@@ -56,6 +56,15 @@ public enum BuiltinCommands {
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool, singleFile: Bool = false) async throws -> Bool {
         // Okno pary (D194): Zapisz — każda jednostka do swojego pliku.
         if !askForName, !singleFile, let url = doc.fileURL, !doc.unitFiles.isEmpty {
+            // Plik zmieniony na dysku od otwarcia albo zapisu (inny program, git checkout) — bez cichego nadpisania.
+            let changed = ws.externallyChangedUnitFiles(doc)
+            if !changed.isEmpty {
+                let names = changed.map(\.lastPathComponent).joined(separator: ", ")
+                let choice = await ws.ui?.ask(L10n.tr("Pliki zmieniły się na dysku: \(names)"),
+                                              message: L10n.tr("Zapis zastąpi zmiany wprowadzone poza tym oknem."),
+                                              buttons: [L10n.tr("Zapisz mimo to"), L10n.tr("Anuluj")])
+                guard choice == 0 else { return false }
+            }
             try ws.save(doc, to: url)
             return true
         }
@@ -65,10 +74,13 @@ public enum BuiltinCommands {
             let (base, _) = suggestedFileName(doc)
             guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext.spec),
                   let urls = ws.specBodyURLs(for: chosen, type: type) else { return false }
-            // Okno zapisu potwierdziło zastąpienie pliku specyfikacji; plik ciała, który już istnieje, a nie należy do okna — pytanie.
-            if FileManager.default.fileExists(atPath: urls.body.path), !doc.fileURLs.contains(urls.body) {
-                let choice = await ws.ui?.ask(L10n.tr("Plik „\(urls.body.lastPathComponent)” już istnieje. Zastąpić go?"),
-                                              message: L10n.tr("Ciało jednostki zostanie zapisane w tym pliku."),
+            // Pliki pary, które już istnieją i nie należą do okna (także specyfikacja, gdy wpisano inne rozszerzenie
+            // albo samą nazwę) — jedno pytanie z listą; plik wybrany w oknie zapisu potwierdziło już okno zapisu.
+            let existing = ws.filesToReplace(doc, spec: urls.spec, body: urls.body, chosen: chosen)
+            if !existing.isEmpty {
+                let names = existing.map(\.lastPathComponent).joined(separator: ", ")
+                let choice = await ws.ui?.ask(L10n.tr("Pliki już istnieją: \(names). Zastąpić je?"),
+                                              message: L10n.tr("Specyfikacja i ciało zostaną zapisane w plikach \(urls.spec.lastPathComponent) i \(urls.body.lastPathComponent)."),
                                               buttons: [L10n.tr("Zastąp"), L10n.tr("Anuluj")])
                 guard choice == 0 else { return false }
             }
@@ -77,7 +89,7 @@ public enum BuiltinCommands {
         }
         var url = doc.fileURL
         if askForName || url == nil {
-            var (base, ext) = suggestedFileName(doc)
+            var (base, ext) = suggestedFileName(doc, extensions: ws.settings.specBodyExtensions)
             // Zapisz jako jeden plik… okna pary: rozszerzenie pliku z wieloma jednostkami (UG 23.29).
             if singleFile, let u = ProgramCompiler.units(in: doc.text).first, !doc.unitFiles.isEmpty { ext = ObjectCommands.fileExtension(u.type) }
             guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext) else { return false }
@@ -94,9 +106,13 @@ public enum BuiltinCommands {
 
     /// Proponowana nazwa pliku: z pliku, z jednostki programu (nazwa + rozszerzenie typu, UG 23.29) albo z tytułu.
     @MainActor
-    static func suggestedFileName(_ doc: Document) -> (String, String) {
+    static func suggestedFileName(_ doc: Document, extensions: SpecBodyExtensions = SpecBodyExtensions()) -> (String, String) {
         if let url = doc.fileURL { return (url.deletingPathExtension().lastPathComponent, url.pathExtension) }
-        if doc.kind == .program, let u = ProgramCompiler.units(in: doc.text).first {
+        if doc.kind == .program, case let units = ProgramCompiler.units(in: doc.text), let u = units.first {
+            // Sama specyfikacja albo samo ciało pakietu/typu — rozszerzenie pliku specyfikacji albo ciała (D194).
+            if units.count == 1, let pair = extensions.pair(for: u.type) {
+                return (u.name.lowercased(), [.package, .type].contains(u.type) ? pair.spec : pair.body)
+            }
             return (u.name.lowercased(), ObjectCommands.fileExtension(u.type))
         }
         let title = doc.customTitle ?? doc.kind.shortName

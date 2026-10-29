@@ -279,4 +279,123 @@ struct SpecBodyFilesTests {
             #expect(SpecBodyFiles.fileTexts(text, tabs: tabs, endings: endings) == [spec, body])
         }
     }
+
+    // MARK: Poprawki po przeglądzie
+
+    @Test("Zapisz jako z inną nazwą (.pck, sama nazwa, .pkb): jedno pytanie z listą istniejących plików pary spoza okna")
+    func saveAsAsksOnceForExistingFiles() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let (s, b) = try writePair("istniejacy")
+        let doc = ws.newDocument(.program)
+        doc.text = ProgramText.join([Self.spec, Self.body], slash: false)
+        // Wpisane .pck: specyfikacja i ciało istnieją — jedno pytanie; Anuluj nic nie zapisuje.
+        ui.saveURL = dir.appendingPathComponent("istniejacy.pck")
+        ui.answers = [1]
+        try await ws.invoke("file.saveAs")
+        #expect(ui.asked.count == 1 && ui.asked[0].contains("istniejacy.pks") && ui.asked[0].contains("istniejacy.pkb"))
+        #expect(try text(s) == Self.spec && doc.unitFiles.isEmpty)
+        // Wpisane .pkb: zastąpienie ciała potwierdziło okno zapisu — pytanie tylko o specyfikację.
+        ui.asked = []
+        ui.saveURL = b
+        ui.answers = [0]
+        try await ws.invoke("file.saveAs")
+        #expect(ui.asked.count == 1 && ui.asked[0].contains("istniejacy.pks") && !ui.asked[0].contains("istniejacy.pkb"))
+        #expect(doc.unitFiles.map(\.url) == [s.standardizedFileURL, b.standardizedFileURL])
+        #expect(try text(b) == Self.body)
+    }
+
+    @Test("Rozszerzenia z Preferencji: te same dla specyfikacji i ciała albo zajęte — domyślne; zapis nie nadpisze specyfikacji ciałem")
+    func invalidExtensions() throws {
+        var e = SpecBodyExtensions()
+        e.packageBody = "PKS"
+        #expect(e.isInvalid && e.pair(for: .package)! == ("pks", "pkb"))
+        e.packageBody = "sql"
+        #expect(e.isInvalid && e.pair(for: .packageBody)! == ("pks", "pkb"))
+        e.packageBody = "a.b"
+        #expect(e.isInvalid)
+        e.packageBody = ".BDY"
+        #expect(!e.isInvalid && e.pair(for: .package)! == ("pks", "bdy"))
+        let ws = Workspace()
+        let doc = ws.newDocument(.program, text: ProgramText.join([Self.spec, Self.body], slash: false))
+        let same = dir.appendingPathComponent("x.pks")
+        #expect(throws: UnitFilesError.self) { try ws.saveUnitFiles(doc, spec: same, body: same) }
+        #expect(!FileManager.default.fileExists(atPath: same.path) && doc.unitFiles.isEmpty)
+    }
+
+    @Test("Dwie jednostki w jednej linii: zapis do pary odmawia zamiast zapisać ucięte pliki")
+    func twoUnitsInOneLine() async throws {
+        let ws = Workspace()
+        let uiWs = FakeUI()
+        ws.ui = uiWs
+        let (s, b) = try writePair()
+        let doc = try ws.openFile(s)
+        doc.text = "CREATE OR REPLACE PACKAGE kadry AS\n  PROCEDURE p;\nEND kadry; CREATE OR REPLACE PACKAGE BODY kadry AS\n  PROCEDURE p IS BEGIN NULL; END;\nEND kadry;\n"
+        await #expect(throws: (any Error).self) { try await ws.invoke("file.save") }
+        #expect(try text(s) == Self.spec)
+        #expect(try text(b) == Self.body)
+        // Siatka bezpieczeństwa: każdy plik to dokładnie jedna jednostka karty — podział w środku polecenia odrzucony.
+        let units = ProgramCompiler.units(in: ProgramText.join([Self.spec, Self.body], slash: false))
+        #expect(SpecBodyFiles.mismatch([Self.spec, Self.body], units: units) == nil)
+        #expect(SpecBodyFiles.mismatch(["CREATE OR REPLACE PACKAGE kadry AS\n  PROCEDURE p;\n",
+                                        "END kadry; CREATE OR REPLACE PACKAGE BODY kadry AS\nEND kadry;\n"], units: units) != nil)
+        #expect(SpecBodyFiles.mismatch([Self.spec, Self.spec], units: units) == 1)
+    }
+
+    @Test("Okno z samą specyfikacją albo samym ciałem: ⌘S proponuje .pks / .pkb")
+    func singleUnitExtension() {
+        let ws = Workspace()
+        let spec = ws.newDocument(.program, text: Self.spec)
+        #expect(BuiltinCommands.suggestedFileName(spec, extensions: ws.settings.specBodyExtensions) == ("kadry", "pks"))
+        let body = ws.newDocument(.program, text: Self.body)
+        #expect(BuiltinCommands.suggestedFileName(body, extensions: ws.settings.specBodyExtensions) == ("kadry", "pkb"))
+        let type = ws.newDocument(.program, text: "CREATE OR REPLACE TYPE BODY punkt AS END;\n")
+        #expect(BuiltinCommands.suggestedFileName(type, extensions: ws.settings.specBodyExtensions) == ("punkt", "tpb"))
+    }
+
+    @Test("Plik pary zmieniony na dysku: Zapisz pyta; Anuluj nie nadpisuje cudzej zmiany")
+    func externalChange() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let (s, b) = try writePair()
+        let doc = try ws.openFile(s)
+        try Data("-- zmiana z zewnątrz\n".utf8).write(to: b)
+        doc.text = doc.text.replacingOccurrences(of: "NULL; -- Zażółć", with: "NULL;")
+        ui.answers = [1]
+        try await ws.invoke("file.save")
+        #expect(ui.asked.count == 1 && ui.asked[0].contains("kadry.pkb"))
+        #expect(try text(b) == "-- zmiana z zewnątrz\n" && doc.isModified)
+        ui.answers = [0]
+        try await ws.invoke("file.save")
+        #expect(try text(b).contains("NULL;\n") && !doc.isModified)
+    }
+
+    @Test("Nazwa pliku pary z dysku (APFS bez rozróżniania wielkości liter); plik karty widocznej i zmienione pliki bez czytania tekstu")
+    func partnerCaseAndShownFile() throws {
+        let ws = Workspace()
+        let s = dir.appendingPathComponent("Kadry.pks"), b = dir.appendingPathComponent("kadry.pkb")
+        try Data(Self.spec.utf8).write(to: s)
+        try Data(Self.body.utf8).write(to: b)
+        let doc = try ws.openFile(s)
+        #expect(doc.unitFiles.map { $0.url.lastPathComponent } == ["Kadry.pks", "kadry.pkb"])
+        #expect(try ws.openFile(b).id == doc.id && ws.documents.count == 1)
+        doc.shownUnitTab = 1
+        #expect(doc.shownFileURL == b.standardizedFileURL)
+        doc.shownUnitTab = 0
+        #expect(doc.shownFileURL == s.standardizedFileURL)
+        #expect(doc.modifiedFileURLs.isEmpty)
+        doc.text = doc.text.replacingOccurrences(of: "NULL; -- Zażółć", with: "NULL;")
+        #expect(doc.modifiedFileURLs == [b.standardizedFileURL])
+    }
+
+    @Test("GRANT sam w linii i z komentarzem za „;” należy do karty specyfikacji")
+    func grantVariants() {
+        let text = "CREATE PACKAGE g AS END;\n\nGRANT\n  EXECUTE ON g TO a; -- dla a\nrevoke execute on g from b;\n\n-- ciało\nCREATE PACKAGE BODY g AS END;\n"
+        let tabs = ProgramUnitTabs.tabs(ProgramCompiler.units(in: text), in: text)
+        #expect(tabs.count == 2)
+        let ns = text as NSString
+        #expect(tabs[1].segment.lowerBound == NSMaxRange(ns.range(of: "from b;\n")))
+    }
 }

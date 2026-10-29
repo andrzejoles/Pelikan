@@ -102,11 +102,15 @@ public enum ProgramUnitTabs {
                 let line = ns.lineRange(for: NSRange(location: q, length: 0))
                 let t = ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
                 if t.isEmpty { q = NSMaxRange(line); continue }
-                if t.hasPrefix("SHOW ERR") { q = NSMaxRange(line); grants = q; continue }
-                guard t.hasPrefix("GRANT ") || t.hasPrefix("REVOKE ") else { break }
-                // Polecenie do linii kończącej się „;”.
+                let word = t.prefix { $0.isLetter }
+                if word == "SHOW", t.dropFirst(4).trimmingCharacters(in: .whitespaces).hasPrefix("ERR") { q = NSMaxRange(line); grants = q; continue }
+                guard word == "GRANT" || word == "REVOKE" else { break }
+                // Polecenie do linii, której ostatni znak kodu (bez komentarza) to „;”.
+                func endsStatement(_ r: NSRange) -> Bool {
+                    Lexer(ns.substring(with: r)).tokenize().last(where: { !$0.isTrivia })?.kind == .semicolon
+                }
                 var e = line
-                while !ns.substring(with: e).trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix(";"), NSMaxRange(e) < unitLine {
+                while !endsStatement(e), NSMaxRange(e) < unitLine {
                     e = ns.lineRange(for: NSRange(location: NSMaxRange(e), length: 0))
                 }
                 q = NSMaxRange(e)

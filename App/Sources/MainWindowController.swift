@@ -617,7 +617,8 @@ final class DocumentAreaViewController: NSViewController {
             statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
                                        doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
-            refreshGit(file: doc.activeFileURL, modified: doc.isModified)
+            // Plik karty widocznej (okno pary) z pamięci kart — bez dzielenia tekstu przy każdym znaku (R4-01).
+            refreshGit(file: doc.shownFileURL, modified: doc.isModified)
         } else {
             installedID = nil
             refreshGit(file: nil, modified: false)

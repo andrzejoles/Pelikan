@@ -144,6 +144,18 @@ public final class Document: Identifiable {
     /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
     public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
 
+    /// Karta widoczna w edytorze okna programu (ustawia widok przy zmianie karty) — do odczytu w śledzonym odświeżaniu
+    /// bez obserwacji tekstu i kursora.
+    public var shownUnitTab: Int?
+
+    /// Plik karty widocznej w oknie pary (D194), inaczej plik okna — stan repozytorium na pasku okna. Z pamięci kart,
+    /// bez odczytu tekstu: odświeżanie okna głównego nie dzieli tekstu na jednostki przy każdym znaku (R4-01).
+    public var shownFileURL: URL? {
+        guard unitFiles.count == 2, let i = shownUnitTab, let tabs = tabsCache?.tabs, tabs.indices.contains(i) else { return fileURL }
+        let part: UnitFile.Part = tabs[i].key.hasSuffix(" body") ? .body : .spec
+        return unitFiles.first { $0.part == part }?.url ?? fileURL
+    }
+
     /// Ostatnia pozycja kursora na karcie (klucz karty → odległość od początku odcinka) — powrót na kartę wraca w to
     /// samo miejsce, jak w oknie programu wzorca.
     @ObservationIgnored public var unitCarets: [String: Int] = [:]

@@ -50,7 +50,11 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
             self?.caretMoved()
         }
         // Karta jednostki widoczna w edytorze — wyróżniona na pasku kart.
-        editor.onShownTabChange = { [weak self] _ in self?.updateUnitButtons() }
+        editor.onShownTabChange = { [weak self] t in
+            self?.updateUnitButtons()
+            // Plik karty widocznej (okno pary, D194) — stan repozytorium na pasku okna bez obserwacji tekstu.
+            if self?.document.shownUnitTab != t { self?.document.shownUnitTab = t }
+        }
         // Code Contents: klik albo Enter — kursor na nazwie elementu i fokus w edytorze; strzałki w drzewie — kursor
         // idzie za zaznaczeniem, fokus zostaje w drzewie. Element innej jednostki przełącza kartę (D192).
         contents.onSelect = { [weak self] n, focus in

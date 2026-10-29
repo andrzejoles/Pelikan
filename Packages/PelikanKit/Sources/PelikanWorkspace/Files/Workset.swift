@@ -61,11 +61,12 @@ public struct WorksetUnitFile: Sendable, Codable, Hashable {
         ending = f.ending
     }
 
-    /// Plik jednostki; treść zapisana — z pliku na dysku (zapis pomija niezmienione pliki), brak pliku — pusta.
-    var unitFile: UnitFile {
+    /// Plik jednostki; treść zapisana — z pliku na dysku w kodowaniu projektu (zapis pomija niezmienione pliki), brak
+    /// pliku — pusta.
+    func unitFile(preferred: String.Encoding?) -> UnitFile {
         let url = URL(fileURLWithPath: path)
         let format = TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
-        let saved = (try? Data(contentsOf: url)).map { TextFileCodec.decode($0).text } ?? ""
+        let saved = (try? Data(contentsOf: url)).map { TextFileCodec.decode($0, preferred: preferred).text } ?? ""
         return UnitFile(part: part, url: url, format: format, ending: ending, savedText: saved)
     }
 }
@@ -219,8 +220,11 @@ public final class WorksetStore {
             if i == w.activeIndex { m.activeIndex = m.documents.count }
             m.documents.append(d)
         }
-        let paths = Set(m.documents.compactMap(\.filePath))
-        m.documents += u.documents.filter { $0.filePath.map { !paths.contains($0) } ?? true }
+        // Okno pary (D194) zajmuje oba swoje pliki.
+        let paths = Set(m.documents.flatMap { [$0.filePath].compactMap { $0 } + ($0.unitFiles ?? []).map(\.path) })
+        m.documents += u.documents.filter { d in
+            ([d.filePath].compactMap { $0 } + (d.unitFiles ?? []).map(\.path)).allSatisfy { !paths.contains($0) }
+        }
         return m
     }
 
@@ -376,7 +380,7 @@ extension Workspace {
                 if let x = e.diagram { doc.diagram = x }
                 if let x = e.notebook { doc.notebook = x }
                 if let x = e.report { doc.report = x }
-                if let files = e.unitFiles, e.kind == .program { doc.unitFiles = files.map(\.unitFile) }
+                if let files = e.unitFiles, e.kind == .program { doc.unitFiles = files.map { $0.unitFile(preferred: projectEncoding(for: URL(fileURLWithPath: $0.path))) } }
                 doc.isModified = e.modified
             } else if let files = e.unitFiles, let spec = files.first(where: { $0.part == .spec }), let body = files.first(where: { $0.part == .body }),
                       let d = try? openUnitFiles(spec: URL(fileURLWithPath: spec.path), body: URL(fileURLWithPath: body.path), show: .spec) {

@@ -312,8 +312,11 @@ enum FileCommands {
                     feature: "PD-VCS-001", validate: { hasActiveFile($0) }) { ctx in
                 let u = try fileOrActive(ctx)
                 let repo = try await repository(for: u)
-                try await Task.detached { try repo.add([u]) }.value
-                return CommandResult(message: L10n.tr("Dodano: \(u.lastPathComponent)"))
+                // Bez argumentu w oknie pary (D194) — oba pliki okna.
+                var files = [u]
+                if url(ctx) == nil, let d = ctx.workspace.activeDocument, d.unitFiles.count > 1 { files = d.fileURLs }
+                try await Task.detached { [files] in try repo.add(files) }.value
+                return CommandResult(message: L10n.tr("Dodano: \(files.map(\.lastPathComponent).joined(separator: ", "))"))
             },
             command("vcs.commit", L10n.tr("Zatwierdź (git commit)…"), .tools, submenu: sub,
                     params: [pathParam, CommandParameter("message", .string, L10n.tr("Komunikat zatwierdzenia"))], effect: .external,

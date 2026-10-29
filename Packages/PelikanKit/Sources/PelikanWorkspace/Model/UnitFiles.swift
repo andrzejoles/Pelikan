@@ -21,16 +21,33 @@ public struct SpecBodyExtensions: Sendable, Hashable, Codable {
         typeBody = (try? c.decodeIfPresent(String.self, forKey: .typeBody)) ?? typeBody
     }
 
-    /// Rozszerzenie wpisane w Preferencjach: bez kropki i spacji, małymi literami; puste — domyślne.
-    public static func normalized(_ s: String, default d: String) -> String {
-        let t = s.trimmingCharacters(in: .whitespaces).drop { $0 == "." }.lowercased()
-        return t.isEmpty || t.contains("/") ? d : t
+    /// Rozszerzenia zajęte przez inne rodzaje plików (skrypty, testy, raporty, diagramy, notatniki, pliki z obiema
+    /// jednostkami) — nie mogą być rozszerzeniem specyfikacji ani ciała.
+    static let reserved: Set<String> = ["sql", "tst", "rep", "pdd", "sqlnb", "pck", "typ", "txt"]
+
+    /// Rozszerzenie wpisane w Preferencjach: bez kropki i spacji, małymi literami; puste, z innymi znakami niż litery,
+    /// cyfry i „_” albo zajęte — nil.
+    public static func normalized(_ s: String) -> String? {
+        let t = String(s.trimmingCharacters(in: .whitespaces).drop { $0 == "." }).lowercased()
+        guard !t.isEmpty, t.allSatisfy({ ($0.isASCII && ($0.isLetter || $0.isNumber)) || $0 == "_" }), !reserved.contains(t) else { return nil }
+        return t
     }
 
+    /// Rozszerzenia w użyciu: wpisane, gdy wszystkie cztery są poprawne i różne (specyfikacja ≠ ciało — inaczej zapis
+    /// ciała nadpisałby specyfikację), inaczej domyślne.
     private var resolved: (ps: String, pb: String, ts: String, tb: String) {
         let def = SpecBodyExtensions()
-        return (Self.normalized(packageSpec, default: def.packageSpec), Self.normalized(packageBody, default: def.packageBody),
-                Self.normalized(typeSpec, default: def.typeSpec), Self.normalized(typeBody, default: def.typeBody))
+        let values = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
+        guard let ps = values[0], let pb = values[1], let ts = values[2], let tb = values[3], Set([ps, pb, ts, tb]).count == 4 else {
+            return (def.packageSpec, def.packageBody, def.typeSpec, def.typeBody)
+        }
+        return (ps, pb, ts, tb)
+    }
+
+    /// Wpisane rozszerzenia są niepoprawne (Preferencje pokazują ostrzeżenie; używane są domyślne).
+    public var isInvalid: Bool {
+        let values = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
+        return values.contains(nil) || Set(values.compactMap { $0 }).count < 4
     }
 
     /// Rozszerzenia pary dla typu obiektu (pakiet albo typ — specyfikacja lub ciało); inne typy — nil.
@@ -119,6 +136,18 @@ public enum SpecBodyFiles {
         }
     }
 
+    /// Pierwszy plik (indeks karty), którego treść nie jest dokładnie jedną jednostką karty — tego samego typu i nazwy;
+    /// nil — podział poprawny.
+    public static func mismatch(_ texts: [String], units: [ProgramUnit]) -> Int? {
+        let expected = units.sorted { $0.range.lowerBound < $1.range.lowerBound }
+        return texts.indices.first { i in
+            let found = ProgramCompiler.units(in: texts[i])
+            // Ten sam tekst jednostki co w oknie — podział w środku polecenia (dwie jednostki w jednej linii) daje inny.
+            return !(expected.indices.contains(i) && found.count == 1 && found[0].type == expected[i].type && found[0].name == expected[i].name
+                     && found[0].text.trimmingCharacters(in: .whitespacesAndNewlines) == expected[i].text.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+    }
+
     /// Linia (od 1) okna dla linii pliku karty `tab` (od 1) — skok do linii z listy wyników albo projektu.
     public static func documentLine(_ fileLine: Int, tab: Int, tabs: [ProgramUnitTab], in text: String) -> Int {
         guard tabs.indices.contains(tab) else { return fileLine }
@@ -134,11 +163,14 @@ public enum SpecBodyFiles {
 /// Błąd zapisu okna powiązanego z plikami specyfikacji i ciała.
 public enum UnitFilesError: Error, LocalizedError, Equatable {
     case notAPair(spec: String, body: String)
+    case splitMismatch(file: String)
 
     public var errorDescription: String? {
         switch self {
         case let .notAPair(spec, body):
             L10n.tr("Okno jest powiązane z plikami \(spec) i \(body), ale nie zawiera dokładnie specyfikacji i ciała jednego pakietu albo typu — zapis zablokowany. Przywróć jednostki albo zapisz okno w innym pliku (Zapisz jako jeden plik…).")
+        case let .splitMismatch(file):
+            L10n.tr("Podział okna na pliki dałby w pliku \(file) inny tekst niż jedna jednostka (np. dwie jednostki w jednej linii) — zapis zablokowany. Rozdziel jednostki w osobnych liniach albo zapisz okno w jednym pliku (Zapisz jako jeden plik…).")
         }
     }
 }
@@ -155,6 +187,13 @@ extension Document {
         guard unitFiles.count == 2, let i = activeUnitTab, let parts = SpecBodyFiles.parts(programUnits, tabs: programUnitTabs),
               let f = unitFiles.first(where: { $0.part == parts[i] }) else { return fileURL }
         return f.url
+    }
+
+    /// Pliki z niezapisaną zmianą: w oknie pary tylko plik, którego jednostka się zmieniła (Przeglądarka plików).
+    public var modifiedFileURLs: [URL] {
+        guard isModified else { return [] }
+        if unitFiles.isEmpty { return fileURLs }
+        return unitFiles.filter { f in currentText(of: f.url).map { $0 != f.savedText } ?? true }.map(\.url)
     }
 
     /// Indeks karty jednostki zapisywanej w pliku `url` (okno pary; nil — inny plik albo tekst nie jest parą).
@@ -201,9 +240,13 @@ extension Workspace {
         let base = url.deletingPathExtension().lastPathComponent
         // Wielkość liter rozszerzenia jak w otwieranym pliku (EMP_API.PKS ↔ EMP_API.PKB), potem małe litery.
         let upper = url.pathExtension == url.pathExtension.uppercased() && url.pathExtension != url.pathExtension.lowercased()
-        let names = upper ? [p.partner.uppercased(), p.partner] : [p.partner, p.partner.uppercased()]
-        guard let partner = names.map({ dir.appendingPathComponent(base + "." + $0) })
-            .first(where: { FileManager.default.fileExists(atPath: $0.path) })?.standardizedFileURL else { return nil }
+        let names = (upper ? [p.partner.uppercased(), p.partner] : [p.partner, p.partner.uppercased()]).map { base + "." + $0 }
+        // Rzeczywista nazwa pliku z katalogu: na APFS bez rozróżniania wielkości liter „X.PKB” istnieje także jako
+        // „x.pkb” — powiązanie musi mieć nazwę z dysku, inaczej ponowne otwarcie nie trafi w okno pary.
+        let listing = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
+        guard let name = names.first(where: { listing.contains($0) })
+                ?? listing.first(where: { f in names.contains { $0.caseInsensitiveCompare(f) == .orderedSame } }) else { return nil }
+        let partner = dir.appendingPathComponent(name).standardizedFileURL
         return p.part == .spec ? (url.standardizedFileURL, partner, .spec) : (partner, url.standardizedFileURL, .body)
     }
 
@@ -213,8 +256,10 @@ extension Workspace {
     @discardableResult
     public func openUnitFiles(spec: URL, body: URL, show: UnitFile.Part) throws -> Document? {
         let spec = spec.standardizedFileURL, body = body.standardizedFileURL
-        let s = TextFileCodec.decode(try Data(contentsOf: spec), preferred: projectEncoding(for: spec))
-        let b = TextFileCodec.decode(try Data(contentsOf: body), preferred: projectEncoding(for: body))
+        // Plik nieczytelny (np. brak uprawnień do pliku pary) — bez pary; otwierany plik zgłosi błąd sam.
+        guard spec != body, let sd = try? Data(contentsOf: spec), let bd = try? Data(contentsOf: body) else { return nil }
+        let s = TextFileCodec.decode(sd, preferred: projectEncoding(for: spec))
+        let b = TextFileCodec.decode(bd, preferred: projectEncoding(for: body))
         let text = SpecBodyFiles.join(spec: s.text, body: b.text)
         let units = ProgramCompiler.units(in: text)
         let tabs = ProgramUnitTabs.tabs(units, in: text)
@@ -225,6 +270,9 @@ extension Workspace {
             close(active.id)
         }
         let doc = newDocument(.program, text: text, fileURL: spec)
+        // Jednostki i karty policzone przy sprawdzaniu pary — bez ponownego liczenia przy pierwszym rysowaniu.
+        doc.cacheProgramUnits(units, forText: text)
+        doc.cacheProgramUnitTabs(tabs, forText: text)
         doc.fileFormat = s.format
         doc.unitFiles = [UnitFile(part: .spec, url: spec, format: s.format, ending: endings[0], savedText: s.text),
                          UnitFile(part: .body, url: body, format: b.format, ending: endings[1], savedText: b.text)]
@@ -249,20 +297,44 @@ extension Workspace {
         return (dir.appendingPathComponent(base + "." + ext.spec).standardizedFileURL, dir.appendingPathComponent(base + "." + ext.body).standardizedFileURL)
     }
 
-    /// Zapisz jako… dla okna pary: wiąże okno z nowymi plikami specyfikacji i ciała (format plików — format okna) i zapisuje.
+    /// Pliki, które Zapisz jako nadpisze, a nie należą do okna (pytanie „Zastąpić?” — raz, z listą). `chosen` — plik
+    /// wybrany w oknie zapisu, którego zastąpienie okno zapisu już potwierdziło.
+    public func filesToReplace(_ doc: Document, spec: URL, body: URL, chosen: URL) -> [URL] {
+        [spec, body].filter {
+            FileManager.default.fileExists(atPath: $0.path) && !doc.fileURLs.contains($0) && $0 != chosen.standardizedFileURL
+        }
+    }
+
+    /// Zapisz jako… dla okna pary: wiąże okno z nowymi plikami specyfikacji i ciała i zapisuje. Format nowego pliku —
+    /// format dotychczasowego pliku tej samej części (okno pary), inaczej format okna. Nieudany zapis usuwa pliki,
+    /// które ten zapis utworzył, i przywraca powiązanie.
     public func saveUnitFiles(_ doc: Document, spec: URL, body: URL) throws {
+        let spec = spec.standardizedFileURL, body = body.standardizedFileURL
+        guard spec != body else { throw UnitFilesError.notAPair(spec: spec.lastPathComponent, body: body.lastPathComponent) }
         let previous = doc.unitFiles
         let format = doc.fileFormat
         let keep = { (part: UnitFile.Part, url: URL) -> UnitFile in
             // Ten sam plik co dotąd (zapis pod tą samą nazwą) — z jego formatem i zakończeniem.
-            if let f = previous.first(where: { $0.part == part && $0.url == url.standardizedFileURL }) { return f }
+            if let f = previous.first(where: { $0.part == part && $0.url == url }) { return f }
+            if let f = previous.first(where: { $0.part == part }) { return UnitFile(part: part, url: url, format: f.format, ending: f.ending) }
             return UnitFile(part: part, url: url, format: format)
         }
+        let created = [spec, body].filter { !FileManager.default.fileExists(atPath: $0.path) }
         doc.unitFiles = [keep(.spec, spec), keep(.body, body)]
         do { try saveUnitFiles(doc) } catch {
+            for u in created { try? FileManager.default.removeItem(at: u) }
             doc.unitFiles = previous
             throw error
         }
+    }
+
+    /// Pliki pary zmienione na dysku od otwarcia albo ostatniego zapisu (inny program, git checkout) — pytanie przed
+    /// zapisem, żeby nie nadpisać cudzej zmiany.
+    public func externallyChangedUnitFiles(_ doc: Document) -> [URL] {
+        doc.unitFiles.filter { f in
+            guard !f.savedText.isEmpty, let data = try? Data(contentsOf: f.url) else { return false }
+            return TextFileCodec.decode(data, preferred: projectEncoding(for: f.url)).text != f.savedText
+        }.map(\.url)
     }
 
     /// Zapis okna pary: każda jednostka do jej pliku, w formacie tego pliku, tylko zmienione (D194). Tekst karty
@@ -271,11 +343,16 @@ extension Workspace {
         if settings.beautifier.beforeSave { autoBeautify(doc) }
         let units = doc.programUnits, tabs = doc.programUnitTabs
         let spec = doc.unitFiles.first { $0.part == .spec }, body = doc.unitFiles.first { $0.part == .body }
-        guard let spec, let body, let parts = SpecBodyFiles.parts(units, tabs: tabs) else {
+        guard let spec, let body, spec.url != body.url, let parts = SpecBodyFiles.parts(units, tabs: tabs) else {
             throw UnitFilesError.notAPair(spec: spec?.url.lastPathComponent ?? "?", body: body?.url.lastPathComponent ?? "?")
         }
         let files = parts.map { $0 == .spec ? spec : body }
         let texts = SpecBodyFiles.fileTexts(doc.text, tabs: tabs, endings: files.map(\.ending))
+        // Siatka bezpieczeństwa: każdy plik to dokładnie jedna jednostka swojej części i tego samego obiektu (np. dwie
+        // jednostki w jednej linii dzielą się na karty w środku polecenia — taki podział zepsułby oba pliki).
+        if let i = SpecBodyFiles.mismatch(texts, units: units) {
+            throw UnitFilesError.splitMismatch(file: files[i].url.lastPathComponent)
+        }
         // Najpierw kodowanie obu plików: znak spoza kodowania któregokolwiek blokuje zapis, zanim cokolwiek zapisano.
         var data: [Data] = []
         for (f, t) in zip(files, texts) {
@@ -285,15 +362,15 @@ extension Workspace {
             }
             data.append(d)
         }
-        var saved = doc.unitFiles
         for (i, f) in files.enumerated() where texts[i] != f.savedText || !FileManager.default.fileExists(atPath: f.url.path) {
             backupBeforeSave(f.url)
             try Self.writeKeepingFile(data[i], to: f.url)
-            if let k = saved.firstIndex(where: { $0.part == f.part }) { saved[k].savedText = texts[i] }
+            // Od razu po zapisie pliku: gdy zapis drugiego się nie uda, następne Zapisz nie uzna pierwszego za
+            // niezmieniony z nieaktualną treścią, a zmiana na dysku nie wygląda na cudzą.
+            if let k = doc.unitFiles.firstIndex(where: { $0.part == f.part }) { doc.unitFiles[k].savedText = texts[i] }
         }
         // Historia lokalna okna pary: cały tekst okna pod plikiem specyfikacji (klucz okna — `LocalHistory.key(for:)`).
         localHistory.record(key: LocalHistory.key(file: spec.url), title: spec.url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))
-        doc.unitFiles = saved
         doc.fileURL = spec.url
         doc.fileFormat = spec.format
         doc.isModified = false
