@@ -1372,6 +1372,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     log("ok debug.planMode")
                     continue
                 }
+                // Zrzuty okien w procesie (D196) do `<przedrostek>-<tytuł okna>.png` — w środku scenariusza; po ostatnim
+                // kroku zrzut robi się sam, gdy jest PELIKAN_SNAPSHOT.
+                #if DEBUG
+                if s.command == "debug.snapshotWindows", case .string(let prefix)? = s.args?["prefix"] {
+                    try? await Task.sleep(for: .seconds(s.delay ?? 0))
+                    for line in await UIScriptSnapshots.snapshot(prefix: prefix, mainWindow: mainWindow?.window) { log("zrzut \(line)") }
+                    continue
+                }
+                #endif
                 // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
                 if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
                     await snapshotWebViews(into: URL(fileURLWithPath: dir))
@@ -1385,6 +1394,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 catch { log("\(s.command): \(error.localizedDescription)") }
                 try? await Task.sleep(for: .seconds(s.delay ?? 1))
             }
+            // Zrzuty okien na końcu przebiegu (D196): okna są niewidoczne, więc aplikacja rysuje je sama, zapisuje znacznik
+            // końca i kończy pracę (bez `screencapture` i zabijania procesu przez skrypt).
+            #if DEBUG
+            if let prefix = ProcessInfo.processInfo.environment["PELIKAN_SNAPSHOT"] {
+                try? await Task.sleep(for: .seconds(1.5))
+                for line in await UIScriptSnapshots.snapshot(prefix: prefix, mainWindow: mainWindow?.window) { log("zrzut \(line)") }
+                try? Data().write(to: url.appendingPathExtension("done"))
+                exit(0)
+            }
+            #endif
             try? Data().write(to: url.appendingPathExtension("done"))
         }
     }

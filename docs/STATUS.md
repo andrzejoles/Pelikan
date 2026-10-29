@@ -24,7 +24,7 @@ a kompilacja i CI nie zgłaszają ostrzeżeń (D166).
   - `ords-up` — ORDS;
   - `ldap-up` — katalog LDAP z aliasami Oracle Net;
   - `kdc-up` / `kdc-linux` — Kerberos.
-- `scripts/screenshots.sh` — zrzuty okien w tle (D113, D148).
+- `scripts/screenshots.sh` — zrzuty okien w tle, bez okien na ekranie (D113, D148, D196); `--screen` — dawne `screencapture`.
 - `python3 scripts/l10n.py check --strict` — komplet tłumaczeń en/de/es/uk.
 - CI:
   - macOS: budowanie, testy jednostkowe, testy SSH, aplikacja;
