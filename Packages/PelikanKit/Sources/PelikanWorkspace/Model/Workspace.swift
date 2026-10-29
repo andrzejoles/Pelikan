@@ -14,8 +14,9 @@ public protocol UIServices: AnyObject {
     func showCommandPalette()
     /// Pytanie z wyborem (np. zapis zmian przy zamykaniu). Zwraca indeks wybranego przycisku albo nil (anuluj).
     func ask(_ title: String, message: String, buttons: [String]) async -> Int?
-    /// Pytanie bez dodatkowego przycisku „Anuluj”: Esc wybiera przycisk `escapeButton` (bezpieczny wybór, D197).
-    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int?
+    /// Pytanie bez dodatkowego przycisku „Anuluj”: Esc wybiera przycisk `escapeButton` (bezpieczny wybór), Enter —
+    /// `defaultButton`; `destructiveButton` oznaczony jako niszczący (D197).
+    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int, defaultButton: Int, destructiveButton: Int?) async -> Int?
     /// Okno definicji połączenia (nil = nowe).
     func showConnectionEditor(connectionID: UUID?)
     /// Okno logowania (wybór połączenia).
@@ -194,8 +195,11 @@ public protocol UIServices: AnyObject {
 }
 
 extension UIServices {
-    public func ask(_ title: String, message: String, buttons: [String], escapeButton: Int) async -> Int? {
+    public func ask(_ title: String, message: String, buttons: [String], escapeButton: Int, defaultButton: Int, destructiveButton: Int?) async -> Int? {
         await ask(title, message: message, buttons: buttons) ?? escapeButton
+    }
+    public func ask(_ title: String, message: String, buttons: [String], escapeButton: Int, defaultButton: Int = 0) async -> Int? {
+        await ask(title, message: message, buttons: buttons, escapeButton: escapeButton, defaultButton: defaultButton, destructiveButton: nil)
     }
     public func showStage7Tool(_ tool: Stage7Tool) {}
     public func showCompletion(_ result: CompletionResult, for document: Document) {}
@@ -410,6 +414,8 @@ public final class Workspace {
     @ObservationIgnored public var externalChangePromptsEnabled = true
     @ObservationIgnored public internal(set) var savingDocuments = 0
     @ObservationIgnored var checkingExternalChanges = false
+    /// Punkt zaczepienia testów: wywoływany po odczycie plików przy wykrywaniu zmian (zapis w trakcie odczytu).
+    @ObservationIgnored var afterExternalRead: (() -> Void)?
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))

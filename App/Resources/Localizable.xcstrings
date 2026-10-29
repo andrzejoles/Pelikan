@@ -11061,6 +11061,34 @@
         }
       }
     },
+    "Czekam na zakończenie zapisu…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for the save to finish…"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warte auf das Ende des Speicherns …"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esperando a que termine el guardado…"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Очікую завершення збереження…"
+          }
+        }
+      }
+    },
     "Czerwony" : {
       "localizations" : {
         "en" : {
@@ -50457,6 +50485,34 @@
         }
       }
     },
+    "Okno „%@” jest właśnie zapisywane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window “%@” is being saved"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster „%@“ wird gerade gespeichert"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana «%@» se está guardando"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно «%@» саме зберігається"
+          }
+        }
+      }
+    },
     "Okno „%@” wykonuje polecenie — najpierw przerwij wykonanie." : {
       "localizations" : {
         "en" : {
@@ -70137,6 +70193,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "WHILE-Schleife"
+          }
+        }
+      }
+    },
+    "Pętla dowiązań symbolicznych: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolic link loop: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schleife symbolischer Links: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bucle de enlaces simbólicos: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цикл символічних посилань: %@"
           }
         }
       }

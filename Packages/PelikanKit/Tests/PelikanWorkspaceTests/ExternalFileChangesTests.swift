@@ -53,7 +53,7 @@ struct ExternalFileChangesTests {
         let u = try write("select 1 from dual;\n", "t.sql")
         let doc = try ws.openFile(u)
         try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: 1_000_000_000)], ofItemAtPath: u.path)
-        #expect(ws.externalChanges(of: doc).isEmpty)
+        #expect(await ws.externalChanges(of: doc).isEmpty)
         #expect(doc.diskStamps[u.standardizedFileURL]?.modified == Date(timeIntervalSince1970: 1_000_000_000))
         try Data("select 2 from dual;\n".utf8).write(to: u)
         ws.settings.detectExternalFileChanges = false
@@ -117,7 +117,7 @@ struct ExternalFileChangesTests {
         let u = try write("select 1 from dual;\n", "d.sql")
         let doc = try ws.openFile(u)
         try FileManager.default.removeItem(at: u)
-        #expect(ws.externalChanges(of: doc).first?.kind == .deleted)
+        #expect(await ws.externalChanges(of: doc).first?.kind == .deleted)
         ui.answers = [0]
         #expect(await ws.checkExternalChanges(of: doc) == 1)
         #expect(doc.isModified && ws.documents.contains { $0.id == doc.id })
@@ -144,7 +144,7 @@ struct ExternalFileChangesTests {
         doc.text = doc.text.replacingOccurrences(of: "PROCEDURE p;\n", with: "PROCEDURE p;\n  PROCEDURE q;\n")
         let newBody = body.replacingOccurrences(of: "NULL;", with: "DBMS_OUTPUT.PUT_LINE('git');")
         try Data(newBody.utf8).write(to: b)
-        let changes = ws.externalChanges(of: doc)
+        let changes = await ws.externalChanges(of: doc)
         #expect(changes.map(\.url) == [b.standardizedFileURL] && changes.first?.windowModified == false)
         ui.answers = [0]
         #expect(await ws.checkExternalChanges(of: doc) == 1)
@@ -196,7 +196,7 @@ struct ExternalFileChangesTests {
         r.ui = ui
         r.appendWorksetDocuments(saved)
         let d = try #require(r.documents.first)
-        #expect(r.externalChanges(of: d).first?.windowModified == true)
+        #expect(await r.externalChanges(of: d).first?.windowModified == true)
     }
 
     @Test("Para: plik, który po zmianie nie daje się wczytać do karty (komentarz za END) — odmowa, bez ponownego pytania")
@@ -246,14 +246,163 @@ struct ExternalFileChangesTests {
     }
 
     @Test("Wiszące dowiązanie (cel usunięty) — plik usunięty")
-    func danglingLinkIsDeleted() throws {
+    func danglingLinkIsDeleted() async throws {
         let ws = Workspace()
         let target = try write("select 1 from dual;\n", "cel.sql")
         let link = dir.appendingPathComponent("link.sql")
         try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
         let doc = try ws.openFile(link)
-        #expect(ws.externalChanges(of: doc).isEmpty)
+        #expect(await ws.externalChanges(of: doc).isEmpty)
         try FileManager.default.removeItem(at: target)
-        #expect(ws.externalChanges(of: doc).first?.kind == .deleted)
+        #expect(await ws.externalChanges(of: doc).first?.kind == .deleted)
+    }
+
+    @Test("Podmiana pliku z tą samą datą i rozmiarem (nowy i-węzeł) — wykryta; drugi ⌘S w trakcie zapisu — komunikat, bez zapisu")
+    func replacedFileSameDateAndSize() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "i.sql")
+        let doc = try ws.openFile(u)
+        let stamp = try #require(doc.diskStamps[u.standardizedFileURL])
+        try Data("select 9 from dual;\n".utf8).write(to: u, options: .atomic)
+        try FileManager.default.setAttributes([.modificationDate: stamp.modified!], ofItemAtPath: u.path)
+        #expect(await ws.externalChanges(of: doc).map(\.kind) == [.modified])
+        // Zapis w toku — drugi zapis tego okna nic nie robi.
+        doc.text = "select 'moje' from dual;\n"
+        doc.isSaving = true
+        await #expect(throws: CommandError.self) { try await ws.invoke("file.save") }
+        #expect(try text(u) == "select 9 from dual;\n" && doc.isModified)
+        doc.isSaving = false
+    }
+
+    @Test("Zostaw przy pliku nie do odczytu: data i rozmiar z atrybutów — bez pytania do następnej zmiany")
+    func acceptUnreadableFile() async throws {
+        let ws = Workspace()
+        let u = try write("select 1 from dual;\n", "n.sql")
+        let doc = try ws.openFile(u)
+        try Data("select 22 from dual;\n".utf8).write(to: u)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: u.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: u.path) }
+        let before = doc.diskStamps[u.standardizedFileURL]?.hash
+        ws.acceptDiskState(doc, url: u)
+        #expect(doc.diskStamps[u.standardizedFileURL]?.size == 21 && doc.diskStamps[u.standardizedFileURL]?.hash == before)
+        #expect(await ws.externalChanges(of: doc).isEmpty)
+    }
+
+    @Test("Wiszące dowiązanie: Zachowaj w oknie i zapis — plik docelowy utworzony, dowiązanie zostaje")
+    func saveThroughDanglingLink() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let target = try write("select 1 from dual;\n", "cel2.sql")
+        let link = dir.appendingPathComponent("link2.sql")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+        let doc = try ws.openFile(link)
+        try FileManager.default.removeItem(at: target)
+        ui.answers = [0]                                     // Zachowaj w oknie
+        #expect(await ws.checkExternalChanges(of: doc) == 1)
+        try await ws.invoke("file.save")
+        #expect(try text(target) == "select 1 from dual;\n")
+        #expect((try FileManager.default.attributesOfItem(atPath: link.path))[.type] as? FileAttributeType == .typeSymbolicLink)
+        #expect(await ws.externalChanges(of: doc).isEmpty)
+    }
+
+    @Test("Własny zapis w trakcie odczytu przy wykrywaniu — bez fałszywego alarmu; dwa wyzwalacze naraz — jedno pytanie")
+    func saveDuringReadAndConcurrentTriggers() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "s.sql")
+        let doc = try ws.openFile(u)
+        doc.text = "select 'moje' from dual;\n"
+        try Data("select 'agent' from dual;\n".utf8).write(to: u)
+        // Zapis okna po odczycie pliku, przed porównaniem: odczytana treść („agent”) jest już nieaktualna.
+        ws.afterExternalRead = { try? ws.save(doc, to: u) }
+        #expect(await ws.externalChanges(of: doc).isEmpty)
+        ws.afterExternalRead = nil
+        #expect(try text(u) == "select 'moje' from dual;\n")
+        // Dwa sprawdzenia naraz (aktywacja okna i aplikacji) — jedno pytanie.
+        try Data("select 'git' from dual;\n".utf8).write(to: u)
+        ui.answers = [1, 1]
+        async let a = ws.checkExternalChanges(of: doc)
+        async let b = ws.checkExternalChanges(of: doc)
+        let (ra, rb) = await (a, b)
+        #expect(ra + rb == 1 && ui.asked.count == 1)
+    }
+
+    @Test("Plik odłączony w trakcie zapisu — Zapisz jako zamiast starej ścieżki; zamknięcie czeka na zapis w toku")
+    func detachedDuringSave() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let u = try write("select 1 from dual;\n", "o.sql")
+        let doc = try ws.openFile(u)
+        doc.text = "select 'moje' from dual;\n"
+        try Data("select 'agent' from dual;\n".utf8).write(to: u)
+        // Pytanie „Pliki zmieniły się na dysku” — w jego trakcie plik zostaje odłączony (usunięty w Przeglądarce plików).
+        try FileManager.default.removeItem(at: u)
+        doc.fileURL = nil
+        doc.diskStamps = [:]
+        ui.saveURL = dir.appendingPathComponent("nowy.sql")
+        try await ws.invoke("file.save")
+        #expect(!FileManager.default.fileExists(atPath: u.path))
+        #expect(try text(ui.saveURL!) == "select 'moje' from dual;\n")
+        // Zapis w toku: drugi zapis — komunikat; zamknięcie czeka na koniec zapisu.
+        doc.isSaving = true
+        await #expect(throws: CommandError.self) { try await ws.invoke("file.save") }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            doc.isSaving = false
+        }
+        try await ws.invoke("file.close")
+        #expect(!ws.documents.contains { $0.id == doc.id })
+    }
+
+    @Test("Łańcuch dowiązań bez celu — zapis tworzy plik na końcu łańcucha, dowiązania zostają")
+    func saveThroughLinkChain() async throws {
+        let ws = Workspace()
+        let target = try write("select 1 from dual;\n", "cel3.sql")
+        let mid = dir.appendingPathComponent("mid.sql"), link = dir.appendingPathComponent("link3.sql")
+        try FileManager.default.createSymbolicLink(atPath: mid.path, withDestinationPath: "cel3.sql")
+        try FileManager.default.createSymbolicLink(atPath: link.path, withDestinationPath: "mid.sql")
+        let doc = try ws.openFile(link)
+        try FileManager.default.removeItem(at: target)
+        doc.text = "select 2 from dual;\n"
+        try ws.save(doc, to: link)
+        #expect(try text(target) == "select 2 from dual;\n")
+        for l in [mid, link] {
+            #expect((try FileManager.default.attributesOfItem(atPath: l.path))[.type] as? FileAttributeType == .typeSymbolicLink)
+        }
+    }
+
+    @Test("Inne okno aktywowane w trakcie pytania — sprawdzone po zakończeniu bieżącego")
+    func recheckActiveWindowAfterwards() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let a = try write("select 1 from dual;\n", "pa.sql"), b = try write("select 1 from dual;\n", "pb.sql")
+        let da = try ws.openFile(a)
+        let db = try ws.openFile(b)
+        try Data("select 2 from dual;\n".utf8).write(to: a)
+        try Data("select 2 from dual;\n".utf8).write(to: b)
+        ws.activate(db.id)
+        ui.answers = [1, 1]
+        #expect(await ws.checkExternalChanges(of: da) == 1)
+        for _ in 0..<50 where ui.asked.count < 2 { try await Task.sleep(nanoseconds: 20_000_000) }
+        #expect(ui.asked.count == 2 && ui.asked[1].contains("pb.sql"))
+    }
+
+    @Test("Pętla dowiązań — zapis kończy się błędem, dowiązania zostają")
+    func linkLoopFails() throws {
+        let ws = Workspace()
+        let a = dir.appendingPathComponent("la.sql"), b = dir.appendingPathComponent("lb.sql")
+        try FileManager.default.createSymbolicLink(atPath: a.path, withDestinationPath: "lb.sql")
+        try FileManager.default.createSymbolicLink(atPath: b.path, withDestinationPath: "la.sql")
+        let doc = ws.newDocument(.sql, text: "select 1 from dual;\n")
+        #expect(throws: (any Error).self) { try ws.save(doc, to: a) }
+        for l in [a, b] {
+            #expect((try FileManager.default.attributesOfItem(atPath: l.path))[.type] as? FileAttributeType == .typeSymbolicLink)
+        }
     }
 }

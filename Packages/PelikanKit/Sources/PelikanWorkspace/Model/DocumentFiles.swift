@@ -307,7 +307,22 @@ extension Workspace {
     /// Zapis atomowy, który nie zmienia rodzaju pliku: przez dowiązanie symboliczne zapisuje plik docelowy (dowiązanie
     /// zostaje) i przywraca uprawnienia istniejącego pliku (0600, bit wykonywania) — zapis `.atomic` podmienia plik nowym.
     nonisolated static func writeKeepingFile(_ data: Data, to url: URL) throws {
-        let target = url.resolvingSymlinksInPath()
+        var target = url.resolvingSymlinksInPath()
+        // Wiszące dowiązanie (cel usunięty, „Zachowaj w oknie” — D197), także łańcuch dowiązań: zapis tworzy plik docelowy
+        // na końcu łańcucha, dowiązania zostają (najwyżej 32 kroki — pętla dowiązań).
+        // Pętla dowiązań (powtórzona ścieżka albo nadal dowiązanie po limicie) — błąd, bez rozrywania pętli zapisem.
+        var visited: Set<String> = [target.path]
+        func isLink(_ u: URL) -> Bool {
+            (try? FileManager.default.attributesOfItem(atPath: u.path))?[.type] as? FileAttributeType == .typeSymbolicLink
+        }
+        for _ in 0..<32 {
+            guard isLink(target), let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: target.path) else { break }
+            target = (dest.hasPrefix("/") ? URL(fileURLWithPath: dest) : target.deletingLastPathComponent().appendingPathComponent(dest)).standardizedFileURL
+            guard visited.insert(target.path).inserted else { throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path, NSLocalizedDescriptionKey: L10n.tr("Pętla dowiązań symbolicznych: \(url.lastPathComponent)")]) }
+        }
+        if isLink(target) {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path, NSLocalizedDescriptionKey: L10n.tr("Pętla dowiązań symbolicznych: \(url.lastPathComponent)")])
+        }
         let permissions = (try? FileManager.default.attributesOfItem(atPath: target.path))?[.posixPermissions] as? NSNumber
         try data.write(to: target, options: .atomic)
         if let permissions { try? FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: target.path) }
