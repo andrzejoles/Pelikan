@@ -9,7 +9,7 @@ utPLSQL** menu.
 **Tools › utPLSQL › utPLSQL: version in database** checks whether utPLSQL is installed and in which version.
 
 If it is not, **utPLSQL: install or upgrade…** downloads the official release from GitHub, verifies its checksum and
-runs the installation scripts in a visible Command Window. This command works only on development and test connections
+runs the installation scripts in a visible SQL*Plus Console. This command works only on development and test connections
 and always asks for confirmation. The new utPLSQL owner gets a random password that nobody knows, and its account is
 locked right away. On shared databases the installation is usually performed by an administrator.
 

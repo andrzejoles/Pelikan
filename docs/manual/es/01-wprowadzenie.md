@@ -3,7 +3,7 @@
 Pelikan es un entorno nativo de macOS para trabajar con bases de datos Oracle: escribir y ejecutar SQL, crear, probar y
 depurar código PL/SQL, explorar y editar objetos de la base de datos, pruebas utPLSQL y herramientas de comparación,
 exportación y administración. La disposición de las ventanas y los atajos de teclado siguen a PL/SQL Developer, así que
-sus usuarios encontrarán ventanas conocidas: **SQL Window**, **Command Window**, **Program Window**, **Test Window**,
+sus usuarios encontrarán ventanas conocidas: **SQL Window**, **Consola SQL*Plus**, **Program Window**, **Test Window**,
 **Explain Plan Window** y **Object Browser** (pestaña **Objetos**).
 
 Este manual describe cómo realizar las tareas habituales. La lista completa de comandos con sus atajos actuales está en
@@ -48,7 +48,7 @@ Descarga «Instant Client for macOS (ARM64)», paquete **Basic** o **Basic Light
 [oracle.com](https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html) e instálalo según
 las instrucciones de Oracle. Pelikan busca la biblioteca `libclntsh.dylib` en este orden:
 
-1. el directorio indicado en **Preferencias › Oracle › Oracle Instant Client**;
+1. el directorio indicado en **Ajustes › Oracle › Oracle Instant Client**;
 2. `/opt/homebrew/lib`, `/usr/local/lib`, `/usr/local/oracle/instantclient` y los directorios
    `/opt/oracle/instantclient*`;
 3. los directorios `instantclient_*` de tus carpetas **Descargas** y **Aplicaciones** (primero la versión más reciente).
@@ -80,7 +80,7 @@ Pelikan tiene una única ventana principal:
   **Objetos** (Object Browser), **Ventanas** (lista de ventanas abiertas), **Templates** y **Archivos** (explorador de
   archivos).
 - **Pestañas de documentos** en el centro: cada ventana SQL, de programa, de prueba o de plan tiene su propia pestaña
-  con una letra de tipo en color: S — SQL Window, P — Program Window, T — Test Window, C — Command Window, E — Explain
+  con una letra de tipo en color: S — SQL Window, P — Program Window, T — Test Window, C — consola SQL*Plus, E — Explain
   Plan Window, R — Report Window, D — ventana de diagrama, N — cuaderno SQL. Un clic central en una pestaña cierra la
   ventana; el menú de la pestaña cierra las demás ventanas o las ventanas a la izquierda y a la derecha.
 - **Barra de herramientas** con las acciones más frecuentes (ventana nueva, abrir, guardar, ejecutar, interrumpir,
@@ -97,7 +97,7 @@ Pelikan tiene una única ventana principal:
   menú de la pestaña y los botones de la cabecera del panel. Una ventana de herramienta vuelve a un panel con el botón
   de su barra de título. Pelikan recuerda la ubicación de cada tipo de herramienta. Un panel contraído con herramientas
   muestra en la barra de estado un botón con su número. Los comandos están en **Vista › Paneles de herramientas**; en
-  **Preferencias › General › Paneles de herramientas** eliges dónde se abren las herramientas nuevas (también en
+  **Ajustes › General › Paneles de herramientas** eliges dónde se abren las herramientas nuevas (también en
   ventanas independientes) y la ocultación automática. Los atajos de una herramienta acoplada (Retorno, Esc) solo
   funcionan mientras el cursor está en esa herramienta.
 - **Panel del agente** a la derecha (contraído por omisión): el terminal del agente de IA con la lista de sus acciones.
@@ -118,7 +118,7 @@ pestaña eligió para cada tipo de ventana y vuelve a ella al cambiar de ventana
 Las acciones frecuentes tienen botones grandes y las demás pequeños; las menos usadas están en las listas desplegables
 de los grupos (marcadas con ▾). La descripción emergente de un botón muestra su descripción y atajo, así aprende los
 atajos sobre la marcha. Clic derecho en un botón añade el comando al acceso rápido. Doble clic en una pestaña o la
-flecha de la derecha contrae la cinta a sus pestañas; **Vista › Cinta** la oculta (también en **Preferencias › General ›
+flecha de la derecha contrae la cinta a sus pestañas; **Vista › Cinta** la oculta (también en **Ajustes › General ›
 Cinta**).
 
 El campo **Buscar acciones…** a la derecha de las pestañas encuentra cualquier comando: escriba unas letras, «plan»,
@@ -136,7 +136,7 @@ qué atajo tienen. Es la forma más rápida de encontrar una función cuya ubica
 
 Pelikan tiene dos perfiles de atajos: **PL/SQL Developer** (teclas F y Ctrl; p. ej., F8 ejecuta y F9 inicia la
 depuración) y **macOS** (atajos con ⌘). En ambos perfiles funcionan los equivalentes con ⌘; p. ej., ⌘↩ ejecuta una
-sentencia. El perfil se elige en **Preferencias › Teclado**. Si las teclas F1–F12 controlan el brillo o el volumen,
+sentencia. El perfil se elige en **Ajustes › Teclado**. Si las teclas F1–F12 controlan el brillo o el volumen,
 activa en Ajustes del Sistema la opción de usarlas como teclas de función estándar o púlsalas junto con la tecla fn.
 
 ## Actualizaciones
@@ -147,13 +147,13 @@ archivo de otra procedencia. Los ajustes, las conexiones y las contraseñas no c
 
 ## Idiomas
 
-La interfaz está disponible en polaco, inglés, alemán, español y ucraniano. El idioma se elige en **Preferencias ›
+La interfaz está disponible en polaco, inglés, alemán, español y ucraniano. El idioma se elige en **Ajustes ›
 General › Idioma de la interfaz**; el cambio surte efecto tras reiniciar. Los nombres de algunas ventanas y herramientas
 (p. ej., Explain Plan, Large Data Editor, Query Builder) se mantienen en su forma original.
 
 ## Dónde guarda Pelikan sus datos
 
-Las definiciones de conexiones (sin contraseñas), las preferencias, el historial, los worksets, el historial local de
+Las definiciones de conexiones (sin contraseñas), los ajustes, el historial, los worksets, el historial local de
 archivos, el registro de agentes y otros datos de la aplicación están en el directorio `~/Library/Application
 Support/Pelikan`. Las contraseñas están únicamente en el Llavero de macOS; consulta el capítulo *Seguridad y
 privacidad*.

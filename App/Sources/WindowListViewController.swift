@@ -115,7 +115,7 @@ final class WindowListViewController: NSViewController, NSTableViewDataSource, N
         let new = NSMenuItem(title: L10n.tr("Nowe"), action: nil, keyEquivalent: "")
         new.submenu = NSMenu()
         for (t, c) in [(L10n.tr("Okno SQL"), "file.new.sql"), (L10n.tr("Okno testu"), "file.new.test"),
-                       (L10n.tr("Okno programu"), "file.new.program"), (L10n.tr("Okno poleceń"), "file.new.command")] {
+                       (L10n.tr("Okno programu"), "file.new.program"), (L10n.tr("Konsola SQL*Plus"), "file.new.command")] {
             new.submenu?.addItem(item(t, c))
         }
         menu.addItem(new)

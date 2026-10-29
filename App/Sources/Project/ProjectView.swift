@@ -20,8 +20,8 @@ struct ProjectView: View {
                 Button(L10n.tr("Otwórz…")) { openProject() }
                 Button(L10n.tr("Zamknij")) { workspace.perform("project.close") }.disabled(workspace.project == nil)
                 Spacer()
-                Button(L10n.tr("Buduj")) { run("project.build") }.disabled(workspace.project == nil)
-                Button(L10n.tr("Make")) { run("project.make") }.disabled(workspace.project == nil)
+                Button(L10n.tr("Kompiluj projekt")) { run("project.build") }.disabled(workspace.project == nil)
+                Button(L10n.tr("Kompiluj zmienione")) { run("project.make") }.disabled(workspace.project == nil)
             }
             if let p = workspace.project {
                 HStack {
@@ -126,7 +126,7 @@ struct ProjectView: View {
             }
             .frame(maxWidth: 280)
             Toggle(L10n.tr("Zatrzymaj po pierwszym błędzie"), isOn: Binding(get: { p.options.haltOnFirstError }, set: { setOption("haltOnFirstError", .bool($0)) }))
-            Toggle(L10n.tr("Formatuj przy budowaniu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { setOption("beautifyOnBuild", .bool($0)) }))
+            Toggle(L10n.tr("Formatuj przy kompilacji projektu"), isOn: Binding(get: { p.options.beautifyOnBuild }, set: { setOption("beautifyOnBuild", .bool($0)) }))
         }
         .toggleStyle(.checkbox).font(.uiSecondary)
     }

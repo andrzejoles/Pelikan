@@ -28,13 +28,13 @@ liczbę wierszy i czas; czas dłuższy niż 100 sekund ma format gg:mm:ss. Po d�
 i podskoczyć ikoną w Docku. Gdy **Przerwij** nie działa (niektóre operacje bazy nie reagują na przerwanie), użyj
 **Sesja › Zakończ sesję okna (Kill)**.
 
-Pelikan nigdy nie zatwierdza zmian automatycznie (opcja **AutoCommit poleceń SQL** w **Preferencje › Okno SQL** jest
+Pelikan nigdy nie zatwierdza zmian automatycznie (opcja **AutoCommit poleceń SQL** w **Ustawienia › Okno SQL** jest
 domyślnie wyłączona). Otwartą transakcję sygnalizuje pasek stanu („● transakcja otwarta”).
 
 ## Zmienne
 
 - **Zmienne podstawiania** `&nazwa` i `&&nazwa` — przed wykonaniem Pelikan pokazuje okno **Zmienne** z polami na
-  wartości. W oknie SQL `&&` w tekście oznacza zwykły znak `&` (np. `'R&&D'`); w oknie poleceń `&&` działa jak w
+  wartości. W oknie SQL `&&` w tekście oznacza zwykły znak `&` (np. `'R&&D'`); w konsoli SQL*Plus `&&` działa jak w
   SQL*Plus (zmienna zapamiętywana).
 - **Zmienne wiązane** `:nazwa` — także trafiają do okna zmiennych (`:new` i `:old` w wyzwalaczach są pomijane).
 - **Parametry raportów JasperReports** `$P{…}`, `$P!{…}` i `$X{IN, kolumna, parametr}` — Pelikan rozpoznaje je i pyta
@@ -65,10 +65,10 @@ katalogu pliku okna.
 
 ![Edycja wyniku: nowy wiersz i licznik zmian oczekujących](../img/siatka-edycja.png)
 
-Siatka pobiera wiersze porcjami (liczbę ustawisz w **Preferencje › Okno SQL › Wierszy na stronę**) i dociąga kolejne
+Siatka pobiera wiersze porcjami (liczbę ustawisz w **Ustawienia › Okno SQL › Wierszy na stronę**) i dociąga kolejne
 przy przewijaniu. Opis „(więcej…)” przy liczbie wierszy oznacza, że wynik nie jest kompletny. **Następna strona** (⌘⇟)
 i **Ostatnia strona (pobierz wszystkie)** (⇧⌘⇟) są w menu **Sesja › Wynik** i na pasku nad siatką. Przy bardzo dużych
-wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Preferencji.
+wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Ustawień.
 
 - **Sortowanie** — klik w nagłówek kolumny (rosnąco, malejąco, bez sortowania) na pobranych wierszach.
 - **Zaznaczanie** — wiersze, kolumny i bloki komórek (klik, a potem ⇧+klik).
@@ -80,10 +80,10 @@ wynikach Pelikan pyta przed przekroczeniem limitu rozmiaru z Preferencji.
 - **Widok pojedynczego rekordu** pokazuje bieżący wiersz w pionie z typami i komentarzami kolumn. Włącza go i wyłącza
   przycisk w pasku nad siatką albo **Rekord** na karcie wstążki **Wynik**; stan zapamiętuje każda karta wyniku osobno.
 - **Kursor zagnieżdżony** (`CURSOR(…)` w zapytaniu) otwiera się w nowej karcie wyniku.
-- **Filtr kolumn…** ukrywa kolumny według nazwy, typu, obowiązkowości i kluczy; ukryte kolumny są pomijane przy
+- **Filtruj kolumny…** ukrywa kolumny według nazwy, typu, obowiązkowości i kluczy; ukryte kolumny są pomijane przy
   kopiowaniu i eksporcie.
-- **Filtruj według wartości komórki**, **Filtr wyrażeniem…** (`=`, `<>`, `<`, `>`, `LIKE`, `IS NULL`, `AND`, `OR`) i
-  **Grupuj według kolumny** (z licznikami; dwuklik filtruje) działają lokalnie, na pobranych wierszach.
+- **Filtruj według wartości komórki**, **Filtruj wyrażeniem…** (`=`, `<>`, `<`, `>`, `LIKE`, `IS NULL`, `AND`, `OR`) i
+  **Grupuj według kolumny** (z licznikami; dwukrotne kliknięcie filtruje) działają lokalnie, na pobranych wierszach.
 - **Sumy kolumny…** liczą sumę, liczbę, średnią, minimum i maksimum pod siatką i pamiętają je po ponownym wykonaniu.
 - **Porównaj rekordy** zestawia zaznaczone wiersze kolumna po kolumnie, a **Porównaj wyniki** — dwie karty wyników.
 - **Zapytania powiązane…** otwierają tabele nadrzędne i podrzędne bieżącego wiersza (z kluczy obcych) w nowym oknie.
@@ -110,7 +110,7 @@ Najprościej użyć **Edytuj dane** z menu tabeli w Przeglądarce obiektów — 
    wyrażenia są tylko do odczytu. Dla kolumn DATE dostępny jest **Kalendarz…**, a dla kolumn z ograniczeniem `CHECK …
    IN` albo kluczem obcym do małej tabeli — **Lista wartości…**.
 3. **Kopiuj SQL zmian** pokaże polecenia, które zostaną wykonane.
-4. **Zatwierdź zmiany (Post)** (⌥⌘S) wysyła zmiany do bazy — bez COMMIT. Po błędzie kursor przechodzi do komórki,
+4. **Zapisz zmiany w bazie (Post)** (⌥⌘S) wysyła zmiany do bazy — bez COMMIT. Po błędzie kursor przechodzi do komórki,
    której dotyczy. **Anuluj zmiany** porzuca wszystkie zmiany oczekujące.
 5. Zatwierdź transakcję (F10, ⌥⌘↩) albo ją wycofaj.
 
@@ -148,7 +148,7 @@ Query By Example** przywraca pierwotne zapytanie.
 
 ## Statystyki i plan
 
-Po włączeniu w **Preferencje › Okno SQL › Statystyki** karta **Statystyki** pokazuje zmianę statystyk sesji (V$MYSTAT)
+Po włączeniu w **Ustawienia › Okno SQL › Statystyki** karta **Statystyki** pokazuje zmianę statystyk sesji (V$MYSTAT)
 z każdego wykonania. **Narzędzia › Explain Plan** (F5) pokazuje plan polecenia pod kursorem, a **Narzędzia ›
 Autotrace** wykonuje je i pokazuje plan rzeczywisty — zobacz rozdział *Plan wykonania, sesje i administracja*.
 
@@ -157,5 +157,5 @@ Autotrace** wykonuje je i pokazuje plan rzeczywisty — zobacz rozdział *Plan w
 - **Plik › Zapisz** (⌘S) zapisuje okno do pliku `.sql`; pliki zachowują kodowanie i końce linii.
 - **Edycja › Historia poleceń…** (⇧⌘H, w profilu PL/SQL Developer ⌃E) pokazuje wszystkie wykonane polecenia ze
   wszystkich okien (bez poleceń zawierających hasła) z filtrem; wybrane wstawisz do edytora.
-- **Plik › Wklej jako nowe SQL Window** tworzy okno z zawartością schowka.
+- **Plik › Wklej jako nowe okno SQL** tworzy okno z zawartością schowka.
 - Historia lokalna pliku (**Plik › Historia lokalna**) jest opisana w rozdziale *Narzędzia*.

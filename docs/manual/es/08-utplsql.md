@@ -9,7 +9,7 @@ pruebas. Los comandos están en el menú **Herramientas › utPLSQL**.
 **Herramientas › utPLSQL › utPLSQL: versión en la base de datos** comprueba si utPLSQL está instalado y en qué versión.
 
 Si no lo está, **utPLSQL: instalar o actualizar…** descarga la versión oficial de GitHub, comprueba su suma de
-verificación y ejecuta los scripts de instalación en una Command Window visible. Este comando solo funciona en
+verificación y ejecuta los scripts de instalación en una consola SQL*Plus visible. Este comando solo funciona en
 conexiones de desarrollo y de pruebas, y siempre pide confirmación. El nuevo propietario de utPLSQL recibe una
 contraseña aleatoria que nadie conoce, y su cuenta se bloquea de inmediato. En las bases de datos compartidas, la
 instalación suele hacerla un administrador.

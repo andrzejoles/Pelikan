@@ -9,7 +9,7 @@ vacía con **Archivo › Nuevo › Explain Plan Window**; Pelikan puede crear la
 
 ![Ventana de plan: vista Diagrama](../img/plan-diagram.png)
 
-- **Explicar** actualiza el plan del texto del editor de la ventana de plan, y **Objetivo del optimizador** (*Como en la
+- **Actualizar plan** recalcula el plan del texto del editor de la ventana de plan, y **Objetivo del optimizador** (*Como en la
   sesión*, ALL_ROWS o FIRST_ROWS_n) añade una sugerencia (hint).
 - Vistas: **Árbol** (operaciones con coste, número de filas, bytes, tiempo, orden de ejecución y predicados de acceso y
   de filtro), **Diagrama** (un nodo por operación con coste, cardinalidad y número de paso), **Flame graph** (el coste
@@ -60,7 +60,7 @@ herramientas. Los informes se guardan como HTML.
   actualización automática.
 - Pestañas de detalle de la sesión seleccionada: **SQL actual**, **Cursores abiertos**, **Bloqueos**, **Estadísticas**,
   **Espera**.
-- **Finalizar** y **Finalizar inmediatamente** terminan la sesión (`ALTER SYSTEM KILL SESSION`) tras confirmación.
+- **Finalizar sesión** y **Finalizar inmediatamente** terminan la sesión (`ALTER SYSTEM KILL SESSION`) tras confirmación.
 - **Acciones**: entre otras, activar SQL Trace para la sesión (DBMS_MONITOR).
 - **Consultas…** permite definir filtros propios (condición WHERE), pestañas de detalle (con `:sid`, `:serial#`) y
   acciones.

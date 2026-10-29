@@ -23,7 +23,7 @@ struct PreferencesView: View {
         ("GeneralPane", L10n.tr("Ogólne"), "gearshape"), ("SQLWindowPane", L10n.tr("Okno SQL"), "tablecells"),
         ("EditorPane", L10n.tr("Edytor"), "text.cursor"), ("BeautifierPane", L10n.tr("Formater"), "text.alignleft"),
         ("KeyboardPane", L10n.tr("Klawiatura"), "keyboard"), ("OraclePane", L10n.tr("Oracle"), "cylinder"),
-        ("BrowserPane", L10n.tr("Object Browser"), "list.bullet.indent"), ("ToolsPane", L10n.tr("Narzędzia"), "wrench.and.screwdriver"),
+        ("BrowserPane", L10n.tr("Przeglądarka obiektów"), "list.bullet.indent"), ("ToolsPane", L10n.tr("Narzędzia"), "wrench.and.screwdriver"),
         ("AgentsPane", L10n.tr("Agenci"), "cpu"), ("PreferenceSetsPane", L10n.tr("Zestawy"), "square.stack.3d.up"),
     ]
 
@@ -165,7 +165,7 @@ struct GeneralPane: View {
                 Stepper(value: setting(workspace, \.uiFontSize), in: 10...20, step: 1) {
                     Text(L10n.tr("Wielkość: \(Int(workspace.settings.uiFontSize)) pt"))
                 }
-                Text(L10n.tr("Etykiety, listy, wstążka, karty okien, pasek stanu, okna narzędzi i Preferencji. Tekst pomocniczy jest o 2 pt mniejszy; menu i tytuły okien rysuje macOS."))
+                Text(L10n.tr("Etykiety, listy, wstążka, karty okien, pasek stanu, okna narzędzi i Ustawień. Tekst pomocniczy jest o 2 pt mniejszy; menu i tytuły okien rysuje macOS."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
                 Text(L10n.tr("Przykład: Okno SQL — SELECT * FROM emp; Połączono z dev_baza_testowa"))
                     .font(Font(AppFonts.font(family: workspace.settings.uiFontName, size: workspace.settings.uiFontSize,
@@ -334,19 +334,19 @@ struct EditorPane: View {
                     Text(L10n.tr("Siatka wyników: \(Int(workspace.settings.gridFontSize)) pt"))
                 }
             }
-            Section(L10n.tr("Object Browser")) {
+            Section(L10n.tr("Przeglądarka obiektów")) {
                 FontFamilyPicker(title: L10n.tr("Krój"), selection: setting(workspace, \.browserFontName),
                                  defaultLabel: L10n.tr("Jak interfejs"), families: AppFonts.cachedFamilies)
                 FontWeightPicker(selection: setting(workspace, \.browserFontWeight))
                 Stepper(value: setting(workspace, \.browserFontSize), in: 0...24, step: 1) {
-                    Text(workspace.settings.browserFontSize == 0 ? L10n.tr("Object Browser: jak interfejs")
-                         : L10n.tr("Object Browser: \(Int(workspace.settings.browserFontSize)) pt"))
+                    Text(workspace.settings.browserFontSize == 0 ? L10n.tr("Przeglądarka obiektów: jak interfejs")
+                         : L10n.tr("Przeglądarka obiektów: \(Int(workspace.settings.browserFontSize)) pt"))
                 }
             }
             Section(L10n.tr("Kolory czcionek")) {
                 colorRow(L10n.tr("Edytor"), \.editorColors)
                 colorRow(L10n.tr("Siatka wyników"), \.gridColors)
-                colorRow(L10n.tr("Object Browser"), \.browserColors)
+                colorRow(L10n.tr("Przeglądarka obiektów"), \.browserColors)
                 Text(L10n.tr("Bez własnego koloru obowiązują kolory motywu systemu (tryb jasny i ciemny). Własny kolor działa w obu trybach."))
                     .font(.uiSecondary).foregroundStyle(.secondary)
             }
@@ -705,7 +705,7 @@ final class PreferencesWindowController: NSWindowController {
 
     init(workspace: Workspace) {
         let w = NSWindow(contentViewController: NSHostingController(rootView: PreferencesView(workspace: workspace, navigation: navigation).interfaceFont()))
-        w.title = L10n.tr("Preferencje")
+        w.title = L10n.tr("Ustawienia")
         w.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         super.init(window: w)
         w.center()

@@ -18,9 +18,9 @@ public struct DeployStep: Sendable, Hashable, Identifiable {
     public static func title(of name: String) -> String {
         switch name {
         case "lock": L10n.tr("Blokada")
-        case "check": L10n.tr("Kontrola working copy")
+        case "check": L10n.tr("Kontrola kopii roboczej")
         case "pull": L10n.tr("Pobranie zmian (git pull --ff-only)")
-        case "backup": L10n.tr("Backup binarek")
+        case "backup": L10n.tr("Kopia zapasowa binarek")
         case "build": L10n.tr("Build")
         case "install": L10n.tr("Instalacja do bin")
         case "history": L10n.tr("Historia")
@@ -51,8 +51,8 @@ public enum DeployOutcome: String, Sendable, Codable, Hashable {
         case .stopped: L10n.tr("Zatrzymane")
         case .locked: L10n.tr("Cel zablokowany przez inne wdrożenie")
         case .staleLock: L10n.tr("Przeterminowana blokada (proces już nie działa)")
-        case .dirty: L10n.tr("Zmiany w working copy na serwerze — wdrożenie przerwane przed pull")
-        case .wrongBranch: L10n.tr("Working copy na innej gałęzi")
+        case .dirty: L10n.tr("Zmiany w kopii roboczej na serwerze — wdrożenie przerwane przed pull")
+        case .wrongBranch: L10n.tr("Kopia robocza na innej gałęzi")
         case .noFastForward: L10n.tr("Brak fast-forward — pull przerwany")
         case .buildFailed: L10n.tr("Build nie powiódł się — bin bez zmian")
         case .cancelled: L10n.tr("Anulowane")
@@ -207,7 +207,7 @@ public struct DeployProgress: Sendable {
             append(.error, L10n.tr("Build nie utworzył binarki \(arg)"))
         case "@@BRANCH":
             serverBranch = arg.replacingOccurrences(of: "refs/heads/", with: "")
-            append(.error, L10n.tr("Working copy na gałęzi „\(serverBranch ?? "")”"))
+            append(.error, L10n.tr("Kopia robocza na gałęzi „\(serverBranch ?? "")”"))
         case "@@NO_FF": append(.error, L10n.tr("Brak fast-forward: historia na serwerze rozeszła się z remote — Pelikan nie robi merge"))
         case "@@DONE": break                                    // znacznik końca skryptu — poza konsolą
         default: return false

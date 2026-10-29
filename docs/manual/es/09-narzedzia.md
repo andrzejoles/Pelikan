@@ -47,7 +47,7 @@ cada n filas.
 Todas las comparaciones de texto (ventana con archivo, objeto con la base de datos, historial local, **Herramientas ›
 Comparar archivos…**) usan el visor de diferencias integrado: dos columnas, mapa de cambios, salto a la diferencia
 siguiente y anterior, diferencias dentro de la línea, omisión de mayúsculas, espacios y comentarios, intercambio de
-lados y **Reload**. En su lugar puedes usar tu propio programa: **Preferencias › Herramientas › Visor de diferencias
+lados y **Reload**. En su lugar puedes usar tu propio programa: **Ajustes › Herramientas › Visor de diferencias
 externo** (argumentos `%1`, `%2`: archivos; `%3`, `%4`: títulos).
 
 ## Exportación e importación
@@ -164,7 +164,7 @@ una descripción. El historial guarda hasta 50 versiones de los últimos 30 día
   variables, y las restaura en el siguiente inicio (**Archivo › Workset**: nuevo, abrir, guardar, restaurar, cerrar,
   comparar, guardado automático). La disposición de la ventana principal se guarda con **Vista › Guardar disposición de
   la ventana**.
-- Al salir con el **guardado automático del workset** activado (predeterminado; **Preferencias › General › Archivos ›
+- Al salir con el **guardado automático del workset** activado (predeterminado; **Ajustes › General › Archivos ›
   Restaurar ventanas al reiniciar** o **Archivo › Workset › Guardar automáticamente el workset**) Pelikan no pregunta si
   guardar: todas las ventanas abiertas (SQL, programa, prueba, comandos, plan, diagrama, cuaderno, informe y consolas de
   conexión) vuelven en el siguiente inicio en el mismo orden y con la misma ventana activa. Una ventana sin archivo
@@ -186,7 +186,7 @@ una descripción. El historial guarda hasta 50 versiones de los últimos 30 día
   registro muestra el resultado de cada ejecución.
 - **Vista › Tareas en segundo plano**: lista de operaciones largas (Autotrace, exportaciones, documentación) con estado,
   tiempo y cancelación.
-- **Herramientas › Documentos…**: tus documentos y direcciones http(s) de la lista de **Preferencias › Herramientas**.
+- **Herramientas › Documentos…**: tus documentos y direcciones http(s) de la lista de **Ajustes › Herramientas**.
 - Servicios de macOS (menú **Servicios** en cualquier aplicación): **Pelikan: Formatear SQL** formatea el texto
   seleccionado en su lugar, y **Pelikan: Abrir en SQL Window** pasa el texto seleccionado a una SQL Window nueva de
   Pelikan.

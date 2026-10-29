@@ -11,7 +11,7 @@ used ones. The connection's open windows are listed under it.
 - Double-clicking a connection connects it as the **main connection** (bold in the list). New windows open on the main
   connection.
 - The connection's context menu: **Connect as main**, **Connect** (without changing the main connection),
-  **Disconnect**, **New window** (SQL, program, test or command window on this connection), **Show Connection
+  **Disconnect**, **New window** (SQL, program or test window or SQL*Plus Console on this connection), **Show Connection
   Windows**, **Close Connection Windows**, **Reconnect Connection Windows**, **Set Current Schema…**, **Edit…**,
   **Copy Under Another Name…** (a copy in the same folder, with the saved passwords), **Move to Folder** and
   **Delete…**.
@@ -89,7 +89,7 @@ agents* chapter.
 ## Environments and protection against mistakes
 
 - The connection color is visible in the connection list, on the window tab, in the window list and in the status bar.
-  The **Editor background in connection color** option (**Preferences › General**) also tints the editor background. On
+  The **Editor background in connection color** option (**Settings › General**) also tints the editor background. On
   the same tab you can add color rules by a `user@database` pattern (e.g. `sys@*`) — they take precedence over the
   environment color.
 - On a **production** connection, statements that change data or objects (DML, DDL, PL/SQL blocks) require confirmation
@@ -97,7 +97,7 @@ agents* chapter.
 - A **read-only** connection rejects everything except queries and session control before it is sent to the database —
   including `SELECT … FOR UPDATE` and PL/SQL blocks. The window's status bar then shows “read-only”.
 - Pelikan never commits a transaction by itself. When you close a window or the application with an open transaction, it
-  asks whether to commit (COMMIT) or roll back (ROLLBACK); you change the behavior on logoff in **Preferences › General
+  asks whether to commit (COMMIT) or roll back (ROLLBACK); you change the behavior on logoff in **Settings › General
   › Logoff with an open transaction**.
 
 ## Passwords and Touch ID
@@ -105,7 +105,7 @@ agents* chapter.
 Database passwords and SSH passwords are stored only in the macOS login Keychain (without iCloud synchronization). They
 never go to files, logs, command history or process arguments.
 
-In **Preferences › Oracle › Connection passwords** you can enable **Require Touch ID or Mac password before using a
+In **Settings › Oracle › Connection passwords** you can enable **Require Touch ID or Mac password before using a
 saved password**. Pelikan then asks for confirmation once per connection while the application is running — also when
 the connection is used by an AI agent.
 
@@ -122,10 +122,10 @@ the new one in the Keychain if the connection remembers its password.
 Pelikan supports two kinds of wallet:
 
 - **Password store** (Secure External Password Store) — logging on without a password in Pelikan (`/@alias`). You set
-  the wallet directory and the Oracle Net configuration directory in **Preferences › Oracle › Oracle Net and Oracle
+  the wallet directory and the Oracle Net configuration directory in **Settings › Oracle › Oracle Net and Oracle
   Wallet**; Pelikan shows the wallet status there (an auto-login wallet `cwallet.sso` is required). In the connection
   definition choose the *Oracle Wallet (password store)* authentication. The **Database** field must be exactly the
-  alias or connect string stored in the wallet. Changes in this Preferences section take effect after Pelikan is
+  alias or connect string stored in the wallet. Changes in this Settings section take effect after Pelikan is
   restarted.
 - **TLS wallet** (mTLS, e.g. Autonomous Database) — set on the **Advanced** tab of the connection definition.
 
@@ -145,18 +145,18 @@ Passwords from the wallet never reach Pelikan.
 Each window has its own connection, visible in the status bar. Click it to switch the window to another connection; when
 the window has an open transaction, Pelikan first asks about COMMIT or ROLLBACK. A window with a **pinned** connection
 (📌) does not change it when you change the main connection; you enable pinning of new windows by default in
-**Preferences › General**.
+**Settings › General**.
 
-Session mode (**Preferences › General › Session mode**):
+Session mode (**Settings › General › Session mode**):
 
 - **Multi** (default) — each window has its own database session, so a long query in one window does not block others,
   and the windows' transactions are independent;
 - **Dual** — windows share one session, and compilation has a separate one;
 - **Single** — everything in one session.
 
-Every 60 seconds Pelikan checks whether the connection is alive (you change the interval in Preferences) and reacts when
+Every 60 seconds Pelikan checks whether the connection is alive (you change the interval in Settings) and reacts when
 it is lost. Optionally it closes the sessions of windows idle for longer than a set time, if they have no open
-transaction (**Preferences › Oracle**).
+transaction (**Settings › Oracle**).
 
 When a query cannot be interrupted (**Break**, ⌘.), use **Session › Terminate window session (Kill)** — Pelikan ends the
 window's session in the database from a separate session (requires the ALTER SYSTEM privilege) and reconnects the

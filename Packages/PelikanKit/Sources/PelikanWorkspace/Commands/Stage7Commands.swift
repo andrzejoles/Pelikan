@@ -40,7 +40,7 @@ enum Stage7Commands {
                 tab.selectedRows = []
                 return CommandResult(message: L10n.tr("Filtr: \(f.text) — wierszy: \(grid.rowCount)"))
             },
-            Command(CommandDescriptor(id: "grid.filterExpression", title: L10n.tr("Filtr wyrażeniem…"), category: .session, submenu: L10n.tr("Wynik"),
+            Command(CommandDescriptor(id: "grid.filterExpression", title: L10n.tr("Filtruj wyrażeniem…"), category: .session, submenu: L10n.tr("Wynik"),
                                       parameters: [CommandParameter("expression", .string, L10n.tr("Np. SAL > 1000 AND ENAME LIKE 'S%' OR COMM IS NULL"))],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Filtruje pobrane wiersze wyrażeniem na kolumnach (=, <>, <, >, LIKE, IS NULL, AND, OR)."),
@@ -187,14 +187,14 @@ enum Stage7Commands {
                 return CommandResult(value: .string(code)).resolving(resolved)
             },
             // MARK: Snippety (SC-SNIP-001)
-            Command(CommandDescriptor(id: "view.snippets", title: L10n.tr("Snippety"), category: .view,
+            Command(CommandDescriptor(id: "view.snippets", title: L10n.tr("Fragmenty kodu"), category: .view,
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Biblioteka fragmentów kodu: wbudowane i własne; dwuklik albo przeciągnięcie wstawia do edytora."),
+                                      summary: L10n.tr("Biblioteka fragmentów kodu: wbudowane i własne; dwukrotne kliknięcie albo przeciągnięcie wstawia do edytora."),
                                       feature: "SC-SNIP-001")) { ctx in
                 ctx.ui?.showSnippets()
                 return .ok
             },
-            Command(CommandDescriptor(id: "edit.insertSnippet", title: L10n.tr("Wstaw snippet"), category: .edit,
+            Command(CommandDescriptor(id: "edit.insertSnippet", title: L10n.tr("Wstaw fragment kodu"), category: .edit,
                                       parameters: [CommandParameter("id", .string, L10n.tr("Identyfikator: kategoria/nazwa (bez argumentu — wybór z listy)"))],
                                       agent: .none, effect: .modifiesEditor,
                                       summary: L10n.tr("Wstawia fragment kodu z biblioteki w miejscu kursora aktywnego edytora."), inMenu: false,
@@ -205,8 +205,8 @@ enum Stage7Commands {
                 // Ze wstążki, menu i palety — bez argumentu: wybór z listy biblioteki.
                 if id == nil, ctx.askingUI != nil {
                     let ids = ctx.workspace.snippets.all.map(\.id).sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-                    guard !ids.isEmpty else { throw CommandError.notAvailable(L10n.tr("Biblioteka snippetów jest pusta")) }
-                    id = try await ctx.choose(L10n.tr("Wstaw snippet"), ids.map { (label: $0, value: $0) })
+                    guard !ids.isEmpty else { throw CommandError.notAvailable(L10n.tr("Biblioteka fragmentów kodu jest pusta")) }
+                    id = try await ctx.choose(L10n.tr("Wstaw fragment kodu"), ids.map { (label: $0, value: $0) })
                 }
                 guard let s = ctx.workspace.snippets.all.first(where: { $0.id == id }) else {
                     throw CommandError.invalidArgument("id", id ?? "")
@@ -214,13 +214,13 @@ enum Stage7Commands {
                 try insert(s.text, into: doc)
                 return ctx.arguments.string("id") == nil ? CommandResult().resolving(["id": .string(s.id)]) : .ok
             },
-            Command(CommandDescriptor(id: "snippets.save", title: L10n.tr("Zapisz snippet"), category: .edit,
+            Command(CommandDescriptor(id: "snippets.save", title: L10n.tr("Zapisz fragment kodu"), category: .edit,
                                       parameters: [CommandParameter("category", .string, required: true, L10n.tr("Kategoria")),
                                                    CommandParameter("name", .string, required: true, L10n.tr("Nazwa")),
                                                    CommandParameter("text", .string, required: true, L10n.tr("Tekst fragmentu")),
-                                                   CommandParameter("replaces", .string, L10n.tr("Identyfikator edytowanego snippetu (kategoria/nazwa) — przy zmianie nazwy"))],
+                                                   CommandParameter("replaces", .string, L10n.tr("Identyfikator edytowanego fragmentu kodu (kategoria/nazwa) — przy zmianie nazwy"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Zapisuje własny snippet w bibliotece (snippet o tej samej kategorii i nazwie jest zastępowany)."),
+                                      summary: L10n.tr("Zapisuje własny fragment kodu w bibliotece (fragment o tej samej kategorii i nazwie jest zastępowany)."),
                                       inMenu: false, feature: "SC-SNIP-001")) { ctx in
                 guard let category = ctx.arguments.string("category"), let name = ctx.arguments.string("name"),
                       let text = ctx.arguments.string("text") else { throw CommandError.missingArgument("category, name, text") }
@@ -230,16 +230,16 @@ enum Stage7Commands {
                 if let old = ctx.arguments.string("replaces"), old != snippet.id { try ctx.workspace.snippets.remove(id: old) }
                 return .ok
             },
-            Command(CommandDescriptor(id: "snippets.remove", title: L10n.tr("Usuń snippet"), category: .edit,
+            Command(CommandDescriptor(id: "snippets.remove", title: L10n.tr("Usuń fragment kodu"), category: .edit,
                                       parameters: [CommandParameter("id", .string, required: true, L10n.tr("Identyfikator: kategoria/nazwa"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Usuwa własny snippet z biblioteki (po potwierdzeniu); wbudowanych nie można usunąć."),
+                                      summary: L10n.tr("Usuwa własny fragment kodu z biblioteki (po potwierdzeniu); wbudowanych nie można usunąć."),
                                       inMenu: false, feature: "SC-SNIP-001")) { ctx in
                 let id = ctx.arguments.string("id") ?? ""
                 guard let s = ctx.workspace.snippets.all.first(where: { $0.id == id }) else { throw CommandError.invalidArgument("id", id) }
-                guard !s.isBuiltIn else { throw CommandError.notAvailable(L10n.tr("Wbudowanego snippetu nie można usunąć")) }
+                guard !s.isBuiltIn else { throw CommandError.notAvailable(L10n.tr("Wbudowanego fragmentu kodu nie można usunąć")) }
                 if let ui = ctx.ui {
-                    guard await ui.ask(L10n.tr("Usunąć snippet „\(s.name)”?"), message: s.category,
+                    guard await ui.ask(L10n.tr("Usunąć fragment kodu „\(s.name)”?"), message: s.category,
                                        buttons: [L10n.tr("Usuń"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
                 }
                 try ctx.workspace.snippets.remove(id: id)

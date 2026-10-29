@@ -70,7 +70,7 @@ public enum PredefinedReports {
                 select object_name, status, last_ddl_time from all_objects
                  where owner = \(owner) and object_type = :parent_object_type order by object_name
                 """),
-            PredefinedReport(id: "invalidObjects", category: objects, title: L10n.tr("Niepoprawne obiekty"), sql: """
+            PredefinedReport(id: "invalidObjects", category: objects, title: L10n.tr("Nieprawidłowe obiekty"), sql: """
                 select object_type, object_name, last_ddl_time from all_objects
                  where owner = \(owner) and status <> 'VALID' order by object_type, object_name
                 """, variables: [ownerVar], detailTitle: L10n.tr("Błędy kompilacji"), detailSQL: """

@@ -24,7 +24,7 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   replaces in the whole window (all units).
 - Units are recognised by `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`, `TRIGGER` headers at
   the start of a line — the file does not need a “/” after units. Pelikan never adds “/” when saving, and code loaded
-  from the database and new units come without “/” (unless you turn on **Preferences › Oracle › End program window
+  from the database and new units come without “/” (unless you turn on **Settings › Oracle › End program window
   units with “/”**). A file with “/” is saved unchanged.
 - **F8** (⌘↩) compiles all units one by one and stops at the first one with an error. Compilation takes place in a
   separate session in the background, so it does not block SQL Windows.
@@ -49,7 +49,7 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
 
 ### Compiler settings
 
-In **Preferences › Oracle › Compiler** you set `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
+In **Settings › Oracle › Compiler** you set `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
 `PLSCOPE_SETTINGS` and `PLSQL_CCFLAGS` — Pelikan sets them in the compilation session before every compilation of a
 Program Window. In the **Debugger** section you enable automatically adding debug information, **Compiler hints**
 (additional code inspections after compilation) and checking **naming conventions** (prefixes of parameters, local and
@@ -58,7 +58,7 @@ line.
 
 ## Code editor
 
-The same editor works in SQL, program, test and command windows. It edits without delays even packages with tens of
+The same editor works in SQL, program and test windows and in the SQL*Plus Console. It edits without delays even packages with tens of
 thousands of lines.
 
 ### Completion and navigation
@@ -112,20 +112,20 @@ thousands of lines.
 - The editor highlights matching brackets and `BEGIN`/`IF`/`LOOP`/`CASE` ↔ `END`, occurrences of the name under the
   cursor, the `INSERT` column corresponding to a value in `VALUES`, and the `COMMIT`, `ROLLBACK` and `SAVEPOINT`
   statements.
-- **AutoReplace** (Preferences › Editor) replaces abbreviations with text while you type; `|` in the replacement marks
+- **AutoReplace** (Settings › Editor) replaces abbreviations with text while you type; `|` in the replacement marks
   the cursor position.
 - **View › Split Editor** shows two views of the same text. **View** also has **Wrap Lines**, **Special Characters** and
   **Line Status** (marks of lines changed and added since opening or saving).
 
 ### Formatting
 
-**Edit › Format PL/SQL code** (⇧⌘F) formats the selection or the whole source according to the rules in **Preferences ›
+**Edit › Format PL/SQL code** (⇧⌘F) formats the selection or the whole source according to the rules in **Settings ›
 Formatter** (indentation, lists, commas, blank lines, case of keywords and identifiers, special spelling). The formatter
 can run automatically after opening a source from the database, before compilation and before saving. A fragment between
 the `-- NoFormat Start` and `-- NoFormat End` comments stays unchanged. Formatting never changes the meaning of the
 code.
 
-The **Preferences › Formatter** tab has the groups **Layout**, **Lists and commas**, **SQL clauses and conditions**
+The **Settings › Formatter** tab has the groups **Layout**, **Lists and commas**, **SQL clauses and conditions**
 (clause keywords left, right or on their own line; AND/OR at line start or end; the JOIN … ON condition; THEN on a new
 line; multi-line CASE), **Column alignment** (declarations, parameters with mode and type, named arguments `=>`,
 assignments `:=`, aliases in SELECT and FROM, `=` in UPDATE … SET, trailing comments), **Spacing** and **Letter case** —
@@ -172,14 +172,14 @@ region without formatting can also be marked with the `-- @formatter:off` and `-
 
 - Pelikan opens `.sql`, `.pck`, `.pks`, `.pkb`, `.spc`, `.bdy`, `.prc`, `.fnc`, `.trg`, `.typ`, `.tps` files, `.tst`
   tests and `.sqlnb` notebooks from the Finder and by dragging. You add extra program and test extensions in
-  **Preferences › General**. Dragging a directory opens all its scripts.
+  **Settings › General**. Dragging a directory opens all its scripts.
 - Files keep their encoding (UTF-8, ISO-8859-2, Windows-1250) and line endings. A character that cannot be saved in the
   file's encoding blocks saving, with the exact line and column indicated — you change the encoding only deliberately
   with **File › File encoding…**.
 - **File › Read Only** locks the window for editing.
 - **File › Open with Connection…** opens a file with a connection pinned right away.
-- **Edit › Open in External Editor** passes the text to the program set in **Preferences › Tools** (e.g. Visual Studio
+- **Edit › Open in External Editor** passes the text to the program set in **Settings › Tools** (e.g. Visual Studio
   Code); when you return to Pelikan, the changes are loaded.
-- **Edit › Web Search** opens a search for the selected word (search engine addresses in Preferences).
+- **Edit › Web Search** opens a search for the selected word (search engine addresses in Settings).
 - Pelikan remembers the state of file windows (cursor, bookmarks, marks, folds, variable values).
 - After an unexpected application exit, Pelikan offers to recover unsaved windows (**File › Recover Windows…**).

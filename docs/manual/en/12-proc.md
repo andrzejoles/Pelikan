@@ -14,7 +14,7 @@ targets in folders, duplicate and delete them. The target form:
 
 - **Connection**: name, folder, environment **UAT** or **PROD** (with a color), host, port, user and authentication —
   **Key file** (optionally with a key passphrase), **SSH agent** or **SSH password**. You save the SSH password and the
-  key passphrase in the Keychain (**Remember in Keychain**); with Touch ID protection enabled (**Preferences › Oracle ›
+  key passphrase in the Keychain (**Remember in Keychain**); with Touch ID protection enabled (**Settings › Oracle ›
   Connection passwords**), Pelikan confirms their use once per target. **Legacy algorithms (AIX 6.1 and older servers)**
   enables SSH algorithms supported by old servers. **Name encoding** and **Console encoding** (UTF-8 or ISO-8859-2) set
   how Pelikan encodes file names and reads the output.

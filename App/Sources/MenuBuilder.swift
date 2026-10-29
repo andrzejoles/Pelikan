@@ -57,7 +57,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
 
     private func addStandardEditItems(to menu: NSMenu) {
         menu.addItem(withTitle: L10n.tr("Cofnij"), action: Selector(("undo:")), keyEquivalent: "z")
-        let redo = menu.addItem(withTitle: L10n.tr("Ponów"), action: Selector(("redo:")), keyEquivalent: "z")
+        let redo = menu.addItem(withTitle: L10n.tr("Powtórz"), action: Selector(("redo:")), keyEquivalent: "z")
         redo.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(.separator())
         menu.addItem(withTitle: L10n.tr("Wytnij"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
@@ -68,7 +68,7 @@ final class MenuBuilder: NSObject, NSMenuItemValidation, NSMenuDelegate {
     }
 
     private func addStandardWindowItems(to menu: NSMenu) {
-        menu.addItem(withTitle: L10n.tr("Minimalizuj"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
+        menu.addItem(withTitle: L10n.tr("Zminimalizuj"), action: #selector(NSWindow.performMiniaturize(_:)), keyEquivalent: "m")
         menu.addItem(withTitle: L10n.tr("Powiększ"), action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
         menu.addItem(.separator())
     }

@@ -41,7 +41,7 @@ struct BrowserPane: View {
                     Text(L10n.tr("Zaczyna się od tekstu (nazwa%)")).tag(false)
                 }
                 ForEach([DBObjectType.table, .view, .package, .procedure, .function], id: \.self) { t in
-                    Picker(L10n.tr("Dwuklik: \(t.folderName)"), selection: Binding(get: { workspace.browserDoubleClickCommand(for: t).rawValue },
+                    Picker(L10n.tr("Dwukrotne kliknięcie: \(t.folderName)"), selection: Binding(get: { workspace.browserDoubleClickCommand(for: t).rawValue },
                                                                                   set: { workspace.settings.browserDoubleClick[t.rawValue] = $0 })) {
                         Text(L10n.tr("Edytuj")).tag("ob.edit")
                         Text(L10n.tr("Pokaż dane")).tag("ob.queryData")

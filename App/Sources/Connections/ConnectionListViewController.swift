@@ -270,7 +270,7 @@ final class ConnectionListViewController: NSViewController, NSOutlineViewDataSou
             menu.addItem(.separator())
             let open = NSMenuItem(title: L10n.tr("Nowe okno"), action: nil, keyEquivalent: "")
             let sub = NSMenu()
-            for (title, kind) in [(L10n.tr("Okno SQL"), "sql"), (L10n.tr("Okno programu"), "program"), (L10n.tr("Okno testu"), "test"), (L10n.tr("Okno poleceń"), "command")] {
+            for (title, kind) in [(L10n.tr("Okno SQL"), "sql"), (L10n.tr("Okno programu"), "program"), (L10n.tr("Okno testu"), "test"), (L10n.tr("Konsola SQL*Plus"), "command")] {
                 let i = item(title, "connection.openWindow", arg)
                 i.representedObject = ["connection.openWindow", arg, kind]
                 sub.addItem(i)

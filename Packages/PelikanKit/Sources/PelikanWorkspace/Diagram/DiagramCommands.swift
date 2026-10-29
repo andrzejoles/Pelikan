@@ -154,7 +154,7 @@ enum DiagramCommands {
     }
 
     static let linkParameter = CommandParameter("link", .string, required: true, L10n.tr("Identyfikator linii relacji"))
-    static let bendParameter = CommandParameter("index", .integer, required: true, L10n.tr("Numer punktu łamania linii (od 0)"))
+    static let bendParameter = CommandParameter("index", .integer, required: true, L10n.tr("Numer punktu zgięcia linii (od 0)"))
 
     /// Czynności myszy na kanwie (PD-DIAG-002, APP2-18): przesunięcie, punkty łamania, tekst notatki, kolor — komendy
     /// z argumentami (dziennik komend, makra); bez pozycji w menu, wywoływane z kanwy.
@@ -169,7 +169,7 @@ enum DiagramCommands {
                 edit(doc) { $0.move(selection, dx: dx, dy: dy) }
                 return .ok
             },
-            uiCommand("diagram.addBend", L10n.tr("Dodaj punkt łamania"), summary: L10n.tr("Wstawia punkt łamania linii relacji na podanej pozycji listy punktów."),
+            uiCommand("diagram.addBend", L10n.tr("Dodaj punkt zgięcia"), summary: L10n.tr("Wstawia punkt zgięcia linii relacji na podanej pozycji listy punktów."),
                       feature: "PD-DIAG-002", params: [linkParameter, bendParameter, CommandParameter("x", .integer, required: true, L10n.tr("Położenie x")),
                                                        CommandParameter("y", .integer, required: true, L10n.tr("Położenie y"))],
                       inMenu: false) { ctx, doc in
@@ -181,7 +181,7 @@ enum DiagramCommands {
                 edit(doc) { $0.links[i].bends.insert(DiagramPoint(Diagram.snap(p.x), Diagram.snap(p.y)), at: Int(index)) }
                 return .ok
             },
-            uiCommand("diagram.moveBend", L10n.tr("Przesuń punkt łamania"), summary: L10n.tr("Przesuwa punkt łamania linii relacji (z dociąganiem do siatki)."),
+            uiCommand("diagram.moveBend", L10n.tr("Przesuń punkt zgięcia"), summary: L10n.tr("Przesuwa punkt zgięcia linii relacji (z dociąganiem do siatki)."),
                       feature: "PD-DIAG-002", params: [linkParameter, bendParameter, CommandParameter("x", .integer, required: true, L10n.tr("Położenie x")),
                                                        CommandParameter("y", .integer, required: true, L10n.tr("Położenie y"))],
                       inMenu: false) { ctx, doc in
@@ -190,7 +190,7 @@ enum DiagramCommands {
                 edit(doc) { $0.moveBend(link: link, index: Int(index), to: p) }
                 return .ok
             },
-            uiCommand("diagram.removeBend", L10n.tr("Usuń punkt łamania"), summary: L10n.tr("Usuwa punkt łamania linii relacji."),
+            uiCommand("diagram.removeBend", L10n.tr("Usuń punkt zgięcia"), summary: L10n.tr("Usuwa punkt zgięcia linii relacji."),
                       feature: "PD-DIAG-002", params: [linkParameter, bendParameter], inMenu: false) { ctx, doc in
                 let link = try uuid(ctx, "link")
                 guard let index = ctx.arguments.int("index") else { throw CommandError.missingArgument("index") }
@@ -229,7 +229,7 @@ enum DiagramCommands {
     static var all: [Command] {
         [
             Command(CommandDescriptor(id: "diagram.addObject", title: L10n.tr("Dodaj do diagramu"), category: .tools, submenu: L10n.tr("Diagram"),
-                                      parameters: [CommandParameter("object", .string, L10n.tr("Obiekt: NAZWA albo SCHEMAT.NAZWA (domyślnie zaznaczony w Object Browserze)"))],
+                                      parameters: [CommandParameter("object", .string, L10n.tr("Obiekt: NAZWA albo SCHEMAT.NAZWA (domyślnie zaznaczony w Przeglądarce obiektów)"))],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Dodaje obiekt do aktywnego diagramu (albo nowego): tabele i widoki z kolumnami, linie kluczy obcych do obiektów na diagramie."),
                                       feature: "PD-DIAG-001"),

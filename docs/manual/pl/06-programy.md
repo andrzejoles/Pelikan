@@ -23,11 +23,11 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   linia `PACKAGE BODY …`. **Zamień wszystko** zamienia w całym oknie (wszystkich jednostkach).
 - Jednostki rozpoznawane są po nagłówkach `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`,
   `TRIGGER` na początku linii — plik nie musi mieć „/” po jednostkach. Pelikan nie dopisuje „/” przy zapisie, a kod
-  wczytany z bazy i nowe jednostki są bez „/” (chyba że włączysz **Preferencje › Oracle › Kończ jednostki okna
+  wczytany z bazy i nowe jednostki są bez „/” (chyba że włączysz **Ustawienia › Oracle › Kończ jednostki okna
   programu znakiem „/”**). Plik z „/” zapisuje się bez zmian.
 - **F8** (⌘↩) kompiluje wszystkie jednostki po kolei i zatrzymuje się na pierwszej z błędem. Kompilacja odbywa się w
   osobnej sesji w tle, więc nie blokuje okien SQL.
-- Błędy i ostrzeżenia kompilatora pojawiają się pod edytorem. Kliknięcie przenosi do linii, dwuklik otwiera opis błędu
+- Błędy i ostrzeżenia kompilatora pojawiają się pod edytorem. Kliknięcie przenosi do linii, dwukrotne kliknięcie otwiera opis błędu
   w dokumentacji Oracle.
 - Pasek stanu pokazuje, czy tekst jest zmieniony i niezapisany oraz czy jest nieskompilowany.
 - **Plik › Zapisz** (⌘S) zapisuje tekst okna bez zmian (bez dopisywania `/`), z nazwą i rozszerzeniem według
@@ -47,7 +47,7 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
 
 ### Ustawienia kompilatora
 
-W **Preferencje › Oracle › Kompilator** ustawisz `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
+W **Ustawienia › Oracle › Kompilator** ustawisz `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
 `PLSCOPE_SETTINGS` i `PLSQL_CCFLAGS` — Pelikan ustawia je w sesji kompilacji przed każdą kompilacją okna programu. W
 sekcji **Debuger** włączysz automatyczne dodawanie informacji debugowania, **Podpowiedzi kompilatora** (dodatkowe
 inspekcje kodu po kompilacji) i sprawdzanie **konwencji nazw** (przedrostki parametrów, zmiennych lokalnych i
@@ -83,7 +83,7 @@ kilkadziesiąt tysięcy linii.
 
 | Czynność | Skrót (macOS) | Menu |
 |---|---|---|
-| Komentarz linii | ⌘/ | Edycja › Zaznaczenie |
+| Przełącz komentarz linii | ⌘/ | Edycja › Zaznaczenie |
 | Powiel linię | ⇧⌘D | Edycja › Zaznaczenie |
 | Wielkie / małe litery | ⌥⌘U / ⌥⇧⌘U | Edycja › Zaznaczenie |
 | Zwiększ / zmniejsz wcięcie | ⌘] / ⌘[ | Edycja › Zaznaczenie |
@@ -107,20 +107,20 @@ kilkadziesiąt tysięcy linii.
   wszystkich okien. **Znaczniki kolorów** wyróżniają fragmenty tekstu jednym z sześciu kolorów.
 - Edytor podświetla pary nawiasów i `BEGIN`/`IF`/`LOOP`/`CASE` ↔ `END`, wystąpienia nazwy pod kursorem, kolumnę
   `INSERT` odpowiadającą wartości w `VALUES` oraz polecenia `COMMIT`, `ROLLBACK` i `SAVEPOINT`.
-- **AutoReplace** (Preferencje › Edytor) zamienia skróty na tekst podczas pisania; `|` w zamianie wyznacza pozycję
+- **AutoReplace** (Ustawienia › Edytor) zamienia skróty na tekst podczas pisania; `|` w zamianie wyznacza pozycję
   kursora.
 - **Widok › Podziel edytor** pokazuje dwa widoki tego samego tekstu. **Widok** ma też **Zawijaj wiersze**, **Znaki
   specjalne** i **Status linii** (znaczniki linii zmienionych i nowych od otwarcia albo zapisu).
 
 ### Formatowanie
 
-**Edycja › Formatuj kod PL/SQL** (⇧⌘F) formatuje zaznaczenie albo całe źródło według reguł z **Preferencje ›
+**Edycja › Formatuj kod PL/SQL** (⇧⌘F) formatuje zaznaczenie albo całe źródło według reguł z **Ustawienia ›
 Formater** (wcięcia, listy, przecinki, puste linie, wielkość liter słów kluczowych i identyfikatorów, pisownia
 specjalna). Formater może działać automatycznie po otwarciu źródła z bazy, przed kompilacją i przed zapisem. Fragment
 między komentarzami `-- NoFormat Start` i `-- NoFormat End` zostaje bez zmian. Formatowanie nigdy nie zmienia
 znaczenia kodu.
 
-Karta **Preferencje › Formater** ma grupy **Układ**, **Listy i przecinki**, **Klauzule SQL i warunki** (słowa klauzul do
+Karta **Ustawienia › Formater** ma grupy **Układ**, **Listy i przecinki**, **Klauzule SQL i warunki** (słowa klauzul do
 lewej, do prawej albo w osobnej linii; AND/OR na początku albo końcu linii; warunek JOIN … ON; THEN w nowej linii;
 wieloliniowe CASE), **Wyrównanie w kolumnach** (deklaracje, parametry z trybem i typem, parametry nazwane `=>`,
 przypisania `:=`, aliasy w SELECT i FROM, `=` w UPDATE … SET, komentarze na końcu linii), **Odstępy** i **Wielkość
@@ -129,13 +129,13 @@ jest podgląd: przykładowy pakiet, na którym widać każdą opcję, z podświe
 nad nim przykład opcji wskazanej kursorem albo ostatnio zmienionej — **Teraz** i **Po zmianie tej opcji**. Region bez
 formatowania można też oznaczyć komentarzami `-- @formatter:off` i `-- @formatter:on`.
 
-### Szablony, snippety i makra
+### Szablony, fragmenty kodu i makra
 
 - **Szablony** (karta **Szablony** w lewej kolumnie albo **Widok › Okno szablonów**) wstawiają gotowe fragmenty:
-  polecenia DML, pętle, typy, funkcje SQL, jednostki programów i szablony utPLSQL. Dwuklik albo przeciągnięcie do
+  polecenia DML, pętle, typy, funkcje SQL, jednostki programów i szablony utPLSQL. Dwukrotne kliknięcie albo przeciągnięcie do
   edytora wstawia szablon; zmienne szablonu wypełniasz w formularzu (`$OSUSER`, `$DBUSER`, `$DATE`, `$TIME` są
   podstawiane same). Własne szablony tworzysz przez **Narzędzia › Szablony › Zapisz zaznaczenie jako szablon…**.
-- **Widok › Snippety** to biblioteka krótkich fragmentów do przeciągania (wbudowane i własne).
+- **Widok › Fragmenty kodu** to biblioteka krótkich fragmentów kodu do przeciągania (wbudowane i własne).
 - **Makra**: F11 rozpoczyna i kończy nagrywanie, F12 odtwarza, ⇧F12 odtwarza wielokrotnie. Makro zapiszesz w
   bibliotece ze skrótem (**Edycja › Makra › Zapisz makro w bibliotece…**).
 - **Edycja › Kopiuj jako literał** kopiuje zaznaczony SQL jako literał tekstowy języka (Swift, Java, C#, JavaScript,
@@ -155,7 +155,7 @@ formatowania można też oznaczyć komentarzami `-- @formatter:off` i `-- @forma
 - **Edycja › Refaktoryzacja › Zmień nazwę…** (⇧F6) zmienia nazwę zmiennej lub parametru w jej zakresie albo obiektu
   czy kolumny w oknach i plikach projektu. Przed zastosowaniem widzisz podgląd różnic; zmiana w bazie (DDL) trafia do
   nowego okna, nie jest wykonywana.
-- **Wydziel stałą lokalną…**, **Wydziel stałą globalną…**, **Wydziel procedurę…** i **Zamień przypisanie na
+- **Wyodrębnij stałą lokalną…**, **Wyodrębnij stałą globalną…**, **Wyodrębnij procedurę…** i **Zamień przypisanie na
   inicjalizację** w tym samym podmenu przekształcają zaznaczony kod; każdą zmianę cofniesz przez ⌘Z.
 
 ### Zadania To-Do
@@ -167,14 +167,14 @@ Komentarze `TODO` i `DONE` (z właścicielem, priorytetem i kategorią) są zbie
 
 - Pelikan otwiera z Findera i przez przeciągnięcie pliki `.sql`, `.pck`, `.pks`, `.pkb`, `.spc`, `.bdy`, `.prc`,
   `.fnc`, `.trg`, `.typ`, `.tps`, testy `.tst` i notatniki `.sqlnb`. Dodatkowe rozszerzenia programów i testów
-  dopiszesz w **Preferencje › Ogólne**. Przeciągnięcie katalogu otwiera wszystkie jego skrypty.
+  dopiszesz w **Ustawienia › Ogólne**. Przeciągnięcie katalogu otwiera wszystkie jego skrypty.
 - Pliki zachowują swoje kodowanie (UTF-8, ISO-8859-2, Windows-1250) i końce linii. Znak, którego nie da się zapisać w
   kodowaniu pliku, blokuje zapis z dokładnym wskazaniem linii i kolumny — kodowanie zmienisz tylko świadomie przez
   **Plik › Kodowanie pliku…**.
 - **Plik › Tylko do odczytu** blokuje edycję okna.
 - **Plik › Otwórz z połączeniem…** otwiera plik z od razu przypiętym połączeniem.
-- **Edycja › Otwórz w zewnętrznym edytorze** przekazuje tekst do programu wskazanego w **Preferencje › Narzędzia**
+- **Edycja › Otwórz w zewnętrznym edytorze** przekazuje tekst do programu wskazanego w **Ustawienia › Narzędzia**
   (np. Visual Studio Code); po powrocie do Pelikana zmiany są wczytywane.
-- **Edycja › Szukaj w sieci** otwiera wyszukiwanie zaznaczonego słowa (adresy wyszukiwarek w Preferencjach).
+- **Edycja › Szukaj w sieci** otwiera wyszukiwanie zaznaczonego słowa (adresy wyszukiwarek w Ustawieniach).
 - Pelikan zapamiętuje stan okien plików (kursor, zakładki, znaczniki, zwinięcia, wartości zmiennych).
 - Po nieoczekiwanym zamknięciu aplikacji Pelikan proponuje odzyskanie niezapisanych okien (**Plik › Odzyskaj okna…**).

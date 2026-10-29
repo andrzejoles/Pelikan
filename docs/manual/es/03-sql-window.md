@@ -30,14 +30,14 @@ larga, Pelikan puede reproducir un sonido y hacer rebotar su icono en el Dock. S
 operaciones de la base de datos no responden a la interrupción), usa **Sesión › Finalizar la sesión de la ventana
 (Kill)**.
 
-Pelikan nunca confirma cambios automáticamente (la opción **AutoCommit de sentencias SQL** de **Preferencias › SQL
+Pelikan nunca confirma cambios automáticamente (la opción **AutoCommit de sentencias SQL** de **Ajustes › SQL
 Window** está desactivada por omisión). La barra de estado indica una transacción abierta («● transacción abierta»).
 
 ## Variables
 
 - **Variables de sustitución** `&nombre` y `&&nombre`: antes de ejecutar, Pelikan muestra la ventana **Variables** con
   campos para los valores. En la SQL Window, `&&` en el texto significa un carácter `&` normal (p. ej., `'R&&D'`); en la
-  Command Window, `&&` funciona como en SQL*Plus (la variable se recuerda).
+  consola SQL*Plus, `&&` funciona como en SQL*Plus (la variable se recuerda).
 - **Variables de enlace** `:nombre`: también van a la ventana de variables (`:new` y `:old` en los disparadores se
   omiten).
 - **Parámetros de informes de JasperReports** `$P{…}`, `$P!{…}` y `$X{IN, columna, parámetro}`: Pelikan los reconoce y
@@ -70,10 +70,10 @@ cuenta desde el directorio del archivo de la ventana.
 
 ![Edición de un resultado: fila nueva y contador de cambios pendientes](../img/siatka-edycja.png)
 
-La cuadrícula obtiene las filas por lotes (el número se ajusta en **Preferencias › SQL Window › Filas por página**) y
+La cuadrícula obtiene las filas por lotes (el número se ajusta en **Ajustes › SQL Window › Filas por página**) y
 carga más al desplazarte. La indicación «(más…)» junto al número de filas significa que el resultado no está completo.
 **Página siguiente** (⌘⇟) y **Última página (obtener todo)** (⇧⌘⇟) están en el menú **Sesión › Resultado** y en la barra
-sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de superar el límite de tamaño de Preferencias.
+sobre la cuadrícula. Con resultados muy grandes, Pelikan pregunta antes de superar el límite de tamaño de Ajustes.
 
 - **Ordenar**: clic en el encabezado de la columna (ascendente, descendente, sin orden) sobre las filas obtenidas.
 - **Seleccionar**: filas, columnas y bloques de celdas (clic y luego ⇧+clic).
@@ -163,7 +163,7 @@ minúsculas y las fechas se comparan sin la hora. **Borrar Query By Example** re
 
 ## Estadísticas y plan
 
-Si se activan en **Preferencias › SQL Window › Estadísticas**, la pestaña **Estadísticas** muestra la variación de las
+Si se activan en **Ajustes › SQL Window › Estadísticas**, la pestaña **Estadísticas** muestra la variación de las
 estadísticas de la sesión (V$MYSTAT) en cada ejecución. **Herramientas › Explain Plan** (F5) muestra el plan de la
 sentencia bajo el cursor, y **Herramientas › Autotrace** la ejecuta y muestra el plan real; consulta el capítulo *Plan
 de ejecución, sesiones y administración*.

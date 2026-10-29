@@ -9,7 +9,7 @@ Plan Window**; Pelikan can create a missing PLAN_TABLE.
 
 ![Explain Plan Window — Diagram view](../img/plan-diagram.png)
 
-- **Explain** refreshes the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
+- **Refresh Plan** recalculates the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
   ALL_ROWS or FIRST_ROWS_n) adds a hint.
 - Views: **Tree** (operations with cost, number of rows, bytes, time, execution order, and access and filter
   predicates), **Diagram** (a node per operation with cost, cardinality and step number), **Flame graph** (the cost of
@@ -57,7 +57,7 @@ features), the feature will not start. AI agents have no access to these tools. 
 
 - **Filter** selects the list query (e.g. *User sessions*); **Refresh every** n seconds turns on automatic refresh.
 - Detail tabs of the selected session: **Current SQL**, **Open cursors**, **Locks**, **Statistics**, **Wait**.
-- **Kill** and **Kill immediately** end the session (`ALTER SYSTEM KILL SESSION`) after confirmation.
+- **Kill session** and **Kill immediately** end the session (`ALTER SYSTEM KILL SESSION`) after confirmation.
 - **Actions** — among others enabling SQL Trace for the session (DBMS_MONITOR).
 - **Queries…** lets you define your own filters (a WHERE condition), detail tabs (with `:sid`, `:serial#`) and actions.
 

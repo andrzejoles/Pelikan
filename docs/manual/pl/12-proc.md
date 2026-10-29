@@ -15,10 +15,10 @@ grupować w folderach, duplikować i usuwać. Formularz celu:
 - **Połączenie**: nazwa, folder, środowisko **UAT** albo **PROD** (z kolorem), host, port, użytkownik i
   uwierzytelnianie — **Plik klucza** (opcjonalnie z hasłem klucza), **Agent SSH** albo **Hasło SSH**. Hasło SSH i
   hasło klucza zapisujesz w Pęku kluczy (**Zapamiętaj w Pęku kluczy**); przy włączonej ochronie Touch ID
-  (**Preferencje › Oracle › Hasła połączeń**) Pelikan potwierdza ich użycie raz na cel. **Stare algorytmy (AIX 6.1 i
+  (**Ustawienia › Oracle › Hasła połączeń**) Pelikan potwierdza ich użycie raz na cel. **Stare algorytmy (AIX 6.1 i
   starsze serwery)** włącza algorytmy SSH obsługiwane przez stare serwery. **Kodowanie nazw** i **Kodowanie konsoli**
   (UTF-8 albo ISO-8859-2) ustawiają, jak Pelikan koduje nazwy plików i czyta wyjście.
-- **Katalogi na serwerze**: katalog bazowy, katalog backupów, working copy oraz podkatalogi źródeł i binarek.
+- **Katalogi na serwerze**: katalog bazowy, katalog kopii zapasowych, kopia robocza oraz podkatalogi źródeł i binarek.
 - **Git i build**: gałąź, remote, komenda builda (np. `make`) i lista binarek (po przecinku).
 - **Środowisko powłoki**: ścieżka do `ksh`, `ORACLE_HOME`, `LIBPATH`, `PATH` i dodatkowe zmienne (`NAZWA=wartość`) —
   nieinteraktywna powłoka nie czyta `.profile`, więc tu podajesz to, czego potrzebuje build.
@@ -30,7 +30,7 @@ komputerami. Na serwerze nie są potrzebne żadne hasła Oracle — Pro*C ma by�
 
 **Testuj** (w menedżerze albo **Narzędzia › Zdalny build Pro*C › Testuj cel SSH**) sprawdza: wersję serwera SSH,
 logowanie, system (`uname -a`, na AIX `oslevel -s`), dostępność `make`, `git` i `compress`/`gzip`, gałąź i czystość
-working copy (`git status --porcelain`) oraz możliwość zapisu w katalogach. Brakujący katalog backupów Pelikan utworzy
+kopii roboczej (`git status --porcelain`) oraz możliwość zapisu w katalogach. Brakujący katalog kopii zapasowych Pelikan utworzy
 po Twoim potwierdzeniu.
 
 Przy pierwszym teście nowego serwera Pelikan pokazuje odcisk jego klucza (SHA256) i zapisuje klucz w known_hosts
@@ -50,7 +50,7 @@ nie potwierdzono, jest odrzucane; serwer ze zmienionym kluczem — zawsze.
 Na serwerze Pelikan wykonuje kolejno:
 
 1. zakłada **blokadę** (na jednym celu może trwać tylko jedno wdrożenie);
-2. sprawdza gałąź i czystość working copy — ręczne zmiany na serwerze zatrzymują wdrożenie przed `pull`;
+2. sprawdza gałąź i czystość kopii roboczej — ręczne zmiany na serwerze zatrzymują wdrożenie przed `pull`;
 3. `git pull --ff-only`;
 4. kopię zapasową binarek (z datą i commitem w nazwie, spakowaną `compress` albo `gzip`, z limitem liczby kopii);
 5. `make` (komenda builda);

@@ -1,7 +1,7 @@
-# Command Window
+# SQL*Plus Console
 
-The Command Window works like SQL*Plus: it executes statements line by line and scripts, and shows query results as text
-in columns. You open it with **File › New › Command Window** or from the connection's menu in the connection list.
+The SQL*Plus Console works like SQL*Plus: it executes statements line by line and scripts, and shows query results as text
+in columns. You open it with **File › New › SQL*Plus Console** or from the connection's menu in the connection list.
 
 The window has two tabs:
 
@@ -28,7 +28,7 @@ The status bar shows the current settings of `ECHO`, `TERMOUT`, `FEEDBACK`, `VER
   `DISCONNECT`, `EXIT`/`QUIT`, `REMARK`, `HELP`.
 - Command buffer: `LIST`, `APPEND`, `CHANGE`, `DEL`, `INPUT`, `SAVE`, `GET`, `STORE SET`.
 - `HOST`, `!` and `$` — an operating system command. Pelikan always shows it for confirmation and executes it without
-  Pelikan's environment variables, with a 120-second limit. The AI agent has no access to the Command Window.
+  Pelikan's environment variables, with a 120-second limit. The AI agent has no access to the SQL*Plus Console.
 
 An unsupported command is skipped with a message, so scripts written for SQL*Plus run to the end. `COPY` is not
 supported.

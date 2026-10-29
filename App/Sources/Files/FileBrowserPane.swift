@@ -142,7 +142,7 @@ struct FileBrowserPane: View {
                     FileTreeLevel(model: model, directory: loc.url, workspace: workspace)
                 }
                 .listStyle(.plain)
-                .accessibilityLabel(L10n.tr("File Browser"))
+                .accessibilityLabel(L10n.tr("Przeglądarka plików"))
                 .contextMenu(forSelectionType: String.self) { ids in
                     if let path = ids.first { menu(for: URL(fileURLWithPath: path)) }
                 } primaryAction: { ids in
@@ -281,7 +281,7 @@ struct FileBrowserPane: View {
                 Button(L10n.tr("Okno SQL")) { open(url, as: "sql") }
                 Button(L10n.tr("Okno programu")) { open(url, as: "program") }
                 Button(L10n.tr("Okno testu")) { open(url, as: "test") }
-                Button(L10n.tr("Okno poleceń")) { open(url, as: "command") }
+                Button(L10n.tr("Konsola SQL*Plus")) { open(url, as: "command") }
             }
             Divider()
         }

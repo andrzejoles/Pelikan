@@ -16,7 +16,7 @@ despliegas. Puedes agrupar los destinos en carpetas, duplicarlos y eliminarlos. 
 - **Conexión**: nombre, carpeta, entorno **UAT** o **PROD** (con color), host, puerto, usuario y autenticación:
   **Archivo de clave** (opcionalmente con la frase de paso de la clave), **Agente SSH** o **Contraseña SSH**. La
   contraseña SSH y la frase de paso de la clave se guardan en el Llavero (**Recordar en el Llavero**); con la protección
-  Touch ID activada (**Preferencias › Oracle › Contraseñas de conexiones**), Pelikan confirma su uso una vez por
+  Touch ID activada (**Ajustes › Oracle › Contraseñas de conexiones**), Pelikan confirma su uso una vez por
   destino. **Algoritmos antiguos (AIX 6.1 y servidores más antiguos)** activa algoritmos SSH compatibles con servidores
   antiguos. **Codificación de nombres** y **Codificación de la consola** (UTF-8 o ISO-8859-2) determinan cómo codifica
   Pelikan los nombres de archivo y cómo lee la salida.

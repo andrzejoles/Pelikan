@@ -49,7 +49,7 @@ enum RemoteTargetCommands {
             },
             command("ssh.test", L10n.tr("Testuj cel SSH"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu (domyślnie zaznaczony)"))],
                     effect: .external,
-                    summary: L10n.tr("Łączy się z serwerem celu i sprawdza system, wersję serwera SSH, make, git, gałąź i czystość working copy, compress/gzip oraz katalogi bazowy, src, bin i backupów (tylko odczyt; katalog backupów tworzony po potwierdzeniu)."),
+                    summary: L10n.tr("Łączy się z serwerem celu i sprawdza system, wersję serwera SSH, make, git, gałąź i czystość kopii roboczej, compress/gzip oraz katalogi bazowy, src, bin i kopii zapasowych (tylko odczyt; katalog kopii zapasowych tworzony po potwierdzeniu)."),
                     feature: "PC-CONN-003") { ctx in
                 ctx.ui?.showSSHTargets(.test(ctx.arguments.string("target")))
                 return .ok
@@ -62,14 +62,14 @@ enum RemoteTargetCommands {
             },
             command("proc.deploy", L10n.tr("Wdróż na cel…"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu (domyślnie wybór w oknie)"))],
                     effect: .external,
-                    summary: L10n.tr("Wdrożenie Pro*C: podsumowanie zmian (commit na serwerze → remote), dla PROD potwierdzenie nazwą celu, potem na serwerze blokada, kontrola working copy, git pull --ff-only, backup binarek, make, instalacja do bin i historia — z konsolą na żywo."),
+                    summary: L10n.tr("Wdrożenie Pro*C: podsumowanie zmian (commit na serwerze → remote), dla PROD potwierdzenie nazwą celu, potem na serwerze blokada, kontrola kopii roboczej, git pull --ff-only, kopia zapasowa binarek, make, instalacja do bin i historia — z konsolą na żywo."),
                     feature: "PC-DEPLOY-001") { ctx in
                 ctx.ui?.showProCDeploy(.deploy(ctx.arguments.string("target")))
                 return .ok
             },
             command("proc.rollback", L10n.tr("Wycofaj binarkę…"), params: [CommandParameter("target", .string, L10n.tr("Nazwa celu"))],
                     effect: .external,
-                    summary: L10n.tr("Przywraca binarkę na celu z wersji .prev albo z wybranej kopii w katalogu backupów (po potwierdzeniu; PROD — nazwą celu). Źródła wycofuje się przez revert w git."),
+                    summary: L10n.tr("Przywraca binarkę na celu z wersji .prev albo z wybranej kopii w katalogu kopii zapasowych (po potwierdzeniu; PROD — nazwą celu). Źródła wycofuje się przez revert w git."),
                     feature: "PC-DEPLOY-003") { ctx in
                 ctx.ui?.showProCDeploy(.rollback(ctx.arguments.string("target")))
                 return .ok

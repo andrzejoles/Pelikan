@@ -1,7 +1,7 @@
-# Command Window
+# SQL*Plus-Konsole
 
-Das Command Window arbeitet wie SQL*Plus: Es führt Befehle zeilenweise und Skripte aus und zeigt Abfrageergebnisse als
-Text in Spalten. Sie öffnen es über **Datei › Neu › Command Window** oder über das Menü der Verbindung in der
+Die SQL*Plus-Konsole arbeitet wie SQL*Plus: Sie führt Befehle zeilenweise und Skripte aus und zeigt Abfrageergebnisse als
+Text in Spalten. Sie öffnen sie über **Datei › Neu › SQL*Plus-Konsole** oder über das Menü der Verbindung in der
 Verbindungsliste.
 
 Das Fenster hat zwei Tabs:
@@ -29,8 +29,8 @@ Die Statusleiste zeigt die aktuellen Einstellungen `ECHO`, `TERMOUT`, `FEEDBACK`
   `DISCONNECT`, `EXIT`/`QUIT`, `REMARK`, `HELP`.
 - Befehlspuffer: `LIST`, `APPEND`, `CHANGE`, `DEL`, `INPUT`, `SAVE`, `GET`, `STORE SET`.
 - `HOST`, `!` und `$` — ein Betriebssystembefehl. Pelikan zeigt ihn immer zur Bestätigung an und führt ihn ohne die
-  Umgebungsvariablen von Pelikan und mit einem Limit von 120 Sekunden aus. Der KI-Agent hat keinen Zugriff auf das
-  Command Window.
+  Umgebungsvariablen von Pelikan und mit einem Limit von 120 Sekunden aus. Der KI-Agent hat keinen Zugriff auf die
+  SQL*Plus-Konsole.
 
 Ein nicht unterstützter Befehl wird mit einem Hinweis übergangen, sodass für SQL*Plus geschriebene Skripte bis zum Ende
 laufen. `COPY` wird nicht unterstützt.

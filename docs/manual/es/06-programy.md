@@ -25,7 +25,7 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   (todas las unidades).
 - Las unidades se reconocen por las cabeceras `CREATE … PACKAGE`, `PACKAGE BODY`, `TYPE`, `PROCEDURE`, `FUNCTION`,
   `TRIGGER` al principio de una línea: el archivo no necesita «/» tras las unidades. Pelikan no añade «/» al guardar,
-  y el código cargado de la base de datos y las unidades nuevas llegan sin «/» (salvo que active **Preferencias ›
+  y el código cargado de la base de datos y las unidades nuevas llegan sin «/» (salvo que active **Ajustes ›
   Oracle › Terminar las unidades de la ventana de programa con «/»**). Un archivo con «/» se guarda sin cambios.
 - **F8** (⌘↩) compila todas las unidades una tras otra y se detiene en la primera con un error. La compilación se hace
   en una sesión aparte en segundo plano, así que no bloquea las SQL Windows.
@@ -51,7 +51,7 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
 
 ### Ajustes del compilador
 
-En **Preferencias › Oracle › Compilador** configuras `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
+En **Ajustes › Oracle › Compilador** configuras `PLSQL_WARNINGS`, `PLSQL_OPTIMIZE_LEVEL`, `PLSQL_CODE_TYPE`,
 `PLSCOPE_SETTINGS` y `PLSQL_CCFLAGS`: Pelikan los establece en la sesión de compilación antes de cada compilación de una
 Program Window. En la sección **Depurador** activas la adición automática de información de depuración, las
 **Sugerencias del compilador** (inspecciones adicionales del código tras compilar) y la comprobación de las
@@ -116,7 +116,7 @@ de varias decenas de miles de líneas.
 - El editor resalta los pares de paréntesis y `BEGIN`/`IF`/`LOOP`/`CASE` ↔ `END`, las apariciones del nombre bajo el
   cursor, la columna de `INSERT` que corresponde a un valor de `VALUES` y las sentencias `COMMIT`, `ROLLBACK` y
   `SAVEPOINT`.
-- **AutoReplace** (Preferencias › Editor) sustituye abreviaturas por texto mientras escribes; `|` en la sustitución
+- **AutoReplace** (Ajustes › Editor) sustituye abreviaturas por texto mientras escribes; `|` en la sustitución
   marca la posición del cursor.
 - **Vista › Dividir editor** muestra dos vistas del mismo texto. **Vista** tiene también **Ajustar líneas**,
   **Caracteres especiales** y **Estado de líneas** (marcas de las líneas modificadas y nuevas desde que se abrió o
@@ -125,12 +125,12 @@ de varias decenas de miles de líneas.
 ### Formato
 
 **Edición › Formatear código PL/SQL** (⇧⌘F) formatea la selección o todo el código fuente según las reglas de
-**Preferencias › Formateador** (sangrías, listas, comas, líneas en blanco, mayúsculas de palabras clave e
+**Ajustes › Formateador** (sangrías, listas, comas, líneas en blanco, mayúsculas de palabras clave e
 identificadores, grafía especial). El formateador puede actuar automáticamente al abrir un código fuente de la base de
 datos, antes de compilar y antes de guardar. Un fragmento entre los comentarios `-- NoFormat Start` y `-- NoFormat End`
 se mantiene sin cambios. El formato nunca cambia el significado del código.
 
-La pestaña **Preferencias › Formateador** tiene los grupos **Disposición**, **Listas y comas**, **Cláusulas SQL y condiciones**
+La pestaña **Ajustes › Formateador** tiene los grupos **Disposición**, **Listas y comas**, **Cláusulas SQL y condiciones**
 (palabras de cláusula a la izquierda, a la derecha o en su propia línea; AND/OR al principio o al final de la línea; la
 condición JOIN … ON; THEN en una línea nueva; CASE en varias líneas), **Alineación en columnas** (declaraciones,
 parámetros con modo y tipo, parámetros con nombre `=>`, asignaciones `:=`, alias en SELECT y FROM, `=` en UPDATE … SET,
@@ -181,16 +181,16 @@ To-Do**. **Edición › Insertar tarea To-Do** inserta un comentario, y **Cerrar
 
 - Pelikan abre desde el Finder y arrastrándolos los archivos `.sql`, `.pck`, `.pks`, `.pkb`, `.spc`, `.bdy`, `.prc`,
   `.fnc`, `.trg`, `.typ`, `.tps`, las pruebas `.tst` y los cuadernos `.sqlnb`. Puedes añadir más extensiones de
-  programas y pruebas en **Preferencias › General**. Arrastrar un directorio abre todos sus scripts.
+  programas y pruebas en **Ajustes › General**. Arrastrar un directorio abre todos sus scripts.
 - Los archivos conservan su codificación (UTF-8, ISO-8859-2, Windows-1250) y sus finales de línea. Un carácter que no se
   puede guardar en la codificación del archivo bloquea el guardado e indica exactamente la línea y la columna; la
   codificación solo se cambia de forma consciente con **Archivo › Codificación del archivo…**.
 - **Archivo › Solo lectura** bloquea la edición de la ventana.
 - **Archivo › Abrir con conexión…** abre un archivo con la conexión ya fijada.
-- **Edición › Abrir en un editor externo** pasa el texto al programa indicado en **Preferencias › Herramientas** (p.
+- **Edición › Abrir en un editor externo** pasa el texto al programa indicado en **Ajustes › Herramientas** (p.
   ej., Visual Studio Code); al volver a Pelikan se cargan los cambios.
 - **Edición › Buscar en la web** abre una búsqueda de la palabra seleccionada (las direcciones de los buscadores están
-  en Preferencias).
+  en Ajustes).
 - Pelikan recuerda el estado de las ventanas de archivos (cursor, marcadores, marcas, contracciones, valores de
   variables).
 - Tras un cierre inesperado de la aplicación, Pelikan propone recuperar las ventanas sin guardar (**Archivo › Recuperar

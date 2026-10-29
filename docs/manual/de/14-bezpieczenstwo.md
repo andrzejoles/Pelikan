@@ -48,7 +48,7 @@ Die Regeln für Agenten beschreibt das Kapitel *KI-Agenten*. In Kürze:
 - er liest in schreibgeschützten Transaktionen, mit Limits;
 - er nimmt Änderungen nur nach Ihrer Zustimmung in einem Fenster ohne Standardschaltfläche vor, und DML bleibt bis zu
   einer gesonderten Zustimmung zu COMMIT nicht festgeschrieben;
-- er hat keinen Zugriff auf das Command Window, Systembefehle, den Debugger, Berichte der Oracle-Packs oder den
+- er hat keinen Zugriff auf die SQL*Plus-Konsole, Systembefehle, den Debugger, Berichte der Oracle-Packs oder den
   Remote-Build;
 - er kommuniziert mit Pelikan nur über einen Socket, auf den Ihr Konto zugreifen kann, mit einem Einmal-Token der
   Sitzung;

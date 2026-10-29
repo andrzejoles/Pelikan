@@ -737,7 +737,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showSnippets() {
-        ToolWindowController.show(key: "snippets", title: L10n.tr("Snippety"), size: NSSize(width: 420, height: 520)) {
+        ToolWindowController.show(key: "snippets", title: L10n.tr("Fragmenty kodu"), size: NSSize(width: 420, height: 520)) {
             SnippetsView(workspace: workspace)
         }
     }
@@ -984,7 +984,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showCompileInvalid() {
-        ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
+        ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj nieprawidłowe obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)
         }
     }

@@ -11,7 +11,7 @@ otworzysz przez **Plik › Nowy › Okno testu**.
    automatycznie; typ możesz zmienić (Integer, Float, String, Date, Timestamp, Boolean, CLOB, BLOB, Cursor i inne).
 2. Naciśnij F8 (⌘↩). Po wykonaniu wartości wyjściowe pojawią się w tabeli, a te, które się zmieniły, są wyróżnione na
    żółto. Pasek stanu pokazuje czas wykonania.
-3. Zatwierdź albo wycofaj zmiany: F10 / ⇧F10 (opcja **AutoCommit po wykonaniu okna testu** w **Preferencje › Okno
+3. Zatwierdź albo wycofaj zmiany: F10 / ⇧F10 (opcja **AutoCommit po wykonaniu okna testu** w **Ustawienia › Okno
    SQL** zatwierdza automatycznie).
 
 Pozostałe karty:
@@ -43,13 +43,13 @@ Debuger używa pakietu Oracle DBMS_DEBUG i działa na bazach 19c–26ai.
   obiektach. **Debugowanie › Uprawnienia debugera…** otwiera okno SQL z gotowymi poleceniami GRANT do wykonania przez
   administratora.
 - Kod, który chcesz krokować, musi być skompilowany z informacją debugowania: **Narzędzia › Obiekt › Dodaj informację
-  debugowania** albo automatycznie przy kompilacji okna programu (**Preferencje › Oracle › Debuger**; tam też listy
+  debugowania** albo automatycznie przy kompilacji okna programu (**Ustawienia › Oracle › Debuger**; tam też listy
   obiektów i połączeń, dla których informację dodawać zawsze albo nigdy, np. `*@prod*`).
 
 ### Krokowanie
 
 1. Ustaw punkty przerwania: kliknij margines z numerami linii w oknie programu albo testu, albo naciśnij ⌃B
-   (**Debugowanie › Punkt przerwania**).
+   (**Debugowanie › Przełącz punkt przerwania**).
 2. W oknie testu wybierz **Debugowanie › Rozpocznij debugowanie** (F9). Otworzy się okno **Debuger** ze stosem
    wywołań, zmiennymi i obserwowanymi wyrażeniami, a kursor zatrzyma się na pierwszej linii.
 3. Krokuj:
@@ -57,9 +57,9 @@ Debuger używa pakietu Oracle DBMS_DEBUG i działa na bazach 19c–26ai.
 | Czynność | Skrót |
 |---|---|
 | Kontynuuj (do następnego punktu przerwania) | ⌃R |
-| Wejdź (do podprogramu, także do wyzwalacza) | ⌃N |
-| Przejdź (następna linia) | ⌃O |
-| Wyjdź (z podprogramu) | ⌃T |
+| Krok do (wejście do podprogramu, także do wyzwalacza) | ⌃N |
+| Krok przez (następna linia bez wchodzenia do wywołań) | ⌃O |
+| Wyjdź z podprogramu | ⌃T |
 | Wykonaj do kursora / do wyjątku | menu Debugowanie |
 | Zatrzymaj debugowanie | ⇧F9 |
 
@@ -78,7 +78,7 @@ Fokus zostaje w oknie głównym, więc możesz krokować skrótami, patrząc na 
 - DBMS_OUTPUT jest odczytywany przy każdym zatrzymaniu.
 
 W wyzwalaczach wartości `:new` i `:old` nie są dostępne (ograniczenie DBMS_DEBUG) — debuger pokazuje wtedy informację
-zamiast wartości. Domyślnie krokowanie pomija inicjalizację pakietów i obiekty SYS (**Preferencje › Oracle ›
+zamiast wartości. Domyślnie krokowanie pomija inicjalizację pakietów i obiekty SYS (**Ustawienia › Oracle ›
 Debuger**).
 
 ### Punkty przerwania, warunki i punkty logowania
@@ -119,7 +119,7 @@ jeśli chcesz je zachować.
 ## Statystyki, ślad i SQL Trace
 
 - Karta **Statystyki** pokazuje zmianę statystyk sesji (V$MYSTAT) z ostatniego wykonania i sumę dla okna, z filtrem i
-  eksportem do CSV. Wybór statystyk jest w **Preferencje › Okno SQL**. Wymaga dostępu do V$MYSTAT.
+  eksportem do CSV. Wybór statystyk jest w **Ustawienia › Okno SQL**. Wymaga dostępu do V$MYSTAT.
 - **Debugowanie › Ślad DBMS_TRACE przy wykonaniu** zapisuje przebieg (wywołania, wyjątki, SQL, linie) do karty
   **Ślad**; historia przebiegów jest w **Historia przebiegów DBMS_TRACE**. Wymaga tabel śladu instalowanych przez
   administratora skryptem `tracetab.sql`.

@@ -19,21 +19,21 @@ serwer MCP.
 - **Połączenia** — EZConnect, TNS, Oracle Wallet i magazyn haseł (SEPS), tunel SSH (klucz albo hasło), proxy, edycje
   (EBR), środowiska z kolorami (produkcja tylko do odczytu), hasła w Pęku kluczy, opcjonalnie Touch ID.
   Dwa sterowniki: Oracle Instant Client (ODPI-C, domyślny) i thin (bez Instant Client).
-- **Okno SQL i siatka wyników** — wykonywanie poleceń i skryptów, edycja wyników z zatwierdzaniem, Query By Example,
+- **Okno SQL i siatka wyników** — wykonywanie poleceń i skryptów, edycja wyników z zapisywaniem zmian, Query By Example,
   eksport (CSV, TSV, Excel, HTML, XML, SQL), wykresy, plan wykonania jako drzewo, diagram i flame graph.
-- **Okno poleceń** — polecenia SQL\*Plus (bufor, BREAK/COMPUTE, SPOOL, zmienne podstawienia) i wybrane z SQLcl.
+- **Konsola SQL\*Plus** — polecenia SQL\*Plus (bufor, BREAK/COMPUTE, SPOOL, zmienne podstawienia) i wybrane z SQLcl.
 - **Programy** — okno programu z konspektem, kompilacja z błędami w linii, formater, analiza kodu i nazw na żywo,
   refaktoryzacja, historia lokalna, porównania ze schematem albo innym połączeniem.
 - **Okno testu i debuger** — zmienne, punkty przerwania z warunkami i komunikatami (logpointy), obserwowane wyrażenia,
   stos, profiler.
 - **utPLSQL** — uruchamianie zestawów, pokrycie kodu w marginesie edytora, generowanie szkieletów testów.
-- **Object Browser i edytory obiektów** — tabele (także partycje), widoki, sekwencje, synonimy, użytkownicy, role,
+- **Przeglądarka obiektów i edytory obiektów** — tabele (także partycje), widoki, sekwencje, synonimy, użytkownicy, role,
   kolejki, zadania; diagramy ER; porównanie i synchronizacja schematów, koszyk wdrożenia.
 - **Narzędzia** — raporty (style, grupy, sumy) i raporty predefiniowane, notatniki SQL z wykresami, sesje, Scheduler,
   panel DBA, eksport i import danych, Real-Time SQL Monitoring (z ostrzeżeniem o licencji Tuning Pack).
 - **Agenci AI** — terminal agenta w oknie, MCP tylko dla bieżącej sesji, macierz uprawnień narzędzi, okno zgody bez
   przycisku domyślnego, DML agenta niezatwierdzony do Twojej zgody, dziennik każdej operacji. Agent nie ma dostępu
-  do terminala, okna poleceń, debugera ani haseł.
+  do terminala, konsoli SQL\*Plus, debugera ani haseł.
 - **Pro\*C przez SSH** — zdalny build i wdrożenie na serwerze, konsola, historia wdrożeń, wycofanie binarki.
 
 ![Plan wykonania jako diagram](docs/screenshots/47-plan-diagram-glowne.png)
@@ -76,8 +76,8 @@ funkcji [`docs/FEATURES.md`](docs/FEATURES.md), architektura [`docs/ARCHITECTURE
 
 ## In English
 
-Pelikan is a native macOS (Apple Silicon) IDE for Oracle SQL and PL/SQL: SQL and command windows, program and test
-windows with a debugger and profiler, utPLSQL, object browser and editors, schema compare, reports, notebooks, and a
+Pelikan is a native macOS (Apple Silicon) IDE for Oracle SQL and PL/SQL: SQL windows and a SQL\*Plus Console, program
+and test windows with a debugger and profiler, utPLSQL, object browser and editors, schema compare, reports, notebooks, and a
 secure MCP API for AI coding agents. The UI is available in Polish, English, German, Spanish and Ukrainian. Version 1.0 is the
 first stable release after the public beta (7.9–10.5); please report issues on GitHub.
 

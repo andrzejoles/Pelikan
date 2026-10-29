@@ -11,7 +11,7 @@ public enum DocumentKind: String, Sendable, Codable, CaseIterable {
         case .sql: L10n.tr("Okno SQL")
         case .program: L10n.tr("Okno programu")
         case .test: L10n.tr("Okno testu")
-        case .command: L10n.tr("Okno poleceń")
+        case .command: L10n.tr("Konsola SQL*Plus")
         case .explainPlan: L10n.tr("Okno planu")
         case .report: L10n.tr("Okno raportu")
         case .diagram: L10n.tr("Okno diagramu")

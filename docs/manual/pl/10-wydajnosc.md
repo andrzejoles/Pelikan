@@ -9,7 +9,7 @@ zapytania z procedury dostaniesz bez przepisywania. Puste okno planu otworzysz p
 
 ![Okno planu — widok Diagram](../img/plan-diagram.png)
 
-- **Wyjaśnij** odświeża plan dla tekstu w edytorze okna planu, a **Cel optymalizatora** (*Jak w sesji*, ALL_ROWS albo
+- **Odśwież plan** wylicza plan ponownie dla tekstu w edytorze okna planu, a **Cel optymalizatora** (*Jak w sesji*, ALL_ROWS albo
   FIRST_ROWS_n) dodaje wskazówkę.
 - Widoki: **Drzewo** (operacje z kosztem, liczbą wierszy, bajtami, czasem, kolejnością wykonania i predykatami dostępu
   i filtrowania), **Diagram** (węzeł na operację z kosztem, kardynalnością i numerem kroku), **Flame graph** (koszt
@@ -59,7 +59,7 @@ się nie uruchomi. Agenci AI nie mają dostępu do tych narzędzi. Raporty zapis
   odświeżanie.
 - Karty szczegółów zaznaczonej sesji: **Bieżące SQL**, **Otwarte kursory**, **Blokady**, **Statystyki**,
   **Oczekiwanie**.
-- **Zabij** i **Zabij natychmiast** kończą sesję (`ALTER SYSTEM KILL SESSION`) po potwierdzeniu.
+- **Zakończ sesję** i **Zakończ natychmiast** kończą sesję (`ALTER SYSTEM KILL SESSION`) po potwierdzeniu.
 - **Akcje** — m.in. włączenie SQL Trace dla sesji (DBMS_MONITOR).
 - **Zapytania…** pozwala zdefiniować własne filtry (warunek WHERE), karty szczegółów (z `:sid`, `:serial#`) i akcje.
 
