@@ -8,6 +8,20 @@ public struct OutlineNode: Sendable, Hashable {
         case declareSection, beginSection, exceptionSection
         /// Polecenie SQL skryptu okna SQL (zapytanie, DML, DDL) — tylko w `parseScript` (D199).
         case statement
+        /// Struktury sterujące (D203, tylko z `controlFlow`): IF z gałęziami ELSIF/ELSE, pętle LOOP/FOR/WHILE, FORALL,
+        /// instrukcja CASE z gałęziami WHEN/ELSE, obsługa wyjątków WHEN w sekcji EXCEPTION, punkt czasowy wyzwalacza
+        /// złożonego. Nazwa — słowo otwierające (wielkimi literami), szczegóły — dalszy nagłówek (warunek, zakres pętli).
+        case ifStatement, elsifBranch, elseBranch, loop, forall, caseStatement, whenBranch, exceptionHandler, timingPoint
+
+        /// Struktura sterująca albo sekcja bloku (EXCEPTION, BEGIN inicjalizacji pakietu) — w zarysie tylko z
+        /// `controlFlow` (bez niej jej dzieci, np. bloki zagnieżdżone, należą do elementu nadrzędnego).
+        public var isControlFlow: Bool {
+            switch self {
+            case .ifStatement, .elsifBranch, .elseBranch, .loop, .forall, .caseStatement, .whenBranch, .exceptionHandler,
+                 .timingPoint, .exceptionSection, .beginSection: true
+            default: false
+            }
+        }
     }
     public var kind: Kind
     public var name: String
@@ -17,6 +31,8 @@ public struct OutlineNode: Sendable, Hashable {
     public var range: Range<Int>
     public var nameOffset: Int
     public var children: [OutlineNode]
+    /// Etykieta `<<nazwa>>` przed blokiem albo strukturą sterującą (D203).
+    public var label: String?
     /// Element pakietu albo typu: true — publiczny (w specyfikacji; w ciele — zadeklarowany w specyfikacji), false —
     /// prywatny (tylko w ciele), nil — nie dotyczy albo nieznane (ciało bez specyfikacji w tekście).
     public var isPublic: Bool?
@@ -38,7 +54,7 @@ public struct OutlineNode: Sendable, Hashable {
 }
 
 /// Parser strukturalny PL/SQL (ADR 0002): tolerancyjny, na tokenach leksera — rozpoznaje jednostki, podprogramy,
-/// deklaracje i bloki BEGIN…END (z IF/LOOP/CASE), nie wymaga poprawnego kodu.
+/// deklaracje, bloki BEGIN…END i struktury sterujące (IF, pętle, CASE, EXCEPTION — D203), nie wymaga poprawnego kodu.
 public enum PLSQLOutline {
     /// Słowa przed PROCEDURE/FUNCTION w metodach typów obiektowych.
     static let methodModifiers: Set<String> = ["MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL", "INSTANTIABLE", "NOT"]
@@ -68,11 +84,66 @@ public enum PLSQLOutline {
         return Tok(kind: t.kind, start: t.start, end: t.start + t.length, upper: s.uppercased(), text: s)
     }
 
-    /// Zarys całego tekstu (wiele jednostek w pliku).
-    public static func parse(_ text: String) -> [OutlineNode] {
-        let t = tokens(text)
-        var p = Parser(t: t, i: 0, length: (text as NSString).length, source: text as NSString)
+    /// Zarys całego tekstu (wiele jednostek w pliku). `controlFlow` — także struktury sterujące (IF, pętle, CASE,
+    /// sekcje EXCEPTION z obsługami wyjątków, punkty czasowe wyzwalacza złożonego — D203); bez niej zarys jak
+    /// `withoutControlFlow` z nimi (bloki zagnieżdżone należą do podprogramu).
+    public static func parse(_ text: String, controlFlow: Bool = false) -> [OutlineNode] {
+        let t = withoutDirectives(tokens(text))
+        var p = Parser(t: t, i: 0, length: (text as NSString).length, source: text as NSString, controlFlow: controlFlow)
         return markVisibility(p.parseTop())
+    }
+
+    /// Zarys bez struktur sterujących: każda struktura zastąpiona swoimi dziećmi (bloki zagnieżdżone, deklaracje bloku).
+    public static func withoutControlFlow(_ nodes: [OutlineNode]) -> [OutlineNode] {
+        var out: [OutlineNode] = []
+        out.reserveCapacity(nodes.count)
+        for n in nodes {
+            if n.kind.isControlFlow {
+                out += withoutControlFlow(n.children)
+            } else if n.children.isEmpty {
+                out.append(n)
+            } else {
+                var n = n
+                n.children = withoutControlFlow(n.children)
+                out.append(n)
+            }
+        }
+        return out
+    }
+
+    /// Słowa dyrektyw kompilacji warunkowej (`$IF … $THEN`, `$ELSIF`, `$ELSE`, `$END`, `$ERROR … $END`).
+    static let directiveWords: Set<String> = ["IF", "THEN", "ELSIF", "ELSE", "END", "ERROR"]
+
+    /// Dyrektywa kompilacji warunkowej w pozycji `i`: słowo i liczba tokenów — `$` sklejony ze słowem (dwa tokeny)
+    /// albo jeden token `$IF` (lekser rozpoznający dyrektywy).
+    static func directive(_ t: [Tok], _ i: Int) -> (word: String, count: Int)? {
+        let k = t[i]
+        if k.upper == "$" {
+            guard i + 1 < t.count, t[i + 1].start == k.end, directiveWords.contains(t[i + 1].upper) else { return nil }
+            return (t[i + 1].upper, 2)
+        }
+        guard k.upper.hasPrefix("$"), !k.upper.hasPrefix("$$") else { return nil }
+        let w = String(k.upper.dropFirst())
+        return directiveWords.contains(w) ? (w, 1) : nil
+    }
+
+    /// Tokeny bez dyrektyw kompilacji warunkowej (`$IF warunek $THEN`, `$ELSIF warunek $THEN`, `$ELSE`, `$END`,
+    /// `$ERROR … $END`) — kod obu gałęzi zostaje, `$END` nie zamyka bloku, a `$IF` nie jest instrukcją IF.
+    static func withoutDirectives(_ t: [Tok]) -> [Tok] {
+        guard t.contains(where: { $0.upper.hasPrefix("$") }) else { return t }
+        var out: [Tok] = []
+        out.reserveCapacity(t.count)
+        var i = 0
+        while i < t.count {
+            guard let d = directive(t, i) else { out.append(t[i]); i += 1; continue }
+            i += d.count
+            // Warunek do $THEN, komunikat $ERROR do $END — pomijane razem z dyrektywą.
+            guard let stop = ["IF": "THEN", "ELSIF": "THEN", "ERROR": "END"][d.word] else { continue }
+            while i < t.count {
+                if let e = directive(t, i) { i += e.count; if e.word == stop { break } } else { i += 1 }
+            }
+        }
+        return out
     }
 
     /// Zarys skryptu okna SQL: elementy i liczba poleceń SQL pominiętych ponad limit (bardzo duże skrypty).
@@ -89,7 +160,9 @@ public enum PLSQLOutline {
     public static let statementDetailLimit = 1000
 
     /// Zarys skryptu okna SQL (D199) — elementy `parseScriptOutline`.
-    public static func parseScript(_ text: String) -> [OutlineNode] { parseScriptOutline(text).nodes }
+    public static func parseScript(_ text: String, controlFlow: Bool = false) -> [OutlineNode] {
+        parseScriptOutline(text, controlFlow: controlFlow).nodes
+    }
 
     /// Zarys skryptu okna SQL (D199) według podziału na polecenia (`ScriptSplitter`, jak przy wykonaniu): każde polecenie
     /// PL/SQL (`CREATE` jednostki, blok anonimowy) parsowane osobno — niedokończony blok albo błąd składni nie zabiera
@@ -97,7 +170,7 @@ public enum PLSQLOutline {
     /// po komentarzach (jak w tekście — klik zaznacza je w edytorze), szczegóły — dalszy początek polecenia (najwyżej
     /// `statementDetailLimit` znaków, z liniami i wcięciami, komentarze zastąpione odstępem). Tekst leksowany raz.
     /// `isCancelled` — przerwanie analizy w tle (wynik wtedy niepełny, do odrzucenia).
-    public static func parseScriptOutline(_ text: String, statementLimit: Int = scriptStatementLimit,
+    public static func parseScriptOutline(_ text: String, statementLimit: Int = scriptStatementLimit, controlFlow: Bool = false,
                                           isCancelled: () -> Bool = { false }) -> ScriptOutline {
         let ns = text as NSString
         // Tekst tokenów tylko tam, gdzie potrzebny (polecenia PL/SQL, początek polecenia SQL) — skrypt z dziesiątkami
@@ -120,7 +193,8 @@ public enum PLSQLOutline {
             if s.isPLSQL {
                 var j = ti
                 while j < all.count, all[j].start < s.fullEnd { j += 1 }
-                var p = Parser(t: all[ti..<j].map { tok($0, ns) }, i: 0, length: min(s.end, ns.length), source: ns)
+                var p = Parser(t: withoutDirectives(all[ti..<j].map { tok($0, ns) }), i: 0, length: min(s.end, ns.length), source: ns,
+                               controlFlow: controlFlow)
                 let units = p.parseTop()
                 if !units.isEmpty { out += units; continue }
             }
@@ -162,11 +236,12 @@ public enum PLSQLOutline {
         var specs: [String: OutlineNode] = [:]
         for r in roots where [.package, .type].contains(r.kind) { specs[r.name.uppercased()] = r }
         let skipped: Set<OutlineNode.Kind> = [.block, .declareSection, .beginSection, .exceptionSection, .pragma, .parameter]
+        func isSkipped(_ k: OutlineNode.Kind) -> Bool { skipped.contains(k) || k.isControlFlow }
         return roots.map { r in
             var r = r
             switch r.kind {
             case .package, .type:
-                r.children = r.children.map { var c = $0; if !skipped.contains(c.kind) { c.isPublic = true }; return c }
+                r.children = r.children.map { var c = $0; if !isSkipped(c.kind) { c.isPublic = true }; return c }
             case .packageBody, .typeBody:
                 guard let spec = specs[r.name.uppercased()] else { break }
                 let exact = Set(spec.children.map(signature))
@@ -178,7 +253,7 @@ public enum PLSQLOutline {
                 for c in r.children { bodyCounts[c.kind.rawValue + "|" + c.name.uppercased(), default: 0] += 1 }
                 r.children = r.children.map { c in
                     var c = c
-                    guard !skipped.contains(c.kind) else { return c }
+                    guard !isSkipped(c.kind) else { return c }
                     let key = c.kind.rawValue + "|" + c.name.uppercased()
                     c.isPublic = exact.contains(signature(c))
                         || (counts[key] == 1 && bodyCounts[key] == 1 && [.procedure, .function, .cursor].contains(c.kind))
@@ -191,11 +266,12 @@ public enum PLSQLOutline {
     }
 
     /// Ścieżka elementów zawierających pozycję (Code Hierarchy): od jednostki do najgłębszego podprogramu/bloku.
+    /// Struktury sterujące (zarys z `controlFlow`) są przezroczyste — ścieżka jak w zarysie bez nich.
     public static func path(at offset: Int, in nodes: [OutlineNode]) -> [OutlineNode] {
         var out: [OutlineNode] = []
         var level = nodes
-        while let n = level.first(where: { $0.isContainer && $0.range.contains(offset) }) {
-            out.append(n)
+        while let n = level.first(where: { ($0.isContainer || $0.kind.isControlFlow) && $0.range.contains(offset) }) {
+            if n.isContainer { out.append(n) }
             level = n.children
         }
         return out
@@ -259,6 +335,10 @@ public enum PLSQLOutline {
         var i: Int
         let length: Int
         let source: NSString
+        /// Struktury sterujące w zarysie (D203); bez nich ich dzieci trafiają do elementu nadrzędnego.
+        var controlFlow = false
+        /// Otwarte bloki i struktury (BLOCK, EXC, IF, LOOP, CASE) — do dopasowania END i gałęzi niedokończonych struktur.
+        var open: [String] = []
 
         /// Tekst źródła między tokenami (z oryginalnymi odstępami, białe znaki zwinięte).
         func text(from a: Tok, to b: Tok) -> String {
@@ -398,8 +478,10 @@ public enum PLSQLOutline {
             node.children = parseDeclarations(untilEnd: true)
             if isWord(0, "BEGIN") {
                 // Sekcja inicjalizacji ciała pakietu kończy się END nazwa; całej jednostki.
+                let begin = t[i]
                 let b = parseBlockBody(allowDeclare: false)
-                node.children.append(contentsOf: b.children)
+                emit(OutlineNode(kind: .beginSection, name: begin.upper, range: begin.start..<b.end, nameOffset: begin.start, children: b.children),
+                     &node.children)
                 node.range = start..<b.end
                 return node
             }
@@ -520,7 +602,7 @@ public enum PLSQLOutline {
             while let k = peek() {
                 if k.upper == "BEGIN" { break }
                 if k.upper == "END" { break }
-                if k.kind == .slash { break }
+                if k.kind == .slash || k.upper == "CREATE" { break }
                 if timingPoints, ["BEFORE", "AFTER", "INSTEAD"].contains(k.upper) { break }
                 // Metody w ciele typu: MEMBER, STATIC, CONSTRUCTOR, MAP/ORDER, OVERRIDING, FINAL… przed PROCEDURE/FUNCTION.
                 if PLSQLOutline.methodModifiers.contains(k.upper) {
@@ -627,8 +709,346 @@ public enum PLSQLOutline {
             return length
         }
 
-        /// Blok BEGIN … [EXCEPTION …] END [nazwa]; — zagnieżdżone bloki (DECLARE/BEGIN) jako dzieci; struktury IF/LOOP/CASE
-        /// liczone, żeby END IF/END LOOP/END CASE nie kończyły bloku.
+        // MARK: Bloki i struktury sterujące (D203)
+
+        /// Koniec ostatniego przeczytanego tokenu — koniec struktury niedokończonej przed granicą.
+        var previousEnd: Int { i > 0 ? t[i - 1].end : (peek()?.start ?? length) }
+
+        /// Element do listy dzieci: struktura sterująca tylko z `controlFlow`, inaczej jej dzieci (bloki zagnieżdżone).
+        func emit(_ n: OutlineNode, _ out: inout [OutlineNode]) {
+            if controlFlow || !n.kind.isControlFlow { out.append(n) } else { out += n.children }
+        }
+
+        /// Słowo kończące albo dzielące strukturę na początku instrukcji: END [IF|LOOP|CASE], ELSIF, ELSE, WHEN, EXCEPTION.
+        func closer() -> String? {
+            guard let k = peek() else { return nil }
+            switch k.upper {
+            case "END":
+                if let n = peek(1), ["IF", "LOOP", "CASE"].contains(n.upper) { return "END " + n.upper }
+                return "END"
+            case "ELSIF", "ELSE", "WHEN", "EXCEPTION": return k.upper
+            default: return nil
+            }
+        }
+
+        /// Czy otwarta struktura (`open`) obsługuje słowo `closer`.
+        static func accepts(_ open: String, _ closer: String) -> Bool {
+            switch open {
+            case "BLOCK": closer == "END" || closer == "EXCEPTION"
+            case "EXC": closer == "WHEN"
+            case "IF": closer == "ELSIF" || closer == "ELSE" || closer == "END IF"
+            case "LOOP": closer == "END LOOP"
+            case "CASE": closer == "WHEN" || closer == "ELSE" || closer == "END CASE"
+            default: false
+            }
+        }
+
+        /// Słowo należy do struktury zewnętrznej — bieżąca jest niedokończona (np. brak END IF przed END bloku).
+        func belongsOutside(_ c: String) -> Bool { open.dropLast().contains { Self.accepts($0, c) } }
+
+        /// Granica jednostki na początku instrukcji: `/`, CREATE, nagłówek następnego podprogramu — kończy wszystkie
+        /// otwarte struktury (niedokończony podprogram nie zabiera następnych).
+        func atBoundary() -> Bool {
+            guard let k = peek() else { return true }
+            if k.kind == .slash { return true }
+            switch k.upper {
+            case "CREATE", "PROCEDURE", "FUNCTION": return true
+            default:
+                guard PLSQLOutline.methodModifiers.contains(k.upper) else { return false }
+                var j = i
+                while j < t.count, PLSQLOutline.methodModifiers.contains(t[j].upper) { j += 1 }
+                return j < t.count && ["PROCEDURE", "FUNCTION"].contains(t[j].upper)
+            }
+        }
+
+        /// Etykieta po END (END nazwa;, END LOOP etykieta;): identyfikator albo słowo kluczowe przed średnikiem.
+        mutating func skipEndLabel() {
+            guard let n = peek() else { return }
+            if n.kind == .identifier || n.kind == .quotedIdentifier { i += 1; return }
+            if n.kind == .keyword, peek(1)?.kind == .semicolon, closer() == nil { i += 1 }
+        }
+
+        /// Zamknięcie struktury (słowa END …, etykieta, średnik) — zwraca koniec.
+        mutating func closeStructure(words: Int) -> Int {
+            i += words
+            skipEndLabel()
+            var end = t[i - 1].end
+            if let s = peek(), s.kind == .semicolon { end = s.end; i += 1 }
+            return end
+        }
+
+        /// Słowo bez dopasowania (END IF bez IF, ELSE poza IF i CASE) — pomijane razem z etykietą i średnikiem.
+        mutating func skipStray(_ c: String) {
+            if c.hasPrefix("END") { _ = closeStructure(words: c == "END" ? 1 : 2) } else { i += 1 }
+        }
+
+        /// Słowa, przed którymi kończy się instrukcja bez średnika i nagłówek struktury (pisany kod).
+        static let statementStops: Set<String> = ["BEGIN", "DECLARE", "IF", "ELSIF", "EXCEPTION", "CREATE"]
+
+        /// Nagłówek struktury (warunek, zakres pętli, wybór CASE) do jednego ze słów `until` poza nawiasami
+        /// i wyrażeniami CASE; `consume` — wskaźnik za słowem. nil — brak słowa przed końcem instrukcji (wskaźnik bez zmian).
+        mutating func header(until words: Set<String>, consume: Bool = true) -> (first: Tok?, last: Tok?)? {
+            var j = i
+            var depth = 0
+            var caseDepth = 0
+            var first: Tok?, last: Tok?
+            while j < t.count {
+                let k = t[j]
+                if k.kind == .semicolon { return nil }
+                if k.kind == .leftParen { depth += 1 } else if k.kind == .rightParen { depth = max(0, depth - 1) }
+                else if k.upper == "CASE" { caseDepth += 1 }
+                else if k.upper == "END" { if caseDepth > 0 { caseDepth -= 1 } else { return nil } }
+                else if caseDepth == 0 {
+                    if depth == 0, words.contains(k.upper) { i = consume ? j + 1 : j; return (first, last) }
+                    if Self.statementStops.contains(k.upper) { return nil }
+                }
+                if first == nil { first = k }
+                last = k
+                j += 1
+            }
+            return nil
+        }
+
+        /// Instrukcja bez struktury (przypisanie, wywołanie, SQL) do średnika; wyrażenia CASE … END w środku;
+        /// bez średnika — do END albo słowa z `statementStops` (pisany kod). Zawsze co najmniej jeden token.
+        mutating func skipSimpleStatement() {
+            i += 1
+            var caseDepth = 0
+            while let k = peek() {
+                if k.kind == .semicolon { i += 1; return }
+                if k.upper == "CASE" { caseDepth += 1 }
+                else if k.upper == "END" { if caseDepth > 0 { caseDepth -= 1 } else { return } }
+                else if caseDepth == 0, Self.statementStops.contains(k.upper) { return }
+                i += 1
+            }
+        }
+
+        /// Element struktury: słowo otwierające jako nazwa, nagłówek w szczegółach (białe znaki zwinięte, najwyżej
+        /// `statementDetailLimit` znaków).
+        func control(_ kind: OutlineNode.Kind, _ kw: Tok, _ h: (first: Tok?, last: Tok?)?, label: String? = nil) -> OutlineNode {
+            var detail = ""
+            if let a = h?.first, let b = h?.last, b.end > a.start {
+                let limit = PLSQLOutline.statementDetailLimit
+                let end = min(b.end, a.start + limit * 2)
+                detail = source.substring(with: NSRange(location: a.start, length: end - a.start))
+                    .components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
+                if detail.count > limit || end < b.end { detail = String(detail.prefix(limit)) + "…" }
+            }
+            var n = OutlineNode(kind: kind, name: kw.upper, detail: detail, range: kw.start..<kw.end, nameOffset: kw.start)
+            n.label = label
+            return n
+        }
+
+        /// Instrukcje do słowa kończącego strukturę (END…, ELSIF, ELSE, WHEN, EXCEPTION), granicy jednostki albo końca
+        /// tekstu: struktury sterujące (`emit`) i bloki zagnieżdżone; etykieta `<<nazwa>>` trafia do następnej struktury.
+        mutating func statements() -> [OutlineNode] {
+            var out: [OutlineNode] = []
+            var label: String?
+            while let k = peek() {
+                if closer() != nil || atBoundary() { break }
+                if k.upper == "<<" {
+                    i += 1
+                    if let n = peek(), n.upper != ">>", n.kind == .identifier || n.kind == .quotedIdentifier || n.kind == .keyword {
+                        label = n.kind == .quotedIdentifier ? String(n.text.dropFirst().dropLast()) : n.text
+                        i += 1
+                    }
+                    if isWord(0, ">>") { i += 1 }
+                    continue
+                }
+                let lbl = label
+                label = nil
+                switch k.upper {
+                case "DECLARE", "BEGIN":
+                    let inner = parseBlockBody(allowDeclare: true)
+                    var node = OutlineNode(kind: .block, name: "BEGIN", range: k.start..<inner.end, nameOffset: k.start, children: inner.children)
+                    node.label = lbl
+                    out.append(node)
+                case "IF":
+                    if let n = parseIf(label: lbl) { emit(n, &out) } else { skipSimpleStatement() }
+                case "LOOP", "FOR", "WHILE":
+                    if let n = parseLoop(label: lbl) { emit(n, &out) } else { skipSimpleStatement() }
+                case "CASE":
+                    if let n = parseCaseStatement(label: lbl) { emit(n, &out) } else { skipSimpleStatement() }
+                case "FORALL":
+                    let save = i
+                    i += 1
+                    if let h = header(until: ["INSERT", "UPDATE", "DELETE", "MERGE", "EXECUTE"], consume: false) {
+                        var n = control(.forall, k, h, label: lbl)
+                        skipSimpleStatement()
+                        n.range = k.start..<previousEnd
+                        emit(n, &out)
+                    } else {
+                        i = save
+                        skipSimpleStatement()
+                    }
+                default:
+                    skipSimpleStatement()
+                }
+            }
+            return out
+        }
+
+        /// IF warunek THEN … [ELSIF warunek THEN …] [ELSE …] END IF; — gałęzie ELSIF i ELSE jako dzieci. nil — bez THEN
+        /// przed końcem instrukcji (pisany kod: instrukcja zwykła).
+        mutating func parseIf(label: String?) -> OutlineNode? {
+            let kw = t[i]
+            let save = i
+            i += 1
+            guard let h = header(until: ["THEN"]) else { i = save; return nil }
+            var node = control(.ifStatement, kw, h, label: label)
+            open.append("IF")
+            defer { open.removeLast() }
+            var children = statements()
+            var branch: OutlineNode?
+            var branchChildren: [OutlineNode] = []
+            func finish(_ end: Int) {
+                guard var b = branch else { return }
+                b.range = b.range.lowerBound..<max(b.range.upperBound, end)
+                b.children = branchChildren
+                emit(b, &children)
+                branch = nil
+                branchChildren = []
+            }
+            while true {
+                if peek() == nil { finish(length); node.range = kw.start..<length; break }
+                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if c == "ELSIF" || c == "ELSE" {
+                    finish(previousEnd)
+                    let b = t[i]
+                    i += 1
+                    let h = c == "ELSE" ? nil : header(until: ["THEN"])
+                    branch = control(c == "ELSE" ? .elseBranch : .elsifBranch, b, h)
+                    branchChildren = statements()
+                    continue
+                }
+                if c == "END IF" {
+                    finish(previousEnd)
+                    node.range = kw.start..<closeStructure(words: 2)
+                    break
+                }
+                if belongsOutside(c) { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                skipStray(c)
+                if branch == nil { children += statements() } else { branchChildren += statements() }
+            }
+            node.children = children
+            return node
+        }
+
+        /// LOOP …, FOR … LOOP …, WHILE … LOOP … END LOOP [etykieta]; nil — FOR/WHILE bez LOOP (instrukcja zwykła).
+        mutating func parseLoop(label: String?) -> OutlineNode? {
+            let kw = t[i]
+            let save = i
+            i += 1
+            var h: (first: Tok?, last: Tok?)?
+            if kw.upper != "LOOP" {
+                guard let x = header(until: ["LOOP"]) else { i = save; return nil }
+                h = x
+            }
+            var node = control(.loop, kw, h, label: label)
+            open.append("LOOP")
+            defer { open.removeLast() }
+            var children = statements()
+            while true {
+                if peek() == nil { node.range = kw.start..<length; break }
+                guard !atBoundary(), let c = closer() else { node.range = kw.start..<previousEnd; break }
+                if c == "END LOOP" { node.range = kw.start..<closeStructure(words: 2); break }
+                if belongsOutside(c) { node.range = kw.start..<previousEnd; break }
+                skipStray(c)
+                children += statements()
+            }
+            node.children = children
+            return node
+        }
+
+        /// Instrukcja CASE [wybór] WHEN … THEN … [ELSE …] END CASE; (wyrażenie CASE … END w instrukcji pomija
+        /// `skipSimpleStatement`). Gałęzie WHEN i ELSE jako dzieci. nil — bez WHEN (instrukcja zwykła).
+        mutating func parseCaseStatement(label: String?) -> OutlineNode? {
+            let kw = t[i]
+            let save = i
+            i += 1
+            guard let h = header(until: ["WHEN"], consume: false) else { i = save; return nil }
+            var node = control(.caseStatement, kw, h, label: label)
+            open.append("CASE")
+            defer { open.removeLast() }
+            var children = statements()
+            var branch: OutlineNode?
+            var branchChildren: [OutlineNode] = []
+            func finish(_ end: Int) {
+                guard var b = branch else { return }
+                b.range = b.range.lowerBound..<max(b.range.upperBound, end)
+                b.children = branchChildren
+                emit(b, &children)
+                branch = nil
+                branchChildren = []
+            }
+            while true {
+                if peek() == nil { finish(length); node.range = kw.start..<length; break }
+                guard !atBoundary(), let c = closer() else { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                if c == "WHEN" || c == "ELSE" {
+                    finish(previousEnd)
+                    let b = t[i]
+                    i += 1
+                    let h = c == "ELSE" ? nil : header(until: ["THEN"])
+                    branch = control(c == "ELSE" ? .elseBranch : .whenBranch, b, h)
+                    branchChildren = statements()
+                    continue
+                }
+                if c == "END CASE" {
+                    finish(previousEnd)
+                    node.range = kw.start..<closeStructure(words: 2)
+                    break
+                }
+                if belongsOutside(c) { finish(previousEnd); node.range = kw.start..<previousEnd; break }
+                skipStray(c)
+                if branch == nil { children += statements() } else { branchChildren += statements() }
+            }
+            node.children = children
+            return node
+        }
+
+        /// Sekcja EXCEPTION bloku: obsługi WHEN wyjątek [OR wyjątek] THEN … do END bloku.
+        mutating func parseExceptionSection() -> OutlineNode {
+            let kw = t[i]
+            i += 1
+            open.append("EXC")
+            defer { open.removeLast() }
+            var section = OutlineNode(kind: .exceptionSection, name: kw.upper, range: kw.start..<kw.end, nameOffset: kw.start)
+            var children = statements()
+            var handler: OutlineNode?
+            var handlerChildren: [OutlineNode] = []
+            func finish(_ end: Int) {
+                guard var h = handler else { return }
+                h.range = h.range.lowerBound..<max(h.range.upperBound, end)
+                h.children = handlerChildren
+                emit(h, &children)
+                handler = nil
+                handlerChildren = []
+            }
+            var end = length
+            while true {
+                if peek() == nil { finish(length); break }
+                guard !atBoundary(), let c = closer() else { end = previousEnd; finish(end); break }
+                if c == "WHEN" {
+                    finish(previousEnd)
+                    let w = t[i]
+                    i += 1
+                    let h = header(until: ["THEN"])
+                    handler = control(.exceptionHandler, w, h)
+                    handlerChildren = statements()
+                    continue
+                }
+                if belongsOutside(c) { end = previousEnd; finish(end); break }
+                skipStray(c)
+                if handler == nil { children += statements() } else { handlerChildren += statements() }
+            }
+            section.range = kw.start..<max(kw.end, end)
+            section.children = children
+            return section
+        }
+
+        /// Blok [DECLARE …] BEGIN … [EXCEPTION …] END [nazwa]; — bloki zagnieżdżone (DECLARE/BEGIN) jako dzieci,
+        /// struktury sterujące (`emit`); END IF/END LOOP/END CASE nie kończą bloku. Niedokończony blok kończy się na
+        /// granicy jednostki (`atBoundary`) albo przed słowem struktury zewnętrznej.
         mutating func parseBlockBody(allowDeclare: Bool) -> (children: [OutlineNode], end: Int) {
             var children: [OutlineNode] = []
             if allowDeclare, isWord(0, "DECLARE") {
@@ -637,58 +1057,55 @@ public enum PLSQLOutline {
             }
             guard isWord(0, "BEGIN") else { return (children, peek()?.start ?? length) }
             i += 1
-            while let k = peek() {
-                if k.upper == "END" {
-                    let next = peek(1)?.upper ?? ""
-                    if ["IF", "LOOP", "CASE"].contains(next) { i += 2; continue }
-                    i += 1
-                    if let n = peek(), n.kind == .identifier || n.kind == .quotedIdentifier { i += 1 }
-                    var end = t[i - 1].end
-                    if let s = peek(), s.kind == .semicolon { end = s.end; i += 1 }
-                    return (children, end)
+            open.append("BLOCK")
+            defer { open.removeLast() }
+            children += statements()
+            while true {
+                guard peek() != nil else { return (children, length) }
+                guard !atBoundary(), let c = closer() else { return (children, previousEnd) }
+                switch c {
+                case "END":
+                    return (children, closeStructure(words: 1))
+                case "EXCEPTION":
+                    let section = parseExceptionSection()
+                    emit(section, &children)
+                default:
+                    if belongsOutside(c) { return (children, previousEnd) }
+                    skipStray(c)
                 }
-                if k.upper == "DECLARE" || (k.upper == "BEGIN") {
-                    let start = k.start
-                    let inner = parseBlockBody(allowDeclare: true)
-                    children.append(OutlineNode(kind: .block, name: "BEGIN", range: start..<inner.end, nameOffset: start, children: inner.children))
-                    continue
-                }
-                // CASE jako wyrażenie albo instrukcja — obie kończą się END [CASE]; wyrażenie END bez CASE.
-                if k.upper == "CASE" {
-                    i += 1
-                    var depth = 1
-                    while let c = peek(), depth > 0 {
-                        if c.upper == "CASE" { depth += 1 }
-                        if c.upper == "END" {
-                            depth -= 1
-                            if peek(1)?.upper == "CASE" { i += 1 }
-                        }
-                        i += 1
-                    }
-                    continue
-                }
-                i += 1
+                children += statements()
             }
-            return (children, length)
         }
 
         /// Ciało wyzwalacza złożonego: deklaracje wspólne, punkty czasowe `BEFORE STATEMENT IS BEGIN … END BEFORE
-        /// STATEMENT;`, na końcu END [nazwa];
+        /// STATEMENT;` (z `controlFlow` — elementy `timingPoint`), na końcu END [nazwa];
         mutating func parseCompoundBody() -> (children: [OutlineNode], end: Int) {
             var children: [OutlineNode] = []
             while let k = peek() {
                 if ["BEFORE", "AFTER", "INSTEAD"].contains(k.upper) {
-                    while let s = peek(), s.upper != "BEGIN", s.upper != "END", s.kind != .semicolon, s.kind != .slash { i += 1 }
+                    // Nazwa punktu: słowo otwierające i dalsze słowa do IS (STATEMENT, EACH ROW, OF EACH ROW).
+                    let first = i
+                    var last = i
+                    i += 1
+                    while let s = peek(), s.upper != "IS", s.upper != "BEGIN", s.upper != "END", s.kind != .semicolon, s.kind != .slash {
+                        last = i
+                        i += 1
+                    }
+                    if isWord(0, "IS") { i += 1 }
                     guard isWord(0, "BEGIN") else {
                         if peek()?.kind == .semicolon { i += 1 }
                         continue
                     }
-                    children += parseBlockBody(allowDeclare: false).children
+                    var node = control(.timingPoint, k, last > first ? (t[first + 1], t[last]) : nil)
+                    let body = parseBlockBody(allowDeclare: false)
                     // END punkt_czasowy; — słowa punktu po END.
                     if t[i - 1].kind != .semicolon {
                         while let s = peek(), s.kind != .semicolon, s.kind != .slash { i += 1 }
                         if peek()?.kind == .semicolon { i += 1 }
                     }
+                    node.range = k.start..<max(body.end, previousEnd)
+                    node.children = body.children
+                    emit(node, &children)
                     continue
                 }
                 if k.upper == "END" {

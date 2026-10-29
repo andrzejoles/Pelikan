@@ -167,7 +167,8 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private func recomputeUnits(_ text: String) {
         // Zarys i jednostki liczone w tle (pakiet 50 000 linii bez przestojów przy pisaniu).
         Task.detached(priority: .userInitiated) {
-            let outline = PLSQLOutline.parse(text)
+            // Ze strukturami sterującymi (D203) — panel je ukrywa według ustawienia, ścieżka hierarchii je pomija.
+            let outline = PLSQLOutline.parse(text, controlFlow: true)
             let units = ProgramCompiler.units(in: text)
             let tabs = ProgramUnitTabs.tabs(units, in: text)
             await MainActor.run { [weak self] in

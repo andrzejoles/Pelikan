@@ -442,6 +442,12 @@ struct EditorPane: View {
                     Text(L10n.tr("Okna programu, SQL i testu bez własnego wyboru (Widok › Zawartość kodu) idą za tym ustawieniem."))
                         .font(.uiSecondary).foregroundStyle(.secondary)
                 }
+                // Wspólne dla wszystkich okien; przełącznik też w panelu (przycisk obok filtra, menu) — D203.
+                VStack(alignment: .leading, spacing: 2) {
+                    Toggle(L10n.tr("Struktury sterujące w Zawartości kodu"), isOn: setting(workspace, \.codeContentsControlFlow))
+                    Text(L10n.tr("IF, pętle, CASE, bloki BEGIN i obsługa wyjątków jako węzły drzewa (domyślnie zwinięte)."))
+                        .font(.uiSecondary).foregroundStyle(.secondary)
+                }
                 Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
                     Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
                     Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)
