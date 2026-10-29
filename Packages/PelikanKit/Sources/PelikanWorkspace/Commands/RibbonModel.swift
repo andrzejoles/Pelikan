@@ -351,7 +351,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Wdrożenie"), [
                 .menu(L10n.tr("Koszyk"), symbol: "cart", commands: ["tools.cart", "cart.script"], large: true),
-                .menu(L10n.tr("Git"), symbol: "arrow.triangle.branch", commands: ["vcs.status", "vcs.diff", "vcs.log", separator, "vcs.add", "vcs.commit"], large: true),
+                .menu(L10n.tr("Git"), symbol: "arrow.triangle.branch", commands: ["vcs.status", "vcs.diff", "vcs.log", separator, "vcs.openBranchChanges", separator, "vcs.add", "vcs.commit"], large: true),
                 .menu(L10n.tr("Zdalny Pro*C"), symbol: "server.rack", commands: [
                     "proc.deploy", "proc.console", "proc.stop", "proc.history", "proc.gitStatus", "proc.rollback", "proc.releaseLock", separator,
                     "ssh.manager", "ssh.test", "ssh.import", "ssh.export",
@@ -397,7 +397,7 @@ public enum RibbonModel {
     @MainActor static var view: RibbonTab {
         RibbonTab("view", L10n.tr("Widok"), [
             RibbonGroup(L10n.tr("Panele"), [
-                .small("view.objectBrowser"), .small("view.fileBrowser"), .small("view.snippets"),
+                .small("view.objectBrowser"), .small("view.fileBrowser"), .small("view.windowList"), .small("view.snippets"),
                 .small("view.taskMonitor"), .small("view.clipboardHistory"), .small("view.todoItems"),
                 .small("grid.valuePanel"), .small("view.templateWindow"), .small("view.codeContents"),
                 .small("agent.togglePane"),
@@ -411,6 +411,13 @@ public enum RibbonModel {
                 .small("window.previous"), .small("window.next"), .small("window.rename"),
                 .small("file.close"), .small("file.closeAll"), .small("file.closeOthers"),
                 .menu(L10n.tr("Więcej"), symbol: "ellipsis.circle", commands: ["file.closeLeft", "file.closeRight", separator, "window.listSort"]),
+            ]),
+            RibbonGroup(L10n.tr("Grupy kart"), [
+                .small("window.previousGroup", label: L10n.tr("Poprzednia grupa")), .small("window.nextGroup", label: L10n.tr("Następna grupa")),
+                .small("window.showGroup", label: L10n.tr("Pokaż grupę…")),
+                .menu(L10n.tr("Grupy ręczne"), symbol: "folder.badge.gearshape", commands: [
+                    "window.moveToGroup", "window.removeFromGroup", separator, "window.renameGroup", "window.ungroup", separator, "window.allTabs",
+                ]),
             ]),
             RibbonGroup(L10n.tr("Układ"), [
                 .small("view.saveLayout"), .small("view.restoreLayout"), .small("view.autosaveLayout"),

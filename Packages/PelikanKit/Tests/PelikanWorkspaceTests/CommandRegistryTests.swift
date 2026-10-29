@@ -55,6 +55,8 @@ struct CommandRegistryTests {
         try await ws.invoke("file.new.program")
         #expect(ws.documents.map(\.fullTitle) == ["Okno SQL – Nowe", "Okno SQL – Nowe 2", "Okno programu – Nowe"])
         #expect(ws.activeDocument?.kind == .program)
+        // Okno programu jest samo w grupie „Programy” (D200) — ⌃Tab przechodzi do pierwszego okna następnej grupy
+        // (cyklicznie: „Okna SQL”).
         ws.cycleDocuments(forward: true)
         #expect(ws.activeDocument?.ordinal == 1 && ws.activeDocument?.kind == .sql)
         try await ws.invoke("file.close")

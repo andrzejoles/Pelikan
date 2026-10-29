@@ -1,0 +1,17 @@
+[
+  {"command": "debug.openFile", "args": {"path": "@REPO@/pensje_api.pks"}, "delay": 1},
+  {"command": "debug.openFile", "args": {"path": "@REPO@/skrypt-zawartosc.sql"}, "delay": 1},
+  {"command": "file.new.sql", "delay": 0.5},
+  {"command": "session.windowConnection", "args": {"connection": "dev_baza_testowa"}, "delay": 0.5},
+  {"command": "file.new.program", "delay": 0.5},
+  {"command": "session.windowConnection", "args": {"connection": "dev_baza_testowa"}, "delay": 0.5},
+  {"command": "file.new.sql", "delay": 0.5},
+  {"command": "session.windowConnection", "args": {"connection": "dev_baza_druga"}, "delay": 0.5},
+  {"command": "file.new.test", "delay": 0.5},
+  {"command": "session.windowConnection", "args": {"connection": "dev_baza_druga"}, "delay": 0.5},
+  {"command": "file.new.sql", "delay": 0.5},
+  {"command": "session.windowConnection", "args": {"connection": "dev_baza_druga"}, "delay": 0.5},
+  {"command": "window.moveToGroup", "args": {"name": "Przegląd"}, "delay": 0.5},
+  {"command": "view.windowList", "delay": 0.5},
+  {"command": "window.showGroup", "args": {"group": "dev_baza_testowa"}, "delay": 2}
+]

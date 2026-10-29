@@ -219,9 +219,11 @@ struct GitRepositoryTests {
         _ = try repo.headContent(of: f)
         _ = GitRepository.discover(for: f)
         for marker in [fsmonitor, clean, gpg] { #expect(!FileManager.default.fileExists(atPath: marker.path), "\(marker.lastPathComponent)") }
-        // Kontrola: zwykłe wywołanie gita (jak w terminalu) wykonuje te polecenia.
+        // Kontrola: zwykłe wywołanie gita (jak w terminalu) wykonuje filtr; fsmonitor jest wyłączony zawsze (demon
+        // w tle trzymałby potoki wyjścia — GitRepository.noBackgroundConfig).
         _ = try? GitRepository.run(["status", "--porcelain=v2", "-z"], in: dir)
-        #expect(FileManager.default.fileExists(atPath: fsmonitor.path) && FileManager.default.fileExists(atPath: clean.path))
+        #expect(FileManager.default.fileExists(atPath: clean.path))
+        #expect(!FileManager.default.fileExists(atPath: fsmonitor.path))
         #expect(GitRepository.untrustedFilterConfig(in: dir).contains { $0 == ("filter.obcy.clean", "") })
     }
 

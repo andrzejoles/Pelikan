@@ -64,6 +64,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 | Fold / Unfold | Zwiń / Rozwiń (blok, wszystko) | VS, JB |
 | Beautifier / Format | Formatuj kod PL/SQL; karta ustawień „Formater” | |
 | Multiple cursors | Wiele kursorów | |
+| Tab group | **grupa kart** (Następna / Poprzednia grupa kart, Pokaż grupę kart…, Karty wszystkich grup, Przenieś do grupy, Rozgrupuj); **kapsułka** grupy na pasku tytułu; en *Tab Group*, de *Tabgruppe*, es *grupo de pestañas*, uk *група вкладок* | karta = zakładka okna (D198); „grupy okien” zajęte przez DBMS Scheduler (window groups) — D200 |
 | Build / Make (projekt) | **Kompiluj projekt** / **Kompiluj zmienione** | VS („Kompiluj” = Build); kompilacja PL/SQL to kompilacja, nie „budowanie”; wcześniej „Buduj projekt” / „Make projektu” |
 
 ## Debuger

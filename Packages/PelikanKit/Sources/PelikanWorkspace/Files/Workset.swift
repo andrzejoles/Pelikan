@@ -35,6 +35,8 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var fileHash: String?
     /// Panel Zawartość kodu wybrany w oknie (D199); brak — jak w Ustawieniach (także starsze worksety).
     public var codeContents: Bool?
+    /// Grupa ręczna kart okna (D200, identyfikator z `Workset.tabGroups`); brak — grupy automatyczne.
+    public var group: UUID?
 
     /// Format zapisany w worksecie (nil — starszy workset).
     var fileFormat: TextFileFormat? {
@@ -115,6 +117,11 @@ public struct Workset: Sendable, Codable, Hashable {
     public var documents: [WorksetDocument] = []
     public var activeIndex: Int?
     public var saved = Date()
+    /// Grupy ręczne kart (D200) w kolejności utworzenia; starsze worksety — brak.
+    public var tabGroups: [ManualTabGroup]?
+    /// Kolory palety połączeń i grup (klucz `conn:<uuid>` albo identyfikator grupy → numer koloru) — te same kolory
+    /// po ponownym otwarciu workseta.
+    public var tabColors: [String: Int]?
 
     public init(name: String, documents: [WorksetDocument] = [], activeIndex: Int? = nil) {
         self.name = name; self.documents = documents; self.activeIndex = activeIndex
@@ -235,8 +242,18 @@ public final class WorksetStore {
         }
         // Okno pary (D194) zajmuje oba swoje pliki.
         let paths = Set(m.documents.flatMap { [$0.filePath].compactMap { $0 } + ($0.unitFiles ?? []).map(\.path) })
-        m.documents += u.documents.filter { d in
+        let added = u.documents.filter { d in
             ([d.filePath].compactMap { $0 } + (d.unitFiles ?? []).map(\.path)).allSatisfy { !paths.contains($0) }
+        }
+        m.documents += added
+        // Grupy ręczne i kolory dopisanych okien (D200).
+        let used = Set(added.compactMap(\.group))
+        let extra = (u.tabGroups ?? []).filter { g in used.contains(g.id) && !(m.tabGroups ?? []).contains { $0.id == g.id } }
+        if !extra.isEmpty { m.tabGroups = (m.tabGroups ?? []) + extra }
+        if let colors = u.tabColors {
+            var c = m.tabColors ?? [:]
+            for (k, v) in colors where c[k] == nil { c[k] = v }
+            m.tabColors = c
         }
         return m
     }
@@ -326,6 +343,7 @@ extension Workspace {
             }
             if d.kind.hasCodeContents { e.codeContents = d.codeContentsVisible }
             if !d.unitFiles.isEmpty { e.unitFiles = d.unitFiles.map(WorksetUnitFile.init) }
+            e.group = tabGroupState.assignments[d.id]
             if let c = d.consoleConnectionID {
                 e.consoleConnectionID = c
                 e.text = nil
@@ -333,7 +351,16 @@ extension Workspace {
             return e
         }
         let active = documents.firstIndex { $0.id == activeDocumentID }
-        return Workset(name: name ?? worksets.current, documents: docs, activeIndex: active)
+        var w = Workset(name: name ?? worksets.current, documents: docs, activeIndex: active)
+        // Grupy ręczne i kolory palety (D200); pola opcjonalne — starsze wersje je pomijają.
+        let used = Set(docs.compactMap(\.group))
+        let groups = tabGroupState.manualGroups.filter { used.contains($0.id) }
+        if !groups.isEmpty { w.tabGroups = groups }
+        if !documents.isEmpty {
+            _ = tabGroups
+            if !tabPalette.assigned.isEmpty { w.tabColors = tabPalette.assigned }
+        }
+        return w
     }
 
     /// Zastępuje okna oknami workseta (bieżące okna trzeba wcześniej zapisać do ich workseta). Plik, którego już nie
@@ -375,6 +402,8 @@ extension Workspace {
         var missing: [String] = []
         // Indeks wpisu → otwarte okno: pominięte wpisy nie przesuwają okna aktywnego (R6-14).
         var opened: [Int: Document] = [:]
+        // Kolory palety z workseta (D200) — przed otwarciem okien, żeby połączenia dostały swoje kolory.
+        if let colors = w.tabColors { tabPalette.prefer(colors) }
         for (i, e) in w.documents.enumerated() {
             let url = e.filePath.map { URL(fileURLWithPath: $0) }
             let doc: Document
@@ -419,6 +448,14 @@ extension Workspace {
             doc.selectedRange = min(e.selectionStart, len)..<min(max(e.selectionEnd, e.selectionStart), len)
             opened[i] = doc
         }
+        // Grupy ręczne (D200): istniejąca grupa o tym identyfikatorze zostaje (odzyskiwanie obok bieżących okien).
+        for g in w.tabGroups ?? [] where !tabGroupState.manualGroups.contains(where: { $0.id == g.id }) {
+            tabGroupState.manualGroups.append(g)
+        }
+        for (i, doc) in opened {
+            if let g = w.documents[i].group, tabGroupState.manualGroups.contains(where: { $0.id == g }) { tabGroupState.assignments[doc.id] = g }
+        }
+        pruneManualTabGroups()
         if let i = w.activeIndex, let d = opened[i] { activate(d.id) }
         return missing
     }

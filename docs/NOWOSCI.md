@@ -31,6 +31,26 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   linii i linią prawego marginesu; zmienione linie podświetlone przez 5 s, usunięte zaznaczone czerwoną kreską; zmiana
   opcji pokazuje przykład, w którym ją widać, i przewija do zmiany; VoiceOver ogłasza liczbę zmienionych linii.
 
+## 1.7.0 — grupy kart okien
+
+- **Grupy kart:** przy wielu oknach pasek kart pokazuje tylko karty bieżącej grupy, a grupy widać jako dwuwierszowe
+  kapsułki na pasku tytułu (nazwa, szczegół i liczba okien, np. „main · 7”, „5 okien”). Pelikan grupuje okna sam:
+  pliki otwartego projektu, pliki repozytorium gita ze zdalnym (osobno dla każdej gałęzi i worktree), dalej według
+  połączenia — a gdy wszystkie okna są na jednej bazie, według rodzaju okna (okna SQL, programy, testy, konsole). Okno
+  aktywowane skądkolwiek przełącza grupę samo; kapsułka przenosi do ostatnio używanego okna grupy, „»” rozwija listę
+  wszystkich grup. ⌃Tab przechodzi po oknach grupy (za ostatnim — do następnej grupy), ⌃⌘] / ⌃⌘[ — po grupach,
+  **Okno › Pokaż grupę kart…** wybiera z listy, **Okno › Karty wszystkich grup** pokazuje wszystkie karty. Własne grupy: menu karty › **Przenieś do grupy**;
+  zapisują się w worksecie. Lista okien pokazuje drzewo według grup.
+- **Karty z połączeniem i kolorem:** każda karta ma drugi wiersz z połączeniem okna, a tło w kolorze połączenia
+  z palety 10 wyraźnie różnych barw (ten sam kolor na kapsułce grupy, Liście okien i pasku stanu). Aktywna karta —
+  mocniejsze tło, grube podkreślenie w kolorze połączenia i pogrubiony tytuł. Kolor trzyma się połączenia, dopóki ma
+  okna, i wraca z worksetem.
+- **Przewijanie kart:** gdy karty nie mieszczą się w wierszu, po bokach paska pojawiają się przyciski ‹ ›; pasek
+  przewija się też kółkiem myszy i gestem gładzika, a aktywna karta jest zawsze widoczna.
+- **Pliki zmienione w gałęzi:** kliknięcie gałęzi na pasku stanu › **Otwórz pozostałe pliki zmienione w gałęzi** otwiera
+  pliki kodu zmienione w gałęzi (od rozgałęzienia z gałęzią domyślną zdalnego repozytorium) oraz niezatwierdzone
+  i nieśledzone — bez usuniętych, binarnych i już otwartych; specyfikacja i ciało pakietu w jednym oknie.
+
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 
 - **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko
