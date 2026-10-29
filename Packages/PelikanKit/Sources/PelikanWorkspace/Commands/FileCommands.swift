@@ -432,7 +432,7 @@ enum FileCommands {
     static var layout: [Command] {
         [
             command("view.saveLayout", L10n.tr("Zapisz układ okna"), .view, effect: .settings,
-                    summary: L10n.tr("Zapamiętuje położenie i rozmiar okna głównego, szerokość lewej kolumny, jej kartę i panel agenta."),
+                    summary: L10n.tr("Zapamiętuje położenie i rozmiar okna głównego, szerokość lewej kolumny, jej kartę, schowanie kolumny i panel agenta."),
                     feature: "PD-WSET-002") { ctx in
                 guard let l = ctx.ui?.currentLayout() else { throw CommandError.notAvailable(L10n.tr("Brak okna głównego")) }
                 ctx.workspace.worksets.saveLayout(l)

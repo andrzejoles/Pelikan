@@ -79,7 +79,7 @@ final class CodeContentsPanel {
         b.bezelStyle = .accessoryBarAction
         b.setButtonType(.pushOnPushOff)
         b.isBordered = true
-        b.image = NSImage(systemSymbolName: "sidebar.left", accessibilityDescription: nil)
+        b.image = NSImage(systemSymbolName: "list.bullet.indent", accessibilityDescription: nil)
         b.imagePosition = .imageOnly
         b.toolTip = L10n.tr("Pokaż/ukryj Zawartość kodu")
         b.setAccessibilityLabel(L10n.tr("Zawartość kodu"))

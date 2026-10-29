@@ -73,7 +73,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         window.toolbar = toolbar
         window.addTitlebarAccessoryViewController(ribbon)
         // Przycisk lewej kolumny tuż za przyciskami okna, przed tytułem (D204).
-        window.addTitlebarAccessoryViewController(SidebarToggleAccessory(workspace: workspace))
+        window.addTitlebarAccessoryViewController(sidebarToggle)
+        observeSidebar()
         window.onFirstResponderChange = { [weak self] in self?.autoHideDocks() }
         window.toolsWithoutFocus = { [weak self] in
             guard let self else { return [] }
@@ -135,7 +136,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         split.splitViewItems.first?.isCollapsed = false
         split.splitView.setPosition(CGFloat(l.sidebarWidth), ofDividerAt: 0)
         sidebarController.select(pane: l.sidebarPane)
-        if l.isSidebarCollapsed { setSidebar(visible: false, animated: false) }
+        if l.isSidebarCollapsed {
+            setSidebar(visible: false, animated: false)
+            // Schowana kolumna wraca do szerokości z układu (podział przy schowanej kolumnie jej nie zna).
+            sidebarWidthBeforeCollapse = max(CGFloat(l.sidebarWidth), sidebarItem?.minimumThickness ?? 220)
+        }
         if agentItem != nil { setAgentPane(visible: l.agentPaneVisible) }
     }
 
@@ -146,8 +151,38 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     // MARK: Lewa kolumna — pokaż/ukryj (D204)
 
     private var sidebarItem: NSSplitViewItem? { split.splitViewItems.first }
-    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie.
+    private lazy var sidebarToggle = SidebarToggleAccessory(workspace: workspace) { [weak self] in self?.isSidebarVisible ?? true }
+    private var sidebarResizeObserver: (any NSObjectProtocol)?
+    /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie. Aktualna po
+    /// każdej zmianie podziału przy widocznej kolumnie (także tuż przed zwinięciem przeciągnięciem); na starcie z autozapisu
+    /// podziału, gdy kolumna była schowana.
     private var sidebarWidthBeforeCollapse: CGFloat = 260
+
+    /// Śledzi szerokość i widoczność lewej kolumny (przycisk na pasku tytułu, VoiceOver).
+    private func observeSidebar() {
+        if let width = Self.autosavedSidebarWidth(), width >= (sidebarItem?.minimumThickness ?? 220) { sidebarWidthBeforeCollapse = width }
+        sidebarResizeObserver = NotificationCenter.default.addObserver(forName: NSSplitView.didResizeSubviewsNotification,
+                                                                       object: split.splitView, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.sidebarDidResize() }
+        }
+    }
+
+    private func sidebarDidResize() {
+        if let item = sidebarItem, !item.isCollapsed {
+            let width = item.viewController.view.frame.width
+            if width >= item.minimumThickness { sidebarWidthBeforeCollapse = width }
+        }
+        sidebarToggle.refresh()
+    }
+
+    /// Szerokość pierwszego elementu z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit”: „x, y, w, h,
+    /// ukryty, …”) — zapisana także dla schowanej kolumny.
+    private static func autosavedSidebarWidth() -> CGFloat? {
+        guard let frames = UserDefaults.standard.array(forKey: "NSSplitView Subview Frames PelikanMainSplit") as? [String],
+              let first = frames.first else { return nil }
+        let parts = first.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        return parts.count > 2 ? Double(parts[2]).map { CGFloat($0) } : nil
+    }
 
     var isSidebarVisible: Bool { !(sidebarItem?.isCollapsed ?? true) }
 
@@ -163,6 +198,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
             }
         }
         if animated { item.animator().isCollapsed = !visible } else { item.isCollapsed = !visible }
+        sidebarToggle.refresh()
     }
 
     // MARK: Panele narzędzi (PD-UI-003)

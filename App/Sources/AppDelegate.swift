@@ -1330,6 +1330,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
+                // Pasek narzędzi ukryty (pasek tytułu bez paska narzędzi — przycisk lewej kolumny, D204).
+                if s.command == "debug.hideToolbar" {
+                    mainWindow?.window?.toolbar?.isVisible = false
+                    log("ok debug.hideToolbar")
+                    try? await Task.sleep(for: .seconds(s.delay ?? 1))
+                    continue
+                }
                 // Zmiana opcji formatera na inną wartość (przykład z BeautifierExamples) — podgląd zmian w Preferencjach.
                 if s.command == "debug.beautifierVariant", case .string(let id)? = s.args?["option"], let e = BeautifierExamples.example(id) {
                     workspace.settings.beautifier = e.variant(workspace.settings.beautifier)
