@@ -43,7 +43,10 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   (e.g. `.pck`), as before.
 - Opening `name.pks` or `name.pkb` when the pair file lies next to it opens both units in one window, on the tab of
   the opened file; the window title is `name.pks + .pkb`. This also works from the Finder, the file browser, recent
-  files, projects and worksets. Files that are not the specification and body of one package or type open separately.
+  files, projects and worksets. Files that are not the specification and body of one package or type open separately —
+  also a `.pks` file with a comment after the specification's `END` (saving would move it to the body file). When a
+  pair file has changed on disk since it was opened (another program, `git checkout`), **Save** asks before
+  overwriting it.
   Set the extensions and pair opening in **Preferences › General › Specification and body in separate files**.
 
 ### Working safely with code in the database

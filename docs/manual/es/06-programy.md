@@ -45,7 +45,10 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
 - Abrir `nombre.pks` o `nombre.pkb` cuando el archivo del par está al lado abre ambas unidades en una ventana, en la
   pestaña del archivo abierto; el título de la ventana es `nombre.pks + .pkb`. Funciona también desde el Finder, el
   explorador de archivos, los archivos recientes, los proyectos y los worksets. Los archivos que no son la
-  especificación y el cuerpo de un mismo paquete o tipo se abren por separado. Las extensiones y la apertura del par se
+  especificación y el cuerpo de un mismo paquete o tipo se abren por separado, también un archivo `.pks` con un
+  comentario tras el `END` de la especificación (al guardar pasaría al archivo del cuerpo). Si un archivo del par ha
+  cambiado en el disco desde que se abrió (otro programa, `git checkout`), **Guardar** pregunta antes de
+  sobrescribirlo. Las extensiones y la apertura del par se
   configuran en **Preferencias › General › Especificación y cuerpo en archivos separados**.
 
 ### Trabajar con seguridad con el código de la base de datos

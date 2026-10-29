@@ -2145,14 +2145,49 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   okno programu.
 - **Eksport obiektów użytkownika (PD-TOOL-007):** „plik na obiekt” zapisuje specyfikację i ciało osobno z
   rozszerzeniami z Preferencji (dotąd `.spc`/`.bdy`); **Specyfikacja i ciało w jednym pliku** (`.pck`/`.typ`) domyślnie
-  wyłączona. Jednostki PL/SQL w plikach na obiekt bez „/” — nowa opcja **Kończ jednostki znakiem /** (domyślnie
-  wyłączona). DBMS_METADATA dalej z SQLTERMINATOR (tabele i inne DDL zachowują „;”); „/” zdejmowany za jednostką,
-  gdy za nią nic nie ma albo jest `GRANT`/`REVOKE`; `ALTER TRIGGER … ENABLE` (wyzwalacz i tak powstaje włączony) jest
-  pomijane, a przy `… DISABLE` „/” zostaje (bez niego ALTER dokleiłby się do wyzwalacza). Bez zmian, z „/”: tryb
-  „jeden plik” (skrypt SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w oknie
-  poleceń, Duplikuj obiekt, okno testu, ORDS. Test na bazie: EMP_API → `emp_api.pks`/`emp_api.pkb` bez linii „/”,
-  otwarte jako para i skompilowane F8 — oba VALID.
-- **Ograniczenia:** komentarz za `END` specyfikacji w pliku `.pks` (bez pustej linii przed ciałem) przeniósłby się do
-  ciała — taki plik otwiera się sam, bez pary. Nagłówek „-- Wygenerowane przez Pelikana — data” w plikach eksportu
-  zostaje (jak dotąd). Para w oknie musi mieć tę samą nazwę bazową plików przy Zapisz jako; zmiana nazwy jednego pliku
-  w Przeglądarce plików zachowuje powiązanie z inną nazwą.
+  wyłączona, a takie pliki mają „/” jak w PL/SQL Developerze. Jednostki PL/SQL w osobnych plikach na obiekt bez „/” —
+  nowa opcja **Kończ jednostki znakiem /** (domyślnie wyłączona). DBMS_METADATA dalej z SQLTERMINATOR (tabele i inne
+  DDL zachowują „;”); „/” zdejmowany za jednostką, gdy za nią nic nie ma; `ALTER TRIGGER … ENABLE` (wyzwalacz i tak
+  powstaje włączony) jest pomijane, a `… DISABLE` zastępuje klauzula `DISABLE` w `CREATE TRIGGER` (11g+, przed
+  `WHEN (…)` albo treścią wyzwalacza) — plik bez „/” i bez ALTER. Gdy za jednostką jest inne polecenie (np. `ALTER
+  TYPE` ewolucji typu), „/” zostaje, a okno eksportu wymienia takie pliki. Bez zmian, z „/”: tryb „jeden plik” (skrypt
+  SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w oknie poleceń, Duplikuj obiekt,
+  okno testu, ORDS. Testy na bazie: EMP_API → `emp_api.pks`/`emp_api.pkb` bez linii „/”, otwarte jako para
+  i skompilowane F8 — oba VALID; wyłączony wyzwalacz → plik z `DISABLE`, wykonany ponownie daje wyzwalacz DISABLED.
+- **Uprawnienia (decyzja właściciela: „GRANT'y zawsze w osobnych plikach”):** w trybie „plik na obiekt” pliki DDL
+  (`.pks`, `.pkb`, `.tps`, `.tpb`, `.sql`, `.trg`…) zawierają wyłącznie CREATE; uprawnienia obiektu trafiają do
+  osobnego pliku `nazwa.grants.sql` obok (polecenia GRANT zakończone „;”) albo są pomijane (opcja **Uprawnienia
+  w plikach na obiekt**: w osobnym pliku — domyślnie — albo pomiń). Jeden plik (skrypt) — uprawnienia za obiektem jak
+  dotąd. W oknie programu `GRANT` stojące w pliku specyfikacji (dopisane ręcznie) to tekst użytkownika: należy do
+  karty specyfikacji i zapisuje się z nią bez zmian — Pelikan nie usuwa ani nie przenosi go po cichu.
+- **Nagłówek z datą:** w plikach na obiekt domyślnie bez komentarza „-- Wygenerowane przez Pelikana — data” (data
+  zmieniałaby każdy plik w repozytorium przy każdym eksporcie) — opcja **Nagłówek z datą eksportu**; jeden plik —
+  z nagłówkiem jak dotąd.
+- **Nazwy plików eksportu:** nazwa bazowa nadawana obiektowi (właściciel + nazwa) wspólna dla wszystkich jego plików;
+  inny obiekt o tej samej nazwie bazowej (inny schemat, „Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich
+  plikach — specyfikacja drugiego schematu nie trafia w parę z ciałem pierwszego. Kolejność eksportu: typ, właściciel,
+  nazwa.
+- **Poprawki po przeglądzie (zapis i otwieranie):** Zapisz jako z nazwą `.pck`, bez rozszerzenia albo `.pkb` pyta raz
+  o wszystkie istniejące pliki pary spoza okna (plik wybrany w oknie zapisu potwierdza okno zapisu), zamiast nadpisać
+  specyfikację bez pytania. Rozszerzenia z Preferencji: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
+  skryptów, testów, raportów i plików `.pck`/`.typ` — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie),
+  a zapis odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
+  jedną jednostkę o tym samym tekście co w oknie (dwie jednostki w jednej linii dzielą kartę w środku polecenia) —
+  inaczej odmowa z komunikatem. Plik pary zmieniony na dysku od otwarcia albo zapisu (inny program, `git checkout`) —
+  pytanie „Zapisz mimo to / Anuluj”. Treść zapisana każdego pliku aktualizowana od razu po jego zapisie; nieudane
+  Zapisz jako usuwa pliki, które samo utworzyło. Nowy plik pary przy Zapisz jako dostaje format dotychczasowego pliku
+  tej samej części. Okno z samą specyfikacją albo samym ciałem proponuje rozszerzenie `.pks`/`.pkb` (`.tps`/`.tpb`).
+  Plik pary szukany po rzeczywistej nazwie z katalogu (APFS bez rozróżniania wielkości liter), nieczytelny plik pary —
+  otwarcie samego pliku; jednostki i karty z otwarcia trafiają do pamięci okna. Pasek okna (stan repozytorium) bierze
+  plik karty widocznej z pamięci kart (`Document.shownUnitTab`/`shownFileURL`) — bez dzielenia tekstu przy każdym
+  znaku (R4-01). Przeglądarka plików oznacza jako zmieniony tylko plik, którego jednostka się zmieniła. **git add** bez
+  argumentu w oknie pary dodaje oba pliki; pulpit projektu, **Dodaj plik okna do projektu**, zmienna `#file` narzędzi
+  użytkownika (plik karty z kursorem) i scalanie workseta nieotwartego przy starcie uwzględniają oba pliki; treść
+  zapisana plików z workseta czytana w kodowaniu projektu. `GRANT` sam w linii i `GRANT …; -- komentarz` należą do
+  karty jednostki przed nimi. Nowe ustawienia w zestawach preferencji (sekcja Ogólne).
+- **Ograniczenia:** komentarz za `END` specyfikacji w pliku `.pks` (bez pustej linii przed ciałem) przeniósłby się przy
+  zapisie do ciała — taki plik otwiera się sam, bez pary. Para w oknie ma tę samą nazwę bazową plików przy Zapisz jako;
+  zmiana nazwy jednego pliku w Przeglądarce plików zachowuje powiązanie z inną nazwą. Workset z oknem pary otwarty
+  w starszej wersji Pelikana nie zna pola `unitFiles` — okno wraca z całym tekstem i plikiem specyfikacji, a zapis
+  zapisałby obie jednostki do pliku specyfikacji. Pasek stanu repozytorium dla zmienionego okna pary pokazuje „zmieniony”
+  także dla niezmienionego pliku karty (stan liczony z całego okna — bez dzielenia tekstu przy każdym znaku).

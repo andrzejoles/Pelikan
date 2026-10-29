@@ -45,7 +45,9 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
 - Das Öffnen von `name.pks` oder `name.pkb`, wenn die Paardatei daneben liegt, öffnet beide Einheiten in einem Fenster
   auf dem Reiter der geöffneten Datei; der Fenstertitel lautet `name.pks + .pkb`. Das funktioniert auch aus dem Finder,
   dem Dateibrowser, den zuletzt verwendeten Dateien, Projekten und Worksets. Dateien, die nicht Spezifikation und Body
-  eines Pakets oder Typs sind, öffnen sich einzeln. Erweiterungen und das Öffnen des Paars stellen Sie unter
+  eines Pakets oder Typs sind, öffnen sich einzeln — auch eine `.pks`-Datei mit einem Kommentar nach dem `END` der
+  Spezifikation (beim Speichern würde er in die Body-Datei wandern). Hat sich eine Paardatei seit dem Öffnen auf dem
+  Datenträger geändert (anderes Programm, `git checkout`), fragt **Speichern** vor dem Überschreiben. Erweiterungen und das Öffnen des Paars stellen Sie unter
   **Einstellungen › Allgemein › Spezifikation und Body in getrennten Dateien** ein.
 
 ### Sicheres Arbeiten mit Code in der Datenbank

@@ -42,7 +42,8 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
 - Otwarcie `nazwa.pks` albo `nazwa.pkb`, gdy obok leży plik pary, otwiera obie jednostki w jednym oknie na karcie
   otwartego pliku; tytuł okna to `nazwa.pks + .pkb`. Działa to także z Findera, Przeglądarki plików, listy ostatnich
   plików, projektu i workseta. Pliki, które nie są specyfikacją i ciałem jednego pakietu albo typu, otwierają się
-  osobno. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne › Specyfikacja i ciało w osobnych
+  osobno — także plik `.pks` z komentarzem za `END` specyfikacji (przy zapisie przeszedłby do pliku ciała). Gdy plik
+  pary zmienił się na dysku od otwarcia (inny program, `git checkout`), **Zapisz** pyta przed nadpisaniem. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne › Specyfikacja i ciało w osobnych
   plikach**.
 
 ### Bezpieczna praca z kodem w bazie

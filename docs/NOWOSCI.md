@@ -30,7 +30,13 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   Specyfikacja i ciało w osobnych plikach**.
 - **Eksport obiektów użytkownika** w trybie „plik na obiekt” zapisuje specyfikację i ciało pakietu albo typu
   w osobnych plikach `.pks` / `.pkb` (`.tps` / `.tpb`) bez „/” — gotowe do repozytorium; nowa opcja **Kończ jednostki
-  znakiem /** przywraca „/”. Eksport do jednego pliku (skrypt SQL*Plus) zostaje z „/”.
+  znakiem /** przywraca „/”. Pliki DDL zawierają wyłącznie CREATE: uprawnienia trafiają do osobnego pliku
+  `nazwa.grants.sql` (albo są pomijane), wyłączony wyzwalacz ma `DISABLE` w `CREATE TRIGGER`, a komentarz z datą
+  eksportu jest tylko na życzenie (**Nagłówek z datą eksportu**). Eksport do jednego pliku (skrypt SQL*Plus) zostaje
+  z „/” i uprawnieniami za obiektami.
+- **Uwaga przy powrocie do starszej wersji:** workset z oknem pary plików otwarty w Pelikanie sprzed 1.4.0 przywróci
+  okno z obiema jednostkami i plikiem specyfikacji — zapis zapisałby wtedy obie jednostki do pliku `.pks`. Przed
+  powrotem do starszej wersji zapisz takie okna albo je zamknij.
 
 ## 1.3.1 — poprawki zgłoszeń
 
