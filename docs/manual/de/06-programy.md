@@ -197,7 +197,7 @@ mit Syntaxfarben, Zeilennummern und einer senkrechten Linie am rechten Rand; der
 nächsten Änderung) hervorgehoben, ein roter Strich markiert entfernte Zeilen; eine Optionsänderung wechselt zum
 Beispiel, in dem sie sichtbar ist, und scrollt dorthin, ein Klick auf eine Option zeigt ihr Beispiel. Ein Bereich ohne
 Formatierung lässt sich auch mit den Kommentaren `-- @formatter:off` und `-- @formatter:on` markieren; bedingte
-Kompilierung `$IF … $END` lässt der Formatierer unverändert.
+Kompilierung `$IF … $END` lässt der Formatierer unverändert. Ein Wort nach einem Punkt behandelt der Formatierer als Bezeichner (`E.ENAME` bei Bezeichnern in Großbuchstaben); JSON-Schlüssel in Punktnotation unterscheiden Groß-/Kleinschreibung, daher solchen Code mit Bezeichnern „unverändert“ oder in einem NoFormat-Bereich formatieren.
 
 ### Vorlagen, Snippets und Makros
 

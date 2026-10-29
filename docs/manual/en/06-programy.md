@@ -186,7 +186,7 @@ syntax colours, line numbers and a vertical right-margin line; the switch above 
 **Queries**, **DML** or **DDL**. Lines changed by the last change are highlighted for 5 s (or until the next change), a
 red bar marks where lines were removed; changing an option switches to the example that shows it and scrolls to the
 change, and clicking an option shows its example. A region without formatting can also be marked with the
-`-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged.
+`-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged. The formatter treats a word after a dot as an identifier (`E.ENAME` with upper-case identifiers); JSON keys in dot notation are case-sensitive, so format such code with identifiers “unchanged” or in a NoFormat region.
 
 ### Templates, snippets and macros
 

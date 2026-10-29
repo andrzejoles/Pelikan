@@ -184,15 +184,18 @@ struct BeautifierEnterTests {
         #expect(r == EnterFormatting(line: "  if a>0 then", indent: "    "))
     }
 
-    @Test("słowo po kropce: reguła identyfikatora, pisownia źródła; verify porównuje je dokładnie (JSON, ß)")
+    @Test("słowo po kropce: reguła identyfikatora (nie typu); ß w pisowni źródła, verify porównuje je dokładnie")
     func afterDot() throws {
         #expect(line("select j.doc.date from t j|") == "SELECT j.doc.date FROM t j")
         var o = BeautifierOptions()
         o.identifierCase = .upper
-        #expect(try Beautifier.format("select j.doc.date, e.ename from t j", options: o) == "SELECT J.doc.date,\n       E.ename\n  FROM T J")
-        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "select j.doc.date from t", formatted: "select j.doc.DATE from t") }
+        #expect(try Beautifier.format("select j.doc.date, e.ename from t j", options: o) == "SELECT J.DOC.DATE,\n       E.ENAME\n  FROM T J")
+        o.identifierCase = .lower
+        o.dataTypeCase = .upper
+        #expect(try Beautifier.format("select j.doc.Date from t j", options: o) == "SELECT j.doc.date\n  FROM t j")
+        #expect(throws: Never.self) { try Beautifier.verify(original: "select j.doc.date from t", formatted: "SELECT J.DOC.DATE FROM T") }
         #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "x := straße;", formatted: "x := STRASSE;") }
-        #expect(throws: Never.self) { try Beautifier.verify(original: "select a from t", formatted: "SELECT A FROM T") }
+        o.identifierCase = .upper
         #expect(try Beautifier.format("x := straße;", options: o) == "X := straße;")
     }
 

@@ -199,7 +199,7 @@ selector de encima elige el ejemplo: **PL/SQL**, **Consultas**, **DML** o **DDL*
 cambio se resaltan durante 5 s (o hasta el siguiente cambio) y una barra roja marca dónde se eliminaron líneas; al
 cambiar una opción se pasa al ejemplo en el que se ve y se desplaza hasta el cambio, y al hacer clic en una opción se
 muestra su ejemplo. Una región sin formato también se puede marcar con los comentarios `-- @formatter:off` y
-`-- @formatter:on`; el formateador deja sin cambios la compilación condicional `$IF … $END`.
+`-- @formatter:on`; el formateador deja sin cambios la compilación condicional `$IF … $END`. El formateador trata una palabra tras un punto como identificador (`E.ENAME` con identificadores en mayúsculas); las claves JSON en notación de punto distinguen mayúsculas y minúsculas, así que formatee ese código con identificadores «sin cambios» o en una región NoFormat.
 
 ### Plantillas, fragmentos y macros
 

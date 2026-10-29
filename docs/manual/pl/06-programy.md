@@ -181,7 +181,7 @@ kolorami składni, numerami linii i pionową linią prawego marginesu; przełąc
 **Zapytania**, **DML** albo **DDL**. Linie zmienione ostatnią zmianą są podświetlone przez 5 s (albo do następnej
 zmiany), miejsce usuniętych linii oznacza czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i
 przewija do niej, a kliknięcie opcji pokazuje jej przykład. Region bez formatowania można też oznaczyć komentarzami
-`-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian.
+`-- @formatter:off` i `-- @formatter:on`; fragmenty kompilacji warunkowej `$IF … $END` formater zostawia bez zmian. Słowo po kropce formater traktuje jak identyfikator (`E.ENAME` przy wielkich literach identyfikatorów); klucze JSON w notacji z kropką rozróżniają wielkość liter, więc kod z nimi formatuj z identyfikatorami „bez zmian” albo w regionie NoFormat.
 
 ### Szablony, fragmenty kodu i makra
 

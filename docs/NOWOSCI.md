@@ -18,8 +18,9 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   (**Formatuj kod**, ⇧⌘F).
 - **Cofanie:** pierwsze ⌘Z cofa samo formatowanie, drugie — Enter. Enter na początku linii albo w jej wcięciu to
   zwykły Enter, ⌥↩ — nowa linia bez wcięcia i formatowania.
-- **Formater:** słowo po kropce zostaje w pisowni źródła (pola JSON w notacji z kropką rozróżniają wielkość liter),
-  `j.doc.date` nie jest już traktowane jak typ `DATE`.
+- **Formater:** słowo po kropce dostaje regułę identyfikatora — `j.doc.date` nie jest już traktowane jak typ `DATE`.
+  Klucze JSON w notacji z kropką rozróżniają wielkość liter: przy wielkich literach identyfikatorów zostaną podniesione,
+  więc taki kod formatuj z identyfikatorami „bez zmian” albo w regionie NoFormat.
 - **Przełącznik u góry po prawej:** różdżka na pasku narzędzi (wyłączona — przekreślona) włącza i wyłącza formatowanie
   przy Enter; także **Edycja › Formatuj linię przy Enter** (z zaznaczeniem stanu), wstążka (karta Edycja), paleta komend,
   skrót do przypisania i **Ustawienia › Formater › Podczas pisania**. Domyślnie włączone.

@@ -2701,6 +2701,9 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   najwyżej o 3 kolumny, a słowo otwierające je jest wyrównane w prawo (`   UPDATE`, `  WITH`, ` MERGE`) — gdy polecenie
   zaczyna linię; w środku linii (podzapytanie za nawiasem) rzeka zostaje 6. Dłuższe słowa (`MATCH_RECOGNIZE`) i
   przedrostki złączeń (`NATURAL`, `INNER`, `LEFT OUTER`…) rzeki nie poszerzają — „wiszą” w lewo od kolumny polecenia.
+- **Klucze JSON (uzupełnienie z D205):** słowo po kropce dostaje regułę identyfikatora — przy wielkich literach
+  identyfikatorów klucze JSON w notacji z kropką (rozróżniające wielkość liter) zostaną podniesione; taki kod formatować z
+  identyfikatorami „bez zmian” albo w regionie NoFormat.
 - **Przegląd (poprawki):** słowo po kropce (`t.offset`, `r.end`, `l.delete`) jest zawsze nazwą — nigdy klauzulą ani
   słowem struktury (wcześniej formatowanie było odrzucane); region `$IF … $END` w środku instrukcji SQL nie kończy
   instrukcji; przy przecinku na początku linii komentarz nie jest doklejany do linii kończącej się komentarzem
@@ -2952,10 +2955,13 @@ przeszkadzać).” (PD-BEAU-003)
   znacznik w literale się nie liczy); komentarz `--` na końcu linii bez zmian (część przed nim — normalizowana), linia
   komentarza bez zmian; linia z niedomkniętym nawiasem — tylko wielkość liter. Konsola SQL*Plus (także jej karta
   edytora) i okna bez kodu — bez formatowania.
-- **Słowo po kropce i ß (po przeglądzie, dotyczy też ⇧⌘F):** słowo po kropce to nazwa — reguła identyfikatora, nie typu
-  ani funkcji (`j.doc.date`, nie `DATE`), a formater zostawia je w pisowni źródła (pola JSON w notacji z kropką rozróżniają
-  wielkość liter); tak samo słowo, którego wielkie litery mają inną długość (`straße`). `verify` porównuje takie słowa
-  dokładnie.
+- **Słowo po kropce i ß (po przeglądzie, dotyczy też ⇧⌘F):** słowo po kropce to nazwa — reguła identyfikatora, nie
+  typu danych ani słowa kluczowego (`j.doc.date`, nie `j.doc.DATE`; przy wielkich literach identyfikatorów `E.ENAME`).
+  `verify` porównuje słowa po kropce bez rozróżniania wielkości liter jak dotąd. Klucze JSON w notacji z kropką
+  rozróżniają wielkość liter, a przy wielkich literach identyfikatorów zostaną podniesione (jak w PL/SQL Developerze) —
+  kod z takimi kluczami lepiej formatować z identyfikatorami „bez zmian” (domyślnie) albo w regionie NoFormat. Wyjątek:
+  słowo, którego zmiana wielkości liter zmienia długość (`straße` → `STRASSE`), zostaje w pisowni źródła, a `verify`
+  porównuje je dokładnie.
 - **Bezpieczeństwo:** zmieniona linia przechodzi `Beautifier.verify` — tokeny polecenia od początku kontekstu do kursora
   przed zmianą i po niej (w kontekście, bo podział na polecenia zależy od tekstu przed linią: `set` w `UPDATE` nie jest
   poleceniem SQL*Plus); odrzucona — linia bez zmian (wcięcie nowej linii zostaje).

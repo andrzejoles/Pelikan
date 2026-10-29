@@ -288,10 +288,9 @@ public enum Beautifier {
                     out.items.insert("\(t.kind.rawValue):,", at: k)
                     out.glued.insert(false, at: k)
                     out.mustGlue.insert(false, at: k)
-                // Słowo po kropce (pole JSON w notacji z kropką rozróżnia wielkość liter) i słowo, którego wielkie
-                // litery mają inną długość (ß → SS) — porównanie dokładne (D205).
+                // Słowo, którego wielkie litery mają inną długość (ß → SS) — porównanie dokładne (D205).
                 case .identifier, .keyword:
-                    if prev?.kind == .dot || x.uppercased().utf16.count != x.utf16.count {
+                    if x.uppercased().utf16.count != x.utf16.count {
                         out.append("w=" + x, glued: glued, must: must)
                     } else {
                         out.append("w:" + x.uppercased(), glued: glued, must: must)
@@ -620,9 +619,8 @@ struct Formatter {
 
     func cased(_ t: Tok) -> String {
         guard t.isWord else { return t.text }
-        // Słowo po kropce i słowo, którego wielkie litery mają inną długość (ß) — w pisowni źródła (`verify` porównuje
-        // je dokładnie: pola JSON w notacji z kropką rozróżniają wielkość liter).
-        if token(before: t)?.kind == .dot || t.upper.utf16.count != t.text.utf16.count { return t.text }
+        // Słowo, którego wielkie litery mają inną długość (ß) — w pisowni źródła (`verify` porównuje je dokładnie).
+        if t.upper.utf16.count != t.text.utf16.count { return t.text }
         if let special = options.specialCase.first(where: { $0.uppercased() == t.upper }) { return special }
         let normal = Self.apply(rule(for: t), to: t)
         return Self.specialCasePattern(options.specialCase, word: normal) ?? normal
