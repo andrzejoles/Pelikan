@@ -406,6 +406,7 @@ protocol DocumentContentController: NSViewController {
 final class DocumentAreaViewController: NSViewController {
     private let workspace: Workspace
     private let tabBar = NSStackView()
+    private var contrastObserver: (any NSObjectProtocol)?
     private let container = NSView()
     private let statusLabel = NSTextField(labelWithString: "")
     /// Połączenie okna na pasku stanu — kliknięcie: wybór połączenia okna (UG 20.2, PD-CONN-019).
@@ -528,6 +529,11 @@ final class DocumentAreaViewController: NSViewController {
         view = root
         trackChanges { [weak self] in self?.refresh() }
         trackChanges { [weak self] in self?.refreshDockButtons() }
+        // „Zwiększ kontrast” w ustawieniach systemu — karty z nowymi kolorami tytułów (D198).
+        contrastObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
     }
 
     /// Zwinięty panel z narzędziami: przycisk z liczbą narzędzi, który go pokazuje.
@@ -731,10 +737,12 @@ final class DocumentTabButton: NSView {
     private let close = NSButton(image: NSImage(), target: nil, action: nil)
     private var hovered = false {
         didSet {
+            guard hovered != oldValue else { return }
             needsDisplay = true
             updateCloseImage()
         }
     }
+    private var needsHoverCheck = true
 
     /// Tło paska kart: ciemniejsze od tła okna (jasny wygląd) albo jaśniejsze od edytora (ciemny) — karty odcinają się
     /// od edytora. Przy „Zwiększ kontrast” tytuły nieaktywnych kart w kolorze tekstu.
@@ -779,6 +787,9 @@ final class DocumentTabButton: NSView {
         stack.edgeInsets = NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 4)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
+        // Podświetlenie pod kursorem: `.inVisibleRect` nie wymaga przebudowy obszaru przy zmianie rozmiaru.
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                       owner: self, userInfo: nil))
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -823,15 +834,12 @@ final class DocumentTabButton: NSView {
         }
     }
 
-    // Obszar śledzenia raz (`.inVisibleRect` nie wymaga przebudowy); karty powstają od nowa przy odświeżeniu paska, więc
-    // stan podświetlenia z położenia kursora po wstawieniu do okna.
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if trackingAreas.isEmpty {
-            addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-                                           owner: self, userInfo: nil))
-        }
-        guard let window else { return }
+    // Karty powstają od nowa przy odświeżeniu paska — stan podświetlenia z położenia kursora po pierwszym układzie
+    // (wcześniej karta nie ma jeszcze wymiarów).
+    override func layout() {
+        super.layout()
+        guard needsHoverCheck, let window, !bounds.isEmpty else { return }
+        needsHoverCheck = false
         hovered = bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
     }
 

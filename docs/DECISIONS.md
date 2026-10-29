@@ -2404,7 +2404,7 @@ zmienić?” Każda karta miała obramowanie w kolorze połączenia (PD-CONN-005
 przy obramowaniu wszystkich kart ginęło.
 
 - **Aktywna karta:** tło akcentu systemu (22%), pasek akcentu u dołu, pogrubiony tytuł w kolorze tekstu; nieaktywne —
-  bez tła, tytuł i przycisk zamknięcia w kolorze drugorzędnym, podświetlenie pod kursorem. Rysowanie w `draw(_:)`, więc
+  bez tła, tytuł i przycisk zamknięcia w kolorze tekstu z przezroczystością 70%, podświetlenie pod kursorem. Rysowanie w `draw(_:)`, więc
   kolory dynamiczne (akcent, jasny i ciemny wygląd) zmieniają się bez przebudowy paska.
 - **Kolor połączenia:** kropka przed znacznikiem typu okna zamiast obramowania —
   informacja zostaje (lista połączeń, Lista okien, pasek stanu i opcjonalne tło edytora bez zmian), a karty nie
