@@ -27,15 +27,16 @@ extension Beautifier {
     /// Linie po kursorze brane pod uwagę (szerokość rzeki, długość warunku i list).
     static let enterLookahead = 200
 
-    /// Formatowanie przy Enter wciśniętym w `caret` (bez zaznaczenia) w tekście sprzed Enter. `contextStart` — początek
-    /// polecenia skryptu zawierającego linię kursora albo wcześniejszy początek polecenia (z pamięci podziału edytora,
-    /// `StatementStartMemory`); formater przechodzi tylko od niego do nowej linii. nil — bez formatowania (linia w
-    /// komentarzu blokowym, literale, kompilacji warunkowej, poleceniu SQL*Plus, kodzie Java/JavaScript, regionie bez
-    /// formatowania, Enter wewnątrz literału albo komentarza): zwykły Enter. Linia z niedomkniętym nawiasem — tylko
-    /// wielkość liter. Zmieniona linia musi przejść `verifier` (domyślnie `verify`: te same tokeny polecenia od jego
-    /// początku do kursora przed zmianą i po niej — w kontekście, bo podział na polecenia zależy od tekstu przed linią)
-    /// — inaczej zostaje bez zmian.
-    public static func formatOnEnter(_ text: String, caret: Int, contextStart: Int = 0,
+    /// Formatowanie przy Enter wciśniętym w `caret` (bez zaznaczenia) w tekście sprzed Enter. `context` — skąd formater
+    /// przechodzi tekst (z pamięci podziału edytora, `StatementStartMemory.context`; nil — wyznaczany od początku
+    /// tekstu): formater przechodzi tylko od niego do nowej linii. nil w wyniku — zwykły Enter: Enter na początku linii
+    /// albo w jej wiodących odstępach, linia w komentarzu blokowym, literale, kompilacji warunkowej, poleceniu SQL*Plus,
+    /// kodzie Java/JavaScript, regionie bez formatowania, Enter wewnątrz literału albo komentarza. `formatLine` false —
+    /// opuszczana linia bez zmian (nie była edytowana: istniejący kod formatuje się tylko na żądanie), tylko wcięcie
+    /// nowej. Linia z niedomkniętym nawiasem — tylko wielkość liter. Zmieniona linia musi przejść `verifier` (domyślnie
+    /// `verify`: te same tokeny polecenia od początku kontekstu do kursora przed zmianą i po niej — w kontekście, bo
+    /// podział na polecenia zależy od tekstu przed linią) — inaczej zostaje bez zmian.
+    public static func formatOnEnter(_ text: String, caret: Int, context: EnterContext? = nil, formatLine: Bool = true,
                                      options: BeautifierOptions = BeautifierOptions(), tabWidth: Int = 4,
                                      lineLimit: Int = enterLineLimit,
                                      verifier: (String, String) throws -> Void = { try Beautifier.verify(original: $0, formatted: $1) })
@@ -46,29 +47,30 @@ extension Beautifier {
         var lineEnd = caret
         while lineEnd < ns.length, ns.character(at: lineEnd) != 0x0A, ns.character(at: lineEnd) != 0x0D { lineEnd += 1 }
         let left = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
+        // Enter na początku linii albo w jej wiodących odstępach — zwykły Enter (reszta linii z dotychczasowym wcięciem).
+        guard left.contains(where: { $0 != " " && $0 != "\t" }) else { return nil }
         let rest = String(ns.substring(with: NSRange(location: caret, length: lineEnd - caret)).drop { $0 == " " || $0 == "\t" })
-        var start = min(max(0, contextStart), lineStart)
-        var prefix = ""
-        var newlines = 0
-        for p in start..<lineStart where ns.character(at: p) == 0x0A { newlines += 1 }
-        if newlines > lineLimit {
-            // Długie polecenie: w ciele pakietu albo typu — kontekst od początku bieżącego podprogramu (z nagłówkiem
-            // zastępczym); inaczej tylko wielkość liter, wcięcie automatyczne edytora.
-            let head = ns.substring(with: NSRange(location: start, length: caret - start))
-            let lexer = Lexer(head)
-            if lexer.scan(range: 0..<lexer.text.count, state: .normal, { _ in }) != .normal { return nil }
-            let toks = Formatter.tokens(head as NSString, from: 0)
-            let from = lineStart - start
-            if toks.contains(where: { $0.start < from && $0.end > from }) { return nil }
-            if let sub = subprogramContext(toks, text: ns, offset: start, before: lineStart, lineLimit: lineLimit) {
-                start = sub.start
-                prefix = sub.header
-            } else {
-                return caseOnlyLine(left, tokens: toks.filter { $0.start >= from }.map { t in
-                    Formatter.Tok(kind: t.kind, start: t.start - from, end: t.end - from, text: t.text, upper: t.upper, newlines: t.newlines)
-                }, options: options, before: (head as NSString).substring(to: from), verifier: verifier)
-            }
+        var memory = StatementStartMemory()
+        let scope = context ?? memory.context(forLineAt: lineStart, in: ns, lineLimit: lineLimit)
+        switch scope.mode {
+        case .none:
+            return nil
+        case .caseOnly:
+            // Długie polecenie: tylko wielkość liter (stan leksera na początku linii — zwykły tekst, sprawdzony przez pamięć).
+            guard formatLine else { return nil }
+            let toks = Formatter.tokens(left as NSString, from: 0)
+            if toks.contains(where: { $0.kind == .directive }) { return nil }
+            if let last = toks.last, [.string, .quotedIdentifier, .blockComment, .hint].contains(last.kind),
+               Lexer(left).scan(range: 0..<(left as NSString).length, state: .normal, { _ in }) != .normal { return nil }
+            return caseOnlyLine(left, tokens: toks, options: options, before: "", verifier: verifier)
+        case .format:
+            break
         }
+        let start = min(max(0, scope.start), lineStart)
+        // Tekst przed początkiem polecenia w jego linii — jako odstępy (kolumny jak w dokumencie, np. `  WITH`).
+        let statementLine = ns.lineRange(for: NSRange(location: start, length: 0)).location
+        let lead = String(ns.substring(with: NSRange(location: statementLine, length: start - statementLine)).map { $0 == "\t" ? "\t" : " " })
+        let prefix = scope.header + lead
         // Kontekst po Enter: polecenie do nowej linii (z resztą linii po kursorze) i kilkaset linii dalej.
         var end = lineEnd, lines = 0
         while end < ns.length, lines < enterLookahead, end - lineEnd < 40_000 {
@@ -202,7 +204,11 @@ extension Beautifier {
             body += toks[k].isWord ? placed[k]?.text ?? toks[k].text : toks[k].text
         }
         var line = leftIdx.isEmpty ? "" : indentText + body
-        if line != left {
+        if !formatLine {
+            // Linia nieedytowana — bez zmian; tylko wcięcie nowej linii.
+            line = left
+            indentWidth = leftIdx.first.map { column(toks[$0].start) } ?? 0
+        } else if line != left {
             let head = sourceText(0, leftFrom)
             do { try verifier(head + left, head + line) } catch {
                 line = left
@@ -236,33 +242,6 @@ extension Beautifier {
             }
         }
         return EnterFormatting(line: line, indent: indent)
-    }
-
-    /// Ciało pakietu albo typu dłuższe niż limit: początek bieżącego podprogramu najwyższego poziomu (linia zaczynająca
-    /// się od PROCEDURE/FUNCTION — i MEMBER, STATIC… w typie — z najmniejszym wcięciem) i nagłówek zastępczy, z którym
-    /// formater widzi podprogram jak w ciele (poziom wcięcia względny — kotwice to linie dokumentu). `toks` — tokeny
-    /// tekstu od `offset`.
-    static func subprogramContext(_ toks: [Formatter.Tok], text ns: NSString, offset: Int, before lineStart: Int,
-                                  lineLimit: Int) -> (start: Int, header: String)? {
-        let words = toks.prefix(8).filter(\.isWord).map(\.upper)
-        guard words.first == "CREATE" else { return nil }
-        let unit = words.firstIndex { $0 == "PACKAGE" || $0 == "TYPE" }
-        guard let u = unit, u + 1 < words.count, words[u + 1] == "BODY" else { return nil }
-        let typeBody = words[u] == "TYPE"
-        let starters: Set<String> = typeBody ? ["PROCEDURE", "FUNCTION", "MEMBER", "STATIC", "CONSTRUCTOR", "MAP", "ORDER", "OVERRIDING", "FINAL"]
-            : ["PROCEDURE", "FUNCTION"]
-        var candidates: [(start: Int, indent: Int)] = []
-        for t in toks where t.isWord && starters.contains(t.upper) && offset + t.start <= lineStart {
-            let ls = ns.lineRange(for: NSRange(location: offset + t.start, length: 0)).location
-            let lead = ns.substring(with: NSRange(location: ls, length: offset + t.start - ls))
-            guard lead.allSatisfy({ $0 == " " || $0 == "\t" }) else { continue }
-            candidates.append((ls, lead.count))
-        }
-        guard let top = candidates.map(\.indent).min(), let c = candidates.last(where: { $0.indent == top }) else { return nil }
-        var newlines = 0
-        for p in c.start..<lineStart where ns.character(at: p) == 0x0A { newlines += 1 }
-        guard newlines <= lineLimit else { return nil }
-        return (c.start, "CREATE OR REPLACE \(typeBody ? "TYPE" : "PACKAGE") BODY pelikan_context IS\n")
     }
 
     /// Linia bez formatera: tylko wielkość liter według rodzaju tokenu (słowo po kropce bez zmian), bez końcowych

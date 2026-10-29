@@ -582,9 +582,10 @@ public enum BuiltinCommands {
                                       feature: "PD-BEAU-003")) { ctx in
                 let on = ctx.arguments.bool("enabled") ?? !ctx.workspace.settings.beautifier.formatOnEnter
                 ctx.workspace.settings.beautifier.formatOnEnter = on
-                // Makro odtwarza stan, a nie przełączenie (menu, pasek narzędzi i wstążka wywołują bez argumentu).
+                // Komenda ustawień nie trafia do makr (nagrywane są tylko zmiany edytora i interfejsu); Enter odtworzony
+                // z makra wstawia tekst bez formatowania.
                 return CommandResult(message: on ? L10n.tr("Formatowanie przy Enter włączone") : L10n.tr("Formatowanie przy Enter wyłączone"),
-                                     value: .bool(on), resolvedArguments: CommandArguments(["enabled": .bool(on)]))
+                                     value: .bool(on))
             },
             Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Pokaż podpowiedzi kodu"), category: .edit,
                                       pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .none, effect: .none,

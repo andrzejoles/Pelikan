@@ -87,7 +87,10 @@ struct BeautifierEnterTests {
         #expect(indent("begin\n  x := CASE|") == "         ")
         // Wcięcie użytkownika (4) zostaje dla kolejnych instrukcji; pusta linia — wcięcie jak po poprzedniej.
         #expect(indent("begin\n    x := 1;|") == "    ")
-        #expect(enter("begin\n  x := 1;\n  |") == EnterFormatting(line: "", indent: "  "))
+        // Enter na początku linii albo w jej wiodących odstępach — zwykły Enter (D205).
+        #expect(enter("begin\n  x := 1;\n  |") == nil)
+        #expect(enter("begin\n|  x := 1;") == nil)
+        #expect(enter("begin\n  |x := 1;") == nil)
         var o = BeautifierOptions()
         o.useTabs = true
         #expect(indent("begin\n\tif a then|", options: o) == "\t\t")
@@ -171,6 +174,114 @@ struct BeautifierEnterTests {
                     p = lr.location + lr.length
                 }
             }
+        }
+    }
+
+    @Test("linia nieedytowana: bez zmian, tylko wcięcie nowej linii")
+    func untouchedLine() {
+        let caret = ("begin\n  if a>0 then" as NSString).length
+        let r = Beautifier.formatOnEnter("begin\n  if a>0 then", caret: caret, formatLine: false)
+        #expect(r == EnterFormatting(line: "  if a>0 then", indent: "    "))
+    }
+
+    @Test("słowo po kropce: reguła identyfikatora, pisownia źródła; verify porównuje je dokładnie (JSON, ß)")
+    func afterDot() throws {
+        #expect(line("select j.doc.date from t j|") == "SELECT j.doc.date FROM t j")
+        var o = BeautifierOptions()
+        o.identifierCase = .upper
+        #expect(try Beautifier.format("select j.doc.date, e.ename from t j", options: o) == "SELECT J.doc.date,\n       E.ename\n  FROM T J")
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "select j.doc.date from t", formatted: "select j.doc.DATE from t") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "x := straße;", formatted: "x := STRASSE;") }
+        #expect(throws: Never.self) { try Beautifier.verify(original: "select a from t", formatted: "SELECT A FROM T") }
+        #expect(try Beautifier.format("x := straße;", options: o) == "X := straße;")
+    }
+
+    @Test("regiony otwarte przed poleceniem: NoFormat i $IF obejmujące kilka poleceń albo podprogram")
+    func regionsBeforeStatement() {
+        #expect(enter("-- NoFormat Start\nselect 1 from dual;\nselect a,b from t|") == nil)
+        #expect(enter("-- @formatter:off\nselect 1 from dual;\nselect a,b from t|") == nil)
+        #expect(line("-- NoFormat Start\nselect 1 from dual;\n-- NoFormat End\nselect a,b from t|") == "SELECT a, b FROM t")
+        // '-- NoFormat Start' w literale nie otwiera regionu.
+        #expect(line("x := '-- NoFormat Start';\nselect a,b from t|") == "SELECT a, b FROM t")
+        var body = "create or replace package body p is\n$if $$debug $then\n"
+        for n in 0..<5 { body += "  procedure p\(n) is\n  begin\n    null;\n  end;\n" }
+        body += "  procedure z is\n  begin\n    if a>0 then|"
+        #expect(enter(body, lineLimit: 10) == nil)
+    }
+
+    @Test("długie polecenie: Java/MLE, linia z dyrektywą i region bez formatowania — bez zmian")
+    func longStatementExceptions() {
+        var java = "create or replace and compile java source named x as\npublic class X {\n"
+        for _ in 0..<5 { java += "  int a;\n" }
+        java += "  if (a) return|"
+        #expect(enter(java, lineLimit: 3) == nil)
+        var block = "begin\n"
+        for _ in 0..<5 { block += "  null;\n" }
+        #expect(enter(block + "  $if $$x $then a:=1; $end|", lineLimit: 3) == nil)
+        #expect(enter(block + "  -- NoFormat Start\n  x:=1;|", lineLimit: 3) == nil)
+        #expect(enter(block + "  x:=1;|", lineLimit: 3) == EnterFormatting(line: "  x:=1;", indent: nil))
+    }
+
+    @Test("para specyfikacja + ciało bez „/” dłuższa niż limit: kontekst od podprogramu ciała")
+    func specAndBody() {
+        var text = "create or replace package p is\n  -- opis\n  procedure p0;\nend;\n"
+        text += "create or replace\n  -- ciało\n  package body p is\n"
+        for n in 0..<5 { text += "  procedure p\(n) is\n  begin\n    null;\n  end;\n" }
+        text += "  procedure z is\n  begin\n    if a>0 then|"
+        #expect(enter(text, lineLimit: 10) == EnterFormatting(line: "    IF a > 0 THEN", indent: "      "))
+    }
+
+    @Test("wydajność: pakiet ~20 tys. linii i para — Enter bez leksowania całego pliku")
+    func performance() {
+        func body(_ n: Int) -> String {
+            var s = ""
+            for k in 0..<n {
+                s += "  procedure p\(k)(a in number, b out varchar2) is\n    l_x number := 0;\n  begin\n"
+                s += "    select count(*) into l_x from emp e join dept d on d.deptno = e.deptno where e.sal > a and d.loc = 'X';\n"
+                s += "    if l_x > 0 then\n      b := 'tak';\n    else\n      b := 'nie';\n    end if;\n"
+                s += "    for r in (select * from emp) loop\n      dbms_output.put_line(r.ename);\n    end loop;\n  end;\n\n"
+            }
+            return s
+        }
+        let package = "create or replace package body p is\n" + body(1400) + "  procedure z is\n  begin\n    x := 1;"
+        let pair = "create or replace package p is\n  procedure z;\nend;\n/\n" + package
+        let clock = ContinuousClock()
+        for (name, text) in [("pakiet", package), ("para", pair)] {
+            var memory = StatementStartMemory()
+            let ns = text as NSString
+            let caret = ns.length
+            let lineStart = ns.lineRange(for: NSRange(location: caret, length: 0)).location
+            var r: EnterFormatting?
+            let first = clock.measure {
+                let c = memory.context(forLineAt: lineStart, in: ns)
+                r = Beautifier.formatOnEnter(text, caret: caret, context: c)
+            }
+            #expect(r?.line == "    x := 1;")
+            // Kolejny Enter niżej (po zmianie tekstu za punktami kontrolnymi): leksowanie tylko od podprogramu.
+            let more = text + "\n    y:=2;"
+            memory.invalidate(from: caret)
+            let scanned = memory.scannedLength
+            let mns = more as NSString
+            let next = clock.measure {
+                let c = memory.context(forLineAt: mns.lineRange(for: NSRange(location: mns.length, length: 0)).location, in: mns)
+                r = Beautifier.formatOnEnter(more, caret: mns.length, context: c)
+            }
+            #expect(r?.line == "    y := 2;")
+            #expect(memory.scannedLength - scanned < 2000, "\(name): leksowanie od punktu kontrolnego")
+            // Enter w środku pakietu (po zmianie w podprogramie p700): od jego punktu kontrolnego.
+            let p700 = mns.range(of: "procedure p700(").location
+            let ifLine = mns.range(of: "    if l_x > 0 then", options: [], range: NSRange(location: p700, length: mns.length - p700))
+            let middle = mns.replacingCharacters(in: ifLine, with: "    if l_x>0 then")
+            memory.invalidate(from: ifLine.location)
+            let before = memory.scannedLength
+            let caretMid = ifLine.location + ("    if l_x>0 then" as NSString).length
+            let mid = clock.measure {
+                let c = memory.context(forLineAt: ifLine.location, in: middle as NSString)
+                r = Beautifier.formatOnEnter(middle, caret: caretMid, context: c)
+            }
+            #expect(r == EnterFormatting(line: "    IF l_x > 0 THEN", indent: "      "))
+            #expect(memory.scannedLength - before < 2000, "\(name): Enter w środku — od punktu kontrolnego")
+            print("Enter \(name) \(ns.length) znaków, \(text.split(separator: "\n").count) linii: pierwszy \(first), kolejny \(next), w środku \(mid)")
         }
     }
 }

@@ -1363,8 +1363,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
                 }
-                // Pasek narzędzi pokazany na czas zrzutu bez zapisu stanu (ustawienia paska są wspólne z aplikacją Debug —
-                // ukryty pasek właściciela zostaje ukryty).
+                // Pasek narzędzi pokazany na czas zrzutu bez zapisu stanu — zrzut nie zależy od tego, czy pasek był ukryty
+                // w zapamiętanym stanie klonu (osobna domena ustawień przebiegu zrzutów).
                 if s.command == "debug.showToolbar", let toolbar = mainWindow?.window?.toolbar {
                     toolbar.autosavesConfiguration = false
                     toolbar.isVisible = true

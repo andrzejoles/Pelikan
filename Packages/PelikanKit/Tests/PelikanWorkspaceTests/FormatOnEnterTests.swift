@@ -9,12 +9,23 @@ import Testing
 @Suite("Formatowanie przy Enter")
 struct FormatOnEnterTests {
     func plan(_ s: String, kind: DocumentKind = .sql, options: BeautifierOptions = BeautifierOptions(),
-              mode: IndentMode = .automatic) -> (text: String, plan: FormatOnEnter.Plan?) {
+              mode: IndentMode = .automatic, keywordCase: KeywordCase = .unchanged, autoReplace: [AutoReplaceRule] = [],
+              edited: Bool = true) -> (text: String, plan: FormatOnEnter.Plan?) {
         let caret = (s as NSString).range(of: "|").location
         let text = (s as NSString).replacingCharacters(in: NSRange(location: caret, length: 1), with: "")
         var memory = StatementStartMemory()
         return (text, FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: mode, unit: "  ",
-                                         tabWidth: 2, memory: &memory))
+                                         tabWidth: 2, keywordCase: keywordCase, autoReplace: autoReplace, lineEdited: edited,
+                                         memory: &memory))
+    }
+
+    /// Wszystkie kroki planu jak w edytorze: krok 0, Enter, formatowanie (tylko na oczekiwanym tekście).
+    func run(_ text: String, _ p: FormatOnEnter.Plan) -> (afterEnter: String, final: String) {
+        var t = p.prepare.map { $0.applied(to: text) } ?? text
+        t = p.enter.applied(to: t)
+        guard let f = p.format else { return (t, t) }
+        #expect((t as NSString).substring(with: NSRange(location: f.range.lowerBound, length: f.range.count)) == p.expected)
+        return (t, f.applied(to: t))
     }
 
     @Test("dwa kroki: zwykły Enter z wcięciem automatycznym, potem formatowanie — każde cofnięcie zdejmuje jeden krok")
@@ -82,13 +93,63 @@ struct FormatOnEnterTests {
         #expect(ws.toggleState("edit.formatOnEnter") == true)
         let r = try await ws.invoke("edit.formatOnEnter")
         #expect(ws.settings.beautifier.formatOnEnter == false && ws.toggleState("edit.formatOnEnter") == false)
-        // Makro zapisuje stan, nie przełączenie.
-        #expect(r.resolvedArguments?.bool("enabled") == false)
+        #expect(r.value == .bool(false))
         try await ws.invoke("edit.formatOnEnter", CommandArguments(["enabled": .bool(true)]))
         try await ws.invoke("edit.formatOnEnter", CommandArguments(["enabled": .bool(true)]))
         #expect(ws.settings.beautifier.formatOnEnter)
         #expect(ws.toggleState("edit.beautify") == nil)
         #expect(ToolbarModel.defaultItems.suffix(2) == [ToolbarModel.formatOnEnterItem, "session.logon"])
         #expect(RibbonModel.location(of: "edit.formatOnEnter")?.tab.id == "edit")
+    }
+
+    @Test("AutoReplace przy Enter: zamiana przed planem (sf), zamiana z miejscem kursora zużywa Enter (dbo) — zwykły Enter")
+    func autoReplace() throws {
+        let rules = AutoReplaceRule.defaults
+        let (text, p) = plan("begin\n  for r in (sf|", autoReplace: rules)
+        let steps = try #require(p)
+        #expect(steps.prepare == FormatOnEnter.Edit(range: 6..<20, text: "  for r in (SELECT * FROM "))
+        #expect(run(text, steps).final.hasPrefix("begin\n  FOR r IN (SELECT * FROM\n"))
+        #expect(plan("begin\n  dbo|", autoReplace: rules).plan == nil)
+        // Skrót w komentarzu — bez zamiany.
+        #expect(try #require(plan("begin\n  x := 1; -- sf|", autoReplace: rules).plan).prepare == nil)
+        // Wielkość liter słowa kluczowego przed kursorem (Ustawienia › Edytor) — w kroku 0, nie po drodze.
+        let (t2, p2) = plan("select a from t where|", keywordCase: .upper)
+        let k = try #require(p2)
+        #expect(k.prepare?.text == "select a from t WHERE")
+        #expect(run(t2, k).final == "SELECT a FROM t WHERE\n       ")
+    }
+
+    @Test("linia nieedytowana w tej sesji — bez zmian, tylko wcięcie nowej; Enter na początku linii — zwykły Enter")
+    func untouched() throws {
+        let (text, p) = plan("begin\n  if a>0 then|", edited: false)
+        let steps = try #require(p)
+        #expect(run(text, steps).final == "begin\n  if a>0 then\n    ")
+        #expect(plan("begin\n|  x := 1;").plan == nil)
+        #expect(plan("begin\n  |x := 1;").plan == nil)
+        var r = EditedRanges()
+        r.record(edited: 10..<11, delta: 1)          // wpisany znak
+        r.record(edited: 2..<5, delta: 3)            // wstawienie przed nim przesuwa zakres
+        #expect(r.ranges == [2..<5, 13..<14])
+        #expect(r.touches(13...20) && r.touches(0...2) && !r.touches(6...12))
+        r.record(edited: 4..<4, delta: -2)           // usunięcie łączy nachodzące zakresy
+        #expect(r.touches(4...4))
+        r.reset()
+        #expect(r.ranges.isEmpty)
+    }
+
+    @Test("tryb Smart: END nieedytowanej linii wyrównany do struktury także z formatowaniem")
+    func smartIndent() throws {
+        let (text, p) = plan("begin\n  if a then\n    x := 1;\n    end if;|", mode: .smart, edited: false)
+        let steps = try #require(p)
+        #expect(run(text, steps).final == "begin\n  if a then\n    x := 1;\n  end if;\n  ")
+    }
+
+    @Test("makro: komenda ustawień nie jest nagrywana")
+    func macro() async throws {
+        let ws = Workspace(secrets: MemorySecretStore(), drivers: [:])
+        ws.toggleMacroRecording()
+        try await ws.invoke("edit.formatOnEnter")
+        #expect(ws.macroRecorder?.steps.isEmpty == true)
+        ws.toggleMacroRecording()
     }
 }

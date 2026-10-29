@@ -241,7 +241,7 @@ public enum Beautifier {
     /// polecenia skryptu (`;`, `/` sam w linii) i poleceń SQL*Plus — te porównywane jako cały tekst linii.
     public static func verify(original: String, formatted: String) throws {
         let a = signature(original), b = signature(formatted)
-        func shown(_ x: String) -> String { String(x.drop { $0 != ":" }.dropFirst().prefix(30)) }
+        func shown(_ x: String) -> String { String(x.drop { $0 != ":" && $0 != "=" }.dropFirst().prefix(30)) }
         if a.items != b.items {
             let i = (0..<min(a.items.count, b.items.count)).first { a.items[$0] != b.items[$0] } ?? min(a.items.count, b.items.count)
             var what = i < a.items.count ? shown(a.items[i]) : "EOF"
@@ -288,7 +288,14 @@ public enum Beautifier {
                     out.items.insert("\(t.kind.rawValue):,", at: k)
                     out.glued.insert(false, at: k)
                     out.mustGlue.insert(false, at: k)
-                case .identifier, .keyword: out.append("w:" + x.uppercased(), glued: glued, must: must)
+                // Słowo po kropce (pole JSON w notacji z kropką rozróżnia wielkość liter) i słowo, którego wielkie
+                // litery mają inną długość (ß → SS) — porównanie dokładne (D205).
+                case .identifier, .keyword:
+                    if prev?.kind == .dot || x.uppercased().utf16.count != x.utf16.count {
+                        out.append("w=" + x, glued: glued, must: must)
+                    } else {
+                        out.append("w:" + x.uppercased(), glued: glued, must: must)
+                    }
                 case .lineComment: out.append("c:" + x.trimmingCharacters(in: .whitespaces), glued: glued, must: must)
                 default: out.append("\(t.kind.rawValue):" + x, glued: glued, must: must)
                 }
@@ -613,6 +620,9 @@ struct Formatter {
 
     func cased(_ t: Tok) -> String {
         guard t.isWord else { return t.text }
+        // Słowo po kropce i słowo, którego wielkie litery mają inną długość (ß) — w pisowni źródła (`verify` porównuje
+        // je dokładnie: pola JSON w notacji z kropką rozróżniają wielkość liter).
+        if token(before: t)?.kind == .dot || t.upper.utf16.count != t.text.utf16.count { return t.text }
         if let special = options.specialCase.first(where: { $0.uppercased() == t.upper }) { return special }
         let normal = Self.apply(rule(for: t), to: t)
         return Self.specialCasePattern(options.specialCase, word: normal) ?? normal
@@ -705,6 +715,8 @@ struct Formatter {
     /// Reguła wielkości liter słowa: funkcja wbudowana (przed „(”), pakiet z bazą (przed „.”), typ danych, słowo
     /// kluczowe, identyfikator.
     func rule(for t: Tok) -> BeautifierOptions.WordCase {
+        // Po kropce — nazwa (pole, kolumna, element pakietu): reguła identyfikatora, nie typu ani funkcji (`j.doc.date`).
+        if token(before: t)?.kind == .dot { return options.identifierCase }
         let keyword = t.kind == .keyword ? !keywordAsIdentifier(t) : contextualKeyword(t)
         let base = keyword ? options.keywordCase : options.identifierCase
         let next = token(after: t)

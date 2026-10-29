@@ -106,6 +106,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in
             guard let self, let ws = (NSApp.delegate as? AppDelegate)?.workspace else { return }
             _ = self.document.baselineText
+            // Nowy stan bazowy (otwarcie, zapis, wczytanie) — linie przestają być „edytowane” dla formatowania przy Enter.
+            self.editedRanges.reset()
             self.lineStatusEnabled = ws.settings.showLineStatus
             self.scheduleLineStatus(delay: 0)
         })
@@ -580,10 +582,21 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
             guard let self else { return }
             // Analiza w tle (pakiet 50 000 linii); wynik tylko dla niezmienionego tekstu.
             let text = self.textView.string, edits = self.textEdits
+            // Pamięć podziału dla formatowania przy Enter (D205) w długim tekście — pierwszy Enter po otwarciu albo zmianie
+            // wyżej nie leksuje wtedy całego pliku.
+            let warmEnter = self.textView.enterPlan != nil && self.textView.textLength > 20_000
             Task.detached(priority: .userInitiated) {
                 let r = CodeFolding.regions(text)
+                var memory: StatementStartMemory?
+                if warmEnter {
+                    var m = StatementStartMemory()
+                    let ns = text as NSString
+                    _ = m.context(forLineAt: ns.lineRange(for: NSRange(location: ns.length, length: 0)).location, in: ns)
+                    memory = m
+                }
                 await MainActor.run { [weak self] in
                     guard let self, self.textEdits == edits else { return }
+                    if let memory { self.statementStarts = memory }
                     self.regions = r
                     self.applyFolds()
                     self.ruler.needsDisplay = true
@@ -905,6 +918,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
 
     /// Pamięć podziału na polecenia — Enter dzieli tylko od ostatniego znanego początku polecenia.
     private var statementStarts = StatementStartMemory()
+    /// Fragmenty zmienione od otwarcia, zapisu albo wczytania (jak status linii) — tylko takie linie Enter formatuje.
+    private var editedRanges = EditedRanges()
 
     /// Plan Entera z ustawień formatera (okno SQL, programu, testu; konsola i okna bez kodu — zwykły Enter).
     private func configureEnterFormatting(_ ws: Workspace) {
@@ -917,8 +932,14 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let tabWidth = max(1, ws.settings.tabSize)
         textView.enterPlan = { [weak self] text, caret in
             guard let self, self.document.additionalSelections.isEmpty else { return nil }
+            // Opuszczana linia formatowana tylko, gdy była zmieniona w tej sesji edycji (istniejący kod — na żądanie).
+            let ns = text as NSString
+            let line = ns.lineRange(for: NSRange(location: caret, length: 0))
+            let edited = self.editedRanges.touches(line.location...(line.location + line.length))
+            let rules = (NSApp.delegate as? AppDelegate)?.workspace.settings.autoReplace ?? []
             return FormatOnEnter.plan(text: text, caret: caret, kind: kind, options: options, indentMode: self.textView.indentMode,
-                                      unit: self.textView.indentUnit, tabWidth: tabWidth, memory: &self.statementStarts)
+                                      unit: self.textView.indentUnit, tabWidth: tabWidth, keywordCase: self.textView.keywordCase,
+                                      autoReplace: rules, lineEdited: edited, memory: &self.statementStarts)
         }
     }
 
@@ -954,6 +975,7 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let editedRange = storage.editedRange
         statementStarts.invalidate(from: editedRange.location)
         let delta = storage.changeInLength
+        editedRanges.record(edited: editedRange.location..<(editedRange.location + editedRange.length), delta: delta)
         // Obszary zwijania przesuwane od razu, tak jak klucze zwinięć w modelu (`Document.text`) — do przeliczenia
         // w tle `applyFolds` dopasowuje przesunięte klucze do przesuniętych obszarów, bez rozwijania i zwijania.
         if !regions.isEmpty {
@@ -1196,11 +1218,11 @@ final class CodeTextView: NSTextView {
             (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
             return
         }
-        if keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
+        if !formattingEnter, keywordCase != .unchanged, let ch = text.unicodeScalars.first, !CharacterSet.alphanumerics.contains(ch), ch != "_", ch != "$", ch != "#" {
             applyKeywordCase()
         }
         super.insertText(string, replacementRange: replacementRange)
-        applyAutoReplace(after: text)
+        if !formattingEnter { applyAutoReplace(after: text) }
         (NSApp.delegate as? AppDelegate)?.workspace.recordTyping(text)
     }
 
@@ -1356,16 +1378,9 @@ final class CodeTextView: NSTextView {
         guard selectedRange().length == 0, caret > 0 else { return }
         let lineStart = ns.lineRange(for: NSRange(location: caret, length: 0)).location
         let line = ns.substring(with: NSRange(location: lineStart, length: caret - lineStart))
-        guard let last = Lexer(line).tokenize().last, last.kind == .keyword, last.start + last.length == (line as NSString).length else { return }
-        let word = (line as NSString).substring(with: NSRange(location: last.start, length: last.length))
-        let cased: String = switch keywordCase {
-        case .upper: word.uppercased()
-        case .lower: word.lowercased()
-        case .initCap: word.prefix(1).uppercased() + word.dropFirst().lowercased()
-        case .unchanged: word
-        }
-        guard cased != word else { return }
-        let r = NSRange(location: lineStart + last.start, length: last.length)
+        // Ta sama reguła co w kroku 0 Entera z formatowaniem (D205).
+        guard let cased = FormatOnEnter.keywordCaseLine(line, keywordCase) else { return }
+        let r = NSRange(location: lineStart, length: caret - lineStart)
         if shouldChangeText(in: r, replacementString: cased) {
             replaceCharacters(in: r, with: cased)
             didChangeText()
@@ -1518,8 +1533,13 @@ final class CodeTextView: NSTextView {
     /// linia w literale…) — wtedy zwykły Enter z wcięciem wg trybu. Ustawia edytor kodu.
     var enterPlan: ((String, Int) -> FormatOnEnter.Plan?)?
 
+    /// Enter z formatowaniem w toku: wielkość liter słowa i AutoReplace są już w planie (krok 0) — `insertText` ich nie
+    /// powtarza.
+    private var formattingEnter = false
+
     override func insertNewline(_ sender: Any?) {
-        if selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(string, selectedRange().location) {
+        // Kompozycja znaków (metoda wprowadzania) — Enter należy do niej.
+        if !hasMarkedText(), selectedRanges.count == 1, selectedRange().length == 0, let plan = enterPlan?(string, selectedRange().location) {
             insertFormattedNewline(plan, sender)
             return
         }
@@ -1559,10 +1579,22 @@ final class CodeTextView: NSTextView {
     /// linii i wcięcia nowej w osobnej grupie cofania — pierwsze ⌘Z cofa formatowanie, drugie Enter.
     private func insertFormattedNewline(_ plan: FormatOnEnter.Plan, _ sender: Any?) {
         breakUndoCoalescing()
-        super.insertNewline(sender)
-        let indent = String(plan.enter.text.dropFirst())
-        if !indent.isEmpty { insertText(indent, replacementRange: selectedRange()) }
-        guard let format = plan.format, format.range.upperBound <= textLength else { return }
+        formattingEnter = true
+        defer { formattingEnter = false }
+        // Krok 0 i 1 (jedna grupa cofania, jak zwykły Enter): wielkość liter słowa, AutoReplace, nowa linia z wcięciem
+        // automatycznym — jednym wstawieniem tekstu.
+        if let prepare = plan.prepare {
+            let r = NSRange(location: prepare.range.lowerBound, length: prepare.range.count)
+            guard shouldChangeText(in: r, replacementString: prepare.text) else { return }
+            replaceCharacters(in: r, with: prepare.text)
+            didChangeText()
+            setSelectedRange(NSRange(location: plan.enter.range.lowerBound, length: 0))
+        }
+        guard selectedRange() == NSRange(location: plan.enter.range.lowerBound, length: 0) else { return }
+        insertText(plan.enter.text, replacementRange: selectedRange())
+        // Krok 2 tylko na oczekiwanym tekście (inaczej coś zmieniło go po drodze — formatowanie pominięte).
+        guard let format = plan.format, format.range.upperBound <= textLength,
+              (string as NSString).substring(with: NSRange(location: format.range.lowerBound, length: format.range.count)) == plan.expected else { return }
         breakUndoCoalescing()
         // Grupa cofania zdarzenia (Enter) zamknięta, formatowanie w nowej — zamyka ją menedżer cofania na końcu zdarzenia.
         if let undo = undoManager, undo.groupsByEvent, undo.groupingLevel == 1 {

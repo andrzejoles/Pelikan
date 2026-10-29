@@ -19797,30 +19797,30 @@
         }
       }
     },
-    "Enter w oknie SQL, programu i testu formatuje opuszczaną linię (wielkość liter, odstępy, wyrównanie klauzul i AND/OR) i wcina nową według tych reguł; tekst nie przechodzi między liniami. Istniejący kod formatuje się tylko na żądanie. Pierwsze ⌘Z cofa samo formatowanie. Przełącznik także na pasku narzędzi i w menu Edycja." : {
+    "Enter w oknie SQL, programu i testu formatuje opuszczaną linię zmienioną od otwarcia albo zapisu (wielkość liter, odstępy, wyrównanie klauzul i AND/OR) i wcina nową według tych reguł; tekst nie przechodzi między liniami. Istniejący, nieedytowany kod formatuje się tylko na żądanie. Pierwsze ⌘Z cofa samo formatowanie. Przełącznik także na pasku narzędzi i w menu Edycja." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In SQL, program and test windows, Enter formats the line you leave (letter case, spacing, alignment of clauses and AND/OR) and indents the new one using these rules; text never moves between lines. Existing code is formatted only on request. The first ⌘Z undoes just the formatting. The switch is also on the toolbar and in the Edit menu."
+            "value" : "In SQL, program and test windows, Enter formats the line you leave if it changed since the file was opened or saved (letter case, spacing, alignment of clauses and AND/OR) and indents the new one using these rules; text never moves between lines. Existing code you have not edited is formatted only on request. The first ⌘Z undoes just the formatting. The switch is also on the toolbar and in the Edit menu."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "In SQL-, Programm- und Testfenstern formatiert Enter die verlassene Zeile (Groß-/Kleinschreibung, Abstände, Ausrichtung von Klauseln und AND/OR) und rückt die neue nach diesen Regeln ein; Text wandert nie zwischen Zeilen. Vorhandener Code wird nur auf Anforderung formatiert. Das erste ⌘Z macht nur die Formatierung rückgängig. Der Schalter befindet sich auch in der Symbolleiste und im Menü Bearbeiten."
+            "value" : "In SQL-, Programm- und Testfenstern formatiert Enter die verlassene Zeile, wenn sie seit dem Öffnen oder Speichern geändert wurde (Groß-/Kleinschreibung, Abstände, Ausrichtung von Klauseln und AND/OR), und rückt die neue nach diesen Regeln ein; Text wandert nie zwischen Zeilen. Vorhandener, nicht bearbeiteter Code wird nur auf Anforderung formatiert. Das erste ⌘Z macht nur die Formatierung rückgängig. Der Schalter befindet sich auch in der Symbolleiste und im Menü Bearbeiten."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En las ventanas SQL, de programa y de prueba, Intro formatea la línea que abandona (mayúsculas y minúsculas, espacios, alineación de cláusulas y AND/OR) y sangra la nueva según estas reglas; el texto nunca pasa de una línea a otra. El código existente solo se formatea a petición. El primer ⌘Z deshace solo el formateo. El interruptor también está en la barra de herramientas y en el menú Edición."
+            "value" : "En las ventanas SQL, de programa y de prueba, Intro formatea la línea que abandona si cambió desde que se abrió o guardó el archivo (mayúsculas y minúsculas, espacios, alineación de cláusulas y AND/OR) y sangra la nueva según estas reglas; el texto nunca pasa de una línea a otra. El código existente que no ha editado solo se formatea a petición. El primer ⌘Z deshace solo el formateo. El interruptor también está en la barra de herramientas y en el menú Edición."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "У вікнах SQL, програми й тесту Enter форматує рядок, який ви залишаєте (регістр літер, пробіли, вирівнювання речень і AND/OR), і робить відступ нового за цими правилами; текст ніколи не переходить між рядками. Наявний код форматується лише на вимогу. Перше ⌘Z скасовує лише форматування. Перемикач є також на панелі інструментів і в меню Редагування."
+            "value" : "У вікнах SQL, програми й тесту Enter форматує рядок, який ви залишаєте, якщо його змінено після відкриття чи збереження (регістр літер, пробіли, вирівнювання речень і AND/OR), і робить відступ нового за цими правилами; текст ніколи не переходить між рядками. Наявний невідредагований код форматується лише на вимогу. Перше ⌘Z скасовує лише форматування. Перемикач є також на панелі інструментів і в меню Редагування."
           }
         }
       }
