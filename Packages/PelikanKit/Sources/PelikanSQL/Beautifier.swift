@@ -1111,7 +1111,8 @@ struct Formatter {
 
     /// Kolumna słowa klauzuli: do lewej w kolumnie instrukcji, do prawej — kończy się w kolumnie końca SELECT.
     func clauseColumn(_ f: Frame, _ keyword: String) -> Int {
-        options.clauseLayout == .rightAligned ? f.column + max(0, 6 - keyword.count) : f.column
+        // Rzeka: pierwsze słowo klauzuli (ORDER w ORDER BY, LEFT w LEFT JOIN) kończy się w kolumnie końca SELECT.
+        options.clauseLayout == .rightAligned ? f.column + max(0, 6 - (keyword.split(separator: " ").first?.count ?? keyword.count)) : f.column
     }
 
     static let clauseStarts: [[String]] = [

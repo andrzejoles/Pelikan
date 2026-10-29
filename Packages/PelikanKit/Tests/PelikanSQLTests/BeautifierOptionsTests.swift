@@ -144,7 +144,7 @@ struct BeautifierOptionsTests {
               JOIN u ON u.id = t.id
              WHERE a = 1 AND
                    b = 2
-            ORDER BY a
+             ORDER BY a
             """)
     }
 

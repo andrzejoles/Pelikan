@@ -71,7 +71,7 @@ WITH   dept_tot AS (
          SELECT deptno,
                 sum(sal) total
            FROM emp
-         GROUP BY deptno
+          GROUP BY deptno
        ),
        avg_tot AS (
          SELECT avg(total) avg_total
@@ -90,7 +90,7 @@ SELECT b.deptno,
   FROM big b
   JOIN dept dp
     ON dp.deptno = b.deptno
-ORDER BY b.total DESC;
+ ORDER BY b.total DESC;
 ### 07-cte-rekurencyjne
 WITH   hier (empno, ename, mgr, lvl, path) AS (
          SELECT empno,
@@ -100,7 +100,7 @@ WITH   hier (empno, ename, mgr, lvl, path) AS (
                 cast(ename AS VARCHAR2(4000))
            FROM emp
           WHERE mgr IS NULL
-         UNION ALL
+          UNION ALL
          SELECT e.empno,
                 e.ename,
                 e.mgr,
@@ -115,7 +115,7 @@ WITH   hier (empno, ename, mgr, lvl, path) AS (
 SELECT lpad(' ', 2 * (lvl - 1)) || ename tree,
        path
   FROM hier
-ORDER BY ord;
+ ORDER BY ord;
 ### 08-in-dluga-lista
 SELECT *
   FROM emp
@@ -185,13 +185,13 @@ MERGE INTO emp t
           WHERE batch_id = 42
        ) s
     ON (t.empno = s.empno)
-WHEN MATCHED THEN UPDATE
+  WHEN MATCHED THEN UPDATE
    SET t.sal = s.sal,
        t.comm = s.comm,
        t.upd = SYSDATE
  WHERE t.sal <> s.sal
 DELETE WHERE s.sal IS NULL
-WHEN NOT MATCHED THEN INSERT (empno, sal, comm, upd)
+  WHEN NOT MATCHED THEN INSERT (empno, sal, comm, upd)
 VALUES (s.empno, s.sal, s.comm, SYSDATE);
 ### 13-case-zagniezdzony
 SELECT ename,
@@ -224,14 +224,14 @@ SELECT e.ename,
        l.city,
        m.ename mgr_name
   FROM emp e
-INNER JOIN dept d
+ INNER JOIN dept d
     ON d.deptno = e.deptno
    AND d.active = 'Y'
-LEFT OUTER JOIN locations l
+  LEFT OUTER JOIN locations l
     ON l.loc_id = d.loc_id
-LEFT JOIN emp m
+  LEFT JOIN emp m
     ON m.empno = e.mgr
-CROSS JOIN params p
+ CROSS JOIN params p
  WHERE e.sal > p.min_sal;
 ### 16-and-or-nawiasy
 SELECT *
@@ -284,8 +284,8 @@ DECLARE
       FROM emp
      WHERE deptno = p_dept
        AND job = p_job
-    ORDER BY sal DESC
-    FOR UPDATE OF sal NOWAIT;
+     ORDER BY sal DESC
+       FOR UPDATE OF sal NOWAIT;
   r c_emp%ROWTYPE;
 BEGIN
   OPEN c_emp(10, 'ANALYST');
@@ -305,7 +305,7 @@ DECLARE
   l_emp t_emp;
 BEGIN
   SELECT *
-  BULK COLLECT INTO l_emp
+    BULK COLLECT INTO l_emp
     FROM emp
    WHERE deptno = 10;
   FORALL i IN 1..l_emp.count SAVE EXCEPTIONS
@@ -366,22 +366,22 @@ SELECT deptno,
        avg(nvl(comm, 0)) avg_comm
   FROM emp
  WHERE hiredate > add_months(SYSDATE, -120)
-GROUP BY deptno,
-         job,
-         EXTRACT(YEAR FROM hiredate)
+ GROUP BY deptno,
+          job,
+          EXTRACT(YEAR FROM hiredate)
 HAVING count(*) > 1
    AND sum(sal) > 5000
-ORDER BY deptno,
-         total DESC,
-         job NULLS FIRST;
+ ORDER BY deptno,
+          total DESC,
+          job NULLS FIRST;
 ### 27-grouping-sets
 SELECT deptno,
        job,
        sum(sal)
   FROM emp
-GROUP BY GROUPING SETS ((deptno, job), (deptno), ())
-ORDER BY 1,
-         2;
+ GROUP BY GROUPING SETS ((deptno, job), (deptno), ())
+ ORDER BY 1,
+          2;
 ### 28-exists-skorelowane
 DELETE FROM emp e
  WHERE NOT EXISTS (
@@ -400,7 +400,7 @@ SELECT empno,
        'E' src
   FROM emp
  WHERE deptno = 10
-UNION ALL
+ UNION ALL
 SELECT empno,
        ename,
        'H' src
@@ -411,7 +411,7 @@ SELECT empno,
        ename,
        'E'
   FROM emp_excluded
-ORDER BY 2;
+ ORDER BY 2;
 ### 30-if-warunki-zlozone
 BEGIN
   IF (v_a > 0 AND v_b > 0)
@@ -453,7 +453,7 @@ BEGIN
            ename
       FROM emp
      WHERE deptno = 10
-    ORDER BY ename
+     ORDER BY ename
   ) LOOP
     dbms_output.put_line(r.ename);
   END LOOP;
@@ -533,7 +533,7 @@ SELECT json_object('id' value e.empno,
                    'dept' value json_object('no' value d.deptno, 'name' value d.dname)) doc
   FROM emp e
   JOIN dept d USING (deptno)
-ORDER BY e.empno
+ ORDER BY e.empno
 OFFSET 10 ROWS
  FETCH NEXT 5 ROWS ONLY;
 ### 40-wyjatki
@@ -577,14 +577,14 @@ SELECT d.dname,
        x.ename,
        x.sal
   FROM dept d
-CROSS APPLY (
-              SELECT ename,
-                     sal
-                FROM emp e
-               WHERE e.deptno = d.deptno
-              ORDER BY sal DESC
-               FETCH FIRST 2 ROWS ONLY
-            ) x;
+ CROSS APPLY (
+               SELECT ename,
+                      sal
+                 FROM emp e
+                WHERE e.deptno = d.deptno
+                ORDER BY sal DESC
+                FETCH FIRST 2 ROWS ONLY
+             ) x;
 ### 43-juz-sformatowane-przecinek-z-przodu
 SELECT e.ename,
        d.dname
@@ -662,8 +662,8 @@ SELECT trunc(created_at) day,
        sum(qty * price) amount,
        count(*) cnt
   FROM order_items
-GROUP BY trunc(created_at),
-         product_id;
+ GROUP BY trunc(created_at),
+          product_id;
 ### 52-ddl-sequence-synonym-dblink
 CREATE SEQUENCE order_seq START WITH 1000 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999 CACHE 50 NOORDER NOCYCLE;
 CREATE OR REPLACE PUBLIC SYNONYM order_items FOR app.order_items;

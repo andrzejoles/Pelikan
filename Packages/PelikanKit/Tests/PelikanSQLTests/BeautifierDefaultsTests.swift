@@ -24,8 +24,8 @@ struct BeautifierDefaultsTests {
               FROM t
              WHERE x = 1
                AND y = 2
-            ORDER BY a,
-                     b;
+             ORDER BY a,
+                      b;
             """)
         #expect(try f("select case when a = 1 then 'x' else 'y' end b, case when a = 1 then 'x' when a = 2 then 'y' end c from t where a in (1, 2, 3);") == """
             SELECT CASE WHEN a = 1 THEN 'x' ELSE 'y' END b,
@@ -113,7 +113,7 @@ struct BeautifierDefaultsTests {
                AND u.x = 1
              WHERE (t.a = 1 OR t.b = 2)
                AND t.c = 3
-            GROUP BY a
+             GROUP BY a
             HAVING count(*) > 1
                AND sum(b) > 0;
             """)
@@ -122,13 +122,13 @@ struct BeautifierDefaultsTests {
              USING s
                 ON (t.id = s.id
                AND t.x = s.x)
-            WHEN MATCHED THEN UPDATE
+              WHEN MATCHED THEN UPDATE
                SET t.v = s.v;
             """)
         #expect(try f("select level from emp start with mgr is null and deptno = 10 connect by prior empno = mgr and level < 5;") == """
             SELECT LEVEL
               FROM emp
-            START WITH mgr IS NULL
+             START WITH mgr IS NULL
                AND deptno = 10
             CONNECT BY PRIOR empno = mgr
                AND LEVEL < 5;

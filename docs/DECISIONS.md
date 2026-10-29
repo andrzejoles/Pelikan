@@ -2504,7 +2504,8 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   warunkiem, a złamany nawias zagnieżdżony kończy `)` w osobnej linii. Rzeka przy krótkim słowie (IF) wysuwa AND w lewo
   (`  IF a` / ` AND b`). AND w `BETWEEN … AND` nigdy nie jest łamany; układ nie zmienia kolejności tokenów, więc
   mieszane AND/OR bez nawiasów zachowują znaczenie. Wyrównanie „rzeką” innych słów (SET, VALUES, INTO, RETURNING,
-  USING, WHEN MATCHED, ORDER BY, GROUP BY) wynika z układu słów klauzul.
+  USING, WHEN MATCHED, ORDER BY, GROUP BY) wynika z układu słów klauzul; w słowach wielowyrazowych do rzeki
+  wyrównane jest pierwsze słowo (` ORDER BY`, `  LEFT JOIN`, ` START WITH`).
 - **Nowe opcje (P2):** UPDATE … SET i GROUP BY / ORDER BY (domyślnie jak listy SELECT), listy w nawiasach (IN,
   argumenty funkcji), kolumny tabel / pola rekordów i typów, próg krótkiego CASE, układ podzapytań, położenie operatora
   w długich wyrażeniach, wyrównanie kolumn tabel. Listy w nawiasach mają trzy wartości: element w linii, „w jednej
