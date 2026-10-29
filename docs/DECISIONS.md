@@ -2508,7 +2508,8 @@ z dynamicznej palety.
   nazwa, numer od 1 albo identyfikator; bez argumentu — wybór z listy, makro nagrywa nazwę) — te trzy agent: Pełny,
   na liście komend aplikacji dla agenta (jak `window.next`), skutek: stan interfejsu; `window.allTabs`,
   `window.moveToGroup`, `window.removeFromGroup`, `window.renameGroup`, `window.ungroup` — agent: Brak. `window.next`
-  / `window.previous` (⌃Tab) przechodzą po oknach bieżącej grupy. ⌘1…9 do wyboru okna Pelikan nie ma — bez zmian.
+  / `window.previous` (⌃Tab) przechodzą po oknach bieżącej grupy (szczegóły — „Po przeglądzie”). ⌘1…9 do wyboru okna
+  Pelikan nie ma — bez zmian.
   Nowa komenda `view.windowList` (Widok › Lista okien, wstążka Widok › Panele) pokazuje kartę Okna lewej kolumny.
 - **Kapsułki na pasku tytułu:** element `tabGroups` paska narzędzi (pierwszy w domyślnym układzie — w unified toolbar
   leży w wolnym miejscu między tytułem a przyciskami; do zapamiętanego układu dodany raz, flaga w UserDefaults —
@@ -2531,14 +2532,15 @@ z dynamicznej palety.
   3,5 pt w nasyconym kolorze połączenia i pogrubiony tytuł (jak D198, kolor połączenia zamiast akcentu); nieaktywna —
   słabsze tło (pod kursorem — jak aktywna). Okno bez połączenia — tło neutralne, podkreślenie szare. Pasek kart 46 pt
   (było 32).
-- **Paleta** (`TabColorPalette`): 10 odcieni rozłożonych po kole barw (co najmniej 25° od siebie, kolejność przydziału
-  przeplata odległe barwy), tło w HSB z małym nasyceniem i dużą jasnością w jasnym wyglądzie, ciemne w ciemnym;
+- **Paleta** (`TabColorPalette`): 10 odcieni rozłożonych po kole barw (co 36°, kolejność przydziału przeplata odległe
+  barwy), tło w HSB z małym nasyceniem i dużą jasnością w jasnym wyglądzie, ciemne w ciemnym;
   „Zwiększ kontrast” — tło jaśniejsze/ciemniejsze, akcent ciemniejszy. Połączenie dostaje kolor przy pierwszym oknie
   w sesji (kolejność otwarcia) i trzyma go, dopóki ma okna; zwolniony wraca do puli. Wybór: najmniej używany kolor,
   z nich nigdy nieużywany (i niezarezerwowany w worksecie dla innego połączenia), potem najdawniej zwolniony — świeżo
   zwolniony kolor nie trafia od razu do innego połączenia; powyżej 10 połączeń kolory się powtarzają równomiernie.
   **Kontrast AA** sprawdzany testem dla każdego koloru, obu wyglądów i „Zwiększ kontrast”: tekst = kolor etykiety 85%
-  (tytuł nieaktywnej karty i wiersz połączenia — 80% tego; przy „Zwiększ kontrast” pełny) ≥ 4,5:1 na tle aktywnej
+  (tytuł nieaktywnej karty i wiersz połączenia — przezroczystość ustawiona na 80%: `withAlphaComponent` zastępuje alfę
+  koloru etykiety, nie mnoży jej; przy „Zwiększ kontrast” kolor etykiety albo pełny) ≥ 4,5:1 na tle aktywnej
   i nieaktywnej karty. Pasek stanu (próbka koloru przed nazwą połączenia) i Lista okien (próbka przed kropką
   środowiska) — ten sam kolor.
 - **Workset:** pola opcjonalne `tabGroups` (grupy ręczne: identyfikator, nazwa), `tabColors` (klucz `conn:<uuid>` albo
@@ -2551,6 +2553,35 @@ z dynamicznej palety.
   pomocą „Grupa kart: szczegół · liczba” i wartością wybrana/niewybrana, pasek kapsułek — grupa przycisków „Grupy kart”.
 - **Dziennik:** `Log.app` — utworzenie grupy ręcznej (bez nazwy), `Log.files` — liczba odświeżonych repozytoriów; bez
   nazw grup, ścieżek i gałęzi.
+- **Po przeglądzie** (koordynator):
+  - **Menu karty** to model `Workspace.tabMenuEntries` (pozycja = komenda z argumentami), z którego aplikacja buduje
+    menu; „Usuń z grupy ręcznej” wywoływało zamknięcie okna — test sprawdza teraz, że pozycja wywołuje
+    `window.removeFromGroup`. „Nowa grupa…” to `window.moveToGroup` z `new: true` (pytanie o nazwę).
+  - **⌃Tab** (`window.next` / `window.previous`, decyzja koordynatora w zastępstwie właściciela): po oknach bieżącej
+    grupy, a za ostatnim — pierwsze okno następnej grupy (wstecz — ostatnie poprzedniej), cyklicznie; każde okno jest
+    osiągalne z klawiatury, w grupie z jednym oknem ⌃Tab przechodzi do następnej grupy; dostępne przy więcej niż
+    jednym oknie.
+  - **Identyfikator grupy repozytorium bez ścieżki:** `repo:<skrót FNV-1a katalogu roboczego>:<gałąź>` (makra, wynik
+    `window.showGroup`, agent); kolor grupy — po repozytorium (skrót katalogu), więc zmiana gałęzi go nie zmienia; ten
+    sam klucz w `tabColors` workseta. Makro zapisuje grupę jako „nazwa · szczegół” (np. „kadry · main”), dopasowywane
+    przed samą nazwą. Nazwy grup ręcznych są unikalne (bez względu na wielkość liter; duplikat — odmowa).
+  - **Repozytoria:** sprawdzanie wstrzykiwane (`TabRepositoryProbe`; testy — zaślepka albo wyłączone); `git remote`
+    raz na katalog roboczy (katalogi jednego repozytorium dzielą wynik), znane katalogi — tylko gałąź z pliku HEAD,
+    pełne sprawdzenie przy aktywacji aplikacji najwyżej co 30 s. Gałąź: reftable (`refs/heads/.invalid`) —
+    `git symbolic-ref` w tle, w trakcie rebase — `rebase-merge/head-name` albo `rebase-apply/head-name`. Nowy plik
+    w znanym repozytorium (katalog jeszcze niesprawdzony) od razu trafia do grupy repozytorium. Ścieżki z gita bez
+    przycinania białych znaków.
+  - **Kontrast:** znacznik typu okna (litera S, P, T…) to tekst — wariant koloru typu ciemny w jasnym wyglądzie, jasny
+    w ciemnym (`TabColorPalette.markerColor`), ≥ 4,5:1 na tle kart i paska; podkreślenie aktywnej karty ≥ 3:1, kropka
+    środowiska z obwódką w kolorze etykiety (≥ 3:1 na każdym tle) — test.
+  - **Kapsułki przy braku miejsca** (`TabCapsuleLayout`, test): widoczne usuwane od końca, aż zmieszczą się bieżąca
+    i „»”. Element paska w menu przepełnienia paska narzędzi ma postać menu „Grupy kart” z listą grup; mała kapsułka
+    na pasku kart także wtedy, gdy element jest w przepełnieniu (`visibleItems`), sprawdzane po zmianie rozmiaru okna
+    i po pokazaniu/ukryciu paska (`toggleToolbarShown`, bez KVO).
+  - **Wysokości** karty (tytuł, połączenie, podkreślenie) i kapsułki liczone z czcionek interfejsu (D178), nie stałe.
+  - **Pasek kart:** przewijanie do aktywnej karty tylko po zmianie aktywnego okna albo zbioru kart (ręcznie
+    przewinięty pasek nie wraca przy każdym odświeżeniu); szerokość treści z ramki paska, zmiany ograniczeń poza
+    `layout()`, kółko bez przepełnienia przekazywane dalej.
 
 ### D201 · 2026-10-29 — Pliki zmienione w gałęzi z paska stanu; przewijanie paska kart przy przepełnieniu
 
@@ -2572,18 +2603,21 @@ pozostałe» i wtedy otworzy pozostałe pliki zmieniane w tym branchu, o ile nie
   w gicie); tylko istniejące pliki. Odczyty z konfiguracją tła i wyłączonymi filtrami repozytorium (D189), poza wątkiem
   głównym.
 - **Tylko pliki kodu otwierane przez Pelikana:** rozszerzenia skryptów i programów (`FileOpening.extensions`), plików
-  okien (`.tst`, `.rep`, `.pdd`, `.sqlnb`), `.pls`, `.plb`, `.jav`, `.txt`, `.pc`, `.ctl` i rozszerzenia z Ustawień
-  (programy, testy, specyfikacja/ciało). Repozytorium — pliku aktywnego okna (karta widoczna w oknie pary).
+  okien (`.tst`, `.rep`, `.pdd`, `.sqlnb`), `.pls`, `.plb`, `.jav`, `.pc`, `.ctl` i rozszerzenia z Ustawień
+  (programy, testy, specyfikacja/ciało) — bez zwykłych plików tekstowych; filtr rozszerzeń przed sprawdzaniem plików
+  binarnych. Repozytorium — pliku aktywnego okna (karta widoczna w oknie pary).
 - Już otwarte pliki (porównanie po rozwiązaniu dowiązań, także część pary) są pomijane; para `.pks`/`.pkb` otwiera się
-  jednym oknem (`openFile`, D194) — drugi plik pary jest wtedy już otwarty. Powyżej 30 plików — pytanie z liczbą
-  (argument `confirm` pomija pytanie; bez okna pytań — agent, skrypt — odmowa i wpis w dzienniku z liczbą). Po otwarciu
+  jednym oknem (`openFile`, D194) — drugi plik pary jest wtedy już otwarty. Zbiór otwartych plików (po rozwiązaniu
+  dowiązań) liczony raz w tle i dopełniany przy otwieraniu. Powyżej 30 plików — pytanie z liczbą (argument `confirm`
+  pomija pytanie; bez okna pytań — agent, skrypt, makro — odmowa z podpowiedzią `confirm=true`), powyżej 200 — odmowa
+  (za dużo naraz). `git diff` z `--` po rewizjach. Po otwarciu
   aktywne zostaje okno, z którego wywołano komendę. Dziennik: liczby plików, bez ścieżek.
 
 **B) Przewijanie paska kart.** „Gdyby mimo wszystko zakładki nie mieściły się w jednym wierszu (wychodziłyby poza
 ekran), to powinny się pojawić przyciski ich przewijania w lewo / prawo (no i jeśli myszka ma odpowiedni scroll, to też
 powinno działać).”
 
-- `TabStripView`: przy przepełnieniu przyciski ‹ › po bokach paska (tylko wtedy; obszar kart zwęża się o nie),
+- `TabStripView` (poprawki po przeglądzie — w D200 › Po przeglądzie): przy przepełnieniu przyciski ‹ › po bokach paska (tylko wtedy; obszar kart zwęża się o nie),
   wyłączone na końcach; krok ok. 60% widocznej szerokości (kilka kart, najmniej 120 pt) z animacją 0,2 s (bez animacji
   przy „Ogranicz ruch”). Kółko myszy: obrót pionowy przewija pasek poziomo; gest poziomy gładzika — zwykłe przewijanie
   `NSScrollView`. Aktywna karta po każdej przebudowie paska (przełączenie okna albo grupy) przewijana do widoku

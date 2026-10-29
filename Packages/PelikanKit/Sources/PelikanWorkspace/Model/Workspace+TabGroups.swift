@@ -29,7 +29,8 @@ extension Workspace {
             let files = d.fileURLs.map { $0.standardizedFileURL.path }
             for f in files {
                 let dir = (f as NSString).deletingLastPathComponent
-                if let r = tabRepositories[dir] { repos[f] = r } else if !tabRepositoryDirectories.contains(dir) { unknown = true }
+                if let r = repositoryInfo(forDirectory: dir) { repos[f] = r }
+                if tabRepositories[dir] == nil, !tabRepositoryDirectories.contains(dir) { unknown = true }
             }
             let c = effectiveConnection(of: d)
             if let c, labels[c] == nil, let def = connections.connection(c) {
@@ -86,6 +87,13 @@ extension Workspace {
         return g.documents
     }
 
+    /// Kolejność ⌃Tab: okna grup jedna po drugiej (kolejność kapsułek), w trybie „wszystkie karty” — kolejność okien.
+    var tabCycleOrder: [DocumentID] {
+        if tabGroupState.showAll { return documents.map(\.id) }
+        let groups = tabGroups
+        return groups.count > 1 ? groups.flatMap(\.documents) : documents.map(\.id)
+    }
+
     /// Ostatnio używane okno z listy (kolejność aktywacji), inaczej pierwsze.
     func mostRecent(_ ids: [DocumentID]) -> DocumentID? {
         ids.max { (activationTicks[$0] ?? 0, -(ids.firstIndex(of: $0) ?? 0)) < (activationTicks[$1] ?? 0, -(ids.firstIndex(of: $1) ?? 0)) }
@@ -115,8 +123,9 @@ extension Workspace {
         let s = spec.trimmingCharacters(in: .whitespaces)
         if let g = groups.first(where: { $0.id == s }) { return g }
         if let n = Int(s), groups.indices.contains(n - 1) { return groups[n - 1] }
-        if let g = groups.first(where: { $0.name.caseInsensitiveCompare(s) == .orderedSame }) { return g }
-        return groups.first { ($0.name + " · " + ($0.detail ?? "")).caseInsensitiveCompare(s) == .orderedSame }
+        // „nazwa · szczegół” przed samą nazwą: dwa repozytoria o tej samej nazwie (worktree, gałęzie) są rozróżnialne.
+        if let g = groups.first(where: { $0.qualifiedName.caseInsensitiveCompare(s) == .orderedSame }) { return g }
+        return groups.first { $0.name.caseInsensitiveCompare(s) == .orderedSame }
     }
 
     /// Następne okno po zamknięciu aktywnego: z prawej w tej samej grupie, inaczej z lewej; grupa bez innych okien —
@@ -133,6 +142,11 @@ extension Workspace {
     // MARK: Grupy ręczne
 
     /// Tworzy grupę ręczną i przenosi do niej okno.
+    /// Nazwy grup ręcznych są unikalne (bez względu na wielkość liter) — wskazanie nazwą w makrach i komendach.
+    public func manualTabGroupNameTaken(_ name: String, except: UUID? = nil) -> Bool {
+        tabGroupState.manualGroups.contains { $0.id != except && $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
     @discardableResult
     public func moveToNewTabGroup(_ doc: DocumentID, name: String) -> ManualTabGroup {
         let g = ManualTabGroup(name: name)
@@ -182,12 +196,14 @@ extension Workspace {
 
     // MARK: Repozytoria
 
-    /// Sprawdzenie repozytoriów katalogów plików okien w tle (jedno naraz, scalane): nowe katalogi — `git rev-parse`
-    /// i `git remote`; znane repozytoria — gałąź z pliku HEAD (bez procesu gita); `full` — także zdalne od nowa
-    /// (aktywacja aplikacji: mogło przybyć `git remote add`).
+    /// Sprawdzenie repozytoriów katalogów plików okien w tle (jedno naraz, scalane). Nowe katalogi — położenie
+    /// repozytorium (`git rev-parse`); znane — tylko gałąź z pliku HEAD (bez procesu gita); `full` (aktywacja aplikacji,
+    /// nie częściej niż co 30 s) — także zdalne od nowa (`git remote` raz na katalog roboczy, nie na katalog pliku).
     public func scheduleTabRepositoryRefresh(full: Bool) {
-        if full { tabRepositoryRefreshFull = true }
-        guard tabRepositoryRefresh == nil else { return }
+        if full, lastFullRepositoryCheck.map({ Date().timeIntervalSince($0) >= 30 }) ?? true {
+            tabRepositoryRefreshFull = true
+        }
+        guard tabRepositoryRefresh == nil, let probe = tabRepositoryProbe else { return }
         tabRepositoryRefresh = Task { @MainActor [weak self] in
             await Task.yield()
             guard let self else { return }
@@ -199,20 +215,11 @@ extension Workspace {
             }
             let fullRun = self.tabRepositoryRefreshFull
             self.tabRepositoryRefreshFull = false
+            if fullRun { self.lastFullRepositoryCheck = Date() }
             let known = self.tabRepositories
             let checked = self.tabRepositoryDirectories
-            let result = await Task.detached { () -> [String: RepositoryGroupInfo?] in
-                var out: [String: RepositoryGroupInfo?] = [:]
-                for dir in dirs.sorted() {
-                    if !fullRun, checked.contains(dir) {
-                        guard var r = known[dir] else { continue }
-                        if let g = r.gitDirectory { r.branch = GitRepository.headBranch(gitDirectory: g) }
-                        out[dir] = r
-                        continue
-                    }
-                    out[dir] = .some(GitRepository.groupInfo(for: URL(fileURLWithPath: dir, isDirectory: true)))
-                }
-                return out
+            let result = await Task.detached {
+                TabRepositoryProbe.refresh(dirs: dirs, known: known, checked: checked, full: fullRun, probe: probe)
             }.value
             var repos = self.tabRepositories
             for (dir, info) in result {
@@ -226,7 +233,7 @@ extension Workspace {
             self.tabRepositoryRefresh = nil
             // W trakcie sprawdzania mogły dojść okna z nowych katalogów albo prośba o pełne odświeżenie.
             let pending = self.tabRepositoryDirectoriesInUse.subtracting(self.tabRepositoryDirectories)
-            if self.tabRepositoryRefreshFull || !pending.isEmpty { self.scheduleTabRepositoryRefresh(full: self.tabRepositoryRefreshFull) }
+            if self.tabRepositoryRefreshFull || !pending.isEmpty { self.scheduleTabRepositoryRefresh(full: false) }
         }
     }
 
@@ -234,11 +241,76 @@ extension Workspace {
     var tabRepositoryDirectoriesInUse: Set<String> {
         Set(documents.flatMap { $0.fileURLs.map { ($0.standardizedFileURL.path as NSString).deletingLastPathComponent } })
     }
+
+    /// Repozytorium katalogu: sprawdzone albo — dla katalogu jeszcze niesprawdzonego — znane repozytorium nad nim (nowy
+    /// plik w znanym repozytorium trafia do grupy repozytorium od razu, bez mignięcia w grupie połączenia).
+    func repositoryInfo(forDirectory dir: String) -> RepositoryGroupInfo? {
+        if let r = tabRepositories[dir] { return r }
+        guard !tabRepositoryDirectories.contains(dir) else { return nil }
+        return tabRepositories.values.filter { dir == $0.root || dir.hasPrefix($0.root + "/") }.max { $0.root.count < $1.root.count }
+    }
+}
+
+/// Sprawdzanie repozytoriów dla grup kart (D200) — wstrzykiwane (testy: zaślepka albo nil, bez procesów gita).
+public struct TabRepositoryProbe: Sendable {
+    /// Położenie repozytorium katalogu (katalog roboczy, nazwa, katalog gita, gałąź); bez informacji o zdalnym.
+    public var locate: @Sendable (String) -> RepositoryGroupInfo?
+    /// Czy repozytorium (katalog roboczy) ma zdalne.
+    public var hasRemote: @Sendable (String) -> Bool
+    /// Gałąź (katalog gita, katalog roboczy).
+    public var branch: @Sendable (String, String) -> String?
+
+    public init(locate: @escaping @Sendable (String) -> RepositoryGroupInfo?, hasRemote: @escaping @Sendable (String) -> Bool,
+                branch: @escaping @Sendable (String, String) -> String?) {
+        self.locate = locate; self.hasRemote = hasRemote; self.branch = branch
+    }
+
+    public static let git = TabRepositoryProbe(
+        locate: { GitRepository.location(for: URL(fileURLWithPath: $0, isDirectory: true)) },
+        hasRemote: { GitRepository.hasRemote(root: URL(fileURLWithPath: $0, isDirectory: true)) },
+        branch: { GitRepository.currentBranch(gitDirectory: $0, root: $1) })
+
+    /// Jedno odświeżenie: znane repozytoria — gałąź; `git remote` najwyżej raz na katalog roboczy (katalogi jednego
+    /// repozytorium dzielą wynik), poza pełnym sprawdzeniem — ze znanych wyników.
+    static func refresh(dirs: Set<String>, known: [String: RepositoryGroupInfo], checked: Set<String>, full: Bool,
+                        probe: TabRepositoryProbe) -> [String: RepositoryGroupInfo?] {
+        var out: [String: RepositoryGroupInfo?] = [:]
+        var remotes: [String: Bool] = [:]
+        if !full { for r in known.values { remotes[r.root] = r.hasRemote } }
+        func remote(_ root: String) -> Bool {
+            if let r = remotes[root] { return r }
+            let r = probe.hasRemote(root)
+            remotes[root] = r
+            return r
+        }
+        for dir in dirs.sorted() {
+            if checked.contains(dir), var r = known[dir] {
+                if let g = r.gitDirectory { r.branch = probe.branch(g, r.root) }
+                r.hasRemote = remote(r.root)
+                out[dir] = r
+                continue
+            }
+            // Katalog spoza repozytorium sprawdzony wcześniej — ponownie tylko przy pełnym sprawdzeniu.
+            if checked.contains(dir), !full { continue }
+            guard var r = probe.locate(dir) else {
+                out[dir] = .some(nil)
+                continue
+            }
+            r.hasRemote = remote(r.root)
+            out[dir] = r
+        }
+        return out
+    }
 }
 
 /// Komendy grup kart (D200): następna i poprzednia grupa, pokaż grupę, karty wszystkich grup, grupy ręczne.
 enum TabGroupCommands {
     static let groupParam = CommandParameter("group", .string, L10n.tr("Grupa: nazwa, numer od 1 albo identyfikator"))
+
+    /// Nazwa grupy ręcznej już zajęta — grupy wskazuje się nazwą (makra, agent), więc bez duplikatów.
+    static func duplicate(_ name: String) -> CommandError {
+        CommandError.invalidArgument("name", L10n.tr("Grupa ręczna „\(name)” już istnieje"))
+    }
 
     @MainActor
     static func group(_ ctx: CommandContext, title: String, manualOnly: Bool = false) async throws -> TabGroup {
@@ -281,7 +353,7 @@ enum TabGroupCommands {
                 let g = try await group(ctx, title: L10n.tr("Pokaż grupę kart"))
                 ctx.workspace.showTabGroup(g.id)
                 return CommandResult(message: g.name, value: .object(["group": .string(g.id), "windows": .int(Int64(g.documents.count))]),
-                                     resolvedArguments: CommandArguments(["group": .string(g.name)]))
+                                     resolvedArguments: CommandArguments(["group": .string(g.qualifiedName)]))
             },
             Command(CommandDescriptor(id: "window.allTabs", title: L10n.tr("Karty wszystkich grup"), category: .window,
                                       parameters: [CommandParameter("visible", .boolean, L10n.tr("Pokaż karty wszystkich grup (true) albo tylko bieżącej (false); bez argumentu — przełącza"))],
@@ -295,7 +367,8 @@ enum TabGroupCommands {
             Command(CommandDescriptor(id: "window.moveToGroup", title: L10n.tr("Przenieś okno do grupy…"), category: .window,
                                       parameters: [WindowListCommands.documentParam,
                                                    CommandParameter("group", .string, L10n.tr("Istniejąca grupa ręczna: nazwa albo identyfikator")),
-                                                   CommandParameter("name", .string, L10n.tr("Nazwa nowej grupy ręcznej"))],
+                                                   CommandParameter("name", .string, L10n.tr("Nazwa nowej grupy ręcznej")),
+                                                   CommandParameter("new", .boolean, L10n.tr("Nowa grupa — bez nazwy pyta o nią"))],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Przenosi okno do grupy ręcznej (istniejącej albo nowej); grupy ręczne mają pierwszeństwo przed grupami automatycznymi i są zapisywane w worksecie."),
                                       feature: "PD-UI-013"),
@@ -303,6 +376,7 @@ enum TabGroupCommands {
                 let ws = ctx.workspace
                 let d = try WindowListCommands.document(ctx)
                 if let name = ctx.arguments.string("name")?.trimmingCharacters(in: .whitespaces), !name.isEmpty {
+                    guard !ws.manualTabGroupNameTaken(name) else { throw duplicate(name) }
                     let g = ws.moveToNewTabGroup(d.id, name: name)
                     return CommandResult(message: g.name, value: .string("manual:" + g.id.uuidString))
                 }
@@ -312,7 +386,7 @@ enum TabGroupCommands {
                         $0.id.uuidString == s || "manual:" + $0.id.uuidString == s || $0.name.caseInsensitiveCompare(s) == .orderedSame
                     }
                     guard target != nil else { throw CommandError.invalidArgument("group", L10n.tr("Nie ma takiej grupy ręcznej")) }
-                } else {
+                } else if ctx.arguments.bool("new") != true {
                     let new = UUID()
                     let options = [(label: L10n.tr("Nowa grupa…"), value: new)] + ws.tabGroupState.manualGroups.map { (label: $0.name, value: $0.id) }
                     guard let chosen = try await ctx.choose(L10n.tr("Przenieś okno do grupy"), options) else {
@@ -321,10 +395,20 @@ enum TabGroupCommands {
                     if chosen == new {
                         guard let name = await ctx.ui?.askText(L10n.tr("Nowa grupa kart"), message: L10n.tr("Nazwa grupy"), defaultValue: ""),
                               !name.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
-                        let g = ws.moveToNewTabGroup(d.id, name: name.trimmingCharacters(in: .whitespaces))
+                        let n = name.trimmingCharacters(in: .whitespaces)
+                        guard !ws.manualTabGroupNameTaken(n) else { throw duplicate(n) }
+                        let g = ws.moveToNewTabGroup(d.id, name: n)
                         return CommandResult(message: g.name, resolvedArguments: CommandArguments(["document": .string(d.id.description), "name": .string(g.name)]))
                     }
                     target = ws.tabGroupState.manualGroups.first { $0.id == chosen }
+                } else {
+                    // Menu karty › Przenieś do grupy › Nowa grupa… — od razu pytanie o nazwę.
+                    guard let name = await ctx.ui?.askText(L10n.tr("Nowa grupa kart"), message: L10n.tr("Nazwa grupy"), defaultValue: ""),
+                          !name.trimmingCharacters(in: .whitespaces).isEmpty else { throw CommandError.cancelledByUser }
+                    let n = name.trimmingCharacters(in: .whitespaces)
+                    guard !ws.manualTabGroupNameTaken(n) else { throw duplicate(n) }
+                    let g = ws.moveToNewTabGroup(d.id, name: n)
+                    return CommandResult(message: g.name, resolvedArguments: CommandArguments(["document": .string(d.id.description), "name": .string(g.name)]))
                 }
                 guard let target else { throw CommandError.cancelledByUser }
                 ws.moveToTabGroup(d.id, group: target.id)
@@ -357,6 +441,7 @@ enum TabGroupCommands {
                 }
                 let n = (name ?? "").trimmingCharacters(in: .whitespaces)
                 guard !n.isEmpty, let id = g.manualID else { throw CommandError.invalidArgument("name", L10n.tr("Pusta nazwa grupy")) }
+                guard !ctx.workspace.manualTabGroupNameTaken(n, except: id) else { throw duplicate(n) }
                 ctx.workspace.renameManualTabGroup(id, to: n)
                 return CommandResult(resolvedArguments: CommandArguments(["group": .string(g.id), "name": .string(n)]))
             },
@@ -369,5 +454,43 @@ enum TabGroupCommands {
                 return CommandResult(resolvedArguments: CommandArguments(["group": .string(g.id)]))
             },
         ]
+    }
+}
+
+/// Pozycja menu karty (PD-UI-004, D200): komenda z argumentami — aplikacja buduje z nich menu, test sprawdza, że każda
+/// pozycja wywołuje właściwą komendę.
+public struct TabMenuEntry: Sendable, Equatable {
+    public var title: String
+    public var command: CommandID?
+    public var arguments: [String: JSONValue]
+    /// Komenda działa na aktywnym oknie — najpierw aktywacja okna karty.
+    public var activatesFirst: Bool
+    public var submenu: [TabMenuEntry]?
+    public var isSeparator: Bool { command == nil && submenu == nil }
+
+    public static let separator = TabMenuEntry(title: "", command: nil, arguments: [:], activatesFirst: false, submenu: nil)
+}
+
+extension Workspace {
+    /// Menu karty: zamykanie (okno, pozostałe, z lewej, z prawej), Przenieś do grupy › Nowa grupa… / grupy ręczne,
+    /// Usuń z grupy ręcznej.
+    public func tabMenuEntries(for doc: Document) -> [TabMenuEntry] {
+        let d: [String: JSONValue] = ["document": .string(doc.id.description)]
+        func entry(_ title: String, _ id: CommandID, _ args: [String: JSONValue] = [:], activates: Bool = false) -> TabMenuEntry {
+            TabMenuEntry(title: title, command: id, arguments: args, activatesFirst: activates, submenu: nil)
+        }
+        var items = [entry(L10n.tr("Zamknij"), "file.closeWindow", d),
+                     entry(L10n.tr("Zamknij pozostałe"), "file.closeOthers", activates: true),
+                     entry(L10n.tr("Zamknij z lewej"), "file.closeLeft", activates: true),
+                     entry(L10n.tr("Zamknij z prawej"), "file.closeRight", activates: true),
+                     .separator]
+        let assigned = tabGroupState.assignments[doc.id]
+        var move = [entry(L10n.tr("Nowa grupa…"), "window.moveToGroup", d.merging(["new": .bool(true)]) { $1 })]
+        let others = tabGroupState.manualGroups.filter { $0.id != assigned }
+        if !others.isEmpty { move.append(.separator) }
+        move += others.map { entry($0.name, "window.moveToGroup", d.merging(["group": .string($0.id.uuidString)]) { $1 }) }
+        items.append(TabMenuEntry(title: L10n.tr("Przenieś do grupy"), command: nil, arguments: [:], activatesFirst: false, submenu: move))
+        if assigned != nil { items.append(entry(L10n.tr("Usuń z grupy ręcznej"), "window.removeFromGroup", d)) }
+        return items
     }
 }

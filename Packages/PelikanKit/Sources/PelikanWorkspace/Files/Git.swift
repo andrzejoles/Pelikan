@@ -221,9 +221,17 @@ public struct GitRepository: Sendable, Hashable {
     /// Repozytorium katalogu dla grup kart (D200): katalog roboczy, nazwa (katalog głównego repozytorium — także dla
     /// worktree), gałąź z pliku HEAD i czy repozytorium ma zdalne (`git remote`). nil — poza repozytorium albo brak gita.
     public static func groupInfo(for directory: URL) -> RepositoryGroupInfo? {
+        guard var info = location(for: directory) else { return nil }
+        info.hasRemote = hasRemote(root: URL(fileURLWithPath: info.root, isDirectory: true))
+        return info
+    }
+
+    /// Położenie repozytorium katalogu (bez sprawdzania zdalnego): katalog roboczy, nazwa, katalog gita, gałąź.
+    public static func location(for directory: URL) -> RepositoryGroupInfo? {
         guard let out = try? run(["rev-parse", "--show-toplevel", "--git-common-dir", "--git-dir"], in: directory, config: backgroundConfig) else { return nil }
-        let lines = out.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
-        guard lines.count >= 3, !lines[0].isEmpty else { return nil }
+        // Ścieżki bez przycinania białych znaków (katalog może się nimi zaczynać albo kończyć) — tylko podział na linie.
+        let lines = out.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard lines.count >= 3, !lines[0].isEmpty, !lines[1].isEmpty, !lines[2].isEmpty else { return nil }
         let top = URL(fileURLWithPath: lines[0], isDirectory: true)
         func absolute(_ p: String) -> URL {
             p.hasPrefix("/") ? URL(fileURLWithPath: p, isDirectory: true) : directory.appendingPathComponent(p, isDirectory: true).standardizedFileURL
@@ -231,17 +239,53 @@ public struct GitRepository: Sendable, Hashable {
         let common = absolute(lines[1]), gitDir = absolute(lines[2])
         var name = common.lastPathComponent == ".git" ? common.deletingLastPathComponent().lastPathComponent : common.lastPathComponent
         if name.hasSuffix(".git"), name.count > 4 { name = String(name.dropLast(4)) }
-        let remotes = (try? run(["remote"], in: top, config: backgroundConfig))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return RepositoryGroupInfo(root: top.standardizedFileURL.path, name: name, branch: headBranch(gitDirectory: gitDir.path),
-                                   hasRemote: !remotes.isEmpty, gitDirectory: gitDir.path)
+        let root = top.standardizedFileURL.path
+        return RepositoryGroupInfo(root: root, name: name, branch: currentBranch(gitDirectory: gitDir.path, root: root),
+                                   hasRemote: false, gitDirectory: gitDir.path)
     }
 
-    /// Gałąź z pliku `HEAD` katalogu gita („ref: refs/heads/…”); nil — odłączony HEAD albo brak pliku.
-    public static func headBranch(gitDirectory: String) -> String? {
-        guard let head = try? String(contentsOfFile: gitDirectory + "/HEAD", encoding: .utf8) else { return nil }
-        let line = head.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// Repozytorium ma zdalne (`git remote` niepuste).
+    public static func hasRemote(root: URL) -> Bool {
+        !((try? run(["remote"], in: root, config: backgroundConfig)) ?? "").split(separator: "\n").isEmpty
+    }
+
+    /// Gałąź: z pliku HEAD (bez procesu); w trakcie rebase — gałąź z `rebase-merge/head-name` albo
+    /// `rebase-apply/head-name`; HEAD w formacie reftable (`refs/heads/.invalid`) — `git symbolic-ref` (wywołanie w tle).
+    /// nil — odłączony HEAD.
+    public static func currentBranch(gitDirectory: String, root: String) -> String? {
+        switch headReference(gitDirectory: gitDirectory) {
+        case .branch(let b): return b
+        case .unknown:
+            let out = try? run(["symbolic-ref", "-q", "--short", "HEAD"], in: URL(fileURLWithPath: root, isDirectory: true), config: backgroundConfig)
+            let b = out.map { $0.hasSuffix("\n") ? String($0.dropLast()) : $0 } ?? ""
+            return b.isEmpty ? nil : b
+        case .detached:
+            for f in ["rebase-merge/head-name", "rebase-apply/head-name"] {
+                if let h = try? String(contentsOfFile: gitDirectory + "/" + f, encoding: .utf8) {
+                    let line = h.hasSuffix("\n") ? String(h.dropLast()) : h
+                    if line.hasPrefix("refs/heads/") { return String(line.dropFirst("refs/heads/".count)) }
+                }
+            }
+            return nil
+        }
+    }
+
+    enum HeadReference: Equatable { case branch(String), detached, unknown }
+
+    /// Odczyt pliku HEAD: „ref: refs/heads/…” — gałąź; reftable (`.invalid`) albo brak pliku — nieznane; inaczej odłączony.
+    static func headReference(gitDirectory: String) -> HeadReference {
+        guard let head = try? String(contentsOfFile: gitDirectory + "/HEAD", encoding: .utf8) else { return .unknown }
+        let line = head.hasSuffix("\n") ? String(head.dropLast()) : head
         let prefix = "ref: refs/heads/"
-        return line.hasPrefix(prefix) ? String(line.dropFirst(prefix.count)) : nil
+        guard line.hasPrefix(prefix) else { return line.hasPrefix("ref: ") ? .unknown : .detached }
+        let b = String(line.dropFirst(prefix.count))
+        return b == ".invalid" ? .unknown : .branch(b)
+    }
+
+    /// Gałąź z pliku `HEAD` katalogu gita (bez procesu gita); nil — odłączony HEAD, reftable albo brak pliku.
+    public static func headBranch(gitDirectory: String) -> String? {
+        if case .branch(let b) = headReference(gitDirectory: gitDirectory) { return b }
+        return nil
     }
 
     /// Ścieżka względem katalogu głównego (dowiązania rozwiązane po obu stronach, np. /var → /private/var).
@@ -318,7 +362,9 @@ public struct GitRepository: Sendable, Hashable {
     /// Pliki zmienione w gałęzi (D201): zatwierdzone od punktu rozgałęzienia (`branchBase`), niezatwierdzone (indeks
     /// i katalog roboczy względem HEAD) i nieśledzone (bez ignorowanych); bez usuniętych i binarnych, tylko istniejące.
     /// Kolejność: według ścieżki.
-    public func branchChangedFiles() throws -> [URL] {
+    public func branchChangedFiles(extensions: Set<String>? = nil) throws -> [URL] {
+        // Filtr rozszerzeń przed sprawdzaniem plików binarnych (bez czytania plików, których i tak nie otworzymy).
+        func wanted(_ p: String) -> Bool { extensions.map { $0.contains((p as NSString).pathExtension.lowercased()) } ?? true }
         let cfg = Self.backgroundConfig + Self.untrustedFilterConfig(in: root)
         var paths = Set<String>()
         var binary = Set<String>()
@@ -329,19 +375,20 @@ public struct GitRepository: Sendable, Hashable {
             for rec in out.split(separator: "\0") {
                 let parts = rec.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false)
                 guard parts.count == 3 else { continue }
-                let path = String(parts[2]).trimmingCharacters(in: .newlines)
+                let path = String(parts[2])
+                guard wanted(path) else { continue }
                 if parts[0] == "-" { binary.insert(path) } else { paths.insert(path) }
             }
         }
         let hasHead = (try? Self.run(["rev-parse", "--verify", "-q", "HEAD"], in: root, config: Self.backgroundConfig)) != nil
         if hasHead {
-            if let base = branchBase() { numstat([base, "HEAD"]) }
-            numstat(["HEAD"])
+            if let base = branchBase() { numstat([base, "HEAD", "--"]) }
+            numstat(["HEAD", "--"])
         } else {
-            numstat(["--cached"])
+            numstat(["--cached", "--"])
         }
         let others = (try? Self.run(["ls-files", "--others", "--exclude-standard", "-z"], in: root, config: Self.backgroundConfig)) ?? ""
-        for p in others.split(separator: "\0").map(String.init) where !p.isEmpty && !p.hasSuffix("/") {
+        for p in others.split(separator: "\0").map(String.init) where !p.isEmpty && !p.hasSuffix("/") && wanted(p) {
             if Self.looksBinary(root.appendingPathComponent(p)) { binary.insert(p) } else { paths.insert(p) }
         }
         return paths.subtracting(binary).sorted().compactMap { p in

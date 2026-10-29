@@ -129,7 +129,8 @@ Kolejność kapsułek jest stała: grupy ręczne (w kolejności utworzenia), pro
 (albo rodzaje okien), „Bez połączenia” na końcu. Karty w grupie są w kolejności otwierania.
 
 Okno aktywowane skądkolwiek (Przeglądarka obiektów, lista błędów, Lista okien, debuger, otwarcie pliku, agent)
-przełącza grupę samo. **⌃Tab** i **⌃⇧Tab** (Następne / Poprzednie okno) przechodzą po oknach bieżącej grupy,
+przełącza grupę samo. **⌃Tab** i **⌃⇧Tab** (Następne / Poprzednie okno) przechodzą po oknach bieżącej grupy, a za
+ostatnim — do pierwszego okna następnej grupy (każde okno jest osiągalne),
 **⌃⌘]** i **⌃⌘[** — **Następna grupa kart** / **Poprzednia grupa kart**, a **Okno › Pokaż grupę kart…** wybiera
 grupę z listy. **Okno › Karty wszystkich grup** (także w menu kapsułki i listy **»**) pokazuje na pasku karty
 wszystkich grup. Lista okien (karta **Okna** w lewej kolumnie, **Widok › Lista okien**) pokazuje okna w drzewie

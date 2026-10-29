@@ -73,7 +73,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         // na początku paska kart.
         toolbarController?.ensureTabGroupsItem()
         toolbarController?.onTabGroupsChange = { [weak self] in self?.updateGroupPill() }
-        toolbarVisibility = toolbar.observe(\.isVisible) { [weak self] _, _ in
+        // Pokazanie/ukrycie paska (Widok › Pokaż pasek narzędzi) — przez MainWindow.toggleToolbarShown (NSToolbar
+        // nie gwarantuje KVO dla isVisible); zmiana rozmiaru okna — element może trafić do menu przepełnienia paska.
+        window.onToolbarVisibilityChange = { [weak self] in self?.updateGroupPill() }
+        resizeObserver = NotificationCenter.default.addObserver(forName: NSWindow.didResizeNotification, object: window, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.updateGroupPill() }
         }
         updateGroupPill()
@@ -96,10 +99,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
-    private var toolbarVisibility: NSKeyValueObservation?
+    private var resizeObserver: (any NSObjectProtocol)?
 
-    /// Mała kapsułka bieżącej grupy na pasku kart, gdy pasek narzędzi nie pokazuje kapsułek grup (D200).
+    /// Mała kapsułka bieżącej grupy na pasku kart, gdy pasek narzędzi nie pokazuje kapsułek grup (D200). Po układzie
+    /// paska (widoczne elementy liczone po zmianie rozmiaru).
     func updateGroupPill() {
+        DispatchQueue.main.async { [weak self] in self?.applyGroupPill() }
+    }
+
+    private func applyGroupPill() {
         let fullScreen = window?.styleMask.contains(.fullScreen) ?? false
         documentArea.groupsOnToolbar = toolbarController?.showsTabGroups(fullScreen: fullScreen) ?? false
     }
@@ -210,6 +218,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
 /// Okno główne zgłaszające zmianę fokusu (autoukrywanie paneli narzędzi) i ograniczające skróty narzędzi w panelach.
 private final class MainWindow: NSWindow {
     var onFirstResponderChange: (() -> Void)?
+    var onToolbarVisibilityChange: (() -> Void)?
+
+    override func toggleToolbarShown(_ sender: Any?) {
+        super.toggleToolbarShown(sender)
+        onToolbarVisibilityChange?()
+    }
     var toolsWithoutFocus: (() -> [NSView])?
 
     /// Skróty narzędzia w panelu (przycisk domyślny — Enter, Anuluj — Esc, `keyboardShortcut` SwiftUI, klawisze
@@ -431,6 +445,9 @@ final class DocumentAreaViewController: NSViewController {
     var groupsOnToolbar = true {
         didSet { if groupsOnToolbar != oldValue, isViewLoaded { refresh() } }
     }
+    private var tabBarHeight: NSLayoutConstraint!
+    /// Aktywne okno i karty z ostatniego przewinięcia do aktywnej karty (D201) — przewijanie tylko po ich zmianie.
+    private var revealedState: (DocumentID?, [DocumentID])?
     private var contrastObserver: (any NSObjectProtocol)?
     private let container = NSView()
     private let statusLabel = NSTextField(labelWithString: "")
@@ -482,6 +499,9 @@ final class DocumentAreaViewController: NSViewController {
         tabScroll.addSubview(tabStrip)
         tabStrip.groupPill.target = self
         tabStrip.groupPill.action = #selector(showGroupMenu(_:))
+        // Wysokość paska kart z czcionek interfejsu (dwa wiersze karty, D178) — uaktualniana przy odświeżeniu.
+        tabBarHeight = tabScroll.heightAnchor.constraint(equalToConstant: TabMetrics.tabBarHeight)
+        tabBarHeight.priority = .defaultHigh
 
         statusLabel.font = InterfaceFonts.shared.small
         statusLabel.textColor = .secondaryLabelColor
@@ -527,7 +547,7 @@ final class DocumentAreaViewController: NSViewController {
             tabScroll.topAnchor.constraint(equalTo: root.safeAreaLayoutGuide.topAnchor),
             tabScroll.leadingAnchor.constraint(equalTo: root.leadingAnchor),
             tabScroll.trailingAnchor.constraint(equalTo: root.trailingAnchor),
-            { let c = tabScroll.heightAnchor.constraint(equalToConstant: 46); c.priority = .defaultHigh; return c }(),
+            tabBarHeight,
             tabStrip.topAnchor.constraint(equalTo: tabScroll.topAnchor),
             tabStrip.bottomAnchor.constraint(equalTo: tabScroll.bottomAnchor),
             tabStrip.leadingAnchor.constraint(equalTo: tabScroll.leadingAnchor),
@@ -630,8 +650,13 @@ final class DocumentAreaViewController: NSViewController {
             tabBar.addArrangedSubview(tab)
             if doc.id == active { activeTab = tab }
         }
-        // Aktywna karta zawsze w widoku (przełączenie okna albo grupy, D201) — po układzie paska.
-        if let activeTab {
+        tabBarHeight.constant = TabMetrics.tabBarHeight
+        // Aktywna karta w widoku po przełączeniu okna albo grupy (D201) — tylko przy zmianie aktywnego okna albo zbioru
+        // kart, nie przy każdym odświeżeniu (przewinięty ręcznie pasek nie wraca sam).
+        let shownIDs = docs.map(\.id).filter(shown.contains)
+        let revealChanged = revealedState.map { $0.0 != active || $0.1 != shownIDs } ?? true
+        revealedState = (active, shownIDs)
+        if revealChanged, let activeTab {
             DispatchQueue.main.async { [weak self, weak activeTab] in
                 guard let self, let activeTab, activeTab.superview != nil else { return }
                 self.tabStrip.reveal(activeTab)
@@ -709,7 +734,7 @@ extension DocumentAreaViewController {
             guard let self, self.gitKey == key else { return }
             if let (branch, state) = info {
                 let mark = state.map { $0 == .unmodified ? "" : " · " + $0.displayName } ?? ""
-                self.setGitLabel("⎇ " + (branch ?? L10n.tr("(odłączony HEAD)")) + mark)
+                self.setGitLabel("⎇ " + (branch ?? L10n.tr("(odłączony HEAD)")) + mark, spoken: (branch ?? L10n.tr("(odłączony HEAD)")) + mark)
             } else {
                 self.setGitLabel(nil)
             }
@@ -717,17 +742,18 @@ extension DocumentAreaViewController {
     }
 
     /// Gałąź na pasku stanu jako przycisk bez ramki (menu gałęzi, D201); nil — plik poza repozytorium.
-    private func setGitLabel(_ text: String?) {
+    private func setGitLabel(_ text: String?, spoken: String? = nil) {
         gitLabel.title = text ?? ""
         gitLabel.isHidden = text == nil
         gitLabel.toolTip = L10n.tr("Git: gałąź i stan pliku — kliknij, aby otworzyć pozostałe pliki zmienione w gałęzi")
-        gitLabel.setAccessibilityLabel(L10n.tr("Gałąź Git: \(text ?? "")"))
+        gitLabel.setAccessibilityLabel(L10n.tr("Gałąź Git: \(spoken ?? "")"))
         gitLabel.setAccessibilityHelp(L10n.tr("Menu gałęzi: otwórz pozostałe pliki zmienione w gałęzi"))
     }
 
     /// Menu gałęzi na pasku stanu (D201): otwarcie pozostałych plików zmienionych w gałęzi.
     @objc func showBranchMenu(_ sender: NSButton) {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         let item = menu.addItem(withTitle: L10n.tr("Otwórz pozostałe pliki zmienione w gałęzi"), action: #selector(openBranchChanges), keyEquivalent: "")
         item.target = self
         item.isEnabled = workspace.isEnabled("vcs.openBranchChanges")
@@ -765,61 +791,30 @@ extension DocumentAreaViewController {
 
     @objc func toggleAllTabs() { workspace.perform("window.allTabs") }
 
-    /// Menu karty (PD-UI-004): zamknij, zamknij pozostałe / z lewej / z prawej.
+    /// Menu karty (PD-UI-004, D200) z modelu `Workspace.tabMenuEntries`: każda pozycja to komenda z argumentami.
     func tabMenu(for doc: Document) -> NSMenu {
+        menu(workspace.tabMenuEntries(for: doc), document: doc.id)
+    }
+
+    private func menu(_ entries: [TabMenuEntry], document: DocumentID) -> NSMenu {
         let menu = NSMenu()
-        for (title, id) in [(L10n.tr("Zamknij"), "file.closeWindow"), (L10n.tr("Zamknij pozostałe"), "file.closeOthers"),
-                            (L10n.tr("Zamknij z lewej"), "file.closeLeft"), (L10n.tr("Zamknij z prawej"), "file.closeRight")] {
-            let item = menu.addItem(withTitle: title, action: #selector(tabMenuAction(_:)), keyEquivalent: "")
+        for e in entries {
+            if e.isSeparator {
+                menu.addItem(.separator())
+                continue
+            }
+            let item = menu.addItem(withTitle: e.title, action: e.command == nil ? nil : #selector(tabMenuAction(_:)), keyEquivalent: "")
             item.target = self
-            item.representedObject = [id, doc.id.description]
-        }
-        // Grupy ręczne (D200): Przenieś do grupy › Nowa grupa… / istniejące grupy; Usuń z grupy ręcznej.
-        menu.addItem(.separator())
-        let move = menu.addItem(withTitle: L10n.tr("Przenieś do grupy"), action: nil, keyEquivalent: "")
-        let sub = NSMenu()
-        let new = sub.addItem(withTitle: L10n.tr("Nowa grupa…"), action: #selector(moveToNewGroup(_:)), keyEquivalent: "")
-        new.target = self
-        new.representedObject = doc.id.description
-        let assigned = workspace.tabGroupState.assignments[doc.id]
-        let manual = workspace.tabGroupState.manualGroups.filter { $0.id != assigned }
-        if !manual.isEmpty { sub.addItem(.separator()) }
-        for g in manual {
-            let item = sub.addItem(withTitle: g.name, action: #selector(moveToGroup(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = [doc.id.description, g.id.uuidString]
-        }
-        move.submenu = sub
-        if assigned != nil {
-            let remove = menu.addItem(withTitle: L10n.tr("Usuń z grupy ręcznej"), action: #selector(tabMenuAction(_:)), keyEquivalent: "")
-            remove.target = self
-            remove.representedObject = ["window.removeFromGroup", doc.id.description]
+            item.representedObject = TabMenuAction(entry: e, document: document)
+            if let sub = e.submenu { item.submenu = self.menu(sub, document: document) }
         }
         return menu
     }
 
-    @objc func moveToNewGroup(_ sender: NSMenuItem) {
-        guard let id = sender.representedObject as? String else { return }
-        Task { @MainActor [workspace] in
-            guard let name = await workspace.ui?.askText(L10n.tr("Nowa grupa kart"), message: L10n.tr("Nazwa grupy"), defaultValue: ""),
-                  !name.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-            workspace.perform("window.moveToGroup", CommandArguments(["document": .string(id), "name": .string(name)]))
-        }
-    }
-
-    @objc func moveToGroup(_ sender: NSMenuItem) {
-        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
-        workspace.perform("window.moveToGroup", CommandArguments(["document": .string(pair[0]), "group": .string(pair[1])]))
-    }
-
     @objc func tabMenuAction(_ sender: NSMenuItem) {
-        guard let pair = sender.representedObject as? [String], pair.count == 2 else { return }
-        if pair[0] == "file.closeWindow" || pair[0] == "window.removeFromGroup" {
-            workspace.perform("file.closeWindow", CommandArguments(["document": .string(pair[1])]))
-        } else {
-            if let d = workspace.documents.first(where: { $0.id.description == pair[1] }) { workspace.activate(d.id) }
-            workspace.perform(CommandID(rawValue: pair[0]))
-        }
+        guard let action = sender.representedObject as? TabMenuAction, let command = action.entry.command else { return }
+        if action.entry.activatesFirst { workspace.activate(action.document) }
+        workspace.perform(command, CommandArguments(action.entry.arguments))
     }
 
     @objc func chooseConnection(_ sender: NSButton) {
@@ -918,9 +913,9 @@ final class DocumentTabButton: NSView {
         }
         let marker = NSTextField(labelWithString: document.kind.shortName)
         marker.font = .monospacedSystemFont(ofSize: fonts.label.pointSize, weight: .bold)
-        marker.textColor = Self.color(for: document.kind)
+        marker.textColor = TabPaletteColors.marker(document.kind)
         let title = NSTextField(labelWithString: document.title)
-        title.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 1), weight: isActive ? .semibold : fonts.weight)
+        title.font = TabMetrics.font(by: 1, weight: isActive ? .semibold : fonts.weight)
         title.textColor = dim
         title.lineBreakMode = .byTruncatingMiddle
         // Zmienione okno — kropka w miejscu przycisku zamknięcia (jak w macOS), pod kursorem „×”.
@@ -936,7 +931,7 @@ final class DocumentTabButton: NSView {
         if let dot { top.setCustomSpacing(5, after: dot) }
         // Drugi wiersz: połączenie okna, mniejsza czcionka, skracanie (pełna nazwa w podpowiedzi).
         let caption = NSTextField(labelWithString: connectionText)
-        caption.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 3), weight: fonts.weight)
+        caption.font = TabMetrics.font(by: 3)
         caption.textColor = connection == nil ? .secondaryLabelColor
             : (increased ? NSColor.labelColor : NSColor.labelColor.withAlphaComponent(Self.captionAlpha))
         caption.lineBreakMode = .byTruncatingTail
@@ -1052,6 +1047,13 @@ final class TabBarBackground: NSView {
     }
 }
 
+/// Pozycja menu karty z oknem, którego dotyczy.
+private final class TabMenuAction: NSObject {
+    let entry: TabMenuEntry
+    let document: DocumentID
+    init(entry: TabMenuEntry, document: DocumentID) { self.entry = entry; self.document = document }
+}
+
 /// Kropka w kolorze połączenia okna na karcie dokumentu (PD-CONN-005).
 private final class ConnectionDot: NSView {
     private let color: NSColor
@@ -1071,8 +1073,8 @@ private final class ConnectionDot: NSView {
         color.setFill()
         oval.fill()
         // Obrys — kropka nie ginie, gdy kolor połączenia jest zbliżony do tła paska.
-        NSColor.separatorColor.setStroke()
-        oval.lineWidth = 0.5
+        NSColor.labelColor.withAlphaComponent(0.85).setStroke()
+        oval.lineWidth = 1
         oval.stroke()
     }
 }

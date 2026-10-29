@@ -132,6 +132,7 @@ alphabetically (or window types), “No connection” at the end. Tabs within a 
 
 A window activated from anywhere (Object Browser, error list, Window List, debugger, opening a file, an agent) switches
 the group by itself. **⌃Tab** and **⌃⇧Tab** (Next / Previous Window) move through the windows of the current group,
+and after the last one to the first window of the next group (every window is reachable),
 **⌃⌘]** and **⌃⌘[** — **Next Tab Group** / **Previous Tab Group**, and **Window › Show Tab Group…** picks a group from a
 list. **Window › Tabs of All Groups** (also in the capsule menu and the **»** list) shows the tabs of all groups in the
 bar. The Window List (the **Windows** tab of the left column, **View › Window List**) shows the windows in a tree by

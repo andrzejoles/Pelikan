@@ -1,6 +1,7 @@
 import Foundation
 import PelikanDB
 @testable import PelikanWorkspace
+import Synchronization
 import Testing
 
 @Suite("Grupy kart: kaskada, histereza, kolejność (D200)")
@@ -131,28 +132,46 @@ struct TabColorPaletteTests {
         #expect(r.index(for: "conn:X") == 7 && r.index(for: "conn:Y") == 3 && r.index(for: "conn:Z") == 0)
     }
 
-    @Test("Kontrast tekstu AA na tle kart i kapsułek — jasny, ciemny wygląd i „Zwiększ kontrast”")
+    @Test("Kontrast na tle kart i kapsułek: tekst i znacznik typu AA, podkreślenie i obwódka kropki ≥ 3:1; odcienie co 36°")
     func contrast() {
         let black = RGBColor(red: 0, green: 0, blue: 0), white = RGBColor(red: 1, green: 1, blue: 1)
         for i in 0..<TabColorPalette.count {
             for dark in [false, true] {
                 for increased in [false, true] {
+                    let accent = TabColorPalette.color(i, shade: .accent, dark: dark, increasedContrast: increased)
                     for shade in [TabColorPalette.Shade.activeBackground, .inactiveBackground] {
                         let bg = TabColorPalette.color(i, shade: shade, dark: dark, increasedContrast: increased)
-                        // labelColor ≈ czarny/biały 85%; tytuł nieaktywnej karty i wiersz połączenia 80% (przy
-                        // „Zwiększ kontrast” — pełny kolor tekstu).
-                        for alpha in increased ? [0.85] : [0.85, 0.85 * 0.8] {
-                            let text = TabColorPalette.blend(dark ? white : black, alpha: alpha, over: bg)
+                        let label = dark ? white : black
+                        // Kolor etykiety 85% (labelColor); tytuł nieaktywnej karty i wiersz połączenia — przezroczystość
+                        // ustawiona na 80% (`withAlphaComponent` zastępuje alfę, nie mnoży jej); przy „Zwiększ kontrast”
+                        // — kolor etykiety (85%) albo pełny.
+                        for alpha in increased ? [0.85] : [0.85, 0.8] {
+                            let text = TabColorPalette.blend(label, alpha: alpha, over: bg)
                             #expect(TabColorPalette.contrast(text, bg) >= 4.5, "kolor \(i) dark \(dark) +kontrast \(increased) \(shade) alfa \(alpha)")
+                        }
+                        // Znacznik typu okna to tekst — AA.
+                        for kind in DocumentKind.allCases {
+                            let m = TabColorPalette.markerColor(kind, dark: dark)
+                            #expect(TabColorPalette.contrast(m, bg) >= 4.5, "znacznik \(kind) kolor \(i) dark \(dark) \(shade)")
+                        }
+                        // Obwódka kropki środowiska (kolor etykiety 85%, 1 pt) — element nietekstowy ≥ 3:1.
+                        #expect(TabColorPalette.contrast(TabColorPalette.blend(label, alpha: 0.85, over: bg), bg) >= 3)
+                        // Podkreślenie aktywnej karty i obwódka bieżącej kapsułki — na mocniejszym tle ≥ 3:1.
+                        if shade == .activeBackground {
+                            #expect(TabColorPalette.contrast(accent, bg) >= 3, "akcent \(i) dark \(dark) +kontrast \(increased)")
                         }
                     }
                 }
             }
         }
-        // Barwy wyraźnie różne: odcienie co najmniej 25° od siebie.
+        // Znacznik typu na tle paska kart i okna bez połączenia.
+        for (dark, bar) in [(false, RGBColor(red: 0.91, green: 0.91, blue: 0.92)), (true, RGBColor(red: 0.16, green: 0.16, blue: 0.17))] {
+            for kind in DocumentKind.allCases { #expect(TabColorPalette.contrast(TabColorPalette.markerColor(kind, dark: dark), bar) >= 4.5) }
+        }
+        // Barwy wyraźnie różne: sąsiednie odcienie co najmniej 36° od siebie (10 barw równo po kole).
         let h = TabColorPalette.hues.sorted()
-        for (x, y) in zip(h, h.dropFirst()) { #expect(y - x >= 25) }
-        #expect(360 - h.last! + h.first! >= 25)
+        for (x, y) in zip(h, h.dropFirst()) { #expect(y - x >= 36) }
+        #expect(360 - h.last! + h.first! >= 36)
     }
 }
 
@@ -203,16 +222,26 @@ struct WorkspaceTabGroupsTests {
         #expect(ws.currentTabGroup?.name == "dev_test" && ws.visibleTabDocuments == [a1.id, a2.id])
         _ = try await ws.invoke("window.next")
         #expect(ws.activeDocumentID == a2.id)
+        // Za ostatnim oknem grupy — pierwsze okno następnej grupy (cyklicznie: dev_test → dev_druga); wstecz — z powrotem.
         _ = try await ws.invoke("window.next")
-        #expect(ws.activeDocumentID == a1.id)
+        #expect(ws.activeDocumentID == b1.id)
+        _ = try await ws.invoke("window.previous")
+        #expect(ws.activeDocumentID == a2.id)
+        ws.activate(a1.id)
         // Następna grupa — ostatnio używane okno grupy (b2 było aktywne przed a1).
+        ws.activate(b2.id)
+        ws.activate(a1.id)
         _ = try await ws.invoke("window.nextGroup")
         #expect(ws.activeDocumentID == b2.id)
         _ = try await ws.invoke("window.previousGroup")
         #expect(ws.activeDocumentID == a1.id)
         _ = try await ws.invoke("window.showGroup", CommandArguments(["group": .string("1")]))
         #expect(ws.currentTabGroup?.name == "dev_druga")
-        _ = try await ws.invoke("window.showGroup", CommandArguments(["group": .string("dev_test")]))
+        let shown = try await ws.invoke("window.showGroup", CommandArguments(["group": .string("dev_test")]))
+        #expect(ws.activeDocumentID == a1.id)
+        // Makro zapisuje „nazwa · szczegół” — wskazanie jednoznaczne także przy grupach o tej samej nazwie.
+        #expect(shown.resolvedArguments?.string("group") == "dev_test · test")
+        _ = try await ws.invoke("window.showGroup", CommandArguments(["group": .string("dev_test · test")]))
         #expect(ws.activeDocumentID == a1.id)
         await #expect(throws: (any Error).self) { try await ws.invoke("window.showGroup", CommandArguments(["group": .string("brak")])) }
         // Karty wszystkich grup.
@@ -243,14 +272,22 @@ struct WorkspaceTabGroupsTests {
     @Test("Repozytorium ze zdalnym: grupa repozytorium · gałąź; zmiana gałęzi zmienia grupę")
     func repositories() throws {
         let (ws, x, _) = try workspace()
+        ws.tabRepositoryProbe = nil
         let d = ws.newDocument(.sql, fileURL: URL(fileURLWithPath: "/repo/sql/a.sql"))
         d.connectionID = x.id
         ws.newDocument(.sql).connectionID = x.id
         ws.tabRepositoryDirectories.insert("/repo/sql")
         ws.tabRepositories["/repo/sql"] = RepositoryGroupInfo(root: "/repo", name: "kadry", branch: "main", hasRemote: true)
         #expect(ws.tabGroups.map { "\($0.name) \($0.caption)" } == ["kadry main · 1", "Okna SQL 1 okno"])
+        // Identyfikator bez ścieżek (makra, agent); kolor po repozytorium, nie po gałęzi.
+        let main = try #require(ws.tabGroups.first)
+        #expect(!main.id.contains("/repo") && main.id.hasSuffix(":main"))
         ws.tabRepositories["/repo/sql"]?.branch = "feature"
-        #expect(ws.tabGroups.first?.caption == "feature · 1")
+        let feature = try #require(ws.tabGroups.first)
+        #expect(feature.caption == "feature · 1" && feature.id != main.id && feature.colorIndex == main.colorIndex)
+        // Nowy plik w znanym repozytorium (katalog jeszcze niesprawdzony) — od razu w grupie repozytorium.
+        ws.newDocument(.sql, fileURL: URL(fileURLWithPath: "/repo/nowe/b.sql")).connectionID = x.id
+        #expect(ws.tabGroups.first?.documents.count == 2)
         ws.tabRepositories["/repo/sql"]?.hasRemote = false
         #expect(ws.tabGroups.map(\.name) == ["Okna SQL"])
     }
@@ -345,4 +382,107 @@ struct TabGroupRepositoryTests {
         #expect(GitRepository.headBranch(gitDirectory: try #require(info.gitDirectory)) == "inna")
         #expect(GitRepository.groupInfo(for: t.url) == nil)
     }
+}
+
+@MainActor
+@Suite("Grupy kart: menu karty, kapsułki przy braku miejsca, sprawdzanie repozytoriów (przegląd D200)")
+struct TabGroupReviewTests {
+    @Test("Menu karty: każda pozycja wywołuje swoją komendę — Usuń z grupy ręcznej to window.removeFromGroup")
+    func tabMenu() async throws {
+        let ws = Workspace()
+        let a = ws.newDocument(.sql), b = ws.newDocument(.sql)
+        ws.moveToNewTabGroup(a.id, name: "Awaria")
+        let entries = ws.tabMenuEntries(for: a)
+        let remove = try #require(entries.first { $0.title == "Usuń z grupy ręcznej" })
+        #expect(remove.command == "window.removeFromGroup" && remove.arguments["document"] == .string(a.id.description))
+        _ = try await ws.invoke(try #require(remove.command), CommandArguments(remove.arguments))
+        #expect(ws.documents.count == 2 && ws.tabGroupState.assignments[a.id] == nil)
+        // Bez grupy ręcznej — bez pozycji „Usuń z grupy ręcznej”; „Przenieś do grupy” zawiera nową grupę i istniejące.
+        ws.moveToNewTabGroup(b.id, name: "Zadanie")
+        let menu = ws.tabMenuEntries(for: a)
+        #expect(!menu.contains { $0.command == "window.removeFromGroup" })
+        let move = try #require(menu.first { $0.submenu != nil }?.submenu)
+        #expect(move.first?.arguments["new"] == .bool(true) && move.contains { $0.title == "Zadanie" && $0.command == "window.moveToGroup" })
+        let close = try #require(menu.first)
+        #expect(close.command == "file.closeWindow" && close.arguments["document"] == .string(a.id.description))
+        // Nazwy grup ręcznych są unikalne.
+        await #expect(throws: (any Error).self) {
+            try await ws.invoke("window.moveToGroup", CommandArguments(["document": .string(a.id.description), "name": .string("zadanie")]))
+        }
+    }
+
+    @Test("Kapsułki: przy braku miejsca bieżąca zawsze widoczna — widoczne usuwane od końca, aż zmieszczą się bieżąca i „»”")
+    func capsuleLayout() {
+        let w: [Double] = [100, 100, 100, 100, 150]
+        let all = TabCapsuleLayout.fit(widths: w, available: 600, spacing: 6, overflowWidth: 28, current: 1)
+        #expect(all.visible == [0, 1, 2, 3, 4] && !all.overflow)
+        // 330 pt: mieszczą się 0, 1 (+ „»”); bieżąca 4 (150) — od końca usunięta 1, bo 28 + 106 + 156 = 290 ≤ 330.
+        let r = TabCapsuleLayout.fit(widths: w, available: 330, spacing: 6, overflowWidth: 28, current: 4)
+        #expect(r.overflow && r.visible == [0, 4] && r.widths[4] == 150)
+        // Bieżąca w środku mieszczących się — bez zmian.
+        let m = TabCapsuleLayout.fit(widths: w, available: 330, spacing: 6, overflowWidth: 28, current: 1)
+        #expect(m.visible == [0, 1])
+        // Bardzo wąsko — sama bieżąca, zwężona najwyżej do minimum.
+        let n = TabCapsuleLayout.fit(widths: w, available: 120, spacing: 6, overflowWidth: 28, current: 4)
+        #expect(n.visible == [4] && n.widths[4] == 86)
+        #expect(TabCapsuleLayout.fit(widths: w, available: 60, spacing: 6, overflowWidth: 28, current: 4).widths[4] == 60)
+    }
+
+    @Test("Repozytoria: git remote raz na katalog roboczy, znane katalogi tylko gałąź, pełne sprawdzenie najwyżej co 30 s")
+    func probe() async throws {
+        let calls = CallCounter()
+        let probe = TabRepositoryProbe(
+            locate: { dir in
+                calls.add("locate")
+                return dir.hasPrefix("/repo") ? RepositoryGroupInfo(root: "/repo", name: "kadry", branch: "main", hasRemote: false, gitDirectory: "/repo/.git") : nil
+            },
+            hasRemote: { _ in calls.add("remote"); return true },
+            branch: { _, _ in calls.add("branch"); return "main" })
+        let ws = Workspace()
+        ws.tabRepositoryProbe = probe
+        for p in ["/repo/a/x.sql", "/repo/b/y.sql", "/inne/z.sql"] { ws.newDocument(.sql, fileURL: URL(fileURLWithPath: p)) }
+        ws.scheduleTabRepositoryRefresh(full: false)
+        await ws.tabRepositoryRefresh?.value
+        #expect(calls.count("locate") == 3 && calls.count("remote") == 1)
+        #expect(ws.tabRepositories.count == 2 && ws.tabRepositories["/repo/a"]?.hasRemote == true)
+        // Aktywacja aplikacji: pełne sprawdzenie — remote raz na repozytorium, gałąź z HEAD dla znanych.
+        calls.reset()
+        ws.scheduleTabRepositoryRefresh(full: true)
+        await ws.tabRepositoryRefresh?.value
+        #expect(calls.count("remote") == 1 && calls.count("branch") == 2 && calls.count("locate") == 1)
+        // Drugie pełne w ciągu 30 s — tylko gałęzie.
+        calls.reset()
+        ws.scheduleTabRepositoryRefresh(full: true)
+        await ws.tabRepositoryRefresh?.value
+        #expect(calls.count("remote") == 0 && calls.count("locate") == 0 && calls.count("branch") == 2)
+        // Wyłączone sprawdzanie — nic się nie uruchamia.
+        let off = Workspace()
+        off.tabRepositoryProbe = nil
+        off.newDocument(.sql, fileURL: URL(fileURLWithPath: "/repo/a/x.sql"))
+        off.scheduleTabRepositoryRefresh(full: true)
+        #expect(off.tabRepositoryRefresh == nil)
+    }
+
+    @Test("Gałąź z HEAD: zwykła, reftable (.invalid — nieznana), rebase (head-name), odłączony")
+    func head() throws {
+        let t = try TempDirectory()
+        let g = t.url.path
+        try t.file("HEAD", "ref: refs/heads/feature/pensje\n")
+        #expect(GitRepository.headReference(gitDirectory: g) == .branch("feature/pensje"))
+        try t.file("HEAD", "ref: refs/heads/.invalid\n")
+        #expect(GitRepository.headReference(gitDirectory: g) == .unknown && GitRepository.headBranch(gitDirectory: g) == nil)
+        try t.file("HEAD", "0123456789abcdef0123456789abcdef01234567\n")
+        #expect(GitRepository.headReference(gitDirectory: g) == .detached)
+        #expect(GitRepository.currentBranch(gitDirectory: g, root: g) == nil)
+        try t.file("rebase-merge/head-name", "refs/heads/zadanie\n")
+        #expect(GitRepository.currentBranch(gitDirectory: g, root: g) == "zadanie")
+    }
+}
+
+/// Licznik wywołań zaślepki (wywołania z zadania w tle).
+final class CallCounter: Sendable {
+    private let calls = Mutex<[String: Int]>([:])
+    func add(_ k: String) { calls.withLock { $0[k, default: 0] += 1 } }
+    func count(_ k: String) -> Int { calls.withLock { $0[k] ?? 0 } }
+    func reset() { calls.withLock { $0 = [:] } }
 }

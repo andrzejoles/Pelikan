@@ -835,15 +835,15 @@ public enum BuiltinCommands {
         [
             Command(CommandDescriptor(id: "window.next", title: L10n.tr("Następne okno"), category: .window,
                                       pd: ["ctrl+tab"], mac: ["cmd+shift+]", "ctrl+tab"], agent: .full, effect: .uiState,
-                                      summary: L10n.tr("Aktywuje następne okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)."), feature: "PD-UI-004"),
-                    validate: { $0.visibleTabDocuments.count > 1 }) { ctx in
+                                      summary: L10n.tr("Aktywuje następne okno bieżącej grupy kart, a za ostatnim — pierwsze okno następnej grupy."), feature: "PD-UI-004"),
+                    validate: { $0.documents.count > 1 }) { ctx in
                 ctx.workspace.cycleDocuments(forward: true)
                 return .ok
             },
             Command(CommandDescriptor(id: "window.previous", title: L10n.tr("Poprzednie okno"), category: .window,
                                       pd: ["ctrl+shift+tab"], mac: ["cmd+shift+[", "ctrl+shift+tab"], agent: .full, effect: .uiState,
-                                      summary: L10n.tr("Aktywuje poprzednie okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)."), feature: "PD-UI-004"),
-                    validate: { $0.visibleTabDocuments.count > 1 }) { ctx in
+                                      summary: L10n.tr("Aktywuje poprzednie okno bieżącej grupy kart, a przed pierwszym — ostatnie okno poprzedniej grupy."), feature: "PD-UI-004"),
+                    validate: { $0.documents.count > 1 }) { ctx in
                 ctx.workspace.cycleDocuments(forward: false)
                 return .ok
             },

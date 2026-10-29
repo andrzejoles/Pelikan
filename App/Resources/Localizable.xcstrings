@@ -3025,30 +3025,30 @@
         }
       }
     },
-    "Aktywuje następne okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)." : {
+    "Aktywuje następne okno bieżącej grupy kart, a za ostatnim — pierwsze okno następnej grupy." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activates the next window of the current tab group (with all tabs shown — from the Window List)."
+            "value" : "Activates the next window of the current tab group, and after the last one — the first window of the next group."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktiviert das nächste Fenster der aktuellen Tabgruppe (bei allen Tabs — aus der Fensterliste)."
+            "value" : "Aktiviert das nächste Fenster der aktuellen Tabgruppe und nach dem letzten das erste Fenster der nächsten Gruppe."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activa la siguiente ventana del grupo de pestañas actual (con todas las pestañas — de la Lista de ventanas)."
+            "value" : "Activa la siguiente ventana del grupo de pestañas actual y, tras la última, la primera ventana del grupo siguiente."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Активує наступне вікно поточної групи вкладок (у режимі всіх вкладок — зі Списку вікон)."
+            "value" : "Активує наступне вікно поточної групи вкладок, а після останнього — перше вікно наступної групи."
           }
         }
       }
@@ -3109,30 +3109,30 @@
         }
       }
     },
-    "Aktywuje poprzednie okno bieżącej grupy kart (w trybie wszystkich kart — z Listy okien)." : {
+    "Aktywuje poprzednie okno bieżącej grupy kart, a przed pierwszym — ostatnie okno poprzedniej grupy." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activates the previous window of the current tab group (with all tabs shown — from the Window List)."
+            "value" : "Activates the previous window of the current tab group, and before the first one — the last window of the previous group."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aktiviert das vorherige Fenster der aktuellen Tabgruppe (bei allen Tabs — aus der Fensterliste)."
+            "value" : "Aktiviert das vorherige Fenster der aktuellen Tabgruppe und vor dem ersten das letzte Fenster der vorherigen Gruppe."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Activa la ventana anterior del grupo de pestañas actual (con todas las pestañas — de la Lista de ventanas)."
+            "value" : "Activa la ventana anterior del grupo de pestañas actual y, antes de la primera, la última ventana del grupo anterior."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Активує попереднє вікно поточної групи вкладок (у режимі всіх вкладок — зі Списку вікон)."
+            "value" : "Активує попереднє вікно поточної групи вкладок, а перед першим — останнє вікно попередньої групи."
           }
         }
       }
@@ -23097,6 +23097,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Група вкладок: %@"
+          }
+        }
+      }
+    },
+    "Grupa ręczna „%@” już istnieje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manual group “%@” already exists"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manuelle Gruppe „%@“ existiert bereits"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El grupo manual «%@» ya existe"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ручна група «%@» уже існує"
           }
         }
       }
@@ -44801,6 +44829,34 @@
         }
       }
     },
+    "Nowa grupa — bez nazwy pyta o nią" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New group — without a name, asks for one"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neue Gruppe — ohne Namen wird danach gefragt"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grupo nuevo — sin nombre, lo pregunta"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нова група — без назви запитує її"
+          }
+        }
+      }
+    },
     "Nowa grupa…" : {
       "localizations" : {
         "en" : {
@@ -58241,6 +58297,34 @@
         }
       }
     },
+    "Pliki zmienione w gałęzi do otwarcia: %@ — potwierdź argumentem confirm=true." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files changed in the branch to open: %@ — confirm with the argument confirm=true."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Branch geänderte Dateien zum Öffnen: %@ — mit dem Argument confirm=true bestätigen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archivos modificados en la rama por abrir: %@ — confirma con el argumento confirm=true."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Змінені в гілці файли для відкриття: %@ — підтвердьте аргументом confirm=true."
+          }
+        }
+      }
+    },
     "Pliki zmienione w gałęzi, które nie są otwarte: %@." : {
       "localizations" : {
         "en" : {
@@ -58321,6 +58405,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файл %@ не вдається завантажити до вкладки вікна пари (інший поділ на одиниці) — відкрийте його окремо."
+          }
+        }
+      }
+    },
+    "Plików zmienionych w gałęzi jest za dużo, by otworzyć je naraz: %@ (najwyżej %@)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many files changed in the branch to open at once: %@ (at most %@)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu viele im Branch geänderte Dateien, um sie gleichzeitig zu öffnen: %@ (höchstens %@)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demasiados archivos modificados en la rama para abrirlos a la vez: %@ (como máximo %@)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Забагато змінених у гілці файлів, щоб відкрити їх одночасно: %@ (щонайбільше %@)."
           }
         }
       }

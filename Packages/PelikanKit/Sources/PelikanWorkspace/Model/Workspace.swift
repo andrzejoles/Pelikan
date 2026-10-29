@@ -357,6 +357,9 @@ public final class Workspace {
     @ObservationIgnored var tabRepositoryDirectories: Set<String> = []
     @ObservationIgnored var tabRepositoryRefresh: Task<Void, Never>?
     @ObservationIgnored var tabRepositoryRefreshFull = false
+    @ObservationIgnored var lastFullRepositoryCheck: Date?
+    /// Sprawdzanie repozytoriów (testy: zaślepka albo nil — bez procesów gita, wyniki deterministyczne).
+    @ObservationIgnored public var tabRepositoryProbe: TabRepositoryProbe? = .git
     @ObservationIgnored var tabGroupingMode: TabGroupingMode = .byKind
     @ObservationIgnored public internal(set) var tabPalette = TabColorPalette()
     @ObservationIgnored var activationTicks: [DocumentID: Int] = [:]
@@ -757,10 +760,10 @@ public final class Workspace {
         }
     }
 
-    /// Następne / poprzednie okno (Ctrl+Tab / Ctrl+Shift+Tab, NF11) — w obrębie bieżącej grupy kart (D200), w trybie
-    /// „wszystkie karty” — wszystkie okna.
+    /// Następne / poprzednie okno (Ctrl+Tab / Ctrl+Shift+Tab, NF11): po oknach bieżącej grupy kart, a na jej końcu —
+    /// pierwsze okno następnej grupy (na początku — ostatnie poprzedniej); każde okno osiągalne (D200).
     public func cycleDocuments(forward: Bool) {
-        let ids = visibleTabDocuments
+        let ids = tabCycleOrder
         guard !ids.isEmpty else { return }
         let i = ids.firstIndex { $0 == activeDocumentID } ?? 0
         let j = (i + (forward ? 1 : ids.count - 1)) % ids.count

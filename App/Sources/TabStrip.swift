@@ -90,7 +90,7 @@ final class TabStripView: NSView {
     }
 
     private var offset: Double { Double(scroll.contentView.bounds.origin.x) }
-    private var content: Double { Double(stack.fittingSize.width) }
+    private var content: Double { Double(stack.frame.width) }
     private var visible: Double { Double(scroll.contentView.bounds.width) }
 
     override func layout() {
@@ -98,15 +98,34 @@ final class TabStripView: NSView {
         updateButtons()
     }
 
-    /// Przyciski tylko przy przepełnieniu; obszar kart zwęża się o ich szerokość.
+    /// Przepełnienie paska: przyciski ‹ › i zwężenie obszaru kart. Zmiana ograniczeń poza `layout()` (następny obieg
+    /// pętli) — zmiana w trakcie układu wywołałaby kolejny układ w tym samym przebiegu.
+    private var overflowShown = false
+
+    /// Przyciski tylko przy przepełnieniu (szerokość kart wobec całego paska, bez miejsca na przyciski); stan
+    /// przycisków (koniec paska) — od razu.
     private func updateButtons() {
-        let overflow = TabStripScrolling.overflows(content: content, visible: visible + (left.isHidden ? 0 : 48))
+        let full = visible + (overflowShown ? 48 : 0)
+        let overflow = TabStripScrolling.overflows(content: content, visible: full)
+        if overflow != overflowShown {
+            DispatchQueue.main.async { [weak self] in self?.setOverflow(overflow) }
+        }
+        left.isEnabled = TabStripScrolling.canScroll(offset: offset, content: content, visible: visible, forward: false)
+        right.isEnabled = TabStripScrolling.canScroll(offset: offset, content: content, visible: visible, forward: true)
+    }
+
+    private func setOverflow(_ overflow: Bool) {
+        guard overflow != overflowShown else { return }
+        overflowShown = overflow
         left.isHidden = !overflow
         right.isHidden = !overflow
         leading.constant = overflow ? 24 : 0
         trailing.constant = overflow ? -24 : 0
-        left.isEnabled = TabStripScrolling.canScroll(offset: offset, content: content, visible: visible, forward: false)
-        right.isEnabled = TabStripScrolling.canScroll(offset: offset, content: content, visible: visible, forward: true)
+        scroll.overflows = overflow
+        if !overflow {
+            scroll.contentView.setBoundsOrigin(.zero)
+            scroll.reflectScrolledClipView(scroll.contentView)
+        }
     }
 
     @objc private func scrollLeft() { animate(to: TabStripScrolling.target(offset: offset, content: content, visible: visible, forward: false)) }
@@ -137,20 +156,25 @@ final class TabStripView: NSView {
     }
 }
 
-/// Przewijanie paska kart kółkiem myszy: obrót pionowy przewija poziomo (pasek nie ma przewijania pionowego), gest
-/// poziomy gładzika — jak zwykle.
+/// Przewijanie paska kart kółkiem myszy i gładzikiem przy przepełnieniu: ruch pionowy (kółko albo gest) przewija
+/// poziomo, ruch poziomy — jak zwykle. Bez przepełnienia zdarzenie idzie dalej (np. do przewijanego widoku pod spodem).
 final class TabScrollView: NSScrollView {
     var onScroll: (() -> Void)?
+    var overflows = false
 
     override func scrollWheel(with event: NSEvent) {
-        guard abs(event.scrollingDeltaY) > abs(event.scrollingDeltaX), let doc = documentView else {
+        guard overflows, let doc = documentView else {
+            nextResponder?.scrollWheel(with: event)
+            return
+        }
+        guard abs(event.scrollingDeltaY) > abs(event.scrollingDeltaX) else {
             super.scrollWheel(with: event)
             onScroll?()
             return
         }
         let delta = Double(event.scrollingDeltaY) * (event.hasPreciseScrollingDeltas ? 1 : 12)
         let x = TabStripScrolling.wheel(offset: Double(contentView.bounds.origin.x), delta: delta,
-                                        content: Double(doc.fittingSize.width), visible: Double(contentView.bounds.width))
+                                        content: Double(doc.frame.width), visible: Double(contentView.bounds.width))
         contentView.setBoundsOrigin(NSPoint(x: x, y: 0))
         reflectScrolledClipView(contentView)
         onScroll?()

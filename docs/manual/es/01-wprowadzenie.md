@@ -141,7 +141,8 @@ alfabético (o tipos de ventana), «Sin conexión» al final. Las pestañas de u
 
 Una ventana activada desde cualquier sitio (Object Browser, lista de errores, Lista de ventanas, depurador,
 apertura de un archivo, un agente) cambia de grupo por sí sola. **⌃Tab** y **⌃⇧Tab** (Ventana siguiente / anterior)
-recorren las ventanas del grupo actual, **⌃⌘]** y **⌃⌘[** — **Grupo de pestañas siguiente** / **Grupo de pestañas
+recorren las ventanas del grupo actual y, tras la última, pasan a la primera ventana del grupo siguiente (todas las
+ventanas son accesibles), **⌃⌘]** y **⌃⌘[** — **Grupo de pestañas siguiente** / **Grupo de pestañas
 anterior**, y **Ventana › Mostrar grupo de pestañas…** elige un grupo de una lista. **Ventana › Pestañas de todos los
 grupos** (también en el menú de la cápsula y en la lista **»**) muestra en la barra las pestañas de todos los grupos. La
 Lista de ventanas (pestaña **Ventanas** de la columna izquierda, **Vista › Lista de ventanas**) muestra las

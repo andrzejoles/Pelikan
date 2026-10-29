@@ -1,12 +1,39 @@
 import AppKit
 import PelikanWorkspace
 
+/// Wysokości karty i kapsułki z czcionek interfejsu (D178): wiersz tytułu i wiersz połączenia/szczegółu.
+@MainActor
+enum TabMetrics {
+    static func line(_ f: NSFont) -> CGFloat { ceil(f.ascender - f.descender + f.leading) }
+
+    static var fonts: InterfaceFonts { InterfaceFonts.shared }
+    /// Tytuł karty (o 1 pt mniejszy), nazwa kapsułki (o 2 pt), drugi wiersz karty i kapsułki (o 3 pt).
+    static func font(by delta: Double, weight: FontWeightChoice? = nil) -> NSFont {
+        AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: delta), weight: weight ?? fonts.weight)
+    }
+
+    /// Karta: odstęp 3 pt, wiersz tytułu (najmniej przycisk zamknięcia 14 pt), wiersz połączenia, 5 pt na podkreślenie.
+    static var tabHeight: CGFloat { 3 + max(14, line(font(by: 1, weight: .semibold))) + line(font(by: 3)) + 5 }
+    /// Pasek kart: karta i odstępy 3 pt nad i pod nią.
+    static var tabBarHeight: CGFloat { tabHeight + 6 }
+    /// Kapsułka: 2 pt, nazwa, szczegół (wiersze zachodzą o 1 pt), 3 pt.
+    static var capsuleHeight: CGFloat { 2 + line(font(by: 2, weight: .semibold)) - 1 + line(font(by: 3)) + 3 }
+}
+
 /// Kolory palety połączeń i grup kart (D200) jako kolory dynamiczne: jasny i ciemny wygląd, „Zwiększ kontrast”.
 enum TabPaletteColors {
     static func color(_ index: Int, _ shade: TabColorPalette.Shade) -> NSColor {
         NSColor(name: nil) { appearance in
             let c = TabColorPalette.color(index, shade: shade, dark: appearance.isDark,
                                           increasedContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast)
+            return NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1)
+        }
+    }
+
+    /// Znacznik typu okna na karcie — wariant koloru typu o kontraście AA na tle palety (`TabColorPalette.markerColor`).
+    static func marker(_ kind: DocumentKind) -> NSColor {
+        NSColor(name: nil) { appearance in
+            let c = TabColorPalette.markerColor(kind, dark: appearance.isDark)
             return NSColor(srgbRed: c.red, green: c.green, blue: c.blue, alpha: 1)
         }
     }
@@ -60,7 +87,6 @@ final class TabGroupCapsule: NSView {
     private let name = NSTextField(labelWithString: "")
     private let caption = NSTextField(labelWithString: "")
     static let maxWidth: CGFloat = 190
-    static let height: CGFloat = 32
 
     init(group: TabGroup, isCurrent: Bool, onSelect: @escaping () -> Void) {
         self.group = group
@@ -69,9 +95,9 @@ final class TabGroupCapsule: NSView {
         super.init(frame: .zero)
         let fonts = InterfaceFonts.shared
         name.stringValue = group.name
-        name.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 2), weight: isCurrent ? .semibold : fonts.weight)
+        name.font = TabMetrics.font(by: 2, weight: isCurrent ? .semibold : fonts.weight)
         caption.stringValue = group.caption
-        caption.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 3), weight: fonts.weight)
+        caption.font = TabMetrics.font(by: 3)
         let increased = NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
         // Kolor z przezroczystością zamiast semantycznego: pasek narzędzi nieaktywnego okna szarzy kolor etykiet, a oba
         // wiersze kapsułki mają zostać czytelne na kolorowym tle.
@@ -144,12 +170,17 @@ final class TabGroupBar: NSView {
     private var currentID: String?
     private var widthConstraint: NSLayoutConstraint!
     private var maxConstraint: NSLayoutConstraint!
+    private var heightConstraint: NSLayoutConstraint!
+    /// Wysokość kapsułki z czcionek interfejsu (odczytana przy przebudowie).
+    private var capsuleHeight: CGFloat = 32
     /// Zmiana liczby grup (pokazanie albo ukrycie elementu paska).
     var onGroupCountChange: ((Int) -> Void)?
+    /// Po przebudowie kapsułek (menu elementu w przepełnieniu paska).
+    var onReload: (() -> Void)?
 
     init(workspace: Workspace) {
         self.workspace = workspace
-        super.init(frame: NSRect(x: 0, y: 0, width: 10, height: TabGroupCapsule.height))
+        super.init(frame: NSRect(x: 0, y: 0, width: 10, height: 34))
         translatesAutoresizingMaskIntoConstraints = false
         overflow.bezelStyle = .accessoryBarAction
         overflow.isBordered = true
@@ -161,10 +192,10 @@ final class TabGroupBar: NSView {
         widthConstraint = widthAnchor.constraint(equalToConstant: 10)
         widthConstraint.priority = .defaultLow
         maxConstraint = widthAnchor.constraint(lessThanOrEqualToConstant: 10)
+        heightConstraint = heightAnchor.constraint(equalToConstant: TabMetrics.capsuleHeight + 2)
         NSLayoutConstraint.activate([
-            widthConstraint, maxConstraint,
+            widthConstraint, maxConstraint, heightConstraint,
             widthAnchor.constraint(greaterThanOrEqualToConstant: 1),
-            heightAnchor.constraint(equalToConstant: TabGroupCapsule.height + 2),
         ])
         setAccessibilityElement(true)
         setAccessibilityRole(.radioGroup)
@@ -177,6 +208,8 @@ final class TabGroupBar: NSView {
 
     private func reload() {
         _ = InterfaceFonts.shared.size
+        capsuleHeight = TabMetrics.capsuleHeight
+        heightConstraint.constant = capsuleHeight + 2
         let groups = workspace.tabGroups
         let current = workspace.tabGroupState.showAll ? nil : workspace.activeDocumentID.flatMap { id in groups.first { $0.documents.contains(id) }?.id }
         let changedCount = groups.count != self.groups.count
@@ -193,40 +226,33 @@ final class TabGroupBar: NSView {
         widthConstraint.constant = groups.count > 1 ? total : 1
         maxConstraint.constant = groups.count > 1 ? total : 1
         if changedCount { onGroupCountChange?(groups.count) }
+        onReload?()
         needsLayout = true
     }
 
     override func layout() {
         super.layout()
-        let h = TabGroupCapsule.height
+        let h = capsuleHeight
         let y = (bounds.height - h) / 2
         let overflowWidth: CGFloat = 28
-        var widths = capsules.map(\.preferredWidth)
-        let all = widths.reduce(0) { $0 + $1 + 6 }
-        var visible = Array(capsules.indices)
-        if all > bounds.width + 0.5 {
-            // Tyle kapsułek, ile się mieści obok „»”; bieżąca zawsze widoczna (zamiast ostatniej mieszczącej się).
-            var used: CGFloat = overflowWidth
-            visible = []
-            for i in capsules.indices where used + widths[i] + 6 <= bounds.width {
-                visible.append(i)
-                used += widths[i] + 6
-            }
-            if let cur = capsules.firstIndex(where: { $0.group.id == currentID }), !visible.contains(cur) {
-                if !visible.isEmpty { visible.removeLast() }
-                visible.append(cur)
-                widths[cur] = min(widths[cur], max(60, bounds.width - overflowWidth - 6))
-            }
-        }
+        let fit = TabCapsuleLayout.fit(widths: capsules.map { Double($0.preferredWidth) }, available: Double(bounds.width),
+                                       spacing: 6, overflowWidth: Double(overflowWidth),
+                                       current: capsules.firstIndex { $0.group.id == currentID })
         var x: CGFloat = 2
         for (i, c) in capsules.enumerated() {
-            guard visible.contains(i) else { c.isHidden = true; continue }
+            guard fit.visible.contains(i) else { c.isHidden = true; continue }
             c.isHidden = false
-            c.frame = NSRect(x: x, y: y, width: widths[i], height: h)
-            x += widths[i] + 6
+            c.frame = NSRect(x: x, y: y, width: CGFloat(fit.widths[i]), height: h)
+            x += CGFloat(fit.widths[i]) + 6
         }
-        overflow.isHidden = visible.count == capsules.count
+        overflow.isHidden = !fit.overflow
         overflow.frame = NSRect(x: x, y: y + (h - 24) / 2, width: overflowWidth, height: 24)
+    }
+
+    /// Lista wszystkich grup (menu „»” i element paska w menu przepełnienia).
+    func groupsMenu() -> NSMenu {
+        TabGroupMenu.make(workspace, groups: groups, current: currentID, target: self, action: #selector(chooseGroup(_:)),
+                          allAction: #selector(toggleAll))
     }
 
     private func select(_ id: String) {
@@ -234,8 +260,7 @@ final class TabGroupBar: NSView {
     }
 
     @objc private func showOverflow(_ sender: NSButton) {
-        let menu = TabGroupMenu.make(workspace, groups: groups, current: currentID, target: self, action: #selector(chooseGroup(_:)),
-                                     allAction: #selector(toggleAll))
+        let menu = groupsMenu()
         menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
     }
 

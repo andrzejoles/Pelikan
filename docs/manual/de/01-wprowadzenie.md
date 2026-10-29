@@ -141,7 +141,8 @@ Verbindungen alphabetisch (oder Fenstertypen), „Ohne Verbindung“ am Ende. Ta
 
 Ein von irgendwoher aktiviertes Fenster (Object Browser, Fehlerliste, Fensterliste, Debugger, Öffnen einer Datei, Agent)
 wechselt die Gruppe von selbst. **⌃Tab** und **⌃⇧Tab** (Nächstes / Vorheriges Fenster) gehen durch die Fenster der
-aktuellen Gruppe, **⌃⌘]** und **⌃⌘[** — **Nächste Tabgruppe** / **Vorherige Tabgruppe**, und **Fenster › Tabgruppe
+aktuellen Gruppe und nach dem letzten zum ersten Fenster der nächsten Gruppe (jedes Fenster ist erreichbar),
+**⌃⌘]** und **⌃⌘[** — **Nächste Tabgruppe** / **Vorherige Tabgruppe**, und **Fenster › Tabgruppe
 zeigen …** wählt eine Gruppe aus einer Liste. **Fenster › Tabs aller Gruppen** (auch im Kapselmenü und in der
 **»**-Liste) zeigt die Tabs aller Gruppen in der Leiste. Die Fensterliste (Tab **Fenster** der linken Spalte,
 **Ansicht › Fensterliste**) zeigt die Fenster in einem Baum nach Gruppen; ein Klick auf eine Gruppe zeigt sie.

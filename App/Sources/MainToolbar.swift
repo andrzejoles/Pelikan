@@ -52,6 +52,11 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
                 item?.isHidden = count < 2
                 self?.onTabGroupsChange?()
             }
+            // Element w menu przepełnienia paska: „Grupy kart” z listą grup.
+            let form = NSMenuItem(title: L10n.tr("Grupy kart"), action: nil, keyEquivalent: "")
+            item.menuFormRepresentation = form
+            bar.onReload = { [weak bar, weak form] in form?.submenu = bar?.groupsMenu() }
+            form.submenu = bar.groupsMenu()
             return item
         }
         if id == Self.quickAccess {
@@ -117,7 +122,8 @@ final class MainToolbarController: NSObject, NSToolbarDelegate, NSToolbarItemVal
     /// Czy kapsułki grup są na widocznym pasku narzędzi (nie: pasek ukryty, element usunięty, pełny ekran).
     func showsTabGroups(fullScreen: Bool) -> Bool {
         guard let toolbar, toolbar.isVisible, !fullScreen else { return false }
-        return toolbar.items.contains { $0.itemIdentifier == Self.tabGroups }
+        // Element w menu przepełnienia paska (wąskie okno) nie pokazuje kapsułek — wtedy mała kapsułka na pasku kart.
+        return (toolbar.visibleItems ?? []).contains { $0.itemIdentifier == Self.tabGroups && !$0.isHidden }
     }
 
     /// Element grup dodany raz do zapamiętanego układu paska (układ sprzed wersji z grupami go nie ma); usunięty potem

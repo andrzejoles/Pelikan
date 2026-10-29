@@ -9,8 +9,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   pliki otwartego projektu, pliki repozytorium gita ze zdalnym (osobno dla każdej gałęzi i worktree), dalej według
   połączenia — a gdy wszystkie okna są na jednej bazie, według rodzaju okna (okna SQL, programy, testy, konsole). Okno
   aktywowane skądkolwiek przełącza grupę samo; kapsułka przenosi do ostatnio używanego okna grupy, „»” rozwija listę
-  wszystkich grup. ⌃Tab przechodzi po oknach grupy, ⌃⌘] / ⌃⌘[ — po grupach, **Okno › Pokaż grupę kart…** wybiera
-  z listy, **Okno › Karty wszystkich grup** pokazuje wszystkie karty. Własne grupy: menu karty › **Przenieś do grupy**;
+  wszystkich grup. ⌃Tab przechodzi po oknach grupy (za ostatnim — do następnej grupy), ⌃⌘] / ⌃⌘[ — po grupach,
+  **Okno › Pokaż grupę kart…** wybiera z listy, **Okno › Karty wszystkich grup** pokazuje wszystkie karty. Własne grupy: menu karty › **Przenieś do grupy**;
   zapisują się w worksecie. Lista okien pokazuje drzewo według grup.
 - **Karty z połączeniem i kolorem:** każda karta ma drugi wiersz z połączeniem okna, a tło w kolorze połączenia
   z palety 10 wyraźnie różnych barw (ten sam kolor na kapsułce grupy, Liście okien i pasku stanu). Aktywna karta —

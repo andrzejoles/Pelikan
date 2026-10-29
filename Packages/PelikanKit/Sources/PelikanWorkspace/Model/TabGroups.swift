@@ -79,6 +79,8 @@ public struct TabGroup: Sendable, Hashable, Identifiable {
     public var manualID: UUID?
     /// Kolor z palety (`TabColorPalette`); nil — neutralny (okna bez połączenia).
     public var colorIndex: Int?
+    /// Klucz koloru repozytorium (skrót katalogu roboczego) — kolor nie zmienia się przy zmianie gałęzi.
+    var repositoryKey: String?
 
     public init(id: String, kind: TabGroupKind, name: String, detail: String? = nil, documents: [DocumentID] = [],
                 connectionID: UUID? = nil, manualID: UUID? = nil, colorIndex: Int? = nil) {
@@ -86,14 +88,19 @@ public struct TabGroup: Sendable, Hashable, Identifiable {
         self.connectionID = connectionID; self.manualID = manualID; self.colorIndex = colorIndex
     }
 
-    /// Klucz koloru grupy w palecie: grupa połączenia ma kolor połączenia.
+    /// Klucz koloru grupy w palecie: grupa połączenia ma kolor połączenia, grupa repozytorium — kolor repozytorium
+    /// (bez gałęzi).
     public var colorKey: String? {
         switch kind {
         case .connection: connectionID.map(TabColorPalette.connectionKey)
         case .noConnection: nil
+        case .repository: repositoryKey ?? id
         default: id
         }
     }
+
+    /// Nazwa ze szczegółem („pelikan · main”) — jednoznaczne wskazanie grupy w makrach i dla agenta.
+    public var qualifiedName: String { detail.map { name + " · " + $0 } ?? name }
 
     /// Drugi wiersz kapsułki: „szczegół · liczba” albo „N okien” (odmiana liczebnika).
     public var caption: String {
@@ -167,9 +174,15 @@ public enum TabGrouping {
                 if project == nil { project = TabGroup(id: "project", kind: .project, name: name, detail: L10n.tr("projekt")) }
                 project?.documents.append(item.id)
             } else if let repo = item.files.lazy.compactMap({ input.repositories[$0] }).first(where: \.hasRemote) {
-                let key = "repo:" + repo.root + "|" + (repo.branch ?? "")
-                repos[key, default: TabGroup(id: key, kind: .repository, name: repo.name, detail: repo.branch ?? L10n.tr("(odłączony HEAD)"))]
-                    .documents.append(item.id)
+                // Identyfikator bez ścieżki (trafia do makr i do agenta): skrót katalogu roboczego i gałąź.
+                let rootKey = "repo:" + TabGrouping.stableHash(repo.root)
+                let key = rootKey + ":" + (repo.branch ?? "")
+                if repos[key] == nil {
+                    var g = TabGroup(id: key, kind: .repository, name: repo.name, detail: repo.branch ?? L10n.tr("(odłączony HEAD)"))
+                    g.repositoryKey = rootKey
+                    repos[key] = g
+                }
+                repos[key]?.documents.append(item.id)
             } else {
                 rest.append(item)
             }
@@ -218,6 +231,16 @@ public enum TabGrouping {
         return current
     }
 
+    /// Skrót FNV-1a 64 (szesnastkowo) — stały między uruchomieniami (klucz koloru w worksecie), bez ujawniania ścieżki.
+    public static func stableHash(_ s: String) -> String {
+        var h: UInt64 = 0xcbf29ce484222325
+        for b in s.utf8 {
+            h ^= UInt64(b)
+            h = h &* 0x100000001b3
+        }
+        return String(h, radix: 16)
+    }
+
     private static func order(_ a: String, _ ad: String?, _ b: String, _ bd: String?) -> Bool {
         let c = a.localizedStandardCompare(b)
         if c != .orderedSame { return c == .orderedAscending }
@@ -236,7 +259,7 @@ public enum TabGrouping {
 public struct TabColorPalette: Sendable, Hashable {
     public static let count = 10
     /// Odcienie (stopnie) w kolejności przydziału — kolejne barwy możliwie od siebie odległe.
-    public static let hues: [Double] = [212, 25, 140, 300, 180, 355, 58, 262, 95, 328]
+    public static let hues: [Double] = [212, 32, 140, 320, 68, 248, 176, 356, 104, 284]
 
     public static func connectionKey(_ id: UUID) -> String { "conn:" + id.uuidString }
 
@@ -293,14 +316,38 @@ public struct TabColorPalette: Sendable, Hashable {
     public static func color(_ index: Int, shade: Shade, dark: Bool, increasedContrast: Bool = false) -> RGBColor {
         let h = hues[((index % count) + count) % count]
         let (s, b): (Double, Double) = switch (shade, dark) {
-        case (.activeBackground, false): increasedContrast ? (0.22, 0.98) : (0.30, 0.96)
-        case (.inactiveBackground, false): increasedContrast ? (0.10, 0.99) : (0.14, 0.97)
-        case (.accent, false): increasedContrast ? (0.90, 0.62) : (0.85, 0.78)
-        case (.activeBackground, true): increasedContrast ? (0.55, 0.28) : (0.55, 0.34)
-        case (.inactiveBackground, true): increasedContrast ? (0.40, 0.20) : (0.40, 0.28)
-        case (.accent, true): increasedContrast ? (0.55, 1.0) : (0.65, 0.95)
+        case (.activeBackground, false): increasedContrast ? (0.18, 0.99) : (0.24, 0.97)
+        case (.inactiveBackground, false): increasedContrast ? (0.08, 1.0) : (0.11, 0.98)
+        case (.accent, false): increasedContrast ? (0.95, 0.46) : (0.90, 0.56)
+        case (.activeBackground, true): increasedContrast ? (0.55, 0.26) : (0.55, 0.32)
+        case (.inactiveBackground, true): increasedContrast ? (0.40, 0.20) : (0.40, 0.26)
+        case (.accent, true): increasedContrast ? (0.35, 1.0) : (0.45, 1.0)
         }
         return hsb(h, s, b)
+    }
+
+    /// Odcień znacznika typu okna (nil — szary: konsola SQL*Plus).
+    public static func markerHue(_ kind: DocumentKind) -> Double? {
+        switch kind {
+        case .sql: 211
+        case .program: 30
+        case .test: 130
+        case .command: nil
+        case .explainPlan: 280
+        case .report: 185
+        case .diagram: 330
+        case .notebook: 240
+        }
+    }
+
+    /// Znacznik typu okna (litera S, P, T…) — to tekst, więc w wariancie o kontraście AA na tle kart każdego koloru
+    /// palety i na tle paska: ciemny w jasnym wyglądzie, jasny w ciemnym.
+    public static func markerColor(_ kind: DocumentKind, dark: Bool) -> RGBColor {
+        guard let h = markerHue(kind) else {
+            let g = dark ? 0.82 : 0.30
+            return RGBColor(red: g, green: g, blue: g)
+        }
+        return dark ? hsb(h, 0.25, 1.0) : hsb(h, 0.95, 0.36)
     }
 
     /// HSB → RGB (odcień w stopniach).
@@ -373,5 +420,41 @@ public enum TabStripScrolling {
         var o = offset
         if minX - margin < o { o = minX - margin } else if maxX + margin > o + visible { o = maxX + margin - visible }
         return clamp(o, content: content, visible: visible)
+    }
+}
+
+/// Kapsułki grup na pasku tytułu przy braku miejsca (D200): ile kapsułek od początku zmieści się obok „»”; bieżąca
+/// grupa zawsze widoczna — jeśli wypadła, widoczne usuwane są od końca, aż zmieszczą się bieżąca i „»” (bieżąca zwężana
+/// najwyżej do `minimum`).
+public enum TabCapsuleLayout {
+    public struct Result: Sendable, Equatable {
+        public var visible: [Int]
+        public var widths: [Double]
+        public var overflow: Bool
+    }
+
+    public static func fit(widths: [Double], available: Double, spacing: Double, overflowWidth: Double, current: Int?,
+                           minimum: Double = 60) -> Result {
+        let total = widths.reduce(0) { $0 + $1 + spacing }
+        guard total > available + 0.5 else { return Result(visible: Array(widths.indices), widths: widths, overflow: false) }
+        let room = available - overflowWidth
+        var out = widths
+        var visible: [Int] = []
+        var used = 0.0
+        for i in widths.indices where used + widths[i] + spacing <= room {
+            // Tylko kolejne od początku — bez przeskakiwania krótszych kapsułek dalej.
+            guard visible.count == i else { break }
+            visible.append(i)
+            used += widths[i] + spacing
+        }
+        if let c = current, widths.indices.contains(c), !visible.contains(c) {
+            while let last = visible.last, used + widths[c] + spacing > room {
+                visible.removeLast()
+                used -= widths[last] + spacing
+            }
+            out[c] = max(minimum, min(widths[c], room - used - spacing))
+            visible.append(c)
+        }
+        return Result(visible: visible, widths: out, overflow: true)
     }
 }
