@@ -288,6 +288,10 @@ struct BeautifierDefaultsTests {
         #expect(try f("select f(a, $if x $then b $else c $end, d) from t;") == "SELECT f(a, $if x $then b $else c $end, d)\n  FROM t;")
         #expect(try f("select a from t where x in ($if y $then 1 $else 2 $end);") == "SELECT a\n  FROM t\n WHERE x IN ($if y $then 1 $else 2 $end);")
         #expect(try f("select a from t where $if y $then b = 1 $else c = 2 $end and d = 3;").hasSuffix("$end\n   AND d = 3;"))
+        // Region zaczęty w środku linii, ale wieloliniowy — dalszy ciąg (także przecinek) w kolumnie kontynuacji.
+        let multi = try f("select f(a, $if x $then\n b $else c $end, d) from t;")
+        #expect(multi.hasPrefix("SELECT f(a, $if x $then\n b $else c $end\n"))
+        #expect(multi.hasSuffix("         , d)\n  FROM t;"))
     }
 
     @Test("$IF w osobnych liniach w środku instrukcji — dalszy ciąg w kolumnie kontynuacji")

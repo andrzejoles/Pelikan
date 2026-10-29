@@ -458,8 +458,10 @@ struct Formatter {
 
     /// Fragment źródła kopiowany bez zmian (polecenie SQL*Plus, kod Java/JavaScript): od początku linii, jeśli
     /// przed nim są tylko odstępy, w osobnych liniach (albo w bieżącej — `sameLine`); dalej tokeny od `end`,
-    /// leksowane od nowa, gdy token źródła przechodzi przez granicę (np. apostrof w PROMPT).
-    mutating func copyRaw(from start: Int, to end: Int, sameLine: Bool = false) {
+    /// leksowane od nowa, gdy token źródła przechodzi przez granicę (np. apostrof w PROMPT). Wynik: fragment został
+    /// w bieżącej, otwartej linii (`sameLine` i bez znaku nowej linii).
+    @discardableResult
+    mutating func copyRaw(from start: Int, to end: Int, sameLine: Bool = false) -> Bool {
         var from = start
         if !sameLine {
             let lineStart = source.lineRange(for: NSRange(location: start, length: 0)).location
@@ -470,7 +472,8 @@ struct Formatter {
         var raw = source.substring(with: NSRange(location: from, length: max(0, end - from))).components(separatedBy: "\n")
         if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: needsSpace(prev, toks[i])); rawLines.insert(lines.count) }
         // Fragment w jednej linii w bieżącej linii — linia zostaje otwarta (dalszy ciąg może do niej dołączyć).
-        if !(sameLine && raw.isEmpty) {
+        let inLine = sameLine && raw.isEmpty
+        if !inLine {
             flush()
             rawLines.formUnion(lines.count..<(lines.count + raw.count))
             lines.append(contentsOf: raw)
@@ -481,6 +484,7 @@ struct Formatter {
         while j < toks.count, toks[j].start < end { j += 1 }
         if j > 0, toks[j - 1].end > end { toks = Array(toks[..<j]) + Self.tokens(source, from: end) }
         i = j - 1
+        return inLine
     }
 
     /// Znaczniki regionu bez formatowania: `-- NoFormat Start/End` (PL/SQL Developer) i `-- @formatter:off/on`.
@@ -818,13 +822,14 @@ struct Formatter {
             // W środku instrukcji SQL albo nawiasu region nie kończy instrukcji: dalej bez nowej instrukcji i złamania.
             let inStatement = frames.contains { $0.kind == .sql || $0.kind == .paren }
             let wasStatementStart = statementStart
-            copyRaw(from: t.start, to: end, sameLine: sameLine)
+            let inLine = copyRaw(from: t.start, to: end, sameLine: sameLine)
             if inStatement {
                 statementStart = wasStatementStart
-                // Dalszy ciąg instrukcji w kolumnie kontynuacji; przecinek i nawias zamykający — w linii regionu
-                // (gdy region był w jednej linii).
+                // Dalszy ciąg instrukcji w kolumnie kontynuacji; przecinek i nawias zamykający — w linii regionu, gdy
+                // region był w jednej linii (zaczęty w środku linii, ale wieloliniowy — też kontynuacja).
                 let next = i + 1 < toks.count ? toks[i + 1].kind : nil
-                pendingBreak = sameLine && (next == .comma || next == .rightParen) ? nil : continuationColumn()
+                let column = frames.last.map { $0.kind == .paren ? $0.column : continuationColumn() } ?? continuationColumn()
+                pendingBreak = inLine && (next == .comma || next == .rightParen) ? nil : column
             }
             return
         }
