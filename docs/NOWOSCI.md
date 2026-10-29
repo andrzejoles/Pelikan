@@ -2,6 +2,24 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.11.0 — formatowanie podczas pisania
+
+- **Formater na bieżąco:** Enter w oknie SQL, programu i testu formatuje opuszczaną linię — wielkość liter słów
+  kluczowych i identyfikatorów, odstępy wokół operatorów i przecinków, a linię zaczynającą się słowem klauzuli
+  (`FROM`, `WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` albo `)` wyrównuje do „rzeki”
+  i struktury polecenia. Tekst nie przechodzi między liniami — nic nie skacze pod kursorem.
+- **Wcięcie nowej linii według reguł formatera:** pod pierwszym elementem listy SELECT/SET po przecinku, o poziom głębiej
+  po `BEGIN`, `THEN`, `LOOP`, treść podzapytania po `(`, gałęzie CASE; własny styl wcięć (np. 4 spacje) zostaje dla
+  kolejnych instrukcji.
+- **Bezpiecznie:** komentarze, literały wieloliniowe, kompilacja warunkowa `$IF … $END`, kod Java/JavaScript, polecenia
+  SQL*Plus i regiony bez formatowania zostają bez zmian, linia z niedomkniętym nawiasem dostaje tylko wielkość liter,
+  a każda zmieniona linia przechodzi kontrolę tokenów. Istniejący kod formatuje się nadal tylko na żądanie
+  (**Formatuj kod**, ⇧⌘F).
+- **Cofanie:** pierwsze ⌘Z cofa samo formatowanie, drugie — Enter.
+- **Przełącznik u góry po prawej:** różdżka na pasku narzędzi (wyłączona — przekreślona) włącza i wyłącza formatowanie
+  przy Enter; także **Edycja › Formatuj linię przy Enter** (z zaznaczeniem stanu), wstążka (karta Edycja), paleta komend,
+  skrót do przypisania i **Ustawienia › Formater › Podczas pisania**. Domyślnie włączone.
+
 ## 1.8.0 — formater: bezpieczeństwo, układ, „rzeka”, podgląd
 
 - **Bezpieczeństwo:** formater nie psuje już kompilacji warunkowej (`$IF … $END`, `$$PLSQL_UNIT`) ani operatorów

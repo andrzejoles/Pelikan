@@ -104,6 +104,7 @@ kilkadziesiąt tysięcy linii.
 | Wielkie / małe litery | ⌥⌘U / ⌥⇧⌘U | Edycja › Zaznaczenie |
 | Zwiększ / zmniejsz wcięcie | ⌘] / ⌘[ | Edycja › Zaznaczenie |
 | Formatuj kod PL/SQL | ⇧⌘F | Edycja |
+| Formatuj linię przy Enter (włącz / wyłącz) | — (do przypisania) | Edycja, pasek narzędzi |
 | Znajdź i zamień | ⌘F | Edycja |
 | Znajdź następne / poprzednie | ⌘G / ⇧⌘G | Edycja |
 | Przejdź do linii | ⌘L | Edycja |
@@ -135,6 +136,18 @@ Formater** (wcięcia, listy, przecinki, puste linie, wielkość liter słów klu
 specjalna). Formater może działać automatycznie po otwarciu źródła z bazy, przed kompilacją i przed zapisem. Fragment
 między komentarzami `-- NoFormat Start` i `-- NoFormat End` zostaje bez zmian. Formatowanie nigdy nie zmienia
 znaczenia kodu.
+
+**Formatowanie podczas pisania.** Istniejący kod formater zmienia tylko na żądanie, ale nowy kod układa na bieżąco:
+Enter w oknie SQL, programu i testu formatuje linię, którą opuszczasz — wielkość liter słów kluczowych i
+identyfikatorów, odstępy wokół operatorów i przecinków, a linię zaczynającą się słowem klauzuli (`FROM`, `WHERE`,
+`ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` albo `)` wyrównuje do „rzeki” i struktury polecenia — i
+wcina nową linię: pod pierwszym elementem listy po przecinku, o poziom głębiej po `BEGIN`, `THEN`, `LOOP`, wcięcie treści
+podzapytania po `(`. Tekst nigdy nie przechodzi między liniami, wyrównanie wpisane w deklaracjach zostaje, a
+komentarze, literały wieloliniowe, kompilacja warunkowa `$IF … $END`, kod Java/JavaScript i polecenia SQL*Plus — bez
+zmian; linia z niedomkniętym nawiasem dostaje tylko wielkość liter. Pierwsze ⌘Z cofa samo formatowanie, drugie —
+Enter. Włączasz i wyłączasz je przełącznikiem z różdżką na pasku narzędzi (u góry po prawej), w menu **Edycja ›
+Formatuj linię przy Enter**, na wstążce (karta **Edycja**) albo w **Ustawienia › Formater › Podczas pisania**;
+konsola SQL*Plus nie formatuje.
 
 Karta **Ustawienia › Formater** ma grupy **Układ**, **Listy i przecinki** (osobno listy SELECT/INTO/FROM, UPDATE …
 SET, GROUP BY i ORDER BY, deklaracje parametrów, parametry wywołań, listy INSERT, listy w nawiasach — IN, argumenty

@@ -116,6 +116,7 @@ de varias decenas de miles de líneas.
 | Mayúsculas / minúsculas | ⌥⌘U / ⌥⇧⌘U | Edición › Selección |
 | Aumentar / reducir sangría | ⌘] / ⌘[ | Edición › Selección |
 | Formatear código PL/SQL | ⇧⌘F | Edición |
+| Formatear la línea al pulsar Intro (activar / desactivar) | — (asignable) | Edición, barra de herramientas |
 | Buscar y reemplazar | ⌘F | Edición |
 | Buscar siguiente / anterior | ⌘G / ⇧⌘G | Edición |
 | Ir a la línea | ⌘L | Edición |
@@ -149,6 +150,19 @@ de varias decenas de miles de líneas.
 identificadores, grafía especial). El formateador puede actuar automáticamente al abrir un código fuente de la base de
 datos, antes de compilar y antes de guardar. Un fragmento entre los comentarios `-- NoFormat Start` y `-- NoFormat End`
 se mantiene sin cambios. El formato nunca cambia el significado del código.
+
+**Formato al escribir.** El formateador cambia el código existente solo a petición, pero ordena el código nuevo
+mientras escribe: en las ventanas SQL, de programa y de prueba, Intro formatea la línea que abandona — mayúsculas y
+minúsculas de palabras clave e identificadores, espacios alrededor de operadores y comas; una línea que empieza por una
+palabra de cláusula (`FROM`, `WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` o `)` se alinea con
+el «río» y la estructura de la instrucción — y sangra la línea nueva: bajo el primer elemento de la lista tras una coma,
+un nivel más tras `BEGIN`, `THEN`, `LOOP`, el cuerpo de la subconsulta tras `(`. El texto nunca pasa de una línea a
+otra, la alineación escrita en las declaraciones se mantiene, y los comentarios, los literales de varias líneas, la
+compilación condicional `$IF … $END`, el código Java/JavaScript y los comandos SQL*Plus no cambian; una línea con un
+paréntesis sin cerrar solo recibe mayúsculas y minúsculas. El primer ⌘Z deshace solo el formato; el segundo, el Intro.
+Se activa y desactiva con el interruptor de la varita en la barra de herramientas (arriba a la derecha), en **Edición ›
+Formatear la línea al pulsar Intro**, en la cinta (pestaña **Edición**) o en **Ajustes › Formateador › Al escribir**;
+la consola SQL*Plus no formatea.
 
 La pestaña **Ajustes › Formateador** tiene los grupos **Disposición**, **Listas y comas** (por separado listas
 SELECT/INTO/FROM, UPDATE … SET, GROUP BY y ORDER BY, declaraciones de parámetros, parámetros de llamadas, listas INSERT,

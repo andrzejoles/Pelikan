@@ -115,6 +115,7 @@ von Zeilen ohne Verzögerung.
 | Groß- / Kleinbuchstaben | ⌥⌘U / ⌥⇧⌘U | Bearbeiten › Auswahl |
 | Einrückung erhöhen / verringern | ⌘] / ⌘[ | Bearbeiten › Auswahl |
 | PL/SQL-Code formatieren | ⇧⌘F | Bearbeiten |
+| Zeile bei Enter formatieren (ein / aus) | — (zuweisbar) | Bearbeiten, Symbolleiste |
 | Suchen und Ersetzen | ⌘F | Bearbeiten |
 | Weitersuchen / Rückwärts suchen | ⌘G / ⇧⌘G | Bearbeiten |
 | Gehe zu Zeile | ⌘L | Bearbeiten |
@@ -146,6 +147,19 @@ von Zeilen ohne Verzögerung.
 Bezeichnern, Sonderschreibweisen). Der Formatierer kann automatisch nach dem Öffnen einer Quelle aus der Datenbank, vor
 dem Kompilieren und vor dem Speichern laufen. Ein Abschnitt zwischen den Kommentaren `-- NoFormat Start` und `--
 NoFormat End` bleibt unverändert. Das Formatieren ändert nie die Bedeutung des Codes.
+
+**Formatieren beim Tippen.** Vorhandenen Code ändert der Formatierer nur auf Anforderung, neuen Code ordnet er beim
+Tippen: In SQL-, Programm- und Testfenstern formatiert Enter die Zeile, die Sie verlassen — Groß-/Kleinschreibung von
+Schlüsselwörtern und Bezeichnern, Abstände um Operatoren und Kommas; eine Zeile, die mit einem Klauselwort (`FROM`,
+`WHERE`, `ORDER BY`, `JOIN`…), `AND`/`OR`, `END`, `ELSE`, `EXCEPTION` oder `)` beginnt, wird am „Fluss“ und an der
+Struktur der Anweisung ausgerichtet — und rückt die neue Zeile ein: unter das erste Listenelement nach einem Komma,
+eine Ebene tiefer nach `BEGIN`, `THEN`, `LOOP`, den Inhalt der Unterabfrage nach `(`. Text wandert nie zwischen Zeilen,
+in Deklarationen getippte Ausrichtung bleibt, und Kommentare, mehrzeilige Literale, bedingte Kompilierung
+`$IF … $END`, Java-/JavaScript-Code und SQL*Plus-Befehle bleiben unverändert; eine Zeile mit offener Klammer erhält nur
+die Groß-/Kleinschreibung. Das erste ⌘Z macht nur die Formatierung rückgängig, das zweite das Enter. Ein- und
+ausschalten mit dem Zauberstab-Schalter in der Symbolleiste (oben rechts), über **Bearbeiten › Zeile bei Enter
+formatieren**, im Menüband (Register **Bearbeiten**) oder unter **Einstellungen › Formatierer › Beim Tippen**; die
+SQL*Plus-Konsole formatiert nicht.
 
 Die Registerkarte **Einstellungen › Formatierer** hat die Gruppen **Layout**, **Listen und Kommas** (getrennt
 SELECT-/INTO-/FROM-Listen, UPDATE … SET, GROUP BY und ORDER BY, Parameterdeklarationen, Aufrufparameter, INSERT-Listen,
