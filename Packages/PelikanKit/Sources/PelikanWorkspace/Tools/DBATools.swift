@@ -400,7 +400,7 @@ public enum SchemaDoc {
                     if let c = comments[name]?.first?.first, !c.isEmpty { body += "<p>\(esc(c))</p>" }
                     body += "<h2>" + esc(L10n.tr("Kolumny")) + "</h2>" + table([L10n.tr("Kolumna"), L10n.tr("Typ"), "Null", L10n.tr("Komentarz")], columns[name] ?? [])
                     if type != "VIEW" {
-                        body += "<h2>" + esc(L10n.tr("Więzy")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Typ"), L10n.tr("Kolumny"), L10n.tr("Tabela nadrzędna")],
+                        body += "<h2>" + esc(L10n.tr("Ograniczenia")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Typ"), L10n.tr("Kolumny"), L10n.tr("Tabela nadrzędna")],
                                                                                    constraints[name] ?? [])
                         body += "<h2>" + esc(L10n.tr("Indeksy")) + "</h2>" + table([L10n.tr("Nazwa"), L10n.tr("Unikalność"), L10n.tr("Kolumny")], indexes[name] ?? [])
                     } else if let text = try? await MetadataProvider.ddl(of: DBObject(owner: owner, name: name, type: .view), in: s) {

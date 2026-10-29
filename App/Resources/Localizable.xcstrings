@@ -9437,6 +9437,34 @@
         }
       }
     },
+    "COMMIT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "COMMIT"
+          }
+        }
+      }
+    },
     "COMMIT co %@" : {
       "localizations" : {
         "en" : {
@@ -49197,6 +49225,34 @@
         }
       }
     },
+    "Ograniczenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constraints"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обмеження"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restricciones"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constraints"
+          }
+        }
+      }
+    },
     "Ogólne" : {
       "localizations" : {
         "en" : {
@@ -69969,6 +70025,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "REST (ORDS)"
+          }
+        }
+      }
+    },
+    "ROLLBACK" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ROLLBACK"
           }
         }
       }

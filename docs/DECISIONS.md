@@ -2119,9 +2119,11 @@ użytkownik oczekuje innego słowa.
 - **Debuger:** Krok do / Krok przez / Wyjdź z podprogramu (było Wejdź / Przejdź / Wyjdź — „Wyjdź” myli się
   z zamknięciem, „Przejdź” z przejściem do miejsca), Przełącz punkt przerwania.
 - **Spójność terminów Oracle:** Post w siatce → **Zapisz zmiany w bazie (Post)** („Zatwierdź” zarezerwowane dla
-  COMMIT); na wstążce Zatwierdź / Wycofaj zamiast samych COMMIT / ROLLBACK; „Zabij sesję” → **Zakończ sesję (Kill)**
-  jak „Zakończ sesję okna (Kill)”; INVALID — zawsze **nieprawidłowe** (było też „niepoprawne”); raport „Ograniczenia”
-  → **Więzy**.
+  COMMIT); „Zabij sesję” → **Zakończ sesję (Kill)** jak „Zakończ sesję okna (Kill)”; INVALID — zawsze
+  **nieprawidłowe** (było też „niepoprawne”).
+- **Decyzje właściciela po przeglądzie tabeli zmian:** duże przyciski transakcji na wstążce zostają nazwami SQL
+  **COMMIT** / **ROLLBACK** (w menu dalej „Zatwierdź (COMMIT)” / „Wycofaj (ROLLBACK)”); raport predefiniowany
+  i nagłówek dokumentacji schematu zostają **Ograniczenia** (folder w Przeglądarce obiektów — „Więzy”).
 - **IDE:** Fragmenty kodu (snippety), Wyodrębnij (Wydziel), Przełącz komentarz linii, Zamień na wielkie/małe litery,
   Przejdź do pierwszego znaku linii, Pokaż podpowiedzi kodu, Kompiluj projekt / Kompiluj zmienione (Buduj / Make),
   Duplikuj połączenie…, Filtruj wyrażeniem… / Filtruj kolumny…; macOS: Powtórz (było „Ponów” — w angielskim

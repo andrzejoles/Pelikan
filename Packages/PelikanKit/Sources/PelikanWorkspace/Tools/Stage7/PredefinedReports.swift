@@ -102,7 +102,7 @@ public enum PredefinedReports {
                                       and ic.column_name = cc.column_name and ic.column_position = 1)
                  order by c.table_name, c.constraint_name
                 """, variables: [ownerVar]),
-            PredefinedReport(id: "constraints", category: tables, title: L10n.tr("Więzy"), sql: """
+            PredefinedReport(id: "constraints", category: tables, title: L10n.tr("Ograniczenia"), sql: """
                 select table_name, constraint_name, constraint_type, status, r_constraint_name from all_constraints
                  where owner = \(owner) and constraint_name not like 'BIN$%' order by table_name, constraint_type, constraint_name
                 """, variables: [ownerVar]),

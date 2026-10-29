@@ -23,7 +23,8 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
    (sekcja ustawień), Query Builder, Query By Example, Large Data Editor, Test Manager, SQL Monitor, Instance Viewer,
    Database Diff, Autotrace, AutoCommit, AutoReplace, AutoSelect. Przyciski czynności w tych narzędziach — po polsku.
 6. **Słowa SQL w nawiasie** przy polskiej czynności, gdy użytkownik zna je z Oracle: „Zatwierdź (COMMIT)”,
-   „Wycofaj (ROLLBACK)”, „Zakończ sesję (Kill)”, „Zapisz zmiany w bazie (Post)”.
+   „Wycofaj (ROLLBACK)”, „Zakończ sesję (Kill)”, „Zapisz zmiany w bazie (Post)”. Wyjątek: duże przyciski transakcji
+   na wstążce to same słowa SQL **COMMIT** / **ROLLBACK** (decyzja właściciela).
 7. **Zmiana nazwy komendy** = dawną nazwę dopisać do słów kluczowych (`CommandSearch.keywords`), żeby wyszukiwanie
    czynności i paleta znajdowały ją po starej nazwie; tłumaczenia przenieść na nowy klucz (`scripts/l10n.py`).
 8. Teksty dziennika (`Log.*`), komunikaty SP2-/ORA- i nazwy techniczne nie są nazewnictwem interfejsu.
@@ -81,7 +82,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 | Pojęcie | W Pelikanie | Uzasadnienie / źródło |
 |---|---|---|
 | Explain plan | Plan wykonania; okno **Okno planu (Explain Plan)**; przycisk/wstążka **Odśwież plan** | Oracle; przycisk liczy plan ponownie dla tekstu okna — wcześniej „Wyjaśnij” (kalka „Explain”) i „Wyznacz plan” |
-| Commit / Rollback | Zatwierdź (COMMIT) / Wycofaj (ROLLBACK); na wstążce **Zatwierdź** / **Wycofaj** | Oracle; wcześniej na wstążce same słowa SQL |
+| Commit / Rollback | Zatwierdź (COMMIT) / Wycofaj (ROLLBACK) w menu; na wstążce nazwy SQL **COMMIT** / **ROLLBACK** | Oracle; wstążka — decyzja właściciela (D195): przyciski transakcji to znane słowa SQL |
 | Post (zmiany siatki) | **Zapisz zmiany w bazie (Post)** | DML bez COMMIT — „Zatwierdź” jest zarezerwowane dla COMMIT; wcześniej „Zatwierdź zmiany (Post)” |
 | Kill session | **Zakończ sesję (Kill)**, Zakończ natychmiast; „Zakończ sesję okna (Kill)” | wcześniej „Zabij sesję” (kalka); zgodnie z istniejącą komendą okna |
 | INVALID (status) | **nieprawidłowe obiekty**; Kompiluj nieprawidłowe obiekty… | jedno słowo zamiast „niepoprawne”/„nieprawidłowe” na przemian |
@@ -90,7 +91,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 | Trigger / Sequence / Synonym / Index | Wyzwalacz / Sekwencja / Synonim / Indeks | |
 | Materialized view | Widok zmaterializowany | |
 | Database link | Łącze bazy danych | |
-| Constraint | Więzy (integralności) — także raport predefiniowany i dokumentacja schematu | Oracle; wcześniej raport „Ograniczenia” |
+| Constraint | Więzy (integralności) — folder Przeglądarki obiektów, opisy; raport predefiniowany i nagłówek dokumentacji schematu: **Ograniczenia** | Oracle; „Ograniczenia” w raporcie — decyzja właściciela (D195) |
 | Schema / Data dictionary | Schemat / Słownik danych | |
 | Recycle bin | Kosz (Opróżnij kosz…, Przywróć z kosza…) | |
 | Job (Scheduler) / Queue | Zadanie / Kolejka | |

@@ -131,8 +131,8 @@ public enum RibbonModel {
                 .small("window.execute"), .small("sql.toggleSubstitution"),
             ]),
             RibbonGroup(L10n.tr("Transakcja"), [
-                .large("session.commit", label: L10n.tr("Zatwierdź")),
-                .large("session.rollback", label: L10n.tr("Wycofaj")),
+                .large("session.commit", label: L10n.tr("COMMIT")),
+                .large("session.rollback", label: L10n.tr("ROLLBACK")),
             ]),
             RibbonGroup(L10n.tr("Połączenie"), [
                 .large("session.logon", label: L10n.tr("Zaloguj")),
@@ -537,7 +537,7 @@ public enum RibbonModel {
                 .large("sql.execute"), .small("cmd.executeLine"), .small("cmd.pause"), .small("sql.break"),
             ]),
             RibbonGroup(L10n.tr("Transakcja"), [
-                .large("session.commit", label: L10n.tr("Zatwierdź")), .large("session.rollback", label: L10n.tr("Wycofaj")),
+                .large("session.commit", label: L10n.tr("COMMIT")), .large("session.rollback", label: L10n.tr("ROLLBACK")),
             ]),
         ])
     }
