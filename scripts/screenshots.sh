@@ -48,8 +48,12 @@ fi
 WORK=$(mktemp -d "$TMP/pelikan-shots.XXXXXX")
 echo $$ > "$WORK/owner.pid"
 RUN_APP="$WORK/Pelikan.app"
+# Osobny identyfikator klonu (D204): własna domena ustawień (UserDefaults) — przebieg nie zmienia ramki okna, układu
+# paska i podziału ani innych ustawień aplikacji Debug właściciela; pęk kluczy też pod osobną usługą (<id>.screenshots.…).
+SHOT_ID=""
 cleanup() {
     pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
+    [ -n "$SHOT_ID" ] && defaults delete "$SHOT_ID" >/dev/null 2>&1 || true
     "$LSREGISTER" -u "$RUN_APP" 2>/dev/null || true
     rm -rf "$WORK"
 }
@@ -65,6 +69,8 @@ trap 'exit 130' INT TERM
 cp -Rc "$APP" "$RUN_APP" 2>/dev/null || ditto "$APP" "$RUN_APP"
 rm -rf "$RUN_APP/Contents/PlugIns"
 /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "$RUN_APP/Contents/Info.plist"
+SHOT_ID="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$RUN_APP/Contents/Info.plist").screenshots"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $SHOT_ID" "$RUN_APP/Contents/Info.plist"
 codesign --force --sign - --options runtime --preserve-metadata=entitlements "$RUN_APP" >/dev/null 2>&1 \
     || { echo "Nie udało się podpisać kopii aplikacji $RUN_APP" >&2; exit 1; }
 if [ "$SCREEN" = 0 ]; then
@@ -108,6 +114,8 @@ for name in "${scenarios[@]}"; do
     started=$(date +%s)
     # Klon należy tylko do tego przebiegu — instancja poprzedniego scenariusza nie może zostać.
     pkill -f "$RUN_APP/Contents/MacOS/Pelikan" 2>/dev/null || true
+    # Czyste ustawienia klonu dla każdego scenariusza (rozmiar okna domyślny, nie z poprzedniego scenariusza).
+    defaults delete "$SHOT_ID" >/dev/null 2>&1 || true
     if [ "$SCREEN" = 0 ]; then
         open -g -n --env PELIKAN_DATA_DIR="$DATA" --env PELIKAN_UI_SCRIPT="$run" --env PELIKAN_SNAPSHOT="$OUT/$name" "$RUN_APP"
         for _ in $(seq 1 120); do [ -f "$run.done" ] && break; sleep 0.5; done

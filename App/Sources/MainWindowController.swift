@@ -57,15 +57,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         content.minimumThickness = 480
         split.addSplitViewItem(sidebar)
         split.addSplitViewItem(content)
-        split.splitView.autosaveName = "PelikanMainSplit"
+        // Przebieg zrzutów (D196, D204) nie zapisuje układu okna — klon ma osobną domenę ustawień, a to dodatkowa ochrona.
+        if AppDelegate.uiScriptURL == nil { split.splitView.autosaveName = Self.splitAutosaveName }
         window.contentViewController = split
         // contentViewController dopasowuje okno do minimalnego rozmiaru treści — rozmiar startowy ustawiamy po nim,
         // a zapamiętaną ramkę (autosave) przywracamy na końcu.
         window.contentMinSize = NSSize(width: 820, height: 520)
         window.setContentSize(NSSize(width: 1280, height: 820))
         window.center()
-        window.setFrameUsingName("PelikanMainWindow")
-        window.setFrameAutosaveName("PelikanMainWindow")
+        if AppDelegate.uiScriptURL == nil {
+            window.setFrameUsingName("PelikanMainWindow")
+            window.setFrameAutosaveName("PelikanMainWindow")
+        }
 
         let toolbar = NSToolbar(identifier: "PelikanMainToolbar")
         toolbar.displayMode = .iconOnly
@@ -153,10 +156,14 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     private var sidebarItem: NSSplitViewItem? { split.splitViewItems.first }
     private lazy var sidebarToggle = SidebarToggleAccessory(workspace: workspace) { [weak self] in self?.isSidebarVisible ?? true }
     private var sidebarResizeObserver: (any NSObjectProtocol)?
+    private static let splitAutosaveName = "PelikanMainSplit"
     /// Szerokość lewej kolumny sprzed schowania — układ okna zapamiętuje ją także przy schowanej kolumnie. Aktualna po
-    /// każdej zmianie podziału przy widocznej kolumnie (także tuż przed zwinięciem przeciągnięciem); na starcie z autozapisu
-    /// podziału, gdy kolumna była schowana.
+    /// każdej zmianie podziału przy widocznej kolumnie poza przeciąganiem podziału i animacją zwijania (zwinięcie
+    /// przeciągnięciem zostawia szerokość z początku ruchu); przy chowaniu komendą — szerokość z tej chwili; na starcie
+    /// z autozapisu podziału, gdy kolumna była schowana.
     private var sidebarWidthBeforeCollapse: CGFloat = 260
+    /// Trwa animacja pokazania/schowania — pośrednie szerokości nie są zapamiętywane.
+    private var sidebarAnimating = false
 
     /// Śledzi szerokość i widoczność lewej kolumny (przycisk na pasku tytułu, VoiceOver).
     private func observeSidebar() {
@@ -168,7 +175,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     private func sidebarDidResize() {
-        if let item = sidebarItem, !item.isCollapsed {
+        // Przeciąganie podziału (mysz wciśnięta) — szerokość z początku ruchu zostaje; po puszczeniu zapisze ją następna
+        // zmiana podziału, schowanie komendą albo odczyt układu (widoczna kolumna — bieżąca szerokość).
+        let dragging = [.leftMouseDragged, .leftMouseDown].contains(NSApp.currentEvent?.type)
+        if !sidebarAnimating, !dragging, let item = sidebarItem, !item.isCollapsed {
             let width = item.viewController.view.frame.width
             if width >= item.minimumThickness { sidebarWidthBeforeCollapse = width }
         }
@@ -176,9 +186,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
     }
 
     /// Szerokość pierwszego elementu z autozapisu podziału („NSSplitView Subview Frames PelikanMainSplit”: „x, y, w, h,
-    /// ukryty, …”) — zapisana także dla schowanej kolumny.
+    /// ukryty, …”) — zapisana także dla schowanej kolumny. Format klucza jest wewnętrzny dla AppKit (nieudokumentowany):
+    /// inny albo nieczytelny — nil i szerokość domyślna, nic więcej od niego nie zależy.
     private static func autosavedSidebarWidth() -> CGFloat? {
-        guard let frames = UserDefaults.standard.array(forKey: "NSSplitView Subview Frames PelikanMainSplit") as? [String],
+        guard AppDelegate.uiScriptURL == nil,
+              let frames = UserDefaults.standard.array(forKey: "NSSplitView Subview Frames " + splitAutosaveName) as? [String],
               let first = frames.first else { return nil }
         let parts = first.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
         return parts.count > 2 ? Double(parts[2]).map { CGFloat($0) } : nil
@@ -197,7 +209,18 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
                 documentArea.focusActiveDocument()
             }
         }
-        if animated { item.animator().isCollapsed = !visible } else { item.isCollapsed = !visible }
+        guard animated else {
+            item.isCollapsed = !visible
+            sidebarToggle.refresh()
+            return
+        }
+        sidebarAnimating = true
+        NSAnimationContext.runAnimationGroup({ _ in item.animator().isCollapsed = !visible }, completionHandler: { [weak self] in
+            MainActor.assumeIsolated {
+                self?.sidebarAnimating = false
+                self?.sidebarToggle.refresh()
+            }
+        })
         sidebarToggle.refresh()
     }
 

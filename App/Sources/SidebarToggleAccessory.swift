@@ -64,8 +64,7 @@ final class SidebarToggleAccessory: NSTitlebarAccessoryViewController {
     }
 
     @objc private func toggle() {
-        // Przełączenie zmienia stan przycisku od razu; właściwy stan ustawia komenda (refresh po zmianie podziału).
-        refresh()
+        // Kliknięcie przełącza stan przycisku od razu; właściwy stan ustawia komenda (refresh po zmianie podziału).
         workspace.perform("view.toggleSidebar")
     }
 }

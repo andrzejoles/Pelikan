@@ -1332,7 +1332,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 }
                 // Pasek narzędzi ukryty (pasek tytułu bez paska narzędzi — przycisk lewej kolumny, D204).
                 if s.command == "debug.hideToolbar" {
-                    mainWindow?.window?.toolbar?.isVisible = false
+                    // Jak Widok › Ukryj pasek narzędzi — przez toggleToolbarShown (hak widoczności paska okna głównego).
+                    if mainWindow?.window?.toolbar?.isVisible == true { mainWindow?.window?.toggleToolbarShown(nil) }
                     log("ok debug.hideToolbar")
                     try? await Task.sleep(for: .seconds(s.delay ?? 1))
                     continue
