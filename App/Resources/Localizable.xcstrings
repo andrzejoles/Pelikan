@@ -58633,6 +58633,34 @@
         }
       }
     },
+    "Podgląd formatowania: zmienione linie: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatting preview: changed lines: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formatierungsvorschau: geänderte Zeilen: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vista previa del formato: líneas modificadas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Попередній перегляд форматування: змінені рядки: %@"
+          }
+        }
+      }
+    },
     "Podgląd przestrzenny" : {
       "localizations" : {
         "en" : {
@@ -69521,6 +69549,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stellt die Binärdatei auf dem Ziel aus der .prev-Version oder einer gewählten Kopie im Backup-Verzeichnis wieder her (nach Bestätigung; PROD — mit Zielname). Quellen werden per git revert zurückgesetzt."
+          }
+        }
+      }
+    },
+    "Przywraca domyślne reguły formatera; formatowanie automatyczne zostaje bez zmian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restores the default formatter rules; automatic formatting stays unchanged."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stellt die Standardregeln des Formatierers wieder her; das automatische Formatieren bleibt unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablece las reglas predeterminadas del formateador; el formato automático no cambia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновлює типові правила форматувальника; автоматичне форматування не змінюється."
           }
         }
       }

@@ -1,3 +1,4 @@
+import AppKit
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
@@ -34,6 +35,11 @@ struct BeautifierPane: View {
                     Toggle(L10n.tr("Po otwarciu źródła z bazy"), isOn: setting(workspace, \.beautifier.afterLoad))
                     Toggle(L10n.tr("Przed kompilacją"), isOn: setting(workspace, \.beautifier.beforeCompile))
                     Toggle(L10n.tr("Przed zapisem do pliku"), isOn: setting(workspace, \.beautifier.beforeSave))
+                }
+                Section {
+                    Button(L10n.tr("Przywróć domyślne")) { workspace.settings.beautifier = options.restoringDefaults() }
+                    Text(L10n.tr("Przywraca domyślne reguły formatera; formatowanie automatyczne zostaje bez zmian."))
+                        .font(.uiSecondary).foregroundStyle(.secondary)
                 }
             }
             .formStyle(.grouped)
@@ -87,6 +93,13 @@ struct BeautifierPane: View {
             }
             if let first = m[sampleID]?.first { scrollTarget = (first, (scrollTarget?.serial ?? 0) + 1) }
             changeSerial += 1
+            // VoiceOver: liczba linii podglądu zmienionych ostatnią zmianą.
+            if let c = m[sampleID], !c.isEmpty {
+                let n = c.changed.count + c.removedBefore.count
+                NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                                     userInfo: [.announcement: L10n.tr("Podgląd formatowania: zmienione linie: \(n)"),
+                                                .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+            }
         }
         .task(id: changeSerial) {
             guard changeSerial > 0 else { return }
@@ -210,13 +223,13 @@ struct BeautifierPane: View {
     private var lists: some View {
         Section(L10n.tr("Listy i przecinki")) {
             row("listLayout") {
-                Picker(L10n.tr("Listy SELECT, INTO, FROM"), selection: setting(workspace, \.beautifier.listLayout)) { layoutOptions }
+                Picker(L10n.tr("Listy SELECT, INTO, FROM"), selection: clauseList(\.beautifier.listLayout)) { layoutOptions }
             }
             row("setList") {
-                Picker(L10n.tr("UPDATE … SET"), selection: setting(workspace, \.beautifier.setList)) { inheritedLayoutOptions }
+                Picker(L10n.tr("UPDATE … SET"), selection: inheritedClauseList(\.beautifier.setList)) { inheritedLayoutOptions }
             }
             row("groupOrderList") {
-                Picker(L10n.tr("GROUP BY, ORDER BY"), selection: setting(workspace, \.beautifier.groupOrderList)) { inheritedLayoutOptions }
+                Picker(L10n.tr("GROUP BY, ORDER BY"), selection: inheritedClauseList(\.beautifier.groupOrderList)) { inheritedLayoutOptions }
             }
             row("parameterDeclarations") {
                 Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { parenLayoutOptions }
@@ -378,6 +391,17 @@ struct BeautifierPane: View {
     @ViewBuilder private var layoutOptions: some View {
         Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
         Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.fit)
+    }
+
+    /// Listy klauzul: „do marginesu” to `fit`; `wrap` (wartość list w nawiasach, np. z importu) działa tak samo.
+    private func clauseList(_ key: WritableKeyPath<PelikanWorkspace.Settings, BeautifierOptions.ListLayout>) -> Binding<BeautifierOptions.ListLayout> {
+        Binding(get: { workspace.settings[keyPath: key] == .wrap ? .fit : workspace.settings[keyPath: key] },
+                set: { workspace.settings[keyPath: key] = $0 })
+    }
+
+    private func inheritedClauseList(_ key: WritableKeyPath<PelikanWorkspace.Settings, BeautifierOptions.ListLayout?>) -> Binding<BeautifierOptions.ListLayout?> {
+        Binding(get: { workspace.settings[keyPath: key] == .wrap ? .fit : workspace.settings[keyPath: key] },
+                set: { workspace.settings[keyPath: key] = $0 })
     }
 
     @ViewBuilder private var inheritedLayoutOptions: some View {
