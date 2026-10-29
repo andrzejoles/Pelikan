@@ -2,6 +2,9 @@ import Foundation
 import PelikanSQL
 @testable import PelikanWorkspace
 import Testing
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Formatowanie podczas pisania w edytorze (D205, PD-BEAU-003): plan dwóch kroków Entera, cofanie, okna, ustawienie
 /// i komenda.
@@ -163,11 +166,19 @@ struct FormatOnEnterTests {
         #expect(c.ranges == [2..<4, 20..<25])
         // Dokument: zapis albo wczytanie — znacznik nowej sesji całego tekstu.
         let doc = Document(kind: .sql, ordinal: 1, text: "select 1 from dual")
-        let mark = doc.editSessionMark.serial
+        let mark = doc.editSessionSerial
         doc.text = "select 2 from dual"
-        #expect(doc.editSessionMark.serial == mark)
+        #expect(doc.editSessionSerial == mark)
         doc.isModified = false
-        #expect(doc.editSessionMark.serial == mark + 1 && doc.editSessionMark.range == nil && doc.editSessionMark.revision == doc.textRevision)
+        #expect(doc.editSessionSerial == mark + 1 && doc.editSessionMarks.map(\.range) == [nil])
+        // Dwa wczytania pary przed synchronizacją edytora: oba zakresy w kolejce, przesuwane przy zmianach tekstu;
+        // znacznik całego tekstu zastępuje kolejkę.
+        doc.markEditSession(0..<6)
+        doc.markEditSession(9..<13)
+        doc.text = "-- " + doc.text
+        #expect(doc.editSessionMarks.suffix(2).map(\.range) == [3..<9, 12..<16])
+        doc.isModified = false
+        #expect(doc.editSessionMarks.count == 1 && doc.editSessionMarks[0].range == nil)
         #expect(SmartIndent.followsNewline("ab\n" as NSString, caret: 3) && !SmartIndent.followsNewline("put_line()" as NSString, caret: 9))
     }
 
@@ -186,4 +197,54 @@ struct FormatOnEnterTests {
         #expect(ws.macroRecorder?.steps.isEmpty == true)
         ws.toggleMacroRecording()
     }
+
+    #if canImport(AppKit)
+    /// Zmiany z magazynu tekstu NSTextView (poza ekranem) jak w edytorze: wczytanie nie jest edycją, Enter na końcu
+    /// nietkniętej linii zostawia ją bez zmian, wpisany znak oznacza linię.
+    @Test("widok: świeżo otwarte okno — Enter na końcu nietkniętej linii bez zmian; wpisanie znaku — linia formatowana")
+    func viewEditTracking() throws {
+        _ = NSApplication.shared
+        let view = NSTextView(frame: NSRect(x: 0, y: 0, width: 400, height: 300))
+        let tracker = StorageTracker()
+        let storage = try #require(view.textStorage)
+        storage.delegate = tracker
+        // Wczytanie (jak `load` edytora: tekst, potem zapomnienie zmian).
+        view.string = "begin\n  if a>0 then\n    null;\n  end if;\nend;"
+        #expect(!tracker.ranges.ranges.isEmpty)
+        tracker.ranges.reset()
+        func plan(at caret: Int) -> FormatOnEnter.Plan? {
+            let ns = view.string as NSString
+            let line = ns.lineRange(for: NSRange(location: caret, length: 0))
+            var memory = StatementStartMemory()
+            return FormatOnEnter.plan(text: view.string, caret: caret, kind: .sql, options: BeautifierOptions(), indentMode: .automatic,
+                                      unit: "  ", tabWidth: 2, lineEdited: tracker.ranges.touches(line: line.location..<caret), memory: &memory)
+        }
+        let end = (view.string as NSString).range(of: "then").upperBound
+        // Linia bez zmian (tylko wcięcie nowej linii według formatera).
+        #expect(try #require(plan(at: end)).format?.text == "  if a>0 then\n    ")
+        // Enter na końcu linii (zwykły) nie oznacza jej; wpisany znak — tak.
+        view.setSelectedRange(NSRange(location: end, length: 0))
+        view.insertText("\n", replacementRange: view.selectedRange())
+        #expect(!tracker.ranges.touches(line: 6..<end))
+        view.setSelectedRange(NSRange(location: end, length: 0))
+        view.insertText(" ", replacementRange: view.selectedRange())
+        #expect(tracker.ranges.touches(line: 6..<(end + 1)))
+        #expect(try #require(plan(at: end + 1)).format?.text.hasPrefix("  IF a > 0 THEN\n") == true)
+    }
+    #endif
 }
+
+#if canImport(AppKit)
+/// Zapis zmian magazynu tekstu jak w edytorze (`CodeEditorView.storageDidProcessEditing`).
+@MainActor
+final class StorageTracker: NSObject, NSTextStorageDelegate {
+    var ranges = EditedRanges()
+
+    func textStorage(_ textStorage: NSTextStorage, didProcessEditing editedMask: NSTextStorageEditActions, range editedRange: NSRange,
+                     changeInLength delta: Int) {
+        guard editedMask.contains(.editedCharacters) else { return }
+        let chars = textStorage.mutableString
+        ranges.record(edited: editedRange, delta: delta) { $0 < chars.length ? chars.character(at: $0) : nil }
+    }
+}
+#endif

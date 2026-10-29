@@ -718,7 +718,9 @@ struct Formatter {
         // a po `SYS.` (`sys.XMLTYPE`) wszystkie reguły jak bez kwalifikatora.
         if let dot = token(before: t), dot.kind == .dot, token(before: dot)?.upper != "SYS" {
             let next = token(after: t)
-            if let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
+            // Więcej niż jeden człon przed słowem (`j.doc.name.upper()`) — metoda albo pole, nie funkcja wbudowana.
+            let chain = token(before: dot).flatMap { token(before: $0) }?.kind == .dot
+            if !chain, let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
             if let c = options.packageCase, next?.kind == .dot, SQLWords.isPackage(t.upper) { return c }
             return options.identifierCase
         }

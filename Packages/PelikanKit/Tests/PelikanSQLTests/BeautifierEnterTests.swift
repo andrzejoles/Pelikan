@@ -209,6 +209,8 @@ struct BeautifierEnterTests {
         #expect(try Beautifier.format("begin sys.dbms_output.put_line(1); end;", options: o) == "BEGIN\n  sys.DBMS_OUTPUT.put_line(1);\nEND;")
         #expect(try Beautifier.format("declare l_x sys.xmltype; begin null; end;", options: o).contains("l_x sys.XMLTYPE;"))
         #expect(try Beautifier.format("select j.doc.date, t.nvl(a, 0) from t j", options: o) == "SELECT j.doc.date,\n       t.NVL(a, 0)\n  FROM t j")
+        // Więcej niż jeden człon przed słowem — metoda (`j.doc.name.upper()`), nie funkcja wbudowana.
+        #expect(try Beautifier.format("select j.doc.name.upper() from t j", options: o) == "SELECT j.doc.name.upper()\n  FROM t j")
     }
 
     @Test("pamięć: jednostka kończy się z poleceniem; ORDER/MAP — podprogram tylko przed MEMBER")

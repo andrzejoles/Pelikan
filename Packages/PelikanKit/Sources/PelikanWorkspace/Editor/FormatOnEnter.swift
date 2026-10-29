@@ -183,6 +183,13 @@ public struct EditedRanges: Sendable, Equatable {
         ranges = out.sorted { $0.lowerBound < $1.lowerBound }
     }
 
+    /// Zmiana z magazynu tekstu edytora (zakres po zmianie, zmiana długości, znak w tekście po zmianie — bez kopiowania
+    /// dokumentu): wstawienie zaczynające się znakiem nowej linii (Enter) zapisane od następnej linii.
+    public mutating func record(edited: NSRange, delta: Int, character: (Int) -> UInt16?) {
+        let first = edited.length > 0 ? character(edited.location) : nil
+        record(edited: edited.location..<(edited.location + edited.length), delta: delta, newlineFirst: first == 0x0A || first == 0x0D)
+    }
+
     /// Czy treść linii (`line` — od początku linii do znaku nowej linii, bez niego) była zmieniona: zakres zmiany
     /// nachodzi na nią albo styka się z nią (wpisanie albo usunięcie na jej końcu). Zmiana od początku następnej linii
     /// jej nie oznacza, a Enter na jej końcu zapisany jest od następnej linii (`newlineFirst`).

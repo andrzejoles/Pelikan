@@ -147,15 +147,15 @@ struct ExternalFileChangesTests {
         let changes = await ws.externalChanges(of: doc)
         #expect(changes.map(\.url) == [b.standardizedFileURL] && changes.first?.windowModified == false)
         ui.answers = [0]
-        let mark = doc.editSessionMark.serial
+        let mark = doc.editSessionSerial
         #expect(await ws.checkExternalChanges(of: doc) == 1)
         #expect(doc.currentText(of: b) == newBody)
         #expect(doc.currentText(of: s)?.contains("PROCEDURE q;") == true && doc.isModified)
         // Nowa sesja edycji (formatowanie przy Enter, D205) tylko w zakresie wczytanego ciała.
         let bodyStart = (doc.text as NSString).range(of: "CREATE OR REPLACE PACKAGE BODY").location
-        #expect(doc.editSessionMark.serial == mark + 1 && doc.editSessionMark.range?.contains(bodyStart) == true)
-        #expect(doc.editSessionMark.range?.contains((doc.text as NSString).range(of: "PROCEDURE q;").location) == false)
-        #expect(doc.editSessionMark.revision == doc.textRevision)
+        let last = try #require(doc.editSessionMarks.last)
+        #expect(last.serial == mark + 1 && last.range?.contains(bodyStart) == true)
+        #expect(last.range?.contains((doc.text as NSString).range(of: "PROCEDURE q;").location) == false)
         // Zapis: tylko specyfikacja (ciało już jak na dysku), bez pytania o zmianę ciała.
         try await ws.invoke("file.save")
         #expect(try text(s).contains("PROCEDURE q;"))

@@ -128,10 +128,10 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         tokens.append(trackChanges { [weak self] in self?.syncFromModel() })
         // Nowa sesja edycji (otwarcie, zapis, wczytanie — także jednego pliku okna pary): zmiany zapomniane po
         // zsynchronizowaniu tekstu, niezależnie od kolejności obserwacji (`applyEditSessionMark` także w `syncFromModel`).
-        handledSessionMark = document.editSessionMark.serial
+        handledSessionMark = document.editSessionSerial
         tokens.append(trackChanges { [weak self] in
             guard let self else { return }
-            _ = self.document.editSessionMark
+            _ = self.document.editSessionMarks
             self.applyEditSessionMark()
         })
         tokens.append(trackChanges { [weak self] in
@@ -435,6 +435,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         updatingFromModel = true
         textView.string = text
         syncedRevision = document.textRevision
+        // Wczytany tekst nie jest edycją (formatowanie przy Enter dotyczy linii zmienionych w sesji, D205).
+        editedRanges.reset()
         if let storage = textView.textStorage { highlighter.highlightAll(storage, font: font) }
         // Zaznaczenie z modelu (np. otwarcie obiektu na linii), a nie koniec wczytanego tekstu.
         let len = (text as NSString).length
@@ -931,11 +933,13 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
     private var handledSessionMark = 0
 
     private func applyEditSessionMark() {
-        let mark = document.editSessionMark
-        // Tekst widoku jeszcze sprzed wczytania — po synchronizacji (zmiana tekstu oznaczyłaby wczytany fragment od nowa).
-        guard mark.serial != handledSessionMark, syncedRevision >= mark.revision else { return }
-        handledSessionMark = mark.serial
-        if let r = mark.range { editedRanges.clear(r) } else { editedRanges.reset() }
+        // Tekst widoku jeszcze sprzed wczytania — po synchronizacji (zmiana tekstu oznaczyłaby wczytany fragment od nowa);
+        // zakresy znaczników są w bieżącym tekście dokumentu.
+        guard document.editSessionSerial != handledSessionMark, syncedRevision == document.textRevision else { return }
+        for mark in document.editSessionMarks where mark.serial > handledSessionMark {
+            if let r = mark.range { editedRanges.clear(r) } else { editedRanges.reset() }
+        }
+        handledSessionMark = document.editSessionSerial
     }
 
     /// Plan Entera z ustawień formatera (okno SQL, programu, testu; konsola i okna bez kodu — zwykły Enter).
@@ -994,9 +998,8 @@ final class CodeEditorView: NSView, NSTextViewDelegate {
         let editedRange = storage.editedRange
         statementStarts.invalidate(from: editedRange.location)
         let delta = storage.changeInLength
-        let newlineFirst = editedRange.length > 0 && storage.length > editedRange.location
-            && [0x0A, 0x0D].contains((storage.string as NSString).character(at: editedRange.location))
-        editedRanges.record(edited: editedRange.location..<(editedRange.location + editedRange.length), delta: delta, newlineFirst: newlineFirst)
+        let chars = storage.mutableString
+        editedRanges.record(edited: editedRange, delta: delta) { $0 < chars.length ? chars.character(at: $0) : nil }
         // Obszary zwijania przesuwane od razu, tak jak klucze zwinięć w modelu (`Document.text`) — do przeliczenia
         // w tle `applyFolds` dopasowuje przesunięte klucze do przesuniętych obszarów, bez rozwijania i zwijania.
         if !regions.isEmpty {

@@ -2704,7 +2704,8 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
 - **Kwalifikowane nazwy (uzupełnienie z D205):** po kropce nie działa reguła typu danych ani słowa kluczowego, ale
   znane nazwy zachowują reguły pakietu (przed kropką: `sys.DBMS_OUTPUT.put_line`) i funkcji wbudowanej (przed
   nawiasem); po `SYS.` (`sys.XMLTYPE`) — wszystkie reguły jak bez kwalifikatora; pozostałe słowa po kropce — reguła
-  identyfikatora.
+  identyfikatora. Słowo z więcej niż jednym członem przed nim (`j.doc.name.upper()`) to metoda albo pole — bez reguły
+  funkcji wbudowanej.
 - **Klucze JSON (uzupełnienie z D205):** słowo po kropce dostaje regułę identyfikatora — przy wielkich literach
   identyfikatorów klucze JSON w notacji z kropką (rozróżniające wielkość liter) zostaną podniesione; taki kod formatować z
   identyfikatorami „bez zmian” albo w regionie NoFormat.
@@ -3012,6 +3013,12 @@ przeszkadzać).” (PD-BEAU-003)
   obserwacji), zmiana ustawienia statusu linii zakresów nie kasuje; Enter na końcu linii zapisany od następnej linii,
   zmiana od początku następnej linii nie oznacza bieżącej. Pamięć podziału zeruje jednostkę CREATE … BODY na
   początku każdego polecenia; w ciele typu ORDER/MAP to początek podprogramu tylko przed MEMBER.
+- **Trzecie przejście przeglądu:** tekst wczytany do edytora przy otwarciu okna nie jest edycją (zakresy zerowane na
+  końcu wczytania, a zmiana z modelu albo od agenta — liczy się); znaczniki nowej sesji w kolejce (`editSessionMarks`,
+  zakresy przesuwane przy zmianach tekstu, znacznik całego tekstu zastępuje kolejkę) — dwa wczytania pary przed
+  synchronizacją edytora nie gubią pierwszego; edytor stosuje je po zsynchronizowaniu z bieżącą wersją tekstu. Znak
+  wstawionego tekstu czytany z magazynu bez kopiowania dokumentu. Test widoku: NSTextView poza ekranem z zapisem zmian
+  jak w edytorze.
 - **Pominięte:** wyrównanie do rzeki linii zaczynającej się słowem klauzuli przy CASE w jednej linii według formatera
   (krótki CASE — formater nie łamie, więc linia `ELSE` zostaje); po komentarzu `--` na końcu linii w SQL nowa linia
   dostaje kolumnę elementów (zaległe złamanie po komentarzu), nie kolumnę instrukcji; stanu przełącznika nie pokazują

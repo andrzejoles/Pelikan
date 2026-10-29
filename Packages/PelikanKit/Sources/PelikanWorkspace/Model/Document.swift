@@ -86,8 +86,13 @@ public final class Document: Identifiable {
                 isModified = true
                 if kind == .program { isCompileStale = true }
                 if !foldedStarts.isEmpty { foldedStarts = CodeFolding.shift(foldedStarts, from: oldValue, to: text) }
-                if !bookmarks.isEmpty || !colorMarks.isEmpty {
+                if !bookmarks.isEmpty || !colorMarks.isEmpty || editSessionMarks.contains(where: { $0.range != nil }) {
                     let d = EditorShift.Change(old: oldValue, new: text)
+                    editSessionMarks = editSessionMarks.map { m in
+                        var m = m
+                        m.range = m.range.flatMap { d.shift($0) }
+                        return m
+                    }
                     bookmarks = bookmarks.map { var b = $0; b.offset = d.shift(b.offset); return b }
                     colorMarks = colorMarks.compactMap { m in d.shift(m.range).map { ColorMark(range: $0, color: m.color) } }
                 }
@@ -181,17 +186,20 @@ public final class Document: Identifiable {
         }
     }
     /// Początek nowej sesji edycji (D205): tekst z otwarcia, zapisu albo wczytania (`range` nil — cały tekst, inaczej
-    /// zakres pliku wczytanego w oknie pary) przy wersji tekstu `revision` — edytor zapomina od niej zmiany w tym zakresie
-    /// (formatowanie przy Enter dotyczy tylko linii zmienionych w sesji).
+    /// zakres pliku wczytanego w oknie pary, w bieżącym tekście) — edytor zapomina zmiany w tym zakresie (formatowanie
+    /// przy Enter dotyczy tylko linii zmienionych w sesji).
     public struct EditSessionMark: Sendable, Equatable {
         public var serial = 0
         public var range: Range<Int>?
-        public var revision = 0
     }
-    public internal(set) var editSessionMark = EditSessionMark()
+    /// Kolejka znaczników (najnowsze na końcu; zakresy przesuwane przy zmianach tekstu — kilka wczytań pary przed
+    /// synchronizacją edytora). Znacznik całego tekstu zastępuje wcześniejsze.
+    public internal(set) var editSessionMarks: [EditSessionMark] = []
+    public var editSessionSerial: Int { editSessionMarks.last?.serial ?? 0 }
 
     func markEditSession(_ range: Range<Int>?) {
-        editSessionMark = EditSessionMark(serial: editSessionMark.serial + 1, range: range, revision: textRevision)
+        let mark = EditSessionMark(serial: editSessionSerial + 1, range: range)
+        editSessionMarks = range == nil ? [mark] : Array((editSessionMarks + [mark]).suffix(32))
     }
     /// Tekst z chwili otwarcia, wczytania z bazy albo zapisu — status linii (PD-EDIT-003) i Revert (PD-PROG-009).
     public internal(set) var baselineText = ""
