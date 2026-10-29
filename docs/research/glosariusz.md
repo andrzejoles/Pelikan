@@ -33,7 +33,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 
 | Pojęcie | W Pelikanie | Uzasadnienie / źródło |
 |---|---|---|
-| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia** (en *Settings*, zestawy — *Settings presets*; es *Ajustes*; uk *Налаштування* — jak w macOS; także w instrukcjach); Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
+| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia** (en *Settings*, zestawy — *Settings presets*, karta Zestawy — *Presets*, zestaw — *preset*; es *Ajustes*; uk *Налаштування* — jak w macOS; także w instrukcjach); Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
 | Undo / Redo | Cofnij / **Powtórz** | macOS (wcześniej „Ponów”, które w Pelikanie znaczy „Retry”) |
 | Cut / Copy / Paste / Select All | Wytnij / Kopiuj / Wklej / Zaznacz wszystko | macOS |
 | Minimize / Zoom | **Zminimalizuj** / Powiększ | macOS (wcześniej „Minimalizuj”) |

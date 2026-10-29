@@ -16,7 +16,7 @@ settings** field at the top finds a setting by name (in the interface language) 
 | Object Browser | visible folders and order, confirming recompilation, drag actions, named filters, user folders |
 | Tools | web searches, external editor, external diff viewer, documents, backups and window recovery, “Don’t ask again” prompts |
 | Agents | agent programs, strict mode, agent call and query limits |
-| Sets | settings presets, export and import, Quick Access toolbar |
+| Presets | settings presets, export and import, Quick Access toolbar |
 
 A few settings take effect only after Pelikan is restarted: the Instant Client directory, Oracle Net and Oracle Wallet,
 and the interface language.
@@ -35,29 +35,29 @@ Confirmations of changes on production and consents for AI agents cannot be turn
 
 ## Settings presets
 
-Sets let you have different settings for different connections — e.g. a different date format for one database or
-stricter rules for production. Pelikan applies the sets in this order (from the most important): **Connection
-personal**, **Personal**, **Connection default**, **Default** for all connections. Connection sets have a
+Presets let you have different settings for different connections — e.g. a different date format for one database or
+stricter rules for production. Pelikan applies the presets in this order (from the most important): **Connection
+personal**, **Personal**, **Connection default**, **Default** for all connections. Connection presets have a
 `user@database` pattern or a connection name with `*` and `%` (e.g. `app@prod*`) and apply when the main connection
 matches them.
 
-![Sets tab in Settings](../img/zestawy-preferencji.png)
+![Presets tab in Settings](../img/zestawy-preferencji.png)
 
-On the **Sets** tab (or **Tools › Settings › Settings Presets…**):
+On the **Presets** tab (or **Tools › Settings › Settings Presets…**):
 
-1. Add a set: choose the kind, enter a name and a connection pattern, click **Add**.
-2. In the **Save changes in Settings to** field, choose the set you want to edit. From then on, changes on other tabs
+1. Add a preset: choose the kind, enter a name and a connection pattern, click **Add**.
+2. In the **Save changes in Settings to** field, choose the preset you want to edit. From then on, changes on other tabs
    go to it.
-3. Next to each setting you can see which set the value comes from; **Inherit** removes the value from the edited set.
+3. Next to each setting you can see which preset the value comes from; **Inherit** removes the value from the edited preset.
 
 **Export and import** saves selected sections of the effective settings to a JSON file (**Tools › Settings ›
-Export Settings…**) and loads them into the edited set (**Import Settings…**). The export contains neither
+Export Settings…**) and loads them into the edited preset (**Import Settings…**). The export contains neither
 passwords nor file history.
 
 ## Toolbar and Quick Access
 
 **View › Customize Toolbar…** changes the toolbar layout with the standard macOS window. The **Quick Access** group on
-the toolbar contains any commands (up to 20) — you add them on the **Sets** tab (**Quick Access Toolbar**) or from the
+the toolbar contains any commands (up to 20) — you add them on the **Presets** tab (**Quick Access Toolbar**) or from the
 command palette.
 
 ## Keyboard

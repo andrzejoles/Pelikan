@@ -2135,8 +2135,11 @@ użytkownik oczekuje innego słowa.
   (Zawartość kodu, menu jednostek) ma tłumaczenia „przejdź do”, nie debugera; przyciski przeglądarki sesji
   i pytanie o zakończenie używają tytułu komendy „Zakończ sesję (Kill)”. Nazwy sekcji w parametrze `sections`
   komend `prefs.export` / `prefs.import` (makra, skrypty, agent) są przetłumaczone na język interfejsu —
-  `PreferenceSets.sectionNames` przyjmuje też nazwę polską, angielską i dawną (np. „SQL Window”, „Object Browser”),
-  bez względu na wielkość liter; sekcja okna SQL to teraz „Okno SQL” (była „SQL Window”).
+  `PreferenceSets.sectionNames` przyjmuje też klucz polski, synonimy zapisane przy definicji sekcji (angielska i dawna
+  nazwa, np. „SQL Window”, „Object Browser”) i tłumaczenie każdej nazwy na wszystkie języki interfejsu (makro nagrane
+  po niemiecku działa po polsku), bez względu na wielkość liter; nieznana nazwa to błąd nieprawidłowego argumentu
+  z listą znanych sekcji (wcześniej po cichu nic nie eksportowała). Sekcja okna SQL to teraz „Okno SQL” (była „SQL
+  Window”). Po angielsku zestawy ustawień to konsekwentnie *presets* (karta *Presets*, *Settings Presets…*).
 - **Do zrobienia po następnym przebiegu zrzutów** (po scaleniu zrzutów ukrytych): nowe nazwy plików od tytułów okien
   (Konsola SQL*Plus, Ustawienia) — poprawić odnośniki w docs/FEATURES.md (wiersze ok. 218, 355, 400, 495), usunąć
   stare pliki zrzutów i odświeżyć obrazki instrukcji.

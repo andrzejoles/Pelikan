@@ -36670,7 +36670,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inicio de sesión /@base con la credencial de la cartera indicada en Ajustes › Oracle (Oracle Wallet). El campo «Base de datos» debe ser exactamente un alias o una cadena de conexión guardada en la cartera; el alias debe estar en la configuración de Oracle Net de las Ajustes."
+            "value" : "Inicio de sesión /@base con la credencial de la cartera indicada en Ajustes › Oracle (Oracle Wallet). El campo «Base de datos» debe ser exactamente un alias o una cadena de conexión guardada en la cartera; el alias debe estar en la configuración de Oracle Net de los Ajustes."
           }
         },
         "de" : {
@@ -56370,7 +56370,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The file contains no passwords (they are in the Keychain) and no file history; import goes to the set selected above."
+            "value" : "The file contains no passwords (they are in the Keychain) and no file history; import goes to the preset selected above."
           }
         },
         "de" : {
@@ -67878,7 +67878,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Overridden by a set with higher precedence"
+            "value" : "Overridden by a preset with higher precedence"
           }
         },
         "de" : {
@@ -87366,7 +87366,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Removes the value from the set — the value from a lower set or the built-in value applies"
+            "value" : "Removes the value from the preset — the value from a lower preset or the built-in value applies"
           }
         },
         "de" : {
@@ -90642,7 +90642,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Values of set “%@”"
+            "value" : "Values of preset “%@”"
           }
         },
         "de" : {
@@ -91734,7 +91734,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loads settings from a file (selected sections) into the set being edited in Settings."
+            "value" : "Loads settings from a file (selected sections) into the preset being edited in Settings."
           }
         },
         "de" : {
@@ -111194,7 +111194,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The set changes no values — all are inherited."
+            "value" : "The preset changes no values — all are inherited."
           }
         },
         "de" : {
@@ -111222,7 +111222,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sets"
+            "value" : "Presets"
           }
         },
         "de" : {
@@ -117625,6 +117625,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "nicht geschlossener Apostroph"
+          }
+        }
+      }
+    },
+    "nieznana sekcja „%@”; znane: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unknown section “%@”; known: %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "unbekannter Abschnitt „%@“; bekannt: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sección desconocida «%@»; conocidas: %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "невідомий розділ «%@»; відомі: %@"
           }
         }
       }
