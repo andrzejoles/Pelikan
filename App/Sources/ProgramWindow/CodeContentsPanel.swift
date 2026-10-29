@@ -22,7 +22,8 @@ final class CodeContentsPanel {
     private var appeared = false
     /// Szerokość panelu przed ukryciem — przywracana przy ponownym pokazaniu.
     private var width: CGFloat = 220
-    private var analysisTask: Task<Void, Never>?
+    /// Liczenie w toku — anulowane przy następnej zmianie i przy zwolnieniu panelu (zamknięcie okna).
+    private var analysis: AnalysisHandle?
     /// Rewizja tekstu (`Document.textRevision`) ostatniego zarysu w panelu i zarysu w trakcie liczenia.
     private var analyzedRevision = -1
     private var pendingRevision = -1
@@ -58,7 +59,7 @@ final class CodeContentsPanel {
                 guard let self else { return }
                 guard self.workspace.showsCodeContents(self.document) else { self.sawVisible = false; return }
                 _ = self.document.text
-                let immediate = !self.sawVisible || self.analyzedRevision < 0
+                let immediate = !self.sawVisible || (self.analyzedRevision < 0 && self.pendingRevision < 0)
                 self.sawVisible = true
                 self.scheduleAnalysis(immediate: immediate)
             })
@@ -146,17 +147,17 @@ final class CodeContentsPanel {
     private func scheduleAnalysis(immediate: Bool) {
         let revision = document.textRevision
         guard revision != analyzedRevision, revision != pendingRevision else { return }
-        analysisTask?.cancel()
         pendingRevision = revision
         let text = document.text
         let kind = document.kind
-        analysisTask = Task.detached(priority: .userInitiated) { [weak self] in
+        // Zastąpienie uchwytu anuluje poprzednie liczenie.
+        analysis = AnalysisHandle(Task.detached(priority: .userInitiated) { [weak self] in
             if !immediate { try? await Task.sleep(for: .milliseconds(400)) }
             guard !Task.isCancelled else { return }
             let result = CodeContents.analyze(text, kind: kind) { Task.isCancelled }
             guard !Task.isCancelled else { return }
             await self?.finishAnalysis(result, revision: revision)
-        }
+        })
     }
 
     private func finishAnalysis(_ result: PLSQLOutline.ScriptOutline, revision: Int) {
@@ -165,4 +166,12 @@ final class CodeContentsPanel {
         analyzedRevision = revision
         update(result.nodes, omitted: result.omittedStatements)
     }
+}
+
+/// Uchwyt zadania w tle anulujący je przy zwolnieniu (zastąpienie nowym liczeniem, zamknięcie okna) — bez `deinit`
+/// izolowanego na głównym aktorze w panelu.
+private final class AnalysisHandle {
+    let task: Task<Void, Never>
+    init(_ task: Task<Void, Never>) { self.task = task }
+    deinit { task.cancel() }
 }

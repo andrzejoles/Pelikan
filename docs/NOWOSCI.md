@@ -7,7 +7,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
 - **Zawartość kodu w każdym oknie z kodem:** panel struktury kodu jest teraz także w oknie SQL i oknie testu, nie tylko
   w oknie programu. W oknie SQL pokazuje cały skrypt — polecenia SQL (początek polecenia, w podpowiedzi do ok. 1000
   znaków), procedury, funkcje, pakiety i wyzwalacze z `CREATE` oraz bloki anonimowe; klik przenosi kursor, filtr szuka
-  także w treści poleceń. Niedokończony blok nie ukrywa reszty skryptu.
+  także w treści poleceń. Niedokończony blok nie ukrywa reszty skryptu. W skrypcie z ponad 5000 poleceń SQL panel
+  pokazuje tylko jednostki i bloki PL/SQL.
 - **Pokaż albo ukryj w oknie:** **Widok › Zawartość kodu** i nowy przycisk na lewym końcu paska okna przełączają panel
   tylko w bieżącym oknie; wybór zostaje w oknie i w worksecie. **Ustawienia › Edytor › Zawartość kodu domyślnie
   widoczna** ustala stan okien bez własnego wyboru.

@@ -2444,7 +2444,8 @@ a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłącz
   potrzebny. Powyżej 5000 poleceń SQL w zarysie są tylko jednostki i bloki, a panel pokazuje dopisek z liczbą
   poleceń. Polecenia wewnątrz rozpoznanych jednostek nie są osobnymi elementami. Filtr nazw
   dopasowuje polecenie także po szczegółach (nazwa tabeli). Komendy menu elementu (zaznacz, kopiuj, wytnij) liczą ten
-  sam zarys (`CodeContents.outline`) — w oknie SQL działają też na poleceniach.
+  sam zarys (`CodeContents.outline`) — w oknie SQL działają też na poleceniach; powyżej limitu 5000 poleceń SQL
+  ich nie widzą (tak jak panel), a na jednostkach i blokach działają dalej.
 - **Wydajność (R4-01):** w oknach SQL i testu zarys liczony w tle, 0,4 s po ostatniej zmianie tekstu (pierwszy raz
   i po pokazaniu panelu — od razu) i tylko przy widocznym panelu; nowa zmiana anuluje liczenie w toku, wynik
   przyjmowany według rewizji tekstu (`textRevision`), a tekst bez nowej rewizji (np. inna zmiana Ustawień) nie jest

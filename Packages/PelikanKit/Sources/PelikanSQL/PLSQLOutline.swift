@@ -102,8 +102,11 @@ public enum PLSQLOutline {
         let ns = text as NSString
         // Tekst tokenów tylko tam, gdzie potrzebny (polecenia PL/SQL, początek polecenia SQL) — skrypt z dziesiątkami
         // tysięcy poleceń bez milionów podciągów.
+        // Anulowanie sprawdzane między fazami (leksowanie i podział to łącznie kilkadziesiąt ms w Release dla 50 000 linii).
         let all = significant(text)
+        if isCancelled() { return ScriptOutline(nodes: []) }
         let statements = ScriptSplitter.split(text).filter { $0.end > $0.start }
+        if isCancelled() { return ScriptOutline(nodes: []) }
         let sqlCount = statements.reduce(0) { $0 + ($1.isPLSQL ? 0 : 1) }
         let withSQL = sqlCount <= statementLimit
         var out: [OutlineNode] = []

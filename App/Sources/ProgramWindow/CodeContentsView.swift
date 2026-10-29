@@ -131,6 +131,16 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    /// Dopisek zawijany do szerokości panelu (etykieta wieloliniowa potrzebuje szerokości, by policzyć wysokość).
+    override func layout() {
+        super.layout()
+        let width = noteLabel.frame.width
+        if !noteLabel.isHidden, width > 0, abs(noteLabel.preferredMaxLayoutWidth - width) > 0.5 {
+            noteLabel.preferredMaxLayoutWidth = width
+            super.layout()
+        }
+    }
+
     /// Nowy zarys; zachowuje rozwinięcie węzłów o tej samej ścieżce nazw.
     /// Klucz rozwinięcia: ścieżka rodzajów i nazw z numerem kolejnym wśród rodzeństwa o tym samym rodzaju i nazwie —
     /// specyfikacja i ciało o tej samej nazwie oraz kolejne bloki „BEGIN” mają osobny stan.
@@ -322,7 +332,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         label.font = font
         label.lineBreakMode = .byTruncatingTail
         label.toolTip = CodeContents.signature(of: n)
-        label.setAccessibilityLabel(CodeContents.signature(of: n))
+        // Polecenie SQL: VoiceOver czyta jednoliniowy tytuł z drzewa (pełny początek polecenia tylko w podpowiedzi).
+        label.setAccessibilityLabel(n.kind == .statement ? Self.title(n) : CodeContents.signature(of: n))
         for v in [icon, label] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false; cell.addSubview(v) }
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: cell.leadingAnchor), icon.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
