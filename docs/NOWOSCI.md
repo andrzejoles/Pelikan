@@ -2,10 +2,17 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.6.1 — szerszy panel po lewej
+## 1.6.1 — panel po lewej i foldery połączeń
 
 - **Panel po lewej** (Połączenia, Obiekty, Okna, Szablony, Pliki) można poszerzyć bez dawnego limitu 420 punktów — aż do
   chwili, gdy obszarowi okien zostaje jego minimalna szerokość.
+- **Pokaż albo ukryj panel po lewej:** przycisk na lewym końcu paska tytułu (tuż za przyciskami okna, jak w Mailu),
+  **Widok › Pokaż lub ukryj panel po lewej**, skrót **⌃⌘S** (jak „Pokaż pasek boczny” w macOS) i przycisk na wstążce
+  (Widok › Panele narzędzi). Panel zwija się z animacją, a jego stan i szerokość zostają w układzie okna i w worksecie.
+- **Usuń folder połączeń:** menu podręczne folderu na liście połączeń, klawisz Delete na zaznaczonym folderze
+  i **Start › Połączenia › Usuń folder** (wybór z listy). Usunąć można tylko pusty folder — bez połączeń i podfolderów;
+  przy niepustym pozycja jest wyłączona, a podpowiedź mówi, ile połączeń i podfolderów trzeba najpierw przenieść albo
+  usunąć. Folder „Ostatnie” i foldery z regułą dopasowania zostają.
 
 ## 1.6.0 — Zawartość kodu w oknie SQL i oknie testu
 

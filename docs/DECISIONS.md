@@ -2457,3 +2457,39 @@ a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłącz
   Zawartość kodu”, wciśnięty przy widocznym panelu; VoiceOver: „Zawartość kodu”, wartość „widoczna”/„ukryta”); okno testu dostało pasek pod blokiem (przycisk i pozycja kursora).
   Wstążka bez zmian — komenda już jest w Widok › Panele, Edycja › Zwijanie › Zawartość kodu i na karcie Program.
   Bez skrótu (wzorzec nie ma domyślnego).
+
+### D204 · 2026-10-29 — Pokaż/ukryj panel po lewej, usuwanie pustych folderów połączeń
+
+Prośby właściciela: „Panel z lewej strony Pelikana — opcja ukrywania/pokazywania (gdzieś na wierzchu)” oraz
+„W połączeniach nie ma usuwania folderu (najlepiej z zabezpieczeniem, że tylko pusty można usunąć)”.
+
+- **Komenda `view.toggleSidebar`** „Pokaż lub ukryj panel po lewej” (Widok; agent: brak dostępu, skutek: stan
+  interfejsu; opcjonalny argument `visible`, makro nagrywa stan — jak `view.codeContents`, D199). Skrót **⌃⌘S** w obu
+  profilach — jak „Pokaż pasek boczny” w macOS, wolny w rejestrze. Wstążka: Widok › Panele narzędzi „Panel po lewej”
+  (obok paneli po prawej i na dole). Lewa kolumna zwija się z animacją (`animator().isCollapsed`); fokus z chowanej
+  kolumny przechodzi do edytora aktywnego okna. Bez okna głównego — czytelny błąd.
+- **Przycisk na wierzchu:** dodatek paska tytułu `NSTitlebarAccessoryViewController` z `layoutAttribute = .leading`
+  (`SidebarToggleAccessory`) — symbol `sidebar.left` tuż za przyciskami okna, przed tytułem, jak w Mailu i Notatkach,
+  w tym samym miejscu także przy schowanej kolumnie. Sprawdzony najpierw element paska narzędzi z separatorem
+  śledzącym (`NSTrackingSeparatorToolbarItem`): tytuł okna zostawał na lewym końcu, przycisk stał przy prawej krawędzi
+  lewej kolumny, a po jej schowaniu przeskakiwał na prawą stronę paska — odrzucony (lewa kolumna nie jest paskiem
+  bocznym macOS, D180, więc tytuł nie przechodzi za separator). Przycisk bez ramki (szklany przycisk dodatku nie
+  rysuje się w zrzutach w tle, D196); komenda jest też w palecie dostosowania paska narzędzi. Domyślny układ paska bez
+  zmian — bez migracji zapamiętanego układu.
+- **Układ okna i workset:** `WindowLayout.sidebarCollapsed` (opcjonalne; brak w starszych układach — kolumna
+  widoczna, widoczna kolumna nie zapisuje pola). Przy schowanej kolumnie `sidebarWidth` to szerokość sprzed schowania,
+  więc pokazanie po przywróceniu układu wraca do niej. Między uruchomieniami stan trzyma też autozapis podziału okna.
+- **Komenda `connection.deleteFolder`** „Usuń folder” (Sesja › Połączenia w palecie, `inMenu: false` jak „Nowy
+  folder…”; wstążka Start › Połączenia; agent: brak dostępu i skutek „ustawienia” — jak pozostałe komendy definicji
+  połączeń i folderów). Argument `folder` — id albo nazwa (bez wielkości liter); bez argumentu użytkownik wybiera
+  z listy folderów ze ścieżkami („Zespół / Archiwum”), makro nagrywa id; skrypt i agent bez argumentu — błąd argumentu.
+  Wywołania: menu podręczne folderu na liście połączeń, klawisz Delete (⌫/⌦) na zaznaczonym folderze.
+- **Zabezpieczenie:** `ConnectionStore.deletionBlocker` — usuwany jest tylko folder bez połączeń przypisanych jawnie
+  i bez podfolderów (nic nie znika razem z nim, więc **bez pytania potwierdzającego**). Niepusty: komunikat „Folder
+  „…” nie jest pusty (połączenia: N, podfoldery: M) — przenieś albo usuń najpierw jego połączenia i podfoldery.”;
+  w menu podręcznym pozycja wyłączona z tym tekstem w podpowiedzi. **Nieusuwalne:** folder z regułą dopasowania
+  (UG 19.2 — reguły nie da się odtworzyć w Pelikanie, przychodzi z importu definicji), folder „Ostatnie” (tworzony
+  automatycznie; argument „Ostatnie”/„recent”, chyba że użytkownik ma folder o tej nazwie). Foldery DBA i DBMS (D190)
+  są gałęziami Przeglądarki obiektów, nie folderami połączeń — komenda ich nie dotyczy. Zapis `connections.json`
+  od razu; błąd zapisu przywraca folder na liście. Dawne `ConnectionStore.remove(folder:)` (przenosi zawartość do
+  rodzica) zostaje dla importu i testów, interfejs go nie używa.

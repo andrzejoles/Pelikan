@@ -18,6 +18,11 @@ usadas recientemente. Bajo cada conexión se ven sus ventanas abiertas.
 - Las carpetas y las conexiones se ordenan alfabéticamente. Arrastra una conexión con el ratón a una carpeta para
   moverla allí, o a un espacio libre de la lista para llevarla al nivel superior.
 - Los botones sobre la lista crean una conexión nueva (**+**) y una carpeta, y actualizan la lista.
+- **Eliminar carpeta** (menú contextual de la carpeta, tecla Supr sobre la carpeta seleccionada o **Iniciar ›
+  Conexiones › Eliminar carpeta** eligiendo de una lista) elimina solo una carpeta vacía —sin conexiones ni
+  subcarpetas—, por eso no pregunta. Con una carpeta no vacía la opción está desactivada y su ayuda indica cuántas
+  conexiones y subcarpetas hay que mover o eliminar primero. La carpeta **Recientes** y las carpetas con regla de
+  coincidencia (de una importación) no se pueden eliminar.
 
 También puedes usar la ventana de inicio de sesión: **Sesión › Iniciar sesión…** (⇧⌘L). Muestra todas las definiciones
 con un buscador y permite crear una conexión nueva o editar una existente. **Sesión › Cerrar sesión de la conexión

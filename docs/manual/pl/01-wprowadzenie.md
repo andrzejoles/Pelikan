@@ -75,6 +75,9 @@ Pelikan ma jedno okno główne:
 
 - **Lewa kolumna** z kartami: **Połączenia** (lista połączeń z folderami i ostatnio używanymi), **Obiekty**
   (Przeglądarka obiektów), **Okna** (lista otwartych okien), **Szablony** i **Pliki** (przeglądarka plików).
+  Kolumnę (panel po lewej) poszerzasz, przeciągając jej krawędź, a chowasz i pokazujesz przyciskiem z symbolem paska
+  bocznego na lewym końcu paska tytułu (tuż za przyciskami okna), poleceniem **Widok › Pokaż lub ukryj panel po
+  lewej** albo skrótem **⌃⌘S**. Stan i szerokość kolumny zostają w układzie okna i w worksecie.
 - **Karty dokumentów** w środku — każde okno SQL, programu, testu czy planu ma własną kartę z kolorową literą typu: S
   — okno SQL, P — okno programu, T — okno testu, C — konsola SQL*Plus, E — okno planu, R — okno raportu, D — okno
   diagramu, N — notatnik SQL. Środkowy klik na karcie zamyka okno; menu karty zamyka pozostałe okna albo okna z lewej

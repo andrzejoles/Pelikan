@@ -18,6 +18,11 @@ verwendeten. Unter einer Verbindung sind ihre offenen Fenster zu sehen.
 - Ordner und Verbindungen sind alphabetisch sortiert. Eine Verbindung, die mit der Maus auf einen Ordner gezogen wird,
   landet darin, auf freiem Platz der Liste — auf der obersten Ebene.
 - Die Schaltflächen über der Liste legen eine neue Verbindung (**+**) und einen Ordner an und aktualisieren die Liste.
+- **Ordner entfernen** (Kontextmenü des Ordners, Entf-Taste auf dem ausgewählten Ordner oder **Start › Verbindungen ›
+  Ordner entfernen** mit Auswahl aus einer Liste) entfernt nur einen leeren Ordner — ohne Verbindungen und
+  Unterordner, daher ohne Rückfrage. Bei einem nicht leeren Ordner ist der Eintrag deaktiviert, und der Tooltip nennt,
+  wie viele Verbindungen und Unterordner zuerst zu verschieben oder zu löschen sind. Der Ordner **Zuletzt** und Ordner
+  mit einer Zuordnungsregel (aus einem Import) lassen sich nicht entfernen.
 
 Sie können auch das Anmeldefenster verwenden: **Sitzung › Anmelden …** (⇧⌘L). Es zeigt alle Definitionen mit einem
 Suchfeld und ermöglicht es, eine neue Verbindung anzulegen oder eine vorhandene zu bearbeiten. **Sitzung ›
