@@ -164,27 +164,13 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         subqueryLayout = v(.subqueryLayout, subqueryLayout); operatorPosition = v(.operatorPosition, operatorPosition)
         alignColumnDefinitions = v(.alignColumnDefinitions, alignColumnDefinitions)
         // Brak znacznika (częściowy JSON z komendy, agenta, makra) — wartości bieżące, bez migracji. Migrację zapisów
-        // sprzed D202 robi odczyt plików (`BeautifierOptions.migratingLegacy`).
+        // sprzed D202 robi odczyt plików (`PreferenceSets.migratingLegacyBeautifier` w PelikanWorkspace).
         defaultsVersion = v(.defaultsVersion, Self.currentDefaultsVersion)
     }
 
     /// Wersja domyślnych ustawień (1 — D202), zapisywana z ustawieniami.
     public static let currentDefaultsVersion = 1
     public var defaultsVersion = BeautifierOptions.currentDefaultsVersion
-
-    /// Migracja zapisu formatera sprzed D202 (JSON bez znacznika `defaultsVersion` albo ze starszym) — tylko przy odczycie
-    /// plików ustawień, zestawów i eksportu w starszej wersji: wartości równe dawnym domyślnym dostają nowe domyślne
-    /// (słowa klauzul do lewej → rzeka, CASE w jednej linii → wieloliniowo, wyrównanie deklaracji i przypisań → włączone),
-    /// zmienione przez użytkownika zostają; dopisany znacznik.
-    public static func migratingLegacy(_ object: [String: Any]) -> [String: Any] {
-        if let v = object["defaultsVersion"] as? Int, v >= currentDefaultsVersion { return object }
-        var o = object
-        if o["clauseLayout"] as? String == ClauseLayout.leftAligned.rawValue { o["clauseLayout"] = ClauseLayout.rightAligned.rawValue }
-        if o["caseLayout"] as? String == CaseLayout.inline.rawValue { o["caseLayout"] = CaseLayout.auto.rawValue }
-        for key in ["alignDeclarations", "alignAssignments"] where o[key] as? Bool == false { o[key] = true }
-        o["defaultsVersion"] = currentDefaultsVersion
-        return o
-    }
 
     /// Ustawienia domyślne z zachowaniem formatowania automatycznego i — opcjonalnie — pisowni specjalnej (przycisk
     /// „Przywróć domyślne”).
@@ -482,10 +468,13 @@ struct Formatter {
             sourceBlankLines(toks[i])
         }
         var raw = source.substring(with: NSRange(location: from, length: max(0, end - from))).components(separatedBy: "\n")
-        if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: true); rawLines.insert(lines.count) }
-        flush()
-        rawLines.formUnion(lines.count..<(lines.count + raw.count))
-        lines.append(contentsOf: raw)
+        if sameLine, !raw.isEmpty { put(raw.removeFirst(), space: needsSpace(prev, toks[i])); rawLines.insert(lines.count) }
+        // Fragment w jednej linii w bieżącej linii — linia zostaje otwarta (dalszy ciąg może do niej dołączyć).
+        if !(sameLine && raw.isEmpty) {
+            flush()
+            rawLines.formUnion(lines.count..<(lines.count + raw.count))
+            lines.append(contentsOf: raw)
+        }
         pendingBreak = indentColumns(level)
         statementStart = true
         var j = i
@@ -832,8 +821,10 @@ struct Formatter {
             copyRaw(from: t.start, to: end, sameLine: sameLine)
             if inStatement {
                 statementStart = wasStatementStart
-                // Region w osobnych liniach — dalszy ciąg instrukcji w kolumnie kontynuacji.
-                pendingBreak = sameLine ? nil : continuationColumn()
+                // Dalszy ciąg instrukcji w kolumnie kontynuacji; przecinek i nawias zamykający — w linii regionu
+                // (gdy region był w jednej linii).
+                let next = i + 1 < toks.count ? toks[i + 1].kind : nil
+                pendingBreak = sameLine && (next == .comma || next == .rightParen) ? nil : continuationColumn()
             }
             return
         }

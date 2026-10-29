@@ -200,16 +200,21 @@ public enum PreferenceSets {
         return values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
     }
 
-    /// Migracja ustawień formatera zapisanych przed D202 (`BeautifierOptions.migratingLegacy`) — tylko przy odczycie
-    /// plików: settings.json, sets.json i eksportu w wersji formatu 1. Częściowy JSON z komendy, agenta albo makra
-    /// (bez znacznika) to wartości bieżące — nie przechodzi tędy.
+    /// Migracja ustawień formatera zapisanych przed D202 — tylko przy odczycie plików: settings.json, sets.json i
+    /// eksportu w wersji formatu 1. Zapis bez znacznika `defaultsVersion` (albo ze starszym) dostaje nowe domyślne tam,
+    /// gdzie miał dawne (słowa klauzul do lewej → rzeka, CASE w jednej linii → wieloliniowo, wyrównanie deklaracji
+    /// i przypisań → włączone); zmienione przez użytkownika zostają; dopisany znacznik. Częściowy JSON z komendy, agenta
+    /// albo makra (bez znacznika) to wartości bieżące — nie przechodzi tędy.
     public static func migratingLegacyBeautifier(_ values: [String: JSONValue]) -> [String: JSONValue] {
-        guard let b = values["beautifier"], case .object = b, let data = try? JSONEncoder().encode(b),
-              let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let migrated = try? JSONSerialization.data(withJSONObject: BeautifierOptions.migratingLegacy(object)),
-              let value = try? JSONDecoder().decode(JSONValue.self, from: migrated) else { return values }
+        guard case .object(var o)? = values["beautifier"] else { return values }
+        if case .int(let v)? = o["defaultsVersion"], v >= Int64(BeautifierOptions.currentDefaultsVersion) { return values }
+        typealias O = BeautifierOptions
+        if o["clauseLayout"] == .string(O.ClauseLayout.leftAligned.rawValue) { o["clauseLayout"] = .string(O.ClauseLayout.rightAligned.rawValue) }
+        if o["caseLayout"] == .string(O.CaseLayout.inline.rawValue) { o["caseLayout"] = .string(O.CaseLayout.auto.rawValue) }
+        for key in ["alignDeclarations", "alignAssignments"] where o[key] == .bool(false) { o[key] = .bool(true) }
+        o["defaultsVersion"] = .int(Int64(BeautifierOptions.currentDefaultsVersion))
         var out = values
-        out["beautifier"] = value
+        out["beautifier"] = .object(o)
         return out
     }
 

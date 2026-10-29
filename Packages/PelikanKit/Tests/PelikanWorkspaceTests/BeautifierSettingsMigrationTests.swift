@@ -23,6 +23,23 @@ struct BeautifierSettingsMigrationTests {
         return dir
     }
 
+    @Test("migracja na JSONValue: dawne domyślne → nowe, wartości użytkownika zostają, zapis ze znacznikiem bez zmian")
+    func migrationValues() {
+        let old: JSONValue = .object(["indent": .int(4), "clauseLayout": "leftAligned", "caseLayout": "inline",
+                                      "alignDeclarations": .bool(false), "alignAssignments": .bool(false)])
+        guard case .object(let m)? = PreferenceSets.migratingLegacyBeautifier(["beautifier": old])["beautifier"] else {
+            Issue.record("brak obiektu"); return
+        }
+        #expect(m["clauseLayout"] == "rightAligned" && m["caseLayout"] == "auto" && m["indent"] == .int(4))
+        #expect(m["alignDeclarations"] == .bool(true) && m["alignAssignments"] == .bool(true) && m["defaultsVersion"] == .int(1))
+        let custom: JSONValue = .object(["clauseLayout": "ownLine", "caseLayout": "multiline"])
+        guard case .object(let c)? = PreferenceSets.migratingLegacyBeautifier(["beautifier": custom])["beautifier"] else { return }
+        #expect(c["clauseLayout"] == "ownLine" && c["caseLayout"] == "multiline")
+        let marked: JSONValue = .object(["clauseLayout": "leftAligned", "defaultsVersion": .int(1)])
+        #expect(PreferenceSets.migratingLegacyBeautifier(["beautifier": marked])["beautifier"] == marked)
+        #expect(PreferenceSets.migratingLegacyBeautifier(["indent": .int(2)]) == ["indent": .int(2)])
+    }
+
     @Test("settings.json sprzed D202 — migracja przy starcie; zapis ze znacznikiem nie migruje ponownie")
     func settingsFile() throws {
         let dir = try temporaryDirectory()

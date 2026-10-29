@@ -81,6 +81,8 @@ struct BeautifierPane: View {
             specialCase = options.specialCase.joined(separator: ", ")
             formatted = formatAll(options)
         }
+        // Zamknięcie karty — bez spóźnionego ogłoszenia VoiceOver.
+        .onDisappear { announcement?.cancel() }
         // Pole zapisywane przy każdej zmianie (jak reszta Preferencji), a zmiana z zestawu lub importu odświeża pole.
         .onChange(of: specialCase) { saveSpecialCase() }
         .onChange(of: options.specialCase) { _, new in

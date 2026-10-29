@@ -243,18 +243,8 @@ struct BeautifierDefaultsTests {
         #expect(mv.contains("BUILD IMMEDIATE") && mv.contains("REFRESH FAST ON DEMAND"))
     }
 
-    @Test("migracja zapisu sprzed D202 (tylko z plików): wartości równe dawnym domyślnym → nowe; JSON bez znacznika w dekoderze — bieżący")
+    @Test("dekoder: JSON bez znacznika — wartości bieżące (migracja tylko przy odczycie plików — PelikanWorkspace); Przywróć domyślne")
     func migration() throws {
-        let old: [String: Any] = ["indent": 4, "clauseLayout": "leftAligned", "caseLayout": "inline", "alignDeclarations": false, "alignAssignments": false]
-        let m = BeautifierOptions.migratingLegacy(old)
-        #expect(m["clauseLayout"] as? String == "rightAligned" && m["caseLayout"] as? String == "auto")
-        #expect(m["alignDeclarations"] as? Bool == true && m["alignAssignments"] as? Bool == true && m["indent"] as? Int == 4)
-        #expect(m["defaultsVersion"] as? Int == BeautifierOptions.currentDefaultsVersion)
-        let custom = BeautifierOptions.migratingLegacy(["clauseLayout": "ownLine", "caseLayout": "multiline"])
-        #expect(custom["clauseLayout"] as? String == "ownLine" && custom["caseLayout"] as? String == "multiline")
-        // Zapis ze znacznikiem — bez zmian.
-        let marked = BeautifierOptions.migratingLegacy(["clauseLayout": "leftAligned", "defaultsVersion": 1])
-        #expect(marked["clauseLayout"] as? String == "leftAligned")
         // Dekoder: częściowy JSON bez znacznika (komenda, agent, makro) — wartości bieżące, bez migracji.
         let partial = try JSONDecoder().decode(BeautifierOptions.self, from: Data(#"{"clauseLayout":"leftAligned","alignDeclarations":false}"#.utf8))
         #expect(partial.clauseLayout == .leftAligned && !partial.alignDeclarations && partial.defaultsVersion == BeautifierOptions.currentDefaultsVersion)
@@ -291,6 +281,13 @@ struct BeautifierDefaultsTests {
             """)
         #expect(try f("create table t2 parallel 4 as select query, schema from t;").contains("SELECT query,\n       schema"))
         #expect(try f("set transaction read only;") == "SET TRANSACTION READ ONLY;")
+    }
+
+    @Test("$IF w jednej linii w środku instrukcji: przecinek i nawias zamykający zostają w linii, reszta w kolumnie kontynuacji")
+    func directiveOnSameLine() throws {
+        #expect(try f("select f(a, $if x $then b $else c $end, d) from t;") == "SELECT f(a, $if x $then b $else c $end, d)\n  FROM t;")
+        #expect(try f("select a from t where x in ($if y $then 1 $else 2 $end);") == "SELECT a\n  FROM t\n WHERE x IN ($if y $then 1 $else 2 $end);")
+        #expect(try f("select a from t where $if y $then b = 1 $else c = 2 $end and d = 3;").hasSuffix("$end\n   AND d = 3;"))
     }
 
     @Test("$IF w osobnych liniach w środku instrukcji — dalszy ciąg w kolumnie kontynuacji")

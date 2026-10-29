@@ -2520,7 +2520,8 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   wystąpienia, zarys, debuger, kolorowanie bez zmian), a formater pisze je jak słowa kluczowe tylko w swoim kontekście:
   DDL poza zapytaniem (nie w `CREATE VIEW … AS SELECT` ani CTAS) i nie jako nazwa kolumny w liście (`(query …`,
   `, schema …`), nagłówek wyzwalacza, po `%`, `WITH READ ONLY`, `SET TRANSACTION READ ONLY`, `MATCH_RECOGNIZE (`.
-  Region `$IF … $END` w osobnych liniach w środku instrukcji — dalszy ciąg w kolumnie kontynuacji. Konsola: linia zaczynająca się od `$if`
+  Region `$IF … $END` w środku instrukcji — dalszy ciąg w kolumnie kontynuacji; region w jednej linii zostaje w
+  linii, a przecinek albo nawias zamykający tuż za nim dołącza do niej. Migracja działa wprost na `JSONValue`. Konsola: linia zaczynająca się od `$if`
   (bez spacji; tak samo `$then`, `$elsif`, `$else`, `$end`, `$error`, `$$nazwa`) nie jest już poleceniem HOST `$` — to
   dyrektywa kompilacji warunkowej; `$ polecenie` i `$polecenie` z innym słowem działają jak dotąd. Podgląd ogłasza VoiceOver liczbę zmienionych linii (po 0,5 s
   bez kolejnej zmiany). Test na bazie porównuje wyniki
@@ -2533,7 +2534,8 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   zamykający list w osobnej linii, pusta linia po instrukcji, wyrównanie ASC/DESC, wcięcie JOIN, osobny przecinek dla
   nawiasów.
 - **Zgodność ustawień (migracja):** tylko przy odczycie plików — `settings.json`, `Preferences/sets.json` (zestawy
-  osobiste i połączeń) i pliku eksportu w wersji formatu 1 (`pelikan-preferences`; eksport ma teraz wersję 2) — zapis
+  osobiste i połączeń) i pliku eksportu w wersji formatu 1 (`pelikan-preferences`; eksport ma teraz wersję 2; import
+  takiego pliku — `prefs.import` z pliku albo **Importuj…** w Ustawieniach › Zestawy — też jest migrowany) — zapis
   formatera bez znacznika `defaultsVersion` (sprzed D202) dostaje nowe domyślne tam, gdzie miał dawne: słowa klauzul do
   lewej → rzeka, CASE w jednej linii → wieloliniowo (krótkie w jednej), wyrównanie deklaracji i przypisań wyłączone →
   włączone (`BeautifierOptions.migratingLegacy`, `PreferenceSets.migratingLegacyBeautifier`); inne wartości (zmienione
