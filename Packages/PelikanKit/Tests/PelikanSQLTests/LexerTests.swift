@@ -74,4 +74,27 @@ struct LexerTests {
     func range() {
         #expect(kinds("1..10").map(\.0) == [.number, .operator, .number])
     }
+
+    @Test("Kompilacja warunkowa i operatory wektorów (D202): $IF, $$nazwa jako jeden token; $ w nazwie; x<-1; <-> i <#>")
+    func directivesAndVectorOperators() {
+        #expect(kinds("$if a $then b $elsif c $else d $end $error 'x' $end").filter { $0.0 == .directive }.map(\.1)
+            == ["$if", "$then", "$elsif", "$else", "$end", "$error", "$end"])
+        #expect(kinds("x := $$plsql_unit || $$PLSQL_LINE").filter { $0.0 == .directive }.map(\.1) == ["$$plsql_unit", "$$PLSQL_LINE"])
+        #expect(kinds("select * from v$session").last?.1 == "v$session")
+        #expect(kinds("select * from v$session").last?.0 == .identifier)
+        #expect(kinds("a$IF").map(\.0) == [.identifier])
+        #expect(kinds("$ifx").map(\.1) == ["$", "ifx"])
+        #expect(kinds("x := '$$a $if'; -- $$b $if").map(\.0) == [.identifier, .operator, .string, .semicolon, .lineComment])
+        #expect(kinds("x<-1").map(\.1) == ["x", "<", "-", "1"])
+        #expect(kinds("a<->b a<#>b a<=>b a<=b").filter { $0.0 == .operator }.map(\.1) == ["<->", "<#>", "<=>", "<="])
+        #expect(kinds("a<-b").map(\.1) == ["a", "<", "-", "b"])
+        // Okno poleceń: `$ls` to polecenie HOST, `$if` — dyrektywa (nie HOST).
+        #expect(ScriptSplitter.split("$ls -l\n", mode: .commandWindow).first?.sqlplusCommand == "$")
+        #expect(ScriptSplitter.split("$if x $then\n", mode: .commandWindow).first?.sqlplusCommand == nil)
+    }
+
+    @Test("Słowa używane przez formater tylko w kontekście DDL (query, schema, statement) zostają identyfikatorami")
+    func formatterContextualWordsAreIdentifiers() {
+        #expect(kinds("select query, schema, statement, build, fast, lob from t").filter { $0.0 == .keyword }.map(\.1) == ["select", "from"])
+    }
 }

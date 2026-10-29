@@ -118,7 +118,7 @@ struct BeautifierDefaultsTests {
                AND sum(b) > 0;
             """)
         #expect(try f("merge into t using s on (t.id = s.id and t.x = s.x) when matched then update set t.v = s.v;") == """
-            MERGE INTO t
+             MERGE INTO t
              USING s
                 ON (t.id = s.id
                AND t.x = s.x)
@@ -126,12 +126,12 @@ struct BeautifierDefaultsTests {
                SET t.v = s.v;
             """)
         #expect(try f("select level from emp start with mgr is null and deptno = 10 connect by prior empno = mgr and level < 5;") == """
-            SELECT LEVEL
-              FROM emp
-             START WITH mgr IS NULL
-               AND deptno = 10
+             SELECT LEVEL
+               FROM emp
+              START WITH mgr IS NULL
+                AND deptno = 10
             CONNECT BY PRIOR empno = mgr
-               AND LEVEL < 5;
+                AND LEVEL < 5;
             """)
     }
 
@@ -160,6 +160,108 @@ struct BeautifierDefaultsTests {
         let back = try JSONDecoder().decode(BeautifierOptions.self, from: JSONEncoder().encode(o))
         #expect(back.condition(.ifCondition) == .init(breaks: .never, position: .lineEnd, align: .indent))
         #expect(back.condition(.check) == BeautifierOptions.defaultCondition(.check))
+    }
+
+    @Test("słowo po kropce to nazwa: t.offset, t.fetch, t.window, r.end, r.when, r.loop — bez klauzul i bez odmowy")
+    func wordsAfterDot() throws {
+        #expect(try f("select t.offset, t.fetch, t.window from t where t.end = 1 order by t.when;") == """
+            SELECT t.offset,
+                   t.fetch,
+                   t.window
+              FROM t
+             WHERE t.end = 1
+             ORDER BY t.when;
+            """)
+        #expect(try f("begin r.end := 1; x := r.when; r.loop := r.if; end;") == "BEGIN\n  r.end  := 1;\n  x      := r.when;\n  r.loop := r.if;\nEND;")
+    }
+
+    @Test("$IF … $END w środku instrukcji SQL nie kończy instrukcji")
+    func directiveInsideStatement() throws {
+        #expect(try f("select a from t where $if dbms_db_version.ver_le_12 $then b = 1 $else c = 2 $end and d = 3;") == """
+            SELECT a
+              FROM t
+             WHERE $if dbms_db_version.ver_le_12 $then b = 1 $else c = 2 $end
+               AND d = 3;
+            """)
+    }
+
+    @Test("przecinek na początku linii: komentarz nie jest doklejany do linii kończącej się komentarzem")
+    func commaBeforeAfterComment() throws {
+        #expect(try f("select a -- k1\n, -- k2\nb from t;") { $0.commaBefore = true } == "SELECT a -- k1\n     , -- k2\n       b\n  FROM t;")
+        #expect(PelikanSQL.Formatter.endsWithLineComment("a -- k") && !PelikanSQL.Formatter.endsWithLineComment("a = '--x'"))
+    }
+
+    @Test("AND w CASE w warunku IF — reguła CASE WHEN (krótki CASE w linii); AND z BETWEEN w argumencie nie przecieka")
+    func caseInsideConditionAndBetween() throws {
+        #expect(try f("begin if case when a = 1 and b = 2 then 1 else 0 end = 1 and c = 3 then null; end if; end;") == """
+            BEGIN
+              IF CASE WHEN a = 1 AND b = 2 THEN 1 ELSE 0 END = 1
+             AND c = 3 THEN
+                NULL;
+              END IF;
+            END;
+            """)
+        #expect(try f("select a from t where f(x between 1 and 2, y) = 1 and z = 2;") == """
+            SELECT a
+              FROM t
+             WHERE f(x BETWEEN 1 AND 2, y) = 1
+               AND z = 2;
+            """)
+    }
+
+    @Test("rzeka z najdłuższego słowa klauzuli: RETURNING, CONNECT BY, INTERSECT; WITH i MERGE wyrównane w prawo")
+    func riverWidth() throws {
+        #expect(try f("update t set a = 1 where b = 2 returning a into x;") == """
+               UPDATE t
+                  SET a = 1
+                WHERE b = 2
+            RETURNING a INTO x;
+            """)
+        #expect(try f("select a from t start with p is null connect by prior id = p intersect select b from u;") == """
+               SELECT a
+                 FROM t
+                START WITH p IS NULL
+              CONNECT BY PRIOR id = p
+            INTERSECT
+               SELECT b
+                 FROM u;
+            """)
+        #expect(try f("with x as (select 1 a from dual) select a from x;").hasPrefix("  WITH x AS (\n"))
+        #expect(try f("merge into t using s on (t.id = s.id) when matched then update set t.v = s.v;") == """
+             MERGE INTO t
+             USING s
+                ON (t.id = s.id)
+              WHEN MATCHED THEN UPDATE
+               SET t.v = s.v;
+            """)
+    }
+
+    @Test("słowa DDL jak słowa kluczowe tylko w DDL; jako nazwy kolumn w zapytaniu — bez zmian")
+    func contextualKeywords() throws {
+        #expect(try f("select query, schema, statement from t;") == "SELECT query,\n       schema,\n       statement\n  FROM t;")
+        let mv = try f("create materialized view mv build immediate refresh fast on demand as select a from t;")
+        #expect(mv.contains("BUILD IMMEDIATE") && mv.contains("REFRESH FAST ON DEMAND"))
+    }
+
+    @Test("migracja ustawień: wartości równe dawnym domyślnym → nowe domyślne, zmienione przez użytkownika zostają, znacznik")
+    func migration() throws {
+        func decode(_ json: String) throws -> BeautifierOptions { try JSONDecoder().decode(BeautifierOptions.self, from: Data(json.utf8)) }
+        let old = try decode(#"{"indent":4,"clauseLayout":"leftAligned","caseLayout":"inline","alignDeclarations":false,"alignAssignments":false}"#)
+        #expect(old.indent == 4 && old.clauseLayout == .rightAligned && old.caseLayout == .auto && old.alignDeclarations && old.alignAssignments)
+        #expect(old.defaultsVersion == BeautifierOptions.currentDefaultsVersion)
+        let custom = try decode(#"{"clauseLayout":"ownLine","caseLayout":"multiline"}"#)
+        #expect(custom.clauseLayout == .ownLine && custom.caseLayout == .multiline)
+        // Po migracji (znacznik zapisany) wybór „do lewej” zostaje.
+        var chosen = BeautifierOptions()
+        chosen.clauseLayout = .leftAligned
+        chosen.alignDeclarations = false
+        let again = try JSONDecoder().decode(BeautifierOptions.self, from: JSONEncoder().encode(chosen))
+        #expect(again.clauseLayout == .leftAligned && !again.alignDeclarations)
+        // Przywróć domyślne — z zachowaniem formatowania automatycznego.
+        var o = chosen
+        o.beforeSave = true; o.afterLoad = true
+        let d = o.restoringDefaults()
+        #expect(d.beforeSave && d.afterLoad && !d.beforeCompile && d.clauseLayout == .rightAligned && d.alignDeclarations)
     }
 
     @Test("listy w nawiasach do marginesu (Fit) i element w linii")

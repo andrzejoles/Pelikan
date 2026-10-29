@@ -16,12 +16,12 @@ struct BeautifierCompileDBTests {
             note varchar2(400 char), modified date, constraint pelikan_fmt_t_pk primary key (id), \
             constraint pelikan_fmt_t_ck check (qty > 0 and (price is null or price >= 0))) pctfree 10 storage (initial 64k next 1m)
             """),
-        ("PROCEDURE", "PELIKAN_FMT_CC", """
-            create or replace procedure pelikan_fmt_cc is v varchar2(200); begin
+        ("FUNCTION", "PELIKAN_FMT_CC", """
+            create or replace function pelikan_fmt_cc return varchar2 is v varchar2(200); begin
             $if dbms_db_version.ver_le_12 $then v := 'stara';
-              $else v := $$plsql_unit || ':' || $$plsql_line;
+              $else v := 'nowa:' || $$plsql_unit;
             $end
-            if v is null then raise program_error; end if; end;
+            if v is null then raise program_error; end if; return v; end;
             """),
         ("FUNCTION", "PELIKAN_FMT_VEC", """
             create or replace function pelikan_fmt_vec return number is r number; begin select (to_vector('[1,2]')<->to_vector('[2,3]')) \
@@ -103,34 +103,45 @@ struct BeautifierCompileDBTests {
         defer { Task { await s.close() } }
         func dropAll() async {
             for drop in ["view pelikan_fmt_v", "package pelikan_fmt_pkg", "type pelikan_fmt_money force", "function pelikan_fmt_vec",
-                         "procedure pelikan_fmt_cc", "table pelikan_fmt_t purge"] {
+                         "function pelikan_fmt_cc", "table pelikan_fmt_t purge"] {
                 _ = try? await s.execute("drop \(drop)")
             }
         }
-        await dropAll()
-        for options in [BeautifierOptions(), Self.heavy] {
-            for u in Self.units {
-                if u.type == "TABLE" { _ = try? await s.execute("drop table pelikan_fmt_t purge") }
-                try await compile(s, u.ddl)
-                #expect(try await status(s, u.type, u.name) == "VALID", "przed: \(u.type) \(u.name)")
-                if u.type == "TABLE" { continue }
-                let formatted = try Beautifier.format(u.ddl, options: options)
-                try await compile(s, formatted)
-                #expect(try await status(s, u.type, u.name) == "VALID", "po formatowaniu: \(u.type) \(u.name)\n\(formatted)")
-            }
-            // Tabela — sformatowana tworzona od nowa (po usunięciu zależnych), potem całość jeszcze raz poprawna.
-            _ = try await s.execute("drop table pelikan_fmt_t purge")
-            try await compile(s, try Beautifier.format(Self.units[0].ddl, options: options))
-            #expect(try await status(s, "TABLE", "PELIKAN_FMT_T") == "VALID")
-            _ = try? await s.execute("alter package pelikan_fmt_pkg compile body")
-            for u in Self.units where ["TRIGGER", "VIEW", "PACKAGE BODY"].contains(u.type) {
-                try await compile(s, try Beautifier.format(u.ddl, options: options))
-                #expect(try await status(s, u.type, u.name) == "VALID", "po odtworzeniu tabeli: \(u.type) \(u.name)")
-            }
+        /// Wyniki wywołań: odległości wektorów i gałąź kompilacji warunkowej.
+        func results() async throws -> [String?] {
+            [try await s.scalar("select to_char(round(pelikan_fmt_vec, 9)) from dual"), try await s.scalar("select pelikan_fmt_cc from dual")]
         }
-        // Wynik wywołań bez zmian: odległości wektorów i dyrektywy kompilacji warunkowej.
-        #expect(try await s.scalar("select round(pelikan_fmt_vec, 6) from dual") != nil)
-        _ = try await s.execute("begin pelikan_fmt_cc; end;")
+        await dropAll()
+        do {
+            // Wyniki wywołań funkcji skompilowanych z oryginalnego źródła.
+            for u in Self.units where u.type == "FUNCTION" { try await compile(s, u.ddl) }
+            let expected = try await results()
+            for options in [BeautifierOptions(), Self.heavy] {
+                for u in Self.units {
+                    if u.type == "TABLE" { _ = try? await s.execute("drop table pelikan_fmt_t purge") }
+                    try await compile(s, u.ddl)
+                    #expect(try await status(s, u.type, u.name) == "VALID", "przed: \(u.type) \(u.name)")
+                    if u.type == "TABLE" { continue }
+                    let formatted = try Beautifier.format(u.ddl, options: options)
+                    try await compile(s, formatted)
+                    #expect(try await status(s, u.type, u.name) == "VALID", "po formatowaniu: \(u.type) \(u.name)\n\(formatted)")
+                }
+                // Te same wyniki wywołań po formatowaniu (funkcje skompilowane ze sformatowanego źródła).
+                let after = try await results()
+                #expect(after == expected && after.allSatisfy { $0 != nil }, "\(after) ≠ \(expected)")
+                // Tabela — sformatowana tworzona od nowa (po usunięciu zależnych), potem całość jeszcze raz poprawna.
+                _ = try await s.execute("drop table pelikan_fmt_t purge")
+                try await compile(s, try Beautifier.format(Self.units[0].ddl, options: options))
+                #expect(try await status(s, "TABLE", "PELIKAN_FMT_T") == "VALID")
+                for u in Self.units where ["TRIGGER", "VIEW", "PACKAGE BODY"].contains(u.type) {
+                    try await compile(s, try Beautifier.format(u.ddl, options: options))
+                    #expect(try await status(s, u.type, u.name) == "VALID", "po odtworzeniu tabeli: \(u.type) \(u.name)")
+                }
+            }
+        } catch {
+            await dropAll()
+            throw error
+        }
         await dropAll()
     }
 }

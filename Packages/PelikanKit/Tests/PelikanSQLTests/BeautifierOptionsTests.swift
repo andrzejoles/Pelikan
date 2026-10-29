@@ -53,7 +53,7 @@ struct BeautifierOptionsTests {
         // Każda opcja wpływająca na wynik ma przykład i przykład podglądu; każde miejsce warunków — trzy reguły.
         let documented = Set(BeautifierExamples.all.map(\.id))
         let mirror = Mirror(reflecting: BeautifierOptions()).children.compactMap(\.label)
-        let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave"]
+        let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave", "defaultsVersion"]
         #expect(Set(mirror).subtracting(automatic) == documented)
         #expect(documented.isSubset(of: Set(BeautifierExamples.previewOf.keys)))
         #expect(BeautifierExamples.previewKeys.count == documented.count - 1 + 3 * BeautifierOptions.ConditionContext.allCases.count)

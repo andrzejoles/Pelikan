@@ -163,6 +163,28 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         conditions = v(.conditions, conditions); caseInlineLimit = v(.caseInlineLimit, caseInlineLimit)
         subqueryLayout = v(.subqueryLayout, subqueryLayout); operatorPosition = v(.operatorPosition, operatorPosition)
         alignColumnDefinitions = v(.alignColumnDefinitions, alignColumnDefinitions)
+        // Migracja D202 (zapis bez znacznika — sprzed zmiany domyślnych): opcje z wartością równą dawnej domyślnej
+        // dostają nową domyślną; wartości zmienione przez użytkownika zostają. Znacznik zapisywany razem z ustawieniami,
+        // więc migracja nie powtarza się (także dla zestawów preferencji i importu — wszystkie dekodują tędy).
+        defaultsVersion = v(.defaultsVersion, 0)
+        if defaultsVersion < Self.currentDefaultsVersion {
+            if clauseLayout == .leftAligned { clauseLayout = .rightAligned }
+            if caseLayout == .inline { caseLayout = .auto }
+            if !alignDeclarations { alignDeclarations = true }
+            if !alignAssignments { alignAssignments = true }
+            defaultsVersion = Self.currentDefaultsVersion
+        }
+    }
+
+    /// Wersja domyślnych ustawień (1 — D202). Zapis bez znacznika albo ze starszym — migracja przy odczycie.
+    public static let currentDefaultsVersion = 1
+    public var defaultsVersion = BeautifierOptions.currentDefaultsVersion
+
+    /// Ustawienia domyślne z zachowaniem formatowania automatycznego (przycisk „Przywróć domyślne”).
+    public func restoringDefaults() -> BeautifierOptions {
+        var o = BeautifierOptions()
+        o.afterLoad = afterLoad; o.beforeCompile = beforeCompile; o.beforeSave = beforeSave
+        return o
     }
 }
 
@@ -359,6 +381,8 @@ struct Formatter {
         var condBroke = false
         /// Wyrażenie CASE: WHEN/ELSE/END w osobnych liniach.
         var multiline = false
+        /// SQL: szerokość „rzeki” — najdłuższe (pierwsze) słowo klauzuli instrukcji, co najmniej 6 (SELECT).
+        var river = 6
     }
 
     /// Warunek logiczny w toku: miejsce, kolumna i długość słowa kluczowego, kolumna pierwszego warunku, czy cały
@@ -564,6 +588,32 @@ struct Formatter {
         return false
     }
 
+    /// Linia kończy się komentarzem `--` (leksowana — `--` w literale nie jest komentarzem). Linia z niedomkniętym
+    /// literałem albo komentarzem blokowym — też (nie wolno do niej nic doklejać).
+    static func endsWithLineComment(_ line: String) -> Bool {
+        let lexer = Lexer(line)
+        var last: TokenKind?
+        let state = lexer.scan(range: 0..<lexer.text.count, state: .normal) { t in
+            if t.kind != .whitespace && t.kind != .newline { last = t.kind }
+        }
+        return last == .lineComment || state != .normal
+    }
+
+    /// Identyfikator zapisywany jak słowo kluczowe w kontekście formatera (`Keywords.formatterContextual`): atrybut
+    /// kursora po `%`, słowa DDL (tabela, indeks, widok, MV, ALTER), nagłówek wyzwalacza, STATEMENT w sekcjach wyzwalacza
+    /// złożonego, READ w `WITH READ ONLY`, MATCH_RECOGNIZE przed „(”.
+    func contextualKeyword(_ t: Tok) -> Bool {
+        let p = token(before: t)
+        if p?.text == "%" { return Keywords.cursorAttributes.contains(t.upper) }
+        guard Keywords.formatterContextual.contains(t.upper), p?.kind != .dot, token(after: t)?.kind != .dot else { return false }
+        switch t.upper {
+        case "MATCH_RECOGNIZE": return token(after: t)?.kind == .leftParen
+        case "READ": return p?.upper == "WITH"
+        case "STATEMENT": return unitKind == "COMPOUND" && ["BEFORE", "AFTER"].contains(p?.upper ?? "")
+        default: return ddlObject != "" || headerKind == "TRIGGER" && headerLevel != nil
+        }
+    }
+
     /// Poprzedni token przed `t` (wyszukiwanie binarne).
     func token(before t: Tok) -> Tok? {
         var lo = 0, hi = toks.count
@@ -577,7 +627,8 @@ struct Formatter {
     /// Reguła wielkości liter słowa: funkcja wbudowana (przed „(”), pakiet z bazą (przed „.”), typ danych, słowo
     /// kluczowe, identyfikator.
     func rule(for t: Tok) -> BeautifierOptions.WordCase {
-        let base = t.kind == .keyword && !keywordAsIdentifier(t) ? options.keywordCase : options.identifierCase
+        let keyword = t.kind == .keyword ? !keywordAsIdentifier(t) : contextualKeyword(t)
+        let base = keyword ? options.keywordCase : options.identifierCase
         let next = token(after: t)
         if let c = options.functionCase, next?.kind == .leftParen, SQLWords.functions.contains(t.upper) { return c }
         if let c = options.packageCase, next?.kind == .dot, SQLWords.isPackage(t.upper) { return c }
@@ -636,6 +687,8 @@ struct Formatter {
         if t.text == ".." || p.text == ".." { return false }
         if t.kind == .leftParen {
             // Nazwa tabeli, widoku albo CTE przed listą kolumn — ze spacją (`INSERT INTO emp (…)`, PL/SQL Developer).
+            // Słowo DDL spoza wspólnego zbioru słów kluczowych (`LESS THAN (…)`) — jak słowo kluczowe.
+            if p.kind == .identifier, Keywords.formatterContextual.contains(p.upper), Self.spacedBeforeParen.contains(p.upper) { return true }
             if p.kind == .identifier || p.kind == .quotedIdentifier { return isObjectNameBeforeColumns() }
             // Metoda kolekcji (`l.EXISTS(i)`, `l.DELETE(1)`) — jak wywołanie, bez spacji.
             if p.kind == .keyword, prevPrev()?.kind == .dot { return false }
@@ -755,7 +808,14 @@ struct Formatter {
             let lineStart = source.lineRange(for: NSRange(location: t.start, length: 0)).location
             let before = source.substring(with: NSRange(location: lineStart, length: t.start - lineStart))
             let sameLine = !before.allSatisfy { $0 == " " || $0 == "\t" } && !(lines.isEmpty && cur.isEmpty)
+            // W środku instrukcji SQL albo nawiasu region nie kończy instrukcji: dalej bez nowej instrukcji i złamania.
+            let inStatement = frames.contains { $0.kind == .sql || $0.kind == .paren }
+            let wasStatementStart = statementStart
             copyRaw(from: t.start, to: end, sameLine: sameLine)
+            if inStatement {
+                statementStart = wasStatementStart
+                pendingBreak = nil
+            }
             return
         }
 
@@ -796,7 +856,7 @@ struct Formatter {
                 }
                 pendingBreak = statementStart ? indentColumns(level) : col
             } else if options.commaBefore, cur == ",", t.kind == .lineComment, let last = lines.indices.last,
-                      !rawLines.contains(last), !lines[last].trimmingCharacters(in: .whitespaces).hasPrefix("--") {
+                      !rawLines.contains(last), !Self.endsWithLineComment(lines[last]) {
                 // Przecinek na początku linii przeniesiony przed komentarz końca linii (`a, -- opis`): komentarz zostaje
                 // przy swoim elemencie w poprzedniej linii.
                 lines[last] += " " + text
@@ -834,6 +894,11 @@ struct Formatter {
             return
         }
 
+        // Słowo po kropce to nazwa (`t.offset`, `l.delete`, `r.end`, `x.when`) — nigdy klauzula ani struktura bloku.
+        if t.isWord, prev?.kind == .dot {
+            put(cased(t), space: needsSpace(prev, t))
+            return
+        }
         if w == "BETWEEN" { betweenPending = true }
         // MARK: Struktura PL/SQL (poza nawiasami i SQL)
         if !frames.contains(where: { $0.kind == .sql || $0.kind == .paren }) {
@@ -841,7 +906,8 @@ struct Formatter {
             if w == "FORALL", statementStart { forallPending = true }
             if w == "ALTER", statementStart { ddlObject = "ALTER" }
             // Warunek IF/ELSIF/WHILE/EXIT WHEN/WHEN instrukcji CASE: AND/OR wg reguły miejsca.
-            if ["AND", "OR"].contains(w), let c = plCond, conditionBreak(t, w, c) { return }
+            // AND/OR wewnątrz wyrażenia CASE w warunku — reguła CASE WHEN (ramka CASE), nie reguła IF/WHILE.
+            if ["AND", "OR"].contains(w), frames.last?.kind != .caseExpr, let c = plCond, conditionBreak(t, w, c) { return }
         }
         // AND/OR w warunku w nawiasie (CHECK, WHEN wyzwalacza, ON w MERGE, nawias zagnieżdżony) i w WHEN wyrażenia CASE.
         if ["AND", "OR"].contains(w), let f = frames.last, f.kind == .paren || f.kind == .caseExpr, let c = f.cond {
@@ -892,6 +958,13 @@ struct Formatter {
             var frame = Frame(kind: .sql, level: level, column: pendingBreak ?? column + (cur.isEmpty || prev?.kind == .leftParen ? 0 : 1), clause: w)
             frame.statement = w
             frame.multiInsert = w == "INSERT" && ["ALL", "FIRST"].contains(nextSignificant(i)?.upper ?? "")
+            // Rzeka: kolumna z najdłuższego słowa klauzuli instrukcji (RETURNING, CONNECT, INTERSECT…); słowo
+            // rozpoczynające instrukcję wyrównane do niej w prawo (`  WITH`, ` MERGE`) — gdy zaczyna linię.
+            if options.clauseLayout == .rightAligned, pendingBreak != nil || cur.isEmpty {
+                frame.river = riverWidth(from: i, statement: w)
+                let shift = max(0, frame.river - t.text.count)
+                if let p = pendingBreak { pendingBreak = p + shift } else { curIndentColumns += shift }
+            }
             frames.append(frame)
             put(cased(t), space: needsSpace(prev, t))
             if w == "SELECT", let n = peek(), ["DISTINCT", "UNIQUE", "ALL"].contains(n.upper) { i += 1; put(cased(n), space: true) }
@@ -916,11 +989,13 @@ struct Formatter {
         }
         // CREATE TABLE/INDEX/MV: klauzule fizyczne (TABLESPACE, STORAGE, PARTITION BY…) w nowych liniach, gdy reszta
         // instrukcji nie mieści się w linii.
-        if ddlOptions, t.kind == .keyword, Self.physicalOptions.contains(w), w != "PARTITION" || peek()?.upper == "BY",
+        if ddlOptions, t.isWord, Self.physicalOptions.contains(w), w != "PARTITION" || peek()?.upper == "BY",
            !frames.contains(where: { $0.kind == .sql || $0.kind == .paren }), column > indentColumns(level),
            column + 1 + remainingLength(from: i) > options.rightMargin {
             lineBreak(indentColumns(level))
         }
+        // AND z BETWEEN … AND, którego nie obsłużyła reguła warunku (np. w argumencie funkcji) — nie przecieka dalej.
+        if w == "AND" { betweenPending = false }
         put(cased(t), space: needsSpace(prev, t))
         if t.text == ":=" { operandColumn = column + 1 }
         if w == "WHEN", ["EXIT", "CONTINUE"].contains(prevUpper) || ["EXIT", "CONTINUE"].contains(prevPrev()?.upper ?? "") {
@@ -1086,7 +1161,7 @@ struct Formatter {
             pendingBreak = col
             return
         }
-        let target = f.column + 7
+        let target = f.column + f.river + 1
         frames[frames.count - 1].itemColumn = max(target, column + 1)
         let next = peek()
         if next?.kind == .semicolon || next?.kind == .rightParen || next == nil { return }
@@ -1106,13 +1181,13 @@ struct Formatter {
 
     /// Kolumna elementów listy klauzuli (kolejne elementy po przecinku, warunki).
     func listColumn(_ f: Frame) -> Int {
-        options.clauseLayout == .ownLine ? f.itemColumn : max(f.column + 7, f.itemColumn)
+        options.clauseLayout == .ownLine ? f.itemColumn : max(f.column + f.river + 1, f.itemColumn)
     }
 
     /// Kolumna słowa klauzuli: do lewej w kolumnie instrukcji, do prawej — kończy się w kolumnie końca SELECT.
     func clauseColumn(_ f: Frame, _ keyword: String) -> Int {
         // Rzeka: pierwsze słowo klauzuli (ORDER w ORDER BY, LEFT w LEFT JOIN) kończy się w kolumnie końca SELECT.
-        options.clauseLayout == .rightAligned ? f.column + max(0, 6 - (keyword.split(separator: " ").first?.count ?? keyword.count)) : f.column
+        options.clauseLayout == .rightAligned ? f.column + max(0, f.river - (keyword.split(separator: " ").first?.count ?? keyword.count)) : f.column
     }
 
     static let clauseStarts: [[String]] = [
@@ -1123,6 +1198,40 @@ struct Formatter {
         ["WHEN", "MATCHED"], ["WHEN", "NOT", "MATCHED"], ["FETCH"], ["OFFSET"], ["FOR", "UPDATE"], ["WINDOW"], ["LOG", "ERRORS"],
         ["CROSS", "APPLY"], ["OUTER", "APPLY"], ["PIVOT"], ["UNPIVOT"], ["MATCH_RECOGNIZE"],
     ]
+
+    /// Szerokość rzeki instrukcji zaczynającej się na tokenie `start`: najdłuższe pierwsze słowo jej klauzul (na tej
+    /// samej głębokości nawiasów, do końca instrukcji), co najmniej 6.
+    func riverWidth(from start: Int, statement: String) -> Int {
+        var width = 6, depth = 0, j = start + 1
+        let end = statementEnd(containing: toks[start].start)
+        let simple: Set<String> = ["FROM", "WHERE", "HAVING", "INTO", "VALUES", "RETURNING", "WINDOW", "OFFSET", "FETCH", "UNION",
+                                   "INTERSECT", "MINUS", "EXCEPT", "PIVOT", "UNPIVOT", "MATCH_RECOGNIZE", "SELECT", "JOIN", "INNER",
+                                   "LEFT", "RIGHT", "FULL", "NATURAL"]
+        while j < toks.count, toks[j].start < end {
+            let k = toks[j]
+            if k.kind == .leftParen { depth += 1 }
+            if k.kind == .rightParen { if depth == 0 { break }; depth -= 1 }
+            if k.kind == .semicolon, depth == 0 { break }
+            if depth == 0, k.isWord {
+                let next = j + 1 < toks.count ? toks[j + 1].upper : ""
+                var clause = simple.contains(k.upper)
+                switch k.upper {
+                case "GROUP", "ORDER", "CONNECT": clause = ["BY", "SIBLINGS"].contains(next)
+                case "START": clause = next == "WITH"
+                case "SET": clause = ["UPDATE", "MERGE"].contains(statement)
+                case "USING", "ON", "WHEN": clause = statement == "MERGE"
+                case "LOG": clause = next == "ERRORS"
+                case "FOR": clause = next == "UPDATE"
+                case "CROSS", "OUTER": clause = ["JOIN", "APPLY"].contains(next)
+                case "WITH": clause = ["READ", "CHECK"].contains(next)
+                default: break
+                }
+                if clause { width = max(width, k.text.count) }
+            }
+            j += 1
+        }
+        return width
+    }
 
     /// Pierwsze słowa klauzul i słowa kończące element listy albo warunek.
     static let clauseWords: Set<String> = Set(clauseStarts.map { $0[0] }).union(["THEN", "LOOP", "END", "AND", "OR", "WHEN", "ELSE", "SELECT", "CONNECT", "START"])

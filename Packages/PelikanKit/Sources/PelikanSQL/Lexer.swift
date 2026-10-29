@@ -191,9 +191,11 @@ public struct Lexer: Sendable {
                 emit(Token(kind: kind, start: s, length: i - s))
             default:
                 // Operatory trzyznakowe (odległości wektorów 23ai), dwuznakowe, potem jednoznakowe.
-                let three: [UInt16] = i + 2 < end ? [c, text[i + 1], text[i + 2]] : []
-                let two: [UInt16] = i + 1 < end ? [c, text[i + 1]] : []
-                if !three.isEmpty, Self.threeCharOperators.contains(three) {
+                // `<=>`, `<->`, `<#>` (odległości wektorów 23ai) — bez tworzenia tablicy (gorąca ścieżka leksera).
+                let mid: UInt16 = c == 0x3C && i + 2 < end && text[i + 2] == 0x3E ? text[i + 1] : 0
+                let isThree = mid == 0x3D || mid == 0x2D || mid == 0x23
+                let two: [UInt16] = !isThree && i + 1 < end ? [c, text[i + 1]] : []
+                if isThree {
                     i += 3
                     emit(Token(kind: .operator, start: s, length: 3))
                 } else if !two.isEmpty, Self.twoCharOperators.contains(two) {
@@ -217,8 +219,6 @@ public struct Lexer: Sendable {
         Array("=>".utf16), Array("||".utf16), Array("**".utf16), Array("<>".utf16), Array("!=".utf16),
         Array("^=".utf16), Array("~=".utf16), Array("<=".utf16), Array(">=".utf16), Array("<<".utf16), Array(">>".utf16),
     ]
-    /// `<=>` (COSINE), `<->` (EUCLIDEAN), `<#>` (DOT) — operatory odległości wektorów (Oracle 23ai).
-    static let threeCharOperators: Set<[UInt16]> = [Array("<=>".utf16), Array("<->".utf16), Array("<#>".utf16)]
     static let oneCharOperators: Set<UInt16> = Set("+-*=<>@%!^~|?$#[]{}\\".utf16)
 
     @inline(__always) func peek(_ i: Int, _ end: Int) -> UInt16 { i < end ? text[i] : 0 }

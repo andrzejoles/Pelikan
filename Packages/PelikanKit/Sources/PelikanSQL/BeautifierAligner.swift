@@ -172,7 +172,7 @@ struct BeautifierAligner {
             var depth = 0
             for (j, x) in t[0..<e].enumerated() {
                 if x.kind == .leftParen { depth += 1 } else if x.kind == .rightParen { depth -= 1 }
-                if depth == 0, x.text == ":=" { return j > 0 && t[j - 1].kind != .keyword ? [j] : nil }
+                if depth == 0, x.text == ":=" { return j > 0 && (t[j - 1].kind != .keyword || j >= 2 && t[j - 2].kind == .dot) ? [j] : nil }
                 if depth == 0, x.isWord, j > 0, t[j - 1].isWord { return nil }
             }
             return nil
