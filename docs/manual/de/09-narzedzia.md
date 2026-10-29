@@ -55,7 +55,7 @@ Externe Vergleichsanzeige** (Argumente `%1`, `%2` — Dateien, `%3`, `%4` — Ti
 
 | Werkzeug | Wofür |
 |---|---|
-| Werkzeuge › Export der Benutzerobjekte … | DDL ausgewählter Objekte in eine Datei oder eine Datei pro Objekt (Spezifikation mit Body oder getrennt), mit Berechtigungen und Storage, in ausführbarer Reihenfolge |
+| Werkzeuge › Export der Benutzerobjekte … | DDL ausgewählter Objekte in eine Datei (Skript mit „/“) oder eine Datei pro Objekt — Spezifikation und Body von Paketen und Typen in getrennten Dateien `.pks`/`.pkb` und `.tps`/`.tpb` (Erweiterungen aus den Einstellungen) ohne „/“, außer Sie aktivieren **Einheiten mit / abschließen**; **Spezifikation und Body in einer Datei** ergibt `.pck`/`.typ`; mit Berechtigungen und Storage, in ausführbarer Reihenfolge |
 | Werkzeuge › Tabellenexport … | Tabellendaten als INSERT-Skript (mit DROP/CREATE, TRUNCATE/DELETE, Deaktivieren von Triggern und Fremdschlüsseln, COMMIT alle n, WHERE-Bedingung), im eigenen (komprimierten) Format von Pelikan oder über Data Pump |
 | Werkzeuge › Import von Tabellen … | Import eines INSERT-Skripts oder des eigenen Formats mit Tabellenauswahl; Data-Pump-Import mit REMAP_SCHEMA |
 | Werkzeuge › Textimport … | CSV- und Textdateien: Erkennung von Trennzeichen, Kopfzeile und Kodierung, Zuordnung von Feldern zu Spalten, Umwandlungsfunktionen, Filter, Behandlung von Duplikaten, CREATE TABLE aus der Datei |

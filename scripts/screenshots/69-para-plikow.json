@@ -1,0 +1,3 @@
+[
+  {"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/pensje_api.pkb"}, "delay": 3}
+]

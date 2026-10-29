@@ -2097,3 +2097,62 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
+
+### D194 · 2026-10-29 — Specyfikacja i ciało w osobnych plikach (okno programu z dwoma plikami, eksport bez „/”)
+
+Wymaganie właściciela: „W repozytoriach specyfikację i body zawsze zapisujemy w osobnych plikach i bez znaku / na
+końcu. W skryptach owszem używamy, ale nie w plikach DDL.” Okno programu (D192) rozpoznawało jednostki bez „/”, ale
+miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
+
+- **Powiązanie okno → pliki:** `Document.unitFiles` — lista plików jednostek (`UnitFile`: część spec/body, ścieżka,
+  własny format pliku — kodowanie, BOM, końce linii — zakończenie treści i treść z ostatniego odczytu/zapisu). Pusta —
+  okno z jednym plikiem jak dotąd. Dokument zostaje jeden (karty, F8, debuger, historia, agent bez zmian); `fileURL`
+  to wtedy plik specyfikacji — klucz stanu okna, historii lokalnej (cały tekst okna, jak dotąd) i workseta; tytuł
+  „nazwa.pks + .pkb”. Wybrano listę plików przy dokumencie zamiast dwóch dokumentów albo osobnych edytorów: reszta
+  aplikacji widzi jeden tekst, a podział na pliki to jedna czysta funkcja.
+- **Podział tekstu:** treść pliku = odcinek karty jednostki (`ProgramUnitTabs`, D192). Tekst okna z plików to
+  specyfikacja bez końcowych białych znaków + pusta linia + ciało (`SpecBodyFiles.join`); zapis zdejmuje tę pustą
+  linię z początku karty ciała i przywraca zakończenie pliku. Niezmienione okno daje pliki bajt w bajt — otwarcie
+  pary sprawdza ten obieg i przy niezgodności (np. komentarz za `END` specyfikacji) otwiera plik sam. Polecenia
+  `GRANT`/`REVOKE`/`SHOW ERRORS` między jednostkami należą teraz do karty jednostki przed nimi (zmiana D192: dotąd
+  trafiały na kartę następnej) — plik specyfikacji z uprawnieniami zachowuje je przy zapisie.
+- **Zapisz:** każda jednostka do swojego pliku, w jego formacie, tylko gdy jej tekst się zmienił (drugi plik
+  nietknięty); bez dopisywania „/” — tekst karty jak w oknie (plik z „/” zapisuje się z nim, bez cichego usuwania, jak
+  w D192). Znak spoza kodowania któregokolwiek pliku blokuje zapis obu. Okno pary, które przestało być dokładnie
+  specyfikacją i ciałem jednego pakietu/typu (usunięte ciało, dodana procedura), nie zapisuje się — komunikat
+  wskazuje **Zapisz jako jeden plik…**. **Kodowanie pliku…** zmienia oba pliki.
+- **Zapisz jako… i pierwsze Zapisz nowego okna** ze specyfikacją i ciałem: okno zapisu z nazwą `nazwa.pks`
+  (rozszerzenie specyfikacji z Preferencji), ciało obok jako `nazwa.pkb`; istniejący plik ciała spoza okna — pytanie
+  „Zastąpić?”. Okno z innym plikiem (np. `.pck`) ⌘S zapisuje jak dotąd do tego pliku. Nowa komenda
+  `file.saveAsSingleFile` „Zapisz jako jeden plik…” (agent: Brak, wstążka Start › Plik › Więcej) zapisuje całe okno
+  w jednym pliku i zdejmuje powiązanie z parą. Okno z jedną jednostką albo innymi jednostkami — bez zmian.
+- **Otwieranie:** `x.pks`/`x.pkb` (`x.tps`/`x.tpb`) z plikiem pary obok otwiera obie jednostki w jednym oknie na karcie
+  otwartego pliku — Plik › Otwórz, ostatnie pliki, Przeglądarka plików, Finder, przeciągnięcie, projekt; wielkość
+  liter rozszerzenia jak w otwieranym pliku. Ponowne otwarcie któregoś z plików aktywuje okno i jego kartę. Para
+  tylko, gdy w plikach jest dokładnie specyfikacja i ciało tego samego obiektu, a drugi plik nie jest już otwarty
+  w innym oknie (jeden plik w dwóch oknach rozjechałby się przy zapisie). Preferencja **Otwieraj parę
+  specyfikacja/ciało w jednym oknie** (domyślnie włączona).
+- **Worksety i odzyskiwanie:** `WorksetDocument.unitFiles` (pole opcjonalne — starsze worksety bez zmian): ścieżki,
+  części, formaty i zakończenia. Okno bez zmian wraca jako para z plików (niezależnie od preferencji), ze zmianami —
+  tekst z workseta, powiązanie i formaty z workseta, treść zapisana z dysku. Migawka odzyskiwania to ten sam workset.
+- **Pozostałe miejsca:** Przeglądarka plików (otwarte i zmienione — oba pliki), zmiana nazwy i usunięcie pliku albo
+  katalogu (powiązanie przeniesione albo zdjęte), stan Git i **Porównaj z HEAD** (plik karty z kursorem, treść karty),
+  użycia i refaktoryzacja (oba pliki jako otwarte), skok do linii pliku z wyników i projektu (linia pliku ciała
+  przeliczona na linię okna), edycja w programie zewnętrznym (plik tymczasowy z całym tekstem, jak okno bez pliku),
+  blokada kompilacji pliku tylko do odczytu (którykolwiek z pary).
+- **Preferencje › Ogólne › Specyfikacja i ciało w osobnych plikach:** otwieranie pary i rozszerzenia specyfikacji
+  i ciała pakietu (`pks`/`pkb`) i typu (`tps`/`tpb`) — bez kropki, małymi literami; pliki z nimi otwierają się jako
+  okno programu.
+- **Eksport obiektów użytkownika (PD-TOOL-007):** „plik na obiekt” zapisuje specyfikację i ciało osobno z
+  rozszerzeniami z Preferencji (dotąd `.spc`/`.bdy`); **Specyfikacja i ciało w jednym pliku** (`.pck`/`.typ`) domyślnie
+  wyłączona. Jednostki PL/SQL w plikach na obiekt bez „/” — nowa opcja **Kończ jednostki znakiem /** (domyślnie
+  wyłączona). DBMS_METADATA dalej z SQLTERMINATOR (tabele i inne DDL zachowują „;”); „/” zdejmowany za jednostką,
+  gdy za nią nic nie ma albo jest `GRANT`/`REVOKE`; `ALTER TRIGGER … ENABLE` (wyzwalacz i tak powstaje włączony) jest
+  pomijane, a przy `… DISABLE` „/” zostaje (bez niego ALTER dokleiłby się do wyzwalacza). Bez zmian, z „/”: tryb
+  „jeden plik” (skrypt SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w oknie
+  poleceń, Duplikuj obiekt, okno testu, ORDS. Test na bazie: EMP_API → `emp_api.pks`/`emp_api.pkb` bez linii „/”,
+  otwarte jako para i skompilowane F8 — oba VALID.
+- **Ograniczenia:** komentarz za `END` specyfikacji w pliku `.pks` (bez pustej linii przed ciałem) przeniósłby się do
+  ciała — taki plik otwiera się sam, bez pary. Nagłówek „-- Wygenerowane przez Pelikana — data” w plikach eksportu
+  zostaje (jak dotąd). Para w oknie musi mieć tę samą nazwę bazową plików przy Zapisz jako; zmiana nazwy jednego pliku
+  w Przeglądarce plików zachowuje powiązanie z inną nazwą.

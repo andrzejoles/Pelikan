@@ -21,6 +21,16 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
   tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
   (preferencja **Kończ jednostki okna programu znakiem „/”** w Preferencje › Oracle przywraca dawny układ).
+- **Specyfikacja i ciało w osobnych plikach:** okno programu z pakietem albo typem zapisuje specyfikację do pliku
+  `.pks`, a ciało do `.pkb` (typy: `.tps` / `.tpb`), bez „/” — każdy plik w swoim kodowaniu i z własnymi końcami linii,
+  a zapisywany jest tylko plik, którego jednostka się zmieniła. **Zapisz jako…** pyta o nazwę i tworzy oba pliki;
+  **Plik › Zapisz jako jeden plik…** zapisuje okno jak dawniej, w jednym pliku `.pck`. Otwarcie `nazwa.pks` albo
+  `nazwa.pkb` (także z Findera, Przeglądarki plików, listy ostatnich plików i workseta) otwiera obie jednostki w jednym
+  oknie, na karcie otwartego pliku. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne ›
+  Specyfikacja i ciało w osobnych plikach**.
+- **Eksport obiektów użytkownika** w trybie „plik na obiekt” zapisuje specyfikację i ciało pakietu albo typu
+  w osobnych plikach `.pks` / `.pkb` (`.tps` / `.tpb`) bez „/” — gotowe do repozytorium; nowa opcja **Kończ jednostki
+  znakiem /** przywraca „/”. Eksport do jednego pliku (skrypt SQL*Plus) zostaje z „/”.
 
 ## 1.3.1 — poprawki zgłoszeń
 

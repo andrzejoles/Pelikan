@@ -32,7 +32,19 @@ well as Java sources and MLE modules (JavaScript). You open it with **File › N
   description in the Oracle documentation.
 - The status bar shows whether the text has been changed and not saved, and whether it is not compiled.
 - **File › Save** (⌘S) saves the window text unchanged (no `/` is added), with a name and extension according to
-  the unit (e.g. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  the unit (e.g. `.prc`, `.fnc`, `.trg`).
+- **Specification and body in separate files.** A window with the specification and body of a package is saved to a
+  pair of files `name.pks` (specification) and `name.pkb` (body), a type to `name.tps` and `name.tpb`, without “/”.
+  **Save as…** (and the first **Save** of a new window) asks for a name and creates both files in the chosen folder;
+  when the body file already exists, it asks whether to replace it. Each file keeps its own encoding and line
+  endings, and **Save** writes only the file whose unit has changed. A file contains the text of its tab (with comments
+  above `CREATE` and `GRANT` statements after the unit). A pair window from which you remove the body or to which you
+  add another unit is not saved to these files — **File › Save as single file…** saves the whole window to one file
+  (e.g. `.pck`), as before.
+- Opening `name.pks` or `name.pkb` when the pair file lies next to it opens both units in one window, on the tab of
+  the opened file; the window title is `name.pks + .pkb`. This also works from the Finder, the file browser, recent
+  files, projects and worksets. Files that are not the specification and body of one package or type open separately.
+  Set the extensions and pair opening in **Preferences › General › Specification and body in separate files**.
 
 ### Working safely with code in the database
 

@@ -31,7 +31,19 @@ także źródeł Java i modułów MLE (JavaScript). Otworzysz je przez **Plik �
   w dokumentacji Oracle.
 - Pasek stanu pokazuje, czy tekst jest zmieniony i niezapisany oraz czy jest nieskompilowany.
 - **Plik › Zapisz** (⌘S) zapisuje tekst okna bez zmian (bez dopisywania `/`), z nazwą i rozszerzeniem według
-  jednostki (np. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  jednostki (np. `.prc`, `.fnc`, `.trg`).
+- **Specyfikacja i ciało w osobnych plikach.** Okno ze specyfikacją i ciałem pakietu zapisuje się do pary plików
+  `nazwa.pks` (specyfikacja) i `nazwa.pkb` (ciało), typu — `nazwa.tps` i `nazwa.tpb`, bez „/”. **Zapisz jako…** (i
+  pierwsze **Zapisz** nowego okna) pyta o nazwę i tworzy oba pliki w wybranym katalogu; gdy plik ciała już istnieje,
+  pyta, czy go zastąpić. Każdy plik zachowuje swoje kodowanie i końce linii, a **Zapisz** zapisuje tylko plik, którego
+  jednostka się zmieniła. Plik zawiera tekst swojej karty (z komentarzami nad `CREATE` i poleceniami `GRANT` za
+  jednostką). Okno pary, z którego usuniesz ciało albo dodasz inną jednostkę, nie zapisze się do tych plików —
+  **Plik › Zapisz jako jeden plik…** zapisuje całe okno w jednym pliku (np. `.pck`), jak dawniej.
+- Otwarcie `nazwa.pks` albo `nazwa.pkb`, gdy obok leży plik pary, otwiera obie jednostki w jednym oknie na karcie
+  otwartego pliku; tytuł okna to `nazwa.pks + .pkb`. Działa to także z Findera, Przeglądarki plików, listy ostatnich
+  plików, projektu i workseta. Pliki, które nie są specyfikacją i ciałem jednego pakietu albo typu, otwierają się
+  osobno. Rozszerzenia i otwieranie pary ustawisz w **Preferencje › Ogólne › Specyfikacja i ciało w osobnych
+  plikach**.
 
 ### Bezpieczna praca z kodem w bazie
 

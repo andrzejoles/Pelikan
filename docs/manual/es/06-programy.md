@@ -33,7 +33,20 @@ o con **Editar** sobre un objeto en el Object Browser (el código se carga direc
   descripción del error en la documentación de Oracle.
 - La barra de estado muestra si el texto se ha modificado y no se ha guardado, y si está sin compilar.
 - **Archivo › Guardar** (⌘S) guarda el texto de la ventana sin cambios (sin añadir `/`), con el nombre y la extensión
-  según la unidad (p. ej., `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  según la unidad (p. ej., `.prc`, `.fnc`, `.trg`).
+- **Especificación y cuerpo en archivos separados.** Una ventana con la especificación y el cuerpo de un paquete se
+  guarda en un par de archivos `nombre.pks` (especificación) y `nombre.pkb` (cuerpo); un tipo, en `nombre.tps` y
+  `nombre.tpb`, sin «/». **Guardar como…** (y el primer **Guardar** de una ventana nueva) pide el nombre y crea ambos
+  archivos en la carpeta elegida; si el archivo del cuerpo ya existe, pregunta si reemplazarlo. Cada archivo conserva
+  su codificación y sus finales de línea, y **Guardar** escribe solo el archivo cuya unidad ha cambiado. Un archivo
+  contiene el texto de su pestaña (con los comentarios sobre `CREATE` y las sentencias `GRANT` tras la unidad). Una
+  ventana de par de la que quite el cuerpo o a la que añada otra unidad no se guarda en esos archivos: **Archivo ›
+  Guardar como un solo archivo…** guarda toda la ventana en un archivo (p. ej., `.pck`), como antes.
+- Abrir `nombre.pks` o `nombre.pkb` cuando el archivo del par está al lado abre ambas unidades en una ventana, en la
+  pestaña del archivo abierto; el título de la ventana es `nombre.pks + .pkb`. Funciona también desde el Finder, el
+  explorador de archivos, los archivos recientes, los proyectos y los worksets. Los archivos que no son la
+  especificación y el cuerpo de un mismo paquete o tipo se abren por separado. Las extensiones y la apertura del par se
+  configuran en **Preferencias › General › Especificación y cuerpo en archivos separados**.
 
 ### Trabajar con seguridad con el código de la base de datos
 

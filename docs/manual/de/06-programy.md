@@ -32,7 +32,21 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   die Fehlerbeschreibung in der Oracle-Dokumentation.
 - Die Statusleiste zeigt, ob der Text geändert und nicht gespeichert und ob er nicht kompiliert ist.
 - **Datei › Speichern** (⌘S) speichert den Fenstertext unverändert (ohne angehängtes `/`), mit Namen und Endung
-  entsprechend der Einheit (z. B. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  entsprechend der Einheit (z. B. `.prc`, `.fnc`, `.trg`).
+- **Spezifikation und Body in getrennten Dateien.** Ein Fenster mit Spezifikation und Body eines Pakets wird in ein
+  Dateipaar `name.pks` (Spezifikation) und `name.pkb` (Body) gespeichert, ein Typ in `name.tps` und `name.tpb`, ohne
+  „/“. **Speichern unter …** (und das erste **Speichern** eines neuen Fensters) fragt nach dem Namen und legt beide
+  Dateien im gewählten Ordner an; existiert die Body-Datei bereits, fragt es, ob sie ersetzt werden soll. Jede Datei
+  behält ihre Kodierung und Zeilenenden, und **Speichern** schreibt nur die Datei, deren Einheit sich geändert hat.
+  Eine Datei enthält den Text ihres Reiters (mit Kommentaren über `CREATE` und `GRANT`-Anweisungen nach der Einheit).
+  Ein Paarfenster, aus dem Sie den Body entfernen oder dem Sie eine weitere Einheit hinzufügen, wird nicht in diese
+  Dateien gespeichert — **Datei › Als eine Datei speichern …** speichert das ganze Fenster wie bisher in einer Datei
+  (z. B. `.pck`).
+- Das Öffnen von `name.pks` oder `name.pkb`, wenn die Paardatei daneben liegt, öffnet beide Einheiten in einem Fenster
+  auf dem Reiter der geöffneten Datei; der Fenstertitel lautet `name.pks + .pkb`. Das funktioniert auch aus dem Finder,
+  dem Dateibrowser, den zuletzt verwendeten Dateien, Projekten und Worksets. Dateien, die nicht Spezifikation und Body
+  eines Pakets oder Typs sind, öffnen sich einzeln. Erweiterungen und das Öffnen des Paars stellen Sie unter
+  **Einstellungen › Allgemein › Spezifikation und Body in getrennten Dateien** ein.
 
 ### Sicheres Arbeiten mit Code in der Datenbank
 
