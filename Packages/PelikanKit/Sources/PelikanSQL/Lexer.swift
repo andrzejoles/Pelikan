@@ -14,6 +14,9 @@ public enum TokenKind: UInt8, Sendable, Hashable {
     case `operator`          // := => || ** .. <> != ^= ~= <= >= i jednoznakowe
     case semicolon, slash, comma, leftParen, rightParen, dot
     case unknown
+    /// Kompilacja warunkowa: `$IF`, `$THEN`, `$ELSIF`, `$ELSE`, `$END`, `$ERROR` i dyrektywy `$$nazwa` — jeden token
+    /// (rozdzielone `$ IF`, `$ $nazwa` nie kompilują się — formater nie może ich rozdzielać).
+    case directive
 }
 
 public struct Token: Sendable, Hashable {
@@ -170,6 +173,9 @@ public struct Lexer: Sendable {
             case 0x24 where jasperParameterEnd(from: i, end: end) != nil:   // $P{…} $P!{…} $X{…}
                 i = jasperParameterEnd(from: i, end: end)!
                 emit(Token(kind: .jasperParameter, start: s, length: i - s))
+            case 0x24 where directiveEnd(from: i, end: end) != nil:   // $IF … $END, $$PLSQL_UNIT
+                i = directiveEnd(from: i, end: end)!
+                emit(Token(kind: .directive, start: s, length: i - s))
             case 0x3B: i += 1; emit(Token(kind: .semicolon, start: s, length: 1))
             case 0x2C: i += 1; emit(Token(kind: .comma, start: s, length: 1))
             case 0x28: i += 1; emit(Token(kind: .leftParen, start: s, length: 1))
@@ -184,9 +190,13 @@ public struct Lexer: Sendable {
                 let kind: TokenKind = Keywords.isKeyword(text, s, i - s) ? .keyword : .identifier
                 emit(Token(kind: kind, start: s, length: i - s))
             default:
-                // Operatory dwuznakowe, potem jednoznakowe.
+                // Operatory trzyznakowe (odległości wektorów 23ai), dwuznakowe, potem jednoznakowe.
+                let three: [UInt16] = i + 2 < end ? [c, text[i + 1], text[i + 2]] : []
                 let two: [UInt16] = i + 1 < end ? [c, text[i + 1]] : []
-                if !two.isEmpty, Self.twoCharOperators.contains(two) {
+                if !three.isEmpty, Self.threeCharOperators.contains(three) {
+                    i += 3
+                    emit(Token(kind: .operator, start: s, length: 3))
+                } else if !two.isEmpty, Self.twoCharOperators.contains(two) {
                     i += 2
                     emit(Token(kind: .operator, start: s, length: 2))
                 } else if Self.oneCharOperators.contains(c) {
@@ -207,6 +217,8 @@ public struct Lexer: Sendable {
         Array("=>".utf16), Array("||".utf16), Array("**".utf16), Array("<>".utf16), Array("!=".utf16),
         Array("^=".utf16), Array("~=".utf16), Array("<=".utf16), Array(">=".utf16), Array("<<".utf16), Array(">>".utf16),
     ]
+    /// `<=>` (COSINE), `<->` (EUCLIDEAN), `<#>` (DOT) — operatory odległości wektorów (Oracle 23ai).
+    static let threeCharOperators: Set<[UInt16]> = [Array("<=>".utf16), Array("<->".utf16), Array("<#>".utf16)]
     static let oneCharOperators: Set<UInt16> = Set("+-*=<>@%!^~|?$#[]{}\\".utf16)
 
     @inline(__always) func peek(_ i: Int, _ end: Int) -> UInt16 { i < end ? text[i] : 0 }
@@ -264,6 +276,23 @@ public struct Lexer: Sendable {
         guard j < end, text[j] == 0x7D, j > i + 3 else { return nil }
         return j + 1
     }
+
+    /// Dyrektywa kompilacji warunkowej zaczynająca się na `i`: `$IF`, `$THEN`, `$ELSIF`, `$ELSE`, `$END`, `$ERROR`
+    /// (wielkość liter dowolna) albo `$$nazwa` — pozycja za nią albo nil.
+    func directiveEnd(from i: Int, end: Int) -> Int? {
+        guard peek(i, end) == 0x24 else { return nil }
+        var j = i + 1
+        let inquiry = peek(j, end) == 0x24
+        if inquiry { j += 1 }
+        guard isIdentStart(peek(j, end)) else { return nil }
+        let w = j
+        while j < end, isIdentPart(text[j]) { j += 1 }
+        if inquiry { return j }
+        let word = String(decoding: text[w..<j], as: UTF16.self).uppercased()
+        return Self.directives.contains(word) ? j : nil
+    }
+
+    static let directives: Set<String> = ["IF", "THEN", "ELSIF", "ELSE", "END", "ERROR"]
 
     static func closingDelimiter(_ open: UInt16) -> UInt16 {
         switch open {

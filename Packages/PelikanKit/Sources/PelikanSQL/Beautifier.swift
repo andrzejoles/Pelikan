@@ -165,30 +165,50 @@ public enum Beautifier {
     /// polecenia skryptu (`;`, `/` sam w linii) i poleceń SQL*Plus — te porównywane jako cały tekst linii.
     public static func verify(original: String, formatted: String) throws {
         let a = signature(original), b = signature(formatted)
-        guard a != b else { return }
-        let i = (0..<min(a.count, b.count)).first { a[$0] != b[$0] } ?? min(a.count, b.count)
         func shown(_ x: String) -> String { String(x.drop { $0 != ":" }.dropFirst().prefix(30)) }
-        var what = i < a.count ? shown(a[i]) : "EOF"
-        if what.isEmpty, i < b.count { what = shown(b[i]) }
-        throw BeautifierError.unsafe(what)
+        if a.items != b.items {
+            let i = (0..<min(a.items.count, b.items.count)).first { a.items[$0] != b.items[$0] } ?? min(a.items.count, b.items.count)
+            var what = i < a.items.count ? shown(a.items[i]) : "EOF"
+            if what.isEmpty, i < b.items.count { what = shown(b.items[i]) }
+            throw BeautifierError.unsafe(what)
+        }
+        // Tokeny sklejone w źródle, których rozdzielenie mogłoby zmienić znaczenie (np. nieznana lekserowi konstrukcja
+        // złożona z kilku znaków), muszą zostać sklejone.
+        for i in a.items.indices where a.mustGlue[i] && !b.glued[i] {
+            throw BeautifierError.unsafe(shown(a.items[i - 1]) + shown(a.items[i]))
+        }
     }
 
     /// Sygnatura tekstu dla `verify`: polecenia wg ScriptSplitter w trybie Command Window (granice poleceń zależą
     /// od układu linii — `/` sam w linii kończy blok, polecenie SQL*Plus kończy koniec linii), w każdym tokeny bez
     /// białych znaków; polecenie SQL*Plus jako cały tekst (wielkość liter i podział linii mają w nim znaczenie).
-    static func signature(_ s: String) -> [String] {
+    /// Dla każdego elementu: czy jest sklejony z poprzednim (bez białego znaku) i czy musi taki zostać.
+    struct Signature {
+        var items: [String] = []
+        var glued: [Bool] = []
+        var mustGlue: [Bool] = []
+        mutating func append(_ s: String, glued g: Bool = false, must: Bool = false) {
+            items.append(s); glued.append(g); mustGlue.append(must)
+        }
+    }
+
+    static func signature(_ s: String) -> Signature {
         let text = Array(s.utf16)
-        var out: [String] = []
+        var out = Signature()
         func lex(_ from: Int, _ to: Int) {
             guard from < to else { return }
             let lexer = Lexer(utf16: Array(text[from..<to]))
+            var prev: (kind: TokenKind, text: String, end: Int)?
             for t in lexer.tokenize() where t.kind != .whitespace && t.kind != .newline {
                 let x = lexer.string(t)
+                let glued = prev.map { $0.end == t.start } ?? false
+                let must = glued && prev.map { !separable($0.kind, $0.text, t.kind, x) } == true
                 switch t.kind {
-                case .identifier, .keyword: out.append("w:" + x.uppercased())
-                case .lineComment: out.append("c:" + x.trimmingCharacters(in: .whitespaces))
-                default: out.append("\(t.kind.rawValue):" + x)
+                case .identifier, .keyword: out.append("w:" + x.uppercased(), glued: glued, must: must)
+                case .lineComment: out.append("c:" + x.trimmingCharacters(in: .whitespaces), glued: glued, must: must)
+                default: out.append("\(t.kind.rawValue):" + x, glued: glued, must: must)
                 }
+                prev = (t.kind, x, t.end)
             }
         }
         var pos = 0
@@ -205,6 +225,33 @@ public enum Beautifier {
         }
         lex(pos, text.count)
         return out
+    }
+
+    /// Operatory, które Oracle czyta jako całość i które można oddzielić spacją od sąsiadów.
+    static let standaloneOperators: Set<String> = [
+        ":=", "=>", "||", "**", "..", "<>", "!=", "^=", "~=", "<=", ">=", "<=>", "<->", "<#>", "=", "<", ">", "+", "-", "*",
+        "<<", ">>", "?",
+    ]
+
+    /// Czy tokeny sklejone w źródle (`a` tuż przed `b`) można rozdzielić białym znakiem bez zmiany znaczenia.
+    /// Nie wolno: kropki (`t.c`, `&x.`), znaki niebędące samodzielnymi operatorami (`$`, `#`, `@`, `%`, `:`, `!`…),
+    /// dwa operatory obok siebie (mogą tworzyć nieznany lekserowi operator, np. `<=>` przed 23ai) — poza minusem i plusem
+    /// jednoargumentowym, liczba z jednostką (`1M`), zmienne podstawiania sklejone z tekstem (`&x.y`, `a&x`).
+    public static func separable(_ ak: TokenKind, _ a: String, _ bk: TokenKind, _ b: String) -> Bool {
+        let free: Set<TokenKind> = [.comma, .semicolon, .leftParen, .rightParen, .lineComment, .blockComment, .hint]
+        if free.contains(ak) || free.contains(bk) { return true }
+        if ak == .dot || bk == .dot || ak == .unknown || bk == .unknown { return false }
+        func isOp(_ k: TokenKind) -> Bool { k == .operator || k == .slash }
+        func standalone(_ k: TokenKind, _ s: String) -> Bool { k == .slash || standaloneOperators.contains(s) }
+        switch (isOp(ak), isOp(bk)) {
+        case (true, true): return standalone(ak, a) && standalone(bk, b) && (b == "-" || b == "+" || b == "?" || a == "?")
+        case (true, false): return standalone(ak, a)
+        case (false, true): return standalone(bk, b)
+        case (false, false):
+            let bound: Set<TokenKind> = [.substitution, .jasperParameter, .directive]
+            if bound.contains(ak) || bound.contains(bk) { return false }
+            return !(ak == .number && (bk == .identifier || bk == .keyword))
+        }
     }
 }
 
@@ -429,6 +476,8 @@ struct Formatter {
 
     func needsSpace(_ prev: Tok?, _ t: Tok) -> Bool {
         guard let p = prev else { return false }
+        // Sklejone w źródle i nierozdzielne (`$$x`, `1M`, `&x.y`, `a.b`…) — bez spacji (pilnuje tego też `verify`).
+        if p.end == t.start, !Beautifier.separable(p.kind, p.text, t.kind, t.text) { return false }
         if t.kind == .rightParen { return options.spaceInsideParentheses && p.kind != .leftParen }
         if [.comma, .semicolon, .dot].contains(t.kind) { return false }
         if p.kind == .leftParen { return options.spaceInsideParentheses }
@@ -512,6 +561,30 @@ struct Formatter {
         if i == rawFrom {
             rawFrom = nil
             copyRaw(from: t.start, to: statementEnd(containing: t.start), sameLine: true)
+            return
+        }
+
+        // Kompilacja warunkowa `$IF … $END` (i `$ERROR … $END`): gałęzie bywają niepełnymi fragmentami składni —
+        // region kopiowany bez zmian, w PL/SQL (poza instrukcją SQL i nawiasem) ze średnikiem tuż za `$END`.
+        if t.kind == .directive, ["$IF", "$ERROR"].contains(t.upper) {
+            var depth = 0
+            var j = i
+            while j < toks.count {
+                if toks[j].kind == .directive {
+                    if ["$IF", "$ERROR"].contains(toks[j].upper) { depth += 1 }
+                    if toks[j].upper == "$END" { depth -= 1; if depth == 0 { break } }
+                }
+                j += 1
+            }
+            var end = j < toks.count ? toks[j].end : source.length
+            if j + 1 < toks.count, toks[j + 1].newlines == 0, toks[j + 1].kind == .semicolon,
+               !frames.contains(where: { $0.kind == .sql || $0.kind == .paren }) {
+                end = toks[j + 1].end
+            }
+            let lineStart = source.lineRange(for: NSRange(location: t.start, length: 0)).location
+            let before = source.substring(with: NSRange(location: lineStart, length: t.start - lineStart))
+            let sameLine = !before.allSatisfy { $0 == " " || $0 == "\t" } && !(lines.isEmpty && cur.isEmpty)
+            copyRaw(from: t.start, to: end, sameLine: sameLine)
             return
         }
 

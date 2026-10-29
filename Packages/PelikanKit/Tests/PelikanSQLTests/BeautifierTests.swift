@@ -165,6 +165,28 @@ struct BeautifierTests {
         #expect(out.contains("'MiXeD  text'") && out.contains("\"Quoted Name\"") && out.contains("/* Ko  ment */") && out.contains("-- uwaga  na  spacje"))
     }
 
+    @Test("Bezpieczeństwo: kompilacja warunkowa, operatory wektorów, liczby z jednostką, zmienne podstawiania sklejone z tekstem")
+    func safetyGluedTokens() throws {
+        let cc = "create or replace procedure p is begin\n$if dbms_db_version.ver_le_12 $then null;\n  $else dbms_output.put_line($$plsql_unit || ':' || $$plsql_line);\n$end\nend;\n/\n"
+        let out = try Beautifier.format(cc)
+        #expect(out.contains("$if dbms_db_version.ver_le_12 $then null;\n  $else dbms_output.put_line($$plsql_unit || ':' || $$plsql_line);\n$end"))
+        #expect(out.hasSuffix("END;\n/\n"))
+        // $$nazwa poza regionem $IF — jeden token, bez spacji.
+        #expect(try Beautifier.format("begin x:=$$plsql_line; end;") == "BEGIN\n  x := $$plsql_line;\nEND;")
+        #expect(try Beautifier.format("select a from t where j<=>k and v1<->v2<1 and v3<#>v4<0") ==
+            "SELECT a\nFROM   t\nWHERE  j <=> k\nAND    v1 <-> v2 < 1\nAND    v3 <#> v4 < 0")
+        #expect(try Beautifier.format("create table t (a number) storage (initial 1m next 10K)").contains("INITIAL 1m NEXT 10K"))
+        #expect(try Beautifier.format("select &kol.x, a&b from t").hasPrefix("SELECT &kol.x,\n       a&b"))
+        // Rozdzielenie sklejonych tokenów, których lekser nie zna jako całości, jest wykrywane.
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "x := a$#b;", formatted: "x := a $ # b;") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "storage (initial 1m)", formatted: "storage (initial 1 m)") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "select &x.y from t", formatted: "select &x. y from t") }
+        #expect(throws: BeautifierError.self) { try Beautifier.verify(original: "a<=>b", formatted: "a<= >b") }
+        // Rozdzielenie bezpieczne: operator, przecinek, nawias, minus jednoargumentowy.
+        try Beautifier.verify(original: "x:=a*-1+f(b,c)", formatted: "x := a * -1 + f(b, c)")
+        try Beautifier.verify(original: "select a from t where a=?", formatted: "select a from t where a = ?")
+    }
+
     @Test("Zaznaczenie: wcięcie bazowe nie wchodzi do wieloliniowego literału ani komentarza")
     func selectionMultilineLiteral() throws {
         let text = "begin\n  x := 'line1\nline2';\n  y := q'[a\nb]'; /* k1\nk2 */\nend;\n"
