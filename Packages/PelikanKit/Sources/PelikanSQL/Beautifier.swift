@@ -163,27 +163,35 @@ public struct BeautifierOptions: Sendable, Codable, Hashable {
         conditions = v(.conditions, conditions); caseInlineLimit = v(.caseInlineLimit, caseInlineLimit)
         subqueryLayout = v(.subqueryLayout, subqueryLayout); operatorPosition = v(.operatorPosition, operatorPosition)
         alignColumnDefinitions = v(.alignColumnDefinitions, alignColumnDefinitions)
-        // Migracja D202 (zapis bez znacznika — sprzed zmiany domyślnych): opcje z wartością równą dawnej domyślnej
-        // dostają nową domyślną; wartości zmienione przez użytkownika zostają. Znacznik zapisywany razem z ustawieniami,
-        // więc migracja nie powtarza się (także dla zestawów preferencji i importu — wszystkie dekodują tędy).
-        defaultsVersion = v(.defaultsVersion, 0)
-        if defaultsVersion < Self.currentDefaultsVersion {
-            if clauseLayout == .leftAligned { clauseLayout = .rightAligned }
-            if caseLayout == .inline { caseLayout = .auto }
-            if !alignDeclarations { alignDeclarations = true }
-            if !alignAssignments { alignAssignments = true }
-            defaultsVersion = Self.currentDefaultsVersion
-        }
+        // Brak znacznika (częściowy JSON z komendy, agenta, makra) — wartości bieżące, bez migracji. Migrację zapisów
+        // sprzed D202 robi odczyt plików (`BeautifierOptions.migratingLegacy`).
+        defaultsVersion = v(.defaultsVersion, Self.currentDefaultsVersion)
     }
 
-    /// Wersja domyślnych ustawień (1 — D202). Zapis bez znacznika albo ze starszym — migracja przy odczycie.
+    /// Wersja domyślnych ustawień (1 — D202), zapisywana z ustawieniami.
     public static let currentDefaultsVersion = 1
     public var defaultsVersion = BeautifierOptions.currentDefaultsVersion
 
-    /// Ustawienia domyślne z zachowaniem formatowania automatycznego (przycisk „Przywróć domyślne”).
-    public func restoringDefaults() -> BeautifierOptions {
+    /// Migracja zapisu formatera sprzed D202 (JSON bez znacznika `defaultsVersion` albo ze starszym) — tylko przy odczycie
+    /// plików ustawień, zestawów i eksportu w starszej wersji: wartości równe dawnym domyślnym dostają nowe domyślne
+    /// (słowa klauzul do lewej → rzeka, CASE w jednej linii → wieloliniowo, wyrównanie deklaracji i przypisań → włączone),
+    /// zmienione przez użytkownika zostają; dopisany znacznik.
+    public static func migratingLegacy(_ object: [String: Any]) -> [String: Any] {
+        if let v = object["defaultsVersion"] as? Int, v >= currentDefaultsVersion { return object }
+        var o = object
+        if o["clauseLayout"] as? String == ClauseLayout.leftAligned.rawValue { o["clauseLayout"] = ClauseLayout.rightAligned.rawValue }
+        if o["caseLayout"] as? String == CaseLayout.inline.rawValue { o["caseLayout"] = CaseLayout.auto.rawValue }
+        for key in ["alignDeclarations", "alignAssignments"] where o[key] as? Bool == false { o[key] = true }
+        o["defaultsVersion"] = currentDefaultsVersion
+        return o
+    }
+
+    /// Ustawienia domyślne z zachowaniem formatowania automatycznego i — opcjonalnie — pisowni specjalnej (przycisk
+    /// „Przywróć domyślne”).
+    public func restoringDefaults(keepSpecialCase: Bool = true) -> BeautifierOptions {
         var o = BeautifierOptions()
         o.afterLoad = afterLoad; o.beforeCompile = beforeCompile; o.beforeSave = beforeSave
+        if keepSpecialCase { o.specialCase = specialCase }
         return o
     }
 }
@@ -453,7 +461,13 @@ struct Formatter {
 
     /// Koniec polecenia skryptu zawierającego pozycję (bez terminatora) albo koniec tekstu.
     func statementEnd(containing pos: Int) -> Int {
-        statements.first { $0.start <= pos && pos < $0.end }?.end ?? source.length
+        // Wyszukiwanie binarne — polecenia są uporządkowane i rozłączne.
+        var lo = 0, hi = statements.count
+        while lo < hi {
+            let mid = (lo + hi) / 2
+            if statements[mid].end <= pos { lo = mid + 1 } else { hi = mid }
+        }
+        return lo < statements.count && statements[lo].start <= pos ? statements[lo].end : source.length
     }
 
     /// Fragment źródła kopiowany bez zmian (polecenie SQL*Plus, kod Java/JavaScript): od początku linii, jeśli
@@ -608,9 +622,13 @@ struct Formatter {
         guard Keywords.formatterContextual.contains(t.upper), p?.kind != .dot, token(after: t)?.kind != .dot else { return false }
         switch t.upper {
         case "MATCH_RECOGNIZE": return token(after: t)?.kind == .leftParen
-        case "READ": return p?.upper == "WITH"
+        case "READ": return ["WITH", "TRANSACTION"].contains(p?.upper ?? "")
         case "STATEMENT": return unitKind == "COMPOUND" && ["BEFORE", "AFTER"].contains(p?.upper ?? "")
-        default: return ddlObject != "" || headerKind == "TRIGGER" && headerLevel != nil
+        default:
+            if headerKind == "TRIGGER", headerLevel != nil { return true }
+            // DDL: nie w zapytaniu (widok, CTAS) i nie jako nazwa kolumny w liście (`(query …`, `, schema …`).
+            guard ddlObject != "", !frames.contains(where: { $0.kind == .sql }) else { return false }
+            return p?.kind != .leftParen && p?.kind != .comma
         }
     }
 
@@ -814,7 +832,8 @@ struct Formatter {
             copyRaw(from: t.start, to: end, sameLine: sameLine)
             if inStatement {
                 statementStart = wasStatementStart
-                pendingBreak = nil
+                // Region w osobnych liniach — dalszy ciąg instrukcji w kolumnie kontynuacji.
+                pendingBreak = sameLine ? nil : continuationColumn()
             }
             return
         }
@@ -1200,13 +1219,16 @@ struct Formatter {
     ]
 
     /// Szerokość rzeki instrukcji zaczynającej się na tokenie `start`: najdłuższe pierwsze słowo jej klauzul (na tej
-    /// samej głębokości nawiasów, do końca instrukcji), co najmniej 6.
+    /// samej głębokości nawiasów, do końca instrukcji), od 6 (SELECT) do `maxRiver` (RETURNING, INTERSECT). Dłuższe słowa
+    /// (MATCH_RECOGNIZE) i przedrostki złączeń (NATURAL, INNER, LEFT OUTER…) rzeki nie poszerzają — „wiszą” w lewo od
+    /// kolumny polecenia, więc dopisanie klauzuli przesuwa polecenie najwyżej do szerokości 9.
+    static let maxRiver = 9
+
     func riverWidth(from start: Int, statement: String) -> Int {
         var width = 6, depth = 0, j = start + 1
         let end = statementEnd(containing: toks[start].start)
         let simple: Set<String> = ["FROM", "WHERE", "HAVING", "INTO", "VALUES", "RETURNING", "WINDOW", "OFFSET", "FETCH", "UNION",
-                                   "INTERSECT", "MINUS", "EXCEPT", "PIVOT", "UNPIVOT", "MATCH_RECOGNIZE", "SELECT", "JOIN", "INNER",
-                                   "LEFT", "RIGHT", "FULL", "NATURAL"]
+                                   "INTERSECT", "MINUS", "EXCEPT", "PIVOT", "UNPIVOT", "SELECT"]
         while j < toks.count, toks[j].start < end {
             let k = toks[j]
             if k.kind == .leftParen { depth += 1 }
@@ -1222,11 +1244,10 @@ struct Formatter {
                 case "USING", "ON", "WHEN": clause = statement == "MERGE"
                 case "LOG": clause = next == "ERRORS"
                 case "FOR": clause = next == "UPDATE"
-                case "CROSS", "OUTER": clause = ["JOIN", "APPLY"].contains(next)
                 case "WITH": clause = ["READ", "CHECK"].contains(next)
                 default: break
                 }
-                if clause { width = max(width, k.text.count) }
+                if clause, k.text.count <= Self.maxRiver { width = max(width, k.text.count) }
             }
             j += 1
         }

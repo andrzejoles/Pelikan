@@ -21141,6 +21141,34 @@
         }
       }
     },
+    "Formatowanie automatyczne zostaje bez zmian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic formatting stays unchanged."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das automatische Formatieren bleibt unverändert."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El formato automático no cambia."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматичне форматування не змінюється."
+          }
+        }
+      }
+    },
     "Formatowanie przerwane: wynik zmieniałby kod (przy „%@”). Tekst pozostaje bez zmian." : {
       "localizations" : {
         "en" : {
@@ -69833,6 +69861,34 @@
         }
       }
     },
+    "Przywrócić domyślne reguły formatera?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore the default formatter rules?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardregeln des Formatierers wiederherstellen?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Restablecer las reglas predeterminadas del formateador?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити типові правила форматувальника?"
+          }
+        }
+      }
+    },
     "Przywrócić workset „%@”?" : {
       "localizations" : {
         "en" : {
@@ -69973,6 +70029,34 @@
         }
       }
     },
+    "Przywróć domyślne, zachowaj pisownię specjalną" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore defaults, keep special spelling"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard wiederherstellen, Sonderschreibweisen behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer valores predeterminados y conservar la grafía especial"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити типові, зберегти особливе написання"
+          }
+        }
+      }
+    },
     "Przywróć miejsca domyślne" : {
       "localizations" : {
         "en" : {
@@ -70109,6 +70193,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alle Standardwerte wiederherstellen"
+          }
+        }
+      }
+    },
+    "Przywróć wszystko, także pisownię specjalną" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore everything, including special spelling"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alles wiederherstellen, auch Sonderschreibweisen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer todo, incluida la grafía especial"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відновити все, зокрема особливе написання"
           }
         }
       }

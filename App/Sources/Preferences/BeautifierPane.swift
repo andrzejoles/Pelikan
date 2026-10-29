@@ -18,6 +18,9 @@ struct BeautifierPane: View {
     @State private var scrollTarget: (line: Int, serial: Int)?
     /// Numer ostatniej zmiany ustawień — podświetlenie zmian gaśnie po 5 s (zadanie anulowane przy następnej zmianie).
     @State private var changeSerial = 0
+    /// Ogłoszenie VoiceOver w toku (anulowane przez następną zmianę) i pytanie przed przywróceniem domyślnych.
+    @State private var announcement: Task<Void, Never>?
+    @State private var confirmRestore = false
 
     private var options: BeautifierOptions { workspace.settings.beautifier }
 
@@ -37,7 +40,18 @@ struct BeautifierPane: View {
                     Toggle(L10n.tr("Przed zapisem do pliku"), isOn: setting(workspace, \.beautifier.beforeSave))
                 }
                 Section {
-                    Button(L10n.tr("Przywróć domyślne")) { workspace.settings.beautifier = options.restoringDefaults() }
+                    Button(L10n.tr("Przywróć domyślne")) { confirmRestore = true }
+                        .confirmationDialog(L10n.tr("Przywrócić domyślne reguły formatera?"), isPresented: $confirmRestore) {
+                            Button(L10n.tr("Przywróć domyślne, zachowaj pisownię specjalną")) {
+                                workspace.settings.beautifier = options.restoringDefaults(keepSpecialCase: true)
+                            }
+                            Button(L10n.tr("Przywróć wszystko, także pisownię specjalną"), role: .destructive) {
+                                workspace.settings.beautifier = options.restoringDefaults(keepSpecialCase: false)
+                            }
+                            Button(L10n.tr("Anuluj"), role: .cancel) {}
+                        } message: {
+                            Text(L10n.tr("Formatowanie automatyczne zostaje bez zmian."))
+                        }
                     Text(L10n.tr("Przywraca domyślne reguły formatera; formatowanie automatyczne zostaje bez zmian."))
                         .font(.uiSecondary).foregroundStyle(.secondary)
                 }
@@ -93,12 +107,18 @@ struct BeautifierPane: View {
             }
             if let first = m[sampleID]?.first { scrollTarget = (first, (scrollTarget?.serial ?? 0) + 1) }
             changeSerial += 1
-            // VoiceOver: liczba linii podglądu zmienionych ostatnią zmianą.
+            // VoiceOver: liczba linii podglądu zmienionych ostatnią zmianą — po 0,5 s spokoju (szybkie zmiany, np.
+            // przytrzymany przycisk krokowy, dają jedno ogłoszenie).
+            announcement?.cancel()
             if let c = m[sampleID], !c.isEmpty {
                 let n = c.changed.count + c.removedBefore.count
-                NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
-                                     userInfo: [.announcement: L10n.tr("Podgląd formatowania: zmienione linie: \(n)"),
-                                                .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+                announcement = Task {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard !Task.isCancelled else { return }
+                    NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                                         userInfo: [.announcement: L10n.tr("Podgląd formatowania: zmienione linie: \(n)"),
+                                                    .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+                }
             }
         }
         .task(id: changeSerial) {

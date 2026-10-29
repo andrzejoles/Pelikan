@@ -243,25 +243,61 @@ struct BeautifierDefaultsTests {
         #expect(mv.contains("BUILD IMMEDIATE") && mv.contains("REFRESH FAST ON DEMAND"))
     }
 
-    @Test("migracja ustawień: wartości równe dawnym domyślnym → nowe domyślne, zmienione przez użytkownika zostają, znacznik")
+    @Test("migracja zapisu sprzed D202 (tylko z plików): wartości równe dawnym domyślnym → nowe; JSON bez znacznika w dekoderze — bieżący")
     func migration() throws {
-        func decode(_ json: String) throws -> BeautifierOptions { try JSONDecoder().decode(BeautifierOptions.self, from: Data(json.utf8)) }
-        let old = try decode(#"{"indent":4,"clauseLayout":"leftAligned","caseLayout":"inline","alignDeclarations":false,"alignAssignments":false}"#)
-        #expect(old.indent == 4 && old.clauseLayout == .rightAligned && old.caseLayout == .auto && old.alignDeclarations && old.alignAssignments)
-        #expect(old.defaultsVersion == BeautifierOptions.currentDefaultsVersion)
-        let custom = try decode(#"{"clauseLayout":"ownLine","caseLayout":"multiline"}"#)
-        #expect(custom.clauseLayout == .ownLine && custom.caseLayout == .multiline)
-        // Po migracji (znacznik zapisany) wybór „do lewej” zostaje.
-        var chosen = BeautifierOptions()
-        chosen.clauseLayout = .leftAligned
-        chosen.alignDeclarations = false
-        let again = try JSONDecoder().decode(BeautifierOptions.self, from: JSONEncoder().encode(chosen))
-        #expect(again.clauseLayout == .leftAligned && !again.alignDeclarations)
-        // Przywróć domyślne — z zachowaniem formatowania automatycznego.
-        var o = chosen
-        o.beforeSave = true; o.afterLoad = true
+        let old: [String: Any] = ["indent": 4, "clauseLayout": "leftAligned", "caseLayout": "inline", "alignDeclarations": false, "alignAssignments": false]
+        let m = BeautifierOptions.migratingLegacy(old)
+        #expect(m["clauseLayout"] as? String == "rightAligned" && m["caseLayout"] as? String == "auto")
+        #expect(m["alignDeclarations"] as? Bool == true && m["alignAssignments"] as? Bool == true && m["indent"] as? Int == 4)
+        #expect(m["defaultsVersion"] as? Int == BeautifierOptions.currentDefaultsVersion)
+        let custom = BeautifierOptions.migratingLegacy(["clauseLayout": "ownLine", "caseLayout": "multiline"])
+        #expect(custom["clauseLayout"] as? String == "ownLine" && custom["caseLayout"] as? String == "multiline")
+        // Zapis ze znacznikiem — bez zmian.
+        let marked = BeautifierOptions.migratingLegacy(["clauseLayout": "leftAligned", "defaultsVersion": 1])
+        #expect(marked["clauseLayout"] as? String == "leftAligned")
+        // Dekoder: częściowy JSON bez znacznika (komenda, agent, makro) — wartości bieżące, bez migracji.
+        let partial = try JSONDecoder().decode(BeautifierOptions.self, from: Data(#"{"clauseLayout":"leftAligned","alignDeclarations":false}"#.utf8))
+        #expect(partial.clauseLayout == .leftAligned && !partial.alignDeclarations && partial.defaultsVersion == BeautifierOptions.currentDefaultsVersion)
+        // Przywróć domyślne — formatowanie automatyczne zostaje; pisownia specjalna — domyślnie też, na życzenie nie.
+        var o = BeautifierOptions()
+        o.clauseLayout = .leftAligned; o.beforeSave = true; o.afterLoad = true; o.specialCase = ["DBMS_Output"]
         let d = o.restoringDefaults()
-        #expect(d.beforeSave && d.afterLoad && !d.beforeCompile && d.clauseLayout == .rightAligned && d.alignDeclarations)
+        #expect(d.beforeSave && d.afterLoad && !d.beforeCompile && d.clauseLayout == .rightAligned && d.specialCase == ["DBMS_Output"])
+        #expect(o.restoringDefaults(keepSpecialCase: false).specialCase.isEmpty)
+    }
+
+    @Test("rzeka od 6 do 9: RETURNING i INTERSECT poszerzają, MATCH_RECOGNIZE i przedrostki złączeń wiszą w lewo")
+    func riverLimits() throws {
+        #expect(try f("select a from t natural join u left outer join w on w.id = t.id;") == """
+            SELECT a
+              FROM t
+            NATURAL JOIN u
+              LEFT OUTER JOIN w
+                ON w.id = t.id;
+            """)
+        let mr = try f("select a from t match_recognize (order by b measures c as d pattern (x) define x as b > 0) where a > 1;")
+        #expect(mr.hasPrefix("SELECT a\n  FROM t\nMATCH_RECOGNIZE"))
+        #expect(mr.contains("\n WHERE a > 1;"))
+        // Dopisanie RETURNING przesuwa polecenie najwyżej do szerokości 9.
+        let r = try f("update t set a = 1 where b = 2 returning a into x;")
+        #expect(r.hasPrefix("   UPDATE t\n") && r.contains("\nRETURNING a INTO x;"))
+    }
+
+    @Test("słowa DDL: nie jako nazwy kolumn w liście ani w zapytaniu widoku/CTAS; SET TRANSACTION READ ONLY")
+    func contextualKeywordPlaces() throws {
+        #expect(try f("create table t (query varchar2(10), schema number) parallel 4;") == """
+            CREATE TABLE t (query  VARCHAR2(10),
+                            schema NUMBER) PARALLEL 4;
+            """)
+        #expect(try f("create table t2 parallel 4 as select query, schema from t;").contains("SELECT query,\n       schema"))
+        #expect(try f("set transaction read only;") == "SET TRANSACTION READ ONLY;")
+    }
+
+    @Test("$IF w osobnych liniach w środku instrukcji — dalszy ciąg w kolumnie kontynuacji")
+    func directiveOnOwnLines() throws {
+        let out = try f("select a\nfrom t\nwhere x = 1\n$if dbms_db_version.ver_le_12 $then\nand y = 2\n$end\nand z = 3;")
+        #expect(out.contains("$if dbms_db_version.ver_le_12 $then\nand y = 2\n$end\n"))
+        #expect(out.hasSuffix("   AND z = 3;"))
     }
 
     @Test("listy w nawiasach do marginesu (Fit) i element w linii")

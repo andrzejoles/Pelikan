@@ -13,13 +13,14 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   komentarze w listach, `RETURN SELF AS RESULT`, etykiety `<<nazwa>>`, wielkość liter słów kluczowych użytych jako
   nazwy, wzorce `%` i `*` w pisowni specjalnej.
 - **Nowy domyślny wygląd:** słowa klauzul i AND/OR wyrównane „rzeką” (`  FROM`, ` WHERE`, `   AND`, ` ORDER BY`;
-  kolumna rzeki według najdłuższego słowa polecenia, np. `RETURNING`), CASE w osobnych liniach (bardzo krótkie w
+  kolumna rzeki według najdłuższego słowa polecenia, np. `RETURNING`, najwyżej 9 znaków), CASE w osobnych liniach (bardzo krótkie w
   jednej), podzapytania i CTE wcięte z `)` w osobnej linii, `INSERT INTO emp (…)`, `DELETE FROM` w jednej linii,
   kolumny tabel po jednej w linii z wyrównanymi typami, DEFAULT i NOT NULL, wyrównane deklaracje i przypisania.
   Domyślny wynik formatowania się zmienia — także u dotychczasowych użytkowników: opcje z wartością równą dawnej
   domyślnej (słowa klauzul do lewej, CASE w jednej linii, bez wyrównania deklaracji i przypisań) dostają nową domyślną;
-  wartości zmienione samodzielnie zostają (także w zestawach preferencji i w importowanych plikach ustawień). Przycisk
-  **Przywróć domyślne** w Ustawieniach › Formater ustawia wszystkie reguły na domyślne (formatowanie automatyczne zostaje).
+  wartości zmienione samodzielnie zostają (także w zestawach preferencji i w plikach ustawień wyeksportowanych przez
+  starszą wersję). Przycisk **Przywróć domyślne** w Ustawieniach › Formater ustawia reguły na domyślne — po potwierdzeniu,
+  z wyborem, czy zachować pisownię specjalną (formatowanie automatyczne zostaje).
 - **AND / OR osobno dla każdego miejsca:** WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY,
   CASE … WHEN, IF / ELSIF, WHILE, EXIT WHEN, WHEN wyzwalacza, CHECK i nawiasy zagnieżdżone — łamanie (każdy w osobnej
   linii, tylko gdy się nie mieści, nigdy), położenie (początek albo koniec linii) i wyrównanie (rzeka, pod pierwszym

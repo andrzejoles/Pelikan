@@ -2506,9 +2506,10 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   mieszane AND/OR bez nawiasów zachowują znaczenie. Wyrównanie „rzeką” innych słów (SET, VALUES, INTO, RETURNING,
   USING, WHEN MATCHED, ORDER BY, GROUP BY) wynika z układu słów klauzul; w słowach wielowyrazowych do rzeki
   wyrównane jest pierwsze słowo (` ORDER BY`, `  LEFT JOIN`, ` START WITH`). Kolumna rzeki to najdłuższe pierwsze słowo
-  klauzuli w poleceniu (co najmniej 6 — SELECT): `RETURNING`, `CONNECT BY`, `INTERSECT`, `NATURAL JOIN`,
-  `MATCH_RECOGNIZE` przesuwają całe polecenie, a słowo otwierające je jest wyrównane w prawo (`   UPDATE`, `  WITH`,
-  ` MERGE`) — gdy polecenie zaczyna linię; w środku linii (podzapytanie za nawiasem) rzeka zostaje 6.
+  klauzuli w poleceniu, od 6 (SELECT) do 9 (`RETURNING`, `INTERSECT`; `CONNECT BY` — 7): polecenie przesuwa się
+  najwyżej o 3 kolumny, a słowo otwierające je jest wyrównane w prawo (`   UPDATE`, `  WITH`, ` MERGE`) — gdy polecenie
+  zaczyna linię; w środku linii (podzapytanie za nawiasem) rzeka zostaje 6. Dłuższe słowa (`MATCH_RECOGNIZE`) i
+  przedrostki złączeń (`NATURAL`, `INNER`, `LEFT OUTER`…) rzeki nie poszerzają — „wiszą” w lewo od kolumny polecenia.
 - **Przegląd (poprawki):** słowo po kropce (`t.offset`, `r.end`, `l.delete`) jest zawsze nazwą — nigdy klauzulą ani
   słowem struktury (wcześniej formatowanie było odrzucane); region `$IF … $END` w środku instrukcji SQL nie kończy
   instrukcji; przy przecinku na początku linii komentarz nie jest doklejany do linii kończącej się komentarzem
@@ -2516,10 +2517,13 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   w miejscu bez reguły warunku (np. argument funkcji) nie przecieka na następne AND. Słowa DDL, wyzwalaczy i atrybuty
   kursora (QUERY, READ, SCHEMA, STATEMENT, SEGMENT, FAST, BUILD, LOB, DDL, NOTFOUND…) nie są we wspólnym zbiorze słów
   kluczowych (`Keywords.formatterContextual`, `cursorAttributes`) — lekser zostawia je identyfikatorami (aliasy,
-  wystąpienia, zarys, debuger, kolorowanie bez zmian), a formater pisze je jak słowa kluczowe tylko w swoim kontekście
-  (DDL, nagłówek wyzwalacza, po `%`, `WITH READ ONLY`, `MATCH_RECOGNIZE (`). Konsola: linia zaczynająca się od `$if`
+  wystąpienia, zarys, debuger, kolorowanie bez zmian), a formater pisze je jak słowa kluczowe tylko w swoim kontekście:
+  DDL poza zapytaniem (nie w `CREATE VIEW … AS SELECT` ani CTAS) i nie jako nazwa kolumny w liście (`(query …`,
+  `, schema …`), nagłówek wyzwalacza, po `%`, `WITH READ ONLY`, `SET TRANSACTION READ ONLY`, `MATCH_RECOGNIZE (`.
+  Region `$IF … $END` w osobnych liniach w środku instrukcji — dalszy ciąg w kolumnie kontynuacji. Konsola: linia zaczynająca się od `$if`
   (bez spacji; tak samo `$then`, `$elsif`, `$else`, `$end`, `$error`, `$$nazwa`) nie jest już poleceniem HOST `$` — to
-  dyrektywa kompilacji warunkowej; `$ polecenie` i `$polecenie` z innym słowem działają jak dotąd. Podgląd ogłasza VoiceOver liczbę zmienionych linii. Test na bazie porównuje wyniki
+  dyrektywa kompilacji warunkowej; `$ polecenie` i `$polecenie` z innym słowem działają jak dotąd. Podgląd ogłasza VoiceOver liczbę zmienionych linii (po 0,5 s
+  bez kolejnej zmiany). Test na bazie porównuje wyniki
   wywołań (odległości wektorów, gałąź `$IF`) przed i po formatowaniu i sprząta obiekty także po błędzie.
 - **Nowe opcje (P2):** UPDATE … SET i GROUP BY / ORDER BY (domyślnie jak listy SELECT), listy w nawiasach (IN,
   argumenty funkcji), kolumny tabel / pola rekordów i typów, próg krótkiego CASE, układ podzapytań, położenie operatora
@@ -2528,15 +2532,17 @@ Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, 
   PL/SQL Developer „Fit”). Pominięte (P3): próg „element w linii od N elementów”, lista od lewego marginesu, nawias
   zamykający list w osobnej linii, pusta linia po instrukcji, wyrównanie ASC/DESC, wcięcie JOIN, osobny przecinek dla
   nawiasów.
-- **Zgodność ustawień (migracja):** przy odczycie zapisu bez znacznika `defaultsVersion` (sprzed D202) opcje z wartością
-  równą dawnej domyślnej dostają nową domyślną: słowa klauzul do lewej → rzeka, CASE w jednej linii → wieloliniowo
-  (krótkie w jednej), wyrównanie deklaracji i przypisań wyłączone → włączone; inne wartości (zmienione przez
-  użytkownika) zostają, a opcje, których w zapisie nie było, dostają nowe domyślne. Znacznik (`defaultsVersion = 1`)
-  zapisuje się z ustawieniami, więc migracja się nie powtarza i późniejszy wybór „do lewej” zostaje. Migracja jest w
-  dekoderze `BeautifierOptions`, więc obejmuje plik ustawień, zestawy preferencji (osobisty, połączenia) i import
-  ustawień ze starego pliku. Ograniczenie: wartości jawnie wybranej, a równej dawnej domyślnej, nie da się odróżnić od
-  domyślnej. **Ustawienia › Formater › Przywróć domyślne** — wszystkie reguły domyślne, formatowanie automatyczne bez
-  zmian (`restoringDefaults()`).
+- **Zgodność ustawień (migracja):** tylko przy odczycie plików — `settings.json`, `Preferences/sets.json` (zestawy
+  osobiste i połączeń) i pliku eksportu w wersji formatu 1 (`pelikan-preferences`; eksport ma teraz wersję 2) — zapis
+  formatera bez znacznika `defaultsVersion` (sprzed D202) dostaje nowe domyślne tam, gdzie miał dawne: słowa klauzul do
+  lewej → rzeka, CASE w jednej linii → wieloliniowo (krótkie w jednej), wyrównanie deklaracji i przypisań wyłączone →
+  włączone (`BeautifierOptions.migratingLegacy`, `PreferenceSets.migratingLegacyBeautifier`); inne wartości (zmienione
+  przez użytkownika) zostają, opcje, których w zapisie nie było, dostają nowe domyślne. Znacznik (`defaultsVersion = 1`)
+  zapisuje się z ustawieniami, więc migracja się nie powtarza i późniejszy wybór „do lewej” zostaje. Częściowy JSON bez
+  znacznika — `prefs.import` z wartościami od komendy, agenta albo makra, dekoder `BeautifierOptions` — to wartości
+  bieżące, bez migracji. Ograniczenie: wartości jawnie wybranej, a równej dawnej domyślnej, nie da się odróżnić od
+  domyślnej. **Ustawienia › Formater › Przywróć domyślne** pyta o potwierdzenie: domyślne reguły z zachowaniem pisowni
+  specjalnej albo wszystko, także pisownia specjalna; formatowanie automatyczne zawsze zostaje (`restoringDefaults`).
 - **Podgląd (Ustawienia › Formater):** cztery przełączane przykłady (PL/SQL, Zapytania, DML, DDL), kolorowanie składni,
   numery linii, pionowa linia prawego marginesu; linie zmienione ostatnią zmianą — żółte tło, miejsce usuniętych —
   czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i przewija do pierwszej zmiany; kliknięcie
