@@ -64,7 +64,13 @@ struct ExportObjectsView: View {
                 Toggle(L10n.tr("Specyfikacja i ciało w jednym pliku"), isOn: $options.specAndBodyTogether).disabled(options.layout == .singleFile)
                 // Pliki DDL na obiekt domyślnie bez „/” (D194); jeden plik to skrypt SQL*Plus — zawsze z „/”.
                 Toggle(L10n.tr("Kończ jednostki znakiem /"), isOn: $options.terminateUnits).disabled(options.layout == .singleFile)
+                Toggle(L10n.tr("Nagłówek z datą eksportu"), isOn: $options.dateHeader).disabled(options.layout == .singleFile)
                 Toggle(L10n.tr("Uprawnienia"), isOn: $options.includePrivileges)
+                Picker(L10n.tr("Uprawnienia w plikach na obiekt"), selection: $options.grantPlacement) {
+                    Text(L10n.tr("w osobnym pliku (nazwa.grants.sql)")).tag(ObjectExportOptions.GrantPlacement.separateFile)
+                    Text(L10n.tr("pomiń")).tag(ObjectExportOptions.GrantPlacement.omit)
+                }
+                .disabled(options.layout == .singleFile || !options.includePrivileges)
                 Toggle(L10n.tr("Parametry składowania"), isOn: $options.includeStorage)
                 Toggle(L10n.tr("Nazwa schematu w DDL"), isOn: $options.includeOwner)
             }
@@ -114,6 +120,9 @@ struct ExportObjectsView: View {
             let files = try await ObjectExport.export(Array(selected), options: options, in: try await session()) { n in message = L10n.tr("Wyeksportowano \(n) z \(selected.count)") }
             for f in files { try Data(f.content.utf8).write(to: dir.appendingPathComponent(f.name)) }
             message = L10n.tr("Zapisano plików: \(files.count)")
+            // Pliki DDL, w których „/” musiał zostać (np. ALTER TYPE za typem) — D194.
+            let slash = files.filter(\.keepsSlash).map(\.name)
+            if !slash.isEmpty { message += " — " + L10n.tr("z „/” (polecenie za jednostką): \(slash.joined(separator: ", "))") }
         } catch { message = error.localizedDescription }
     }
 }
