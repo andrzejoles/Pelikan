@@ -2097,3 +2097,26 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
+
+### D196 · 2026-10-29 — Zrzuty bez okien na ekranie (zmienia D113)
+Właściciel pracuje przy komputerze, a okna przebiegu zrzutów (D113) pojawiały się na kilka sekund na jego monitorach;
+`screencapture` nie działa też w piaskownicy agentów. Teraz w trybie skryptu (`PELIKAN_UI_SCRIPT`, tylko Debug) okna są
+niewidoczne od pierwszej klatki: haki Objective-C (`App/Sources/UIScriptWindows.m`) na inicjalizatorze `NSWindow`
+i każdej drodze wystawienia okna (`orderWindow`, `orderFront`, `makeKeyAndOrderFront`, `orderFrontRegardless`,
+`setIsVisible`, arkusze, okna potomne) ustawiają alfę 0, `ignoresMouseEvents`, brak cienia i animacji; `setAlphaValue`
+zawsze daje 0, a `activate`, `activateIgnoringOtherApps` i `requestUserAttention` nic nie robią. Polityka aktywacji
+`.accessory`, a skrypt uruchamia klon APFS aplikacji z `LSUIElement` (nowy podpis ad hoc z tymi samymi uprawnieniami,
+po przebiegu wyrejestrowany i usunięty) — bez ikony w Docku także w pierwszych chwilach po `open -g -n` (sama polityka
+w kodzie przychodzi po starcie: ok. 0,5 s typu „Foreground”). Okna pozostają „widoczne” dla AppKit (`isVisible`,
+układ, rysowanie), więc `open -j` (ukryta aplikacja) odrzucone — ukryte okna nie są rysowane ani listowane.
+Zrzut robi aplikacja: po ostatnim kroku (`PELIKAN_SNAPSHOT=<katalog>/<scenariusz>`) albo krokiem `debug.snapshotWindows`
+(`prefix`) rysuje ramkę każdego okna (`contentView.superview` — pasek tytułu, pasek narzędzi, wstążka, SwiftUI, TextKit 2)
+przez `cacheDisplay(in:to:)` do mapy bitowej co najmniej 2×, dokleja treść WKWebView z `takeSnapshot`, zapisuje
+`<scenariusz>-<tytuł>.png` (nazwy jak dotąd), znacznik `.done` i kończy pracę. Porównanie: `CALayer.render(in:)` gubi
+tła przycisków paska narzędzi (szkło), `CGWindowListCreateImage` jest wycofane w SDK i mogłoby wywołać pytanie
+o nagrywanie ekranu, ScreenCaptureKit wymaga tego uprawnienia — odrzucone. Sprawdzone strażnikiem odczytującym listę
+okien co 20 ms (alfa okien procesu zawsze 0, typ aplikacji zawsze UIElement) na scenariuszach 01, 07, 11, 17, 19, 28, 49
+i 65: obraz zgodny z dawnymi zrzutami, a WKWebView (instrukcja) wreszcie z treścią. Ograniczenia: zaznaczony segment
+`NSTabViewController` (szkło Liquid Glass, warstwy portalowe) wychodzi bez etykiety, rogi okna są proste (bez
+przezroczystych zaokrągleń); w takich przypadkach `scripts/screenshots.sh --screen` — dawny sposób z widocznymi oknami
+(`PELIKAN_UI_SCRIPT_VISIBLE=1`).
