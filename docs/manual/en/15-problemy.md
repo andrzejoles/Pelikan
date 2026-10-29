@@ -11,7 +11,7 @@ Anyway** (see the *Introduction* chapter).
 
 - Download Instant Client for macOS in the **ARM64** version (Basic or Basic Light) and unpack or install it according
   to Oracle's instructions.
-- Select the directory containing the `libclntsh.dylib` file in **Preferences › Oracle › Oracle Instant Client** and
+- Select the directory containing the `libclntsh.dylib` file in **Settings › Oracle › Oracle Instant Client** and
   restart Pelikan.
 - If the client is in the Downloads folder and macOS asked about Pelikan's access to that folder and you refused, change
   it in **System Settings › Privacy & Security › Files and Folders** or move the client somewhere else.
@@ -21,11 +21,11 @@ Anyway** (see the *Introduction* chapter).
 
 - Click **Test** in the connection definition — the message from the database or the Oracle client points to the cause.
 - **ORA-12154 / TNS:** the alias was not found — check the configuration directory (the **Advanced** tab or
-  **Preferences › Oracle › Oracle Net and Oracle Wallet**) or use a `host:port/service` address.
+  **Settings › Oracle › Oracle Net and Oracle Wallet**) or use a `host:port/service` address.
 - **ORA-01017:** wrong password — Pelikan asks for it again; check remembering to replace the password in the Keychain.
 - **ORA-28001:** the password has expired — Pelikan shows the password change window.
 - **Oracle Wallet:** the **Database** field must be exactly the alias stored in the wallet, and the wallet must have the
-  `cwallet.sso` file (auto-login). The wallet status is shown in **Preferences › Oracle**. Changes in this section take
+  `cwallet.sso` file (auto-login). The wallet status is shown in **Settings › Oracle**. Changes in this section take
   effect after a restart.
 - **SSH tunnel:** Pelikan uses the system `ssh` — check in Terminal whether `ssh user@bastion.example.com` works (key in
   the SSH agent, known host). Enter the database address as the SSH server sees it.
@@ -38,7 +38,7 @@ Anyway** (see the *Introduction* chapter).
 - ⌃F8, ⌃F2, ⌃F3 and other ⌃ shortcuts may be taken by macOS (**System Settings › Keyboard › Keyboard Shortcuts**). Use
   the ⌘ equivalent (e.g. ⇧⌘↩ instead of ⌃F8) or turn off the system shortcut.
 - ⌃Space switches the input source in macOS by default — invoke code completion with ⌥⎋.
-- Check the command's shortcut in the command palette (⇧⌘P) or in **Preferences › Keyboard**.
+- Check the command's shortcut in the command palette (⇧⌘P) or in **Settings › Keyboard**.
 
 ### A query takes too long
 
@@ -80,7 +80,7 @@ gives the GRANT statement for the database administrator, e.g. `GRANT EXECUTE ON
 ### Pelikan quit unexpectedly
 
 At the next launch Pelikan offers to recover unsaved windows (also later: **File › Recover Windows…**), if keeping
-unsaved windows is enabled in **Preferences › Tools**. You will also find file changes in the local history (**File ›
+unsaved windows is enabled in **Settings › Tools**. You will also find file changes in the local history (**File ›
 Local history**).
 
 ### Application log
@@ -91,7 +91,7 @@ opens it in macOS Console; the file is in `~/Library/Logs/Pelikan`, and the same
 (Pelikan's subsystem in Console). Files are at most 2 MB, and Pelikan keeps the last five.
 
 The log never contains passwords, SQL statement text or database data. Connection, server and object names and file
-paths are hidden or replaced by a hash by default (the same name always has the same hash). In **Preferences ›
+paths are hidden or replaced by a hash by default (the same name always has the same hash). In **Settings ›
 General › Application Log** you choose how much is logged (*Warnings and errors*, *Events*, *Details — diagnostics*)
 and can show names — useful when tracking down a problem on your own computer.
 
@@ -112,7 +112,7 @@ real environment:
 - **Debugger**: no debugging through DBMS_DEBUG_JDWP; in triggers the `:new` and `:old` values are not available; there
   can be only one breakpoint per line.
 - The **grid** cannot freeze columns or rows.
-- **Command Window**: the `COPY` and `SET ENVVAR` commands are not supported.
+- **SQL*Plus Console**: the `COPY` and `SET ENVVAR` commands are not supported.
 - The **Event Monitor** does not read the DBMS_OUTPUT of other sessions (Oracle does not provide it).
 - **Tools in the left column** are tabs of one panel (Connections, Objects, Windows, Templates, Files); they cannot be
   docked freely or hidden automatically. Documents are tabs of one main window, not native macOS tabs.

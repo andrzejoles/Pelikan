@@ -90,7 +90,7 @@ public enum CommandSearch {
         "file.new.sql": "sql window nowe zapytanie query",
         "file.new.program": "program window pakiet package procedura funkcja",
         "file.new.test": "test window",
-        "file.new.command": "command window sqlplus sql*plus",
+        "file.new.command": "command window sqlplus sql*plus okno polecen konsola",
         "file.new.explainPlan": "explain plan window",
         "file.new.report": "report window",
         "file.new.diagram": "diagram window erd",
@@ -187,8 +187,8 @@ public enum CommandSearch {
         "prefs.sets": "preferencje preferences",
         "file.pasteAsSQLWindow": "sql window",
         "codeContents.sort": "code contents",
-        "diagram.addBend": "lamania bend",
-        "diagram.moveBend": "lamania bend",
-        "diagram.removeBend": "lamania bend",
+        "diagram.addBend": "lamania zalamania bend",
+        "diagram.moveBend": "lamania zalamania bend",
+        "diagram.removeBend": "lamania zalamania bend",
     ]
 }

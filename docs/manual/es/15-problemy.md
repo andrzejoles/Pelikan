@@ -119,7 +119,7 @@ comprobado en un entorno real:
 - **Depurador**: no hay depuración mediante DBMS_DEBUG_JDWP; en los disparadores no están disponibles los valores `:new`
   y `:old`; en una línea solo puede haber un punto de interrupción.
 - La **cuadrícula** no puede inmovilizar (congelar) columnas ni filas.
-- **Command Window**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
+- **Consola SQL*Plus**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
 - El **Event Monitor** no lee el DBMS_OUTPUT de otras sesiones (Oracle no lo ofrece).
 - Las **herramientas de la columna izquierda** son pestañas de un único panel (Conexiones, Objetos, Ventanas, Templates,
   Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Los documentos son pestañas de una única ventana

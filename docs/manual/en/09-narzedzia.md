@@ -43,7 +43,7 @@ schema or connection. The result is a script or a direct update of the target wi
 All text comparisons (a window with a file, an object with the database, local history, **Tools › Compare files…**) use
 the built-in diff viewer: two columns, a change map, jumping to the next and previous difference, differences within a
 line, ignoring case, spacing and comments, swapping sides and **Reload**. Instead of it you can use your own program —
-**Preferences › Tools › External diff viewer** (arguments `%1`, `%2` — files, `%3`, `%4` — titles).
+**Settings › Tools › External diff viewer** (arguments `%1`, `%2` — files, `%3`, `%4` — titles).
 
 ## Export and import
 
@@ -153,7 +153,7 @@ from the last 30 days.
 - A **workset** remembers the open windows — also with unsaved changes and variable values — and restores them at the
   next launch (**File › Workset**: new, open, save, restore, close, compare, autosave). You save the main window layout
   with **View › Save window layout**.
-- When you quit with **workset autosave** on (the default; **Preferences › General › Files › Restore windows after
+- When you quit with **workset autosave** on (the default; **Settings › General › Files › Restore windows after
   relaunch** or **File › Workset › Autosave workset**) Pelikan does not ask about saving — all open windows (SQL,
   program, test, command, plan, diagram, notebook, report and connection consoles) come back on the next launch in the
   same order and with the same active window. A window without a file comes back with its text as a window without a
@@ -173,6 +173,6 @@ from the last 30 days.
   days) while Pelikan is running. Definitions do not contain passwords; the log shows the result of each run.
 - **View › Background tasks** — a list of long operations (Autotrace, exports, documentation) with state, time and
   cancellation.
-- **Tools › Documents…** — your documents and http(s) addresses from the list in **Preferences › Tools**.
+- **Tools › Documents…** — your documents and http(s) addresses from the list in **Settings › Tools**.
 - macOS services (the **Services** menu in any application): **Pelikan: Format SQL** formats the selected text in
   place, and **Pelikan: Open in SQL Window** moves the selected text to a new Pelikan SQL Window.

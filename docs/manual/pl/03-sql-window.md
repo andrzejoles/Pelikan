@@ -34,7 +34,7 @@ domyślnie wyłączona). Otwartą transakcję sygnalizuje pasek stanu („● tr
 ## Zmienne
 
 - **Zmienne podstawiania** `&nazwa` i `&&nazwa` — przed wykonaniem Pelikan pokazuje okno **Zmienne** z polami na
-  wartości. W oknie SQL `&&` w tekście oznacza zwykły znak `&` (np. `'R&&D'`); w oknie poleceń `&&` działa jak w
+  wartości. W oknie SQL `&&` w tekście oznacza zwykły znak `&` (np. `'R&&D'`); w konsoli SQL*Plus `&&` działa jak w
   SQL*Plus (zmienna zapamiętywana).
 - **Zmienne wiązane** `:nazwa` — także trafiają do okna zmiennych (`:new` i `:old` w wyzwalaczach są pomijane).
 - **Parametry raportów JasperReports** `$P{…}`, `$P!{…}` i `$X{IN, kolumna, parametr}` — Pelikan rozpoznaje je i pyta

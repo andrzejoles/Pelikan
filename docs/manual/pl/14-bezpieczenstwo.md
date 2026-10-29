@@ -45,7 +45,7 @@ Zasady pracy agentów opisuje rozdział *Agenci AI*. W skrócie:
 - czyta w transakcjach tylko do odczytu, z limitami;
 - zmiany wykonuje tylko po Twojej zgodzie w oknie bez przycisku domyślnego, a DML pozostaje niezatwierdzone do osobnej
   zgody na COMMIT;
-- nie ma dostępu do okna poleceń, poleceń systemu, debugera, raportów pakietów Oracle ani zdalnego buildu;
+- nie ma dostępu do konsoli SQL*Plus, poleceń systemu, debugera, raportów pakietów Oracle ani zdalnego buildu;
 - komunikuje się z Pelikanem tylko przez gniazdo dostępne dla Twojego konta, z jednorazowym tokenem sesji;
 - dane, które agent przeczyta, trafiają do dostawcy modelu AI — dla danych wrażliwych używaj osobnego użytkownika bazy
   agenta z ograniczonymi uprawnieniami i maskowania kolumn.

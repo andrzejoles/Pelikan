@@ -3,7 +3,7 @@
 Pelikan es un entorno nativo de macOS para trabajar con bases de datos Oracle: escribir y ejecutar SQL, crear, probar y
 depurar código PL/SQL, explorar y editar objetos de la base de datos, pruebas utPLSQL y herramientas de comparación,
 exportación y administración. La disposición de las ventanas y los atajos de teclado siguen a PL/SQL Developer, así que
-sus usuarios encontrarán ventanas conocidas: **SQL Window**, **Command Window**, **Program Window**, **Test Window**,
+sus usuarios encontrarán ventanas conocidas: **SQL Window**, **Consola SQL*Plus**, **Program Window**, **Test Window**,
 **Explain Plan Window** y **Object Browser** (pestaña **Objetos**).
 
 Este manual describe cómo realizar las tareas habituales. La lista completa de comandos con sus atajos actuales está en
@@ -80,7 +80,7 @@ Pelikan tiene una única ventana principal:
   **Objetos** (Object Browser), **Ventanas** (lista de ventanas abiertas), **Templates** y **Archivos** (explorador de
   archivos).
 - **Pestañas de documentos** en el centro: cada ventana SQL, de programa, de prueba o de plan tiene su propia pestaña
-  con una letra de tipo en color: S — SQL Window, P — Program Window, T — Test Window, C — Command Window, E — Explain
+  con una letra de tipo en color: S — SQL Window, P — Program Window, T — Test Window, C — consola SQL*Plus, E — Explain
   Plan Window, R — Report Window, D — ventana de diagrama, N — cuaderno SQL. Un clic central en una pestaña cierra la
   ventana; el menú de la pestaña cierra las demás ventanas o las ventanas a la izquierda y a la derecha.
 - **Barra de herramientas** con las acciones más frecuentes (ventana nueva, abrir, guardar, ejecutar, interrumpir,

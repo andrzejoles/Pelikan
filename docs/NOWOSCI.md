@@ -22,7 +22,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
   (ustawienie **Kończ jednostki okna programu znakiem „/”** w Ustawienia › Oracle przywraca dawny układ).
 - **Polskie nazwy bliższe macOS i IDE:** okno planu ma przycisk **Odśwież plan** (zamiast „Wyjaśnij”), okno
-  **Preferencje** nazywa się **Ustawienia** (jak pozycja ⌘, w menu Pelikan), debuger — **Krok do**, **Krok przez**,
+  **Preferencje** nazywa się **Ustawienia** (jak pozycja ⌘, w menu Pelikan; po angielsku *Settings*), **Okno poleceń**
+  — **Konsola SQL*Plus** (także w innych językach), punkt załamania linii na diagramie — **punkt zgięcia**, debuger — **Krok do**, **Krok przez**,
   **Wyjdź z podprogramu** i **Przełącz punkt przerwania**, w siatce **Zapisz zmiany w bazie (Post)** (zatwierdza się
   tylko COMMIT), **Fragmenty kodu** zamiast snippetów, **Wyodrębnij** w refaktoryzacji, **Zakończ sesję (Kill)**,
   **Kompiluj projekt** / **Kompiluj zmienione**, **Powtórz** (⇧⌘Z), **Zminimalizuj**; opisy mówią o Przeglądarce

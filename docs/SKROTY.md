@@ -19,7 +19,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Okno SQL | `file.new.sql` | ⌘N | ⌘N | Za zgodą | PD-SQLW-002 |
 | Nowy › Okno programu | `file.new.program` | ⇧⌘N | ⇧⌘N | Za zgodą | PD-PROG-001 |
 | Nowy › Okno testu | `file.new.test` |  |  | Za zgodą | PD-TEST-001 |
-| Nowy › Okno poleceń | `file.new.command` |  |  | Brak | PD-CMDW-001 |
+| Nowy › Konsola SQL*Plus | `file.new.command` |  |  | Brak | PD-CMDW-001 |
 | Nowy › Okno planu (Explain Plan) | `file.new.explainPlan` |  |  | Brak | PD-OPT-001 |
 | Nowy › Okno raportu | `file.new.report` |  |  | Brak | PD-REP-002 |
 | Nowy › Okno diagramu | `file.new.diagram` |  |  | Brak | PD-DIAG-001 |
@@ -498,9 +498,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | PD-DIAG-003 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | PD-QB-001 |
 | Diagram › Przesuń zaznaczone | `diagram.move` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Dodaj punkt załamania | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Przesuń punkt załamania | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Usuń punkt załamania | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Dodaj punkt zgięcia | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Przesuń punkt zgięcia | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Usuń punkt zgięcia | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
 | Diagram › Tekst notatki diagramu | `diagram.editNote` |  |  | Brak | PD-DIAG-002 |
 | Diagram › Kolor zaznaczonych | `diagram.setColor` |  |  | Brak | PD-DIAG-002 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | PD-TOOL-003 |

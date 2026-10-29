@@ -63,7 +63,7 @@ Narzędzia agenta w skrócie:
 - **Za zgodą**: kompilacja, wykonanie polecenia i skryptu, COMMIT, ROLLBACK, utworzenie i wygenerowanie pakietu
   testowego, uruchomienie testów utPLSQL, instalacja utPLSQL.
 
-Agent **nie ma** dostępu do okna poleceń i polecenia HOST, powłoki systemu przez Pelikana, debugera, okna Sesje (poza
+Agent **nie ma** dostępu do konsoli SQL*Plus i polecenia HOST, powłoki systemu przez Pelikana, debugera, okna Sesje (poza
 odczytem listy sesji) i kończenia sesji, SQL Trace, raportów AWR/ASH/ADDM, SQL Monitor i SQL Tuning Advisor, zdalnego
 buildu Pro*C, narzędzi użytkownika ani do haseł, hostów, portów i nazw użytkowników połączeń.
 
@@ -93,7 +93,7 @@ Okno jest zaprojektowane tak, żeby nie zatwierdzić niczego przypadkiem:
   niezatwierdzone zmiany (ROLLBACK). DDL agenta jest odrzucane, gdy agent ma niezatwierdzone DML (DDL zatwierdziłoby
   je niejawnie).
 - Bloki PL/SQL i `CALL` agenta też są odrzucane przy niezatwierdzonym DML — mogłyby je zatwierdzić (COMMIT w kodzie,
-  DDL dynamiczne, transakcje autonomiczne). Okno zgody ostrzega, że bloku PL/SQL nie da się cofnąć. Okno poleceń jest
+  DDL dynamiczne, transakcje autonomiczne). Okno zgody ostrzega, że bloku PL/SQL nie da się cofnąć. Konsola SQL*Plus jest
   dla agenta niedostępne: nie odczyta ani nie zmieni jego tekstu.
 - Przed zmianą kodu obiektu (pakiet, procedura, widok…) Pelikan zapisuje poprzednią wersję. **Narzędzia › Agent AI ›
   Cofnij sesję agenta…** (albo **Cofnij sesję…** w panelu) przywraca kod obiektów sprzed sesji, usuwa obiekty

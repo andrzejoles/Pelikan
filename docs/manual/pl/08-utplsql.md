@@ -9,7 +9,7 @@ Pelikan ma wbudowaną obsługę utPLSQL — biblioteki testów jednostkowych dla
 **Narzędzia › utPLSQL › utPLSQL: wersja w bazie** sprawdza, czy utPLSQL jest zainstalowany i w jakiej wersji.
 
 Jeśli go nie ma, **utPLSQL: instaluj lub aktualizuj…** pobierze oficjalne wydanie z GitHuba, sprawdzi jego sumę
-kontrolną i wykona skrypty instalacyjne w widocznym oknie poleceń. Ta komenda działa tylko na połączeniach
+kontrolną i wykona skrypty instalacyjne w widocznej konsoli SQL*Plus. Ta komenda działa tylko na połączeniach
 deweloperskich i testowych i zawsze pyta o potwierdzenie. Nowy właściciel utPLSQL dostaje losowe hasło, którego nikt
 nie zna, a jego konto jest od razu blokowane. Na bazach współdzielonych instalację zwykle wykonuje administrator.
 

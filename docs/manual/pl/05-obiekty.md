@@ -165,7 +165,7 @@ starą albo nową nazwą, a **Kosz › Opróżnij kosz…** usuwa obiekty trwale
 
 W oknie diagramu: **Powiązane** dodaje tabele połączone kluczami obcymi, **Zależności** — linie zależności,
 **Notatka** i **Grupa** porządkują rysunek, **Kolumny** pokazuje lub ukrywa kolumny, **Siatka** włącza przyciąganie do
-siatki 8 px, a powiększenie zmienisz od 10 do 200%. Dwukrotne kliknięcie linii dodaje punkt załamania, ⌥+klik go usuwa. Diagram
+siatki 8 px, a powiększenie zmienisz od 10 do 200%. Dwukrotne kliknięcie linii dodaje punkt zgięcia, ⌥+klik go usuwa. Diagram
 zapiszesz jako plik `.pdd`, zaktualizujesz z bazy (**Aktualizuj z bazy**), wydrukujesz albo wyeksportujesz do PNG lub
 PDF.
 

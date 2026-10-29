@@ -1,7 +1,7 @@
-# Okno poleceń
+# Konsola SQL*Plus
 
-Okno poleceń działa jak SQL*Plus: wykonuje polecenia linia po linii i skrypty, a wyniki zapytań pokazuje jako tekst w
-kolumnach. Otworzysz je przez **Plik › Nowy › Okno poleceń** albo z menu połączenia na liście połączeń.
+Konsola SQL*Plus działa jak SQL*Plus: wykonuje polecenia linia po linii i skrypty, a wyniki zapytań pokazuje jako tekst w
+kolumnach. Otworzysz ją przez **Plik › Nowy › Konsola SQL*Plus** albo z menu połączenia na liście połączeń.
 
 Okno ma dwie karty:
 
@@ -28,7 +28,7 @@ dwukrotne kliknięcie wskaźnika przełącza ustawienie.
   `DISCONNECT`, `EXIT`/`QUIT`, `REMARK`, `HELP`.
 - Bufor poleceń: `LIST`, `APPEND`, `CHANGE`, `DEL`, `INPUT`, `SAVE`, `GET`, `STORE SET`.
 - `HOST`, `!` i `$` — polecenie systemu operacyjnego. Pelikan zawsze pokazuje je do potwierdzenia, wykonuje bez
-  zmiennych środowiska Pelikana, z limitem 120 sekund. Agent AI nie ma dostępu do okna poleceń.
+  zmiennych środowiska Pelikana, z limitem 120 sekund. Agent AI nie ma dostępu do konsoli SQL*Plus.
 
 Polecenie nieobsługiwane jest pomijane z informacją, więc skrypty pisane dla SQL*Plus wykonują się do końca. `COPY`
 nie jest obsługiwane.

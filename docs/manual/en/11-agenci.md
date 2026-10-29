@@ -14,7 +14,7 @@ analyze plans, write and format code in windows, and it makes changes in the dat
 | Antigravity | `agy` | a one-time registration of the “pelikan” server — only with your consent |
 
 You install the agent program yourself and log in to it with your provider account. Pelikan looks for the command in the
-`PATH` of your login shell. You change the list of programs in **Preferences › Agents** (**Add CLI**, **Restore
+`PATH` of your login shell. You change the list of programs in **Settings › Agents** (**Add CLI**, **Restore
 defaults**).
 
 Pelikan's MCP server is available only to a session started from Pelikan: communication goes through a Unix socket
@@ -63,7 +63,7 @@ The agent's tools in brief:
 - **With consent**: compilation, executing a statement and a script, COMMIT, ROLLBACK, creating and generating a test
   package, running utPLSQL tests, installing utPLSQL.
 
-The agent has **no** access to the Command Window and the HOST command, the system shell through Pelikan, the debugger,
+The agent has **no** access to the SQL*Plus Console and the HOST command, the system shell through Pelikan, the debugger,
 the Sessions window (apart from reading the list of sessions) and killing sessions, SQL Trace, AWR/ASH/ADDM reports, SQL
 Monitor and SQL Tuning Advisor, the Pro*C remote build, user tools, or the passwords, hosts, ports and user names of
 connections.
@@ -89,14 +89,14 @@ The window is designed so that nothing gets approved by accident:
 - The agent has **its own database sessions** — it does not see your uncommitted transaction and cannot commit it. In
   V$SESSION its sessions have MODULE “Pelikan agent”, and ACTION — the name of the tool.
 - The agent's queries run in a read-only transaction, with limits on the number of rows, time and result size
-  (**Preferences › Agents › Agent queries**; by default 500 rows, 30 s and 1 MB) and a limit of calls per minute. A
+  (**Settings › Agents › Agent queries**; by default 500 rows, 30 s and 1 MB) and a limit of calls per minute. A
   query must be a single SELECT/WITH statement, without `FOR UPDATE` and without functions defined in the WITH clause.
 - **The agent's DML stays uncommitted** until you separately consent to a COMMIT. Closing the agent session rolls back
   uncommitted changes (ROLLBACK). The agent's DDL is rejected when the agent has uncommitted DML (DDL would commit it
   implicitly).
 - The agent's PL/SQL blocks and `CALL` are also rejected while it has uncommitted DML — they could commit it (COMMIT
   in code, dynamic DDL, autonomous transactions). The approval window warns that a PL/SQL block cannot be undone. The
-  Command Window is off limits to the agent: it can neither read nor change its text.
+  SQL*Plus Console is off limits to the agent: it can neither read nor change its text.
 - Before changing an object's code (package, procedure, view…) Pelikan saves the previous version. **Tools › AI agent ›
   Revert agent session…** (or **Revert session…** in the panel) restores the code of objects from before the session,
   drops objects created by the agent, undoes text changes in windows and closes windows opened by the agent. An object
@@ -124,7 +124,7 @@ autonomous transactions) — here, too, only privileges protect you.
 
 ## Strict mode
 
-**Preferences › Agents › Strict mode** (on by default) starts the agent program without its own shell and file editing —
+**Settings › Agents › Strict mode** (on by default) starts the agent program without its own shell and file editing —
 only with Pelikan's tools, as far as the program allows it. When it does not, the agent panel shows a warning. An agent
 program in full mode runs with the privileges of your macOS account — Pelikan warns about it but does not restrict it.
 

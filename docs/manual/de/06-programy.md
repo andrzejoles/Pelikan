@@ -60,7 +60,7 @@ Zeilenende unterdrückt den Hinweis für diese Zeile.
 
 ## Codeeditor
 
-Derselbe Editor arbeitet in SQL-, Programm-, Test- und Befehlsfenstern. Er bearbeitet selbst Pakete mit Zehntausenden
+Derselbe Editor arbeitet in SQL-, Programm- und Testfenstern sowie in der SQL*Plus-Konsole. Er bearbeitet selbst Pakete mit Zehntausenden
 von Zeilen ohne Verzögerung.
 
 ### Vorschläge und Navigation

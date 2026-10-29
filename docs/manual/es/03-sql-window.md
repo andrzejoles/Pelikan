@@ -37,7 +37,7 @@ Window** está desactivada por omisión). La barra de estado indica una transacc
 
 - **Variables de sustitución** `&nombre` y `&&nombre`: antes de ejecutar, Pelikan muestra la ventana **Variables** con
   campos para los valores. En la SQL Window, `&&` en el texto significa un carácter `&` normal (p. ej., `'R&&D'`); en la
-  Command Window, `&&` funciona como en SQL*Plus (la variable se recuerda).
+  consola SQL*Plus, `&&` funciona como en SQL*Plus (la variable se recuerda).
 - **Variables de enlace** `:nombre`: también van a la ventana de variables (`:new` y `:old` en los disparadores se
   omiten).
 - **Parámetros de informes de JasperReports** `$P{…}`, `$P!{…}` y `$X{IN, columna, parámetro}`: Pelikan los reconoce y

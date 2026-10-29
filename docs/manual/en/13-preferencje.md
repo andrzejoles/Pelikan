@@ -1,6 +1,6 @@
-# Preferences and keyboard shortcuts
+# Settings and keyboard shortcuts
 
-## Preferences window
+## Settings window
 
 You open it with **Pelikan › Settings…** (⌘,). Changes are saved immediately — there is no Apply button. The **Search
 settings** field at the top finds a setting by name (in the interface language) and takes you to the right tab.
@@ -16,7 +16,7 @@ settings** field at the top finds a setting by name (in the interface language) 
 | Object Browser | visible folders and order, confirming recompilation, drag actions, named filters, user folders |
 | Tools | web searches, external editor, external diff viewer, documents, backups and window recovery, “Don’t ask again” prompts |
 | Agents | agent programs, strict mode, agent call and query limits |
-| Sets | preference sets, export and import, Quick Access toolbar |
+| Sets | settings sets, export and import, Quick Access toolbar |
 
 A few settings take effect only after Pelikan is restarted: the Instant Client directory, Oracle Net and Oracle Wallet,
 and the interface language.
@@ -33,7 +33,7 @@ Some prompts (e.g. COMMIT confirmation, moving to the Trash) have a **Don’t as
 remembers your answer. The list of remembered answers and the **Show again** button are on the **Tools** tab.
 Confirmations of changes on production and consents for AI agents cannot be turned off this way.
 
-## Preference sets
+## Settings sets
 
 Sets let you have different settings for different connections — e.g. a different date format for one database or
 stricter rules for production. Pelikan applies the sets in this order (from the most important): **Connection
@@ -41,17 +41,17 @@ personal**, **Personal**, **Connection default**, **Default** for all connection
 `user@database` pattern or a connection name with `*` and `%` (e.g. `app@prod*`) and apply when the main connection
 matches them.
 
-![Sets tab in Preferences](../img/zestawy-preferencji.png)
+![Sets tab in Settings](../img/zestawy-preferencji.png)
 
-On the **Sets** tab (or **Tools › Preferences › Preference Sets…**):
+On the **Sets** tab (or **Tools › Settings › Settings Sets…**):
 
 1. Add a set: choose the kind, enter a name and a connection pattern, click **Add**.
-2. In the **Save changes in Preferences to** field, choose the set you want to edit. From then on, changes on other tabs
+2. In the **Save changes in Settings to** field, choose the set you want to edit. From then on, changes on other tabs
    go to it.
 3. Next to each setting you can see which set the value comes from; **Inherit** removes the value from the edited set.
 
-**Export and import** saves selected sections of the effective preferences to a JSON file (**Tools › Preferences ›
-Export Preferences…**) and loads them into the edited set (**Import Preferences…**). The export contains neither
+**Export and import** saves selected sections of the effective settings to a JSON file (**Tools › Settings ›
+Export Settings…**) and loads them into the edited set (**Import Settings…**). The export contains neither
 passwords nor file history.
 
 ## Toolbar and Quick Access

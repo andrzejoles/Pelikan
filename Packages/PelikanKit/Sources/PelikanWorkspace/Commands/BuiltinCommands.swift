@@ -125,7 +125,7 @@ public enum BuiltinCommands {
             newDocument(.sql, id: "file.new.sql", title: L10n.tr("Okno SQL"), mac: ["cmd+n"], agent: .full, feature: "PD-SQLW-002"),
             newDocument(.program, id: "file.new.program", title: L10n.tr("Okno programu"), mac: ["cmd+shift+n"], agent: .full, feature: "PD-PROG-001"),
             newDocument(.test, id: "file.new.test", title: L10n.tr("Okno testu"), agent: .full, feature: "PD-TEST-001"),
-            newDocument(.command, id: "file.new.command", title: L10n.tr("Okno poleceń"), feature: "PD-CMDW-001"),
+            newDocument(.command, id: "file.new.command", title: L10n.tr("Konsola SQL*Plus"), feature: "PD-CMDW-001"),
             newDocument(.explainPlan, id: "file.new.explainPlan", title: L10n.tr("Okno planu (Explain Plan)"), feature: "PD-OPT-001"),
             newDocument(.report, id: "file.new.report", title: L10n.tr("Okno raportu"), feature: "PD-REP-002"),
             newDocument(.diagram, id: "file.new.diagram", title: L10n.tr("Okno diagramu"), feature: "PD-DIAG-001"),

@@ -141,6 +141,8 @@ struct RibbonTests {
         #expect(top("snippety").first == "view.snippets")
         #expect(top("preferencje", 5).contains("prefs.sets"))
         #expect(top("buduj").contains("project.build"))
+        #expect(top("okno polecen").contains("file.new.command"))
+        #expect(top("command window").first == "file.new.command")
         #expect(top("przel zakl").first == "edit.toggleBookmark")
         #expect(top("qqqxyz").isEmpty)
         #expect(top("   ").isEmpty)

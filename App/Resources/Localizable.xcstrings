@@ -2554,7 +2554,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Action from preferences for an object dropped outside the editor: Edit, Query data, DDL, Describe or Properties."
+            "value" : "Action from settings for an object dropped outside the editor: Edit, Query data, DDL, Describe or Properties."
           }
         },
         "de" : {
@@ -8350,7 +8350,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No searches — add them in Preferences › Tools"
+            "value" : "No searches — add them in Settings › Tools"
           }
         },
         "de" : {
@@ -10170,7 +10170,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What to insert; none — as in preferences"
+            "value" : "What to insert; none — as in settings"
           }
         },
         "de" : {
@@ -14589,7 +14589,7 @@
         }
       }
     },
-    "Dodaj punkt załamania" : {
+    "Dodaj punkt zgięcia" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -19270,7 +19270,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Export Preferences…"
+            "value" : "Export Settings…"
           }
         },
         "de" : {
@@ -19550,7 +19550,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Labels, lists, ribbon, window tabs, status bar, tool windows and Preferences. Secondary text is 2 pt smaller; menus and window titles are drawn by macOS."
+            "value" : "Labels, lists, ribbon, window tabs, status bar, tool windows and Settings. Secondary text is 2 pt smaller; menus and window titles are drawn by macOS."
           }
         },
         "de" : {
@@ -25565,30 +25565,30 @@
         }
       }
     },
-    "Import skryptu SQL Inserts w oknie poleceń, pliku w formacie własnym z wyborem tabel albo zrzutu Data Pump." : {
+    "Import skryptu SQL Inserts w konsoli SQL*Plus, pliku w formacie własnym z wyborem tabel albo zrzutu Data Pump." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import an SQL Inserts script in the Command Window, a file in Pelikan's own format with table selection, or a Data Pump dump."
+            "value" : "Import an SQL Inserts script in the SQL*Plus Console, a file in Pelikan's own format with table selection, or a Data Pump dump."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Імпорт скрипту SQL Inserts у Command Window, файлу у власному форматі з вибором таблиць або дампу Data Pump."
+            "value" : "Імпорт скрипту SQL Inserts у консолі SQL*Plus, файлу у власному форматі з вибором таблиць або дампу Data Pump."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Importación de un script de SQL Inserts en la Command Window, de un archivo en formato propio con selección de tablas o de un volcado de Data Pump."
+            "value" : "Importación de un script de SQL Inserts en la consola SQL*Plus, de un archivo en formato propio con selección de tablas o de un volcado de Data Pump."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import eines SQL-Inserts-Skripts im Command Window, einer Datei im eigenen Format mit Tabellenauswahl oder eines Data-Pump-Dumps."
+            "value" : "Import eines SQL-Inserts-Skripts in der SQL*Plus-Konsole, einer Datei im eigenen Format mit Tabellenauswahl oder eines Data-Pump-Dumps."
           }
         }
       }
@@ -26018,7 +26018,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Import Preferences…"
+            "value" : "Import Settings…"
           }
         },
         "de" : {
@@ -26293,30 +26293,30 @@
         }
       }
     },
-    "Instalacja albo aktualizacja utPLSQL na połączeniu „%@” (%@) z oficjalnego wydania. Skrypty wykonuje okno poleceń na Twoim koncie (nie na koncie agenta), z uprawnieniami SYSDBA albo DBA." : {
+    "Instalacja albo aktualizacja utPLSQL na połączeniu „%@” (%@) z oficjalnego wydania. Skrypty wykonuje konsola SQL*Plus na Twoim koncie (nie na koncie agenta), z uprawnieniami SYSDBA albo DBA." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install or upgrade utPLSQL on connection “%@” (%@) from the official release. The scripts run in a Command Window under your account (not the agent’s), with SYSDBA or DBA privileges."
+            "value" : "Install or upgrade utPLSQL on connection “%@” (%@) from the official release. The scripts run in a SQL*Plus Console under your account (not the agent’s), with SYSDBA or DBA privileges."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "utPLSQL auf der Verbindung „%@“ (%@) aus dem offiziellen Release installieren oder aktualisieren. Die Skripte laufen in einem Command Window unter Ihrem Konto (nicht dem des Agenten), mit SYSDBA- oder DBA-Rechten."
+            "value" : "utPLSQL auf der Verbindung „%@“ (%@) aus dem offiziellen Release installieren oder aktualisieren. Die Skripte laufen in einer SQL*Plus-Konsole unter Ihrem Konto (nicht dem des Agenten), mit SYSDBA- oder DBA-Rechten."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Instalar o actualizar utPLSQL en la conexión «%@» (%@) desde la versión oficial. Los scripts se ejecutan en una Command Window con tu cuenta (no la del agente), con privilegios SYSDBA o DBA."
+            "value" : "Instalar o actualizar utPLSQL en la conexión «%@» (%@) desde la versión oficial. Los scripts se ejecutan en una consola SQL*Plus con tu cuenta (no la del agente), con privilegios SYSDBA o DBA."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Встановлення або оновлення utPLSQL на з’єднанні «%@» (%@) з офіційного випуску. Скрипти виконує Command Window під вашим обліковим записом (не агента), з правами SYSDBA або DBA."
+            "value" : "Встановлення або оновлення utPLSQL на з’єднанні «%@» (%@) з офіційного випуску. Скрипти виконує консоль SQL*Plus під вашим обліковим записом (не агента), з правами SYSDBA або DBA."
           }
         }
       }
@@ -26433,30 +26433,30 @@
         }
       }
     },
-    "Instalacja utPLSQL nie powiodła się — szczegóły w oknie poleceń" : {
+    "Instalacja utPLSQL nie powiodła się — szczegóły w konsoli SQL*Plus" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "utPLSQL installation failed — see the Command Window for details"
+            "value" : "utPLSQL installation failed — see the SQL*Plus Console for details"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не вдалося встановити utPLSQL — подробиці в Command Window"
+            "value" : "Не вдалося встановити utPLSQL — подробиці в консолі SQL*Plus"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La instalación de utPLSQL ha fallado: detalles en la Command Window"
+            "value" : "La instalación de utPLSQL ha fallado: detalles en la consola SQL*Plus"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "utPLSQL-Installation fehlgeschlagen — Details im Command Window"
+            "value" : "utPLSQL-Installation fehlgeschlagen — Details in der SQL*Plus-Konsole"
           }
         }
       }
@@ -26517,30 +26517,30 @@
         }
       }
     },
-    "Instaluje albo aktualizuje utPLSQL z oficjalnego wydania w oknie poleceń widocznym dla użytkownika — tylko połączenia deweloperskie i testowe." : {
+    "Instaluje albo aktualizuje utPLSQL z oficjalnego wydania w konsoli SQL*Plus widocznej dla użytkownika — tylko połączenia deweloperskie i testowe." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Installs or upgrades utPLSQL from the official release in a Command Window visible to the user — development and test connections only."
+            "value" : "Installs or upgrades utPLSQL from the official release in a SQL*Plus Console visible to the user — development and test connections only."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Встановлює або оновлює utPLSQL з офіційного випуску в Command Window, видимому користувачеві, — лише з'єднання розробки й тестування."
+            "value" : "Встановлює або оновлює utPLSQL з офіційного випуску в консолі SQL*Plus, видимій користувачеві, — лише з'єднання розробки й тестування."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Instala o actualiza utPLSQL desde la versión oficial en una Command Window visible para el usuario; solo conexiones de desarrollo y de pruebas."
+            "value" : "Instala o actualiza utPLSQL desde la versión oficial en una consola SQL*Plus visible para el usuario; solo conexiones de desarrollo y de pruebas."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Installiert oder aktualisiert utPLSQL aus dem offiziellen Release in einem für den Benutzer sichtbaren Command Window — nur Entwicklungs- und Testverbindungen."
+            "value" : "Installiert oder aktualisiert utPLSQL aus dem offiziellen Release in einer für den Benutzer sichtbaren SQL*Plus-Konsole — nur Entwicklungs- und Testverbindungen."
           }
         }
       }
@@ -29210,7 +29210,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Program source code from ALL_SOURCE (package: specification and body) as CREATE OR REPLACE, units without “/” (program window preference); to run it as a SQL*Plus script, end each unit with “/” or compile the units separately."
+            "value" : "Program source code from ALL_SOURCE (package: specification and body) as CREATE OR REPLACE, units without “/” (program window setting); to run it as a SQL*Plus script, end each unit with “/” or compile the units separately."
           }
         },
         "de" : {
@@ -32169,6 +32169,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Konsole %@"
+          }
+        }
+      }
+    },
+    "Konsola SQL*Plus" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL*Plus Console"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Консоль SQL*Plus"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consola SQL*Plus"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SQL*Plus-Konsole"
           }
         }
       }
@@ -36658,7 +36686,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Login /@db with a credential from the wallet specified in Preferences › Oracle (Oracle Wallet). The “Database” field must be exactly an alias or connect string stored in the wallet; the alias must be in the Oracle Net configuration from Preferences."
+            "value" : "Login /@db with a credential from the wallet specified in Settings › Oracle (Oracle Wallet). The “Database” field must be exactly an alias or connect string stored in the wallet; the alias must be in the Oracle Net configuration from Settings."
           }
         },
         "uk" : {
@@ -39570,7 +39598,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Action name from Preferences › Sessions"
+            "value" : "Action name from Settings › Sessions"
           }
         },
         "de" : {
@@ -40634,7 +40662,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search name from Preferences (default: the first one)"
+            "value" : "Search name from Settings (default: the first one)"
           }
         },
         "de" : {
@@ -46005,7 +46033,7 @@
         }
       }
     },
-    "Numer punktu załamania linii (od 0)" : {
+    "Numer punktu zgięcia linii (od 0)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -49785,34 +49813,6 @@
         }
       }
     },
-    "Okno poleceń" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command Window"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command Window"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command Window"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command Window"
-          }
-        }
-      }
-    },
     "Okno połączy się ponownie przy następnym wykonaniu" : {
       "localizations" : {
         "en" : {
@@ -51974,7 +51974,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens a user document from the list in Preferences (a file or an http/https address)."
+            "value" : "Opens a user document from the list in Settings (a file or an http/https address)."
           }
         },
         "de" : {
@@ -52161,6 +52161,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Відкриває посібник користувача з розділами та списком клавіатурних скорочень."
+          }
+        }
+      }
+    },
+    "Otwiera konsolę SQL*Plus ze skryptem odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opens a SQL*Plus Console with a script equivalent to the Test Window (VARIABLE, values, block, PRINT)."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкриває консоль SQL*Plus зі скриптом, що відповідає Test Window (VARIABLE, значення, блок, PRINT)."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre una consola SQL*Plus con el script equivalente a la Test Window (VARIABLE, valores, bloque, PRINT)."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnet eine SQL*Plus-Konsole mit einem dem Test Window entsprechenden Skript (VARIABLE, Werte, Block, PRINT)."
           }
         }
       }
@@ -52501,34 +52529,6 @@
         }
       }
     },
-    "Otwiera okno poleceń ze skryptem SQL*Plus odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opens a Command Window with an SQL*Plus script equivalent to the Test Window (VARIABLE, values, block, PRINT)."
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Відкриває Command Window зі скриптом SQL*Plus, що відповідає Test Window (VARIABLE, значення, блок, PRINT)."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre una Command Window con el script de SQL*Plus equivalente a la Test Window (VARIABLE, valores, bloque, PRINT)."
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öffnet ein Command Window mit einem dem Test Window entsprechenden SQL*Plus-Skript (VARIABLE, Werte, Block, PRINT)."
-          }
-        }
-      }
-    },
     "Otwiera okno programu ze szkieletem pakietu testowego (suita, test na każdą procedurę i funkcję) dla pakietu." : {
       "localizations" : {
         "en" : {
@@ -52725,30 +52725,30 @@
         }
       }
     },
-    "Otwiera plik w oknie SQL, programu, testu albo poleceń (domyślnie wg rozszerzenia)." : {
+    "Otwiera plik w oknie SQL, programu, testu albo w konsoli SQL*Plus (domyślnie wg rozszerzenia)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens the file in a SQL, Program, Test or Command Window (by extension by default)."
+            "value" : "Opens the file in a SQL, Program or Test Window or in the SQL*Plus Console (by extension by default)."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Відкриває файл у SQL Window, Program Window, Test Window або Command Window (типово за розширенням)."
+            "value" : "Відкриває файл у SQL Window, Program Window, Test Window або в консолі SQL*Plus (типово за розширенням)."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre el archivo en una SQL Window, Program Window, Test Window o Command Window (por omisión, según la extensión)."
+            "value" : "Abre el archivo en una SQL Window, Program Window o Test Window o en la consola SQL*Plus (por omisión, según la extensión)."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffnet die Datei im SQL Window, Program Window, Test Window oder Command Window (standardmäßig nach Erweiterung)."
+            "value" : "Öffnet die Datei im SQL Window, Program Window, Test Window oder in der SQL*Plus-Konsole (standardmäßig nach Erweiterung)."
           }
         }
       }
@@ -52926,7 +52926,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens the window text in the app set in Preferences (e.g. Visual Studio Code); changes are loaded when you return to Pelikan."
+            "value" : "Opens the window text in the app set in Settings (e.g. Visual Studio Code); changes are loaded when you return to Pelikan."
           }
         },
         "de" : {
@@ -52982,7 +52982,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens a browser search for the selected text or the word at the cursor (searches with %%s in Preferences)."
+            "value" : "Opens a browser search for the selected text or the word at the cursor (searches with %%s in Settings)."
           }
         },
         "de" : {
@@ -56622,7 +56622,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File “%@” is read-only — compilation disabled (Preferences › Oracle)"
+            "value" : "File “%@” is read-only — compilation disabled (Settings › Oracle)"
           }
         },
         "de" : {
@@ -57037,30 +57037,30 @@
         }
       }
     },
-    "Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w oknie poleceń — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu." : {
+    "Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w konsoli SQL*Plus — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Downloads the official utPLSQL release (with checksum) and installs or upgrades it in a Command Window — development and test connections only, after confirmation."
+            "value" : "Downloads the official utPLSQL release (with checksum) and installs or upgrades it in a SQL*Plus Console — development and test connections only, after confirmation."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Завантажує офіційний випуск utPLSQL (з контрольною сумою) і встановлює або оновлює його в Command Window — лише для з'єднань розробки й тестування, після підтвердження."
+            "value" : "Завантажує офіційний випуск utPLSQL (з контрольною сумою) і встановлює або оновлює його в консолі SQL*Plus — лише для з'єднань розробки й тестування, після підтвердження."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descarga la versión oficial de utPLSQL (con suma de comprobación) y la instala o actualiza en la Command Window; solo para conexiones de desarrollo y de pruebas, tras confirmación."
+            "value" : "Descarga la versión oficial de utPLSQL (con suma de comprobación) y la instala o actualiza en la consola SQL*Plus; solo para conexiones de desarrollo y de pruebas, tras confirmación."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lädt das offizielle utPLSQL-Release (mit Prüfsumme) herunter und installiert oder aktualisiert es im Command Window — nur für Entwicklungs- und Testverbindungen, nach Bestätigung."
+            "value" : "Lädt das offizielle utPLSQL-Release (mit Prüfsumme) herunter und installiert oder aktualisiert es in der SQL*Plus-Konsole — nur für Entwicklungs- und Testverbindungen, nach Bestätigung."
           }
         }
       }
@@ -57182,7 +57182,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fetching more rows will increase memory use (limit in Preferences › SQL Window)."
+            "value" : "Fetching more rows will increase memory use (limit in Settings › SQL Window)."
           }
         },
         "de" : {
@@ -64065,30 +64065,30 @@
         }
       }
     },
-    "Połączenia tymczasowego (CONNECT w oknie poleceń) nie można skopiować ani przenieść" : {
+    "Połączenia tymczasowego (CONNECT w konsoli SQL*Plus) nie można skopiować ani przenieść" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A temporary connection (CONNECT in the command window) cannot be copied or moved"
+            "value" : "A temporary connection (CONNECT in the SQL*Plus Console) cannot be copied or moved"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eine temporäre Verbindung (CONNECT im Befehlsfenster) kann weder kopiert noch verschoben werden"
+            "value" : "Eine temporäre Verbindung (CONNECT in der SQL*Plus-Konsole) kann weder kopiert noch verschoben werden"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Una conexión temporal (CONNECT en la ventana de comandos) no se puede copiar ni mover"
+            "value" : "Una conexión temporal (CONNECT en la consola SQL*Plus) no se puede copiar ni mover"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Тимчасове з'єднання (CONNECT у вікні команд) не можна скопіювати чи перемістити"
+            "value" : "Тимчасове з'єднання (CONNECT у консолі SQL*Plus) не можна скопіювати чи перемістити"
           }
         }
       }
@@ -67677,7 +67677,7 @@
         }
       }
     },
-    "Przesuwa punkt załamania linii relacji (z dociąganiem do siatki)." : {
+    "Przesuwa punkt zgięcia linii relacji (z dociąganiem do siatki)." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -67761,7 +67761,7 @@
         }
       }
     },
-    "Przesuń punkt załamania" : {
+    "Przesuń punkt zgięcia" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -75629,30 +75629,30 @@
         }
       }
     },
-    "Skrypt wykonuje się w nowym oknie poleceń połączenia; błędy zostają w konsoli okna." : {
+    "Skrypt wykonuje się w nowej konsoli SQL*Plus połączenia; błędy zostają w jej wyjściu." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The script runs in a new Command Window of the connection; errors remain in the window's console."
+            "value" : "The script runs in a new SQL*Plus Console of the connection; errors remain in its output."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Скрипт виконується в новому Command Window з'єднання; помилки залишаються в консолі вікна."
+            "value" : "Скрипт виконується в новій консолі SQL*Plus з'єднання; помилки залишаються в її виводі."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El script se ejecuta en una nueva Command Window de la conexión; los errores permanecen en la consola de la ventana."
+            "value" : "El script se ejecuta en una nueva consola SQL*Plus de la conexión; los errores permanecen en su salida."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Das Skript wird in einem neuen Command Window der Verbindung ausgeführt; Fehler bleiben in der Konsole des Fensters."
+            "value" : "Das Skript wird in einer neuen SQL*Plus-Konsole der Verbindung ausgeführt; Fehler bleiben in ihrer Ausgabe."
           }
         }
       }
@@ -81962,7 +81962,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This is not a Pelikan preferences file"
+            "value" : "This is not a Pelikan settings file"
           }
         },
         "de" : {
@@ -86218,7 +86218,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sets the order of items in the Code Contents panel (saved in Preferences)."
+            "value" : "Sets the order of items in the Code Contents panel (saved in Settings)."
           }
         },
         "de" : {
@@ -86386,7 +86386,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preferences"
+            "value" : "Settings"
           }
         },
         "de" : {
@@ -86442,7 +86442,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pelikan Preferences"
+            "value" : "Pelikan Settings"
           }
         },
         "de" : {
@@ -87277,7 +87277,7 @@
         }
       }
     },
-    "Usuwa punkt załamania linii relacji." : {
+    "Usuwa punkt zgięcia linii relacji." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -88425,7 +88425,7 @@
         }
       }
     },
-    "Usuń punkt załamania" : {
+    "Usuń punkt zgięcia" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -91762,7 +91762,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loads preferences from a file (selected sections) into the set being edited in Preferences."
+            "value" : "Loads settings from a file (selected sections) into the set being edited in Settings."
           }
         },
         "de" : {
@@ -94249,7 +94249,7 @@
         }
       }
     },
-    "Wstawia punkt załamania linii relacji na podanej pozycji listy punktów." : {
+    "Wstawia punkt zgięcia linii relacji na podanej pozycji listy punktów." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -94669,30 +94669,30 @@
         }
       }
     },
-    "Wstrzymuje skrypt okna poleceń przed następnym poleceniem; dalej krok po kroku albo resztę naraz." : {
+    "Wstrzymuje skrypt konsoli SQL*Plus przed następnym poleceniem; dalej krok po kroku albo resztę naraz." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pauses the Command Window script before the next command; then continue step by step or run the rest at once."
+            "value" : "Pauses the SQL*Plus Console script before the next command; then continue step by step or run the rest at once."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hält das Command Window-Skript vor dem nächsten Befehl an; danach schrittweise oder den Rest auf einmal ausführen."
+            "value" : "Hält das Skript der SQL*Plus-Konsole vor dem nächsten Befehl an; danach schrittweise oder den Rest auf einmal ausführen."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pausa el script de la Command Window antes del siguiente comando; después continúa paso a paso o ejecuta el resto de una vez."
+            "value" : "Pausa el script de la consola SQL*Plus antes del siguiente comando; después continúa paso a paso o ejecuta el resto de una vez."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Призупиняє скрипт Command Window перед наступною командою; далі крок за кроком або решту одразу."
+            "value" : "Призупиняє скрипт консолі SQL*Plus перед наступною командою; далі крок за кроком або решту одразу."
           }
         }
       }
@@ -96713,30 +96713,30 @@
         }
       }
     },
-    "Wyjście okna poleceń" : {
+    "Wyjście konsoli SQL*Plus" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command Window output"
+            "value" : "SQL*Plus Console output"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вивід Command Window"
+            "value" : "Вивід консолі SQL*Plus"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Salida de la Command Window"
+            "value" : "Salida de la consola SQL*Plus"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ausgabe des Command Window"
+            "value" : "Ausgabe der SQL*Plus-Konsole"
           }
         }
       }
@@ -97698,7 +97698,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Runs a session browser action (a command from Preferences) for the selected session through the modification guard."
+            "value" : "Runs a session browser action (a command from Settings) for the selected session through the modification guard."
           }
         },
         "de" : {
@@ -98001,30 +98001,30 @@
         }
       }
     },
-    "Wykonuje linię z karty Dialog okna poleceń." : {
+    "Wykonuje linię z karty Dialog konsoli SQL*Plus." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Executes the line from the Dialog tab of the Command Window."
+            "value" : "Executes the line from the Dialog tab of the SQL*Plus Console."
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Виконує рядок із вкладки «Діалог» Command Window."
+            "value" : "Виконує рядок із вкладки «Діалог» консолі SQL*Plus."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ejecuta la línea de la pestaña Diálogo de la Command Window."
+            "value" : "Ejecuta la línea de la pestaña Diálogo de la consola SQL*Plus."
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Führt die Zeile aus dem Tab „Dialog“ des Command Window aus."
+            "value" : "Führt die Zeile aus dem Tab „Dialog“ der SQL*Plus-Konsole aus."
           }
         }
       }
@@ -99854,7 +99854,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Searches the Oracle documentation for the selected version (Preferences › Oracle)."
+            "value" : "Searches the Oracle documentation for the selected version (Settings › Oracle)."
           }
         },
         "de" : {
@@ -106406,7 +106406,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saves the preferences in effect (selected sections) to a file; no passwords or file history."
+            "value" : "Saves the settings in effect (selected sections) to a file; no passwords or file history."
           }
         },
         "de" : {
@@ -111306,7 +111306,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preference sets"
+            "value" : "Settings sets"
           }
         },
         "de" : {
@@ -111334,7 +111334,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preference sets: personal, default and per connection; the source of each value and restoring the inherited one."
+            "value" : "Settings sets: personal, default and per connection; the source of each value and restoring the inherited one."
           }
         },
         "de" : {
@@ -111362,7 +111362,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Preference Sets…"
+            "value" : "Settings Sets…"
           }
         },
         "de" : {
@@ -112090,7 +112090,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Save changes in Preferences to"
+            "value" : "Save changes in Settings to"
           }
         },
         "de" : {
@@ -116705,6 +116705,34 @@
         }
       }
     },
+    "konsola SQL*Plus jest niedostępna dla agenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the SQL*Plus Console is not available to the agent"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "die SQL*Plus-Konsole ist für den Agenten nicht verfügbar"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "la consola SQL*Plus no está disponible para el agente"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "консоль SQL*Plus недоступна для агента"
+          }
+        }
+      }
+    },
     "koszt %@ · wiersze %@" : {
       "localizations" : {
         "en" : {
@@ -118437,34 +118465,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fenster"
-          }
-        }
-      }
-    },
-    "okno poleceń jest niedostępne dla agenta" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "the Command Window is not available to the agent"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "das Command Window ist für den Agenten nicht verfügbar"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "la Command Window no está disponible para el agente"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command Window недоступне для агента"
           }
         }
       }

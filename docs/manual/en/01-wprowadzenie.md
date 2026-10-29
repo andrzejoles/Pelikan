@@ -3,7 +3,7 @@
 Pelikan is a native macOS environment for working with Oracle databases: writing and executing SQL, creating, testing
 and debugging PL/SQL code, browsing and editing database objects, utPLSQL tests, and tools for comparison, export and
 administration. The window layout and keyboard shortcuts follow PL/SQL Developer, so its users will find familiar
-windows: **SQL Window**, **Command Window**, **Program Window**, **Test Window**, **Explain Plan Window** and **Object
+windows: **SQL Window**, **SQL*Plus Console**, **Program Window**, **Test Window**, **Explain Plan Window** and **Object
 Browser** (the **Objects** tab).
 
 This manual describes how to perform typical tasks. The full list of commands with their current shortcuts is in the
@@ -46,7 +46,7 @@ Download “Instant Client for macOS (ARM64)”, the **Basic** or **Basic Light*
 [oracle.com](https://www.oracle.com/database/technologies/instant-client/macos-arm64-downloads.html) and install it
 according to Oracle's instructions. Pelikan looks for the `libclntsh.dylib` library in this order:
 
-1. the directory set in **Preferences › Oracle › Oracle Instant Client**;
+1. the directory set in **Settings › Oracle › Oracle Instant Client**;
 2. `/opt/homebrew/lib`, `/usr/local/lib`, `/usr/local/oracle/instantclient` and the `/opt/oracle/instantclient*`
    directories;
 3. `instantclient_*` directories in your **Downloads** and **Applications** folders (newest version first).
@@ -77,7 +77,7 @@ Pelikan has one main window:
 - **Left column** with tabs: **Connections** (connection list with folders and recently used connections), **Objects**
   (Object Browser), **Windows** (list of open windows), **Templates** and **Files** (file browser).
 - **Document tabs** in the middle — each SQL, program, test or Explain Plan Window has its own tab with a colored type letter: S
-  — SQL Window, P — Program Window, T — Test Window, C — Command Window, E — Explain Plan Window, R — Report Window, D —
+  — SQL Window, P — Program Window, T — Test Window, C — SQL*Plus Console, E — Explain Plan Window, R — Report Window, D —
   diagram window, N — SQL notebook. A middle click on a tab closes the window; the tab menu closes the other windows or
   the windows to the left and right.
 - **Toolbar** with the most frequent actions (new window, open, save, execute, break, COMMIT, ROLLBACK, log on) and the
@@ -90,7 +90,7 @@ Pelikan has one main window:
   its own tab. Drag a tab to the other panel or outside the panels — the tool then gets a separate window where you drop
   it; the tab menu and the buttons in the panel header do the same. A tool window goes back to a panel with the button
   in its title bar. Pelikan remembers the location of each kind of tool. A collapsed panel with tools shows a button
-  with their number in the status bar. The commands are in **View › Tool Panels**; in **Preferences › General › Tool
+  with their number in the status bar. The commands are in **View › Tool Panels**; in **Settings › General › Tool
   Panels** you choose where new tools open (also separate windows) and turn on auto-hide. A docked tool's shortcuts
   (Return, Esc) work only while the cursor is in that tool.
 - **Agent panel** on the right (collapsed by default) — the AI agent's terminal with a list of its actions. It is shown
@@ -110,7 +110,7 @@ and returns to it when you switch windows.
 Frequent actions have large buttons, others small ones; rarer ones are in the groups' drop-down lists (marked ▾). A
 button's tooltip shows its description and shortcut, so you learn shortcuts along the way. Right-click a button to add
 the command to the quick access group. Double-click a tab or use the arrow on the right to collapse the ribbon to its
-tabs; **View › Ribbon** hides it (also in **Preferences › General › Ribbon**).
+tabs; **View › Ribbon** hides it (also in **Settings › General › Ribbon**).
 
 The **Search actions…** field to the right of the tabs finds any command — type a few letters: “plan”, “export tables”,
 a word without Polish diacritics, or an English name known from PL/SQL Developer, e.g. “beautifier”, “compile invalid”.
@@ -126,7 +126,7 @@ what shortcut they have. It is the fastest way to find a feature whose menu loca
 
 Pelikan has two shortcut profiles: **PL/SQL Developer** (F and Ctrl keys — e.g. F8 executes, F9 starts debugging) and
 **macOS** (⌘ shortcuts). In both profiles the ⌘ equivalents work, e.g. ⌘↩ executes a statement. You choose the profile
-in **Preferences › Keyboard**. If the F1–F12 keys control brightness or volume, enable the option to use them as
+in **Settings › Keyboard**. If the F1–F12 keys control brightness or volume, enable the option to use them as
 standard function keys in System Settings, or press them together with the fn key.
 
 ## Updates
@@ -137,13 +137,13 @@ from another source. Settings, connections and passwords stay unchanged.
 
 ## Languages
 
-The interface is available in Polish, English, German, Spanish and Ukrainian. You choose the language in **Preferences ›
+The interface is available in Polish, English, German, Spanish and Ukrainian. You choose the language in **Settings ›
 General › Interface language**; the change takes effect after a restart. The names of some windows and tools (e.g.
 Explain Plan, Large Data Editor, Query Builder) stay in their original form.
 
 ## Where Pelikan keeps its data
 
-Connection definitions (without passwords), preferences, history, worksets, local file history, the agent log and other
+Connection definitions (without passwords), settings, history, worksets, local file history, the agent log and other
 application data are in the `~/Library/Application Support/Pelikan` directory. Passwords are kept only in the macOS
 Keychain — see the *Security and privacy* chapter.
 

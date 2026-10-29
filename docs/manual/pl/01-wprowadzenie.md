@@ -3,7 +3,7 @@
 Pelikan to natywne środowisko macOS do pracy z bazą Oracle: pisania i wykonywania SQL, tworzenia, testowania i
 debugowania kodu PL/SQL, przeglądania i edycji obiektów bazy, testów utPLSQL oraz narzędzi porównywania, eksportu i
 administracji. Układ okien i skróty klawiszowe odpowiadają programowi PL/SQL Developer, więc jego użytkownicy odnajdą
-znajome okna — w Pelikanie noszą polskie nazwy: **Okno SQL**, **Okno poleceń**, **Okno programu**, **Okno testu**,
+znajome okna — w Pelikanie noszą polskie nazwy: **Okno SQL**, **Konsola SQL*Plus**, **Okno programu**, **Okno testu**,
 **Okno planu** i **Przeglądarka obiektów** (karta **Obiekty**).
 
 Ta instrukcja opisuje, jak wykonać typowe zadania. Pełna lista komend z bieżącymi skrótami jest w ostatnim rozdziale,
@@ -76,7 +76,7 @@ Pelikan ma jedno okno główne:
 - **Lewa kolumna** z kartami: **Połączenia** (lista połączeń z folderami i ostatnio używanymi), **Obiekty**
   (Przeglądarka obiektów), **Okna** (lista otwartych okien), **Szablony** i **Pliki** (przeglądarka plików).
 - **Karty dokumentów** w środku — każde okno SQL, programu, testu czy planu ma własną kartę z kolorową literą typu: S
-  — okno SQL, P — okno programu, T — okno testu, C — okno poleceń, E — okno planu, R — okno raportu, D — okno
+  — okno SQL, P — okno programu, T — okno testu, C — konsola SQL*Plus, E — okno planu, R — okno raportu, D — okno
   diagramu, N — notatnik SQL. Środkowy klik na karcie zamyka okno; menu karty zamyka pozostałe okna albo okna z lewej
   i prawej.
 - **Pasek narzędzi** z najczęstszymi czynnościami (nowe okno, otwórz, zapisz, wykonaj, przerwij, COMMIT, ROLLBACK,

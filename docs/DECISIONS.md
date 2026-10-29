@@ -2107,8 +2107,8 @@ użytkownik oczekuje innego słowa.
 - **Zasady** (szczegóły, źródła i tabela terminów: [`docs/research/glosariusz.md`](research/glosariusz.md)): czynności
   w trybie rozkazującym (rzeczownik tylko przy przełącznikach i nazwach narzędzi), wielokropek tylko przed oknem
   z pytaniem, ta sama czynność tą samą nazwą w menu, na wstążce, w palecie, na przyciskach i w instrukcji; panele
-  Pelikana po polsku jak w menu Widok (Przeglądarka obiektów, Przeglądarka plików, Zawartość kodu, okno SQL, okno
-  poleceń); nazwy własne narzędzi wzorca (Explain Plan, Code Assistant, Query Builder, Query By Example, Large Data
+  Pelikana po polsku jak w menu Widok (Przeglądarka obiektów, Przeglądarka plików, Zawartość kodu, okno SQL, konsola
+  SQL*Plus); nazwy własne narzędzi wzorca (Explain Plan, Code Assistant, Query Builder, Query By Example, Large Data
   Editor, SQL Monitor…) bez tłumaczenia; słowa SQL w nawiasie przy polskiej czynności.
 - **Okno planu:** przycisk „Wyjaśnij” (kalka „Explain”) i etykieta wstążki „Wyznacz plan” → **Odśwież plan** — liczy
   plan ponownie dla tekstu okna (pierwszy plan liczy otwarcie okna z okna SQL).
@@ -2124,11 +2124,17 @@ użytkownik oczekuje innego słowa.
 - **Decyzje właściciela po przeglądzie tabeli zmian:** duże przyciski transakcji na wstążce zostają nazwami SQL
   **COMMIT** / **ROLLBACK** (w menu dalej „Zatwierdź (COMMIT)” / „Wycofaj (ROLLBACK)”); raport predefiniowany
   i nagłówek dokumentacji schematu zostają **Ograniczenia** (folder w Przeglądarce obiektów — „Więzy”).
+  „Okno poleceń” (Command Window) → **Konsola SQL*Plus** wszędzie (menu Plik › Nowy, wstążka, tytuły okien i komend,
+  opisy, instrukcja) — nazwa mówi, czym okno jest; także po angielsku (*SQL*Plus Console*), niemiecku, hiszpańsku
+  i ukraińsku (tłumaczenia i instrukcje poprawione, bo zmienił się sens nazwy). Punkt załamania linii relacji na
+  diagramie → **punkt zgięcia**. Po angielsku *Preferences* → *Settings* wszędzie (okno, menu, opisy, „in Settings ›
+  …”, instrukcja en; zestawy — *Settings sets*). Dawne nazwy są słowami kluczowymi wyszukiwania komend. Tytuł okna
+  wyznacza nazwy plików zrzutów, więc zrzuty konsoli i ustawień dostaną nowe nazwy przy następnym przebiegu.
 - **IDE:** Fragmenty kodu (snippety), Wyodrębnij (Wydziel), Przełącz komentarz linii, Zamień na wielkie/małe litery,
   Przejdź do pierwszego znaku linii, Pokaż podpowiedzi kodu, Kompiluj projekt / Kompiluj zmienione (Buduj / Make),
   Duplikuj połączenie…, Filtruj wyrażeniem… / Filtruj kolumny…; macOS: Powtórz (było „Ponów” — w angielskim
   interfejsie pokazywało „Retry” przy ⇧⌘Z), Zminimalizuj, dwukrotne kliknięcie; Pro*C: kopia robocza, kopia
-  zapasowa; diagram: punkt załamania.
+  zapasowa; diagram: punkt zgięcia.
 - **Technicznie:** klucz = polskie zdanie, więc tłumaczenia en/de/es/uk przeniesiono na nowe klucze bez zmian;
   poprawiono tylko te, którym zmienił się sens (Odśwież plan, Powtórz, Ustawienia). Dawne polskie tytuły komend są
   słowami kluczowymi wyszukiwania czynności (`CommandSearch.keywords`), więc „wyjaśnij”, „zabij”, „snippet”, „buduj”

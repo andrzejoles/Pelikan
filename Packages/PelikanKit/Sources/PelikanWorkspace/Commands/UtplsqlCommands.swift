@@ -39,7 +39,7 @@ enum UtplsqlCommands {
         let steps = UtplsqlInstaller.script(owner: owner, upgrade: installed != nil,
                                             tablespace: ctx.arguments.string("tablespace") ?? "USERS")
         guard await UtplsqlInstaller.run(steps, source: source, engine: ws.sqlplusEngine(for: doc)) else {
-            throw CommandError.notAvailable(L10n.tr("Instalacja utPLSQL nie powiodła się — szczegóły w oknie poleceń"))
+            throw CommandError.notAvailable(L10n.tr("Instalacja utPLSQL nie powiodła się — szczegóły w konsoli SQL*Plus"))
         }
         let now = await UtplsqlRunner.version(s)
         return CommandResult(message: L10n.tr("Zainstalowano utPLSQL \(now ?? release.version)"), value: now.map { .string($0) } ?? .null)
@@ -232,7 +232,7 @@ enum UtplsqlCommands {
                                                    CommandParameter("owner", .string, L10n.tr("Schemat utPLSQL przy nowej instalacji (domyślnie UT3)")),
                                                    CommandParameter("tablespace", .string, L10n.tr("Przestrzeń tabel schematu (domyślnie USERS)"))],
                                       agent: .none, effect: .modifiesDatabase,
-                                      summary: L10n.tr("Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w oknie poleceń — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu."),
+                                      summary: L10n.tr("Pobiera oficjalne wydanie utPLSQL (z sumą kontrolną) i instaluje je albo aktualizuje w konsoli SQL*Plus — tylko dla połączeń deweloperskich i testowych, po potwierdzeniu."),
                                       feature: "UT-INS-002"),
                     validate: { connection($0) != nil }) { ctx in
                 guard let conn = connection(ctx.workspace) else { throw CommandError.notConnected }

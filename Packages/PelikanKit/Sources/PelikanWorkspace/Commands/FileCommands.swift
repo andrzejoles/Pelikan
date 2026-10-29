@@ -141,7 +141,7 @@ enum FileCommands {
             command("fb.open", L10n.tr("Otwórz jako…"), submenu: fb,
                     params: [CommandParameter("path", .string, L10n.tr("Ścieżka pliku (bez argumentu — plik zaznaczony w Przeglądarce plików albo wybór pliku)")),
                              CommandParameter("kind", .string, L10n.tr("Rodzaj okna (domyślnie wg rozszerzenia)"), allowed: ["sql", "program", "test", "command"])],
-                    effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo poleceń (domyślnie wg rozszerzenia)."),
+                    effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo w konsoli SQL*Plus (domyślnie wg rozszerzenia)."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
                 // Ścieżka albo lista ścieżek (makro nagrywa pliki wybrane w oknie).
                 let given = (ctx.arguments.strings("path") ?? []).filter { !$0.isEmpty }
@@ -163,7 +163,7 @@ enum FileCommands {
                 if given.isEmpty, ctx.arguments.string("kind") == nil {
                     let options: [(label: String, value: DocumentKind?)] = [
                         (L10n.tr("Wg rozszerzenia pliku"), nil), (L10n.tr("Okno SQL"), .sql), (L10n.tr("Okno programu"), .program),
-                        (L10n.tr("Okno testu"), .test), (L10n.tr("Okno poleceń"), .command)]
+                        (L10n.tr("Okno testu"), .test), (L10n.tr("Konsola SQL*Plus"), .command)]
                     kind = try await ctx.choose(L10n.tr("Otwórz jako"), options) ?? nil
                 }
                 var title = ""

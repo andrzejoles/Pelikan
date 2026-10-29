@@ -236,7 +236,7 @@ enum EditorCommands {
             },
             Command(CommandDescriptor(id: "test.saveAsSQLPlus", title: L10n.tr("Zapisz test jako skrypt SQL*Plus"), category: .file,
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Otwiera okno poleceń ze skryptem SQL*Plus odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)."),
+                                      summary: L10n.tr("Otwiera konsolę SQL*Plus ze skryptem odpowiadającym oknu testu (VARIABLE, wartości, blok, PRINT)."),
                                       feature: "PD-TEST-005"),
                     validate: { $0.activeDocument?.kind == .test }) { ctx in
                 guard let d = ctx.workspace.activeDocument, d.kind == .test else { return .ok }

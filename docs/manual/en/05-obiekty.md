@@ -36,10 +36,10 @@ invalidate objects across the whole database.
   - a specific schema.
   The **Directories** folder (Oracle directories have no schema owner) shows all directories in every mode when you
   have access to DBA views, and otherwise those you have privileges on.
-  Set the scope after connecting in **Preferences › Object Browser › After connecting, show**.
+  Set the scope after connecting in **Settings › Object Browser › After connecting, show**.
 - **Filter** below the user selection: part of a name (matched anywhere in the name — `emp` finds `EMP` and
   `T_EMP_HIST`), a pattern with `%` (e.g. `EMP%` — only the start of the name; change the behaviour without `%` in
-  **Preferences › Object Browser**), several comma-separated patterns, `status=invalid`
+  **Settings › Object Browser**), several comma-separated patterns, `status=invalid`
   (only invalid objects) or `source=text` (objects whose source contains the text).
 - Expanding an object shows its elements: columns with types, constraints, indexes, triggers, partitions, subprograms,
   attributes, and also dependencies (**Depends on**, **Used by**).
@@ -81,14 +81,14 @@ to Folder…** and **Run utPLSQL tests**.
 
 ### Dragging
 
-Drag an object into the editor to insert its name. With the ⌃ key (or when “Ask” is selected in Preferences), a menu
+Drag an object into the editor to insert its name. With the ⌃ key (or when “Ask” is selected in Settings), a menu
 appears after dropping: name, name with owner, column list, SELECT, INSERT, UPDATE, DELETE, call or DDL. Dropping an
-object on the empty window area performs the action from **Preferences › Object Browser** (e.g. Edit or Show data).
+object on the empty window area performs the action from **Settings › Object Browser** (e.g. Edit or Show data).
 Dragging a folder inserts the names of its objects separated by commas.
 
 ### Filters and custom folders
 
-In **Preferences › Object Browser** you set:
+In **Settings › Object Browser** you set:
 
 - visible folders and their order, and the double-click action for each type;
 - **Named filters** — a `WHERE` condition and `ORDER BY` on the object view (alias `o`, variables `:browser_user` and

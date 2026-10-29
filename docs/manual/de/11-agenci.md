@@ -68,7 +68,7 @@ Die Werkzeuge des Agenten im Überblick:
 - **Mit Zustimmung**: Kompilieren, Ausführen eines Befehls und eines Skripts, COMMIT, ROLLBACK, Anlegen und Generieren
   eines Testpakets, Ausführen von utPLSQL-Tests, Installieren von utPLSQL.
 
-Der Agent hat **keinen** Zugriff auf das Command Window und den Befehl HOST, auf die System-Shell über Pelikan, den
+Der Agent hat **keinen** Zugriff auf die SQL*Plus-Konsole und den Befehl HOST, auf die System-Shell über Pelikan, den
 Debugger, das Fenster „Sitzungen“ (außer dem Lesen der Sitzungsliste) und das Beenden von Sitzungen, auf SQL Trace,
 AWR/ASH/ADDM-Berichte, SQL Monitor und SQL Tuning Advisor, den Pro*C-Remote-Build, Benutzerwerkzeuge und auch nicht auf
 Passwörter, Hosts, Ports und Benutzernamen der Verbindungen.
@@ -102,8 +102,8 @@ Das Fenster ist so gestaltet, dass nichts versehentlich genehmigt wird:
   Agent nicht festgeschriebene DML hat (DDL würde sie implizit festschreiben).
 - PL/SQL-Blöcke und `CALL` des Agenten werden ebenfalls abgewiesen, solange er nicht festgeschriebene DML hat — sie
   könnten sie festschreiben (COMMIT im Code, dynamisches DDL, autonome Transaktionen). Das Zustimmungsfenster warnt,
-  dass sich ein PL/SQL-Block nicht rückgängig machen lässt. Das Command Window ist für den Agenten gesperrt: Er kann
-  dessen Text weder lesen noch ändern.
+  dass sich ein PL/SQL-Block nicht rückgängig machen lässt. Die SQL*Plus-Konsole ist für den Agenten gesperrt: Er kann
+  ihren Text weder lesen noch ändern.
 - Vor einer Änderung am Code eines Objekts (Paket, Prozedur, View …) speichert Pelikan die vorherige Version.
   **Werkzeuge › KI-Agent › Agentensitzung rückgängig machen …** (oder **Sitzung rückgängig machen …** im Bereich) stellt
   den Code der Objekte vom Stand vor der Sitzung wieder her, löscht vom Agenten angelegte Objekte, macht Textänderungen

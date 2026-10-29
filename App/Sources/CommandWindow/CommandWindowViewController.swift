@@ -53,7 +53,7 @@ final class CommandWindowViewController: NSViewController, NSTextFieldDelegate, 
 
         console.isEditable = false
         console.textContainerInset = NSSize(width: 6, height: 6)
-        console.setAccessibilityLabel(L10n.tr("Wyjście okna poleceń"))
+        console.setAccessibilityLabel(L10n.tr("Wyjście konsoli SQL*Plus"))
         input.placeholderString = L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL (blok kończy „/”)")
         input.delegate = self
         input.target = self

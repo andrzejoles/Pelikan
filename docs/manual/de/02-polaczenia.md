@@ -11,7 +11,7 @@ verwendeten. Unter einer Verbindung sind ihre offenen Fenster zu sehen.
 - Ein Doppelklick auf eine Verbindung verbindet sie als **Hauptverbindung** (in der Liste fett). Neue Fenster öffnen
   sich auf der Hauptverbindung.
 - Kontextmenü der Verbindung: **Als Hauptverbindung verbinden**, **Verbinden** (ohne die Hauptverbindung zu ändern),
-  **Trennen**, **Neues Fenster** (SQL-, Programm-, Test- oder Befehlsfenster auf dieser Verbindung), **Fenster der
+  **Trennen**, **Neues Fenster** (SQL-, Programm- oder Testfenster oder SQL*Plus-Konsole auf dieser Verbindung), **Fenster der
   Verbindung zeigen**, **Fenster der Verbindung schließen**, **Fenster der Verbindung neu verbinden**, **Aktuelles
   Schema festlegen …**, **Bearbeiten …**, **Unter anderem Namen kopieren …** (Kopie im selben Ordner, mit den
   gespeicherten Passwörtern), **In Ordner verschieben** und **Löschen …**.

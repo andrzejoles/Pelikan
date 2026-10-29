@@ -67,7 +67,7 @@ Las herramientas del agente en resumen:
 - **Con autorización**: compilación, ejecución de una sentencia y de un script, COMMIT, ROLLBACK, creación y generación
   de un paquete de pruebas, ejecución de pruebas utPLSQL, instalación de utPLSQL.
 
-El agente **no** tiene acceso a la Command Window ni al comando HOST, al shell del sistema a través de Pelikan, al
+El agente **no** tiene acceso a la consola SQL*Plus ni al comando HOST, al shell del sistema a través de Pelikan, al
 depurador, a la ventana Sesiones (salvo leer la lista de sesiones) ni a finalizar sesiones, a SQL Trace, a los informes
 AWR/ASH/ADDM, a SQL Monitor ni a SQL Tuning Advisor, al build remoto de Pro*C, a las herramientas de usuario ni a las
 contraseñas, hosts, puertos y nombres de usuario de las conexiones.
@@ -101,7 +101,7 @@ La ventana está diseñada para que no se apruebe nada por accidente:
   (el DDL lo confirmaría implícitamente).
 - Los bloques PL/SQL y `CALL` del agente también se rechazan mientras tenga DML sin confirmar: podrían confirmarlo
   (COMMIT en el código, DDL dinámico, transacciones autónomas). La ventana de aprobación avisa de que un bloque PL/SQL
-  no se puede deshacer. La Command Window está fuera del alcance del agente: no puede leer ni cambiar su texto.
+  no se puede deshacer. La consola SQL*Plus está fuera del alcance del agente: no puede leer ni cambiar su texto.
 - Antes de modificar el código de un objeto (paquete, procedimiento, vista…), Pelikan guarda la versión anterior.
   **Herramientas › Agente de IA › Deshacer sesión de agente…** (o **Deshacer sesión…** en el panel) restaura el código
   de los objetos de antes de la sesión, elimina los objetos creados por el agente, deshace los cambios de texto en las

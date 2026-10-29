@@ -113,7 +113,7 @@ Poniższe funkcje działają inaczej niż we wzorcu, są niepełne albo nie zost
 - **Debuger**: brak debugowania przez DBMS_DEBUG_JDWP; w wyzwalaczach nie są dostępne wartości `:new` i `:old`; w
   jednej linii może być tylko jeden punkt przerwania.
 - **Siatka** nie potrafi zablokować przewijania (zamrozić) kolumn ani wierszy.
-- **Okno poleceń**: polecenia `COPY` i `SET ENVVAR` nie są obsługiwane.
+- **Konsola SQL*Plus**: polecenia `COPY` i `SET ENVVAR` nie są obsługiwane.
 - **Monitor zdarzeń** nie odczytuje DBMS_OUTPUT innych sesji (Oracle tego nie udostępnia).
 - **Narzędzia w lewej kolumnie** są kartami jednego panelu (Połączenia, Obiekty, Okna, Szablony, Pliki); nie można ich
   dowolnie dokować ani automatycznie ukrywać. Dokumenty są kartami jednego okna głównego, a nie natywnymi kartami macOS.

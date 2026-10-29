@@ -281,7 +281,7 @@ struct FileBrowserPane: View {
                 Button(L10n.tr("Okno SQL")) { open(url, as: "sql") }
                 Button(L10n.tr("Okno programu")) { open(url, as: "program") }
                 Button(L10n.tr("Okno testu")) { open(url, as: "test") }
-                Button(L10n.tr("Okno poleceń")) { open(url, as: "command") }
+                Button(L10n.tr("Konsola SQL*Plus")) { open(url, as: "command") }
             }
             Divider()
         }

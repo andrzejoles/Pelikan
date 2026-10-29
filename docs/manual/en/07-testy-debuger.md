@@ -12,7 +12,7 @@ You open an empty window with **File › New › Test Window**.
    Cursor and others).
 2. Press F8 (⌘↩). After execution the output values appear in the table, and those that have changed are highlighted in
    yellow. The status bar shows the execution time.
-3. Commit or roll back the changes: F10 / ⇧F10 (the **AutoCommit after Test Window execution** option in **Preferences ›
+3. Commit or roll back the changes: F10 / ⇧F10 (the **AutoCommit after Test Window execution** option in **Settings ›
    SQL Window** commits automatically).
 
 The other tabs:
@@ -44,7 +44,7 @@ The debugger uses the Oracle DBMS_DEBUG package and works on 19c–26ai database
   **Debug › Debugger Privileges…** opens a SQL Window with ready GRANT statements to be executed by an
   administrator.
 - The code you want to step through must be compiled with debug information: **Tools › Object › Add debug information**
-  or automatically when compiling a Program Window (**Preferences › Oracle › Debugger**; there are also the lists of
+  or automatically when compiling a Program Window (**Settings › Oracle › Debugger**; there are also the lists of
   objects and connections for which the information is always or never added, e.g. `*@prod*`).
 
 ### Stepping
@@ -78,7 +78,7 @@ Focus stays in the main window, so you can step with shortcuts while looking at 
 - DBMS_OUTPUT is read at every stop.
 
 In triggers the `:new` and `:old` values are not available (a DBMS_DEBUG limitation) — the debugger then shows a note
-instead of the value. By default stepping skips package initialization and SYS objects (**Preferences › Oracle ›
+instead of the value. By default stepping skips package initialization and SYS objects (**Settings › Oracle ›
 Debugger**).
 
 ### Breakpoints, conditions and logpoints
@@ -117,7 +117,7 @@ at all). The data of a line profiler run stays in the window's transaction — c
 ## Statistics, trace and SQL Trace
 
 - The **Statistics** tab shows the change in session statistics (V$MYSTAT) from the last execution and the total for the
-  window, with a filter and export to CSV. The choice of statistics is in **Preferences › SQL Window**. Requires access
+  window, with a filter and export to CSV. The choice of statistics is in **Settings › SQL Window**. Requires access
   to V$MYSTAT.
 - **Debug › DBMS_TRACE on Execution** records the run (calls, exceptions, SQL, lines) on the **Trace** tab; the
   history of runs is in **DBMS_TRACE Run History**. Requires the trace tables installed by an administrator with the

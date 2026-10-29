@@ -18,7 +18,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 3. **Ta sama czynność — ta sama nazwa** w menu, na wstążce, w palecie, na przyciskach i w instrukcji. Etykieta na
    wstążce może być krótsza („Zapisz zmiany (Post)” przy „Zapisz zmiany w bazie (Post)”), ale nie innym słowem.
 4. **Panele i okna Pelikana po polsku**, tak jak w menu Widok: Przeglądarka obiektów, Przeglądarka plików, Zawartość
-   kodu, Okno SQL, Okno poleceń. Nazwa angielska wzorca tylko jako słowo kluczowe wyszukiwania komend.
+   kodu, Okno SQL, Konsola SQL*Plus. Nazwa angielska wzorca tylko jako słowo kluczowe wyszukiwania komend.
 5. **Nazwy własne narzędzi wzorca** bez tłumaczenia tam, gdzie są nazwą narzędzia: Explain Plan, Code Assistant
    (sekcja ustawień), Query Builder, Query By Example, Large Data Editor, Test Manager, SQL Monitor, Instance Viewer,
    Database Diff, Autotrace, AutoCommit, AutoReplace, AutoSelect. Przyciski czynności w tych narzędziach — po polsku.
@@ -33,7 +33,7 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 
 | Pojęcie | W Pelikanie | Uzasadnienie / źródło |
 |---|---|---|
-| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia**; Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
+| Settings… (⌘,) | **Ustawienia…**; okno **Ustawienia** (en *Settings* wszędzie, także w instrukcji en); Narzędzia › Ustawienia › Eksportuj/Importuj ustawienia…, Zestawy ustawień… | macOS 13+ (HIG: „Settings” zamiast „Preferences”); wcześniej okno nazywało się „Preferencje”, choć menu już „Ustawienia…” (D195) |
 | Undo / Redo | Cofnij / **Powtórz** | macOS (wcześniej „Ponów”, które w Pelikanie znaczy „Retry”) |
 | Cut / Copy / Paste / Select All | Wytnij / Kopiuj / Wklej / Zaznacz wszystko | macOS |
 | Minimize / Zoom | **Zminimalizuj** / Powiększ | macOS (wcześniej „Minimalizuj”) |
@@ -104,12 +104,13 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 |---|---|---|
 | Object Browser | **Przeglądarka obiektów** (także karta ustawień, filtr nazwany, opisy) | nazwa z menu Widok; wcześniej mieszane z „Object Browser” |
 | File Browser | **Przeglądarka plików** | jw. |
-| SQL Window / Command Window | **okno SQL** / **okno poleceń** (także sekcja ustawień „Okno SQL”) | jw. |
+| SQL Window | **okno SQL** (także sekcja ustawień „Okno SQL”) | jw. |
+| Command Window | **Konsola SQL*Plus** (Plik › Nowy, wstążka, tytuły okien, opisy); en *SQL*Plus Console*, de *SQL*Plus-Konsole*, es *Consola SQL*Plus*, uk *Консоль SQL*Plus* | decyzja właściciela (D195): okno działa jak SQL*Plus — „okno poleceń” nic nie mówiło; dawne nazwy (okno poleceń, command window) są słowami kluczowymi wyszukiwania |
 | Find Database Objects | Znajdź obiekty bazy… (kryteria wyszukiwania obiektów bazy) | |
 | Working copy | **kopia robocza** | git-gui, TortoiseGit; wcześniej „working copy” |
 | Backup | **kopia zapasowa**, katalog kopii zapasowych | macOS; wcześniej „backup” |
 | Auto refresh | Automatyczne odświeżanie… (menu), **Autoodświeżanie** (krótka etykieta) | pisownia łączna jak Autoukrywanie, Autozapis |
-| Bend point (diagram) | **punkt załamania** linii relacji | wcześniej „punkt łamania” |
+| Bend point (diagram) | **punkt zgięcia** linii relacji (Dodaj / Przesuń / Usuń punkt zgięcia) | decyzja właściciela (D195); wcześniej „punkt łamania” |
 
 ## Rozważone i pozostawione
 
@@ -120,6 +121,6 @@ i Eclipse (Babel); **Oracle** — polska terminologia baz danych i Oracle; **git
 - **Zadokuj, Autoukrywanie** — przyjęte w polskim Visual Studio.
 - **Rekompiluj** — utrwalone w środowisku Oracle (rekompilacja obiektów).
 - **Upuść** (przeciągnij i upuść) — polski macOS.
-- **To-Do**, **Dialog** (karta okna poleceń), tryby sesji **Single / Multi / Dual** — nazwy wzorca.
+- **To-Do**, **Dialog** (karta konsoli SQL*Plus), tryby sesji **Single / Multi / Dual** — nazwy wzorca.
 - **Znaki specjalne**, **Status linii** — przełączniki widoku z nazwami wzorca; opis wyjaśnia skutek.
 - **Sprawdź uaktualnienia…** — tekst zgodny z dotychczasową lokalizacją Sparkle w Pelikanie.

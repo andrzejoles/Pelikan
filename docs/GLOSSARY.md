@@ -9,7 +9,7 @@ i uzasadnienia: [`docs/research/glosariusz.md`](research/glosariusz.md) (D195).
 | SQL Window | Okno SQL | |
 | Program Window | Okno programu | |
 | Test Window | Okno testu | |
-| Command Window | Okno poleceń | |
+| Command Window | Konsola SQL*Plus | |
 | Explain Plan Window | Okno planu (Explain Plan) | „Explain Plan” bez tłumaczenia |
 | Report Window | Okno raportu | |
 | Diagram Window | Okno diagramu | |
@@ -40,7 +40,8 @@ i uzasadnienia: [`docs/research/glosariusz.md`](research/glosariusz.md) (D195).
 | Single Record View | Widok pojedynczego rekordu | |
 | Snippets | Fragmenty kodu | |
 | File Browser | Przeglądarka plików | |
-| Preferences | Ustawienia | macOS 13+ (⌘,) |
+| Preferences | Ustawienia | macOS 13+ (⌘,); po angielsku Settings |
+| Bend point (diagram) | Punkt zgięcia | |
 | Kill session | Zakończ sesję (Kill) | |
 | Invalid objects | Nieprawidłowe obiekty | |
 | Working copy / backup (Pro*C) | Kopia robocza / kopia zapasowa | |

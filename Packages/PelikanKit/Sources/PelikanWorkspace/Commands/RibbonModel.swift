@@ -111,7 +111,7 @@ public enum RibbonModel {
                 .large("file.new.sql", label: L10n.tr("Okno SQL")),
                 .large("file.new.program", label: L10n.tr("Okno programu")),
                 .small("file.new.test", label: L10n.tr("Okno testu")),
-                .small("file.new.command", label: L10n.tr("Okno poleceń")),
+                .small("file.new.command", label: L10n.tr("Konsola SQL*Plus")),
                 .menu(L10n.tr("Inne okna"), symbol: "plus.rectangle.on.rectangle", commands: [
                     "file.new.explainPlan", "file.new.report", "file.new.diagram", "file.new.notebook", separator,
                     "file.newFromTemplate", "file.pasteAsSQLWindow", "file.openWithConnection",
@@ -532,7 +532,7 @@ public enum RibbonModel {
     }
 
     @MainActor static var command: RibbonTab {
-        RibbonTab("command", L10n.tr("Okno poleceń"), context: [.command], [
+        RibbonTab("command", L10n.tr("Konsola SQL*Plus"), context: [.command], [
             RibbonGroup(L10n.tr("Wykonanie"), [
                 .large("sql.execute"), .small("cmd.executeLine"), .small("cmd.pause"), .small("sql.break"),
             ]),

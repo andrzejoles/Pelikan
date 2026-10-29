@@ -49,7 +49,7 @@ Las reglas de trabajo de los agentes se describen en el capítulo *Agentes de IA
 - lee en transacciones de solo lectura, con límites;
 - solo hace cambios con tu autorización, en una ventana sin botón predeterminado, y el DML queda sin confirmar hasta una
   autorización aparte para el COMMIT;
-- no tiene acceso a la Command Window, a los comandos del sistema, al depurador, a los informes de los paquetes de
+- no tiene acceso a la consola SQL*Plus, a los comandos del sistema, al depurador, a los informes de los paquetes de
   Oracle ni al build remoto;
 - se comunica con Pelikan solo a través de un socket accesible para tu cuenta, con un token de sesión de un solo uso;
 - los datos que lee el agente llegan al proveedor del modelo de IA: para datos sensibles, usa un usuario de base de
