@@ -2164,20 +2164,24 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   zmieniałaby każdy plik w repozytorium przy każdym eksporcie) — opcja **Nagłówek z datą eksportu**; jeden plik —
   z nagłówkiem jak dotąd.
 - **Nazwy plików eksportu:** nazwa bazowa nadawana obiektowi (właściciel + nazwa) wspólna dla wszystkich jego plików.
-  Gdy eksport obejmuje obiekty kilku schematów, każdy plik ma przedrostek schematu (`s2.pkg.pks`, `s2.pkg.pkb`,
-  `s2.pkg.grants.sql`) — nazwy nie zależą od tego, które obiekty wybrano, a specyfikacja jednego schematu nie trafia
-  w parę z ciałem innego; jeden schemat — bez przedrostka jak dotąd. Inny obiekt o tej samej nazwie bazowej
+  Przy eksporcie obiektów kilku schematów zawsze z przedrostkiem schematu w nazwie każdego pliku (`s2.pkg.pks`,
+  `s2.pkg.pkb`, `s2.pkg.grants.sql`) — specyfikacja jednego schematu nie trafia w parę z ciałem innego; eksport jednego
+  schematu — bez przedrostka jak dotąd. Inny obiekt o tej samej nazwie bazowej
   („Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich plikach. Kolejność eksportu: typ, właściciel, nazwa.
 - **Poprawki po przeglądzie (zapis i otwieranie):** Zapisz jako z nazwą `.pck`, bez rozszerzenia albo `.pkb` pyta raz
   o wszystkie istniejące pliki pary spoza okna (plik wybrany w oknie zapisu potwierdza okno zapisu), zamiast nadpisać
   specyfikację bez pytania. Rozszerzenia z Preferencji: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
-  skryptów, testów, raportów i plików `.pck`/`.typ`; rozszerzenia specyfikacji różne od rozszerzeń ciała (pakiet
-  i typ mogą mieć wspólne, np. `.spc`/`.bdy`) — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie), a zapis
+  skryptów, testów, raportów i plików `.pck`/`.typ`; rozszerzenia specyfikacji różne od rozszerzeń ciała; pakiet
+  i typ mogą mieć wspólne (np. `.spc`/`.bdy`), ale tylko oba naraz — wspólna specyfikacja z różnymi ciałami dawałaby
+  niejednoznaczny plik pary — inaczej używane są domyślne (Preferencje pokazują ostrzeżenie), a zapis
   odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
   jedną jednostkę o tym samym tekście co w oknie (dwie jednostki w jednej linii dzielą kartę w środku polecenia) —
   inaczej odmowa z komunikatem. Plik pary, który ten zapis zapisze (jego jednostka zmieniła się w oknie), a zmienił się
-  na dysku od otwarcia albo zapisu (inny program, `git checkout`) — pytanie „Zapisz mimo to / Anuluj”; treść z dysku
-  dekodowana w formacie pliku z otwarcia (bez zgadywania kodowania — pliki jednobajtowe bez fałszywych alarmów). Plik
+  na dysku od otwarcia albo zapisu (inny program, `git checkout`) — pytanie „Zapisz mimo to / Anuluj”; zmianę wykrywa
+  skrót bajtów pliku z otwarcia albo zapisu (`UnitFile.savedHash`, FNV-1a), bez dekodowania — pliki jednobajtowe bez
+  fałszywych alarmów, a po **Kodowanie pliku…** (oba pliki oznaczone do zapisu, `needsRewrite`) sprawdzenie nadal
+  działa. Worksety zapisują skrót (pole opcjonalne `hash`) — okno ze zmianami przywrócone z workseta pyta, gdy plik
+  zmienił się na dysku po zapisie workseta; starsze worksety bez skrótu — bez sprawdzania. Plik
   zmieniony na dysku, którego jednostka w oknie się nie zmieniła, nie jest zapisywany ani nie wywołuje pytania; jego
   treść zapisana zostaje dawna (świadomie — przyjęcie treści z dysku sprawiłoby, że następny zapis po cichu nadpisałby
   zmianę z repozytorium starą kartą okna), więc gdy jednostka zmieni się później, zapis zapyta wtedy. Treść zapisana

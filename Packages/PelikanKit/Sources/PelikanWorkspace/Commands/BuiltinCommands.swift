@@ -243,7 +243,7 @@ public enum BuiltinCommands {
                 for i in doc.unitFiles.indices {
                     doc.unitFiles[i].format.encoding = enc
                     doc.unitFiles[i].format.hasBOM = false
-                    doc.unitFiles[i].savedText = ""
+                    doc.unitFiles[i].needsRewrite = true
                 }
                 doc.isModified = true
                 if let bad = TextFileCodec.firstUnencodable(doc.text, encoding: enc) {

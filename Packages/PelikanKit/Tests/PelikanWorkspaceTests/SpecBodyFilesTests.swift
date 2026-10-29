@@ -322,6 +322,9 @@ struct SpecBodyFilesTests {
         #expect(!e.isInvalid && e.pair(for: .type)! == ("spc", "bdy") && e.partner(of: "BDY")! == ("spc", .body))
         e.typeSpec = "bdy"
         #expect(e.isInvalid && e.pair(for: .type)! == ("tps", "tpb"))
+        // Wspólna specyfikacja (.spc) z różnymi ciałami (.pkb, .tpb) — plik pary niejednoznaczny.
+        e.typeSpec = "spc"; e.packageBody = "pkb"; e.typeBody = "tpb"
+        #expect(e.isInvalid && e.partner(of: "spc") == nil && e.partner(of: "pks")?.partner == "pkb")
         let ws = Workspace()
         let doc = ws.newDocument(.program, text: ProgramText.join([Self.spec, Self.body], slash: false))
         let same = dir.appendingPathComponent("x.pks")
@@ -405,6 +408,51 @@ struct SpecBodyFilesTests {
         try await ws2.invoke("file.save")
         #expect(ui2.asked.isEmpty && !d2.isModified)
         #expect(try Data(contentsOf: ls) == latinSpec.data(using: .isoLatin2)!)
+    }
+
+    @Test("Kodowanie pliku… w oknie pary: oba pliki zapisane bez pytania; zmiana na dysku po zmianie kodowania — pytanie")
+    func encodingChangeKeepsExternalCheck() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let (s, b) = try writePair()
+        let doc = try ws.openFile(s)
+        try await ws.invoke("file.encoding", CommandArguments(["encoding": .string("ISO-8859-2")]))
+        try Data("-- ciało z repozytorium\n".utf8).write(to: b)
+        ui.answers = [1]
+        try await ws.invoke("file.save")
+        #expect(ui.asked.count == 1 && ui.asked[0].contains("kadry.pkb"))
+        #expect(try text(b) == "-- ciało z repozytorium\n" && doc.isModified)
+        // Bez zmiany na dysku — oba pliki zapisane w nowym kodowaniu, bez pytania.
+        ui.asked = []
+        try Self.body.replacingOccurrences(of: "\n", with: "\r\n").data(using: .windowsCP1250)!.write(to: b)
+        let doc2 = try #require(ws.documents.first)
+        ws.close(doc2.id)
+        let d = try ws.openFile(s)
+        try await ws.invoke("file.encoding", CommandArguments(["encoding": .string("ISO-8859-2")]))
+        try await ws.invoke("file.save")
+        #expect(ui.asked.isEmpty && !d.isModified)
+        #expect(String(data: try Data(contentsOf: b), encoding: .isoLatin2)?.contains("Zażółć") == true)
+        #expect(String(data: try Data(contentsOf: b), encoding: .utf8) == nil)
+    }
+
+    @Test("Okno pary ze zmianami z workseta: plik zmieniony na dysku po zapisie workseta — zapis pyta")
+    func worksetKeepsHash() async throws {
+        let ws = Workspace()
+        let (s, b) = try writePair()
+        let doc = try ws.openFile(s)
+        doc.text = doc.text.replacingOccurrences(of: "NULL; -- Zażółć", with: "NULL; -- zmiana")
+        let saved = try JSONDecoder().decode(Workset.self, from: JSONEncoder().encode(ws.worksetSnapshot()))
+        #expect(saved.documents.first?.unitFiles?.allSatisfy { $0.hash != nil } == true)
+        try Data("-- ciało z repozytorium\n".utf8).write(to: b)
+        let r = Workspace()
+        let ui = FakeUI()
+        r.ui = ui
+        r.appendWorksetDocuments(saved)
+        ui.answers = [1]
+        try await r.invoke("file.save")
+        #expect(ui.asked.count == 1 && ui.asked[0].contains("kadry.pkb"))
+        #expect(try text(b) == "-- ciało z repozytorium\n")
     }
 
     @Test("Nieudane Zapisz jako nie usuwa wiszącego dowiązania w miejscu pliku ciała")

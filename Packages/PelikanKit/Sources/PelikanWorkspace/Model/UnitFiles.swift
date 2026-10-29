@@ -37,7 +37,10 @@ public struct SpecBodyExtensions: Sendable, Hashable, Codable {
     /// nadpisałby specyfikację, a plik nie wiedziałby, którą częścią jest); pakiet i typ mogą mieć wspólne (`.spc`/`.bdy`).
     private var valid: (ps: String, pb: String, ts: String, tb: String)? {
         let v = [packageSpec, packageBody, typeSpec, typeBody].map { Self.normalized($0) }
-        guard let ps = v[0], let pb = v[1], let ts = v[2], let tb = v[3], Set([ps, ts]).isDisjoint(with: [pb, tb]) else { return nil }
+        // Wspólne rozszerzenie specyfikacji pakietu i typu wymaga wspólnego rozszerzenia ciała (i odwrotnie) — inaczej plik
+        // pary dla `x.spc` byłby niejednoznaczny.
+        guard let ps = v[0], let pb = v[1], let ts = v[2], let tb = v[3], Set([ps, ts]).isDisjoint(with: [pb, tb]),
+              (ps == ts) == (pb == tb) else { return nil }
         return (ps, pb, ts, tb)
     }
 
@@ -86,9 +89,23 @@ public struct UnitFile: Sendable, Hashable {
     public var ending: String
     /// Treść pliku (LF) z ostatniego odczytu albo zapisu — zapis pomija pliki, których jednostka się nie zmieniła.
     public var savedText: String
+    /// Skrót bajtów pliku z ostatniego odczytu albo zapisu (FNV-1a) — wykrywanie zmiany na dysku bez dekodowania
+    /// (także po zmianie kodowania okna); nil — nieznany (nowy plik), bez sprawdzania.
+    public var savedHash: UInt64?
+    /// Plik do zapisania przy następnym Zapisz mimo niezmienionej jednostki (zmiana kodowania — Plik › Kodowanie pliku).
+    public var needsRewrite = false
 
-    public init(part: Part, url: URL, format: TextFileFormat = TextFileFormat(), ending: String = "\n", savedText: String = "") {
+    public init(part: Part, url: URL, format: TextFileFormat = TextFileFormat(), ending: String = "\n", savedText: String = "",
+                savedHash: UInt64? = nil) {
         self.part = part; self.url = url.standardizedFileURL; self.format = format; self.ending = ending; self.savedText = savedText
+        self.savedHash = savedHash
+    }
+
+    /// Skrót bajtów pliku (FNV-1a 64).
+    public static func fingerprint(_ data: Data) -> UInt64 {
+        var h: UInt64 = 0xcbf2_9ce4_8422_2325
+        for b in data { h = (h ^ UInt64(b)) &* 0x0000_0100_0000_01b3 }
+        return h
     }
 }
 
@@ -274,8 +291,8 @@ extension Workspace {
         doc.cacheProgramUnits(units, forText: text)
         doc.cacheProgramUnitTabs(tabs, forText: text)
         doc.fileFormat = s.format
-        doc.unitFiles = [UnitFile(part: .spec, url: spec, format: s.format, ending: endings[0], savedText: s.text),
-                         UnitFile(part: .body, url: body, format: b.format, ending: endings[1], savedText: b.text)]
+        doc.unitFiles = [UnitFile(part: .spec, url: spec, format: s.format, ending: endings[0], savedText: s.text, savedHash: UnitFile.fingerprint(sd)),
+                         UnitFile(part: .body, url: body, format: b.format, ending: endings[1], savedText: b.text, savedHash: UnitFile.fingerprint(bd))]
         doc.isModified = false
         restoreWindowState(doc)
         doc.showUnitTab(show == .spec ? 0 : 1)
@@ -332,13 +349,13 @@ extension Workspace {
     /// Pliki pary, które ten zapis zapisze (jednostka zmieniona w oknie), a które zmieniły się na dysku od otwarcia albo
     /// ostatniego zapisu (inny program, git checkout) — pytanie przed zapisem, żeby nie nadpisać cudzej zmiany. Plik,
     /// którego jednostka w oknie się nie zmieniła, nie jest zapisywany, więc nie pyta (i jego `savedText` zostaje — gdy
-    /// jednostka zmieni się później, zapis zapyta wtedy). Treść z dysku dekodowana w formacie pliku z otwarcia, bez
-    /// zgadywania kodowania (pliki jednobajtowe bez fałszywych alarmów).
+    /// jednostka zmieni się później, zapis zapyta wtedy). Porównanie skrótu bajtów z ostatniego odczytu albo zapisu — bez
+    /// dekodowania (pliki jednobajtowe bez fałszywych alarmów, sprawdzenie działa też po zmianie kodowania okna).
     public func externallyChangedUnitFiles(_ doc: Document) -> [URL] {
         doc.unitFiles.filter { f in
-            guard !f.savedText.isEmpty, let current = doc.currentText(of: f.url), current != f.savedText,
+            guard let hash = f.savedHash, f.needsRewrite || doc.currentText(of: f.url).map({ $0 != f.savedText }) == true,
                   let data = try? Data(contentsOf: f.url) else { return false }
-            return TextFileCodec.decode(data, format: f.format) != f.savedText
+            return UnitFile.fingerprint(data) != hash
         }.map(\.url)
     }
 
@@ -372,12 +389,16 @@ extension Workspace {
             }
             data.append(d)
         }
-        for (i, f) in files.enumerated() where texts[i] != f.savedText || !FileManager.default.fileExists(atPath: f.url.path) {
+        for (i, f) in files.enumerated() where texts[i] != f.savedText || f.needsRewrite || !FileManager.default.fileExists(atPath: f.url.path) {
             backupBeforeSave(f.url)
             try Self.writeKeepingFile(data[i], to: f.url)
             // Od razu po zapisie pliku: gdy zapis drugiego się nie uda, następne Zapisz nie uzna pierwszego za
             // niezmieniony z nieaktualną treścią, a zmiana na dysku nie wygląda na cudzą.
-            if let k = doc.unitFiles.firstIndex(where: { $0.part == f.part }) { doc.unitFiles[k].savedText = texts[i] }
+            if let k = doc.unitFiles.firstIndex(where: { $0.part == f.part }) {
+                doc.unitFiles[k].savedText = texts[i]
+                doc.unitFiles[k].savedHash = UnitFile.fingerprint(data[i])
+                doc.unitFiles[k].needsRewrite = false
+            }
         }
         // Historia lokalna okna pary: cały tekst okna pod plikiem specyfikacji (klucz okna — `LocalHistory.key(for:)`).
         localHistory.record(key: LocalHistory.key(file: spec.url), title: spec.url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))

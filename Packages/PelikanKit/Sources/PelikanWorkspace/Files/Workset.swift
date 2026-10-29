@@ -51,6 +51,10 @@ public struct WorksetUnitFile: Sendable, Codable, Hashable {
     public var bom: Bool
     public var lineEnding: String
     public var ending: String
+    /// Skrót bajtów pliku z ostatniego odczytu albo zapisu (szesnastkowo) — zapis po przywróceniu pyta, gdy plik zmienił
+    /// się na dysku od zapisu workseta; starsze worksety bez niego — bez sprawdzania.
+    public var hash: String?
+    public var needsRewrite: Bool?
 
     init(_ f: UnitFile) {
         part = f.part
@@ -59,6 +63,8 @@ public struct WorksetUnitFile: Sendable, Codable, Hashable {
         bom = f.format.hasBOM
         lineEnding = f.format.lineEnding.rawValue
         ending = f.ending
+        hash = f.savedHash.map { String($0, radix: 16) }
+        needsRewrite = f.needsRewrite ? true : nil
     }
 
     /// Plik jednostki; treść zapisana — z pliku na dysku w kodowaniu projektu (zapis pomija niezmienione pliki), brak
@@ -67,7 +73,9 @@ public struct WorksetUnitFile: Sendable, Codable, Hashable {
         let url = URL(fileURLWithPath: path)
         let format = TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
         let saved = (try? Data(contentsOf: url)).map { TextFileCodec.decode($0, preferred: preferred).text } ?? ""
-        return UnitFile(part: part, url: url, format: format, ending: ending, savedText: saved)
+        var f = UnitFile(part: part, url: url, format: format, ending: ending, savedText: saved, savedHash: hash.flatMap { UInt64($0, radix: 16) })
+        f.needsRewrite = needsRewrite ?? false
+        return f
     }
 }
 
