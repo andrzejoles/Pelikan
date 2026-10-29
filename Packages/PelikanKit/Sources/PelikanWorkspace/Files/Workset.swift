@@ -33,6 +33,8 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     /// Skrót bajtów pliku okna z otwarcia albo zapisu (szesnastkowo, D197) — okno ze zmianami przywrócone z workseta
     /// pyta przy aktywacji i zapisie, gdy plik zmienił się na dysku po zapisie workseta.
     public var fileHash: String?
+    /// Panel Zawartość kodu wybrany w oknie (D199); brak — jak w Ustawieniach (także starsze worksety).
+    public var codeContents: Bool?
 
     /// Format zapisany w worksecie (nil — starszy workset).
     var fileFormat: TextFileFormat? {
@@ -322,6 +324,7 @@ extension Workspace {
                     e.fileHash = d.savedFileHash.map { String($0, radix: 16) }
                 }
             }
+            if d.kind.hasCodeContents { e.codeContents = d.codeContentsVisible }
             if !d.unitFiles.isEmpty { e.unitFiles = d.unitFiles.map(WorksetUnitFile.init) }
             if let c = d.consoleConnectionID {
                 e.consoleConnectionID = c
@@ -406,6 +409,7 @@ extension Workspace {
                 continue
             }
             doc.customTitle = e.title
+            if doc.kind.hasCodeContents { doc.codeContentsVisible = e.codeContents }
             if let v = e.variables { doc.variableValues = v.mapValues(\.value) }
             if let c = e.connectionID, connections.connection(c) != nil {
                 doc.connectionID = c

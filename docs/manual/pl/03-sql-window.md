@@ -31,6 +31,17 @@ i podskoczyć ikoną w Docku. Gdy **Przerwij** nie działa (niektóre operacje b
 Pelikan nigdy nie zatwierdza zmian automatycznie (opcja **AutoCommit poleceń SQL** w **Ustawienia › Okno SQL** jest
 domyślnie wyłączona). Otwartą transakcję sygnalizuje pasek stanu („● transakcja otwarta”).
 
+## Zawartość kodu
+
+Po lewej stronie edytora **Zawartość kodu** pokazuje strukturę całego skryptu: polecenia SQL (pierwsze słowo i
+początek polecenia, w podpowiedzi do ok. 1000 znaków z podziałem na linie), procedury, funkcje, pakiety i wyzwalacze z `CREATE` oraz bloki
+anonimowe z ich deklaracjami. Klik albo Enter przenosi kursor do polecenia, drzewo śledzi kursor, pole nad drzewem
+filtruje także po treści polecenia (np. nazwie tabeli). Panel pokażesz albo ukryjesz w tym oknie przez **Widok ›
+Zawartość kodu** albo przycisk z symbolem paska bocznego na lewym końcu paska okna; wybór zostaje w oknie, a
+domyślny stan nowych okien ustawisz w **Ustawienia › Edytor › Zawartość kodu domyślnie widoczna**. Konsola SQL*Plus nie
+ma tego panelu. W skrypcie z ponad 5000 poleceń SQL panel pokazuje tylko jednostki i bloki PL/SQL (z dopiskiem o
+liczbie poleceń).
+
 ## Zmienne
 
 - **Zmienne podstawiania** `&nazwa` i `&&nazwa` — przed wykonaniem Pelikan pokazuje okno **Zmienne** z polami na

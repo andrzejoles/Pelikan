@@ -1,0 +1,1 @@
+[{"command": "debug.openFile", "args": {"path": "@ROOT@/scripts/screenshots/fixtures/skrypt-zawartosc.sql"}, "delay": 1}, {"command": "view.codeContents", "args": {"visible": true}, "delay": 1}, {"command": "edit.gotoLine", "args": {"line": 15}, "delay": 2}]

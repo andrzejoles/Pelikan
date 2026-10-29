@@ -436,7 +436,12 @@ struct EditorPane: View {
                          : L10n.tr("Pionowy margines w kolumnie \(workspace.settings.rightMarginColumn)"))
                 }
                 Toggle(L10n.tr("Pokazuj znaki specjalne (spacje, tabulacje, końce linii)"), isOn: setting(workspace, \.showSpecialCharacters))
-                Toggle(L10n.tr("Zawartość kodu"), isOn: setting(workspace, \.showCodeContents))
+                // Domyślny stan okien programu, SQL i testu; przełącznik w oknie — Widok › Zawartość kodu (D199).
+                VStack(alignment: .leading, spacing: 2) {
+                    Toggle(L10n.tr("Zawartość kodu domyślnie widoczna"), isOn: setting(workspace, \.showCodeContents))
+                    Text(L10n.tr("Okna programu, SQL i testu bez własnego wyboru (Widok › Zawartość kodu) idą za tym ustawieniem."))
+                        .font(.uiSecondary).foregroundStyle(.secondary)
+                }
                 Picker(L10n.tr("Kolejność w Zawartości kodu"), selection: setting(workspace, \.codeContentsOrder)) {
                     Text(L10n.tr("Jak w źródle")).tag(CodeContents.Order.source)
                     Text(L10n.tr("Alfabetycznie")).tag(CodeContents.Order.name)

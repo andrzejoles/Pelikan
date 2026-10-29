@@ -31,6 +31,16 @@ interruption), use **Session › Terminate window session (Kill)**.
 Pelikan never commits changes automatically (the **AutoCommit SQL statements** option in **Settings › SQL Window** is
 off by default). An open transaction is indicated in the status bar (“● transaction open”).
 
+## Code Contents
+
+On the left of the editor, **Code Contents** shows the structure of the whole script: SQL statements (the first
+word and the beginning of the statement, up to about 1000 characters with line breaks in the tooltip), procedures, functions, packages and triggers
+from `CREATE`, and anonymous blocks with their declarations. A click or Enter moves the cursor to the statement, the
+tree tracks the cursor, and the field above the tree also filters by statement text (e.g. a table name). Show or
+hide the panel in this window with **View › Code Contents** or the sidebar button at the left end of the window
+bar; the choice stays with the window, and the default for new windows is **Settings › Editor › Code Contents visible by default**. The SQL*Plus console has no such panel. In a script with more than 5000 SQL statements, the panel shows only PL/SQL
+units and blocks (with a note giving the number of statements).
+
 ## Variables
 
 - **Substitution variables** `&name` and `&&name` — before execution Pelikan shows the **Variables** window with fields

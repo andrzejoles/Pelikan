@@ -2416,3 +2416,44 @@ przy obramowaniu wszystkich kart ginęło.
   „Połączenie: …” (także pomoc VoiceOver karty); tytuły nieaktywnych kart w kolorze tekstu z przezroczystością 70%
   (kontrast), przy „Zwiększ kontrast” — pełny kolor tekstu; podświetlenie pod kursorem ustawiane z położenia kursora
   po przebudowie paska.
+
+### D199 · 2026-10-29 — Zawartość kodu w każdym oknie z kodem, pokazywana i ukrywana w oknie
+
+Prośba właściciela: „Chciałbym, aby dla każdego okna z kodem można było wyświetlić / ukryć panel ze strukturą kodu
+(obecnie otwarłem tylko plik z body pakietu i paneli ze strukturą nie ma)”. Panel był tylko w oknie programu,
+a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłączone u właściciela ukrywało panel wszędzie.
+
+- **Stan w oknie:** `Document.codeContentsVisible` (nil — jak w Ustawieniach). Komenda `view.codeContents` przełącza
+  panel w aktywnym oknie (opcjonalny argument `visible`; agent: brak dostępu jak dotąd, skutek: stan interfejsu),
+  w oknach bez panelu jest wyłączona (wywołana — „Zawartość kodu jest dostępna w oknie programu, SQL i testu”).
+  Ustawienie **Ustawienia › Edytor › Zawartość kodu domyślnie widoczna** (`showCodeContents`, nazwa w pliku bez zmian;
+  opis pod przełącznikiem) jest stanem domyślnym: okna, w których panelu nie przełączano, idą za nim także po zmianie
+  ustawienia. Przełączenie bez argumentu (przycisk, menu) zapisuje w makrze stan (`visible`), nie przełączenie.
+- **Workset i odzyskiwanie:** pole opcjonalne `codeContents` wpisu okna (tylko wybór w oknie); starsze worksety bez
+  pola — stan domyślny.
+- **Okna:** program, SQL i test — ten sam `CodeContentsView` po lewej stronie edytora (`CodeContentsPanel`, wspólny
+  podział, szerokość 220 pt, zapamiętana przy ukryciu). W oknach SQL i testu panel obejmuje tylko edytor z paskiem
+  okna — siatka wyników i karty testu zostają na całą szerokość. Konsola SQL*Plus, plan, raport, diagram i notatnik —
+  bez panelu.
+- **Zarys skryptu okna SQL:** `PLSQLOutline.parseScript` według podziału na polecenia `ScriptSplitter` (jak przy
+  wykonaniu): każde polecenie PL/SQL (`CREATE` jednostki, blok anonimowy) parsowane osobno, więc niedokończony blok
+  albo błąd składni nie zabiera reszty skryptu; polecenia SQL jako nowy rodzaj elementu `statement` — nazwa to pierwsze
+  słowo polecenia po komentarzach (jak w tekście, więc klik zaznacza je w edytorze, także z polskimi znakami i emoji
+  — pozycje w UTF-16), szczegóły — dalszy początek polecenia do 1000 znaków z liniami i wcięciami (komentarze zastąpione
+  odstępem; w drzewie jedna linia, w podpowiedzi całość). Tekst leksowany raz, tekst tokenów tworzony tylko tam, gdzie
+  potrzebny. Powyżej 5000 poleceń SQL w zarysie są tylko jednostki i bloki, a panel pokazuje dopisek z liczbą
+  poleceń. Polecenia wewnątrz rozpoznanych jednostek nie są osobnymi elementami. Filtr nazw
+  dopasowuje polecenie także po szczegółach (nazwa tabeli). Komendy menu elementu (zaznacz, kopiuj, wytnij) liczą ten
+  sam zarys (`CodeContents.outline`) — w oknie SQL działają też na poleceniach; powyżej limitu 5000 poleceń SQL
+  ich nie widzą (tak jak panel), a na jednostkach i blokach działają dalej.
+- **Wydajność (R4-01):** w oknach SQL i testu zarys liczony w tle, 0,4 s po ostatniej zmianie tekstu (pierwszy raz
+  i po pokazaniu panelu — od razu) i tylko przy widocznym panelu; nowa zmiana anuluje liczenie w toku, wynik
+  przyjmowany według rewizji tekstu (`textRevision`), a tekst bez nowej rewizji (np. inna zmiana Ustawień) nie jest
+  liczony ponownie. Skrypt 50 000 poleceń — ok. 160 ms w Release (`SQLPerformanceTests.scriptOutline`). Drzewo
+  nie rozwija korzeni przy ponad 200 elementach, filtr przy ponad 1000 elementach czeka dłużej (0,45 s); klucz
+  rozwinięcia ma numer kolejny wśród rodzeństwa o tym samym rodzaju i nazwie (kolejne bloki „BEGIN”). Okno programu
+  jak dotąd liczy zarys razem z kartami jednostek.
+- **Przełącznik w oknie:** przycisk z symbolem `sidebar.left` na lewym końcu paska okna (podpowiedź „Pokaż/ukryj
+  Zawartość kodu”, wciśnięty przy widocznym panelu; VoiceOver: „Zawartość kodu”, wartość „widoczna”/„ukryta”); okno testu dostało pasek pod blokiem (przycisk i pozycja kursora).
+  Wstążka bez zmian — komenda już jest w Widok › Panele, Edycja › Zwijanie › Zawartość kodu i na karcie Program.
+  Bez skrótu (wzorzec nie ma domyślnego).

@@ -33,6 +33,9 @@ standardowy…** w menu obiektu.
 Do uruchamiania wielu testów z oczekiwanymi wynikami służy **Narzędzia › Test Manager** (rozdział *Narzędzia*), a do
 testów jednostkowych — utPLSQL (rozdział *Testy utPLSQL*).
 
+Obok bloku, jak w oknie programu, jest **Zawartość kodu** (deklaracje, podprogramy lokalne, bloki) — pokażesz albo
+ukryjesz ją w tym oknie przez **Widok › Zawartość kodu** albo przycisk na lewym końcu paska pod blokiem.
+
 ## Debuger
 
 Debuger używa pakietu Oracle DBMS_DEBUG i działa na bazach 19c–26ai.

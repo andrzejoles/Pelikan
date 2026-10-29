@@ -16,8 +16,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private let split = NSSplitView()
     private let caretLabel = NSTextField(labelWithString: "1:1")
     private let hierarchyLabel = NSTextField(labelWithString: "")
-    private let contents = CodeContentsView()
-    private let outerSplit = NSSplitView()
+    private var panel: CodeContentsPanel!
     private var outlineNodes: [OutlineNode] = []
     private let modifiedDot = NSTextField(labelWithString: "●")
     private let staleDot = NSTextField(labelWithString: "●")
@@ -61,14 +60,6 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
                 DispatchQueue.main.async { Task { await ws.checkExternalChanges(of: doc) } }
             }
         }
-        // Code Contents: klik albo Enter — kursor na nazwie elementu i fokus w edytorze; strzałki w drzewie — kursor
-        // idzie za zaznaczeniem, fokus zostaje w drzewie. Element innej jednostki przełącza kartę (D192).
-        contents.onSelect = { [weak self] n, focus in
-            guard let self else { return }
-            self.workspace.recordJump()
-            self.document.selectedRange = n.nameOffset..<(n.nameOffset + (n.name as NSString).length)
-            if focus { self.view.window?.makeFirstResponder(self.editor.textView) }
-        }
         hierarchyLabel.textColor = .secondaryLabelColor
         hierarchyLabel.lineBreakMode = .byTruncatingHead
         hierarchyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -102,10 +93,12 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         executing.style = .spinning
         executing.controlSize = .small
         executing.isDisplayedWhenStopped = false
-        let windowBar = NSStackView(views: [modifiedDot, staleDot, caretLabel, hierarchyLabel, NSView(), executing])
-        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 8, bottom: 2, right: 8)
-
         let editorPane = NSView()
+        // Zawartość kodu po lewej stronie edytora (UG 25.15), widoczność według okna (D199).
+        panel = CodeContentsPanel(document: document, workspace: workspace, editor: editor, content: split, analyzesText: false)
+        let windowBar = NSStackView(views: [panel.makeToggleButton(), modifiedDot, staleDot, caretLabel, hierarchyLabel, NSView(), executing])
+        windowBar.edgeInsets = NSEdgeInsets(top: 2, left: 4, bottom: 2, right: 8)
+
         let barContainer = NSView()
         unitBar.translatesAutoresizingMaskIntoConstraints = false
         barContainer.addSubview(unitBar)
@@ -135,21 +128,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         split.addArrangedSubview(editorPane)
         split.addArrangedSubview(messagesScroll)
         messagesScroll.isHidden = true
-        // Code Contents po lewej stronie edytora (UG 25.15).
-        outerSplit.isVertical = true
-        outerSplit.dividerStyle = .thin
-        outerSplit.addArrangedSubview(contents)
-        outerSplit.addArrangedSubview(split)
-        contents.widthAnchor.constraint(greaterThanOrEqualToConstant: 120).isActive = true
-        outerSplit.setHoldingPriority(NSLayoutConstraint.Priority(260), forSubviewAt: 0)
-        outerSplit.setHoldingPriority(NSLayoutConstraint.Priority(240), forSubviewAt: 1)
-        view = outerSplit
-        tokens.append(trackChanges { [weak self] in
-            guard let self else { return }
-            self.contents.isHidden = !self.workspace.settings.showCodeContents
-            self.contents.order = self.workspace.settings.codeContentsOrder
-            self.outerSplit.adjustSubviews()
-        })
+        view = panel.split
         tokens.append(trackChanges { [weak self] in self?.refreshUnits() })
         tokens.append(trackChanges { [weak self] in self?.refreshMessages() })
         tokens.append(trackChanges { [weak self] in self?.refreshIndicators() })
@@ -167,18 +146,9 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         messages.reloadData()
     }
 
-    private var didPositionContents = false
-
     override func viewDidAppear() {
         super.viewDidAppear()
-        // Szerokość początkowa panelu Code Contents — po pierwszym układzie okna (wcześniej podział dzieli po połowie).
-        guard !didPositionContents else { return }
-        didPositionContents = true
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.outerSplit.layoutSubtreeIfNeeded()
-            self.outerSplit.setPosition(220, ofDividerAt: 0)
-        }
+        panel.viewDidAppear()
     }
 
     // MARK: Karty jednostek
@@ -214,7 +184,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
 
     private func apply(outline: [OutlineNode], units u: [ProgramUnit]) {
         outlineNodes = outline
-        contents.update(outlineNodes)
+        panel.update(outlineNodes)
         caretMoved()
         // Karty z podziału na jednostki; okno z jedną jednostką — jej przycisk.
         let entries: [(title: String, key: String, tip: String)] = tabs.count > 1
@@ -268,7 +238,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         }
         // Granice z edytora (przesuwane przy pisaniu), nie z ostatniej analizy.
         let current = editor.unitTabs
-        contents.activeRange = shown.flatMap { current.indices.contains($0) ? current[$0].segment : nil }
+        panel.contents.activeRange = shown.flatMap { current.indices.contains($0) ? current[$0].segment : nil }
     }
 
     private weak var addButton: NSButton?
@@ -309,7 +279,7 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
     private func caretMoved() {
         let o = document.selectedRange.lowerBound
         hierarchyLabel.stringValue = PLSQLOutline.path(at: o, in: outlineNodes).map(\.name).joined(separator: " › ")
-        if !contents.isHidden { contents.track(offset: o) }
+        panel.caretMoved()
     }
 
     /// Klik karty: okno z kartami — `prog.selectUnit`; jedna jednostka — kursor na jej początku (jak dotąd).

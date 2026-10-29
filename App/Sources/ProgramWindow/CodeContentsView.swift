@@ -6,7 +6,8 @@ import PelikanWorkspace
 /// typy, kursory, zmienne, stałe, wyjątki, pragmy, podprogramy zagnieżdżone; elementy prywatne ciała pochylone
 /// i przygaszone. Śledzi kursor (zaznacza element zawierający pozycję), klik albo Enter przenosi do nazwy elementu
 /// (także na innej karcie jednostki — D192), strzałki w drzewie przesuwają kursor bez zmiany fokusu; filtr nazw nad
-/// drzewem, sortowanie i menu elementu (PD-CA-010).
+/// drzewem, sortowanie i menu elementu (PD-CA-010). Ten sam widok w oknie programu, SQL i testu (`CodeContentsPanel`,
+/// D199) — w oknie SQL także polecenia SQL skryptu.
 final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDelegate, NSMenuDelegate, NSSearchFieldDelegate {
     /// Węzeł drzewa (NSOutlineView wymaga obiektów o stałej tożsamości).
     final class Item {
@@ -31,6 +32,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     private let outline = Tree()
     private let scroll = NSScrollView()
     private let filterField = NSSearchField()
+    private let noteLabel = NSTextField(wrappingLabelWithString: "")
+    private var noteHidden: NSLayoutConstraint!
     private var roots: [Item] = []
     private var selecting = false
     private var rawNodes: [OutlineNode] = []
@@ -47,6 +50,16 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     /// Kolejność elementów (Ustawienia › Edytor, menu panelu).
     var order: CodeContents.Order = .source {
         didSet { if order != oldValue { update(rawNodes) } }
+    }
+
+    /// Dopisek nad drzewem (np. skrypt z poleceniami ponad limit); nil — bez dopisku.
+    var note: String? {
+        didSet {
+            guard note != oldValue else { return }
+            noteLabel.stringValue = note ?? ""
+            noteLabel.isHidden = note == nil
+            noteHidden.isActive = note == nil
+        }
     }
 
     private var fontToken: ObservationToken?
@@ -83,13 +96,23 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         filterField.target = self
         filterField.action = #selector(filterChanged)
         filterField.translatesAutoresizingMaskIntoConstraints = false
+        noteLabel.textColor = .secondaryLabelColor
+        noteLabel.isHidden = true
+        noteLabel.translatesAutoresizingMaskIntoConstraints = false
+        noteLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        noteHidden = noteLabel.heightAnchor.constraint(equalToConstant: 0)
+        noteHidden.isActive = true
         addSubview(filterField)
+        addSubview(noteLabel)
         addSubview(scroll)
         NSLayoutConstraint.activate([
             filterField.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             filterField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
             filterField.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
-            scroll.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 4), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
+            noteLabel.topAnchor.constraint(equalTo: filterField.bottomAnchor, constant: 4),
+            noteLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
+            noteLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -6),
+            scroll.topAnchor.constraint(equalTo: noteLabel.bottomAnchor, constant: 4), scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: leadingAnchor), scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         fontToken = trackChanges { [weak self] in
@@ -97,6 +120,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             let font = InterfaceFonts.shared.small
             outline.rowHeight = AppFonts.rowHeight(for: font)
             filterField.font = font
+            noteLabel.font = font
             // Bez `reloadData` — zachowuje rozwinięcie i zaznaczenie.
             for row in 0..<outline.numberOfRows {
                 (outline.view(atColumn: 0, row: row, makeIfNecessary: false) as? NSTableCellView)?.textField?.font = font
@@ -107,9 +131,31 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    /// Dopisek zawijany do szerokości panelu (etykieta wieloliniowa potrzebuje szerokości, by policzyć wysokość).
+    override func layout() {
+        super.layout()
+        let width = noteLabel.frame.width
+        if !noteLabel.isHidden, width > 0, abs(noteLabel.preferredMaxLayoutWidth - width) > 0.5 {
+            noteLabel.preferredMaxLayoutWidth = width
+            super.layout()
+        }
+    }
+
     /// Nowy zarys; zachowuje rozwinięcie węzłów o tej samej ścieżce nazw.
-    /// Klucz rozwinięcia: ścieżka rodzajów i nazw — specyfikacja i ciało o tej samej nazwie mają osobny stan.
-    private static func key(_ prefix: String, _ n: OutlineNode) -> String { prefix + "/" + n.kind.rawValue + ":" + n.name }
+    /// Klucz rozwinięcia: ścieżka rodzajów i nazw z numerem kolejnym wśród rodzeństwa o tym samym rodzaju i nazwie —
+    /// specyfikacja i ciało o tej samej nazwie oraz kolejne bloki „BEGIN” mają osobny stan.
+    private static func keys(_ prefix: String, _ items: [Item]) -> [String] {
+        var seen: [String: Int] = [:]
+        return items.map { i in
+            let base = i.node.kind.rawValue + ":" + i.node.name
+            let n = seen[base, default: 0]
+            seen[base] = n + 1
+            return prefix + "/" + base + (n == 0 ? "" : "#\(n)")
+        }
+    }
+
+    /// Bez rozwijania przy pierwszym pokazaniu, gdy korzeni jest więcej (skrypt z tysiącami poleceń).
+    private static let autoExpandLimit = 200
 
     /// Rozwinięcie sprzed filtrowania — przywracane po wyczyszczeniu filtra (przy filtrze drzewo jest rozwinięte całe).
     private var expandedBeforeFilter: Set<String>?
@@ -117,8 +163,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
     private func expandedKeys() -> Set<String> {
         var expanded = Set<String>()
         func collect(_ items: [Item], _ prefix: String) {
-            for i in items where outline.isItemExpanded(i) {
-                let key = Self.key(prefix, i.node)
+            for (i, key) in zip(items, Self.keys(prefix, items)) where !i.children.isEmpty && outline.isItemExpanded(i) {
                 expanded.insert(key)
                 collect(i.children, key)
             }
@@ -133,11 +178,11 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         rawNodes = nodes
         roots = CodeContents.sorted(CodeContents.filtered(nodes, matching: filter), order: order).map(Item.init)
         outline.reloadData()
+        let expandRoots = first && roots.count <= Self.autoExpandLimit
         func restore(_ items: [Item], _ prefix: String, depth: Int) {
-            for i in items {
-                let key = Self.key(prefix, i.node)
+            for (i, key) in zip(items, Self.keys(prefix, items)) where !i.children.isEmpty {
                 // Przy filtrze — wszystko rozwinięte (widać pasujące elementy).
-                if expanded.contains(key) || (first && depth == 0) || !filter.isEmpty { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
+                if expanded.contains(key) || (expandRoots && depth == 0) || !filter.isEmpty { outline.expandItem(i); restore(i.children, key, depth: depth + 1) }
             }
         }
         restore(roots, "", depth: 0)
@@ -145,12 +190,13 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
 
     private var filterWork: DispatchWorkItem?
 
-    /// Filtr z opóźnieniem (pakiet z tysiącami elementów — bez przebudowy drzewa przy każdym znaku).
+    /// Filtr z opóźnieniem (pakiet z tysiącami elementów — bez przebudowy drzewa przy każdym znaku); przy bardzo
+    /// wielu elementach (skrypt z tysiącami poleceń) — dłuższym.
     @objc private func filterChanged() {
         filterWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.applyFilter() }
         filterWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + (rawNodes.count > 1000 ? 0.45 : 0.18), execute: work)
     }
 
     private func applyFilter() {
@@ -286,7 +332,8 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         label.font = font
         label.lineBreakMode = .byTruncatingTail
         label.toolTip = CodeContents.signature(of: n)
-        label.setAccessibilityLabel(CodeContents.signature(of: n))
+        // Polecenie SQL: VoiceOver czyta jednoliniowy tytuł z drzewa (pełny początek polecenia tylko w podpowiedzi).
+        label.setAccessibilityLabel(n.kind == .statement ? Self.title(n) : CodeContents.signature(of: n))
         for v in [icon, label] as [NSView] { v.translatesAutoresizingMaskIntoConstraints = false; cell.addSubview(v) }
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: cell.leadingAnchor), icon.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
@@ -316,6 +363,10 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
             return n.name + params
         case .pragma: return "pragma " + n.name.lowercased()
         case .block: return n.name
+        // Polecenie SQL skryptu: szczegóły wieloliniowe (do ok. 1000 znaków w podpowiedzi) — w drzewie jedna linia.
+        case .statement:
+            let line = n.detail.prefix(200).split(whereSeparator: \.isWhitespace).joined(separator: " ")
+            return line.isEmpty ? n.name : n.name + " " + line
         default: return n.detail.isEmpty ? n.name : n.name + " " + n.detail
         }
     }
@@ -346,6 +397,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .constant: "c.square"
         case .variable, .parameter: "v.square"
         case .pragma: "p.square"
+        case .statement: "text.alignleft"
         }
     }
 
@@ -355,6 +407,7 @@ final class CodeContentsView: NSView, NSOutlineViewDataSource, NSOutlineViewDele
         case .procedure, .function, .trigger: .systemBlue
         case .exception: .systemRed
         case .typeDeclaration, .cursor: .systemPurple
+        case .statement: .systemGreen
         case .constant: .systemTeal
         default: .secondaryLabelColor
         }

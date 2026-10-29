@@ -33,6 +33,17 @@ langen Abfrage kann Pelikan einen Ton abspielen und das Symbol im Dock hüpfen l
 Pelikan schreibt Änderungen nie automatisch fest (die Option **AutoCommit für SQL-Befehle** unter **Einstellungen › SQL
 Window** ist standardmäßig deaktiviert). Eine offene Transaktion zeigt die Statusleiste an („● Transaktion offen“).
 
+## Codeinhalt
+
+Links vom Editor zeigt der **Codeinhalt** die Struktur des ganzen Skripts: SQL-Anweisungen (erstes Wort und Anfang
+der Anweisung, bis etwa 1000 Zeichen mit Zeilenumbrüchen im Tooltip), Prozeduren, Funktionen, Pakete und Trigger aus `CREATE` sowie
+anonyme Blöcke mit ihren Deklarationen. Klick oder Enter setzt den Cursor auf die Anweisung, der Baum verfolgt den
+Cursor, und das Feld über dem Baum filtert auch nach dem Text der Anweisung (z. B. einem Tabellennamen). Den
+Bereich blenden Sie in diesem Fenster über **Ansicht › Codeinhalt** oder die Seitenleisten-Taste am linken Ende
+der Fensterleiste ein und aus; die Auswahl bleibt im Fenster, den Standard für neue Fenster legen Sie unter
+**Einstellungen › Editor › Codeinhalt standardmäßig sichtbar** fest. Die SQL*Plus-Konsole hat diesen Bereich nicht. In einem Skript mit mehr als 5000 SQL-Anweisungen zeigt der Bereich
+nur PL/SQL-Einheiten und -Blöcke (mit einem Hinweis auf die Anzahl der Anweisungen).
+
 ## Variablen
 
 - **Substitutionsvariablen** `&name` und `&&name` — vor der Ausführung zeigt Pelikan das Fenster **Variablen** mit
