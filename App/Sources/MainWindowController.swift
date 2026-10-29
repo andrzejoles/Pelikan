@@ -455,7 +455,9 @@ final class DocumentAreaViewController: NSViewController {
         let tabScroll = NSScrollView()
         tabScroll.documentView = tabBar
         tabScroll.hasHorizontalScroller = false
-        tabScroll.drawsBackground = false
+        // Pasek kart na własnym tle, odróżnionym od edytora i wstążki; aktywna karta wyróżniona tłem i kolorem.
+        tabScroll.drawsBackground = true
+        tabScroll.backgroundColor = DocumentTabButton.barBackground
         tabBar.translatesAutoresizingMaskIntoConstraints = false
 
         statusLabel.font = InterfaceFonts.shared.small
@@ -566,17 +568,14 @@ final class DocumentAreaViewController: NSViewController {
         // Karty.
         tabBar.arrangedSubviews.forEach { $0.removeFromSuperview() }
         for doc in docs {
-            let tab = DocumentTabButton(document: doc, isActive: doc.id == active) { [weak self] in
+            // Kolor połączenia (wskaźniki, PD-CONN-005) — kropka przed znacznikiem typu.
+            let color = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
+            let tab = DocumentTabButton(document: doc, isActive: doc.id == active, connectionColor: color) { [weak self] in
                 self?.workspace.activate(doc.id)
             } onClose: { [weak self] in
                 self?.workspace.perform("file.closeWindow", CommandArguments(["document": .string(doc.id.description)]))
             }
             tab.menu = tabMenu(for: doc)
-            // Kolor połączenia (wskaźniki, PD-CONN-005) jako obramowanie karty.
-            if let c = workspace.indicatorColor(for: doc) {
-                tab.layer?.borderWidth = 1.5
-                tab.layer?.borderColor = NSColor(red: c.red, green: c.green, blue: c.blue, alpha: 0.9).cgColor
-            }
             tabBar.addArrangedSubview(tab)
         }
         // Widoki dokumentów (zachowywane dla otwartych okien).
@@ -721,32 +720,51 @@ extension DocumentAreaViewController {
 }
 
 /// Karta dokumentu: kolorowy znacznik typu (NF12), tytuł, przycisk zamknięcia; środkowy klik zamyka (NF15).
+/// Aktywna karta: tło w kolorze akcentu, pasek akcentu u dołu i pogrubiony tytuł; pozostałe bez tła (podświetlenie
+/// pod kursorem). Kolor połączenia (PD-CONN-005) — kropka przed znacznikiem typu zamiast obramowania karty.
 final class DocumentTabButton: NSView {
     private let onSelect: () -> Void
     private let onClose: () -> Void
+    private let isActive: Bool
+    private var hovered = false {
+        didSet { needsDisplay = true }
+    }
 
-    init(document: Document, isActive: Bool, onSelect: @escaping () -> Void, onClose: @escaping () -> Void) {
+    /// Tło paska kart: ciemniejsze od tła okna (jasny wygląd) albo jaśniejsze (ciemny) — karty odcinają się od edytora.
+    static let barBackground = NSColor(name: nil) {
+        $0.isDark ? NSColor(srgbRed: 0.16, green: 0.16, blue: 0.17, alpha: 1) : NSColor(srgbRed: 0.89, green: 0.89, blue: 0.90, alpha: 1)
+    }
+
+    init(document: Document, isActive: Bool, connectionColor: NSColor?, onSelect: @escaping () -> Void, onClose: @escaping () -> Void) {
         self.onSelect = onSelect
         self.onClose = onClose
+        self.isActive = isActive
         super.init(frame: .zero)
-        wantsLayer = true
-        layer?.cornerRadius = 6
-        layer?.backgroundColor = isActive ? NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor : NSColor.clear.cgColor
         let fonts = InterfaceFonts.shared
+        var views: [NSView] = []
+        if let connectionColor {
+            let dot = ConnectionDot(color: connectionColor)
+            dot.toolTip = L10n.tr("Kolor połączenia okna")
+            views.append(dot)
+        }
         let marker = NSTextField(labelWithString: document.kind.shortName)
         marker.font = .monospacedSystemFont(ofSize: fonts.label.pointSize, weight: .bold)
         marker.textColor = Self.color(for: document.kind)
         let title = NSTextField(labelWithString: (document.isModified ? "● " : "") + document.title)
         title.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 1), weight: isActive ? .semibold : fonts.weight)
+        title.textColor = isActive ? .labelColor : .secondaryLabelColor
         title.lineBreakMode = .byTruncatingMiddle
         let close = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: L10n.tr("Zamknij"))!,
                              target: nil, action: nil)
         close.isBordered = false
         close.imageScaling = .scaleProportionallyDown
+        close.contentTintColor = isActive ? .labelColor : .secondaryLabelColor
         close.target = self
         close.action = #selector(closeTapped)
-        let stack = NSStackView(views: [marker, title, close])
+        views += [marker, title, close]
+        let stack = NSStackView(views: views)
         stack.spacing = 6
+        stack.setCustomSpacing(5, after: views[0])
         stack.edgeInsets = NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 4)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
@@ -778,6 +796,31 @@ final class DocumentTabButton: NSView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError() }
 
+    // Rysowanie w draw(_:) — kolory dynamiczne (akcent, jasny/ciemny wygląd) bez ręcznej aktualizacji warstwy.
+    override func draw(_ dirtyRect: NSRect) {
+        let shape = NSBezierPath(roundedRect: bounds.insetBy(dx: 0.5, dy: 1), xRadius: 6, yRadius: 6)
+        if isActive {
+            NSColor.controlAccentColor.withAlphaComponent(0.22).setFill()
+            shape.fill()
+            NSColor.controlAccentColor.setFill()
+            NSBezierPath(roundedRect: NSRect(x: bounds.minX + 6, y: bounds.minY + 1, width: bounds.width - 12, height: 2.5),
+                         xRadius: 1.25, yRadius: 1.25).fill()
+        } else if hovered {
+            NSColor.quaternaryLabelColor.setFill()
+            shape.fill()
+        }
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                                       owner: self, userInfo: nil))
+    }
+
+    override func mouseEntered(with event: NSEvent) { hovered = true }
+    override func mouseExited(with event: NSEvent) { hovered = false }
+
     static func color(for kind: DocumentKind) -> NSColor {
         switch kind {
         case .sql: .systemBlue
@@ -794,4 +837,24 @@ final class DocumentTabButton: NSView {
     override func mouseDown(with event: NSEvent) { onSelect() }
     override func otherMouseUp(with event: NSEvent) { if event.buttonNumber == 2 { onClose() } }
     @objc private func closeTapped() { onClose() }
+}
+
+/// Kropka w kolorze połączenia okna na karcie dokumentu (PD-CONN-005).
+private final class ConnectionDot: NSView {
+    private let color: NSColor
+
+    init(color: NSColor) {
+        self.color = color
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([widthAnchor.constraint(equalToConstant: 8), heightAnchor.constraint(equalToConstant: 8)])
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func draw(_ dirtyRect: NSRect) {
+        color.setFill()
+        NSBezierPath(ovalIn: bounds).fill()
+    }
 }

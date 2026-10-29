@@ -88,7 +88,7 @@ agents* chapter.
 
 ## Environments and protection against mistakes
 
-- The connection color is visible in the connection list, on the window tab, in the window list and in the status bar.
+- The connection color is visible in the connection list, on the window tab (a dot before the name), in the window list and in the status bar.
   The **Editor background in connection color** option (**Settings › General**) also tints the editor background. On
   the same tab you can add color rules by a `user@database` pattern (e.g. `sys@*`) — they take precedence over the
   environment color.

@@ -92,7 +92,7 @@ werden im Kapitel *KI-Agenten* beschrieben.
 
 ## Umgebungen und Schutz vor Fehlern
 
-- Die Farbe der Verbindung ist in der Verbindungsliste, auf dem Fenster-Tab, in der Fensterliste und in der Statusleiste
+- Die Farbe der Verbindung ist in der Verbindungsliste, auf dem Fenster-Tab (ein Punkt vor dem Namen), in der Fensterliste und in der Statusleiste
   zu sehen. Die Option **Editorhintergrund in Verbindungsfarbe** (**Einstellungen › Allgemein**) färbt auch den
   Hintergrund des Editors. Im selben Tab können Sie Farbregeln nach dem Muster `benutzer@datenbank` hinzufügen (z. B.
   `sys@*`) — sie haben Vorrang vor der Umgebungsfarbe.

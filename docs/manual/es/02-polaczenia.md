@@ -91,7 +91,7 @@ capítulo *Agentes de IA*.
 
 ## Entornos y protección contra errores
 
-- El color de la conexión se ve en la lista de conexiones, en la pestaña de la ventana, en la lista de ventanas y en la
+- El color de la conexión se ve en la lista de conexiones, en la pestaña de la ventana (un punto antes del nombre), en la lista de ventanas y en la
   barra de estado. La opción **Fondo del editor con el color de la conexión** (**Ajustes › General**) colorea
   también el fondo del editor. En la misma pestaña puedes añadir reglas de color según el patrón `usuario@base` (p. ej.,
   `sys@*`); tienen prioridad sobre el color del entorno.

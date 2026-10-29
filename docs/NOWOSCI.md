@@ -2,6 +2,12 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.5.1 — wyraźniejsze karty okien
+
+- **Karty okien:** aktywna karta ma tło w kolorze akcentu, pasek akcentu u dołu i pogrubiony tytuł; pozostałe są bez
+  tła, z przyciemnionym tytułem i podświetleniem pod kursorem. Kolor połączenia pokazuje kropka przed nazwą okna
+  (zamiast obramowania każdej karty), a pasek kart ma własne tło, odcięte od edytora.
+
 ## 1.5.0 — specyfikacja i ciało w osobnych plikach, pliki zmienione przez inne programy, polskie nazwy
 
 - **Specyfikacja i ciało w osobnych plikach:** okno programu z pakietem albo typem zapisuje specyfikację do pliku
