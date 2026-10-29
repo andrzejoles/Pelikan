@@ -106,10 +106,10 @@ public struct PelikanSSHTarget: Sendable, Codable, Hashable, Identifiable {
         if name.trimmingCharacters(in: .whitespaces).isEmpty { e.append(L10n.tr("Podaj nazwę celu")) }
         if host.trimmingCharacters(in: .whitespaces).isEmpty { e.append(L10n.tr("Podaj host")) }
         if !baseDirectory.hasPrefix("/") { e.append(L10n.tr("Katalog bazowy musi być ścieżką bezwzględną")) }
-        if !backupDirectory.hasPrefix("/") { e.append(L10n.tr("Katalog backupów musi być ścieżką bezwzględną")) }
+        if !backupDirectory.hasPrefix("/") { e.append(L10n.tr("Katalog kopii zapasowych musi być ścieżką bezwzględną")) }
         let wc = effectiveWorkingCopy
         if pelikanDirectory == wc || pelikanDirectory.hasPrefix(Self.join(wc, "")) {
-            e.append(L10n.tr("Katalog backupów nie może leżeć w working copy (pliki Pelikana pojawiłyby się w git status)"))
+            e.append(L10n.tr("Katalog kopii zapasowych nie może leżeć w kopii roboczej (pliki Pelikana pojawiłyby się w git status)"))
         }
         if auth == .keyFile, keyFile.isEmpty { e.append(L10n.tr("Wskaż plik klucza")) }
         if !(1...65535).contains(port) { e.append(L10n.tr("Port spoza zakresu 1–65535")) }

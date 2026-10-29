@@ -124,7 +124,7 @@ public enum ConnectionCommands {
                 try ctx.workspace.connections.remove(id)
                 return .ok
             },
-            Command(CommandDescriptor(id: "connection.duplicate", title: L10n.tr("Kopiuj połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
+            Command(CommandDescriptor(id: "connection.duplicate", title: L10n.tr("Duplikuj połączenie…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam, CommandParameter("name", .string, L10n.tr("Nazwa kopii (bez argumentu — pytanie)"))],
                                       agent: .none, effect: .settings,
                                       summary: L10n.tr("Tworzy kopię definicji połączenia pod inną nazwą, w tym samym folderze, z zapisanymi hasłami."),
@@ -136,7 +136,7 @@ public enum ConnectionCommands {
                 if name == nil {
                     let taken = Set(ctx.workspace.connections.connections.map { $0.displayName.lowercased() })
                     let candidates = [L10n.tr("\(def.displayName) (kopia)")] + (2...99).map { L10n.tr("\(def.displayName) (kopia \($0))") }
-                    name = await ctx.ui?.askText(L10n.tr("Kopiuj połączenie"), message: L10n.tr("Nazwa kopii połączenia „\(def.displayName)”:"),
+                    name = await ctx.ui?.askText(L10n.tr("Duplikuj połączenie"), message: L10n.tr("Nazwa kopii połączenia „\(def.displayName)”:"),
                                                  defaultValue: candidates.first { !taken.contains($0.lowercased()) } ?? "")
                     guard name != nil else { throw CommandError.cancelledByUser }
                 }
@@ -252,7 +252,7 @@ public enum ConnectionCommands {
             Command(CommandDescriptor(id: "connection.setCurrentSchema", title: L10n.tr("Ustaw bieżący schemat…"), category: .session, submenu: L10n.tr("Połączenia"),
                                       parameters: [connectionParam, CommandParameter("schema", .string, required: true, L10n.tr("Schemat"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Object Browser i nazwy bez schematu)."),
+                                      summary: L10n.tr("ALTER SESSION SET CURRENT_SCHEMA w sesji głównej połączenia (Przeglądarka obiektów i nazwy bez schematu)."),
                                       inMenu: false, feature: "PD-CONN-022")) { ctx in
                 let id = try connectionID(ctx)
                 var schema = ctx.arguments.string("schema")

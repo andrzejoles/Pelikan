@@ -126,10 +126,10 @@ enum P1BrowserCommands {
             },
             // MARK: Upuszczenie obiektu (PD-OB-010)
             command("ob.dropText", L10n.tr("Wstaw obiekt do edytora"),
-                    params: objectParams + [CommandParameter("action", .string, L10n.tr("Co wstawić; brak — wg preferencji"),
+                    params: objectParams + [CommandParameter("action", .string, L10n.tr("Co wstawić; brak — wg ustawień"),
                                                              allowed: BrowserDropAction.allCases.filter { $0 != .ask }.map(\.rawValue))],
                     agent: .none, effect: .modifiesEditor,
-                    summary: L10n.tr("Wstawia w miejscu kursora nazwę, listę kolumn, SELECT/INSERT/UPDATE/DELETE, wywołanie albo DDL obiektu (przeciąganie z Object Browsera)."),
+                    summary: L10n.tr("Wstawia w miejscu kursora nazwę, listę kolumn, SELECT/INSERT/UPDATE/DELETE, wywołanie albo DDL obiektu (przeciąganie z Przeglądarki obiektów)."),
                     feature: "PD-OB-010") { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let raw = ctx.arguments.string("action") ?? ctx.workspace.settings.browserDropAction.rawValue
@@ -140,7 +140,7 @@ enum P1BrowserCommands {
             },
             command("ob.dropOnWorkspace", L10n.tr("Upuść obiekt na obszar okien"),
                     params: objectParams, agent: .none, effect: .uiState,
-                    summary: L10n.tr("Akcja z preferencji dla obiektu upuszczonego poza edytorem: Edytuj, Pokaż dane, DDL, Opis albo Właściwości."),
+                    summary: L10n.tr("Akcja z ustawień dla obiektu upuszczonego poza edytorem: Edytuj, Pokaż dane, DDL, Opis albo Właściwości."),
                     feature: "PD-OB-010") { ctx in
                 let (o, m) = try await ObjectCommands.target(ctx)
                 let id = ctx.workspace.settings.browserWorkspaceDrop.command(for: o.type)

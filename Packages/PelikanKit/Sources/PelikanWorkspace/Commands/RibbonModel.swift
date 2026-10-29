@@ -131,8 +131,8 @@ public enum RibbonModel {
                 .small("window.execute"), .small("sql.toggleSubstitution"),
             ]),
             RibbonGroup(L10n.tr("Transakcja"), [
-                .large("session.commit", label: L10n.tr("COMMIT")),
-                .large("session.rollback", label: L10n.tr("ROLLBACK")),
+                .large("session.commit", label: L10n.tr("Zatwierdź")),
+                .large("session.rollback", label: L10n.tr("Wycofaj")),
             ]),
             RibbonGroup(L10n.tr("Połączenie"), [
                 .large("session.logon", label: L10n.tr("Zaloguj")),
@@ -199,7 +199,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Refaktoryzacja"), [
                 .large("edit.refactorRename", label: L10n.tr("Zmień nazwę")),
-                .menu(L10n.tr("Wydziel"), symbol: "rectangle.portrait.and.arrow.right", commands: [
+                .menu(L10n.tr("Wyodrębnij"), symbol: "rectangle.portrait.and.arrow.right", commands: [
                     "edit.extractLocalConstant", "edit.extractGlobalConstant", "edit.extractProcedure", separator,
                     "edit.replaceAssignmentWithInitialization",
                 ]),
@@ -262,7 +262,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Schemat"), [
                 .large("diagram.fromSchema", label: L10n.tr("Diagram ER")),
-                .small("tools.compileInvalid", label: L10n.tr("Kompiluj niepoprawne")),
+                .small("tools.compileInvalid", label: L10n.tr("Kompiluj nieprawidłowe")),
                 .small("reports.invalidObjects"), .small("reports.compilationErrors"),
                 .small("tools.schemaDoc", label: L10n.tr("Dokumentacja")),
             ]),
@@ -363,7 +363,7 @@ public enum RibbonModel {
                 .menu(L10n.tr("Szablony"), symbol: "doc.text", commands: [
                     "templates.save", "templates.edit", "templates.delete", separator, "templates.newFolder", "templates.renameFolder", "templates.deleteFolder",
                 ]),
-                .menu(L10n.tr("Preferencje"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
+                .menu(L10n.tr("Ustawienia"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
             ]),
             // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Preferencji › Agenci.
             RibbonGroup(L10n.tr("Agent AI"), [
@@ -458,7 +458,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Edycja danych"), [
                 .large("grid.edit"),
-                .small("grid.insertRecord"), .small("grid.deleteRecord"), .small("grid.post", label: L10n.tr("Zatwierdź (Post)")),
+                .small("grid.insertRecord"), .small("grid.deleteRecord"), .small("grid.post", label: L10n.tr("Zapisz zmiany (Post)")),
                 .small("grid.cancelChanges"), .small("grid.revertRowChanges"),
                 .menu(L10n.tr("Zmiany"), symbol: "pencil.and.list.clipboard", commands: [
                     "grid.nextPendingChange", "grid.previousPendingChange", "grid.copyChangesSQL", separator,
@@ -537,7 +537,7 @@ public enum RibbonModel {
                 .large("sql.execute"), .small("cmd.executeLine"), .small("cmd.pause"), .small("sql.break"),
             ]),
             RibbonGroup(L10n.tr("Transakcja"), [
-                .large("session.commit", label: L10n.tr("COMMIT")), .large("session.rollback", label: L10n.tr("ROLLBACK")),
+                .large("session.commit", label: L10n.tr("Zatwierdź")), .large("session.rollback", label: L10n.tr("Wycofaj")),
             ]),
         ])
     }
@@ -545,7 +545,7 @@ public enum RibbonModel {
     @MainActor static var plan: RibbonTab {
         RibbonTab("plan", L10n.tr("Plan"), context: [.explainPlan], [
             RibbonGroup(L10n.tr("Plan wykonania"), [
-                .large("sql.execute", label: L10n.tr("Wyznacz plan")), .small("plan.compare", label: L10n.tr("Porównaj z poprzednim")),
+                .large("sql.execute", label: L10n.tr("Odśwież plan")), .small("plan.compare", label: L10n.tr("Porównaj z poprzednim")),
                 .small("plan.export", label: L10n.tr("Zapisz plan")), .small("tools.autotrace"),
             ]),
         ])

@@ -142,7 +142,7 @@ struct FileBrowserPane: View {
                     FileTreeLevel(model: model, directory: loc.url, workspace: workspace)
                 }
                 .listStyle(.plain)
-                .accessibilityLabel(L10n.tr("File Browser"))
+                .accessibilityLabel(L10n.tr("Przeglądarka plików"))
                 .contextMenu(forSelectionType: String.self) { ids in
                     if let path = ids.first { menu(for: URL(fileURLWithPath: path)) }
                 } primaryAction: { ids in

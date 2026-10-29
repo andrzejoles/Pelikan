@@ -119,15 +119,15 @@ extension Workspace {
 enum BrowserCommands {
     static var all: [Command] {
         [
-            Command(CommandDescriptor(id: "ob.applyFilter", title: L10n.tr("Filtr nazwany…"), category: .tools, submenu: L10n.tr("Object Browser"),
+            Command(CommandDescriptor(id: "ob.applyFilter", title: L10n.tr("Filtr nazwany…"), category: .tools, submenu: L10n.tr("Przeglądarka obiektów"),
                                       parameters: [CommandParameter("name", .string, L10n.tr("Nazwa filtra (puste — bez filtra)"))],
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Stosuje w Object Browserze filtr nazwany (WHERE/ORDER BY na widoku obiektów)."), feature: "PD-OB-007")) { ctx in
+                                      summary: L10n.tr("Stosuje w Przeglądarce obiektów filtr nazwany (WHERE/ORDER BY na widoku obiektów)."), feature: "PD-OB-007")) { ctx in
                 let ws = ctx.workspace
                 var name = ctx.arguments.string("name")
                 if name == nil, let ui = ctx.ui, !ws.browserCustomization.filters.isEmpty {
                     let options = Array(ws.browserCustomization.filters.prefix(7).map(\.name)) + [L10n.tr("Bez filtra")]
-                    guard let i = await ui.ask(L10n.tr("Filtr nazwany"), message: L10n.tr("Wybierz filtr Object Browsera."), buttons: options) else {
+                    guard let i = await ui.ask(L10n.tr("Filtr nazwany"), message: L10n.tr("Wybierz filtr Przeglądarki obiektów."), buttons: options) else {
                         throw CommandError.cancelledByUser
                     }
                     name = i < options.count - 1 ? options[i] : ""
@@ -143,7 +143,7 @@ enum BrowserCommands {
             Command(CommandDescriptor(id: "ob.addToFolder", title: L10n.tr("Dodaj do folderu…"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: ObjectCommands.objectParams + [CommandParameter("folder", .string, L10n.tr("Folder użytkownika (nowy, gdy nie istnieje)"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Dodaje zaznaczony obiekt do folderu użytkownika Object Browsera."), feature: "PD-OB-008"),
+                                      summary: L10n.tr("Dodaje zaznaczony obiekt do folderu użytkownika Przeglądarki obiektów."), feature: "PD-OB-008"),
                     validate: ObjectCommands.hasSelection) { ctx in
                 let ws = ctx.workspace
                 let (o, _) = try await ObjectCommands.target(ctx)

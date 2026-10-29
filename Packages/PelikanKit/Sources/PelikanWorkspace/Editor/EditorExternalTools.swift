@@ -312,16 +312,16 @@ enum EditorExternalCommands {
     static var all: [Command] {
         [
             Command(CommandDescriptor(id: "edit.webSearch", title: L10n.tr("Szukaj w sieci"), category: .edit, submenu: nil,
-                                      parameters: [CommandParameter("engine", .string, L10n.tr("Nazwa wyszukiwania z Preferencji (domyślnie pierwsze)")),
+                                      parameters: [CommandParameter("engine", .string, L10n.tr("Nazwa wyszukiwania z Ustawień (domyślnie pierwsze)")),
                                                    CommandParameter("text", .string, L10n.tr("Tekst (domyślnie zaznaczenie albo słowo pod kursorem)"))],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Otwiera w przeglądarce wyszukiwanie zaznaczonego tekstu albo słowa pod kursorem (wyszukiwania z %s w Preferencjach)."),
+                                      summary: L10n.tr("Otwiera w przeglądarce wyszukiwanie zaznaczonego tekstu albo słowa pod kursorem (wyszukiwania z %s w Ustawieniach)."),
                                       feature: "PD-EDIT-027")) { ctx in
                 let ws = ctx.workspace
                 let text = ctx.arguments.string("text") ?? editorDocument(ws).map { ws.searchText(in: $0) } ?? ""
                 guard !text.isEmpty else { throw CommandError.notAvailable(L10n.tr("Zaznacz tekst albo ustaw kursor na słowie")) }
                 let searches = ws.settings.webSearches
-                guard !searches.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak wyszukiwań — dodaj je w Preferencjach › Narzędzia")) }
+                guard !searches.isEmpty else { throw CommandError.notAvailable(L10n.tr("Brak wyszukiwań — dodaj je w Ustawieniach › Narzędzia")) }
                 var search = searches[0]
                 if let name = ctx.arguments.string("engine") {
                     guard let s = searches.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
@@ -341,7 +341,7 @@ enum EditorExternalCommands {
             },
             Command(CommandDescriptor(id: "edit.openInExternalEditor", title: L10n.tr("Otwórz w zewnętrznym edytorze"), category: .edit,
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Otwiera tekst okna w programie z Preferencji (np. Visual Studio Code); po powrocie do Pelikana zmiany są wczytywane."),
+                                      summary: L10n.tr("Otwiera tekst okna w programie z Ustawień (np. Visual Studio Code); po powrocie do Pelikana zmiany są wczytywane."),
                                       feature: "PD-EDIT-028"),
                     validate: { editorDocument($0) != nil }) { ctx in
                 guard let doc = editorDocument(ctx.workspace) else { return .ok }
@@ -353,7 +353,7 @@ enum EditorExternalCommands {
             Command(CommandDescriptor(id: "tools.documents", title: L10n.tr("Dokumenty…"), category: .tools,
                                       parameters: [CommandParameter("title", .string, L10n.tr("Tytuł dokumentu (domyślnie wybór z listy)"))],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Otwiera dokument użytkownika z listy w Preferencjach (plik albo adres http/https)."),
+                                      summary: L10n.tr("Otwiera dokument użytkownika z listy w Ustawieniach (plik albo adres http/https)."),
                                       feature: "PD-DOC-002"),
                     validate: { !$0.settings.userDocuments.isEmpty }) { ctx in
                 let docs = ctx.workspace.settings.userDocuments

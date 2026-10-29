@@ -132,8 +132,15 @@ struct RibbonTests {
         #expect(top("beautifier").first == "edit.beautify")
         #expect(top("eksport tabel").first == "tools.exportTables")
         #expect(top("find database objects").first == "tools.findObjects")
-        #expect(top("kompiluj", 6).contains("sql.execute"))
+        // Tytułem pasują też „Kompiluj projekt” i „Kompiluj zmienione” (D195), więc F8 — po słowie kluczowym — jest dalej.
+        #expect(top("kompiluj", 8).contains("sql.execute"))
         #expect(top("kompiluj", 6).contains("tools.compileInvalid"))
+        // Dawne polskie nazwy komend (D195) dalej znajdują komendę.
+        #expect(top("wejdz").first == "debug.stepInto")
+        #expect(top("wydziel procedure").first == "edit.extractProcedure")
+        #expect(top("snippety").first == "view.snippets")
+        #expect(top("preferencje", 5).contains("prefs.sets"))
+        #expect(top("buduj").contains("project.build"))
         #expect(top("przel zakl").first == "edit.toggleBookmark")
         #expect(top("qqqxyz").isEmpty)
         #expect(top("   ").isEmpty)

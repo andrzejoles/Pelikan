@@ -153,13 +153,13 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         post.isBordered = false
         post.addItem(withTitle: "")
         post.item(at: 0)?.image = NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: L10n.tr("Zatwierdź zmiany"))
-        for (title, id) in [(L10n.tr("Zatwierdź zmiany (Post)"), "grid.post"), (L10n.tr("Kopiuj SQL zmian"), "grid.copyChangesSQL"),
+        for (title, id) in [(L10n.tr("Zapisz zmiany w bazie (Post)"), "grid.post"), (L10n.tr("Kopiuj SQL zmian"), "grid.copyChangesSQL"),
                             (L10n.tr("Anuluj zmiany"), "grid.cancelChanges")] {
             let item = post.menu!.addItem(withTitle: title, action: #selector(contextCommand(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = id
         }
-        post.toolTip = L10n.tr("Zatwierdź zmiany w bazie (bez COMMIT)")
+        post.toolTip = L10n.tr("Zapisz zmiany w bazie (bez COMMIT)")
         editControls = [button("plus", L10n.tr("Wstaw rekord"), #selector(insertRecord)),
                         button("minus", L10n.tr("Usuń rekord"), #selector(deleteRecord)), post]
         editControls.forEach { $0.isHidden = true }
@@ -648,11 +648,11 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
             item.target = self
             item.representedObject = exclude
         }
-        for (title, id) in [(L10n.tr("Filtr wyrażeniem…"), "grid.filterExpression"), (L10n.tr("Wyczyść filtr"), "grid.clearFilter"),
+        for (title, id) in [(L10n.tr("Filtruj wyrażeniem…"), "grid.filterExpression"), (L10n.tr("Wyczyść filtr"), "grid.clearFilter"),
                             (L10n.tr("Grupuj według kolumny"), "grid.groupBy"), (L10n.tr("Panel wartości"), "grid.valuePanel"),
                             (L10n.tr("Otwórz kursor zagnieżdżony"), "grid.openCursor"), (L10n.tr("Sumy kolumny…"), "grid.totals"),
-                            (L10n.tr("Lista wartości…"), "grid.valueList"), (L10n.tr("Wielkie litery w komórkach"), "grid.upperCase"),
-                            (L10n.tr("Małe litery w komórkach"), "grid.lowerCase"), (L10n.tr("Kalendarz…"), "grid.chooseDate"),
+                            (L10n.tr("Lista wartości…"), "grid.valueList"), (L10n.tr("Zamień na wielkie litery w komórkach"), "grid.upperCase"),
+                            (L10n.tr("Zamień na małe litery w komórkach"), "grid.lowerCase"), (L10n.tr("Kalendarz…"), "grid.chooseDate"),
                             (L10n.tr("Zaznacz kolumnę"), "grid.selectColumn")] {
             let item = menu.addItem(withTitle: title, action: #selector(cellCommand(_:)), keyEquivalent: "")
             item.target = self
@@ -666,7 +666,7 @@ final class ResultGridView: NSView, NSTableViewDataSource, NSTableViewDelegate, 
         }
         menu.addItem(withTitle: L10n.tr("Generuj SQL z wierszy"), action: nil, keyEquivalent: "").submenu = gen
         menu.addItem(.separator())
-        for (title, id) in [(L10n.tr("Filtr kolumn…"), "grid.columnFilter"), (L10n.tr("Pokaż wszystkie kolumny"), "grid.clearColumnFilter"),
+        for (title, id) in [(L10n.tr("Filtruj kolumny…"), "grid.columnFilter"), (L10n.tr("Pokaż wszystkie kolumny"), "grid.clearColumnFilter"),
                             (L10n.tr("Wyrównaj kolumny"), "grid.align"), (L10n.tr("Zapisz wyrównanie dla zapytania"), "grid.saveAlignTemplate"),
                             (L10n.tr("Query By Example…"), "grid.queryByExample"), (L10n.tr("Wyczyść Query By Example"), "grid.clearQueryByExample"),
                             (L10n.tr("Odśwież wynik"), "sql.refreshResult"), (L10n.tr("Przypnij wynik"), "sql.pinResult")] {

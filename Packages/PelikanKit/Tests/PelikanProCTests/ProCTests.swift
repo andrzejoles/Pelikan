@@ -258,16 +258,16 @@ struct SSHTargetTesterTests {
         #expect(check("Serwer SSH")?.status == .ok && check("Logowanie")?.status == .ok)
         #expect(check("uname -a")?.status == .ok && check("git --version")?.detail.hasPrefix("git version") == true)
         #expect(check("Gałąź")?.status == .ok && check("Gałąź")?.detail == "MASTER")
-        #expect(check("Czystość working copy")?.status == .ok)
+        #expect(check("Czystość kopii roboczej")?.status == .ok)
         #expect(check("Katalog bazowy")?.status == .ok && check("Katalog src")?.status == .ok && check("Katalog bin")?.status == .ok)
-        #expect(check("Katalog backupów")?.status == .failed)
+        #expect(check("Katalog kopii zapasowych")?.status == .failed)
 
         try SSHTargetTester.createBackupDirectory(t, session: session)
         try sshd.root.file("app base/src/nowy.pc", "x")
         t.branch = "master"
         checks = SSHTargetTester.run(t, session: session)
-        #expect(check("Katalog backupów")?.status == .ok)
-        #expect(check("Czystość working copy")?.status == .warning && check("Czystość working copy")?.detail.contains("nowy.pc") == true)
+        #expect(check("Katalog kopii zapasowych")?.status == .ok)
+        #expect(check("Czystość kopii roboczej")?.status == .warning && check("Czystość kopii roboczej")?.detail.contains("nowy.pc") == true)
         #expect(check("Gałąź")?.status == .warning)
         #expect(sshd.root.exists("kopie/.pelikan"))
     }

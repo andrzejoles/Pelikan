@@ -95,7 +95,7 @@ public enum SQLCommands {
             },
             Command(CommandDescriptor(id: "cmd.pause", title: L10n.tr("Wstrzymaj wykonanie"), category: .session,
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Wstrzymuje skrypt Command Window przed następnym poleceniem; dalej krok po kroku albo resztę naraz."),
+                                      summary: L10n.tr("Wstrzymuje skrypt okna poleceń przed następnym poleceniem; dalej krok po kroku albo resztę naraz."),
                                       feature: "PD-CMDW-003"),
                     validate: { ws in ws.activeDocument.map { $0.kind == .command && $0.isExecuting } ?? false }) { ctx in
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .command else { return .ok }
@@ -106,7 +106,7 @@ public enum SQLCommands {
                                       parameters: [CommandParameter("line", .string, required: true, L10n.tr("Polecenie SQL*Plus, SQL albo PL/SQL")),
                                                    WindowListCommands.documentParam],
                                       agent: .none, effect: .modifiesDatabase,
-                                      summary: L10n.tr("Wykonuje linię z karty Dialog okna Command Window."), inMenu: false, feature: "PD-CMDW-001"),
+                                      summary: L10n.tr("Wykonuje linię z karty Dialog okna poleceń."), inMenu: false, feature: "PD-CMDW-001"),
                     validate: { ws in ws.activeDocument.map { $0.kind == .command && !$0.isExecuting } ?? false }) { ctx in
                 // Okno wskazane jawnie (kolejka type-ahead okna, które nie jest aktywne) albo aktywne.
                 let doc = try WindowListCommands.document(ctx)

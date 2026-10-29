@@ -54,7 +54,7 @@ public final class SnippetLibrary: @unchecked Sendable {
             s(hints, L10n.tr("Indeks"), "/*+ INDEX(t nazwa_indeksu) */"),
             s(hints, L10n.tr("Bez scalania widoku"), "/*+ NO_MERGE */"),
             s(hints, L10n.tr("Statystyki wykonania"), "/*+ GATHER_PLAN_STATISTICS */"),
-            s(dict, L10n.tr("Niepoprawne obiekty"), "SELECT object_type, object_name FROM user_objects WHERE status = 'INVALID' ORDER BY 1, 2;"),
+            s(dict, L10n.tr("Nieprawidłowe obiekty"), "SELECT object_type, object_name FROM user_objects WHERE status = 'INVALID' ORDER BY 1, 2;"),
             s(dict, L10n.tr("Kolumny tabeli"), "SELECT column_name, data_type, data_length, nullable FROM user_tab_columns WHERE table_name = 'TABELA' ORDER BY column_id;"),
             s(dict, L10n.tr("Rozmiary segmentów"), "SELECT segment_name, ROUND(SUM(bytes) / 1024 / 1024, 1) mb FROM user_segments GROUP BY segment_name ORDER BY 2 DESC;"),
             s(json, L10n.tr("Wartość z JSON"), "JSON_VALUE(dokument, '$.klucz')"),
@@ -75,7 +75,7 @@ public final class SnippetLibrary: @unchecked Sendable {
 
     func checkWritable() throws {
         guard let e = loadError, let f = file else { return }
-        throw CommandError.notAvailable(L10n.tr("Nie można odczytać pliku \(f.lastPathComponent) (\(e)) — popraw go albo usuń; zmiany nie zostały zapisane, żeby nie utracić własnych snippetów"))
+        throw CommandError.notAvailable(L10n.tr("Nie można odczytać pliku \(f.lastPathComponent) (\(e)) — popraw go albo usuń; zmiany nie zostały zapisane, żeby nie utracić własnych fragmentów kodu"))
     }
 
     public func save(_ s: Snippet) throws {

@@ -107,7 +107,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         outline.doubleAction = #selector(doubleClicked)
         outline.allowsMultipleSelection = true
         outline.setDraggingSourceOperationMask(.copy, forLocal: false)
-        outline.setAccessibilityLabel(L10n.tr("Object Browser"))
+        outline.setAccessibilityLabel(L10n.tr("Przeglądarka obiektów"))
         let menu = NSMenu()
         menu.delegate = self
         outline.menu = menu
@@ -129,7 +129,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         let refresh = NSButton(image: NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: L10n.tr("Odśwież"))!,
                                target: self, action: #selector(refreshAll))
         refresh.isBordered = false
-        refresh.toolTip = L10n.tr("Odśwież Object Browser")
+        refresh.toolTip = L10n.tr("Odśwież Przeglądarkę obiektów")
         status.font = InterfaceFonts.shared.small
         status.textColor = .secondaryLabelColor
         let root = NSView()

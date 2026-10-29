@@ -208,11 +208,11 @@ enum EditorExtraCommands {
                 return CommandResult(value: .array(opened.map { .string($0) })).resolving(resolved)
             },
             // MARK: Refaktoryzacja (PD-CA-014)
-            refactoring("edit.extractLocalConstant", L10n.tr("Wydziel stałą lokalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną w podprogramie albo bloku."),
+            refactoring("edit.extractLocalConstant", L10n.tr("Wyodrębnij stałą lokalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną w podprogramie albo bloku."),
                         typed: true) { text, sel, name, type in try CodeRefactoring.extractLocalConstant(text, selection: sel, name: name, type: type) },
-            refactoring("edit.extractGlobalConstant", L10n.tr("Wydziel stałą globalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną na początku pakietu."),
+            refactoring("edit.extractGlobalConstant", L10n.tr("Wyodrębnij stałą globalną…"), summary: L10n.tr("Zastępuje zaznaczone wyrażenie stałą zadeklarowaną na początku pakietu."),
                         typed: true) { text, sel, name, type in try CodeRefactoring.extractGlobalConstant(text, selection: sel, name: name, type: type) },
-            refactoring("edit.extractProcedure", L10n.tr("Wydziel procedurę…"), summary: L10n.tr("Przenosi zaznaczone instrukcje do procedury lokalnej; używane zmienne stają się parametrami."),
+            refactoring("edit.extractProcedure", L10n.tr("Wyodrębnij procedurę…"), summary: L10n.tr("Przenosi zaznaczone instrukcje do procedury lokalnej; używane zmienne stają się parametrami."),
                         typed: false) { text, sel, name, _ in try CodeRefactoring.extractProcedure(text, selection: sel, name: name) },
             command("edit.replaceAssignmentWithInitialization", L10n.tr("Zamień przypisanie na inicjalizację"), submenu: refactor, agent: .none, effect: .modifiesEditor,
                     summary: L10n.tr("Przenosi przypisanie „zmienna := wyrażenie;” z początku ciała do deklaracji zmiennej."), feature: "PD-CA-014") { ctx in
@@ -229,7 +229,7 @@ enum EditorExtraCommands {
             command("edit.searchBar", L10n.tr("Szukaj w edytorach i plikach…"), submenu: nil, mac: ["cmd+alt+shift+f"],
                     params: [CommandParameter("query", .string, L10n.tr("Szukany tekst")),
                              CommandParameter("scope", .string, L10n.tr("current — bieżący edytor, all — wszystkie edytory, files — pliki w katalogach")),
-                             CommandParameter("directories", .string, L10n.tr("Katalogi rozdzielone ; (domyślnie lokalizacje File Browsera)")),
+                             CommandParameter("directories", .string, L10n.tr("Katalogi rozdzielone ; (domyślnie lokalizacje Przeglądarki plików)")),
                              CommandParameter("caseSensitive", .boolean, L10n.tr("Wielkość liter")), CommandParameter("wholeWord", .boolean, L10n.tr("Całe słowa")),
                              CommandParameter("regex", .boolean, L10n.tr("Wyrażenie regularne"))],
                     agent: .none, effect: .none,
@@ -248,7 +248,7 @@ enum EditorExtraCommands {
                     let raw = ctx.arguments.string("directories")
                     let dirs = raw.map { $0.split(separator: ";").map { URL(fileURLWithPath: (String($0).trimmingCharacters(in: .whitespaces) as NSString).expandingTildeInPath) } }
                         ?? ws.fileBrowser.locations.map { URL(fileURLWithPath: ($0.path as NSString).expandingTildeInPath) }
-                    guard !dirs.isEmpty else { throw CommandError.notAvailable(L10n.tr("Podaj katalogi albo dodaj lokalizacje w File Browserze")) }
+                    guard !dirs.isEmpty else { throw CommandError.notAvailable(L10n.tr("Podaj katalogi albo dodaj lokalizacje w Przeglądarce plików")) }
                     // Agent przeszukuje tylko okna (pliki użytkownika — poza jego zakresem).
                     if ctx.invoker.isAgent { throw AgentDenial.permissionDenied("wyszukiwanie w plikach jest niedostępne dla agenta") }
                     scope = .directories(dirs)

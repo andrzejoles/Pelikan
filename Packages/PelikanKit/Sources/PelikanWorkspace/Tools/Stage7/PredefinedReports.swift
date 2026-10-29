@@ -70,7 +70,7 @@ public enum PredefinedReports {
                 select object_name, status, last_ddl_time from all_objects
                  where owner = \(owner) and object_type = :parent_object_type order by object_name
                 """),
-            PredefinedReport(id: "invalidObjects", category: objects, title: L10n.tr("Niepoprawne obiekty"), sql: """
+            PredefinedReport(id: "invalidObjects", category: objects, title: L10n.tr("Nieprawidłowe obiekty"), sql: """
                 select object_type, object_name, last_ddl_time from all_objects
                  where owner = \(owner) and status <> 'VALID' order by object_type, object_name
                 """, variables: [ownerVar], detailTitle: L10n.tr("Błędy kompilacji"), detailSQL: """
@@ -102,7 +102,7 @@ public enum PredefinedReports {
                                       and ic.column_name = cc.column_name and ic.column_position = 1)
                  order by c.table_name, c.constraint_name
                 """, variables: [ownerVar]),
-            PredefinedReport(id: "constraints", category: tables, title: L10n.tr("Ograniczenia"), sql: """
+            PredefinedReport(id: "constraints", category: tables, title: L10n.tr("Więzy"), sql: """
                 select table_name, constraint_name, constraint_type, status, r_constraint_name from all_constraints
                  where owner = \(owner) and constraint_name not like 'BIN$%' order by table_name, constraint_type, constraint_name
                 """, variables: [ownerVar]),

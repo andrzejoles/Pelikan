@@ -57,9 +57,9 @@ struct PlanPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Dwa wiersze: przy jednym w oknie o typowej szerokości selektor celu i „Wyjaśnij” ściskały się do zera.
+            // Dwa wiersze: przy jednym w oknie o typowej szerokości selektor celu i „Odśwież plan” ściskały się do zera.
             HStack(spacing: 8) {
-                Button { workspace.perform("tools.explainPlan") } label: { Label(L10n.tr("Wyjaśnij"), systemImage: "play.fill") }
+                Button { workspace.perform("tools.explainPlan") } label: { Label(L10n.tr("Odśwież plan"), systemImage: "play.fill") }
                     .disabled(document.isExecuting)
                     .fixedSize()
                 Picker(L10n.tr("Cel optymalizatora"), selection: $document.planGoal) {

@@ -136,7 +136,7 @@ public enum PreferenceSets {
         (L10n.tr("Oracle"), ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
                              "confirmCommitRollback", "confirmProductionChanges", "plsqlWarnings", "compiler", "useDBAViews",
                              "debugInfoOnCompile", "debugInfoNever", "debugInfoAlways", "debuggerSkipPackageInit", "debuggerSkipSys", "selectedStatistics", "profilerTimeUnit", "profilerMinShare"]),
-        (L10n.tr("Object Browser"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserShowAccessible", "browserDoubleClick",
+        (L10n.tr("Przeglądarka obiektów"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserShowAccessible", "browserDoubleClick",
                                      "browserDropAction", "browserWorkspaceDrop"]),
         (L10n.tr("Agenci"), ["agent"]),
         (L10n.tr("Narzędzia"), ["sessionQueries", "schedulerReports", "userTools"]),
@@ -162,7 +162,7 @@ public enum PreferenceSets {
     /// Wartości z pliku eksportu (wybrane sekcje; nieznane pola pominięte).
     public static func importValues(_ data: Data, sections chosen: Set<String>?) throws -> [String: JSONValue] {
         let file = try JSONDecoder().decode(ExportFile.self, from: data)
-        guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik preferencji Pelikana")) }
+        guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik ustawień Pelikana")) }
         let known = values(of: Settings())
         return file.values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
     }

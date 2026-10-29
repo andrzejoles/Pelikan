@@ -295,7 +295,7 @@ public enum ProgramCompiler {
         // Plik tylko do odczytu (np. z systemu kontroli wersji) — kompilacja wyłączona preferencją (PD-PROG-017).
         if let url = doc.fileURL, !ws.settings.compileReadOnlyFiles, FileManager.default.fileExists(atPath: url.path),
            !FileManager.default.isWritableFile(atPath: url.path) {
-            throw CommandError.notAvailable(L10n.tr("Plik „\(url.lastPathComponent)” jest tylko do odczytu — kompilacja wyłączona (Preferencje › Oracle)"))
+            throw CommandError.notAvailable(L10n.tr("Plik „\(url.lastPathComponent)” jest tylko do odczytu — kompilacja wyłączona (Ustawienia › Oracle)"))
         }
         try await ws.guardModification(units.map(\.text), connectionID: conn)
         let s = try await ws.sessions.session(ws.sessions.compileKey(connection: conn))

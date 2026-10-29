@@ -93,7 +93,7 @@ struct GraphView: View {
                 ForEach(Array(definition.seriesColumns.enumerated()), id: \.element) { i, name in
                     ColorPicker(name, selection: colorBinding(i))
                 }
-                Stepper(definition.refreshSeconds == 0 ? L10n.tr("Auto-odświeżanie: wyłączone") : L10n.tr("Auto-odświeżanie co \(definition.refreshSeconds) s"),
+                Stepper(definition.refreshSeconds == 0 ? L10n.tr("Autoodświeżanie: wyłączone") : L10n.tr("Autoodświeżanie co \(definition.refreshSeconds) s"),
                         value: $definition.refreshSeconds, in: 0...3600, step: 5)
             }
             Section(L10n.tr("Szablony")) {

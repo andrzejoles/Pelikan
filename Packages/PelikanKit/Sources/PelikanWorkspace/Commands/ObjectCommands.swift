@@ -8,7 +8,7 @@ import PelikanDB
 public enum ObjectCommands {
     /// Obiekt wskazany nazwą i typem — bez połączenia (komendy z własnym argumentem `connection`).
     static let objectNameParams = [
-        CommandParameter("object", .string, L10n.tr("Obiekt: WŁAŚCICIEL.NAZWA (domyślnie zaznaczony w Object Browserze)")),
+        CommandParameter("object", .string, L10n.tr("Obiekt: WŁAŚCICIEL.NAZWA (domyślnie zaznaczony w Przeglądarce obiektów)")),
         CommandParameter("type", .string, L10n.tr("Typ obiektu jak w ALL_OBJECTS, np. TABLE, PACKAGE BODY")),
     ]
     /// Obiekt i jego połączenie (domyślnie gałąź zaznaczonego obiektu, przy nazwie — aktywne okno, potem główne; D185).
@@ -264,7 +264,7 @@ public enum ObjectCommands {
                 ctx.workspace.ui?.copyToClipboard(name, html: nil)
                 return CommandResult(message: name)
             },
-            Command(CommandDescriptor(id: "ob.refresh", title: L10n.tr("Odśwież Object Browser"), category: .tools, submenu: L10n.tr("Obiekt"),
+            Command(CommandDescriptor(id: "ob.refresh", title: L10n.tr("Odśwież Przeglądarkę obiektów"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: [CommandContext.toolConnectionParam],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Czyści pamięć podręczną słownika i przeładowuje drzewo (wszystkie otwarte połączenia albo wskazane)."),

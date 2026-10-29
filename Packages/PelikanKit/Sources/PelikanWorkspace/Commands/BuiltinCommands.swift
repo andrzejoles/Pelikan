@@ -451,7 +451,7 @@ public enum BuiltinCommands {
                 ctx.workspace.recordAgentEdit(ctx, doc, before: before)
                 return CommandResult(message: L10n.tr("Sformatowano"))
             },
-            Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
+            Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Pokaż podpowiedzi kodu"), category: .edit,
                                       pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .none, effect: .none,
                                       summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),
                                       feature: "PD-CA-001"),
@@ -565,7 +565,7 @@ public enum BuiltinCommands {
                 ctx.workspace.ui?.showRecallStatement()
                 return .ok
             },
-            editCommand("edit.commentLine", L10n.tr("Komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
+            editCommand("edit.commentLine", L10n.tr("Przełącz komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
                         agent: .full, summary: L10n.tr("Dodaje lub usuwa -- na początku zaznaczonych linii."), feature: "PD-EDIT-006") {
                 TextEditing.toggleLineComment($0, selection: $1)
             },
@@ -577,15 +577,15 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)."), feature: "PD-EDIT-020") {
                 TextEditing.deleteNextWord($0, selection: $1)
             },
-            editCommand("edit.firstCharacterOnLine", L10n.tr("Pierwszy znak w linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
+            editCommand("edit.firstCharacterOnLine", L10n.tr("Przejdź do pierwszego znaku linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
                         summary: L10n.tr("Przenosi kursor na pierwszy niebiały znak linii, a ponownie — na początek linii."), feature: "PD-EDIT-020") {
                 TextEditing.firstCharacterOnLine($0, selection: $1)
             },
-            editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
+            editCommand("edit.uppercase", L10n.tr("Zamień na wielkie litery"), mac: ["cmd+alt+u"],
                         agent: .full, summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: true)
             },
-            editCommand("edit.lowercase", L10n.tr("Małe litery"), mac: ["cmd+alt+shift+u"],
+            editCommand("edit.lowercase", L10n.tr("Zamień na małe litery"), mac: ["cmd+alt+shift+u"],
                         agent: .full, summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: false)
             },
@@ -623,7 +623,7 @@ public enum BuiltinCommands {
                 let sharing = ws.documents.filter { ws.sessionKey(for: $0) == key }
                 if let ui = ctx.ui {
                     let message = key.purpose == .main
-                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Object Browsera. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
+                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Przeglądarki obiektów. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
                         : L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną.")
                     guard await ui.ask(L10n.tr("Zakończyć sesję okna?"), message: message,
                                        buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
@@ -743,7 +743,7 @@ public enum BuiltinCommands {
             Command(CommandDescriptor(id: "help.oracleManuals", title: L10n.tr("Dokumentacja Oracle…"), category: .help,
                                       parameters: [CommandParameter("query", .string, L10n.tr("Szukane słowa"))],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Preferencje › Oracle)."), feature: "PD-DOC-001")) { ctx in
+                                      summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Ustawienia › Oracle)."), feature: "PD-DOC-001")) { ctx in
                 let ws = ctx.workspace
                 var q = ctx.arguments.string("query")
                 if q == nil, let ui = ctx.ui { q = await ui.askText(L10n.tr("Dokumentacja Oracle"), message: L10n.tr("Szukane słowa"), defaultValue: "") }

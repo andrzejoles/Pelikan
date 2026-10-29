@@ -372,7 +372,7 @@ enum AgentChangeCommands {
                 if statements == nil { statements = try await compileStatements(ctx, s) }
                 return CommandResult(value: try await ctx.workspace.runAgentStatements(ctx, statements ?? [], def: def, s: s))
             },
-            Command(CommandDescriptor(id: "agent.commit", title: L10n.tr("COMMIT zmian agenta"), category: .help,
+            Command(CommandDescriptor(id: "agent.commit", title: L10n.tr("Zatwierdź zmiany agenta (COMMIT)"), category: .help,
                                       parameters: [connectionParam], agent: .approval, effect: .transaction,
                                       summary: L10n.tr("Zatwierdza niezatwierdzone zmiany agenta na połączeniu (po zgodzie z liczbą zmienionych wierszy) — nieodwracalne."),
                                       inMenu: false, feature: "AI-SEC-007"),
@@ -395,7 +395,7 @@ enum AgentChangeCommands {
                 if let id = ctx.invoker.agentSessionID { ctx.workspace.agentPendingRows[ctx.workspace.agentPendingKey(id, def.id)] = nil }
                 return CommandResult(message: "COMMIT")
             },
-            Command(CommandDescriptor(id: "agent.rollback", title: L10n.tr("ROLLBACK zmian agenta"), category: .help,
+            Command(CommandDescriptor(id: "agent.rollback", title: L10n.tr("Wycofaj zmiany agenta (ROLLBACK)"), category: .help,
                                       parameters: [connectionParam], agent: .approval, effect: .transaction,
                                       summary: L10n.tr("Wycofuje niezatwierdzone zmiany agenta na połączeniu."),
                                       inMenu: false, feature: "AI-SEC-007"),

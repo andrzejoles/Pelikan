@@ -224,7 +224,7 @@ struct ConnectionEditorView: View {
                                 .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         if draft.authMode == .wallet {
-                            Text(L10n.tr("Logowanie /@baza poświadczeniem z portfela wskazanego w Preferencjach › Oracle (Oracle Wallet). Pole „Baza” musi być dokładnie aliasem albo connect stringiem zapisanym w portfelu; alias musi być w konfiguracji Oracle Net z Preferencji."))
+                            Text(L10n.tr("Logowanie /@baza poświadczeniem z portfela wskazanego w Ustawieniach › Oracle (Oracle Wallet). Pole „Baza” musi być dokładnie aliasem albo connect stringiem zapisanym w portfelu; alias musi być w konfiguracji Oracle Net z Ustawień."))
                                 .font(.uiSecondary).foregroundStyle(.secondary)
                         }
                         Picker(L10n.tr("Sterownik"), selection: $draft.driver) {

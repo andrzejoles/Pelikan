@@ -264,7 +264,7 @@ struct ProjectAndReportReviewTests {
         p.items = [.file("inst.sql")]
         let results = try await ProjectEngine.build(&p, projectURL: t.url.appendingPathComponent("p.prj"), make: false, in: ws)
         #expect(results.first?.status == .compiled)
-        #expect(results.first?.messages == ["Pominięto poleceń innych niż jednostki programów: 1 (budowanie kompiluje tylko jednostki PL/SQL)."])
+        #expect(results.first?.messages == ["Pominięto poleceń innych niż jednostki programów: 1 (kompilacja projektu obejmuje tylko jednostki PL/SQL)."])
         let executed = try #require(driver.sessions.withLock { $0 }.first).executed.withLock { $0 }
         #expect(executed.contains("ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL'"))
         #expect(executed.contains { $0.hasPrefix("create or replace procedure p") } && !executed.contains { $0.hasPrefix("create table") })

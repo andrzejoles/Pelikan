@@ -47,7 +47,7 @@ enum ToolCommands {
                                           CommandParameter("tableDefinitions", .boolean, L10n.tr("Szukaj w definicjach tabel (kolumny, komentarze, CHECK)")),
                                       ],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Zapisuje kryteria Find Database Objects pod nazwą (zastępuje kryteria o tej samej nazwie)."),
+                                      summary: L10n.tr("Zapisuje kryteria wyszukiwania obiektów bazy pod nazwą (zastępuje kryteria o tej samej nazwie)."),
                                       inMenu: false, feature: "PD-TOOL-001")) { ctx in
                 guard let name = ctx.arguments.string("saveAs")?.trimmingCharacters(in: .whitespaces), !name.isEmpty else {
                     throw CommandError.missingArgument("saveAs")
@@ -61,7 +61,7 @@ enum ToolCommands {
             Command(CommandDescriptor(id: "tools.deleteObjectSearch", title: L10n.tr("Usuń zapisane kryteria wyszukiwania"), category: .tools,
                                       parameters: [CommandParameter("saved", .string, required: true, L10n.tr("Nazwa zapisanych kryteriów"))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Usuwa zapisane kryteria Find Database Objects."), inMenu: false, feature: "PD-TOOL-001")) { ctx in
+                                      summary: L10n.tr("Usuwa zapisane kryteria wyszukiwania obiektów bazy."), inMenu: false, feature: "PD-TOOL-001")) { ctx in
                 guard let name = ctx.arguments.string("saved") else { throw CommandError.missingArgument("saved") }
                 ctx.workspace.settings.savedDatabaseSearches.removeAll { $0.name == name }
                 return .ok
@@ -96,7 +96,7 @@ enum ToolCommands {
                              "line": .int(Int64(h.line)), "text": .string(h.text)])
                 }))
             },
-            Command(CommandDescriptor(id: "tools.compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty…"), category: .tools,
+            Command(CommandDescriptor(id: "tools.compileInvalid", title: L10n.tr("Kompiluj nieprawidłowe obiekty…"), category: .tools,
                                       parameters: [
                                           CommandParameter("owner", .string, L10n.tr("Właściciel (domyślnie bieżący schemat)")),
                                           CommandParameter("run", .boolean, L10n.tr("Kompiluj od razu (bez — tylko lista)")),

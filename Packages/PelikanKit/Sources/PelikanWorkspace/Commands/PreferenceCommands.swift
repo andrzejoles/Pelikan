@@ -12,22 +12,22 @@ enum PreferenceCommands {
     static var all: [Command] {
         let sectionsParam = CommandParameter("sections", .string, L10n.tr("Sekcje po przecinku (puste — wszystkie)"))
         return [
-            Command(CommandDescriptor(id: "prefs.export", title: L10n.tr("Eksportuj preferencje…"), category: .tools, submenu: L10n.tr("Preferencje"),
+            Command(CommandDescriptor(id: "prefs.export", title: L10n.tr("Eksportuj ustawienia…"), category: .tools, submenu: L10n.tr("Ustawienia"),
                                       parameters: [CommandParameter("file", .string, L10n.tr("Plik .json")), sectionsParam],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Zapisuje obowiązujące preferencje (wybrane sekcje) do pliku; bez haseł i historii plików."),
+                                      summary: L10n.tr("Zapisuje obowiązujące ustawienia (wybrane sekcje) do pliku; bez haseł i historii plików."),
                                       feature: "PD-PREF-003")) { ctx in
                 let url: URL
                 if let f = ctx.arguments.string("file") { url = URL(fileURLWithPath: (f as NSString).expandingTildeInPath) }
-                else if let u = await ctx.ui?.chooseSaveURL(suggestedName: L10n.tr("Preferencje Pelikana"), fileExtension: "json") { url = u }
+                else if let u = await ctx.ui?.chooseSaveURL(suggestedName: L10n.tr("Ustawienia Pelikana"), fileExtension: "json") { url = u }
                 else { throw CommandError.cancelledByUser }
                 try PreferenceSets.export(ctx.workspace.settings, sections: sections(ctx)).write(to: url, options: .atomic)
                 return CommandResult(message: url.lastPathComponent)
             },
-            Command(CommandDescriptor(id: "prefs.import", title: L10n.tr("Importuj preferencje…"), category: .tools, submenu: L10n.tr("Preferencje"),
+            Command(CommandDescriptor(id: "prefs.import", title: L10n.tr("Importuj ustawienia…"), category: .tools, submenu: L10n.tr("Ustawienia"),
                                       parameters: [CommandParameter("file", .string, L10n.tr("Plik .json")), sectionsParam],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Wczytuje preferencje z pliku (wybrane sekcje) do zestawu edytowanego w Preferencjach."),
+                                      summary: L10n.tr("Wczytuje ustawienia z pliku (wybrane sekcje) do zestawu edytowanego w Ustawieniach."),
                                       feature: "PD-PREF-003")) { ctx in
                 let url: URL
                 if let f = ctx.arguments.string("file") { url = URL(fileURLWithPath: (f as NSString).expandingTildeInPath) }
@@ -44,9 +44,9 @@ enum PreferenceCommands {
                 try ctx.workspace.importPreferences(values)
                 return CommandResult(message: L10n.tr("Wczytano ustawień: \(values.count)"))
             },
-            Command(CommandDescriptor(id: "prefs.sets", title: L10n.tr("Zestawy preferencji…"), category: .tools, submenu: L10n.tr("Preferencje"),
+            Command(CommandDescriptor(id: "prefs.sets", title: L10n.tr("Zestawy ustawień…"), category: .tools, submenu: L10n.tr("Ustawienia"),
                                       agent: .none, effect: .none,
-                                      summary: L10n.tr("Zestawy preferencji: osobisty, domyślny i dla połączeń; źródło każdej wartości i przywracanie dziedziczonej."),
+                                      summary: L10n.tr("Zestawy ustawień: osobisty, domyślny i dla połączeń; źródło każdej wartości i przywracanie dziedziczonej."),
                                       feature: "PD-PREF-002")) { ctx in
                 ctx.ui?.showPreferenceSets()
                 return CommandResult(value: .array(ctx.workspace.activePreferenceSets.map {
@@ -69,7 +69,7 @@ enum PreferenceCommands {
             },
             Command(CommandDescriptor(id: "view.ribbonCollapse", title: L10n.tr("Zwiń wstążkę"), category: .view,
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Zwija wstążkę do samych kart albo ją rozwija (także dwuklik karty)."),
+                                      summary: L10n.tr("Zwija wstążkę do samych kart albo ją rozwija (także dwukrotne kliknięcie karty)."),
                                       feature: "PD-UI-012")) { ctx in
                 ctx.workspace.settings.ribbonCollapsed.toggle()
                 return .ok

@@ -37,8 +37,8 @@ struct SessionBrowserView: View {
                 Toggle(L10n.tr("Odświeżaj co"), isOn: $autoRefresh).toggleStyle(.checkbox)
                 Stepper("\(Int(interval)) s", value: $interval, in: 2...300, step: 1).fixedSize()
                 Spacer()
-                Button(L10n.tr("Zabij")) { kill(immediate: false) }.disabled(selected == nil)
-                Button(L10n.tr("Zabij natychmiast")) { kill(immediate: true) }.disabled(selected == nil)
+                Button(L10n.tr("Zakończ sesję")) { kill(immediate: false) }.disabled(selected == nil)
+                Button(L10n.tr("Zakończ natychmiast")) { kill(immediate: true) }.disabled(selected == nil)
                 Menu(L10n.tr("Akcje")) {
                     ForEach(queries.actions) { a in Button(a.name) { perform(a) } }
                 }
