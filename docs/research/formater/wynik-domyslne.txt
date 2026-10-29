@@ -1,0 +1,793 @@
+# Wynik formatera Pelikana — profil: domyslne
+
+### 01-update-set
+UPDATE emp
+SET    sal = sal * 1.1,
+       comm = nvl(comm, 0) + 100,
+       job = 'MANAGER',
+       hiredate = SYSDATE,
+       mgr = NULL
+WHERE  deptno = 10
+AND    job = 'CLERK';
+### 02-update-set-podzapytanie
+UPDATE emp e
+SET    (sal, comm) = (SELECT avg(sal),
+                             max(comm)
+                      FROM   emp x
+                      WHERE  x.deptno = e.deptno),
+       last_upd = SYSTIMESTAMP
+WHERE  EXISTS (SELECT 1
+               FROM   dept d
+               WHERE  d.deptno = e.deptno
+               AND    d.loc = 'DALLAS');
+### 03-select-wiele-kolumn
+SELECT e.empno,
+       e.ename,
+       upper(e.job) job,
+       to_char(e.hiredate, 'YYYY-MM-DD') hired,
+       nvl(e.comm, 0) + e.sal AS total,
+       round(months_between(SYSDATE, e.hiredate) / 12, 1) years,
+       decode(e.deptno, 10, 'ACC', 20, 'RES', 30, 'SAL', 'OTHER') dept_code
+FROM   emp e;
+### 04-podzapytania-zagniezdzone
+SELECT *
+FROM   (SELECT deptno,
+               ename,
+               sal,
+               rank() OVER (PARTITION BY deptno ORDER BY sal DESC) rn
+        FROM   emp
+        WHERE  sal > (SELECT avg(sal)
+                      FROM   emp
+                      WHERE  job IN (SELECT job
+                                     FROM   jobs
+                                     WHERE  active = 'Y')))
+WHERE  rn <= 3;
+### 05-podzapytanie-skalarne
+SELECT d.dname,
+       (SELECT count(*)
+        FROM   emp e
+        WHERE  e.deptno = d.deptno) cnt,
+       (SELECT max(sal)
+        FROM   emp e
+        WHERE  e.deptno = d.deptno
+        AND    e.job <> 'PRESIDENT') max_sal
+FROM   dept d;
+### 06-cte-kilka
+WITH   dept_tot AS (SELECT deptno,
+                           sum(sal) total
+                    FROM   emp
+                    GROUP BY deptno),
+       avg_tot AS (SELECT avg(total) avg_total
+                   FROM   dept_tot),
+       big AS (SELECT d.deptno,
+                      d.total
+               FROM   dept_tot d,
+                      avg_tot a
+               WHERE  d.total > a.avg_total)
+SELECT b.deptno,
+       b.total,
+       dp.dname
+FROM   big b
+JOIN   dept dp
+  ON dp.deptno = b.deptno
+ORDER BY b.total DESC;
+### 07-cte-rekurencyjne
+WITH   hier(empno, ename, mgr, lvl, PATH) AS (SELECT empno,
+                                                     ename,
+                                                     mgr,
+                                                     1,
+                                                     cast(ename AS VARCHAR2(4000))
+                                              FROM   emp
+                                              WHERE  mgr IS NULL
+                                              UNION ALL SELECT e.empno, e.ename, e.mgr, h.lvl + 1, h.PATH || '/' || e.ename
+                                              FROM   emp e
+                                              JOIN   hier h
+                                                ON e.mgr = h.empno) SEARCH DEPTH FIRST BY ename SET ord CYCLE empno SET is_cycle TO 'Y' DEFAULT 'N' SELECT lpad(' ',
+                                                                                                                                                                2 * (lvl - 1)) || ename tree,
+       PATH
+FROM   hier
+ORDER BY ord;
+### 08-in-dluga-lista
+SELECT *
+FROM   emp
+WHERE  ename IN ('SMITH',
+                 'ALLEN',
+                 'WARD',
+                 'JONES',
+                 'MARTIN',
+                 'BLAKE',
+                 'CLARK',
+                 'SCOTT',
+                 'KING',
+                 'TURNER',
+                 'ADAMS',
+                 'JAMES',
+                 'FORD',
+                 'MILLER',
+                 'NOWAK',
+                 'KOWALSKI',
+                 'WISNIEWSKI')
+AND    deptno NOT IN (40, 50, 60);
+### 09-insert-values
+INSERT INTO emp(empno, ename, job, mgr, hiredate, sal, comm, deptno)
+VALUES (7999,
+        'NOWAK',
+        'ANALYST',
+        7566,
+        to_date('2024-01-15', 'YYYY-MM-DD'),
+        3000,
+        NULL,
+        20);
+### 10-insert-select
+INSERT INTO emp_hist(empno, ename, sal, changed_at, changed_by)
+SELECT e.empno,
+       e.ename,
+       e.sal,
+       SYSDATE,
+       USER
+FROM   emp e
+WHERE  e.deptno = 10
+AND    NOT EXISTS (SELECT 1
+                   FROM   emp_hist h
+                   WHERE  h.empno = e.empno);
+### 11-insert-all
+INSERT ALL WHEN sal > 3000 THEN
+INTO   emp_high(empno, sal)
+VALUES (empno, sal) WHEN sal <= 3000 THEN
+INTO   emp_low(empno, sal)
+VALUES (empno, sal) ELSE
+INTO   emp_other(empno)
+VALUES (empno)
+SELECT empno,
+       sal
+FROM   emp;
+### 12-merge
+MERGE INTO emp t
+USING  (SELECT empno,
+               sal,
+               comm
+        FROM   emp_stage
+        WHERE  batch_id = 42) s ON (t.empno = s.empno)
+WHEN MATCHED THEN UPDATE
+SET    t.sal = s.sal,
+       t.comm = s.comm,
+       t.upd = SYSDATE
+WHERE  t.sal <> s.sal DELETE
+WHERE  s.sal IS NULL
+WHEN NOT MATCHED THEN INSERT (empno, sal, comm, upd)
+VALUES (s.empno, s.sal, s.comm, SYSDATE);
+### 13-case-zagniezdzony
+SELECT ename,
+       CASE WHEN sal > 3000 THEN CASE WHEN job = 'PRESIDENT' THEN 'TOP' ELSE 'HIGH' END WHEN sal > 1500 THEN 'MID' ELSE 'LOW' END band,
+       CASE deptno WHEN 10 THEN 'A' WHEN 20 THEN 'B' ELSE 'C' END grp
+FROM   emp;
+### 14-analityczne
+SELECT deptno,
+       ename,
+       sal,
+       sum(sal) OVER (PARTITION BY deptno ORDER BY hiredate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) running,
+       lag(sal, 1, 0) OVER (PARTITION BY deptno ORDER BY hiredate) prev_sal,
+       row_number() OVER (ORDER BY sal DESC NULLS LAST) rn,
+       listagg(ename, ', ') WITHIN GROUP(ORDER BY ename) OVER (PARTITION BY deptno) names
+FROM   emp;
+### 15-join-wielokrotny
+SELECT e.ename,
+       d.dname,
+       l.city,
+       m.ename mgr_name
+FROM   emp e
+INNER JOIN dept d
+  ON d.deptno = e.deptno
+AND    d.active = 'Y'
+LEFT OUTER JOIN locations l
+  ON l.loc_id = d.loc_id
+LEFT JOIN emp m
+  ON m.empno = e.mgr
+CROSS JOIN params p
+WHERE  e.sal > p.min_sal;
+### 16-and-or-nawiasy
+SELECT *
+FROM   emp
+WHERE  (deptno = 10 AND job = 'CLERK')
+OR     (deptno = 20 AND (sal > 1000 OR comm IS NOT NULL))
+AND    hiredate BETWEEN DATE '2020-01-01' AND DATE '2024-12-31'
+AND    NOT (ename LIKE 'A%' OR ename LIKE 'B%');
+### 17-wywolanie-nazwane
+BEGIN
+  dbms_scheduler.create_job(job_name => 'NIGHTLY_REFRESH',
+                            job_type => 'PLSQL_BLOCK',
+                            job_action => 'begin refresh_all; end;',
+                            start_date => SYSTIMESTAMP,
+                            repeat_interval => 'FREQ=DAILY;BYHOUR=2',
+                            enabled => TRUE,
+                            comments => 'Nightly refresh');
+END;
+/
+### 18-wywolanie-zagniezdzone
+BEGIN
+  v_result := pkg_util.format_value(p_value => nvl(to_char(v_amount, 'FM999G999D00'), '-'),
+                                    p_width => greatest(length(v_label), 20),
+                                    p_align => CASE WHEN v_amount < 0 THEN 'R' ELSE 'L' END);
+END;
+/
+### 19-deklaracje-plsql
+CREATE OR REPLACE PROCEDURE process_orders(p_customer_id IN customers.customer_id%TYPE,
+                                           p_from_date IN DATE DEFAULT trunc(SYSDATE) - 30,
+                                           p_to_date IN DATE DEFAULT trunc(SYSDATE),
+                                           p_status IN OUT NOCOPY VARCHAR2,
+                                           p_count OUT PLS_INTEGER) IS
+  c_batch_size CONSTANT PLS_INTEGER := 1000;
+  v_total NUMBER(14, 2) := 0;
+  v_name customers.name%TYPE;
+  TYPE t_ids IS TABLE OF orders.order_id%TYPE INDEX BY PLS_INTEGER;
+  l_ids t_ids;
+  e_locked EXCEPTION;
+  PRAGMA EXCEPTION_INIT(e_locked, -54);
+BEGIN
+  NULL;
+END process_orders;
+/
+### 20-kursor
+DECLARE
+  CURSOR c_emp(p_dept NUMBER, p_job VARCHAR2 DEFAULT 'CLERK') IS SELECT empno,
+                                                                        ename,
+                                                                        sal
+                                                                 FROM   emp
+                                                                 WHERE  deptno = p_dept
+                                                                 AND    job = p_job
+                                                                 ORDER BY sal DESC
+                                                                 FOR UPDATE OF sal NOWAIT;
+  r c_emp%ROWTYPE;
+BEGIN
+  OPEN c_emp(10, 'ANALYST');
+  LOOP
+    FETCH c_emp INTO r;
+    EXIT WHEN c_emp%notfound;
+    UPDATE emp
+    SET    sal = r.sal * 1.05
+    WHERE  CURRENT OF c_emp;
+  END LOOP;
+  CLOSE c_emp;
+END;
+/
+### 21-forall-bulk
+DECLARE
+  TYPE t_emp IS TABLE OF emp%ROWTYPE;
+  l_emp t_emp;
+BEGIN
+  SELECT *
+  BULK COLLECT INTO l_emp
+  FROM   emp
+  WHERE  deptno = 10;
+  FORALL i IN 1..l_emp.count SAVE EXCEPTIONS INSERT INTO emp_copy VALUES l_emp(i);
+  FORALL i IN INDICES OF l_emp UPDATE emp SET sal = l_emp(i).sal WHERE empno = l_emp(i).empno;
+EXCEPTION
+  WHEN OTHERS THEN
+    IF SQLCODE = -24381 THEN
+    FOR j IN 1..sql%bulk_exceptions.count LOOP
+      dbms_output.put_line(sql%bulk_exceptions(j).error_index || ': ' || SQLERRM(-sql%bulk_exceptions(j).error_code));
+    END LOOP;
+  ELSE
+    RAISE;
+  END IF;
+END;
+/
+### 22-komentarze-w-liscie
+SELECT empno, -- klucz
+       ename, -- nazwisko
+       sal /* pensja */,
+       comm -- prowizja
+FROM   emp
+WHERE  deptno = 10 -- tylko księgowość
+AND    job = 'CLERK';
+### 23-literaly-q-quote
+BEGIN
+  v_sql := q'[select 'x' from dual where a = 'it''s']';
+  v_msg := q'{Don't  touch  {this}}' || q'<a,b , c>' || 'zwykły  ''tekst''';
+  EXECUTE IMMEDIATE q'!update t set   x = 1 where y='a'!';
+END;
+/
+### 24-hinty
+SELECT /*+ index(e emp_idx1) leading(e d) use_nl(d) */ e.ename,
+       d.dname
+FROM   emp e,
+       dept d
+WHERE  e.deptno = d.deptno;
+UPDATE /*+ parallel(t 4) */ big_table t
+SET    status = 'X'
+WHERE  status IS NULL;
+### 25-wielkosc-liter
+SELECT Emp.EName,
+       "MixedCol",
+       Dbms_Lob.GetLength(Emp.Notes) Len
+FROM   Scott.Emp Emp
+WHERE  Emp.Sal > 1000
+AND    Emp."Job" = 'clerk';
+### 26-group-order-having
+SELECT deptno,
+       job,
+       count(*) cnt,
+       sum(sal) total,
+       avg(nvl(comm, 0)) avg_comm
+FROM   emp
+WHERE  hiredate > add_months(SYSDATE, -120)
+GROUP BY deptno,
+         job,
+         EXTRACT(YEAR FROM hiredate)
+HAVING count(*) > 1
+AND    sum(sal) > 5000
+ORDER BY deptno,
+         total DESC,
+         job NULLS FIRST;
+### 27-grouping-sets
+SELECT deptno,
+       job,
+       sum(sal)
+FROM   emp
+GROUP BY GROUPING SETS((deptno, job), (deptno), ())
+ORDER BY 1,
+         2;
+### 28-exists-skorelowane
+DELETE
+FROM   emp e
+WHERE  NOT EXISTS (SELECT 1
+                   FROM   dept d
+                   WHERE  d.deptno = e.deptno)
+OR     e.sal < (SELECT min_sal
+                FROM   salgrade s
+                WHERE  s.grade = 1);
+### 29-union
+SELECT empno,
+       ename,
+       'E' src
+FROM   emp
+WHERE  deptno = 10
+UNION ALL SELECT empno, ename, 'H' src
+FROM   emp_hist
+WHERE  deptno = 10
+MINUS  SELECT empno, ename, 'E'
+FROM   emp_excluded
+ORDER BY 2;
+### 30-if-warunki-zlozone
+BEGIN
+  IF (v_a > 0 AND v_b > 0) OR (v_c IS NOT NULL AND v_d IN (1, 2, 3)) THEN
+    p1;
+  ELSIF v_x BETWEEN 1 AND 10 AND NOT v_flag THEN
+    p2;
+  ELSE
+    p3;
+  END IF;
+END;
+/
+### 31-case-instrukcja
+BEGIN
+  CASE v_status
+    WHEN 'N' THEN
+      v_msg := 'Nowy';
+    WHEN 'A' THEN
+      v_msg := 'Aktywny';
+    v_cnt := v_cnt + 1;
+    ELSE
+      v_msg := 'Inny';
+  END CASE;
+END;
+/
+### 32-petle-etykiety
+BEGIN
+  << OUTER >> FOR i IN 1..10 LOOP
+    WHILE j < i LOOP
+      j := j + 1;
+      CONTINUE OUTER WHEN j = 5;
+    END LOOP;
+    EXIT OUTER WHEN i > 8;
+  END LOOP OUTER;
+  FOR r IN (SELECT empno,
+                   ename
+            FROM   emp
+            WHERE  deptno = 10
+            ORDER BY ename) LOOP
+    dbms_output.put_line(r.ename);
+  END LOOP;
+END;
+/
+### 33-specyfikacja-pakietu
+CREATE OR REPLACE PACKAGE pkg_orders AS
+  SUBTYPE t_amount IS NUMBER(14, 2);
+  TYPE t_order_rec IS RECORD (order_id orders.order_id%TYPE,
+                              customer_id orders.customer_id%TYPE,
+                              amount t_amount,
+                              created DATE := SYSDATE);
+  TYPE t_order_tab IS TABLE OF t_order_rec;
+  g_debug BOOLEAN := FALSE;
+  FUNCTION get_total(p_order_id IN NUMBER, p_include_tax IN BOOLEAN DEFAULT TRUE) RETURN t_amount;
+  PROCEDURE cancel(p_order_id NUMBER, p_reason VARCHAR2);
+END pkg_orders;
+/
+### 34-dlugie-wyrazenie
+BEGIN
+  v_text := 'Klient: ' || v_customer_name || ', adres: ' || v_street || ' ' || v_house_no || ', ' || v_postcode || ' ' || v_city || ', telefon: ' || nvl(v_phone,
+                                                                                                                                                         'brak') || ', e-mail: ' || nvl(v_email,
+                                                                                                                                                                                        'brak');
+  v_val := (v_a + v_b) * (v_c - v_d) / nullif(v_e, 0) + power(v_f, 2) - sqrt(abs(v_g)) * v_h + v_i * v_j - v_k / v_l + v_m;
+END;
+/
+### 35-pivot
+SELECT *
+FROM   (SELECT deptno,
+               job,
+               sal
+        FROM   emp) PIVOT (sum(sal) FOR job IN ('CLERK' AS clerk,
+                                                'MANAGER' AS manager,
+                                                'ANALYST' AS analyst));
+### 36-create-view
+CREATE OR REPLACE VIEW v_emp_dept AS SELECT e.empno,
+                                            e.ename,
+                                            d.dname,
+                                            d.loc
+                                     FROM   emp e
+                                     JOIN   dept d
+                                       ON d.deptno = e.deptno
+                                     WHERE  e.active = 'Y' WITH read ONLY;
+### 37-create-table
+CREATE TABLE orders(order_id NUMBER(10) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                    customer_id NUMBER(10) NOT NULL REFERENCES customers(customer_id),
+                    status VARCHAR2(1) DEFAULT 'N' CHECK (status IN ('N', 'A', 'C')),
+                    amount NUMBER(14, 2),
+                    created DATE DEFAULT SYSDATE NOT NULL,
+                    CONSTRAINT orders_uk UNIQUE (customer_id, created));
+### 38-select-into-returning
+BEGIN
+  SELECT count(*),
+         sum(sal),
+         max(hiredate)
+  INTO   v_cnt,
+         v_sum,
+         v_max
+  FROM   emp
+  WHERE  deptno = p_dept;
+  UPDATE emp
+  SET    sal = sal * 1.1
+  WHERE  deptno = p_dept
+  RETURNING count(*)
+  INTO   v_upd;
+  DELETE
+  FROM   emp_tmp
+  WHERE  created < SYSDATE - 1
+  RETURNING empno
+  BULK COLLECT INTO l_ids;
+END;
+/
+### 39-json-fetch-offset
+SELECT json_object('id' value e.empno,
+                   'name' value e.ename,
+                   'dept' value json_object('no' value d.deptno, 'name' value d.dname)) doc
+FROM   emp e
+JOIN   dept d USING (deptno)
+ORDER BY e.empno
+OFFSET 10 ROWS
+FETCH  NEXT 5 ROWS ONLY;
+### 40-wyjatki
+BEGIN
+  BEGIN
+    INSERT INTO t
+    VALUES (1);
+  EXCEPTION
+    WHEN dup_val_on_index THEN
+      UPDATE t
+      SET    c = c + 1
+      WHERE  id = 1;
+    WHEN e_locked OR e_timeout THEN
+      log_error(p_code => SQLCODE,
+                p_msg => SQLERRM,
+                p_stack => dbms_utility.format_error_backtrace);
+    RAISE;
+  END;
+EXCEPTION
+  WHEN OTHERS THEN
+    ROLLBACK;
+  raise_application_error(-20001, 'Błąd: ' || SQLERRM, TRUE);
+END;
+/
+### 41-in-podzapytanie-krotka
+SELECT *
+FROM   emp
+WHERE  (deptno, job) IN (SELECT deptno,
+                                job
+                         FROM   emp_pref
+                         WHERE  active = 'Y')
+AND    empno NOT IN (SELECT mgr
+                     FROM   emp
+                     WHERE  mgr IS NOT NULL);
+### 42-cross-apply
+SELECT d.dname,
+       x.ename,
+       x.sal
+FROM   dept d CROSS APPLY(SELECT ename,
+                                 sal
+                          FROM   emp e
+                          WHERE  e.deptno = d.deptno
+                          ORDER BY sal DESC
+                          FETCH  FIRST 2 ROWS ONLY) x;
+### 43-juz-sformatowane-przecinek-z-przodu
+SELECT e.ename,
+       d.dname
+FROM   emp e
+JOIN   dept d
+  ON d.deptno = e.deptno
+WHERE  e.sal > 1000
+AND    e.job = 'CLERK';
+### 44-update-plsql-zmienne
+BEGIN
+  UPDATE orders o
+  SET    o.status = 'C',
+         o.closed_at = SYSTIMESTAMP,
+         o.closed_by = nvl(p_user, USER),
+         o.note = substr(o.note || chr(10) || p_reason, 1, 4000)
+  WHERE  o.order_id = p_order_id
+  AND    o.status <> 'C'
+  RETURNING o.customer_id
+  INTO   v_customer;
+END;
+/
+### 45-select-krotkie
+SELECT 1
+FROM   dual;
+SELECT a
+FROM   t
+WHERE  x = 1;
+### 46-ddl-create-table-constrainty
+CREATE TABLE order_items(order_id NUMBER(10) NOT NULL,
+                         line_no NUMBER(5) NOT NULL,
+                         product_id NUMBER(10) NOT NULL,
+                         qty NUMBER(10, 3) DEFAULT 1 NOT NULL,
+                         price NUMBER(14, 2),
+                         discount_pct NUMBER(5, 2) DEFAULT 0 CONSTRAINT oi_disc_ck CHECK (discount_pct BETWEEN 0 AND 100),
+                         note VARCHAR2(4000 CHAR),
+                         created_at TIMESTAMP(6) WITH TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL,
+                         CONSTRAINT order_items_pk PRIMARY KEY (order_id, line_no) USING INDEX TABLESPACE idx_ts,
+                         CONSTRAINT oi_order_fk FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+                         CONSTRAINT oi_prod_fk FOREIGN KEY (product_id) REFERENCES products(product_id) DEFERRABLE INITIALLY DEFERRED,
+                         CONSTRAINT oi_qty_ck CHECK (qty > 0 AND (price IS NULL OR price >= 0))) TABLESPACE data_ts PCTFREE 10 STORAGE(INITIAL 1 m NEXT 1 m) PARTITION BY RANGE (order_id) INTERVAL(1000000) (PARTITION p0 VALUES less than(1000000));
+### 47-ddl-comment-on
+COMMENT ON TABLE order_items IS 'Pozycje zamówień';
+COMMENT ON COLUMN order_items.qty IS 'Ilość (jednostki produktu)';
+### 48-ddl-alter-table
+ALTER TABLE order_items ADD(batch_id NUMBER(10),
+                            source VARCHAR2(30) DEFAULT 'WEB' NOT NULL);
+ALTER TABLE order_items MODIFY(note VARCHAR2(2000 CHAR) NULL, qty DEFAULT 0);
+ALTER TABLE order_items DROP COLUMN legacy_flag;
+ALTER TABLE order_items ADD CONSTRAINT oi_batch_fk FOREIGN KEY (batch_id) REFERENCES batches(batch_id) ENABLE NOVALIDATE;
+ALTER TABLE order_items DROP CONSTRAINT oi_qty_ck KEEP INDEX;
+ALTER TABLE order_items RENAME COLUMN note TO remarks;
+### 49-ddl-create-index
+CREATE UNIQUE INDEX order_items_uk ON order_items(order_id, product_id) TABLESPACE idx_ts COMPRESS 1 ONLINE;
+CREATE bitmap INDEX oi_status_bix ON order_items(status) LOCAL NOLOGGING;
+CREATE INDEX oi_upper_note_ix ON order_items(upper(note), trunc(created_at)) parallel 4;
+### 50-ddl-view-check-option
+CREATE OR REPLACE FORCE VIEW v_active_items(order_id, line_no, total) AS SELECT order_id,
+                                                                                line_no,
+                                                                                qty * price
+                                                                         FROM   order_items
+                                                                         WHERE  qty > 0 WITH CHECK OPTION CONSTRAINT v_active_items_ck;
+### 51-ddl-mview
+CREATE MATERIALIZED VIEW mv_daily_sales build IMMEDIATE refresh fast ON COMMIT ENABLE query rewrite AS SELECT trunc(created_at) DAY,
+                                                                                                              product_id,
+                                                                                                              sum(qty * price) amount,
+                                                                                                              count(*) cnt
+                                                                                                       FROM   order_items
+                                                                                                       GROUP BY trunc(created_at),
+                                                                                                                product_id;
+### 52-ddl-sequence-synonym-dblink
+CREATE SEQUENCE order_seq START WITH 1000 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999999 CACHE 50 NOORDER NOCYCLE;
+CREATE OR REPLACE PUBLIC SYNONYM order_items FOR app.order_items;
+CREATE DATABASE LINK dev_remote CONNECT TO current_user USING 'dev_remote_tns';
+### 53-ddl-grant-revoke
+GRANT SELECT, INSERT, UPDATE(qty, price), DELETE ON order_items TO app_role, report_user WITH GRANT OPTION;
+REVOKE INSERT, DELETE ON order_items FROM report_user;
+GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE TO app_owner;
+### 54-trigger-wiele-zdarzen
+CREATE OR REPLACE TRIGGER oi_biu BEFORE INSERT OR UPDATE OF qty, price OR DELETE ON order_items REFERENCING old AS o new AS n FOR EACH ROW FOLLOWS oi_audit WHEN (n.qty > 0 OR o.qty IS NOT NULL)
+DECLARE
+  v_now TIMESTAMP := SYSTIMESTAMP;
+BEGIN
+  IF inserting THEN
+    :n.created_at := v_now;
+  ELSIF updating('QTY') THEN
+    :n.qty := round(:n.qty, 3);
+  END IF;
+END;
+/
+### 55-trigger-instead-of
+CREATE OR REPLACE TRIGGER v_active_items_io INSTEAD OF UPDATE ON v_active_items FOR EACH ROW
+BEGIN
+  UPDATE order_items
+  SET    qty = :new.total / price
+  WHERE  order_id = :old.order_id
+  AND    line_no = :old.line_no;
+END;
+/
+### 56-trigger-compound
+CREATE OR REPLACE TRIGGER oi_compound FOR INSERT OR UPDATE ON order_items
+COMPOUND TRIGGER TYPE t_ids IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+g_ids t_ids;
+BEFORE statement IS
+BEGIN
+  g_ids.DELETE;
+END BEFORE statement;
+AFTER EACH ROW IS
+BEGIN
+  g_ids(g_ids.count + 1) := :new.order_id;
+END AFTER EACH ROW;
+AFTER statement IS
+BEGIN
+  FORALL i IN 1..g_ids.count UPDATE orders SET modified = SYSDATE WHERE order_id = g_ids(i);
+END AFTER statement;
+END oi_compound;
+/
+### 57-trigger-ddl-database
+CREATE OR REPLACE TRIGGER trg_ddl_audit AFTER CREATE OR ALTER OR DROP ON schema
+BEGIN
+  INSERT INTO ddl_log(who, what, obj, at)
+  VALUES (ora_login_user, ora_sysevent, ora_dict_obj_name, SYSDATE);
+END;
+/
+CREATE OR REPLACE TRIGGER trg_logon AFTER logon ON DATABASE WHEN (USER <> 'SYS')
+BEGIN
+  dbms_session.set_identifier(sys_context('USERENV', 'OS_USER'));
+END;
+/
+### 58-type-object
+CREATE OR REPLACE TYPE t_money FORCE AS OBJECT (amount NUMBER(14, 2),
+                                                currency VARCHAR2(3),
+                                                CONSTRUCTOR FUNCTION t_money(p_amount NUMBER) RETURN SELF AS result,
+                                                MEMBER FUNCTION to_string RETURN VARCHAR2,
+                                                MAP MEMBER FUNCTION sort_key RETURN NUMBER,
+                                                STATIC FUNCTION zero RETURN t_money) NOT FINAL;
+/
+### 59-type-kolekcje
+CREATE OR REPLACE TYPE t_money_tab AS TABLE OF t_money;
+/
+CREATE OR REPLACE TYPE t_codes AS VARRAY (10) OF VARCHAR2(30);
+/
+### 60-type-body
+CREATE OR REPLACE TYPE BODY t_money AS
+  CONSTRUCTOR FUNCTION t_money(p_amount NUMBER) RETURN SELF AS
+    result IS
+  BEGIN
+    SELF.amount := p_amount;
+    SELF.currency := 'PLN';
+    RETURN;
+  END;
+  MEMBER FUNCTION to_string RETURN VARCHAR2 IS
+  BEGIN
+    RETURN to_char(amount, 'FM999G990D00') || ' ' || currency;
+  END;
+  MAP MEMBER FUNCTION sort_key RETURN NUMBER IS
+  BEGIN
+    RETURN amount;
+  END;
+  STATIC FUNCTION zero RETURN t_money IS
+  BEGIN
+    RETURN t_money(0);
+  END;
+END;
+/
+### 61-pakiet-spec-kursory
+CREATE OR REPLACE PACKAGE pkg_items AUTHID DEFINER ACCESSIBLE BY (PACKAGE pkg_orders) AS
+  c_max_lines CONSTANT PLS_INTEGER := 999;
+  CURSOR c_items(p_order_id NUMBER) RETURN order_items%ROWTYPE;
+  TYPE t_item_cur IS REF CURSOR RETURN order_items%ROWTYPE;
+  e_too_many EXCEPTION;
+  PRAGMA EXCEPTION_INIT(e_too_many, -20100);
+  FUNCTION items(p_order_id NUMBER) RETURN t_money_tab PIPELINED;
+  FUNCTION total(p_order_id NUMBER) RETURN NUMBER RESULT_CACHE DETERMINISTIC PARALLEL_ENABLE;
+  PROCEDURE add_item(p_order_id IN NUMBER,
+                     p_product_id IN NUMBER,
+                     p_qty IN NUMBER DEFAULT 1,
+                     p_price IN NUMBER DEFAULT NULL,
+                     p_line_no OUT NUMBER);
+END pkg_items;
+/
+### 62-pakiet-body-pipelined
+CREATE OR REPLACE PACKAGE BODY pkg_items AS
+  CURSOR c_items(p_order_id NUMBER) RETURN order_items%ROWTYPE IS SELECT *
+                                                                  FROM   order_items
+                                                                  WHERE  order_id = p_order_id;
+  FUNCTION items(p_order_id NUMBER) RETURN t_money_tab PIPELINED IS
+  BEGIN
+    FOR r IN c_items(p_order_id) LOOP
+      PIPE ROW (t_money(r.qty * r.price));
+    END LOOP;
+    RETURN;
+  END items;
+  FUNCTION total(p_order_id NUMBER) RETURN NUMBER RESULT_CACHE DETERMINISTIC PARALLEL_ENABLE IS
+    v NUMBER;
+  BEGIN
+    SELECT sum(qty * price)
+    INTO   v
+    FROM   order_items
+    WHERE  order_id = p_order_id;
+    RETURN v;
+  END total;
+  PROCEDURE add_item(p_order_id IN NUMBER,
+                     p_product_id IN NUMBER,
+                     p_qty IN NUMBER DEFAULT 1,
+                     p_price IN NUMBER DEFAULT NULL,
+                     p_line_no OUT NUMBER) IS
+  BEGIN
+    INSERT INTO order_items(order_id, line_no, product_id, qty, price)
+    VALUES (p_order_id,
+            (SELECT nvl(max(line_no), 0) + 1
+             FROM   order_items
+             WHERE  order_id = p_order_id),
+            p_product_id,
+            p_qty,
+            p_price)
+    RETURNING line_no
+    INTO   p_line_no;
+  END add_item;
+END pkg_items;
+/
+### 64-bezpieczenstwo-podstawienia-i-kompilacja-warunkowa
+SELECT &kolumna,
+       &&tabela..id,
+       :bind,
+       t.c@dev_link,
+       1e10,
+       1.5f,
+       2d,
+       n'tekst',
+       nq'[a'b]',
+       DATE '2020-01-01',
+       INTERVAL '1' DAY
+FROM   &&tabela t
+WHERE  x = '&nie_zmieniaj';
+CREATE OR REPLACE PROCEDURE p IS
+BEGIN
+  $ IF dbms_db_version.ver_le_12 $ THEN NULL;
+  $ ELSE dbms_output.put_line($ $ plsql_unit || ':' || $ $ plsql_line);
+  $
+END END;
+/
+### 65-bezpieczenstwo-hint-i-komentarz-w-wyrazeniu
+SELECT /*+ first_rows(10) */ a,
+       b -- komentarz po b
+       ,
+       c
+FROM   t
+WHERE  a = 1 /* w środku */
+AND    b = 2;
+INSERT /*+ append */
+INTO   t SELECT *
+FROM   s;
+### 66-bezpieczenstwo-operatory
+SELECT a
+FROM   t,
+       u
+WHERE  t.id = u.id(+)
+AND    a ^= 1
+AND    b ~= 2
+AND    c != 3
+AND    d <> 4
+AND    e >= 5
+AND    f <= 6
+AND    g ** 2 > 1
+AND    h || i = 'x'
+AND    j <= > k
+AND    v1 < -> v2 < 1
+AND    v3 < # > v4 < 0;
+BEGIN
+  x := y ** 2;
+  z := - (-1);
+  w := a - -1;
+END;
+/
+### 63-java-mle-bez-zmian
+create or replace and compile java source named "Util" as
+public class Util { public static String up(String s) { return s.toUpperCase(); } }
+/
+create or replace mle module m_util language javascript as
+export function up(s) { return s.toUpperCase(); }
+/
+CREATE OR REPLACE FUNCTION js_up(s VARCHAR2) RETURN VARCHAR2 AS MLE MODULE m_util SIGNATURE 'up(string)';
+/
