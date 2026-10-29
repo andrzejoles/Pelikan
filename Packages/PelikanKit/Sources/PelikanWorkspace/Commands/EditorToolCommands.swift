@@ -170,7 +170,7 @@ enum EditorToolCommands {
             },
             Command(CommandDescriptor(id: "view.clipboardHistory", title: L10n.tr("Historia schowka"), category: .view,
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Lista tekstów skopiowanych w Pelikanie z filtrem i podglądem; dwuklik wkleja do edytora."),
+                                      summary: L10n.tr("Lista tekstów skopiowanych w Pelikanie z filtrem i podglądem; dwukrotne kliknięcie wkleja do edytora."),
                                       feature: "PD-EDIT-024")) { ctx in
                 ctx.ui?.showClipboardHistory()
                 return .ok

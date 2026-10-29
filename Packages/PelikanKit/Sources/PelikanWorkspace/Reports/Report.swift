@@ -336,7 +336,7 @@ public enum StandardReports {
                 var b = ReportColumnFormat(column: "OBIEKT"); b.breakGroup = true
                 d.columns = [b]
             }),
-            Entry(id: "reports.invalidObjects", definition: def(L10n.tr("Niepoprawne obiekty"), """
+            Entry(id: "reports.invalidObjects", definition: def(L10n.tr("Nieprawidłowe obiekty"), """
                 select object_type typ, object_name nazwa, to_char(last_ddl_time, 'YYYY-MM-DD HH24:MI') zmieniony
                   from user_objects where status <> 'VALID' order by object_type, object_name
                 """)),

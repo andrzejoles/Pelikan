@@ -405,6 +405,7 @@ struct DataTransferOfflineTests {
     func objectExportFiles() {
         var o = ObjectExportOptions()
         o.layout = .filePerObject
+        o.specAndBodyTogether = true
         let parts: [(DBObject, String)] = [(DBObject(owner: "S", name: "../Evil/x", type: .view), "v1"), (DBObject(owner: "S", name: "Foo", type: .view), "v2"),
                                            (DBObject(owner: "S", name: "FOO", type: .view), "v3"), (DBObject(owner: "S", name: "PKG", type: .package), "spec"),
                                            (DBObject(owner: "S", name: "PKG", type: .packageBody), "body")]

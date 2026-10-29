@@ -49,7 +49,7 @@ struct UsagesView: View {
             d.selectedRange = o..<o
         case .file:
             guard let u = h.fileURL, let d = try? workspace.openFile(u) else { return }
-            let o = ProgramCompiler.offset(line: h.line, column: 1, in: d.text)
+            let o = d.offset(line: h.line, inFile: u)
             d.selectedRange = o..<o
         case .dependency, .source, .plscope:
             guard let owner = h.owner, let name = h.name, let type = h.type.flatMap(DBObjectType.init(rawValue:)) else { return }

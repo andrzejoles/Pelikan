@@ -92,7 +92,7 @@ extension Workspace {
             guard let active = activeDocument else { throw CommandError.notAvailable(L10n.tr("Brak aktywnego okna")) }
             d = active
         }
-        guard d.kind != .command else { throw AgentDenial.permissionDenied(L10n.tr("okno poleceń jest niedostępne dla agenta")) }
+        guard d.kind != .command else { throw AgentDenial.permissionDenied(L10n.tr("konsola SQL*Plus jest niedostępna dla agenta")) }
         guard agentCanSee(d) else { throw AgentDenial.permissionDenied(L10n.tr("okno połączenia niedostępnego dla agenta")) }
         return d
     }

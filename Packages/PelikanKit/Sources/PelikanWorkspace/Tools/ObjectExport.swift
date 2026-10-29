@@ -6,8 +6,23 @@ import PelikanSQL
 public struct ObjectExportOptions: Sendable, Hashable, Codable {
     public enum Layout: String, Sendable, Codable, CaseIterable { case singleFile, filePerObject }
     public var layout: Layout = .singleFile
-    /// Specyfikacja i ciało pakietu/typu w jednym pliku (przy pliku na obiekt).
-    public var specAndBodyTogether = true
+    /// Specyfikacja i ciało pakietu/typu w jednym pliku `.pck`/`.typ` (przy pliku na obiekt). Domyślnie osobne pliki
+    /// `.pks`/`.pkb` i `.tps`/`.tpb` (D194 — konwencja repozytoriów właściciela).
+    public var specAndBodyTogether = false
+    /// Rozszerzenia plików specyfikacji i ciała (Ustawienia › Ogólne, D194).
+    public var extensions = SpecBodyExtensions()
+    /// Pliki na obiekt: jednostki PL/SQL zakończone „/” w osobnej linii. Domyślnie bez „/” w osobnych plikach DDL
+    /// w repozytorium („/” psuje proces wdrożenia, D192/D194); jeden plik (skrypt SQL*Plus) i pliki `.pck`/`.typ`
+    /// z obiema jednostkami (konwencja PL/SQL Developera) zawsze z „/”.
+    public var terminateUnits = false
+    /// Uprawnienia obiektu w trybie „plik na obiekt” (D194, decyzja właściciela: „GRANT'y zawsze w osobnych plikach”):
+    /// osobny plik `nazwa.grants.sql` obok plików DDL, które zawierają wyłącznie CREATE, albo pominięte. Jeden plik
+    /// (skrypt) — uprawnienia zawsze za obiektem.
+    public enum GrantPlacement: String, Sendable, Codable, CaseIterable { case separateFile, omit }
+    public var grantPlacement: GrantPlacement = .separateFile
+    /// Pliki na obiekt: komentarz „Wygenerowane przez Pelikana — data” na początku pliku. Domyślnie bez — data zmieniałaby
+    /// każdy plik w repozytorium przy każdym eksporcie. Jeden plik — zawsze z nagłówkiem.
+    public var dateHeader = false
     public var includePrivileges = true
     public var includeStorage = false
     /// Nazwa schematu w DDL (bez — obiekty tworzone w bieżącym schemacie docelowym).
@@ -19,6 +34,20 @@ public struct ObjectExportOptions: Sendable, Hashable, Codable {
 public struct ExportedFile: Sendable, Hashable {
     public var name: String
     public var content: String
+    /// Plik na obiekt bez „/” (D194), w którym „/” musiał zostać (polecenie za jednostką, np. `ALTER TYPE` ewolucji
+    /// typu) — ostrzeżenie w oknie eksportu.
+    public var keepsSlash = false
+
+    public init(name: String, content: String, keepsSlash: Bool = false) {
+        self.name = name; self.content = content; self.keepsSlash = keepsSlash
+    }
+}
+
+/// DDL jednego obiektu z eksportu: polecenia obiektu i osobno jego uprawnienia (GRANT).
+struct ExportPart: Sendable {
+    var object: DBObject
+    var ddl: String
+    var grants: String?
 }
 
 /// Eksport DDL obiektów (sekwencje pierwsze, potem tabele, widoki i kod — kolejność, w której skrypt da się wykonać).
@@ -64,6 +93,12 @@ public enum ObjectExport {
     /// z uprawnieniami (eksport wielu obiektów; `.some(nil)` — listy nie udało się pobrać, każdy obiekt traktowany
     /// jak mający uprawnienia, bez ponawiania zapytania), bez niej — sprawdzenie tego jednego obiektu.
     static func ddl(_ o: DBObject, options: ObjectExportOptions, granted: Set<String>?? = nil, in s: any DatabaseSession) async throws -> String {
+        let p = try await part(o, options: options, granted: granted, in: s)
+        return p.grants.map { p.ddl + "\n" + $0 } ?? p.ddl
+    }
+
+    /// DDL obiektu i jego uprawnienia osobno (plik na obiekt może je zapisać w osobnym pliku albo pominąć).
+    static func part(_ o: DBObject, options: ObjectExportOptions, granted: Set<String>?? = nil, in s: any DatabaseSession) async throws -> ExportPart {
         let metaType: String = switch o.type {
         case .packageBody: "PACKAGE_BODY"
         case .package: "PACKAGE_SPEC"
@@ -86,7 +121,7 @@ public enum ObjectExport {
                          BindVariable(name: "ow", type: .number, value: .text(options.includeOwner ? "1" : "0")),
                          BindVariable(name: "ddl", type: .clob, direction: .output), BindVariable(name: "t", value: .text(metaType)),
                          BindVariable(name: "n", value: .text(o.name)), BindVariable(name: "o", value: .text(o.owner))])
-        guard case .lob(let l)? = r.outBinds["ddl"], var text = l.text else { return "" }
+        guard case .lob(let l)? = r.outBinds["ddl"], var text = l.text else { return ExportPart(object: o, ddl: "") }
         text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         // Kod PL/SQL z DBMS_METADATA kończy się „/”, pozostałe „;” (SQLTERMINATOR).
         var hasGrants = false
@@ -100,62 +135,169 @@ public enum ObjectExport {
                 begin :g := dbms_metadata.get_dependent_ddl('OBJECT_GRANT', :n, :o); exception when others then :g := null; end;
                 """, binds: [BindVariable(name: "g", type: .clob, direction: .output), BindVariable(name: "n", value: .text(o.name)), BindVariable(name: "o", value: .text(o.owner))])
             if case .lob(let g)? = r2?.outBinds["g"], let grants = g.text?.trimmingCharacters(in: .whitespacesAndNewlines), !grants.isEmpty {
-                text += "\n" + grants
+                return ExportPart(object: o, ddl: text, grants: grants)
             }
         }
-        return text
+        return ExportPart(object: o, ddl: text)
     }
 
     /// Eksport w kolejności wykonalnej; `progress` dostaje liczbę wyeksportowanych obiektów.
     public static func export(_ objects: [DBObject], options: ObjectExportOptions, in s: any DatabaseSession,
                               progress: (@MainActor (Int) -> Void)? = nil) async throws -> [ExportedFile] {
-        let sorted = objects.sorted { (sortKey($0.type), $0.name) < (sortKey($1.type), $1.name) }
+        // Właściciel w kluczu: eksport kilku schematów w stałej kolejności (pary plików nazwane tak samo przy każdym eksporcie).
+        let sorted = objects.sorted { (sortKey($0.type), $0.owner, $0.name) < (sortKey($1.type), $1.owner, $1.name) }
         // Lista obiektów z uprawnieniami — raz na schemat zamiast pytania o każdy obiekt.
         var granted: [String: Set<String>?] = [:]
         if options.includePrivileges, sorted.count > 1 {
             // Także nieudane pobranie (nil) — zapamiętane, żeby każdy obiekt nie ponawiał zapytania.
             for owner in Set(sorted.map(\.owner)) { granted.updateValue(await grantedObjects(owner: owner, in: s), forKey: owner) }
         }
-        var parts: [(DBObject, String)] = []
+        var parts: [ExportPart] = []
         for (i, o) in sorted.enumerated() {
-            parts.append((o, try await ddl(o, options: options, granted: granted[o.owner], in: s)))
+            parts.append(try await part(o, options: options, granted: granted[o.owner], in: s))
             await progress?(i + 1)
         }
         let header = "-- " + L10n.tr("Wygenerowane przez Pelikana") + " — " + ISO8601DateFormatter().string(from: Date()) + "\n"
         if options.layout == .singleFile {
-            return [ExportedFile(name: "\(sorted.first?.owner.lowercased() ?? "obiekty").sql",
-                                 content: header + parts.map { "\n-- \($0.0.type.rawValue) \($0.0.name)\n" + $0.1 }.joined(separator: "\n") + "\n")]
+            let text = parts.map { p in "\n-- \(p.object.type.rawValue) \(p.object.name)\n" + (p.grants.map { p.ddl + "\n" + $0 } ?? p.ddl) }
+            return [ExportedFile(name: "\(sorted.first?.owner.lowercased() ?? "obiekty").sql", content: header + text.joined(separator: "\n") + "\n")]
         }
-        return files(parts, options: options, header: header)
+        return files(parts, options: options, header: options.dateHeader ? header : "")
     }
 
-    /// Pliki „plik na obiekt”: nazwa z bezpiecznych znaków (nazwa w cudzysłowie może mieć `/`, `..`); różne obiekty
-    /// o tej samej nazwie pliku (np. „Foo” i „FOO”, inny schemat) dostają przyrostek `_2`, `_3`…; specyfikacja i ciało
-    /// tego samego obiektu trafiają do wspólnego pliku `.pck`/`.typ`.
-    static func files(_ parts: [(DBObject, String)], options: ObjectExportOptions, header: String) -> [ExportedFile] {
-        var files: [String: String] = [:]
+    /// Pliki „plik na obiekt”: nazwa z bezpiecznych znaków (nazwa w cudzysłowie może mieć `/`, `..`). Nazwa bazowa jest
+    /// wspólna dla obiektu (właściciel + nazwa) we wszystkich jego plikach — specyfikacja i ciało jednego pakietu dostają
+    /// tę samą; przy obiektach kilku schematów z przedrostkiem schematu (`s2.pkg.pks`); różne obiekty o tej samej nazwie
+    /// bazowej (np. „Foo” i „FOO”) — przyrostek `_2`, `_3`…
+    /// we wszystkich swoich plikach. Specyfikacja i ciało w osobnych plikach (rozszerzenia z opcji, domyślnie
+    /// `.pks`/`.pkb`, `.tps`/`.tpb`) bez „/” (chyba że `terminateUnits`), albo razem w `.pck`/`.typ` z „/”. Uprawnienia
+    /// według `grantPlacement` — w osobnym pliku `nazwa.grants.sql` (polecenia z „;”) albo pominięte, nigdy w pliku DDL.
+    static func files(_ parts: [ExportPart], options: ObjectExportOptions, header: String) -> [ExportedFile] {
+        var contents: [String: [String]] = [:]
         var names: [String] = []
-        var fileOf: [String: String] = [:]
-        for (o, text) in parts {
-            let together = options.specAndBodyTogether && [.package, .packageBody, .type, .typeBody].contains(o.type)
-            let ext = together ? (o.type == .package || o.type == .packageBody ? "pck" : "typ")
-                : [.package, .type].contains(o.type) ? "spc" : [.packageBody, .typeBody].contains(o.type) ? "bdy" : ObjectCommands.fileExtension(o.type)
-            let id = "\(o.owner)\u{1F}\(o.name)\u{1F}\(ext)"
-            let name: String
-            if let known = fileOf[id] {
-                name = known
-            } else {
-                let base = String(o.name.lowercased().map { $0.isLetter || $0.isNumber || "_$#".contains($0) ? $0 : "_" })
-                var candidate = "\(base).\(ext)", n = 2
-                while files[candidate] != nil { candidate = "\(base)_\(n).\(ext)"; n += 1 }
-                name = candidate
-                fileOf[id] = name
-                names.append(name)
-                files[name] = header
-            }
-            files[name, default: ""] += "\n" + text + "\n"
+        var slashKept: Set<String> = []
+        var baseOf: [String: String] = [:]
+        var usedBases: Set<String> = []
+        // Obiekty kilku schematów: przedrostek schematu w nazwie każdego pliku (`s2.pkg.pks`) — nazwy nie zależą od tego,
+        // które obiekty wybrano; jeden schemat — bez przedrostka.
+        let manyOwners = Set(parts.map(\.object.owner)).count > 1
+        func safe(_ s: String) -> String { String(s.lowercased().map { $0.isLetter || $0.isNumber || "_$#".contains($0) ? $0 : "_" }) }
+        func base(_ o: DBObject) -> String {
+            let key = "\(o.owner)\u{1F}\(o.name)"
+            if let b = baseOf[key] { return b }
+            let wanted = manyOwners ? safe(o.owner) + "." + safe(o.name) : safe(o.name)
+            var candidate = wanted, n = 2
+            while usedBases.contains(candidate) { candidate = "\(wanted)_\(n)"; n += 1 }
+            usedBases.insert(candidate)
+            baseOf[key] = candidate
+            return candidate
         }
-        return names.map { ExportedFile(name: $0, content: files[$0] ?? "") }
+        func append(_ name: String, _ text: String) {
+            if contents[name] == nil { names.append(name) }
+            contents[name, default: []].append(text)
+        }
+        for p in parts {
+            let o = p.object
+            let together = options.specAndBodyTogether && [.package, .packageBody, .type, .typeBody].contains(o.type)
+            let pair = options.extensions.pair(for: o.type)
+            let ext = together ? (o.type == .package || o.type == .packageBody ? "pck" : "typ")
+                : [.package, .type].contains(o.type) ? pair?.spec ?? "spc" : [.packageBody, .typeBody].contains(o.type) ? pair?.body ?? "bdy"
+                : ObjectCommands.fileExtension(o.type)
+            let b = base(o)
+            let name = "\(b).\(ext)"
+            // Osobne pliki DDL bez „/” (D194); `.pck`/`.typ` z obiema jednostkami — z „/” jak w PL/SQL Developerze.
+            let stripSlash = !options.terminateUnits && !together
+            let text = stripSlash ? withoutUnitTerminator(p.ddl) : p.ddl
+            if stripSlash, ProgramCompiler.header(text) != nil,
+               text.components(separatedBy: "\n").contains(where: { $0.trimmingCharacters(in: .whitespaces) == "/" }) {
+                slashKept.insert(name)
+            }
+            append(name, text)
+            if let grants = p.grants, options.grantPlacement == .separateFile { append("\(b).grants.sql", grants) }
+        }
+        return names.map { n in
+            ExportedFile(name: n, content: header + (header.isEmpty ? "" : "\n") + (contents[n] ?? []).joined(separator: "\n\n") + "\n",
+                         keepsSlash: slashKept.contains(n))
+        }
+    }
+
+    /// Wersja dla testów: DDL obiektów bez osobnych uprawnień.
+    static func files(_ parts: [(DBObject, String)], options: ObjectExportOptions, header: String) -> [ExportedFile] {
+        files(parts.map { ExportPart(object: $0.0, ddl: $0.1) }, options: options, header: header)
+    }
+
+    /// DDL z DBMS_METADATA bez „/” kończącego jednostki PL/SQL (pliki DDL w repozytorium, D194). „/” zostaje, gdy za
+    /// jednostką jest polecenie, które bez niego dokleiłoby się do jej tekstu (D192) — poza GRANT/REVOKE; `ALTER TRIGGER
+    /// … ENABLE` (wyzwalacz i tak powstaje włączony) jest pomijane, `… DISABLE` zostaje razem z „/”.
+    static func withoutUnitTerminator(_ ddl: String) -> String {
+        let ns = ddl as NSString
+        let statements = ScriptSplitter.split(ddl)
+        var remove: [NSRange] = []
+        var inserts: [Int] = []
+        for (i, st) in statements.enumerated() where st.terminator == .slash && ProgramCompiler.header(st.text) != nil {
+            if i + 1 < statements.count {
+                let next = statements[i + 1]
+                let t = next.text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                    .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+                if t.hasPrefix("ALTER TRIGGER") {
+                    // Wyłączony wyzwalacz: klauzula DISABLE w CREATE TRIGGER (11g+) zamiast ALTER, żeby plik był bez „/”;
+                    // gdy nie da się jej wstawić — ALTER zostaje razem z „/”.
+                    var disableAt: Int?
+                    if t.hasSuffix(" DISABLE") {
+                        guard let at = triggerStateClauseOffset(st.text) else { continue }
+                        disableAt = st.start + at
+                    } else if !t.hasSuffix(" ENABLE") {
+                        continue
+                    }
+                    let start = ns.lineRange(for: NSRange(location: next.start, length: 0)).location
+                    let end = NSMaxRange(ns.lineRange(for: NSRange(location: max(next.start, next.fullEnd - 1), length: 0)))
+                    remove.append(NSRange(location: start, length: end - start))
+                    if let at = disableAt { inserts.append(at) }
+                } else if !(t.hasPrefix("GRANT ") || t.hasPrefix("REVOKE ")) {
+                    continue
+                }
+            }
+            // Linia z samym „/” między końcem polecenia a końcem z terminatorem.
+            let slash = ns.range(of: "/", options: [], range: NSRange(location: st.end, length: max(0, st.fullEnd - st.end)))
+            guard slash.location != NSNotFound else { continue }
+            let line = ns.lineRange(for: slash)
+            guard ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" else { continue }
+            remove.append(line)
+        }
+        guard !remove.isEmpty else { return ddl }
+        var out = ns as String
+        // Od końca: usunięcia linii „/” i ALTER oraz wstawienia „DISABLE ” (zawsze przed usuwanymi liniami).
+        let edits = remove.map { ($0, "") } + inserts.map { (NSRange(location: $0, length: 0), "DISABLE ") }
+        for (r, t) in edits.sorted(by: { $0.0.location > $1.0.location }) {
+            out = (out as NSString).replacingCharacters(in: r, with: t)
+        }
+        while let c = out.last, c.isWhitespace { out.removeLast() }
+        return out
+    }
+
+    /// Miejsce klauzuli `ENABLE | DISABLE` w CREATE TRIGGER (pozycja w tekście polecenia): przed `WHEN (…)` albo
+    /// treścią wyzwalacza (`DECLARE`, `BEGIN`, `<<etykieta>>`, `CALL`, `COMPOUND TRIGGER`) na poziomie zerowym nawiasów. nil — nie
+    /// znaleziono albo stan jest już podany.
+    static func triggerStateClauseOffset(_ sql: String) -> Int? {
+        let ns = sql as NSString
+        var depth = 0, afterTrigger = false
+        for t in Lexer(sql).tokenize() where !t.isTrivia {
+            // Etykieta bloku (`<<nazwa>>`) przed DECLARE/BEGIN — początek treści wyzwalacza.
+            if afterTrigger, depth == 0, t.start + 2 <= ns.length, ns.substring(with: NSRange(location: t.start, length: 2)) == "<<" {
+                return t.start
+            }
+            switch t.kind {
+            case .leftParen: depth += 1; continue
+            case .rightParen: depth -= 1; continue
+            default: break
+            }
+            guard depth == 0, [.keyword, .identifier].contains(t.kind) else { continue }
+            let word = ns.substring(with: NSRange(location: t.start, length: t.length)).uppercased()
+            if !afterTrigger { afterTrigger = word == "TRIGGER"; continue }
+            if ["ENABLE", "DISABLE"].contains(word) { return nil }
+            if ["WHEN", "DECLARE", "BEGIN", "CALL", "COMPOUND"].contains(word) { return t.start }
+        }
+        return nil
     }
 }
 

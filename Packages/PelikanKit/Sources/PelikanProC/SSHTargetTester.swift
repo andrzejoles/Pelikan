@@ -143,7 +143,7 @@ public enum SSHTargetTester {
                                     timeout: 60)
             let out = text(r, enc)
             if r.status != 0 {
-                checks.append(SSHTestCheck(title: L10n.tr("Working copy"), status: .failed,
+                checks.append(SSHTestCheck(title: L10n.tr("Kopia robocza"), status: .failed,
                                            detail: L10n.tr("\(wc): kod \(r.status) \(r.errorText)")))
             } else {
                 let parts = out.components(separatedBy: "@@STATUS")
@@ -151,14 +151,14 @@ public enum SSHTargetTester {
                 let status = parts.count > 1 ? parts[1].trimmingCharacters(in: .whitespacesAndNewlines) : ""
                 checks.append(SSHTestCheck(title: L10n.tr("Gałąź"), status: branch == t.branch ? .ok : .warning,
                                            detail: branch == t.branch ? branch : L10n.tr("\(branch) (oczekiwana \(t.branch))")))
-                checks.append(SSHTestCheck(title: L10n.tr("Czystość working copy"), status: status.isEmpty ? .ok : .warning,
+                checks.append(SSHTestCheck(title: L10n.tr("Czystość kopii roboczej"), status: status.isEmpty ? .ok : .warning,
                                            detail: status.isEmpty ? L10n.tr("bez zmian") : status))
             }
         } catch {
-            checks.append(SSHTestCheck(title: L10n.tr("Working copy"), status: .failed, detail: describe(error)))
+            checks.append(SSHTestCheck(title: L10n.tr("Kopia robocza"), status: .failed, detail: describe(error)))
         }
         for (title, path) in [(L10n.tr("Katalog bazowy"), t.baseDirectory), (L10n.tr("Katalog src"), t.sourceDirectory),
-                              (L10n.tr("Katalog bin"), t.binaryDirectory), (L10n.tr("Katalog backupów"), t.backupDirectory)] {
+                              (L10n.tr("Katalog bin"), t.binaryDirectory), (L10n.tr("Katalog kopii zapasowych"), t.backupDirectory)] {
             do {
                 switch try directoryState(path, session: session) {
                 case .writable: checks.append(SSHTestCheck(title: title, status: .ok, detail: path))

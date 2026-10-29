@@ -111,7 +111,7 @@ public enum RibbonModel {
                 .large("file.new.sql", label: L10n.tr("Okno SQL")),
                 .large("file.new.program", label: L10n.tr("Okno programu")),
                 .small("file.new.test", label: L10n.tr("Okno testu")),
-                .small("file.new.command", label: L10n.tr("Okno poleceń")),
+                .small("file.new.command", label: L10n.tr("Konsola SQL*Plus")),
                 .menu(L10n.tr("Inne okna"), symbol: "plus.rectangle.on.rectangle", commands: [
                     "file.new.explainPlan", "file.new.report", "file.new.diagram", "file.new.notebook", separator,
                     "file.newFromTemplate", "file.pasteAsSQLWindow", "file.openWithConnection",
@@ -121,7 +121,7 @@ public enum RibbonModel {
                 .small("file.open"), .small("file.save"), .small("file.saveAs"),
                 .small("file.print"), .small("file.restoreRecovery", label: L10n.tr("Odzyskaj okna")),
                 .menu(L10n.tr("Więcej"), symbol: "ellipsis.circle", commands: [
-                    "file.readOnly", "file.encoding", separator, "file.localHistory", "file.localHistoryList", "file.localHistoryCheckpoint",
+                    "file.saveAsSingleFile", "file.reload", "file.readOnly", "file.encoding", separator, "file.localHistory", "file.localHistoryList", "file.localHistoryCheckpoint",
                     "file.localHistoryCompare", "file.localHistoryRestore", separator, "app.openStartupParameters",
                 ]),
             ]),
@@ -199,7 +199,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Refaktoryzacja"), [
                 .large("edit.refactorRename", label: L10n.tr("Zmień nazwę")),
-                .menu(L10n.tr("Wydziel"), symbol: "rectangle.portrait.and.arrow.right", commands: [
+                .menu(L10n.tr("Wyodrębnij"), symbol: "rectangle.portrait.and.arrow.right", commands: [
                     "edit.extractLocalConstant", "edit.extractGlobalConstant", "edit.extractProcedure", separator,
                     "edit.replaceAssignmentWithInitialization",
                 ]),
@@ -262,7 +262,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Schemat"), [
                 .large("diagram.fromSchema", label: L10n.tr("Diagram ER")),
-                .small("tools.compileInvalid", label: L10n.tr("Kompiluj niepoprawne")),
+                .small("tools.compileInvalid", label: L10n.tr("Kompiluj nieprawidłowe")),
                 .small("reports.invalidObjects"), .small("reports.compilationErrors"),
                 .small("tools.schemaDoc", label: L10n.tr("Dokumentacja")),
             ]),
@@ -363,9 +363,9 @@ public enum RibbonModel {
                 .menu(L10n.tr("Szablony"), symbol: "doc.text", commands: [
                     "templates.save", "templates.edit", "templates.delete", separator, "templates.newFolder", "templates.renameFolder", "templates.deleteFolder",
                 ]),
-                .menu(L10n.tr("Preferencje"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
+                .menu(L10n.tr("Ustawienia"), symbol: "gearshape", commands: ["prefs.sets", "prefs.export", "prefs.import", separator, "localTasks.runNow"]),
             ]),
-            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Preferencji › Agenci.
+            // Komendy panelu agenta rejestruje aplikacja (AgentUICommands); uruchamianie — po profilu z Ustawień › Agenci.
             RibbonGroup(L10n.tr("Agent AI"), [
                 .large("agent.togglePane"),
                 .menu(L10n.tr("Uruchom agenta"), symbol: "sparkles", commands: ["agent.launch.*"], large: true),
@@ -458,7 +458,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Edycja danych"), [
                 .large("grid.edit"),
-                .small("grid.insertRecord"), .small("grid.deleteRecord"), .small("grid.post", label: L10n.tr("Zatwierdź (Post)")),
+                .small("grid.insertRecord"), .small("grid.deleteRecord"), .small("grid.post", label: L10n.tr("Zapisz zmiany (Post)")),
                 .small("grid.cancelChanges"), .small("grid.revertRowChanges"),
                 .menu(L10n.tr("Zmiany"), symbol: "pencil.and.list.clipboard", commands: [
                     "grid.nextPendingChange", "grid.previousPendingChange", "grid.copyChangesSQL", separator,
@@ -532,7 +532,7 @@ public enum RibbonModel {
     }
 
     @MainActor static var command: RibbonTab {
-        RibbonTab("command", L10n.tr("Okno poleceń"), context: [.command], [
+        RibbonTab("command", L10n.tr("Konsola SQL*Plus"), context: [.command], [
             RibbonGroup(L10n.tr("Wykonanie"), [
                 .large("sql.execute"), .small("cmd.executeLine"), .small("cmd.pause"), .small("sql.break"),
             ]),
@@ -545,8 +545,12 @@ public enum RibbonModel {
     @MainActor static var plan: RibbonTab {
         RibbonTab("plan", L10n.tr("Plan"), context: [.explainPlan], [
             RibbonGroup(L10n.tr("Plan wykonania"), [
-                .large("sql.execute", label: L10n.tr("Wyznacz plan")), .small("plan.compare", label: L10n.tr("Porównaj z poprzednim")),
+                .large("sql.execute", label: L10n.tr("Odśwież plan")), .small("plan.compare", label: L10n.tr("Porównaj z poprzednim")),
                 .small("plan.export", label: L10n.tr("Zapisz plan")), .small("tools.autotrace"),
+            ]),
+            RibbonGroup(L10n.tr("Drzewo"), [
+                .small("plan.expandAll", label: L10n.tr("Rozwiń wszystkie gałęzie")),
+                .small("plan.collapseAll", label: L10n.tr("Zwiń wszystkie gałęzie")),
             ]),
         ])
     }

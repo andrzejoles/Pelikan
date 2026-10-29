@@ -40,10 +40,10 @@ requiere una confirmación aparte (**Cancelar** por defecto), porque puede inval
   - un esquema concreto.
   La carpeta **Directorios** (los directorios de Oracle no tienen propietario de esquema) muestra todos los directorios
   en cualquier modo si tienes acceso a las vistas DBA y, si no, los que tienen privilegios concedidos.
-  El ámbito al conectar se ajusta en **Preferencias › Object Browser › Al conectar, mostrar**.
+  El ámbito al conectar se ajusta en **Ajustes › Object Browser › Al conectar, mostrar**.
 - **Filtro** bajo la selección de usuario: parte del nombre (en cualquier posición: `emp` encuentra `EMP` y
   `T_EMP_HIST`), un patrón con `%` (p. ej. `EMP%`: solo el principio del nombre; el comportamiento sin `%` se cambia en
-  **Preferencias › Object Browser**), varios patrones separados por comas,
+  **Ajustes › Object Browser**), varios patrones separados por comas,
   `status=invalid` (solo objetos no válidos) o `source=texto` (objetos cuyo código fuente contiene el texto).
 - Al expandir un objeto se ven sus elementos: columnas con tipos, restricciones, índices, disparadores, particiones,
   subprogramas, atributos y también las dependencias (**Depende de**, **Usado por**).
@@ -89,14 +89,14 @@ utPLSQL**.
 
 ### Arrastrar
 
-Arrastra un objeto al editor para insertar su nombre. Con la tecla ⌃ (o si en Preferencias se eligió «Preguntar»), al
+Arrastra un objeto al editor para insertar su nombre. Con la tecla ⌃ (o si en Ajustes se eligió «Preguntar»), al
 soltarlo aparece un menú: nombre, nombre con propietario, lista de columnas, SELECT, INSERT, UPDATE, DELETE, llamada o
-DDL. Soltar un objeto en el área vacía de las ventanas ejecuta la acción de **Preferencias › Object Browser** (p. ej.,
+DDL. Soltar un objeto en el área vacía de las ventanas ejecuta la acción de **Ajustes › Object Browser** (p. ej.,
 Editar o Mostrar datos). Arrastrar una carpeta inserta los nombres de sus objetos separados por comas.
 
 ### Filtros y carpetas propias
 
-En **Preferencias › Object Browser** configuras:
+En **Ajustes › Object Browser** configuras:
 
 - las carpetas visibles y su orden, y la acción de doble clic para cada tipo;
 - **Filtros con nombre**: una condición `WHERE` y un `ORDER BY` sobre la vista de objetos (alias `o`, variables

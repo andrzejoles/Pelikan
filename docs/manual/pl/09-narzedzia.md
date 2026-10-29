@@ -43,14 +43,14 @@ innym schemacie lub połączeniu. Wynik to skrypt albo bezpośrednia aktualizacj
 Wszystkie porównania tekstu (okno z plikiem, obiekt z bazą, historia lokalna, **Narzędzia › Porównaj pliki…**) używają
 wbudowanej przeglądarki różnic: dwie kolumny, mapa zmian, przejście do następnej i poprzedniej różnicy, różnice
 wewnątrz linii, ignorowanie wielkości liter, odstępów i komentarzy, zamiana stron i **Reload**. Zamiast niej możesz
-używać własnego programu — **Preferencje › Narzędzia › Zewnętrzna przeglądarka różnic** (argumenty `%1`, `%2` — pliki,
+używać własnego programu — **Ustawienia › Narzędzia › Zewnętrzna przeglądarka różnic** (argumenty `%1`, `%2` — pliki,
 `%3`, `%4` — tytuły).
 
 ## Eksport i import
 
 | Narzędzie | Do czego |
 |---|---|
-| Narzędzia › Eksport obiektów użytkownika… | DDL wybranych obiektów do jednego pliku albo pliku na obiekt (specyfikacja z ciałem albo osobno), z uprawnieniami i składowaniem, w kolejności wykonalnej |
+| Narzędzia › Eksport obiektów użytkownika… | DDL wybranych obiektów do jednego pliku (skrypt z „/”) albo pliku na obiekt — specyfikacja i ciało pakietu i typu w osobnych plikach `.pks`/`.pkb` i `.tps`/`.tpb` (rozszerzenia z Ustawień) bez „/”, chyba że włączysz **Kończ jednostki znakiem /**; opcja **Specyfikacja i ciało w jednym pliku** daje `.pck`/`.typ` z „/”; pliki obiektów zawierają wyłącznie CREATE — uprawnienia w osobnym pliku `nazwa.grants.sql` albo pominięte (**Uprawnienia w plikach na obiekt**), wyłączony wyzwalacz z `DISABLE` w `CREATE TRIGGER`, komentarz z datą tylko z opcją **Nagłówek z datą eksportu**; ze składowaniem, w kolejności wykonalnej |
 | Narzędzia › Eksport tabel… | dane tabel jako skrypt INSERT (z DROP/CREATE, TRUNCATE/DELETE, wyłączaniem wyzwalaczy i kluczy obcych, COMMIT co n, warunkiem WHERE), w formacie własnym Pelikana (skompresowanym) albo przez Data Pump |
 | Narzędzia › Import tabel… | import skryptu INSERT albo formatu własnego z wyborem tabel; import Data Pump z REMAP_SCHEMA |
 | Narzędzia › Import tekstu… | pliki CSV i tekstowe: wykrywanie separatora, nagłówka i kodowania, mapowanie pól na kolumny, funkcje przekształceń, filtr, obsługa duplikatów, CREATE TABLE z pliku |
@@ -148,14 +148,14 @@ okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia sta
 
 ## Projekty, worksety i pliki
 
-- **Projekt** grupuje pliki i obiekty bazy (z notatkami i grupami) w pliku `.prj`. **Projekt › Buduj projekt**
-  kompiluje wszystko w kolejności elementów, a **Make projektu** — tylko pliki zmienione od ostatniego budowania i
-  obiekty niepoprawne. Opcje projektu to m.in. połączenie, zatrzymanie po pierwszym błędzie i formatowanie. **Zapisz
+- **Projekt** grupuje pliki i obiekty bazy (z notatkami i grupami) w pliku `.prj`. **Projekt › Kompiluj projekt**
+  kompiluje wszystko w kolejności elementów, a **Kompiluj zmienione** (Make) — tylko pliki zmienione od ostatniej
+  kompilacji projektu i obiekty nieprawidłowe. Opcje projektu to m.in. połączenie, zatrzymanie po pierwszym błędzie i formatowanie. **Zapisz
   pulpit projektu** zapamiętuje otwarte okna.
 - **Workset** (zestaw roboczy) zapamiętuje otwarte okna — także z niezapisanymi zmianami i wartościami zmiennych — i
   przywraca je przy następnym uruchomieniu (**Plik › Workset**: nowy, otwórz, zapisz, przywróć, zamknij, porównaj,
   autozapis). Układ okna głównego zapisujesz w **Widok › Zapisz układ okna**.
-- Przy zamykaniu aplikacji z włączonym **autozapisem workseta** (domyślnie; **Preferencje › Ogólne › Pliki › Przywracaj okna po ponownym uruchomieniu** albo **Plik › Workset ›
+- Przy zamykaniu aplikacji z włączonym **autozapisem workseta** (domyślnie; **Ustawienia › Ogólne › Pliki › Przywracaj okna po ponownym uruchomieniu** albo **Plik › Workset ›
   Autozapis workseta**) Pelikan nie pyta o
   zapis — wszystkie otwarte okna (SQL, programu, testu, poleceń, planu, diagramu, notatnika, raportu i konsole połączeń)
   wracają przy następnym uruchomieniu w tym samym układzie i z tym samym aktywnym oknem. Okno bez pliku wraca z tekstem
@@ -176,6 +176,6 @@ okna; **Porównaj z bieżącym** otwiera różnice, a **Przywróć** wstawia sta
   przebiegu.
 - **Widok › Zadania w tle** — lista długich operacji (Autotrace, eksporty, dokumentacja) ze stanem, czasem i
   anulowaniem.
-- **Narzędzia › Dokumenty…** — Twoje dokumenty i adresy http(s) z listy w **Preferencje › Narzędzia**.
+- **Narzędzia › Dokumenty…** — Twoje dokumenty i adresy http(s) z listy w **Ustawienia › Narzędzia**.
 - Usługi macOS (menu **Usługi** w dowolnej aplikacji): **Pelikan: Formatuj SQL** formatuje zaznaczony tekst w miejscu,
   a **Pelikan: Otwórz w oknie SQL** przenosi zaznaczony tekst do nowego okna SQL Pelikana.

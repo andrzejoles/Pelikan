@@ -117,41 +117,70 @@ public enum PreferenceSets {
     // MARK: Sekcje (eksport i import, PD-PREF-003)
 
     /// Sekcje preferencji jak karty okna Preferencji; pola spoza listy — „Inne”.
-    public static let sections: [(name: String, keys: [String])] = [
-        (L10n.tr("Ogólne"), ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
+    public static let sections: [(name: String, keys: [String])] = definitions.map { ($0.name, $0.keys) }
+
+    /// Definicje sekcji: nazwa w języku interfejsu, klucz polski i synonimy przyjmowane w parametrze `sections`
+    /// (nazwa angielska i dawna sprzed D195; tłumaczenia na wszystkie języki dochodzą w `sectionNames`), pola.
+    static let definitions: [(name: String, polish: String, synonyms: [String], keys: [String])] = [
+        (L10n.tr("Ogólne"), "Ogólne", ["General"], ["sessionMode", "logoffWithOpenTransaction", "checkConnectionIntervalSeconds", "pinWindowConnectionsByDefault",
                              "appearance", "uiFontName", "uiFontSize", "uiFontWeight", "language", "confirmSaveNewWindows", "worksetAutosave", "autosaveLayout",
-                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames"]),
-        (L10n.tr("SQL Window"), ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
+                             "quickAccessCommands", "showRibbon", "ribbonCollapsed", "toolDock", "logLevel", "logIncludeNames",
+                             "specBodyExtensions", "openSpecBodyPair", "detectExternalFileChanges", "reloadExternalChangesSilently"]),
+        (L10n.tr("Okno SQL"), "Okno SQL", ["SQL Window"], ["autoCommitSQL", "autoCommitTestWindow", "autoSelectStatement", "recordsPerPage", "maximumResultSetMegabytes",
                                  "fetchLOBsOnDemand", "dbmsOutputEnabled", "dbmsOutputClearBeforeExecute", "dbmsOutputBufferSize",
                                  "dateFormat", "timestampFormat", "standardQueries", "gridFontSize", "gridFontName", "gridFontWeight", "gridColors", "rowNumbersInCopyExport", "gridNumberLayout",
                                  "notifyLongQuerySeconds", "alignTemplates", "autoAlign", "qbeCaseInsensitive", "qbeAutoContains",
                                  "qbeIgnoreTime", "columnFilterHistory"]),
-        (L10n.tr("Edytor"), ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontSize", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
+        (L10n.tr("Edytor"), "Edytor", ["Editor"], ["editorFontName", "editorFontSize", "editorFontWeight", "browserFontName", "browserFontSize", "browserFontWeight", "tabSize", "keywordCase", "editorColors", "browserColors", "highlightCurrentLine", "highlightOccurrences", "highlightTransactions", "liveCodeAnalysis",
                              "useTabCharacter", "indentMode", "backspaceUnindents", "wordWrap", "showLineStatus", "lineNumberInterval", "rightMarginColumn", "showSpecialCharacters", "showCodeContents", "codeContentsOrder", "codeAssistantAutomatic", "codeAssistantDelay",
                              "codeAssistantMatch", "codeAssistantCase", "codeAssistantMinChars", "codeAssistantStandardFunctions",
                              "codeAssistantAllPerLine", "codeAssistantCommaFirst", "autoReplace", "identifierLengthWarning", "editorLigatures",
                              "rememberWindowState"]),
-        (L10n.tr("Formater"), ["beautifier"]),
-        (L10n.tr("Klawiatura"), ["shortcutProfile", "keyOverrides"]),
-        (L10n.tr("Oracle"), ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
+        (L10n.tr("Formater"), "Formater", ["Formatter"], ["beautifier"]),
+        (L10n.tr("Klawiatura"), "Klawiatura", ["Keyboard"], ["shortcutProfile", "keyOverrides"]),
+        (L10n.tr("Oracle"), "Oracle", [], ["instantClientDirectory", "oracleNetDirectory", "walletDirectory", "requireOwnerForSavedPasswords",
                              "confirmCommitRollback", "confirmProductionChanges", "plsqlWarnings", "compiler", "useDBAViews",
                              "debugInfoOnCompile", "debugInfoNever", "debugInfoAlways", "debuggerSkipPackageInit", "debuggerSkipSys", "selectedStatistics", "profilerTimeUnit", "profilerMinShare"]),
-        (L10n.tr("Object Browser"), ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserShowAccessible", "browserDoubleClick",
+        (L10n.tr("Przeglądarka obiektów"), "Przeglądarka obiektów", ["Object Browser"], ["browserFolders", "browserRecentLimit", "confirmRecompile", "browserFilterContains", "browserShowAccessible", "browserDoubleClick",
                                      "browserDropAction", "browserWorkspaceDrop"]),
-        (L10n.tr("Agenci"), ["agent"]),
-        (L10n.tr("Narzędzia"), ["sessionQueries", "schedulerReports", "userTools"]),
+        (L10n.tr("Agenci"), "Agenci", ["Agents"], ["agent"]),
+        (L10n.tr("Narzędzia"), "Narzędzia", ["Tools"], ["sessionQueries", "schedulerReports", "userTools"]),
     ]
+
+    /// Sekcja pól spoza listy.
+    static let other: (name: String, polish: String, synonyms: [String]) = (L10n.tr("Inne"), "Inne", ["Other"])
 
     /// Pola nigdy nieeksportowane: prywatna historia użytkownika.
     static let privateKeys: Set<String> = ["recentFiles"]
 
     public static func section(of key: String) -> String {
-        sections.first { $0.keys.contains(key) }?.name ?? L10n.tr("Inne")
+        sections.first { $0.keys.contains(key) }?.name ?? other.name
+    }
+
+    /// Nazwy sekcji z parametru `sections` komend `prefs.export` i `prefs.import` (użytkownik, makro, agent) zamienione
+    /// na nazwy z `sections`. Nazwy sekcji są przetłumaczone na język interfejsu, więc przyjmowane są też: klucz polski,
+    /// synonimy (angielska i dawna nazwa) oraz tłumaczenie na każdy język interfejsu — makro nagrane w innym języku dalej
+    /// trafia w sekcję. Bez względu na wielkość liter; nieznana nazwa — błąd z listą znanych.
+    public static func sectionNames(_ names: Set<String>,
+                                    translate: (String, String) -> String? = { L10n.translation(of: $0, language: $1) }) throws -> Set<String> {
+        let all = definitions.map { ($0.name, $0.polish, $0.synonyms) } + [(other.name, other.polish, other.synonyms)]
+        let languages = UserManual.languages.filter { $0 != "pl" }
+        func matches(_ n: String, _ s: (String, String, [String])) -> Bool {
+            let candidates = [s.0, s.1] + s.2 + languages.compactMap { translate(s.1, $0) }
+            return candidates.contains { $0.caseInsensitiveCompare(n) == .orderedSame }
+        }
+        return try Set(names.map { n in
+            guard let s = all.first(where: { matches(n, $0) }) else {
+                throw CommandError.invalidArgument("sections", L10n.tr("nieznana sekcja „\(n)”; znane: \(all.map(\.0).joined(separator: ", "))"))
+            }
+            return s.0
+        })
     }
 
     /// Plik eksportu: wybrane sekcje (nil — wszystkie), bez pól prywatnych. Hasła nie są częścią preferencji —
     /// leżą w Pęku kluczy.
     public static func export(_ s: Settings, sections chosen: Set<String>?) throws -> Data {
+        let chosen = try chosen.map { try sectionNames($0) }
         let all = values(of: s).filter { !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
         let file = ExportFile(format: ExportFile.formatName, version: 1, values: all)
         let enc = JSONEncoder()
@@ -162,8 +191,9 @@ public enum PreferenceSets {
     /// Wartości z pliku eksportu (wybrane sekcje; nieznane pola pominięte).
     public static func importValues(_ data: Data, sections chosen: Set<String>?) throws -> [String: JSONValue] {
         let file = try JSONDecoder().decode(ExportFile.self, from: data)
-        guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik preferencji Pelikana")) }
+        guard file.format == ExportFile.formatName else { throw CommandError.notAvailable(L10n.tr("To nie jest plik ustawień Pelikana")) }
         let known = values(of: Settings())
+        let chosen = try chosen.map { try sectionNames($0) }
         return file.values.filter { known[$0.key] != nil && !privateKeys.contains($0.key) && (chosen?.contains(section(of: $0.key)) ?? true) }
     }
 

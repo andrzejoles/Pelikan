@@ -276,7 +276,7 @@ public enum SQLExecutor {
         grid.confirmSizeLimit = { [weak ws] bytes in
             guard let ui = ws?.ui else { return false }
             return await ui.ask(L10n.tr("Wynik zajmuje ponad \(bytes >> 20) MB"),
-                                message: L10n.tr("Pobieranie kolejnych wierszy zwiększy zużycie pamięci (limit w Preferencjach › SQL Window)."),
+                                message: L10n.tr("Pobieranie kolejnych wierszy zwiększy zużycie pamięci (limit w Ustawieniach › Okno SQL)."),
                                 buttons: [L10n.tr("Pobieraj dalej"), L10n.tr("Zatrzymaj")]) == 0
         }
     }

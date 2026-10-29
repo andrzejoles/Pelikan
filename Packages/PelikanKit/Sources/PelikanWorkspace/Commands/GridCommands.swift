@@ -116,7 +116,7 @@ public enum GridCommands {
                     validate: hasGrid) { ctx in try copy(ctx, .expressionList, header: false) },
             Command(CommandDescriptor(id: "grid.graph", title: L10n.tr("Wykres…"), category: .session, submenu: L10n.tr("Wynik"),
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Okno wykresu z bieżącej karty wyników: kategoria, serie, typ, styl, szablony, auto-odświeżanie, eksport."),
+                                      summary: L10n.tr("Okno wykresu z bieżącej karty wyników: kategoria, serie, typ, styl, szablony, autoodświeżanie, eksport."),
                                       feature: "PD-GRAPH-001"),
                     validate: hasGrid) { ctx in
                 guard let doc = SQLCommands.sqlDocument(ctx.workspace), let (tab, _) = activeGrid(ctx.workspace) else { return .ok }
@@ -205,7 +205,7 @@ public enum GridCommands {
                 try grid.deleteRecords(tab.selectedRows ?? [])
                 return .ok
             },
-            Command(CommandDescriptor(id: "grid.post", title: L10n.tr("Zatwierdź zmiany (Post)"), category: .session, submenu: L10n.tr("Wynik"),
+            Command(CommandDescriptor(id: "grid.post", title: L10n.tr("Zapisz zmiany w bazie (Post)"), category: .session, submenu: L10n.tr("Wynik"),
                                       mac: ["cmd+alt+s"], agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Zapisuje zmiany siatki w bazie (UPDATE/INSERT/DELETE po ROWID) — bez COMMIT."), feature: "PD-GRID-017"),
                     validate: { ws in hasPendingChanges(ws) }) { ctx in

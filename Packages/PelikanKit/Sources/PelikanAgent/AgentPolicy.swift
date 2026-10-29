@@ -28,7 +28,7 @@ public enum AgentPolicy {
     /// interfejs albo tekst edytora i nie czytają bazy sesjami użytkownika ani nie ujawniają danych połączeń.
     /// Okno poleceń, szablony z pytaniami, zamykanie okien (utrata zmian) i wszystko, co dotyka bazy — poza listą.
     public static let appCommands: Set<CommandID> = [
-        "file.new.sql", "file.new.program", "file.new.test",
+        "file.new.sql", "file.new.program", "file.new.test", "file.reload",
         "edit.findNext", "edit.findPrevious", "edit.gotoLine", "edit.beautify", "edit.commentLine", "edit.duplicateLine",
         "edit.uppercase", "edit.lowercase", "edit.indent", "edit.outdent", "edit.removeTrailingSpaces",
         "edit.navigateBack", "edit.navigateForward", "window.next", "window.previous",

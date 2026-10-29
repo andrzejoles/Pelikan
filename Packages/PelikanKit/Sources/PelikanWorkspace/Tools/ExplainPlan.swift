@@ -50,9 +50,26 @@ public struct ExplainPlanResult: Sendable {
     public var text: String
     public var html: String
     public var xml: String
+    /// Polecenie, dla którego wyznaczono plan (bez wskazówki celu optymalizatora) — nowe polecenie rozwija całe drzewo.
+    public var sql = ""
 
     /// Wiersze w kolejności wykonania (nawigacja Pierwszy/Poprzedni/Następny/Ostatni).
     public var executionOrder: [PlanLine] { lines.sorted { $0.executionOrder < $1.executionOrder } }
+
+    /// Kroki z dziećmi — gałęzie drzewa planu, które można rozwinąć („Rozwiń wszystko”, PD-OPT-001).
+    public var branchIDs: Set<Int> { Set(lines.compactMap(\.parentID)) }
+
+    /// Przodkowie kroku od rodzica do korzenia — gałęzie do rozwinięcia, żeby zaznaczony krok był widoczny w drzewie.
+    public func ancestors(of id: Int) -> [Int] {
+        let parent = Dictionary(lines.map { ($0.id, $0.parentID) }, uniquingKeysWith: { a, _ in a })
+        var out: [Int] = []
+        var current = parent[id] ?? nil
+        while let p = current, !out.contains(p) {
+            out.append(p)
+            current = parent[p] ?? nil
+        }
+        return out
+    }
 }
 
 /// Explain Plan (PD-OPT-001..003) w osobnej sesji narzędzi — EXPLAIN PLAN wstawia wiersze do PLAN_TABLE, więc nie może
@@ -141,7 +158,7 @@ public enum ExplainPlan {
             select dbms_xplan.display_plan(table_name => 'PLAN_TABLE', statement_id => :id, format => 'TYPICAL', type => 'XML') from dual
             """, binds: b) ?? ""
         try? await s.rollback()
-        return ExplainPlanResult(statementID: id, roots: tree(lines), lines: lines, text: text, html: html, xml: xml)
+        return ExplainPlanResult(statementID: id, roots: tree(lines), lines: lines, text: text, html: html, xml: xml, sql: sql)
     }
 
     /// Cel optymalizatora jako wskazówka w głównym poleceniu (bez zmiany parametrów sesji, do których odczytu trzeba
@@ -220,6 +237,12 @@ enum PlanCommands {
         return ExplainPlan.prepare(s.text)
     }
 
+    /// Aktywne okno planu z planem, który ma gałęzie (komendy drzewa: Rozwiń/Zwiń wszystkie gałęzie).
+    static func treeDocument(_ ws: Workspace) -> Document? {
+        guard let d = ws.activeDocument, d.kind == .explainPlan, let p = d.plan, !p.branchIDs.isEmpty else { return nil }
+        return d
+    }
+
     /// Plan dla okna planu w sesji narzędzi połączenia okna.
     static func run(_ doc: Document, in ws: Workspace) async throws -> ExplainPlanResult {
         guard let conn = ws.effectiveConnection(of: doc) else { throw CommandError.notConnected }
@@ -259,6 +282,23 @@ enum PlanCommands {
                 }
                 let r = try await run(target, in: ws)
                 return CommandResult(message: L10n.tr("Kroków planu: \(r.lines.count)"), value: .string(r.text))
+            },
+            Command(CommandDescriptor(id: "plan.expandAll", title: L10n.tr("Rozwiń wszystkie gałęzie"), category: .tools, submenu: L10n.tr("Plan"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Rozwija wszystkie gałęzie drzewa planu w aktywnym oknie planu."), feature: "PD-OPT-001"),
+                    validate: { treeDocument($0) != nil }) { ctx in
+                guard let doc = treeDocument(ctx.workspace), let plan = doc.plan else { return .ok }
+                doc.planExpanded = plan.branchIDs
+                return .ok
+            },
+            Command(CommandDescriptor(id: "plan.collapseAll", title: L10n.tr("Zwiń wszystkie gałęzie"), category: .tools, submenu: L10n.tr("Plan"),
+                                      agent: .none, effect: .uiState,
+                                      summary: L10n.tr("Zwija wszystkie gałęzie drzewa planu w aktywnym oknie planu; widoczny zostaje korzeń planu."),
+                                      feature: "PD-OPT-001"),
+                    validate: { treeDocument($0) != nil }) { ctx in
+                guard let doc = treeDocument(ctx.workspace) else { return .ok }
+                doc.planExpanded = []
+                return .ok
             },
             Command(CommandDescriptor(id: "plan.export", title: L10n.tr("Zapisz plan jako…"), category: .tools, submenu: L10n.tr("Plan"),
                                       parameters: [CommandParameter("format", .string, L10n.tr("Format"), allowed: PlanFormat.allCases.map(\.rawValue))],

@@ -19,7 +19,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Nowy › Okno SQL | `file.new.sql` | ⌘N | ⌘N | Za zgodą | PD-SQLW-002 |
 | Nowy › Okno programu | `file.new.program` | ⇧⌘N | ⇧⌘N | Za zgodą | PD-PROG-001 |
 | Nowy › Okno testu | `file.new.test` |  |  | Za zgodą | PD-TEST-001 |
-| Nowy › Okno poleceń | `file.new.command` |  |  | Brak | PD-CMDW-001 |
+| Nowy › Konsola SQL*Plus | `file.new.command` |  |  | Brak | PD-CMDW-001 |
 | Nowy › Okno planu (Explain Plan) | `file.new.explainPlan` |  |  | Brak | PD-OPT-001 |
 | Nowy › Okno raportu | `file.new.report` |  |  | Brak | PD-REP-002 |
 | Nowy › Okno diagramu | `file.new.diagram` |  |  | Brak | PD-DIAG-001 |
@@ -29,6 +29,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wyczyść listę ostatnich plików | `file.clearRecent` |  |  | Brak | PD-SQLW-012 |
 | Zapisz | `file.save` | ⌘S | ⌘S | Brak | PD-SQLW-012 |
 | Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | PD-SQLW-012 |
+| Zapisz jako jeden plik… | `file.saveAsSingleFile` |  |  | Brak | PD-PROG-007 |
+| Wczytaj ponownie z dysku | `file.reload` |  |  | Za zgodą | PD-FILE-005 |
 | Kodowanie pliku… | `file.encoding` |  |  | Brak | PC-ENC-001 |
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Brak | PD-UI-004 |
 | Zamknij wskazane okno | `file.closeWindow` |  |  | Brak | PD-UI-004 |
@@ -39,7 +41,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Drukuj… | `file.print` | ⌘P | ⌘P | Brak | PD-SQLW-016 |
 | Eksportuj wynik… | `grid.export` |  |  | Brak | PD-GRID-013 |
 | Eksport wyniku › Kolumna do plików… | `grid.columnToFiles` |  |  | Brak | PD-GRID-016 |
-| Wklej jako nowe SQL Window | `file.pasteAsSQLWindow` |  |  | Brak | PD-SQLW-025 |
+| Wklej jako nowe okno SQL | `file.pasteAsSQLWindow` |  |  | Brak | PD-SQLW-025 |
 | Tylko do odczytu | `file.readOnly` |  |  | Brak | PD-FILE-003 |
 | Otwórz z połączeniem… | `file.openWithConnection` |  |  | Brak | PD-FILE-004 |
 | Wykonaj parametry startowe | `app.openStartupParameters` |  |  | Brak | PD-CLI-001 |
@@ -106,8 +108,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamknij projekt | `project.close` |  |  | Brak | PD-PROJ-001 |
 | Dodaj plik okna do projektu | `project.addActiveFile` |  |  | Brak | PD-PROJ-001 |
 | Dodaj obiekt do projektu | `project.addSelectedObject` |  |  | Brak | PD-PROJ-001 |
-| Buduj projekt | `project.build` |  |  | Brak | PD-PROJ-002 |
-| Make projektu | `project.make` |  |  | Brak | PD-PROJ-002 |
+| Kompiluj projekt | `project.build` |  |  | Brak | PD-PROJ-002 |
+| Kompiluj zmienione | `project.make` |  |  | Brak | PD-PROJ-002 |
 | Zapisz pulpit projektu | `project.saveDesktop` |  |  | Brak | PD-PROJ-003 |
 | Otwórz pulpit projektu | `project.openDesktop` |  |  | Brak | PD-PROJ-003 |
 | Szukaj w projekcie… | `project.find` |  |  | Brak | PD-PROJ-003 |
@@ -129,7 +131,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zamień wszystko | `edit.replaceAll` |  |  | Brak | PD-EDIT-008 |
 | Przejdź do linii… | `edit.gotoLine` | ⌃G, ⌘L | ⌘L | Za zgodą | PD-EDIT-010 |
 | Formatuj kod PL/SQL | `edit.beautify` | ⇧⌘F | ⇧⌘F | Za zgodą | PD-BEAU-002 |
-| Podpowiedź kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Brak | PD-CA-001 |
+| Pokaż podpowiedzi kodu | `edit.codeAssistant` | ⌃Spacja † | ⌥⎋, ⌃Spacja | Brak | PD-CA-001 |
 | Odśwież podpowiedzi kodu | `edit.refreshCodeAssistant` |  |  | Brak | PD-CA-009 |
 | Zwiń blok | `edit.fold` | ⌥⌘← | ⌥⌘← | Brak | PD-EDIT-013 |
 | Rozwiń blok | `edit.unfold` | ⌥⌘→ | ⌥⌘→ | Brak | PD-EDIT-013 |
@@ -137,12 +139,12 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Rozwiń wszystko | `edit.unfoldAll` | ⌥⇧⌘→ | ⌥⇧⌘→ | Brak | PD-EDIT-013 |
 | Przejdź do deklaracji | `edit.gotoDeclaration` | ⌃⌥D †, ⌃⌘J | ⌃⌘J | Brak | PD-CA-012 |
 | Historia poleceń… | `edit.recallStatement` | ⌃E, ⇧⌘H | ⇧⌘H | Brak | PD-EDIT-009 |
-| Zaznaczenie › Komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Za zgodą | PD-EDIT-006 |
+| Zaznaczenie › Przełącz komentarz linii | `edit.commentLine` | ⌃-, ⌘/ | ⌘/ | Za zgodą | PD-EDIT-006 |
 | Zaznaczenie › Powiel linię | `edit.duplicateLine` | ⇧⌘D | ⇧⌘D | Za zgodą | PD-EDIT-020 |
 | Zaznaczenie › Usuń następne słowo | `edit.deleteNextWord` | ⌃⌦ † | ⌃⌥⌦ | Brak | PD-EDIT-020 |
-| Zaznaczenie › Pierwszy znak w linii | `edit.firstCharacterOnLine` | ⌥↖ † | ⌃⌥← | Brak | PD-EDIT-020 |
-| Zaznaczenie › Wielkie litery | `edit.uppercase` | ⌥⌘U | ⌥⌘U | Za zgodą | PD-EDIT-005 |
-| Zaznaczenie › Małe litery | `edit.lowercase` | ⌥⇧⌘U | ⌥⇧⌘U | Za zgodą | PD-EDIT-005 |
+| Zaznaczenie › Przejdź do pierwszego znaku linii | `edit.firstCharacterOnLine` | ⌥↖ † | ⌃⌥← | Brak | PD-EDIT-020 |
+| Zaznaczenie › Zamień na wielkie litery | `edit.uppercase` | ⌥⌘U | ⌥⌘U | Za zgodą | PD-EDIT-005 |
+| Zaznaczenie › Zamień na małe litery | `edit.lowercase` | ⌥⇧⌘U | ⌥⇧⌘U | Za zgodą | PD-EDIT-005 |
 | Zaznaczenie › Zwiększ wcięcie | `edit.indent` | ⌘] | ⌘] | Za zgodą | PD-EDIT-005 |
 | Zaznaczenie › Zmniejsz wcięcie | `edit.outdent` | ⌘[ | ⌘[ | Za zgodą | PD-EDIT-005 |
 | Zaznaczenie › Usuń końcowe spacje | `edit.removeTrailingSpaces` |  |  | Za zgodą | PD-EDIT-005 |
@@ -153,14 +155,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Kopiuj jako… | `grid.copyAs` |  |  | Brak | PD-GRID-013 |
 | Wynik › Kopiuj do Excela | `grid.copyToExcel` |  |  | Brak | PD-GRID-014 |
 | Wynik › Large Data Editor… | `grid.largeData` | ⌥⌘L | ⌥⌘L | Brak | PD-GRID-003 |
-| Wstaw snippet | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
-| Zapisz snippet | `snippets.save` |  |  | Brak | SC-SNIP-001 |
-| Usuń snippet | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
+| Wstaw fragment kodu | `edit.insertSnippet` |  |  | Brak | SC-SNIP-001 |
+| Zapisz fragment kodu | `snippets.save` |  |  | Brak | SC-SNIP-001 |
+| Usuń fragment kodu | `snippets.remove` |  |  | Brak | SC-SNIP-001 |
 | Wynik › Kalendarz… | `grid.chooseDate` |  |  | Brak | PD-GRID-005 |
 | Wynik › Zaznacz blok komórek | `grid.selectBlock` |  |  | Brak | PD-GRID-007 |
 | Wynik › Zaznacz kolumnę | `grid.selectColumn` |  |  | Brak | PD-GRID-007 |
-| Wynik › Wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | PD-GRID-026 |
-| Wynik › Małe litery w komórkach | `grid.lowerCase` |  |  | Brak | PD-GRID-026 |
+| Wynik › Zamień na wielkie litery w komórkach | `grid.upperCase` |  |  | Brak | PD-GRID-026 |
+| Wynik › Zamień na małe litery w komórkach | `grid.lowerCase` |  |  | Brak | PD-GRID-026 |
 | Zakładki › Przełącz zakładkę | `edit.toggleBookmark` | ⌘F3 | ⌘F3 | Brak | PD-EDIT-011 |
 | Zakładki › Przejdź do zakładki | `edit.gotoBookmark` |  |  | Brak | PD-EDIT-011 |
 | Zakładki › Następna zakładka | `edit.nextBookmark` | ⌥⌘F3 | ⌥⌘F3 | Brak | PD-EDIT-011 |
@@ -173,9 +175,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wiele kursorów › Dodaj kursor powyżej | `edit.addCursorAbove` | ⌃⇧↑ † | ⌃⇧↑ | Brak | PD-EDIT-023 |
 | Wiele kursorów › Dodaj kursor poniżej | `edit.addCursorBelow` | ⌃⇧↓ † | ⌃⇧↓ | Brak | PD-EDIT-023 |
 | Wiele kursorów › Jeden kursor | `edit.singleCursor` |  |  | Brak | PD-EDIT-023 |
-| Refaktoryzacja › Wydziel stałą lokalną… | `edit.extractLocalConstant` |  |  | Brak | PD-CA-014 |
-| Refaktoryzacja › Wydziel stałą globalną… | `edit.extractGlobalConstant` |  |  | Brak | PD-CA-014 |
-| Refaktoryzacja › Wydziel procedurę… | `edit.extractProcedure` |  |  | Brak | PD-CA-014 |
+| Refaktoryzacja › Wyodrębnij stałą lokalną… | `edit.extractLocalConstant` |  |  | Brak | PD-CA-014 |
+| Refaktoryzacja › Wyodrębnij stałą globalną… | `edit.extractGlobalConstant` |  |  | Brak | PD-CA-014 |
+| Refaktoryzacja › Wyodrębnij procedurę… | `edit.extractProcedure` |  |  | Brak | PD-CA-014 |
 | Refaktoryzacja › Zamień przypisanie na inicjalizację | `edit.replaceAssignmentWithInitialization` |  |  | Brak | PD-CA-014 |
 | Szukaj w edytorach i plikach… | `edit.searchBar` | ⌥⇧⌘F | ⌥⇧⌘F | Brak | PD-CA-015 |
 | Szukaj w sieci | `edit.webSearch` |  |  | Brak | PD-EDIT-027 |
@@ -193,7 +195,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Refaktoryzacja › Znajdź użycia | `edit.findUsages` |  | ⌥F7 | Brak | DG-USE-001 |
 | Refaktoryzacja › Zmień nazwę… | `edit.refactorRename` |  | ⇧F6 | Brak | DG-REF-001 |
 | Wstaw szablon… | `edit.insertTemplate` |  |  | Brak | PD-TPL-002 |
-| Zawartość kodu › Kolejność Code Contents | `codeContents.sort` |  |  | Brak | PD-CA-010 |
+| Zawartość kodu › Kolejność w Zawartości kodu | `codeContents.sort` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Zaznacz element | `codeContents.select` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Kopiuj element | `codeContents.copy` |  |  | Brak | PD-CA-010 |
 | Zawartość kodu › Wytnij element | `codeContents.cut` |  |  | Brak | PD-CA-010 |
@@ -247,7 +249,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Edytuj dane | `grid.edit` | ⌥⌘E | ⌥⌘E | Brak | PD-GRID-017 |
 | Wynik › Wstaw rekord | `grid.insertRecord` | ⌥⌘I | ⌥⌘I | Brak | PD-GRID-017 |
 | Wynik › Usuń rekord | `grid.deleteRecord` | ⇧⌘⌫ | ⇧⌘⌫ | Brak | PD-GRID-017 |
-| Wynik › Zatwierdź zmiany (Post) | `grid.post` | ⌥⌘S | ⌥⌘S | Brak | PD-GRID-017 |
+| Wynik › Zapisz zmiany w bazie (Post) | `grid.post` | ⌥⌘S | ⌥⌘S | Brak | PD-GRID-017 |
 | Wynik › Anuluj zmiany | `grid.cancelChanges` |  |  | Brak | PD-GRID-017 |
 | Wynik › Kopiuj SQL zmian | `grid.copyChangesSQL` |  |  | Brak | PD-GRID-020 |
 | Wynik › Zapisz jako zapytanie standardowe… | `grid.saveAsStandardQuery` |  |  | Brak | PD-SQLW-013 |
@@ -255,14 +257,14 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wynik › Porównaj rekordy | `grid.compareRecords` |  |  | Brak | PD-SQLW-020 |
 | Wynik › Porównaj wyniki | `grid.compareResults` |  |  | Brak | PD-SQLW-021 |
 | Wynik › Filtruj według wartości komórki | `grid.filterByValue` |  |  | Brak | DB-GRID-001 |
-| Wynik › Filtr wyrażeniem… | `grid.filterExpression` |  |  | Brak | DB-GRID-001 |
+| Wynik › Filtruj wyrażeniem… | `grid.filterExpression` |  |  | Brak | DB-GRID-001 |
 | Wynik › Wyczyść filtr | `grid.clearFilter` |  |  | Brak | DB-GRID-001 |
 | Wynik › Grupuj według kolumny | `grid.groupBy` |  |  | Brak | DB-GRID-001 |
 | Wynik › Generuj SQL z wierszy… | `grid.generateSQL` |  |  | Brak | DB-GRID-002 |
 | Wynik › Widok pojedynczego rekordu | `grid.toggleRecordView` |  |  | Brak | PD-GRID-010 |
 | Wynik › Rekord z komentarzami kolumn | `grid.recordView` |  |  | Brak | PD-GRID-010 |
 | Wynik › Otwórz kursor zagnieżdżony | `grid.openCursor` |  |  | Brak | PD-GRID-006 |
-| Wynik › Filtr kolumn… | `grid.columnFilter` |  |  | Brak | PD-GRID-011 |
+| Wynik › Filtruj kolumny… | `grid.columnFilter` |  |  | Brak | PD-GRID-011 |
 | Wynik › Pokaż wszystkie kolumny | `grid.clearColumnFilter` |  |  | Brak | PD-GRID-011 |
 | Wynik › Wyrównaj kolumny | `grid.align` |  |  | Brak | PD-GRID-012 |
 | Wynik › Ukryj edytor | `sql.toggleEditor` |  |  | Brak | PD-GRID-012 |
@@ -299,7 +301,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Połączenia › Nowe połączenie… | `connection.new` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Edytuj połączenie… | `connection.edit` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Usuń połączenie | `connection.delete` |  |  | Brak | PD-CONN-004 |
-| Połączenia › Kopiuj połączenie… | `connection.duplicate` |  |  | Brak | PD-CONN-004 |
+| Połączenia › Duplikuj połączenie… | `connection.duplicate` |  |  | Brak | PD-CONN-004 |
 | Połączenia › Przenieś połączenie do folderu | `connection.moveToFolder` |  |  | Brak | PD-CONN-003 |
 | Połączenia › Połącz jako główne | `connection.connectAsMain` |  |  | Brak | PD-CONN-018 |
 | Połączenia › Połącz | `connection.connect` |  |  | Brak | PD-CONN-022 |
@@ -337,15 +339,15 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | utPLSQL: debuguj test pod kursorem | `utplsql.debugTest` |  |  | Brak | UT-RUN-007 |
 | Rozpocznij debugowanie | `debug.start` | F9 † | F9 | Brak | PD-DBG-001 |
 | Kontynuuj | `debug.run` | ⌃R † | ⌃R | Brak | PD-DBG-001 |
-| Wejdź | `debug.stepInto` | ⌃N † | ⌃N | Brak | PD-DBG-001 |
-| Przejdź | `debug.stepOver` | ⌃O † | ⌃O | Brak | PD-DBG-001 |
-| Wyjdź | `debug.stepOut` | ⌃T † | ⌃T | Brak | PD-DBG-001 |
+| Krok do | `debug.stepInto` | ⌃N † | ⌃N | Brak | PD-DBG-001 |
+| Krok przez | `debug.stepOver` | ⌃O † | ⌃O | Brak | PD-DBG-001 |
+| Wyjdź z podprogramu | `debug.stepOut` | ⌃T † | ⌃T | Brak | PD-DBG-001 |
 | Wykonaj do wyjątku | `debug.runToException` |  |  | Brak | PD-DBG-001 |
 | Wykonaj do kursora | `debug.runToCursor` |  |  | Brak | PD-DBG-001 |
 | Zatrzymaj debugowanie | `debug.stop` | ⇧F9 † | ⇧F9 | Brak | PD-DBG-001 |
 | Wykonaj SQL w sesji debugowanej… | `debug.executeInTarget` |  |  | Brak | PD-DBG-009 |
 | Punkty przerwania… | `debug.breakpoints` |  |  | Brak | PD-DBG-008 |
-| Punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | PD-DBG-007 |
+| Przełącz punkt przerwania | `debug.toggleBreakpoint` | ⌃B † | ⌃B | Brak | PD-DBG-007 |
 
 ## Narzędzia
 
@@ -375,7 +377,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Duplikuj… | `ob.duplicate` |  |  | Brak | PD-OB-016 |
 | Obiekt › Wstaw obiekt do edytora | `ob.dropText` |  |  | Brak | PD-OB-010 |
 | Obiekt › Upuść obiekt na obszar okien | `ob.dropOnWorkspace` |  |  | Brak | PD-OB-010 |
-| Object Browser › Filtr nazwany… | `ob.applyFilter` |  |  | Brak | PD-OB-007 |
+| Przeglądarka obiektów › Filtr nazwany… | `ob.applyFilter` |  |  | Brak | PD-OB-007 |
 | Obiekt › Dodaj do folderu… | `ob.addToFolder` |  |  | Brak | PD-OB-008 |
 | Obiekt › Włącz | `ob.enable` |  |  | Brak | PD-OB-019 |
 | Obiekt › Wyłącz | `ob.disable` |  |  | Brak | PD-OB-019 |
@@ -389,9 +391,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Kosz › Opróżnij kosz… | `ob.purgeRecycleBin` |  |  | Brak | PD-OB-021 |
 | Obiekt › Flagi kompilacji warunkowej… | `ob.ccflags` |  |  | Brak | PD-OB-020 |
 | Obiekt › Dodaj źródło do edytora | `ob.addSourceToEditor` |  |  | Brak | PD-OB-023 |
-| Preferencje › Eksportuj preferencje… | `prefs.export` |  |  | Brak | PD-PREF-003 |
-| Preferencje › Importuj preferencje… | `prefs.import` |  |  | Brak | PD-PREF-003 |
-| Preferencje › Zestawy preferencji… | `prefs.sets` |  |  | Brak | PD-PREF-002 |
+| Ustawienia › Eksportuj ustawienia… | `prefs.export` |  |  | Brak | PD-PREF-003 |
+| Ustawienia › Importuj ustawienia… | `prefs.import` |  |  | Brak | PD-PREF-003 |
+| Ustawienia › Zestawy ustawień… | `prefs.sets` |  |  | Brak | PD-PREF-002 |
 | Dokumenty… | `tools.documents` |  |  | Brak | PD-DOC-002 |
 | Zdalny build Pro*C › Cele SSH… | `ssh.manager` |  |  | Brak | PC-CONN-002 |
 | Zdalny build Pro*C › Testuj cel SSH | `ssh.test` |  |  | Brak | PC-CONN-003 |
@@ -437,11 +439,11 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Obiekt › Dodaj informację debugowania | `ob.addDebugInfo` |  |  | Brak | PD-DBG-011 |
 | Obiekt › Usuń obiekt… | `ob.drop` |  |  | Brak | PD-OB-016 |
 | Obiekt › Kopiuj nazwę | `ob.copyName` |  |  | Brak | PD-OB-011 |
-| Obiekt › Odśwież Object Browser | `ob.refresh` |  |  | Brak | PD-OB-004 |
+| Obiekt › Odśwież Przeglądarkę obiektów | `ob.refresh` |  |  | Brak | PD-OB-004 |
 | Zapisz kryteria wyszukiwania | `tools.saveObjectSearch` |  |  | Brak | PD-TOOL-001 |
 | Usuń zapisane kryteria wyszukiwania | `tools.deleteObjectSearch` |  |  | Brak | PD-TOOL-001 |
 | Znajdź obiekty bazy… | `tools.findObjects` | ⌃⇧O †, ⇧⌘O | ⇧⌘O | Brak | PD-TOOL-001 |
-| Kompiluj niepoprawne obiekty… | `tools.compileInvalid` |  |  | Brak | PD-TOOL-002 |
+| Kompiluj nieprawidłowe obiekty… | `tools.compileInvalid` |  |  | Brak | PD-TOOL-002 |
 | Szablony › Zapisz zaznaczenie jako szablon… | `templates.save` |  |  | Brak | PD-TPL-003 |
 | Szablony › Usuń szablon | `templates.delete` |  |  | Brak | PD-TPL-003 |
 | Szablony › Edytuj szablon… | `templates.edit` |  |  | Brak | PD-TPL-003 |
@@ -476,11 +478,13 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Git › Zatwierdź (git commit)… | `vcs.commit` |  |  | Brak | PD-VCS-001 |
 | Git › Historia Git pliku | `vcs.log` |  |  | Brak | PD-VCS-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | PD-OPT-002 |
+| Plan › Rozwiń wszystkie gałęzie | `plan.expandAll` |  |  | Brak | PD-OPT-001 |
+| Plan › Zwiń wszystkie gałęzie | `plan.collapseAll` |  |  | Brak | PD-OPT-001 |
 | Plan › Zapisz plan jako… | `plan.export` |  |  | Brak | PD-OPT-003 |
 | Sesje | `tools.sessions` |  |  | Brak | PD-TOOL-015 |
 | Eksport obiektów użytkownika… | `tools.exportUserObjects` |  |  | Brak | PD-TOOL-007 |
 | Porównaj obiekty użytkowników… | `tools.compareUserObjects` |  |  | Brak | PD-TOOL-012 |
-| Sesje › Zabij sesję | `sessions.kill` |  |  | Brak | PD-TOOL-015 |
+| Sesje › Zakończ sesję (Kill) | `sessions.kill` |  |  | Brak | PD-TOOL-015 |
 | Sesje › Akcja sesji | `sessions.action` |  |  | Brak | PD-TOOL-015 |
 | DBMS Scheduler | `tools.scheduler` |  |  | Brak | PD-SCHED-001 |
 | Diagram › Dodaj do diagramu | `diagram.addObject` |  |  | Brak | PD-DIAG-001 |
@@ -498,9 +502,9 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Diagram › Drukuj diagram… | `diagram.print` |  |  | Brak | PD-DIAG-003 |
 | Query Builder… | `tools.queryBuilder` |  |  | Brak | PD-QB-001 |
 | Diagram › Przesuń zaznaczone | `diagram.move` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Dodaj punkt łamania | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Przesuń punkt łamania | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
-| Diagram › Usuń punkt łamania | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Dodaj punkt zgięcia | `diagram.addBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Przesuń punkt zgięcia | `diagram.moveBend` |  |  | Brak | PD-DIAG-002 |
+| Diagram › Usuń punkt zgięcia | `diagram.removeBend` |  |  | Brak | PD-DIAG-002 |
 | Diagram › Tekst notatki diagramu | `diagram.editNote` |  |  | Brak | PD-DIAG-002 |
 | Diagram › Kolor zaznaczonych | `diagram.setColor` |  |  | Brak | PD-DIAG-002 |
 | Eksport tabel… | `tools.exportTables` |  |  | Brak | PD-TOOL-003 |
@@ -519,7 +523,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wykonaj raport predefiniowany | `reports.predefined.run` |  |  | Brak | SD-REP-001 |
 | Otwórz raport w oknie SQL | `reports.predefined.worksheet` |  |  | Brak | SD-REP-001 |
 | Błędy kompilacji | `reports.compilationErrors` |  |  | Brak | PD-REP-001 |
-| Niepoprawne obiekty | `reports.invalidObjects` |  |  | Brak | PD-REP-001 |
+| Nieprawidłowe obiekty | `reports.invalidObjects` |  |  | Brak | PD-REP-001 |
 | Ostatnio zmienione obiekty | `reports.recentChanges` |  |  | Brak | PD-REP-001 |
 | Rozmiary tabel | `reports.tableSizes` |  |  | Brak | PD-REP-001 |
 | Kolumny tabel | `reports.tableColumns` |  |  | Brak | PD-REP-001 |
@@ -538,7 +542,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Komenda | Identyfikator | PL/SQL Developer | macOS | Agent | Funkcja |
 |---|---|---|---|---|---|
 | Panel wartości | `grid.valuePanel` | ⌥⌘V | ⌥⌘V | Brak | DB-PANEL-001 |
-| Snippety | `view.snippets` |  |  | Brak | SC-SNIP-001 |
+| Fragmenty kodu | `view.snippets` |  |  | Brak | SC-SNIP-001 |
 | Panel DBA | `view.dba` |  |  | Brak | SD-DBA-001 |
 | Zadania w tle | `view.taskMonitor` |  |  | Brak | SD-MON-002 |
 | Siatka › Układ liczb w siatce | `grid.numberLayout` |  |  | Brak | PD-GRID-004 |
@@ -623,8 +627,8 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Wykonaj skrypt (agent) | `agent.executeScript` |  |  | Za zgodą | AI-TOOL-003 |
 | Utwórz pakiet testowy (agent) | `agent.createTestPackage` |  |  | Za zgodą | AI-TOOL-003 |
 | Kompiluj (agent) | `agent.compile` |  |  | Za zgodą | AI-TOOL-003 |
-| COMMIT zmian agenta | `agent.commit` |  |  | Za zgodą | AI-SEC-007 |
-| ROLLBACK zmian agenta | `agent.rollback` |  |  | Za zgodą | AI-SEC-007 |
+| Zatwierdź zmiany agenta (COMMIT) | `agent.commit` |  |  | Za zgodą | AI-SEC-007 |
+| Wycofaj zmiany agenta (ROLLBACK) | `agent.rollback` |  |  | Za zgodą | AI-SEC-007 |
 | Uruchom testy utPLSQL (agent) | `agent.runTests` |  |  | Za zgodą | AI-TOOL-003 |
 | Generuj i kompiluj szkielet testu (agent) | `agent.generateTest` |  |  | Za zgodą | AI-TOOL-003 |
 | Instaluj utPLSQL (agent) | `agent.installUtplsql` |  |  | Za zgodą | AI-TOOL-003 |

@@ -9,8 +9,11 @@ Planfenster öffnen Sie über **Datei › Neu › Explain Plan Window**; eine fe
 
 ![Planfenster — Ansicht „Diagramm“](../img/plan-diagram.png)
 
-- **Erklären** aktualisiert den Plan für den Text im Editor des Planfensters, **Optimizer-Ziel** (*Wie in der Sitzung*,
+- **Plan aktualisieren** berechnet den Plan für den Text im Editor des Planfensters neu, **Optimizer-Ziel** (*Wie in der Sitzung*,
   ALL_ROWS oder FIRST_ROWS_n) fügt einen Hint hinzu.
+- Ein neuer Plan erscheint vollständig ausgeklappt. Die Pfeile **Alle Zweige ausklappen** und **Alle Zweige
+  einklappen** neben der Ansichtsauswahl über dem Planbaum (auch auf der Menüband-Registerkarte **Plan**) klappen alle
+  Zweige auf einmal aus oder bis auf die Wurzel ein.
 - Ansichten: **Baum** (Operationen mit Kosten, Zeilenzahl, Bytes, Zeit, Ausführungsreihenfolge sowie Zugriffs- und
   Filterprädikaten), **Diagramm** (ein Knoten je Operation mit Kosten, Kardinalität und Schrittnummer), **Flame Graph**
   (Kosten der Operationen im Verhältnis zum Elternknoten) und **Text** (DBMS_XPLAN).
@@ -60,7 +63,7 @@ Funktion nicht. KI-Agenten haben keinen Zugriff auf diese Werkzeuge. Die Bericht
 - **Filter** wählt die Abfrage der Liste (z. B. *Benutzersitzungen*); **Aktualisieren alle** n Sekunden schaltet die
   automatische Aktualisierung ein.
 - Detail-Tabs der ausgewählten Sitzung: **Aktuelles SQL**, **Offene Cursor**, **Sperren**, **Statistiken**, **Warten**.
-- **Beenden** und **Sofort beenden** beenden die Sitzung (`ALTER SYSTEM KILL SESSION`) nach Bestätigung.
+- **Sitzung beenden** und **Sofort beenden** beenden die Sitzung (`ALTER SYSTEM KILL SESSION`) nach Bestätigung.
 - **Aktionen** — u. a. das Aktivieren von SQL Trace für die Sitzung (DBMS_MONITOR).
 - **Abfragen …** ermöglicht eigene Filter (WHERE-Bedingung), Detail-Tabs (mit `:sid`, `:serial#`) und Aktionen.
 

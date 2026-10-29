@@ -66,7 +66,7 @@ public enum UsageFinder {
         var out: [UsageHit] = []
         var seen = Set<URL>()
         for d in documents {
-            if let u = d.fileURL { seen.insert(u.standardizedFileURL) }
+            for u in d.fileURLs { seen.insert(u) }
             for (line, text) in find(d.text, name: name, owner: owner, column: column) {
                 out.append(UsageHit(kind: .document, line: line, text: text, fileURL: d.fileURL, document: d.id, title: d.fullTitle))
             }

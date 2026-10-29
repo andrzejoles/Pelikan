@@ -31,7 +31,7 @@ extension Workspace {
     /// Rodzaj okna dla pliku z rozszerzeniami z Preferencji (programy, testy) i domyślnymi.
     public func documentKind(for url: URL) -> DocumentKind {
         let ext = url.pathExtension.lowercased()
-        if settings.programExtensions.contains(ext) { return .program }
+        if settings.programExtensions.contains(ext) || settings.specBodyExtensions.all.contains(ext) { return .program }
         if settings.testExtensions.contains(ext) { return .test }
         return DocumentKind.forFile(url)
     }

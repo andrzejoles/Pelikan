@@ -90,7 +90,7 @@ enum GridStage8Commands {
                 return CommandResult(message: L10n.tr("Wierszy: \(child.rowCount)"))
             },
             // MARK: Filtr kolumn (PD-GRID-011)
-            command("grid.columnFilter", L10n.tr("Filtr kolumn…"),
+            command("grid.columnFilter", L10n.tr("Filtruj kolumny…"),
                     params: [CommandParameter("names", .string, L10n.tr("Fragmenty nazw (po przecinku albo w liniach)")),
                              CommandParameter("types", .string, L10n.tr("Typy: text, number, date, lob, other")),
                              CommandParameter("mandatory", .boolean, L10n.tr("Tylko obowiązkowe (NOT NULL)")),
@@ -245,12 +245,12 @@ enum GridStage8Commands {
                 return .ok
             },
             // MARK: Wielkość liter w siatce (PD-GRID-026)
-            command("grid.upperCase", L10n.tr("Wielkie litery w komórkach"), .edit, effect: .modifiesEditor,
+            command("grid.upperCase", L10n.tr("Zamień na wielkie litery w komórkach"), .edit, effect: .modifiesEditor,
                     summary: L10n.tr("Zamienia tekst zaznaczonych komórek bieżącej kolumny na wielkie litery (tryb edycji)."),
                     feature: "PD-GRID-026", validate: { ws in GridCommands.activeGrid(ws)?.1.edit.isEditing ?? false }) { ctx in
                 try changeCase(ctx, upper: true)
             },
-            command("grid.lowerCase", L10n.tr("Małe litery w komórkach"), .edit, effect: .modifiesEditor,
+            command("grid.lowerCase", L10n.tr("Zamień na małe litery w komórkach"), .edit, effect: .modifiesEditor,
                     summary: L10n.tr("Zamienia tekst zaznaczonych komórek bieżącej kolumny na małe litery (tryb edycji)."),
                     feature: "PD-GRID-026", validate: { ws in GridCommands.activeGrid(ws)?.1.edit.isEditing ?? false }) { ctx in
                 try changeCase(ctx, upper: false)
@@ -355,8 +355,8 @@ enum GridStage8Commands {
                 return .ok
             },
             // MARK: Wklejenie jako nowe SQL Window (PD-SQLW-025)
-            command("file.pasteAsSQLWindow", L10n.tr("Wklej jako nowe SQL Window"), .file, submenu: nil,
-                    summary: L10n.tr("Tworzy SQL Window z tekstem ze schowka (także wklejenie na pusty obszar okien)."),
+            command("file.pasteAsSQLWindow", L10n.tr("Wklej jako nowe okno SQL"), .file, submenu: nil,
+                    summary: L10n.tr("Tworzy okno SQL z tekstem ze schowka (także wklejenie na pusty obszar okien)."),
                     feature: "PD-SQLW-025") { ctx in
                 guard let text = ctx.ui?.clipboardText(), !text.isEmpty else { throw CommandError.notAvailable(L10n.tr("Schowek nie zawiera tekstu")) }
                 let doc = ctx.workspace.newDocument(.sql, text: text)

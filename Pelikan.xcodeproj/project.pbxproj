@@ -89,12 +89,14 @@
 		D1E53FCD72414D163BC3A5D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D7056F4E355029FE5D90B7C /* AppDelegate.swift */; };
 		D23D6E5FE264EA699F32CE3A /* Stage7Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553ECB1A8EBBFA724FA78DD9 /* Stage7Views.swift */; };
 		D6F6A09F7CA201ECBDFE27C1 /* SessionBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */; };
+		D8EF2AEBD19EB4AB8FFC26DD /* UIScriptSnapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 031C04E8448920291721F4D5 /* UIScriptSnapshots.swift */; };
 		DAE10D65697F853CAE9A94D5 /* TableEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6E52538571C1727BD5E642 /* TableEditorView.swift */; };
 		DD90C5023ABF02A6EAE06E42 /* AgentUIController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 369E922BFAFA0E7E2337EF13 /* AgentUIController.swift */; };
 		DE09E189F1C2266923C22346 /* PelikanDB in Frameworks */ = {isa = PBXBuildFile; productRef = 68DCC77A1DA6108E25EBC9B9 /* PelikanDB */; };
 		E1307212DEA5DCBACA490C55 /* CompletionPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7048E3E041B381E86A22B88 /* CompletionPopup.swift */; };
 		E3A1E7C2AE6D2213F55A68EB /* SimpleObjectEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51A0C4F5E48B2C3F79DD9DBB /* SimpleObjectEditorView.swift */; };
 		E49530B5903B36F288385DD4 /* CommandWindowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2996DE4187C21C9D6E173DAA /* CommandWindowViewController.swift */; };
+		E617158680B98FA0FDBC3CF4 /* UIScriptWindows.m in Sources */ = {isa = PBXBuildFile; fileRef = BCA1F7D08B4C1DA2D9811189 /* UIScriptWindows.m */; };
 		E6F3689835B5ADF425692CAA /* LargeDataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 578AFB938F4F75FCFB263FA2 /* LargeDataEditor.swift */; };
 		EA03C2AF4B38B21F5987B27C /* AgentsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C866A6E13301104082FC8632 /* AgentsPane.swift */; };
 		EBB91D4E331A89078F54F583 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2CD6A006B64ECCA95F14C9E9 /* Assets.xcassets */; };
@@ -156,6 +158,7 @@
 
 /* Begin PBXFileReference section */
 		00A838393A0802C7E216722E /* TestWindowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestWindowViewController.swift; sourceTree = "<group>"; };
+		031C04E8448920291721F4D5 /* UIScriptSnapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIScriptSnapshots.swift; sourceTree = "<group>"; };
 		0B0427D9CBADA2F10B268B10 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		0B86F8DC29D2C6CDFC640605 /* MonitorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorViews.swift; sourceTree = "<group>"; };
 		0D4C6D76604DB82B31BAD889 /* SessionBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionBrowserView.swift; sourceTree = "<group>"; };
@@ -228,6 +231,7 @@
 		AFB74D2818143B7B6569D353 /* ProCDeployViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProCDeployViews.swift; sourceTree = "<group>"; };
 		AFE884FF532FF1FC27461D4A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B3FB679B3AA90E719B503472 /* TemplatePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePane.swift; sourceTree = "<group>"; };
+		BCA1F7D08B4C1DA2D9811189 /* UIScriptWindows.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UIScriptWindows.m; sourceTree = "<group>"; };
 		C0A5D68E7B06D029157C9330 /* FileBrowserPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserPane.swift; sourceTree = "<group>"; };
 		C1CD10FFAB91AD55FF3EA87A /* TestManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestManagerView.swift; sourceTree = "<group>"; };
 		C283921294ECF4112EB71BEE /* CodeContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeContentsView.swift; sourceTree = "<group>"; };
@@ -483,6 +487,8 @@
 				26AA9CEDE79921F45A0500AB /* Observe.swift */,
 				8985D14B4D443131FC094B58 /* Ribbon.swift */,
 				285C7B10C63EF5F2F56D1679 /* ServicesProvider.swift */,
+				031C04E8448920291721F4D5 /* UIScriptSnapshots.swift */,
+				BCA1F7D08B4C1DA2D9811189 /* UIScriptWindows.m */,
 				2DBDD1E41E781A5FA9056374 /* WindowListViewController.swift */,
 			);
 			path = Sources;
@@ -903,6 +909,8 @@
 				4DF0333531870281AF6B3CF0 /* ToolDock.swift in Sources */,
 				3F56C561C61FB014C6F3166F /* ToolWindows.swift in Sources */,
 				B11F760E47FF7DC651E5607E /* ToolsPane.swift in Sources */,
+				D8EF2AEBD19EB4AB8FFC26DD /* UIScriptSnapshots.swift in Sources */,
+				E617158680B98FA0FDBC3CF4 /* UIScriptWindows.m in Sources */,
 				7DD82EB4274A6B9C758EB96C /* UserManualView.swift in Sources */,
 				F802B8C38E16CD188618C177 /* UtplsqlResultsView.swift in Sources */,
 				177EBD9537B4C91B95A14E55 /* VariablesView.swift in Sources */,

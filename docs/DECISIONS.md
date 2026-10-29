@@ -2097,3 +2097,301 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
+### D193 · 2026-10-29 — Plan wykonania: rozwinięcie i zwinięcie wszystkich gałęzi drzewa planu
+
+Zgłoszenie właściciela: w drzewie Explain Plan brakuje przycisku do rozwinięcia albo zwinięcia wszystkich gałęzi.
+
+- Komendy `plan.expandAll` „Rozwiń wszystkie gałęzie” i `plan.collapseAll` „Zwiń wszystkie gałęzie” (agent: Brak,
+  skutek: stan interfejsu, PD-OPT-001) działają na aktywnym oknie planu, gdy plan ma gałęzie (plan jednokrokowy —
+  wyłączone). Strzałki nad drzewem obok wyboru widoku (aktywne w widoku Drzewo), grupa „Drzewo” na karcie
+  kontekstowej „Plan” wstążki, menu Narzędzia › Plan. Osobne teksty zamiast „Rozwiń wszystko”/„Zwiń wszystko” —
+  te klucze należą do zwijania kodu edytora (en „Fold all”). Wzorzec nie ma dla tego skrótów — bez skrótów.
+- Stan rozwinięcia w modelu okna (`Document.planExpanded`, zbiór PLAN_TABLE.ID gałęzi), a nie w widoku: drzewo to
+  `Table` z `DisclosureTableRow` sterowanym tym zbiorem (`Table(children:)` nie daje dostępu do rozwinięcia). Wybór
+  widoku (Drzewo/Diagram/Flame graph/Tekst) jest stanem widoku, więc komendy ze wstążki i menu zmieniają rozwinięcie
+  także przy innym widoku — widać je po powrocie do Drzewa.
+- Nowy plan rozwinięty w całości (jak we wzorcu): pierwszy plan okna i plan innego polecenia (`ExplainPlanResult.sql`,
+  tekst bez wskazówki celu) dostają wszystkie gałęzie. Ponowne wyznaczenie planu tego samego polecenia (także z innym
+  celem optymalizatora) zachowuje rozwinięcie użytkownika, przycięte do gałęzi nowego planu. Zwiń wszystkie gałęzie
+  czyści zbiór — widoczny zostaje sam korzeń (SELECT STATEMENT).
+- Krok zaznaczony nawigacją w kolejności wykonania albo w Diagramie/Flame graph (po powrocie do Drzewa) rozwija swoich
+  przodków (`Document.revealPlanLine`), a tabela przewija się do niego.
+- Ograniczenie: rozwinięcie całego poddrzewa ⌥-kliknięciem trójkąta (⌥→) to zachowanie NSOutlineView pod tabelą
+  SwiftUI; przy rozwinięciu sterowanym bindingiem SwiftUI może nie przenieść go na podgałęzie (API nie daje do tego
+  dostępu, a sprawdzenie wymaga sterowania interfejsem — nie sprawdzone). Całe drzewo rozwija przycisk „Rozwiń
+  wszystkie gałęzie”.
+- Inne widoki planu nie są drzewami: Autotrace (plan rzeczywisty) i porównanie planów to płaskie tabele z wcięciem,
+  SQL Monitor — lista i raport HTML; komendy ich nie dotyczą.
+
+### D194 · 2026-10-29 — Specyfikacja i ciało w osobnych plikach (okno programu z dwoma plikami, eksport bez „/”)
+
+Wymaganie właściciela: „W repozytoriach specyfikację i body zawsze zapisujemy w osobnych plikach i bez znaku / na
+końcu. W skryptach owszem używamy, ale nie w plikach DDL.” Okno programu (D192) rozpoznawało jednostki bez „/”, ale
+miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
+
+- **Powiązanie okno → pliki:** `Document.unitFiles` — lista plików jednostek (`UnitFile`: część spec/body, ścieżka,
+  własny format pliku — kodowanie, BOM, końce linii — zakończenie treści i treść z ostatniego odczytu/zapisu). Pusta —
+  okno z jednym plikiem jak dotąd. Dokument zostaje jeden (karty, F8, debuger, historia, agent bez zmian); `fileURL`
+  to wtedy plik specyfikacji — klucz stanu okna, historii lokalnej (cały tekst okna, jak dotąd) i workseta; tytuł
+  „nazwa.pks + .pkb”. Wybrano listę plików przy dokumencie zamiast dwóch dokumentów albo osobnych edytorów: reszta
+  aplikacji widzi jeden tekst, a podział na pliki to jedna czysta funkcja.
+- **Podział tekstu:** treść pliku = odcinek karty jednostki (`ProgramUnitTabs`, D192). Tekst okna z plików to
+  specyfikacja bez końcowych białych znaków + pusta linia + ciało (`SpecBodyFiles.join`); zapis zdejmuje tę pustą
+  linię z początku karty ciała i przywraca zakończenie pliku. Niezmienione okno daje pliki bajt w bajt — otwarcie
+  pary sprawdza ten obieg i przy niezgodności (np. komentarz za `END` specyfikacji) otwiera plik sam. Polecenia
+  `GRANT`/`REVOKE`/`SHOW ERRORS` między jednostkami należą teraz do karty jednostki przed nimi (zmiana D192: dotąd
+  trafiały na kartę następnej) — plik specyfikacji z uprawnieniami zachowuje je przy zapisie.
+- **Zapisz:** każda jednostka do swojego pliku, w jego formacie, tylko gdy jej tekst się zmienił (drugi plik
+  nietknięty); bez dopisywania „/” — tekst karty jak w oknie (plik z „/” zapisuje się z nim, bez cichego usuwania, jak
+  w D192). Znak spoza kodowania któregokolwiek pliku blokuje zapis obu. Okno pary, które przestało być dokładnie
+  specyfikacją i ciałem jednego pakietu/typu (usunięte ciało, dodana procedura), nie zapisuje się — komunikat
+  wskazuje **Zapisz jako jeden plik…**. **Kodowanie pliku…** zmienia oba pliki.
+- **Zapisz jako… i pierwsze Zapisz nowego okna** ze specyfikacją i ciałem: okno zapisu z nazwą `nazwa.pks`
+  (rozszerzenie specyfikacji z Ustawień), ciało obok jako `nazwa.pkb`; istniejący plik ciała spoza okna — pytanie
+  „Zastąpić?”. Okno z innym plikiem (np. `.pck`) ⌘S zapisuje jak dotąd do tego pliku. Nowa komenda
+  `file.saveAsSingleFile` „Zapisz jako jeden plik…” (agent: Brak, wstążka Start › Plik › Więcej) zapisuje całe okno
+  w jednym pliku i zdejmuje powiązanie z parą. Okno z jedną jednostką albo innymi jednostkami — bez zmian.
+- **Otwieranie:** `x.pks`/`x.pkb` (`x.tps`/`x.tpb`) z plikiem pary obok otwiera obie jednostki w jednym oknie na karcie
+  otwartego pliku — Plik › Otwórz, ostatnie pliki, Przeglądarka plików, Finder, przeciągnięcie, projekt; wielkość
+  liter rozszerzenia jak w otwieranym pliku. Ponowne otwarcie któregoś z plików aktywuje okno i jego kartę. Para
+  tylko, gdy w plikach jest dokładnie specyfikacja i ciało tego samego obiektu, a drugi plik nie jest już otwarty
+  w innym oknie (jeden plik w dwóch oknach rozjechałby się przy zapisie). Ustawienie **Otwieraj parę
+  specyfikacja/ciało w jednym oknie** (domyślnie włączona).
+- **Worksety i odzyskiwanie:** `WorksetDocument.unitFiles` (pole opcjonalne — starsze worksety bez zmian): ścieżki,
+  części, formaty i zakończenia. Okno bez zmian wraca jako para z plików (niezależnie od ustawień), ze zmianami —
+  tekst z workseta, powiązanie i formaty z workseta, treść zapisana z dysku. Migawka odzyskiwania to ten sam workset.
+- **Pozostałe miejsca:** Przeglądarka plików (otwarte i zmienione — oba pliki), zmiana nazwy i usunięcie pliku albo
+  katalogu (powiązanie przeniesione albo zdjęte), stan Git i **Porównaj z HEAD** (plik karty z kursorem, treść karty),
+  użycia i refaktoryzacja (oba pliki jako otwarte), skok do linii pliku z wyników i projektu (linia pliku ciała
+  przeliczona na linię okna), edycja w programie zewnętrznym (plik tymczasowy z całym tekstem, jak okno bez pliku),
+  blokada kompilacji pliku tylko do odczytu (którykolwiek z pary).
+- **Ustawienia › Ogólne › Specyfikacja i ciało w osobnych plikach:** otwieranie pary i rozszerzenia specyfikacji
+  i ciała pakietu (`pks`/`pkb`) i typu (`tps`/`tpb`) — bez kropki, małymi literami; pliki z nimi otwierają się jako
+  okno programu.
+- **Eksport obiektów użytkownika (PD-TOOL-007):** „plik na obiekt” zapisuje specyfikację i ciało osobno z
+  rozszerzeniami z Ustawień (dotąd `.spc`/`.bdy`); **Specyfikacja i ciało w jednym pliku** (`.pck`/`.typ`) domyślnie
+  wyłączona, a takie pliki mają „/” jak w PL/SQL Developerze. Jednostki PL/SQL w osobnych plikach na obiekt bez „/” —
+  nowa opcja **Kończ jednostki znakiem /** (domyślnie wyłączona). DBMS_METADATA dalej z SQLTERMINATOR (tabele i inne
+  DDL zachowują „;”); „/” zdejmowany za jednostką, gdy za nią nic nie ma; `ALTER TRIGGER … ENABLE` (wyzwalacz i tak
+  powstaje włączony) jest pomijane, a `… DISABLE` zastępuje klauzula `DISABLE` w `CREATE TRIGGER` (11g+, przed
+  `WHEN (…)` albo treścią wyzwalacza) — plik bez „/” i bez ALTER. Gdy za jednostką jest inne polecenie (np. `ALTER
+  TYPE` ewolucji typu), „/” zostaje, a okno eksportu wymienia takie pliki. Bez zmian, z „/”: tryb „jeden plik” (skrypt
+  SQL*Plus), skrypt wdrożenia koszyka, kopia schematu, porównanie schematów, eksport w konsoli SQL*Plus, Duplikuj obiekt,
+  okno testu, ORDS. Testy na bazie: EMP_API → `emp_api.pks`/`emp_api.pkb` bez linii „/”, otwarte jako para
+  i skompilowane F8 — oba VALID; wyłączony wyzwalacz → plik z `DISABLE`, wykonany ponownie daje wyzwalacz DISABLED.
+- **Uprawnienia (decyzja właściciela: „GRANT'y zawsze w osobnych plikach”):** w trybie „plik na obiekt” pliki DDL
+  (`.pks`, `.pkb`, `.tps`, `.tpb`, `.sql`, `.trg`…) zawierają wyłącznie CREATE; uprawnienia obiektu trafiają do
+  osobnego pliku `nazwa.grants.sql` obok (polecenia GRANT zakończone „;”) albo są pomijane (opcja **Uprawnienia
+  w plikach na obiekt**: w osobnym pliku — domyślnie — albo pomiń). Jeden plik (skrypt) — uprawnienia za obiektem jak
+  dotąd. W oknie programu `GRANT` stojące w pliku specyfikacji (dopisane ręcznie) to tekst użytkownika: należy do
+  karty specyfikacji i zapisuje się z nią bez zmian — Pelikan nie usuwa ani nie przenosi go po cichu.
+- **Nagłówek z datą:** w plikach na obiekt domyślnie bez komentarza „-- Wygenerowane przez Pelikana — data” (data
+  zmieniałaby każdy plik w repozytorium przy każdym eksporcie) — opcja **Nagłówek z datą eksportu**; jeden plik —
+  z nagłówkiem jak dotąd.
+- **Nazwy plików eksportu:** nazwa bazowa nadawana obiektowi (właściciel + nazwa) wspólna dla wszystkich jego plików.
+  Przy eksporcie obiektów kilku schematów zawsze z przedrostkiem schematu w nazwie każdego pliku (`s2.pkg.pks`,
+  `s2.pkg.pkb`, `s2.pkg.grants.sql`) — specyfikacja jednego schematu nie trafia w parę z ciałem innego; eksport jednego
+  schematu — bez przedrostka jak dotąd. Inny obiekt o tej samej nazwie bazowej
+  („Foo” i „FOO”) dostaje przyrostek `_2` we wszystkich swoich plikach. Kolejność eksportu: typ, właściciel, nazwa.
+- **Poprawki po przeglądzie (zapis i otwieranie):** Zapisz jako z nazwą `.pck`, bez rozszerzenia albo `.pkb` pyta raz
+  o wszystkie istniejące pliki pary spoza okna (plik wybrany w oknie zapisu potwierdza okno zapisu), zamiast nadpisać
+  specyfikację bez pytania. Rozszerzenia z Ustawień: cztery różne, z liter, cyfr i „_”, inne niż rozszerzenia
+  skryptów, testów, raportów i plików `.pck`/`.typ`; rozszerzenia specyfikacji różne od rozszerzeń ciała; pakiet
+  i typ mogą mieć wspólne (np. `.spc`/`.bdy`), ale tylko oba naraz — wspólna specyfikacja z różnymi ciałami dawałaby
+  niejednoznaczny plik pary — inaczej używane są domyślne (Ustawienia pokazują ostrzeżenie), a zapis
+  odmawia, gdy plik specyfikacji i ciała to ten sam plik. Przed zapisem każdy plik pary musi zawierać dokładnie
+  jedną jednostkę o tym samym tekście co w oknie (dwie jednostki w jednej linii dzielą kartę w środku polecenia) —
+  inaczej odmowa z komunikatem. Plik pary, który ten zapis zapisze (jego jednostka zmieniła się w oknie), a zmienił się
+  na dysku od otwarcia albo zapisu (inny program, `git checkout`) — pytanie „Zapisz mimo to / Anuluj”; zmianę wykrywa
+  skrót bajtów pliku z otwarcia albo zapisu (`UnitFile.savedHash`, FNV-1a), bez dekodowania — pliki jednobajtowe bez
+  fałszywych alarmów, a po **Kodowanie pliku…** (oba pliki oznaczone do zapisu, `needsRewrite`) sprawdzenie nadal
+  działa. Worksety zapisują skrót (pole opcjonalne `hash`) — okno ze zmianami przywrócone z workseta pyta, gdy plik
+  zmienił się na dysku po zapisie workseta; starsze worksety bez skrótu — bez sprawdzania. Plik
+  zmieniony na dysku, którego jednostka w oknie się nie zmieniła, nie jest zapisywany ani nie wywołuje pytania; jego
+  treść zapisana zostaje dawna (świadomie — przyjęcie treści z dysku sprawiłoby, że następny zapis po cichu nadpisałby
+  zmianę z repozytorium starą kartą okna), więc gdy jednostka zmieni się później, zapis zapyta wtedy. Treść zapisana
+  każdego pliku aktualizowana od razu po jego zapisie; nieudane Zapisz jako usuwa tylko pliki, których przed zapisem nie
+  było wcale (sprawdzenie bez podążania za dowiązaniem — wiszące dowiązanie zostaje). Nowy plik pary przy Zapisz jako dostaje format dotychczasowego pliku
+  tej samej części. Okno z samą specyfikacją albo samym ciałem proponuje rozszerzenie `.pks`/`.pkb` (`.tps`/`.tpb`).
+  Plik pary szukany po rzeczywistej nazwie z katalogu (APFS bez rozróżniania wielkości liter), nieczytelny plik pary —
+  otwarcie samego pliku; jednostki i karty z otwarcia trafiają do pamięci okna. Klauzula `DISABLE` wyzwalacza w eksporcie
+  stawiana także przed etykietą bloku (`<<etykieta>>`). Pasek okna (stan repozytorium) bierze
+  plik karty widocznej z pamięci kart (`Document.shownUnitTab`/`shownFileURL`) — bez dzielenia tekstu przy każdym
+  znaku (R4-01). Przeglądarka plików oznacza jako zmieniony tylko plik, którego jednostka się zmieniła. **git add** bez
+  argumentu w oknie pary dodaje oba pliki; pulpit projektu, **Dodaj plik okna do projektu**, zmienna `#file` narzędzi
+  użytkownika (plik karty z kursorem) i scalanie workseta nieotwartego przy starcie uwzględniają oba pliki; treść
+  zapisana plików z workseta czytana w kodowaniu projektu. `GRANT` sam w linii i `GRANT …; -- komentarz` należą do
+  karty jednostki przed nimi. Nowe ustawienia w zestawach ustawień (sekcja Ogólne).
+- **Ograniczenia:** komentarz za `END` specyfikacji w pliku `.pks` (bez pustej linii przed ciałem) przeniósłby się przy
+  zapisie do ciała — taki plik otwiera się sam, bez pary. Para w oknie ma tę samą nazwę bazową plików przy Zapisz jako;
+  zmiana nazwy jednego pliku w Przeglądarce plików zachowuje powiązanie z inną nazwą. Workset z oknem pary otwarty
+  w starszej wersji Pelikana nie zna pola `unitFiles` — okno wraca z całym tekstem i plikiem specyfikacji, a zapis
+  zapisałby obie jednostki do pliku specyfikacji. Pasek stanu repozytorium dla zmienionego okna pary pokazuje „zmieniony”
+  także dla niezmienionego pliku karty (stan liczony z całego okna — bez dzielenia tekstu przy każdym znaku).
+
+### D195 · 2026-10-29 — Polskie nazewnictwo interfejsu: macOS, IDE i Oracle (glosariusz)
+
+Prośba właściciela: „Co w explain plan oznacza «Wyjaśnij»? Nie ma to być «Odśwież»?” oraz przegląd polskich nazw
+pod kątem nomenklatury aplikacji macOS i narzędzi programistycznych — zmiany umiarkowane, tylko tam, gdzie polski
+użytkownik oczekuje innego słowa.
+
+- **Zasady** (szczegóły, źródła i tabela terminów: [`docs/research/glosariusz.md`](research/glosariusz.md)): czynności
+  w trybie rozkazującym (rzeczownik tylko przy przełącznikach i nazwach narzędzi), wielokropek tylko przed oknem
+  z pytaniem, ta sama czynność tą samą nazwą w menu, na wstążce, w palecie, na przyciskach i w instrukcji; panele
+  Pelikana po polsku jak w menu Widok (Przeglądarka obiektów, Przeglądarka plików, Zawartość kodu, okno SQL, konsola
+  SQL*Plus); nazwy własne narzędzi wzorca (Explain Plan, Code Assistant, Query Builder, Query By Example, Large Data
+  Editor, SQL Monitor…) bez tłumaczenia; słowa SQL w nawiasie przy polskiej czynności.
+- **Okno planu:** przycisk „Wyjaśnij” (kalka „Explain”) i etykieta wstążki „Wyznacz plan” → **Odśwież plan** — liczy
+  plan ponownie dla tekstu okna (pierwszy plan liczy otwarcie okna z okna SQL).
+- **Ustawienia zamiast Preferencji:** od macOS 13 menu aplikacji ma „Ustawienia…” (⌘,) — Pelikan już tak je nazywał,
+  ale okno, podmenu Narzędzia, zestawy, eksport/import i opisy mówiły „Preferencje”. Teraz wszędzie **Ustawienia**
+  (Zestawy ustawień, Eksportuj ustawienia…, „w Ustawieniach › Oracle”), także w instrukcji pl; nazwa pliku
+  `13-preferencje.md` i identyfikatory w kodzie bez zmian.
+- **Debuger:** Krok do / Krok przez / Wyjdź z podprogramu (było Wejdź / Przejdź / Wyjdź — „Wyjdź” myli się
+  z zamknięciem, „Przejdź” z przejściem do miejsca), Przełącz punkt przerwania.
+- **Spójność terminów Oracle:** Post w siatce → **Zapisz zmiany w bazie (Post)** („Zatwierdź” zarezerwowane dla
+  COMMIT); „Zabij sesję” → **Zakończ sesję (Kill)** jak „Zakończ sesję okna (Kill)”; INVALID — zawsze
+  **nieprawidłowe** (było też „niepoprawne”).
+- **Decyzje właściciela po przeglądzie tabeli zmian:** duże przyciski transakcji na wstążce zostają nazwami SQL
+  **COMMIT** / **ROLLBACK** (w menu dalej „Zatwierdź (COMMIT)” / „Wycofaj (ROLLBACK)”); raport predefiniowany
+  i nagłówek dokumentacji schematu zostają **Ograniczenia** (folder w Przeglądarce obiektów — „Więzy”).
+  „Okno poleceń” (Command Window) → **Konsola SQL*Plus** wszędzie (menu Plik › Nowy, wstążka, tytuły okien i komend,
+  opisy, instrukcja) — nazwa mówi, czym okno jest; także po angielsku (*SQL*Plus Console*), niemiecku, hiszpańsku
+  i ukraińsku (tłumaczenia i instrukcje poprawione, bo zmienił się sens nazwy). Punkt załamania linii relacji na
+  diagramie → **punkt zgięcia**. Po angielsku *Preferences* → *Settings* wszędzie (okno, menu, opisy, „in Settings ›
+  …”, instrukcja en; zestawy — *Settings sets*). Dawne nazwy są słowami kluczowymi wyszukiwania komend. Tytuł okna
+  wyznacza nazwy plików zrzutów, więc zrzuty konsoli i ustawień dostaną nowe nazwy przy następnym przebiegu.
+- **Po przeglądzie gałęzi:** es *Ajustes* i uk *Налаштування* wszędzie (okno, podmenu, opisy, instrukcje — jak macOS),
+  en zestawy *Settings presets*, en *Toggle Breakpoint* i *Step Into / Step Over / Step Out*; klucz „Przejdź”
+  (Zawartość kodu, menu jednostek) ma tłumaczenia „przejdź do”, nie debugera; przyciski przeglądarki sesji
+  i pytanie o zakończenie używają tytułu komendy „Zakończ sesję (Kill)”. Nazwy sekcji w parametrze `sections`
+  komend `prefs.export` / `prefs.import` (makra, skrypty, agent) są przetłumaczone na język interfejsu —
+  `PreferenceSets.sectionNames` przyjmuje też klucz polski, synonimy zapisane przy definicji sekcji (angielska i dawna
+  nazwa, np. „SQL Window”, „Object Browser”) i tłumaczenie każdej nazwy na wszystkie języki interfejsu (makro nagrane
+  po niemiecku działa po polsku), bez względu na wielkość liter; nieznana nazwa to błąd nieprawidłowego argumentu
+  z listą znanych sekcji (wcześniej po cichu nic nie eksportowała). Sekcja okna SQL to teraz „Okno SQL” (była „SQL
+  Window”). Po angielsku zestawy ustawień to konsekwentnie *presets* (karta *Presets*, *Settings Presets…*).
+- **Zrzuty po zmianie nazw** (przebieg ukryty D196 przy scaleniu wydania 1.5.0): plan (28, 47, 48, 69) i Fragmenty kodu
+  (23 — panel w oknie głównym, `23-snippety-glowne.png` zamiast `23-snippety-snippety.png`) odświeżone. **Do zrobienia:**
+  okno Ustawień (zrzuty 19, 51, 57 — dziś `*-preferencje.png`) i obrazki instrukcji wymagają przebiegu `--screen`
+  w chwili, gdy właściciel pozwoli na okna na ekranie: w trybie ukrytym zaznaczona karta paska Ustawień (Liquid
+  Glass) wychodzi pusta, a rozmiar okna pochodzi z zapamiętanej ramki aplikacji Debug (D196 › Ograniczenia).
+- **IDE:** Fragmenty kodu (snippety), Wyodrębnij (Wydziel), Przełącz komentarz linii, Zamień na wielkie/małe litery,
+  Przejdź do pierwszego znaku linii, Pokaż podpowiedzi kodu, Kompiluj projekt / Kompiluj zmienione (Buduj / Make),
+  Duplikuj połączenie…, Filtruj wyrażeniem… / Filtruj kolumny…; macOS: Powtórz (było „Ponów” — w angielskim
+  interfejsie pokazywało „Retry” przy ⇧⌘Z), Zminimalizuj, dwukrotne kliknięcie; Pro*C: kopia robocza, kopia
+  zapasowa; diagram: punkt zgięcia.
+- **Technicznie:** klucz = polskie zdanie, więc tłumaczenia en/de/es/uk przeniesiono na nowe klucze bez zmian;
+  poprawiono tylko te, którym zmienił się sens (Odśwież plan, Powtórz, Ustawienia). Dawne polskie tytuły komend są
+  słowami kluczowymi wyszukiwania czynności (`CommandSearch.keywords`), więc „wyjaśnij”, „zabij”, „snippet”, „buduj”
+  czy „preferencje” dalej znajdują komendę. Teksty dziennika i komunikaty SP2-/ORA- bez zmian.
+- **Pozostawione** (z powodem w glosariuszu): Workset, żargon zdalnego buildu Pro*C (build, binarka, remote, commit),
+  Zadokuj, Autoukrywanie, Rekompiluj, To-Do, Znaki specjalne, Status linii, nazwy narzędzi wzorca.
+
+### D196 · 2026-10-29 — Zrzuty bez okien na ekranie (zmienia D113)
+Właściciel pracuje przy komputerze, a okna przebiegu zrzutów (D113) pojawiały się na kilka sekund na jego monitorach;
+`screencapture` nie działa też w piaskownicy agentów. Teraz w trybie skryptu (`PELIKAN_UI_SCRIPT`, tylko Debug) okna są
+niewidoczne od pierwszej klatki: haki Objective-C (`App/Sources/UIScriptWindows.m`) na inicjalizatorze `NSWindow`
+i każdej drodze wystawienia okna (`orderWindow`, `orderFront`, `makeKeyAndOrderFront`, `orderFrontRegardless`,
+`setIsVisible`, arkusze, okna potomne) ustawiają alfę 0, `ignoresMouseEvents`, brak cienia i animacji; `setAlphaValue`
+zawsze daje 0, a `activate`, `activateIgnoringOtherApps` i `requestUserAttention` nic nie robią. Polityka aktywacji
+`.accessory`, a skrypt uruchamia klon APFS aplikacji z `LSUIElement` (nowy podpis ad hoc z tymi samymi uprawnieniami,
+po przebiegu wyrejestrowany i usunięty) — bez ikony w Docku także w pierwszych chwilach po `open -g -n` (sama polityka
+w kodzie przychodzi po starcie: ok. 0,5 s typu „Foreground”). Okna pozostają „widoczne” dla AppKit (`isVisible`,
+układ, rysowanie), więc `open -j` (ukryta aplikacja) odrzucone — ukryte okna nie są rysowane ani listowane.
+Zrzut robi aplikacja: po ostatnim kroku (`PELIKAN_SNAPSHOT=<katalog>/<scenariusz>`) albo krokiem `debug.snapshotWindows`
+(`prefix`) rysuje ramkę każdego okna (`contentView.superview` — pasek tytułu, pasek narzędzi, wstążka, SwiftUI, TextKit 2)
+przez `cacheDisplay(in:to:)` do mapy bitowej co najmniej 2×, dokleja treść WKWebView z `takeSnapshot`, zapisuje
+`<scenariusz>-<tytuł>.png` (nazwy jak dotąd), znacznik `.done` i kończy pracę. Porównanie: `CALayer.render(in:)` gubi
+tła przycisków paska narzędzi (szkło), `CGWindowListCreateImage` jest wycofane w SDK i mogłoby wywołać pytanie
+o nagrywanie ekranu, ScreenCaptureKit wymaga tego uprawnienia — odrzucone. Sprawdzone strażnikiem odczytującym listę
+okien co 20 ms (alfa okien procesu zawsze 0, typ aplikacji zawsze UIElement) na scenariuszach 01, 07, 11, 17, 19, 28, 49
+i 65: obraz zgodny z dawnymi zrzutami, a WKWebView (instrukcja) wreszcie z treścią. Ograniczenia: zaznaczony segment
+`NSTabViewController` (szkło Liquid Glass, warstwy portalowe) wychodzi bez etykiety, rogi okna są proste (bez
+przezroczystych zaokrągleń); w takich przypadkach `scripts/screenshots.sh --screen` — dawny sposób z widocznymi oknami
+(`PELIKAN_UI_SCRIPT_VISIBLE=1`).
+Skrypt zawsze buduje aplikację (przyrostowo) i przerywa, gdy klon nie ma haków ukrywania (stara binarka pokazałaby
+okna); każdy przebieg ma własny katalog `mktemp` (klon, dane — równoległe przebiegi w worktree agentów się nie mieszają),
+sprzątany w `trap` razem z niewidocznymi instancjami (sesje w bazie testowej); katalogi przebiegów przerwanych bez
+sprzątania (właściciel z `owner.pid` już nie działa) są usuwane przy następnym starcie. Scenariusz bez żadnego zrzutu
+kończy skrypt błędem; okna modalne i arkusze w trybie skryptu trafiają do dziennika `.log`, a zrzut treści WKWebView ma
+limit 5 s. Klon jest bez rozszerzeń (`PlugIns`, Quick Look nie rejestruje się drugi raz).
+
+### D197 · 2026-10-29 — Pliki zmienione przez inny program: wykrywanie przy aktywacji i wczytanie ponowne
+
+Właściciel: jak w PL/SQL Developerze — otwarcie pliku go nie blokuje, a gdy plik zmieni inny program (agent, git,
+edytor), Pelikan to wykrywa i pyta.
+
+- **Bez blokad:** okna czytają plik raz (`Data(contentsOf:)`) i nie trzymają deskryptora ani blokady; zapis jest
+  atomowy (plik tymczasowy i podmiana, `writeKeepingFile` — przez dowiązanie zapisywany jest plik docelowy,
+  uprawnienia zostają). Inne programy mogą plik czytać, zmieniać i usuwać w każdej chwili.
+- **Stan pliku:** przy otwarciu, zapisie i wczytaniu ponownym okno zapamiętuje dla każdego pliku (okno pary — dla
+  `.pks` i `.pkb` osobno) datę modyfikacji, rozmiar i skrót bajtów (`Document.diskStamps`, `FileStamp`). Sprawdzenie
+  czyta plik tylko, gdy zmieniła się data albo rozmiar; ten sam skrót (np. `touch`, `git checkout` bez zmiany treści)
+  uaktualnia stan bez pytania. Dowiązanie — stan pliku docelowego; wiszące dowiązanie (cel usunięty) to plik usunięty.
+  Poza datą i rozmiarem porównywane są ctime i identyfikator pliku (`attributeModificationDateKey`,
+  `fileResourceIdentifierKey`) — podmiana pliku z tą samą datą i rozmiarem też jest wykrywana. Na woluminie nielokalnym
+  (SMB, NFS — `volumeIsLocalKey`) treść jest porównywana także bez zmiany metadanych (daty bywają zaokrąglane albo
+  z innego zegara), ale nie częściej niż co 5 s na plik. Odczyt i skrót zawsze poza wątkiem głównym.
+- **Kiedy:** przy aktywacji okna z plikiem, karty pliku w oknie pary i aplikacji (okno na wierzchu). Jedno sprawdzenie
+  naraz i jedno pytanie naraz (zmiany kilku plików okna po kolei), pytania tylko dla aktywowanego okna — inne okna
+  zapytają, gdy się je aktywuje. Nie w trakcie zapisu okna (także okna wyboru nazwy), nie w trybie skryptu
+  (`PELIKAN_UI_SCRIPT`), nie bez interfejsu. Zmiana z edytora zewnętrznego (PD-EDIT-028) jest wczytywana jak dotąd
+  i nie pyta drugi raz.
+- **Okno bez zmian:** „Plik „…” został zmieniony przez inny program. Wczytać go ponownie?” — **Wczytaj ponownie** /
+  **Zostaw**; ustawienie **Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian** (domyślnie
+  wyłączona). **Okno ze zmianami** (w oknie pary — karta tego pliku): ostrzeżenie „Okno ma niezapisane zmiany” —
+  **Wczytaj ponownie (utracisz zmiany)** / **Zachowaj moje zmiany**. „Zostaw” i „Zachowaj” zapamiętują nowy stan dysku
+  jako znany (bez pytania do następnej zmiany), ale nie treść zapisaną okna — późniejsze ⌘S ostrzega „Pliki zmieniły
+  się na dysku… Zapisz mimo to / Anuluj” (dla wszystkich okien z plikiem, nie tylko par: `Document.savedFileHash`).
+  Ostrzeżenie przy zapisie najpierw porównuje datę i rozmiar ze znanym stanem (gdy to stan zapisu), skrót liczy tylko
+  przy różnicy, odczyt i skrót poza wątkiem głównym. Z wyłączonym ustawieniem **Wykrywaj zmiany plików na dysku** — bez
+  ostrzeżenia; w trybie skryptu i bez interfejsu zapis odbywa się (bez cichego anulowania), a nadpisanie zmiany z dysku
+  trafia do dziennika. Tekst sprzed wczytania ponownego zawsze trafia do historii lokalnej (także okno bez zmian
+  i wczytanie bez pytania). Pytania nie mają dodatkowego przycisku „Anuluj”; Esc wybiera bezpieczną odpowiedź
+  (**Zostaw**, **Zachowaj moje zmiany**, **Zachowaj w oknie**), a w oknie ze zmianami **Zachowaj moje zmiany** jest
+  też przyciskiem domyślnym (Enter), a **Wczytaj ponownie (utracisz zmiany)** — oznaczony jako niszczący, bez Enter
+  (`UIServices.ask(_:message:buttons:escapeButton:defaultButton:destructiveButton:)`). Nieudane wczytanie (np. plik nie
+  do odczytu, para o innym podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (plik nie do
+  odczytu: data i rozmiar z atrybutów, skrót dotychczasowy), więc nie pyta przy każdej aktywacji, a błąd pokazuje
+  użytkownikowi i zapisuje w dzienniku. Zapis okna jest chroniony przed ponownym wejściem: drugi zapis w trakcie
+  pytania albo sprawdzania kończy się komunikatem „Okno „…” jest właśnie zapisywane”, a zamknięcie okna, wyjście
+  z aplikacji i zmiana workseta czekają na koniec zapisu (najwyżej minutę, w pasku stanu okna „Czekam na zakończenie
+  zapisu…”) zamiast przerywać się po cichu. Sprawdzenie zmian na dysku przed
+  zapisem powtarza się, gdy tekst albo pliki okna zmieniły się w trakcie (najwyżej trzy razy); zapis idzie do bieżącego
+  pliku okna, a plik odłączony w tym czasie (usunięty albo przeniesiony w Przeglądarce plików) — dalej jak okno bez
+  pliku (Zapisz jako), bez odtwarzania starej ścieżki. Wiszące dowiązanie zachowane w oknie („Zachowaj w oknie”), także
+  łańcuch dowiązań: zapis tworzy plik docelowy na końcu łańcucha (najwyżej 32 kroki), dowiązania zostają; pętla
+  dowiązań (powtórzona ścieżka albo nadal dowiązanie po limicie) kończy zapis błędem, bez rozrywania pętli. Esc i ⌘.
+  wybierają bezpieczną odpowiedź. Sprawdzenie przy aktywacji ustawia blokadę przed pierwszym odczytem (dwa wyzwalacze
+  naraz — jedno pytanie), pomija pliki, których stan zmienił się w trakcie odczytu albo pytania (własny zapis,
+  wczytanie), przerywa się, gdy w międzyczasie zaczął się zapis albo okno zamknięto, i przed każdym pytaniem liczy
+  ponownie, czy okno ma niezapisane zmiany. Gdy w trakcie aktywowano inne okno (jego sprawdzenie odbiło się od
+  blokady), po zakończeniu sprawdzane jest okno aktywne.
+- **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
+  zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
+  pytanie o zapis).
+- **Para `.pks`/`.pkb`:** wczytywany jest tylko zmieniony plik (jego karta), druga karta zostaje bez zmian, także
+  niezapisana; kursor zostaje w tym samym miejscu karty, karty i Zawartość kodu odświeżają się z tekstu. Wczytanie
+  sprawdza obieg jak otwarcie pary — podział nowego tekstu na karty musi dać te same pliki, każdy z jedną jednostką
+  swojej karty; inaczej (np. komentarz za `END` specyfikacji przeszedłby do karty ciała) odmowa z komunikatem „otwórz
+  go osobno”.
+- **Wczytanie ponowne** okna z jednym plikiem odtwarza je jak otwarcie (kodowanie, BOM, końce linii; okno testu `.tst`
+  ze zmiennymi, raport, diagram, notatnik); kursor na tej samej pozycji, jeśli się mieści.
+- **Komenda `file.reload`** „Wczytaj ponownie z dysku” (menu Plik, wstążka Start › Plik › Więcej; agent: Za zgodą,
+  skutek: tekst edytora; na liście komend aplikacji dla agenta) — okno pary: oba pliki. Okno ze zmianami: użytkownik
+  potwierdza utratę zmian, agent dostaje odmowę.
+- **Ustawienia › Ogólne › Pliki:** **Wykrywaj zmiany plików na dysku** (domyślnie włączona) i wczytywanie bez
+  pytania; obie w zestawach ustawień (sekcja Ogólne).
+- **Worksety:** okno ze zmianami zapisuje skrót pliku z otwarcia albo zapisu (pole opcjonalne `fileHash`, para —
+  `hash` każdego pliku) — po przywróceniu zmiana pliku z czasu, gdy Pelikan był zamknięty, jest wykrywana przy
+  aktywacji i przy zapisie. Okno bez zmian i tak czyta plik ponownie przy przywróceniu.
+- **Dziennik:** `Log.files` — wykrycie zmiany, usunięcia i wczytanie ponowne, nazwa pliku `privacy: .hash`, bez
+  treści.
+- **Ograniczenia:** brak obserwacji systemu plików w tle (FSEvents) — zmiana jest wykrywana dopiero przy aktywacji
+  okna, karty albo aplikacji (jak we wzorcu); zmiana pliku okna w tle, gdy Pelikan jest aktywny i okno na wierzchu,
+  zostanie zauważona przy następnej aktywacji (np. przełączeniu okna albo aplikacji) albo przez **Wczytaj ponownie
+  z dysku**. Pliki w iCloud Drive (i innych dostawcach plików): synchronizacja może zmieniać datę bez zmiany treści
+  (bez pytania — porównanie skrótu), a plik usunięty z dysku lokalnego przez „Optymalizuj miejsce” (zastąpiony
+  symbolem zastępczym) bywa widziany jako usunięty albo jest pobierany przy odczycie — Pelikan nie odróżnia tych stanów
+  od zwykłej zmiany pliku.

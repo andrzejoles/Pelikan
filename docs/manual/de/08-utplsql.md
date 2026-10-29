@@ -9,7 +9,7 @@ Befehle stehen im Menü **Werkzeuge › utPLSQL**.
 **Werkzeuge › utPLSQL › utPLSQL: Version in der Datenbank** prüft, ob utPLSQL installiert ist und in welcher Version.
 
 Fehlt es, lädt **utPLSQL: installieren oder aktualisieren …** das offizielle Release von GitHub herunter, prüft seine
-Prüfsumme und führt die Installationsskripte in einem sichtbaren Command Window aus. Dieser Befehl funktioniert nur auf
+Prüfsumme und führt die Installationsskripte in einer sichtbaren SQL*Plus-Konsole aus. Dieser Befehl funktioniert nur auf
 Entwicklungs- und Testverbindungen und fragt immer nach einer Bestätigung. Der neue Eigentümer von utPLSQL erhält ein
 zufälliges Passwort, das niemand kennt, und sein Konto wird sofort gesperrt. Auf gemeinsam genutzten Datenbanken
 übernimmt die Installation in der Regel ein Administrator.

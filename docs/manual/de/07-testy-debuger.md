@@ -52,7 +52,7 @@ Der Debugger verwendet das Oracle-Paket DBMS_DEBUG und arbeitet auf Datenbanken 
 ### Schrittweise Ausführung
 
 1. Setzen Sie Haltepunkte: Klicken Sie im Program oder Test Window auf den Rand mit den Zeilennummern oder drücken Sie
-   ⌃B (**Debuggen › Haltepunkt**).
+   ⌃B (**Debuggen › Haltepunkt umschalten**).
 2. Wählen Sie im Test Window **Debuggen › Debuggen starten** (F9). Das Fenster **Debugger** mit Aufrufstack, Variablen
    und beobachteten Ausdrücken öffnet sich, und der Cursor hält in der ersten Zeile an.
 3. Gehen Sie schrittweise vor:

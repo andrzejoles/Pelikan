@@ -1,7 +1,7 @@
-# Command Window
+# Consola SQL*Plus
 
-La Command Window funciona como SQL*Plus: ejecuta sentencias línea a línea y scripts, y muestra los resultados de las
-consultas como texto en columnas. La abres con **Archivo › Nuevo › Command Window** o desde el menú de la conexión en la
+La consola SQL*Plus funciona como SQL*Plus: ejecuta sentencias línea a línea y scripts, y muestra los resultados de las
+consultas como texto en columnas. La abres con **Archivo › Nuevo › Consola SQL*Plus** o desde el menú de la conexión en la
 lista de conexiones.
 
 La ventana tiene dos pestañas:

@@ -92,7 +92,7 @@ capítulo *Agentes de IA*.
 ## Entornos y protección contra errores
 
 - El color de la conexión se ve en la lista de conexiones, en la pestaña de la ventana, en la lista de ventanas y en la
-  barra de estado. La opción **Fondo del editor con el color de la conexión** (**Preferencias › General**) colorea
+  barra de estado. La opción **Fondo del editor con el color de la conexión** (**Ajustes › General**) colorea
   también el fondo del editor. En la misma pestaña puedes añadir reglas de color según el patrón `usuario@base` (p. ej.,
   `sys@*`); tienen prioridad sobre el color del entorno.
 - En una conexión de **producción**, las sentencias que modifican datos u objetos (DML, DDL, bloques PL/SQL) requieren
@@ -102,14 +102,14 @@ capítulo *Agentes de IA*.
   entonces «solo lectura».
 - Pelikan nunca confirma una transacción por sí mismo. Al cerrar una ventana o la aplicación con una transacción
   abierta, pregunta si confirmar (COMMIT) o revertir (ROLLBACK); el comportamiento al cerrar sesión se cambia en
-  **Preferencias › General › Cierre de sesión con una transacción abierta**.
+  **Ajustes › General › Cierre de sesión con una transacción abierta**.
 
 ## Contraseñas y Touch ID
 
 Las contraseñas de bases de datos y SSH se guardan únicamente en el llavero de inicio de sesión de macOS (sin
 sincronización con iCloud). No van a archivos, registros, historial de comandos ni argumentos de procesos.
 
-En **Preferencias › Oracle › Contraseñas de conexiones** puedes activar **Requerir Touch ID o la contraseña del Mac
+En **Ajustes › Oracle › Contraseñas de conexiones** puedes activar **Requerir Touch ID o la contraseña del Mac
 antes de usar una contraseña guardada**. Pelikan pedirá entonces confirmación una vez por conexión mientras la
 aplicación esté en marcha, también cuando use la conexión un agente de IA.
 
@@ -126,11 +126,11 @@ comandos— y guarda la nueva en el Llavero si la conexión recuerda su contrase
 Pelikan admite dos tipos de cartera:
 
 - **Almacén de contraseñas** (Secure External Password Store): inicio de sesión sin contraseña en Pelikan (`/@alias`).
-  El directorio de la cartera y el directorio de configuración de Oracle Net se indican en **Preferencias › Oracle ›
+  El directorio de la cartera y el directorio de configuración de Oracle Net se indican en **Ajustes › Oracle ›
   Oracle Net y Oracle Wallet**; Pelikan muestra ahí el estado de la cartera (se requiere una cartera de inicio de sesión
   automático `cwallet.sso`). En la definición de la conexión elige la autenticación *Oracle Wallet (almacén de
   contraseñas)*. El campo **Base de datos** debe ser exactamente el alias o la cadena de conexión guardados en la
-  cartera. Los cambios en esta sección de Preferencias surten efecto tras reiniciar Pelikan.
+  cartera. Los cambios en esta sección de Ajustes surten efecto tras reiniciar Pelikan.
 - **Cartera TLS** (mTLS, p. ej., Autonomous Database): se configura en la pestaña **Avanzado** de la definición de la
   conexión.
 
@@ -151,18 +151,18 @@ Las contraseñas de la cartera nunca llegan a Pelikan.
 Cada ventana tiene su propia conexión, visible en la barra de estado. Haz clic en ella para cambiar la ventana a otra
 conexión; si la ventana tiene una transacción abierta, Pelikan pregunta primero por COMMIT o ROLLBACK. Una ventana con
 la conexión **fijada** (📌) no la cambia cuando cambias la conexión principal; la fijación por omisión de las ventanas
-nuevas se activa en **Preferencias › General**.
+nuevas se activa en **Ajustes › General**.
 
-Modo de sesión (**Preferencias › General › Modo de sesión**):
+Modo de sesión (**Ajustes › General › Modo de sesión**):
 
 - **Multi** (por omisión): cada ventana tiene su propia sesión de base de datos, así que una consulta larga en una
   ventana no bloquea las demás y las transacciones de las ventanas son independientes;
 - **Dual**: las ventanas comparten una sesión, y la compilación tiene otra aparte;
 - **Single**: todo en una sola sesión.
 
-Cada 60 segundos Pelikan comprueba si la conexión sigue viva (el intervalo se cambia en Preferencias) y reacciona si se
+Cada 60 segundos Pelikan comprueba si la conexión sigue viva (el intervalo se cambia en Ajustes) y reacciona si se
 pierde. Opcionalmente, cierra las sesiones de las ventanas inactivas durante más tiempo del indicado, si no tienen una
-transacción abierta (**Preferencias › Oracle**).
+transacción abierta (**Ajustes › Oracle**).
 
 Cuando no se puede interrumpir una consulta (**Interrumpir**, ⌘.), usa **Sesión › Finalizar la sesión de la ventana
 (Kill)**: Pelikan finaliza la sesión de la ventana en la base de datos desde una sesión aparte (requiere el privilegio

@@ -206,7 +206,7 @@ struct ImportTablesView: View {
             .pickerStyle(.segmented)
             switch method {
             case .sql:
-                Text(L10n.tr("Skrypt wykonuje się w nowym oknie poleceń połączenia; błędy zostają w konsoli okna.")).foregroundStyle(.secondary)
+                Text(L10n.tr("Skrypt wykonuje się w nowej konsoli SQL*Plus połączenia; błędy zostają w jej wyjściu.")).foregroundStyle(.secondary)
                 Button(L10n.tr("Wybierz skrypt i importuj…")) { Task { await importSQL() } }.disabled(busy)
             case .native:
                 HStack {

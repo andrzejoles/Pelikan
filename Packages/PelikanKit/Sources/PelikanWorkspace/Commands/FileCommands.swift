@@ -9,8 +9,12 @@ enum FileCommands {
     /// Okna pliku albo plików z wnętrza katalogu (jak przy zmianie nazwy) zostają oknami bez pliku ze zmianą do zapisu.
     static func detachDocuments(under u: URL, in ws: Workspace) {
         for d in ws.documents {
-            guard let f = d.fileURL?.standardizedFileURL, f == u || f.path.hasPrefix(u.path + "/") else { continue }
+            // Okno pary (D194): dowolny z jego plików.
+            guard d.fileURLs.contains(where: { $0 == u || $0.path.hasPrefix(u.path + "/") }) else { continue }
             d.fileURL = nil
+            d.unitFiles = []
+            d.diskStamps = [:]
+            d.savedFileHash = nil
             d.isModified = true
         }
     }
@@ -23,7 +27,8 @@ enum FileCommands {
     /// Plik z argumentu albo plik aktywnego okna.
     static func fileOrActive(_ ctx: CommandContext) throws -> URL {
         if let u = url(ctx) { return u }
-        guard let u = ctx.workspace.activeDocument?.fileURL else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie ma pliku")) }
+        // Okno pary (D194): plik karty z kursorem.
+        guard let u = ctx.workspace.activeDocument?.activeFileURL else { throw CommandError.notAvailable(L10n.tr("Aktywne okno nie ma pliku")) }
         return u
     }
 
@@ -141,7 +146,7 @@ enum FileCommands {
             command("fb.open", L10n.tr("Otwórz jako…"), submenu: fb,
                     params: [CommandParameter("path", .string, L10n.tr("Ścieżka pliku (bez argumentu — plik zaznaczony w Przeglądarce plików albo wybór pliku)")),
                              CommandParameter("kind", .string, L10n.tr("Rodzaj okna (domyślnie wg rozszerzenia)"), allowed: ["sql", "program", "test", "command"])],
-                    effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo poleceń (domyślnie wg rozszerzenia)."),
+                    effect: .uiState, summary: L10n.tr("Otwiera plik w oknie SQL, programu, testu albo w konsoli SQL*Plus (domyślnie wg rozszerzenia)."),
                     feature: "PD-FB-001", inMenu: false) { ctx in
                 // Ścieżka albo lista ścieżek (makro nagrywa pliki wybrane w oknie).
                 let given = (ctx.arguments.strings("path") ?? []).filter { !$0.isEmpty }
@@ -163,7 +168,7 @@ enum FileCommands {
                 if given.isEmpty, ctx.arguments.string("kind") == nil {
                     let options: [(label: String, value: DocumentKind?)] = [
                         (L10n.tr("Wg rozszerzenia pliku"), nil), (L10n.tr("Okno SQL"), .sql), (L10n.tr("Okno programu"), .program),
-                        (L10n.tr("Okno testu"), .test), (L10n.tr("Okno poleceń"), .command)]
+                        (L10n.tr("Okno testu"), .test), (L10n.tr("Konsola SQL*Plus"), .command)]
                     kind = try await ctx.choose(L10n.tr("Otwórz jako"), options) ?? nil
                 }
                 var title = ""
@@ -186,10 +191,17 @@ enum FileCommands {
                 if name == nil { name = await ctx.ui?.askText(L10n.tr("Zmień nazwę"), message: u.lastPathComponent, defaultValue: u.lastPathComponent) }
                 guard let name else { throw CommandError.cancelledByUser }
                 let target = try FileBrowser.rename(u, to: name)
+                let moved = { (f: URL) -> URL? in
+                    let f = f.standardizedFileURL
+                    if f == u { return target.standardizedFileURL }
+                    return f.path.hasPrefix(u.path + "/") ? URL(fileURLWithPath: target.path + f.path.dropFirst(u.path.count)) : nil
+                }
                 for d in ctx.workspace.documents {
-                    guard let f = d.fileURL?.standardizedFileURL else { continue }
-                    if f == u { d.fileURL = target.standardizedFileURL }
-                    else if f.path.hasPrefix(u.path + "/") { d.fileURL = URL(fileURLWithPath: target.path + f.path.dropFirst(u.path.count)) }
+                    if let f = d.fileURL, let m = moved(f) { d.fileURL = m }
+                    // Stan dysku pod nową ścieżką — przeniesienie przez Pelikana to nie zmiana z zewnątrz (D197).
+                    for (u, s) in d.diskStamps { if let m = moved(u) { d.diskStamps[u] = nil; d.diskStamps[m.standardizedFileURL] = s } }
+                    // Okno pary (D194): także plik ciała.
+                    for i in d.unitFiles.indices { if let m = moved(d.unitFiles[i].url) { d.unitFiles[i].url = m } }
                 }
                 if ctx.workspace.fileBrowser.selectedURL?.standardizedFileURL == u { ctx.workspace.fileBrowser.selectedURL = target }
                 return CommandResult(value: .string(target.path))
@@ -293,7 +305,7 @@ enum FileCommands {
                 let head = try await Task.detached { try repo.headContent(of: u) }.value ?? Data()
                 // Obie strony dekodowane jak przy otwieraniu pliku (BOM, ISO-8859-2/Windows-1250, kodowanie projektu — D55).
                 let encoding = ctx.workspace.projectEncoding(for: u)
-                let current = ctx.workspace.documents.first { $0.fileURL?.standardizedFileURL == u }?.text
+                let current = ctx.workspace.documents.lazy.compactMap { $0.currentText(of: u) }.first
                     ?? TextFileCodec.decode((try? Data(contentsOf: u)) ?? Data(), preferred: encoding).text
                 let headText = TextFileCodec.decode(head, preferred: encoding).text
                 ctx.ui?.showDiff(left: headText, right: current, leftTitle: "HEAD: \(u.lastPathComponent)", rightTitle: u.lastPathComponent)
@@ -304,8 +316,11 @@ enum FileCommands {
                     feature: "PD-VCS-001", validate: { hasActiveFile($0) }) { ctx in
                 let u = try fileOrActive(ctx)
                 let repo = try await repository(for: u)
-                try await Task.detached { try repo.add([u]) }.value
-                return CommandResult(message: L10n.tr("Dodano: \(u.lastPathComponent)"))
+                // Bez argumentu w oknie pary (D194) — oba pliki okna.
+                var files = [u]
+                if url(ctx) == nil, let d = ctx.workspace.activeDocument, d.unitFiles.count > 1 { files = d.fileURLs }
+                try await Task.detached { [files] in try repo.add(files) }.value
+                return CommandResult(message: L10n.tr("Dodano: \(files.map(\.lastPathComponent).joined(separator: ", "))"))
             },
             command("vcs.commit", L10n.tr("Zatwierdź (git commit)…"), .tools, submenu: sub,
                     params: [pathParam, CommandParameter("message", .string, L10n.tr("Komunikat zatwierdzenia"))], effect: .external,

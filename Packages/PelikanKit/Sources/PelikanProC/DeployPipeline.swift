@@ -27,7 +27,7 @@ public struct DeploySummary: Sendable, Hashable {
             return h.isEmpty ? nil : h
         }.value
         s.serverHead = serverHead
-        if serverHead == nil { s.warnings.append(L10n.tr("Nie udało się odczytać commita working copy na serwerze")) }
+        if serverHead == nil { s.warnings.append(L10n.tr("Nie udało się odczytać commita kopii roboczej na serwerze")) }
         if let repo {
             let local: Result<LocalGitStatus, any Error> = await Task.detached {
                 Result {
@@ -124,7 +124,7 @@ public final class DeployPipeline: Identifiable {
         Log.proc.info("Pro*C: start \(record.kind.rawValue, privacy: .public) na cel \(target.name, privacy: .hash) (\(target.environment.rawValue, privacy: .public))")
         running = true
         defer { running = false }
-        progress.info(L10n.tr("Cel: \(target.name) (\(target.environment.rawValue)), \(target.user)@\(target.host), working copy \(target.effectiveWorkingCopy)"))
+        progress.info(L10n.tr("Cel: \(target.name) (\(target.environment.rawValue)), \(target.user)@\(target.host), kopia robocza \(target.effectiveWorkingCopy)"))
         let t = target, session = session, id = plan.id
         let scriptText: String
         do { scriptText = try script() } catch {

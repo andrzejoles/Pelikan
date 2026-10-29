@@ -5,7 +5,7 @@ import PelikanDB
 /// rekompilacja, DDL w jednym oknie, usuwanie po jednym potwierdzeniu.
 enum MultiObjectCommands {
     static let objectsParam = CommandParameter("objects", .string,
-                                               L10n.tr("Obiekty „SCHEMAT.NAZWA:TYP” po przecinku (domyślnie zaznaczone w Object Browserze)"))
+                                               L10n.tr("Obiekty „SCHEMAT.NAZWA:TYP” po przecinku (domyślnie zaznaczone w Przeglądarce obiektów)"))
 
     /// Część nazwy z argumentu: w cudzysłowie bez zmiany wielkości liter (jak `MetadataProvider.find`), inaczej wielkie litery.
     nonisolated static func identifierPart(_ s: String) -> String {
@@ -72,7 +72,7 @@ enum MultiObjectCommands {
         [
             Command(CommandDescriptor(id: "ob.copyNames", title: L10n.tr("Kopiuj nazwy po przecinku"), category: .tools, submenu: L10n.tr("Obiekt"),
                                       parameters: [objectsParam, CommandContext.toolConnectionParam], agent: .none, effect: .none,
-                                      summary: L10n.tr("Kopiuje nazwy zaznaczonych obiektów oddzielone przecinkami (Cmd+C w Object Browserze)."),
+                                      summary: L10n.tr("Kopiuje nazwy zaznaczonych obiektów oddzielone przecinkami (Cmd+C w Przeglądarce obiektów)."),
                                       feature: "PD-OB-011"),
                     validate: hasSelection) { ctx in
                 let objs = try targets(ctx)

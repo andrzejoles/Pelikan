@@ -163,9 +163,18 @@ extension Workspace {
     @discardableResult
     public func openFile(_ url: URL, as kind: DocumentKind? = nil) throws -> Document {
         let std = url.standardizedFileURL
-        if let open = documents.first(where: { $0.fileURL?.standardizedFileURL == std }) {
+        if let open = documents.first(where: { $0.fileURLs.contains(std) }) {
             activate(open.id)
+            // Okno pary: karta otwieranego pliku (D194).
+            if let tab = open.unitTab(for: std) { open.showUnitTab(tab) }
             return open
+        }
+        // Plik specyfikacji albo ciała z plikiem pary obok — oba w jednym oknie programu (D194); plik pary otwarty już
+        // w innym oknie — plik sam, jak dotąd (jeden plik w dwóch oknach rozjechałby się przy zapisie).
+        if kind == nil || kind == .program, settings.openSpecBodyPair, let pair = specBodyPartner(of: std),
+           !documents.contains(where: { $0.fileURLs.contains(pair.spec) || $0.fileURLs.contains(pair.body) }),
+           let doc = try openUnitFiles(spec: pair.spec, body: pair.body, show: pair.part) {
+            return doc
         }
         let data = try Data(contentsOf: std)
         // Plik projektu bez BOM: kodowanie ustawione w projekcie (np. ISO-8859-2 dla źródeł Pro*C z AIX), żeby nie
@@ -206,6 +215,7 @@ extension Workspace {
         }
         doc.fileFormat = format
         doc.isModified = false
+        rememberDiskState(doc, url: std, data: data)
         restoreWindowState(doc)
         rememberRecentFile(std)
         return doc
@@ -223,6 +233,18 @@ extension Workspace {
 
     /// Zapis dokumentu do pliku (w formacie, w jakim go otwarto; znaki spoza kodowania — UTF-8).
     public func save(_ doc: Document, to url: URL) throws {
+        if !doc.unitFiles.isEmpty {
+            // Okno pary (D194): zapis pod plikiem specyfikacji albo ciała zapisuje obie jednostki do ich plików; zapis
+            // w innym pliku — całe okno w jednym pliku, bez powiązania z parą.
+            if doc.unitFiles.contains(where: { $0.url == url.standardizedFileURL }) { return try saveUnitFiles(doc) }
+            let files = doc.unitFiles
+            doc.unitFiles = []
+            do { try save(doc, to: url) } catch {
+                doc.unitFiles = files
+                throw error
+            }
+            return
+        }
         if settings.beautifier.beforeSave { autoBeautify(doc) }
         // Tekst okna zapisywany bez zmian — Pelikan nie dopisuje „/” (D192: „/” w plikach z kodem psuje wdrożenie;
         // jednostki rozpoznawane są po nagłówkach CREATE). Plik z „/” zapisuje się tak, jak jest.
@@ -230,29 +252,37 @@ extension Workspace {
         if doc.kind == .report {
             var def = doc.report
             def.sql = doc.text
-            try Self.writeKeepingFile(def.encoded(), to: url)
+            let data = try def.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .diagram {
-            try Self.writeKeepingFile(doc.diagram.encoded(), to: url)
+            let data = try doc.diagram.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .notebook {
-            try Self.writeKeepingFile(doc.notebook.encoded(), to: url)
+            let data = try doc.notebook.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
-            try Self.writeKeepingFile(TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded(), to: url)
+            let data = try TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
@@ -270,13 +300,29 @@ extension Workspace {
         doc.fileURL = url.standardizedFileURL
         doc.fileFormat = format
         doc.isModified = false
+        rememberDiskState(doc, url: url, data: data)
         rememberRecentFile(url)
     }
 
     /// Zapis atomowy, który nie zmienia rodzaju pliku: przez dowiązanie symboliczne zapisuje plik docelowy (dowiązanie
     /// zostaje) i przywraca uprawnienia istniejącego pliku (0600, bit wykonywania) — zapis `.atomic` podmienia plik nowym.
     nonisolated static func writeKeepingFile(_ data: Data, to url: URL) throws {
-        let target = url.resolvingSymlinksInPath()
+        var target = url.resolvingSymlinksInPath()
+        // Wiszące dowiązanie (cel usunięty, „Zachowaj w oknie” — D197), także łańcuch dowiązań: zapis tworzy plik docelowy
+        // na końcu łańcucha, dowiązania zostają (najwyżej 32 kroki — pętla dowiązań).
+        // Pętla dowiązań (powtórzona ścieżka albo nadal dowiązanie po limicie) — błąd, bez rozrywania pętli zapisem.
+        var visited: Set<String> = [target.path]
+        func isLink(_ u: URL) -> Bool {
+            (try? FileManager.default.attributesOfItem(atPath: u.path))?[.type] as? FileAttributeType == .typeSymbolicLink
+        }
+        for _ in 0..<32 {
+            guard isLink(target), let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: target.path) else { break }
+            target = (dest.hasPrefix("/") ? URL(fileURLWithPath: dest) : target.deletingLastPathComponent().appendingPathComponent(dest)).standardizedFileURL
+            guard visited.insert(target.path).inserted else { throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path, NSLocalizedDescriptionKey: L10n.tr("Pętla dowiązań symbolicznych: \(url.lastPathComponent)")]) }
+        }
+        if isLink(target) {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSFilePathErrorKey: url.path, NSLocalizedDescriptionKey: L10n.tr("Pętla dowiązań symbolicznych: \(url.lastPathComponent)")])
+        }
         let permissions = (try? FileManager.default.attributesOfItem(atPath: target.path))?[.posixPermissions] as? NSNumber
         try data.write(to: target, options: .atomic)
         if let permissions { try? FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: target.path) }

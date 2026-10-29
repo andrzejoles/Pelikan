@@ -20,7 +20,9 @@ public enum BuiltinCommands {
                                     agent: AgentAccess = .none, feature: String) -> Command {
         Command(CommandDescriptor(
             id: CommandID(rawValue: id), title: title, category: .file, submenu: L10n.tr("Nowy"), pd: pd, mac: mac,
-            agent: agent, effect: .uiState, summary: L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."), feature: feature
+            agent: agent, effect: .uiState,
+            summary: kind == .command ? L10n.tr("Otwiera nową, pustą konsolę SQL*Plus.") : L10n.tr("Otwiera nowe puste okno: \(kind.displayName)."),
+            feature: feature
         )) { ctx in
             let doc = ctx.workspace.newDocument(kind)
             return CommandResult(message: doc.fullTitle, value: .object(["document": .string(doc.id.description)]))
@@ -53,22 +55,95 @@ public enum BuiltinCommands {
 
     /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
     @MainActor
-    static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool) async throws -> Bool {
+    static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool, singleFile: Bool = false) async throws -> Bool {
+        // W trakcie zapisu (także pytań i okna wyboru nazwy) bez pytań o zmiany plików na dysku (D197).
+        // Drugi zapis tego okna w trakcie pierwszego (pytanie, okno wyboru nazwy) — komunikat zamiast cichego „anulowano”.
+        guard !doc.isSaving else { throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” jest właśnie zapisywane")) }
+        doc.isSaving = true
+        ws.savingDocuments += 1
+        defer {
+            ws.savingDocuments -= 1
+            doc.isSaving = false
+        }
+        // Zapis do pliku okna (para — każda jednostka do swojego pliku, D194): plik zmieniony na dysku od otwarcia albo
+        // zapisu (inny program, git checkout, „Zostaw” przy pytaniu, D197) — bez cichego nadpisania.
+        if !askForName, !singleFile, doc.fileURL != nil {
+            // Preferencja „Wykrywaj zmiany plików na dysku” wyłączona — bez sprawdzania (D197).
+            // Sprawdzenie dotyczy stanu okna po await: tekst albo pliki zmienione w trakcie sprawdzania (pisanie, agent) —
+            // sprawdzenie jeszcze raz dla nowego stanu (najwyżej trzy razy).
+            var changed: [URL] = []
+            if ws.settings.detectExternalFileChanges {
+                for _ in 0..<3 {
+                    let revision = doc.textRevision, files = doc.unitFiles, file = doc.fileURL
+                    changed = await ws.externallyChangedUnitFiles(doc)
+                    if doc.textRevision == revision, doc.unitFiles == files, doc.fileURL == file { break }
+                }
+            }
+            if !changed.isEmpty {
+                let names = changed.map(\.lastPathComponent).joined(separator: ", ")
+                if let ui = ws.ui, ws.externalChangePromptsEnabled {
+                    let choice = await ui.ask(L10n.tr("Pliki zmieniły się na dysku: \(names)"),
+                                              message: L10n.tr("Zapis zastąpi zmiany wprowadzone poza tym oknem."),
+                                              buttons: [L10n.tr("Zapisz mimo to"), L10n.tr("Anuluj")])
+                    guard choice == 0 else { return false }
+                } else {
+                    // Tryb skryptu albo bez interfejsu: zapis jak zlecono, zmiana z dysku tylko w dzienniku — bez cichego
+                    // anulowania zapisu.
+                    Log.files.notice("Zapis nadpisuje plik zmieniony na dysku przez inny program: \(names, privacy: .hash)")
+                }
+            }
+            // Plik okna po await (zmiana nazwy w Przeglądarce plików w trakcie pytania); plik odłączony w tym czasie
+            // (usunięty albo przeniesiony) — dalej jak okno bez pliku (Zapisz jako), bez odtwarzania starej ścieżki.
+            if let current = doc.fileURL {
+                try ws.save(doc, to: current)
+                return true
+            }
+        }
+        // Okno ze specyfikacją i ciałem pakietu albo typu — nowe okno albo Zapisz jako: para plików `nazwa.pks` +
+        // `nazwa.pkb` (rozszerzenia z Preferencji), bez „/”. Okno z innym plikiem (np. .pck) Zapisz zapisuje jak dotąd.
+        if !singleFile, askForName || doc.fileURL == nil, let type = ws.specBodyPairType(doc), let ext = ws.settings.specBodyExtensions.pair(for: type) {
+            let (base, _) = suggestedFileName(doc)
+            guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext.spec),
+                  let urls = ws.specBodyURLs(for: chosen, type: type) else { return false }
+            // Pliki pary, które już istnieją i nie należą do okna (także specyfikacja, gdy wpisano inne rozszerzenie
+            // albo samą nazwę) — jedno pytanie z listą; plik wybrany w oknie zapisu potwierdziło już okno zapisu.
+            let existing = ws.filesToReplace(doc, spec: urls.spec, body: urls.body, chosen: chosen)
+            if !existing.isEmpty {
+                let names = existing.map(\.lastPathComponent).joined(separator: ", ")
+                let choice = await ws.ui?.ask(L10n.tr("Pliki już istnieją: \(names). Zastąpić je?"),
+                                              message: L10n.tr("Specyfikacja i ciało zostaną zapisane w plikach \(urls.spec.lastPathComponent) i \(urls.body.lastPathComponent)."),
+                                              buttons: [L10n.tr("Zastąp"), L10n.tr("Anuluj")])
+                guard choice == 0 else { return false }
+            }
+            try ws.saveUnitFiles(doc, spec: urls.spec, body: urls.body)
+            return true
+        }
         var url = doc.fileURL
         if askForName || url == nil {
-            let (base, ext) = suggestedFileName(doc)
+            var (base, ext) = suggestedFileName(doc, extensions: ws.settings.specBodyExtensions)
+            // Zapisz jako jeden plik… okna pary: rozszerzenie pliku z wieloma jednostkami (UG 23.29).
+            if singleFile, let u = ProgramCompiler.units(in: doc.text).first, !doc.unitFiles.isEmpty { ext = ObjectCommands.fileExtension(u.type) }
             guard let chosen = await ws.ui?.chooseSaveURL(suggestedName: base, fileExtension: ext) else { return false }
             url = chosen
         }
-        try ws.save(doc, to: url!)
+        let unitFiles = doc.unitFiles
+        if singleFile { doc.unitFiles = [] }
+        do { try ws.save(doc, to: url!) } catch {
+            doc.unitFiles = unitFiles
+            throw error
+        }
         return true
     }
 
     /// Proponowana nazwa pliku: z pliku, z jednostki programu (nazwa + rozszerzenie typu, UG 23.29) albo z tytułu.
     @MainActor
-    static func suggestedFileName(_ doc: Document) -> (String, String) {
+    static func suggestedFileName(_ doc: Document, extensions: SpecBodyExtensions = SpecBodyExtensions()) -> (String, String) {
         if let url = doc.fileURL { return (url.deletingPathExtension().lastPathComponent, url.pathExtension) }
-        if doc.kind == .program, let u = ProgramCompiler.units(in: doc.text).first {
+        if doc.kind == .program, case let units = ProgramCompiler.units(in: doc.text), let u = units.first {
+            // Sama specyfikacja albo samo ciało pakietu/typu — rozszerzenie pliku specyfikacji albo ciała (D194).
+            if units.count == 1, let pair = extensions.pair(for: u.type) {
+                return (u.name.lowercased(), [.package, .type].contains(u.type) ? pair.spec : pair.body)
+            }
             return (u.name.lowercased(), ObjectCommands.fileExtension(u.type))
         }
         let title = doc.customTitle ?? doc.kind.shortName
@@ -80,6 +155,18 @@ public enum BuiltinCommands {
     /// false — użytkownik anulował. `askToSave: false` — zmiana workseta: tekst okna jest już w zapisanym worksecie (R6-01).
     @MainActor
     static func closeDocument(_ doc: Document, in ws: Workspace, askToSave: Bool = true) async throws -> Bool {
+        // Zapis okna w toku (np. pytanie o zmianę pliku na dysku): zamknięcie i wyjście z aplikacji czekają na jego koniec
+        // (najwyżej minutę), zamiast przerywać się po cichu.
+        if doc.isSaving {
+            // Komunikat w pasku stanu okna na czas czekania (zamknięcie, wyjście, zmiana workseta).
+            // Przywrócenie także po anulowaniu zadania, ale nie nad komunikatem ustawionym w trakcie czekania.
+            let status = doc.statusText
+            let waiting = L10n.tr("Czekam na zakończenie zapisu…")
+            doc.statusText = waiting
+            defer { if doc.statusText == waiting { doc.statusText = status } }
+            for _ in 0..<1200 where doc.isSaving { try await Task.sleep(nanoseconds: 50_000_000) }
+        }
+        if doc.isSaving { throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” jest właśnie zapisywane")) }
         // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
         // zwykłe wykonanie trzeba najpierw przerwać.
         let debugger = ws.debuggers[doc.id]
@@ -125,7 +212,7 @@ public enum BuiltinCommands {
             newDocument(.sql, id: "file.new.sql", title: L10n.tr("Okno SQL"), mac: ["cmd+n"], agent: .full, feature: "PD-SQLW-002"),
             newDocument(.program, id: "file.new.program", title: L10n.tr("Okno programu"), mac: ["cmd+shift+n"], agent: .full, feature: "PD-PROG-001"),
             newDocument(.test, id: "file.new.test", title: L10n.tr("Okno testu"), agent: .full, feature: "PD-TEST-001"),
-            newDocument(.command, id: "file.new.command", title: L10n.tr("Okno poleceń"), feature: "PD-CMDW-001"),
+            newDocument(.command, id: "file.new.command", title: L10n.tr("Konsola SQL*Plus"), feature: "PD-CMDW-001"),
             newDocument(.explainPlan, id: "file.new.explainPlan", title: L10n.tr("Okno planu (Explain Plan)"), feature: "PD-OPT-001"),
             newDocument(.report, id: "file.new.report", title: L10n.tr("Okno raportu"), feature: "PD-REP-002"),
             newDocument(.diagram, id: "file.new.diagram", title: L10n.tr("Okno diagramu"), feature: "PD-DIAG-001"),
@@ -169,6 +256,36 @@ public enum BuiltinCommands {
                 _ = try await saveDocument(doc, in: ctx.workspace, askForName: true)
                 return .ok
             },
+            Command(CommandDescriptor(id: "file.saveAsSingleFile", title: L10n.tr("Zapisz jako jeden plik…"), category: .file,
+                                      agent: .none, effect: .external,
+                                      summary: L10n.tr("Zapisuje okno programu ze specyfikacją i ciałem w jednym pliku (np. .pck) zamiast w parze plików specyfikacji i ciała."),
+                                      feature: "PD-PROG-007"),
+                    validate: { $0.activeDocument?.kind == .program }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, doc.kind == .program else { return .ok }
+                let ok = try await saveDocument(doc, in: ctx.workspace, askForName: true, singleFile: true)
+                return CommandResult(message: ok ? L10n.tr("Zapisano \(doc.title)") : nil)
+            },
+            Command(CommandDescriptor(id: "file.reload", title: L10n.tr("Wczytaj ponownie z dysku"), category: .file,
+                                      agent: .approval, effect: .modifiesEditor,
+                                      summary: L10n.tr("Wczytuje plik aktywnego okna ponownie z dysku (okno pary specyfikacja/ciało — oba pliki). Niezapisane zmiany okna zostają zastąpione treścią pliku; tekst sprzed wczytania trafia do historii lokalnej. Okna z niezapisanymi zmianami agent nie wczytuje."),
+                                      feature: "PD-FILE-005"),
+                    validate: { $0.activeDocument?.fileURL != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, let url = doc.fileURL else {
+                    throw CommandError.notAvailable(L10n.tr("Aktywne okno nie ma pliku"))
+                }
+                if doc.isModified {
+                    guard ctx.invoker == .user else {
+                        throw CommandError.notAvailable(L10n.tr("Okno ma niezapisane zmiany — wczytanie z dysku zastąpiłoby je; zrobi to tylko użytkownik."))
+                    }
+                    if let ui = ctx.askingUI {
+                        let choice = await ui.ask(L10n.tr("Wczytać „\(doc.title)” ponownie z dysku?"), message: L10n.tr("Okno ma niezapisane zmiany."),
+                                                  buttons: [L10n.tr("Wczytaj ponownie (utracisz zmiany)"), L10n.tr("Anuluj")])
+                        guard choice == 0 else { throw CommandError.cancelledByUser }
+                    }
+                }
+                for u in doc.unitFiles.isEmpty ? [url] : doc.unitFiles.map(\.url) { try ctx.workspace.reloadFromDisk(doc, url: u) }
+                return CommandResult(message: L10n.tr("Wczytano ponownie \(doc.title)"))
+            },
             Command(CommandDescriptor(id: "file.encoding", title: L10n.tr("Kodowanie pliku…"), category: .file,
                                       parameters: [CommandParameter("encoding", .string, L10n.tr("Kodowanie (bez argumentu — wybór z listy)"), allowed: TextFileCodec.encodingNames)],
                                       agent: .none, effect: .modifiesEditor,
@@ -186,6 +303,12 @@ public enum BuiltinCommands {
                 let resolved: [String: JSONValue] = ctx.arguments.string("encoding") == nil ? ["encoding": .string(name)] : [:]
                 doc.fileFormat.encoding = enc
                 doc.fileFormat.hasBOM = false
+                // Okno pary (D194): oba pliki w nowym kodowaniu — zapisywane przy następnym Zapisz.
+                for i in doc.unitFiles.indices {
+                    doc.unitFiles[i].format.encoding = enc
+                    doc.unitFiles[i].format.hasBOM = false
+                    doc.unitFiles[i].needsRewrite = true
+                }
                 doc.isModified = true
                 if let bad = TextFileCodec.firstUnencodable(doc.text, encoding: enc) {
                     return CommandResult(message: L10n.tr("Kodowanie \(name); znak „\(bad.character)” (linia \(bad.line), kolumna \(bad.column)) trzeba zmienić przed zapisem"))
@@ -451,7 +574,7 @@ public enum BuiltinCommands {
                 ctx.workspace.recordAgentEdit(ctx, doc, before: before)
                 return CommandResult(message: L10n.tr("Sformatowano"))
             },
-            Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Podpowiedź kodu"), category: .edit,
+            Command(CommandDescriptor(id: "edit.codeAssistant", title: L10n.tr("Pokaż podpowiedzi kodu"), category: .edit,
                                       pd: ["ctrl+space"], mac: ["alt+escape", "ctrl+space"], agent: .none, effect: .none,
                                       summary: L10n.tr("Lista kolumn, elementów pakietu, pól rekordu, deklaracji i obiektów pasujących do pozycji kursora."),
                                       feature: "PD-CA-001"),
@@ -565,7 +688,7 @@ public enum BuiltinCommands {
                 ctx.workspace.ui?.showRecallStatement()
                 return .ok
             },
-            editCommand("edit.commentLine", L10n.tr("Komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
+            editCommand("edit.commentLine", L10n.tr("Przełącz komentarz linii"), pd: ["ctrl+-"], mac: ["cmd+/"],
                         agent: .full, summary: L10n.tr("Dodaje lub usuwa -- na początku zaznaczonych linii."), feature: "PD-EDIT-006") {
                 TextEditing.toggleLineComment($0, selection: $1)
             },
@@ -577,15 +700,15 @@ public enum BuiltinCommands {
                         summary: L10n.tr("Usuwa tekst od kursora do końca następnego słowa (albo zaznaczenie)."), feature: "PD-EDIT-020") {
                 TextEditing.deleteNextWord($0, selection: $1)
             },
-            editCommand("edit.firstCharacterOnLine", L10n.tr("Pierwszy znak w linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
+            editCommand("edit.firstCharacterOnLine", L10n.tr("Przejdź do pierwszego znaku linii"), pd: ["alt+home"], mac: ["ctrl+alt+left"],
                         summary: L10n.tr("Przenosi kursor na pierwszy niebiały znak linii, a ponownie — na początek linii."), feature: "PD-EDIT-020") {
                 TextEditing.firstCharacterOnLine($0, selection: $1)
             },
-            editCommand("edit.uppercase", L10n.tr("Wielkie litery"), mac: ["cmd+alt+u"],
+            editCommand("edit.uppercase", L10n.tr("Zamień na wielkie litery"), mac: ["cmd+alt+u"],
                         agent: .full, summary: L10n.tr("Zamienia zaznaczenie na wielkie litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: true)
             },
-            editCommand("edit.lowercase", L10n.tr("Małe litery"), mac: ["cmd+alt+shift+u"],
+            editCommand("edit.lowercase", L10n.tr("Zamień na małe litery"), mac: ["cmd+alt+shift+u"],
                         agent: .full, summary: L10n.tr("Zamienia zaznaczenie na małe litery (bez literałów)."), feature: "PD-EDIT-005") {
                 TextEditing.changeCase($0, selection: $1, upper: false)
             },
@@ -623,7 +746,7 @@ public enum BuiltinCommands {
                 let sharing = ws.documents.filter { ws.sessionKey(for: $0) == key }
                 if let ui = ctx.ui {
                     let message = key.purpose == .main
-                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Object Browsera. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
+                        ? L10n.tr("Sesja \(id.sid) jest wspólna dla okien: \(sharing.map(\.title).joined(separator: ", ")) i Przeglądarki obiektów. Zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION); niezatwierdzone zmiany wszystkich tych okien przepadną.")
                         : L10n.tr("Sesja \(id.sid) zostanie zakończona w bazie (ALTER SYSTEM KILL SESSION). Niezatwierdzone zmiany tej sesji przepadną.")
                     guard await ui.ask(L10n.tr("Zakończyć sesję okna?"), message: message,
                                        buttons: [L10n.tr("Zakończ sesję"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
@@ -743,7 +866,7 @@ public enum BuiltinCommands {
             Command(CommandDescriptor(id: "help.oracleManuals", title: L10n.tr("Dokumentacja Oracle…"), category: .help,
                                       parameters: [CommandParameter("query", .string, L10n.tr("Szukane słowa"))],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Preferencje › Oracle)."), feature: "PD-DOC-001")) { ctx in
+                                      summary: L10n.tr("Wyszukuje w dokumentacji Oracle wybranej wersji (Ustawienia › Oracle)."), feature: "PD-DOC-001")) { ctx in
                 let ws = ctx.workspace
                 var q = ctx.arguments.string("query")
                 if q == nil, let ui = ctx.ui { q = await ui.askText(L10n.tr("Dokumentacja Oracle"), message: L10n.tr("Szukane słowa"), defaultValue: "") }

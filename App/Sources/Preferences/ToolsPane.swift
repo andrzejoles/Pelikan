@@ -2,7 +2,7 @@ import AppKit
 import PelikanWorkspace
 import SwiftUI
 
-/// Preferencje › Narzędzia: wyszukiwania w sieci (PD-EDIT-027), edytor zewnętrzny (PD-EDIT-028), zewnętrzna
+/// Ustawienia › Narzędzia: wyszukiwania w sieci (PD-EDIT-027), edytor zewnętrzny (PD-EDIT-028), zewnętrzna
 /// przeglądarka różnic (PD-DIFF-002), dokumenty użytkownika (PD-DOC-002), kopie i odzyskiwanie (PD-FILE-001),
 /// pytania „Nie pytaj więcej” (PD-PREF-008).
 struct ToolsPane: View {

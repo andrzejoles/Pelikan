@@ -70,8 +70,38 @@ struct PreferencesStartupTests {
         try await other.invoke("prefs.import", CommandArguments(["file": .string(file.path)]))
         #expect(other.settings.tabSize == 5 && other.settings.autoCommitSQL == false)
         let all = try PreferenceSets.export(ws.settings, sections: nil)
-        #expect(try PreferenceSets.importValues(all, sections: [L10n.tr("SQL Window")])["autoCommitSQL"] == .bool(true))
+        #expect(try PreferenceSets.importValues(all, sections: [L10n.tr("Okno SQL")])["autoCommitSQL"] == .bool(true))
+        // Synonimy sekcji (D195): nazwa angielska, dawna i polska bez względu na język interfejsu i wielkość liter.
+        for name in ["SQL Window", "okno sql", "Okno SQL"] {
+            #expect(try PreferenceSets.importValues(all, sections: [name])["autoCommitSQL"] == .bool(true))
+        }
+        #expect(try PreferenceSets.importValues(all, sections: ["Object Browser"])["browserRecentLimit"] != nil)
+        #expect(try PreferenceSets.importValues(all, sections: ["Object Browser"])["autoCommitSQL"] == nil)
         #expect(throws: (any Error).self) { try PreferenceSets.importValues(Data(#"{"format":"x","version":1,"values":{}}"#.utf8), sections: nil) }
+    }
+
+    @Test("Sekcje ustawień: synonimy przy każdej sekcji, tłumaczenia z innych języków, nieznana nazwa — błąd z listą")
+    func sectionSynonyms() async throws {
+        // Każda sekcja ma definicję z kluczem polskim zgodnym z nazwą (bez tłumaczeń w testach nazwa = klucz).
+        #expect(PreferenceSets.definitions.count == PreferenceSets.sections.count)
+        #expect(Set(PreferenceSets.definitions.map(\.polish)).count == PreferenceSets.definitions.count)
+        for d in PreferenceSets.definitions { #expect(L10n.translated(format: d.polish) == d.name) }
+        #expect(try PreferenceSets.sectionNames(["general", "Inne", "Other"]) == [L10n.tr("Ogólne"), L10n.tr("Inne")])
+        // Makro nagrane w interfejsie niemieckim albo ukraińskim.
+        let translations = ["de": ["Okno SQL": "SQL-Fenster", "Narzędzia": "Werkzeuge"], "uk": ["Edytor": "Редактор"]]
+        let translate: (String, String) -> String? = { text, language in translations[language]?[text] }
+        #expect(try PreferenceSets.sectionNames(["sql-fenster", "Werkzeuge", "Редактор"], translate: translate)
+                == [L10n.tr("Okno SQL"), L10n.tr("Narzędzia"), L10n.tr("Edytor")])
+        do {
+            _ = try PreferenceSets.sectionNames(["Okno SQL", "Nie ma takiej"])
+            Issue.record("nieznana sekcja powinna być błędem")
+        } catch let CommandError.invalidArgument(name, why) {
+            #expect(name == "sections" && why.contains("Nie ma takiej") && why.contains(L10n.tr("Przeglądarka obiektów")))
+        }
+        let ws = Workspace()
+        await #expect(throws: CommandError.self) {
+            try await ws.invoke("prefs.export", CommandArguments(["file": .string("/dev/null"), "sections": .string("Nieznana")]))
+        }
     }
 
     @Test("Parametry startowe: klucz=wartość, --klucz, pliki, argumenty systemu pominięte, hasło odrzucone")

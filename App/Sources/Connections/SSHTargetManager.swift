@@ -180,15 +180,15 @@ final class SSHTargetManagerModel {
         case .success(let c): checks = c
         case .failure(let e): message = SSHTargetTester.describe(e); return
         }
-        guard checks.first(where: { $0.title == L10n.tr("Katalog backupów") })?.status == .failed,
+        guard checks.first(where: { $0.title == L10n.tr("Katalog kopii zapasowych") })?.status == .failed,
               checks.first(where: { $0.title == L10n.tr("Logowanie") })?.status == .ok else { return }
         let alert = NSAlert()
-        alert.messageText = L10n.tr("Utworzyć katalog backupów?")
+        alert.messageText = L10n.tr("Utworzyć katalog kopii zapasowych?")
         alert.informativeText = t.backupDirectory
         alert.addButton(withTitle: L10n.tr("Utwórz"))
         alert.addButton(withTitle: L10n.tr("Nie"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
-        guard await ProductionConfirmation.confirm(t, operation: L10n.tr("utworzenie katalogu backupów"), ask: SSHTargetPrompts.askTargetName) else {
+        guard await ProductionConfirmation.confirm(t, operation: L10n.tr("utworzenie katalogu kopii zapasowych"), ask: SSHTargetPrompts.askTargetName) else {
             message = L10n.tr("Nie potwierdzono nazwy celu PROD")
             return
         }
@@ -200,7 +200,7 @@ final class SSHTargetManagerModel {
                 return nil
             } catch { return SSHTargetTester.describe(error) }
         }.value
-        message = created ?? L10n.tr("Utworzono katalog backupów")
+        message = created ?? L10n.tr("Utworzono katalog kopii zapasowych")
     }
 }
 
@@ -353,9 +353,9 @@ struct SSHTargetEditor: View {
                 }
                 Section(L10n.tr("Katalogi na serwerze")) {
                     TextField(L10n.tr("Katalog bazowy"), text: draft.baseDirectory, prompt: Text("/…/app"))
-                    TextField(L10n.tr("Katalog backupów"), text: draft.backupDirectory,
+                    TextField(L10n.tr("Katalog kopii zapasowych"), text: draft.backupDirectory,
                               prompt: Text(PelikanSSHTarget.suggestedBackupDirectory(base: draft.wrappedValue.baseDirectory.isEmpty ? "/…/app" : draft.wrappedValue.baseDirectory)))
-                    TextField(L10n.tr("Working copy"), text: draft.workingCopyDirectory, prompt: Text(draft.wrappedValue.sourceDirectory))
+                    TextField(L10n.tr("Kopia robocza"), text: draft.workingCopyDirectory, prompt: Text(draft.wrappedValue.sourceDirectory))
                     DisclosureGroup(L10n.tr("Zaawansowane")) {
                         TextField(L10n.tr("Podkatalog źródeł"), text: draft.sourceFolderName)
                         TextField(L10n.tr("Podkatalog binarek"), text: draft.binaryFolderName)

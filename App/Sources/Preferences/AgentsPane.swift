@@ -1,7 +1,7 @@
 import PelikanWorkspace
 import SwiftUI
 
-/// Preferencje › Agenci (PROMPT §7.1–7.4): lista CLI agentów, tryb ścisły, limit wywołań i limity `run_query`.
+/// Ustawienia › Agenci (PROMPT §7.1–7.4): lista CLI agentów, tryb ścisły, limit wywołań i limity `run_query`.
 struct AgentsPane: View {
     let workspace: Workspace
 

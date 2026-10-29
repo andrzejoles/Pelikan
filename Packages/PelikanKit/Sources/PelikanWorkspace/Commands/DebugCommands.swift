@@ -45,9 +45,9 @@ enum DebugCommands {
                 return .ok
             },
             step("debug.run", L10n.tr("Kontynuuj"), pd: ["ctrl+r"], summary: L10n.tr("Wykonuje do następnego punktu przerwania albo do końca."), .run),
-            step("debug.stepInto", L10n.tr("Wejdź"), pd: ["ctrl+n"], summary: L10n.tr("Wchodzi do wywołania w bieżącej linii (także do wyzwalacza)."), .into),
-            step("debug.stepOver", L10n.tr("Przejdź"), pd: ["ctrl+o"], summary: L10n.tr("Wykonuje bieżącą linię bez wchodzenia do wywołań."), .over),
-            step("debug.stepOut", L10n.tr("Wyjdź"), pd: ["ctrl+t"], summary: L10n.tr("Wykonuje do końca bieżącej jednostki."), .out),
+            step("debug.stepInto", L10n.tr("Krok do"), pd: ["ctrl+n"], summary: L10n.tr("Wchodzi do wywołania w bieżącej linii (także do wyzwalacza)."), .into),
+            step("debug.stepOver", L10n.tr("Krok przez"), pd: ["ctrl+o"], summary: L10n.tr("Wykonuje bieżącą linię bez wchodzenia do wywołań."), .over),
+            step("debug.stepOut", L10n.tr("Wyjdź z podprogramu"), pd: ["ctrl+t"], summary: L10n.tr("Wykonuje do końca bieżącej jednostki."), .out),
             step("debug.runToException", L10n.tr("Wykonaj do wyjątku"), pd: [], summary: L10n.tr("Wykonuje do wystąpienia wyjątku."), .runToException),
             Command(CommandDescriptor(id: "debug.runToCursor", title: L10n.tr("Wykonaj do kursora"), category: .debug, agent: .none, effect: .modifiesDatabase,
                                       summary: L10n.tr("Wykonuje do linii z kursorem (tymczasowy punkt przerwania)."), feature: "PD-DBG-001"),
@@ -96,7 +96,7 @@ enum DebugCommands {
                 ctx.ui?.showBreakpoints()
                 return .ok
             },
-            Command(CommandDescriptor(id: "debug.toggleBreakpoint", title: L10n.tr("Punkt przerwania"), category: .debug, pd: ["ctrl+b"],
+            Command(CommandDescriptor(id: "debug.toggleBreakpoint", title: L10n.tr("Przełącz punkt przerwania"), category: .debug, pd: ["ctrl+b"],
                                       agent: .none, effect: .uiState,
                                       summary: L10n.tr("Ustawia lub usuwa punkt przerwania w linii kursora (okno testu albo jednostka w oknie programu)."),
                                       feature: "PD-DBG-007"),

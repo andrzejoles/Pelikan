@@ -11,7 +11,7 @@ public enum DocumentKind: String, Sendable, Codable, CaseIterable {
         case .sql: L10n.tr("Okno SQL")
         case .program: L10n.tr("Okno programu")
         case .test: L10n.tr("Okno testu")
-        case .command: L10n.tr("Okno poleceń")
+        case .command: L10n.tr("Konsola SQL*Plus")
         case .explainPlan: L10n.tr("Okno planu")
         case .report: L10n.tr("Okno raportu")
         case .diagram: L10n.tr("Okno diagramu")
@@ -65,6 +65,17 @@ public final class Document: Identifiable {
     public var fileURL: URL?
     /// Kodowanie i zakończenia linii pliku (zapis w tym samym formacie, w jakim plik otwarto).
     public var fileFormat = TextFileFormat()
+    /// Okno programu powiązane z plikami specyfikacji i ciała (D194): każda jednostka zapisywana do swojego pliku;
+    /// `fileURL` to wtedy plik specyfikacji (klucz stanu okna, historii lokalnej, workseta). Puste — jeden plik okna.
+    public var unitFiles: [UnitFile] = []
+    /// Stan plików okna na dysku z otwarcia, zapisu albo wczytania ponownego (D197) — wykrywanie zmian przez inny program.
+    @ObservationIgnored public var diskStamps: [URL: FileStamp] = [:]
+    /// Skrót bajtów pliku okna (bez pary) z otwarcia albo zapisu — zapis ostrzega, gdy plik zmienił się na dysku.
+    @ObservationIgnored public var savedFileHash: UInt64?
+    /// Ostatnie porównanie treści pliku na woluminie nielokalnym (co najwyżej co 5 s na plik, D197).
+    @ObservationIgnored public var contentChecks: [URL: Date] = [:]
+    /// Zapis okna w toku (pytania, okno wyboru nazwy) — drugi zapis w tym czasie jest pomijany.
+    @ObservationIgnored public var isSaving = false
     public var text: String {
         didSet {
             if text != oldValue {
@@ -141,6 +152,18 @@ public final class Document: Identifiable {
     /// Karta aktywna — karta odcinka z kursorem (nil — okno bez kart).
     public var activeUnitTab: Int? { ProgramUnitTabs.index(of: selectedRange.lowerBound, in: programUnitTabs) }
 
+    /// Karta widoczna w edytorze okna programu (ustawia widok przy zmianie karty) — do odczytu w śledzonym odświeżaniu
+    /// bez obserwacji tekstu i kursora.
+    public var shownUnitTab: Int?
+
+    /// Plik karty widocznej w oknie pary (D194), inaczej plik okna — stan repozytorium na pasku okna. Z pamięci kart,
+    /// bez odczytu tekstu: odświeżanie okna głównego nie dzieli tekstu na jednostki przy każdym znaku (R4-01).
+    public var shownFileURL: URL? {
+        guard unitFiles.count == 2, let i = shownUnitTab, let tabs = tabsCache?.tabs, tabs.indices.contains(i) else { return fileURL }
+        let part: UnitFile.Part = tabs[i].key.hasSuffix(" body") ? .body : .spec
+        return unitFiles.first { $0.part == part }?.url ?? fileURL
+    }
+
     /// Ostatnia pozycja kursora na karcie (klucz karty → odległość od początku odcinka) — powrót na kartę wraca w to
     /// samo miejsce, jak w oknie programu wzorca.
     @ObservationIgnored public var unitCarets: [String: Int] = [:]
@@ -216,10 +239,26 @@ public final class Document: Identifiable {
     /// Okno planu: wynik Explain Plan, cel optymalizatora, błąd (PD-OPT-001).
     public var plan: ExplainPlanResult? {
         willSet { if let p = plan, newValue?.statementID != p.statementID { previousPlan = p } }
+        didSet {
+            // Pierwszy plan okna albo plan innego polecenia — drzewo rozwinięte (jak we wzorcu); ponowny plan tego samego
+            // polecenia zachowuje rozwinięcie użytkownika (bez gałęzi, których nowy plan nie ma).
+            guard let p = plan else { return }
+            if let old = oldValue, old.sql == p.sql { planExpanded.formIntersection(p.branchIDs) } else { planExpanded = p.branchIDs }
+        }
     }
     /// Poprzedni plan okna (porównanie planów, SD-PLAN-003).
     public var previousPlan: ExplainPlanResult?
     public var planGoal: OptimizerGoal = .session
+    /// Rozwinięte gałęzie drzewa planu (PLAN_TABLE.ID): nowy plan rozwinięty w całości, ponowny plan tego samego polecenia
+    /// zachowuje rozwinięcie.
+    public var planExpanded: Set<Int> = []
+
+    /// Rozwija gałęzie nad krokiem planu, żeby zaznaczony krok był widoczny w drzewie (nawigacja, powrót z Diagramu).
+    public func revealPlanLine(_ id: Int) {
+        guard let p = plan else { return }
+        let missing = p.ancestors(of: id).filter { !planExpanded.contains($0) }
+        if !missing.isEmpty { planExpanded.formUnion(missing) }
+    }
     public var planError: String?
     /// Zmienne okna testowego (UG 5.1) i stos ostatniego błędu wykonania (UG 5.5).
     public var testVariables: [TestVariable] = []
@@ -274,6 +313,11 @@ public final class Document: Identifiable {
 
     public var title: String {
         if let customTitle { return customTitle }
+        if unitFiles.count == 2, let s = unitFiles.first(where: { $0.part == .spec }), let b = unitFiles.first(where: { $0.part == .body }) {
+            // Para plików: „emp_api.pks + .pkb” (ta sama nazwa), inaczej obie nazwy.
+            let same = s.url.deletingPathExtension().lastPathComponent == b.url.deletingPathExtension().lastPathComponent
+            return s.url.lastPathComponent + " + " + (same ? "." + b.url.pathExtension : b.url.lastPathComponent)
+        }
         if let fileURL { return fileURL.lastPathComponent }
         return ordinal > 1 ? L10n.tr("Nowe \(ordinal)") : L10n.tr("Nowe")
     }

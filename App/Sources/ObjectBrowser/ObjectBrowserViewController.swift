@@ -107,7 +107,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         outline.doubleAction = #selector(doubleClicked)
         outline.allowsMultipleSelection = true
         outline.setDraggingSourceOperationMask(.copy, forLocal: false)
-        outline.setAccessibilityLabel(L10n.tr("Object Browser"))
+        outline.setAccessibilityLabel(L10n.tr("Przeglądarka obiektów"))
         let menu = NSMenu()
         menu.delegate = self
         outline.menu = menu
@@ -129,7 +129,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         let refresh = NSButton(image: NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: L10n.tr("Odśwież"))!,
                                target: self, action: #selector(refreshAll))
         refresh.isBordered = false
-        refresh.toolTip = L10n.tr("Odśwież Object Browser")
+        refresh.toolTip = L10n.tr("Odśwież Przeglądarkę obiektów")
         status.font = InterfaceFonts.shared.small
         status.textColor = .secondaryLabelColor
         let root = NSView()
@@ -167,7 +167,7 @@ final class ObjectBrowserViewController: NSViewController, NSOutlineViewDataSour
         })
     }
 
-    /// Czcionka drzewa: własna z Preferencji › Edytor albo czcionka interfejsu o 1 pt mniejsza.
+    /// Czcionka drzewa: własna z Ustawień › Edytor albo czcionka interfejsu o 1 pt mniejsza.
     var browserFont: NSFont {
         let s = workspace.settings, ui = InterfaceFonts.shared
         return AppFonts.font(family: s.browserFontName.isEmpty ? ui.family : s.browserFontName,

@@ -86,6 +86,7 @@ public enum Log {
     public static let debugger = Logger("debugger")
     public static let tests = Logger("tests")
     public static let keychain = Logger("keychain")
+    public static let files = Logger("files")
 
     struct Configuration: Sendable {
         var level: LogLevel = .info
@@ -116,7 +117,7 @@ public enum Log {
         configuration.withLock { $0.extraSinks[id] = nil }
     }
 
-    /// Poziom i jawne nazwy (`LogPrivacy.hash`; Preferencje › Ogólne › Dziennik aplikacji). Wartości prywatne
+    /// Poziom i jawne nazwy (`LogPrivacy.hash`; Ustawienia › Ogólne › Dziennik aplikacji). Wartości prywatne
     /// (komunikaty błędów, treści) zostają ukryte także przy jawnych nazwach.
     public static func configure(level: LogLevel, revealNames: Bool) {
         configuration.withLock { $0.level = level; $0.revealNames = revealNames }

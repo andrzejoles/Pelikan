@@ -97,7 +97,7 @@ struct GroupCountsView: View {
             .contextMenu(forSelectionType: GroupCount.ID.self) { _ in } primaryAction: { ids in
                 if let id = ids.first, let g = counts.first(where: { $0.id == id }) { apply(g) }
             }
-            Text(L10n.tr("Dwuklik — pokaż w siatce tylko wiersze z tą wartością.")).font(.uiSecondary).foregroundStyle(.secondary)
+            Text(L10n.tr("Dwukrotne kliknięcie — pokaż w siatce tylko wiersze z tą wartością.")).font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)
         .frame(minWidth: 360, minHeight: 300)
@@ -131,7 +131,7 @@ struct SnippetsView: View {
             HStack {
                 TextField(L10n.tr("Szukaj"), text: $filter).textFieldStyle(.roundedBorder)
                 Button { editing = Snippet(category: L10n.tr("Moje"), name: L10n.tr("Nowy"), text: "") } label: { Image(systemName: "plus") }
-                    .iconLabel(L10n.tr("Nowy snippet"))
+                    .iconLabel(L10n.tr("Nowy fragment kodu"))
             }
             List(selection: $selection) {
                 ForEach(Array(Set(visible.map(\.category))).sorted(), id: \.self) { cat in
@@ -158,7 +158,7 @@ struct SnippetsView: View {
             } primaryAction: { ids in
                 if let id = ids.first, let s = snippets.first(where: { $0.id == id }) { insert(s) }
             }
-            Text(message.isEmpty ? L10n.tr("Dwuklik wstawia w miejscu kursora; fragment można też przeciągnąć do edytora.") : message)
+            Text(message.isEmpty ? L10n.tr("Dwukrotne kliknięcie wstawia w miejscu kursora; fragment można też przeciągnąć do edytora.") : message)
                 .font(.uiSecondary).foregroundStyle(.secondary)
         }
         .padding(10)

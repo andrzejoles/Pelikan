@@ -18,7 +18,7 @@ struct PreferenceSetsPane: View {
 
     var body: some View {
         Form {
-            Section(L10n.tr("Zestawy preferencji")) {
+            Section(L10n.tr("Zestawy ustawień")) {
                 List(selection: $selection) {
                     ForEach(sets) { s in
                         HStack {
@@ -33,7 +33,7 @@ struct PreferenceSetsPane: View {
                     }
                 }
                 .frame(minHeight: 110)
-                Picker(L10n.tr("Zmiany w Preferencjach zapisuj do"), selection: Binding(get: { workspace.preferenceEditTarget ?? Workspace.personalSetID },
+                Picker(L10n.tr("Zmiany w Ustawieniach zapisuj do"), selection: Binding(get: { workspace.preferenceEditTarget ?? Workspace.personalSetID },
                                                                                        set: { workspace.preferenceEditTarget = $0 == Workspace.personalSetID ? nil : $0 })) {
                     ForEach(sets) { Text($0.name).tag($0.id) }
                 }

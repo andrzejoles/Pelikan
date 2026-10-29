@@ -33,7 +33,7 @@ struct SearchBarView: View {
                 Toggle(L10n.tr("Wyrażenie regularne"), isOn: $options.regex)
             }
             if scope == 2 {
-                TextField(L10n.tr("Katalogi rozdzielone ; (puste — lokalizacje File Browsera)"), text: $directories).textFieldStyle(.roundedBorder)
+                TextField(L10n.tr("Katalogi rozdzielone ; (puste — lokalizacje Przeglądarki plików)"), text: $directories).textFieldStyle(.roundedBorder)
             }
             if searched {
                 Text(L10n.tr("Trafień: \(hits.count)")).font(.uiSecondary).foregroundStyle(.secondary)

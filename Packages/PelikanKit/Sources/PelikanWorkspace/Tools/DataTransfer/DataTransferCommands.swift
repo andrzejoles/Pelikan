@@ -34,7 +34,7 @@ public enum DataTransferCommands {
                  summary: L10n.tr("Eksport tabel jako SQL Inserts, w formacie własnym Pelikana albo przez Data Pump (kolejność wg kluczy obcych)."),
                  feature: "PD-TOOL-003"),
             open("tools.importTables", L10n.tr("Import tabel…"), .importTables,
-                 summary: L10n.tr("Import skryptu SQL Inserts w oknie poleceń, pliku w formacie własnym z wyborem tabel albo zrzutu Data Pump."),
+                 summary: L10n.tr("Import skryptu SQL Inserts w konsoli SQL*Plus, pliku w formacie własnym z wyborem tabel albo zrzutu Data Pump."),
                  feature: "PD-TOOL-006"),
             open("tools.textImporter", L10n.tr("Import tekstu…"), .textImporter,
                  summary: L10n.tr("Import pliku tekstowego (CSV, TSV) do tabeli: wykrywanie formatu, mapowanie pól, filtr, duplikaty, skrypt."),

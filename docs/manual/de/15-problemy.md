@@ -123,7 +123,7 @@ geprüft:
 - **Debugger**: kein Debuggen über DBMS_DEBUG_JDWP; in Triggern sind die Werte von `:new` und `:old` nicht verfügbar; in
   einer Zeile kann es nur einen Haltepunkt geben.
 - Das **Raster** kann keine Spalten oder Zeilen fixieren (einfrieren).
-- **Command Window**: Die Befehle `COPY` und `SET ENVVAR` werden nicht unterstützt.
+- **SQL*Plus-Konsole**: Die Befehle `COPY` und `SET ENVVAR` werden nicht unterstützt.
 - Der **Event Monitor** liest kein DBMS_OUTPUT anderer Sitzungen (Oracle stellt das nicht bereit).
 - Die **Werkzeuge in der linken Spalte** sind Tabs eines Bereichs (Verbindungen, Objekte, Fenster, Templates, Dateien);
   sie lassen sich nicht frei andocken oder automatisch ausblenden. Dokumente sind Tabs eines Hauptfensters,
@@ -159,5 +159,5 @@ besonders wenn Namen angezeigt wurden.
 ## Glossar
 
 Die polnischen Namen der Fenster und Begriffe in Pelikan und ihre Entsprechungen in PL/SQL Developer (z. B. *Okno SQL* —
-SQL Window, *Przeglądarka obiektów* — Object Browser, *Zatwierdź zmiany (Post)* — Post changes) enthält das Glossar:
+SQL Window, *Przeglądarka obiektów* — Object Browser, *Zapisz zmiany w bazie (Post)* — Post changes) enthält das Glossar:
 [docs/GLOSSARY.md](https://github.com/andrzejoles/Pelikan/blob/main/docs/GLOSSARY.md).

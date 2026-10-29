@@ -193,8 +193,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
-        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”.
-        if Self.uiScriptURL == nil { startRecovery() }
+        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”, bez pytań
+        // o pliki zmienione na dysku (D197).
+        if Self.uiScriptURL == nil { startRecovery() } else { workspace.externalChangePromptsEnabled = false }
         let crashedSince = crashMonitor?.begin()
         if Self.uiScriptURL == nil, let crashedSince { offerCrashReport(since: crashedSince) }
         // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
@@ -349,9 +350,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
-    /// Powrót do Pelikana: okna edytowane programem zewnętrznym dostają nową treść (PD-EDIT-028).
+    /// Powrót do Pelikana: okna edytowane programem zewnętrznym dostają nową treść (PD-EDIT-028), a plik okna na
+    /// wierzchu zmieniony przez inny program (agent, git) — pytanie o wczytanie ponowne (D197).
     func applicationDidBecomeActive(_ notification: Notification) {
         workspace.checkExternalEdits()
+        if let doc = workspace.activeDocument {
+            Task { await workspace.checkExternalChanges(of: doc) }
+        }
     }
 
     /// Odzyskiwanie po awarii (PD-FILE-001): okna z poprzedniego, nieczysto zakończonego uruchomienia i okresowa migawka.
@@ -737,7 +742,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showSnippets() {
-        ToolWindowController.show(key: "snippets", title: L10n.tr("Snippety"), size: NSSize(width: 420, height: 520)) {
+        ToolWindowController.show(key: "snippets", title: L10n.tr("Fragmenty kodu"), size: NSSize(width: 420, height: 520)) {
             SnippetsView(workspace: workspace)
         }
     }
@@ -984,7 +989,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
     }
 
     func showCompileInvalid() {
-        ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj niepoprawne obiekty"), size: NSSize(width: 680, height: 460)) {
+        ToolWindowController.show(key: "compileInvalid", title: L10n.tr("Kompiluj nieprawidłowe obiekty"), size: NSSize(width: 680, height: 460)) {
             CompileInvalidView(workspace: workspace)
         }
     }
@@ -1372,6 +1377,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                     log("ok debug.planMode")
                     continue
                 }
+                // Zrzuty okien w procesie (D196) do `<przedrostek>-<tytuł okna>.png` — w środku scenariusza; po ostatnim
+                // kroku zrzut robi się sam, gdy jest PELIKAN_SNAPSHOT.
+                #if DEBUG
+                if s.command == "debug.snapshotWindows", case .string(let prefix)? = s.args?["prefix"] {
+                    try? await Task.sleep(for: .seconds(s.delay ?? 0))
+                    for line in await UIScriptSnapshots.snapshot(prefix: prefix, mainWindow: mainWindow?.window) { log("zrzut \(line)") }
+                    continue
+                }
+                #endif
                 // Zrzut treści WKWebView w procesie (WebKit nie rysuje okien w tle w `screencapture`).
                 if s.command == "debug.snapshotWebViews", case .string(let dir)? = s.args?["directory"] {
                     await snapshotWebViews(into: URL(fileURLWithPath: dir))
@@ -1385,6 +1399,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
                 catch { log("\(s.command): \(error.localizedDescription)") }
                 try? await Task.sleep(for: .seconds(s.delay ?? 1))
             }
+            // Zrzuty okien na końcu przebiegu (D196): okna są niewidoczne, więc aplikacja rysuje je sama, zapisuje znacznik
+            // końca i kończy pracę (bez `screencapture` i zabijania procesu przez skrypt).
+            #if DEBUG
+            if let prefix = ProcessInfo.processInfo.environment["PELIKAN_SNAPSHOT"] {
+                try? await Task.sleep(for: .seconds(1.5))
+                for line in await UIScriptSnapshots.snapshot(prefix: prefix, mainWindow: mainWindow?.window) { log("zrzut \(line)") }
+                try? Data().write(to: url.appendingPathExtension("done"))
+                exit(0)
+            }
+            #endif
             try? Data().write(to: url.appendingPathExtension("done"))
         }
     }
@@ -1494,5 +1518,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         let response = alert.runModal()
         let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
         return index < buttons.count ? index : nil
+    }
+
+    /// Pytanie bez dodatkowego „Anuluj” (D197): Enter — `defaultButton`, Esc — bezpieczny `escapeButton` (może to być
+    /// ten sam przycisk), `destructiveButton` oznaczony jako niszczący i bez Enter.
+    func ask(_ title: String, message: String, buttons: [String], escapeButton: Int, defaultButton: Int, destructiveButton: Int?) async -> Int? {
+        if Self.scriptSkipsDialog(title) { return escapeButton }
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        for b in buttons { alert.addButton(withTitle: b) }
+        for (i, b) in alert.buttons.enumerated() { b.keyEquivalent = i == defaultButton ? "\r" : "" }
+        if let d = destructiveButton, alert.buttons.indices.contains(d) { alert.buttons[d].hasDestructiveAction = true }
+        // Esc kończy pytanie bezpieczną odpowiedzią — także gdy to przycisk z Enter (jeden przycisk ma jeden klawisz).
+        let first = NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+        let monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Esc albo ⌘. (anulowanie w macOS).
+            let cancel = event.keyCode == 53
+                || (event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command && event.charactersIgnoringModifiers == ".")
+            guard cancel, NSApp.modalWindow === alert.window else { return event }
+            NSApp.stopModal(withCode: NSApplication.ModalResponse(rawValue: first + escapeButton))
+            return nil
+        }
+        defer { if let monitor { NSEvent.removeMonitor(monitor) } }
+        let response = alert.runModal()
+        let index = response.rawValue - first
+        return buttons.indices.contains(index) ? index : escapeButton
     }
 }

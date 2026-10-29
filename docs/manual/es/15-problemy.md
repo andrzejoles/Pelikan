@@ -11,7 +11,7 @@ clic en **Abrir igualmente** (consulta el capítulo *Introducción*).
 
 - Descarga Instant Client para macOS en la versión **ARM64** (Basic o Basic Light) y descomprímelo o instálalo según las
   instrucciones de Oracle.
-- Indica el directorio con el archivo `libclntsh.dylib` en **Preferencias › Oracle › Oracle Instant Client** y reinicia
+- Indica el directorio con el archivo `libclntsh.dylib` en **Ajustes › Oracle › Oracle Instant Client** y reinicia
   Pelikan.
 - Si el cliente está en la carpeta Descargas y macOS preguntó por el acceso de Pelikan a esa carpeta y lo denegaste,
   cámbialo en **Ajustes del Sistema › Privacidad y seguridad › Archivos y carpetas** o mueve el cliente a otro lugar.
@@ -23,12 +23,12 @@ clic en **Abrir igualmente** (consulta el capítulo *Introducción*).
 - Haz clic en **Probar** en la definición de la conexión: el mensaje de la base de datos o del cliente de Oracle
   indicará la causa.
 - **ORA-12154 / TNS:** no se encontró el alias; comprueba el directorio de configuración (pestaña **Avanzado** o
-  **Preferencias › Oracle › Oracle Net y Oracle Wallet**) o usa una dirección `host:puerto/servicio`.
+  **Ajustes › Oracle › Oracle Net y Oracle Wallet**) o usa una dirección `host:puerto/servicio`.
 - **ORA-01017:** contraseña incorrecta; Pelikan vuelve a pedirla. Marca que se recuerde para sustituir la contraseña en
   el Llavero.
 - **ORA-28001:** la contraseña ha caducado; Pelikan muestra la ventana de cambio de contraseña.
 - **Oracle Wallet:** el campo **Base de datos** debe ser exactamente el alias guardado en la cartera, y la cartera debe
-  tener el archivo `cwallet.sso` (inicio de sesión automático). El estado de la cartera se ve en **Preferencias ›
+  tener el archivo `cwallet.sso` (inicio de sesión automático). El estado de la cartera se ve en **Ajustes ›
   Oracle**. Los cambios en esta sección surten efecto tras reiniciar.
 - **Túnel SSH:** Pelikan usa el `ssh` del sistema; comprueba en el Terminal si funciona `ssh
   usuario@bastion.example.com` (clave en el agente SSH, host conocido). Indica la dirección de la base de datos tal como
@@ -42,7 +42,7 @@ clic en **Abrir igualmente** (consulta el capítulo *Introducción*).
 - ⌃F8, ⌃F2, ⌃F3 y otros atajos con ⌃ pueden estar ocupados por macOS (**Ajustes del Sistema › Teclado › Funciones
   rápidas de teclado**). Usa el equivalente con ⌘ (p. ej., ⇧⌘↩ en lugar de ⌃F8) o desactiva el atajo del sistema.
 - ⌃Espacio cambia por omisión la fuente de entrada en macOS: invoca la sugerencia de código con ⌥⎋.
-- Comprueba el atajo del comando en la paleta de comandos (⇧⌘P) o en **Preferencias › Teclado**.
+- Comprueba el atajo del comando en la paleta de comandos (⇧⌘P) o en **Ajustes › Teclado**.
 
 ### Una consulta tarda demasiado
 
@@ -85,7 +85,7 @@ indica la sentencia GRANT para el administrador de la base de datos, p. ej.
 ### Pelikan se cerró inesperadamente
 
 En el siguiente inicio, Pelikan propondrá recuperar las ventanas sin guardar (también más tarde: **Archivo › Recuperar
-ventanas…**), si en **Preferencias › Herramientas** está activada la conservación de las ventanas sin guardar. Los
+ventanas…**), si en **Ajustes › Herramientas** está activada la conservación de las ventanas sin guardar. Los
 cambios de los archivos también están en el historial local (**Archivo › Historial local**).
 
 ### Registro de la aplicación
@@ -98,7 +98,7 @@ archivos ocupan como máximo 2 MB y Pelikan conserva los cinco últimos.
 
 El registro nunca contiene contraseñas, texto de sentencias SQL ni datos de la base de datos. Los nombres de
 conexiones, servidores y objetos y las rutas de archivos están ocultos o sustituidos por un hash de forma
-predeterminada (el mismo nombre tiene siempre el mismo hash). En **Preferencias › General › Registro de la
+predeterminada (el mismo nombre tiene siempre el mismo hash). En **Ajustes › General › Registro de la
 aplicación** eliges cuánto se registra (*Advertencias y errores*, *Eventos*, *Detalles — diagnóstico*) y puedes
 mostrar los nombres, algo útil para buscar la causa de un problema en tu propio equipo.
 
@@ -119,7 +119,7 @@ comprobado en un entorno real:
 - **Depurador**: no hay depuración mediante DBMS_DEBUG_JDWP; en los disparadores no están disponibles los valores `:new`
   y `:old`; en una línea solo puede haber un punto de interrupción.
 - La **cuadrícula** no puede inmovilizar (congelar) columnas ni filas.
-- **Command Window**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
+- **Consola SQL*Plus**: los comandos `COPY` y `SET ENVVAR` no están admitidos.
 - El **Event Monitor** no lee el DBMS_OUTPUT de otras sesiones (Oracle no lo ofrece).
 - Las **herramientas de la columna izquierda** son pestañas de un único panel (Conexiones, Objetos, Ventanas, Templates,
   Archivos); no se pueden acoplar libremente ni ocultar automáticamente. Los documentos son pestañas de una única ventana
@@ -155,5 +155,5 @@ mostraban los nombres.
 ## Glosario
 
 Los nombres polacos de las ventanas y los conceptos de Pelikan y sus equivalentes en PL/SQL Developer (p. ej., *Okno
-SQL*: SQL Window; *Przeglądarka obiektów*: Object Browser; *Zatwierdź zmiany (Post)*: Post changes) están en el glosario
+SQL*: SQL Window; *Przeglądarka obiektów*: Object Browser; *Zapisz zmiany w bazie (Post)*: Post changes) están en el glosario
 de términos: [docs/GLOSSARY.md](https://github.com/andrzejoles/Pelikan/blob/main/docs/GLOSSARY.md).

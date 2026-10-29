@@ -7,20 +7,20 @@ AI agents.
 
 - Database passwords, SSH passwords (tunnels and Pro*C targets) and SSH key passphrases are stored **only in the macOS
   Keychain** — in the login keychain, without iCloud synchronization, available only while the Mac is unlocked.
-- Passwords **never** go to Pelikan's files (connection definitions, preferences, worksets), logs, command
+- Passwords **never** go to Pelikan's files (connection definitions, settings, worksets), logs, command
   history, process arguments or environment variables. Commands with passwords (`CONNECT`, `ALTER USER … IDENTIFIED BY`,
   `CREATE DATABASE LINK`) are not saved in the command history.
 - The one exception, only on your explicit request: **Export Connections with Passwords…** writes the passwords to a
   file (encrypted with a passphrase or as plain text) after confirmation with Touch ID or your Mac password — see
   **Connections**, “Exporting and importing definitions”. The AI agent does not have this command.
 - A password not remembered in the Keychain is kept only in memory until the application quits.
-- The **Require Touch ID or Mac password before using a saved password** option (**Preferences › Oracle › Connection
+- The **Require Touch ID or Mac password before using a saved password** option (**Settings › Oracle › Connection
   passwords**) requires confirmation once per connection while the application is running — also when the connection is
   used by an AI agent.
 - The SSH password reaches the `ssh` program through a one-time pipe accessible only to your account, not through
   arguments, the environment or a file.
 - Passwords from an Oracle Wallet never reach Pelikan — logon is handled by the Oracle client.
-- Connection definition exports, preference exports, definitions of jobs, transfers and user tools, utPLSQL scripts for
+- Connection definition exports, settings exports, definitions of jobs, transfers and user tools, utPLSQL scripts for
   CI and startup parameters do not contain passwords.
 
 ## Protecting databases against mistakes
@@ -46,7 +46,7 @@ The rules for agents are described in the *AI agents* chapter. In brief:
 - it reads in read-only transactions, with limits;
 - it makes changes only after your consent in a window without a default button, and DML stays uncommitted until a
   separate consent to COMMIT;
-- it has no access to the Command Window, system commands, the debugger, Oracle pack reports or the remote build;
+- it has no access to the SQL*Plus Console, system commands, the debugger, Oracle pack reports or the remote build;
 - it communicates with Pelikan only through a socket accessible to your account, with a one-time session token;
 - the data the agent reads goes to the AI model provider — for sensitive data use a separate agent database user with
   limited privileges and column masking.
@@ -67,7 +67,7 @@ their servers — they send there what the agent reads in Pelikan.
 ## Data on disk
 
 Pelikan's data is in the `~/Library/Application Support/Pelikan` directory: connection definitions (without passwords),
-preferences, command history, worksets and window recovery snapshots (they may contain the text of unsaved windows),
+settings, command history, worksets and window recovery snapshots (they may contain the text of unsaved windows),
 local file history, reports, carts, the agent log. Files with window content and the log are saved with access
 permissions for your account only. If your Mac is shared, remember that a person with access to your macOS account also
 has access to this data — it is protected by your Mac login password and FileVault disk encryption.

@@ -28,13 +28,13 @@ of rows and the time are shown; a time longer than 100 seconds is formatted as h
 play a sound and bounce its icon in the Dock. When **Break** does not work (some database operations do not respond to
 interruption), use **Session › Terminate window session (Kill)**.
 
-Pelikan never commits changes automatically (the **AutoCommit SQL statements** option in **Preferences › SQL Window** is
+Pelikan never commits changes automatically (the **AutoCommit SQL statements** option in **Settings › SQL Window** is
 off by default). An open transaction is indicated in the status bar (“● transaction open”).
 
 ## Variables
 
 - **Substitution variables** `&name` and `&&name` — before execution Pelikan shows the **Variables** window with fields
-  for the values. In the SQL Window `&&` in text means an ordinary `&` character (e.g. `'R&&D'`); in the Command Window
+  for the values. In the SQL Window `&&` in text means an ordinary `&` character (e.g. `'R&&D'`); in the SQL*Plus Console
   `&&` works as in SQL*Plus (the variable is remembered).
 - **Bind variables** `:name` — also go to the variables window (`:new` and `:old` in triggers are skipped).
 - **JasperReports report parameters** `$P{…}`, `$P!{…}` and `$X{IN, column, parameter}` — Pelikan recognizes them and
@@ -66,10 +66,10 @@ the directory of the window's file.
 
 ![Editing a result: a new row and the pending changes counter](../img/siatka-edycja.png)
 
-The grid fetches rows in batches (you set the number in **Preferences › SQL Window › Rows per page**) and fetches more
+The grid fetches rows in batches (you set the number in **Settings › SQL Window › Rows per page**) and fetches more
 while you scroll. The “(more…)” label next to the row count means that the result is not complete. **Next page** (⌘⇟)
 and **Last page (fetch all)** (⇧⌘⇟) are in the **Session › Result** menu and on the bar above the grid. For very large
-results Pelikan asks before the size limit from Preferences is exceeded.
+results Pelikan asks before the size limit from Settings is exceeded.
 
 - **Sorting** — click a column header (ascending, descending, unsorted) on the fetched rows.
 - **Selecting** — rows, columns and blocks of cells (click, then ⇧+click).
@@ -148,7 +148,7 @@ without time. **Clear Query By Example** restores the original query.
 
 ## Statistics and plan
 
-When enabled in **Preferences › SQL Window › Statistics**, the **Statistics** tab shows the change in session statistics
+When enabled in **Settings › SQL Window › Statistics**, the **Statistics** tab shows the change in session statistics
 (V$MYSTAT) for each execution. **Tools › Explain Plan** (F5) shows the plan of the statement under the cursor, and
 **Tools › Autotrace** executes it and shows the actual plan — see the *Execution plan, sessions and administration*
 chapter.

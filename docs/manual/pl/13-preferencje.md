@@ -1,22 +1,22 @@
-# Preferencje i skróty klawiszowe
+# Ustawienia i skróty klawiszowe
 
-## Okno Preferencje
+## Okno Ustawienia
 
 Otworzysz je przez **Pelikan › Ustawienia…** (⌘,). Zmiany zapisują się od razu — nie ma przycisku Zastosuj. Pole
 **Szukaj ustawienia** u góry znajduje ustawienie po nazwie (w języku interfejsu) i przenosi do właściwej karty.
 
 | Karta | Co ustawisz |
 |---|---|
-| Ogólne | tryb sesji (Multi, Dual, Single), zachowanie przy wylogowaniu z otwartą transakcją, sprawdzanie połączenia, przypinanie połączenia nowych okien, kolory połączeń i reguły `użytkownik@baza`, wygląd (jak system, jasny, ciemny), czcionka interfejsu (krój, styl, wielkość), język interfejsu, katalogi startowe i dodatkowe rozszerzenia plików, pytanie o zapis nowych okien |
+| Ogólne | tryb sesji (Multi, Dual, Single), zachowanie przy wylogowaniu z otwartą transakcją, sprawdzanie połączenia, przypinanie połączenia nowych okien, kolory połączeń i reguły `użytkownik@baza`, wygląd (jak system, jasny, ciemny), czcionka interfejsu (krój, styl, wielkość), język interfejsu, katalogi startowe i dodatkowe rozszerzenia plików, pytanie o zapis nowych okien; specyfikacja i ciało w osobnych plikach (rozszerzenia, otwieranie pary); pliki zmienione na dysku przez inny program (wykrywanie, wczytywanie bez pytania) |
 | Okno SQL | AutoSelect, AutoCommit, potwierdzanie COMMIT i ROLLBACK, AutoCommit okna testu, liczba wierszy na stronę, układ liczb, Auto Format w Large Data Editor, statystyki, DBMS_OUTPUT (włączony, czyszczenie przed wykonaniem), formaty DATE i TIMESTAMP |
-| Edytor | czcionki edytora, siatki wyników i Object Browsera (krój, styl, wielkość; ligatury) i kolory, podpowiedź kodu (automatycznie po kropce, dopasowanie, wielkość liter, funkcje standardowe, układ „(all)”), AutoReplace, zapamiętywanie stanu okien, wielkość liter słów kluczowych, podświetlenia, status linii, zawijanie, znaki specjalne, wcięcia i tabulacje |
+| Edytor | czcionki edytora, siatki wyników i Przeglądarki obiektów (krój, styl, wielkość; ligatury) i kolory, podpowiedź kodu (automatycznie po kropce, dopasowanie, wielkość liter, funkcje standardowe, układ „(all)”), AutoReplace, zapamiętywanie stanu okien, wielkość liter słów kluczowych, podświetlenia, status linii, zawijanie, znaki specjalne, wcięcia i tabulacje |
 | Formater | reguły formatowania PL/SQL i automatyczne formatowanie (po otwarciu z bazy, przed kompilacją, przed zapisem) |
 | Klawiatura | profil skrótów i własne skróty komend |
 | Oracle | Instant Client, ustawienia NLS sesji, zamykanie bezczynnych sesji, wersja dokumentacji Oracle dla F1, Touch ID dla zapisanych haseł, Oracle Net i Oracle Wallet, kompilator, debuger, podpowiedzi kompilatora i konwencje nazw, widoki DBA_ |
-| Object Browser | widoczne foldery i kolejność, potwierdzanie rekompilacji, akcje przeciągania, filtry nazwane, foldery użytkownika |
+| Przeglądarka obiektów | widoczne foldery i kolejność, potwierdzanie rekompilacji, akcje przeciągania, filtry nazwane, foldery użytkownika |
 | Narzędzia | wyszukiwania w sieci, edytor zewnętrzny, zewnętrzna przeglądarka różnic, dokumenty, kopie zapasowe i odzyskiwanie okien, pytania „Nie pytaj więcej” |
 | Agenci | programy agentów, tryb ścisły, limity wywołań i zapytań agenta |
-| Zestawy | zestawy preferencji, eksport i import, pasek szybkiego dostępu |
+| Zestawy | zestawy ustawień, eksport i import, pasek szybkiego dostępu |
 
 Kilka ustawień działa dopiero po ponownym uruchomieniu Pelikana: katalog Instant Client, Oracle Net i Oracle Wallet
 oraz język interfejsu.
@@ -34,7 +34,7 @@ Część pytań (np. potwierdzenie COMMIT, przeniesienie do Kosza) ma pole **Nie
 wtedy Twoją odpowiedź. Listę zapamiętanych odpowiedzi i przycisk **Pokazuj znowu** znajdziesz w karcie **Narzędzia**.
 Potwierdzeń zmian na produkcji i zgód dla agentów AI nie da się wyłączyć w ten sposób.
 
-## Zestawy preferencji
+## Zestawy ustawień
 
 Zestawy pozwalają mieć inne ustawienia dla różnych połączeń — np. inny format dat dla jednej bazy albo ostrzejsze
 reguły dla produkcji. Pelikan nakłada zestawy w kolejności (od najważniejszego): **osobisty połączenia**,
@@ -42,17 +42,17 @@ reguły dla produkcji. Pelikan nakłada zestawy w kolejności (od najważniejsze
 `użytkownik@baza` albo nazwę połączenia z `*` i `%` (np. `app@prod*`) i działają, gdy pasuje do nich połączenie
 główne.
 
-![Karta Zestawy w Preferencjach](../img/zestawy-preferencji.png)
+![Karta Zestawy w Ustawieniach](../img/zestawy-preferencji.png)
 
-W karcie **Zestawy** (albo **Narzędzia › Preferencje › Zestawy preferencji…**):
+W karcie **Zestawy** (albo **Narzędzia › Ustawienia › Zestawy ustawień…**):
 
 1. Dodaj zestaw: wybierz rodzaj, wpisz nazwę i wzorzec połączeń, kliknij **Dodaj**.
-2. W polu **Zmiany w Preferencjach zapisuj do** wybierz zestaw, który chcesz edytować. Od tej chwili zmiany w innych
+2. W polu **Zmiany w Ustawieniach zapisuj do** wybierz zestaw, który chcesz edytować. Od tej chwili zmiany w innych
    kartach trafiają do niego.
 3. Przy ustawieniach widać, z którego zestawu pochodzi wartość; **Dziedzicz** usuwa wartość z edytowanego zestawu.
 
-**Eksport i import** zapisuje do pliku JSON wybrane sekcje obowiązujących preferencji (**Narzędzia › Preferencje ›
-Eksportuj preferencje…**) i wczytuje je do edytowanego zestawu (**Importuj preferencje…**). Eksport nie zawiera haseł
+**Eksport i import** zapisuje do pliku JSON wybrane sekcje obowiązujących ustawień (**Narzędzia › Ustawienia ›
+Eksportuj ustawienia…**) i wczytuje je do edytowanego zestawu (**Importuj ustawienia…**). Eksport nie zawiera haseł
 ani historii plików.
 
 ## Pasek narzędzi i szybki dostęp
@@ -78,11 +78,11 @@ jej skróty.
 | Zatwierdź (COMMIT) / Wycofaj (ROLLBACK) | F10 / ⇧F10 (także ⌥⌘↩ / ⌥⌘⌫) | ⌥⌘↩ / ⌥⌘⌫ (także F10 / ⇧F10) |
 | Explain Plan | F5 | F5 |
 | Zaloguj… | ⇧⌘L | ⇧⌘L |
-| Podpowiedź kodu | ⌃Spacja | ⌥⎋, ⌃Spacja |
+| Pokaż podpowiedzi kodu | ⌃Spacja | ⌥⎋, ⌃Spacja |
 | Przejdź do deklaracji | ⌃⌥D, ⌃⌘J | ⌃⌘J |
 | Historia poleceń | ⌃E, ⇧⌘H | ⇧⌘H |
 | Znajdź i zamień / przejdź do linii | ⌃F, ⌘F / ⌃G, ⌘L | ⌘F / ⌘L |
-| Komentarz linii | ⌃−, ⌘/ | ⌘/ |
+| Przełącz komentarz linii | ⌃−, ⌘/ | ⌘/ |
 | Formatuj kod PL/SQL | ⇧⌘F | ⇧⌘F |
 | Szukaj w edytorach i plikach | ⌥⇧⌘F | ⌥⇧⌘F |
 | Znajdź obiekty bazy | ⌃⇧O, ⇧⌘O | ⇧⌘O |

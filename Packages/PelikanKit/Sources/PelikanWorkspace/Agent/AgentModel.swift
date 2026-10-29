@@ -31,7 +31,7 @@ public struct AgentProfile: Sendable, Codable, Hashable, Identifiable {
     ]
 }
 
-/// Ustawienia agentów (Preferencje › Agenci).
+/// Ustawienia agentów (Ustawienia › Agenci).
 public struct AgentSettings: Sendable, Codable, Hashable {
     public var profiles: [AgentProfile] = AgentProfile.builtIn
     /// Tryb ścisły: CLI bez własnej powłoki i edycji plików, tylko narzędzia Pelikana (gdzie CLI na to pozwala).
@@ -45,7 +45,7 @@ public struct AgentSettings: Sendable, Codable, Hashable {
     public var queryTimeoutSeconds = 30
     public var queryMaxBytes = 1_000_000
 
-    /// Dozwolone zakresy limitów (Preferencje › Agenci); wartości z pliku (settings.json, zestaw preferencji, import)
+    /// Dozwolone zakresy limitów (Ustawienia › Agenci); wartości z pliku (settings.json, zestaw preferencji, import)
     /// są do nich przycinane: ujemny albo ogromny limit czasu przerywał aplikację przy konwersji, limit wywołań ≤ 0
     /// blokował wszystko bez komunikatu. Rozmiar wyniku — z zapasem poniżej limitu ramki mostu MCP (4 MB, tekst
     /// kodowany w JSON dwa razy).

@@ -32,7 +32,23 @@ mit **Bearbeiten** auf einem Objekt im Object Browser (der Code wird direkt aus 
   die Fehlerbeschreibung in der Oracle-Dokumentation.
 - Die Statusleiste zeigt, ob der Text geändert und nicht gespeichert und ob er nicht kompiliert ist.
 - **Datei › Speichern** (⌘S) speichert den Fenstertext unverändert (ohne angehängtes `/`), mit Namen und Endung
-  entsprechend der Einheit (z. B. `.pck`, `.prc`, `.fnc`, `.typ`, `.trg`).
+  entsprechend der Einheit (z. B. `.prc`, `.fnc`, `.trg`).
+- **Spezifikation und Body in getrennten Dateien.** Ein Fenster mit Spezifikation und Body eines Pakets wird in ein
+  Dateipaar `name.pks` (Spezifikation) und `name.pkb` (Body) gespeichert, ein Typ in `name.tps` und `name.tpb`, ohne
+  „/“. **Speichern unter …** (und das erste **Speichern** eines neuen Fensters) fragt nach dem Namen und legt beide
+  Dateien im gewählten Ordner an; existiert die Body-Datei bereits, fragt es, ob sie ersetzt werden soll. Jede Datei
+  behält ihre Kodierung und Zeilenenden, und **Speichern** schreibt nur die Datei, deren Einheit sich geändert hat.
+  Eine Datei enthält den Text ihres Reiters (mit Kommentaren über `CREATE` und `GRANT`-Anweisungen nach der Einheit).
+  Ein Paarfenster, aus dem Sie den Body entfernen oder dem Sie eine weitere Einheit hinzufügen, wird nicht in diese
+  Dateien gespeichert — **Datei › Als eine Datei speichern …** speichert das ganze Fenster wie bisher in einer Datei
+  (z. B. `.pck`).
+- Das Öffnen von `name.pks` oder `name.pkb`, wenn die Paardatei daneben liegt, öffnet beide Einheiten in einem Fenster
+  auf dem Reiter der geöffneten Datei; der Fenstertitel lautet `name.pks + .pkb`. Das funktioniert auch aus dem Finder,
+  dem Dateibrowser, den zuletzt verwendeten Dateien, Projekten und Worksets. Dateien, die nicht Spezifikation und Body
+  eines Pakets oder Typs sind, öffnen sich einzeln — auch eine `.pks`-Datei mit einem Kommentar nach dem `END` der
+  Spezifikation (beim Speichern würde er in die Body-Datei wandern). Hat sich eine Paardatei seit dem Öffnen auf dem
+  Datenträger geändert (anderes Programm, `git checkout`), fragt **Speichern** vor dem Überschreiben. Erweiterungen und das Öffnen des Paars stellen Sie unter
+  **Einstellungen › Allgemein › Spezifikation und Body in getrennten Dateien** ein.
 
 ### Sicheres Arbeiten mit Code in der Datenbank
 
@@ -60,7 +76,7 @@ Zeilenende unterdrückt den Hinweis für diese Zeile.
 
 ## Codeeditor
 
-Derselbe Editor arbeitet in SQL-, Programm-, Test- und Befehlsfenstern. Er bearbeitet selbst Pakete mit Zehntausenden
+Derselbe Editor arbeitet in SQL-, Programm- und Testfenstern sowie in der SQL*Plus-Konsole. Er bearbeitet selbst Pakete mit Zehntausenden
 von Zeilen ohne Verzögerung.
 
 ### Vorschläge und Navigation
@@ -186,6 +202,15 @@ gesammelt. **Bearbeiten › To-Do-Aufgabe einfügen** fügt einen Kommentar ein,
   Kodierung der Datei nicht speichern lässt, blockiert das Speichern mit genauer Angabe von Zeile und Spalte — die
   Kodierung ändern Sie nur bewusst über **Datei › Dateikodierung …**.
 - **Datei › Schreibgeschützt** sperrt das Fenster für die Bearbeitung.
+- Eine geöffnete Datei wird nicht gesperrt — andere Programme (Agent, git, Editor) können sie ändern. Kehren Sie zum
+  Fenster, zu einem Reiter des Paars oder zu Pelikan zurück und hat sich die Datei auf dem Datenträger geändert, fragt
+  Pelikan, ob sie **neu geladen** werden soll; ein Fenster mit ungespeicherten Änderungen warnt vor deren Verlust
+  (**Meine Änderungen behalten** behält den Fenstertext, und ein späteres **Speichern** warnt noch einmal vor dem
+  Überschreiben). Eine bloße Änderung des Dateidatums (z. B. `touch`) löst keine Frage aus. Im Fenster eines
+  `.pks`/`.pkb`-Paars wird nur die geänderte Datei neu geladen. Gelöschte oder verschobene Datei: **Im Fenster behalten**
+  oder **Fenster schließen**. **Datei › Von der Festplatte neu laden** tut dies auf Wunsch. Unter **Einstellungen ›
+  Allgemein › Dateien** schalten Sie die Erkennung ab oder das Neuladen ohne Rückfrage ein, wenn das Fenster keine
+  Änderungen hat.
 - **Datei › Mit Verbindung öffnen …** öffnet eine Datei mit sofort angehefteter Verbindung.
 - **Bearbeiten › In externem Editor öffnen** übergibt den Text an das unter **Einstellungen › Werkzeuge** angegebene
   Programm (z. B. Visual Studio Code); nach der Rückkehr zu Pelikan werden die Änderungen geladen.

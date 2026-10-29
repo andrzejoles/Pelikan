@@ -235,7 +235,7 @@ public final class ConnectionStore {
     }
 
     private static func notOnList(_ id: UUID, temporary: Bool) -> CommandError {
-        temporary ? .notAvailable(L10n.tr("Połączenia tymczasowego (CONNECT w oknie poleceń) nie można skopiować ani przenieść"))
+        temporary ? .notAvailable(L10n.tr("Połączenia tymczasowego (CONNECT w konsoli SQL*Plus) nie można skopiować ani przenieść"))
             : .invalidArgument("connection", L10n.tr("nieznane połączenie"))
     }
 

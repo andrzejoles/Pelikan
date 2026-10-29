@@ -307,7 +307,7 @@ struct TestPanel: View {
                 Button(L10n.tr("Eksportuj…")) { workspace.perform("stats.export") }.disabled(document.statisticTotals.isEmpty)
             }
             .padding(.horizontal, 6)
-            // Ostatnie wykonanie i suma okna; wybór statystyk w Preferencjach › Okno SQL (PD-OPT-004).
+            // Ostatnie wykonanie i suma okna; wybór statystyk w Ustawieniach › Okno SQL (PD-OPT-004).
             Table(Profiler.rows(last: document.statistics, totals: document.statisticTotals, selected: workspace.settings.selectedStatistics, filter: statFilter)) {
                 TableColumn(L10n.tr("Statystyka")) { (s: Profiler.StatisticRow) in Text(s.name) }
                 TableColumn(L10n.tr("Ostatnie")) { (s: Profiler.StatisticRow) in Text(Self.number(s.last)).monospacedDigit() }.width(110)

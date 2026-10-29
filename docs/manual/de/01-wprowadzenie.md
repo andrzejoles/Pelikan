@@ -3,7 +3,7 @@
 Pelikan ist eine native macOS-Umgebung für die Arbeit mit Oracle-Datenbanken: zum Schreiben und Ausführen von SQL, zum
 Erstellen, Testen und Debuggen von PL/SQL-Code, zum Durchsuchen und Bearbeiten von Datenbankobjekten, für utPLSQL-Tests
 sowie für Werkzeuge zum Vergleichen, Exportieren und Administrieren. Fensteraufbau und Tastenkürzel entsprechen PL/SQL
-Developer, sodass dessen Benutzer vertraute Fenster wiederfinden: **SQL Window**, **Command Window**, **Program
+Developer, sodass dessen Benutzer vertraute Fenster wiederfinden: **SQL Window**, **SQL*Plus-Konsole**, **Program
 Window**, **Test Window**, **Explain Plan Window** und **Object Browser** (Tab **Objekte**).
 
 Diese Anleitung beschreibt, wie Sie typische Aufgaben erledigen. Die vollständige Liste der Befehle mit ihren aktuellen
@@ -82,7 +82,7 @@ Pelikan hat ein Hauptfenster:
 - **Linke Spalte** mit den Tabs **Verbindungen** (Verbindungsliste mit Ordnern und zuletzt verwendeten Verbindungen),
   **Objekte** (Object Browser), **Fenster** (Liste der offenen Fenster), **Templates** und **Dateien** (File Browser).
 - **Dokument-Tabs** in der Mitte — jedes SQL-, Programm-, Test- oder Planfenster hat einen eigenen Tab mit einem
-  farbigen Typbuchstaben: S — SQL Window, P — Program Window, T — Test Window, C — Command Window, E — Explain Plan
+  farbigen Typbuchstaben: S — SQL Window, P — Program Window, T — Test Window, C — SQL*Plus-Konsole, E — Explain Plan
   Window, R — Report Window, D — Diagrammfenster, N — SQL-Notizbuch. Ein Mittelklick auf einen Tab schließt das Fenster;
   das Tab-Menü schließt die übrigen Fenster oder die Fenster links bzw. rechts.
 - **Symbolleiste** mit den häufigsten Aktionen (neues Fenster, öffnen, speichern, ausführen, unterbrechen, COMMIT,
@@ -110,7 +110,7 @@ Der Fenstertitel zeigt die Hauptverbindung und das aktive Workset, der Untertite
 Unter der Symbolleiste liegt das **Menüband** — jede Aktion mit einem Klick, ohne Suchen in Menüs und ohne Tastenkürzel
 zu merken. Die festen Registerkarten sind **Start** (neue Fenster, Dateien, Ausführung, COMMIT und ROLLBACK, Verbindung,
 Suche), **Bearbeiten**, **Objekte**, **Debuggen und Testen**, **Werkzeuge**, **Berichte** und **Ansicht**. Bei einem
-Programm-, Ergebnis-, Diagramm-, Berichts-, Notizbuch-, Plan- oder Befehlsfenster erscheint eine farbige
+Programm-, Ergebnis-, Diagramm-, Berichts-, Notizbuch-, Planfenster oder einer SQL*Plus-Konsole erscheint eine farbige
 **Kontextregisterkarte** (z. B. **Programm** mit Kompilierung, Einheiten, Vergleich mit der Quelle in der Datenbank und
 Tests). Das Menüband merkt sich die gewählte Registerkarte je Fensterart und kehrt beim Fensterwechsel dorthin zurück.
 

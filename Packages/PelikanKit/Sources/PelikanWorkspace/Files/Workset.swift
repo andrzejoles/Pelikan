@@ -28,20 +28,66 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var encoding: UInt?
     public var bom: Bool?
     public var lineEnding: String?
+    /// Okno programu powiązane z plikami specyfikacji i ciała (D194) — `filePath` to plik specyfikacji.
+    public var unitFiles: [WorksetUnitFile]?
+    /// Skrót bajtów pliku okna z otwarcia albo zapisu (szesnastkowo, D197) — okno ze zmianami przywrócone z workseta
+    /// pyta przy aktywacji i zapisie, gdy plik zmienił się na dysku po zapisie workseta.
+    public var fileHash: String?
 
     /// Format zapisany w worksecie (nil — starszy workset).
     var fileFormat: TextFileFormat? {
         guard let encoding else { return nil }
-        var f = TextFileFormat()
-        f.encoding = String.Encoding(rawValue: encoding)
-        f.hasBOM = bom ?? false
-        f.lineEnding = lineEnding.flatMap(TextFileFormat.LineEnding.init(rawValue:)) ?? .lf
-        return f
+        return TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
     }
 
     /// Puste okno edytora bez pliku (np. okno SQL otwarte przy starcie) — nie warto go dopisywać do cudzego workseta.
     var isBlank: Bool {
         filePath == nil && consoleConnectionID == nil && !modified && (text ?? "").isEmpty && [.sql, .program, .command].contains(kind)
+    }
+}
+
+/// Plik jednostki okna pary w worksecie (D194): ścieżka, część, format i zakończenie treści pliku.
+public struct WorksetUnitFile: Sendable, Codable, Hashable {
+    public var part: UnitFile.Part
+    public var path: String
+    public var encoding: UInt
+    public var bom: Bool
+    public var lineEnding: String
+    public var ending: String
+    /// Skrót bajtów pliku z ostatniego odczytu albo zapisu (szesnastkowo) — zapis po przywróceniu pyta, gdy plik zmienił
+    /// się na dysku od zapisu workseta; starsze worksety bez niego — bez sprawdzania.
+    public var hash: String?
+    public var needsRewrite: Bool?
+
+    init(_ f: UnitFile) {
+        part = f.part
+        path = f.url.path
+        encoding = f.format.encoding.rawValue
+        bom = f.format.hasBOM
+        lineEnding = f.format.lineEnding.rawValue
+        ending = f.ending
+        hash = f.savedHash.map { String($0, radix: 16) }
+        needsRewrite = f.needsRewrite ? true : nil
+    }
+
+    /// Plik jednostki; treść zapisana — z pliku na dysku w kodowaniu projektu (zapis pomija niezmienione pliki), brak
+    /// pliku — pusta.
+    func unitFile(preferred: String.Encoding?) -> UnitFile {
+        let url = URL(fileURLWithPath: path)
+        let format = TextFileFormat(encodingRaw: encoding, bom: bom, lineEnding: lineEnding)
+        let saved = (try? Data(contentsOf: url)).map { TextFileCodec.decode($0, preferred: preferred).text } ?? ""
+        var f = UnitFile(part: part, url: url, format: format, ending: ending, savedText: saved, savedHash: hash.flatMap { UInt64($0, radix: 16) })
+        f.needsRewrite = needsRewrite ?? false
+        return f
+    }
+}
+
+extension TextFileFormat {
+    init(encodingRaw: UInt, bom: Bool?, lineEnding: String?) {
+        self.init()
+        encoding = String.Encoding(rawValue: encodingRaw)
+        hasBOM = bom ?? false
+        self.lineEnding = lineEnding.flatMap(LineEnding.init(rawValue:)) ?? .lf
     }
 }
 
@@ -185,8 +231,11 @@ public final class WorksetStore {
             if i == w.activeIndex { m.activeIndex = m.documents.count }
             m.documents.append(d)
         }
-        let paths = Set(m.documents.compactMap(\.filePath))
-        m.documents += u.documents.filter { $0.filePath.map { !paths.contains($0) } ?? true }
+        // Okno pary (D194) zajmuje oba swoje pliki.
+        let paths = Set(m.documents.flatMap { [$0.filePath].compactMap { $0 } + ($0.unitFiles ?? []).map(\.path) })
+        m.documents += u.documents.filter { d in
+            ([d.filePath].compactMap { $0 } + (d.unitFiles ?? []).map(\.path)).allSatisfy { !paths.contains($0) }
+        }
         return m
     }
 
@@ -270,8 +319,10 @@ extension Workspace {
                     e.encoding = d.fileFormat.encoding.rawValue
                     e.bom = d.fileFormat.hasBOM
                     e.lineEnding = d.fileFormat.lineEnding.rawValue
+                    e.fileHash = d.savedFileHash.map { String($0, radix: 16) }
                 }
             }
+            if !d.unitFiles.isEmpty { e.unitFiles = d.unitFiles.map(WorksetUnitFile.init) }
             if let c = d.consoleConnectionID {
                 e.consoleConnectionID = c
                 e.text = nil
@@ -341,7 +392,13 @@ extension Workspace {
                 if let x = e.diagram { doc.diagram = x }
                 if let x = e.notebook { doc.notebook = x }
                 if let x = e.report { doc.report = x }
+                if let files = e.unitFiles, e.kind == .program { doc.unitFiles = files.map { $0.unitFile(preferred: projectEncoding(for: URL(fileURLWithPath: $0.path))) } }
+                rememberWorksetDiskState(doc, hash: e.fileHash)
                 doc.isModified = e.modified
+            } else if let files = e.unitFiles, let spec = files.first(where: { $0.part == .spec }), let body = files.first(where: { $0.part == .body }),
+                      let d = try? openUnitFiles(spec: URL(fileURLWithPath: spec.path), body: URL(fileURLWithPath: body.path), show: .spec) {
+                // Okno pary bez zmian (D194): oba pliki czytane ponownie, niezależnie od preferencji otwierania pary.
+                doc = d
             } else if let url, FileManager.default.fileExists(atPath: url.path), let d = try? openFile(url, as: e.kind) {
                 doc = d
             } else {
@@ -360,6 +417,24 @@ extension Workspace {
         }
         if let i = w.activeIndex, let d = opened[i] { activate(d.id) }
         return missing
+    }
+
+    /// Stan plików okna przywróconego z tekstem (D197): skrót z workseta — zmiana pliku po zapisie workseta zostanie
+    /// wykryta przy aktywacji okna i zapisie; bez skrótu (starszy workset) — stan obecny.
+    private func rememberWorksetDiskState(_ doc: Document, hash: String?) {
+        if doc.unitFiles.isEmpty {
+            guard let url = doc.fileURL?.standardizedFileURL, let data = try? Data(contentsOf: url) else { return }
+            rememberDiskState(doc, url: url, data: data)
+            if let h = hash.flatMap({ UInt64($0, radix: 16) }) {
+                doc.savedFileHash = h
+                doc.diskStamps[url] = FileStamp(modified: nil, size: -1, hash: h)
+            }
+            return
+        }
+        for f in doc.unitFiles {
+            guard let data = try? Data(contentsOf: f.url) else { continue }
+            doc.diskStamps[f.url] = f.savedHash.map { FileStamp(modified: nil, size: -1, hash: $0) } ?? FileStamp.of(f.url, data: data)
+        }
     }
 
     /// Zapis bieżących okien do bieżącego workseta (autozapis przy zamykaniu aplikacji i przełączaniu).

@@ -167,7 +167,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate {
         if wasCollapsed || size > current + 1 { area.setDockSize(size) }
     }
 
-    /// Autoukrywanie (Preferencje › Panele narzędzi): fokus w edytorze okna chowa panele z narzędziami.
+    /// Autoukrywanie (Ustawienia › Panele narzędzi): fokus w edytorze okna chowa panele z narzędziami.
     private func autoHideDocks() {
         guard workspace.settings.toolDock.autoHide, let responder = window?.firstResponder as? NSView,
               responder.isDescendant(of: documentArea.view) else { return }
@@ -610,6 +610,10 @@ final class DocumentAreaViewController: NSViewController {
                 container.addSubview(vc.view)
                 installedID = doc.id
                 focusActiveDocument()
+                // Aktywacja okna z plikiem: zmiana pliku przez inny program — pytanie (D197); poza śledzonym odświeżeniem.
+                if doc.fileURL != nil {
+                    DispatchQueue.main.async { [workspace] in Task { await workspace.checkExternalChanges(of: doc) } }
+                }
             }
             connectionButton.title = connectionDescription(for: doc) + " ▾"
             connectionButton.contentTintColor = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .labelColor
@@ -617,7 +621,8 @@ final class DocumentAreaViewController: NSViewController {
             statusLabel.stringValue = [doc.transactionOpen ? L10n.tr("● transakcja otwarta") : nil, workspace.coverageStatus(in: doc),
                                        doc.isExecuting ? nil : doc.resultSummary,
                                        doc.isExecuting ? L10n.tr("Wykonywanie…") : doc.statusText?.components(separatedBy: "\n").first].compactMap { $0 }.joined(separator: "   ·   ")
-            refreshGit(file: doc.fileURL, modified: doc.isModified)
+            // Plik karty widocznej (okno pary) z pamięci kart — bez dzielenia tekstu przy każdym znaku (R4-01).
+            refreshGit(file: doc.shownFileURL, modified: doc.isModified)
         } else {
             installedID = nil
             refreshGit(file: nil, modified: false)

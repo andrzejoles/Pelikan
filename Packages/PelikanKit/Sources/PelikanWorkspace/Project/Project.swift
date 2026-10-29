@@ -173,7 +173,7 @@ public enum ProjectEngine {
                 // Build kompiluje jednostki programów; pozostałe polecenia pliku (CREATE TABLE, GRANT, SET…) nie są
                 // wykonywane — informacja zamiast cichego pominięcia.
                 let other = ScriptSplitter.split(text).count { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } - units.count
-                if other > 0 { notes.append(L10n.tr("Pominięto poleceń innych niż jednostki programów: \(other) (budowanie kompiluje tylko jednostki PL/SQL).")) }
+                if other > 0 { notes.append(L10n.tr("Pominięto poleceń innych niż jednostki programów: \(other) (kompilacja projektu obejmuje tylko jednostki PL/SQL).")) }
                 let schema = s.info.currentSchema
                 compiled = units.map { DBObject(owner: $0.owner ?? schema, name: $0.name, type: $0.type) }
             case .object:
@@ -237,14 +237,15 @@ public enum ProjectEngine {
 
     /// Pulpit: okna z plikami w katalogu projektu (zapis) i ich ponowne otwarcie.
     public static func captureDesktop(_ project: inout Project, projectURL: URL, ws: Workspace) {
-        project.desktop = ws.documents.compactMap { d in d.fileURL.map { ProjectWindow(path: relativePath($0, projectURL: projectURL), kind: d.kind) } }
+        // Okno pary (D194): oba pliki — przy otwarciu drugi trafia do tego samego okna.
+        project.desktop = ws.documents.flatMap { d in d.fileURLs.map { ProjectWindow(path: relativePath($0, projectURL: projectURL), kind: d.kind) } }
     }
 
     public static func restoreDesktop(_ project: Project, projectURL: URL, ws: Workspace) -> Int {
         var n = 0
         for w in project.desktop {
             let url = w.path.hasPrefix("/") ? URL(fileURLWithPath: w.path) : projectURL.deletingLastPathComponent().appendingPathComponent(w.path)
-            if ws.documents.contains(where: { $0.fileURL?.standardizedFileURL == url.standardizedFileURL }) { continue }
+            if ws.documents.contains(where: { $0.fileURLs.contains(url.standardizedFileURL) }) { continue }
             if (try? ws.openFile(url, as: w.kind)) != nil { n += 1 }
         }
         return n
@@ -358,7 +359,7 @@ enum ProjectCommands {
                                                    CommandParameter("value", .string, required: true,
                                                                     L10n.tr("Wartość: nazwa połączenia (pusta — główne) albo true/false"))],
                                       agent: .none, effect: .external,
-                                      summary: L10n.tr("Zmienia opcję projektu: połączenie budowania, zatrzymanie po pierwszym błędzie, formatowanie przy budowaniu."),
+                                      summary: L10n.tr("Zmienia opcję projektu: połączenie kompilacji, zatrzymanie po pierwszym błędzie, formatowanie przy kompilacji."),
                                       inMenu: false, feature: "PD-PROJ-002"),
                     validate: hasProject) { ctx in
                 guard let option = ctx.arguments.string("option") else { throw CommandError.missingArgument("option") }
@@ -381,7 +382,7 @@ enum ProjectCommands {
         let hasProject: @MainActor (Workspace) -> Bool = { $0.project != nil }
         return [
             Command(CommandDescriptor(id: "project.show", title: L10n.tr("Elementy projektu"), category: .project,
-                                      agent: .none, effect: .uiState, summary: L10n.tr("Okno projektu: elementy, grupy, budowanie, wyszukiwanie, pulpit."),
+                                      agent: .none, effect: .uiState, summary: L10n.tr("Okno projektu: elementy, grupy, kompilacja, wyszukiwanie, pulpit."),
                                       feature: "PD-PROJ-001")) { ctx in
                 ctx.ui?.showProject()
                 return .ok
@@ -424,9 +425,12 @@ enum ProjectCommands {
             Command(CommandDescriptor(id: "project.addActiveFile", title: L10n.tr("Dodaj plik okna do projektu"), category: .project,
                                       agent: .none, effect: .external, summary: L10n.tr("Dodaje plik aktywnego okna do projektu."), feature: "PD-PROJ-001"),
                     validate: { $0.project != nil && $0.activeDocument?.fileURL != nil }) { ctx in
-                guard case (var p, let url)? = try? current(ctx.workspace), let f = ctx.workspace.activeDocument?.fileURL else { return .ok }
-                let rel = ProjectEngine.relativePath(f, projectURL: url)
-                if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
+                guard case (var p, let url)? = try? current(ctx.workspace), let d = ctx.workspace.activeDocument, d.fileURL != nil else { return .ok }
+                // Okno pary (D194): oba pliki.
+                for f in d.fileURLs {
+                    let rel = ProjectEngine.relativePath(f, projectURL: url)
+                    if !p.items.contains(where: { $0.path == rel }) { p.items.append(.file(rel)) }
+                }
                 ctx.workspace.project = p
                 try save(ctx.workspace)
                 return .ok
@@ -440,12 +444,12 @@ enum ProjectCommands {
                 try save(ctx.workspace)
                 return .ok
             },
-            Command(CommandDescriptor(id: "project.build", title: L10n.tr("Buduj projekt"), category: .project,
+            Command(CommandDescriptor(id: "project.build", title: L10n.tr("Kompiluj projekt"), category: .project,
                                       agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kompiluje wszystkie pliki i obiekty projektu w kolejności elementów."),
                                       feature: "PD-PROJ-002"),
                     validate: hasProject) { ctx in try await build(ctx, make: false) },
-            Command(CommandDescriptor(id: "project.make", title: L10n.tr("Make projektu"), category: .project,
-                                      agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kompiluje tylko pliki zmienione od ostatniego budowania i obiekty niepoprawne."),
+            Command(CommandDescriptor(id: "project.make", title: L10n.tr("Kompiluj zmienione"), category: .project,
+                                      agent: .none, effect: .modifiesDatabase, summary: L10n.tr("Kompiluje tylko pliki zmienione od ostatniej kompilacji projektu i obiekty nieprawidłowe."),
                                       feature: "PD-PROJ-002"),
                     validate: hasProject) { ctx in try await build(ctx, make: true) },
             Command(CommandDescriptor(id: "project.saveDesktop", title: L10n.tr("Zapisz pulpit projektu"), category: .project,

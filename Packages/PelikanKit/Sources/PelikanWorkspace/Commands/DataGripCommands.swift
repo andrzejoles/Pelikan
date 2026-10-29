@@ -74,7 +74,7 @@ enum DataGripCommands {
         }
         let (owner, name, column) = try target(ctx)
         var texts: [(RefactoringChange.Target, String, String)] = editorDocuments(ws).map { (.document($0.id), $0.fullTitle, $0.text) }
-        let open = Set(ws.documents.compactMap { $0.fileURL?.standardizedFileURL })
+        let open = Set(ws.documents.flatMap(\.fileURLs))
         for f in projectFiles(ws) where !open.contains(f.standardizedFileURL) {
             if let data = try? Data(contentsOf: f) { texts.append((.file(f), f.lastPathComponent, TextFileCodec.decode(data, preferred: ws.projectEncoding(for: f)).text)) }
         }

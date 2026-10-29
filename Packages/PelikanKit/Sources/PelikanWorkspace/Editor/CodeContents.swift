@@ -129,11 +129,11 @@ enum CodeContentsCommands {
 
     @MainActor static var all: [Command] {
         [
-            Command(CommandDescriptor(id: "codeContents.sort", title: L10n.tr("Kolejność Code Contents"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
+            Command(CommandDescriptor(id: "codeContents.sort", title: L10n.tr("Kolejność w Zawartości kodu"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: [CommandParameter("order", .string, required: true, L10n.tr("Kolejność: source (jak w źródle), name (alfabetycznie), kind (według rodzaju)"),
                                                                     allowed: CodeContents.Order.allCases.map(\.rawValue))],
                                       agent: .none, effect: .settings,
-                                      summary: L10n.tr("Ustawia kolejność elementów w panelu Code Contents (zapamiętana w Preferencjach)."),
+                                      summary: L10n.tr("Ustawia kolejność elementów w panelu Zawartość kodu (zapamiętana w Ustawieniach)."),
                                       inMenu: false, feature: "PD-CA-010")) { ctx in
                 let raw = ctx.arguments.string("order") ?? ""
                 guard let order = CodeContents.Order(rawValue: raw) else { throw CommandError.invalidArgument("order", raw) }
@@ -142,7 +142,7 @@ enum CodeContentsCommands {
             },
             Command(CommandDescriptor(id: "codeContents.select", title: L10n.tr("Zaznacz element"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Zaznacza w edytorze cały element Code Contents (podprogram, deklarację, jednostkę)."),
+                                      summary: L10n.tr("Zaznacza w edytorze cały element Zawartości kodu (podprogram, deklarację, jednostkę)."),
                                       inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let (doc, node) = try target(ctx)
@@ -152,7 +152,7 @@ enum CodeContentsCommands {
             },
             Command(CommandDescriptor(id: "codeContents.copy", title: L10n.tr("Kopiuj element"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .none, effect: .none,
-                                      summary: L10n.tr("Kopiuje do schowka tekst elementu Code Contents."), inMenu: false, feature: "PD-CA-010"),
+                                      summary: L10n.tr("Kopiuje do schowka tekst elementu Zawartości kodu."), inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let (doc, node) = try target(ctx)
                 let text = substring(doc.text, CodeContents.lineRange(of: node, in: doc.text))
@@ -161,7 +161,7 @@ enum CodeContentsCommands {
             },
             Command(CommandDescriptor(id: "codeContents.cut", title: L10n.tr("Wytnij element"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .none, effect: .modifiesEditor,
-                                      summary: L10n.tr("Wycina element Code Contents z tekstu okna (do schowka)."), inMenu: false, feature: "PD-CA-010"),
+                                      summary: L10n.tr("Wycina element Zawartości kodu z tekstu okna (do schowka)."), inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0).map { !$0.isReadOnly } ?? false }) { ctx in
                 let (doc, node) = try target(ctx)
                 let r = CodeContents.lineRange(of: node, in: doc.text)
@@ -173,7 +173,7 @@ enum CodeContentsCommands {
             },
             Command(CommandDescriptor(id: "codeContents.test", title: L10n.tr("Testuj podprogram"), category: .edit, submenu: L10n.tr("Zawartość kodu"),
                                       parameters: params, agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Otwiera okno testu procedury lub funkcji wskazanej w Code Contents (z pakietem jako obiektem)."),
+                                      summary: L10n.tr("Otwiera okno testu procedury lub funkcji wskazanej w Zawartości kodu (z pakietem jako obiektem)."),
                                       inMenu: false, feature: "PD-CA-010"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let (doc, node) = try target(ctx)
@@ -188,7 +188,7 @@ enum CodeContentsCommands {
                                       submenu: L10n.tr("Zawartość kodu"),
                                       parameters: [CommandParameter("level", .integer, L10n.tr("Poziom ścieżki od jednostki (0); domyślnie najgłębszy"))],
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Zaznacza element ścieżki Code Hierarchy (jednostkę, podprogram, blok) obejmujący kursor."),
+                                      summary: L10n.tr("Zaznacza element ścieżki hierarchii kodu (jednostkę, podprogram, blok) obejmujący kursor."),
                                       inMenu: false, feature: "PD-CA-011"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let (doc, node) = try hierarchyTarget(ctx)
@@ -199,7 +199,7 @@ enum CodeContentsCommands {
                                       submenu: L10n.tr("Zawartość kodu"),
                                       parameters: [CommandParameter("level", .integer, L10n.tr("Poziom ścieżki od jednostki (0); domyślnie najgłębszy"))],
                                       agent: .none, effect: .uiState,
-                                      summary: L10n.tr("Przenosi kursor do nazwy elementu ścieżki Code Hierarchy."), inMenu: false, feature: "PD-CA-011"),
+                                      summary: L10n.tr("Przenosi kursor do nazwy elementu ścieżki hierarchii kodu."), inMenu: false, feature: "PD-CA-011"),
                     validate: { BuiltinCommands.editable($0) != nil }) { ctx in
                 let (doc, node) = try hierarchyTarget(ctx)
                 doc.selectedRange = node.nameOffset..<node.nameOffset

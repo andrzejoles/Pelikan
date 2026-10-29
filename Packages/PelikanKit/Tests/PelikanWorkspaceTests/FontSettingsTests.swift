@@ -31,7 +31,7 @@ struct FontSettingsTests {
         // Krój, styl i wielkość czcionki Object Browsera w jednej sekcji; ustawienia karty Object Browser — w swojej (R3-18).
         for k in ["browserFontName", "browserFontSize", "browserFontWeight"] { #expect(PreferenceSets.section(of: k) == L10n.tr("Edytor"), "\(k)") }
         for k in ["browserFolders", "browserFilterContains", "browserDoubleClick", "browserDropAction"] {
-            #expect(PreferenceSets.section(of: k) == L10n.tr("Object Browser"), "\(k)")
+            #expect(PreferenceSets.section(of: k) == L10n.tr("Przeglądarka obiektów"), "\(k)")
         }
         let known = PreferenceSets.values(of: Settings())
         for k in PreferenceSets.sections.flatMap(\.keys) { #expect(known[k] != nil, "\(k)") }

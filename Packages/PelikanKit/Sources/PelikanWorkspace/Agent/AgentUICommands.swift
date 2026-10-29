@@ -8,7 +8,7 @@ public enum AgentUICommands {
     public static let undoSession: CommandID = "agent.undoSession"
     public static let endSession: CommandID = "agent.endSession"
     public static let showLog: CommandID = "agent.showLog"
-    /// Prefiks komend uruchamiania (`agent.launch.<profil>`), jedna na profil z Preferencji › Agenci.
+    /// Prefiks komend uruchamiania (`agent.launch.<profil>`), jedna na profil z Ustawień › Agenci.
     public static let launchPrefix = "agent.launch."
 
     public static func launchID(_ profile: AgentProfile) -> CommandID { CommandID(rawValue: launchPrefix + profile.id) }
