@@ -11,6 +11,8 @@ Plan Window**; Pelikan can create a missing PLAN_TABLE.
 
 - **Explain** refreshes the plan for the text in the Explain Plan Window's editor, and **Optimizer goal** (*Same as session*,
   ALL_ROWS or FIRST_ROWS_n) adds a hint.
+- The **Expand all** and **Fold all** buttons above the plan tree (also on the **Plan** ribbon tab) expand every branch
+  of the tree at once or fold it back to the root.
 - Views: **Tree** (operations with cost, number of rows, bytes, time, execution order, and access and filter
   predicates), **Diagram** (a node per operation with cost, cardinality and step number), **Flame graph** (the cost of
   operations proportional to the parent) and **Text** (DBMS_XPLAN).

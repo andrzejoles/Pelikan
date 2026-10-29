@@ -2097,3 +2097,17 @@ a struktura pakietu z lewej nie nawiguje i jest uboższa niż w innych programac
   w literale szablonowym JavaScript albo bloku tekstowym Javy) jest traktowana jako nagłówek następnej jednostki —
   takie jednostki kończ „/”.
 
+### D193 · 2026-10-29 — Plan wykonania: Rozwiń wszystko / Zwiń wszystko w drzewie planu
+
+Zgłoszenie właściciela: w drzewie Explain Plan brakuje przycisku do rozwinięcia albo zwinięcia wszystkich gałęzi.
+
+- Komendy `plan.expandAll` i `plan.collapseAll` (agent: Brak, skutek: stan interfejsu, PD-OPT-001) działają na
+  aktywnym oknie planu z wyznaczonym planem; przyciski nad drzewem (obok wyboru widoku, aktywne w widoku Drzewo),
+  grupa „Drzewo” na karcie kontekstowej „Plan” wstążki i menu Narzędzia › Plan. Wzorzec nie ma dla tego skrótów —
+  bez skrótów.
+- Stan rozwinięcia przeniesiony z widoku do modelu okna (`Document.planExpanded`, zbiór PLAN_TABLE.ID gałęzi);
+  drzewo to `Table` z `DisclosureTableRow` sterowanym tym zbiorem (`Table(children:)` nie daje dostępu do
+  rozwinięcia). Ponowne wyznaczenie planu zachowuje rozwinięte gałęzie o tych samych identyfikatorach, nowe są
+  zwinięte — jak dotąd. Zwiń wszystko czyści zbiór: widoczny zostaje sam korzeń (SELECT STATEMENT).
+- Inne widoki planu nie są drzewami: Autotrace (plan rzeczywisty) i porównanie planów to płaskie tabele z wcięciem,
+  SQL Monitor — lista i raport HTML; komendy ich nie dotyczą.

@@ -11,6 +11,8 @@ zapytania z procedury dostaniesz bez przepisywania. Puste okno planu otworzysz p
 
 - **Wyjaśnij** odświeża plan dla tekstu w edytorze okna planu, a **Cel optymalizatora** (*Jak w sesji*, ALL_ROWS albo
   FIRST_ROWS_n) dodaje wskazówkę.
+- Przyciski nad drzewem planu (i karta **Plan** na wstążce) **Rozwiń wszystko** i **Zwiń wszystko** rozwijają naraz
+  wszystkie gałęzie drzewa albo zwijają je do samego korzenia.
 - Widoki: **Drzewo** (operacje z kosztem, liczbą wierszy, bajtami, czasem, kolejnością wykonania i predykatami dostępu
   i filtrowania), **Diagram** (węzeł na operację z kosztem, kardynalnością i numerem kroku), **Flame graph** (koszt
   operacji proporcjonalnie do rodzica) i **Tekst** (DBMS_XPLAN).

@@ -21,6 +21,8 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
   tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
   (preferencja **Kończ jednostki okna programu znakiem „/”** w Preferencje › Oracle przywraca dawny układ).
+- **Plan wykonania:** przyciski **Rozwiń wszystko** i **Zwiń wszystko** nad drzewem planu (także na karcie **Plan**
+  wstążki) rozwijają naraz wszystkie gałęzie albo zwijają drzewo do korzenia.
 
 ## 1.3.1 — poprawki zgłoszeń
 
