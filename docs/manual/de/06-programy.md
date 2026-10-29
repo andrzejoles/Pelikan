@@ -202,6 +202,15 @@ gesammelt. **Bearbeiten › To-Do-Aufgabe einfügen** fügt einen Kommentar ein,
   Kodierung der Datei nicht speichern lässt, blockiert das Speichern mit genauer Angabe von Zeile und Spalte — die
   Kodierung ändern Sie nur bewusst über **Datei › Dateikodierung …**.
 - **Datei › Schreibgeschützt** sperrt das Fenster für die Bearbeitung.
+- Eine geöffnete Datei wird nicht gesperrt — andere Programme (Agent, git, Editor) können sie ändern. Kehren Sie zum
+  Fenster, zu einem Reiter des Paars oder zu Pelikan zurück und hat sich die Datei auf dem Datenträger geändert, fragt
+  Pelikan, ob sie **neu geladen** werden soll; ein Fenster mit ungespeicherten Änderungen warnt vor deren Verlust
+  (**Meine Änderungen behalten** behält den Fenstertext, und ein späteres **Speichern** warnt noch einmal vor dem
+  Überschreiben). Eine bloße Änderung des Dateidatums (z. B. `touch`) löst keine Frage aus. Im Fenster eines
+  `.pks`/`.pkb`-Paars wird nur die geänderte Datei neu geladen. Gelöschte oder verschobene Datei: **Im Fenster behalten**
+  oder **Fenster schließen**. **Datei › Von der Festplatte neu laden** tut dies auf Wunsch. Unter **Einstellungen ›
+  Allgemein › Dateien** schalten Sie die Erkennung ab oder das Neuladen ohne Rückfrage ein, wenn das Fenster keine
+  Änderungen hat.
 - **Datei › Mit Verbindung öffnen …** öffnet eine Datei mit sofort angehefteter Verbindung.
 - **Bearbeiten › In externem Editor öffnen** übergibt den Text an das unter **Einstellungen › Werkzeuge** angegebene
   Programm (z. B. Visual Studio Code); nach der Rückkehr zu Pelikan werden die Änderungen geladen.

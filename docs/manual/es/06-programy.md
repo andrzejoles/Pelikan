@@ -202,6 +202,14 @@ To-Do**. **Edición › Insertar tarea To-Do** inserta un comentario, y **Cerrar
   puede guardar en la codificación del archivo bloquea el guardado e indica exactamente la línea y la columna; la
   codificación solo se cambia de forma consciente con **Archivo › Codificación del archivo…**.
 - **Archivo › Solo lectura** bloquea la edición de la ventana.
+- Un archivo abierto no se bloquea: otros programas (un agente, git, un editor) pueden cambiarlo. Al volver a la
+  ventana, a una pestaña del par o a Pelikan, si el archivo ha cambiado en el disco, Pelikan pregunta si **volver a
+  cargarlo**; una ventana con cambios sin guardar avisa de que se perderán (**Conservar mis cambios** mantiene el texto
+  de la ventana, y un **Guardar** posterior vuelve a avisar antes de sobrescribir). Un simple cambio de la fecha del
+  archivo (p. ej., `touch`) no pregunta. En una ventana de par `.pks`/`.pkb` solo se vuelve a cargar el archivo
+  modificado. Archivo eliminado o movido: **Conservar en la ventana** o **Cerrar ventana**. **Archivo › Volver a cargar
+  desde el disco** lo hace a petición. En **Preferencias › General › Archivos** puede desactivar la detección o volver a
+  cargar sin preguntar cuando la ventana no tiene cambios.
 - **Archivo › Abrir con conexión…** abre un archivo con la conexión ya fijada.
 - **Edición › Abrir en un editor externo** pasa el texto al programa indicado en **Preferencias › Herramientas** (p.
   ej., Visual Studio Code); al volver a Pelikan se cargan los cambios.

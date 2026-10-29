@@ -168,6 +168,10 @@ public struct Settings: Sendable, Codable, Hashable {
     public var specBodyExtensions = SpecBodyExtensions()
     /// Otwarcie pliku specyfikacji albo ciała otwiera parę z tego samego katalogu w jednym oknie (D194).
     public var openSpecBodyPair = true
+    /// Wykrywanie zmian plików okien przez inne programy przy aktywacji okna, karty i aplikacji (D197).
+    public var detectExternalFileChanges = true
+    /// Plik zmieniony na zewnątrz wczytywany bez pytania, gdy okno nie ma niezapisanych zmian (D197).
+    public var reloadExternalChangesSilently = false
     public var tabSize = 2
     /// Wielkość liter słów kluczowych przy pisaniu (UG 23.12 Keyword case).
     public var keywordCase: KeywordCase = .unchanged
@@ -420,6 +424,8 @@ public struct Settings: Sendable, Codable, Hashable {
         testExtensions = v(.testExtensions, testExtensions)
         specBodyExtensions = v(.specBodyExtensions, specBodyExtensions)
         openSpecBodyPair = v(.openSpecBodyPair, openSpecBodyPair)
+        detectExternalFileChanges = v(.detectExternalFileChanges, detectExternalFileChanges)
+        reloadExternalChangesSilently = v(.reloadExternalChangesSilently, reloadExternalChangesSilently)
         tabSize = v(.tabSize, tabSize)
         useTabCharacter = v(.useTabCharacter, useTabCharacter)
         shortcutProfile = v(.shortcutProfile, shortcutProfile)

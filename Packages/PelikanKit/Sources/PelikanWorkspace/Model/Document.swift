@@ -68,6 +68,10 @@ public final class Document: Identifiable {
     /// Okno programu powiązane z plikami specyfikacji i ciała (D194): każda jednostka zapisywana do swojego pliku;
     /// `fileURL` to wtedy plik specyfikacji (klucz stanu okna, historii lokalnej, workseta). Puste — jeden plik okna.
     public var unitFiles: [UnitFile] = []
+    /// Stan plików okna na dysku z otwarcia, zapisu albo wczytania ponownego (D197) — wykrywanie zmian przez inny program.
+    @ObservationIgnored public var diskStamps: [URL: FileStamp] = [:]
+    /// Skrót bajtów pliku okna (bez pary) z otwarcia albo zapisu — zapis ostrzega, gdy plik zmienił się na dysku.
+    @ObservationIgnored public var savedFileHash: UInt64?
     public var text: String {
         didSet {
             if text != oldValue {

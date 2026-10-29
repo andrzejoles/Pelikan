@@ -86,6 +86,7 @@ public enum Log {
     public static let debugger = Logger("debugger")
     public static let tests = Logger("tests")
     public static let keychain = Logger("keychain")
+    public static let files = Logger("files")
 
     struct Configuration: Sendable {
         var level: LogLevel = .info

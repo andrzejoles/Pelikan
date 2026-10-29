@@ -11,7 +11,7 @@ public enum CommandSymbols {
         "file.new.explainPlan": "chart.bar.doc.horizontal", "file.new.report": "doc.richtext", "file.new.diagram": "point.3.connected.trianglepath.dotted",
         "file.new.notebook": "book.pages", "file.newFromTemplate": "doc.on.doc", "file.pasteAsSQLWindow": "doc.on.clipboard",
         "file.openWithConnection": "folder.badge.person.crop", "file.open": "folder", "file.save": "square.and.arrow.down",
-        "file.saveAs": "square.and.arrow.down.on.square", "file.saveAsSingleFile": "doc.badge.arrow.up", "file.print": "printer", "file.restoreRecovery": "arrow.clockwise.circle",
+        "file.saveAs": "square.and.arrow.down.on.square", "file.saveAsSingleFile": "doc.badge.arrow.up", "file.reload": "arrow.clockwise", "file.print": "printer", "file.restoreRecovery": "arrow.clockwise.circle",
         "file.readOnly": "lock", "file.encoding": "textformat", "file.localHistory": "clock.arrow.circlepath",
         "file.close": "xmark.square", "file.closeAll": "xmark.square.fill", "file.closeOthers": "rectangle.stack.badge.minus",
         "edit.findNext": "chevron.down.circle", "edit.findPrevious": "chevron.up.circle", "sql.toggleSubstitution": "character.textbox",

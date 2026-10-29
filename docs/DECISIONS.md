@@ -2203,3 +2203,50 @@ miało jeden plik — specyfikacja i ciało trafiały do jednego pliku.
   w starszej wersji Pelikana nie zna pola `unitFiles` — okno wraca z całym tekstem i plikiem specyfikacji, a zapis
   zapisałby obie jednostki do pliku specyfikacji. Pasek stanu repozytorium dla zmienionego okna pary pokazuje „zmieniony”
   także dla niezmienionego pliku karty (stan liczony z całego okna — bez dzielenia tekstu przy każdym znaku).
+
+### D197 · 2026-10-29 — Pliki zmienione przez inny program: wykrywanie przy aktywacji i wczytanie ponowne
+
+Właściciel: jak w PL/SQL Developerze — otwarcie pliku go nie blokuje, a gdy plik zmieni inny program (agent, git,
+edytor), Pelikan to wykrywa i pyta.
+
+- **Bez blokad:** okna czytają plik raz (`Data(contentsOf:)`) i nie trzymają deskryptora ani blokady; zapis jest
+  atomowy (plik tymczasowy i podmiana, `writeKeepingFile` — przez dowiązanie zapisywany jest plik docelowy,
+  uprawnienia zostają). Inne programy mogą plik czytać, zmieniać i usuwać w każdej chwili.
+- **Stan pliku:** przy otwarciu, zapisie i wczytaniu ponownym okno zapamiętuje dla każdego pliku (okno pary — dla
+  `.pks` i `.pkb` osobno) datę modyfikacji, rozmiar i skrót bajtów (`Document.diskStamps`, `FileStamp`). Sprawdzenie
+  czyta plik tylko, gdy zmieniła się data albo rozmiar; ten sam skrót (np. `touch`, `git checkout` bez zmiany treści)
+  uaktualnia stan bez pytania. Dowiązanie — stan pliku docelowego.
+- **Kiedy:** przy aktywacji okna z plikiem, karty pliku w oknie pary i aplikacji (okno na wierzchu). Jedno sprawdzenie
+  naraz i jedno pytanie naraz (zmiany kilku plików okna po kolei), pytania tylko dla aktywowanego okna — inne okna
+  zapytają, gdy się je aktywuje. Nie w trakcie zapisu okna (także okna wyboru nazwy), nie w trybie skryptu
+  (`PELIKAN_UI_SCRIPT`), nie bez interfejsu. Zmiana z edytora zewnętrznego (PD-EDIT-028) jest wczytywana jak dotąd
+  i nie pyta drugi raz.
+- **Okno bez zmian:** „Plik „…” został zmieniony przez inny program. Wczytać go ponownie?” — **Wczytaj ponownie** /
+  **Zostaw**; preferencja **Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian** (domyślnie
+  wyłączona). **Okno ze zmianami** (w oknie pary — karta tego pliku): ostrzeżenie „Okno ma niezapisane zmiany” —
+  **Wczytaj ponownie (utracisz zmiany)** / **Zachowaj moje zmiany**. „Zostaw” i „Zachowaj” zapamiętują nowy stan dysku
+  jako znany (bez pytania do następnej zmiany), ale nie treść zapisaną okna — późniejsze ⌘S ostrzega „Pliki zmieniły
+  się na dysku… Zapisz mimo to / Anuluj” (dla wszystkich okien z plikiem, nie tylko par: `Document.savedFileHash`).
+  Tekst sprzed wczytania okna ze zmianami trafia do historii lokalnej.
+- **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
+  zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
+  pytanie o zapis).
+- **Para `.pks`/`.pkb`:** wczytywany jest tylko zmieniony plik (jego karta), druga karta zostaje bez zmian, także
+  niezapisana; kursor zostaje w tym samym miejscu karty, karty i Zawartość kodu odświeżają się z tekstu. Plik, który
+  po zmianie nie zawiera już jednostki swojej karty, nie jest wczytywany (komunikat: otwórz go osobno).
+- **Wczytanie ponowne** okna z jednym plikiem odtwarza je jak otwarcie (kodowanie, BOM, końce linii; okno testu `.tst`
+  ze zmiennymi, raport, diagram, notatnik); kursor na tej samej pozycji, jeśli się mieści.
+- **Komenda `file.reload`** „Wczytaj ponownie z dysku” (menu Plik, wstążka Start › Plik › Więcej; agent: Za zgodą,
+  skutek: tekst edytora; na liście komend aplikacji dla agenta) — okno pary: oba pliki. Okno ze zmianami: użytkownik
+  potwierdza utratę zmian, agent dostaje odmowę.
+- **Preferencje › Ogólne › Pliki:** **Wykrywaj zmiany plików na dysku** (domyślnie włączona) i wczytywanie bez
+  pytania; obie w zestawach preferencji (sekcja Ogólne).
+- **Worksety:** okno ze zmianami zapisuje skrót pliku z otwarcia albo zapisu (pole opcjonalne `fileHash`, para —
+  `hash` każdego pliku) — po przywróceniu zmiana pliku z czasu, gdy Pelikan był zamknięty, jest wykrywana przy
+  aktywacji i przy zapisie. Okno bez zmian i tak czyta plik ponownie przy przywróceniu.
+- **Dziennik:** `Log.files` — wykrycie zmiany, usunięcia i wczytanie ponowne, nazwa pliku `privacy: .hash`, bez
+  treści.
+- **Ograniczenia:** brak obserwacji systemu plików w tle (FSEvents) — zmiana jest wykrywana dopiero przy aktywacji
+  okna, karty albo aplikacji (jak we wzorcu); zmiana pliku okna w tle, gdy Pelikan jest aktywny i okno na wierzchu,
+  zostanie zauważona przy następnej aktywacji (np. przełączeniu okna albo aplikacji) albo przez **Wczytaj ponownie
+  z dysku**.

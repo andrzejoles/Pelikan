@@ -379,6 +379,7 @@ Prefiksy: `PD-` PL/SQL Developer · `UT-` utPLSQL · `AI-` agenci AI · `SD-` SQ
 | PD-FILE-002 | Format plików: końce linii LF/CRLF (per katalog), kodowanie UTF-8/auto, BOM | UG 23.30 | Preferences > Format | 1 | P2 | — | ✅ test |
 | PD-FILE-003 | Okno/plik tylko do odczytu (menu Read Only) | NF13 | Okno | 2 | P3 | — | ✅ test (Plik › Tylko do odczytu: edytor nieedytowalny, komendy zaznaczenia i refaktoryzacji odmawiają, narzędzia agenta zmieniające tekst okna też — przejście do linii działa) |
 | PD-FILE-004 | Otwieranie pliku z wyborem połączenia; przeciągnięcie katalogu otwiera pliki | NF13, NF10 | File > Open | 1 | P3 | — | ✅ test (Plik › Otwórz z połączeniem… — połączenie przypięte do okien; katalog upuszczony albo otwarty — skrypty z katalogu w kolejności nazw) |
+| PD-FILE-005 | Plik okna zmieniony przez inny program (agent, git, edytor): wykrywanie przy aktywacji okna, karty i aplikacji (data, rozmiar, skrót treści — touch bez pytania), pytanie Wczytaj ponownie / Zostaw, ostrzeżenie przy niezapisanych zmianach, plik usunięty, para .pks/.pkb — tylko zmieniony plik; Wczytaj ponownie z dysku (file.reload); otwarty plik nie jest blokowany (D197) | UG 25 | File > Reload | 1 | P1 | Za zgodą | ✅ test (ExternalFileChangesTests: okno bez zmian i ze zmianami, touch, preferencje, tryb skryptu, Zachowaj moje zmiany + ostrzeżenie ⌘S, plik usunięty, para, file.reload, workset; D197) |
 
 ## PL/SQL Developer — interfejs, preferencje, dostosowanie
 

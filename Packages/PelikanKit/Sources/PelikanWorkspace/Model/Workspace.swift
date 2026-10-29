@@ -400,6 +400,11 @@ public final class Workspace {
     /// Stany okien plików (PD-EDIT-029).
     @ObservationIgnored public private(set) lazy var fileStates = FileStateStore(directory: dataDirectory?.appendingPathComponent("WindowState", isDirectory: true))
     @ObservationIgnored public private(set) lazy var consoles = QueryConsoles(directory: dataDirectory?.appendingPathComponent("Consoles", isDirectory: true))
+    /// Pytania o pliki zmienione przez inny program (D197): wyłączone w trybie skryptu (bez okien dialogowych), jedno
+    /// sprawdzenie naraz, żadne w trakcie zapisu okna.
+    @ObservationIgnored public var externalChangePromptsEnabled = true
+    @ObservationIgnored public internal(set) var savingDocuments = 0
+    @ObservationIgnored var checkingExternalChanges = false
     /// Okna edytowane programem zewnętrznym (PD-EDIT-028) i odzyskiwanie po awarii (PD-FILE-001).
     @ObservationIgnored public var externalEdits: [DocumentID: ExternalDocumentEdit] = [:]
     @ObservationIgnored public private(set) lazy var recovery = RecoveryStore(directory: dataDirectory?.appendingPathComponent("Recovery", isDirectory: true))

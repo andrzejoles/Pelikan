@@ -26321,6 +26321,34 @@
         }
       }
     },
+    "Inny program usunął albo przeniósł plik. Tekst zostaje w oknie — zapis utworzy plik ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Another program deleted or moved the file. The text stays in the window — saving creates the file again."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein anderes Programm hat die Datei gelöscht oder verschoben. Der Text bleibt im Fenster — Speichern legt die Datei neu an."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro programa eliminó o movió el archivo. El texto se queda en la ventana; al guardar se vuelve a crear el archivo."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Інша програма видалила або перемістила файл. Текст залишається у вікні — збереження створить файл знову."
+          }
+        }
+      }
+    },
     "Inspekcje kodu (nieużywane zmienne i parametry, kod nieosiągalny, UPDATE/DELETE bez WHERE, niejawne konwersje) i nieznane tabele, kolumny, aliasy wg słownika połączenia; lista problemów." : {
       "localizations" : {
         "en" : {
@@ -49813,6 +49841,62 @@
         }
       }
     },
+    "Okno ma niezapisane zmiany — wczytanie z dysku zastąpiłoby je; zrobi to tylko użytkownik." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has unsaved changes — reloading from disk would replace them; only the user can do that."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat ungespeicherte Änderungen — Neuladen von der Festplatte würde sie ersetzen; das kann nur der Benutzer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene cambios sin guardar: recargar desde el disco los reemplazaría; solo puede hacerlo el usuario."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має незбережені зміни — повторне завантаження з диска замінило б їх; це може зробити лише користувач."
+          }
+        }
+      }
+    },
+    "Okno ma niezapisane zmiany." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat ungespeicherte Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana tiene cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно має незбережені зміни."
+          }
+        }
+      }
+    },
     "Okno ma otwartą transakcję — zatwierdź albo wycofaj ją przed ponownym połączeniem" : {
       "localizations" : {
         "en" : {
@@ -49865,6 +49949,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Das Fenster hat keinen lokalen Verlauf (Datei speichern oder Objekt kompilieren)"
+          }
+        }
+      }
+    },
+    "Okno nie ma niezapisanych zmian." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The window has no unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Fenster hat keine ungespeicherten Änderungen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La ventana no tiene cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вікно не має незбережених змін."
           }
         }
       }
@@ -56169,6 +56281,34 @@
         }
       }
     },
+    "Plik %@ nie zawiera już jednostki tej karty — otwórz go osobno." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file %@ no longer contains this tab's unit — open it separately."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei %@ enthält die Einheit dieses Reiters nicht mehr — öffnen Sie sie separat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo %@ ya no contiene la unidad de esta pestaña: ábralo por separado."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл %@ більше не містить одиниці цієї вкладки — відкрийте його окремо."
+          }
+        }
+      }
+    },
     "Plik %@: %@" : {
       "localizations" : {
         "en" : {
@@ -56977,6 +57117,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Файл «%@» пошкоджений або створений новішою версією застосунку — зміни до нього не зберігатимуться."
+          }
+        }
+      }
+    },
+    "Plik „%@” nie istnieje na dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” does not exist on disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ existiert nicht auf dem Datenträger"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El archivo «%@» no existe en el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» не існує на диску"
+          }
+        }
+      }
+    },
+    "Plik „%@” został zmieniony przez inny program. Wczytać go ponownie?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The file “%@” was changed by another program. Reload it?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Datei „%@“ wurde von einem anderen Programm geändert. Neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otro programa ha modificado el archivo «%@». ¿Volver a cargarlo?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» змінено іншою програмою. Завантажити його знову?"
           }
         }
       }
@@ -91869,6 +92065,34 @@
         }
       }
     },
+    "Wczytaj ponownie (utracisz zmiany)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload (discard changes)"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neu laden (Änderungen verwerfen)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar (perder los cambios)"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову (втратити зміни)"
+          }
+        }
+      }
+    },
     "Wczytaj ponownie z bazy" : {
       "localizations" : {
         "en" : {
@@ -91893,6 +92117,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажити знову з бази даних"
+          }
+        }
+      }
+    },
+    "Wczytaj ponownie z dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload from disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von der Festplatte neu laden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar desde el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити знову з диска"
           }
         }
       }
@@ -92065,6 +92317,34 @@
         }
       }
     },
+    "Wczytano ponownie %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloaded %@"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ neu geladen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se ha vuelto a cargar %@"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову завантажено %@"
+          }
+        }
+      }
+    },
     "Wczytano ponownie z bazy" : {
       "localizations" : {
         "en" : {
@@ -92229,6 +92509,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завантажити знову з бази даних?"
+          }
+        }
+      }
+    },
+    "Wczytać „%@” ponownie z dysku?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload “%@” from disk?"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ von der Festplatte neu laden?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Volver a cargar «%@» desde el disco?"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажити «%@» знову з диска?"
+          }
+        }
+      }
+    },
+    "Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload files changed outside without asking when the window has no changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extern geänderte Dateien ohne Rückfrage neu laden, wenn das Fenster keine Änderungen hat"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volver a cargar sin preguntar los archivos modificados fuera cuando la ventana no tiene cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завантажувати без запиту файли, змінені ззовні, коли вікно не має змін"
+          }
+        }
+      }
+    },
+    "Wczytuje plik aktywnego okna ponownie z dysku (okno pary specyfikacja/ciało — oba pliki). Niezapisane zmiany okna zostają zastąpione treścią pliku; tekst sprzed wczytania trafia do historii lokalnej. Okna z niezapisanymi zmianami agent nie wczytuje." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reloads the active window's file from disk (a specification/body pair window — both files). Unsaved changes in the window are replaced by the file content; the text before reloading goes to the local history. The agent does not reload windows with unsaved changes."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lädt die Datei des aktiven Fensters neu von der Festplatte (Fenster mit Spezifikation/Body-Paar — beide Dateien). Ungespeicherte Änderungen im Fenster werden durch den Dateiinhalt ersetzt; der Text vor dem Neuladen kommt in den lokalen Verlauf. Fenster mit ungespeicherten Änderungen lädt der Agent nicht neu."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a cargar desde el disco el archivo de la ventana activa (ventana de par especificación/cuerpo: ambos archivos). Los cambios sin guardar de la ventana se reemplazan por el contenido del archivo; el texto anterior va al historial local. El agente no vuelve a cargar ventanas con cambios sin guardar."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Знову завантажує файл активного вікна з диска (вікно пари специфікація/тіло — обидва файли). Незбережені зміни вікна замінюються вмістом файлу; текст до завантаження потрапляє до локальної історії. Вікна з незбереженими змінами агент не завантажує."
           }
         }
       }
@@ -99373,6 +99737,34 @@
         }
       }
     },
+    "Wykrywaj zmiany plików na dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detect file changes on disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Änderungen von Dateien auf der Festplatte erkennen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detectar cambios de archivos en el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виявляти зміни файлів на диску"
+          }
+        }
+      }
+    },
     "Wykrywany automatycznie (Homebrew, /opt/oracle, Pobrane)" : {
       "localizations" : {
         "en" : {
@@ -102953,6 +103345,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Berichtsdefinition sperren"
+          }
+        }
+      }
+    },
+    "Zachowaj moje zmiany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep my changes"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Änderungen behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar mis cambios"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти мої зміни"
+          }
+        }
+      }
+    },
+    "Zachowaj w oknie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep in window"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Im Fenster behalten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conservar en la ventana"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити у вікні"
           }
         }
       }
@@ -114857,6 +115305,34 @@
         }
       }
     },
+    "Zostaw" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Belassen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dejar"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Залишити"
+          }
+        }
+      }
+    },
     "Zwija blok, IF, LOOP albo CASE zaczynający się w linii kursora lub najbliższy obejmujący kursor." : {
       "localizations" : {
         "en" : {
@@ -119977,6 +120453,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vorher: %@"
+          }
+        }
+      }
+    },
+    "przed: wczytanie z dysku" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "before: reload from disk"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vor: Neuladen von der Festplatte"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "antes: carga desde el disco"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "перед: завантаження з диска"
           }
         }
       }

@@ -42,6 +42,8 @@ enum PreferenceIndex {
         ("GeneralPane", "Przywracaj okna po ponownym uruchomieniu (także niezapisane)"),
         ("GeneralPane", "Autozapis układu okna"),
         ("GeneralPane", "Pytaj o zapis zmian przy zamykaniu nowych okien"),
+        ("GeneralPane", "Wykrywaj zmiany plików na dysku"),
+        ("GeneralPane", "Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian"),
         ("GeneralPane", "Dziennik aplikacji"),
         ("GeneralPane", "Zapisuj w dzienniku"),
         ("GeneralPane", "Nazwy połączeń, obiektów i ścieżki plików jawnie"),

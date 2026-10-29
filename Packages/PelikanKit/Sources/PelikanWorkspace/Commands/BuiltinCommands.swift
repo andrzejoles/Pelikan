@@ -54,9 +54,12 @@ public enum BuiltinCommands {
     /// Zapis (z oknem wyboru nazwy dla nowego okna albo „Zapisz jako”). false — anulowano.
     @MainActor
     static func saveDocument(_ doc: Document, in ws: Workspace, askForName: Bool, singleFile: Bool = false) async throws -> Bool {
-        // Okno pary (D194): Zapisz — każda jednostka do swojego pliku.
-        if !askForName, !singleFile, let url = doc.fileURL, !doc.unitFiles.isEmpty {
-            // Plik zmieniony na dysku od otwarcia albo zapisu (inny program, git checkout) — bez cichego nadpisania.
+        // W trakcie zapisu (także pytań i okna wyboru nazwy) bez pytań o zmiany plików na dysku (D197).
+        ws.savingDocuments += 1
+        defer { ws.savingDocuments -= 1 }
+        // Zapis do pliku okna (para — każda jednostka do swojego pliku, D194): plik zmieniony na dysku od otwarcia albo
+        // zapisu (inny program, git checkout, „Zostaw” przy pytaniu, D197) — bez cichego nadpisania.
+        if !askForName, !singleFile, let url = doc.fileURL {
             let changed = ws.externallyChangedUnitFiles(doc)
             if !changed.isEmpty {
                 let names = changed.map(\.lastPathComponent).joined(separator: ", ")
@@ -221,6 +224,27 @@ public enum BuiltinCommands {
                 guard let doc = ctx.workspace.activeDocument, doc.kind == .program else { return .ok }
                 let ok = try await saveDocument(doc, in: ctx.workspace, askForName: true, singleFile: true)
                 return CommandResult(message: ok ? L10n.tr("Zapisano \(doc.title)") : nil)
+            },
+            Command(CommandDescriptor(id: "file.reload", title: L10n.tr("Wczytaj ponownie z dysku"), category: .file,
+                                      agent: .approval, effect: .modifiesEditor,
+                                      summary: L10n.tr("Wczytuje plik aktywnego okna ponownie z dysku (okno pary specyfikacja/ciało — oba pliki). Niezapisane zmiany okna zostają zastąpione treścią pliku; tekst sprzed wczytania trafia do historii lokalnej. Okna z niezapisanymi zmianami agent nie wczytuje."),
+                                      feature: "PD-FILE-005"),
+                    validate: { $0.activeDocument?.fileURL != nil }) { ctx in
+                guard let doc = ctx.workspace.activeDocument, let url = doc.fileURL else {
+                    throw CommandError.notAvailable(L10n.tr("Aktywne okno nie ma pliku"))
+                }
+                if doc.isModified {
+                    guard ctx.invoker == .user else {
+                        throw CommandError.notAvailable(L10n.tr("Okno ma niezapisane zmiany — wczytanie z dysku zastąpiłoby je; zrobi to tylko użytkownik."))
+                    }
+                    if let ui = ctx.askingUI {
+                        let choice = await ui.ask(L10n.tr("Wczytać „\(doc.title)” ponownie z dysku?"), message: L10n.tr("Okno ma niezapisane zmiany."),
+                                                  buttons: [L10n.tr("Wczytaj ponownie (utracisz zmiany)"), L10n.tr("Anuluj")])
+                        guard choice == 0 else { throw CommandError.cancelledByUser }
+                    }
+                }
+                for u in doc.unitFiles.isEmpty ? [url] : doc.unitFiles.map(\.url) { try ctx.workspace.reloadFromDisk(doc, url: u) }
+                return CommandResult(message: L10n.tr("Wczytano ponownie \(doc.title)"))
             },
             Command(CommandDescriptor(id: "file.encoding", title: L10n.tr("Kodowanie pliku…"), category: .file,
                                       parameters: [CommandParameter("encoding", .string, L10n.tr("Kodowanie (bez argumentu — wybór z listy)"), allowed: TextFileCodec.encodingNames)],

@@ -30,6 +30,9 @@ public struct WorksetDocument: Sendable, Codable, Hashable {
     public var lineEnding: String?
     /// Okno programu powiązane z plikami specyfikacji i ciała (D194) — `filePath` to plik specyfikacji.
     public var unitFiles: [WorksetUnitFile]?
+    /// Skrót bajtów pliku okna z otwarcia albo zapisu (szesnastkowo, D197) — okno ze zmianami przywrócone z workseta
+    /// pyta przy aktywacji i zapisie, gdy plik zmienił się na dysku po zapisie workseta.
+    public var fileHash: String?
 
     /// Format zapisany w worksecie (nil — starszy workset).
     var fileFormat: TextFileFormat? {
@@ -316,6 +319,7 @@ extension Workspace {
                     e.encoding = d.fileFormat.encoding.rawValue
                     e.bom = d.fileFormat.hasBOM
                     e.lineEnding = d.fileFormat.lineEnding.rawValue
+                    e.fileHash = d.savedFileHash.map { String($0, radix: 16) }
                 }
             }
             if !d.unitFiles.isEmpty { e.unitFiles = d.unitFiles.map(WorksetUnitFile.init) }
@@ -389,6 +393,7 @@ extension Workspace {
                 if let x = e.notebook { doc.notebook = x }
                 if let x = e.report { doc.report = x }
                 if let files = e.unitFiles, e.kind == .program { doc.unitFiles = files.map { $0.unitFile(preferred: projectEncoding(for: URL(fileURLWithPath: $0.path))) } }
+                rememberWorksetDiskState(doc, hash: e.fileHash)
                 doc.isModified = e.modified
             } else if let files = e.unitFiles, let spec = files.first(where: { $0.part == .spec }), let body = files.first(where: { $0.part == .body }),
                       let d = try? openUnitFiles(spec: URL(fileURLWithPath: spec.path), body: URL(fileURLWithPath: body.path), show: .spec) {
@@ -412,6 +417,24 @@ extension Workspace {
         }
         if let i = w.activeIndex, let d = opened[i] { activate(d.id) }
         return missing
+    }
+
+    /// Stan plików okna przywróconego z tekstem (D197): skrót z workseta — zmiana pliku po zapisie workseta zostanie
+    /// wykryta przy aktywacji okna i zapisie; bez skrótu (starszy workset) — stan obecny.
+    private func rememberWorksetDiskState(_ doc: Document, hash: String?) {
+        if doc.unitFiles.isEmpty {
+            guard let url = doc.fileURL?.standardizedFileURL, let data = try? Data(contentsOf: url) else { return }
+            rememberDiskState(doc, url: url, data: data)
+            if let h = hash.flatMap({ UInt64($0, radix: 16) }) {
+                doc.savedFileHash = h
+                doc.diskStamps[url] = FileStamp(modified: nil, size: -1, hash: h)
+            }
+            return
+        }
+        for f in doc.unitFiles {
+            guard let data = try? Data(contentsOf: f.url) else { continue }
+            doc.diskStamps[f.url] = f.savedHash.map { FileStamp(modified: nil, size: -1, hash: $0) } ?? FileStamp.of(f.url, data: data)
+        }
     }
 
     /// Zapis bieżących okien do bieżącego workseta (autozapis przy zamykaniu aplikacji i przełączaniu).

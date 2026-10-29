@@ -192,6 +192,13 @@ region without formatting can also be marked with the `-- @formatter:off` and `-
   file's encoding blocks saving, with the exact line and column indicated — you change the encoding only deliberately
   with **File › File encoding…**.
 - **File › Read Only** locks the window for editing.
+- An open file is not locked — other programs (an agent, git, an editor) can change it. When you return to the window,
+  a pair tab or Pelikan and the file has changed on disk, Pelikan asks whether to **reload** it; a window with unsaved
+  changes warns that you will lose them (**Keep my changes** keeps the window text, and a later **Save** warns once
+  more before overwriting). A change of the file date alone (e.g. `touch`) does not ask. In a `.pks`/`.pkb` pair window
+  only the changed file is reloaded. A deleted or moved file: **Keep in window** or **Close window**. **File › Reload
+  from disk** does it on demand. In **Preferences › General › Files** you can turn detection off or reload without
+  asking when the window has no changes.
 - **File › Open with Connection…** opens a file with a connection pinned right away.
 - **Edit › Open in External Editor** passes the text to the program set in **Preferences › Tools** (e.g. Visual Studio
   Code); when you return to Pelikan, the changes are loaded.

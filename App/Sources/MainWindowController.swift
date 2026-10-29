@@ -610,6 +610,10 @@ final class DocumentAreaViewController: NSViewController {
                 container.addSubview(vc.view)
                 installedID = doc.id
                 focusActiveDocument()
+                // Aktywacja okna z plikiem: zmiana pliku przez inny program — pytanie (D197); poza śledzonym odświeżeniem.
+                if doc.fileURL != nil {
+                    DispatchQueue.main.async { [workspace] in Task { await workspace.checkExternalChanges(of: doc) } }
+                }
             }
             connectionButton.title = connectionDescription(for: doc) + " ▾"
             connectionButton.contentTintColor = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) } ?? .labelColor

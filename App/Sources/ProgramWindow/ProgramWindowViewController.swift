@@ -53,7 +53,13 @@ final class ProgramWindowViewController: NSViewController, NSTableViewDataSource
         editor.onShownTabChange = { [weak self] t in
             self?.updateUnitButtons()
             // Plik karty widocznej (okno pary, D194) — stan repozytorium na pasku okna bez obserwacji tekstu.
-            if self?.document.shownUnitTab != t { self?.document.shownUnitTab = t }
+            guard let self, self.document.shownUnitTab != t else { return }
+            self.document.shownUnitTab = t
+            // Aktywacja karty pliku pary: zmiana pliku przez inny program — pytanie (D197).
+            if !self.document.unitFiles.isEmpty, self.view.window != nil {
+                let doc = self.document, ws = self.workspace
+                DispatchQueue.main.async { Task { await ws.checkExternalChanges(of: doc) } }
+            }
         }
         // Code Contents: klik albo Enter — kursor na nazwie elementu i fokus w edytorze; strzałki w drzewie — kursor
         // idzie za zaznaczeniem, fokus zostaje w drzewie. Element innej jednostki przełącza kartę (D192).

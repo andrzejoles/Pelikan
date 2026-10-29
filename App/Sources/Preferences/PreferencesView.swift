@@ -235,6 +235,10 @@ struct GeneralPane: View {
                 Toggle(L10n.tr("Przywracaj okna po ponownym uruchomieniu (także niezapisane)"), isOn: setting(workspace, \.worksetAutosave))
                 Toggle(L10n.tr("Autozapis układu okna"), isOn: setting(workspace, \.autosaveLayout))
                 Toggle(L10n.tr("Pytaj o zapis zmian przy zamykaniu nowych okien"), isOn: setting(workspace, \.confirmSaveNewWindows))
+                // D197: pliki zmienione przez inny program (agent, git) — przy aktywacji okna, karty i aplikacji.
+                Toggle(L10n.tr("Wykrywaj zmiany plików na dysku"), isOn: setting(workspace, \.detectExternalFileChanges))
+                Toggle(L10n.tr("Wczytuj bez pytania pliki zmienione na zewnątrz, gdy okno nie ma zmian"), isOn: setting(workspace, \.reloadExternalChangesSilently))
+                    .disabled(!workspace.settings.detectExternalFileChanges)
             }
             Section(L10n.tr("Dziennik aplikacji")) {
                 Picker(L10n.tr("Zapisuj w dzienniku"), selection: setting(workspace, \.logLevel)) {

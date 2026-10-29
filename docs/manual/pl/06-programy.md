@@ -185,6 +185,13 @@ Komentarze `TODO` i `DONE` (z właścicielem, priorytetem i kategorią) są zbie
   kodowaniu pliku, blokuje zapis z dokładnym wskazaniem linii i kolumny — kodowanie zmienisz tylko świadomie przez
   **Plik › Kodowanie pliku…**.
 - **Plik › Tylko do odczytu** blokuje edycję okna.
+- Otwarty plik nie jest blokowany — inne programy (agent, git, edytor) mogą go zmieniać. Gdy wrócisz do okna, karty
+  pary albo do Pelikana, a plik zmienił się na dysku, Pelikan pyta, czy **wczytać go ponownie**; okno z niezapisanymi
+  zmianami ostrzega, że je utracisz (**Zachowaj moje zmiany** zostawia tekst okna, a późniejsze **Zapisz** jeszcze raz
+  ostrzega przed nadpisaniem). Sama zmiana daty pliku (np. `touch`) nie wywołuje pytania. W oknie pary `.pks`/`.pkb`
+  wczytywany jest tylko zmieniony plik. Plik usunięty albo przeniesiony: **Zachowaj w oknie** albo **Zamknij okno**.
+  **Plik › Wczytaj ponownie z dysku** robi to na żądanie. W **Preferencje › Ogólne › Pliki** wyłączysz wykrywanie
+  albo włączysz wczytywanie bez pytania, gdy okno nie ma zmian.
 - **Plik › Otwórz z połączeniem…** otwiera plik z od razu przypiętym połączeniem.
 - **Edycja › Otwórz w zewnętrznym edytorze** przekazuje tekst do programu wskazanego w **Preferencje › Narzędzia**
   (np. Visual Studio Code); po powrocie do Pelikana zmiany są wczytywane.

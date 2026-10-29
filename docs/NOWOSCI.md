@@ -34,6 +34,10 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   `nazwa.grants.sql` (albo są pomijane), wyłączony wyzwalacz ma `DISABLE` w `CREATE TRIGGER`, a komentarz z datą
   eksportu jest tylko na życzenie (**Nagłówek z datą eksportu**). Eksport do jednego pliku (skrypt SQL*Plus) zostaje
   z „/” i uprawnieniami za obiektami.
+- **Pliki zmienione przez inny program:** otwarty plik nie jest blokowany, a gdy agent, git albo inny edytor zmieni
+  go na dysku, Pelikan przy powrocie do okna (karty pary, aplikacji) pyta, czy wczytać go ponownie — z ostrzeżeniem,
+  gdy okno ma niezapisane zmiany. Sama zmiana daty pliku nie wywołuje pytania; plik usunięty można zachować w oknie
+  albo zamknąć okno. Nowa komenda **Plik › Wczytaj ponownie z dysku**; ustawienia w **Preferencje › Ogólne › Pliki**.
 - **Uwaga przy powrocie do starszej wersji:** workset z oknem pary plików otwarty w Pelikanie sprzed 1.4.0 przywróci
   okno z obiema jednostkami i plikiem specyfikacji — zapis zapisałby wtedy obie jednostki do pliku `.pks`. Przed
   powrotem do starszej wersji zapisz takie okna albo je zamknij.

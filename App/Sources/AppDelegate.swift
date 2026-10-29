@@ -193,8 +193,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
         if workspace.documents.isEmpty {
             workspace.perform("file.new.sql")
         }
-        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”.
-        if Self.uiScriptURL == nil { startRecovery() }
+        // Przebieg zrzutów: aplikacja jest zamykana sygnałem — bez pytania o odzyskanie okien po „awarii”, bez pytań
+        // o pliki zmienione na dysku (D197).
+        if Self.uiScriptURL == nil { startRecovery() } else { workspace.externalChangePromptsEnabled = false }
         let crashedSince = crashMonitor?.begin()
         if Self.uiScriptURL == nil, let crashedSince { offerCrashReport(since: crashedSince) }
         // Przebieg zrzutów w tle (D30): bez aktywacji aplikacji — okna nie zabierają fokusu użytkownikowi.
@@ -349,9 +350,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UIServices {
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
-    /// Powrót do Pelikana: okna edytowane programem zewnętrznym dostają nową treść (PD-EDIT-028).
+    /// Powrót do Pelikana: okna edytowane programem zewnętrznym dostają nową treść (PD-EDIT-028), a plik okna na
+    /// wierzchu zmieniony przez inny program (agent, git) — pytanie o wczytanie ponowne (D197).
     func applicationDidBecomeActive(_ notification: Notification) {
         workspace.checkExternalEdits()
+        if let doc = workspace.activeDocument {
+            Task { await workspace.checkExternalChanges(of: doc) }
+        }
     }
 
     /// Odzyskiwanie po awarii (PD-FILE-001): okna z poprzedniego, nieczysto zakończonego uruchomienia i okresowa migawka.

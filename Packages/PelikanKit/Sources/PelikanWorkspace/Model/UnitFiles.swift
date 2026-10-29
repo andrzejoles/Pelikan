@@ -294,6 +294,8 @@ extension Workspace {
         doc.unitFiles = [UnitFile(part: .spec, url: spec, format: s.format, ending: endings[0], savedText: s.text, savedHash: UnitFile.fingerprint(sd)),
                          UnitFile(part: .body, url: body, format: b.format, ending: endings[1], savedText: b.text, savedHash: UnitFile.fingerprint(bd))]
         doc.isModified = false
+        rememberDiskState(doc, url: spec, data: sd)
+        rememberDiskState(doc, url: body, data: bd)
         restoreWindowState(doc)
         doc.showUnitTab(show == .spec ? 0 : 1)
         rememberRecentFile(show == .spec ? spec : body)
@@ -352,7 +354,12 @@ extension Workspace {
     /// jednostka zmieni się później, zapis zapyta wtedy). Porównanie skrótu bajtów z ostatniego odczytu albo zapisu — bez
     /// dekodowania (pliki jednobajtowe bez fałszywych alarmów, sprawdzenie działa też po zmianie kodowania okna).
     public func externallyChangedUnitFiles(_ doc: Document) -> [URL] {
-        doc.unitFiles.filter { f in
+        // Okno z jednym plikiem (D197): skrót z otwarcia albo zapisu — „Zostaw” przy pytaniu o zmianę tego nie zmienia.
+        if doc.unitFiles.isEmpty {
+            guard let url = doc.fileURL, let hash = doc.savedFileHash, let data = try? Data(contentsOf: url) else { return [] }
+            return UnitFile.fingerprint(data) == hash ? [] : [url.standardizedFileURL]
+        }
+        return doc.unitFiles.filter { f in
             guard let hash = f.savedHash, f.needsRewrite || doc.currentText(of: f.url).map({ $0 != f.savedText }) == true,
                   let data = try? Data(contentsOf: f.url) else { return false }
             return UnitFile.fingerprint(data) != hash
@@ -399,6 +406,7 @@ extension Workspace {
                 doc.unitFiles[k].savedHash = UnitFile.fingerprint(data[i])
                 doc.unitFiles[k].needsRewrite = false
             }
+            rememberDiskState(doc, url: f.url, data: data[i])
         }
         // Historia lokalna okna pary: cały tekst okna pod plikiem specyfikacji (klucz okna — `LocalHistory.key(for:)`).
         localHistory.record(key: LocalHistory.key(file: spec.url), title: spec.url.lastPathComponent, text: doc.text, label: L10n.tr("zapis"))

@@ -13,6 +13,8 @@ enum FileCommands {
             guard d.fileURLs.contains(where: { $0 == u || $0.path.hasPrefix(u.path + "/") }) else { continue }
             d.fileURL = nil
             d.unitFiles = []
+            d.diskStamps = [:]
+            d.savedFileHash = nil
             d.isModified = true
         }
     }
@@ -196,6 +198,8 @@ enum FileCommands {
                 }
                 for d in ctx.workspace.documents {
                     if let f = d.fileURL, let m = moved(f) { d.fileURL = m }
+                    // Stan dysku pod nową ścieżką — przeniesienie przez Pelikana to nie zmiana z zewnątrz (D197).
+                    for (u, s) in d.diskStamps { if let m = moved(u) { d.diskStamps[u] = nil; d.diskStamps[m.standardizedFileURL] = s } }
                     // Okno pary (D194): także plik ciała.
                     for i in d.unitFiles.indices { if let m = moved(d.unitFiles[i].url) { d.unitFiles[i].url = m } }
                 }

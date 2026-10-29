@@ -215,6 +215,7 @@ extension Workspace {
         }
         doc.fileFormat = format
         doc.isModified = false
+        rememberDiskState(doc, url: std, data: data)
         restoreWindowState(doc)
         rememberRecentFile(std)
         return doc
@@ -251,29 +252,37 @@ extension Workspace {
         if doc.kind == .report {
             var def = doc.report
             def.sql = doc.text
-            try Self.writeKeepingFile(def.encoded(), to: url)
+            let data = try def.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .diagram {
-            try Self.writeKeepingFile(doc.diagram.encoded(), to: url)
+            let data = try doc.diagram.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .notebook {
-            try Self.writeKeepingFile(doc.notebook.encoded(), to: url)
+            let data = try doc.notebook.encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
         }
         if doc.kind == .test, url.pathExtension.lowercased() == "tst" {
-            try Self.writeKeepingFile(TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded(), to: url)
+            let data = try TestScriptFile(block: doc.text, variables: doc.testVariables, watches: doc.testWatches).encoded()
+            try Self.writeKeepingFile(data, to: url)
             doc.fileURL = url.standardizedFileURL
+            rememberDiskState(doc, url: url, data: data)
             doc.isModified = false
             rememberRecentFile(url)
             return
@@ -291,6 +300,7 @@ extension Workspace {
         doc.fileURL = url.standardizedFileURL
         doc.fileFormat = format
         doc.isModified = false
+        rememberDiskState(doc, url: url, data: data)
         rememberRecentFile(url)
     }
 

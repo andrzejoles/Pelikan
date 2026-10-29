@@ -30,6 +30,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Zapisz | `file.save` | ⌘S | ⌘S | Brak | PD-SQLW-012 |
 | Zapisz jako… | `file.saveAs` | ⇧⌘S | ⇧⌘S | Brak | PD-SQLW-012 |
 | Zapisz jako jeden plik… | `file.saveAsSingleFile` |  |  | Brak | PD-PROG-007 |
+| Wczytaj ponownie z dysku | `file.reload` |  |  | Za zgodą | PD-FILE-005 |
 | Kodowanie pliku… | `file.encoding` |  |  | Brak | PC-ENC-001 |
 | Zamknij okno | `file.close` | ⌘W | ⌘W | Brak | PD-UI-004 |
 | Zamknij wskazane okno | `file.closeWindow` |  |  | Brak | PD-UI-004 |
