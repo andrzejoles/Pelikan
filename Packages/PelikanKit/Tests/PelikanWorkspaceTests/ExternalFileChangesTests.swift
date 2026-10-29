@@ -375,4 +375,34 @@ struct ExternalFileChangesTests {
             #expect((try FileManager.default.attributesOfItem(atPath: l.path))[.type] as? FileAttributeType == .typeSymbolicLink)
         }
     }
+
+    @Test("Inne okno aktywowane w trakcie pytania — sprawdzone po zakończeniu bieżącego")
+    func recheckActiveWindowAfterwards() async throws {
+        let ws = Workspace()
+        let ui = FakeUI()
+        ws.ui = ui
+        let a = try write("select 1 from dual;\n", "pa.sql"), b = try write("select 1 from dual;\n", "pb.sql")
+        let da = try ws.openFile(a)
+        let db = try ws.openFile(b)
+        try Data("select 2 from dual;\n".utf8).write(to: a)
+        try Data("select 2 from dual;\n".utf8).write(to: b)
+        ws.activate(db.id)
+        ui.answers = [1, 1]
+        #expect(await ws.checkExternalChanges(of: da) == 1)
+        for _ in 0..<50 where ui.asked.count < 2 { try await Task.sleep(nanoseconds: 20_000_000) }
+        #expect(ui.asked.count == 2 && ui.asked[1].contains("pb.sql"))
+    }
+
+    @Test("Pętla dowiązań — zapis kończy się błędem, dowiązania zostają")
+    func linkLoopFails() throws {
+        let ws = Workspace()
+        let a = dir.appendingPathComponent("la.sql"), b = dir.appendingPathComponent("lb.sql")
+        try FileManager.default.createSymbolicLink(atPath: a.path, withDestinationPath: "lb.sql")
+        try FileManager.default.createSymbolicLink(atPath: b.path, withDestinationPath: "la.sql")
+        let doc = ws.newDocument(.sql, text: "select 1 from dual;\n")
+        #expect(throws: (any Error).self) { try ws.save(doc, to: a) }
+        for l in [a, b] {
+            #expect((try FileManager.default.attributesOfItem(atPath: l.path))[.type] as? FileAttributeType == .typeSymbolicLink)
+        }
+    }
 }

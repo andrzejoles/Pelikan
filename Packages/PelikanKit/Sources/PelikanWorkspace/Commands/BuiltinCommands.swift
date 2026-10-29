@@ -155,7 +155,13 @@ public enum BuiltinCommands {
     static func closeDocument(_ doc: Document, in ws: Workspace, askToSave: Bool = true) async throws -> Bool {
         // Zapis okna w toku (np. pytanie o zmianę pliku na dysku): zamknięcie i wyjście z aplikacji czekają na jego koniec
         // (najwyżej minutę), zamiast przerywać się po cichu.
-        for _ in 0..<1200 where doc.isSaving { try await Task.sleep(nanoseconds: 50_000_000) }
+        if doc.isSaving {
+            // Komunikat w pasku stanu okna na czas czekania (zamknięcie, wyjście, zmiana workseta).
+            let status = doc.statusText
+            doc.statusText = L10n.tr("Czekam na zakończenie zapisu…")
+            for _ in 0..<1200 where doc.isSaving { try await Task.sleep(nanoseconds: 50_000_000) }
+            doc.statusText = status
+        }
         if doc.isSaving { throw CommandError.notAvailable(L10n.tr("Okno „\(doc.title)” jest właśnie zapisywane")) }
         // Wykonanie w toku: debugowanie jest przerywane (inaczej sesja zostaje z DEBUG_ON i wstrzymanym programem),
         // zwykłe wykonanie trzeba najpierw przerwać.

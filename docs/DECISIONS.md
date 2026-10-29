@@ -2242,16 +2242,19 @@ edytor), Pelikan to wykrywa i pyta.
   do odczytu, para o innym podziale) — także w trybie bez pytania — zapamiętuje stan dysku jako znany (plik nie do
   odczytu: data i rozmiar z atrybutów, skrót dotychczasowy), więc nie pyta przy każdej aktywacji, a błąd pokazuje
   użytkownikowi i zapisuje w dzienniku. Zapis okna jest chroniony przed ponownym wejściem: drugi zapis w trakcie
-  pytania albo sprawdzania kończy się komunikatem „Okno „…” jest właśnie zapisywane”, a zamknięcie okna i wyjście
-  z aplikacji czekają na koniec zapisu (najwyżej minutę) zamiast przerywać się po cichu. Sprawdzenie zmian na dysku przed
+  pytania albo sprawdzania kończy się komunikatem „Okno „…” jest właśnie zapisywane”, a zamknięcie okna, wyjście
+  z aplikacji i zmiana workseta czekają na koniec zapisu (najwyżej minutę, w pasku stanu okna „Czekam na zakończenie
+  zapisu…”) zamiast przerywać się po cichu. Sprawdzenie zmian na dysku przed
   zapisem powtarza się, gdy tekst albo pliki okna zmieniły się w trakcie (najwyżej trzy razy); zapis idzie do bieżącego
   pliku okna, a plik odłączony w tym czasie (usunięty albo przeniesiony w Przeglądarce plików) — dalej jak okno bez
   pliku (Zapisz jako), bez odtwarzania starej ścieżki. Wiszące dowiązanie zachowane w oknie („Zachowaj w oknie”), także
-  łańcuch dowiązań: zapis tworzy plik docelowy na końcu łańcucha (najwyżej 32 kroki), dowiązania zostają. Esc i ⌘.
+  łańcuch dowiązań: zapis tworzy plik docelowy na końcu łańcucha (najwyżej 32 kroki), dowiązania zostają; pętla
+  dowiązań (powtórzona ścieżka albo nadal dowiązanie po limicie) kończy zapis błędem, bez rozrywania pętli. Esc i ⌘.
   wybierają bezpieczną odpowiedź. Sprawdzenie przy aktywacji ustawia blokadę przed pierwszym odczytem (dwa wyzwalacze
   naraz — jedno pytanie), pomija pliki, których stan zmienił się w trakcie odczytu albo pytania (własny zapis,
   wczytanie), przerywa się, gdy w międzyczasie zaczął się zapis albo okno zamknięto, i przed każdym pytaniem liczy
-  ponownie, czy okno ma niezapisane zmiany.
+  ponownie, czy okno ma niezapisane zmiany. Gdy w trakcie aktywowano inne okno (jego sprawdzenie odbiło się od
+  blokady), po zakończeniu sprawdzane jest okno aktywne.
 - **Plik usunięty albo przeniesiony:** „Plik „…” nie istnieje na dysku” — **Zachowaj w oknie** (okno oznaczone jako
   zmienione, zapis utworzy plik ponownie; bez ponownego pytania) albo **Zamknij okno** (okno ze zmianami — zwykłe
   pytanie o zapis).

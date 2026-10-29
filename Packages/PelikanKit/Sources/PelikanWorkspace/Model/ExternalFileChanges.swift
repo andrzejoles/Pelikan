@@ -232,7 +232,13 @@ extension Workspace {
               documents.contains(where: { $0.id == doc.id }), let ui else { return 0 }
         // Flaga przed pierwszym await — drugi wyzwalacz w tym czasie (aktywacja okna i aplikacji naraz) nie pyta drugi raz.
         checkingExternalChanges = true
-        defer { checkingExternalChanges = false }
+        defer {
+            checkingExternalChanges = false
+            // Aktywacja innego okna w trakcie (jego sprawdzenie odbiło się od blokady) — sprawdzenie okna aktywnego teraz.
+            if let active = activeDocument, active.id != doc.id, active.fileURL != nil {
+                Task { await self.checkExternalChanges(of: active) }
+            }
+        }
         let changes = await externalChanges(of: doc)
         guard !changes.isEmpty else { return 0 }
         var handled = 0
