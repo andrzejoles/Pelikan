@@ -29989,34 +29989,6 @@
         }
       }
     },
-    "Kolor połączenia okna" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Window connection color"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindungsfarbe des Fensters"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Color de la conexión de la ventana"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Колір з'єднання вікна"
-          }
-        }
-      }
-    },
     "Kolor zaznaczonych" : {
       "localizations" : {
         "en" : {

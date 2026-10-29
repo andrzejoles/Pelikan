@@ -570,7 +570,8 @@ final class DocumentAreaViewController: NSViewController {
         for doc in docs {
             // Kolor połączenia (wskaźniki, PD-CONN-005) — kropka przed znacznikiem typu.
             let color = workspace.indicatorColor(for: doc).map { NSColor(red: $0.red, green: $0.green, blue: $0.blue, alpha: 1) }
-            let tab = DocumentTabButton(document: doc, isActive: doc.id == active, connectionColor: color) { [weak self] in
+            let tab = DocumentTabButton(document: doc, isActive: doc.id == active, connectionColor: color,
+                                        connection: connectionDescription(for: doc)) { [weak self] in
                 self?.workspace.activate(doc.id)
             } onClose: { [weak self] in
                 self?.workspace.perform("file.closeWindow", CommandArguments(["document": .string(doc.id.description)]))
@@ -726,45 +727,55 @@ final class DocumentTabButton: NSView {
     private let onSelect: () -> Void
     private let onClose: () -> Void
     private let isActive: Bool
+    private let isModified: Bool
+    private let close = NSButton(image: NSImage(), target: nil, action: nil)
     private var hovered = false {
-        didSet { needsDisplay = true }
+        didSet {
+            needsDisplay = true
+            updateCloseImage()
+        }
     }
 
-    /// Tło paska kart: ciemniejsze od tła okna (jasny wygląd) albo jaśniejsze (ciemny) — karty odcinają się od edytora.
+    /// Tło paska kart: ciemniejsze od tła okna (jasny wygląd) albo jaśniejsze od edytora (ciemny) — karty odcinają się
+    /// od edytora. Przy „Zwiększ kontrast” tytuły nieaktywnych kart w kolorze tekstu.
     static let barBackground = NSColor(name: nil) {
-        $0.isDark ? NSColor(srgbRed: 0.16, green: 0.16, blue: 0.17, alpha: 1) : NSColor(srgbRed: 0.89, green: 0.89, blue: 0.90, alpha: 1)
+        $0.isDark ? NSColor(srgbRed: 0.16, green: 0.16, blue: 0.17, alpha: 1) : NSColor(srgbRed: 0.91, green: 0.91, blue: 0.92, alpha: 1)
     }
 
-    init(document: Document, isActive: Bool, connectionColor: NSColor?, onSelect: @escaping () -> Void, onClose: @escaping () -> Void) {
+    init(document: Document, isActive: Bool, connectionColor: NSColor?, connection: String,
+         onSelect: @escaping () -> Void, onClose: @escaping () -> Void) {
         self.onSelect = onSelect
         self.onClose = onClose
         self.isActive = isActive
+        self.isModified = document.isModified
         super.init(frame: .zero)
         let fonts = InterfaceFonts.shared
+        let dim = isActive || NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? NSColor.labelColor
+                                                                                            : NSColor.labelColor.withAlphaComponent(0.7)
         var views: [NSView] = []
-        if let connectionColor {
-            let dot = ConnectionDot(color: connectionColor)
-            dot.toolTip = L10n.tr("Kolor połączenia okna")
+        let dot = connectionColor.map(ConnectionDot.init(color:))
+        if let dot {
+            dot.toolTip = L10n.tr("Połączenie: \(connection)")
             views.append(dot)
         }
         let marker = NSTextField(labelWithString: document.kind.shortName)
         marker.font = .monospacedSystemFont(ofSize: fonts.label.pointSize, weight: .bold)
         marker.textColor = Self.color(for: document.kind)
-        let title = NSTextField(labelWithString: (document.isModified ? "● " : "") + document.title)
+        let title = NSTextField(labelWithString: document.title)
         title.font = AppFonts.font(family: fonts.family, size: AppFonts.reduced(fonts.size, by: 1), weight: isActive ? .semibold : fonts.weight)
-        title.textColor = isActive ? .labelColor : .secondaryLabelColor
+        title.textColor = dim
         title.lineBreakMode = .byTruncatingMiddle
-        let close = NSButton(image: NSImage(systemSymbolName: "xmark", accessibilityDescription: L10n.tr("Zamknij"))!,
-                             target: nil, action: nil)
+        // Zmienione okno — kropka w miejscu przycisku zamknięcia (jak w macOS), pod kursorem „×”.
         close.isBordered = false
         close.imageScaling = .scaleProportionallyDown
-        close.contentTintColor = isActive ? .labelColor : .secondaryLabelColor
+        close.contentTintColor = dim
         close.target = self
         close.action = #selector(closeTapped)
+        updateCloseImage()
         views += [marker, title, close]
         let stack = NSStackView(views: views)
         stack.spacing = 6
-        stack.setCustomSpacing(5, after: views[0])
+        if let dot { stack.setCustomSpacing(5, after: dot) }
         stack.edgeInsets = NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 4)
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
@@ -781,6 +792,7 @@ final class DocumentTabButton: NSView {
         setAccessibilityElement(true)
         setAccessibilityRole(.radioButton)
         setAccessibilityLabel(document.fullTitle)
+        setAccessibilityHelp(L10n.tr("Połączenie: \(connection)") + (document.isModified ? " · " + L10n.tr("Zmieniony, niezapisany") : ""))
         setAccessibilityValue(NSNumber(value: isActive ? 1 : 0))
         setAccessibilityCustomActions([NSAccessibilityCustomAction(name: L10n.tr("Zamknij")) { [weak self] in
             self?.onClose()
@@ -811,15 +823,28 @@ final class DocumentTabButton: NSView {
         }
     }
 
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-        trackingAreas.forEach(removeTrackingArea)
-        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
-                                       owner: self, userInfo: nil))
+    // Obszar śledzenia raz (`.inVisibleRect` nie wymaga przebudowy); karty powstają od nowa przy odświeżeniu paska, więc
+    // stan podświetlenia z położenia kursora po wstawieniu do okna.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if trackingAreas.isEmpty {
+            addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                           owner: self, userInfo: nil))
+        }
+        guard let window else { return }
+        hovered = bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
     }
 
     override func mouseEntered(with event: NSEvent) { hovered = true }
     override func mouseExited(with event: NSEvent) { hovered = false }
+
+    private func updateCloseImage() {
+        let symbol = isModified && !hovered ? "circle.fill" : "xmark"
+        let label = isModified && !hovered ? L10n.tr("Zmieniony, niezapisany") : L10n.tr("Zamknij")
+        close.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)?
+            .withSymbolConfiguration(.init(scale: symbol == "circle.fill" ? .small : .medium))
+        close.setAccessibilityLabel(L10n.tr("Zamknij"))
+    }
 
     static func color(for kind: DocumentKind) -> NSColor {
         switch kind {
@@ -854,7 +879,12 @@ private final class ConnectionDot: NSView {
     required init?(coder: NSCoder) { fatalError() }
 
     override func draw(_ dirtyRect: NSRect) {
+        let oval = NSBezierPath(ovalIn: bounds.insetBy(dx: 0.5, dy: 0.5))
         color.setFill()
-        NSBezierPath(ovalIn: bounds).fill()
+        oval.fill()
+        // Obrys — kropka nie ginie, gdy kolor połączenia jest zbliżony do tła paska.
+        NSColor.separatorColor.setStroke()
+        oval.lineWidth = 0.5
+        oval.stroke()
     }
 }
