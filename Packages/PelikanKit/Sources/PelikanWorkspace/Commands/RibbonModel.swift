@@ -351,7 +351,7 @@ public enum RibbonModel {
             ]),
             RibbonGroup(L10n.tr("Wdrożenie"), [
                 .menu(L10n.tr("Koszyk"), symbol: "cart", commands: ["tools.cart", "cart.script"], large: true),
-                .menu(L10n.tr("Git"), symbol: "arrow.triangle.branch", commands: ["vcs.status", "vcs.diff", "vcs.log", separator, "vcs.add", "vcs.commit"], large: true),
+                .menu(L10n.tr("Git"), symbol: "arrow.triangle.branch", commands: ["vcs.status", "vcs.diff", "vcs.log", separator, "vcs.openBranchChanges", separator, "vcs.add", "vcs.commit"], large: true),
                 .menu(L10n.tr("Zdalny Pro*C"), symbol: "server.rack", commands: [
                     "proc.deploy", "proc.console", "proc.stop", "proc.history", "proc.gitStatus", "proc.rollback", "proc.releaseLock", separator,
                     "ssh.manager", "ssh.test", "ssh.import", "ssh.export",

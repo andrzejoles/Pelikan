@@ -287,6 +287,78 @@ public struct GitRepository: Sendable, Hashable {
         return try Self.run(["rev-parse", "--short", "HEAD"], in: root).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Punkt odniesienia zmian gałęzi (D201): punkt rozgałęzienia z gałęzią domyślną zdalnego repozytorium
+    /// (`<zdalne>/HEAD`, inaczej `<zdalne>/main` albo `master`; zdalne `origin` albo pierwsze), bez niej — z gałęzią
+    /// śledzoną (upstream); nil — tylko zmiany niezatwierdzone.
+    public func branchBase() -> String? {
+        let cfg = Self.backgroundConfig
+        func verify(_ ref: String) -> Bool { (try? Self.run(["rev-parse", "--verify", "-q", ref + "^{commit}"], in: root, config: cfg)) != nil }
+        func mergeBase(_ ref: String) -> String? {
+            guard let b = (try? Self.run(["merge-base", "HEAD", ref], in: root, config: cfg))?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !b.isEmpty else { return nil }
+            return b
+        }
+        let remotes = ((try? Self.run(["remote"], in: root, config: cfg)) ?? "").split(separator: "\n").map(String.init)
+        if let remote = remotes.contains("origin") ? "origin" : remotes.first {
+            var candidates: [String] = []
+            if let head = (try? Self.run(["symbolic-ref", "-q", "--short", "refs/remotes/\(remote)/HEAD"], in: root, config: cfg))?
+                .trimmingCharacters(in: .whitespacesAndNewlines), !head.isEmpty { candidates.append(head) }
+            candidates += ["\(remote)/main", "\(remote)/master"]
+            for ref in candidates where verify(ref) {
+                if let base = mergeBase(ref) { return base }
+            }
+        }
+        if let up = (try? Self.run(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"], in: root, config: cfg))?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !up.isEmpty {
+            return mergeBase(up)
+        }
+        return nil
+    }
+
+    /// Pliki zmienione w gałęzi (D201): zatwierdzone od punktu rozgałęzienia (`branchBase`), niezatwierdzone (indeks
+    /// i katalog roboczy względem HEAD) i nieśledzone (bez ignorowanych); bez usuniętych i binarnych, tylko istniejące.
+    /// Kolejność: według ścieżki.
+    public func branchChangedFiles() throws -> [URL] {
+        let cfg = Self.backgroundConfig + Self.untrustedFilterConfig(in: root)
+        var paths = Set<String>()
+        var binary = Set<String>()
+        func numstat(_ args: [String]) {
+            guard let out = try? Self.run(["diff", "--numstat", "-z", "--no-renames", "--no-textconv", "--no-ext-diff", "--diff-filter=d"] + args,
+                                          in: root, config: cfg) else { return }
+            // Rekord: dodane TAB usunięte TAB ścieżka NUL; plik binarny — „-” zamiast liczb.
+            for rec in out.split(separator: "\0") {
+                let parts = rec.split(separator: "\t", maxSplits: 2, omittingEmptySubsequences: false)
+                guard parts.count == 3 else { continue }
+                let path = String(parts[2]).trimmingCharacters(in: .newlines)
+                if parts[0] == "-" { binary.insert(path) } else { paths.insert(path) }
+            }
+        }
+        let hasHead = (try? Self.run(["rev-parse", "--verify", "-q", "HEAD"], in: root, config: Self.backgroundConfig)) != nil
+        if hasHead {
+            if let base = branchBase() { numstat([base, "HEAD"]) }
+            numstat(["HEAD"])
+        } else {
+            numstat(["--cached"])
+        }
+        let others = (try? Self.run(["ls-files", "--others", "--exclude-standard", "-z"], in: root, config: Self.backgroundConfig)) ?? ""
+        for p in others.split(separator: "\0").map(String.init) where !p.isEmpty && !p.hasSuffix("/") {
+            if Self.looksBinary(root.appendingPathComponent(p)) { binary.insert(p) } else { paths.insert(p) }
+        }
+        return paths.subtracting(binary).sorted().compactMap { p in
+            let u = root.appendingPathComponent(p).standardizedFileURL
+            var isDir: ObjCBool = false
+            return FileManager.default.fileExists(atPath: u.path, isDirectory: &isDir) && !isDir.boolValue ? u : nil
+        }
+    }
+
+    /// Plik binarny: bajt NUL w pierwszych 8000 bajtach (jak git).
+    static func looksBinary(_ url: URL) -> Bool {
+        guard let h = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? h.close() }
+        let data = (try? h.read(upToCount: 8000)) ?? Data()
+        return data.contains(0)
+    }
+
     /// Historia (dla pliku albo całego repozytorium), najnowsze pierwsze.
     public func log(limit: Int = 100, file: URL? = nil) throws -> [GitCommit] {
         var args = ["log", "-n", String(max(1, limit)), "--pretty=format:%H%x1f%an%x1f%aI%x1f%s%x1e"]

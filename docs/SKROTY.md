@@ -476,6 +476,7 @@ klawiszy funkcyjnych” albo z klawiszem fn.
 | Git › Porównaj z HEAD | `vcs.diff` |  |  | Brak | PD-VCS-001 |
 | Git › Dodaj do zatwierdzenia (git add) | `vcs.add` |  |  | Brak | PD-VCS-001 |
 | Git › Zatwierdź (git commit)… | `vcs.commit` |  |  | Brak | PD-VCS-001 |
+| Git › Otwórz pozostałe pliki zmienione w gałęzi | `vcs.openBranchChanges` |  |  | Brak | PD-VCS-002 |
 | Git › Historia Git pliku | `vcs.log` |  |  | Brak | PD-VCS-001 |
 | Explain Plan | `tools.explainPlan` | F5 | F5 | Brak | PD-OPT-002 |
 | Plan › Rozwiń wszystkie gałęzie | `plan.expandAll` |  |  | Brak | PD-OPT-001 |

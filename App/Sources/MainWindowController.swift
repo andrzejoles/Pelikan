@@ -436,8 +436,8 @@ final class DocumentAreaViewController: NSViewController {
     private let statusLabel = NSTextField(labelWithString: "")
     /// Połączenie okna na pasku stanu — kliknięcie: wybór połączenia okna (UG 20.2, PD-CONN-019).
     private let connectionButton = NSButton(title: "", target: nil, action: nil)
-    /// Gałąź i stan Git pliku aktywnego okna (PD-VCS-001).
-    private let gitLabel = NSTextField(labelWithString: "")
+    /// Gałąź i stan Git pliku aktywnego okna (PD-VCS-001); kliknięcie — menu gałęzi (otwórz pozostałe zmienione pliki, D201).
+    private let gitLabel = NSButton(title: "", target: nil, action: nil)
     /// Kolor palety połączenia aktywnego okna (D200) — obok nazwy połączenia, jak tło karty.
     private let paletteSwatch = NSImageView()
     /// Przyciski zwiniętych paneli narzędzi z liczbą narzędzi (D183).
@@ -500,7 +500,11 @@ final class DocumentAreaViewController: NSViewController {
         statusLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         status.addSubview(connectionButton)
         gitLabel.font = InterfaceFonts.shared.small
-        gitLabel.textColor = .secondaryLabelColor
+        gitLabel.isBordered = false
+        gitLabel.contentTintColor = .secondaryLabelColor
+        gitLabel.target = self
+        gitLabel.action = #selector(showBranchMenu(_:))
+        gitLabel.isHidden = true
         gitLabel.translatesAutoresizingMaskIntoConstraints = false
         gitLabel.setContentHuggingPriority(.required, for: .horizontal)
         gitLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -696,7 +700,7 @@ extension DocumentAreaViewController {
         let key = file.map { "\($0.path)|\(modified)" }
         guard key != gitKey else { return }
         gitKey = key
-        guard let file else { gitLabel.stringValue = ""; return }
+        guard let file else { setGitLabel(nil); return }
         Task { [weak self] in
             let info = await Task.detached { () -> (String?, GitFileState?)? in
                 guard let repo = GitRepository.discover(for: file), let s = try? repo.status() else { return nil }
@@ -705,13 +709,32 @@ extension DocumentAreaViewController {
             guard let self, self.gitKey == key else { return }
             if let (branch, state) = info {
                 let mark = state.map { $0 == .unmodified ? "" : " · " + $0.displayName } ?? ""
-                self.gitLabel.stringValue = "⎇ " + (branch ?? L10n.tr("(odłączony HEAD)")) + mark
-                self.gitLabel.toolTip = L10n.tr("Git: gałąź i stan pliku")
+                self.setGitLabel("⎇ " + (branch ?? L10n.tr("(odłączony HEAD)")) + mark)
             } else {
-                self.gitLabel.stringValue = ""
+                self.setGitLabel(nil)
             }
         }
     }
+
+    /// Gałąź na pasku stanu jako przycisk bez ramki (menu gałęzi, D201); nil — plik poza repozytorium.
+    private func setGitLabel(_ text: String?) {
+        gitLabel.title = text ?? ""
+        gitLabel.isHidden = text == nil
+        gitLabel.toolTip = L10n.tr("Git: gałąź i stan pliku — kliknij, aby otworzyć pozostałe pliki zmienione w gałęzi")
+        gitLabel.setAccessibilityLabel(L10n.tr("Gałąź Git: \(text ?? "")"))
+        gitLabel.setAccessibilityHelp(L10n.tr("Menu gałęzi: otwórz pozostałe pliki zmienione w gałęzi"))
+    }
+
+    /// Menu gałęzi na pasku stanu (D201): otwarcie pozostałych plików zmienionych w gałęzi.
+    @objc func showBranchMenu(_ sender: NSButton) {
+        let menu = NSMenu()
+        let item = menu.addItem(withTitle: L10n.tr("Otwórz pozostałe pliki zmienione w gałęzi"), action: #selector(openBranchChanges), keyEquivalent: "")
+        item.target = self
+        item.isEnabled = workspace.isEnabled("vcs.openBranchChanges")
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.height + 4), in: sender)
+    }
+
+    @objc func openBranchChanges() { workspace.perform("vcs.openBranchChanges") }
 
     /// Mała kapsułka bieżącej grupy na początku paska kart (pełny ekran, pasek narzędzi ukryty albo bez kapsułek, D200).
     func updateGroupPill(groups: [TabGroup], current: TabGroup?) {

@@ -76,6 +76,7 @@ public enum CommandSymbols {
         "window.next": "chevron.right.square", "window.nextGroup": "rectangle.stack.badge.plus", "window.previousGroup": "rectangle.stack", "window.showGroup": "square.stack.3d.up", "window.allTabs": "rectangle.grid.1x2", "window.moveToGroup": "folder.badge.plus", "window.removeFromGroup": "folder.badge.minus", "window.renameGroup": "pencil", "window.ungroup": "square.stack.3d.down.right", "window.rename": "character.cursor.ibeam", "view.saveLayout": "rectangle.3.group",
         "view.restoreLayout": "rectangle.3.group.fill", "view.autosaveLayout": "arrow.triangle.2.circlepath", "view.ribbon": "menubar.rectangle", "view.ribbonCollapse": "rectangle.compress.vertical",
         "view.customizeToolbar": "slider.horizontal.3", "view.toolDockRight": "sidebar.right", "view.toolDockBottom": "rectangle.bottomthird.inset.filled",
+        "vcs.openBranchChanges": "arrow.triangle.branch",
         "view.toolDockAutoHide": "eye.slash", "view.dockToolRight": "rectangle.righthalf.inset.filled", "view.dockToolBottom": "dock.arrow.down.rectangle",
         "view.floatTool": "macwindow.on.rectangle", "view.closeTool": "xmark.rectangle", "help.manual": "book.closed", "help.context": "questionmark.circle",
         "help.oracleManuals": "books.vertical", "view.commandPalette": "command.square", "help.log": "doc.text.below.ecg", "help.exportLog": "square.and.arrow.up.on.square", "help.reportProblem": "exclamationmark.bubble", "view.ribbonSearch": "magnifyingglass.circle",

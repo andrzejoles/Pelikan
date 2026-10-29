@@ -1,4 +1,5 @@
 import Foundation
+import PelikanLog
 
 /// File Browser (UG 22), Git (UG 17), worksety (UG 15) i układ okna (UG 23.10). Operacje na plikach i repozytorium
 /// są tylko dla użytkownika (agent — Brak): ścieżki lokalne mogą ujawniać katalog domowy, a agent ma własne narzędzia.
@@ -282,6 +283,17 @@ enum FileCommands {
 
     // MARK: Git
 
+    /// Więcej plików zmienionych w gałęzi niż tyle — pytanie przed otwarciem (D201).
+    static let branchChangesAskLimit = 30
+
+    /// Rozszerzenia plików kodu otwieranych z gałęzi: skrypty i programy (`FileOpening`), pliki okien Pelikana
+    /// i rozszerzenia z Ustawień (programy, testy, specyfikacja i ciało).
+    static func branchOpenableExtensions(_ s: Settings) -> Set<String> {
+        FileOpening.extensions.union(["pls", "plb", "jav", "rep", "pdd", "sqlnb", "txt", "pc", "ctl"])
+            .union(s.programExtensions.map { $0.lowercased() }).union(s.testExtensions.map { $0.lowercased() })
+            .union(s.specBodyExtensions.all.map { $0.lowercased() })
+    }
+
     static var git: [Command] {
         let sub = "Git"
         return [
@@ -333,6 +345,51 @@ enum FileCommands {
                 guard let message else { throw CommandError.cancelledByUser }
                 let hash = try await Task.detached { try repo.commit(message: message) }.value
                 return CommandResult(message: L10n.tr("Zatwierdzono \(hash)"), value: .string(hash))
+            },
+            command("vcs.openBranchChanges", L10n.tr("Otwórz pozostałe pliki zmienione w gałęzi"), .tools, submenu: sub,
+                    params: [pathParam, CommandParameter("confirm", .boolean, L10n.tr("Otwórz bez pytania także więcej niż \(branchChangesAskLimit) plików"))],
+                    effect: .uiState,
+                    summary: L10n.tr("Otwiera pliki kodu zmienione w gałęzi repozytorium pliku aktywnego okna — od punktu rozgałęzienia z gałęzią domyślną zdalnego repozytorium (bez niej — z gałęzią śledzoną), a także niezatwierdzone i nieśledzone; bez usuniętych, binarnych i już otwartych. Para specyfikacji i ciała — jedno okno."),
+                    feature: "PD-VCS-002", validate: { hasActiveFile($0) }) { ctx in
+                let u = try fileOrActive(ctx)
+                let repo = try await repository(for: u)
+                let ws = ctx.workspace
+                let changed = try await Task.detached { try repo.branchChangedFiles() }.value
+                let openable = branchOpenableExtensions(ws.settings)
+                let candidates = changed.filter { openable.contains($0.pathExtension.lowercased()) }
+                // Porównanie po rozwiązaniu dowiązań (np. /var → /private/var z katalogu repozytorium).
+                let isOpen = { (f: URL) in
+                    let r = f.resolvingSymlinksInPath().path
+                    return ws.documents.contains { $0.fileURLs.contains { $0.resolvingSymlinksInPath().path == r } }
+                }
+                let pending = candidates.filter { !isOpen($0) }
+                guard !pending.isEmpty else {
+                    return CommandResult(message: L10n.tr("Wszystkie pliki zmienione w gałęzi są już otwarte"), value: .int(0))
+                }
+                if pending.count > branchChangesAskLimit, ctx.arguments.bool("confirm") != true {
+                    Log.files.info("Pliki zmienione w gałęzi do otwarcia: \(pending.count, privacy: .public)")
+                    guard let ui = ctx.askingUI,
+                          await ui.ask(L10n.tr("Otworzyć pliki zmienione w gałęzi?"),
+                                       message: L10n.tr("Pliki zmienione w gałęzi, które nie są otwarte: \(pending.count)."),
+                                       buttons: [L10n.tr("Otwórz"), L10n.tr("Anuluj")]) == 0 else { throw CommandError.cancelledByUser }
+                }
+                let previous = ws.activeDocumentID
+                var opened = 0
+                var failed: [String] = []
+                for f in pending where !isOpen(f) {
+                    // Para .pks/.pkb otwiera się jednym oknem (D194) — drugi plik pary jest już wtedy otwarty.
+                    do {
+                        _ = try ws.openFile(f)
+                        opened += 1
+                    } catch {
+                        failed.append(f.lastPathComponent)
+                    }
+                }
+                if let previous { ws.activate(previous) }
+                Log.files.info("Otwarto pliki zmienione w gałęzi: \(opened, privacy: .public), błędy: \(failed.count, privacy: .public)")
+                var message = L10n.tr("Otwarte okna: \(opened)")
+                if !failed.isEmpty { message += " · " + L10n.tr("Nie udało się otworzyć: \(failed.joined(separator: ", "))") }
+                return CommandResult(message: message, value: .int(Int64(opened)))
             },
             command("vcs.log", L10n.tr("Historia Git pliku"), .tools, submenu: sub,
                     params: [pathParam, CommandParameter("all", .boolean, L10n.tr("Historia całego repozytorium zamiast pliku"))], effect: .uiState,
