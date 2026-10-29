@@ -52,7 +52,21 @@ jobs:
         working-directory: Packages/PelikanKit
         # shell: bash = -eo pipefail — inaczej `| tee` ukrywa błąd kompilacji testów.
         shell: bash
-        run: swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log
+        # Strażnik: po 20 min zawieszenia stosy wątków procesu testów (sample) do dziennika, potem jego koniec — zamiast
+        # cichego przerwania zadania po 60 min.
+        run: |
+          ( sleep 1200
+            echo "::error::Testy jednostkowe przekroczyły 20 min — stosy wątków procesów testów:"
+            for p in $(pgrep -f 'swiftpm-testing-helper|xctest|PelikanKitPackageTests'); do
+              ps -o pid,etime,command -p "$p" || true
+              sample "$p" 3 2>&1 | head -600 || true
+            done
+            pkill -f 'swiftpm-testing-helper|xctest|PelikanKitPackageTests' || true ) &
+          watchdog=$!
+          status=0
+          swift test --parallel --skip 'PelikanRemoteTests|PelikanProCTests' 2>&1 | tee /tmp/swift-test.log || status=$?
+          kill "$watchdog" 2>/dev/null || true
+          exit "$status"
       - name: Kompilacja pakietu bez ostrzeżeń
         run: scripts/ci-no-warnings.sh /tmp/swift-test.log
       # Testy SSH na lokalnym sshd: każdy zestaw osobno, z limitem i diagnostyką przy zawieszeniu.

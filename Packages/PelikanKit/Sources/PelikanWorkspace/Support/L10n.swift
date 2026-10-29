@@ -100,6 +100,45 @@ public enum L10n {
         return t == missing || t == key ? nil : template(t)
     }
 
+    /// Liczebnik z odmianą (D200): trzy klucze z polskimi formami — `one` („%@ okno”), `few` („%@ okna”, 2–4),
+    /// `many` („%@ okien”) — tłumaczone jak zwykłe teksty; formę wybiera reguła języka interfejsu: polski i ukraiński
+    /// (21 — ukr. forma pojedyncza), pozostałe (en, de, es) — `one` dla 1, inaczej `many`.
+    public static func plural(_ n: Int, one: @autoclosure () -> String, few: @autoclosure () -> String, many: @autoclosure () -> String) -> String {
+        switch pluralCategory(n, language: language) {
+        case .one: one()
+        case .few: few()
+        case .many: many()
+        }
+    }
+
+    public enum PluralCategory: Sendable { case one, few, many }
+
+    public static func pluralCategory(_ n: Int, language: String) -> PluralCategory {
+        let a = abs(n), d = a % 10, h = a % 100
+        switch language {
+        case "pl":
+            if a == 1 { return .one }
+            return (2...4).contains(d) && !(12...14).contains(h) ? .few : .many
+        case "uk", "ru":
+            if d == 1 && h != 11 { return .one }
+            return (2...4).contains(d) && !(12...14).contains(h) ? .few : .many
+        default:
+            return a == 1 ? .one : .many
+        }
+    }
+
+    /// Język tekstów interfejsu: katalog `.lproj` wybrany w ustawieniach, inaczej pierwszy język aplikacji z katalogiem
+    /// tekstów; bez katalogu (testy, narzędzia) — polski (teksty to klucze).
+    static var language: String {
+        if let b = selected.withLock({ $0 }), b.bundleURL.pathExtension == "lproj" {
+            return String(b.bundleURL.deletingPathExtension().lastPathComponent.prefix(2))
+        }
+        guard Bundle.main.path(forResource: "Localizable", ofType: "strings") != nil
+                || Bundle.main.path(forResource: "Localizable", ofType: "stringsdict") != nil,
+              let l = Bundle.main.preferredLocalizations.first else { return "pl" }
+        return String(l.prefix(2))
+    }
+
     /// Katalog `.lproj` języka wybranego w ustawieniach (`nil` = język systemu przez `Bundle.main`).
     public static func use(_ bundle: Bundle?) {
         selected.withLock { $0 = bundle }

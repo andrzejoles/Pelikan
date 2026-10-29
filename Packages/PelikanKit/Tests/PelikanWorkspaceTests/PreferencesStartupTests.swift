@@ -227,7 +227,7 @@ struct PreferencesStartupTests {
     @Test("Pasek narzędzi: domyślne i paleta to komendy z rejestru; szybki dostęp bez powtórzeń i nieznanych")
     func toolbar() async throws {
         let ws = Workspace()
-        for id in ToolbarModel.defaultItems + ToolbarModel.paletteCommands where id != ToolbarModel.quickAccessItem && id != ToolbarModel.flexibleSpaceItem {
+        for id in ToolbarModel.defaultItems + ToolbarModel.paletteCommands where id != ToolbarModel.quickAccessItem && id != ToolbarModel.flexibleSpaceItem && id != ToolbarModel.tabGroupsItem {
             #expect(ws.registry.command(CommandID(rawValue: id)) != nil, "nieznana komenda paska: \(id)")
         }
         try await ws.invoke("view.addToQuickAccess", CommandArguments(["command": "edit.beautify"]))

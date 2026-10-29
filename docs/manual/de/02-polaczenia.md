@@ -96,6 +96,11 @@ werden im Kapitel *KI-Agenten* beschrieben.
   zu sehen. Die Option **Editorhintergrund in Verbindungsfarbe** (**Einstellungen › Allgemein**) färbt auch den
   Hintergrund des Editors. Im selben Tab können Sie Farbregeln nach dem Muster `benutzer@datenbank` hinzufügen (z. B.
   `sys@*`) — sie haben Vorrang vor der Umgebungsfarbe.
+- Neben der Umgebungsfarbe erhält jede Verbindung mit offenen Fenstern eine Farbe aus einer **Palette von 10 deutlich
+  verschiedenen Farbtönen**: Hintergrund der Tabs ihrer Fenster, Kapsel der Verbindungsgruppe, Markierung in der
+  Fensterliste und in der Statusleiste (siehe *Einführung › Tabgruppen*). Die Farbe bleibt bei der Verbindung, solange sie
+  offene Fenster hat, und kehrt beim erneuten Öffnen des Worksets zurück; nach dem Schließen des letzten Fensters geht sie
+  zurück in den Vorrat. Bei mehr als 10 Verbindungen gleichzeitig wiederholen sich die Farben.
 - Auf einer **Produktionsverbindung** erfordern Befehle, die Daten oder Objekte ändern (DML, DDL, PL/SQL-Blöcke), eine
   Bestätigung im Fenster „Änderungen auf der Produktionsverbindung“.
 - Eine **schreibgeschützte** Verbindung weist vor dem Senden an die Datenbank alles außer Abfragen und Sitzungssteuerung

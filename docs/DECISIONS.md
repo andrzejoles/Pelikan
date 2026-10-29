@@ -2457,3 +2457,191 @@ a **Widok › Zawartość kodu** przełączała globalne ustawienie — wyłącz
   Zawartość kodu”, wciśnięty przy widocznym panelu; VoiceOver: „Zawartość kodu”, wartość „widoczna”/„ukryta”); okno testu dostało pasek pod blokiem (przycisk i pozycja kursora).
   Wstążka bez zmian — komenda już jest w Widok › Panele, Edycja › Zwijanie › Zawartość kodu i na karcie Program.
   Bez skrótu (wzorzec nie ma domyślnego).
+
+### D200 · 2026-10-29 — Grupy kart okien: kaskada grup, kapsułki na pasku tytułu, karty dwuwierszowe z kolorem połączenia
+
+Prośba właściciela: „Zwykle pracuję z wieloma otwartymi zakładkami. Wiele wierszy zakładek byłoby mało czytelne, ale
+może grupowanie?” Ustalenia z właścicielem (pierwszy etap): kaskada grup automatycznych, grupy ręczne, kapsułki grup
+na pasku tytułu, pasek kart tylko bieżącej grupy, karty dwuwierszowe z połączeniem i tłem w kolorze połączenia
+z dynamicznej palety.
+
+- **Kaskada** (dla każdego okna po kolei; `TabGrouping.groups` w PelikanWorkspace — bez AppKit, testowana także na
+  Linuksie; repozytoria, projekt, połączenia i przydziały ręczne wstrzykiwane w `TabGroupInput`):
+  1. **grupa ręczna** (pierwszeństwo);
+  2. **projekt** — plik okna jest elementem otwartego projektu Pelikana (okno pary — dowolny z plików); zawsze jedna
+     grupa, szczegół „projekt”;
+  3. **repozytorium · gałąź** — plik w repozytorium gita z niepustym `git remote`; klucz grupy to katalog roboczy
+     i gałąź, więc worktree tego samego repozytorium z inną gałęzią jest osobną grupą. Nazwa repozytorium — katalog
+     głównego repozytorium (`--git-common-dir`; także dla worktree), szczegół — gałąź („(odłączony HEAD)”).
+     Repozytoria bez zdalnego przechodzą dalej;
+  4. **połączenie** — efektywne połączenie okna (przypięte albo główne); okna bez połączenia — „Bez połączenia”;
+  5. gdy wszystkie okna z poziomu 4 używają **jednej bazy** — grupy według rodzaju okna: Okna SQL, Programy, Testy,
+     Konsole SQL*Plus, Inne okna (okna bez połączenia też według rodzaju; nie liczą się jako baza).
+- **Histereza poziomów 4/5** (`TabGrouping.nextMode`): na grupy połączeń dopiero wtedy, gdy co najmniej dwie bazy mają
+  po więcej niż jednym oknie („druga baza ma więcej niż jedno okno”); z powrotem na rodzaje — gdy zostaje najwyżej
+  jedna baza. Pomiędzy (np. 5 okien jednej bazy i 1 okno drugiej) tryb się nie zmienia. Start — rodzaje okien. Tryb
+  jest stanem obszaru roboczego, a jedno wyliczenie z tym samym wejściem jest punktem stałym — kilka widoków liczy grupy
+  niezależnie i dostaje ten sam wynik.
+- **Kolejność:** grupy ręczne (kolejność utworzenia), projekt, repozytoria alfabetycznie (nazwa, gałąź), połączenia
+  alfabetycznie albo rodzaje w stałej kolejności, „Bez połączenia” na końcu. Okna w grupie — w kolejności dokumentów
+  (otwierania), jak dotąd.
+- **Bieżąca grupa = grupa aktywnego okna** (bez osobnego stanu): okno spoza grupy aktywowane skądkolwiek (Przeglądarka
+  obiektów, lista błędów, Lista okien, debuger, otwarcie pliku, komenda agenta) przełącza grupę samo, bo każda droga
+  ustawia `activeDocumentID`. Kapsułka aktywuje **ostatnio używane** okno grupy (kolejność aktywacji w obszarze
+  roboczym). Zamknięcie aktywnego okna wybiera następne okno tej samej grupy (z prawej, inaczej z lewej), a gdy grupa
+  się opróżnia — ostatnio używane okno.
+- **Tryb „Karty wszystkich grup”** (`window.allTabs`, menu kapsułki i listy „»”, wstążka) — pasek pokazuje wszystkie
+  karty; wybór grupy go wyłącza. Prosty, bo bieżąca grupa jest wyliczana — zrobiony jako przełącznik zamiast osobnej
+  kapsułki „Wszystkie”.
+- **Repozytoria w tle** (`scheduleTabRepositoryRefresh`): katalog pliku okna sprawdzany raz (`git rev-parse
+  --show-toplevel --git-common-dir --git-dir` i `git remote` z konfiguracją tła jak w D189), poza wątkiem głównym,
+  z pamięcią per katalog; gałąź znanych repozytoriów czytana z pliku `HEAD` (bez procesu gita) przy każdej zmianie
+  aktywnego okna, a przy aktywacji aplikacji — wszystko od nowa (nowe zdalne, `git checkout` w terminalu). Zmiana
+  gałęzi przenosi okna do grupy nowej gałęzi.
+- **Grupy ręczne:** menu karty › **Przenieś do grupy › Nowa grupa… / <grupy>**, **Usuń z grupy ręcznej**; menu
+  kapsułki grupy ręcznej › **Zmień nazwę…**, **Rozgrupuj**; to samo w menu węzła Listy okien. Grupa bez okien znika
+  (zamknięcie ostatniego okna). **Przeciąganie karty na kapsułkę pominięte:** karta obsługuje dziś klik
+  (`mouseDown`) i środkowy klik, a przeciąganie wymagałoby źródła przeciągania na karcie, celu na elemencie paska
+  narzędzi i odróżnienia od przewijania paska — menu karty wystarcza w pierwszym etapie.
+- **Komendy** (kategoria Okno, wstążka Widok › Grupy kart): `window.nextGroup` ⌃⌘] i `window.previousGroup` ⌃⌘[
+  (wolne w obu profilach; ⌃⌘←/→ to Wstecz/Naprzód, ⌥⌘[/] — jednostki programu), `window.showGroup` (argument `group`:
+  nazwa, numer od 1 albo identyfikator; bez argumentu — wybór z listy, makro nagrywa nazwę) — te trzy agent: Pełny,
+  na liście komend aplikacji dla agenta (jak `window.next`), skutek: stan interfejsu; `window.allTabs`,
+  `window.moveToGroup`, `window.removeFromGroup`, `window.renameGroup`, `window.ungroup` — agent: Brak. `window.next`
+  / `window.previous` (⌃Tab) przechodzą po oknach bieżącej grupy (szczegóły — „Po przeglądzie”). ⌘1…9 do wyboru okna
+  Pelikan nie ma — bez zmian.
+  Nowa komenda `view.windowList` (Widok › Lista okien, wstążka Widok › Panele) pokazuje kartę Okna lewej kolumny.
+- **Kapsułki na pasku tytułu:** element `tabGroups` paska narzędzi (pierwszy w domyślnym układzie — w unified toolbar
+  leży w wolnym miejscu między tytułem a przyciskami; do zapamiętanego układu dodany raz, flaga w UserDefaults —
+  usunięty potem w „Dostosuj pasek” zostaje usunięty). Kapsułka dwuwierszowa: nazwa (repozytorium, projekt,
+  połączenie, rodzaj okna, nazwa grupy ręcznej) i „szczegół · liczba” albo „N okien”; tło w kolorze grupy (połączenie —
+  kolor połączenia, pozostałe grupy — kolory tej samej palety, „Bez połączenia” — neutralne), bieżąca — mocniejsze tło,
+  obwódka w nasyconym kolorze i pogrubiona nazwa. Nie mieszczą się — tyle, ile wejdzie (bieżąca zawsze widoczna),
+  i „»” z pionową listą wszystkich grup (kolor, nazwa, liczba) i przełącznikiem kart wszystkich grup. Jedna grupa —
+  element ukryty (pasek jak dotąd). Element nie jest komendą — walidacja paska zawsze go włącza (wyłączony szarzałby
+  nazwy). Pasek ukryty, element usunięty albo pełny ekran — mała kapsułka bieżącej grupy z menu grup na początku paska
+  kart.
+- **Odmiana liczebników:** `L10n.plural(n, one:few:many:)` — trzy klucze z polskimi formami („%@ okno”, „%@ okna”,
+  „%@ okien”) tłumaczone jak zwykłe teksty; formę wybiera reguła języka interfejsu (pl, uk — 2–4 bez 12–14; uk — 21 to
+  forma pojedyncza; en, de, es — 1 albo reszta). Bez katalogu tekstów (testy, Linux) — reguła polska. Projekt nie miał
+  dotąd mechanizmu liczby mnogiej (klucze z `%@` są tekstami).
+- **Karty dwuwierszowe** (`DocumentTabButton`): 1. wiersz — kropka koloru środowiska (wskaźnik połączenia, D198,
+  zostaje), znacznik typu, tytuł, przycisk zamknięcia / kropka zmian; 2. wiersz — zawsze połączenie okna
+  (`connectionDescription`, np. „dev_test (test)”; bez połączenia — szare „Brak połączenia”), mniejsza czcionka,
+  skracanie, pełny opis w podpowiedzi. Tło — kolor połączenia z palety; aktywna karta — mocniejsze tło, podkreślenie
+  3,5 pt w nasyconym kolorze połączenia i pogrubiony tytuł (jak D198, kolor połączenia zamiast akcentu); nieaktywna —
+  słabsze tło (pod kursorem — jak aktywna). Okno bez połączenia — tło neutralne, podkreślenie szare. Pasek kart 46 pt
+  (było 32).
+- **Paleta** (`TabColorPalette`): 10 odcieni rozłożonych po kole barw (co 36°, kolejność przydziału przeplata odległe
+  barwy), tło w HSB z małym nasyceniem i dużą jasnością w jasnym wyglądzie, ciemne w ciemnym;
+  „Zwiększ kontrast” — tło jaśniejsze/ciemniejsze, akcent ciemniejszy. Połączenie dostaje kolor przy pierwszym oknie
+  w sesji (kolejność otwarcia) i trzyma go, dopóki ma okna; zwolniony wraca do puli. Wybór: najmniej używany kolor,
+  z nich nigdy nieużywany (i niezarezerwowany w worksecie dla innego połączenia), potem najdawniej zwolniony — świeżo
+  zwolniony kolor nie trafia od razu do innego połączenia; powyżej 10 połączeń kolory się powtarzają równomiernie.
+  **Kontrast AA** sprawdzany testem dla każdego koloru, obu wyglądów i „Zwiększ kontrast”: tekst = kolor etykiety 85%
+  (tytuł nieaktywnej karty i wiersz połączenia — przezroczystość ustawiona na 80%: `withAlphaComponent` zastępuje alfę
+  koloru etykiety, nie mnoży jej; przy „Zwiększ kontrast” kolor etykiety albo pełny) ≥ 4,5:1 na tle aktywnej
+  i nieaktywnej karty. Pasek stanu (próbka koloru przed nazwą połączenia) i Lista okien (próbka przed kropką
+  środowiska) — ten sam kolor.
+- **Workset:** pola opcjonalne `tabGroups` (grupy ręczne: identyfikator, nazwa), `tabColors` (klucz `conn:<uuid>` albo
+  identyfikator grupy → numer koloru) i `group` wpisu okna; starsze worksety bez pól — grupy automatyczne, kolory od
+  nowa. Kolory z workseta są preferencją: połączenie dostaje swój kolor, gdy jest wolny. Dopisywanie okien
+  nieotwartych (R3-01) przenosi też ich grupy i kolory.
+- **Lista okien:** przy kilku grupach drzewo (`NSOutlineView`) — węzeł grupy z kolorem, nazwą i „szczegół · liczba”,
+  klik pokazuje grupę; okna w grupie według sortowania listy. Jedna grupa — lista płaska jak dotąd.
+- **Dostępność:** karta — etykieta: tytuł; pomoc: połączenie, grupa, stan zmian; kapsułka — przycisk wyboru z nazwą,
+  pomocą „Grupa kart: szczegół · liczba” i wartością wybrana/niewybrana, pasek kapsułek — grupa przycisków „Grupy kart”.
+- **Dziennik:** `Log.app` — utworzenie grupy ręcznej (bez nazwy), `Log.files` — liczba odświeżonych repozytoriów; bez
+  nazw grup, ścieżek i gałęzi.
+- **Po przeglądzie** (koordynator):
+  - **Menu karty** to model `Workspace.tabMenuEntries` (pozycja = komenda z argumentami), z którego aplikacja buduje
+    menu; „Usuń z grupy ręcznej” wywoływało zamknięcie okna — test sprawdza teraz, że pozycja wywołuje
+    `window.removeFromGroup`. „Nowa grupa…” to `window.moveToGroup` z `new: true` (pytanie o nazwę).
+  - **⌃Tab** (`window.next` / `window.previous`, decyzja koordynatora w zastępstwie właściciela): po oknach bieżącej
+    grupy, a za ostatnim — pierwsze okno następnej grupy (wstecz — ostatnie poprzedniej), cyklicznie; każde okno jest
+    osiągalne z klawiatury, w grupie z jednym oknem ⌃Tab przechodzi do następnej grupy; dostępne przy więcej niż
+    jednym oknie.
+  - **Identyfikator grupy repozytorium bez ścieżki:** `repo:<skrót FNV-1a katalogu roboczego>:<gałąź>` (makra, wynik
+    `window.showGroup`, agent); kolor grupy — po repozytorium (skrót katalogu), więc zmiana gałęzi go nie zmienia; ten
+    sam klucz w `tabColors` workseta. Makro zapisuje grupę jako „nazwa · szczegół” (np. „kadry · main”), dopasowywane
+    przed samą nazwą. Nazwy grup ręcznych są unikalne (bez względu na wielkość liter; duplikat — odmowa).
+  - **Repozytoria:** sprawdzanie wstrzykiwane (`TabRepositoryProbe`; testy — zaślepka albo wyłączone); `git remote`
+    raz na katalog roboczy (katalogi jednego repozytorium dzielą wynik), znane katalogi — tylko gałąź z pliku HEAD,
+    pełne sprawdzenie przy aktywacji aplikacji najwyżej co 30 s. Gałąź: reftable (`refs/heads/.invalid`) —
+    `git symbolic-ref` w tle, w trakcie rebase — `rebase-merge/head-name` albo `rebase-apply/head-name`. Nowy plik
+    w znanym repozytorium (katalog jeszcze niesprawdzony) od razu trafia do grupy repozytorium. Ścieżki z gita bez
+    przycinania białych znaków.
+  - **Kontrast:** znacznik typu okna (litera S, P, T…) to tekst — wariant koloru typu ciemny w jasnym wyglądzie, jasny
+    w ciemnym (`TabColorPalette.markerColor`), ≥ 4,5:1 na tle kart i paska; podkreślenie aktywnej karty ≥ 3:1, kropka
+    środowiska z obwódką w kolorze etykiety (≥ 3:1 na każdym tle) — test.
+  - **Kapsułki przy braku miejsca** (`TabCapsuleLayout`, test): widoczne usuwane od końca, aż zmieszczą się bieżąca
+    i „»”. Element paska w menu przepełnienia paska narzędzi ma postać menu „Grupy kart” z listą grup; mała kapsułka
+    na pasku kart także wtedy, gdy element jest w przepełnieniu (`visibleItems`), sprawdzane po zmianie rozmiaru okna
+    i po pokazaniu/ukryciu paska (`toggleToolbarShown`, bez KVO).
+  - **Wysokości** karty (tytuł, połączenie, podkreślenie) i kapsułki liczone z czcionek interfejsu (D178), nie stałe.
+  - **Pasek kart:** przewijanie do aktywnej karty tylko po zmianie aktywnego okna albo zbioru kart (ręcznie
+    przewinięty pasek nie wraca przy każdym odświeżeniu); szerokość treści z ramki paska, zmiany ograniczeń poza
+    `layout()`, kółko bez przepełnienia przekazywane dalej.
+- **Drugie przejście przeglądu:** pełne sprawdzenie repozytoriów (aktywacja aplikacji, najwyżej co 30 s) ustala
+  położenie wszystkich katalogów od nowa — usunięte repozytorium albo worktree i zagnieżdżone `git init` zmieniają
+  grupę; gałąź HEAD w formacie reftable odczytywana gitem tylko przy pełnym sprawdzeniu, raz na repozytorium, a między
+  nimi zapamiętana (jak wynik `git remote`); położenie repozytorium czyta gałąź tylko z pliku HEAD, a gałąź z gita
+  (reftable) — raz na repozytorium przy pełnym sprawdzeniu albo przy pierwszym zobaczeniu repozytorium. Skrót katalogu
+  w identyfikatorze grupy ma losową sól w pliku `tab-group-salt` katalogu danych (0600; osobna dla każdego katalogu
+  danych, np. `PELIKAN_DATA_DIR`, bez skutków ubocznych testów; obszar roboczy bez katalogu danych — bez soli) —
+  identyfikator jest stały między uruchomieniami (klucze kolorów w worksecie), ale nie pozwala potwierdzić zgadniętej
+  ścieżki. Kapsułka mieści się w pasku narzędzi (najwyżej 36 pt):
+  przy dużej czcionce interfejsu oba wiersze są zmniejszane (szczegół do 9 pt, nazwa do 10 pt), a gdy to za mało —
+  jeden wiersz „nazwa · szczegół”. **Świadomy kompromis:** przy bardzo dużej czcionce interfejsu kapsułka ma tekst
+  10/9 pt (albo jeden wiersz) — mniejszy niż wybrana czcionka, bo pasek narzędzi ma stałą wysokość; pełna nazwa
+  i liczba okien są w podpowiedzi, w VoiceOver i w liście „»”. Obszar roboczy bez katalogu danych (testy pakietu) domyślnie nie sprawdza
+  repozytoriów (bez procesów gita w tle w innych zestawach testów; test wstrzykuje zaślepkę), aplikacja — tak.
+  Przygotowanie repozytorium zrzutu 72 usuwa `GIT_DIR`, `GIT_WORK_TREE` i `GIT_INDEX_FILE` z otoczenia.
+
+### D201 · 2026-10-29 — Pliki zmienione w gałęzi z paska stanu; przewijanie paska kart przy przepełnieniu
+
+Dwa życzenia właściciela do etapu grup kart (D200):
+
+**A) Otwórz pozostałe pliki zmienione w gałęzi.** „Przydałaby się też dodatkowa funkcja otwierania wszystkich plików
+zmienianych w wybranym BRANCH'u. Np. w dolnym prawym rogu mamy nazwę brancha. Kliknięcie w niego pokaże opcję «Otwórz
+pozostałe» i wtedy otworzy pozostałe pliki zmieniane w tym branchu, o ile nie są już otwarte.”
+
+- Gałąź na pasku stanu jest przyciskiem bez ramki (VoiceOver: „Gałąź Git: …”, pomoc o menu) z menu **Otwórz pozostałe
+  pliki zmienione w gałęzi**; ta sama komenda `vcs.openBranchChanges` w **Narzędzia › Git** i na wstążce (Narzędzia ›
+  Git). Agent: Brak (jak pozostałe komendy `vcs.*` — ścieżki lokalne), skutek: stan interfejsu (otwiera okna).
+- **Zbiór plików** (`GitRepository.branchChangedFiles`): zmiany zatwierdzone od punktu rozgałęzienia
+  (`git merge-base HEAD <ref>`, `<ref>` = `<zdalne>/HEAD`, inaczej `<zdalne>/main`, `<zdalne>/master`; zdalne `origin`
+  albo pierwsze), bez gałęzi domyślnej — od gałęzi śledzonej (`@{u}`), bez obu — tylko zmiany niezatwierdzone; do tego
+  zmiany niezatwierdzone (indeks i katalog roboczy względem HEAD) i pliki nieśledzone (`ls-files --others
+  --exclude-standard`, bez ignorowanych). `git diff --numstat -z --no-renames --diff-filter=d --no-textconv
+  --no-ext-diff` — bez usuniętych, binarne rozpoznane po „-” (nieśledzone — bajt NUL w pierwszych 8000 bajtach jak
+  w gicie); tylko istniejące pliki. Odczyty z konfiguracją tła i wyłączonymi filtrami repozytorium (D189), poza wątkiem
+  głównym.
+- **Tylko pliki kodu otwierane przez Pelikana:** rozszerzenia skryptów i programów (`FileOpening.extensions`), plików
+  okien (`.tst`, `.rep`, `.pdd`, `.sqlnb`), `.pls`, `.plb`, `.jav`, `.pc`, `.ctl` i rozszerzenia z Ustawień
+  (programy, testy, specyfikacja/ciało) — bez zwykłych plików tekstowych; filtr rozszerzeń przed sprawdzaniem plików
+  binarnych. Repozytorium — pliku aktywnego okna (karta widoczna w oknie pary).
+- Już otwarte pliki (porównanie po rozwiązaniu dowiązań, także część pary) są pomijane; para `.pks`/`.pkb` otwiera się
+  jednym oknem (`openFile`, D194) — drugi plik pary jest wtedy już otwarty. Zbiór otwartych plików (po rozwiązaniu
+  dowiązań) liczony raz w tle i dopełniany przy otwieraniu. Powyżej 30 plików — pytanie z liczbą (argument `confirm`
+  pomija pytanie; bez okna pytań — agent, skrypt, makro — odmowa z podpowiedzią `confirm=true`), powyżej 200 — odmowa
+  (za dużo naraz). `git diff` z `--` po rewizjach. Po otwarciu
+  aktywne zostaje okno, z którego wywołano komendę. Dziennik: liczby plików, bez ścieżek.
+
+**B) Przewijanie paska kart.** „Gdyby mimo wszystko zakładki nie mieściły się w jednym wierszu (wychodziłyby poza
+ekran), to powinny się pojawić przyciski ich przewijania w lewo / prawo (no i jeśli myszka ma odpowiedni scroll, to też
+powinno działać).”
+
+- `TabStripView` (poprawki po przeglądzie — w D200 › Po przeglądzie): przy przepełnieniu przyciski ‹ › po bokach paska (tylko wtedy; obszar kart zwęża się o nie),
+  wyłączone na końcach; krok ok. 60% widocznej szerokości (kilka kart, najmniej 120 pt) z animacją 0,2 s (bez animacji
+  przy „Ogranicz ruch”). Kółko myszy: obrót pionowy przewija pasek poziomo; gest poziomy gładzika — zwykłe przewijanie
+  `NSScrollView`. Aktywna karta po każdej przebudowie paska (przełączenie okna albo grupy) przewijana do widoku
+  z marginesem 8 pt. Obliczenia w `TabStripScrolling` (pakiet, testy). Przyciski z etykietami VoiceOver „Przewiń karty
+  w lewo / w prawo”.
+- **Zawieszenie testów w CI (git w tle):** testy z gitem czekały w nieskończoność na koniec strumienia błędów, który
+  trzymał otwarty proces potomny gita (`gc --auto --detach`, `maintenance run --auto`, demon fsmonitor) — zawieszony
+  cały zestaw testów na maszynie CI, a w aplikacji groziło to zawieszeniem operacji Git. Każde wywołanie gita
+  z Pelikana ma teraz `gc.auto=0`, `gc.autoDetach=false`, `maintenance.auto=false`, `core.fsmonitor=false`, a wyjście
+  czytane jest bez blokowania wątku (`readabilityHandler`): koniec wyznacza zakończenie gita, a strumień trzymany przez
+  proces potomny jest porzucany po 5 s. CI zapisuje stosy wątków zawieszonych testów po 20 min (strażnik w ci.yml).
+
