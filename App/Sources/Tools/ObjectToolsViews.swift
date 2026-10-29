@@ -62,6 +62,8 @@ struct ExportObjectsView: View {
                     Text(L10n.tr("Plik na obiekt")).tag(ObjectExportOptions.Layout.filePerObject)
                 }
                 Toggle(L10n.tr("Specyfikacja i ciało w jednym pliku"), isOn: $options.specAndBodyTogether).disabled(options.layout == .singleFile)
+                // Pliki DDL na obiekt domyślnie bez „/” (D194); jeden plik to skrypt SQL*Plus — zawsze z „/”.
+                Toggle(L10n.tr("Kończ jednostki znakiem /"), isOn: $options.terminateUnits).disabled(options.layout == .singleFile)
                 Toggle(L10n.tr("Uprawnienia"), isOn: $options.includePrivileges)
                 Toggle(L10n.tr("Parametry składowania"), isOn: $options.includeStorage)
                 Toggle(L10n.tr("Nazwa schematu w DDL"), isOn: $options.includeOwner)
@@ -106,6 +108,8 @@ struct ExportObjectsView: View {
         guard panel.runModal() == .OK, let dir = panel.url else { return }
         busy = true
         defer { busy = false }
+        var options = options
+        options.extensions = workspace.settings.specBodyExtensions
         do {
             let files = try await ObjectExport.export(Array(selected), options: options, in: try await session()) { n in message = L10n.tr("Wyeksportowano \(n) z \(selected.count)") }
             for f in files { try Data(f.content.utf8).write(to: dir.appendingPathComponent(f.name)) }

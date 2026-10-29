@@ -6,8 +6,14 @@ import PelikanSQL
 public struct ObjectExportOptions: Sendable, Hashable, Codable {
     public enum Layout: String, Sendable, Codable, CaseIterable { case singleFile, filePerObject }
     public var layout: Layout = .singleFile
-    /// Specyfikacja i ciało pakietu/typu w jednym pliku (przy pliku na obiekt).
-    public var specAndBodyTogether = true
+    /// Specyfikacja i ciało pakietu/typu w jednym pliku `.pck`/`.typ` (przy pliku na obiekt). Domyślnie osobne pliki
+    /// `.pks`/`.pkb` i `.tps`/`.tpb` (D194 — konwencja repozytoriów właściciela).
+    public var specAndBodyTogether = false
+    /// Rozszerzenia plików specyfikacji i ciała (Preferencje › Ogólne, D194).
+    public var extensions = SpecBodyExtensions()
+    /// Pliki na obiekt: jednostki PL/SQL zakończone „/” w osobnej linii. Domyślnie bez „/” — pliki DDL w repozytorium
+    /// („/” psuje proces wdrożenia, D192/D194); jeden plik (skrypt SQL*Plus) zawsze z „/”.
+    public var terminateUnits = false
     public var includePrivileges = true
     public var includeStorage = false
     /// Nazwa schematu w DDL (bez — obiekty tworzone w bieżącym schemacie docelowym).
@@ -131,15 +137,19 @@ public enum ObjectExport {
 
     /// Pliki „plik na obiekt”: nazwa z bezpiecznych znaków (nazwa w cudzysłowie może mieć `/`, `..`); różne obiekty
     /// o tej samej nazwie pliku (np. „Foo” i „FOO”, inny schemat) dostają przyrostek `_2`, `_3`…; specyfikacja i ciało
-    /// tego samego obiektu trafiają do wspólnego pliku `.pck`/`.typ`.
+    /// w osobnych plikach (rozszerzenia z opcji, domyślnie `.pks`/`.pkb`, `.tps`/`.tpb`) albo we wspólnym `.pck`/`.typ`.
+    /// Bez `terminateUnits` jednostki PL/SQL bez kończącego „/” (D194).
     static func files(_ parts: [(DBObject, String)], options: ObjectExportOptions, header: String) -> [ExportedFile] {
         var files: [String: String] = [:]
         var names: [String] = []
         var fileOf: [String: String] = [:]
-        for (o, text) in parts {
+        for (o, ddl) in parts {
+            let text = options.terminateUnits ? ddl : withoutUnitTerminator(ddl)
             let together = options.specAndBodyTogether && [.package, .packageBody, .type, .typeBody].contains(o.type)
+            let pair = options.extensions.pair(for: o.type)
             let ext = together ? (o.type == .package || o.type == .packageBody ? "pck" : "typ")
-                : [.package, .type].contains(o.type) ? "spc" : [.packageBody, .typeBody].contains(o.type) ? "bdy" : ObjectCommands.fileExtension(o.type)
+                : [.package, .type].contains(o.type) ? pair?.spec ?? "spc" : [.packageBody, .typeBody].contains(o.type) ? pair?.body ?? "bdy"
+                : ObjectCommands.fileExtension(o.type)
             let id = "\(o.owner)\u{1F}\(o.name)\u{1F}\(ext)"
             let name: String
             if let known = fileOf[id] {
@@ -156,6 +166,43 @@ public enum ObjectExport {
             files[name, default: ""] += "\n" + text + "\n"
         }
         return names.map { ExportedFile(name: $0, content: files[$0] ?? "") }
+    }
+
+    /// DDL z DBMS_METADATA bez „/” kończącego jednostki PL/SQL (pliki DDL w repozytorium, D194). „/” zostaje, gdy za
+    /// jednostką jest polecenie, które bez niego dokleiłoby się do jej tekstu (D192) — poza GRANT/REVOKE; `ALTER TRIGGER
+    /// … ENABLE` (wyzwalacz i tak powstaje włączony) jest pomijane, `… DISABLE` zostaje razem z „/”.
+    static func withoutUnitTerminator(_ ddl: String) -> String {
+        let ns = ddl as NSString
+        let statements = ScriptSplitter.split(ddl)
+        var remove: [NSRange] = []
+        for (i, st) in statements.enumerated() where st.terminator == .slash && ProgramCompiler.header(st.text) != nil {
+            if i + 1 < statements.count {
+                let next = statements[i + 1]
+                let t = next.text.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                    .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+                if t.hasPrefix("ALTER TRIGGER") {
+                    guard t.hasSuffix(" ENABLE") else { continue }
+                    let start = ns.lineRange(for: NSRange(location: next.start, length: 0)).location
+                    let end = NSMaxRange(ns.lineRange(for: NSRange(location: max(next.start, next.fullEnd - 1), length: 0)))
+                    remove.append(NSRange(location: start, length: end - start))
+                } else if !(t.hasPrefix("GRANT ") || t.hasPrefix("REVOKE ")) {
+                    continue
+                }
+            }
+            // Linia z samym „/” między końcem polecenia a końcem z terminatorem.
+            let slash = ns.range(of: "/", options: [], range: NSRange(location: st.end, length: max(0, st.fullEnd - st.end)))
+            guard slash.location != NSNotFound else { continue }
+            let line = ns.lineRange(for: slash)
+            guard ns.substring(with: line).trimmingCharacters(in: .whitespacesAndNewlines) == "/" else { continue }
+            remove.append(line)
+        }
+        guard !remove.isEmpty else { return ddl }
+        var out = ns as String
+        for r in remove.sorted(by: { $0.location > $1.location }) {
+            out = (out as NSString).replacingCharacters(in: r, with: "")
+        }
+        while let c = out.last, c.isWhitespace { out.removeLast() }
+        return out
     }
 }
 
