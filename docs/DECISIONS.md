@@ -2271,7 +2271,7 @@ użytkownik oczekuje innego słowa.
   po niemiecku działa po polsku), bez względu na wielkość liter; nieznana nazwa to błąd nieprawidłowego argumentu
   z listą znanych sekcji (wcześniej po cichu nic nie eksportowała). Sekcja okna SQL to teraz „Okno SQL” (była „SQL
   Window”). Po angielsku zestawy ustawień to konsekwentnie *presets* (karta *Presets*, *Settings Presets…*).
-- **Zrzuty po zmianie nazw** (przebieg ukryty D196 przy scaleniu 1.4.0): plan (28, 47, 48, 69) i Fragmenty kodu
+- **Zrzuty po zmianie nazw** (przebieg ukryty D196 przy scaleniu wydania 1.5.0): plan (28, 47, 48, 69) i Fragmenty kodu
   (23 — panel w oknie głównym, `23-snippety-glowne.png` zamiast `23-snippety-snippety.png`) odświeżone. **Do zrobienia:**
   okno Ustawień (zrzuty 19, 51, 57 — dziś `*-preferencje.png`) i obrazki instrukcji wymagają przebiegu `--screen`
   w chwili, gdy właściciel pozwoli na okna na ekranie: w trybie ukrytym zaznaczona karta paska Ustawień (Liquid

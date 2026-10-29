@@ -2,7 +2,41 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
-## 1.4.0 — specyfikacja i ciało w osobnych plikach, karty jednostek, pliki zmienione przez inne programy
+## 1.5.0 — specyfikacja i ciało w osobnych plikach, pliki zmienione przez inne programy, polskie nazwy
+
+- **Specyfikacja i ciało w osobnych plikach:** okno programu z pakietem albo typem zapisuje specyfikację do pliku
+  `.pks`, a ciało do `.pkb` (typy: `.tps` / `.tpb`), bez „/” — każdy plik w swoim kodowaniu i z własnymi końcami linii,
+  a zapisywany jest tylko plik, którego jednostka się zmieniła. **Zapisz jako…** pyta o nazwę i tworzy oba pliki;
+  **Plik › Zapisz jako jeden plik…** zapisuje okno jak dawniej, w jednym pliku `.pck`. Otwarcie `nazwa.pks` albo
+  `nazwa.pkb` (także z Findera, Przeglądarki plików, listy ostatnich plików i workseta) otwiera obie jednostki w jednym
+  oknie, na karcie otwartego pliku. Rozszerzenia i otwieranie pary ustawisz w **Ustawienia › Ogólne ›
+  Specyfikacja i ciało w osobnych plikach**.
+- **Eksport obiektów użytkownika** w trybie „plik na obiekt” zapisuje specyfikację i ciało pakietu albo typu
+  w osobnych plikach `.pks` / `.pkb` (`.tps` / `.tpb`) bez „/” — gotowe do repozytorium; nowa opcja **Kończ jednostki
+  znakiem /** przywraca „/”. Pliki DDL zawierają wyłącznie CREATE: uprawnienia trafiają do osobnego pliku
+  `nazwa.grants.sql` (albo są pomijane), wyłączony wyzwalacz ma `DISABLE` w `CREATE TRIGGER`, a komentarz z datą
+  eksportu jest tylko na życzenie (**Nagłówek z datą eksportu**). Eksport do jednego pliku (skrypt SQL*Plus) zostaje
+  z „/” i uprawnieniami za obiektami.
+- **Pliki zmienione przez inny program:** otwarty plik nie jest blokowany, a gdy agent, git albo inny edytor zmieni
+  go na dysku, Pelikan przy powrocie do okna (karty pary, aplikacji) pyta, czy wczytać go ponownie — z ostrzeżeniem,
+  gdy okno ma niezapisane zmiany. Sama zmiana daty pliku nie wywołuje pytania; plik usunięty można zachować w oknie
+  albo zamknąć okno. Nowa komenda **Plik › Wczytaj ponownie z dysku**; ustawienia w **Ustawienia › Ogólne › Pliki**.
+- **Plan wykonania:** nowy plan pojawia się rozwinięty w całości, a strzałki **Rozwiń wszystkie gałęzie** i **Zwiń
+  wszystkie gałęzie** obok wyboru widoku (także na karcie **Plan** wstążki) rozwijają naraz wszystkie gałęzie albo
+  zwijają drzewo do korzenia. Przejście do kroku przyciskami kolejności wykonania odsłania go w zwiniętej gałęzi.
+- **Polskie nazwy bliższe macOS i IDE:** okno planu ma przycisk **Odśwież plan** (zamiast „Wyjaśnij”), okno
+  **Preferencje** nazywa się **Ustawienia** (jak pozycja ⌘, w menu Pelikan; po angielsku *Settings*), **Okno poleceń**
+  — **Konsola SQL*Plus** (także w innych językach), punkt załamania linii na diagramie — **punkt zgięcia**, debuger — **Krok do**, **Krok przez**,
+  **Wyjdź z podprogramu** i **Przełącz punkt przerwania**, w siatce **Zapisz zmiany w bazie (Post)** (zatwierdza się
+  tylko COMMIT), **Fragmenty kodu** zamiast snippetów, **Wyodrębnij** w refaktoryzacji, **Zakończ sesję (Kill)**,
+  **Kompiluj projekt** / **Kompiluj zmienione**, **Powtórz** (⇧⌘Z), **Zminimalizuj**; opisy mówią o Przeglądarce
+  obiektów, Zawartości kodu i oknie SQL, a nie o ich angielskich nazwach. Szukaj czynności i paleta komend znajdują
+  komendy także po dawnych nazwach.
+- **Uwaga przy powrocie do starszej wersji:** workset z oknem pary plików otwarty w Pelikanie sprzed 1.5.0 przywróci
+  okno z obiema jednostkami i plikiem specyfikacji — zapis zapisałby wtedy obie jednostki do pliku `.pks`. Przed
+  powrotem do starszej wersji zapisz takie okna albo je zamknij.
+
+## 1.4.0 — karty jednostek w oknie programu, bogatsza Zawartość kodu
 
 - **Okno programu** z pakietem (albo typem) pokazuje naraz tylko specyfikację albo tylko ciało — tę jednostkę, której
   karta jest wybrana; aktywna karta jest wyraźnie zaznaczona. Kartę zmienisz kliknięciem, przez **Plik › Okno
@@ -21,37 +55,6 @@ Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs
   gdy jednostki nie kończą się znakiem „/” — karty, kompilacja F8 każdej jednostki osobno i numeracja linii działają
   tak samo. Pelikan nie dopisuje już „/” przy zapisie, a kod otwarty z bazy i nowe jednostki z szablonów są bez „/”
   (ustawienie **Kończ jednostki okna programu znakiem „/”** w **Ustawienia › Oracle** przywraca dawny układ).
-- **Polskie nazwy bliższe macOS i IDE:** okno planu ma przycisk **Odśwież plan** (zamiast „Wyjaśnij”), okno
-  **Preferencje** nazywa się **Ustawienia** (jak pozycja ⌘, w menu Pelikan; po angielsku *Settings*), **Okno poleceń**
-  — **Konsola SQL*Plus** (także w innych językach), punkt załamania linii na diagramie — **punkt zgięcia**, debuger — **Krok do**, **Krok przez**,
-  **Wyjdź z podprogramu** i **Przełącz punkt przerwania**, w siatce **Zapisz zmiany w bazie (Post)** (zatwierdza się
-  tylko COMMIT), **Fragmenty kodu** zamiast snippetów, **Wyodrębnij** w refaktoryzacji, **Zakończ sesję (Kill)**,
-  **Kompiluj projekt** / **Kompiluj zmienione**, **Powtórz** (⇧⌘Z), **Zminimalizuj**; opisy mówią o Przeglądarce
-  obiektów, Zawartości kodu i oknie SQL, a nie o ich angielskich nazwach. Szukaj czynności i paleta komend znajdują
-  komendy także po dawnych nazwach.
-- **Plan wykonania:** nowy plan pojawia się rozwinięty w całości, a strzałki **Rozwiń wszystkie gałęzie** i **Zwiń
-  wszystkie gałęzie** obok wyboru widoku (także na karcie **Plan** wstążki) rozwijają naraz wszystkie gałęzie albo
-  zwijają drzewo do korzenia. Przejście do kroku przyciskami kolejności wykonania odsłania go w zwiniętej gałęzi.
-- **Specyfikacja i ciało w osobnych plikach:** okno programu z pakietem albo typem zapisuje specyfikację do pliku
-  `.pks`, a ciało do `.pkb` (typy: `.tps` / `.tpb`), bez „/” — każdy plik w swoim kodowaniu i z własnymi końcami linii,
-  a zapisywany jest tylko plik, którego jednostka się zmieniła. **Zapisz jako…** pyta o nazwę i tworzy oba pliki;
-  **Plik › Zapisz jako jeden plik…** zapisuje okno jak dawniej, w jednym pliku `.pck`. Otwarcie `nazwa.pks` albo
-  `nazwa.pkb` (także z Findera, Przeglądarki plików, listy ostatnich plików i workseta) otwiera obie jednostki w jednym
-  oknie, na karcie otwartego pliku. Rozszerzenia i otwieranie pary ustawisz w **Ustawienia › Ogólne ›
-  Specyfikacja i ciało w osobnych plikach**.
-- **Eksport obiektów użytkownika** w trybie „plik na obiekt” zapisuje specyfikację i ciało pakietu albo typu
-  w osobnych plikach `.pks` / `.pkb` (`.tps` / `.tpb`) bez „/” — gotowe do repozytorium; nowa opcja **Kończ jednostki
-  znakiem /** przywraca „/”. Pliki DDL zawierają wyłącznie CREATE: uprawnienia trafiają do osobnego pliku
-  `nazwa.grants.sql` (albo są pomijane), wyłączony wyzwalacz ma `DISABLE` w `CREATE TRIGGER`, a komentarz z datą
-  eksportu jest tylko na życzenie (**Nagłówek z datą eksportu**). Eksport do jednego pliku (skrypt SQL*Plus) zostaje
-  z „/” i uprawnieniami za obiektami.
-- **Pliki zmienione przez inny program:** otwarty plik nie jest blokowany, a gdy agent, git albo inny edytor zmieni
-  go na dysku, Pelikan przy powrocie do okna (karty pary, aplikacji) pyta, czy wczytać go ponownie — z ostrzeżeniem,
-  gdy okno ma niezapisane zmiany. Sama zmiana daty pliku nie wywołuje pytania; plik usunięty można zachować w oknie
-  albo zamknąć okno. Nowa komenda **Plik › Wczytaj ponownie z dysku**; ustawienia w **Ustawienia › Ogólne › Pliki**.
-- **Uwaga przy powrocie do starszej wersji:** workset z oknem pary plików otwarty w Pelikanie sprzed 1.4.0 przywróci
-  okno z obiema jednostkami i plikiem specyfikacji — zapis zapisałby wtedy obie jednostki do pliku `.pks`. Przed
-  powrotem do starszej wersji zapisz takie okna albo je zamknij.
 
 ## 1.3.1 — poprawki zgłoszeń
 
