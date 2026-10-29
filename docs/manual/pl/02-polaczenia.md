@@ -85,7 +85,7 @@ zgodą), osobny użytkownik bazy dla agenta i kolumny maskowane. Opisuje je rozd
 
 ## Środowiska i ochrona przed pomyłkami
 
-- Kolor połączenia widać na liście połączeń, na karcie okna, na liście okien i na pasku stanu. Opcja **Tło edytora w
+- Kolor połączenia widać na liście połączeń, na karcie okna (kropka przed nazwą), na liście okien i na pasku stanu. Opcja **Tło edytora w
   kolorze połączenia** (**Ustawienia › Ogólne**) barwi też tło edytora. W tej samej karcie możesz dodać reguły
   kolorów według wzorca `użytkownik@baza` (np. `sys@*`) — mają pierwszeństwo przed kolorem środowiska.
 - Na połączeniu **produkcyjnym** polecenia zmieniające dane lub obiekty (DML, DDL, bloki PL/SQL) wymagają

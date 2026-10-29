@@ -2395,3 +2395,24 @@ edytor), Pelikan to wykrywa i pyta.
   (bez pytania — porównanie skrótu), a plik usunięty z dysku lokalnego przez „Optymalizuj miejsce” (zastąpiony
   symbolem zastępczym) bywa widziany jako usunięty albo jest pobierany przy odczycie — Pelikan nie odróżnia tych stanów
   od zwykłej zmiany pliku.
+
+### D198 · 2026-10-29 — Karty okien: aktywna karta wyróżniona tłem i kolorem, kolor połączenia jako kropka
+
+Uwaga właściciela: „Rysowanie zakładek (te czerwone ramki) jest brzydkie. Poza tym nie wiadomo, która jest bieżąca.
+Może podobnie jak w pakietach (spec i body) tylko tło i wyróżnienie kolorem? Może tło paska z zakładkami też
+zmienić?” Każda karta miała obramowanie w kolorze połączenia (PD-CONN-005), a aktywna — tylko blade tło akcentu, które
+przy obramowaniu wszystkich kart ginęło.
+
+- **Aktywna karta:** tło akcentu systemu (22%), pasek akcentu u dołu, pogrubiony tytuł w kolorze tekstu; nieaktywne —
+  bez tła, tytuł i przycisk zamknięcia w kolorze tekstu z przezroczystością 70%, podświetlenie pod kursorem. Rysowanie w `draw(_:)`, więc
+  kolory dynamiczne (akcent, jasny i ciemny wygląd) zmieniają się bez przebudowy paska.
+- **Kolor połączenia:** kropka przed znacznikiem typu okna zamiast obramowania —
+  informacja zostaje (lista połączeń, Lista okien, pasek stanu i opcjonalne tło edytora bez zmian), a karty nie
+  krzyczą kolorem środowiska.
+- **Pasek kart:** własne tło (jasny wygląd — ciemniejsze od okna, ciemny — jaśniejsze od edytora), odcięte od edytora
+  i wstążki jak pasek kart jednostek w oknie programu.
+- **Po przeglądzie:** niezapisane zmiany — kropka w miejscu przycisku zamknięcia (pod kursorem „×”, jak w macOS) zamiast
+  „●” przed tytułem, która myliłaby się z kropką połączenia; kropka połączenia z cienkim obrysem i podpowiedzią
+  „Połączenie: …” (także pomoc VoiceOver karty); tytuły nieaktywnych kart w kolorze tekstu z przezroczystością 70%
+  (kontrast), przy „Zwiększ kontrast” — pełny kolor tekstu; podświetlenie pod kursorem ustawiane z położenia kursora
+  po przebudowie paska.
