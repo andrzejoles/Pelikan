@@ -1,17 +1,26 @@
+import AppKit
 import PelikanSQL
 import PelikanWorkspace
 import SwiftUI
 
-/// Reguły formatera PL/SQL (UG 29.1–29.2, D174) z podglądem na żywo: kod podglądu pokazuje każdą opcję, linie
-/// zmienione ostatnią zmianą ustawienia są podświetlone, a opcja pod kursorem (albo ostatnio zmieniona) ma przykład
-/// „teraz” i „po zmianie”. Formatowanie automatyczne (UG 29.4).
+/// Reguły formatera PL/SQL (UG 29.1–29.2, D174, D202) z podglądem na żywo: cztery przełączane przykłady (PL/SQL,
+/// zapytania, DML, DDL) z kolorowaniem składni, numerami linii i linią prawego marginesu; linie zmienione ostatnią zmianą
+/// ustawienia są podświetlone, miejsce usuniętych — czerwoną kreską; zmiana przełącza na przykład, w którym ją widać, i
+/// przewija do niej; podświetlenie gaśnie po 5 s albo przy następnej zmianie (D202). Formatowanie automatyczne (UG 29.4).
 struct BeautifierPane: View {
     let workspace: Workspace
     @State private var specialCase = ""
-    /// Opcja, której przykład jest pokazany (nazwa właściwości `BeautifierOptions`).
-    @State private var focused = "keywordCase"
-    @State private var preview = ""
-    @State private var changed: Set<Int> = []
+    /// Przykład podglądu (`BeautifierExamples.previews`), sformatowane przykłady i znaczniki ostatniej zmiany.
+    @State private var sampleID = "plsql"
+    @State private var formatted: [String: String] = [:]
+    @State private var marks: [String: BeautifierExamples.Marks] = [:]
+    /// Linia, do której podgląd przewija po zmianie (z licznikiem — ta sama linia po kolejnej zmianie też przewija).
+    @State private var scrollTarget: (line: Int, serial: Int)?
+    /// Numer ostatniej zmiany ustawień — podświetlenie zmian gaśnie po 5 s (zadanie anulowane przy następnej zmianie).
+    @State private var changeSerial = 0
+    /// Ogłoszenie VoiceOver w toku (anulowane przez następną zmianę) i pytanie przed przywróceniem domyślnych.
+    @State private var announcement: Task<Void, Never>?
+    @State private var confirmRestore = false
 
     private var options: BeautifierOptions { workspace.settings.beautifier }
 
@@ -21,6 +30,7 @@ struct BeautifierPane: View {
                 layout
                 lists
                 clauses
+                conditions
                 alignment
                 spacing
                 letterCase
@@ -29,39 +39,181 @@ struct BeautifierPane: View {
                     Toggle(L10n.tr("Przed kompilacją"), isOn: setting(workspace, \.beautifier.beforeCompile))
                     Toggle(L10n.tr("Przed zapisem do pliku"), isOn: setting(workspace, \.beautifier.beforeSave))
                 }
+                Section {
+                    Button(L10n.tr("Przywróć domyślne")) { confirmRestore = true }
+                        .confirmationDialog(L10n.tr("Przywrócić domyślne reguły formatera?"), isPresented: $confirmRestore) {
+                            Button(L10n.tr("Przywróć domyślne, zachowaj pisownię specjalną")) {
+                                workspace.settings.beautifier = options.restoringDefaults(keepSpecialCase: true)
+                            }
+                            Button(L10n.tr("Przywróć wszystko, także pisownię specjalną"), role: .destructive) {
+                                workspace.settings.beautifier = options.restoringDefaults(keepSpecialCase: false)
+                            }
+                            Button(L10n.tr("Anuluj"), role: .cancel) {}
+                        } message: {
+                            Text(L10n.tr("Formatowanie automatyczne zostaje bez zmian."))
+                        }
+                    Text(L10n.tr("Przywraca domyślne reguły formatera; formatowanie automatyczne zostaje bez zmian."))
+                        .font(.uiSecondary).foregroundStyle(.secondary)
+                }
             }
             .formStyle(.grouped)
             .frame(width: 390)
             VStack(alignment: .leading, spacing: 8) {
-                example
-                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone")).font(.uiSecondary).foregroundStyle(.secondary)
-                ScrollView([.vertical, .horizontal]) {
-                    Text(highlighted)
-                        .font(.code)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .topLeading)
-                        .padding(8)
+                HStack {
+                    Picker(L10n.tr("Przykład podglądu"), selection: $sampleID) {
+                        Text(verbatim: "PL/SQL").tag("plsql")
+                        Text(L10n.tr("Zapytania")).tag("queries")
+                        Text(verbatim: "DML").tag("dml")
+                        Text(verbatim: "DDL").tag("ddl")
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+                    Spacer()
                 }
-                .background(Color(nsColor: .textBackgroundColor))
-                .accessibilityLabel(L10n.tr("Podgląd formatowania"))
+                Text(L10n.tr("Podgląd — linie zmienione ostatnią zmianą są podświetlone przez 5 s, czerwona kreska oznacza usunięte linie, pionowa linia — prawy margines"))
+                    .font(.uiSecondary).foregroundStyle(.secondary)
+                previewView
             }
             .padding(10)
         }
         .onAppear {
             specialCase = options.specialCase.joined(separator: ", ")
-            preview = format(BeautifierExamples.preview, options)
+            formatted = formatAll(options)
         }
+        // Zamknięcie karty — bez spóźnionego ogłoszenia VoiceOver.
+        .onDisappear { announcement?.cancel() }
         // Pole zapisywane przy każdej zmianie (jak reszta Preferencji), a zmiana z zestawu lub importu odświeża pole.
         .onChange(of: specialCase) { saveSpecialCase() }
         .onChange(of: options.specialCase) { _, new in
             if Self.parseSpecialCase(specialCase) != new { specialCase = new.joined(separator: ", ") }
         }
         .onChange(of: options) { old, new in
-            if let id = Self.changedOption(old, new) { focused = id }
-            let next = format(BeautifierExamples.preview, new)
-            changed = Set(TextDiff.lineStatus(baseline: preview, current: next).keys)
-            preview = next
+            let id = Self.changedOption(old, new)
+            let before = formatted.isEmpty ? formatAll(old) : formatted
+            let after = formatAll(new)
+            var m: [String: BeautifierExamples.Marks] = [:]
+            for s in BeautifierExamples.previews {
+                m[s.id] = BeautifierExamples.marks(baseline: before[s.id] ?? "", current: after[s.id] ?? "")
+            }
+            formatted = after
+            marks = m
+            // Zmiana niewidoczna w bieżącym przykładzie — przykład tej opcji albo pierwszy, w którym coś się zmieniło.
+            if m[sampleID]?.isEmpty ?? true {
+                let preferred = id.flatMap { BeautifierExamples.previewOf[$0] }
+                if let p = preferred, m[p]?.isEmpty == false {
+                    sampleID = p
+                } else if let other = BeautifierExamples.previews.first(where: { m[$0.id]?.isEmpty == false }) {
+                    sampleID = other.id
+                }
+            }
+            if let first = m[sampleID]?.first { scrollTarget = (first, (scrollTarget?.serial ?? 0) + 1) }
+            changeSerial += 1
+            // VoiceOver: liczba linii podglądu zmienionych ostatnią zmianą — po 0,5 s spokoju (szybkie zmiany, np.
+            // przytrzymany przycisk krokowy, dają jedno ogłoszenie).
+            announcement?.cancel()
+            if let c = m[sampleID], !c.isEmpty {
+                let n = c.changed.count + c.removedBefore.count
+                announcement = Task {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard !Task.isCancelled else { return }
+                    NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                                         userInfo: [.announcement: L10n.tr("Podgląd formatowania: zmienione linie: \(n)"),
+                                                    .priority: NSAccessibilityPriorityLevel.medium.rawValue])
+                }
+            }
         }
+        .task(id: changeSerial) {
+            guard changeSerial > 0 else { return }
+            try? await Task.sleep(for: .seconds(5))
+            if !Task.isCancelled { withAnimation { marks = [:] } }
+        }
+    }
+
+    // MARK: Podgląd
+
+    private var previewLines: [String] { (formatted[sampleID] ?? "").components(separatedBy: "\n") }
+
+    /// Szerokość znaku czcionki kodu (linia marginesu i szerokość wierszy).
+    private var charWidth: CGFloat {
+        ("M" as NSString).size(withAttributes: [.font: InterfaceFonts.shared.code]).width
+    }
+
+    private var currentMarks: BeautifierExamples.Marks { marks[sampleID] ?? BeautifierExamples.Marks() }
+
+    private var gutterWidth: CGFloat { CGFloat(String(previewLines.count).count + 1) * charWidth }
+
+    private var rowWidth: CGFloat {
+        let longest = previewLines.map(\.count).max() ?? 0
+        return gutterWidth + 12 + CGFloat(max(options.rightMargin + 4, longest)) * charWidth
+    }
+
+    private var marginOffset: CGFloat { gutterWidth + 12 + CGFloat(options.rightMargin) * charWidth }
+
+    private func previewRow(_ k: Int, _ line: String) -> some View {
+        let m = currentMarks
+        return HStack(spacing: 0) {
+            Text(verbatim: "\(k + 1)")
+                .foregroundStyle(.tertiary)
+                .frame(width: gutterWidth, alignment: .trailing)
+                .padding(.trailing, 12)
+            Text(colored(line))
+                .fixedSize()
+        }
+        .font(.code)
+        .frame(width: rowWidth, alignment: .leading)
+        .background(m.changed.contains(k) ? Color.yellow.opacity(0.35) : Color.clear)
+        .overlay(alignment: .top) {
+            if m.removedBefore.contains(k) { removedMark }
+        }
+    }
+
+    private var removedMark: some View { Rectangle().fill(Color.red.opacity(0.8)).frame(height: 2) }
+
+    private var previewLinesView: some View {
+        let lines = previewLines
+        return VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(lines.enumerated()), id: \.offset) { k, line in
+                previewRow(k, line).id(k)
+            }
+            if currentMarks.removedBefore.contains(lines.count) { removedMark.frame(width: rowWidth) }
+        }
+        .overlay(alignment: .topLeading) {
+            Rectangle().fill(Color.secondary.opacity(0.35)).frame(width: 1).offset(x: marginOffset)
+        }
+    }
+
+    private var previewView: some View {
+        ScrollViewReader { proxy in
+            ScrollView([.vertical, .horizontal]) {
+                previewLinesView
+                    .padding(8)
+                    .textSelection(.enabled)
+            }
+            .background(Color(nsColor: .textBackgroundColor))
+            .accessibilityLabel(L10n.tr("Podgląd formatowania"))
+            .onChange(of: scrollTarget?.serial) {
+                guard let line = scrollTarget?.line else { return }
+                withAnimation { proxy.scrollTo(line, anchor: .center) }
+            }
+        }
+    }
+
+    /// Linia podglądu z kolorami składni jak w edytorze (bez stanu między liniami — przykłady nie mają wieloliniowych
+    /// literałów ani komentarzy).
+    private func colored(_ line: String) -> AttributedString {
+        var out = AttributedString()
+        let lexer = Lexer(line)
+        for t in lexer.tokenize() {
+            var part = AttributedString(lexer.string(t))
+            if let c = SyntaxTheme.color(for: t.kind) { part.foregroundColor = Color(nsColor: c) }
+            out += part
+        }
+        return out
+    }
+
+    private func formatAll(_ o: BeautifierOptions) -> [String: String] {
+        Dictionary(uniqueKeysWithValues: BeautifierExamples.previews.map { ($0.id, format($0.code, o)) })
     }
 
     // MARK: Sekcje
@@ -93,16 +245,28 @@ struct BeautifierPane: View {
     private var lists: some View {
         Section(L10n.tr("Listy i przecinki")) {
             row("listLayout") {
-                Picker(L10n.tr("Listy (SELECT, SET, ORDER BY)"), selection: setting(workspace, \.beautifier.listLayout)) { layoutOptions }
+                Picker(L10n.tr("Listy SELECT, INTO, FROM"), selection: clauseList(\.beautifier.listLayout)) { layoutOptions }
+            }
+            row("setList") {
+                Picker(L10n.tr("UPDATE … SET"), selection: inheritedClauseList(\.beautifier.setList)) { inheritedLayoutOptions }
+            }
+            row("groupOrderList") {
+                Picker(L10n.tr("GROUP BY, ORDER BY"), selection: inheritedClauseList(\.beautifier.groupOrderList)) { inheritedLayoutOptions }
             }
             row("parameterDeclarations") {
-                Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { layoutOptions }
+                Picker(L10n.tr("Deklaracje parametrów"), selection: setting(workspace, \.beautifier.parameterDeclarations)) { parenLayoutOptions }
             }
             row("callParameters") {
-                Picker(L10n.tr("Parametry wywołań"), selection: setting(workspace, \.beautifier.callParameters)) { layoutOptions }
+                Picker(L10n.tr("Parametry wywołań"), selection: setting(workspace, \.beautifier.callParameters)) { parenLayoutOptions }
             }
             row("insertLists") {
-                Picker(L10n.tr("Listy INSERT (kolumny, VALUES)"), selection: setting(workspace, \.beautifier.insertLists)) { layoutOptions }
+                Picker(L10n.tr("Listy INSERT (kolumny, VALUES)"), selection: setting(workspace, \.beautifier.insertLists)) { parenLayoutOptions }
+            }
+            row("parenthesisLists") {
+                Picker(L10n.tr("Listy w nawiasach (IN, argumenty funkcji)"), selection: setting(workspace, \.beautifier.parenthesisLists)) { parenLayoutOptions }
+            }
+            row("ddlColumns") {
+                Picker(L10n.tr("Kolumny tabel, pola rekordów i typów"), selection: setting(workspace, \.beautifier.ddlColumns)) { parenLayoutOptions }
             }
             row("commaBefore") { Toggle(L10n.tr("Przecinek na początku linii"), isOn: setting(workspace, \.beautifier.commaBefore)) }
         }
@@ -131,6 +295,25 @@ struct BeautifierPane: View {
                 Picker(L10n.tr("Wyrażenie CASE"), selection: setting(workspace, \.beautifier.caseLayout)) {
                     Text(L10n.tr("W jednej linii")).tag(BeautifierOptions.CaseLayout.inline)
                     Text(L10n.tr("WHEN, ELSE, END w osobnych liniach")).tag(BeautifierOptions.CaseLayout.multiline)
+                    Text(L10n.tr("W osobnych liniach, krótkie w jednej")).tag(BeautifierOptions.CaseLayout.auto)
+                }
+            }
+            row("caseInlineLimit") {
+                Stepper(value: setting(workspace, \.beautifier.caseInlineLimit), in: 20...120, step: 5) {
+                    Text(L10n.tr("Krótkie CASE (jedna gałąź WHEN) w jednej linii do znaków: \(options.caseInlineLimit)"))
+                }
+                .disabled(options.caseLayout != .auto)
+            }
+            row("subqueryLayout") {
+                Picker(L10n.tr("Podzapytania i CTE"), selection: setting(workspace, \.beautifier.subqueryLayout)) {
+                    Text(L10n.tr("Za nawiasem")).tag(BeautifierOptions.SubqueryLayout.hanging)
+                    Text(L10n.tr("Wcięte, „)” w osobnej linii")).tag(BeautifierOptions.SubqueryLayout.indented)
+                }
+            }
+            row("operatorPosition") {
+                Picker(L10n.tr("Długie wyrażenia: operator (||, +, -)"), selection: setting(workspace, \.beautifier.operatorPosition)) {
+                    Text(L10n.tr("Na początku linii")).tag(BeautifierOptions.OperatorPosition.lineStart)
+                    Text(L10n.tr("Na końcu linii")).tag(BeautifierOptions.OperatorPosition.lineEnd)
                 }
             }
         }
@@ -150,6 +333,9 @@ struct BeautifierPane: View {
             row("alignAssignments") { Toggle(L10n.tr("Kolejne przypisania: :="), isOn: setting(workspace, \.beautifier.alignAssignments)) }
             row("alignAliases") { Toggle(L10n.tr("Aliasy w SELECT i FROM"), isOn: setting(workspace, \.beautifier.alignAliases)) }
             row("alignSetValues") { Toggle(L10n.tr("UPDATE … SET: ="), isOn: setting(workspace, \.beautifier.alignSetValues)) }
+            row("alignColumnDefinitions") {
+                Toggle(L10n.tr("Kolumny tabel i pola rekordów: typ, DEFAULT, NOT NULL"), isOn: setting(workspace, \.beautifier.alignColumnDefinitions))
+            }
             row("alignTrailingComments") {
                 Toggle(L10n.tr("Komentarze na końcu kolejnych linii"), isOn: setting(workspace, \.beautifier.alignTrailingComments))
             }
@@ -200,40 +386,13 @@ struct BeautifierPane: View {
         }
     }
 
-    // MARK: Przykład opcji
-
-    @ViewBuilder private var example: some View {
-        if let e = BeautifierExamples.example(focused) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.tr("Przykład opcji — wskaż albo zmień opcję po lewej")).font(.uiSecondary).foregroundStyle(.secondary)
-                HStack(alignment: .top, spacing: 8) {
-                    exampleColumn(L10n.tr("Teraz"), format(e.snippet, options))
-                    exampleColumn(L10n.tr("Po zmianie tej opcji"), format(e.snippet, e.variant(options)))
-                }
-            }
-            .frame(height: 190)
-        }
-    }
-
-    private func exampleColumn(_ title: String, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.uiSecondary.bold())
-            ScrollView([.vertical, .horizontal]) {
-                Text(text)
-                    .font(.code)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                    .padding(6)
-            }
-            .background(Color(nsColor: .textBackgroundColor), in: RoundedRectangle(cornerRadius: 4))
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    /// Wiersz opcji: wskazanie kursorem albo zmiana wartości pokazuje jej przykład.
+    /// Wiersz opcji: kliknięcie przełącza podgląd na przykład, w którym widać opcję.
     private func row<Content: View>(_ id: String, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .onHover { if $0 { focused = id } }
-            .simultaneousGesture(TapGesture().onEnded { focused = id })
+            .simultaneousGesture(TapGesture().onEnded {
+                let key = id == "conditions" ? "conditions.\(conditionContext.rawValue).breaks" : id
+                if let p = BeautifierExamples.previewOf[key] { sampleID = p }
+            })
     }
 
     // MARK: Pomocnicze
@@ -247,16 +406,6 @@ struct BeautifierPane: View {
         }?.label
     }
 
-    private var highlighted: AttributedString {
-        var out = AttributedString()
-        for (k, line) in preview.components(separatedBy: "\n").enumerated() {
-            var a = AttributedString(line + "\n")
-            if changed.contains(k) { a.backgroundColor = Color.yellow.opacity(0.35) }
-            out += a
-        }
-        return out
-    }
-
     private func format(_ text: String, _ o: BeautifierOptions) -> String {
         (try? Beautifier.format(text, options: o)) ?? text
     }
@@ -264,6 +413,97 @@ struct BeautifierPane: View {
     @ViewBuilder private var layoutOptions: some View {
         Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
         Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.fit)
+    }
+
+    /// Listy klauzul: „do marginesu” to `fit`; `wrap` (wartość list w nawiasach, np. z importu) działa tak samo.
+    private func clauseList(_ key: WritableKeyPath<PelikanWorkspace.Settings, BeautifierOptions.ListLayout>) -> Binding<BeautifierOptions.ListLayout> {
+        Binding(get: { workspace.settings[keyPath: key] == .wrap ? .fit : workspace.settings[keyPath: key] },
+                set: { workspace.settings[keyPath: key] = $0 })
+    }
+
+    private func inheritedClauseList(_ key: WritableKeyPath<PelikanWorkspace.Settings, BeautifierOptions.ListLayout?>) -> Binding<BeautifierOptions.ListLayout?> {
+        Binding(get: { workspace.settings[keyPath: key] == .wrap ? .fit : workspace.settings[keyPath: key] },
+                set: { workspace.settings[keyPath: key] = $0 })
+    }
+
+    @ViewBuilder private var inheritedLayoutOptions: some View {
+        Text(L10n.tr("Jak listy SELECT")).tag(BeautifierOptions.ListLayout?.none)
+        Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout?.some(.onePerLine))
+        Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout?.some(.fit))
+    }
+
+    /// Listy w nawiasach: „do marginesu” z PL/SQL Developera (Fit) to `wrap`; `fit` — w jednej linii, jeśli się mieści.
+    @ViewBuilder private var parenLayoutOptions: some View {
+        Text(L10n.tr("Element w linii")).tag(BeautifierOptions.ListLayout.onePerLine)
+        Text(L10n.tr("W jednej linii, jeśli się mieści")).tag(BeautifierOptions.ListLayout.fit)
+        Text(L10n.tr("Do marginesu")).tag(BeautifierOptions.ListLayout.wrap)
+    }
+
+    // MARK: Warunki AND / OR
+
+    /// Miejsce warunków, którego reguły AND/OR są pokazane.
+    @State private var conditionContext = BeautifierOptions.ConditionContext.whereClause
+
+    private func conditionBinding<T>(_ key: WritableKeyPath<BeautifierOptions.ConditionLayout, T>) -> Binding<T> {
+        let c = conditionContext
+        return Binding(get: { workspace.settings.beautifier.condition(c)[keyPath: key] }, set: { value in
+            var r = workspace.settings.beautifier.condition(c)
+            r[keyPath: key] = value
+            workspace.settings.beautifier.setCondition(c, r)
+        })
+    }
+
+    static func contextName(_ c: BeautifierOptions.ConditionContext) -> String {
+        switch c {
+        case .whereClause: "WHERE"
+        case .having: "HAVING"
+        case .joinOn: "JOIN … ON"
+        case .mergeOn: "MERGE … ON"
+        case .hierarchical: "START WITH, CONNECT BY"
+        case .caseWhen: "CASE … WHEN"
+        case .ifCondition: "IF, ELSIF"
+        case .whileLoop: "WHILE"
+        case .exitWhen: "EXIT, CONTINUE WHEN"
+        case .triggerWhen: L10n.tr("WHEN wyzwalacza")
+        case .check: "CHECK"
+        case .nested: L10n.tr("Nawiasy zagnieżdżone")
+        }
+    }
+
+    private var conditions: some View {
+        Section(L10n.tr("Warunki AND / OR")) {
+            row("conditions") {
+                Picker(L10n.tr("Miejsce warunku"), selection: $conditionContext) {
+                    ForEach(BeautifierOptions.ConditionContext.allCases, id: \.self) { Text(verbatim: Self.contextName($0)).tag($0) }
+                }
+                .onChange(of: conditionContext) { _, c in
+                    if let p = BeautifierExamples.previewOf["conditions.\(c.rawValue).breaks"] { sampleID = p }
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Łamanie przed AND / OR"), selection: conditionBinding(\.breaks)) {
+                    Text(L10n.tr("Każdy w osobnej linii")).tag(BeautifierOptions.ConditionBreak.always)
+                    Text(L10n.tr("Tylko gdy warunek się nie mieści")).tag(BeautifierOptions.ConditionBreak.ifLong)
+                    Text(L10n.tr("Nie łam")).tag(BeautifierOptions.ConditionBreak.never)
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Położenie AND / OR"), selection: conditionBinding(\.position)) {
+                    Text(L10n.tr("Jak AND / OR ogólnie")).tag(BeautifierOptions.OperatorPosition?.none)
+                    Text(L10n.tr("Na początku linii")).tag(BeautifierOptions.OperatorPosition?.some(.lineStart))
+                    Text(L10n.tr("Na końcu linii")).tag(BeautifierOptions.OperatorPosition?.some(.lineEnd))
+                }
+            }
+            row("conditions") {
+                Picker(L10n.tr("Wyrównanie AND / OR"), selection: conditionBinding(\.align)) {
+                    Text(L10n.tr("Do słowa kluczowego (rzeka)")).tag(BeautifierOptions.ConditionAlign.keyword)
+                    Text(L10n.tr("Pod pierwszym warunkiem")).tag(BeautifierOptions.ConditionAlign.firstCondition)
+                    Text(L10n.tr("Pod pierwszym warunkiem, z wcięciem")).tag(BeautifierOptions.ConditionAlign.indent)
+                }
+            }
+            Text(L10n.tr("Reguły osobno dla każdego miejsca; AND w BETWEEN … AND nie jest łamany."))
+                .font(.uiSecondary).foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder private var caseOptions: some View {

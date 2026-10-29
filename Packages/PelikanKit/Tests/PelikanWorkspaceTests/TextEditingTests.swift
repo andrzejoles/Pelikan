@@ -270,7 +270,7 @@ struct BeautifyCommandTests {
         let s = (doc.text as NSString).range(of: "select").location
         doc.selectedRange = s..<(s + 3)
         try await ws.invoke("edit.beautify")
-        #expect(doc.text == "begin\n  SELECT a,\n         b\n  FROM   t;\nend;")
+        #expect(doc.text == "begin\n  SELECT a,\n         b\n    FROM t;\nend;")
         var settings = ws.settings
         settings.beautifier.beforeSave = true
         ws.settings = settings

@@ -2645,3 +2645,95 @@ powinno działać).”
   czytane jest bez blokowania wątku (`readabilityHandler`): koniec wyznacza zakończenie gita, a strumień trzymany przez
   proces potomny jest porzucany po 5 s. CI zapisuje stosy wątków zawieszonych testów po 20 min (strażnik w ci.yml).
 
+### D202 · 2026-10-29 — Formater: bezpieczeństwo, poprawki układu, domyślne właściciela, reguły AND/OR i podgląd
+
+Prośba właściciela: „Osobno musiałbyś popracować jeszcze nad formaterem. Szczególnie w kontekście wszelkich list (to co
+rozdzielane przecinkami, np. kilka elementów w SET dla instrukcji UPDATE). Kwestie nawiasów, CTE, podselectów itd.”
+Rozpoznanie: [`docs/research/formater.md`](research/formater.md) (korpus 66 przypadków, porównanie z PL/SQL
+Developerem, SQL Developerem, Toad, DataGrip, DBeaver, sqlfluff, sql-formatter, pgFormatter); wynik po zmianach:
+`docs/research/formater/wynik-po-D202-domyslne.txt`.
+
+- **Bezpieczeństwo (P0):** lekser czyta `$IF/$THEN/$ELSIF/$ELSE/$END/$ERROR` i `$$nazwa` jako jeden token (`directive`,
+  kolor słowa kluczowego) i `<=>`, `<->`, `<#>` jako operatory; region `$IF … $END` kopiowany bez zmian. Wcześniej
+  formater rozdzielał je (`$ IF`, `< ->`) — procedura przestawała się kompilować. `Beautifier.verify` sprawdza także, że
+  tokeny sklejone w źródle zostają sklejone, chyba że para jest bezpieczna do rozdzielenia (przecinek, nawias, komentarz,
+  operator znany jako całość, minus jednoargumentowy); formater sam takich par nie rozdziela (`1M`, `&x.y`, `$$x`, `a.b`).
+  Przecinek za komentarzem `--` jest równoważny przecinkowi przed nim (formater może go przenieść do elementu).
+  Test na bazie testowej: jednostki z korpusu (kompilacja warunkowa, wektory, COMPOUND TRIGGER, typ z ciałem, pakiet,
+  widok, tabela) kompilują się do VALID przed i po formatowaniu przy ustawieniach domyślnych i „ciężkich”.
+- **Poprawki układu (P1, F1–F20 rozpoznania):** wszystkie instrukcje gałęzi WHEN obsługi wyjątków i instrukcji CASE z
+  jednym wcięciem; `SELF AS RESULT`; zapytanie kursora od nowej linii (wcięte), widoku/MV/CTAS w kolumnie instrukcji;
+  `WITH READ ONLY`/`CHECK OPTION`; UNION/MINUS w osobnej linii; SEARCH/CYCLE; MERGE `ON` i `DELETE WHERE`; INSERT ALL;
+  INSERT z hintem; `RETURNING … INTO` w jednej klauzuli; długie wyrażenia łamane przed `||`, `+`, `-`; długie nagłówki
+  wyzwalaczy i klauzule fizyczne tabel/indeksów w osobnych liniach; COMPOUND TRIGGER; DML po FORALL; komentarz przy
+  elemencie listy; rozmiary typów i PRAGMA nie łamane; etykiety `<<x>>`; słowa niezastrzeżone jako nazwy (`h.path`,
+  alias `day`) jak identyfikatory, słowa DDL i atrybuty kursora jak słowa kluczowe; spacja przed `(` po `WITHIN GROUP`,
+  `GROUPING SETS`, `APPLY`, `STORAGE`, `ADD`, `MODIFY`, `UPDATE` w GRANT, bez spacji po metodzie kolekcji; pisownia
+  specjalna ze wzorcem `%`/`*` (UG 29.2); `CROSS/OUTER APPLY` i `PIVOT` jak klauzule.
+- **Decyzje właściciela (pytania 1–11 rozpoznania):** 1 — przecinek na końcu linii; 2 — listy SELECT/SET/ORDER BY
+  zawsze element w linii; 3 — listy IN i VALUES w jednej linii, a gdy się nie mieszczą — po jednym w linii (jak
+  dotąd); 4 — CASE wieloliniowo, w jednej linii tylko bardzo krótkie (jedna gałąź WHEN, całość do 50 znaków; próg w
+  Ustawieniach); 5 — podzapytania i CTE wcięte, `)` w osobnej linii; 6 — podświetlenie zmian w podglądzie gaśnie po
+  5 s albo przy następnej zmianie, para „Teraz / Po zmianie” usunięta (zastępuje ją podgląd); 7 — słowa klauzul
+  „rzeką” (do prawej, jak przykłady PL/SQL Developera), z opcją do lewej; 8 — `INSERT INTO emp (…)` ze spacją i
+  `DELETE FROM` w jednej linii (zawsze, bez opcji); 9 — kolumny CREATE TABLE po jednej w linii z wyrównaniem typu,
+  DEFAULT i NOT NULL; 10 — wyrównanie deklaracji i przypisań domyślnie włączone; 11 — zrzutów kart reguł PL/SQL
+  Developera nie ma: opcje kart Control Structures / DML / Parameter Declaration / Record Type Declaration odwzorowane
+  według podręcznika 17 (rozdz. 29) i przykładów `beautifierpreview.cfg` z instalatora — nazwy i wartości domyślne
+  tych kart są **niepewne** (podręcznik ich nie wymienia); do porównania, gdy właściciel zrobi zrzuty.
+- **AND/OR osobno dla miejsc** (prośby: „czy AND i OR w osobnej linii i jak wyrównywać — różnie dla IF, WHEN, WHERE,
+  ON…”, „tam, gdzie można, preferowane wyrównanie «rzeka»”): `BeautifierOptions.conditions` — dla WHERE, HAVING,
+  JOIN … ON, MERGE … ON, START WITH / CONNECT BY, CASE … WHEN, IF / ELSIF, WHILE, EXIT / CONTINUE WHEN, WHEN
+  wyzwalacza, CHECK i nawiasów zagnieżdżonych: łamanie (każdy w osobnej linii / tylko gdy warunek się nie mieści —
+  wtedy każdy / nie łam), położenie (na początku / na końcu linii / jak „AND / OR” ogólnie) i wyrównanie (do słowa
+  kluczowego — rzeka, w klauzulach SQL jak słowa klauzul; pod pierwszym warunkiem; pod nim z wcięciem). Domyślnie:
+  każdy w osobnej linii, na początku, rzeka; CHECK i nawiasy zagnieżdżone — tylko gdy się nie mieszczą, pod pierwszym
+  warunkiem, a złamany nawias zagnieżdżony kończy `)` w osobnej linii. Rzeka przy krótkim słowie (IF) wysuwa AND w lewo
+  (`  IF a` / ` AND b`). AND w `BETWEEN … AND` nigdy nie jest łamany; układ nie zmienia kolejności tokenów, więc
+  mieszane AND/OR bez nawiasów zachowują znaczenie. Wyrównanie „rzeką” innych słów (SET, VALUES, INTO, RETURNING,
+  USING, WHEN MATCHED, ORDER BY, GROUP BY) wynika z układu słów klauzul; w słowach wielowyrazowych do rzeki
+  wyrównane jest pierwsze słowo (` ORDER BY`, `  LEFT JOIN`, ` START WITH`). Kolumna rzeki to najdłuższe pierwsze słowo
+  klauzuli w poleceniu, od 6 (SELECT) do 9 (`RETURNING`, `INTERSECT`; `CONNECT BY` — 7): polecenie przesuwa się
+  najwyżej o 3 kolumny, a słowo otwierające je jest wyrównane w prawo (`   UPDATE`, `  WITH`, ` MERGE`) — gdy polecenie
+  zaczyna linię; w środku linii (podzapytanie za nawiasem) rzeka zostaje 6. Dłuższe słowa (`MATCH_RECOGNIZE`) i
+  przedrostki złączeń (`NATURAL`, `INNER`, `LEFT OUTER`…) rzeki nie poszerzają — „wiszą” w lewo od kolumny polecenia.
+- **Przegląd (poprawki):** słowo po kropce (`t.offset`, `r.end`, `l.delete`) jest zawsze nazwą — nigdy klauzulą ani
+  słowem struktury (wcześniej formatowanie było odrzucane); region `$IF … $END` w środku instrukcji SQL nie kończy
+  instrukcji; przy przecinku na początku linii komentarz nie jest doklejany do linii kończącej się komentarzem
+  (sprawdzane lekserem); AND/OR w wyrażeniu CASE w warunku IF/WHILE/EXIT WHEN — reguła CASE WHEN; AND z `BETWEEN … AND`
+  w miejscu bez reguły warunku (np. argument funkcji) nie przecieka na następne AND. Słowa DDL, wyzwalaczy i atrybuty
+  kursora (QUERY, READ, SCHEMA, STATEMENT, SEGMENT, FAST, BUILD, LOB, DDL, NOTFOUND…) nie są we wspólnym zbiorze słów
+  kluczowych (`Keywords.formatterContextual`, `cursorAttributes`) — lekser zostawia je identyfikatorami (aliasy,
+  wystąpienia, zarys, debuger, kolorowanie bez zmian), a formater pisze je jak słowa kluczowe tylko w swoim kontekście:
+  DDL poza zapytaniem (nie w `CREATE VIEW … AS SELECT` ani CTAS) i nie jako nazwa kolumny w liście (`(query …`,
+  `, schema …`), nagłówek wyzwalacza, po `%`, `WITH READ ONLY`, `SET TRANSACTION READ ONLY`, `MATCH_RECOGNIZE (`.
+  Region `$IF … $END` w środku instrukcji — dalszy ciąg w kolumnie kontynuacji (w nawiasie — za nawiasem); region w jednej linii zostaje w
+  linii, a przecinek albo nawias zamykający tuż za nim dołącza do niej. Migracja działa wprost na `JSONValue`. Konsola: linia zaczynająca się od `$if`
+  (bez spacji; tak samo `$then`, `$elsif`, `$else`, `$end`, `$error`, `$$nazwa`) nie jest już poleceniem HOST `$` — to
+  dyrektywa kompilacji warunkowej; `$ polecenie` i `$polecenie` z innym słowem działają jak dotąd. Podgląd ogłasza VoiceOver liczbę zmienionych linii (po 0,5 s
+  bez kolejnej zmiany). Test na bazie porównuje wyniki
+  wywołań (odległości wektorów, gałąź `$IF`) przed i po formatowaniu i sprząta obiekty także po błędzie.
+- **Nowe opcje (P2):** UPDATE … SET i GROUP BY / ORDER BY (domyślnie jak listy SELECT), listy w nawiasach (IN,
+  argumenty funkcji), kolumny tabel / pola rekordów i typów, próg krótkiego CASE, układ podzapytań, położenie operatora
+  w długich wyrażeniach, wyrównanie kolumn tabel. Listy w nawiasach mają trzy wartości: element w linii, „w jednej
+  linii, jeśli się mieści” (dotychczasowe `fit` — zapisane ustawienia zachowują działanie) i „do marginesu” (`wrap`,
+  PL/SQL Developer „Fit”). Pominięte (P3): próg „element w linii od N elementów”, lista od lewego marginesu, nawias
+  zamykający list w osobnej linii, pusta linia po instrukcji, wyrównanie ASC/DESC, wcięcie JOIN, osobny przecinek dla
+  nawiasów.
+- **Zgodność ustawień (migracja):** tylko przy odczycie plików — `settings.json`, `Preferences/sets.json` (zestawy
+  osobiste i połączeń) i pliku eksportu w wersji formatu 1 (`pelikan-preferences`; eksport ma teraz wersję 2; import
+  takiego pliku — `prefs.import` z pliku albo **Importuj…** w Ustawieniach › Zestawy — też jest migrowany) — zapis
+  formatera bez znacznika `defaultsVersion` (sprzed D202) dostaje nowe domyślne tam, gdzie miał dawne: słowa klauzul do
+  lewej → rzeka, CASE w jednej linii → wieloliniowo (krótkie w jednej), wyrównanie deklaracji i przypisań wyłączone →
+  włączone (`PreferenceSets.migratingLegacyBeautifier`, wprost na `JSONValue`); inne wartości (zmienione
+  przez użytkownika) zostają, opcje, których w zapisie nie było, dostają nowe domyślne. Znacznik (`defaultsVersion = 1`)
+  zapisuje się z ustawieniami, więc migracja się nie powtarza i późniejszy wybór „do lewej” zostaje. Częściowy JSON bez
+  znacznika — `prefs.import` z wartościami od komendy, agenta albo makra, dekoder `BeautifierOptions` — to wartości
+  bieżące, bez migracji. Ograniczenie: wartości jawnie wybranej, a równej dawnej domyślnej, nie da się odróżnić od
+  domyślnej. **Ustawienia › Formater › Przywróć domyślne** pyta o potwierdzenie: domyślne reguły z zachowaniem pisowni
+  specjalnej albo wszystko, także pisownia specjalna; formatowanie automatyczne zawsze zostaje (`restoringDefaults`).
+- **Podgląd (Ustawienia › Formater):** cztery przełączane przykłady (PL/SQL, Zapytania, DML, DDL), kolorowanie składni,
+  numery linii, pionowa linia prawego marginesu; linie zmienione ostatnią zmianą — żółte tło, miejsce usuniętych —
+  czerwona kreska; zmiana opcji przełącza na przykład, w którym ją widać, i przewija do pierwszej zmiany; kliknięcie
+  opcji (i wybór miejsca warunku) pokazuje jej przykład. Test pilnuje, że **każda wartość każdej opcji** (i każdej
+  reguły AND/OR każdego miejsca) zmienia przypisany przykład i zmiana jest zaznaczona.

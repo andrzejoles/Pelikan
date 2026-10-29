@@ -143,14 +143,25 @@ can run automatically after opening a source from the database, before compilati
 the `-- NoFormat Start` and `-- NoFormat End` comments stays unchanged. Formatting never changes the meaning of the
 code.
 
-The **Settings › Formatter** tab has the groups **Layout**, **Lists and commas**, **SQL clauses and conditions**
-(clause keywords left, right or on their own line; AND/OR at line start or end; the JOIN … ON condition; THEN on a new
-line; multi-line CASE), **Column alignment** (declarations, parameters with mode and type, named arguments `=>`,
-assignments `:=`, aliases in SELECT and FROM, `=` in UPDATE … SET, trailing comments), **Spacing** and **Letter case** —
-separately for keywords, identifiers, data types, built-in functions and Oracle packages. On the right there is a
-preview: a sample package that shows every option, with the lines changed by the last change highlighted, and above it
-an example of the option under the pointer or the one changed last — **Now** and **After changing this option**. A
-region without formatting can also be marked with the `-- @formatter:off` and `-- @formatter:on` comments.
+The **Settings › Formatter** tab has the groups **Layout**, **Lists and commas** (separately SELECT/INTO/FROM lists,
+UPDATE … SET, GROUP BY and ORDER BY, parameter declarations, call parameters, INSERT lists, lists in parentheses — IN,
+function arguments — and table columns, record and type fields: one item per line, on one line if it fits, or fit to
+the margin), **SQL clauses and conditions** (clause keywords right — the “river”, default — left or on their own line;
+AND/OR at line start or end; the JOIN … ON condition; THEN on a new line; CASE on separate lines — very short ones, with
+one WHEN branch, on one line up to a set number of characters; subqueries and CTEs indented with `)` on its own line or
+after the parenthesis; operator position in long expressions), **AND / OR conditions** (separately for each location —
+WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY, CASE … WHEN, IF / ELSIF, WHILE, EXIT / CONTINUE WHEN,
+trigger WHEN, CHECK, nested parentheses: breaking — each on its own line, only when the condition does not fit, do not
+break; AND/OR position; alignment to the keyword — the “river”, under the first condition or under it indented),
+**Column alignment** (declarations, parameters with mode and type, named arguments `=>`, assignments `:=`, aliases in
+SELECT and FROM, `=` in UPDATE … SET, table columns and record fields — type, DEFAULT, NOT NULL, trailing comments),
+**Spacing** and **Letter case** — separately for keywords, identifiers, data types, built-in functions and Oracle
+packages; special spelling also accepts patterns with `%` or `*` (e.g. `DBMS_%`). On the right there is a preview with
+syntax colours, line numbers and a vertical right-margin line; the switch above it picks the example: **PL/SQL**,
+**Queries**, **DML** or **DDL**. Lines changed by the last change are highlighted for 5 s (or until the next change), a
+red bar marks where lines were removed; changing an option switches to the example that shows it and scrolls to the
+change, and clicking an option shows its example. A region without formatting can also be marked with the
+`-- @formatter:off` and `-- @formatter:on` comments; the formatter leaves `$IF … $END` conditional compilation unchanged.
 
 ### Templates, snippets and macros
 

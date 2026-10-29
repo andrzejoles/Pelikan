@@ -55,6 +55,19 @@ public enum Keywords {
         "ASCII", "WRAPPER", "WITHOUT", "CONDITIONAL", "UNCONDITIONAL", "ARRAY", "SCALAR", "FORMAT",
     ]
 
+    /// Słowa, które formater zapisuje jak słowa kluczowe tylko w swoim kontekście (DDL, nagłówek wyzwalacza, atrybut
+    /// kursora po `%`, MATCH_RECOGNIZE) — poza wspólnym zbiorem, żeby nie zmieniać leksowania nazw (aliasy, wystąpienia,
+    /// zarys, debuger, kolorowanie), np. kolumny `query`, `schema`, `statement`.
+    public static let formatterContextual: Set<String> = [
+        "BITMAP", "PARALLEL", "NOPARALLEL", "BUILD", "REFRESH", "FAST", "DEMAND", "QUERY", "REWRITE", "LESS", "THAN", "READ",
+        "SCHEMA", "LOGON", "LOGOFF", "STARTUP", "SHUTDOWN", "SERVERERROR", "DDL", "STATEMENT", "USABLE", "UNUSABLE", "REBUILD",
+        "MOVEMENT", "ORGANIZATION", "PCTUSED", "INITRANS", "MAXTRANS", "LOB", "SECUREFILE", "BASICFILE", "SEGMENT", "CREATION",
+        "INVALIDATE", "CONSTRAINTS", "MATCH_RECOGNIZE",
+    ]
+
+    /// Atrybuty kursora po `%` (`c%NOTFOUND`, `SQL%BULK_EXCEPTIONS`) — dla formatera.
+    public static let cursorAttributes: Set<String> = ["FOUND", "NOTFOUND", "ISOPEN", "ROWCOUNT", "BULK_ROWCOUNT", "BULK_EXCEPTIONS"]
+
     /// Wszystkie słowa kluczowe jako tablice UTF-16 (szybkie sprawdzanie w lekserze bez tworzenia String).
     static let all: Set<[UInt16]> = Set(reserved.union(plsql).union(sql).map { Array($0.utf16) })
     static let maxLength = all.map(\.count).max() ?? 0

@@ -23,7 +23,7 @@ enum SyntaxTheme {
 
     static func color(for kind: TokenKind) -> NSColor? {
         switch kind {
-        case .keyword: keyword
+        case .keyword, .directive: keyword
         case .string: string
         case .lineComment, .blockComment: comment
         case .hint: hint

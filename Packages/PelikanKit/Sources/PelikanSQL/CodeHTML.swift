@@ -6,7 +6,7 @@ public enum CodeHTML {
     /// Klasa CSS rodzaju tokenu (nil — tekst zwykły).
     static func cssClass(_ kind: TokenKind) -> String? {
         switch kind {
-        case .keyword: "kw"
+        case .keyword, .directive: "kw"
         case .string: "str"
         case .lineComment, .blockComment: "cmt"
         case .hint: "hint"

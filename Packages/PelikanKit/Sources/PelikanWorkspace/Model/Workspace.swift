@@ -575,7 +575,8 @@ public final class Workspace {
         var blocked: (settings: Bool, history: Bool) = (false, false)
         if let dir = dataDirectory, let data = try? Data(contentsOf: dir.appendingPathComponent("settings.json")) {
             if case .object(let o)? = try? JSONDecoder().decode(JSONValue.self, from: data) {
-                personal = o
+                // Ustawienia zapisane przed D202 — migracja formatera (wartości równe dawnym domyślnym → nowe domyślne).
+                personal = PreferenceSets.migratingLegacyBeautifier(o)
             } else {
                 let (message, preserved) = DamagedFile.preserve(dir.appendingPathComponent("settings.json"))
                 problems.append(message)

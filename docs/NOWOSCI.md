@@ -2,6 +2,35 @@
 
 Wydania stabilne od 1.0.0 (numeracja: D184). Historia bet 7.9.0–10.5.0: [`docs/BETA.md`](BETA.md).
 
+## 1.8.0 — formater: bezpieczeństwo, układ, „rzeka”, podgląd
+
+- **Bezpieczeństwo:** formater nie psuje już kompilacji warunkowej (`$IF … $END`, `$$PLSQL_UNIT`) ani operatorów
+  odległości wektorów (`<=>`, `<->`, `<#>`); kontrola po formatowaniu wykrywa rozdzielenie znaków, które Oracle czyta
+  jako całość.
+- **Poprawki układu:** wcięcie wszystkich instrukcji w gałęzi `WHEN … THEN` obsługi wyjątków i CASE, zapytania
+  kursorów i widoków od nowej linii, UNION/MINUS w osobnej linii, MERGE (`ON`, `DELETE WHERE`), INSERT ALL, długie
+  wyrażenia łamane przed `||`, długie nagłówki wyzwalaczy i opcje tabel w osobnych liniach, COMPOUND TRIGGER, FORALL,
+  komentarze w listach, `RETURN SELF AS RESULT`, etykiety `<<nazwa>>`, wielkość liter słów kluczowych użytych jako
+  nazwy, wzorce `%` i `*` w pisowni specjalnej.
+- **Nowy domyślny wygląd:** słowa klauzul i AND/OR wyrównane „rzeką” (`  FROM`, ` WHERE`, `   AND`, ` ORDER BY`;
+  kolumna rzeki według najdłuższego słowa polecenia, np. `RETURNING`, najwyżej 9 znaków), CASE w osobnych liniach (bardzo krótkie w
+  jednej), podzapytania i CTE wcięte z `)` w osobnej linii, `INSERT INTO emp (…)`, `DELETE FROM` w jednej linii,
+  kolumny tabel po jednej w linii z wyrównanymi typami, DEFAULT i NOT NULL, wyrównane deklaracje i przypisania.
+  Domyślny wynik formatowania się zmienia — także u dotychczasowych użytkowników: opcje z wartością równą dawnej
+  domyślnej (słowa klauzul do lewej, CASE w jednej linii, bez wyrównania deklaracji i przypisań) dostają nową domyślną;
+  wartości zmienione samodzielnie zostają (także w zestawach preferencji i w plikach ustawień wyeksportowanych przez
+  starszą wersję). Przycisk **Przywróć domyślne** w Ustawieniach › Formater ustawia reguły na domyślne — po potwierdzeniu,
+  z wyborem, czy zachować pisownię specjalną (formatowanie automatyczne zostaje).
+- **AND / OR osobno dla każdego miejsca:** WHERE, HAVING, JOIN … ON, MERGE … ON, START WITH / CONNECT BY,
+  CASE … WHEN, IF / ELSIF, WHILE, EXIT WHEN, WHEN wyzwalacza, CHECK i nawiasy zagnieżdżone — łamanie (każdy w osobnej
+  linii, tylko gdy się nie mieści, nigdy), położenie (początek albo koniec linii) i wyrównanie (rzeka, pod pierwszym
+  warunkiem, z wcięciem).
+- **Nowe opcje list:** UPDATE … SET, GROUP BY / ORDER BY, listy w nawiasach (IN, argumenty) i kolumny tabel — także
+  „do marginesu”; próg krótkiego CASE; położenie operatora w długich wyrażeniach.
+- **Podgląd w Ustawieniach › Formater:** cztery przykłady (PL/SQL, Zapytania, DML, DDL) z kolorami składni, numerami
+  linii i linią prawego marginesu; zmienione linie podświetlone przez 5 s, usunięte zaznaczone czerwoną kreską; zmiana
+  opcji pokazuje przykład, w którym ją widać, i przewija do zmiany; VoiceOver ogłasza liczbę zmienionych linii.
+
 ## 1.7.0 — grupy kart okien
 
 - **Grupy kart:** przy wielu oknach pasek kart pokazuje tylko karty bieżącej grupy, a grupy widać jako dwuwierszowe

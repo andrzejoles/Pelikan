@@ -6,7 +6,7 @@ import Testing
 @Suite("Formater — opcje")
 struct BeautifierOptionsTests {
     func f(_ s: String, _ change: (inout BeautifierOptions) -> Void) throws -> String {
-        var o = BeautifierOptions()
+        var o = BeautifierOptions.legacy
         change(&o)
         return try Beautifier.format(s, options: o)
     }
@@ -23,10 +23,11 @@ struct BeautifierOptionsTests {
     }
 
     static var corpus: [String] {
-        [BeautifierExamples.preview, BeautifierTests.query, BeautifierTests.body, BeautifierTests.misc] + BeautifierExamples.all.map(\.snippet)
+        [BeautifierTests.query, BeautifierTests.body, BeautifierTests.misc] + BeautifierExamples.previews.map(\.code)
+            + BeautifierExamples.all.map(\.snippet)
     }
 
-    @Test("każda opcja zmienia swój przykład i kod podglądu w Preferencjach")
+    @Test("każda opcja zmienia swój przykład; każda wartość każdej opcji zmienia przypisany przykład podglądu i zmiana jest zaznaczona")
     func everyOptionVisible() throws {
         for base in [BeautifierOptions(), Self.heavy] {
             for e in BeautifierExamples.all {
@@ -34,17 +35,38 @@ struct BeautifierOptionsTests {
                 let other = try Beautifier.format(e.snippet, options: e.variant(base))
                 #expect(now != other, "przykład \(e.id) bez zmiany")
             }
+            // Podgląd: przypisany przykład (PL/SQL, Zapytania, DML, DDL) przy każdej innej wartości każdej opcji i każdej
+            // reguły AND/OR każdego miejsca.
+            for key in BeautifierExamples.previewKeys {
+                let sample = try #require(BeautifierExamples.previewOf[key].flatMap(BeautifierExamples.previewSample), "\(key) bez przykładu podglądu")
+                let prepared = BeautifierExamples.prepared(key, base)
+                let shown = try Beautifier.format(sample.code, options: prepared)
+                let values = BeautifierExamples.alternatives(key, base)
+                #expect(!values.isEmpty, "\(key) bez wartości")
+                for v in values {
+                    let changed = try Beautifier.format(sample.code, options: v)
+                    #expect(changed != shown, "podgląd \(sample.id) nie pokazuje opcji \(key) = \(v)")
+                    #expect(!BeautifierExamples.marks(baseline: shown, current: changed).isEmpty, "\(key): zmiana bez zaznaczenia")
+                }
+            }
         }
-        let o = BeautifierOptions()
-        let preview = try Beautifier.format(BeautifierExamples.preview, options: o)
-        for e in BeautifierExamples.all {
-            #expect(try Beautifier.format(BeautifierExamples.preview, options: e.variant(o)) != preview, "podgląd nie pokazuje opcji \(e.id)")
-        }
-        // Każda opcja wpływająca na wynik ma przykład.
+        // Każda opcja wpływająca na wynik ma przykład i przykład podglądu; każde miejsce warunków — trzy reguły.
         let documented = Set(BeautifierExamples.all.map(\.id))
         let mirror = Mirror(reflecting: BeautifierOptions()).children.compactMap(\.label)
-        let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave"]
+        let automatic: Set<String> = ["afterLoad", "beforeCompile", "beforeSave", "defaultsVersion"]
         #expect(Set(mirror).subtracting(automatic) == documented)
+        #expect(documented.isSubset(of: Set(BeautifierExamples.previewOf.keys)))
+        #expect(BeautifierExamples.previewKeys.count == documented.count - 1 + 3 * BeautifierOptions.ConditionContext.allCases.count)
+    }
+
+    @Test("znaczniki podglądu: zmienione, dodane i miejsce usuniętych linii")
+    func previewMarks() {
+        let m = BeautifierExamples.marks(baseline: "a\nb\n\nc\nd", current: "a\nB\nc\nd\ne")
+        #expect(m.changed == [1, 4])
+        #expect(m.removedBefore == [2])
+        #expect(m.first == 1)
+        #expect(BeautifierExamples.marks(baseline: "a\n\n\nb", current: "a\n\nb").removedBefore == [2])
+        #expect(BeautifierExamples.marks(baseline: "x", current: "x").isEmpty)
     }
 
     @Test("bezpieczeństwo i idempotencja przy każdej opcji osobno i wszystkich naraz")
@@ -122,7 +144,7 @@ struct BeautifierOptionsTests {
               JOIN u ON u.id = t.id
              WHERE a = 1 AND
                    b = 2
-            ORDER BY a
+             ORDER BY a
             """)
     }
 
@@ -217,6 +239,6 @@ struct BeautifierOptionsTests {
         let h = Self.heavy
         #expect(try JSONDecoder().decode(BeautifierOptions.self, from: JSONEncoder().encode(h)) == h)
         let old = try JSONDecoder().decode(BeautifierOptions.self, from: Data(#"{"indent":4,"keywordCase":"lower"}"#.utf8))
-        #expect(old.indent == 4 && old.keywordCase == .lower && old.clauseLayout == .leftAligned && old.dataTypeCase == nil && !old.alignDeclarations)
+        #expect(old.indent == 4 && old.keywordCase == .lower && old.clauseLayout == .rightAligned && old.dataTypeCase == nil && old.alignDeclarations && old.caseLayout == .auto)
     }
 }
